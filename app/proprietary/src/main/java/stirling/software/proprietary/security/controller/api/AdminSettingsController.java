@@ -27,9 +27,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.HtmlUtils;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -48,6 +45,9 @@ import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.security.model.api.admin.SettingValueResponse;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingValueRequest;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequest;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 @AdminApi
 @RequiredArgsConstructor
@@ -186,11 +186,19 @@ public class AdminSettingsController {
                                                     + HtmlUtils.htmlEscape(key)));
                 }
 
+                // Validate pipeline path settings
+                String validationError = validatePipelinePathSetting(key, value);
+                if (validationError != null) {
+                    return ResponseEntity.badRequest()
+                            .body(Map.of("error", HtmlUtils.htmlEscape(validationError)));
+                }
+
                 log.info("Admin updating setting: {} = {}", key, value);
                 GeneralUtils.saveKeyToSettings(key, value);
 
-                // Track this as a pending change
-                pendingChanges.put(key, value);
+                // Track this as a pending change (convert null to empty string for
+                // ConcurrentHashMap)
+                pendingChanges.put(key, value != null ? value : "");
 
                 updatedCount++;
             }
@@ -260,6 +268,9 @@ public class AdminSettingsController {
                     sectionMap.put("_pending", sectionPending);
                 }
             }
+
+            // Mask sensitive fields before returning to frontend
+            sectionMap = maskSensitiveFields(sectionMap);
 
             log.debug(
                     "Admin requested settings section: {} (includePending={})",
@@ -397,6 +408,13 @@ public class AdminSettingsController {
                 return ResponseEntity.badRequest()
                         .body("Setting key not found: " + HtmlUtils.htmlEscape(key));
             }
+
+            // Mask sensitive values before returning
+            String keyName = key.contains(".") ? key.substring(key.lastIndexOf(".") + 1) : key;
+            if (isSensitiveFieldWithPath(keyName, key)) {
+                value = createMaskedValue(value);
+            }
+
             log.debug("Admin requested setting: {}", key);
             return ResponseEntity.ok(new SettingValueResponse(key, value));
         } catch (IllegalArgumentException e) {
@@ -434,6 +452,20 @@ public class AdminSettingsController {
             }
 
             Object value = request.getValue();
+
+            // Prevent saving masked values for sensitive fields to avoid data loss
+            if ("********".equals(value)) {
+                String keyName = key.contains(".") ? key.substring(key.lastIndexOf(".") + 1) : key;
+                if (isSensitiveFieldWithPath(keyName, key)) {
+                    log.warn(
+                            "Admin attempted to save masked value for sensitive field: {}. This operation is blocked to prevent data loss.",
+                            key);
+                    return ResponseEntity.badRequest()
+                            .body(
+                                    "Cannot save masked values for sensitive settings. Please provide the actual value.");
+                }
+            }
+
             log.info("Admin updating single setting: {} = {}", key, value);
             GeneralUtils.saveKeyToSettings(key, value);
 
@@ -536,7 +568,8 @@ public class AdminSettingsController {
             pendingChanges.clear();
 
             // Give the HTTP response time to complete, then exit
-            new Thread(
+            Thread.ofVirtual()
+                    .start(
                             () -> {
                                 try {
                                     Thread.sleep(1000);
@@ -547,8 +580,7 @@ public class AdminSettingsController {
                                     log.error("Restart interrupted: {}", e.getMessage(), e);
                                     Thread.currentThread().interrupt();
                                 }
-                            })
-                    .start();
+                            });
 
             return ResponseEntity.ok(
                     Map.of(
@@ -640,6 +672,54 @@ public class AdminSettingsController {
         }
 
         return true;
+    }
+
+    private String validatePipelinePathSetting(String key, Object value) {
+        // Validate pipeline path settings
+        if (key.startsWith("system.customPaths.pipeline.watchedFoldersDirs")
+                && value instanceof java.util.List) {
+            @SuppressWarnings("unchecked")
+            java.util.List<String> paths = (java.util.List<String>) value;
+
+            // Check for empty or all-blank paths
+            if (paths.isEmpty()) {
+                return null; // Empty is OK, will use default
+            }
+
+            // Validate each path
+            java.util.Set<String> normalizedPaths = new java.util.HashSet<>();
+            for (String path : paths) {
+                if (path != null && !path.trim().isEmpty()) {
+                    try {
+                        java.nio.file.Path normalized =
+                                java.nio.file.Paths.get(path.trim()).toAbsolutePath().normalize();
+                        String normalizedStr = normalized.toString();
+
+                        // Check for duplicates
+                        if (normalizedPaths.contains(normalizedStr)) {
+                            return "Duplicate path detected: " + path;
+                        }
+                        normalizedPaths.add(normalizedStr);
+                    } catch (java.nio.file.InvalidPathException e) {
+                        return "Invalid path: " + path + " - " + e.getMessage();
+                    }
+                }
+            }
+
+            // Check for overlapping paths
+            java.util.List<String> pathList = new java.util.ArrayList<>(normalizedPaths);
+            for (int i = 0; i < pathList.size(); i++) {
+                java.nio.file.Path path1 = java.nio.file.Paths.get(pathList.get(i));
+                for (int j = i + 1; j < pathList.size(); j++) {
+                    java.nio.file.Path path2 = java.nio.file.Paths.get(pathList.get(j));
+                    if (path1.startsWith(path2) || path2.startsWith(path1)) {
+                        return "Overlapping paths detected: " + path1 + " and " + path2;
+                    }
+                }
+            }
+        }
+
+        return null; // Valid
     }
 
     private Object getSettingByKey(String key) {

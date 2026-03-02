@@ -1,6 +1,7 @@
 import { StirlingFileStub } from '@app/types/fileContext';
 import { fileStorage } from '@app/services/fileStorage';
 import { zipFileService } from '@app/services/zipFileService';
+import { downloadFile } from '@app/services/downloadService';
 
 /**
  * Downloads a blob as a file using browser download API
@@ -8,17 +9,7 @@ import { zipFileService } from '@app/services/zipFileService';
  * @param filename - The filename for the download
  */
 export function downloadBlob(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob);
-
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-
-  // Clean up the blob URL
-  URL.revokeObjectURL(url);
+  void downloadFile({ data: blob, filename });
 }
 
 /**
@@ -34,8 +25,11 @@ export async function downloadFileFromStorage(file: StirlingFileStub): Promise<v
     throw new Error(`File "${file.name}" not found in storage`);
   }
 
-  // StirlingFile is already a File object, just download it
-  downloadBlob(stirlingFile, stirlingFile.name);
+  await downloadFile({
+    data: stirlingFile,
+    filename: stirlingFile.name,
+    localPath: file.localFilePath
+  });
 }
 
 /**
@@ -80,7 +74,7 @@ export async function downloadFilesAsZip(files: StirlingFileStub[], zipFilename?
 
   // Create and download ZIP
   const { zipFile } = await zipFileService.createZipFromFiles(filesToZip, finalZipFilename);
-  downloadBlob(zipFile, finalZipFilename);
+  await downloadFile({ data: zipFile, filename: finalZipFilename });
 }
 
 /**
@@ -120,7 +114,7 @@ export async function downloadFiles(
  * @param filename - Optional custom filename
  */
 export function downloadFileObject(file: File, filename?: string): void {
-  downloadBlob(file, filename || file.name);
+  void downloadFile({ data: file, filename: filename || file.name });
 }
 
 /**
@@ -135,7 +129,7 @@ export function downloadTextAsFile(
   mimeType: string = 'text/plain'
 ): void {
   const blob = new Blob([content], { type: mimeType });
-  downloadBlob(blob, filename);
+  void downloadFile({ data: blob, filename });
 }
 
 /**

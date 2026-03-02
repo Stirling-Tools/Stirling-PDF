@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <Property Id="STIRLING_SERVER_URL" Secure="yes" />
+    <Property Id="STIRLING_LOCK_CONNECTION" Secure="yes" />
+
+    <DirectoryRef Id="TARGETDIR">
+      <Directory Id="AppDataFolder" />
+      <Directory Id="CommonAppDataFolder" />
+    </DirectoryRef>
+
+    <DirectoryRef Id="INSTALLDIR">
+      <Component Id="ProvisionerBinaryComponent" Guid="*">
+        <File Id="ProvisionerExe" Source="$(sys.SOURCEFILEDIR)stirling-provision.exe" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <ComponentGroup Id="ProvisioningComponentGroup">
+      <ComponentRef Id="ProvisionerBinaryComponent" />
+    </ComponentGroup>
+
+    <CustomAction
+      Id="WriteProvisioningFilePerUser"
+      FileKey="ProvisionerExe"
+      Execute="deferred"
+      Impersonate="yes"
+      Return="check"
+      ExeCommand="[WriteProvisioningFilePerUser]"
+    />
+
+    <CustomAction
+      Id="WriteProvisioningFileAllUsers"
+      FileKey="ProvisionerExe"
+      Execute="deferred"
+      Impersonate="no"
+      Return="check"
+      ExeCommand="[WriteProvisioningFileAllUsers]"
+    />
+
+    <CustomAction
+      Id="SetWriteProvisioningFilePerUser"
+      Property="WriteProvisioningFilePerUser"
+      Value="--output &quot;[AppDataFolder]Stirling-PDF\stirling-provisioning.json&quot; --url &quot;[STIRLING_SERVER_URL]&quot; --lock &quot;[STIRLING_LOCK_CONNECTION]&quot;"
+    />
+
+    <CustomAction
+      Id="SetWriteProvisioningFileAllUsers"
+      Property="WriteProvisioningFileAllUsers"
+      Value="--output &quot;[CommonAppDataFolder]Stirling-PDF\stirling-provisioning.json&quot; --url &quot;[STIRLING_SERVER_URL]&quot; --lock &quot;[STIRLING_LOCK_CONNECTION]&quot;"
+    />
+
+    <InstallExecuteSequence>
+      <Custom Action="SetWriteProvisioningFilePerUser" After="InstallFiles">STIRLING_SERVER_URL &lt;&gt; &quot;&quot; AND (NOT ALLUSERS OR ALLUSERS=0)</Custom>
+      <Custom Action="WriteProvisioningFilePerUser" After="SetWriteProvisioningFilePerUser">STIRLING_SERVER_URL &lt;&gt; &quot;&quot; AND (NOT ALLUSERS OR ALLUSERS=0)</Custom>
+      <Custom Action="SetWriteProvisioningFileAllUsers" After="InstallFiles">STIRLING_SERVER_URL &lt;&gt; &quot;&quot; AND (ALLUSERS=1 OR ALLUSERS=2)</Custom>
+      <Custom Action="WriteProvisioningFileAllUsers" After="SetWriteProvisioningFileAllUsers">STIRLING_SERVER_URL &lt;&gt; &quot;&quot; AND (ALLUSERS=1 OR ALLUSERS=2)</Custom>
+    </InstallExecuteSequence>
+  </Fragment>
+</Wix>

@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { authService, UserInfo } from '@app/services/authService';
 import { buildOAuthCallbackHtml } from '@app/utils/oauthCallbackHtml';
 import { BASE_PATH } from '@app/constants/app';
-import { STIRLING_SAAS_URL } from '@desktop/constants/connection';
-import '@app/routes/authShared/auth.css';
+import { STIRLING_SAAS_URL } from '@app/constants/connection';
+import '@app/components/SetupWizard/desktopOAuth.css';
 
 type KnownProviderId = 'google' | 'github' | 'keycloak' | 'azure' | 'apple' | 'oidc';
 export type OAuthProviderId = KnownProviderId | string;
@@ -91,12 +91,17 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
     (id as KnownProviderId) in providerConfig;
   const GENERIC_PROVIDER_ICON = 'oidc.svg';
 
+  console.log('[DesktopOAuthButtons] Received providers:', providers);
+  console.log('[DesktopOAuthButtons] Mode:', mode, 'Server URL:', serverUrl);
+
   if (providers.length === 0) {
+    console.warn('[DesktopOAuthButtons] No providers to display, returning null');
     return null;
   }
 
+  // Desktop always uses its own styling classes (independent of web)
   return (
-    <div className="oauth-container-vertical">
+    <div className="oauth-container-vertical-desktop">
       {providers
         .filter((providerConfigEntry) => providerConfigEntry && providerConfigEntry.id)
         .map((providerEntry) => {
@@ -114,15 +119,19 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
               key={providerEntry.id}
               onClick={() => handleOAuthLogin(providerEntry)}
               disabled={isDisabled || oauthLoading}
-              className="oauth-button-vertical"
+              className="oauth-button-vertical-desktop"
               title={label}
             >
-              <img
-                src={`${BASE_PATH}/Login/${iconConfig?.file || GENERIC_PROVIDER_ICON}`}
-                alt={label}
-                className="oauth-icon-tiny"
-              />
-              {label}
+              <span className="oauth-button-left-desktop">
+                <span className="oauth-icon-wrapper-desktop">
+                  <img
+                    src={`${BASE_PATH}/Login/${iconConfig?.file || GENERIC_PROVIDER_ICON}`}
+                    alt={label}
+                    className="oauth-icon-tiny-desktop"
+                  />
+                </span>
+                <span className="oauth-button-text-desktop">{label}</span>
+              </span>
             </button>
           );
         })}

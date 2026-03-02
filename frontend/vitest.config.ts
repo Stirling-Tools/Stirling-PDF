@@ -37,7 +37,7 @@ export default defineConfig({
         plugins: [
           react(),
           tsconfigPaths({
-            projects: ['./tsconfig.core.json'],
+            projects: ['./tsconfig.core.vite.json'],
           }),
         ],
         esbuild: {
@@ -55,7 +55,7 @@ export default defineConfig({
         plugins: [
           react(),
           tsconfigPaths({
-            projects: ['./tsconfig.proprietary.json'],
+            projects: ['./tsconfig.proprietary.vite.json'],
           }),
         ],
         esbuild: {
@@ -73,7 +73,7 @@ export default defineConfig({
         plugins: [
           react(),
           tsconfigPaths({
-            projects: ['./tsconfig.desktop.json'],
+            projects: ['./tsconfig.desktop.vite.json'],
           }),
         ],
         esbuild: {

@@ -55,44 +55,44 @@ public class OverlayImageController {
 
             boolean isSvg = SvgOverlayUtil.isSvgImage(imageBytes);
 
-            PDDocument document = pdfDocumentFactory.load(pdfBytes);
+            try (PDDocument document = pdfDocumentFactory.load(pdfBytes)) {
+                int pages = document.getNumberOfPages();
+                for (int i = 0; i < pages; i++) {
+                    PDPage page = document.getPage(i);
 
-            int pages = document.getNumberOfPages();
-            for (int i = 0; i < pages; i++) {
-                PDPage page = document.getPage(i);
+                    if (isSvg) {
+                        SvgOverlayUtil.overlaySvgOnPage(document, page, imageBytes, x, y);
+                    } else {
+                        try (PDPageContentStream contentStream =
+                                new PDPageContentStream(
+                                        document,
+                                        page,
+                                        PDPageContentStream.AppendMode.APPEND,
+                                        true,
+                                        true)) {
+                            PDImageXObject image =
+                                    PDImageXObject.createFromByteArray(document, imageBytes, "");
+                            contentStream.drawImage(image, x, y);
+                            log.info("Image successfully overlaid onto PDF page {}", i);
+                        }
+                    }
 
-                if (isSvg) {
-                    SvgOverlayUtil.overlaySvgOnPage(document, page, imageBytes, x, y);
-                } else {
-                    try (PDPageContentStream contentStream =
-                            new PDPageContentStream(
-                                    document,
-                                    page,
-                                    PDPageContentStream.AppendMode.APPEND,
-                                    true,
-                                    true)) {
-                        PDImageXObject image =
-                                PDImageXObject.createFromByteArray(document, imageBytes, "");
-                        contentStream.drawImage(image, x, y);
-                        log.info("Image successfully overlaid onto PDF page {}", i);
+                    if (!everyPage && i == 0) {
+                        break;
                     }
                 }
 
-                if (!everyPage && i == 0) {
-                    break;
-                }
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                document.save(baos);
+
+                byte[] result = baos.toByteArray();
+                log.info("PDF with overlaid image successfully created");
+
+                return WebResponseUtils.bytesToWebResponse(
+                        result,
+                        GeneralUtils.generateFilename(
+                                pdfFile.getOriginalFilename(), "_overlayed.pdf"));
             }
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            document.save(baos);
-            document.close();
-
-            byte[] result = baos.toByteArray();
-            log.info("PDF with overlaid image successfully created");
-
-            return WebResponseUtils.bytesToWebResponse(
-                    result,
-                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_overlayed.pdf"));
 
         } catch (IOException e) {
             log.error("Failed to add image to PDF", e);

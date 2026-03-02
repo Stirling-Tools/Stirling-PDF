@@ -15,9 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.Getter;
@@ -31,6 +28,9 @@ import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 @GeneralApi
 @Slf4j
@@ -46,18 +46,18 @@ public class EditTableOfContentsController {
     @Operation(
             summary = "Extract PDF Bookmarks",
             description = "Extracts bookmarks/table of contents from a PDF document as JSON.")
-    @ResponseBody
-    public List<Map<String, Object>> extractBookmarks(@RequestParam("file") MultipartFile file)
-            throws Exception {
+    public ResponseEntity<List<Map<String, Object>>> extractBookmarks(
+            @RequestParam("file") MultipartFile file) throws Exception {
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             PDDocumentOutline outline = document.getDocumentCatalog().getDocumentOutline();
 
             if (outline == null) {
                 log.info("No outline/bookmarks found in PDF");
-                return new ArrayList<>();
+                return ResponseEntity.ok(new ArrayList<>());
             }
 
-            return extractBookmarkItems(document, outline);
+            List<Map<String, Object>> bookmarks = extractBookmarkItems(document, outline);
+            return ResponseEntity.ok(bookmarks);
         }
     }
 

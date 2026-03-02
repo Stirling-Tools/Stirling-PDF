@@ -5,7 +5,7 @@ import {
   ScrollState,
   ZoomState,
 } from '@app/contexts/viewer/viewerBridges';
-import { PdfBookmarkObject } from '@embedpdf/models';
+import { PdfBookmarkObject, PdfAttachmentObject } from '@embedpdf/models';
 
 export interface ScrollActions {
   scrollToPage: (page: number, behavior?: 'smooth' | 'instant') => void;
@@ -19,7 +19,7 @@ export interface ZoomActions {
   zoomIn: () => void;
   zoomOut: () => void;
   toggleMarqueeZoom: () => void;
-  requestZoom: (level: number) => void;
+  requestZoom: (level: any, center?: any) => void;
 }
 
 export interface PanActions {
@@ -56,7 +56,6 @@ export interface SearchActions {
 }
 
 export interface ExportActions {
-  download: () => void;
   saveAsCopy: () => Promise<ArrayBuffer | null>;
 }
 
@@ -64,6 +63,13 @@ export interface BookmarkActions {
   fetchBookmarks: () => Promise<PdfBookmarkObject[] | null>;
   clearBookmarks: () => void;
   setLocalBookmarks: (bookmarks: PdfBookmarkObject[] | null, error?: string | null) => void;
+}
+
+export interface AttachmentActions {
+  getAttachments: () => Promise<PdfAttachmentObject[] | null>;
+  downloadAttachment: (attachment: PdfAttachmentObject) => void;
+  clearAttachments: () => void;
+  setLocalAttachments: (attachments: PdfAttachmentObject[] | null, error?: string | null) => void;
 }
 
 export interface PrintActions {
@@ -80,6 +86,7 @@ export interface ViewerActionsBundle {
   searchActions: SearchActions;
   exportActions: ExportActions;
   bookmarkActions: BookmarkActions;
+  attachmentActions: AttachmentActions;
   printActions: PrintActions;
 }
 
@@ -100,32 +107,63 @@ export function createViewerActions({
     scrollToPage: (page: number, behavior?: 'smooth' | 'instant') => {
       const api = registry.current.scroll?.api;
       if (api?.scrollToPage) {
-        api.scrollToPage({ pageNumber: page, behavior: behavior || 'smooth' });
+        try {
+          api.scrollToPage({ pageNumber: page, behavior: behavior || 'smooth' });
+        } catch (error) {
+          // Silently handle "Strategy not found" errors that occur during document transitions
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('[ScrollActions] scrollToPage failed (document may be transitioning):', error);
+          }
+        }
       }
     },
     scrollToFirstPage: () => {
       const api = registry.current.scroll?.api;
       if (api?.scrollToPage) {
-        api.scrollToPage({ pageNumber: 1 });
+        try {
+          api.scrollToPage({ pageNumber: 1 });
+        } catch (error) {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('[ScrollActions] scrollToFirstPage failed:', error);
+          }
+        }
       }
     },
     scrollToPreviousPage: () => {
       const api = registry.current.scroll?.api;
       if (api?.scrollToPreviousPage) {
-        api.scrollToPreviousPage();
+        try {
+          api.scrollToPreviousPage();
+        } catch (error) {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('[ScrollActions] scrollToPreviousPage failed:', error);
+          }
+        }
       }
     },
     scrollToNextPage: () => {
       const api = registry.current.scroll?.api;
       if (api?.scrollToNextPage) {
-        api.scrollToNextPage();
+        try {
+          api.scrollToNextPage();
+        } catch (error) {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('[ScrollActions] scrollToNextPage failed:', error);
+          }
+        }
       }
     },
     scrollToLastPage: () => {
       const api = registry.current.scroll?.api;
       const state = getScrollState();
       if (api?.scrollToPage && state.totalPages > 0) {
-        api.scrollToPage({ pageNumber: state.totalPages });
+        try {
+          api.scrollToPage({ pageNumber: state.totalPages });
+        } catch (error) {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('[ScrollActions] scrollToLastPage failed:', error);
+          }
+        }
       }
     },
   };
@@ -161,10 +199,10 @@ export function createViewerActions({
         api.toggleMarqueeZoom();
       }
     },
-    requestZoom: (level: number) => {
+    requestZoom: (level: any, center?: any) => {
       const api = registry.current.zoom?.api;
       if (api?.requestZoom) {
-        api.requestZoom(level);
+        api.requestZoom(level, center);
       }
     },
   };
@@ -297,12 +335,6 @@ export function createViewerActions({
   };
 
   const exportActions: ExportActions = {
-    download: () => {
-      const api = registry.current.export?.api;
-      if (api?.download) {
-        api.download();
-      }
-    },
     saveAsCopy: async () => {
       const api = registry.current.export?.api;
       if (api?.saveAsCopy) {
@@ -342,6 +374,27 @@ export function createViewerActions({
       setLocalBookmarks: (bookmarks, error = null) => {
         const api = registry.current.bookmark?.api;
         api?.setLocalBookmarks?.(bookmarks ?? null, error);
+      },
+    },
+    attachmentActions: {
+      getAttachments: async () => {
+        const api = registry.current.attachment?.api;
+        if (!api?.getAttachments) {
+          return null;
+        }
+        return api.getAttachments();
+      },
+      downloadAttachment: (attachment) => {
+        const api = registry.current.attachment?.api;
+        api?.downloadAttachment?.(attachment);
+      },
+      clearAttachments: () => {
+        const api = registry.current.attachment?.api;
+        api?.clearAttachments?.();
+      },
+      setLocalAttachments: (attachments, error = null) => {
+        const api = registry.current.attachment?.api;
+        api?.setLocalAttachments?.(attachments ?? null, error);
       },
     },
     printActions: {

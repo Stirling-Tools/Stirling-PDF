@@ -23,6 +23,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,7 +59,7 @@ public class SplitPdfBySectionsController {
                             + " which page to split, and how to split"
                             + " ( halves, thirds, quarters, etc.), both vertically and horizontally."
                             + " Input:PDF Output:ZIP-PDF Type:SISO")
-    public ResponseEntity<byte[]> splitPdf(@ModelAttribute SplitPdfBySectionsRequest request)
+    public ResponseEntity<byte[]> splitPdf(@Valid @ModelAttribute SplitPdfBySectionsRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
         String pageNumbers = request.getPageNumbers();
@@ -101,66 +103,68 @@ public class SplitPdfBySectionsController {
                     return WebResponseUtils.baosToWebResponse(baos, filename + ".pdf");
                 }
             } else {
-                TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
-                try (ZipOutputStream zipOut =
-                        new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
-                    for (int pageIndex = 0;
-                            pageIndex < sourceDocument.getNumberOfPages();
-                            pageIndex++) {
-                        int pageNum = pageIndex + 1;
-                        if (pagesToSplit.contains(pageIndex)) {
-                            for (int i = 0; i < horiz; i++) {
-                                for (int j = 0; j < verti; j++) {
-                                    try (PDDocument subDoc =
-                                            pdfDocumentFactory.createNewDocument()) {
-                                        LayerUtility subLayerUtility = new LayerUtility(subDoc);
-                                        addSingleSectionToTarget(
-                                                sourceDocument,
-                                                pageIndex,
-                                                subDoc,
-                                                subLayerUtility,
-                                                i,
-                                                j,
-                                                horiz,
-                                                verti);
-                                        int sectionNum = i * verti + j + 1;
-                                        String entryName =
-                                                filename
-                                                        + "_"
-                                                        + pageNum
-                                                        + "_"
-                                                        + sectionNum
-                                                        + ".pdf";
-                                        saveDocToZip(subDoc, zipOut, entryName);
-                                    } catch (IOException e) {
-                                        log.error(
-                                                "Error creating section {} for page {}",
-                                                (i * verti + j + 1),
-                                                pageNum,
-                                                e);
-                                        throw e;
+                try (TempFile zipTempFile = new TempFile(tempFileManager, ".zip")) {
+                    try (ZipOutputStream zipOut =
+                            new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
+                        for (int pageIndex = 0;
+                                pageIndex < sourceDocument.getNumberOfPages();
+                                pageIndex++) {
+                            int pageNum = pageIndex + 1;
+                            if (pagesToSplit.contains(pageIndex)) {
+                                for (int i = 0; i < horiz; i++) {
+                                    for (int j = 0; j < verti; j++) {
+                                        try (PDDocument subDoc =
+                                                pdfDocumentFactory.createNewDocument()) {
+                                            LayerUtility subLayerUtility = new LayerUtility(subDoc);
+                                            addSingleSectionToTarget(
+                                                    sourceDocument,
+                                                    pageIndex,
+                                                    subDoc,
+                                                    subLayerUtility,
+                                                    i,
+                                                    j,
+                                                    horiz,
+                                                    verti);
+                                            int sectionNum = i * verti + j + 1;
+                                            String entryName =
+                                                    filename
+                                                            + "_"
+                                                            + pageNum
+                                                            + "_"
+                                                            + sectionNum
+                                                            + ".pdf";
+                                            saveDocToZip(subDoc, zipOut, entryName);
+                                        } catch (IOException e) {
+                                            log.error(
+                                                    "Error creating section {} for page {}",
+                                                    (i * verti + j + 1),
+                                                    pageNum,
+                                                    e);
+                                            throw e;
+                                        }
                                     }
                                 }
-                            }
-                        } else {
-                            try (PDDocument subDoc = pdfDocumentFactory.createNewDocument()) {
-                                LayerUtility subLayerUtility = new LayerUtility(subDoc);
-                                addPageToTarget(sourceDocument, pageIndex, subDoc, subLayerUtility);
-                                String entryName = filename + "_" + pageNum + "_1.pdf";
-                                saveDocToZip(subDoc, zipOut, entryName);
-                            } catch (IOException e) {
-                                log.error("Error processing unsplit page {}", pageNum, e);
-                                throw e;
+                            } else {
+                                try (PDDocument subDoc = pdfDocumentFactory.createNewDocument()) {
+                                    LayerUtility subLayerUtility = new LayerUtility(subDoc);
+                                    addPageToTarget(
+                                            sourceDocument, pageIndex, subDoc, subLayerUtility);
+                                    String entryName = filename + "_" + pageNum + "_1.pdf";
+                                    saveDocToZip(subDoc, zipOut, entryName);
+                                } catch (IOException e) {
+                                    log.error("Error processing unsplit page {}", pageNum, e);
+                                    throw e;
+                                }
                             }
                         }
+                    } catch (IOException e) {
+                        log.error("Error creating ZIP file with split PDF sections", e);
+                        throw e;
                     }
-                } catch (IOException e) {
-                    log.error("Error creating ZIP file with split PDF sections", e);
-                    throw e;
+                    byte[] zipBytes = Files.readAllBytes(zipTempFile.getPath());
+                    return WebResponseUtils.bytesToWebResponse(
+                            zipBytes, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
                 }
-                byte[] zipBytes = Files.readAllBytes(zipTempFile.getPath());
-                return WebResponseUtils.bytesToWebResponse(
-                        zipBytes, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
             }
         } catch (Exception e) {
             log.error("Error splitting PDF file: {}", file.getOriginalFilename(), e);

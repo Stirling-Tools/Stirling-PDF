@@ -25,6 +25,21 @@ export default function Landing() {
 
   const loading = authLoading || configLoading || backendProbe.loading;
 
+  // Debug: Track Landing component lifecycle
+  useEffect(() => {
+    const mountId = Math.random().toString(36).substring(7);
+    console.log(`[Landing:${mountId}] 🔵 Component mounted at ${location.pathname}`);
+    console.log(`[Landing:${mountId}] Mount state:`, {
+      authLoading,
+      configLoading,
+      backendLoading: backendProbe.loading,
+      hasSession: !!session,
+    });
+    return () => {
+      console.log(`[Landing:${mountId}] 🔴 Component unmounting`);
+    };
+  }, [location.pathname, authLoading, configLoading, backendProbe.loading, session]);
+
   // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
   useEffect(() => {
     if (backendProbe.status === 'up' || backendProbe.loginDisabled) {
@@ -51,12 +66,20 @@ export default function Landing() {
     }
   }, [backendProbe.status, refetch]);
 
-  console.log('[Landing] State:', {
+  console.log('[Landing] ════════════════════════════════════');
+  console.log('[Landing] Render state:', {
     pathname: location.pathname,
     loading,
+    authLoading,
+    configLoading,
+    backendLoading: backendProbe.loading,
     hasSession: !!session,
+    hasConfig: !!config,
     loginEnabled: config?.enableLogin === true && !backendProbe.loginDisabled,
+    backendStatus: backendProbe.status,
+    timestamp: new Date().toISOString(),
   });
+  console.log('[Landing] ════════════════════════════════════');
 
   // Show loading while checking auth and config
   if (loading) {

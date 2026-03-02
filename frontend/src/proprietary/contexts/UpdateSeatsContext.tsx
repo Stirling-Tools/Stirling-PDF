@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import licenseService, {} from '@app/services/licenseService';
 import UpdateSeatsModal from '@app/components/shared/UpdateSeatsModal';
 import { userManagementService } from '@app/services/userManagementService';
 import { alert } from '@app/components/toast';
-import { useLicense } from '@app/contexts/LicenseContext';
+import { useOptionalLicense } from '@app/contexts/LicenseContext';
 import { resyncExistingLicense } from '@app/utils/licenseCheckoutUtils';
 
 export interface UpdateSeatsOptions {
@@ -27,7 +28,9 @@ interface UpdateSeatsProviderProps {
 
 export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({ children }) => {
   const { t } = useTranslation();
-  const { refetchLicense } = useLicense();
+  const location = useLocation();
+  // Use optional hook - won't throw during setup wizard when license provider isn't needed
+  const license = useOptionalLicense();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentSeats, setCurrentSeats] = useState<number>(1);
@@ -36,6 +39,20 @@ export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({ childr
 
   // Handle return from Stripe billing portal
   useEffect(() => {
+    // CRITICAL FIX: Don't run billing check on auth routes to prevent race conditions
+    // during SAML/OAuth callback. This check only matters after successful billing
+    // portal redirects, which never happen on auth routes.
+    const isAuthRoute =
+      location.pathname === '/login' ||
+      location.pathname === '/signup' ||
+      location.pathname === '/auth/callback' ||
+      location.pathname.startsWith('/invite/');
+
+    if (isAuthRoute) {
+      console.log('[UpdateSeatsContext] On auth route, skipping billing return check');
+      return;
+    }
+
     const handleBillingReturn = async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const seatsUpdated = urlParams.get('seats_updated');
@@ -58,7 +75,7 @@ export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({ childr
             console.log('License synced successfully after seat update');
 
             // Refresh global license context
-            await refetchLicense();
+            await license?.refetchLicense();
 
             // Get updated license info for notification
             const updatedLicense = await licenseService.getLicenseInfo();
@@ -89,8 +106,12 @@ export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({ childr
       }
     };
 
-    handleBillingReturn();
-  }, [t, refetchLicense]);
+    // CRITICAL FIX: Properly handle async function and catch errors
+    handleBillingReturn().catch((error) => {
+      console.error('[UpdateSeatsContext] Error in billing return handler:', error);
+      // Don't throw - this is initialization, should not block rendering
+    });
+  }, [t, location.pathname, license]);
 
   const openUpdateSeats = useCallback(async (options: UpdateSeatsOptions = {}) => {
     try {
@@ -143,8 +164,8 @@ export const UpdateSeatsProvider: React.FC<UpdateSeatsProviderProps> = ({ childr
     setCurrentOptions({});
 
     // Refetch license after modal closes to update UI
-    refetchLicense();
-  }, [refetchLicense]);
+    license?.refetchLicense();
+  }, [license]);
 
   const handleUpdateSeats = useCallback(
     async (newSeatCount: number): Promise<string> => {

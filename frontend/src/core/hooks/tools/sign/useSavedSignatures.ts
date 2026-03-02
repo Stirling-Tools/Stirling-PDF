@@ -1,38 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { signatureStorageService, type StorageType } from '@app/services/signatureStorageService';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
+import type {
+  SavedSignature,
+  SavedSignaturePayload,
+  SavedSignatureType,
+  SignatureScope,
+} from '@app/types/signature';
 
 export const MAX_SAVED_SIGNATURES_BACKEND = 20; // Backend limit per user
 export const MAX_SAVED_SIGNATURES_LOCALSTORAGE = 10; // LocalStorage limit
 
-export type SavedSignatureType = 'canvas' | 'image' | 'text';
-export type SignatureScope = 'personal' | 'shared' | 'localStorage';
-
-export type SavedSignaturePayload =
-  | {
-      type: 'canvas';
-      dataUrl: string;
-    }
-  | {
-      type: 'image';
-      dataUrl: string;
-    }
-  | {
-      type: 'text';
-      dataUrl: string;
-      signerName: string;
-      fontFamily: string;
-      fontSize: number;
-      textColor: string;
-    };
-
-export type SavedSignature = SavedSignaturePayload & {
-  id: string;
-  label: string;
-  scope: SignatureScope;
-  createdAt: number;
-  updatedAt: number;
-};
+export type { SavedSignature, SavedSignaturePayload, SavedSignatureType, SignatureScope };
 
 export type AddSignatureResult =
   | { success: true; signature: SavedSignature }

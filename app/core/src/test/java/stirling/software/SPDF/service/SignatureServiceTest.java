@@ -20,6 +20,8 @@ import org.mockito.MockedStatic;
 import stirling.software.SPDF.model.SignatureFile;
 import stirling.software.common.configuration.InstallationPathConfig;
 
+import tools.jackson.databind.json.JsonMapper;
+
 class SignatureServiceTest {
 
     @TempDir Path tempDir;
@@ -53,7 +55,7 @@ class SignatureServiceTest {
                     .thenReturn(tempDir.toString());
 
             // Initialize the service with our temp directory
-            signatureService = new SharedSignatureService();
+            signatureService = new SharedSignatureService(JsonMapper.builder().build());
         }
     }
 

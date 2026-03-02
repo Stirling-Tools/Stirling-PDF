@@ -105,7 +105,7 @@ describe('Convert Tool Integration Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Setup default apiClient mock
-    mockedApiClient.post = vi.fn();
+    mockedApiClient.post = vi.fn() as any;
   });
 
   afterEach(() => {
@@ -150,7 +150,8 @@ describe('Convert Tool Integration Tests', () => {
           includeAllRecipients: false
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: '',
+          strict: false
         },
         pdfxOptions: {
           outputFormat: 'pdfx'
@@ -191,7 +192,7 @@ describe('Convert Tool Integration Tests', () => {
       expect(result.current.downloadUrl).toBeTruthy();
       expect(result.current.downloadFilename).toBe('test.png');
       expect(result.current.isLoading).toBe(false);
-      expect(result.current.errorMessage).not.toBe(null);
+      expect(result.current.errorMessage).toBe(null);
     });
 
     test('should handle API error responses correctly', async () => {
@@ -232,7 +233,8 @@ describe('Convert Tool Integration Tests', () => {
           includeAllRecipients: false
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: '',
+          strict: false
         },
         pdfxOptions: {
           outputFormat: 'pdfx'
@@ -292,7 +294,8 @@ describe('Convert Tool Integration Tests', () => {
           includeAllRecipients: false
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: '',
+          strict: false
         },
         pdfxOptions: {
           outputFormat: 'pdfx'
@@ -361,7 +364,8 @@ describe('Convert Tool Integration Tests', () => {
           includeAllRecipients: false
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: '',
+          strict: false
         },
         pdfxOptions: {
           outputFormat: 'pdfx'
@@ -434,7 +438,8 @@ describe('Convert Tool Integration Tests', () => {
           includeAllRecipients: false
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: '',
+          strict: false
         },
         pdfxOptions: {
           outputFormat: 'pdfx'
@@ -473,7 +478,7 @@ describe('Convert Tool Integration Tests', () => {
       expect(result.current.downloadUrl).toBeTruthy();
       expect(result.current.downloadFilename).toBe('test.csv');
       expect(result.current.isLoading).toBe(false);
-      expect(result.current.errorMessage).not.toBe(null);
+      expect(result.current.errorMessage).toBe(null);
     });
 
     test('should handle complete unsupported conversion workflow', async () => {
@@ -505,7 +510,8 @@ describe('Convert Tool Integration Tests', () => {
           includeAllRecipients: false
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: '',
+          strict: false
         },
         pdfxOptions: {
           outputFormat: 'pdfx'
@@ -572,7 +578,8 @@ describe('Convert Tool Integration Tests', () => {
           includeAllRecipients: false
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: '',
+          strict: false
         },
         pdfxOptions: {
           outputFormat: 'pdfx'
@@ -636,7 +643,8 @@ describe('Convert Tool Integration Tests', () => {
           includeAllRecipients: false
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: '',
+          strict: false
         },
         pdfxOptions: {
           outputFormat: 'pdfx'
@@ -702,7 +710,8 @@ describe('Convert Tool Integration Tests', () => {
           includeAllRecipients: false
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: '',
+          strict: false
         },
         pdfxOptions: {
           outputFormat: 'pdfx'
@@ -765,7 +774,8 @@ describe('Convert Tool Integration Tests', () => {
           includeAllRecipients: false
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: '',
+          strict: false
         },
         pdfxOptions: {
           outputFormat: 'pdfx'
@@ -834,7 +844,8 @@ describe('Convert Tool Integration Tests', () => {
           includeAllRecipients: false
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: '',
+          strict: false
         },
         pdfxOptions: {
           outputFormat: 'pdfx'
@@ -902,7 +913,8 @@ describe('Convert Tool Integration Tests', () => {
           includeAllRecipients: false
         },
         pdfaOptions: {
-          outputFormat: ''
+          outputFormat: '',
+          strict: false
         },
         pdfxOptions: {
           outputFormat: 'pdfx'

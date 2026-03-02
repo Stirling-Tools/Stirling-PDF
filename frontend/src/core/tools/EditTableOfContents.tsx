@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { downloadFile } from '@app/services/downloadService';
 import MenuBookRoundedIcon from '@mui/icons-material/MenuBookRounded';
 import { alert } from '@app/components/toast';
 import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
@@ -191,14 +192,7 @@ const EditTableOfContents = (props: BaseToolProps) => {
   const exportJsonCallback = () => {
     const data = JSON.stringify(serializeBookmarkNodes(base.params.parameters.bookmarks), null, 2);
     const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = 'bookmarks.json';
-    document.body.appendChild(anchor);
-    anchor.click();
-    document.body.removeChild(anchor);
-    URL.revokeObjectURL(url);
+    void downloadFile({ data: blob, filename: 'bookmarks.json' });
     alert({
       title: t('editTableOfContents.messages.exported', 'JSON download ready'),
       alertType: 'success',

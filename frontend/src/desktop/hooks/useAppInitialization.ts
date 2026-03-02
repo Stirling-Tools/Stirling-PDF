@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useOpenedFile } from '@app/hooks/useOpenedFile';
 import { fileOpenService } from '@app/services/fileOpenService';
 import { useFileManagement } from '@app/contexts/file/fileHooks';
+import { createQuickKey } from '@app/types/fileContext';
 
 /**
  * App initialization hook
@@ -11,10 +12,10 @@ import { useFileManagement } from '@app/contexts/file/fileHooks';
  */
 export function useAppInitialization(): void {
   // Get file management actions
-  const { addFiles } = useFileManagement();
+  const { addFiles, updateStirlingFileStub } = useFileManagement();
 
   // Handle files opened with app (Tauri mode)
-  const { openedFilePaths, loading: openedFileLoading } = useOpenedFile();
+  const { openedFilePaths, loading: openedFileLoading, consumeOpenedFilePaths } = useOpenedFile();
 
   // Load opened files and add directly to FileContext
   useEffect(() => {
@@ -23,29 +24,50 @@ export function useAppInitialization(): void {
     }
 
     const loadOpenedFiles = async () => {
+      const filePaths = consumeOpenedFilePaths();
+      if (filePaths.length === 0) {
+        return;
+      }
       try {
-        const filesArray: File[] = [];
+        const loadedFiles = (
+          await Promise.all(
+            filePaths.map(async (filePath) => {
+              try {
+                const fileData = await fileOpenService.readFileAsArrayBuffer(filePath);
+                if (!fileData) return null;
 
-        await Promise.all(
-          openedFilePaths.map(async (filePath) => {
-            try {
-              const fileData = await fileOpenService.readFileAsArrayBuffer(filePath);
-              if (fileData) {
                 const file = new File([fileData.arrayBuffer], fileData.fileName, {
                   type: 'application/pdf'
                 });
-                filesArray.push(file);
-                console.log('[Desktop] Loaded file:', fileData.fileName);
-              }
-            } catch (error) {
-              console.error('[Desktop] Failed to load file:', filePath, error);
-            }
-          })
-        );
 
-        if (filesArray.length > 0) {
-          await addFiles(filesArray);
-          console.log(`[Desktop] ${filesArray.length} opened file(s) added to FileContext`);
+                console.log('[Desktop] Loaded file:', fileData.fileName);
+
+                return {
+                  file,
+                  filePath,
+                  quickKey: createQuickKey(file),
+                };
+              } catch (error) {
+                console.error('[Desktop] Failed to load file:', filePath, error);
+                return null;
+              }
+            })
+          )
+        ).filter((entry): entry is { file: File; filePath: string; quickKey: string } => Boolean(entry));
+
+        if (loadedFiles.length > 0) {
+          const filesArray = loadedFiles.map(entry => entry.file);
+          const quickKeyToPath = new Map(loadedFiles.map(entry => [entry.quickKey, entry.filePath]));
+
+          const addedFiles = await addFiles(filesArray);
+          addedFiles.forEach(file => {
+            const localFilePath = quickKeyToPath.get(file.quickKey);
+            if (localFilePath) {
+              updateStirlingFileStub(file.fileId, { localFilePath });
+            }
+          });
+
+          console.log(`[Desktop] ${loadedFiles.length} opened file(s) added to FileContext`);
         }
       } catch (error) {
         console.error('[Desktop] Failed to load opened files:', error);
@@ -53,7 +75,7 @@ export function useAppInitialization(): void {
     };
 
     loadOpenedFiles();
-  }, [openedFilePaths, openedFileLoading, addFiles]);
+  }, [openedFilePaths, openedFileLoading, addFiles, updateStirlingFileStub, consumeOpenedFilePaths]);
 }
 
 export function useSetupCompletion(): (completed: boolean) => void {

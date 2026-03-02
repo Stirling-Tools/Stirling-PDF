@@ -14,6 +14,8 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { ToolId } from "@app/types/toolId";
 import { getToolDisabledReason, getDisabledLabel } from "@app/components/tools/fullscreen/shared";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { CloudBadge } from "@app/components/shared/CloudBadge";
+import { useToolCloudStatus } from "@app/hooks/useToolCloudStatus";
 
 interface ToolButtonProps {
   id: ToolId;
@@ -37,6 +39,10 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
   const binding = hotkeys[id];
   const { getToolNavigation } = useToolNavigation();
   const fav = isFavorite(id as ToolId);
+
+  // Check if this tool will route to SaaS backend (desktop only)
+  const endpointName = tool.endpoints?.[0];
+  const usesCloud = useToolCloudStatus(endpointName);
 
   const handleClick = (id: ToolId) => {
     if (isUnavailable) return;
@@ -97,6 +103,9 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
             >
               {t('toolPanel.alpha', 'Alpha')}
             </Badge>
+          )}
+          {usesCloud && !isUnavailable && (
+            <CloudBadge />
           )}
         </div>
         {matchedSynonym && (

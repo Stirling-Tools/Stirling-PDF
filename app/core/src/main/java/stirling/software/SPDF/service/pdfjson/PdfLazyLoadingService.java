@@ -18,8 +18,6 @@ import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +35,8 @@ import stirling.software.SPDF.model.json.PdfJsonTextElement;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.util.ExceptionUtils;
+
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Service for lazy loading PDF pages. Caches PDF documents and extracts pages on-demand to reduce
@@ -255,7 +255,8 @@ public class PdfLazyLoadingService {
 
     /** Schedules automatic cleanup of cached documents after 30 minutes. */
     private void scheduleDocumentCleanup(String jobId) {
-        new Thread(
+        Thread.ofVirtual()
+                .start(
                         () -> {
                             try {
                                 Thread.sleep(TimeUnit.MINUTES.toMillis(30));
@@ -264,8 +265,7 @@ public class PdfLazyLoadingService {
                             } catch (InterruptedException e) {
                                 Thread.currentThread().interrupt();
                             }
-                        })
-                .start();
+                        });
     }
 
     /**

@@ -372,7 +372,6 @@ const Annotate = (_props: BaseToolProps) => {
     annotationApiRef,
     deriveToolFromAnnotation,
     activeToolRef,
-    manualToolSwitch,
     setActiveTool,
     setSelectedTextDraft,
     setSelectedFontSize,

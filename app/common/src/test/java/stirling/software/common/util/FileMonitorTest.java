@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
+import java.util.List;
 import java.util.function.Predicate;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +35,8 @@ class FileMonitorTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        when(runtimePathConfig.getPipelineWatchedFoldersPath()).thenReturn(tempDir.toString());
+        when(runtimePathConfig.getPipelineWatchedFoldersPaths())
+                .thenReturn(List.of(tempDir.toString()));
 
         // This mock is used in all tests except testPathFilter
         // We use lenient to avoid UnnecessaryStubbingException in that test

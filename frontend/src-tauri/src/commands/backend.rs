@@ -2,7 +2,7 @@ use tauri_plugin_shell::ShellExt;
 use tauri::Manager;
 use std::sync::Mutex;
 use std::path::{Path, PathBuf};
-use crate::utils::add_log;
+use crate::utils::{add_log, app_data_dir};
 use crate::state::connection_state::{AppConnectionState, ConnectionMode};
 
 // Store backend process handle and port globally
@@ -168,16 +168,7 @@ fn copy_dir_recursive(src: &Path, dest: &Path) -> std::io::Result<()> {
 // Create, configure and run the Java command to run Stirling-PDF JAR
 fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &PathBuf) -> Result<(), String> {
     // Get platform-specific application data directory for Tauri mode
-    let app_data_dir = if cfg!(target_os = "macos") {
-        let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
-        PathBuf::from(home).join("Library").join("Application Support").join("Stirling-PDF")
-    } else if cfg!(target_os = "windows") {
-        let appdata = std::env::var("APPDATA").unwrap_or_else(|_| std::env::temp_dir().to_string_lossy().to_string());
-        PathBuf::from(appdata).join("Stirling-PDF")
-    } else {
-        let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
-        PathBuf::from(home).join(".config").join("Stirling-PDF")
-    };
+    let app_data_dir = app_data_dir();
 
     // Create subdirectories for different purposes
     let config_dir = app_data_dir.join("configs");

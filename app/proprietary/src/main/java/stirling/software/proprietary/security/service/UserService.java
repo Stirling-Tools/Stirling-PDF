@@ -67,6 +67,7 @@ public class UserService implements UserServiceInterface {
 
     private final ApplicationProperties.Security.OAUTH2 oAuth2;
 
+    @Transactional
     public void processSSOPostLogin(
             String username,
             String ssoProviderId,

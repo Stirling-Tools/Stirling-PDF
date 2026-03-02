@@ -33,7 +33,8 @@ public class PersistentAuditEvent {
     private String principal;
     private String type;
 
-    @Lob private String data; // JSON blob
+    @Column(columnDefinition = "text")
+    private String data; // JSON blob
 
     private Instant timestamp;
 }

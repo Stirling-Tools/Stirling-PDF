@@ -7,16 +7,15 @@
         "src/proprietary/*",
         "src/core/*"
       ],
-      "@desktop/*": ["src/desktop/*"],
       "@proprietary/*": ["src/proprietary/*"],
       "@core/*": ["src/core/*"]
     }
   },
-  "exclude": [
-    "src/core/**/*.test.ts*",
-    "src/core/**/*.spec.ts*",
-    "src/proprietary/**/*.test.ts*",
-    "src/proprietary/**/*.spec.ts*",
-    "node_modules"
+  "include": [
+    "src/*.js",
+    "src/*.ts",
+    "src/*.tsx",
+    "src/core/setupTests.ts",
+    "src/desktop"
   ]
 }

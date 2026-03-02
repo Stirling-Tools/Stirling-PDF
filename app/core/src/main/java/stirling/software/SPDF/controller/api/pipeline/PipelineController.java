@@ -14,10 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
@@ -33,6 +29,10 @@ import stirling.software.common.annotations.api.PipelineApi;
 import stirling.software.common.service.PostHogService;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.ObjectMapper;
 
 @PipelineApi
 @Slf4j
@@ -54,7 +54,7 @@ public class PipelineController {
                             + "Users provide files and a JSON configuration defining the sequence of operations to perform. "
                             + "Input:PDF Output:PDF/ZIP Type:MIMO")
     public ResponseEntity<byte[]> handleData(@ModelAttribute HandleDataRequest request)
-            throws JsonMappingException, JsonProcessingException {
+            throws DatabindException, JacksonException {
         MultipartFile[] files = request.getFileInput();
         String jsonString = request.getJson();
         if (files == null) {

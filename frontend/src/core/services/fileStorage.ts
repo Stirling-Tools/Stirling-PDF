@@ -335,10 +335,10 @@ class FileStorageService {
    * Get storage statistics
    */
   async getStorageStats(): Promise<StorageStats> {
-    let used = 0;
+    let used: number;
+    let fileCount: number;
     let available = 0;
     let quota: number | undefined;
-    let fileCount = 0;
 
     try {
       // Get browser quota for context

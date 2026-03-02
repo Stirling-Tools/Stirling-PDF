@@ -12,8 +12,14 @@ const FileActions: React.FC = () => {
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
   const DownloadIcon = icons.download;
-  const { recentFiles, selectedFileIds, filteredFiles, onSelectAll, onDeleteSelected, onDownloadSelected } =
-    useFileManagerContext();
+  const {
+    recentFiles,
+    selectedFileIds,
+    filteredFiles,
+    onSelectAll,
+    onDeleteSelected,
+    onDownloadSelected
+  } = useFileManagerContext();
 
   const handleSelectAll = () => {
     onSelectAll();
@@ -30,6 +36,7 @@ const FileActions: React.FC = () => {
       onDownloadSelected();
     }
   };
+
 
   // Only show actions if there are files
   if (recentFiles.length === 0) {

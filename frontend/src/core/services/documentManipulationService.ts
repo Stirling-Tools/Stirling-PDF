@@ -1,4 +1,5 @@
 import { PDFDocument, PDFPage } from '@app/types/pageEditor';
+import { convertSplitPageIdsToIndexes } from '@app/components/pageEditor/utils/splitPositions';
 
 /**
  * Service for applying DOM changes to PDF document state
@@ -9,7 +10,7 @@ export class DocumentManipulationService {
    * Apply all DOM changes (rotations, splits, reordering) to document state
    * Returns single document or multiple documents if splits are present
    */
-  applyDOMChangesToDocument(pdfDocument: PDFDocument, currentDisplayOrder?: PDFDocument, splitPositions?: Set<number>): PDFDocument | PDFDocument[] {
+  applyDOMChangesToDocument(pdfDocument: PDFDocument, currentDisplayOrder?: PDFDocument, splitPositions?: Set<string>): PDFDocument | PDFDocument[] {
     // Use current display order (from React state) if provided, otherwise use original order
     const baseDocument = currentDisplayOrder || pdfDocument;
     
@@ -17,10 +18,14 @@ export class DocumentManipulationService {
     let updatedPages = baseDocument.pages.map(page => this.applyPageChanges(page));
     
     // Convert position-based splits to page-based splits for export
-    if (splitPositions && splitPositions.size > 0) {
+    const resolvedSplitIndexes = splitPositions && splitPositions.size > 0
+      ? convertSplitPageIdsToIndexes(baseDocument, splitPositions)
+      : new Set<number>();
+
+    if (resolvedSplitIndexes.size > 0) {
       updatedPages = updatedPages.map((page, index) => ({
         ...page,
-        splitAfter: splitPositions.has(index)
+        splitAfter: resolvedSplitIndexes.has(index)
       }));
     }
     
@@ -31,7 +36,7 @@ export class DocumentManipulationService {
     };
 
     // Check for splits and return multiple documents if needed
-    if (splitPositions && splitPositions.size > 0) {
+    if (resolvedSplitIndexes.size > 0) {
       return this.createSplitDocuments(finalDocument);
     }
     

@@ -24,9 +24,8 @@ const ToolChain: React.FC<ToolChainProps> = ({
   size = 'xs',
   color = 'var(--mantine-color-blue-7)'
 }) => {
-  if (!toolChain || toolChain.length === 0) return null;
-
   const { t } = useTranslation();
+  if (!toolChain || toolChain.length === 0) return null;
 
   const toolIds = toolChain.map(tool => tool.toolId);
 

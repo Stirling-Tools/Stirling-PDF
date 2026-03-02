@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.proprietary.vite.json",
+  "compilerOptions": {
+    "paths": {
+      "@app/*": [
+        "src/desktop/*",
+        "src/proprietary/*",
+        "src/core/*"
+      ],
+      "@proprietary/*": ["src/proprietary/*"],
+      "@core/*": ["src/core/*"]
+    }
+  },
+  "exclude": [
+    "src/core/**/*.test.ts*",
+    "src/core/**/*.spec.ts*",
+    "src/proprietary/**/*.test.ts*",
+    "src/proprietary/**/*.spec.ts*",
+    "node_modules"
+  ]
+}

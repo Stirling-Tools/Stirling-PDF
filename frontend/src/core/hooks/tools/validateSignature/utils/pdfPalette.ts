@@ -1,4 +1,4 @@
-import { rgb } from 'pdf-lib';
+import { rgb } from '@cantoo/pdf-lib';
 
 type RgbTuple = [number, number, number];
 

@@ -57,7 +57,7 @@ export class RotatePageCommand extends DOMCommand {
 
 export class DeletePagesCommand extends DOMCommand {
   private originalDocument: PDFDocument | null = null;
-  private originalSplitPositions: Set<number> = new Set();
+  private originalSplitPositions: Set<string> = new Set();
   private originalSelectedPages: number[] = [];
   private hasExecuted: boolean = false;
   private pageIdsToDelete: string[] = [];
@@ -68,8 +68,8 @@ export class DeletePagesCommand extends DOMCommand {
     private getCurrentDocument: () => PDFDocument | null,
     private setDocument: (doc: PDFDocument) => void,
     private setSelectedPageIds: (pageIds: string[]) => void,
-    private getSplitPositions: () => Set<number>,
-    private setSplitPositions: (positions: Set<number>) => void,
+    private getSplitPositions: () => Set<string>,
+    private setSplitPositions: (positions: Set<string>) => void,
     private getSelectedPages: () => number[],
     onAllPagesDeleted?: () => void
   ) {
@@ -133,10 +133,15 @@ export class DeletePagesCommand extends DOMCommand {
 
     // Adjust split positions
     const currentSplitPositions = this.getSplitPositions();
-    const newPositions = new Set<number>();
-    currentSplitPositions.forEach(pos => {
-      if (pos < remainingPages.length - 1) {
-        newPositions.add(pos);
+    const remainingIndexMap = new Map<string, number>();
+    remainingPages.forEach((page, index) => {
+      remainingIndexMap.set(page.id, index);
+    });
+    const newPositions = new Set<string>();
+    currentSplitPositions.forEach((pageId) => {
+      const splitIndex = remainingIndexMap.get(pageId);
+      if (splitIndex !== undefined && splitIndex < remainingPages.length - 1) {
+        newPositions.add(pageId);
       }
     });
 
@@ -261,12 +266,13 @@ export class ReorderPagesCommand extends DOMCommand {
 }
 
 export class SplitCommand extends DOMCommand {
-  private originalSplitPositions: Set<number> = new Set();
+  private originalSplitPositions: Set<string> = new Set();
 
   constructor(
-    private position: number,
-    private getSplitPositions: () => Set<number>,
-    private setSplitPositions: (positions: Set<number>) => void
+    private pageId: string,
+    private pageNumber: number,
+    private getSplitPositions: () => Set<string>,
+    private setSplitPositions: (positions: Set<string>) => void
   ) {
     super();
   }
@@ -279,10 +285,10 @@ export class SplitCommand extends DOMCommand {
     const currentPositions = this.getSplitPositions();
     const newPositions = new Set(currentPositions);
 
-    if (newPositions.has(this.position)) {
-      newPositions.delete(this.position);
+    if (newPositions.has(this.pageId)) {
+      newPositions.delete(this.pageId);
     } else {
-      newPositions.add(this.position);
+      newPositions.add(this.pageId);
     }
 
     this.setSplitPositions(newPositions);
@@ -295,8 +301,8 @@ export class SplitCommand extends DOMCommand {
 
   get description(): string {
     const currentPositions = this.getSplitPositions();
-    const willAdd = !currentPositions.has(this.position);
-    return `${willAdd ? 'Add' : 'Remove'} split at position ${this.position + 1}`;
+    const willAdd = !currentPositions.has(this.pageId);
+    return `${willAdd ? 'Add' : 'Remove'} split at position ${this.pageNumber}`;
   }
 }
 
@@ -748,43 +754,49 @@ export class InsertFilesCommand extends DOMCommand {
         console.log('Pages:', pages.length);
         console.log('ArrayBuffer size:', arrayBuffer?.byteLength || 'undefined');
 
-        if (arrayBuffer && arrayBuffer.byteLength > 0) {
-          // Extract page numbers for all pages from this file
-          const pageNumbers = pages.map(page => {
-            const pageNumMatch = page.id.match(/-page-(\d+)$/);
-            return pageNumMatch ? parseInt(pageNumMatch[1]) : 1;
-          });
+        try {
+          if (arrayBuffer && arrayBuffer.byteLength > 0) {
+            // Extract page numbers for all pages from this file
+            const pageNumbers = pages.map(page => {
+              const pageNumMatch = page.id.match(/-page-(\d+)$/);
+              return pageNumMatch ? parseInt(pageNumMatch[1]) : 1;
+            });
 
-          console.log('Generating thumbnails for page numbers:', pageNumbers);
+            console.log('Generating thumbnails for page numbers:', pageNumbers);
 
-          // Generate thumbnails for all pages from this file at once
-          const results = await thumbnailGenerationService.generateThumbnails(
-            fileId,
-            arrayBuffer,
-            pageNumbers,
-            { scale: 0.2, quality: 0.8 }
-          );
+            // Generate thumbnails for all pages from this file at once
+            const results = await thumbnailGenerationService.generateThumbnails(
+              fileId,
+              arrayBuffer,
+              pageNumbers,
+              { scale: 0.2, quality: 0.8 }
+            );
 
-          console.log('Thumbnail generation results:', results.length, 'thumbnails generated');
+            console.log('Thumbnail generation results:', results.length, 'thumbnails generated');
 
-          // Update pages with generated thumbnails
-          for (let i = 0; i < results.length && i < pages.length; i++) {
-            const result = results[i];
-            const page = pages[i];
+            // Update pages with generated thumbnails
+            for (let i = 0; i < results.length && i < pages.length; i++) {
+              const result = results[i];
+              const page = pages[i];
 
-            if (result.success) {
-              const pageIndex = updatedDocument.pages.findIndex(p => p.id === page.id);
-              if (pageIndex >= 0) {
-                updatedDocument.pages[pageIndex].thumbnail = result.thumbnail;
-                console.log('Updated thumbnail for page:', page.id);
+              if (result.success) {
+                const pageIndex = updatedDocument.pages.findIndex(p => p.id === page.id);
+                if (pageIndex >= 0) {
+                  updatedDocument.pages[pageIndex].thumbnail = result.thumbnail;
+                  console.log('Updated thumbnail for page:', page.id);
+                }
               }
             }
-          }
 
-          // Trigger re-render by updating the document
-          this.setDocument({ ...updatedDocument });
-        } else {
-          console.error('No valid ArrayBuffer found for file ID:', fileId);
+            // Trigger re-render by updating the document
+            this.setDocument({ ...updatedDocument });
+          } else {
+            console.error('No valid ArrayBuffer found for file ID:', fileId);
+          }
+        } catch (error) {
+          console.error('Failed to generate thumbnails for file:', fileId, error);
+        } finally {
+          this.fileDataMap.delete(fileId);
         }
       }
     } catch (error) {

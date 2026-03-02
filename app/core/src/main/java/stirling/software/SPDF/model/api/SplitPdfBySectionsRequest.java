@@ -2,6 +2,9 @@ package stirling.software.SPDF.model.api;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -33,6 +36,8 @@ public class SplitPdfBySectionsRequest extends PDFFile {
             defaultValue = "0",
             minimum = "0",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @Min(value = 0, message = "Horizontal divisions must be non-negative")
+    @Max(value = 50, message = "Horizontal divisions must not exceed 50")
     private int horizontalDivisions;
 
     @Schema(
@@ -40,6 +45,8 @@ public class SplitPdfBySectionsRequest extends PDFFile {
             defaultValue = "1",
             minimum = "0",
             requiredMode = Schema.RequiredMode.REQUIRED)
+    @Min(value = 0, message = "Vertical divisions must be non-negative")
+    @Max(value = 50, message = "Vertical divisions must not exceed 50")
     private int verticalDivisions;
 
     @Schema(

@@ -9,23 +9,28 @@ use commands::{
     cleanup_backend,
     clear_auth_token,
     clear_opened_files,
+    clear_refresh_token,
     clear_user_info,
     is_default_pdf_handler,
     get_auth_token,
     get_backend_port,
     get_connection_config,
     get_opened_files,
+    pop_opened_files,
+    get_refresh_token,
     get_user_info,
     is_first_launch,
     login,
     reset_setup_completion,
     save_auth_token,
+    save_refresh_token,
     save_user_info,
     set_connection_mode,
     set_as_default_pdf_handler,
     start_backend,
     start_oauth_login,
 };
+use commands::connection::apply_provisioning_if_present;
 use state::connection_state::AppConnectionState;
 use utils::{add_log, get_tauri_logs};
 use tauri_plugin_deep_link::DeepLinkExt;
@@ -51,6 +56,7 @@ pub fn run() {
     .plugin(tauri_plugin_opener::init())
     .plugin(tauri_plugin_shell::init())
     .plugin(tauri_plugin_fs::init())
+    .plugin(tauri_plugin_dialog::init())
     .plugin(tauri_plugin_http::init())
     .plugin(tauri_plugin_store::Builder::new().build())
     .plugin(tauri_plugin_deep_link::init())
@@ -113,6 +119,10 @@ pub fn run() {
         });
       }
 
+      if let Err(err) = apply_provisioning_if_present(&app.handle()) {
+        add_log(format!("⚠️ Failed to apply provisioning file: {}", err));
+      }
+
       // Start backend immediately, non-blocking
       let app_handle = app.handle().clone();
 
@@ -131,6 +141,7 @@ pub fn run() {
       start_backend,
       get_backend_port,
       get_opened_files,
+      pop_opened_files,
       clear_opened_files,
       get_tauri_logs,
       get_connection_config,
@@ -143,6 +154,9 @@ pub fn run() {
       save_auth_token,
       get_auth_token,
       clear_auth_token,
+      save_refresh_token,
+      get_refresh_token,
+      clear_refresh_token,
       save_user_info,
       get_user_info,
       clear_user_info,
@@ -159,9 +173,9 @@ pub fn run() {
           app_handle.cleanup_before_exit();
         }
         RunEvent::WindowEvent { event: WindowEvent::CloseRequested {.. }, .. } => {
-          add_log("🔄 Window close requested, cleaning up...".to_string());
-          cleanup_backend();
-          // Allow the window to close
+          add_log("🔄 Window close requested (will cleanup on actual exit)...".to_string());
+          // Don't cleanup here - let JavaScript handler prevent close if needed
+          // Backend cleanup happens in ExitRequested when window actually closes
         }
         RunEvent::WindowEvent { event: WindowEvent::DragDrop(drag_drop_event), .. } => {
           use tauri::DragDropEvent;

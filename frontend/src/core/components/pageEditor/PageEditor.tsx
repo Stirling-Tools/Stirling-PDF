@@ -1,9 +1,9 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Text, Center, Box, LoadingOverlay, Stack } from "@mantine/core";
 import { useFileState, useFileActions } from "@app/contexts/FileContext";
-import { useNavigationGuard } from "@app/contexts/NavigationContext";
+import { useNavigationGuard, useNavigationState } from "@app/contexts/NavigationContext";
 import { usePageEditor } from "@app/contexts/PageEditorContext";
-import { PageEditorFunctions } from "@app/types/pageEditor";
+import { PageEditorFunctions, PDFPage } from "@app/types/pageEditor";
 // Thumbnail generation is now handled by individual PageThumbnail components
 import '@app/components/pageEditor/PageEditor.module.css';
 import PageThumbnail from '@app/components/pageEditor/PageThumbnail';
@@ -23,6 +23,8 @@ import { useUndoManagerState } from "@app/components/pageEditor/hooks/useUndoMan
 import { usePageSelectionManager } from "@app/components/pageEditor/hooks/usePageSelectionManager";
 import { usePageEditorCommands } from "@app/components/pageEditor/hooks/useEditorCommands";
 import { usePageEditorExport } from "@app/components/pageEditor/hooks/usePageEditorExport";
+import { useThumbnailGeneration } from "@app/hooks/useThumbnailGeneration";
+import { convertSplitPageIdsToIndexes } from '@app/components/pageEditor/utils/splitPositions';
 
 export interface PageEditorProps {
   onFunctionsReady?: (functions: PageEditorFunctions) => void;
@@ -38,9 +40,31 @@ const PageEditor = ({
 
   // Navigation guard for unsaved changes
   const { setHasUnsavedChanges } = useNavigationGuard();
+  const navigationState = useNavigationState();
 
   // Get PageEditor coordination functions
-  const { updateFileOrderFromPages, fileOrder, reorderedPages, clearReorderedPages, updateCurrentPages } = usePageEditor();
+  const {
+    updateFileOrderFromPages,
+    fileOrder,
+    reorderedPages,
+    clearReorderedPages,
+    updateCurrentPages,
+    savePersistedDocument,
+    clearPersistedDocument,
+  } = usePageEditor();
+
+  const [visiblePageIds, setVisiblePageIds] = useState<string[]>([]);
+  const thumbnailRequestsRef = useRef<Set<string>>(new Set());
+  const { requestThumbnail, getThumbnailFromCache } = useThumbnailGeneration();
+  const handleVisibleItemsChange = useCallback((items: PDFPage[]) => {
+    setVisiblePageIds(prev => {
+      const ids = items.map(item => item.id);
+      if (prev.length === ids.length && prev.every((id, index) => id === ids[index])) {
+        return prev;
+      }
+      return ids;
+    });
+  }, []);
 
   // Zoom state management
   const [zoomLevel, setZoomLevel] = useState(1.0);
@@ -149,6 +173,142 @@ const PageEditor = ({
     updateCurrentPages,
   });
 
+  const displayDocumentRef = useRef(displayDocument);
+  useEffect(() => {
+    displayDocumentRef.current = displayDocument;
+  }, [displayDocument]);
+
+  const queueThumbnailRequestsForPages = useCallback((pageIds: string[]) => {
+    const doc = displayDocumentRef.current;
+    if (!doc || pageIds.length === 0) return;
+
+    const loadedCount = doc.pages.filter(p => p.thumbnail).length;
+    const pending = thumbnailRequestsRef.current.size;
+    const MAX_CONCURRENT_THUMBNAILS = loadedCount < 8 ? 1
+      : doc.totalPages < 20 ? 3
+      : doc.totalPages < 50 ? 5
+      : 8;
+    const available = Math.max(0, MAX_CONCURRENT_THUMBNAILS - pending);
+    if (available === 0) return;
+
+    const toLoad: string[] = [];
+    for (const pageId of pageIds) {
+      if (toLoad.length >= available) break;
+      if (thumbnailRequestsRef.current.has(pageId)) continue;
+      const page = doc.pages.find(p => p.id === pageId);
+      if (!page || page.thumbnail) continue;
+      toLoad.push(pageId);
+    }
+
+    if (toLoad.length === 0) return;
+
+    toLoad.forEach(pageId => {
+      const page = doc.pages.find(p => p.id === pageId);
+      if (!page) return;
+
+      const cached = getThumbnailFromCache(pageId);
+      if (cached) {
+        thumbnailRequestsRef.current.add(pageId);
+        Promise.resolve(cached)
+          .then(cache => {
+            setEditedDocument(prev => {
+              if (!prev) return prev;
+              const pageIndex = prev.pages.findIndex(p => p.id === pageId);
+              if (pageIndex === -1) return prev;
+
+              const updated = [...prev.pages];
+              updated[pageIndex] = { ...prev.pages[pageIndex], thumbnail: cache };
+              return { ...prev, pages: updated };
+            });
+          })
+          .finally(() => {
+            thumbnailRequestsRef.current.delete(pageId);
+          });
+        return;
+      }
+
+      const fileId = page.originalFileId;
+      if (!fileId) return;
+      const file = selectors.getFile(fileId);
+      if (!file) return;
+
+      thumbnailRequestsRef.current.add(pageId);
+      requestThumbnail(pageId, file, page.originalPageNumber || page.pageNumber)
+        .then(thumbnail => {
+          if (thumbnail) {
+            setEditedDocument(prev => {
+              if (!prev) return prev;
+              const pageIndex = prev.pages.findIndex(p => p.id === pageId);
+              if (pageIndex === -1) return prev;
+
+              const updated = [...prev.pages];
+              updated[pageIndex] = { ...prev.pages[pageIndex], thumbnail };
+              return { ...prev, pages: updated };
+            });
+          }
+        })
+        .catch((error) => {
+          console.error('[Thumbnail Loading] Error:', error);
+        })
+        .finally(() => {
+          thumbnailRequestsRef.current.delete(pageId);
+        });
+    });
+  }, [
+    getThumbnailFromCache,
+    requestThumbnail,
+    selectors,
+    setEditedDocument
+  ]);
+
+  useEffect(() => {
+    if (!displayDocument) {
+      return;
+    }
+    queueThumbnailRequestsForPages(visiblePageIds);
+  }, [displayDocument, visiblePageIds, queueThumbnailRequestsForPages]);
+
+  const lastInitialDocumentSignatureRef = useRef<string | null>(null);
+  const displayDocumentId = displayDocument?.id ?? null;
+  const displayDocumentLength = displayDocument?.pages.length ?? 0;
+  useEffect(() => {
+    if (!displayDocument || displayDocument.pages.length === 0) {
+      lastInitialDocumentSignatureRef.current = null;
+      return;
+    }
+
+    const signature = `${displayDocumentId}:${displayDocumentLength}`;
+    if (lastInitialDocumentSignatureRef.current === signature) {
+      return;
+    }
+
+    const INITIAL_VISIBLE_PAGE_COUNT = 8;
+    const initialIds = displayDocument.pages
+      .slice(0, INITIAL_VISIBLE_PAGE_COUNT)
+      .map(page => page.id);
+
+    queueThumbnailRequestsForPages(initialIds);
+    lastInitialDocumentSignatureRef.current = signature;
+  }, [displayDocumentId, displayDocumentLength, queueThumbnailRequestsForPages]);
+
+  useEffect(() => {
+    setVisiblePageIds([]);
+  }, [displayDocumentId]);
+
+  useEffect(() => {
+    return () => {
+      if (navigationState.workbench !== 'pageEditor') {
+        return;
+      }
+
+      const doc = displayDocumentRef.current;
+      if (doc && doc.pages.length > 0) {
+        const signature = doc.pages.map(page => page.id).join(',');
+        savePersistedDocument(doc, signature);
+      }
+    };
+  }, [savePersistedDocument, navigationState.workbench]);
+
   // UI state management
   const {
     selectionMode, selectedPageIds, movingPage, isAnimating, splitPositions, exportLoading,
@@ -229,6 +389,8 @@ const PageEditor = ({
     exportLoading,
     setExportLoading,
     setSplitPositions,
+    clearPersistedDocument,
+    updateCurrentPages,
   });
 
   // Derived values for right rail and usePageEditorRightRailButtons (must be after displayDocument)
@@ -344,13 +506,90 @@ const PageEditor = ({
   // Track color assignments by insertion order (files keep their color)
   const fileColorIndexMap = useFileColorMap(orderedFileIds);
 
+  // Memoize renderItem to prevent DragDropGrid's React.memo from blocking updates
+  // when selectedPageIds changes
+  const renderItemCallback = useCallback((
+    page: PDFPage,
+    index: number,
+    refs: React.MutableRefObject<Map<string, HTMLDivElement>>,
+    boxSelectedIds: string[],
+    clearBoxSelection: () => void,
+    activeDragIds: string[],
+    justMoved: boolean,
+    dragHandleProps?: any,
+    zoomLevelParam?: number
+  ) => {
+    gridItemRefsRef.current = refs;
+    const fileColorIndex = page.originalFileId ? fileColorIndexMap.get(page.originalFileId) ?? 0 : 0;
+    const isBoxSelected = boxSelectedIds.includes(page.id);
+    return (
+      <PageThumbnail
+        key={page.id}
+        page={page}
+        index={index}
+        totalPages={displayDocument?.pages.length || 0}
+        fileColorIndex={fileColorIndex}
+        selectedPageIds={selectedPageIds}
+        selectionMode={selectionMode}
+        movingPage={movingPage}
+        isAnimating={isAnimating}
+        isBoxSelected={isBoxSelected}
+        clearBoxSelection={clearBoxSelection}
+        activeDragIds={activeDragIds}
+        justMoved={justMoved}
+        pageRefs={refs}
+        dragHandleProps={dragHandleProps}
+        onReorderPages={handleReorderPages}
+        onTogglePage={togglePage}
+        onAnimateReorder={animateReorder}
+        onExecuteCommand={executeCommand}
+        onSetStatus={() => {}}
+        onSetMovingPage={setMovingPage}
+        onDeletePage={handleDeletePage}
+        createRotateCommand={createRotateCommand}
+        createDeleteCommand={createDeleteCommand}
+        createSplitCommand={createSplitCommand}
+        pdfDocument={displayDocument!}
+        setPdfDocument={setEditedDocument}
+        splitPositions={splitPositions}
+        onInsertFiles={handleInsertFiles}
+        zoomLevel={zoomLevelParam || zoomLevel}
+      />
+    );
+  }, [
+    selectedPageIds,
+    selectionMode,
+    movingPage,
+    isAnimating,
+    displayDocument,
+    fileColorIndexMap,
+    handleReorderPages,
+    togglePage,
+    animateReorder,
+    executeCommand,
+    setMovingPage,
+    handleDeletePage,
+    createRotateCommand,
+    createDeleteCommand,
+    createSplitCommand,
+    setEditedDocument,
+    splitPositions,
+    handleInsertFiles,
+    zoomLevel,
+  ]);
+
   return (
-    <Box
+    <div
       ref={containerRef}
-      pos="relative"
       data-scrolling-container="true"
       onMouseEnter={() => setIsContainerHovered(true)}
       onMouseLeave={() => setIsContainerHovered(false)}
+      style={{
+        height: '100%',
+        overflow: 'auto',
+        position: 'relative',
+        width: '100%',
+      }}
     >
       <LoadingOverlay visible={globalProcessing && !initialDocument} />
 
@@ -372,8 +611,7 @@ const PageEditor = ({
       )}
 
       {displayDocument && (
-        <Box ref={gridContainerRef} p={0} pt="2rem" pb="15rem" style={{ position: 'relative' }}>
-
+        <Box ref={gridContainerRef} p={0} pt="2rem" pb="4rem" style={{ position: 'relative' }}>
             {/* Split Lines Overlay */}
             <div
               style={{
@@ -394,8 +632,9 @@ const PageEditor = ({
               }
 
               const containerRect = containerEl.getBoundingClientRect();
+              const splitIndexes = convertSplitPageIdsToIndexes(displayDocument, splitPositions);
 
-              return Array.from(splitPositions).map((position) => {
+              return Array.from(splitIndexes).map((position) => {
                 const currentPage = displayedPages[position];
                 if (!currentPage) {
                   return null;
@@ -450,6 +689,8 @@ const PageEditor = ({
             onReorderPages={handleReorderPages}
             zoomLevel={zoomLevel}
             selectedFileIds={selectedFileIds}
+            selectedPageIds={selectedPageIds}
+            onVisibleItemsChange={handleVisibleItemsChange}
             getThumbnailData={(pageId) => {
               const page = displayDocument.pages.find(p => p.id === pageId);
               if (!page?.thumbnail) return null;
@@ -458,50 +699,10 @@ const PageEditor = ({
                 rotation: page.rotation || 0
               };
             }}
-            renderItem={(page, index, refs, boxSelectedIds, clearBoxSelection, _getBoxSelection, _activeId, activeDragIds, justMoved, _isOver, dragHandleProps, zoomLevel) => {
-              gridItemRefsRef.current = refs;
-              const fileColorIndex = page.originalFileId ? fileColorIndexMap.get(page.originalFileId) ?? 0 : 0;
-              const isBoxSelected = boxSelectedIds.includes(page.id);
-              return (
-                <PageThumbnail
-                  key={page.id}
-                  page={page}
-                  index={index}
-                  totalPages={displayDocument.pages.length}
-                  originalFile={(page as any).originalFileId ? selectors.getFile((page as any).originalFileId) : undefined}
-                  fileColorIndex={fileColorIndex}
-                  selectedPageIds={selectedPageIds}
-                  selectionMode={selectionMode}
-                  movingPage={movingPage}
-                  isAnimating={isAnimating}
-                  isBoxSelected={isBoxSelected}
-                  clearBoxSelection={clearBoxSelection}
-                  activeDragIds={activeDragIds}
-                  justMoved={justMoved}
-                  pageRefs={refs}
-                  dragHandleProps={dragHandleProps}
-                  onReorderPages={handleReorderPages}
-                  onTogglePage={togglePage}
-                  onAnimateReorder={animateReorder}
-                  onExecuteCommand={executeCommand}
-                  onSetStatus={() => {}}
-                  onSetMovingPage={setMovingPage}
-                  onDeletePage={handleDeletePage}
-                  createRotateCommand={createRotateCommand}
-                  createDeleteCommand={createDeleteCommand}
-                  createSplitCommand={createSplitCommand}
-                  pdfDocument={displayDocument}
-                  setPdfDocument={setEditedDocument}
-                  splitPositions={splitPositions}
-                  onInsertFiles={handleInsertFiles}
-                  zoomLevel={zoomLevel}
-                />
-              );
-            }}
+            renderItem={renderItemCallback}
           />
         </Box>
       )}
-
 
       <NavigationWarningModal
         onApplyAndContinue={async () => {
@@ -511,8 +712,7 @@ const PageEditor = ({
           await onExportAll();
         }}
       />
-
-    </Box>
+    </div>
   );
 };
 

@@ -21,6 +21,8 @@ services:
       SECURITY_ENABLELOGIN: "false"
       PROCESS_EXECUTOR_AUTO_UNO_SERVER: "true"
       PROCESS_EXECUTOR_SESSION_LIMIT_LIBRE_OFFICE_SESSION_LIMIT: "1"
+      # STIRLING_JVM_PROFILE: "balanced"  # Options: balanced (G1GC, default), performance (Shenandoah)
+      # JAVA_CUSTOM_OPTS: ""              # Additional JVM flags appended to the active profile
       PUID: 1002
       PGID: 1002
       UMASK: "022"

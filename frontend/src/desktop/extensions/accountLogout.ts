@@ -16,8 +16,11 @@ export function useAccountLogout() {
     try {
       await signOut();
 
-      await connectionModeService.switchToSaaS(STIRLING_SAAS_URL);
-      await connectionModeService.resetSetupCompletion().catch(() => {});
+      const currentConfig = await connectionModeService.getCurrentConfig();
+      if (!currentConfig.lock_connection_mode) {
+        await connectionModeService.switchToSaaS(STIRLING_SAAS_URL);
+        await connectionModeService.resetSetupCompletion().catch(() => {});
+      }
 
       window.history.replaceState({}, '', '/');
       window.location.reload();

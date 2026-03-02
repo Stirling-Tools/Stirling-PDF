@@ -8,7 +8,7 @@ import { documentManipulationService } from "@app/services/documentManipulationS
 import { pdfExportService } from "@app/services/pdfExportService";
 import { exportProcessedDocumentsToFiles } from "@app/services/pdfExportHelpers";
 import { FileId } from "@app/types/file";
-import { PDFDocument } from "@app/types/pageEditor";
+import { PDFDocument, PDFPage } from "@app/types/pageEditor";
 
 type FileActions = ReturnType<typeof useFileActions>["actions"];
 type FileSelectors = ReturnType<typeof useFileState>["selectors"];
@@ -16,14 +16,16 @@ type FileSelectors = ReturnType<typeof useFileState>["selectors"];
 interface UsePageEditorExportParams {
   displayDocument: PDFDocument | null;
   selectedPageIds: string[];
-  splitPositions: Set<number>;
+  splitPositions: Set<string>;
   selectedFileIds: FileId[];
   selectors: FileSelectors;
   actions: FileActions;
   setHasUnsavedChanges: (dirty: boolean) => void;
   exportLoading: boolean;
   setExportLoading: (loading: boolean) => void;
-  setSplitPositions: Dispatch<SetStateAction<Set<number>>>;
+  setSplitPositions: Dispatch<SetStateAction<Set<string>>>;
+  clearPersistedDocument: () => void;
+  updateCurrentPages: (pages: PDFPage[] | null) => void;
 }
 
 const removePlaceholderPages = (document: PDFDocument): PDFDocument => {
@@ -67,6 +69,8 @@ export const usePageEditorExport = ({
   exportLoading,
   setExportLoading,
   setSplitPositions,
+  clearPersistedDocument,
+  updateCurrentPages,
 }: UsePageEditorExportParams) => {
   const getSourceFiles = useCallback((): Map<FileId, File> | null => {
     const sourceFiles = new Map<FileId, File>();
@@ -272,11 +276,33 @@ export const usePageEditorExport = ({
       // Store source file IDs before adding new files
       const sourceFileIds = [...selectedFileIds];
 
+      // Clear all cached page state to prevent stale data from being merged
+      clearPersistedDocument();
+      updateCurrentPages(null);
+
+      // Deselect old files immediately so the view can reset before we mutate the file list
+      actions.setSelectedFiles([]);
+
+      // Remove the original files before inserting the newly generated versions
+      if (sourceFileIds.length > 0) {
+        await actions.removeFiles(sourceFileIds, true);
+      }
+
       const newStirlingFiles = await actions.addFiles(renamedFiles, {
         selectFiles: true,
       });
       if (newStirlingFiles.length > 0) {
         actions.setSelectedFiles(newStirlingFiles.map((file) => file.fileId));
+      }
+
+      if (sourceFileIds.length === 1 && newStirlingFiles.length === 1) {
+        const sourceStub = selectors.getStirlingFileStub(sourceFileIds[0]);
+        if (sourceStub?.localFilePath) {
+          actions.updateStirlingFileStub(newStirlingFiles[0].fileId, {
+            localFilePath: sourceStub.localFilePath,
+            isDirty: true
+          });
+        }
       }
 
       // Remove source files from context
@@ -300,6 +326,8 @@ export const usePageEditorExport = ({
     selectedFileIds,
     setHasUnsavedChanges,
     setExportLoading,
+    clearPersistedDocument,
+    updateCurrentPages,
   ]);
 
   return {

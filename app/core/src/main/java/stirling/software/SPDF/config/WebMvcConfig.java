@@ -82,6 +82,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
             logger.info("Tauri mode detected - enabling CORS for Tauri protocols (v1 and v2)");
             registry.addMapping("/**")
                     .allowedOriginPatterns(
+                            "http://localhost:*",
+                            "https://localhost:*",
+                            "tauri://*", // Add this for Tauri apps
                             "tauri://localhost",
                             "http://tauri.localhost",
                             "https://tauri.localhost")
@@ -106,16 +109,29 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     .allowCredentials(true)
                     .maxAge(3600);
         } else if (hasConfiguredOrigins) {
-            // Use user-configured origins
+            // Use user-configured origins + always include Tauri origins for desktop app support
             logger.info(
                     "Configuring CORS with allowed origins: {}",
                     applicationProperties.getSystem().getCorsAllowedOrigins());
 
-            String[] allowedOrigins =
-                    applicationProperties
-                            .getSystem()
-                            .getCorsAllowedOrigins()
-                            .toArray(new String[0]);
+            // Combine user-configured origins with Tauri origins
+            java.util.List<String> allOrigins =
+                    new java.util.ArrayList<>(
+                            applicationProperties.getSystem().getCorsAllowedOrigins());
+
+            // Always include Tauri origins for desktop app compatibility
+            // Tauri v1 uses tauri://localhost, v2 uses http(s)://tauri.localhost
+            if (!allOrigins.contains("tauri://localhost")) {
+                allOrigins.add("tauri://localhost");
+            }
+            if (!allOrigins.contains("http://tauri.localhost")) {
+                allOrigins.add("http://tauri.localhost");
+            }
+            if (!allOrigins.contains("https://tauri.localhost")) {
+                allOrigins.add("https://tauri.localhost");
+            }
+
+            String[] allowedOrigins = allOrigins.toArray(new String[0]);
 
             registry.addMapping("/**")
                     .allowedOriginPatterns(allowedOrigins)
@@ -141,8 +157,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     .maxAge(3600);
         } else {
             // Default to allowing all origins when nothing is configured
-            logger.info(
-                    "No CORS allowed origins configured in settings.yml (system.corsAllowedOrigins); allowing all origins.");
+            logger.debug(
+                    "No CORS allowed origins configured in settings.yml (system.corsAllowedOrigins); WebMvcConfig allowing all origins.");
             registry.addMapping("/**")
                     .allowedOriginPatterns("*")
                     .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")

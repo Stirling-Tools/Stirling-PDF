@@ -41,6 +41,14 @@ public class AddPageNumbersRequest extends PDFWithPageNums {
 
     @Schema(
             description =
+                    "Zero-padding width for page numbers (Bates Stamping). Set to 0 to disable padding",
+            minimum = "0",
+            defaultValue = "0",
+            requiredMode = RequiredMode.NOT_REQUIRED)
+    private int zeroPad = 0;
+
+    @Schema(
+            description =
                     "Position: 1-9 representing positions on the page (1=top-left, 2=top-center,"
                             + " 3=top-right, 4=middle-left, 5=middle-center, 6=middle-right,"
                             + " 7=bottom-left, 8=bottom-center, 9=bottom-right)",

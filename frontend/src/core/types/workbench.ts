@@ -6,7 +6,7 @@ export type BaseWorkbenchType = typeof BASE_WORKBENCH_TYPES[number];
 // Workbench types including custom views
 export type WorkbenchType = BaseWorkbenchType | `custom:${string}`;
 
-export const getDefaultWorkbench = (): WorkbenchType => 'fileEditor';
+export const getDefaultWorkbench = (): WorkbenchType => 'viewer';
 
 // Type guard using the same source of truth
 export const isValidWorkbench = (value: string): value is WorkbenchType => {

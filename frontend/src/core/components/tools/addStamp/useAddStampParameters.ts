@@ -22,7 +22,7 @@ export const defaultParameters: AddStampParameters = {
   stampType: 'text',
   stampText: '',
   alphabet: 'roman',
-  fontSize: 80,
+  fontSize: 40,
   rotation: 0,
   opacity: 50,
   position: 5,

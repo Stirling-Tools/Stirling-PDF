@@ -1,9 +1,9 @@
-import { PDFDocument, rgb } from 'pdf-lib';
-import { PdfAnnotationSubtype } from '@embedpdf/models';
-import { generateThumbnailWithMetadata } from '@app/utils/thumbnailUtils';
-import { createProcessedFile, createChildStub } from '@app/contexts/file/fileActions';
-import { createStirlingFile, StirlingFile, FileId, StirlingFileStub } from '@app/types/fileContext';
-import type { SignatureAPI } from '@app/components/viewer/viewerTypes';
+import {PDFDocument, rgb} from '@cantoo/pdf-lib';
+import {PdfAnnotationSubtype} from '@embedpdf/models';
+import {generateThumbnailWithMetadata} from '@app/utils/thumbnailUtils';
+import {createChildStub, createProcessedFile} from '@app/contexts/file/fileActions';
+import {createStirlingFile, FileId, StirlingFile, StirlingFileStub} from '@app/types/fileContext';
+import type {SignatureAPI} from '@app/components/viewer/viewerTypes';
 
 interface MinimalFileContextSelectors {
   getAllFileIds: () => FileId[];
@@ -38,29 +38,20 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
 
     if (signatureApiRef?.current) {
 
-      // Get actual page count from viewer
       const scrollState = getScrollState();
       const totalPages = scrollState.totalPages;
 
-      // Check only actual pages that exist in the document
       for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
         try {
           const pageAnnotations = await signatureApiRef.current.getPageAnnotations(pageIndex);
           if (pageAnnotations && pageAnnotations.length > 0) {
-            // Filter to only include annotations added in this session
             const sessionAnnotations = pageAnnotations.filter(annotation => {
-              // Check if this annotation has stored image data (indicates it was added this session)
               const hasStoredImageData = annotation.id && getImageData(annotation.id);
 
-              // Also check if it has image data directly in the annotation (new signatures)
               const hasDirectImageData = annotation.imageData || annotation.appearance ||
                                        annotation.stampData || annotation.imageSrc ||
                                        annotation.contents || annotation.data;
-
-              const isSessionAnnotation = hasStoredImageData || (hasDirectImageData && typeof hasDirectImageData === 'string' && hasDirectImageData.startsWith('data:image'));
-
-
-              return isSessionAnnotation;
+              return hasStoredImageData || (hasDirectImageData && typeof hasDirectImageData === 'string' && hasDirectImageData.startsWith('data:image'));
             });
 
             if (sessionAnnotations.length > 0) {
@@ -74,12 +65,11 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
     }
 
     // Step 2: Delete ONLY session annotations from EmbedPDF before export (they'll be rendered manually)
-    // Leave old annotations alone - they will remain as annotations in the PDF
     if (allAnnotations.length > 0 && signatureApiRef?.current) {
       for (const pageData of allAnnotations) {
         for (const annotation of pageData.annotations) {
           try {
-            await signatureApiRef.current.deleteAnnotation(annotation.id, pageData.pageIndex);
+            signatureApiRef.current.deleteAnnotation(annotation.id, pageData.pageIndex);
           } catch (deleteError) {
             console.warn(`Failed to delete annotation ${annotation.id}:`, deleteError);
           }
@@ -96,17 +86,12 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
 
     if (pdfArrayBuffer) {
 
-      // Try loading with more permissive PDF-lib options
-
-      // Convert ArrayBuffer to File
       const blob = new Blob([pdfArrayBuffer], { type: 'application/pdf' });
 
-      // Get the current file - try from originalFile first, then from all files
       let currentFile = originalFile;
       if (!currentFile) {
         const allFileIds = selectors.getAllFileIds();
         if (allFileIds.length > 0) {
-          // Use activeFileIndex if provided, otherwise default to 0
           const fileIndex = activeFileIndex !== undefined && activeFileIndex < allFileIds.length ? activeFileIndex : 0;
           const fileStub = selectors.getStirlingFileStub(allFileIds[fileIndex]);
           const fileObject = selectors.getFile(allFileIds[fileIndex]);
@@ -128,7 +113,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
         try {
           const pdfArrayBufferForFlattening = await signedFile.arrayBuffer();
 
-          // Try different loading options to handle problematic PDFs
           let pdfDoc: PDFDocument;
           try {
             pdfDoc = await PDFDocument.load(pdfArrayBufferForFlattening, {
@@ -139,7 +123,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
           } catch {
             console.warn('Failed to load with standard options, trying createProxy...');
             try {
-              // Create a fresh PDF and copy pages instead of modifying
               pdfDoc = await PDFDocument.create();
               const sourcePdf = await PDFDocument.load(pdfArrayBufferForFlattening, {
                 ignoreEncryption: true,
@@ -169,22 +152,18 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                   const rect = annotation.rect || annotation.bounds || annotation.rectangle || annotation.position;
 
                   if (rect) {
-                    // Extract original annotation position and size
                     const originalX = rect.origin?.x || rect.x || rect.left || 0;
                     const originalY = rect.origin?.y || rect.y || rect.top || 0;
                     const width = rect.size?.width || rect.width || 100;
                     const height = rect.size?.height || rect.height || 50;
 
-                    // Convert EmbedPDF coordinates to PDF-lib coordinates
                     const pdfX = originalX;
                     const pdfY = pageHeight - originalY - height;
 
 
-                    // Try to get annotation image data
                     let imageDataUrl = annotation.imageData || annotation.appearance || annotation.stampData ||
                                      annotation.imageSrc || annotation.contents || annotation.data;
 
-                    // If no image data found directly, try to get it from storage
                     if (!imageDataUrl && annotation.id) {
                       const storedImageData = getImageData(annotation.id);
                       if (storedImageData) {
@@ -192,24 +171,63 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                       }
                     }
 
-                    if (imageDataUrl && typeof imageDataUrl === 'string' && imageDataUrl.startsWith('data:image')) {
+                    if (imageDataUrl && typeof imageDataUrl === 'string' && imageDataUrl.startsWith('data:image/svg+xml')) {
+                      let svgRendered = false;
                       try {
-                        // Convert data URL to bytes
+                        const svgContent = decodeSvgDataUrl(imageDataUrl);
+                        if (svgContent && typeof (page as any).drawSvg === 'function') {
+                          // drawSvg from @cantoo/pdf-lib renders SVG natively as
+                          (page as any).drawSvg(svgContent, {
+                            x: pdfX,
+                            y: pdfY,
+                            width: width,
+                            height: height,
+                          });
+                          svgRendered = true;
+                        }
+                      } catch (svgError) {
+                        console.warn('Native SVG embed failed, falling back to raster:', svgError);
+                      }
+
+                      if (!svgRendered) {
+                        try {
+                          const pngBytes = await rasteriseSvgToPng(imageDataUrl, width * 2, height * 2);
+                          if (pngBytes) {
+                            const image = await pdfDoc.embedPng(pngBytes);
+                            page.drawImage(image, { x: pdfX, y: pdfY, width, height });
+                            svgRendered = true;
+                          }
+                        } catch (rasterError) {
+                          console.error('SVG raster fallback also failed:', rasterError);
+                        }
+                      }
+
+                      if (!svgRendered) {
+                        page.drawRectangle({
+                          x: pdfX,
+                          y: pdfY,
+                          width: width,
+                          height: height,
+                          borderColor: rgb(0.8, 0, 0),
+                          borderWidth: 1,
+                          color: rgb(1, 0.95, 0.95),
+                          opacity: 0.7,
+                        });
+                      }
+                    } else if (imageDataUrl && typeof imageDataUrl === 'string' && imageDataUrl.startsWith('data:image')) {
+                      try {
                         const base64Data = imageDataUrl.split(',')[1];
                         const imageBytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
 
-                        // Embed image in PDF based on data URL type
                         let image;
                         if (imageDataUrl.includes('data:image/jpeg') || imageDataUrl.includes('data:image/jpg')) {
                           image = await pdfDoc.embedJpg(imageBytes);
                         } else if (imageDataUrl.includes('data:image/png')) {
                           image = await pdfDoc.embedPng(imageBytes);
                         } else {
-                          // Default to PNG for other formats (including converted SVGs)
                           image = await pdfDoc.embedPng(imageBytes);
                         }
 
-                        // Draw image on page at annotation position
                         page.drawImage(image, {
                           x: pdfX,
                           y: pdfY,
@@ -221,8 +239,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                         console.error('Failed to render image annotation:', imageError);
                       }
                     } else if (annotation.content || annotation.text) {
-                      console.warn('Rendering text annotation instead');
-                      // Handle text annotations
                       page.drawText(annotation.content || annotation.text, {
                         x: pdfX,
                         y: pdfY + height - 12, // Adjust for text baseline
@@ -230,26 +246,17 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                         color: rgb(0, 0, 0)
                       });
                     } else if (annotation.type === PdfAnnotationSubtype.INK || annotation.type === PdfAnnotationSubtype.LINE) {
-                      // Handle ink annotations (drawn signatures)
                       page.drawRectangle({
                         x: pdfX,
                         y: pdfY,
                         width: width,
                         height: height,
                         borderColor: rgb(0, 0, 0),
-                        borderWidth: 2,
-                        color: rgb(0.9, 0.9, 0.9), // Light gray background
-                        opacity: 0.8
-                      });
-
-                      page.drawText('Drawn Signature', {
-                        x: pdfX + 5,
-                        y: pdfY + height / 2,
-                        size: 10,
-                        color: rgb(0, 0, 0)
+                        borderWidth: 1,
+                        color: rgb(0.95, 0.95, 0.95),
+                        opacity: 0.6
                       });
                     } else {
-                      // Handle other annotation types
                       page.drawRectangle({
                         x: pdfX,
                         y: pdfY,
@@ -257,7 +264,7 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
                         height: height,
                         borderColor: rgb(1, 0, 0),
                         borderWidth: 2,
-                        color: rgb(1, 1, 0), // Yellow background
+                        color: rgb(1, 1, 0),
                         opacity: 0.5
                       });
                     }
@@ -270,7 +277,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
           }
 
 
-          // Save the PDF with rendered annotations
           const flattenedPdfBytes = await pdfDoc.save({ useObjectStreams: false, addDefaultPage: false });
 
           const arrayBuffer = new ArrayBuffer(flattenedPdfBytes.length);
@@ -284,11 +290,9 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
         }
       }
 
-      // Generate thumbnail and metadata for the signed file
       const thumbnailResult = await generateThumbnailWithMetadata(signedFile);
       const processedFileMetadata = createProcessedFile(thumbnailResult.pageCount, thumbnailResult.thumbnail);
 
-      // Prepare input file data for replacement
       const inputFileIds: FileId[] = [currentFile.fileId];
 
       const record = selectors.getStirlingFileStub(currentFile.fileId);
@@ -297,7 +301,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
         return null;
       }
 
-      // Create output stub and file as a child of the original (increments version)
       const outputStub = createChildStub(
         record,
         { toolId: 'sign', timestamp: Date.now() },
@@ -307,7 +310,6 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
       );
       const outputStirlingFile = createStirlingFile(signedFile, outputStub.id);
 
-      // Return the flattened file data for consumption by caller
       return {
         inputFileIds,
         outputStirlingFile,
@@ -320,4 +322,62 @@ export async function flattenSignatures(options: SignatureFlatteningOptions): Pr
     console.error('Error flattening signatures:', error);
     return null;
   }
+}
+
+/**
+ * Decode an SVG data URL to its raw XML string.
+ * Handles both base64-encoded and URI-encoded SVG data URLs.
+ */
+function decodeSvgDataUrl(dataUrl: string): string | null {
+  try {
+    if (dataUrl.includes(';base64,')) {
+      const base64 = dataUrl.split(',')[1];
+      return atob(base64);
+    }
+    // URI-encoded SVG
+    const encoded = dataUrl.split(',')[1];
+    return decodeURIComponent(encoded);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Rasterise an SVG data URL to PNG bytes via an offscreen canvas.
+ * Used as a fallback when native SVG embedding is unavailable.
+ */
+function rasteriseSvgToPng(svgDataUrl: string, width: number, height: number): Promise<Uint8Array | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(width));
+        canvas.height = Math.max(1, Math.round(height));
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(null);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              resolve(null);
+              return;
+            }
+            blob.arrayBuffer().then(
+              (buf) => resolve(new Uint8Array(buf)),
+              () => resolve(null),
+            );
+          },
+          'image/png',
+        );
+      } catch {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = svgDataUrl;
+  });
 }

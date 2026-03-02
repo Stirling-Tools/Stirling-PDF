@@ -1,4 +1,5 @@
-import { PDFDocument as PDFLibDocument, degrees, PageSizes } from 'pdf-lib';
+import { PDFDocument as PDFLibDocument, degrees, PageSizes } from '@cantoo/pdf-lib';
+import { downloadFile } from '@app/services/downloadService';
 import { PDFDocument, PDFPage } from '@app/types/pageEditor';
 
 export interface ExportOptions {
@@ -36,7 +37,10 @@ export class PDFExportService {
       return { blob, filename: exportFilename };
     } catch (error) {
       console.error('PDF export error:', error);
-      throw new Error(`Failed to export PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to export PDF: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { cause: error }
+      );
     }
   }
 
@@ -67,7 +71,10 @@ export class PDFExportService {
       return { blob, filename: exportFilename };
     } catch (error) {
       console.error('Multi-file PDF export error:', error);
-      throw new Error(`Failed to export PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to export PDF: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { cause: error }
+      );
     }
   }
 
@@ -181,18 +188,7 @@ export class PDFExportService {
    * Download a single file
    */
   downloadFile(blob: Blob, filename: string): void {
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.style.display = 'none';
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    // Clean up the URL after a short delay
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    void downloadFile({ data: blob, filename });
   }
 
   /**

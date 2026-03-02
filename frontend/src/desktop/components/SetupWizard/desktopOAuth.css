@@ -1,0 +1,96 @@
+/* Desktop-specific OAuth button styles for self-hosted server connections */
+/* These styles are isolated from the web SSO buttons to prevent conflicts */
+
+.oauth-container-vertical-desktop {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem; /* 14px */
+  align-items: stretch;
+}
+
+.oauth-button-vertical-desktop {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.75rem 1rem; /* 12px 16px */
+  border: 1px solid #d1d5db;
+  border-radius: 0.75rem; /* 12px */
+  background-color: var(--auth-card-bg-light-only);
+  font-size: 1rem; /* 16px */
+  font-weight: 500;
+  color: var(--auth-text-primary-light-only);
+  cursor: pointer;
+  gap: 0.75rem; /* 12px */
+  font-family: inherit;
+  transition: background-color 0.2s ease;
+}
+
+.oauth-button-vertical-desktop:hover:not(:disabled) {
+  background-color: #f3f4f6;
+}
+
+.oauth-button-vertical-desktop:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.oauth-button-vertical-desktop:focus-visible {
+  outline: 2px solid var(--auth-border-focus-light-only);
+  outline-offset: 2px;
+}
+
+/* Fix Mantine Button internal spans */
+.oauth-button-vertical-desktop .mantine-Button-inner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.oauth-button-vertical-desktop .mantine-Button-label {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  overflow: visible;
+}
+
+.oauth-button-left-desktop {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.oauth-button-text-desktop {
+  font-size: 1rem;
+  font-weight: 500;
+  color: inherit;
+  line-height: 1.2;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.oauth-icon-wrapper-desktop {
+  width: 1.25rem; /* 20px */
+  height: 1.25rem; /* 20px */
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+}
+
+.oauth-icon-tiny-desktop {
+  width: 1.25rem; /* 20px */
+  height: 1.25rem; /* 20px */
+  display: block;
+  flex-shrink: 0;
+}

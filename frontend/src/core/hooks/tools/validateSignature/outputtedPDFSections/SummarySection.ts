@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next';
-import { PDFFont, PDFImage, PDFPage } from 'pdf-lib';
+import { PDFFont, PDFImage, PDFPage } from '@cantoo/pdf-lib';
 import { SignatureValidationReportEntry } from '@app/types/validateSignature';
 import { drawFieldBox } from '@app/hooks/tools/validateSignature/outputtedPDFSections/FieldBoxSection';
 import { drawThumbnailImage, drawThumbnailPlaceholder } from '@app/hooks/tools/validateSignature/outputtedPDFSections/ThumbnailSection';

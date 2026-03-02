@@ -105,9 +105,13 @@ capture_file_list() {
         -not -path '*/tmp/stirling-pdf/PDFBox*' \
         -not -path '*/tmp/stirling-pdf/hsperfdata_stirlingpdfuser/*' \
         -not -path '*/tmp/hsperfdata_stirlingpdfuser/*' \
+        -not -path '*/tmp/hsperfdata_root/*' \
         -not -path '*/tmp/stirling-pdf/jetty-*/*' \
         -not -path '*/tmp/stirling-pdf/lu*' \
         -not -path '*/tmp/stirling-pdf/tmp*' \
+        -not -path '/app/stirling.aot' \
+        -not -path '*/tmp/stirling.aotconf' \
+        -not -path '*/tmp/aot-*.log' \
         2>/dev/null | xargs -I{} sh -c 'stat -c \"%n %s %Y\" \"{}\" 2>/dev/null || true' | sort" > "$output_file"
 
     # Check if the output file has content
@@ -127,10 +131,14 @@ capture_file_list() {
             -not -path '*/home/stirlingpdfuser/.pdfbox.cache' \
             -not -path '*/tmp/PDFBox*' \
             -not -path '*/tmp/hsperfdata_stirlingpdfuser/*' \
+            -not -path '*/tmp/hsperfdata_root/*' \
             -not -path '*/tmp/stirling-pdf/hsperfdata_stirlingpdfuser/*' \
             -not -path '*/tmp/stirling-pdf/jetty-*/*' \
             -not -path '*/tmp/lu*' \
             -not -path '*/tmp/tmp*' \
+            -not -path '/app/stirling.aot' \
+            -not -path '*/tmp/stirling.aotconf' \
+            -not -path '*/tmp/aot-*.log' \
             2>/dev/null | sort" > "$output_file"
 
         if [ ! -s "$output_file" ]; then
@@ -413,7 +421,7 @@ main() {
        should_run_test "Stirling-PDF-Ultra-Lite-Version-Check"; then
 
         export DISABLE_ADDITIONAL_FEATURES=true
-        if ! ./gradlew clean build; then
+        if ! ./gradlew clean build -PnoSpotless; then
             echo "Gradle build failed with security disabled, exiting script."
             exit 1
         fi
@@ -423,11 +431,18 @@ main() {
         EXPECTED_VERSION=$(get_expected_version)
         echo "Expected version: $EXPECTED_VERSION"
 
-        # Build Ultra-Lite image with embedded frontend (GHCR tag, matching docker-compose-latest-ultra-lite.yml)
+        # Build Ultra-Lite image with embedded frontend (matching docker-compose-latest-ultra-lite.yml)
         echo "Building ultra-lite image for tests that require it..."
-        docker build --build-arg VERSION_TAG=alpha \
+        if [ -n "${ACTIONS_RUNTIME_TOKEN}" ] && { [ -n "${ACTIONS_RESULTS_URL}" ] || [ -n "${ACTIONS_CACHE_URL}" ]; }; then
+            DOCKER_CACHE_ARGS_ULTRA_LITE="--cache-from type=gha,scope=stirling-pdf-ultra-lite --cache-to type=gha,mode=max,scope=stirling-pdf-ultra-lite"
+        else
+            DOCKER_CACHE_ARGS_ULTRA_LITE=""
+        fi
+        docker buildx build --build-arg VERSION_TAG=alpha \
             -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite \
-            -f ./docker/embedded/Dockerfile.ultra-lite .
+            -f ./docker/embedded/Dockerfile.ultra-lite \
+            --load \
+            ${DOCKER_CACHE_ARGS_ULTRA_LITE} .
     else
         echo "Skipping ultra-lite image build - no ultra-lite tests in rerun list"
     fi
@@ -474,7 +489,7 @@ main() {
        should_run_test "Stirling-PDF-Fat-Disable-Endpoints-Version-Check"; then
 
         export DISABLE_ADDITIONAL_FEATURES=false
-        if ! ./gradlew clean build; then
+        if ! ./gradlew clean build -PnoSpotless; then
             echo "Gradle build failed with security enabled, exiting script."
             exit 1
         fi
@@ -483,11 +498,18 @@ main() {
         EXPECTED_VERSION=$(get_expected_version)
         echo "Expected version with security enabled: $EXPECTED_VERSION"
 
-        # Build Fat (Security) image with embedded frontend for GHCR tag used in all 'fat' compose files
+        # Build Fat (Security) image with embedded frontend (matching all 'fat' compose files)
         echo "Building fat image for tests that require it..."
-        docker build --no-cache --pull --build-arg VERSION_TAG=alpha \
+        if [ -n "${ACTIONS_RUNTIME_TOKEN}" ] && { [ -n "${ACTIONS_RESULTS_URL}" ] || [ -n "${ACTIONS_CACHE_URL}" ]; }; then
+            DOCKER_CACHE_ARGS_FAT="--cache-from type=gha,scope=stirling-pdf-fat --cache-to type=gha,mode=max,scope=stirling-pdf-fat"
+        else
+            DOCKER_CACHE_ARGS_FAT=""
+        fi
+        docker buildx build --build-arg VERSION_TAG=alpha \
             -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat \
-            -f ./docker/embedded/Dockerfile.fat .
+            -f ./docker/embedded/Dockerfile.fat \
+            --load \
+            ${DOCKER_CACHE_ARGS_FAT} .
     else
         echo "Skipping fat image build - no fat tests in rerun list"
     fi
@@ -539,8 +561,14 @@ main() {
 
         capture_file_list "$CONTAINER_NAME" "$BEFORE_FILE"
 
+        CUCUMBER_REPORT="$PROJECT_ROOT/testing/cucumber/report.html"
+        CUCUMBER_JUNIT_DIR="$PROJECT_ROOT/testing/cucumber/junit"
+        mkdir -p "$CUCUMBER_JUNIT_DIR"
         cd "testing/cucumber"
-        if python -m behave; then
+        if python -m behave \
+            -f behave_html_formatter:HTMLFormatter -o "$CUCUMBER_REPORT" \
+            -f pretty \
+            --junit --junit-directory "$CUCUMBER_JUNIT_DIR"; then
             echo "Waiting 5 seconds for any file operations to complete..."
             sleep 5
 

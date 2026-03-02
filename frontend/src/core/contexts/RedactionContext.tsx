@@ -1,20 +1,25 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback, useRef, useEffect } from 'react';
 import { RedactParameters } from '@app/hooks/tools/redact/useRedactParameters';
 import { useNavigationGuard } from '@app/contexts/NavigationContext';
+import { RedactionMode } from '@embedpdf/plugin-redaction';
 
 /**
  * API interface that the EmbedPDF bridge will implement
  */
 export interface RedactionAPI {
-  toggleRedactSelection: () => void;
-  toggleMarqueeRedact: () => void;
+  toggleRedact: () => void;
+  enableRedact: () => void;
+  isRedactActive: () => boolean;
+  endRedact: () => void;
+  // Common methods
   commitAllPending: () => void;
-  getActiveType: () => 'redactSelection' | 'marqueeRedact' | null;
+  getActiveType: () => RedactionMode | null;
   getPendingCount: () => number;
 }
 
 /**
  * State interface for redaction operations
+ * Uses embedPDF v2.5.0 unified redaction mode
  */
 interface RedactionState {
   // Current redaction configuration from the tool
@@ -25,14 +30,18 @@ interface RedactionState {
   redactionsApplied: boolean;
   // Synced state from EmbedPDF
   pendingCount: number;
-  activeType: 'redactSelection' | 'marqueeRedact' | null;
+  // Uses RedactionMode enum from v2.5.0
+  activeType: RedactionMode | null;
   isRedacting: boolean;
   // Whether the redaction API bridge is ready (API ref is populated)
   isBridgeReady: boolean;
+  // Color for manual redaction
+  manualRedactColor: string;
 }
 
 /**
  * Actions interface for redaction operations
+ * Uses embedPDF v2.5.0 unified redaction mode
  */
 interface RedactionActions {
   setRedactionConfig: (config: RedactParameters | null) => void;
@@ -40,13 +49,19 @@ interface RedactionActions {
   setRedactionsApplied: (applied: boolean) => void;
   // Synced state setters (called from inside EmbedPDF)
   setPendingCount: (count: number) => void;
-  setActiveType: (type: 'redactSelection' | 'marqueeRedact' | null) => void;
+  setActiveType: (type: RedactionMode | null) => void;
   setIsRedacting: (isRedacting: boolean) => void;
   setBridgeReady: (ready: boolean) => void;
-  // Actions that call through to EmbedPDF API
+  setManualRedactColor: (color: string) => void;
+  // Unified redaction actions (v2.5.0)
+  activateRedact: () => void;
+  deactivateRedact: () => void;
+  commitAllPending: () => void;
+  // Unified manual redaction action
+  activateManualRedact: () => void;
+  // Legacy UI actions (for backwards compatibility with UI)
   activateTextSelection: () => void;
   activateMarquee: () => void;
-  commitAllPending: () => void;
 }
 
 /**
@@ -69,6 +84,7 @@ const initialState: RedactionState = {
   activeType: null,
   isRedacting: false,
   isBridgeReady: false,
+  manualRedactColor: '#000000',
 };
 
 /**
@@ -110,7 +126,7 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     }));
   }, []);
 
-  const setActiveType = useCallback((type: 'redactSelection' | 'marqueeRedact' | null) => {
+  const setActiveType = useCallback((type: RedactionMode | null) => {
     setState(prev => ({
       ...prev,
       activeType: type,
@@ -131,6 +147,13 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     }));
   }, []);
 
+  const setManualRedactColor = useCallback((color: string) => {
+    setState(prev => ({
+      ...prev,
+      manualRedactColor: color,
+    }));
+  }, []);
+
   // Keep navigation guard aware of pending or applied redactions so we block navigation
   // Also clear the flag when all redactions have been saved
   useEffect(() => {
@@ -143,16 +166,16 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   }, [state.pendingCount, state.redactionsApplied, state.isRedactionMode, setHasUnsavedChanges]);
 
-  // Actions that call through to EmbedPDF API
-  const activateTextSelection = useCallback(() => {
+  // Unified redaction actions (v2.5.0)
+  const activateRedact = useCallback(() => {
     if (redactionApiRef.current) {
-      redactionApiRef.current.toggleRedactSelection();
+      redactionApiRef.current.enableRedact();
     }
   }, []);
 
-  const activateMarquee = useCallback(() => {
+  const deactivateRedact = useCallback(() => {
     if (redactionApiRef.current) {
-      redactionApiRef.current.toggleMarqueeRedact();
+      redactionApiRef.current.endRedact();
     }
   }, []);
 
@@ -165,6 +188,29 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   }, [setRedactionsApplied]);
 
+  const activateManualRedact = useCallback(() => {
+    if (redactionApiRef.current) {
+      redactionApiRef.current.enableRedact();
+    }
+  }, []);
+
+  // Legacy UI actions for backwards compatibility
+  // In v2.5.0, both text selection and marquee use the same unified mode
+  // These just activate the unified redact mode and set the active type for UI state
+  const activateTextSelection = useCallback(() => {
+    if (redactionApiRef.current) {
+      redactionApiRef.current.enableRedact();
+      setActiveType('redactSelection' as RedactionMode);
+    }
+  }, [setActiveType]);
+
+  const activateMarquee = useCallback(() => {
+    if (redactionApiRef.current) {
+      redactionApiRef.current.enableRedact();
+      setActiveType('marqueeRedact' as RedactionMode);
+    }
+  }, [setActiveType]);
+
   const contextValue: RedactionContextValue = {
     ...state,
     redactionApiRef,
@@ -175,9 +221,13 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     setActiveType,
     setIsRedacting,
     setBridgeReady,
+    setManualRedactColor,
+    activateRedact,
+    deactivateRedact,
+    commitAllPending,
+    activateManualRedact,
     activateTextSelection,
     activateMarquee,
-    commitAllPending,
   };
 
   return (
@@ -210,6 +260,7 @@ export const useRedactionMode = () => {
     activeType: context?.activeType || null,
     isRedacting: context?.isRedacting || false,
     isBridgeReady: context?.isBridgeReady || false,
+    manualRedactColor: context?.manualRedactColor || '#000000',
   };
 };
 

@@ -1,4 +1,4 @@
-import { PDFFont } from 'pdf-lib';
+import { PDFFont } from '@cantoo/pdf-lib';
 
 export const wrapText = (text: string, font: PDFFont, fontSize: number, maxWidth: number): string[] => {
   const lines: string[] = [];

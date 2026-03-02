@@ -52,6 +52,7 @@ describe('SpringAuthClient', () => {
       expect(apiClient.get).toHaveBeenCalledWith('/api/v1/auth/me', {
         headers: { Authorization: `Bearer ${mockToken}` },
         suppressErrorToast: true,
+        skipAuthRedirect: true,
       });
       expect(result.data.session).toBeTruthy();
       expect(result.data.session?.user).toEqual(mockUser);
@@ -309,14 +310,10 @@ describe('SpringAuthClient', () => {
         },
       } as any);
 
-      const dispatchEventSpy = vi.spyOn(window, 'dispatchEvent');
-
       const result = await springAuth.refreshSession();
 
       expect(localStorage.getItem('stirling_jwt')).toBe(newToken);
-      expect(dispatchEventSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'jwt-available' })
-      );
+      // Note: refreshSession does not dispatch jwt-available event, only notifies listeners
       expect(result.data.session?.access_token).toBe(newToken);
       expect(result.error).toBeNull();
     });

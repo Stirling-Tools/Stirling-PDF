@@ -4,18 +4,23 @@ import java.beans.PropertyEditorSupport;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.api.security.RedactionArea;
 
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+
 @Slf4j
 public class StringToArrayListPropertyEditor extends PropertyEditorSupport {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper =
+            JsonMapper.builder()
+                    .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+                    .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                    .build();
 
     @Override
     public void setAsText(String text) throws IllegalArgumentException {
@@ -24,7 +29,6 @@ public class StringToArrayListPropertyEditor extends PropertyEditorSupport {
             return;
         }
         try {
-            objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
             TypeReference<ArrayList<RedactionArea>> typeRef = new TypeReference<>() {};
             List<RedactionArea> list = objectMapper.readValue(text, typeRef);
             setValue(list);

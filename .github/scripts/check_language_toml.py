@@ -59,8 +59,8 @@ def find_duplicate_keys(file_path, keys=None, prefix=""):
     return duplicates
 
 
-# Maximum size for TOML files (e.g., 570 KB)
-MAX_FILE_SIZE = 570 * 1024
+# Maximum size for TOML files (e.g., 1 MB)
+MAX_FILE_SIZE = 1000 * 1024
 
 
 def parse_toml_file(file_path):
@@ -259,9 +259,26 @@ def check_for_differences(reference_file, file_list, branch, actor):
                 report.append(
                     f"    - **_Extra keys in `{locale_dir}/{basename_current_file}`_**: `{missing_keys_str}` that are not present in **_`{basename_reference_file}`_**."
                 )
+                report.append("")
+                report.append("    Use the following command to remove them:")
+                report.append(
+                    f"    `python scripts/translations/translation_merger.py {locale_dir} remove-unused`"
+                )
+                report.append("")
             if extra_keys_list:
                 report.append(
                     f"    - **_Missing keys in `{locale_dir}/{basename_current_file}`_**: `{extra_keys_str}` that are not present in **_`{basename_reference_file}`_**."
+                )
+                report.append("")
+                report.append("    Use the following command to add them:")
+                report.append(
+                    f"    `python scripts/translations/translation_merger.py {locale_dir} add-missing`"
+                )
+                report.append("")
+
+            if missing_keys_list or extra_keys_list:
+                report.append(
+                    "    See: https://github.com/Stirling-Tools/Stirling-PDF/tree/main/scripts/translations#2-translation_mergerpy"
                 )
         else:
             report.append("2. **Test Status:** ✅ **_Passed_**")
