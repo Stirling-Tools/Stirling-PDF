@@ -308,7 +308,7 @@ The frontend is organized with a clear separation of concerns:
 
 ## Important Notes
 
-- **Java Version**: Minimum JDK 17, supports and recommends JDK 21
+- **Java Version**: Minimum JDK 21, supports and recommends JDK 25
 - **Lombok**: Used extensively - ensure IDE plugin is installed
 - **File Persistence**:
   - **Backend**: Designed to be stateless - files are processed in memory/temp locations only
