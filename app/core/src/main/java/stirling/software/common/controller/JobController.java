@@ -262,9 +262,15 @@ public class JobController {
     @Operation(summary = "Get file metadata")
     public ResponseEntity<?> getFileMetadata(@PathVariable("fileId") String fileId) {
         try {
-            // Verify file exists
-            if (!fileStorage.fileExists(fileId)) {
+            String jobKey = taskManager.findJobKeyByFileId(fileId);
+            if (jobKey == null) {
                 return ResponseEntity.notFound().build();
+            }
+
+            if (!validateJobAccess(jobKey)) {
+                log.warn("Unauthorized attempt to access file metadata: {}", fileId);
+                return ResponseEntity.status(403)
+                        .body(Map.of("message", "You are not authorized to access this file"));
             }
 
             // Find the file metadata from any job that contains this file
@@ -272,7 +278,14 @@ public class JobController {
 
             if (resultFile != null) {
                 return ResponseEntity.ok(resultFile);
-            } else {
+            }
+
+            if (!isSecurityEnabled()) {
+                // Backwards compatibility when ownership service is unavailable
+                if (!fileStorage.fileExists(fileId)) {
+                    return ResponseEntity.notFound().build();
+                }
+
                 // File exists but no metadata found, get basic info efficiently
                 long fileSize = fileStorage.getFileSize(fileId);
                 return ResponseEntity.ok(
@@ -286,6 +299,8 @@ public class JobController {
                                 "fileSize",
                                 fileSize));
             }
+
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
             log.error("Error retrieving file metadata {}: {}", fileId, e.getMessage(), e);
             return ResponseEntity.internalServerError()
@@ -303,9 +318,15 @@ public class JobController {
     @Operation(summary = "Download a file")
     public ResponseEntity<?> downloadFile(@PathVariable("fileId") String fileId) {
         try {
-            // Verify file exists
-            if (!fileStorage.fileExists(fileId)) {
+            String jobKey = taskManager.findJobKeyByFileId(fileId);
+            if (jobKey == null) {
                 return ResponseEntity.notFound().build();
+            }
+
+            if (!validateJobAccess(jobKey)) {
+                log.warn("Unauthorized attempt to download file: {}", fileId);
+                return ResponseEntity.status(403)
+                        .body(Map.of("message", "You are not authorized to access this file"));
             }
 
             // Retrieve file content
@@ -327,9 +348,12 @@ public class JobController {
                     .body(fileContent);
         } catch (Exception e) {
             log.error("Error retrieving file {}: {}", fileId, e.getMessage(), e);
-            return ResponseEntity.internalServerError()
-                    .body("Error retrieving file: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("Error retrieving file");
         }
+    }
+
+    private boolean isSecurityEnabled() {
+        return jobOwnershipService != null;
     }
 
     /**

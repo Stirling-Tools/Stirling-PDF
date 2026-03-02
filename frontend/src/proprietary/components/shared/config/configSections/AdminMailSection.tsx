@@ -1,12 +1,13 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, PasswordInput, Anchor } from '@mantine/core';
+import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Anchor } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
+import EditableSecretField from '@app/components/shared/EditableSecretField';
 import apiClient from '@app/services/apiClient';
 
 interface MailSettingsData {
@@ -174,16 +175,15 @@ export default function AdminMailSection() {
           </div>
 
           <div>
-            <PasswordInput
-              label={
-                <Group gap="xs">
-                  <span>{t('admin.settings.mail.password.label', 'SMTP Password')}</span>
-                  <PendingBadge show={isFieldPending('password')} />
-                </Group>
-              }
+            <Group gap="xs" align="center" mb={4}>
+              <span style={{ fontWeight: 500, fontSize: '0.875rem' }}>{t('admin.settings.mail.password.label', 'SMTP Password')}</span>
+              <PendingBadge show={isFieldPending('password')} />
+            </Group>
+            <EditableSecretField
               description={t('admin.settings.mail.password.description', 'SMTP authentication password')}
               value={settings.password || ''}
-              onChange={(e) => setSettings({ ...settings, password: e.target.value })}
+              onChange={(value) => setSettings({ ...settings, password: value })}
+              placeholder="Enter SMTP password"
             />
           </div>
 
