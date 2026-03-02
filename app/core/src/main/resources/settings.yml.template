@@ -173,7 +173,7 @@ system:
   corsAllowedOrigins: [] # List of allowed origins for CORS (e.g. ['http://localhost:5173', 'https://app.example.com']). Leave empty to disable CORS. For local development with frontend on port 5173, add 'http://localhost:5173'
   backendUrl: "" # Backend base URL for SAML/OAuth/API callbacks (e.g. 'http://localhost:8080' for dev, 'https://api.example.com' for production). REQUIRED for SSO authentication to work correctly. This is where your IdP will send SAML responses and OAuth callbacks. Leave empty to default to 'http://localhost:8080' in development.
   frontendUrl: "" # Frontend URL for invite email links (e.g. 'https://app.example.com'). Optional - if not set, will use backendUrl. This is the URL users click in invite emails.
-  enableMobileScanner: false # Enable mobile phone QR code upload feature. Requires frontendUrl to be configured.
+  enableMobileScanner: true # Enable mobile phone QR code upload feature. Requires frontendUrl to be configured.
   mobileScannerSettings:
     convertToPdf: true # Automatically convert uploaded images to PDF format. If false, images are kept as-is.
     imageResolution: full # Image resolution for mobile uploads: 'full' (original size) or 'reduced' (max 1200px on longest side). Only applies when convertToPdf is true.
