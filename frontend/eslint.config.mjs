@@ -9,7 +9,7 @@ const srcGlobs = [
   'src/**/*.{js,mjs,jsx,ts,tsx}',
 ];
 const nodeGlobs = [
-  'scripts/**/*.{js,ts,mjs}',
+  'scripts/**/*.{js,ts,mjs,cjs}',
   '*.config.{js,ts,mjs}',
 ];
 
