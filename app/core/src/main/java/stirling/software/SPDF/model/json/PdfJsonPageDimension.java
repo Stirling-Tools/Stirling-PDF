@@ -11,10 +11,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class PdfJsonPageDimension {
-    private Integer pageNumber;
-    private Float width;
-    private Float height;
-    private Integer rotation;
+    private int pageNumber;
+    private float width;
+    private float height;
+    private int rotation;
 }

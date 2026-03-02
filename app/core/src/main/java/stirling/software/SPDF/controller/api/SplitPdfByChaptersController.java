@@ -1,8 +1,6 @@
 package stirling.software.SPDF.controller.api;
 
-import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -17,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -36,6 +35,8 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
@@ -46,6 +47,8 @@ public class SplitPdfByChaptersController {
     private final PdfMetadataService pdfMetadataService;
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+
+    private final TempFileManager tempFileManager;
 
     private static List<Bookmark> extractOutlineItems(
             PDDocument sourceDocument,
@@ -122,22 +125,19 @@ public class SplitPdfByChaptersController {
     @Operation(
             summary = "Split PDFs by Chapters",
             description = "Splits a PDF into chapters and returns a ZIP file.")
-    public ResponseEntity<byte[]> splitPdf(@ModelAttribute SplitPdfByChaptersRequest request)
-            throws Exception {
+    public ResponseEntity<StreamingResponseBody> splitPdf(
+            @ModelAttribute SplitPdfByChaptersRequest request) throws Exception {
         MultipartFile file = request.getFileInput();
-        PDDocument sourceDocument = null;
-        Path zipFile = null;
 
-        try {
-            boolean includeMetadata = Boolean.TRUE.equals(request.getIncludeMetadata());
-            Integer bookmarkLevel =
-                    request.getBookmarkLevel(); // levels start from 0 (top most bookmarks)
-            if (bookmarkLevel < 0) {
-                throw ExceptionUtils.createIllegalArgumentException(
-                        "error.invalidArgument", "Invalid argument: {0}", "bookmark level");
-            }
-            sourceDocument = pdfDocumentFactory.load(file);
+        boolean includeMetadata = Boolean.TRUE.equals(request.getIncludeMetadata());
+        Integer bookmarkLevel =
+                request.getBookmarkLevel(); // levels start from 0 (top most bookmarks)
+        if (bookmarkLevel < 0) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument", "Invalid argument: {0}", "bookmark level");
+        }
 
+        try (PDDocument sourceDocument = pdfDocumentFactory.load(file)) {
             PDDocumentOutline outline = sourceDocument.getDocumentCatalog().getDocumentOutline();
 
             if (outline == null) {
@@ -157,12 +157,10 @@ public class SplitPdfByChaptersController {
                                 bookmarkLevel);
                 // to handle last page edge case
                 bookmarks.get(bookmarks.size() - 1).setEndPage(sourceDocument.getNumberOfPages());
-                Bookmark lastBookmark = bookmarks.get(bookmarks.size() - 1);
 
             } catch (Exception e) {
                 ExceptionUtils.logException("outline extraction", e);
-                return ResponseEntity.internalServerError()
-                        .body("Unable to extract outline items".getBytes());
+                throw e;
             }
 
             boolean allowDuplicates = Boolean.TRUE.equals(request.getAllowDuplicates());
@@ -181,29 +179,10 @@ public class SplitPdfByChaptersController {
                         bookmark.getStartPage(),
                         bookmark.getEndPage());
             }
-            List<ByteArrayOutputStream> splitDocumentsBoas =
-                    getSplitDocumentsBoas(sourceDocument, bookmarks, includeMetadata);
 
-            zipFile = createZipFile(bookmarks, splitDocumentsBoas);
-
-            byte[] data = Files.readAllBytes(zipFile);
-            Files.deleteIfExists(zipFile);
-
+            TempFile zipTempFile = createZipFile(sourceDocument, bookmarks, includeMetadata);
             String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");
-            sourceDocument.close();
-            return WebResponseUtils.bytesToWebResponse(
-                    data, filename + ".zip", MediaType.APPLICATION_OCTET_STREAM);
-        } finally {
-            try {
-                if (sourceDocument != null) {
-                    sourceDocument.close();
-                }
-                if (zipFile != null) {
-                    Files.deleteIfExists(zipFile);
-                }
-            } catch (Exception e) {
-                log.error("Error while cleaning up resources", e);
-            }
+            return WebResponseUtils.zipFileToWebResponse(zipTempFile, filename + ".zip");
         }
     }
 
@@ -232,72 +211,55 @@ public class SplitPdfByChaptersController {
         return bookmarks;
     }
 
-    private Path createZipFile(
-            List<Bookmark> bookmarks, List<ByteArrayOutputStream> splitDocumentsBoas)
-            throws Exception {
-        Path zipFile = Files.createTempFile("split_documents", ".zip");
-        String fileNumberFormatter = "%0" + (Integer.toString(bookmarks.size()).length()) + "d ";
-        try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(zipFile))) {
-            for (int i = 0; i < splitDocumentsBoas.size(); i++) {
-
-                // split files will be named as "[FILE_NUMBER] [BOOKMARK_TITLE].pdf"
-
-                String fileName =
-                        String.format(Locale.ROOT, fileNumberFormatter, i)
-                                + bookmarks.get(i).getTitle()
-                                + ".pdf";
-                ByteArrayOutputStream baos = splitDocumentsBoas.get(i);
-                byte[] pdf = baos.toByteArray();
-
-                ZipEntry pdfEntry = new ZipEntry(fileName);
-                zipOut.putNextEntry(pdfEntry);
-                zipOut.write(pdf);
-                zipOut.closeEntry();
-
-                log.debug("Wrote split document {} to zip file", fileName);
-            }
-        } catch (Exception e) {
-            log.error("Failed writing to zip", e);
-            throw e;
-        }
-
-        log.info("Successfully created zip file with split documents: {}", zipFile);
-        return zipFile;
-    }
-
-    public List<ByteArrayOutputStream> getSplitDocumentsBoas(
+    private TempFile createZipFile(
             PDDocument sourceDocument, List<Bookmark> bookmarks, boolean includeMetadata)
             throws Exception {
-        List<ByteArrayOutputStream> splitDocumentsBoas = new ArrayList<>();
-        PdfMetadata metadata = null;
-        if (includeMetadata) {
-            metadata = pdfMetadataService.extractMetadataFromPdf(sourceDocument);
-        }
-        for (Bookmark bookmark : bookmarks) {
-            try (PDDocument splitDocument = new PDDocument()) {
-                boolean isSinglePage = (bookmark.getStartPage() == bookmark.getEndPage());
+        PdfMetadata metadata =
+                includeMetadata ? pdfMetadataService.extractMetadataFromPdf(sourceDocument) : null;
+        String fileNumberFormatter = "%0" + (Integer.toString(bookmarks.size()).length()) + "d ";
+        TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
+        try {
+            try (ZipOutputStream zipOut =
+                    new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
+                for (int i = 0; i < bookmarks.size(); i++) {
+                    Bookmark bookmark = bookmarks.get(i);
+                    try (PDDocument splitDocument = new PDDocument()) {
+                        boolean isSinglePage = (bookmark.getStartPage() == bookmark.getEndPage());
 
-                for (int i = bookmark.getStartPage();
-                        i < bookmark.getEndPage() + (isSinglePage ? 1 : 0);
-                        i++) {
-                    PDPage page = sourceDocument.getPage(i);
-                    splitDocument.addPage(page);
-                    log.debug("Adding page {} to split document", i);
+                        for (int pg = bookmark.getStartPage();
+                                pg < bookmark.getEndPage() + (isSinglePage ? 1 : 0);
+                                pg++) {
+                            PDPage page = sourceDocument.getPage(pg);
+                            splitDocument.addPage(page);
+                            log.debug("Adding page {} to split document", pg);
+                        }
+                        if (includeMetadata) {
+                            pdfMetadataService.setMetadataToPdf(splitDocument, metadata);
+                        }
+
+                        // split files will be named as "[FILE_NUMBER] [BOOKMARK_TITLE].pdf"
+                        String fileName =
+                                String.format(Locale.ROOT, fileNumberFormatter, i)
+                                        + bookmark.getTitle()
+                                        + ".pdf";
+                        zipOut.putNextEntry(new ZipEntry(fileName));
+                        splitDocument.save(zipOut);
+                        zipOut.closeEntry();
+                        log.debug("Wrote split document {} to zip file", fileName);
+                    } catch (Exception e) {
+                        ExceptionUtils.logException("document splitting and saving", e);
+                        throw e;
+                    }
                 }
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                if (includeMetadata) {
-                    pdfMetadataService.setMetadataToPdf(splitDocument, metadata);
-                }
-
-                splitDocument.save(baos);
-
-                splitDocumentsBoas.add(baos);
-            } catch (Exception e) {
-                ExceptionUtils.logException("document splitting and saving", e);
-                throw e;
             }
+            log.info(
+                    "Successfully created zip file with split documents: {}",
+                    zipTempFile.getPath());
+            return zipTempFile;
+        } catch (Exception e) {
+            zipTempFile.close();
+            throw e;
         }
-        return splitDocumentsBoas;
     }
 }
 

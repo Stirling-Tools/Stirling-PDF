@@ -1,7 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -14,10 +14,10 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -31,6 +31,8 @@ import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
@@ -39,10 +41,9 @@ import stirling.software.common.util.WebResponseUtils;
 public class PosterPdfController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(
-            value = "/split-for-poster-print",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(value = "/split-for-poster-print", consumes = "multipart/form-data")
     @MultiFileResponse
     @Operation(
             summary = "Split large PDF pages into smaller printable chunks",
@@ -51,7 +52,7 @@ public class PosterPdfController {
                             + "suitable for printing on standard paper sizes (e.g., A4, Letter). "
                             + "Divides each page into a grid of smaller pages using Apache PDFBox. "
                             + "Input: PDF Output: ZIP-PDF Type: SISO")
-    public ResponseEntity<byte[]> posterPdf(@ModelAttribute PosterPdfRequest request)
+    public ResponseEntity<StreamingResponseBody> posterPdf(@ModelAttribute PosterPdfRequest request)
             throws Exception {
 
         log.debug("Starting PDF poster split process with request: {}", request);
@@ -60,184 +61,187 @@ public class PosterPdfController {
         String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");
         log.debug("Base filename for output: {}", filename);
 
-        try (PDDocument sourceDocument = pdfDocumentFactory.load(file);
-                PDDocument outputDocument =
-                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
-                ByteArrayOutputStream pdfOutputStream = new ByteArrayOutputStream();
-                ByteArrayOutputStream zipOutputStream = new ByteArrayOutputStream()) {
+        TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
+        try {
+            try (PDDocument sourceDocument = pdfDocumentFactory.load(file);
+                    PDDocument outputDocument =
+                            pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
+                    TempFile pdfTempFile = new TempFile(tempFileManager, ".pdf")) {
 
-            // Get target page size
-            PDRectangle targetPageSize = getTargetPageSize(request.getPageSize());
-            log.debug(
-                    "Target page size: {} ({}x{})",
-                    request.getPageSize(),
-                    targetPageSize.getWidth(),
-                    targetPageSize.getHeight());
+                // Get target page size
+                PDRectangle targetPageSize = getTargetPageSize(request.getPageSize());
+                log.debug(
+                        "Target page size: {} ({}x{})",
+                        request.getPageSize(),
+                        targetPageSize.getWidth(),
+                        targetPageSize.getHeight());
 
-            // Create LayerUtility for importing pages as forms
-            LayerUtility layerUtility = new LayerUtility(outputDocument);
+                // Create LayerUtility for importing pages as forms
+                LayerUtility layerUtility = new LayerUtility(outputDocument);
 
-            int totalPages = sourceDocument.getNumberOfPages();
-            int xFactor = request.getXFactor();
-            int yFactor = request.getYFactor();
-            boolean rightToLeft = request.isRightToLeft();
-
-            log.debug(
-                    "Processing {} pages with grid {}x{}, RTL={}",
-                    totalPages,
-                    xFactor,
-                    yFactor,
-                    rightToLeft);
-
-            // Process each page
-            for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
-                PDPage sourcePage = sourceDocument.getPage(pageIndex);
-
-                // Get both MediaBox and CropBox
-                PDRectangle mediaBox = sourcePage.getMediaBox();
-                PDRectangle cropBox = sourcePage.getCropBox();
-
-                // If no CropBox is set, use MediaBox
-                if (cropBox == null) {
-                    cropBox = mediaBox;
-                }
-
-                // Save original boxes for restoration
-                PDRectangle originalMediaBox = sourcePage.getMediaBox();
-                PDRectangle originalCropBox = sourcePage.getCropBox();
-
-                // Normalize the page: set MediaBox to CropBox
-                // This ensures the form's coordinate space starts at (0, 0)
-                // instead of having an offset from the original MediaBox
-                sourcePage.setMediaBox(cropBox);
-                sourcePage.setCropBox(cropBox);
-
-                // Handle page rotation
-                int rotation = sourcePage.getRotation();
-                float sourceWidth = cropBox.getWidth();
-                float sourceHeight = cropBox.getHeight();
-
-                // Swap dimensions if rotated 90 or 270 degrees
-                if (rotation == 90 || rotation == 270) {
-                    float temp = sourceWidth;
-                    sourceWidth = sourceHeight;
-                    sourceHeight = temp;
-                }
+                int totalPages = sourceDocument.getNumberOfPages();
+                int xFactor = request.getXFactor();
+                int yFactor = request.getYFactor();
+                boolean rightToLeft = request.isRightToLeft();
 
                 log.debug(
-                        "Page {}: Normalized to CropBox dimensions {}x{}, rotation {}",
-                        pageIndex,
-                        sourceWidth,
-                        sourceHeight,
-                        rotation);
+                        "Processing {} pages with grid {}x{}, RTL={}",
+                        totalPages,
+                        xFactor,
+                        yFactor,
+                        rightToLeft);
 
-                // Import source page as form (now with normalized coordinate space)
-                PDFormXObject form = layerUtility.importPageAsForm(sourceDocument, pageIndex);
+                // Process each page
+                for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+                    PDPage sourcePage = sourceDocument.getPage(pageIndex);
 
-                // Restore original boxes
-                sourcePage.setMediaBox(originalMediaBox);
-                sourcePage.setCropBox(originalCropBox);
+                    // Get both MediaBox and CropBox
+                    PDRectangle mediaBox = sourcePage.getMediaBox();
+                    PDRectangle cropBox = sourcePage.getCropBox();
 
-                // Calculate cell dimensions in source page coordinates
-                float cellWidth = sourceWidth / xFactor;
-                float cellHeight = sourceHeight / yFactor;
+                    // If no CropBox is set, use MediaBox
+                    if (cropBox == null) {
+                        cropBox = mediaBox;
+                    }
 
-                // Create grid cells (rows × columns)
-                for (int row = 0; row < yFactor; row++) {
-                    for (int col = 0; col < xFactor; col++) {
-                        // Apply RTL ordering for columns if enabled
-                        int actualCol = rightToLeft ? (xFactor - 1 - col) : col;
+                    // Save original boxes for restoration
+                    PDRectangle originalMediaBox = sourcePage.getMediaBox();
+                    PDRectangle originalCropBox = sourcePage.getCropBox();
 
-                        // Calculate crop rectangle in source coordinates
-                        // PDF coordinates start at bottom-left
-                        float cropX = actualCol * cellWidth;
-                        // For Y: invert so row 0 shows TOP (following SplitPdfBySectionsController
-                        // pattern)
-                        float cropY = (yFactor - 1 - row) * cellHeight;
+                    // Normalize the page: set MediaBox to CropBox
+                    // This ensures the form's coordinate space starts at (0, 0)
+                    // instead of having an offset from the original MediaBox
+                    sourcePage.setMediaBox(cropBox);
+                    sourcePage.setCropBox(cropBox);
 
-                        // Create new output page with target size
-                        PDPage outputPage = new PDPage(targetPageSize);
-                        outputDocument.addPage(outputPage);
+                    // Handle page rotation
+                    int rotation = sourcePage.getRotation();
+                    float sourceWidth = cropBox.getWidth();
+                    float sourceHeight = cropBox.getHeight();
 
-                        try (PDPageContentStream contentStream =
-                                new PDPageContentStream(
-                                        outputDocument,
-                                        outputPage,
-                                        PDPageContentStream.AppendMode.APPEND,
-                                        true,
-                                        true)) {
+                    // Swap dimensions if rotated 90 or 270 degrees
+                    if (rotation == 90 || rotation == 270) {
+                        float temp = sourceWidth;
+                        sourceWidth = sourceHeight;
+                        sourceHeight = temp;
+                    }
 
-                            // Calculate uniform scale to fit cell into target page
-                            // Scale UP if cell is smaller than target, scale DOWN if larger
-                            float scaleX = targetPageSize.getWidth() / cellWidth;
-                            float scaleY = targetPageSize.getHeight() / cellHeight;
-                            float scale = Math.min(scaleX, scaleY);
+                    log.debug(
+                            "Page {}: Normalized to CropBox dimensions {}x{}, rotation {}",
+                            pageIndex,
+                            sourceWidth,
+                            sourceHeight,
+                            rotation);
 
-                            // Center the scaled content on the target page
-                            float scaledCellWidth = cellWidth * scale;
-                            float scaledCellHeight = cellHeight * scale;
-                            float offsetX = (targetPageSize.getWidth() - scaledCellWidth) / 2;
-                            float offsetY = (targetPageSize.getHeight() - scaledCellHeight) / 2;
+                    // Import source page as form (now with normalized coordinate space)
+                    PDFormXObject form = layerUtility.importPageAsForm(sourceDocument, pageIndex);
 
-                            // Apply transformations
-                            contentStream.saveGraphicsState();
+                    // Restore original boxes
+                    sourcePage.setMediaBox(originalMediaBox);
+                    sourcePage.setCropBox(originalCropBox);
 
-                            // Translate to center position
-                            contentStream.transform(Matrix.getTranslateInstance(offsetX, offsetY));
+                    // Calculate cell dimensions in source page coordinates
+                    float cellWidth = sourceWidth / xFactor;
+                    float cellHeight = sourceHeight / yFactor;
 
-                            // Scale uniformly
-                            contentStream.transform(Matrix.getScaleInstance(scale, scale));
+                    // Create grid cells (rows × columns)
+                    for (int row = 0; row < yFactor; row++) {
+                        for (int col = 0; col < xFactor; col++) {
+                            // Apply RTL ordering for columns if enabled
+                            int actualCol = rightToLeft ? (xFactor - 1 - col) : col;
 
-                            // Translate to show only the desired grid cell
-                            // IMPORTANT: The PDFormXObject's BBox already matches the CropBox
-                            // (including its offset), so we only need to translate by cropX/cropY
-                            // relative to the CropBox origin, NOT the MediaBox origin
-                            contentStream.transform(Matrix.getTranslateInstance(-cropX, -cropY));
+                            // Calculate crop rectangle in source coordinates
+                            // PDF coordinates start at bottom-left
+                            float cropX = actualCol * cellWidth;
+                            // For Y: invert so row 0 shows TOP (following
+                            // SplitPdfBySectionsController
+                            // pattern)
+                            float cropY = (yFactor - 1 - row) * cellHeight;
 
-                            // Draw the form
-                            contentStream.drawForm(form);
+                            // Create new output page with target size
+                            PDPage outputPage = new PDPage(targetPageSize);
+                            outputDocument.addPage(outputPage);
 
-                            contentStream.restoreGraphicsState();
+                            try (PDPageContentStream contentStream =
+                                    new PDPageContentStream(
+                                            outputDocument,
+                                            outputPage,
+                                            PDPageContentStream.AppendMode.APPEND,
+                                            true,
+                                            true)) {
+
+                                // Calculate uniform scale to fit cell into target page
+                                // Scale UP if cell is smaller than target, scale DOWN if larger
+                                float scaleX = targetPageSize.getWidth() / cellWidth;
+                                float scaleY = targetPageSize.getHeight() / cellHeight;
+                                float scale = Math.min(scaleX, scaleY);
+
+                                // Center the scaled content on the target page
+                                float scaledCellWidth = cellWidth * scale;
+                                float scaledCellHeight = cellHeight * scale;
+                                float offsetX = (targetPageSize.getWidth() - scaledCellWidth) / 2;
+                                float offsetY = (targetPageSize.getHeight() - scaledCellHeight) / 2;
+
+                                // Apply transformations
+                                contentStream.saveGraphicsState();
+
+                                // Translate to center position
+                                contentStream.transform(
+                                        Matrix.getTranslateInstance(offsetX, offsetY));
+
+                                // Scale uniformly
+                                contentStream.transform(Matrix.getScaleInstance(scale, scale));
+
+                                // Translate to show only the desired grid cell
+                                // IMPORTANT: The PDFormXObject's BBox already matches the CropBox
+                                // (including its offset), so we only need to translate by
+                                // cropX/cropY
+                                // relative to the CropBox origin, NOT the MediaBox origin
+                                contentStream.transform(
+                                        Matrix.getTranslateInstance(-cropX, -cropY));
+
+                                // Draw the form
+                                contentStream.drawForm(form);
+
+                                contentStream.restoreGraphicsState();
+                            }
+
+                            log.trace(
+                                    "Created output page for grid cell [{},{}] of page {}: cropX={}, cropY={}, translate=({}, {})",
+                                    row,
+                                    actualCol,
+                                    pageIndex,
+                                    cropX,
+                                    cropY,
+                                    -cropX,
+                                    -cropY);
                         }
-
-                        log.trace(
-                                "Created output page for grid cell [{},{}] of page {}: cropX={}, cropY={}, translate=({}, {})",
-                                row,
-                                actualCol,
-                                pageIndex,
-                                cropX,
-                                cropY,
-                                -cropX,
-                                -cropY);
                     }
                 }
+
+                // Save output PDF to intermediate TempFile
+                outputDocument.save(pdfTempFile.getFile());
+                log.debug("Generated output PDF with {} pages", outputDocument.getNumberOfPages());
+
+                // Create ZIP from the PDF TempFile, streaming directly to zip TempFile
+                try (ZipOutputStream zipOut =
+                        new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()))) {
+                    zipOut.putNextEntry(new ZipEntry(filename + "_poster.pdf"));
+                    Files.copy(pdfTempFile.getPath(), zipOut);
+                    zipOut.closeEntry();
+                }
+                // pdfTempFile auto-closed and deleted here (end of inner try-with-resources)
             }
 
-            // Save output PDF
-            outputDocument.save(pdfOutputStream);
-            byte[] pdfData = pdfOutputStream.toByteArray();
-
-            log.debug(
-                    "Generated output PDF with {} pages ({} bytes)",
-                    outputDocument.getNumberOfPages(),
-                    pdfData.length);
-
-            // Create ZIP file with the result
-            try (ZipOutputStream zipOut = new ZipOutputStream(zipOutputStream)) {
-                ZipEntry zipEntry = new ZipEntry(filename + "_poster.pdf");
-                zipOut.putNextEntry(zipEntry);
-                zipOut.write(pdfData);
-                zipOut.closeEntry();
-            }
-
-            byte[] zipData = zipOutputStream.toByteArray();
-            log.debug("Successfully created ZIP with {} bytes", zipData.length);
-
-            return WebResponseUtils.bytesToWebResponse(
-                    zipData, filename + "_poster.zip", MediaType.APPLICATION_OCTET_STREAM);
+            log.debug("Successfully created ZIP");
+            return WebResponseUtils.zipFileToWebResponse(zipTempFile, filename + "_poster.zip");
 
         } catch (IOException e) {
             ExceptionUtils.logException("PDF poster split process", e);
+            zipTempFile.close();
+            throw e;
+        } catch (Exception e) {
+            zipTempFile.close();
             throw e;
         }
     }

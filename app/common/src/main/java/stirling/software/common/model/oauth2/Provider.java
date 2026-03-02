@@ -117,13 +117,13 @@ public class Provider {
                 + ", clientName="
                 + getClientName()
                 + ", clientId="
-                + getClientId()
+                + clientId
                 + ", clientSecret="
-                + (getClientSecret() != null && !getClientSecret().isEmpty() ? "*****" : "NULL")
+                + (clientSecret != null && !clientSecret.isEmpty() ? "*****" : "NULL")
                 + ", scopes="
                 + getScopes()
                 + ", useAsUsername="
-                + getUseAsUsername()
+                + useAsUsername
                 + "]";
     }
 }

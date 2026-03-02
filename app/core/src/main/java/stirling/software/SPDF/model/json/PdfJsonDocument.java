@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class PdfJsonDocument {
 
     private PdfJsonMetadata metadata;
@@ -23,7 +23,7 @@ public class PdfJsonDocument {
     private String xmpMetadata;
 
     /** Indicates that images should be loaded lazily via API rather than embedded in the JSON. */
-    private Boolean lazyImages;
+    private boolean lazyImages;
 
     @Builder.Default private List<PdfJsonFont> fonts = new ArrayList<>();
 

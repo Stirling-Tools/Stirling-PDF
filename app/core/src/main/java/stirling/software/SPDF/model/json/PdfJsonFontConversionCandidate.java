@@ -1,7 +1,5 @@
 package stirling.software.SPDF.model.json;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.AllArgsConstructor;
@@ -65,5 +63,5 @@ public class PdfJsonFontConversionCandidate {
     private String diagnostics;
 
     /** Known unicode/codepoint coverage derived from the conversion strategy. */
-    private List<Integer> glyphCoverage;
+    private int[] glyphCoverage;
 }

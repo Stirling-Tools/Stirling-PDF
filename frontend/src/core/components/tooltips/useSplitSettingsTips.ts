@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { TooltipContent } from '@app/types/tips';
 import { SPLIT_METHODS, type SplitMethod } from '@app/constants/splitConstants';
 
-export const useSplitSettingsTips = (method: SplitMethod | ''): TooltipContent | null => {
+export const useSplitSettingsTips = (method: SplitMethod | null): TooltipContent | null => {
   const { t } = useTranslation();
 
   if (!method) return null;

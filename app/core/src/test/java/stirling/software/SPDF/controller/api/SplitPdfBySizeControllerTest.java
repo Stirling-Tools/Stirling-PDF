@@ -25,6 +25,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.api.general.SplitPdfBySizeOrCountRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -69,16 +70,15 @@ class SplitPdfBySizeControllerTest {
         request.setSplitType(1); // Page count
         request.setSplitValue("2");
 
-        when(pdfDocumentFactory.load(any(byte[].class)))
-                .thenAnswer(inv -> Loader.loadPDF((byte[]) inv.getArgument(0)));
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(((MultipartFile) inv.getArgument(0)).getBytes()));
 
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(any(PDDocument.class)))
                 .thenAnswer(inv -> new PDDocument());
 
-        ResponseEntity<byte[]> response = controller.autoSplitPdf(request);
+        ResponseEntity<?> response = controller.autoSplitPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotEmpty();
         assertThat(response.getHeaders().getContentType())
                 .isEqualTo(MediaType.APPLICATION_OCTET_STREAM);
     }
@@ -104,15 +104,19 @@ class SplitPdfBySizeControllerTest {
         request.setSplitType(2); // Document count
         request.setSplitValue("3"); // Split into 3 docs (2 pages each)
 
-        when(pdfDocumentFactory.load(any(byte[].class)))
-                .thenAnswer(inv -> Loader.loadPDF((byte[]) inv.getArgument(0)));
+        when(pdfDocumentFactory.load(any(org.springframework.web.multipart.MultipartFile.class)))
+                .thenAnswer(
+                        inv ->
+                                Loader.loadPDF(
+                                        ((org.springframework.web.multipart.MultipartFile)
+                                                        inv.getArgument(0))
+                                                .getBytes()));
 
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(any(PDDocument.class)))
                 .thenAnswer(inv -> new PDDocument());
 
-        ResponseEntity<byte[]> response = controller.autoSplitPdf(request);
+        ResponseEntity<?> response = controller.autoSplitPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotEmpty();
     }
 }

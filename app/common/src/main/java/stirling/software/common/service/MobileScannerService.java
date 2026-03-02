@@ -129,7 +129,7 @@ public class MobileScannerService {
                         FILE_EXTENSION_PATTERN.matcher(safeFilename).replaceFirst("");
                 String ext =
                         safeFilename.contains(".")
-                                ? safeFilename.substring(safeFilename.lastIndexOf("."))
+                                ? safeFilename.substring(safeFilename.lastIndexOf('.'))
                                 : "";
                 safeFilename = nameWithoutExt + "-" + counter + ext;
                 filePath = sessionDir.resolve(safeFilename).normalize().toAbsolutePath();

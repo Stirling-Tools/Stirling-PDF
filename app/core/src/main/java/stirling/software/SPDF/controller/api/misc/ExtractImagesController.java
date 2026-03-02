@@ -5,6 +5,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -24,10 +25,10 @@ import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -42,6 +43,8 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ImageProcessingUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
@@ -50,8 +53,9 @@ import stirling.software.common.util.WebResponseUtils;
 public class ExtractImagesController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/extract-images")
+    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/extract-images")
     @MultiFileResponse
     @Operation(
             summary = "Extract images from a PDF file",
@@ -59,111 +63,115 @@ public class ExtractImagesController {
                     "This endpoint extracts images from a given PDF file and returns them in a zip"
                             + " file. Users can specify the output image format. Input:PDF"
                             + " Output:IMAGE/ZIP Type:SIMO")
-    public ResponseEntity<byte[]> extractImages(@ModelAttribute PDFExtractImagesRequest request)
+    public ResponseEntity<StreamingResponseBody> extractImages(
+            @ModelAttribute PDFExtractImagesRequest request)
             throws IOException, InterruptedException, ExecutionException {
         MultipartFile file = request.getFileInput();
         String format = request.getFormat();
         boolean allowDuplicates = Boolean.TRUE.equals(request.getAllowDuplicates());
-        PDDocument document = pdfDocumentFactory.load(file);
-
-        // Determine if multithreading should be used based on PDF size or number of pages
-        boolean useMultithreading = shouldUseMultithreading(file, document);
-
-        // Create ByteArrayOutputStream to write zip file to byte array
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-        // Create ZipOutputStream to create zip file
-        ZipOutputStream zos = new ZipOutputStream(baos);
-
-        // Set compression level
-        zos.setLevel(Deflater.BEST_COMPRESSION);
 
         String filename = GeneralUtils.removeExtension(file.getOriginalFilename());
         Set<byte[]> processedImages = new HashSet<>();
 
-        if (useMultithreading) {
-            // Virtual thread executor — lightweight threads ideal for I/O-bound image extraction
-            ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
-            Set<Future<Void>> futures = new HashSet<>();
+        TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
+        try (ZipOutputStream zos =
+                        new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()));
+                PDDocument document = pdfDocumentFactory.load(file)) {
 
-            // Safely iterate over each page, handling corrupt PDFs where page count might be wrong
-            try {
-                int pageCount = document.getPages().getCount();
-                log.debug("Document reports {} pages", pageCount);
+            // Set compression level
+            zos.setLevel(Deflater.BEST_COMPRESSION);
 
-                int consecutiveFailures = 0;
+            // Determine if multithreading should be used based on PDF size or number of pages
+            boolean useMultithreading = shouldUseMultithreading(file, document);
 
-                for (int pgNum = 0; pgNum < pageCount; pgNum++) {
-                    try {
-                        PDPage page = document.getPage(pgNum);
-                        consecutiveFailures = 0; // Reset on success
-                        final int currentPageNum = pgNum + 1; // Convert to 1-based page numbering
-                        Future<Void> future =
-                                executor.submit(
-                                        () -> {
-                                            try {
-                                                // Call the image extraction method for each page
-                                                extractImagesFromPage(
-                                                        page,
-                                                        format,
-                                                        filename,
-                                                        currentPageNum,
-                                                        processedImages,
-                                                        zos,
-                                                        allowDuplicates);
-                                            } catch (Exception e) {
-                                                // Log the error and continue processing other pages
-                                                ExceptionUtils.logException(
-                                                        "image extraction from page "
-                                                                + currentPageNum,
-                                                        e);
-                                            }
+            if (useMultithreading) {
+                ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+                Set<Future<Void>> futures = new HashSet<>();
 
-                                            return null; // Callable requires a return type
-                                        });
+                try {
+                    int pageCount = document.getPages().getCount();
+                    log.debug("Document reports {} pages", pageCount);
 
-                        // Add the Future object to the list to track completion
-                        futures.add(future);
-                    } catch (Exception e) {
-                        consecutiveFailures++;
-                        ExceptionUtils.logException("page access for page " + (pgNum + 1), e);
+                    int consecutiveFailures = 0;
 
-                        if (consecutiveFailures >= 3) {
-                            log.warn("Stopping page iteration after 3 consecutive failures");
-                            break;
+                    for (int pgNum = 0; pgNum < pageCount; pgNum++) {
+                        try {
+                            PDPage page = document.getPage(pgNum);
+                            consecutiveFailures = 0; // Reset on success
+                            final int currentPageNum =
+                                    pgNum + 1; // Convert to 1-based page numbering
+                            Future<Void> future =
+                                    executor.submit(
+                                            () -> {
+                                                try {
+                                                    // Call the image extraction method for each
+                                                    // page
+                                                    extractImagesFromPage(
+                                                            page,
+                                                            format,
+                                                            filename,
+                                                            currentPageNum,
+                                                            processedImages,
+                                                            zos,
+                                                            allowDuplicates);
+                                                } catch (Exception e) {
+                                                    // Log the error and continue processing other
+                                                    // pages
+                                                    ExceptionUtils.logException(
+                                                            "image extraction from page "
+                                                                    + currentPageNum,
+                                                            e);
+                                                }
+
+                                                return null; // Callable requires a return type
+                                            });
+
+                            // Add the Future object to the list to track completion
+                            futures.add(future);
+                        } catch (Exception e) {
+                            consecutiveFailures++;
+                            ExceptionUtils.logException("page access for page " + (pgNum + 1), e);
+
+                            if (consecutiveFailures >= 3) {
+                                log.warn("Stopping page iteration after 3 consecutive failures");
+                                break;
+                            }
                         }
                     }
+                } catch (Exception e) {
+                    ExceptionUtils.logException("page count determination", e);
+                    throw e;
                 }
-            } catch (Exception e) {
-                ExceptionUtils.logException("page count determination", e);
-                throw e;
-            }
 
-            // Wait for all tasks to complete
-            for (Future<Void> future : futures) {
-                future.get();
-            }
+                // Wait for all tasks to complete
+                for (Future<Void> future : futures) {
+                    future.get();
+                }
 
-            // Close executor service
-            executor.shutdown();
-        } else {
-            // Single-threaded extraction
-            for (int pgNum = 0; pgNum < document.getPages().getCount(); pgNum++) {
-                PDPage page = document.getPage(pgNum);
-                extractImagesFromPage(
-                        page, format, filename, pgNum + 1, processedImages, zos, allowDuplicates);
+                // Close executor service
+                executor.shutdown();
+            } else {
+                // Single-threaded extraction
+                for (int pgNum = 0; pgNum < document.getPages().getCount(); pgNum++) {
+                    PDPage page = document.getPage(pgNum);
+                    extractImagesFromPage(
+                            page,
+                            format,
+                            filename,
+                            pgNum + 1,
+                            processedImages,
+                            zos,
+                            allowDuplicates);
+                }
             }
+            // document and zos closed by try-with-resources
+        } catch (Exception e) {
+            zipTempFile.close();
+            throw e;
         }
 
-        // Close PDDocument and ZipOutputStream
-        document.close();
-        zos.close();
-
-        // Create ByteArrayResource from byte array
-        byte[] zipContents = baos.toByteArray();
-
-        return WebResponseUtils.baosToWebResponse(
-                baos, filename + "_extracted-images.zip", MediaType.APPLICATION_OCTET_STREAM);
+        return WebResponseUtils.zipFileToWebResponse(
+                zipTempFile, filename + "_extracted-images.zip");
     }
 
     private boolean shouldUseMultithreading(MultipartFile file, PDDocument document) {
@@ -214,13 +222,16 @@ public class ExtractImagesController {
                     // Convert to standard RGB colorspace if needed
                     BufferedImage bufferedImage = convertToRGB(renderedImage, format);
 
-                    // Write image to zip file
+                    // Encode image outside the lock to allow parallel encoding across threads
                     String imageName = filename + "_page_" + pageNum + "_" + count++ + "." + format;
+                    ByteArrayOutputStream imageBaos = new ByteArrayOutputStream();
+                    ImageIO.write(bufferedImage, format, imageBaos);
+                    byte[] imageData = imageBaos.toByteArray();
+
+                    // Write encoded bytes to zip under lock (ZipOutputStream requires serialization)
                     synchronized (zos) {
                         zos.putNextEntry(new ZipEntry(imageName));
-                        ByteArrayOutputStream imageBaos = new ByteArrayOutputStream();
-                        ImageIO.write(bufferedImage, format, imageBaos);
-                        zos.write(imageBaos.toByteArray());
+                        zos.write(imageData);
                         zos.closeEntry();
                     }
                 }
