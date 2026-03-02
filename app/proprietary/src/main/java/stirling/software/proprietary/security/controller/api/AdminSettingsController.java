@@ -196,8 +196,9 @@ public class AdminSettingsController {
                 log.info("Admin updating setting: {} = {}", key, value);
                 GeneralUtils.saveKeyToSettings(key, value);
 
-                // Track this as a pending change
-                pendingChanges.put(key, value);
+                // Track this as a pending change (convert null to empty string for
+                // ConcurrentHashMap)
+                pendingChanges.put(key, value != null ? value : "");
 
                 updatedCount++;
             }
@@ -267,6 +268,9 @@ public class AdminSettingsController {
                     sectionMap.put("_pending", sectionPending);
                 }
             }
+
+            // Mask sensitive fields before returning to frontend
+            sectionMap = maskSensitiveFields(sectionMap);
 
             log.debug(
                     "Admin requested settings section: {} (includePending={})",
@@ -404,6 +408,13 @@ public class AdminSettingsController {
                 return ResponseEntity.badRequest()
                         .body("Setting key not found: " + HtmlUtils.htmlEscape(key));
             }
+
+            // Mask sensitive values before returning
+            String keyName = key.contains(".") ? key.substring(key.lastIndexOf(".") + 1) : key;
+            if (isSensitiveFieldWithPath(keyName, key)) {
+                value = createMaskedValue(value);
+            }
+
             log.debug("Admin requested setting: {}", key);
             return ResponseEntity.ok(new SettingValueResponse(key, value));
         } catch (IllegalArgumentException e) {
@@ -441,6 +452,20 @@ public class AdminSettingsController {
             }
 
             Object value = request.getValue();
+
+            // Prevent saving masked values for sensitive fields to avoid data loss
+            if ("********".equals(value)) {
+                String keyName = key.contains(".") ? key.substring(key.lastIndexOf(".") + 1) : key;
+                if (isSensitiveFieldWithPath(keyName, key)) {
+                    log.warn(
+                            "Admin attempted to save masked value for sensitive field: {}. This operation is blocked to prevent data loss.",
+                            key);
+                    return ResponseEntity.badRequest()
+                            .body(
+                                    "Cannot save masked values for sensitive settings. Please provide the actual value.");
+                }
+            }
+
             log.info("Admin updating single setting: {} = {}", key, value);
             GeneralUtils.saveKeyToSettings(key, value);
 
