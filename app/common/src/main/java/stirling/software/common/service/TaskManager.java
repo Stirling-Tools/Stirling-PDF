@@ -42,7 +42,8 @@ public class TaskManager {
 
     private final FileStorage fileStorage;
     private final ScheduledExecutorService cleanupExecutor =
-            Executors.newSingleThreadScheduledExecutor();
+            Executors.newSingleThreadScheduledExecutor(
+                    Thread.ofVirtual().name("task-cleanup-", 0).factory());
 
     /** Initialize the task manager and start the cleanup scheduler */
     public TaskManager(FileStorage fileStorage) {
@@ -460,6 +461,26 @@ public class TaskManager {
                 for (ResultFile resultFile : jobResult.getAllResultFiles()) {
                     if (fileId.equals(resultFile.getFileId())) {
                         return resultFile;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Find the job key that owns a given file ID.
+     *
+     * @param fileId file identifier to look up
+     * @return scoped job key if found, otherwise null
+     */
+    public String findJobKeyByFileId(String fileId) {
+        for (Map.Entry<String, JobResult> entry : jobResults.entrySet()) {
+            JobResult jobResult = entry.getValue();
+            if (jobResult.hasFiles()) {
+                for (ResultFile resultFile : jobResult.getAllResultFiles()) {
+                    if (fileId.equals(resultFile.getFileId())) {
+                        return entry.getKey();
                     }
                 }
             }

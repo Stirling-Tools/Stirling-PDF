@@ -52,7 +52,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jdk-version: [17, 21]
+        jdk-version: [21, 25]
         spring-security: [true, false]
     steps:
       - name: Harden Runner
@@ -68,10 +68,20 @@ jobs:
           java-version: ${{ matrix.jdk-version }}
           distribution: "temurin"
 
+      - name: Cache Gradle dependency artifacts
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/caches/modules-2/files-2.1
+            ~/.gradle/caches/modules-2/metadata-2.*
+          key: gradle-deps-${{ runner.os }}-jdk-${{ matrix.jdk-version }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
         with:
           gradle-version: 8.14
+          cache-disabled: true
 
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
         run: ./gradlew build -PnoSpotless
@@ -140,13 +150,23 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
-          java-version: "21"
+          java-version: "25"
           distribution: "temurin"
+
+      - name: Cache Gradle dependency artifacts
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/caches/modules-2/files-2.1
+            ~/.gradle/caches/modules-2/metadata-2.*
+          key: gradle-deps-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
         with:
           gradle-version: 8.14
+          cache-disabled: true
 
       - name: Generate OpenAPI documentation
         run: ./gradlew :stirling-pdf:generateOpenApiDocs
@@ -209,19 +229,34 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Set up JDK 21
+      - name: Set up JDK 25
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
-          java-version: "21"
+          java-version: "25"
           distribution: "temurin"
+
+      - name: Cache Gradle dependency artifacts
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/caches/modules-2/files-2.1
+            ~/.gradle/caches/modules-2/metadata-2.*
+          key: gradle-deps-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
         with:
           gradle-version: 8.14
+          cache-disabled: true
 
       - name: check the licenses for compatibility
-        run: ./gradlew checkLicense
+        # NOTE: --no-parallel is intentional here. Running the checkLicense task in parallel with other
+        # Gradle tasks has been observed to cause intermittent failures with the dependency license
+        # checking plugin on this Gradle version. Disabling parallel execution trades some build speed
+        # for more reliable, deterministic license checks. If upgrading Gradle or the plugin, consider
+        # re-evaluating whether this flag is still required before removing it.
+        run: ./gradlew checkLicense --no-parallel
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
@@ -253,6 +288,10 @@ jobs:
     #     )
 
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+      checks: write
 
     steps:
       - name: Harden Runner
@@ -263,19 +302,33 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Set up JDK 21
+      - name: Set up JDK 25
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
-          java-version: "21"
+          java-version: "25"
           distribution: "temurin"
+
+      - name: Cache Gradle dependency artifacts
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/caches/modules-2/files-2.1
+            ~/.gradle/caches/modules-2/metadata-2.*
+          key: gradle-deps-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
         with:
           gradle-version: 8.14
+          cache-disabled: true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+      # Expose ACTIONS_RUNTIME_TOKEN / ACTIONS_RESULTS_URL for docker buildx type=gha cache backend.
+      - name: Expose GitHub runtime for Buildx cache
+        uses: crazy-max/ghaction-github-runtime@3cb05d89e1f492524af3d41a1c98c83bc3025124 # v3.1.0
 
       - name: Install Docker Compose
         run: |
@@ -292,6 +345,7 @@ jobs:
       - name: Pip requirements
         run: |
           pip install --require-hashes -r ./testing/cucumber/requirements.txt
+          pip install behave-html-formatter
 
       - name: Run Docker Compose Tests
         run: |
@@ -304,6 +358,24 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
 
+      - name: Upload Cucumber Report
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: cucumber-report
+          path: testing/cucumber/report.html
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Cucumber Test Report
+        if: always()
+        uses: dorny/test-reporter@b082adf0eced0765477756c2a610396589b8c637 # v2.5.0
+        with:
+          name: Cucumber Tests
+          path: testing/cucumber/junit/*.xml
+          reporter: java-junit
+          fail-on-error: false
+
   test-build-docker-images:
     if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
     needs: [files-changed, build, check-generateOpenApiDocs, check-licence]
@@ -314,10 +386,13 @@ jobs:
         include:
           - docker-rev: docker/embedded/Dockerfile
             artifact-suffix: Dockerfile
+            cache-scope: stirling-pdf-latest
           - docker-rev: docker/embedded/Dockerfile.ultra-lite
             artifact-suffix: Dockerfile.ultra-lite
+            cache-scope: stirling-pdf-ultra-lite
           - docker-rev: docker/embedded/Dockerfile.fat
             artifact-suffix: Dockerfile.fat
+            cache-scope: stirling-pdf-fat
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
@@ -334,16 +409,26 @@ jobs:
           docker system prune -af || true
           echo "Disk space after cleanup:" && df -h
 
-      - name: Set up JDK 21
+      - name: Set up JDK 25
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
-          java-version: "21"
+          java-version: "25"
           distribution: "temurin"
+
+      - name: Cache Gradle dependency artifacts
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/caches/modules-2/files-2.1
+            ~/.gradle/caches/modules-2/metadata-2.*
+          key: gradle-deps-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
         with:
           gradle-version: 8.14
+          cache-disabled: true
 
       - name: Build application
         run: ./gradlew build
@@ -368,8 +453,8 @@ jobs:
           context: .
           file: ./${{ matrix.docker-rev }}
           push: false
-          cache-from: type=gha,scope=${{ matrix.artifact-suffix }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.artifact-suffix }}
+          cache-from: type=gha,scope=${{ matrix.cache-scope }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.cache-scope }}
           platforms: linux/amd64,linux/arm64/v8
           provenance: true
           sbom: true

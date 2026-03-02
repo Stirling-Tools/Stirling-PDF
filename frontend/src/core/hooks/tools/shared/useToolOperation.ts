@@ -15,6 +15,8 @@ import { createNewStirlingFileStub } from '@app/types/fileContext';
 import { ToolOperation } from '@app/types/file';
 import { ToolId } from '@app/types/toolId';
 import { ensureBackendReady } from '@app/services/backendReadinessGuard';
+import { useWillUseCloud } from '@app/hooks/useWillUseCloud';
+import { useCreditCheck } from '@app/hooks/useCreditCheck';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
@@ -147,6 +149,7 @@ export interface ToolOperationHook<TParams = void> {
   status: string;
   errorMessage: string | null;
   progress: ProcessingProgress | null;
+  willUseCloud?: boolean;
 
   // Actions
   executeOperation: (params: TParams, selectedFiles: StirlingFile[]) => Promise<void>;
@@ -183,6 +186,16 @@ export const useToolOperation = <TParams>(
   const { processFiles, cancelOperation: cancelApiCalls } = useToolApiCalls<TParams>();
   const { generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles } = useToolResources();
 
+  const { checkCredits } = useCreditCheck(config.operationType);
+
+  // Determine endpoint for cloud usage check
+  const endpointString = config.toolType !== ToolType.custom && config.endpoint
+    ? (typeof config.endpoint === 'function'
+        ? (config.defaultParameters ? config.endpoint(config.defaultParameters) : undefined)
+        : config.endpoint)
+    : undefined;
+  const willUseCloud = useWillUseCloud(endpointString);
+
   // Track last operation for undo functionality
   const lastOperationRef = useRef<{
     inputFiles: File[];
@@ -217,7 +230,24 @@ export const useToolOperation = <TParams>(
       return;
     }
 
-    const backendReady = await ensureBackendReady();
+    // Get endpoint (static or dynamic) for backend readiness check
+    const endpoint = config.customProcessor
+      ? undefined // Custom processors may not have endpoints
+      : typeof config.endpoint === 'function'
+        ? config.endpoint(params)
+        : config.endpoint;
+
+    // Credit check for cloud operations (desktop SaaS mode only, no-op in web builds)
+    if (willUseCloud && endpoint) {
+      const creditError = await checkCredits();
+      if (creditError !== null) {
+        actions.setError(creditError);
+        return;
+      }
+    }
+
+    // Backend readiness check (will skip for SaaS-routed endpoints)
+    const backendReady = await ensureBackendReady(endpoint);
     if (!backendReady) {
       actions.setError(t('backendHealth.offline', 'Embedded backend is offline. Please try again shortly.'));
       return;
@@ -507,7 +537,7 @@ export const useToolOperation = <TParams>(
       actions.setLoading(false);
       actions.setProgress(null);
     }
-  }, [t, config, actions, addFiles, consumeFiles, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles]);
+  }, [t, config, actions, addFiles, consumeFiles, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, willUseCloud, checkCredits]);
 
   const cancelOperation = useCallback(() => {
     cancelApiCalls();
@@ -591,6 +621,7 @@ export const useToolOperation = <TParams>(
     status: state.status,
     errorMessage: state.errorMessage,
     progress: state.progress,
+    willUseCloud,
 
     // Actions
     executeOperation,

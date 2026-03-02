@@ -143,6 +143,7 @@ export default function AdminEndpointsSection() {
     'ocr-pdf',
     'overlay-pdf',
     'pdf-to-csv',
+    'pdf-to-xlsx',
     'pdf-to-epub',
     'pdf-to-html',
     'pdf-to-img',

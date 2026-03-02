@@ -5,10 +5,10 @@ bootRun {
 spotless {
     java {
         target 'src/**/java/**/*.java'
+        targetExclude 'src/main/java/org/apache/**'
         googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
 
         importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
-        toggleOffOn()
         trimTrailingWhitespace()
         leadingTabsToSpaces()
         endWithNewline()
@@ -27,8 +27,9 @@ spotless {
     }
 }
 dependencies {
-    api 'org.springframework.boot:spring-boot-starter-web'
-    api 'org.springframework.boot:spring-boot-starter-aop'
+    api 'com.google.guava:guava:33.4.8-jre'
+    api 'org.springframework.boot:spring-boot-starter-webmvc'
+    api 'org.springframework.boot:spring-boot-starter-aspectj'
     api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260102.1'
     api 'com.fathzer:javaluator:3.0.6'
     api 'com.posthog.java:posthog:1.2.0'
@@ -39,10 +40,10 @@ dependencies {
     api "org.apache.pdfbox:pdfbox-io:$pdfboxVersion"
     api "org.apache.pdfbox:xmpbox:$pdfboxVersion"
     api "org.apache.pdfbox:preflight:$pdfboxVersion"
-    api 'com.github.junrar:junrar:7.5.7' // RAR archive support for CBR files
+    api 'com.github.junrar:junrar:7.5.8' // RAR archive support for CBR files
     api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
     api 'org.snakeyaml:snakeyaml-engine:3.0.1'
-    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.15"
+    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1"
     // Simple Java Mail for EML/MSG parsing (replaces direct Angus Mail usage)
     api 'org.simplejavamail:simple-java-mail:8.12.6'
     api 'org.simplejavamail:outlook-module:8.12.6' // MSG file support

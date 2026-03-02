@@ -160,6 +160,55 @@ const SplitSettings = ({
     </Stack>
   );
 
+  const renderByPosterForm = () => (
+    <Stack gap="sm">
+      <Select
+        label={t("split.poster.pageSize.label", "Target Page Size")}
+        description={t("split.poster.pageSize.description", "Size of output pages for printing")}
+        value={parameters.pageSize || 'A4'}
+        onChange={(value) => onParameterChange('pageSize', value || 'A4')}
+        data={[
+          { value: 'A4', label: 'A4 (210 × 297 mm)' },
+          { value: 'Letter', label: 'Letter (8.5 × 11 in)' },
+          { value: 'A3', label: 'A3 (297 × 420 mm)' },
+          { value: 'A5', label: 'A5 (148 × 210 mm)' },
+          { value: 'Legal', label: 'Legal (8.5 × 14 in)' },
+          { value: 'Tabloid', label: 'Tabloid (11 × 17 in)' },
+        ]}
+        disabled={disabled}
+        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+      />
+      <TextInput
+        label={t("split.poster.xFactor.label", "Horizontal Divisions")}
+        description={t("split.poster.xFactor.description", "Number of columns to split each page into")}
+        type="number"
+        min="1"
+        max="10"
+        value={parameters.xFactor || 2}
+        onChange={(e) => onParameterChange('xFactor', e.target.value)}
+        placeholder="2"
+        disabled={disabled}
+      />
+      <TextInput
+        label={t("split.poster.yFactor.label", "Vertical Divisions")}
+        description={t("split.poster.yFactor.description", "Number of rows to split each page into")}
+        type="number"
+        min="1"
+        max="10"
+        value={parameters.yFactor || 2}
+        onChange={(e) => onParameterChange('yFactor', e.target.value)}
+        placeholder="2"
+        disabled={disabled}
+      />
+      <Checkbox
+        label={t("split.poster.rightToLeft", "Split right-to-left")}
+        checked={parameters.rightToLeft || false}
+        onChange={(e) => onParameterChange('rightToLeft', e.currentTarget.checked)}
+        disabled={disabled}
+      />
+    </Stack>
+  );
+
   // Don't render anything if no method is selected
   if (!parameters.method) {
     return (
@@ -181,6 +230,7 @@ const SplitSettings = ({
         parameters.method === SPLIT_METHODS.BY_DOC_COUNT) && renderSplitValueForm()}
       {parameters.method === SPLIT_METHODS.BY_CHAPTERS && renderByChaptersForm()}
       {parameters.method === SPLIT_METHODS.BY_PAGE_DIVIDER && renderByPageDividerForm()}
+      {parameters.method === SPLIT_METHODS.BY_POSTER && renderByPosterForm()}
     </Stack>
   );
 };

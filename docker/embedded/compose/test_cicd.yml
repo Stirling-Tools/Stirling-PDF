@@ -20,7 +20,6 @@ services:
     environment:
       DISABLE_ADDITIONAL_FEATURES: "false"
       SECURITY_ENABLELOGIN: "true"
-      V2: "false"
       PUID: 1002
       PGID: 1002
       UMASK: "022"
@@ -31,5 +30,6 @@ services:
       SYSTEM_MAXFILESIZE: "100"
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
+      SYSTEM_ENABLEMOBILESCANNER: "true"
       SECURITY_CUSTOMGLOBALAPIKEY: "123456789"
     restart: on-failure:5

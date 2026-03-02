@@ -12,7 +12,10 @@ export const buildSplitFormData = (parameters: SplitParameters, file: File): For
 
   formData.append("fileInput", file);
 
-  switch (parameters.method) {
+  // Use BY_PAGES as default if no method is selected
+  const method = parameters.method || SPLIT_METHODS.BY_PAGES;
+
+  switch (method) {
     case SPLIT_METHODS.BY_PAGES:
       formData.append("pageNumbers", parameters.pages);
       break;
@@ -45,14 +48,25 @@ export const buildSplitFormData = (parameters: SplitParameters, file: File): For
     case SPLIT_METHODS.BY_PAGE_DIVIDER:
       formData.append("duplexMode", (parameters.duplexMode ?? false).toString());
       break;
+    case SPLIT_METHODS.BY_POSTER:
+      formData.append("pageSize", parameters.pageSize || 'A4');
+      formData.append("xFactor", parameters.xFactor || '2');
+      formData.append("yFactor", parameters.yFactor || '2');
+      formData.append("rightToLeft", (parameters.rightToLeft ?? false).toString());
+      break;
     default:
-      throw new Error(`Unknown split method: ${parameters.method}`);
+      throw new Error(`Unknown split method: ${method}`);
   }
 
   return formData;
 };
 
 export const getSplitEndpoint = (parameters: SplitParameters): string => {
+  // Default to BY_PAGES endpoint if no method selected yet
+  if (!parameters.method) {
+    return "/api/v1/general/split-pages";
+  }
+
   switch (parameters.method) {
     case SPLIT_METHODS.BY_PAGES:
       return "/api/v1/general/split-pages";
@@ -66,6 +80,8 @@ export const getSplitEndpoint = (parameters: SplitParameters): string => {
       return "/api/v1/general/split-pdf-by-chapters";
     case SPLIT_METHODS.BY_PAGE_DIVIDER:
       return "/api/v1/misc/auto-split-pdf";
+    case SPLIT_METHODS.BY_POSTER:
+      return "/api/v1/general/split-for-poster-print";
     default:
       throw new Error(`Unknown split method: ${parameters.method}`);
   }

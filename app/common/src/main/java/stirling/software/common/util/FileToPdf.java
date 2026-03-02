@@ -100,6 +100,13 @@ public class FileToPdf {
                 while (entry != null) {
                     Path filePath =
                             tempUnzippedDir.getPath().resolve(sanitizeZipFilename(entry.getName()));
+                    Path normalizedTargetDir =
+                            tempUnzippedDir.getPath().toAbsolutePath().normalize();
+                    Path normalizedFilePath = filePath.toAbsolutePath().normalize();
+                    if (!normalizedFilePath.startsWith(normalizedTargetDir)) {
+                        throw new IOException(
+                                "Zip entry path escapes target directory: " + entry.getName());
+                    }
                     if (!entry.isDirectory()) {
                         Files.createDirectories(filePath.getParent());
                         if (entry.getName().toLowerCase(Locale.ROOT).endsWith(".html")
