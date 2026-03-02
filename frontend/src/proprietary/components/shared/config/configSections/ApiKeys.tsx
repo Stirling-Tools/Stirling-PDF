@@ -18,11 +18,29 @@ export default function ApiKeys() {
 
   const copy = async (text: string, tag: string) => {
     try {
-      await navigator.clipboard.writeText(text);
-      setCopied(tag);
-      setTimeout(() => setCopied(null), 1600);
+      // Try modern Clipboard API first (requires HTTPS)
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        setCopied(tag);
+        setTimeout(() => setCopied(null), 1600);
+      } else {
+        // Fallback for HTTP: use old execCommand method
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+
+        if (document.execCommand('copy')) {
+          setCopied(tag);
+          setTimeout(() => setCopied(null), 1600);
+        }
+
+        document.body.removeChild(textarea);
+      }
     } catch (e) {
-      console.error(e);
+      console.error('Failed to copy:', e);
     }
   };
 

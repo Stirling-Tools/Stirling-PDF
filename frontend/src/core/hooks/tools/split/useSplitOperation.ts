@@ -12,7 +12,10 @@ export const buildSplitFormData = (parameters: SplitParameters, file: File): For
 
   formData.append("fileInput", file);
 
-  switch (parameters.method) {
+  // Use BY_PAGES as default if no method is selected
+  const method = parameters.method || SPLIT_METHODS.BY_PAGES;
+
+  switch (method) {
     case SPLIT_METHODS.BY_PAGES:
       formData.append("pageNumbers", parameters.pages);
       break;
@@ -52,13 +55,18 @@ export const buildSplitFormData = (parameters: SplitParameters, file: File): For
       formData.append("rightToLeft", (parameters.rightToLeft ?? false).toString());
       break;
     default:
-      throw new Error(`Unknown split method: ${parameters.method}`);
+      throw new Error(`Unknown split method: ${method}`);
   }
 
   return formData;
 };
 
 export const getSplitEndpoint = (parameters: SplitParameters): string => {
+  // Default to BY_PAGES endpoint if no method selected yet
+  if (!parameters.method) {
+    return "/api/v1/general/split-pages";
+  }
+
   switch (parameters.method) {
     case SPLIT_METHODS.BY_PAGES:
       return "/api/v1/general/split-pages";
