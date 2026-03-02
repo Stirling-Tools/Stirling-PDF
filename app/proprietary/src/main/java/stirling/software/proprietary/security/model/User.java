@@ -46,9 +46,11 @@ public class User implements UserDetails, Serializable {
     private String username;
 
     @Column(name = "password")
+    @JsonIgnore
     private String password;
 
     @Column(name = "apiKey")
+    @JsonIgnore
     private String apiKey;
 
     @Column(name = "enabled")

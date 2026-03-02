@@ -14,10 +14,10 @@ bootRun {
 spotless {
         java {
         target 'src/**/java/**/*.java'
+        targetExclude 'src/main/java/org/apache/**'
         googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
 
         importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
-        toggleOffOn()
         trimTrailingWhitespace()
         leadingTabsToSpaces()
         endWithNewline()
@@ -37,6 +37,7 @@ spotless {
 }
 dependencies {
     implementation project(':common')
+    api 'com.google.guava:guava:33.4.8-jre'
 
     api 'org.springframework:spring-jdbc'
     api 'org.springframework:spring-webmvc'

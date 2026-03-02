@@ -125,7 +125,7 @@ class InviteLinkControllerTest {
     }
 
     @Test
-    void validateInviteTokenReturnsGoneWhenExpired() throws Exception {
+    void validateInviteTokenReturnsNotFoundWhenExpired() throws Exception {
         InviteToken expired = new InviteToken();
         expired.setToken("abc");
         expired.setExpiresAt(LocalDateTime.now().minusHours(1));
@@ -133,8 +133,8 @@ class InviteLinkControllerTest {
         when(inviteTokenRepository.findByToken("abc")).thenReturn(Optional.of(expired));
 
         mockMvc.perform(get("/api/v1/invite/validate/abc"))
-                .andExpect(status().isGone())
-                .andExpect(jsonPath("$.error").value("This invite link has expired"));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Invalid invite link"));
     }
 
     @Test

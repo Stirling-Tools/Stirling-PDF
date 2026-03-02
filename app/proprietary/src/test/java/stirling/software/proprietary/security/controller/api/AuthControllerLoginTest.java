@@ -149,7 +149,7 @@ class AuthControllerLoginTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Invalid credentials"));
+                .andExpect(jsonPath("$.error").value("Invalid username or password"));
 
         verify(loginAttemptService).loginFailed("user@example.com");
     }

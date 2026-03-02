@@ -9,12 +9,12 @@ import {
   TextInput,
   Textarea,
   Switch,
-  PasswordInput,
   NumberInput,
   TagsInput,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import LocalIcon from '@app/components/shared/LocalIcon';
+import EditableSecretField from '@app/components/shared/EditableSecretField';
 import { Provider, ProviderField } from '@app/components/shared/config/configSections/providerDefinitions';
 
 interface ProviderCardProps {
@@ -94,13 +94,13 @@ export default function ProviderCard({
 
       case 'password':
         return (
-          <PasswordInput
+          <EditableSecretField
             key={field.key}
             label={field.label}
             description={field.description}
             placeholder={field.placeholder}
             value={value}
-            onChange={(e) => handleFieldChange(field.key, e.target.value)}
+            onChange={(newValue) => handleFieldChange(field.key, newValue)}
             disabled={disabled}
           />
         );

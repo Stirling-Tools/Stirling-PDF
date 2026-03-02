@@ -123,7 +123,7 @@ public class AuthController {
                 log.warn("Invalid password for user: {} from IP: {}", username, ip);
                 loginAttemptService.loginFailed(username);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Invalid credentials"));
+                        .body(Map.of("error", "Invalid username or password"));
             }
 
             if (!user.isEnabled()) {
