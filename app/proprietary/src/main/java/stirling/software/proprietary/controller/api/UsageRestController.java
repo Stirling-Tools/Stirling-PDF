@@ -32,12 +32,12 @@ public class UsageRestController {
     private final ObjectMapper objectMapper;
 
     /**
-     * Get endpoint statistics derived from audit events. This endpoint analyzes HTTP_REQUEST audit
-     * events to generate usage statistics.
+     * Get endpoint statistics derived from audit events. This endpoint analyzes audit events
+     * filtered by type to generate usage statistics.
      *
      * @param limit Optional limit on number of endpoints to return
-     * @param dataType Type of data to include: "all" (default), "api" (API endpoints excluding
-     *     auth), or "ui" (non-API endpoints)
+     * @param dataType Type of data to include: "all" (default), "api" (operational endpoints), or
+     *     "ui" (UI data endpoints)
      * @return Endpoint statistics response
      */
     @GetMapping("/usage-endpoint-statistics")
@@ -45,21 +45,15 @@ public class UsageRestController {
             @RequestParam(value = "limit", required = false) Integer limit,
             @RequestParam(value = "dataType", defaultValue = "all") String dataType) {
 
-        // Get all HTTP_REQUEST audit events
-        List<PersistentAuditEvent> httpEvents =
-                auditRepository.findByTypeForExport(AuditEventType.HTTP_REQUEST.name());
+        // Get audit events filtered by type
+        List<PersistentAuditEvent> events = getEventsByDataType(dataType);
 
         // Count visits per endpoint
         Map<String, Long> endpointCounts = new HashMap<>();
 
-        for (PersistentAuditEvent event : httpEvents) {
+        for (PersistentAuditEvent event : events) {
             String endpoint = extractEndpointFromAuditData(event.getData());
             if (endpoint != null) {
-                // Apply data type filter
-                if (!shouldIncludeEndpoint(endpoint, dataType)) {
-                    continue;
-                }
-
                 endpointCounts.merge(endpoint, 1L, Long::sum);
             }
         }
@@ -168,52 +162,24 @@ public class UsageRestController {
     }
 
     /**
-     * Determine if an endpoint should be included based on the data type filter.
+     * Get audit events filtered by data type. UI = UI_DATA events. API = everything except UI_DATA.
      *
-     * @param endpoint The endpoint path to check
-     * @param dataType The filter type: "all", "api", or "ui"
-     * @return true if the endpoint should be included, false otherwise
+     * @param dataType "all", "api" (not UI_DATA), or "ui" (UI_DATA only)
+     * @return List of audit events matching the data type filter
      */
-    private boolean shouldIncludeEndpoint(String endpoint, String dataType) {
+    private List<PersistentAuditEvent> getEventsByDataType(String dataType) {
         if ("all".equalsIgnoreCase(dataType)) {
-            return true;
-        }
-
-        boolean isApiEndpoint = isApiEndpoint(endpoint);
-
-        if ("api".equalsIgnoreCase(dataType)) {
-            return isApiEndpoint;
+            // Return all events
+            return auditRepository.findAll();
         } else if ("ui".equalsIgnoreCase(dataType)) {
-            return !isApiEndpoint;
+            // UI data endpoints only
+            return auditRepository.findByTypeForExport(AuditEventType.UI_DATA.name());
+        } else if ("api".equalsIgnoreCase(dataType)) {
+            // API = everything except UI_DATA (queried at DB level, not filtered in-memory)
+            return auditRepository.findAllExceptTypeForExport(AuditEventType.UI_DATA.name());
         }
 
-        // Default to including all if unrecognized type
-        return true;
-    }
-
-    /**
-     * Check if an endpoint is an API endpoint. API endpoints match /api/v1/* pattern but exclude
-     * /api/v1/auth/* paths.
-     *
-     * @param endpoint The endpoint path to check
-     * @return true if this is an API endpoint (excluding auth endpoints), false otherwise
-     */
-    private boolean isApiEndpoint(String endpoint) {
-        if (endpoint == null) {
-            return false;
-        }
-
-        // Check if it starts with /api/v1/
-        if (!endpoint.startsWith("/api/v1/")) {
-            return false;
-        }
-
-        // Exclude auth endpoints
-        if (endpoint.startsWith("/api/v1/auth/")) {
-            return false;
-        }
-
-        return true;
+        return new ArrayList<>();
     }
 
     // DTOs for response formatting

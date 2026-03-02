@@ -1148,18 +1148,42 @@ title = "Security"
 
 [admin.settings.security.audit]
 label = "Audit Logging"
+showDetails = "Show audit level details"
+hideDetails = "Hide audit level details"
 
 [admin.settings.security.audit.enabled]
 description = "Track user actions and system events for compliance and security monitoring"
 label = "Enable Audit Logging"
 
 [admin.settings.security.audit.level]
-description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+description = "Audit Level: OFF (0) = no logging | BASIC (1) = file modifications (compress/split/merge/etc) & settings | STANDARD (2) = file operations + user actions | VERBOSE (3) = all requests including polling. Higher levels include all events from lower levels."
 label = "Audit Level"
 
+[admin.settings.security.audit.levelDetails]
+off = "No audit logging (except critical security events)"
+basic = "PDF file operations (compress, split, merge, etc.) and settings changes. Captures: operation status (success/failure), method parameters, timing. Minimal log volume."
+standard = "BASIC events plus: user login/logout, account changes, general GET requests. Excludes continuous polling calls (/auth/me, /app-config, /health, etc.) to reduce log noise. Ideal for most deployments."
+verbose = "STANDARD events plus: continuous polling calls, all GET requests, detailed timing. Warning: high log volume and performance impact."
+
 [admin.settings.security.audit.retentionDays]
-description = "Number of days to retain audit logs"
+description = "Number of days to retain audit logs (0 = infinite retention)"
 label = "Audit Retention (days)"
+
+[admin.settings.security.audit.metadata]
+description = "Enable additional metadata extraction. Each option independently increases processing time per file (50-200ms depending on file size)."
+warning = "Optional Metadata Capture"
+
+[admin.settings.security.audit.captureFileHash]
+description = "Extract SHA-256 hash of uploaded PDF files for integrity verification. Independent of audit level."
+label = "Capture File Hash (SHA-256)"
+
+[admin.settings.security.audit.capturePdfAuthor]
+description = "Extract author field from PDF documents during processing. Requires PDF parsing, increases latency. Independent of audit level."
+label = "Capture PDF Author Metadata"
+
+[admin.settings.security.audit.captureOperationResults]
+description = "Capture method return values. Not recommended: significantly increases log volume and disk usage."
+label = "Capture Operation Results"
 
 [admin.settings.security.csrfDisabled]
 description = "Disable Cross-Site Request Forgery protection (not recommended)"
@@ -1524,43 +1548,18 @@ tags = "attachments,add,remove,embed,file"
 title = "Add Attachments"
 
 [audit]
+configureAudit = "Configure Audit Logging"
+configureAuditMessage = "Adjust audit logging level, retention period, and other settings in the Security & Authentication section."
 disabled = "Audit logging is disabled"
 disabledMessage = "Enable audit logging in your application configuration to track system events."
 enterpriseRequired = "Enterprise License Required"
 enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
+goToSettings = "Go to Audit Settings"
 notAvailable = "Audit system not available"
 notAvailableMessage = "The audit system is not configured or not available."
 
-[audit.charts]
-byType = "Events by Type"
-byUser = "Events by User"
-day = "Day"
-error = "Error loading charts"
-month = "Month"
-overTime = "Events Over Time"
-title = "Audit Dashboard"
-week = "Week"
-
 [audit.error]
 title = "Error loading audit system"
-
-[audit.events]
-actions = "Actions"
-clearFilters = "Clear"
-details = "Details"
-endDate = "End date"
-error = "Error loading events"
-eventDetails = "Event Details"
-filterByType = "Filter by type"
-filterByUser = "Filter by user"
-ipAddress = "IP Address"
-noEvents = "No events found"
-startDate = "Start date"
-timestamp = "Timestamp"
-title = "Audit Events"
-type = "Type"
-user = "User"
-viewDetails = "View Details"
 
 [audit.export]
 clearFilters = "Clear"
@@ -1568,27 +1567,131 @@ description = "Export audit events to CSV or JSON format. Use filters to limit t
 endDate = "End date"
 error = "Failed to export data"
 exportButton = "Export Data"
+fieldAuthor = "Author (from PDF)"
+fieldDate = "Date"
+fieldDocumentName = "Document Name"
+fieldFileHash = "File Hash (SHA-256)"
+fieldIpAddress = "IP Address"
+fieldOperationResults = "Operation Results"
+fieldOutcome = "Outcome (Success/Failure)"
+fieldTool = "Tool"
+fieldUsername = "Username"
 filterByType = "Filter by type"
 filterByUser = "Filter by user"
 filters = "Filters (Optional)"
 format = "Export Format"
+selectFields = "Select Fields to Include"
 startDate = "Start date"
 title = "Export Audit Data"
+verboseRequired = "Requires VERBOSE audit level"
 
 [audit.systemStatus]
+autoRefresh = "Auto-refresh"
+autoRefreshLabel = "Auto-refresh every 30s"
+capturedFields = "Captured Fields"
+date = "Date"
 days = "days"
 disabled = "Disabled"
+documentName = "Document Name"
 enabled = "Enabled"
+fileHash = "File Hash"
 level = "Audit Level"
+pdfAuthor = "PDF Author"
 retention = "Retention Period"
 status = "Audit Logging"
 title = "System Status"
+tool = "Tool"
 totalEvents = "Total Events"
+username = "Username"
+verboseOnly = "VERBOSE only"
+
+[audit.stats]
+activeUsers = "Active Users"
+attention = "Attention needed"
+avgLatency = "Avg Latency"
+error = "Error loading statistics"
+errorLoadingStats = "Failed to load statistics"
+excellent = "Excellent"
+good = "Good"
+noData = "N/A"
+successRate = "Success Rate"
+title = "Summary"
+totalEvents = "Total Events"
+vsLastPeriod = "vs last period"
+
+[audit.charts]
+byTool = "Top Tools Used"
+byType = "Events by Type"
+byUser = "Top Users"
+day = "Day"
+error = "Error loading charts"
+hourlyActivity = "Hourly Activity"
+month = "Month"
+noData = "No data for this period"
+overTime = "Events Over Time"
+title = "Audit Dashboard"
+week = "Week"
+
+[audit.events]
+actions = "Actions"
+author = "Author"
+clearFilters = "Clear"
+details = "Details"
+documentName = "Document"
+endDate = "End date"
+error = "Error loading events"
+eventDetails = "Event Details"
+failure = "Failure"
+fileHash = "File Hash"
+filterByType = "Filter by type"
+filterByUser = "Filter by user"
+ipAddress = "IP Address"
+noEvents = "No events found"
+outcome = "Status"
+sortAsc = "Sort ascending"
+sortDesc = "Sort descending"
+startDate = "Start date"
+success = "Success"
+timestamp = "Timestamp"
+title = "Audit Events"
+type = "Type"
+user = "User"
+viewDetails = "View Details"
+
+[audit.filters]
+allOutcomes = "All"
+failureOnly = "Failures only"
+last7Days = "Last 7 days"
+last30Days = "Last 30 days"
+outcomeFilter = "Outcome"
+quickPresets = "Quick filters"
+successOnly = "Success only"
+thisMonth = "This month"
+today = "Today"
 
 [audit.tabs]
+clearData = "Clear Data"
 dashboard = "Dashboard"
 events = "Audit Events"
 export = "Export"
+
+[audit.clearData]
+cancel = "Cancel"
+codeDoesNotMatch = "Code does not match"
+codePlaceholder = "Type the code here"
+confirmationCode = "Confirmation Code"
+confirmationRequired = "Delete All Audit Data"
+confirmMessage = "This will permanently remove all audit logs. Enter the confirmation code below to proceed."
+confirmTitle = "Please confirm you want to delete"
+deleteButton = "Delete"
+enterCode = "Confirmation Code"
+enterCodeBelow = "Enter the code exactly as shown above (case-sensitive)"
+initiateDelete = "Delete All Data"
+irreversible = "IRREVERSIBLE"
+success = "Success"
+successMessage = "All audit data has been cleared successfully"
+warning1 = "This action cannot be undone"
+warning2 = "Deleting audit data will permanently remove all historical audit logs, including security events, user activities, and file operations from the database."
 
 [auth]
 accessDenied = "Access Denied"
@@ -6523,9 +6626,13 @@ tags = "web-capture,save-page,web-to-doc,archive"
 title = "URL To PDF"
 
 [usage]
+aboutUsageAnalytics = "About Usage Analytics"
+configureSettings = "Configure Analytics Settings"
 error = "Error loading usage statistics"
 noData = "No data available"
 noDataMessage = "No usage statistics are currently available."
+usageAnalyticsExplanation = "Usage analytics track endpoint requests and tool usage patterns. Combined with the Audit Logging dashboard, you get complete visibility into system activity, performance, and security events."
+viewAuditLogs = "View Audit Logs"
 
 [usage.chart]
 title = "Endpoint Usage Chart"

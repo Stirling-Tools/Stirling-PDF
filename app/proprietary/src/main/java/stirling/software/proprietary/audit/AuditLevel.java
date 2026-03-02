@@ -12,21 +12,26 @@ public enum AuditLevel {
     OFF(0),
 
     /**
-     * BASIC - Minimal audit logging (level 1) Includes: - Authentication events (login, logout,
-     * failed logins) - Password changes - User/role changes - System configuration changes
+     * BASIC - File modifications only (level 1) Tracks: PDF file operations like compress, split,
+     * merge, etc., and settings changes. Captures: Operation status (success/failure), method
+     * parameters, timing. Ideal for: Compliance tracking of file modifications with minimal log
+     * volume.
      */
     BASIC(1),
 
     /**
-     * STANDARD - Standard audit logging (level 2) Includes everything in BASIC plus: - All HTTP
-     * requests (basic info: URL, method, status) - File operations (upload, download, process) -
-     * PDF operations (view, edit, etc.) - User operations
+     * STANDARD - File operations and user actions (level 2) Tracks: Everything in BASIC plus user
+     * actions like login/logout, account changes, and general GET requests. Excludes continuous
+     * polling calls (/auth/me, /app-config, /admin/license-info, /endpoints-availability, /health,
+     * /metrics). Ideal for: General audit trail with reasonable log volume for most deployments.
      */
     STANDARD(2),
 
     /**
-     * VERBOSE - Detailed audit logging (level 3) Includes everything in STANDARD plus: - Request
-     * headers and parameters - Method parameters - Operation results - Detailed timing information
+     * VERBOSE - Everything including polling (level 3) Tracks: Everything in STANDARD plus
+     * continuous polling calls and all GET requests. Captures: Detailed timing information. Note:
+     * Operation results (return values) are controlled by separate captureOperationResults flag.
+     * Warning: High log volume and performance impact.
      */
     VERBOSE(3);
 

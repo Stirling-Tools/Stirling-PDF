@@ -126,6 +126,13 @@ public class ProprietaryUIDataController {
         data.setRetentionDays(auditConfig.getRetentionDays());
         data.setAuditLevels(AuditLevel.values());
         data.setAuditEventTypes(AuditEventType.values());
+        // Metadata capture settings (independent flags)
+        data.setCaptureFileHash(auditConfig.isCaptureFileHash());
+        data.setCapturePdfAuthor(auditConfig.isCapturePdfAuthor());
+        data.setCaptureOperationResults(auditConfig.isCaptureOperationResults());
+        // pdfMetadataEnabled: true if any metadata flag is enabled (file hash or PDF author)
+        data.setPdfMetadataEnabled(
+                auditConfig.isCaptureFileHash() || auditConfig.isCapturePdfAuthor());
 
         return ResponseEntity.ok(data);
     }
@@ -527,6 +534,10 @@ public class ProprietaryUIDataController {
         private int retentionDays;
         private AuditLevel[] auditLevels;
         private AuditEventType[] auditEventTypes;
+        private boolean pdfMetadataEnabled;
+        private boolean captureFileHash;
+        private boolean capturePdfAuthor;
+        private boolean captureOperationResults;
     }
 
     @Data

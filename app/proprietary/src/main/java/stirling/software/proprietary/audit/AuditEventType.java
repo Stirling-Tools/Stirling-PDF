@@ -22,6 +22,9 @@ public enum AuditEventType {
     // PDF operations - STANDARD level
     PDF_PROCESS("PDF processing operation"),
 
+    // UI data requests - STANDARD level
+    UI_DATA("UI data request"),
+
     // HTTP requests - STANDARD level
     HTTP_REQUEST("HTTP request");
 
