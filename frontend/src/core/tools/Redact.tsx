@@ -6,10 +6,9 @@ import { useRedactParameters, RedactMode } from "@app/hooks/tools/redact/useReda
 import { useRedactOperation } from "@app/hooks/tools/redact/useRedactOperation";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { useRedactModeTips, useRedactWordsTips, useRedactAdvancedTips, useRedactManualTips } from "@app/components/tooltips/useRedactTips";
-import RedactAdvancedSettings from "@app/components/tools/redact/RedactAdvancedSettings";
-import WordsToRedactInput from "@app/components/tools/redact/WordsToRedactInput";
+import { useRedactModeTips, useRedactManualTips } from "@app/components/tooltips/useRedactTips";
 import ManualRedactionControls from "@app/components/tools/redact/ManualRedactionControls";
+import SearchAndRedactControls from "@app/components/tools/redact/SearchAndRedactControls";
 import { useNavigationActions, useNavigationState } from "@app/contexts/NavigationContext";
 import { useRedaction } from "@app/contexts/RedactionContext";
 import { useFileState } from "@app/contexts/file/fileHooks";
@@ -19,14 +18,14 @@ const Redact = (props: BaseToolProps) => {
 
   // State for managing step collapse status
   const [methodCollapsed, setMethodCollapsed] = useState(false);
-  const [wordsCollapsed, setWordsCollapsed] = useState(false);
-  const [advancedCollapsed, setAdvancedCollapsed] = useState(true);
 
   // Navigation and redaction context
   const { actions: navActions } = useNavigationActions();
-  const { setRedactionConfig, setRedactionMode, redactionConfig } = useRedaction();
+  const { setRedactionConfig, setRedactionMode, redactionConfig, deactivateRedact, clearSearch } = useRedaction();
   const { workbench } = useNavigationState();
   const hasOpenedViewer = useRef(false);
+  const isSwitching = useRef(false);
+  const lastRequestedMode = useRef<RedactMode | null>(null);
 
   const base = useBaseTool(
     'redact',
@@ -41,37 +40,60 @@ const Redact = (props: BaseToolProps) => {
 
   // Tooltips for each step
   const modeTips = useRedactModeTips();
-  const wordsTips = useRedactWordsTips();
-  const advancedTips = useRedactAdvancedTips();
   const manualTips = useRedactManualTips();
 
   // Auto-set manual mode if we're in the viewer and redaction config is set to manual
   // This ensures when opening redact from viewer, it automatically selects manual mode
   useEffect(() => {
+    // Skip if we are currently in the middle of a requested mode switch
+    if (isSwitching.current) return;
+
     if (workbench === 'viewer' && redactionConfig?.mode === 'manual' && base.params.parameters.mode !== 'manual') {
-      // Set immediately when conditions are met
+      // Don't revert if we explicitly just requested a different mode
+      if (lastRequestedMode.current !== null && lastRequestedMode.current !== 'manual') return;
+      
       base.params.updateParameter('mode', 'manual');
     }
   }, [workbench, redactionConfig, base.params.parameters.mode, base.params.updateParameter]);
 
-  // Handle mode change - navigate to viewer when manual mode is selected
-  // Manual mode works with any files in workbench (not just selected files)
+  // Handle mode change - navigate to viewer for both modes
+  // Both modes work with the EmbedPDF viewer
   const handleModeChange = (mode: RedactMode) => {
+    console.log(`[Redact] Mode switch requested: ${base.params.parameters.mode} -> ${mode}`);
+    isSwitching.current = true;
+    lastRequestedMode.current = mode;
+
+    // Deactivate manual redaction tool when switching away from manual mode
+    if (base.params.parameters.mode === 'manual' && mode !== 'manual') {
+      console.log('[Redact] Deactivating manual redaction tool');
+      try { deactivateRedact(); } catch { /* ignore if bridge not ready */ }
+    }
+
+    // Always clear search when switching modes to ensure highlights are removed
+    try { clearSearch(); } catch { /* ignore if bridge not ready */ }
+
     base.params.updateParameter('mode', mode);
     
-    if (mode === 'manual' && hasAnyFiles) {
-      // Set redaction config and navigate to viewer
-      setRedactionConfig(base.params.parameters);
+    if (hasAnyFiles) {
+      console.log('[Redact] Updating redaction config and navigating to viewer');
+      const newConfig = { ...base.params.parameters, mode };
+      setRedactionConfig(newConfig);
       setRedactionMode(true);
       navActions.setWorkbench('viewer');
       hasOpenedViewer.current = true;
     }
+
+    // Reset switching flag after state updates have had a chance to propogate
+    // Using a longer timeout to be safe with context propagation and viewer initialization
+    setTimeout(() => {
+      console.log('[Redact] Mode switch transition complete');
+      isSwitching.current = false;
+    }, 1000); // 1s is long but safer for slower environments
   };
 
-  // When files are added and in manual mode, navigate to viewer
-  // Uses hasAnyFiles since manual mode works with any files in workbench
+  // When files are added and in any mode, navigate to viewer
   useEffect(() => {
-    if (base.params.parameters.mode === 'manual' && hasAnyFiles && !hasOpenedViewer.current) {
+    if (hasAnyFiles && !hasOpenedViewer.current) {
       setRedactionConfig(base.params.parameters);
       setRedactionMode(true);
       navActions.setWorkbench('viewer');
@@ -79,25 +101,13 @@ const Redact = (props: BaseToolProps) => {
     }
   }, [hasAnyFiles, base.params.parameters, navActions, setRedactionConfig, setRedactionMode]);
 
-  // Reset viewer flag when mode changes back to automatic
-  useEffect(() => {
-    if (base.params.parameters.mode === 'automatic') {
-      hasOpenedViewer.current = false;
-      setRedactionMode(false);
-    }
-  }, [base.params.parameters.mode, setRedactionMode]);
+  // Reset viewer flag when switching modes
+  // Both modes use the viewer so we don't need to exit redaction mode
 
   const isExecuteDisabled = () => {
-    if (base.params.parameters.mode === 'manual') {
-      return true; // Manual mode uses viewer, not execute button
-    }
-    return !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled;
+    return true; // Both modes use viewer-based controls, not the execute button
   };
 
-  // Compute actual collapsed state based on results and user state
-  const getActualCollapsedState = (userCollapsed: boolean) => {
-    return (!base.hasFiles || base.hasResults) ? true : userCollapsed; // Force collapse when results are shown
-  };
 
   // Build conditional steps based on redaction mode
   const buildSteps = () => {
@@ -117,7 +127,6 @@ const Redact = (props: BaseToolProps) => {
             mode={base.params.parameters.mode}
             onModeChange={handleModeChange}
             disabled={base.endpointLoading}
-            hasFilesSelected={base.hasFiles}
             hasAnyFiles={hasAnyFiles}
           />
         ),
@@ -126,30 +135,14 @@ const Redact = (props: BaseToolProps) => {
 
     // Add mode-specific steps
     if (base.params.parameters.mode === 'automatic') {
-      steps.push(
-        {
-          title: t("redact.auto.settings.title", "Redaction Settings"),
-          isCollapsed: getActualCollapsedState(wordsCollapsed),
-          onCollapsedClick: () => base.settingsCollapsed ? base.handleSettingsReset() : setWordsCollapsed(!wordsCollapsed),
-          tooltip: wordsTips,
-          content: <WordsToRedactInput
-            wordsToRedact={base.params.parameters.wordsToRedact}
-            onWordsChange={(words) => base.params.updateParameter('wordsToRedact', words)}
-            disabled={base.endpointLoading}
-          />,
-        },
-        {
-          title: t("redact.auto.settings.advancedTitle", "Advanced Settings"),
-          isCollapsed: getActualCollapsedState(advancedCollapsed),
-          onCollapsedClick: () => base.settingsCollapsed ? base.handleSettingsReset() : setAdvancedCollapsed(!advancedCollapsed),
-          tooltip: advancedTips,
-          content: <RedactAdvancedSettings
-            parameters={base.params.parameters}
-            onParameterChange={base.params.updateParameter}
-            disabled={base.endpointLoading}
-          />,
-        },
-      );
+      // Search & Redact mode - show search controls in sidebar
+      steps.push({
+        title: t("redact.searchAndRedact.controlsTitle", "Search & Redact Controls"),
+        isCollapsed: false,
+        onCollapsedClick: () => {},
+        tooltip: manualTips, // Reuse tips for now
+        content: <SearchAndRedactControls disabled={!hasAnyFiles} />,
+      });
     } else if (base.params.parameters.mode === 'manual') {
       // Manual mode - show redaction controls
       // Uses hasAnyFiles since manual mode works with any files in workbench (viewer-powered)
@@ -165,8 +158,8 @@ const Redact = (props: BaseToolProps) => {
     return steps;
   };
 
-  // Hide execute button in manual mode (redactions applied via controls)
-  const isManualMode = base.params.parameters.mode === 'manual';
+  // Hide execute button for both modes (redactions applied via viewer controls)
+  const hideExecuteButton = true;
 
   return createToolFlow({
     files: {
@@ -176,7 +169,7 @@ const Redact = (props: BaseToolProps) => {
     steps: buildSteps(),
     executeButton: {
       text: t("redact.submit", "Redact"),
-      isVisible: !base.hasResults && !isManualMode,
+      isVisible: !base.hasResults && !hideExecuteButton,
       loadingText: t("loading"),
       onClick: base.handleExecute,
       disabled: isExecuteDisabled(),
