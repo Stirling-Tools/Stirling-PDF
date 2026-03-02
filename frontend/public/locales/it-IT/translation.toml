@@ -16,13 +16,13 @@ comingSoon = "In arrivo"
 confirmClose = "Conferma chiusura"
 confirmCloseCancel = "Annulla"
 confirmCloseConfirm = "Chiudi file"
-confirmCloseMessage = "Sei sicuro di voler chiudere questo file?"
 confirmCloseDiscard = "Scarta le modifiche e chiudi"
+confirmCloseMessage = "Sei sicuro di voler chiudere questo file?"
 confirmCloseSave = "Salva e chiudi"
+confirmCloseSaveFailed = "Salvato con errori. Non è stato possibile salvare {{count}} file{{plural}}."
+confirmCloseSaveFailedTitle = "Salvataggio non riuscito"
 confirmCloseUnsaved = "Questo file contiene modifiche non salvate."
 confirmCloseUnsavedList = "Hai {{count}} file{{plural}} con modifiche non salvate.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Salvataggio non riuscito"
-confirmCloseSaveFailed = "Salvato con errori. Non è stato possibile salvare {{count}} file{{plural}}."
 confirmPasswordErrorMessage = "La nuova password e la conferma della nuova password devono corrispondere."
 custom = "Personalizzato"
 customPosition = "Posizione personalizzata"
@@ -42,11 +42,12 @@ downloadComplete = "Download completo"
 downloadPdf = "Scarica PDF"
 downloadUnavailable = "Download non disponibile per questo elemento"
 edit = "Modifica"
+editSecret = "Edit this value"
 editYourNewFiles = "Modifica il/i nuovo/i file"
 exportAndContinue = "Esporta e continua"
 false = "Falso"
-fileSavedToDisk = "File salvato su disco"
 fileNotSavedToDisk = "Non salvato su disco"
+fileSavedToDisk = "File salvato su disco"
 fileSelected = "Selezionato: {{filename}}"
 filesSelected = "file selezionati"
 font = "Carattere"
@@ -841,6 +842,14 @@ title = "Endpoint API"
 userDefaults = "Valori predefiniti delle preferenze utente"
 userDefaultsDescription = "Imposta i valori predefiniti per le preferenze utente. Gli utenti possono sovrascriverli nelle proprie impostazioni personali."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Rimuovi le opzioni di conversione disabilitate invece di mostrarle in grigio"
+label = "Nascondi per impostazione predefinita le conversioni non disponibili"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Rimuovi gli strumenti disabilitati invece di mostrarli in grigio"
+label = "Nascondi per impostazione predefinita gli strumenti non disponibili"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Seleziona gruppi di endpoint da disabilitare"
 label = "Gruppi di endpoint disabilitati"
@@ -848,14 +857,6 @@ label = "Gruppi di endpoint disabilitati"
 [admin.settings.endpoints.toRemove]
 description = "Seleziona endpoint individuali da disabilitare"
 label = "Endpoint disabilitati"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Rimuovi gli strumenti disabilitati invece di mostrarli in grigio"
-label = "Nascondi per impostazione predefinita gli strumenti non disponibili"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Rimuovi le opzioni di conversione disabilitate invece di mostrarle in grigio"
-label = "Nascondi per impostazione predefinita le conversioni non disponibili"
 
 [admin.settings.enterpriseRequired]
 message = "È necessaria una licenza Enterprise per accedere a {{featureName}}. Stai visualizzando dati demo a scopo di riferimento."
@@ -1228,6 +1229,14 @@ label = "Nome utente iniziale"
 [admin.settings.security.jwt]
 label = "Configurazione JWT"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolleranza per la deriva temporale client/server durante la convalida del token (predefinito: 60 secondi)"
+label = "Tolleranza deriva temporale (secondi)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Durata del token di accesso in minuti per i client desktop. Le app desktop vengono rilevate automaticamente tramite User-Agent e ricevono sessioni più lunghe per una migliore UX (predefinito: 43200 = 30 giorni)"
+label = "Scadenza token desktop (minuti)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Rimuovi automaticamente le chiavi JWT scadute"
 label = "Abilita pulizia chiavi"
@@ -1236,29 +1245,21 @@ label = "Abilita pulizia chiavi"
 description = "Ruota automaticamente periodicamente le chiavi di firma JWT"
 label = "Abilita rotazione chiavi"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Durata del token di accesso in minuti per i client web (predefinito: 1440 = 24 ore)"
-label = "Scadenza token web (minuti)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Durata del token di accesso in minuti per i client desktop. Le app desktop vengono rilevate automaticamente tramite User-Agent e ricevono sessioni più lunghe per una migliore UX (predefinito: 43200 = 30 giorni)"
-label = "Scadenza token desktop (minuti)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Tolleranza per la deriva temporale client/server durante la convalida del token (predefinito: 60 secondi)"
-label = "Tolleranza deriva temporale (secondi)"
+[admin.settings.security.jwt.persistence]
+description = "Archivia le chiavi JWT in modo persistente per sopravvivere ai riavvii del server"
+label = "Abilita persistenza chiavi"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Consenti l'aggiornamento del token entro questo numero di minuti dopo la scadenza (predefinito: 15 minuti, max 3 tentativi)"
 label = "Periodo di tolleranza per l'aggiornamento (minuti)"
 
-[admin.settings.security.jwt.persistence]
-description = "Archivia le chiavi JWT in modo persistente per sopravvivere ai riavvii del server"
-label = "Abilita persistenza chiavi"
-
 [admin.settings.security.jwt.secureCookie]
 description = "Richiedi HTTPS per i cookie JWT (consigliato in produzione)"
 label = "Cookie sicuro"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Durata del token di accesso in minuti per i client web (predefinito: 1440 = 24 ore)"
+label = "Scadenza token web (minuti)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Numero massimo di tentativi di accesso falliti prima del blocco dell'account"
@@ -2238,6 +2239,9 @@ title = "Cambia Permessi"
 [changePermissions.tooltip.warning]
 text = "Per rendere questi permessi immodificabili, usa lo strumento Aggiungi password per impostare una password proprietario."
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "Scegli il colore"
 
@@ -2254,9 +2258,11 @@ copy = "Copia"
 done = "Fatto"
 error = "Errore"
 expand = "Espandi"
+learnMore = "Learn more"
 lines = "righe"
 loading = "Caricamento..."
 next = "Successivo"
+operation = "this operation"
 preview = "Anteprima"
 previous = "Precedente"
 refresh = "Aggiorna"
@@ -2670,6 +2676,77 @@ description = "Questi cookie sono essenziali per il corretto funzionamento del s
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "Ritaglio automatico spazi bianchi"
 header = "Ritaglia PDF"
@@ -2920,6 +2997,7 @@ copyStack = "Copia traccia dello stack"
 discordSubmit = "Discord: invia post di supporto"
 dismissAllErrors = "Chiudi tutti gli errori"
 encryptedPdfMustRemovePassword = "Questo PDF è crittografato o protetto da password. Si prega di sbloccarlo prima di convertire in PDF/A."
+generic = "An error occurred"
 github = "Apri un ticket su GitHub"
 githubSubmit = "GitHub: apri un ticket"
 incorrectPasswordProvided = "La password del PDF è errata o non è stata fornita."
@@ -3346,10 +3424,6 @@ desc = "Crea flussi multi‑step concatenando azioni PDF. Ideale per attività r
 tags = "flusso di lavoro,sequenza,automazione"
 title = "Automatizza"
 
-[home.formFill]
-desc = "Compila interattivamente i campi dei moduli PDF con un editor visuale"
-title = "Compila modulo"
-
 [home.autoRename]
 desc = "Rinomina automaticamente un file PDF in base all’intestazione rilevata"
 tags = "auto-rilevamento,basato su intestazione,organizza,rinomina"
@@ -3444,6 +3518,10 @@ title = "Estrai pagine"
 desc = "Rimuovi tutti gli elementi interattivi e moduli da un PDF."
 tags = "semplifica,rimuovi,interattivo"
 title = "Appiattisci"
+
+[home.formFill]
+desc = "Compila interattivamente i campi dei moduli PDF con un editor visuale"
+title = "Compila modulo"
 
 [home.getPdfInfo]
 desc = "Raccogli tutte le informazioni possibili sui PDF"
@@ -4247,75 +4325,6 @@ title = "Editor pagine"
 zoomIn = "Ingrandisci"
 zoomOut = "Riduci"
 
-[viewer]
-cannotPreviewFile = "Impossibile visualizzare l'anteprima del file"
-dualPageView = "Vista doppia pagina"
-firstPage = "Prima pagina"
-lastPage = "Ultima pagina"
-nextPage = "Pagina successiva"
-onlyPdfSupported = "Il visualizzatore supporta solo file PDF. Questo file sembra essere in un formato diverso."
-previousPage = "Pagina precedente"
-singlePageView = "Vista pagina singola"
-unknownFile = "File sconosciuto"
-zoomIn = "Ingrandisci"
-zoomOut = "Riduci"
-
-[viewer.attachments]
-title = "Allegati"
-searchPlaceholder = "Cerca allegati"
-noSupport = "Il supporto per gli allegati non è disponibile in questo visualizzatore."
-noDocument = "Apri un PDF per visualizzarne gli allegati."
-loading = "Caricamento degli allegati..."
-empty = "Nessun allegato in questo documento"
-noMatch = "Nessun allegato corrisponde alla tua ricerca"
-
-[viewer.formBar]
-title = "Campi modulo"
-unsavedBadge = "Non salvato"
-unsavedDesc = "Hai modifiche non salvate"
-hasFieldsDesc = "Questo PDF contiene campi compilabili"
-dismiss = "Nascondi"
-apply = "Applica le modifiche"
-download = "Scarica PDF"
-
-[rightRail]
-closeSelected = "Chiudi file selezionati"
-selectAll = "Seleziona tutto"
-deselectAll = "Deseleziona tutto"
-selectByNumber = "Seleziona per numeri di pagina"
-deleteSelected = "Elimina pagine selezionate"
-closePdf = "Chiudi PDF"
-exportAll = "Esporta PDF"
-downloadSelected = "Scarica file selezionati"
-annotations = "Annotazioni"
-exportSelected = "Esporta pagine selezionate"
-formFill = "Compila modulo"
-saveChanges = "Salva modifiche"
-toggleAttachments = "Mostra/Nascondi allegati"
-toggleTheme = "Cambia tema"
-language = "Lingua"
-toggleAnnotations = "Attiva/disattiva visibilità annotazioni"
-search = "Cerca nel PDF"
-panMode = "Modalità mano"
-applyRedactionsFirst = "Applica prima gli oscuramenti"
-rotateLeft = "Ruota a sinistra"
-rotateRight = "Ruota a destra"
-toggleSidebar = "Mostra/Nascondi barra laterale"
-toggleBookmarks = "Mostra/Nascondi segnalibri"
-print = "Stampa PDF"
-ruler = "Righello / Misura"
-draw = "Disegna"
-redact = "Oscura"
-exitRedaction = "Esci dalla modalità di oscuramento"
-save = "Salva"
-downloadAll = "Scarica tutto"
-saveAll = "Salva tutto"
-
-[textAlign]
-left = "Sinistra"
-center = "Centro"
-right = "Destra"
-
 [pageExtracter]
 header = "Estrai pagine"
 placeholder = "(es. 1,2,8 o 4,7,12-16 o 2n-1)"
@@ -4424,6 +4433,9 @@ title = "Suggerimenti"
 autoClose = "Questa finestra si chiuderà automaticamente..."
 billingPeriod = "Periodo di fatturazione"
 canCloseWindow = "Ora puoi chiudere questa finestra."
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "Inserisci un indirizzo email valido"
 enterpriseNote = "I posti possono essere modificati al checkout (1-1000)."
 error = "Errore di pagamento"
@@ -4445,6 +4457,7 @@ perMonth = "/mese"
 perYear = "/anno"
 preparing = "Preparazione del checkout..."
 redirecting = "Reindirizzamento al checkout sicuro..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "Stripe non configurato"
 stripeNotConfiguredMessage = "L'integrazione dei pagamenti Stripe non è configurata. Contatta il tuo amministratore."
 success = "Pagamento riuscito!"
@@ -4777,6 +4790,13 @@ title = "Da PDF a Word"
 [PDFToWord.selectText]
 1 = "Formato file di output"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "Questo servizio utilizza LibreOffice per la conversione."
 header = "Da PDF a XML"
@@ -4835,6 +4855,7 @@ customPricing = "Personalizzato"
 featureComparison = "Confronto funzionalità"
 from = "Da"
 hideComparison = "Nascondi confronto funzionalità"
+included = "Included"
 includedInCurrent = "Incluso nel tuo piano"
 licensedSeats = "Con licenza: {{count}} posti"
 manage = "Gestisci"
@@ -4851,6 +4872,7 @@ subtitle = "Dettagli del tuo abbonamento attuale"
 title = "Piano attivo"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "Scegli il piano adatto alle tue esigenze"
 title = "Piani disponibili"
 
@@ -4861,6 +4883,7 @@ highlight3 = "Funzionalità più recenti"
 name = "Enterprise"
 requiresServer = "Richiede Server"
 requiresServerMessage = "Esegui prima l'upgrade al piano Server prima di passare a Enterprise."
+siteLicense = "Site License"
 
 [plan.feature]
 api = "Accesso API"
@@ -4928,6 +4951,10 @@ keyDescription = "Incolla la chiave di licenza dall'email"
 success = "Licenza attivata!"
 successMessage = "La licenza è stata attivata correttamente. Ora puoi chiudere questa finestra."
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "Stampa file su stampante"
 submit = "Stampare"
@@ -4992,15 +5019,15 @@ title = "Parole da redigere"
 failed = "Si è verificato un errore durante la redazione del PDF."
 
 [redact.manual]
+activate = "Attiva strumento di oscuramento"
+active = "Modalità di oscuramento attiva"
 apply = "Applica"
 applyChanges = "Applica modifiche"
 applyRedactions = "Applica redazioni"
 applyWarning = "⚠️ Applicazione permanente, non può essere annullata e i dati sottostanti verranno eliminati"
 boxRedaction = "Redazione con riquadro"
-colourPicker = "Selettore colore"
 colorLabel = "Colore dell'oscuramento"
-active = "Modalità di oscuramento attiva"
-activate = "Attiva strumento di oscuramento"
+colourPicker = "Selettore colore"
 controlsTitle = "Controlli di oscuramento manuale"
 convertPDFToImageLabel = "Converti PDF in PDF‑immagine (usato per rimuovere testo dietro il riquadro)"
 export = "Esporta"
@@ -5396,6 +5423,39 @@ title = "Alto contrasto"
 text = "Inverti completamente tutti i colori nel PDF, creando un effetto simile a un negativo. Utile per creare versioni in modalità scura dei documenti o ridurre l'affaticamento visivo in condizioni di scarsa illuminazione."
 title = "Inverti tutti i colori"
 
+[rightRail]
+annotations = "Annotazioni"
+applyRedactionsFirst = "Applica prima gli oscuramenti"
+closePdf = "Chiudi PDF"
+closeSelected = "Chiudi file selezionati"
+deleteSelected = "Elimina pagine selezionate"
+deselectAll = "Deseleziona tutto"
+downloadAll = "Scarica tutto"
+downloadSelected = "Scarica file selezionati"
+draw = "Disegna"
+exitRedaction = "Esci dalla modalità di oscuramento"
+exportAll = "Esporta PDF"
+exportSelected = "Esporta pagine selezionate"
+formFill = "Compila modulo"
+language = "Lingua"
+panMode = "Modalità mano"
+print = "Stampa PDF"
+redact = "Oscura"
+rotateLeft = "Ruota a sinistra"
+rotateRight = "Ruota a destra"
+ruler = "Righello / Misura"
+save = "Salva"
+saveAll = "Salva tutto"
+saveChanges = "Salva modifiche"
+search = "Cerca nel PDF"
+selectAll = "Seleziona tutto"
+selectByNumber = "Seleziona per numeri di pagina"
+toggleAnnotations = "Attiva/disattiva visibilità annotazioni"
+toggleAttachments = "Mostra/Nascondi allegati"
+toggleBookmarks = "Mostra/Nascondi segnalibri"
+toggleSidebar = "Mostra/Nascondi barra laterale"
+toggleTheme = "Cambia tema"
+
 [rotate]
 rotateLeft = "Ruota in senso antiorario"
 rotateRight = "Ruota in senso orario"
@@ -5647,6 +5707,70 @@ plan = "Piano"
 title = "Licenze e Analytics"
 usageAnalytics = "Analytics d'uso"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "Legale"
 privacy = "Privacy"
@@ -5679,6 +5803,9 @@ connections = "Connessioni"
 security = "Sicurezza"
 telegram = "Telegram"
 title = "Sicurezza e autenticazione"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "Abilita prima la modalità di login"
@@ -6016,6 +6143,11 @@ desc = "Estrai pagine specifiche (1,3,5-10)"
 name = "Numeri di pagina"
 tooltip = "Inserisci numeri di pagina separati da virgole o intervalli con trattini"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "Dividi le pagine in sezioni a griglia"
 name = "Sezioni"
@@ -6029,6 +6161,7 @@ tooltip = "Specifica dimensione massima (es. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Dividi a"
 splitBy = "Dividi per"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "Clicca su una scheda metodo per selezionarla"
@@ -6040,6 +6173,21 @@ title = "Scegli il tuo metodo di divisione"
 [split.methodSelection.tooltip.header]
 text = "Scegli come vuoi dividere il tuo documento PDF. Ogni metodo è ottimizzato per casi d'uso e tipi di documento differenti."
 title = "Selezione metodo di divisione"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "Seleziona prima un metodo di divisione"
@@ -6091,6 +6239,14 @@ bullet2 = "Intervalli: 3-8 (divide prima della 3 e dopo la 8)"
 bullet3 = "Misto: 2,5-10,15 (divide dopo 2, prima di 5, dopo 10 e dopo 15)"
 text = "Dividi il PDF in corrispondenza di numeri di pagina specifici. Usare 'n' divide dopo la pagina n. Usare 'n-m' divide prima di n e dopo m."
 title = "Dividi a numeri di pagina"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "Orizzontale: numero di righe da creare"
@@ -6232,6 +6388,82 @@ title = "Documentazione API"
 
 [tableExtraxt]
 tags = "CSV,Estrazione tabella,estrai,converti"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "Centro"
+left = "Sinistra"
+right = "Destra"
 
 [theme]
 toggle = "Cambia tema"
@@ -6507,6 +6739,37 @@ invalid = "Certificato non presente nell'archivio attendibile: la fonte non può
 fileManager = "Gestore file"
 pageEditor = "Editor pagine"
 viewer = "Visualizzatore"
+
+[viewer]
+cannotPreviewFile = "Impossibile visualizzare l'anteprima del file"
+dualPageView = "Vista doppia pagina"
+firstPage = "Prima pagina"
+lastPage = "Ultima pagina"
+nextPage = "Pagina successiva"
+onlyPdfSupported = "Il visualizzatore supporta solo file PDF. Questo file sembra essere in un formato diverso."
+previousPage = "Pagina precedente"
+singlePageView = "Vista pagina singola"
+unknownFile = "File sconosciuto"
+zoomIn = "Ingrandisci"
+zoomOut = "Riduci"
+
+[viewer.attachments]
+empty = "Nessun allegato in questo documento"
+loading = "Caricamento degli allegati..."
+noDocument = "Apri un PDF per visualizzarne gli allegati."
+noMatch = "Nessun allegato corrisponde alla tua ricerca"
+noSupport = "Il supporto per gli allegati non è disponibile in questo visualizzatore."
+searchPlaceholder = "Cerca allegati"
+title = "Allegati"
+
+[viewer.formBar]
+apply = "Applica le modifiche"
+dismiss = "Nascondi"
+download = "Scarica PDF"
+hasFieldsDesc = "Questo PDF contiene campi compilabili"
+title = "Campi modulo"
+unsavedBadge = "Non salvato"
+unsavedDesc = "Hai modifiche non salvate"
 
 [viewPdf]
 header = "Visualizza PDF"

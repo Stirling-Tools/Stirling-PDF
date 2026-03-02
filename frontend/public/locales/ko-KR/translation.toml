@@ -16,13 +16,13 @@ comingSoon = "곧 제공"
 confirmClose = "닫기 확인"
 confirmCloseCancel = "취소"
 confirmCloseConfirm = "파일 닫기"
-confirmCloseMessage = "이 파일을 닫으시겠습니까?"
 confirmCloseDiscard = "변경 사항 버리고 닫기"
+confirmCloseMessage = "이 파일을 닫으시겠습니까?"
 confirmCloseSave = "저장하고 닫기"
+confirmCloseSaveFailed = "오류가 있는 상태로 저장되었습니다. {{count}}개 파일{{plural}}은(는) 저장할 수 없었습니다."
+confirmCloseSaveFailedTitle = "저장 실패"
 confirmCloseUnsaved = "이 파일에는 저장되지 않은 변경 사항이 있습니다."
 confirmCloseUnsavedList = "저장되지 않은 변경 사항이 있는 파일{{plural}}이(가) {{count}}개 있습니다.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "저장 실패"
-confirmCloseSaveFailed = "오류가 있는 상태로 저장되었습니다. {{count}}개 파일{{plural}}은(는) 저장할 수 없었습니다."
 confirmPasswordErrorMessage = "새 비밀번호와 새 비밀번호 확인이 일치해야 합니다."
 custom = "사용자 지정..."
 customPosition = "사용자 지정 위치"
@@ -42,11 +42,12 @@ downloadComplete = "다운로드 완료"
 downloadPdf = "PDF 다운로드"
 downloadUnavailable = "이 항목은 다운로드할 수 없습니다"
 edit = "편집"
+editSecret = "Edit this value"
 editYourNewFiles = "새 파일 편집"
 exportAndContinue = "내보내고 계속"
 false = "거짓"
-fileSavedToDisk = "파일이 디스크에 저장되었습니다"
 fileNotSavedToDisk = "디스크에 저장되지 않았습니다"
+fileSavedToDisk = "파일이 디스크에 저장되었습니다"
 fileSelected = "선택됨: {{filename}}"
 filesSelected = "개의 파일이 선택됨"
 font = "글꼴"
@@ -841,6 +842,14 @@ title = "API 엔드포인트"
 userDefaults = "사용자 환경설정 기본값"
 userDefaultsDescription = "사용자 환경설정의 기본값을 설정합니다. 사용자는 개인 설정에서 이를 재정의할 수 있습니다."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "비활성화된 변환 옵션을 회색으로 표시하는 대신 숨깁니다"
+label = "기본적으로 사용 불가 변환 숨기기"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "비활성화된 도구를 회색으로 표시하는 대신 숨깁니다"
+label = "기본적으로 사용 불가 도구 숨기기"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "비활성화할 엔드포인트 그룹 선택"
 label = "비활성화된 엔드포인트 그룹"
@@ -848,14 +857,6 @@ label = "비활성화된 엔드포인트 그룹"
 [admin.settings.endpoints.toRemove]
 description = "비활성화할 개별 엔드포인트 선택"
 label = "비활성화된 엔드포인트"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "비활성화된 도구를 회색으로 표시하는 대신 숨깁니다"
-label = "기본적으로 사용 불가 도구 숨기기"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "비활성화된 변환 옵션을 회색으로 표시하는 대신 숨깁니다"
-label = "기본적으로 사용 불가 변환 숨기기"
 
 [admin.settings.enterpriseRequired]
 message = "{{featureName}}에 액세스하려면 Enterprise 라이선스가 필요합니다. 참고용으로 데모 데이터를 보고 있습니다."
@@ -1228,6 +1229,14 @@ label = "초기 사용자 이름"
 [admin.settings.security.jwt]
 label = "JWT 구성"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "토큰 검증 중 클라이언트/서버 시간 오차 허용치(기본값: 60초)"
+label = "클록 스큐 허용치(초)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "데스크톱 클라이언트용 액세스 토큰 수명(분). User-Agent로 자동 감지된 데스크톱 앱은 더 나은 UX를 위해 더 긴 세션을 받습니다(기본값: 43200 = 30일)."
+label = "데스크톱 토큰 만료 시간(분)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "만료된 JWT 키를 자동으로 제거"
 label = "키 정리 활성화"
@@ -1236,29 +1245,21 @@ label = "키 정리 활성화"
 description = "JWT 서명 키를 주기적으로 자동 순환"
 label = "키 순환 활성화"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "웹 클라이언트용 액세스 토큰 수명(분). (기본값: 1440 = 24시간)"
-label = "웹 토큰 만료 시간(분)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "데스크톱 클라이언트용 액세스 토큰 수명(분). User-Agent로 자동 감지된 데스크톱 앱은 더 나은 UX를 위해 더 긴 세션을 받습니다(기본값: 43200 = 30일)."
-label = "데스크톱 토큰 만료 시간(분)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "토큰 검증 중 클라이언트/서버 시간 오차 허용치(기본값: 60초)"
-label = "클록 스큐 허용치(초)"
+[admin.settings.security.jwt.persistence]
+description = "서버 재시작 후에도 유지되도록 JWT 키를 영구 저장"
+label = "키 영속성 활성화"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "만료 후 지정된 분 수 이내에 토큰 갱신을 허용합니다(기본값: 15분, 최대 3회 시도)."
 label = "갱신 유예 기간(분)"
 
-[admin.settings.security.jwt.persistence]
-description = "서버 재시작 후에도 유지되도록 JWT 키를 영구 저장"
-label = "키 영속성 활성화"
-
 [admin.settings.security.jwt.secureCookie]
 description = "JWT 쿠키에 HTTPS를 요구(프로덕션 권장)"
 label = "보안 쿠키"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "웹 클라이언트용 액세스 토큰 수명(분). (기본값: 1440 = 24시간)"
+label = "웹 토큰 만료 시간(분)"
 
 [admin.settings.security.loginAttemptCount]
 description = "계정 잠금 전 허용되는 최대 로그인 실패 횟수"
@@ -2238,6 +2239,9 @@ title = "권한 변경"
 [changePermissions.tooltip.warning]
 text = "이 권한을 변경할 수 없도록 하려면, 비밀번호 추가 도구를 사용해 소유자 비밀번호를 설정하세요."
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "색상 선택"
 
@@ -2254,9 +2258,11 @@ copy = "복사"
 done = "완료"
 error = "오류"
 expand = "펼치기"
+learnMore = "Learn more"
 lines = "줄"
 loading = "불러오는 중..."
 next = "다음"
+operation = "this operation"
 preview = "미리보기"
 previous = "이전"
 refresh = "새로고침"
@@ -2670,6 +2676,77 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "여백 자동 자르기"
 header = "PDF 자르기"
@@ -2920,6 +2997,7 @@ copyStack = "스택 추적 복사"
 discordSubmit = "Discord - 지원 게시물 작성"
 dismissAllErrors = "모든 오류 닫기"
 encryptedPdfMustRemovePassword = "이 PDF는 암호화되었거나 암호로 보호되어 있습니다. PDF/A로 변환하기 전에 잠금을 해제해 주세요."
+generic = "An error occurred"
 github = "GitHub에서 티켓 제출"
 githubSubmit = "GitHub - 티켓 제출"
 incorrectPasswordProvided = "PDF 암호가 없거나 올바르지 않습니다."
@@ -3346,10 +3424,6 @@ desc = "PDF 작업을 연결하여 다단계 워크플로를 구성하세요. �
 tags = "워크플로,시퀀스,자동화"
 title = "자동화"
 
-[home.formFill]
-desc = "시각적 편집기로 PDF 양식 필드를 대화형으로 작성합니다"
-title = "양식 작성"
-
 [home.autoRename]
 desc = "감지된 헤더를 기반으로 PDF 파일 이름을 자동으로 변경합니다."
 tags = "자동 감지,헤더 기반,정리,이름 변경"
@@ -3444,6 +3518,10 @@ title = "페이지 추출"
 desc = "PDF에서 모든 대화형 요소와 양식 제거"
 tags = "단순화,제거,대화형"
 title = "평면화"
+
+[home.formFill]
+desc = "시각적 편집기로 PDF 양식 필드를 대화형으로 작성합니다"
+title = "양식 작성"
 
 [home.getPdfInfo]
 desc = "PDF에서 가능한 모든 정보 가져오기"
@@ -4247,75 +4325,6 @@ title = "페이지 편집기"
 zoomIn = "확대"
 zoomOut = "축소"
 
-[viewer]
-cannotPreviewFile = "파일을 미리보기할 수 없습니다"
-dualPageView = "두 페이지 보기"
-firstPage = "첫 페이지"
-lastPage = "마지막 페이지"
-nextPage = "다음 페이지"
-onlyPdfSupported = "뷰어는 PDF 파일만 지원합니다. 이 파일은 다른 형식인 것으로 보입니다."
-previousPage = "이전 페이지"
-singlePageView = "단일 페이지 보기"
-unknownFile = "알 수 없는 파일"
-zoomIn = "확대"
-zoomOut = "축소"
-
-[viewer.attachments]
-title = "첨부 파일"
-searchPlaceholder = "첨부 파일 검색"
-noSupport = "이 뷰어는 첨부 파일을 지원하지 않습니다."
-noDocument = "첨부 파일을 보려면 PDF를 여세요."
-loading = "첨부 파일 불러오는 중..."
-empty = "이 문서에는 첨부 파일이 없습니다"
-noMatch = "검색과 일치하는 첨부 파일이 없습니다"
-
-[viewer.formBar]
-title = "양식 필드"
-unsavedBadge = "미저장"
-unsavedDesc = "저장되지 않은 변경 사항이 있습니다"
-hasFieldsDesc = "이 PDF에는 작성 가능한 필드가 있습니다"
-dismiss = "닫기"
-apply = "변경 사항 적용"
-download = "PDF 다운로드"
-
-[rightRail]
-closeSelected = "선택한 파일 닫기"
-selectAll = "모두 선택"
-deselectAll = "모두 선택 해제"
-selectByNumber = "페이지 번호로 선택"
-deleteSelected = "선택한 페이지 삭제"
-closePdf = "PDF 닫기"
-exportAll = "PDF 내보내기"
-downloadSelected = "선택한 파일 다운로드"
-annotations = "주석"
-exportSelected = "선택한 페이지 내보내기"
-formFill = "양식 작성"
-saveChanges = "변경 내용 저장"
-toggleAttachments = "첨부 파일 표시/숨기기"
-toggleTheme = "테마 전환"
-language = "언어"
-toggleAnnotations = "주석 가시성 전환"
-search = "PDF 검색"
-panMode = "이동 모드"
-applyRedactionsFirst = "먼저 가리기 적용"
-rotateLeft = "왼쪽으로 회전"
-rotateRight = "오른쪽으로 회전"
-toggleSidebar = "사이드바 전환"
-toggleBookmarks = "북마크 표시/숨기기"
-print = "PDF 인쇄"
-ruler = "눈금자/측정"
-draw = "그리기"
-redact = "가리기"
-exitRedaction = "가리기 모드 종료"
-save = "저장"
-downloadAll = "전체 다운로드"
-saveAll = "모두 저장"
-
-[textAlign]
-left = "왼쪽"
-center = "가운데"
-right = "오른쪽"
-
 [pageExtracter]
 header = "페이지 추출"
 placeholder = "(예: 1,2,8 또는 4,7,12-16 또는 2n-1)"
@@ -4424,6 +4433,9 @@ title = "팁"
 autoClose = "이 창은 자동으로 닫힙니다..."
 billingPeriod = "청구 주기"
 canCloseWindow = "이제 이 창을 닫아도 됩니다."
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "유효한 이메일 주소를 입력하세요"
 enterpriseNote = "좌석 수는 결제 시 조정할 수 있습니다(1-1000)."
 error = "결제 오류"
@@ -4445,6 +4457,7 @@ perMonth = "/월"
 perYear = "/년"
 preparing = "결제 준비 중..."
 redirecting = "보안 결제 페이지로 이동 중..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "Stripe 미구성"
 stripeNotConfiguredMessage = "Stripe 결제 연동이 구성되지 않았습니다. 관리자에게 문의하세요."
 success = "결제 성공!"
@@ -4777,6 +4790,13 @@ title = "PDF를 Word로"
 [PDFToWord.selectText]
 1 = "출력 파일 형식"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "이 서비스는 파일 변환을 위해 LibreOffice를 사용합니다."
 header = "PDF를 XML로"
@@ -4835,6 +4855,7 @@ customPricing = "맞춤"
 featureComparison = "기능 비교"
 from = "시작가"
 hideComparison = "기능 비교 숨기기"
+included = "Included"
 includedInCurrent = "현재 플랜에 포함됨"
 licensedSeats = "라이선스: {{count}} 좌석"
 manage = "관리"
@@ -4851,6 +4872,7 @@ subtitle = "현재 구독 세부 정보"
 title = "활성 요금제"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "필요에 맞는 요금제를 선택하세요"
 title = "이용 가능한 요금제"
 
@@ -4861,6 +4883,7 @@ highlight3 = "최신 기능"
 name = "엔터프라이즈"
 requiresServer = "서버 필요"
 requiresServerMessage = "Enterprise로 업그레이드하기 전에 먼저 Server 플랜으로 업그레이드하세요."
+siteLicense = "Site License"
 
 [plan.feature]
 api = "API 접근"
@@ -4928,6 +4951,10 @@ keyDescription = "이메일의 라이선스 키를 붙여넣으세요"
 success = "라이선스 활성화됨!"
 successMessage = "라이선스가 성공적으로 활성화되었습니다. 이제 이 창을 닫아도 됩니다."
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "프린터로 파일 인쇄"
 submit = "인쇄"
@@ -4992,15 +5019,15 @@ title = "가릴 단어"
 failed = "PDF 가리기 처리 중 오류가 발생했습니다."
 
 [redact.manual]
+activate = "비공개 처리 도구 활성화"
+active = "비공개 처리 모드 활성화됨"
 apply = "적용"
 applyChanges = "변경 내용 적용"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ 영구 적용되며 되돌릴 수 없고, 아래 데이터는 삭제됩니다"
 boxRedaction = "박스 그리기 가리기"
-colourPicker = "색상 선택기"
 colorLabel = "비공개 처리 색상"
-active = "비공개 처리 모드 활성화됨"
-activate = "비공개 처리 도구 활성화"
+colourPicker = "색상 선택기"
 controlsTitle = "수동 가리기 컨트롤"
 convertPDFToImageLabel = "PDF를 PDF-Image로 변환(박스 뒤 텍스트 제거용)"
 export = "내보내기"
@@ -5396,6 +5423,39 @@ title = "고대비"
 text = "PDF의 모든 색상을 완전히 반전하여 네거티브와 같은 효과를 만듭니다. 문서의 다크 모드 버전을 만들거나 저조도 환경에서 눈의 피로를 줄이는 데 유용합니다."
 title = "모든 색상 반전"
 
+[rightRail]
+annotations = "주석"
+applyRedactionsFirst = "먼저 가리기 적용"
+closePdf = "PDF 닫기"
+closeSelected = "선택한 파일 닫기"
+deleteSelected = "선택한 페이지 삭제"
+deselectAll = "모두 선택 해제"
+downloadAll = "전체 다운로드"
+downloadSelected = "선택한 파일 다운로드"
+draw = "그리기"
+exitRedaction = "가리기 모드 종료"
+exportAll = "PDF 내보내기"
+exportSelected = "선택한 페이지 내보내기"
+formFill = "양식 작성"
+language = "언어"
+panMode = "이동 모드"
+print = "PDF 인쇄"
+redact = "가리기"
+rotateLeft = "왼쪽으로 회전"
+rotateRight = "오른쪽으로 회전"
+ruler = "눈금자/측정"
+save = "저장"
+saveAll = "모두 저장"
+saveChanges = "변경 내용 저장"
+search = "PDF 검색"
+selectAll = "모두 선택"
+selectByNumber = "페이지 번호로 선택"
+toggleAnnotations = "주석 가시성 전환"
+toggleAttachments = "첨부 파일 표시/숨기기"
+toggleBookmarks = "북마크 표시/숨기기"
+toggleSidebar = "사이드바 전환"
+toggleTheme = "테마 전환"
+
 [rotate]
 rotateLeft = "반시계 방향으로 회전"
 rotateRight = "시계 방향으로 회전"
@@ -5647,6 +5707,70 @@ plan = "플랜"
 title = "라이선스 및 분석"
 usageAnalytics = "사용 분석"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "법률"
 privacy = "개인정보 보호"
@@ -5679,6 +5803,9 @@ connections = "연결"
 security = "보안"
 telegram = "Telegram"
 title = "보안 및 인증"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "먼저 로그인 모드를 활성화하세요"
@@ -6016,6 +6143,11 @@ desc = "특정 페이지 추출(1,3,5-10)"
 name = "페이지 번호"
 tooltip = "쉼표로 페이지 번호를 구분하거나 하이픈으로 범위를 입력하세요"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "페이지를 격자 섹션으로 분할"
 name = "섹션"
@@ -6029,6 +6161,7 @@ tooltip = "최대 파일 크기를 지정하세요(예: 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "다음에서 분할"
 splitBy = "다음으로 분할"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "방법 카드를 클릭하여 선택하세요"
@@ -6040,6 +6173,21 @@ title = "분할 방법을 선택하세요"
 [split.methodSelection.tooltip.header]
 text = "PDF 문서를 어떻게 분할할지 선택하세요. 각 방법은 다양한 사용 사례와 문서 유형에 최적화되어 있습니다."
 title = "분할 방법 선택"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "먼저 분할 방법을 선택하세요"
@@ -6091,6 +6239,14 @@ bullet2 = "범위 분할 지점: 3-8 (3페이지 앞과 8페이지 뒤에서 분
 bullet3 = "혼합: 2,5-10,15 (2페이지 뒤, 5페이지 앞, 10페이지 뒤, 15페이지 뒤에서 분할)"
 text = "PDF를 특정 페이지 번호에서 분할합니다. 'n'은 n페이지 뒤에서 분할합니다. 'n-m'은 n페이지 앞과 m페이지 뒤에서 분할합니다."
 title = "특정 페이지 번호에서 분할"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "가로: 만들 행 수"
@@ -6232,6 +6388,82 @@ title = "API 문서"
 
 [tableExtraxt]
 tags = "CSV,테이블-추출,추출,변환"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "가운데"
+left = "왼쪽"
+right = "오른쪽"
 
 [theme]
 toggle = "테마 전환"
@@ -6507,6 +6739,37 @@ invalid = "인증서가 신뢰 저장소에 없음 - 출처를 확인할 수 없
 fileManager = "파일 관리자"
 pageEditor = "페이지 편집기"
 viewer = "뷰어"
+
+[viewer]
+cannotPreviewFile = "파일을 미리보기할 수 없습니다"
+dualPageView = "두 페이지 보기"
+firstPage = "첫 페이지"
+lastPage = "마지막 페이지"
+nextPage = "다음 페이지"
+onlyPdfSupported = "뷰어는 PDF 파일만 지원합니다. 이 파일은 다른 형식인 것으로 보입니다."
+previousPage = "이전 페이지"
+singlePageView = "단일 페이지 보기"
+unknownFile = "알 수 없는 파일"
+zoomIn = "확대"
+zoomOut = "축소"
+
+[viewer.attachments]
+empty = "이 문서에는 첨부 파일이 없습니다"
+loading = "첨부 파일 불러오는 중..."
+noDocument = "첨부 파일을 보려면 PDF를 여세요."
+noMatch = "검색과 일치하는 첨부 파일이 없습니다"
+noSupport = "이 뷰어는 첨부 파일을 지원하지 않습니다."
+searchPlaceholder = "첨부 파일 검색"
+title = "첨부 파일"
+
+[viewer.formBar]
+apply = "변경 사항 적용"
+dismiss = "닫기"
+download = "PDF 다운로드"
+hasFieldsDesc = "이 PDF에는 작성 가능한 필드가 있습니다"
+title = "양식 필드"
+unsavedBadge = "미저장"
+unsavedDesc = "저장되지 않은 변경 사항이 있습니다"
 
 [viewPdf]
 header = "PDF 보기"

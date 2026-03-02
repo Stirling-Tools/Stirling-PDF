@@ -16,13 +16,13 @@ comingSoon = "Již brzy"
 confirmClose = "Potvrdit zavření"
 confirmCloseCancel = "Zrušit"
 confirmCloseConfirm = "Zavřít soubor"
-confirmCloseMessage = "Opravdu chcete tento soubor zavřít?"
 confirmCloseDiscard = "Zahodit změny a zavřít"
+confirmCloseMessage = "Opravdu chcete tento soubor zavřít?"
 confirmCloseSave = "Uložit a zavřít"
+confirmCloseSaveFailed = "Uloženo s chybami. {{count}} soubor{{plural}} se nepodařilo uložit."
+confirmCloseSaveFailedTitle = "Uložení se nezdařilo"
 confirmCloseUnsaved = "Tento soubor má neuložené změny."
 confirmCloseUnsavedList = "Máte {{count}} soubor{{plural}} s neuloženými změnami.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Uložení se nezdařilo"
-confirmCloseSaveFailed = "Uloženo s chybami. {{count}} soubor{{plural}} se nepodařilo uložit."
 confirmPasswordErrorMessage = "Nové heslo a potvrzení nového hesla se musí shodovat."
 custom = "Vlastní..."
 customPosition = "Vlastní umístění"
@@ -42,11 +42,12 @@ downloadComplete = "Stahování dokončeno"
 downloadPdf = "Stáhnout PDF"
 downloadUnavailable = "Stažení pro tuto položku není k dispozici"
 edit = "Upravit"
+editSecret = "Edit this value"
 editYourNewFiles = "Upravit nové soubory"
 exportAndContinue = "Exportovat a pokračovat"
 false = "Ne"
-fileSavedToDisk = "Soubor uložen na disk"
 fileNotSavedToDisk = "Neuloženo na disk"
+fileSavedToDisk = "Soubor uložen na disk"
 fileSelected = "Vybráno: {{filename}}"
 filesSelected = "vybraných souborů"
 font = "Písmo"
@@ -841,6 +842,14 @@ title = "API koncové body"
 userDefaults = "Výchozí předvolby uživatelů"
 userDefaultsDescription = "Nastavte výchozí hodnoty uživatelských předvoleb. Uživatelé je mohou přepsat ve svém osobním nastavení."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Odebrat zakázané možnosti konverze místo jejich zobrazení šedě"
+label = "Ve výchozím nastavení skrýt nedostupné konverze"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Odebrat zakázané nástroje místo jejich zobrazení šedě"
+label = "Ve výchozím nastavení skrýt nedostupné nástroje"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Vyberte skupiny koncových bodů k zakázání"
 label = "Zakázané skupiny koncových bodů"
@@ -848,14 +857,6 @@ label = "Zakázané skupiny koncových bodů"
 [admin.settings.endpoints.toRemove]
 description = "Vyberte jednotlivé koncové body k zakázání"
 label = "Zakázané koncové body"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Odebrat zakázané nástroje místo jejich zobrazení šedě"
-label = "Ve výchozím nastavení skrýt nedostupné nástroje"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Odebrat zakázané možnosti konverze místo jejich zobrazení šedě"
-label = "Ve výchozím nastavení skrýt nedostupné konverze"
 
 [admin.settings.enterpriseRequired]
 message = "Pro přístup k {{featureName}} je vyžadována licence Enterprise. Zobrazená data jsou pouze ukázková."
@@ -1228,6 +1229,14 @@ label = "Počáteční uživatelské jméno"
 [admin.settings.security.jwt]
 label = "Konfigurace JWT"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolerance odchylky času klient/server během ověření tokenu (výchozí: 60 sekund)"
+label = "Tolerance odchylky času (sekundy)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Doba platnosti přístupového tokenu v minutách pro desktopové klienty. Desktopové aplikace jsou automaticky detekovány podle User-Agent a získají delší relace pro lepší UX (výchozí: 43200 = 30 dní)"
+label = "Vypršení platnosti desktopového tokenu (minuty)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Automaticky odstraňovat expirované klíče JWT"
 label = "Povolit čištění klíčů"
@@ -1236,29 +1245,21 @@ label = "Povolit čištění klíčů"
 description = "Automaticky periodicky rotovat podepisovací klíče JWT"
 label = "Povolit rotaci klíčů"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Doba platnosti přístupového tokenu v minutách pro webové klienty (výchozí: 1440 = 24 hodin)"
-label = "Vypršení platnosti webového tokenu (minuty)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Doba platnosti přístupového tokenu v minutách pro desktopové klienty. Desktopové aplikace jsou automaticky detekovány podle User-Agent a získají delší relace pro lepší UX (výchozí: 43200 = 30 dní)"
-label = "Vypršení platnosti desktopového tokenu (minuty)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Tolerance odchylky času klient/server během ověření tokenu (výchozí: 60 sekund)"
-label = "Tolerance odchylky času (sekundy)"
+[admin.settings.security.jwt.persistence]
+description = "Ukládat klíče JWT trvale, aby přežily restarty serveru"
+label = "Povolit persistenci klíčů"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Povolit obnovení tokenu v tomto počtu minut po vypršení (výchozí: 15 minut, max. 3 pokusy)"
 label = "Lhůta pro obnovení (minuty)"
 
-[admin.settings.security.jwt.persistence]
-description = "Ukládat klíče JWT trvale, aby přežily restarty serveru"
-label = "Povolit persistenci klíčů"
-
 [admin.settings.security.jwt.secureCookie]
 description = "Vyžadovat HTTPS pro cookies JWT (doporučeno pro produkci)"
 label = "Zabezpečená cookie"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Doba platnosti přístupového tokenu v minutách pro webové klienty (výchozí: 1440 = 24 hodin)"
+label = "Vypršení platnosti webového tokenu (minuty)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Maximální počet neúspěšných pokusů o přihlášení před uzamčením účtu"
@@ -2238,6 +2239,9 @@ title = "Změnit oprávnění"
 [changePermissions.tooltip.warning]
 text = "Abyste tato oprávnění učinili nezměnitelnými, použijte nástroj Přidat heslo a nastavte heslo vlastníka."
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "Zvolte barvu"
 
@@ -2254,9 +2258,11 @@ copy = "Kopírovat"
 done = "Hotovo"
 error = "Chyba"
 expand = "Rozbalit"
+learnMore = "Learn more"
 lines = "řádky"
 loading = "Načítání..."
 next = "Další"
+operation = "this operation"
 preview = "Náhled"
 previous = "Předchozí"
 refresh = "Obnovit"
@@ -2670,6 +2676,77 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "Auto-crop whitespace"
 header = "Oříznout PDF"
@@ -2920,6 +2997,7 @@ copyStack = "Kopírovat trasování zásobníku"
 discordSubmit = "Discord - Podat příspěvek podpory"
 dismissAllErrors = "Zavřít všechny chyby"
 encryptedPdfMustRemovePassword = "Tento soubor PDF je šifrovaný nebo chráněný heslem. Před převodem na PDF/A jej prosím odemkněte."
+generic = "An error occurred"
 github = "Podat ticket na GitHubu"
 githubSubmit = "GitHub - Podat ticket"
 incorrectPasswordProvided = "Heslo k PDF je nesprávné nebo nebylo zadáno."
@@ -3346,10 +3424,6 @@ desc = "Vytvářejte vícekrokové workflow řetězením akcí PDF. Ideální pr
 tags = "pracovní postup,sekvence,automatizace"
 title = "Automatizace"
 
-[home.formFill]
-desc = "Interaktivně vyplňte pole formuláře PDF vizuálním editorem"
-title = "Vyplnit formulář"
-
 [home.autoRename]
 desc = "Automaticky přejmenuje soubor PDF podle detekovaného záhlaví"
 tags = "automatická detekce,na základě záhlaví,uspořádat,přejmenovat"
@@ -3444,6 +3518,10 @@ title = "Extrahovat stránky"
 desc = "Odstranit všechny interaktivní prvky a formuláře z PDF"
 tags = "zjednodušit,odstranit,interaktivní"
 title = "Zploštit"
+
+[home.formFill]
+desc = "Interaktivně vyplňte pole formuláře PDF vizuálním editorem"
+title = "Vyplnit formulář"
 
 [home.getPdfInfo]
 desc = "Získá všechny možné informace o PDF"
@@ -4247,75 +4325,6 @@ title = "Editor stránek"
 zoomIn = "Přiblížit"
 zoomOut = "Oddálit"
 
-[viewer]
-cannotPreviewFile = "Nelze zobrazit náhled souboru"
-dualPageView = "Zobrazení dvou stránek"
-firstPage = "První stránka"
-lastPage = "Poslední stránka"
-nextPage = "Další stránka"
-onlyPdfSupported = "Prohlížeč podporuje pouze soubory PDF. Tento soubor má zřejmě jiný formát."
-previousPage = "Předchozí stránka"
-singlePageView = "Zobrazení jedné stránky"
-unknownFile = "Neznámý soubor"
-zoomIn = "Přiblížit"
-zoomOut = "Oddálit"
-
-[viewer.attachments]
-title = "Přílohy"
-searchPlaceholder = "Hledat přílohy"
-noSupport = "Podpora příloh není v tomto prohlížeči k dispozici."
-noDocument = "Otevřete PDF a zobrazte jeho přílohy."
-loading = "Načítání příloh..."
-empty = "Tento dokument neobsahuje žádné přílohy"
-noMatch = "Žádné přílohy neodpovídají vašemu hledání"
-
-[viewer.formBar]
-title = "Formulářová pole"
-unsavedBadge = "Neuloženo"
-unsavedDesc = "Máte neuložené změny"
-hasFieldsDesc = "Toto PDF obsahuje vyplnitelná pole"
-dismiss = "Skrýt"
-apply = "Použít změny"
-download = "Stáhnout PDF"
-
-[rightRail]
-closeSelected = "Zavřít vybrané soubory"
-selectAll = "Vybrat vše"
-deselectAll = "Zrušit výběr všeho"
-selectByNumber = "Vybrat podle čísel stránek"
-deleteSelected = "Smazat vybrané stránky"
-closePdf = "Zavřít PDF"
-exportAll = "Exportovat PDF"
-downloadSelected = "Stáhnout vybrané soubory"
-annotations = "Annotations"
-exportSelected = "Exportovat vybrané stránky"
-formFill = "Vyplnit formulář"
-saveChanges = "Uložit změny"
-toggleAttachments = "Přepnout zobrazení příloh"
-toggleTheme = "Přepnout motiv"
-language = "Jazyk"
-toggleAnnotations = "Přepnout viditelnost anotací"
-search = "Hledat v PDF"
-panMode = "Režim posunu"
-applyRedactionsFirst = "Nejprve použijte začernění"
-rotateLeft = "Otočit doleva"
-rotateRight = "Otočit doprava"
-toggleSidebar = "Přepnout postranní panel"
-toggleBookmarks = "Přepnout záložky"
-print = "Tisk PDF"
-ruler = "Pravítko / Měření"
-draw = "Kreslit"
-redact = "Začernit"
-exitRedaction = "Opustit režim začernění"
-save = "Uložit"
-downloadAll = "Stáhnout vše"
-saveAll = "Uložit vše"
-
-[textAlign]
-left = "Left"
-center = "Center"
-right = "Right"
-
 [pageExtracter]
 header = "Extrahovat stránky"
 placeholder = "(např. 1,2,8 nebo 4,7,12-16 nebo 2n-1)"
@@ -4424,6 +4433,9 @@ title = "Tipy"
 autoClose = "Toto okno se zavře automaticky..."
 billingPeriod = "Fakturační období"
 canCloseWindow = "Toto okno můžete nyní zavřít."
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "Zadejte prosím platnou e-mailovou adresu"
 enterpriseNote = "Počet míst lze upravit při platbě (1–1000)."
 error = "Chyba platby"
@@ -4445,6 +4457,7 @@ perMonth = "/měsíc"
 perYear = "/rok"
 preparing = "Připravujeme vaši platbu..."
 redirecting = "Přesměrování na zabezpečenou pokladnu..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "Stripe není nastaven"
 stripeNotConfiguredMessage = "Integrace plateb Stripe není nakonfigurována. Kontaktujte prosím svého správce."
 success = "Platba úspěšná!"
@@ -4777,6 +4790,13 @@ title = "PDF na Word"
 [PDFToWord.selectText]
 1 = "Formát výstupního souboru"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "Tato služba používá LibreOffice pro konverzi souborů."
 header = "PDF na XML"
@@ -4835,6 +4855,7 @@ customPricing = "Vlastní"
 featureComparison = "Srovnání funkcí"
 from = "Od"
 hideComparison = "Skrýt porovnání funkcí"
+included = "Included"
 includedInCurrent = "Součást vašeho plánu"
 licensedSeats = "Licencováno: {{count}} míst"
 manage = "Spravovat"
@@ -4851,6 +4872,7 @@ subtitle = "Podrobnosti vašeho aktuálního předplatného"
 title = "Aktivní plán"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "Vyberte plán, který vám vyhovuje"
 title = "Dostupné plány"
 
@@ -4861,6 +4883,7 @@ highlight3 = "Nejnovější funkce"
 name = "Enterprise"
 requiresServer = "Vyžaduje Server"
 requiresServerMessage = "Nejprve prosím přejděte na plán Server a teprve poté na Enterprise."
+siteLicense = "Site License"
 
 [plan.feature]
 api = "Přístup k API"
@@ -4928,6 +4951,10 @@ keyDescription = "Paste the license key from your email"
 success = "License Activated!"
 successMessage = "Your license has been successfully activated. You can now close this window."
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "Tisk souboru na tiskárně"
 submit = "Tisknout"
@@ -4992,15 +5019,15 @@ title = "Slova k začernění"
 failed = "Při začerňování PDF došlo k chybě."
 
 [redact.manual]
+activate = "Aktivovat nástroj začernění"
+active = "Režim začernění aktivní"
 apply = "Použít"
 applyChanges = "Použít změny"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Trvalé použití, nelze vrátit zpět a data pod začerněním budou smazána"
 boxRedaction = "Začernění tažením rámečku"
-colourPicker = "Výběr barvy"
 colorLabel = "Barva začernění"
-active = "Režim začernění aktivní"
-activate = "Aktivovat nástroj začernění"
+colourPicker = "Výběr barvy"
 controlsTitle = "Ovládání ručního začernění"
 convertPDFToImageLabel = "Převést PDF na PDF-Image (použito k odstranění textu za rámečkem)"
 export = "Exportovat"
@@ -5396,6 +5423,39 @@ title = "Vysoký kontrast"
 text = "Úplně invertuje všechny barvy v PDF a vytvoří efekt podobný negativu. Vhodné pro tvorbu tmavých verzí dokumentů nebo snížení únavy očí při slabém osvětlení."
 title = "Invertovat všechny barvy"
 
+[rightRail]
+annotations = "Annotations"
+applyRedactionsFirst = "Nejprve použijte začernění"
+closePdf = "Zavřít PDF"
+closeSelected = "Zavřít vybrané soubory"
+deleteSelected = "Smazat vybrané stránky"
+deselectAll = "Zrušit výběr všeho"
+downloadAll = "Stáhnout vše"
+downloadSelected = "Stáhnout vybrané soubory"
+draw = "Kreslit"
+exitRedaction = "Opustit režim začernění"
+exportAll = "Exportovat PDF"
+exportSelected = "Exportovat vybrané stránky"
+formFill = "Vyplnit formulář"
+language = "Jazyk"
+panMode = "Režim posunu"
+print = "Tisk PDF"
+redact = "Začernit"
+rotateLeft = "Otočit doleva"
+rotateRight = "Otočit doprava"
+ruler = "Pravítko / Měření"
+save = "Uložit"
+saveAll = "Uložit vše"
+saveChanges = "Uložit změny"
+search = "Hledat v PDF"
+selectAll = "Vybrat vše"
+selectByNumber = "Vybrat podle čísel stránek"
+toggleAnnotations = "Přepnout viditelnost anotací"
+toggleAttachments = "Přepnout zobrazení příloh"
+toggleBookmarks = "Přepnout záložky"
+toggleSidebar = "Přepnout postranní panel"
+toggleTheme = "Přepnout motiv"
+
 [rotate]
 rotateLeft = "Otočit proti směru hodinových ručiček"
 rotateRight = "Otočit po směru hodinových ručiček"
@@ -5647,6 +5707,70 @@ plan = "Plán"
 title = "Licencování a analytika"
 usageAnalytics = "Analytika využití"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "Právní"
 privacy = "Soukromí"
@@ -5679,6 +5803,9 @@ connections = "Připojení"
 security = "Zabezpečení"
 telegram = "Telegram"
 title = "Zabezpečení a ověřování"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "Nejprve povolte režim přihlášení"
@@ -6016,6 +6143,11 @@ desc = "Vyjmout konkrétní stránky (1,3,5–10)"
 name = "Čísla stránek"
 tooltip = "Zadejte čísla stránek oddělená čárkami nebo rozsahy s pomlčkami"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "Rozdělit stránky na mřížkové sekce"
 name = "Sekce"
@@ -6029,6 +6161,7 @@ tooltip = "Zadejte maximální velikost souboru (např. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Rozdělit na"
 splitBy = "Rozdělit podle"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "Kliknutím na kartu metody ji vyberete"
@@ -6040,6 +6173,21 @@ title = "Zvolte svou metodu rozdělení"
 [split.methodSelection.tooltip.header]
 text = "Zvolte, jak chcete rozdělit svůj PDF dokument. Každá metoda je optimalizována pro jiné případy použití a typy dokumentů."
 title = "Výběr metody rozdělení"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "Nejprve vyberte metodu rozdělení"
@@ -6091,6 +6239,14 @@ bullet2 = "Rozsahové body: 3–8 (rozdělí před stránkou 3 a po stránce 8)"
 bullet3 = "Smíšené: 2,5–10,15 (rozdělí po stránce 2, před stránkou 5, po stránce 10 a po stránce 15)"
 text = "Rozdělte PDF na konkrétních číslech stránek. Použití 'n' rozdělí po stránce n. Použití 'n-m' rozdělí před stránkou n a po stránce m."
 title = "Rozdělit na číslech stránek"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "Horizontálně: Počet řádků k vytvoření"
@@ -6232,6 +6388,82 @@ title = "API Dokumentace"
 
 [tableExtraxt]
 tags = "CSV,Extrakce tabulek,extrahovat,převést"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "Center"
+left = "Left"
+right = "Right"
 
 [theme]
 toggle = "Přepnout motiv"
@@ -6507,6 +6739,37 @@ invalid = "Certifikát není v úložišti důvěryhodných certifikátů - zdro
 fileManager = "Správce souborů"
 pageEditor = "Editor stránek"
 viewer = "Prohlížeč"
+
+[viewer]
+cannotPreviewFile = "Nelze zobrazit náhled souboru"
+dualPageView = "Zobrazení dvou stránek"
+firstPage = "První stránka"
+lastPage = "Poslední stránka"
+nextPage = "Další stránka"
+onlyPdfSupported = "Prohlížeč podporuje pouze soubory PDF. Tento soubor má zřejmě jiný formát."
+previousPage = "Předchozí stránka"
+singlePageView = "Zobrazení jedné stránky"
+unknownFile = "Neznámý soubor"
+zoomIn = "Přiblížit"
+zoomOut = "Oddálit"
+
+[viewer.attachments]
+empty = "Tento dokument neobsahuje žádné přílohy"
+loading = "Načítání příloh..."
+noDocument = "Otevřete PDF a zobrazte jeho přílohy."
+noMatch = "Žádné přílohy neodpovídají vašemu hledání"
+noSupport = "Podpora příloh není v tomto prohlížeči k dispozici."
+searchPlaceholder = "Hledat přílohy"
+title = "Přílohy"
+
+[viewer.formBar]
+apply = "Použít změny"
+dismiss = "Skrýt"
+download = "Stáhnout PDF"
+hasFieldsDesc = "Toto PDF obsahuje vyplnitelná pole"
+title = "Formulářová pole"
+unsavedBadge = "Neuloženo"
+unsavedDesc = "Máte neuložené změny"
 
 [viewPdf]
 header = "Zobrazit PDF"

@@ -16,13 +16,13 @@ comingSoon = "Ag teacht go luath"
 confirmClose = "Deimhnigh Dúnadh"
 confirmCloseCancel = "Cealaigh"
 confirmCloseConfirm = "Dún an Comhad"
-confirmCloseMessage = "An bhfuil tú cinnte gur mian leat an comhad seo a dhúnadh?"
 confirmCloseDiscard = "Cuir na hathruithe ar ceal agus dún"
+confirmCloseMessage = "An bhfuil tú cinnte gur mian leat an comhad seo a dhúnadh?"
 confirmCloseSave = "Sábháil agus dún"
+confirmCloseSaveFailed = "Sábháilte le hearráidí. Níorbh fhéidir {{count}} comhad{{plural}} a shábháil."
+confirmCloseSaveFailedTitle = "Theip ar an tsábháil"
 confirmCloseUnsaved = "Tá athruithe gan sábháil sa chomhad seo."
 confirmCloseUnsavedList = "Tá athruithe gan sábháil ar {{count}} comhad{{plural}} agat.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Theip ar an tsábháil"
-confirmCloseSaveFailed = "Sábháilte le hearráidí. Níorbh fhéidir {{count}} comhad{{plural}} a shábháil."
 confirmPasswordErrorMessage = "Ní mór Pasfhocal Nua agus Deimhnigh Pasfhocal Nua a bheith ag teacht leis."
 custom = "Saincheaptha..."
 customPosition = "Suíomh Saincheaptha"
@@ -42,11 +42,12 @@ downloadComplete = "Íosluchtaigh Críochnaithe"
 downloadPdf = "Íoslódáil PDF"
 downloadUnavailable = "Níl íoslódáil ar fáil don mhír seo"
 edit = "Cuir in eagar"
+editSecret = "Edit this value"
 editYourNewFiles = "Cuir do chomhad(aí) nua in eagar"
 exportAndContinue = "Easpórtáil & Lean ar aghaidh"
 false = "Bréagach"
-fileSavedToDisk = "Comhad sábháilte ar an diosca"
 fileNotSavedToDisk = "Gan sábháil ar an diosca"
+fileSavedToDisk = "Comhad sábháilte ar an diosca"
 fileSelected = "Roghnaithe: {{filename}}"
 filesSelected = "comhaid roghnaithe"
 font = "Cló"
@@ -841,6 +842,14 @@ title = "Críochphointí API"
 userDefaults = "Réamhshocruithe na Roghanna Úsáideora"
 userDefaultsDescription = "Socraigh luachanna réamhshocraithe do roghanna úsáideora. Is féidir le húsáideoirí iad seo a shárú ina socruithe pearsanta."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Bain roghanna tiontaithe díchumasaithe in ionad iad a thaispeáint liathaithe"
+label = "Folaigh tiontuithe nach bhfuil ar fáil de réir réamhshocraithe"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Bain uirlisí díchumasaithe in ionad iad a thaispeáint liathaithe"
+label = "Folaigh uirlisí nach bhfuil ar fáil de réir réamhshocraithe"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Roghnaigh grúpaí críochphointe le díchumasú"
 label = "Grúpaí Deireadhphointe Díchumasaithe"
@@ -848,14 +857,6 @@ label = "Grúpaí Deireadhphointe Díchumasaithe"
 [admin.settings.endpoints.toRemove]
 description = "Roghnaigh críochphointí aonair le díchumasú"
 label = "Críochphointí Díchumasaithe"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Bain uirlisí díchumasaithe in ionad iad a thaispeáint liathaithe"
-label = "Folaigh uirlisí nach bhfuil ar fáil de réir réamhshocraithe"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Bain roghanna tiontaithe díchumasaithe in ionad iad a thaispeáint liathaithe"
-label = "Folaigh tiontuithe nach bhfuil ar fáil de réir réamhshocraithe"
 
 [admin.settings.enterpriseRequired]
 message = "Tá ceadúnas Fiontraíochta de dhíth chun rochtain a fháil ar {{featureName}}. Tá tú ag féachaint ar shonraí taispeána mar thagairt."
@@ -1228,6 +1229,14 @@ label = "Ainm Úsáideora Tosaigh"
 [admin.settings.security.jwt]
 label = "Cumraíocht JWT"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Lamháltas do dhiall ama cliant/freastalaí le linn bailíochtaithe tocain (réamhshocrú: 60 soicind)"
+label = "Lamháltas diall ama an chloig (soicind)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Fad saoil tocan rochtana i nóiméid do chliaint deisce. Aithnítear aipeanna deisce go huathoibríoch trí User-Agent agus faigheann siad seisiúin níos faide chun UX níos fearr a sholáthar (réamhshocrú: 43200 = 30 lá)"
+label = "Dul in Éag Tocan Deisce (nóiméid)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Bain eochracha JWT a d’imíodh as feidhm go huathoibríoch"
 label = "Cumasaigh Glanadh Eochracha"
@@ -1236,29 +1245,21 @@ label = "Cumasaigh Glanadh Eochracha"
 description = "Rothlaigh eochracha sínithe JWT go huathoibríoch go tréimhsiúil"
 label = "Cumasaigh Rothlú Eochracha"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Fad saoil tocan rochtana i nóiméid do chliaint ghréasáin (réamhshocrú: 1440 = 24 uair an chloig)"
-label = "Dul in Éag Tocan Gréasáin (nóiméid)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Fad saoil tocan rochtana i nóiméid do chliaint deisce. Aithnítear aipeanna deisce go huathoibríoch trí User-Agent agus faigheann siad seisiúin níos faide chun UX níos fearr a sholáthar (réamhshocrú: 43200 = 30 lá)"
-label = "Dul in Éag Tocan Deisce (nóiméid)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Lamháltas do dhiall ama cliant/freastalaí le linn bailíochtaithe tocain (réamhshocrú: 60 soicind)"
-label = "Lamháltas diall ama an chloig (soicind)"
+[admin.settings.security.jwt.persistence]
+description = "Stóráil eochracha JWT go seasmhach chun maireachtáil thar atosaithe freastalaí"
+label = "Cumasaigh Seasmhacht Eochracha"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Ceadaigh athnuachan tocain laistigh de an oiread seo nóiméad tar éis dul in éag (réamhshocrú: 15 nóiméad, uasmhéid 3 iarracht)"
 label = "Tréimhse Ghrásta Athnuachana (nóiméid)"
 
-[admin.settings.security.jwt.persistence]
-description = "Stóráil eochracha JWT go seasmhach chun maireachtáil thar atosaithe freastalaí"
-label = "Cumasaigh Seasmhacht Eochracha"
-
 [admin.settings.security.jwt.secureCookie]
 description = "Éiligh HTTPS do fhianáin JWT (molta don léiriúchán)"
 label = "Fianán Slán"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Fad saoil tocan rochtana i nóiméid do chliaint ghréasáin (réamhshocrú: 1440 = 24 uair an chloig)"
+label = "Dul in Éag Tocan Gréasáin (nóiméid)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Uasmhéid iarrachtaí logála isteach teipthe sula gcuirtear an cuntas faoi ghlas"
@@ -2238,6 +2239,9 @@ title = "Athrú Ceadanna"
 [changePermissions.tooltip.warning]
 text = "Chun na ceadanna seo a dhéanamh dodhéanta a athrú, úsáid an uirlis Cuir Focal Faire Leis chun focal faire úinéara a shocrú."
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "Roghnaigh dath"
 
@@ -2254,9 +2258,11 @@ copy = "Cóipeáil"
 done = "Déanta"
 error = "Earráid"
 expand = "Leathnaigh"
+learnMore = "Learn more"
 lines = "línte"
 loading = "Á lódáil..."
 next = "Ar Aghaidh"
+operation = "this operation"
 preview = "Réamhamharc"
 previous = "Roimhe Seo"
 refresh = "Athnuaigh"
@@ -2670,6 +2676,77 @@ description = "Tá na fianáin seo riachtanach chun go bhfeidhmeoidh an suíomh 
 posthog = "Anailísíocht PostHog"
 scarf = "Scairf Picteilín"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "Spás bán a bhearradh go huathoibríoch"
 header = "PDF a ghearradh"
@@ -2920,6 +2997,7 @@ copyStack = "Cóipeáil Stack Trace"
 discordSubmit = "Discord - Cuir post Tacaíochta"
 dismissAllErrors = "Díbhe gach earráid"
 encryptedPdfMustRemovePassword = "Tá an PDF seo cripteáilte nó cosanta le focal faire. Díghlasáil é roimh é a thiontú go PDF/A."
+generic = "An error occurred"
 github = "Cuir ticéad isteach ar GitHub"
 githubSubmit = "GitHub - Cuir ticéad isteach"
 incorrectPasswordProvided = "Tá focal faire an PDF mícheart nó níor soláthraíodh é."
@@ -3346,10 +3424,6 @@ desc = "Tóg sreafaí oibre ilchéime trí ghníomhartha PDF a nascadh le chéil
 tags = "sreabhadh oibre,ord,uathoibriú"
 title = "Uathoibrigh"
 
-[home.formFill]
-desc = "Líon réimsí foirme PDF go hidirghníomhach le heagarthóir amhairc"
-title = "Líon Foirm"
-
 [home.autoRename]
 desc = "Athainmníonn comhad PDF go huathoibríoch bunaithe ar a cheannteideal braite"
 tags = "uathbhraite,bunaithe ar cheannteideal,eagraigh,athlipéadaigh"
@@ -3444,6 +3518,10 @@ title = "Leathanaigh Sliocht"
 desc = "Bain gach eilimint agus foirm idirghníomhach as PDF"
 tags = "simpligh,bain,idirghníomhach"
 title = "Comhcheangail"
+
+[home.formFill]
+desc = "Líon réimsí foirme PDF go hidirghníomhach le heagarthóir amhairc"
+title = "Líon Foirm"
 
 [home.getPdfInfo]
 desc = "Grab aon fhaisnéis agus is féidir ar PDFs"
@@ -4247,75 +4325,6 @@ title = "Eagarthóir Leathanach"
 zoomIn = "Súmáil Isteach"
 zoomOut = "Súmáil Amach"
 
-[viewer]
-cannotPreviewFile = "Ní féidir an comhad a réamhamharc."
-dualPageView = "Amharc Dhá Leathanach"
-firstPage = "An Chéad Leathanach"
-lastPage = "An Leathanach Deireanach"
-nextPage = "Leathanach Ar Aghaidh"
-onlyPdfSupported = "Ní thacaíonn an t-amharcán ach le comhaid PDF. Is cosúil gur formáid eile é an comhad seo."
-previousPage = "Leathanach Roimhe Seo"
-singlePageView = "Amharc Leathanach Aonair"
-unknownFile = "Comhad anaithnid"
-zoomIn = "Súmáil Isteach"
-zoomOut = "Súmáil Amach"
-
-[viewer.attachments]
-title = "Iatáin"
-searchPlaceholder = "Cuardaigh iatáin"
-noSupport = "Níl tacaíocht iatáin ar fáil don amharcóir seo."
-noDocument = "Oscail PDF chun a iatáin a fheiceáil."
-loading = "Iatáin á luchtú..."
-empty = "Níl iatáin sa cháipéis seo"
-noMatch = "Ní mheaitseálann aon iatán do chuardach"
-
-[viewer.formBar]
-title = "Réimsí Foirme"
-unsavedBadge = "Gan Sábháil"
-unsavedDesc = "Tá athruithe gan sábháil agat"
-hasFieldsDesc = "Tá réimsí inlíonta sa PDF seo"
-dismiss = "Neamhaird"
-apply = "Cuir Athruithe i bhFeidhm"
-download = "Íosluchtaigh PDF"
-
-[rightRail]
-closeSelected = "Dún na Comhaid Roghnaithe"
-selectAll = "Roghnaigh Uile"
-deselectAll = "Díroghnaigh Uile"
-selectByNumber = "Roghnaigh de réir Uimhreacha Leathanaigh"
-deleteSelected = "Scrios na Leathanaigh Roghnaithe"
-closePdf = "Dún an PDF"
-exportAll = "Easpórtáil an PDF"
-downloadSelected = "Íoslódáil Comhaid Roghnaithe"
-annotations = "Anótálacha"
-exportSelected = "Easpórtáil Leathanaigh Roghnaithe"
-formFill = "Líon Foirm"
-saveChanges = "Sábháil Athruithe"
-toggleAttachments = "Scoránaigh Iatáin"
-toggleTheme = "Téama a Athsholáthar"
-language = "Teanga"
-toggleAnnotations = "Infheictheacht Anótálacha a Athrú"
-search = "Cuardaigh PDF"
-panMode = "Mód Pan"
-applyRedactionsFirst = "Cuir eagarthóireachtaí i bhfeidhm ar dtús"
-rotateLeft = "Rothlaigh ar Chlé"
-rotateRight = "Rothlaigh ar Dheis"
-toggleSidebar = "Barra Taobh a Athraigh"
-toggleBookmarks = "Leabharmharcanna a Athsholáthar"
-print = "Priontáil PDF"
-ruler = "Rialóir / Tomhas"
-draw = "Tarraing"
-redact = "Leasaigh"
-exitRedaction = "Scoir Mód Eagarthóireachta"
-save = "Sábháil"
-downloadAll = "Íoslódáil Gach Rud"
-saveAll = "Sábháil Uile"
-
-[textAlign]
-left = "Ar chlé"
-center = "Lár"
-right = "Ar dheis"
-
 [pageExtracter]
 header = "Leathanaigh Sliocht"
 placeholder = "(m.sh. 1,2,8 nó 4,7,12-16 nó 2n-1)"
@@ -4424,6 +4433,9 @@ title = "Leideanna"
 autoClose = "Dúnfaidh an fhuinneog seo go huathoibríoch..."
 billingPeriod = "Tréimhse Billeála"
 canCloseWindow = "Is féidir leat an fhuinneog seo a dhúnadh anois."
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "Cuir isteach seoladh ríomhphoist bailí"
 enterpriseNote = "Is féidir suíocháin a choigeartú ag an tseiceáil amach (1-1000)."
 error = "Earráid Íocaíochta"
@@ -4445,6 +4457,7 @@ perMonth = "/mí"
 perYear = "/bliain"
 preparing = "Do sheiceáil amach á ullmhú..."
 redirecting = "Ag atreorú chuig an tseiceáil amach slán..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "Stripe Gan Cumraíocht"
 stripeNotConfiguredMessage = "Níl comhtháthú íocaíochta Stripe cumraithe. Déan teagmháil le d’riarthóir."
 success = "D’éirigh leis an Íocaíocht!"
@@ -4777,6 +4790,13 @@ title = "PDF a thiontú go word"
 [PDFToWord.selectText]
 1 = "Formáid comhaid aschuir"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "Úsáideann an tseirbhís seo LibreOffice chun comhaid a thiontú."
 header = "Ó XML go PDF"
@@ -4835,6 +4855,7 @@ customPricing = "Saincheaptha"
 featureComparison = "Comparáid Gnéithe"
 from = "Ó"
 hideComparison = "Folaigh Comparáid Gnéithe"
+included = "Included"
 includedInCurrent = "San Áireamh i do Phlean"
 licensedSeats = "Ceadúnaithe: {{count}} suíochán"
 manage = "Bainistigh"
@@ -4851,6 +4872,7 @@ subtitle = "Mionsonraí do shínithe reatha"
 title = "Plean Gníomhach"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "Roghnaigh an plean a oireann do do riachtanais"
 title = "Pleananna atá ar fáil"
 
@@ -4861,6 +4883,7 @@ highlight3 = "Na gnéithe is déanaí"
 name = "Fiontar"
 requiresServer = "Teastaíonn Freastalaí"
 requiresServerMessage = "Uasghrádaigh go dtí an plean Freastalaí ar dtús sula n-uasghrádaíonn tú go Fiontraíochta."
+siteLicense = "Site License"
 
 [plan.feature]
 api = "Rochtain API"
@@ -4928,6 +4951,10 @@ keyDescription = "Greamaigh an eochair cheadúnais ó do ríomhphost"
 success = "Ceadúnas Gníomhachtaithe!"
 successMessage = "Tá do cheadúnas gníomhachtaithe go rathúil. Is féidir leat an fhuinneog seo a dhúnadh anois."
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "Priontáil an Comhad go Printéir"
 submit = "Priontáil"
@@ -4992,15 +5019,15 @@ title = "Focail le Ceilt"
 failed = "Tharla earráid agus an PDF á cheilt."
 
 [redact.manual]
+activate = "Gníomhachtaigh an Uirlis Cheilte"
+active = "Mód Ceilte Gníomhach"
 apply = "Cuir isteach"
 applyChanges = "Cuir Athruithe i bhFeidhm"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Feidhmchlár buan, ní féidir é a chealú agus scriosfar na sonraí faoi."
 boxRedaction = "Ceilt trí bhosca a tharraingt"
-colourPicker = "Roghnóir Datha"
 colorLabel = "Dath Ceilte"
-active = "Mód Ceilte Gníomhach"
-activate = "Gníomhachtaigh an Uirlis Cheilte"
+colourPicker = "Roghnóir Datha"
 controlsTitle = "Rialuithe Eagarthóireachta Láimhe"
 convertPDFToImageLabel = "Tiontaigh PDF go PDF-Íomhá (Úsáidtear é chun téacs taobh thiar den bhosca a bhaint)"
 export = "Easpórtáil"
@@ -5396,6 +5423,39 @@ title = "Ardchodarsnacht"
 text = "Inbhéartaigh gach dath sa PDF go hiomlán, ag cruthú éifeacht cosúil le diúltach. Úsáideach chun leaganacha mód dorcha a chruthú de dhoiciméid nó chun strus súl a laghdú i solas íseal."
 title = "Inbhéartaigh Gach Dath"
 
+[rightRail]
+annotations = "Anótálacha"
+applyRedactionsFirst = "Cuir eagarthóireachtaí i bhfeidhm ar dtús"
+closePdf = "Dún an PDF"
+closeSelected = "Dún na Comhaid Roghnaithe"
+deleteSelected = "Scrios na Leathanaigh Roghnaithe"
+deselectAll = "Díroghnaigh Uile"
+downloadAll = "Íoslódáil Gach Rud"
+downloadSelected = "Íoslódáil Comhaid Roghnaithe"
+draw = "Tarraing"
+exitRedaction = "Scoir Mód Eagarthóireachta"
+exportAll = "Easpórtáil an PDF"
+exportSelected = "Easpórtáil Leathanaigh Roghnaithe"
+formFill = "Líon Foirm"
+language = "Teanga"
+panMode = "Mód Pan"
+print = "Priontáil PDF"
+redact = "Leasaigh"
+rotateLeft = "Rothlaigh ar Chlé"
+rotateRight = "Rothlaigh ar Dheis"
+ruler = "Rialóir / Tomhas"
+save = "Sábháil"
+saveAll = "Sábháil Uile"
+saveChanges = "Sábháil Athruithe"
+search = "Cuardaigh PDF"
+selectAll = "Roghnaigh Uile"
+selectByNumber = "Roghnaigh de réir Uimhreacha Leathanaigh"
+toggleAnnotations = "Infheictheacht Anótálacha a Athrú"
+toggleAttachments = "Scoránaigh Iatáin"
+toggleBookmarks = "Leabharmharcanna a Athsholáthar"
+toggleSidebar = "Barra Taobh a Athraigh"
+toggleTheme = "Téama a Athsholáthar"
+
 [rotate]
 rotateLeft = "Rothlaigh tuathalach"
 rotateRight = "Rothlaigh deiseal"
@@ -5647,6 +5707,70 @@ plan = "Plean"
 title = "Ceadúnú agus Anailísíocht"
 usageAnalytics = "Anailísíocht Úsáide"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "Dlíthiúil"
 privacy = "Príobháideachas"
@@ -5679,6 +5803,9 @@ connections = "Naisc"
 security = "Slándáil"
 telegram = "Telegram"
 title = "Slándáil agus Fíordheimhniú"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "Cumasaigh mód logála isteach ar dtús"
@@ -6016,6 +6143,11 @@ desc = "Bain leathanaigh shonracha (1,3,5-10)"
 name = "Uimhreacha Leathanach"
 tooltip = "Cuir isteach uimhreacha leathanaigh scartha le camóga nó raonta le fleiscíní"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "Roinn leathanaigh ina rannóga greille"
 name = "Altanna"
@@ -6029,6 +6161,7 @@ tooltip = "Sonraigh uasmhéid comhaid (m.sh. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Scoilt ag"
 splitBy = "Scoilt de réir"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "Cliceáil ar chárta modha chun é a roghnú"
@@ -6040,6 +6173,21 @@ title = "Roghnaigh do Mhodh Scoilte"
 [split.methodSelection.tooltip.header]
 text = "Roghnaigh conas is mian leat do cháipéis PDF a scoilt. Tá gach modh optamaithe do chásanna úsáide agus cineálacha cáipéise éagsúla."
 title = "Roghnú Modha Scoilte"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "Roghnaigh modh scoilte ar dtús, le do thoil"
@@ -6091,6 +6239,14 @@ bullet2 = "Pointí scoilte raoin: 3-8 (scoilteann sé roimh leathanach 3 agus ta
 bullet3 = "Measctha: 2,5-10,15 (scoilteann sé tar éis leathanach 2, roimh leathanach 5, tar éis leathanach 10, agus tar éis leathanach 15)"
 text = "Scoilt do PDF ag uimhreacha leathanaigh ar leith. Úsáid 'n' chun scoilteadh tar éis leathanach n. Úsáid 'n-m' chun scoilteadh roimh leathanach n agus tar éis leathanach m."
 title = "Scoilt ag Uimhreacha Leathanach"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "Cothrománach: Líon na róanna le cruthú"
@@ -6232,6 +6388,82 @@ title = "Doiciméadú API"
 
 [tableExtraxt]
 tags = "CSV, Eastóscadh Tábla, sliocht, tiontú"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "Lár"
+left = "Ar chlé"
+right = "Ar dheis"
 
 [theme]
 toggle = "Athraigh an Téama"
@@ -6507,6 +6739,37 @@ invalid = "Níl an teastas sa stór muiníne - ní féidir an fhoinse a fhíorú
 fileManager = "Bainisteoir Comhad"
 pageEditor = "Eagarthóir Leathanach"
 viewer = "Amharcóir"
+
+[viewer]
+cannotPreviewFile = "Ní féidir an comhad a réamhamharc."
+dualPageView = "Amharc Dhá Leathanach"
+firstPage = "An Chéad Leathanach"
+lastPage = "An Leathanach Deireanach"
+nextPage = "Leathanach Ar Aghaidh"
+onlyPdfSupported = "Ní thacaíonn an t-amharcán ach le comhaid PDF. Is cosúil gur formáid eile é an comhad seo."
+previousPage = "Leathanach Roimhe Seo"
+singlePageView = "Amharc Leathanach Aonair"
+unknownFile = "Comhad anaithnid"
+zoomIn = "Súmáil Isteach"
+zoomOut = "Súmáil Amach"
+
+[viewer.attachments]
+empty = "Níl iatáin sa cháipéis seo"
+loading = "Iatáin á luchtú..."
+noDocument = "Oscail PDF chun a iatáin a fheiceáil."
+noMatch = "Ní mheaitseálann aon iatán do chuardach"
+noSupport = "Níl tacaíocht iatáin ar fáil don amharcóir seo."
+searchPlaceholder = "Cuardaigh iatáin"
+title = "Iatáin"
+
+[viewer.formBar]
+apply = "Cuir Athruithe i bhFeidhm"
+dismiss = "Neamhaird"
+download = "Íosluchtaigh PDF"
+hasFieldsDesc = "Tá réimsí inlíonta sa PDF seo"
+title = "Réimsí Foirme"
+unsavedBadge = "Gan Sábháil"
+unsavedDesc = "Tá athruithe gan sábháil agat"
 
 [viewPdf]
 header = "Féach PDF"

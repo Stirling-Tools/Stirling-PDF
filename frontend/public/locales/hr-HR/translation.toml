@@ -16,13 +16,13 @@ comingSoon = "Uskoro"
 confirmClose = "Potvrdi zatvaranje"
 confirmCloseCancel = "Odustani"
 confirmCloseConfirm = "Zatvori datoteku"
-confirmCloseMessage = "Jeste li sigurni da želite zatvoriti ovu datoteku?"
 confirmCloseDiscard = "Odbaci promjene i zatvori"
+confirmCloseMessage = "Jeste li sigurni da želite zatvoriti ovu datoteku?"
 confirmCloseSave = "Spremi i zatvori"
+confirmCloseSaveFailed = "Spremljeno s pogreškama. {{count}} datoteka{{plural}} nije se moglo spremiti."
+confirmCloseSaveFailedTitle = "Spremanje nije uspjelo"
 confirmCloseUnsaved = "Ova datoteka ima nespremljene promjene."
 confirmCloseUnsavedList = "Imate {{count}} datoteka{{plural}} s nespremljenim promjenama.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Spremanje nije uspjelo"
-confirmCloseSaveFailed = "Spremljeno s pogreškama. {{count}} datoteka{{plural}} nije se moglo spremiti."
 confirmPasswordErrorMessage = "Nova lozinka i potvrda nove lozinke moraju biti identične."
 custom = "Prilagođeno..."
 customPosition = "Prilagođeni položaj"
@@ -42,11 +42,12 @@ downloadComplete = "Preuzimanje završeno"
 downloadPdf = "Preuzmi PDF"
 downloadUnavailable = "Preuzimanje nije dostupno za ovu stavku"
 edit = "Uredi"
+editSecret = "Edit this value"
 editYourNewFiles = "Uredite svoje nove datoteke"
 exportAndContinue = "Izvezi i nastavi"
 false = "Netočno"
-fileSavedToDisk = "Datoteka spremljena na disk"
 fileNotSavedToDisk = "Nije spremljeno na disk"
+fileSavedToDisk = "Datoteka spremljena na disk"
 fileSelected = "Odabrano: {{filename}}"
 filesSelected = "odabrane datoteke"
 font = "Pismo"
@@ -841,6 +842,14 @@ title = "API krajnje točke"
 userDefaults = "Zadane vrijednosti korisničkih postavki"
 userDefaultsDescription = "Postavite zadane vrijednosti za korisničke postavke. Korisnici ih mogu nadjačati u svojim osobnim postavkama."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Ukloni onemogućene opcije pretvorbe umjesto prikazivanja zasivljenima"
+label = "Po zadanom sakrij nedostupne pretvorbe"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Ukloni onemogućene alate umjesto prikazivanja zasivljenima"
+label = "Po zadanom sakrij nedostupne alate"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Odaberite grupe krajnjih točaka za onemogućavanje"
 label = "Onemogućene grupe krajnjih točaka"
@@ -848,14 +857,6 @@ label = "Onemogućene grupe krajnjih točaka"
 [admin.settings.endpoints.toRemove]
 description = "Odaberite pojedinačne krajnje točke za onemogućavanje"
 label = "Onemogućene krajnje točke"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Ukloni onemogućene alate umjesto prikazivanja zasivljenima"
-label = "Po zadanom sakrij nedostupne alate"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Ukloni onemogućene opcije pretvorbe umjesto prikazivanja zasivljenima"
-label = "Po zadanom sakrij nedostupne pretvorbe"
 
 [admin.settings.enterpriseRequired]
 message = "Za pristup {{featureName}} potrebna je Enterprise licenca. Prikazuju se ogledni podaci radi reference."
@@ -1228,6 +1229,14 @@ label = "Početno korisničko ime"
 [admin.settings.security.jwt]
 label = "JWT konfiguracija"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolerancija odstupanja vremena klijent/poslužitelj tijekom provjere tokena (zadano: 60 sekundi)"
+label = "Tolerancija vremenskog odstupanja (sekunde)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Vrijeme trajanja pristupnog tokena u minutama za desktop klijente. Desktop aplikacije se automatski prepoznaju putem User-Agent i dobivaju dulje sesije radi boljeg korisničkog iskustva (zadano: 43200 = 30 dana)"
+label = "Istek desktop tokena (minute)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Automatski uklanjaj istekle JWT ključeve"
 label = "Omogući čišćenje ključeva"
@@ -1236,29 +1245,21 @@ label = "Omogući čišćenje ključeva"
 description = "Automatski periodički rotiraj potpisne JWT ključeve"
 label = "Omogući rotaciju ključeva"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Vrijeme trajanja pristupnog tokena u minutama za web klijente (zadano: 1440 = 24 sata)"
-label = "Istek web tokena (minute)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Vrijeme trajanja pristupnog tokena u minutama za desktop klijente. Desktop aplikacije se automatski prepoznaju putem User-Agent i dobivaju dulje sesije radi boljeg korisničkog iskustva (zadano: 43200 = 30 dana)"
-label = "Istek desktop tokena (minute)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Tolerancija odstupanja vremena klijent/poslužitelj tijekom provjere tokena (zadano: 60 sekundi)"
-label = "Tolerancija vremenskog odstupanja (sekunde)"
+[admin.settings.security.jwt.persistence]
+description = "Trajno pohrani JWT ključeve kako bi preživjeli ponovno pokretanje poslužitelja"
+label = "Omogući trajnost ključeva"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Dopusti osvježavanje tokena unutar ovoliko minuta nakon isteka (zadano: 15 minuta, najviše 3 pokušaja)"
 label = "Razdoblje tolerancije za osvježavanje (minute)"
 
-[admin.settings.security.jwt.persistence]
-description = "Trajno pohrani JWT ključeve kako bi preživjeli ponovno pokretanje poslužitelja"
-label = "Omogući trajnost ključeva"
-
 [admin.settings.security.jwt.secureCookie]
 description = "Zahtijevaj HTTPS za JWT kolačiće (preporučeno za produkciju)"
 label = "Sigurni kolačić"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Vrijeme trajanja pristupnog tokena u minutama za web klijente (zadano: 1440 = 24 sata)"
+label = "Istek web tokena (minute)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Maksimalan broj neuspjelih pokušaja prijave prije zaključavanja računa"
@@ -2238,6 +2239,9 @@ title = "Promjena dopuštenja"
 [changePermissions.tooltip.warning]
 text = "Kako bi ove dozvole bile nepromjenjive, upotrijebite alat Dodaj lozinku za postavljanje vlasničke lozinke."
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "Odaberite boju"
 
@@ -2254,9 +2258,11 @@ copy = "Kopiraj"
 done = "Gotovo"
 error = "Pogreška"
 expand = "Proširi"
+learnMore = "Learn more"
 lines = "redaka"
 loading = "Učitavanje..."
 next = "Sljedeće"
+operation = "this operation"
 preview = "Pregled"
 previous = "Prethodno"
 refresh = "Osvježi"
@@ -2670,6 +2676,77 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "Automatski obreži bijeli prostor"
 header = "Izreži sliku"
@@ -2920,6 +2997,7 @@ copyStack = "Kopiraj Stack Trace"
 discordSubmit = "Discord - Pošalji objavu podrške"
 dismissAllErrors = "Zanemari sve pogreške"
 encryptedPdfMustRemovePassword = "Ovaj PDF je šifriran ili zaštićen lozinkom. Otključajte ga prije pretvorbe u PDF/A."
+generic = "An error occurred"
 github = "Pošaljite ticket na GitHub"
 githubSubmit = "GitHub - Pošaljite ticket"
 incorrectPasswordProvided = "Lozinka za PDF je netočna ili nije navedena."
@@ -3346,10 +3424,6 @@ desc = "Izgradite višekoračne tijekove rada povezivanjem PDF radnji. Idealno z
 tags = "tijek rada,sekvenca,automatizacija"
 title = "Automatiziraj"
 
-[home.formFill]
-desc = "Interaktivno ispunite polja PDF obrasca pomoću vizualnog uređivača"
-title = "Ispuni obrazac"
-
 [home.autoRename]
 desc = "Automatski preimenuje PDF datoteku na temelju detektiranog zaglavlja"
 tags = "automatski-detekcija,temeljen-na-zaglavlju,organiziraj,preimenuj"
@@ -3444,6 +3518,10 @@ title = "Izdvojiti stranice"
 desc = "Uklonite sve interaktivne elemente i obrasce iz PDF-a"
 tags = "pojednostavi,ukloni,interaktivno"
 title = "Ravnanje (Flatten)"
+
+[home.formFill]
+desc = "Interaktivno ispunite polja PDF obrasca pomoću vizualnog uređivača"
+title = "Ispuni obrazac"
 
 [home.getPdfInfo]
 desc = "Dohvaća sve moguće informacije o PDF-ovima"
@@ -4247,75 +4325,6 @@ title = "Uređivač stranica"
 zoomIn = "Povećaj"
 zoomOut = "Umanji"
 
-[viewer]
-cannotPreviewFile = "Nije moguće pregledati datoteku"
-dualPageView = "Prikaz dviju stranica"
-firstPage = "Prva stranica"
-lastPage = "Zadnja stranica"
-nextPage = "Sljedeća stranica"
-onlyPdfSupported = "Preglednik podržava samo PDF datoteke. Čini se da je ova datoteka u drugačijem formatu."
-previousPage = "Prethodna stranica"
-singlePageView = "Prikaz jedne stranice"
-unknownFile = "Nepoznata datoteka"
-zoomIn = "Povećaj"
-zoomOut = "Umanji"
-
-[viewer.attachments]
-title = "Prilozi"
-searchPlaceholder = "Pretraži priloge"
-noSupport = "Podrška za priloge nije dostupna u ovom pregledniku."
-noDocument = "Otvorite PDF za prikaz njegovih priloga."
-loading = "Učitavanje priloga..."
-empty = "Nema priloga u ovom dokumentu"
-noMatch = "Nema priloga koji odgovaraju vašem pretraživanju"
-
-[viewer.formBar]
-title = "Polja obrasca"
-unsavedBadge = "Nespremljeno"
-unsavedDesc = "Imate nespremljene promjene"
-hasFieldsDesc = "Ovaj PDF sadrži polja koja je moguće ispuniti"
-dismiss = "Odbaci"
-apply = "Primijeni promjene"
-download = "Preuzmi PDF"
-
-[rightRail]
-closeSelected = "Zatvori odabrane datoteke"
-selectAll = "Odaberi sve"
-deselectAll = "Poništi sav odabir"
-selectByNumber = "Odaberi po brojevima stranica"
-deleteSelected = "Izbriši odabrane stranice"
-closePdf = "Zatvori PDF"
-exportAll = "Izvezi PDF"
-downloadSelected = "Preuzmi odabrane datoteke"
-annotations = "Anotacije"
-exportSelected = "Izvezi odabrane stranice"
-formFill = "Ispuni obrazac"
-saveChanges = "Spremi promjene"
-toggleAttachments = "Prikaži/sakrij priloge"
-toggleTheme = "Prebaci temu"
-language = "Jezik"
-toggleAnnotations = "Prebaci vidljivost bilješki"
-search = "Pretraži PDF"
-panMode = "Način pomicanja"
-applyRedactionsFirst = "Najprije primijeni zacrnjivanja"
-rotateLeft = "Rotiraj ulijevo"
-rotateRight = "Rotiraj udesno"
-toggleSidebar = "Prebaci bočnu traku"
-toggleBookmarks = "Prebaci knjižne oznake"
-print = "Ispis PDF-a"
-ruler = "Ravnalo / mjerenje"
-draw = "Crtaj"
-redact = "Zacrni"
-exitRedaction = "Izađi iz načina zacrnjivanja"
-save = "Spremi"
-downloadAll = "Preuzmi sve"
-saveAll = "Spremi sve"
-
-[textAlign]
-left = "Lijevo"
-center = "Centar"
-right = "Desno"
-
 [pageExtracter]
 header = "Izdvojiti stranice"
 placeholder = "(t.j. 1,2,8 ili 4,7,12-16 ili 2n-1)"
@@ -4424,6 +4433,9 @@ title = "Savjeti"
 autoClose = "Ovaj će se prozor automatski zatvoriti..."
 billingPeriod = "Obračunsko razdoblje"
 canCloseWindow = "Sada možete zatvoriti ovaj prozor."
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "Unesite valjanu adresu e-pošte"
 enterpriseNote = "Mjesta se mogu prilagoditi u naplati (1–1000)."
 error = "Pogreška pri plaćanju"
@@ -4445,6 +4457,7 @@ perMonth = "/mj"
 perYear = "/god"
 preparing = "Priprema naplate..."
 redirecting = "Preusmjeravanje na sigurnu naplatu..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "Stripe nije konfiguriran"
 stripeNotConfiguredMessage = "Stripe integracija plaćanja nije konfigurirana. Obratite se administratoru."
 success = "Plaćanje uspješno!"
@@ -4777,6 +4790,13 @@ title = "PDF u Word"
 [PDFToWord.selectText]
 1 = "Format izlazne datoteke"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "Ova usluga koristi LibreOffice za konverziju datoteka."
 header = "PDF u XML"
@@ -4835,6 +4855,7 @@ customPricing = "Prilagođeno"
 featureComparison = "Usporedba značajki"
 from = "Od"
 hideComparison = "Sakrij usporedbu značajki"
+included = "Included"
 includedInCurrent = "Uključeno u vaš plan"
 licensedSeats = "Licencirano: {{count}} mjesta"
 manage = "Upravljaj"
@@ -4851,6 +4872,7 @@ subtitle = "Pojedinosti vaše trenutačne pretplate"
 title = "Aktivni plan"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "Odaberite plan koji odgovara vašim potrebama"
 title = "Dostupni planovi"
 
@@ -4861,6 +4883,7 @@ highlight3 = "Najnovije značajke"
 name = "Enterprise"
 requiresServer = "Zahtijeva Server"
 requiresServerMessage = "Najprije nadogradite na plan Server prije nadogradnje na Enterprise."
+siteLicense = "Site License"
 
 [plan.feature]
 api = "Pristup API-ju"
@@ -4928,6 +4951,10 @@ keyDescription = "Zalijepite licenčni ključ iz e-poruke"
 success = "Licenca aktivirana!"
 successMessage = "Vaša licenca je uspješno aktivirana. Sada možete zatvoriti ovaj prozor."
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "Ispis datoteke na pisač"
 submit = "Ispis"
@@ -4992,15 +5019,15 @@ title = "Riječi za redakciju"
 failed = "Došlo je do pogreške pri redakciji PDF-a."
 
 [redact.manual]
+activate = "Aktiviraj alat za zacrnjivanje"
+active = "Način zacrnjivanja aktivan"
 apply = "Primijeni"
 applyChanges = "Primijeni promjene"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Trajna primjena, ne može se poništiti i podaci ispod će biti izbrisani"
 boxRedaction = "Redakcija crtanjem okvira"
-colourPicker = "Birač boja"
 colorLabel = "Boja zacrnjivanja"
-active = "Način zacrnjivanja aktivan"
-activate = "Aktiviraj alat za zacrnjivanje"
+colourPicker = "Birač boja"
 controlsTitle = "Kontrole ručnog zacrnjivanja"
 convertPDFToImageLabel = "Pretvori PDF u PDF-Image (koristi se za uklanjanje teksta iza okvira)"
 export = "Izvoz"
@@ -5396,6 +5423,39 @@ title = "Visoki kontrast"
 text = "U potpunosti invertirajte sve boje u PDF-u, stvarajući efekt sličan negativu. Korisno za izradu tamnih verzija dokumenata ili smanjenje naprezanja očiju pri slabom osvjetljenju."
 title = "Invertiraj sve boje"
 
+[rightRail]
+annotations = "Anotacije"
+applyRedactionsFirst = "Najprije primijeni zacrnjivanja"
+closePdf = "Zatvori PDF"
+closeSelected = "Zatvori odabrane datoteke"
+deleteSelected = "Izbriši odabrane stranice"
+deselectAll = "Poništi sav odabir"
+downloadAll = "Preuzmi sve"
+downloadSelected = "Preuzmi odabrane datoteke"
+draw = "Crtaj"
+exitRedaction = "Izađi iz načina zacrnjivanja"
+exportAll = "Izvezi PDF"
+exportSelected = "Izvezi odabrane stranice"
+formFill = "Ispuni obrazac"
+language = "Jezik"
+panMode = "Način pomicanja"
+print = "Ispis PDF-a"
+redact = "Zacrni"
+rotateLeft = "Rotiraj ulijevo"
+rotateRight = "Rotiraj udesno"
+ruler = "Ravnalo / mjerenje"
+save = "Spremi"
+saveAll = "Spremi sve"
+saveChanges = "Spremi promjene"
+search = "Pretraži PDF"
+selectAll = "Odaberi sve"
+selectByNumber = "Odaberi po brojevima stranica"
+toggleAnnotations = "Prebaci vidljivost bilješki"
+toggleAttachments = "Prikaži/sakrij priloge"
+toggleBookmarks = "Prebaci knjižne oznake"
+toggleSidebar = "Prebaci bočnu traku"
+toggleTheme = "Prebaci temu"
+
 [rotate]
 rotateLeft = "Zakreni suprotno od kazaljke na satu"
 rotateRight = "Zakreni u smjeru kazaljke na satu"
@@ -5647,6 +5707,70 @@ plan = "Plan"
 title = "Licenciranje i analitika"
 usageAnalytics = "Analitika korištenja"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "Pravno"
 privacy = "Privatnost"
@@ -5679,6 +5803,9 @@ connections = "Povezivanja"
 security = "Sigurnost"
 telegram = "Telegram"
 title = "Sigurnost i autentikacija"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "Najprije omogućite način prijave"
@@ -6016,6 +6143,11 @@ desc = "Izdvojite određene stranice (1,3,5-10)"
 name = "Brojevi stranica"
 tooltip = "Unesite brojeve stranica odvojene zarezima ili raspon s crtama"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "Podijelite stranice u mrežne sekcije"
 name = "Sekcije"
@@ -6029,6 +6161,7 @@ tooltip = "Navedite maksimalnu veličinu datoteke (npr. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Razdvoji na"
 splitBy = "Razdvoji po"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "Kliknite na karticu metode da je odaberete"
@@ -6040,6 +6173,21 @@ title = "Odaberite svoju metodu razdvajanja"
 [split.methodSelection.tooltip.header]
 text = "Odaberite kako želite razdvojiti svoj PDF dokument. Svaka metoda je optimizirana za različite slučajeve uporabe i vrste dokumenata."
 title = "Odabir metode razdvajanja"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "Najprije odaberite metodu razdvajanja"
@@ -6091,6 +6239,14 @@ bullet2 = "Raspon točaka razdvajanja: 3-8 (razdvaja prije stranice 3 i nakon st
 bullet3 = "Mješovito: 2,5-10,15 (razdvaja nakon stranice 2, prije stranice 5, nakon stranice 10 i nakon stranice 15)"
 text = "Razdvojite svoj PDF na određenim brojevima stranica. Korištenje 'n' razdvaja nakon stranice n. Korištenje 'n-m' razdvaja prije stranice n i nakon stranice m."
 title = "Razdvoji na brojevima stranica"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "Vodoravno: Broj redaka za izradu"
@@ -6232,6 +6388,82 @@ title = "API dokumentacija"
 
 [tableExtraxt]
 tags = "CSV,Izdvajanje tabela,izdvajanje,pretvaranje"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "Centar"
+left = "Lijevo"
+right = "Desno"
 
 [theme]
 toggle = "Prebaci temu"
@@ -6507,6 +6739,37 @@ invalid = "Certifikat nije u spremniku povjerenja - izvor se ne može potvrditi"
 fileManager = "Upravitelj datoteka"
 pageEditor = "Uređivač stranica"
 viewer = "Preglednik"
+
+[viewer]
+cannotPreviewFile = "Nije moguće pregledati datoteku"
+dualPageView = "Prikaz dviju stranica"
+firstPage = "Prva stranica"
+lastPage = "Zadnja stranica"
+nextPage = "Sljedeća stranica"
+onlyPdfSupported = "Preglednik podržava samo PDF datoteke. Čini se da je ova datoteka u drugačijem formatu."
+previousPage = "Prethodna stranica"
+singlePageView = "Prikaz jedne stranice"
+unknownFile = "Nepoznata datoteka"
+zoomIn = "Povećaj"
+zoomOut = "Umanji"
+
+[viewer.attachments]
+empty = "Nema priloga u ovom dokumentu"
+loading = "Učitavanje priloga..."
+noDocument = "Otvorite PDF za prikaz njegovih priloga."
+noMatch = "Nema priloga koji odgovaraju vašem pretraživanju"
+noSupport = "Podrška za priloge nije dostupna u ovom pregledniku."
+searchPlaceholder = "Pretraži priloge"
+title = "Prilozi"
+
+[viewer.formBar]
+apply = "Primijeni promjene"
+dismiss = "Odbaci"
+download = "Preuzmi PDF"
+hasFieldsDesc = "Ovaj PDF sadrži polja koja je moguće ispuniti"
+title = "Polja obrasca"
+unsavedBadge = "Nespremljeno"
+unsavedDesc = "Imate nespremljene promjene"
 
 [viewPdf]
 header = "Pogledaj PDF"

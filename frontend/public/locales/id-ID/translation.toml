@@ -16,13 +16,13 @@ comingSoon = "Segera hadir"
 confirmClose = "Konfirmasi Penutupan"
 confirmCloseCancel = "Batal"
 confirmCloseConfirm = "Tutup File"
-confirmCloseMessage = "Apakah Anda yakin ingin menutup file ini?"
 confirmCloseDiscard = "Abaikan perubahan dan tutup"
+confirmCloseMessage = "Apakah Anda yakin ingin menutup file ini?"
 confirmCloseSave = "Simpan dan tutup"
+confirmCloseSaveFailed = "Tersimpan dengan kesalahan. {{count}} file{{plural}} tidak dapat disimpan."
+confirmCloseSaveFailedTitle = "Gagal Menyimpan"
 confirmCloseUnsaved = "File ini memiliki perubahan yang belum disimpan."
 confirmCloseUnsavedList = "Anda memiliki {{count}} file{{plural}} dengan perubahan yang belum disimpan.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Gagal Menyimpan"
-confirmCloseSaveFailed = "Tersimpan dengan kesalahan. {{count}} file{{plural}} tidak dapat disimpan."
 confirmPasswordErrorMessage = "Kata Sandi Baru dan Konfirmasi Kata Sandi Baru harus sama."
 custom = "Kustom..."
 customPosition = "Posisi Kustom"
@@ -42,11 +42,12 @@ downloadComplete = "Unduhan Lengkap"
 downloadPdf = "Unduh PDF"
 downloadUnavailable = "Unduhan tidak tersedia untuk item ini"
 edit = "Edit"
+editSecret = "Edit this value"
 editYourNewFiles = "Edit file baru Anda"
 exportAndContinue = "Ekspor & Lanjutkan"
 false = "Salah"
-fileSavedToDisk = "File disimpan ke disk"
 fileNotSavedToDisk = "Tidak disimpan ke disk"
+fileSavedToDisk = "File disimpan ke disk"
 fileSelected = "Dipilih: {{filename}}"
 filesSelected = "berkas dipilih"
 font = "Jenis huruf"
@@ -841,6 +842,14 @@ title = "Endpoint API"
 userDefaults = "Bawaan Preferensi Pengguna"
 userDefaultsDescription = "Atur nilai bawaan untuk preferensi pengguna. Pengguna dapat menimpanya di setelan pribadi mereka."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Hapus opsi konversi yang dinonaktifkan alih-alih menampilkannya dalam warna abu-abu"
+label = "Sembunyikan konversi yang tidak tersedia secara bawaan"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Hapus alat yang dinonaktifkan alih-alih menampilkannya dalam warna abu-abu"
+label = "Sembunyikan alat yang tidak tersedia secara bawaan"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Pilih grup endpoint untuk dinonaktifkan"
 label = "Grup Endpoint Dinonaktifkan"
@@ -848,14 +857,6 @@ label = "Grup Endpoint Dinonaktifkan"
 [admin.settings.endpoints.toRemove]
 description = "Pilih endpoint individual untuk dinonaktifkan"
 label = "Endpoint Dinonaktifkan"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Hapus alat yang dinonaktifkan alih-alih menampilkannya dalam warna abu-abu"
-label = "Sembunyikan alat yang tidak tersedia secara bawaan"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Hapus opsi konversi yang dinonaktifkan alih-alih menampilkannya dalam warna abu-abu"
-label = "Sembunyikan konversi yang tidak tersedia secara bawaan"
 
 [admin.settings.enterpriseRequired]
 message = "Lisensi Enterprise diperlukan untuk mengakses {{featureName}}. Anda sedang melihat data demo sebagai referensi."
@@ -1228,6 +1229,14 @@ label = "Nama Pengguna Awal"
 [admin.settings.security.jwt]
 label = "Konfigurasi JWT"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Toleransi pergeseran waktu klien/server selama validasi token (bawaan: 60 detik)"
+label = "Toleransi Ketidaksinkronan Waktu (detik)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Masa berlaku token akses dalam menit untuk klien desktop. Aplikasi desktop terdeteksi secara otomatis melalui User-Agent dan menerima sesi yang lebih lama untuk UX yang lebih baik (bawaan: 43200 = 30 hari)"
+label = "Kedaluwarsa Token Desktop (menit)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Hapus kunci JWT yang kedaluwarsa secara otomatis"
 label = "Aktifkan Pembersihan Kunci"
@@ -1236,29 +1245,21 @@ label = "Aktifkan Pembersihan Kunci"
 description = "Putar kunci penandatangan JWT secara otomatis secara berkala"
 label = "Aktifkan Rotasi Kunci"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Masa berlaku token akses dalam menit untuk klien web (bawaan: 1440 = 24 jam)"
-label = "Kedaluwarsa Token Web (menit)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Masa berlaku token akses dalam menit untuk klien desktop. Aplikasi desktop terdeteksi secara otomatis melalui User-Agent dan menerima sesi yang lebih lama untuk UX yang lebih baik (bawaan: 43200 = 30 hari)"
-label = "Kedaluwarsa Token Desktop (menit)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Toleransi pergeseran waktu klien/server selama validasi token (bawaan: 60 detik)"
-label = "Toleransi Ketidaksinkronan Waktu (detik)"
+[admin.settings.security.jwt.persistence]
+description = "Simpan kunci JWT secara persisten agar tetap ada saat server dimulai ulang"
+label = "Aktifkan Persistensi Kunci"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Izinkan penyegaran token dalam sejumlah menit ini setelah kedaluwarsa (bawaan: 15 menit, maks 3 percobaan)"
 label = "Masa Tenggang Penyegaran (menit)"
 
-[admin.settings.security.jwt.persistence]
-description = "Simpan kunci JWT secara persisten agar tetap ada saat server dimulai ulang"
-label = "Aktifkan Persistensi Kunci"
-
 [admin.settings.security.jwt.secureCookie]
 description = "Wajibkan HTTPS untuk cookie JWT (disarankan untuk produksi)"
 label = "Cookie Aman"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Masa berlaku token akses dalam menit untuk klien web (bawaan: 1440 = 24 jam)"
+label = "Kedaluwarsa Token Web (menit)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Jumlah maksimum kegagalan login sebelum akun terkunci"
@@ -2238,6 +2239,9 @@ title = "Ganti Perizinan"
 [changePermissions.tooltip.warning]
 text = "Agar izin ini tidak dapat diubah, gunakan alat Tambah Kata Sandi untuk menetapkan kata sandi pemilik."
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "Pilih warna"
 
@@ -2254,9 +2258,11 @@ copy = "Salin"
 done = "Selesai"
 error = "Error"
 expand = "Perluas"
+learnMore = "Learn more"
 lines = "baris"
 loading = "Memuat..."
 next = "Berikutnya"
+operation = "this operation"
 preview = "Pratinjau"
 previous = "Sebelumnya"
 refresh = "Muat Ulang"
@@ -2670,6 +2676,77 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "Pangkas otomatis ruang kosong"
 header = "Pangkas PDF"
@@ -2920,6 +2997,7 @@ copyStack = "Salin Stack Trace"
 discordSubmit = "Discord - Kirim pos dukungan"
 dismissAllErrors = "Abaikan Semua Kesalahan"
 encryptedPdfMustRemovePassword = "PDF ini terenkripsi atau dilindungi kata sandi. Harap buka kunci sebelum mengonversi ke PDF/A."
+generic = "An error occurred"
 github = "Kirim tiket di GitHub"
 githubSubmit = "GitHub - Kirim tiket"
 incorrectPasswordProvided = "Kata sandi PDF salah atau tidak diberikan."
@@ -3346,10 +3424,6 @@ desc = "Bangun alur kerja multi-langkah dengan merangkai tindakan PDF. Ideal unt
 tags = "alur-kerja,urutan,otomasi"
 title = "Otomasi"
 
-[home.formFill]
-desc = "Isi bidang formulir PDF secara interaktif dengan editor visual"
-title = "Isi Formulir"
-
 [home.autoRename]
 desc = "Mengganti nama file PDF secara otomatis berdasarkan header yang terdeteksi"
 tags = "deteksi-otomatis,berbasis-header,atur,ganti-nama"
@@ -3444,6 +3518,10 @@ title = "Ekstrak Halaman"
 desc = "Menghapus semua elemen dan formulir interaktif dari PDF"
 tags = "sederhanakan,hapus,interaktif"
 title = "Meratakan"
+
+[home.formFill]
+desc = "Isi bidang formulir PDF secara interaktif dengan editor visual"
+title = "Isi Formulir"
 
 [home.getPdfInfo]
 desc = "Mengambil setiap dan semua informasi yang mungkin ada pada PDF"
@@ -4247,75 +4325,6 @@ title = "Editor Halaman"
 zoomIn = "Perbesar"
 zoomOut = "Perkecil"
 
-[viewer]
-cannotPreviewFile = "Tidak dapat menampilkan pratinjau file"
-dualPageView = "Tampilan Dua Halaman"
-firstPage = "Halaman Pertama"
-lastPage = "Halaman Terakhir"
-nextPage = "Halaman Berikutnya"
-onlyPdfSupported = "Penampil hanya mendukung file PDF. File ini tampaknya memiliki format yang berbeda."
-previousPage = "Halaman Sebelumnya"
-singlePageView = "Tampilan Satu Halaman"
-unknownFile = "File tidak dikenal"
-zoomIn = "Perbesar"
-zoomOut = "Perkecil"
-
-[viewer.attachments]
-title = "Lampiran"
-searchPlaceholder = "Cari lampiran"
-noSupport = "Dukungan lampiran tidak tersedia untuk penampil ini."
-noDocument = "Buka PDF untuk melihat lampirannya."
-loading = "Memuat lampiran..."
-empty = "Tidak ada lampiran dalam dokumen ini"
-noMatch = "Tidak ada lampiran yang cocok dengan pencarian Anda"
-
-[viewer.formBar]
-title = "Bidang Formulir"
-unsavedBadge = "Belum Disimpan"
-unsavedDesc = "Anda memiliki perubahan yang belum disimpan"
-hasFieldsDesc = "PDF ini berisi bidang yang dapat diisi"
-dismiss = "Abaikan"
-apply = "Terapkan Perubahan"
-download = "Unduh PDF"
-
-[rightRail]
-closeSelected = "Tutup File Terpilih"
-selectAll = "Pilih Semua"
-deselectAll = "Batalkan Semua Pilihan"
-selectByNumber = "Pilih berdasarkan Nomor Halaman"
-deleteSelected = "Hapus Halaman Terpilih"
-closePdf = "Tutup PDF"
-exportAll = "Ekspor PDF"
-downloadSelected = "Unduh File Terpilih"
-annotations = "Anotasi"
-exportSelected = "Ekspor Halaman Terpilih"
-formFill = "Isi Formulir"
-saveChanges = "Simpan Perubahan"
-toggleAttachments = "Tampilkan/Sembunyikan Lampiran"
-toggleTheme = "Alihkan Tema"
-language = "Bahasa"
-toggleAnnotations = "Alihkan Visibilitas Anotasi"
-search = "Cari PDF"
-panMode = "Mode Geser"
-applyRedactionsFirst = "Terapkan redaksi terlebih dahulu"
-rotateLeft = "Putar Kiri"
-rotateRight = "Putar Kanan"
-toggleSidebar = "Alihkan Sidebar"
-toggleBookmarks = "Tampilkan/Sembunyikan Bookmark"
-print = "Cetak PDF"
-ruler = "Penggaris / Ukur"
-draw = "Gambar"
-redact = "Redaksi"
-exitRedaction = "Keluar dari Mode Redaksi"
-save = "Simpan"
-downloadAll = "Unduh Semua"
-saveAll = "Simpan Semua"
-
-[textAlign]
-left = "Kiri"
-center = "Tengah"
-right = "Kanan"
-
 [pageExtracter]
 header = "Ekstrak Halaman"
 placeholder = "(misalnya 1,2,8 atau 4,7,12-16 atau 2n-1)"
@@ -4424,6 +4433,9 @@ title = "Tips"
 autoClose = "Jendela ini akan tertutup secara otomatis..."
 billingPeriod = "Periode Penagihan"
 canCloseWindow = "Anda bisa menutup jendela ini sekarang."
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "Masukkan alamat email yang valid"
 enterpriseNote = "Seat dapat disesuaikan saat checkout (1–1000)."
 error = "Kesalahan Pembayaran"
@@ -4445,6 +4457,7 @@ perMonth = "/bulan"
 perYear = "/tahun"
 preparing = "Menyiapkan checkout Anda..."
 redirecting = "Mengalihkan ke checkout aman..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "Stripe Tidak Dikonfigurasi"
 stripeNotConfiguredMessage = "Integrasi pembayaran Stripe tidak dikonfigurasi. Silakan hubungi administrator Anda."
 success = "Pembayaran Berhasil!"
@@ -4777,6 +4790,13 @@ title = "PDF ke Word"
 [PDFToWord.selectText]
 1 = "Hasil format berkas"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "Layanan ini menggunakan LibreOffice untuk konversi berkas."
 header = "PDF ke XML"
@@ -4835,6 +4855,7 @@ customPricing = "Khusus"
 featureComparison = "Perbandingan Fitur"
 from = "Mulai"
 hideComparison = "Sembunyikan Perbandingan Fitur"
+included = "Included"
 includedInCurrent = "Termasuk dalam Paket Anda"
 licensedSeats = "Berlisensi: {{count}} seat"
 manage = "Kelola"
@@ -4851,6 +4872,7 @@ subtitle = "Detail langganan Anda saat ini"
 title = "Paket Aktif"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "Pilih paket yang sesuai kebutuhan Anda"
 title = "Paket yang Tersedia"
 
@@ -4861,6 +4883,7 @@ highlight3 = "Fitur terbaru"
 name = "Enterprise"
 requiresServer = "Memerlukan Server"
 requiresServerMessage = "Harap upgrade ke paket Server terlebih dahulu sebelum upgrade ke Enterprise."
+siteLicense = "Site License"
 
 [plan.feature]
 api = "Akses API"
@@ -4928,6 +4951,10 @@ keyDescription = "Tempel kunci lisensi dari email Anda"
 success = "Lisensi Diaktifkan!"
 successMessage = "Lisensi Anda berhasil diaktifkan. Anda sekarang dapat menutup jendela ini."
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "Cetak File ke Printer"
 submit = "Cetak"
@@ -4992,15 +5019,15 @@ title = "Kata untuk Disensor"
 failed = "Terjadi kesalahan saat menyensor PDF."
 
 [redact.manual]
+activate = "Aktifkan Alat Sensor"
+active = "Mode Sensor Aktif"
 apply = "Terapkan"
 applyChanges = "Terapkan Perubahan"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Penerapan permanen, tidak dapat dibatalkan dan data di bawahnya akan dihapus"
 boxRedaction = "Penyensoran dengan menggambar kotak"
-colourPicker = "Pemilih Warna"
 colorLabel = "Warna Sensor"
-active = "Mode Sensor Aktif"
-activate = "Aktifkan Alat Sensor"
+colourPicker = "Pemilih Warna"
 controlsTitle = "Kontrol Redaksi Manual"
 convertPDFToImageLabel = "Konversi PDF ke PDF-Image (Digunakan untuk menghapus teks di belakang kotak)"
 export = "Ekspor"
@@ -5396,6 +5423,39 @@ title = "Kontras Tinggi"
 text = "Membalik semua warna dalam PDF sepenuhnya, menciptakan efek seperti negatif. Berguna untuk membuat versi mode gelap dokumen atau mengurangi ketegangan mata dalam kondisi cahaya rendah."
 title = "Balik Semua Warna"
 
+[rightRail]
+annotations = "Anotasi"
+applyRedactionsFirst = "Terapkan redaksi terlebih dahulu"
+closePdf = "Tutup PDF"
+closeSelected = "Tutup File Terpilih"
+deleteSelected = "Hapus Halaman Terpilih"
+deselectAll = "Batalkan Semua Pilihan"
+downloadAll = "Unduh Semua"
+downloadSelected = "Unduh File Terpilih"
+draw = "Gambar"
+exitRedaction = "Keluar dari Mode Redaksi"
+exportAll = "Ekspor PDF"
+exportSelected = "Ekspor Halaman Terpilih"
+formFill = "Isi Formulir"
+language = "Bahasa"
+panMode = "Mode Geser"
+print = "Cetak PDF"
+redact = "Redaksi"
+rotateLeft = "Putar Kiri"
+rotateRight = "Putar Kanan"
+ruler = "Penggaris / Ukur"
+save = "Simpan"
+saveAll = "Simpan Semua"
+saveChanges = "Simpan Perubahan"
+search = "Cari PDF"
+selectAll = "Pilih Semua"
+selectByNumber = "Pilih berdasarkan Nomor Halaman"
+toggleAnnotations = "Alihkan Visibilitas Anotasi"
+toggleAttachments = "Tampilkan/Sembunyikan Lampiran"
+toggleBookmarks = "Tampilkan/Sembunyikan Bookmark"
+toggleSidebar = "Alihkan Sidebar"
+toggleTheme = "Alihkan Tema"
+
 [rotate]
 rotateLeft = "Putar Berlawanan Arah Jarum Jam"
 rotateRight = "Putar Searah Jarum Jam"
@@ -5647,6 +5707,70 @@ plan = "Paket"
 title = "Lisensi & Analitik"
 usageAnalytics = "Analitik Penggunaan"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "Legal"
 privacy = "Privasi"
@@ -5679,6 +5803,9 @@ connections = "Koneksi"
 security = "Keamanan"
 telegram = "Telegram"
 title = "Keamanan & Autentikasi"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "Aktifkan mode login terlebih dahulu"
@@ -6016,6 +6143,11 @@ desc = "Ekstrak halaman tertentu (1,3,5-10)"
 name = "Nomor Halaman"
 tooltip = "Masukkan nomor halaman dipisahkan koma atau rentang dengan tanda hubung"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "Bagi halaman menjadi bagian kisi"
 name = "Bagian"
@@ -6029,6 +6161,7 @@ tooltip = "Tentukan ukuran file maksimum (mis. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Bagi pada"
 splitBy = "Bagi berdasarkan"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "Klik pada kartu metode untuk memilihnya"
@@ -6040,6 +6173,21 @@ title = "Pilih Metode Pemisahan Anda"
 [split.methodSelection.tooltip.header]
 text = "Pilih bagaimana Anda ingin membagi dokumen PDF Anda. Setiap metode dioptimalkan untuk kasus penggunaan dan tipe dokumen yang berbeda."
 title = "Pemilihan Metode Pemisahan"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "Silakan pilih metode pemisahan terlebih dahulu"
@@ -6091,6 +6239,14 @@ bullet2 = "Rentang pemisahan: 3-8 (pecah sebelum halaman 3 dan setelah halaman 8
 bullet3 = "Campuran: 2,5-10,15 (pecah setelah halaman 2, sebelum halaman 5, setelah halaman 10, dan setelah halaman 15)"
 text = "Bagi PDF Anda pada nomor halaman tertentu. Menggunakan 'n' memecah setelah halaman n. Menggunakan 'n-m' memecah sebelum halaman n dan setelah halaman m."
 title = "Bagi pada Nomor Halaman"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "Horizontal: Jumlah baris yang dibuat"
@@ -6232,6 +6388,82 @@ title = "Dokumentasi API"
 
 [tableExtraxt]
 tags = "CSV, Ekstraksi Tabel, ekstrak, konversi"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "Tengah"
+left = "Kiri"
+right = "Kanan"
 
 [theme]
 toggle = "Alihkan Tema"
@@ -6507,6 +6739,37 @@ invalid = "Sertifikat tidak ada di trust store - sumber tidak dapat diverifikasi
 fileManager = "Pengelola File"
 pageEditor = "Editor Halaman"
 viewer = "Penampil"
+
+[viewer]
+cannotPreviewFile = "Tidak dapat menampilkan pratinjau file"
+dualPageView = "Tampilan Dua Halaman"
+firstPage = "Halaman Pertama"
+lastPage = "Halaman Terakhir"
+nextPage = "Halaman Berikutnya"
+onlyPdfSupported = "Penampil hanya mendukung file PDF. File ini tampaknya memiliki format yang berbeda."
+previousPage = "Halaman Sebelumnya"
+singlePageView = "Tampilan Satu Halaman"
+unknownFile = "File tidak dikenal"
+zoomIn = "Perbesar"
+zoomOut = "Perkecil"
+
+[viewer.attachments]
+empty = "Tidak ada lampiran dalam dokumen ini"
+loading = "Memuat lampiran..."
+noDocument = "Buka PDF untuk melihat lampirannya."
+noMatch = "Tidak ada lampiran yang cocok dengan pencarian Anda"
+noSupport = "Dukungan lampiran tidak tersedia untuk penampil ini."
+searchPlaceholder = "Cari lampiran"
+title = "Lampiran"
+
+[viewer.formBar]
+apply = "Terapkan Perubahan"
+dismiss = "Abaikan"
+download = "Unduh PDF"
+hasFieldsDesc = "PDF ini berisi bidang yang dapat diisi"
+title = "Bidang Formulir"
+unsavedBadge = "Belum Disimpan"
+unsavedDesc = "Anda memiliki perubahan yang belum disimpan"
 
 [viewPdf]
 header = "Lihat PDF"

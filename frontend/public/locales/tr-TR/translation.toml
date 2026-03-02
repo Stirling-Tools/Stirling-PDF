@@ -16,13 +16,13 @@ comingSoon = "Yakında"
 confirmClose = "Kapatmayı Onayla"
 confirmCloseCancel = "İptal"
 confirmCloseConfirm = "Dosyayı Kapat"
-confirmCloseMessage = "Bu dosyayı kapatmak istediğinizden emin misiniz?"
 confirmCloseDiscard = "Değişiklikleri at ve kapat"
+confirmCloseMessage = "Bu dosyayı kapatmak istediğinizden emin misiniz?"
 confirmCloseSave = "Kaydet ve kapat"
+confirmCloseSaveFailed = "Hatalarla kaydedildi. {{count}} dosya{{plural}} kaydedilemedi."
+confirmCloseSaveFailedTitle = "Kaydetme Başarısız"
 confirmCloseUnsaved = "Bu dosyada kaydedilmemiş değişiklikler var."
 confirmCloseUnsavedList = "Kaydedilmemiş değişiklikleri olan {{count}} dosya{{plural}} var.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Kaydetme Başarısız"
-confirmCloseSaveFailed = "Hatalarla kaydedildi. {{count}} dosya{{plural}} kaydedilemedi."
 confirmPasswordErrorMessage = "Yeni Şifre ve Yeni Şifreyi Onayla eşleşmelidir."
 custom = "Özel"
 customPosition = "Özel Konum"
@@ -42,11 +42,12 @@ downloadComplete = "İndirme Tamamlandı"
 downloadPdf = "PDF İndir"
 downloadUnavailable = "Bu öğe için indirme kullanılamıyor"
 edit = "Düzenle"
+editSecret = "Edit this value"
 editYourNewFiles = "Yeni dosyalarınızı düzenleyin"
 exportAndContinue = "Dışa aktar ve Devam et"
 false = "Yanlış"
-fileSavedToDisk = "Dosya diske kaydedildi"
 fileNotSavedToDisk = "Diske kaydedilmedi"
+fileSavedToDisk = "Dosya diske kaydedildi"
 fileSelected = "Seçildi: {{filename}}"
 filesSelected = "dosya seçildi"
 font = "Yazı tipi"
@@ -841,6 +842,14 @@ title = "API Uç Noktaları"
 userDefaults = "Kullanıcı Tercihi Varsayılanları"
 userDefaultsDescription = "Kullanıcı tercihleri için varsayılan değerleri ayarlayın. Kullanıcılar bunları kişisel ayarlarında geçersiz kılabilir."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Devre dışı dönüştürme seçeneklerini gri göstermek yerine kaldırın"
+label = "Kullanılamayan dönüştürmeleri varsayılan olarak gizle"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Devre dışı araçları gri göstermek yerine kaldırın"
+label = "Kullanılamayan araçları varsayılan olarak gizle"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Devre dışı bırakılacak uç nokta gruplarını seçin"
 label = "Devre Dışı Uç Nokta Grupları"
@@ -848,14 +857,6 @@ label = "Devre Dışı Uç Nokta Grupları"
 [admin.settings.endpoints.toRemove]
 description = "Devre dışı bırakılacak bireysel uç noktaları seçin"
 label = "Devre Dışı Uç Noktalar"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Devre dışı araçları gri göstermek yerine kaldırın"
-label = "Kullanılamayan araçları varsayılan olarak gizle"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Devre dışı dönüştürme seçeneklerini gri göstermek yerine kaldırın"
-label = "Kullanılamayan dönüştürmeleri varsayılan olarak gizle"
 
 [admin.settings.enterpriseRequired]
 message = "{{featureName}} erişimi için Kurumsal lisans gereklidir. Referans için demo verilerini görüntülüyorsunuz."
@@ -1228,6 +1229,14 @@ label = "İlk Kullanıcı Adı"
 [admin.settings.security.jwt]
 label = "JWT Yapılandırması"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Jeton doğrulaması sırasında istemci/sunucu zaman sapmasına tolerans (varsayılan: 60 saniye)"
+label = "Zaman Sapması Toleransı (saniye)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Masaüstü istemcileri için erişim jetonu ömrü (dakika cinsinden). Masaüstü uygulamaları User-Agent üzerinden otomatik olarak algılanır ve daha iyi UX için daha uzun oturumlar alır (varsayılan: 43200 = 30 gün)"
+label = "Masaüstü Jetonu Sona Erme (dakika)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Süresi dolan JWT anahtarlarını otomatik olarak kaldır"
 label = "Anahtar Temizlemeyi Etkinleştir"
@@ -1236,29 +1245,21 @@ label = "Anahtar Temizlemeyi Etkinleştir"
 description = "JWT imzalama anahtarlarını periyodik olarak otomatik döndür"
 label = "Anahtar Döndürmeyi Etkinleştir"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Web istemcileri için erişim jetonu ömrü (dakika cinsinden) (varsayılan: 1440 = 24 saat)"
-label = "Web Jetonu Sona Erme (dakika)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Masaüstü istemcileri için erişim jetonu ömrü (dakika cinsinden). Masaüstü uygulamaları User-Agent üzerinden otomatik olarak algılanır ve daha iyi UX için daha uzun oturumlar alır (varsayılan: 43200 = 30 gün)"
-label = "Masaüstü Jetonu Sona Erme (dakika)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Jeton doğrulaması sırasında istemci/sunucu zaman sapmasına tolerans (varsayılan: 60 saniye)"
-label = "Zaman Sapması Toleransı (saniye)"
+[admin.settings.security.jwt.persistence]
+description = "Sunucu yeniden başlatmalarında korunması için JWT anahtarlarını kalıcı olarak sakla"
+label = "Anahtar Kalıcılığını Etkinleştir"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Jetonun süresi dolduktan sonra bu kadar dakika içinde yenilemeye izin ver (varsayılan: 15 dakika, en fazla 3 deneme)"
 label = "Yenileme Toleransı (dakika)"
 
-[admin.settings.security.jwt.persistence]
-description = "Sunucu yeniden başlatmalarında korunması için JWT anahtarlarını kalıcı olarak sakla"
-label = "Anahtar Kalıcılığını Etkinleştir"
-
 [admin.settings.security.jwt.secureCookie]
 description = "JWT çerezleri için HTTPS gerektir (üretim için önerilir)"
 label = "Güvenli Çerez"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Web istemcileri için erişim jetonu ömrü (dakika cinsinden) (varsayılan: 1440 = 24 saat)"
+label = "Web Jetonu Sona Erme (dakika)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Hesap kilitlenmeden önceki maksimum başarısız oturum açma denemesi sayısı"
@@ -2238,6 +2239,9 @@ title = "İzinleri Değiştir"
 [changePermissions.tooltip.warning]
 text = "Bu izinlerin değiştirilemez olmasını sağlamak için, sahip parolasını ayarlamak üzere Parola Ekle aracını kullanın."
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "Renk seçin"
 
@@ -2254,9 +2258,11 @@ copy = "Kopyala"
 done = "Bitti"
 error = "Hata"
 expand = "Genişlet"
+learnMore = "Learn more"
 lines = "satır"
 loading = "Yükleniyor..."
 next = "Sonraki"
+operation = "this operation"
 preview = "Önizleme"
 previous = "Önceki"
 refresh = "Yenile"
@@ -2670,6 +2676,77 @@ description = "Bu çerezler, web sitesinin düzgün çalışabilmesi için gerek
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "Boşlukları otomatik kırp"
 header = "PDF'i Kırp"
@@ -2920,6 +2997,7 @@ copyStack = "Yığın İzini Kopyala"
 discordSubmit = "Discord - Destek gönderisi gönderin"
 dismissAllErrors = "Tüm Hataları Kapat"
 encryptedPdfMustRemovePassword = "Bu PDF şifreli veya parola korumalı. PDF/A'ya dönüştürmeden önce lütfen kilidini açın."
+generic = "An error occurred"
 github = "GitHub üzerinden bir hata bildirin"
 githubSubmit = "GitHub - Hata gönderin"
 incorrectPasswordProvided = "PDF parolası yanlış veya sağlanmadı."
@@ -3346,10 +3424,6 @@ desc = "PDF eylemlerini birbirine bağlayarak çok adımlı iş akışları olu�
 tags = "iş_akışı,sıralı,otomasyon"
 title = "Otomatikleştir"
 
-[home.formFill]
-desc = "PDF form alanlarını görsel bir düzenleyiciyle etkileşimli olarak doldurun"
-title = "Formu Doldur"
-
 [home.autoRename]
 desc = "Algılanan başlığına göre bir PDF dosyasını otomatik olarak yeniden adlandırır"
 tags = "otomatik_algılama,başlık_tabanlı,düzenle,yeniden_adlandır"
@@ -3444,6 +3518,10 @@ title = "Sayfaları Çıkar"
 desc = "PDF'ten tüm etkileşimli öğeleri ve formları kaldırır"
 tags = "basitleştir,kaldır,etkileşimli"
 title = "Düzleştir"
+
+[home.formFill]
+desc = "PDF form alanlarını görsel bir düzenleyiciyle etkileşimli olarak doldurun"
+title = "Formu Doldur"
 
 [home.getPdfInfo]
 desc = "PDF'ler hakkında mümkün olan her türlü bilgiyi toplar"
@@ -4247,75 +4325,6 @@ title = "Sayfa Düzenleyici"
 zoomIn = "Yakınlaştır"
 zoomOut = "Uzaklaştır"
 
-[viewer]
-cannotPreviewFile = "Dosya önizlenemiyor"
-dualPageView = "Çift Sayfa Görünümü"
-firstPage = "İlk Sayfa"
-lastPage = "Son Sayfa"
-nextPage = "Sonraki Sayfa"
-onlyPdfSupported = "Görüntüleyici yalnızca PDF dosyalarını destekler. Bu dosya farklı bir biçimde görünüyor."
-previousPage = "Önceki Sayfa"
-singlePageView = "Tek Sayfa Görünümü"
-unknownFile = "Bilinmeyen dosya"
-zoomIn = "Yakınlaştır"
-zoomOut = "Uzaklaştır"
-
-[viewer.attachments]
-title = "Ekler"
-searchPlaceholder = "Eklerde ara"
-noSupport = "Bu görüntüleyici için ek desteği mevcut değil."
-noDocument = "Eklerini görmek için bir PDF açın."
-loading = "Ekler yükleniyor..."
-empty = "Bu belgede ek yok"
-noMatch = "Aramanızla eşleşen ek yok"
-
-[viewer.formBar]
-title = "Form Alanları"
-unsavedBadge = "Kaydedilmemiş"
-unsavedDesc = "Kaydedilmemiş değişiklikleriniz var"
-hasFieldsDesc = "Bu PDF doldurulabilir alanlar içeriyor"
-dismiss = "Kapat"
-apply = "Değişiklikleri Uygula"
-download = "PDF'yi İndir"
-
-[rightRail]
-closeSelected = "Seçilen Dosyaları Kapat"
-selectAll = "Tümünü Seç"
-deselectAll = "Seçimi Kaldır"
-selectByNumber = "Sayfa Numaralarına Göre Seç"
-deleteSelected = "Seçilen Sayfaları Sil"
-closePdf = "PDF'yi Kapat"
-exportAll = "PDF'yi Dışa Aktar"
-downloadSelected = "Seçilen Dosyaları İndir"
-annotations = "Açıklamalar"
-exportSelected = "Seçilen Sayfaları Dışa Aktar"
-formFill = "Formu Doldur"
-saveChanges = "Değişiklikleri Kaydet"
-toggleAttachments = "Ekleri Göster/Gizle"
-toggleTheme = "Temayı Değiştir"
-language = "Dil"
-toggleAnnotations = "Açıklamaların Görünürlüğünü Değiştir"
-search = "PDF Ara"
-panMode = "Kaydırma Modu"
-applyRedactionsFirst = "Önce karartmaları uygula"
-rotateLeft = "Sola Döndür"
-rotateRight = "Sağa Döndür"
-toggleSidebar = "Kenar Çubuğunu Aç/Kapat"
-toggleBookmarks = "Yer imlerini aç/kapat"
-print = "PDF'yi Yazdır"
-ruler = "Cetvel / Ölçüm"
-draw = "Çiz"
-redact = "Karart"
-exitRedaction = "Karartma Modundan Çık"
-save = "Kaydet"
-downloadAll = "Tümünü İndir"
-saveAll = "Tümünü Kaydet"
-
-[textAlign]
-left = "Sol"
-center = "Orta"
-right = "Sağ"
-
 [pageExtracter]
 header = "Sayfaları Çıkar"
 placeholder = "(örneğin 1,2,8 veya 4,7,12-16 ya da 2n-1)"
@@ -4424,6 +4433,9 @@ title = "İpuçları"
 autoClose = "Bu pencere otomatik olarak kapanacaktır..."
 billingPeriod = "Faturalandırma Dönemi"
 canCloseWindow = "Bu pencereyi şimdi kapatabilirsiniz."
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "Lütfen geçerli bir e-posta adresi girin"
 enterpriseNote = "Koltuklar ödeme adımında ayarlanabilir (1-1000)."
 error = "Ödeme Hatası"
@@ -4445,6 +4457,7 @@ perMonth = "/ay"
 perYear = "/yıl"
 preparing = "Ödeme hazırlanıyor..."
 redirecting = "Güvenli ödeme sayfasına yönlendiriliyor..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "Stripe Yapılandırılmadı"
 stripeNotConfiguredMessage = "Stripe ödeme entegrasyonu yapılandırılmadı. Lütfen yöneticinizle iletişime geçin."
 success = "Ödeme Başarılı!"
@@ -4777,6 +4790,13 @@ title = "PDF'den Word'e"
 [PDFToWord.selectText]
 1 = "Çıktı dosya formatı"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "Bu hizmet dosya dönüşümü için LibreOffice kullanır."
 header = "PDF'den XML'e"
@@ -4835,6 +4855,7 @@ customPricing = "Özel"
 featureComparison = "Özellik Karşılaştırması"
 from = "Başlangıç"
 hideComparison = "Özellik Karşılaştırmasını Gizle"
+included = "Included"
 includedInCurrent = "Planınızda Dahil"
 licensedSeats = "Lisanslı: {{count}} koltuk"
 manage = "Yönet"
@@ -4851,6 +4872,7 @@ subtitle = "Mevcut abonelik ayrıntılarınız"
 title = "Aktif Plan"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "İhtiyaçlarınıza uygun planı seçin"
 title = "Mevcut Planlar"
 
@@ -4861,6 +4883,7 @@ highlight3 = "En yeni özellikler"
 name = "Kurumsal"
 requiresServer = "Sunucu gerektirir"
 requiresServerMessage = "Enterprise'a yükseltmeden önce lütfen önce Sunucu planına yükseltin."
+siteLicense = "Site License"
 
 [plan.feature]
 api = "API Erişimi"
@@ -4928,6 +4951,10 @@ keyDescription = "E-postanızdaki lisans anahtarını yapıştırın"
 success = "Lisans Etkinleştirildi!"
 successMessage = "Lisansınız başarıyla etkinleştirildi. Bu pencereyi şimdi kapatabilirsiniz."
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "Dosyayı Yazıcıya Yazdır"
 submit = "Yazdır"
@@ -4992,15 +5019,15 @@ title = "Sansürlenecek Kelimeler"
 failed = "PDF sansürlenirken bir hata oluştu."
 
 [redact.manual]
+activate = "Karartma Aracını Etkinleştir"
+active = "Karartma Modu Etkin"
 apply = "Uygula"
 applyChanges = "Değişiklikleri Uygula"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Kalıcı uygulama, geri alınamaz ve altındaki veriler silinir"
 boxRedaction = "Kutu çizerek sansürleme"
-colourPicker = "Renk Seçici"
 colorLabel = "Karartma Rengi"
-active = "Karartma Modu Etkin"
-activate = "Karartma Aracını Etkinleştir"
+colourPicker = "Renk Seçici"
 controlsTitle = "Manuel Karartma Kontrolleri"
 convertPDFToImageLabel = "PDF'yi PDF-Image'a dönüştür (Kutunun arkasındaki metni kaldırmak için kullanılır)"
 export = "Dışa Aktar"
@@ -5396,6 +5423,39 @@ title = "Yüksek Kontrast"
 text = "PDF'deki tüm renkleri tamamen ters çevirerek negatif benzeri bir etki oluşturur. Düşük ışık koşullarında göz yorgunluğunu azaltmak veya belgelerin koyu mod sürümlerini oluşturmak için kullanışlıdır."
 title = "Tüm Renkleri Ters Çevir"
 
+[rightRail]
+annotations = "Açıklamalar"
+applyRedactionsFirst = "Önce karartmaları uygula"
+closePdf = "PDF'yi Kapat"
+closeSelected = "Seçilen Dosyaları Kapat"
+deleteSelected = "Seçilen Sayfaları Sil"
+deselectAll = "Seçimi Kaldır"
+downloadAll = "Tümünü İndir"
+downloadSelected = "Seçilen Dosyaları İndir"
+draw = "Çiz"
+exitRedaction = "Karartma Modundan Çık"
+exportAll = "PDF'yi Dışa Aktar"
+exportSelected = "Seçilen Sayfaları Dışa Aktar"
+formFill = "Formu Doldur"
+language = "Dil"
+panMode = "Kaydırma Modu"
+print = "PDF'yi Yazdır"
+redact = "Karart"
+rotateLeft = "Sola Döndür"
+rotateRight = "Sağa Döndür"
+ruler = "Cetvel / Ölçüm"
+save = "Kaydet"
+saveAll = "Tümünü Kaydet"
+saveChanges = "Değişiklikleri Kaydet"
+search = "PDF Ara"
+selectAll = "Tümünü Seç"
+selectByNumber = "Sayfa Numaralarına Göre Seç"
+toggleAnnotations = "Açıklamaların Görünürlüğünü Değiştir"
+toggleAttachments = "Ekleri Göster/Gizle"
+toggleBookmarks = "Yer imlerini aç/kapat"
+toggleSidebar = "Kenar Çubuğunu Aç/Kapat"
+toggleTheme = "Temayı Değiştir"
+
 [rotate]
 rotateLeft = "Saat yönünün tersine döndür"
 rotateRight = "Saat yönünde döndür"
@@ -5647,6 +5707,70 @@ plan = "Plan"
 title = "Lisanslama ve Analitik"
 usageAnalytics = "Kullanım Analitiği"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "Yasal"
 privacy = "Gizlilik"
@@ -5679,6 +5803,9 @@ connections = "Bağlantılar"
 security = "Güvenlik"
 telegram = "Telegram"
 title = "Güvenlik ve Kimlik Doğrulama"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "Önce oturum açma modunu etkinleştirin"
@@ -6016,6 +6143,11 @@ desc = "Belirli sayfaları çıkar (1,3,5-10)"
 name = "Sayfa Numaraları"
 tooltip = "Virgülle ayrılmış sayfa numaraları veya tire ile aralıklar girin"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "Sayfaları ızgara bölümlerine ayır"
 name = "Bölümler"
@@ -6029,6 +6161,7 @@ tooltip = "Azami dosya boyutunu belirtin (örn. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Şurada böl"
 splitBy = "Göre böl"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "Seçmek için bir yöntem kartına tıklayın"
@@ -6040,6 +6173,21 @@ title = "Bölme Yönteminizi Seçin"
 [split.methodSelection.tooltip.header]
 text = "PDF belgenizi nasıl bölmek istediğinizi seçin. Her yöntem farklı kullanım durumları ve belge türleri için optimize edilmiştir."
 title = "Bölme Yöntemi Seçimi"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "Lütfen önce bir bölme yöntemi seçin"
@@ -6091,6 +6239,14 @@ bullet2 = "Aralık bölme noktaları: 3-8 (3. sayfadan önce ve 8. sayfadan sonr
 bullet3 = "Karışık: 2,5-10,15 (2'den sonra, 5'ten önce, 10'dan sonra ve 15'ten sonra böler)"
 text = "PDF'inizi belirli sayfa numaralarında bölün. 'n' kullanmak sayfa n'den sonra böler. 'n-m' kullanmak sayfa n'den önce ve m'den sonra böler."
 title = "Sayfa Numaralarında Böl"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "Yatay: Oluşturulacak satır sayısı"
@@ -6232,6 +6388,82 @@ title = "API Dokümantasyonu"
 
 [tableExtraxt]
 tags = "CSV, Tablo Çıkarma, ayıklama, dönüştürme"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "Orta"
+left = "Sol"
+right = "Sağ"
 
 [theme]
 toggle = "Temayı Değiştir"
@@ -6507,6 +6739,37 @@ invalid = "Sertifika güvenilir mağazada değil - kaynak doğrulanamıyor"
 fileManager = "Dosya Yöneticisi"
 pageEditor = "Sayfa Düzenleyici"
 viewer = "Görüntüleyici"
+
+[viewer]
+cannotPreviewFile = "Dosya önizlenemiyor"
+dualPageView = "Çift Sayfa Görünümü"
+firstPage = "İlk Sayfa"
+lastPage = "Son Sayfa"
+nextPage = "Sonraki Sayfa"
+onlyPdfSupported = "Görüntüleyici yalnızca PDF dosyalarını destekler. Bu dosya farklı bir biçimde görünüyor."
+previousPage = "Önceki Sayfa"
+singlePageView = "Tek Sayfa Görünümü"
+unknownFile = "Bilinmeyen dosya"
+zoomIn = "Yakınlaştır"
+zoomOut = "Uzaklaştır"
+
+[viewer.attachments]
+empty = "Bu belgede ek yok"
+loading = "Ekler yükleniyor..."
+noDocument = "Eklerini görmek için bir PDF açın."
+noMatch = "Aramanızla eşleşen ek yok"
+noSupport = "Bu görüntüleyici için ek desteği mevcut değil."
+searchPlaceholder = "Eklerde ara"
+title = "Ekler"
+
+[viewer.formBar]
+apply = "Değişiklikleri Uygula"
+dismiss = "Kapat"
+download = "PDF'yi İndir"
+hasFieldsDesc = "Bu PDF doldurulabilir alanlar içeriyor"
+title = "Form Alanları"
+unsavedBadge = "Kaydedilmemiş"
+unsavedDesc = "Kaydedilmemiş değişiklikleriniz var"
 
 [viewPdf]
 header = "PDF Görüntüle"

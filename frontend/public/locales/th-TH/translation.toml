@@ -16,13 +16,13 @@ comingSoon = "เร็วๆ นี้"
 confirmClose = "ยืนยันการปิด"
 confirmCloseCancel = "ยกเลิก"
 confirmCloseConfirm = "ปิดไฟล์"
-confirmCloseMessage = "แน่ใจหรือไม่ว่าต้องการปิดไฟล์นี้?"
 confirmCloseDiscard = "ยกเลิกการเปลี่ยนแปลงและปิด"
+confirmCloseMessage = "แน่ใจหรือไม่ว่าต้องการปิดไฟล์นี้?"
 confirmCloseSave = "บันทึกและปิด"
+confirmCloseSaveFailed = "บันทึกพร้อมข้อผิดพลาด มี {{count}} ไฟล์{{plural}} ที่ไม่สามารถบันทึกได้"
+confirmCloseSaveFailedTitle = "บันทึกล้มเหลว"
 confirmCloseUnsaved = "ไฟล์นี้มีการเปลี่ยนแปลงที่ยังไม่บันทึก"
 confirmCloseUnsavedList = "คุณมี {{count}} ไฟล์{{plural}} ที่ยังไม่บันทึกการเปลี่ยนแปลง\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "บันทึกล้มเหลว"
-confirmCloseSaveFailed = "บันทึกพร้อมข้อผิดพลาด มี {{count}} ไฟล์{{plural}} ที่ไม่สามารถบันทึกได้"
 confirmPasswordErrorMessage = "รหัสผ่านใหม่และยืนยันรหัสผ่านใหม่ต้องตรงกัน"
 custom = "ปรับแต่ง..."
 customPosition = "ตำแหน่งกำหนดเอง"
@@ -42,11 +42,12 @@ downloadComplete = "การดาวน์โหลดเสร็จสมบ
 downloadPdf = "ดาวน์โหลด PDF"
 downloadUnavailable = "ไม่สามารถดาวน์โหลดรายการนี้ได้"
 edit = "แก้ไข"
+editSecret = "Edit this value"
 editYourNewFiles = "แก้ไขไฟล์ใหม่ของคุณ"
 exportAndContinue = "ส่งออกและทำต่อ"
 false = "เท็จ"
-fileSavedToDisk = "บันทึกไฟล์ลงดิสก์แล้ว"
 fileNotSavedToDisk = "ยังไม่ได้บันทึกลงดิสก์"
+fileSavedToDisk = "บันทึกไฟล์ลงดิสก์แล้ว"
 fileSelected = "ที่เลือก: {{filename}}"
 filesSelected = "ไฟล์ที่เลือก"
 font = "ฟอนต์"
@@ -841,6 +842,14 @@ title = "API Endpoints"
 userDefaults = "ค่าเริ่มต้นของการตั้งค่าผู้ใช้"
 userDefaultsDescription = "กำหนดค่าเริ่มต้นสำหรับการตั้งค่าผู้ใช้ ผู้ใช้สามารถแทนที่ได้ในการตั้งค่าส่วนตัวของตน"
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "นำตัวเลือกการแปลงที่ปิดใช้งานออกแทนที่จะแสดงเป็นสีเทา"
+label = "ซ่อนการแปลงที่ไม่พร้อมใช้งานโดยค่าเริ่มต้น"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "นำเครื่องมือที่ปิดใช้งานออกแทนที่จะแสดงเป็นสีเทา"
+label = "ซ่อนเครื่องมือที่ไม่พร้อมใช้งานโดยค่าเริ่มต้น"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "เลือกกลุ่มจุดปลายทางที่จะปิดใช้งาน"
 label = "กลุ่ม Endpoints ที่ปิดใช้งาน"
@@ -848,14 +857,6 @@ label = "กลุ่ม Endpoints ที่ปิดใช้งาน"
 [admin.settings.endpoints.toRemove]
 description = "เลือกจุดปลายทางเป็นรายรายการเพื่อปิดใช้งาน"
 label = "Endpoints ที่ปิดใช้งาน"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "นำเครื่องมือที่ปิดใช้งานออกแทนที่จะแสดงเป็นสีเทา"
-label = "ซ่อนเครื่องมือที่ไม่พร้อมใช้งานโดยค่าเริ่มต้น"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "นำตัวเลือกการแปลงที่ปิดใช้งานออกแทนที่จะแสดงเป็นสีเทา"
-label = "ซ่อนการแปลงที่ไม่พร้อมใช้งานโดยค่าเริ่มต้น"
 
 [admin.settings.enterpriseRequired]
 message = "ต้องมีสิทธิ์การใช้งานสำหรับองค์กรเพื่อเข้าถึง {{featureName}} ขณะนี้คุณกำลังดูข้อมูลสาธิตเพื่อเป็นข้อมูลอ้างอิง"
@@ -1228,6 +1229,14 @@ label = "ชื่อผู้ใช้เริ่มต้น"
 [admin.settings.security.jwt]
 label = "การกำหนดค่า JWT"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "ค่าความคลาดเคลื่อนเวลาระหว่างไคลเอนต์/เซิร์ฟเวอร์ระหว่างการตรวจสอบโทเค็น (ค่าเริ่มต้น: 60 วินาที)"
+label = "ค่าความคลาดเคลื่อนของนาฬิกา (วินาที)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "อายุการใช้งานโทเค็นการเข้าถึงสำหรับไคลเอนต์เดสก์ท็อปเป็นนาที ตรวจพบแอปเดสก์ท็อปโดยอัตโนมัติผ่าน User-Agent และจะได้รับช่วงเวลาเซสชันที่ยาวขึ้นเพื่อ UX ที่ดีกว่า (ค่าเริ่มต้น: 43200 = 30 วัน)"
+label = "การหมดอายุของโทเค็นเดสก์ท็อป (นาที)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "ลบคีย์ JWT ที่หมดอายุโดยอัตโนมัติ"
 label = "เปิดใช้งานการล้างคีย์"
@@ -1236,29 +1245,21 @@ label = "เปิดใช้งานการล้างคีย์"
 description = "หมุนคีย์ลงนาม JWT โดยอัตโนมัติเป็นระยะ"
 label = "เปิดใช้งานการหมุนคีย์"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "อายุการใช้งานโทเค็นการเข้าถึงสำหรับไคลเอนต์เว็บเป็นนาที (ค่าเริ่มต้น: 1440 = 24 ชั่วโมง)"
-label = "การหมดอายุของโทเค็นเว็บ (นาที)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "อายุการใช้งานโทเค็นการเข้าถึงสำหรับไคลเอนต์เดสก์ท็อปเป็นนาที ตรวจพบแอปเดสก์ท็อปโดยอัตโนมัติผ่าน User-Agent และจะได้รับช่วงเวลาเซสชันที่ยาวขึ้นเพื่อ UX ที่ดีกว่า (ค่าเริ่มต้น: 43200 = 30 วัน)"
-label = "การหมดอายุของโทเค็นเดสก์ท็อป (นาที)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "ค่าความคลาดเคลื่อนเวลาระหว่างไคลเอนต์/เซิร์ฟเวอร์ระหว่างการตรวจสอบโทเค็น (ค่าเริ่มต้น: 60 วินาที)"
-label = "ค่าความคลาดเคลื่อนของนาฬิกา (วินาที)"
+[admin.settings.security.jwt.persistence]
+description = "จัดเก็บคีย์ JWT แบบคงอยู่เพื่อให้ผ่านการรีสตาร์ทเซิร์ฟเวอร์"
+label = "เปิดใช้งานการคงอยู่ของคีย์"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "อนุญาตให้รีเฟรชโทเค็นภายในจำนวนนาทีนับจากหมดอายุ (ค่าเริ่มต้น: 15 นาที สูงสุด 3 ครั้ง)"
 label = "ช่วงผ่อนผันสำหรับการรีเฟรช (นาที)"
 
-[admin.settings.security.jwt.persistence]
-description = "จัดเก็บคีย์ JWT แบบคงอยู่เพื่อให้ผ่านการรีสตาร์ทเซิร์ฟเวอร์"
-label = "เปิดใช้งานการคงอยู่ของคีย์"
-
 [admin.settings.security.jwt.secureCookie]
 description = "ต้องใช้ HTTPS สำหรับคุกกี้ JWT (แนะนำสำหรับการใช้งานจริง)"
 label = "คุกกี้แบบปลอดภัย"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "อายุการใช้งานโทเค็นการเข้าถึงสำหรับไคลเอนต์เว็บเป็นนาที (ค่าเริ่มต้น: 1440 = 24 ชั่วโมง)"
+label = "การหมดอายุของโทเค็นเว็บ (นาที)"
 
 [admin.settings.security.loginAttemptCount]
 description = "จำนวนครั้งสูงสุดของการเข้าสู่ระบบที่ล้มเหลวก่อนล็อกบัญชี"
@@ -2238,6 +2239,9 @@ title = "เปลี่ยนสิทธิ์"
 [changePermissions.tooltip.warning]
 text = "เพื่อให้สิทธิ์เหล่านี้ไม่สามารถเปลี่ยนได้ ให้ใช้เครื่องมือเพิ่มรหัสผ่านเพื่อตั้งรหัสผ่านเจ้าของ"
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "เลือกสี"
 
@@ -2254,9 +2258,11 @@ copy = "คัดลอก"
 done = "เสร็จสิ้น"
 error = "ข้อผิดพลาด"
 expand = "ขยาย"
+learnMore = "Learn more"
 lines = "บรรทัด"
 loading = "กำลังโหลด..."
 next = "ถัดไป"
+operation = "this operation"
 preview = "แสดงตัวอย่าง"
 previous = "ก่อนหน้า"
 refresh = "รีเฟรช"
@@ -2670,6 +2676,77 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "ครอบตัดช่องว่างอัตโนมัติ"
 header = "ครอบตัด PDF"
@@ -2920,6 +2997,7 @@ copyStack = "คัดลอก Stack Trace"
 discordSubmit = "Discord - ส่งโพสต์การสนับสนุน"
 dismissAllErrors = "ปิดข้อผิดพลาดทั้งหมด"
 encryptedPdfMustRemovePassword = "PDF นี้มีการเข้ารหัสหรือป้องกันด้วยรหัสผ่าน โปรดปลดล็อกก่อนแปลงเป็น PDF/A"
+generic = "An error occurred"
 github = "ส่งตั๋วใน GitHub"
 githubSubmit = "GitHub - ส่งตั๋ว"
 incorrectPasswordProvided = "รหัสผ่าน PDF ไม่ถูกต้องหรือไม่ได้ระบุ"
@@ -3346,10 +3424,6 @@ desc = "สร้างเวิร์กโฟลว์หลายขั้น
 tags = "เวิร์กโฟลว์,ลำดับ,ระบบอัตโนมัติ"
 title = "ทำให้อัตโนมัติ"
 
-[home.formFill]
-desc = "กรอกช่องแบบฟอร์ม PDF แบบโต้ตอบด้วยเครื่องมือแก้ไขแบบภาพ"
-title = "กรอกแบบฟอร์ม"
-
 [home.autoRename]
 desc = "เปลี่ยนชื่อไฟล์ PDF อัตโนมัติตามส่วนหัวที่ตรวจพบ"
 tags = "ตรวจจับอัตโนมัติ,จากหัวกระดาษ,จัดระเบียบ,เปลี่ยนชื่อ"
@@ -3444,6 +3518,10 @@ title = "แยกหน้า"
 desc = "ลบองค์ประกอบแบบอินเตอร์แอคทีฟและฟอร์มทั้งหมดจาก PDF"
 tags = "ทำให้เรียบ,ลบ,โต้ตอบ"
 title = "แบน"
+
+[home.formFill]
+desc = "กรอกช่องแบบฟอร์ม PDF แบบโต้ตอบด้วยเครื่องมือแก้ไขแบบภาพ"
+title = "กรอกแบบฟอร์ม"
 
 [home.getPdfInfo]
 desc = "รับข้อมูลที่เป็นไปได้ทั้งหมดเกี่ยวกับ PDF"
@@ -4247,75 +4325,6 @@ title = "ตัวแก้ไขหน้า"
 zoomIn = "ซูมเข้า"
 zoomOut = "ซูมออก"
 
-[viewer]
-cannotPreviewFile = "ไม่สามารถแสดงตัวอย่างไฟล์ได้"
-dualPageView = "มุมมองสองหน้า"
-firstPage = "หน้าแรก"
-lastPage = "หน้าสุดท้าย"
-nextPage = "หน้าถัดไป"
-onlyPdfSupported = "ตัวแสดงผลรองรับเฉพาะไฟล์ PDF ไฟล์นี้ดูเหมือนจะเป็นรูปแบบอื่น"
-previousPage = "หน้าก่อนหน้า"
-singlePageView = "มุมมองหน้าเดียว"
-unknownFile = "ไฟล์ไม่รู้จัก"
-zoomIn = "ซูมเข้า"
-zoomOut = "ซูมออก"
-
-[viewer.attachments]
-title = "ไฟล์แนบ"
-searchPlaceholder = "ค้นหาไฟล์แนบ"
-noSupport = "ตัวแสดงผลนี้ไม่รองรับไฟล์แนบ"
-noDocument = "เปิด PDF เพื่อดูไฟล์แนบ"
-loading = "กำลังโหลดไฟล์แนบ..."
-empty = "ไม่มีไฟล์แนบในเอกสารนี้"
-noMatch = "ไม่มีไฟล์แนบที่ตรงกับการค้นหา"
-
-[viewer.formBar]
-title = "ช่องแบบฟอร์ม"
-unsavedBadge = "ยังไม่บันทึก"
-unsavedDesc = "คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึก"
-hasFieldsDesc = "PDF นี้มีช่องที่กรอกได้"
-dismiss = "ปิด"
-apply = "ใช้การเปลี่ยนแปลง"
-download = "ดาวน์โหลด PDF"
-
-[rightRail]
-closeSelected = "ปิดไฟล์ที่เลือก"
-selectAll = "เลือกทั้งหมด"
-deselectAll = "ยกเลิกการเลือกทั้งหมด"
-selectByNumber = "เลือกตามหมายเลขหน้า"
-deleteSelected = "ลบหน้าที่เลือก"
-closePdf = "ปิด PDF"
-exportAll = "ส่งออก PDF"
-downloadSelected = "ดาวน์โหลดไฟล์ที่เลือก"
-annotations = "คำอธิบายประกอบ"
-exportSelected = "ส่งออกหน้าที่เลือก"
-formFill = "กรอกแบบฟอร์ม"
-saveChanges = "บันทึกการเปลี่ยนแปลง"
-toggleAttachments = "สลับไฟล์แนบ"
-toggleTheme = "สลับธีม"
-language = "ภาษา"
-toggleAnnotations = "สลับการแสดงคำอธิบายประกอบ"
-search = "ค้นหาใน PDF"
-panMode = "โหมดเลื่อนดู"
-applyRedactionsFirst = "ใช้การปกปิดก่อน"
-rotateLeft = "หมุนซ้าย"
-rotateRight = "หมุนขวา"
-toggleSidebar = "สลับแถบข้าง"
-toggleBookmarks = "สลับที่คั่นหน้า"
-print = "พิมพ์ PDF"
-ruler = "ไม้บรรทัด / วัด"
-draw = "วาด"
-redact = "ปกปิด"
-exitRedaction = "ออกจากโหมดการปกปิด"
-save = "บันทึก"
-downloadAll = "ดาวน์โหลดทั้งหมด"
-saveAll = "บันทึกทั้งหมด"
-
-[textAlign]
-left = "ชิดซ้าย"
-center = "กึ่งกลาง"
-right = "ชิดขวา"
-
 [pageExtracter]
 header = "แยกหน้า"
 placeholder = "(เช่น 1,2,8 หรือ 4,7,12-16 หรือ 2n-1)"
@@ -4424,6 +4433,9 @@ title = "เคล็ดลับ"
 autoClose = "หน้าต่างนี้จะปิดโดยอัตโนมัติ..."
 billingPeriod = "รอบบิล"
 canCloseWindow = "คุณสามารถปิดหน้าต่างนี้ได้แล้ว"
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "โปรดกรอกที่อยู่อีเมลที่ถูกต้อง"
 enterpriseNote = "ปรับจำนวนที่นั่งได้ในหน้าเช็คเอาต์ (1-1000)"
 error = "ข้อผิดพลาดในการชำระเงิน"
@@ -4445,6 +4457,7 @@ perMonth = "/เดือน"
 perYear = "/ปี"
 preparing = "กำลังเตรียมหน้าชำระเงินของคุณ..."
 redirecting = "กำลังเปลี่ยนเส้นทางไปยังการชำระเงินที่ปลอดภัย..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "ยังไม่ได้ตั้งค่า Stripe"
 stripeNotConfiguredMessage = "ยังไม่ได้ตั้งค่าการชำระเงินผ่าน Stripe โปรดติดต่อผู้ดูแลระบบของคุณ"
 success = "ชำระเงินสำเร็จ!"
@@ -4777,6 +4790,13 @@ title = "PDF เป็น Word"
 [PDFToWord.selectText]
 1 = "รูปแบบไฟล์ผลลัพธ์"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "บริการนี้ใช้ LibreOffice สำหรับการแปลงไฟล์"
 header = "PDF เป็น XML"
@@ -4835,6 +4855,7 @@ customPricing = "กำหนดเอง"
 featureComparison = "การเปรียบเทียบฟีเจอร์"
 from = "เริ่มต้นที่"
 hideComparison = "ซ่อนการเปรียบเทียบฟีเจอร์"
+included = "Included"
 includedInCurrent = "รวมอยู่ในแพ็กเกจของคุณ"
 licensedSeats = "ที่นั่งที่มีสิทธิ์: {{count}} ที่นั่ง"
 manage = "จัดการ"
@@ -4851,6 +4872,7 @@ subtitle = "รายละเอียดการสมัครใช้ง�
 title = "แผนที่ใช้งาน"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "เลือกแผนที่เหมาะกับความต้องการของคุณ"
 title = "แผนที่มีให้"
 
@@ -4861,6 +4883,7 @@ highlight3 = "ฟีเจอร์ล่าสุด"
 name = "องค์กร"
 requiresServer = "ต้องใช้เซิร์ฟเวอร์"
 requiresServerMessage = "โปรดอัปเกรดเป็นแพ็กเกจ Server ก่อนจึงอัปเกรดเป็น Enterprise"
+siteLicense = "Site License"
 
 [plan.feature]
 api = "การเข้าถึง API"
@@ -4928,6 +4951,10 @@ keyDescription = "วางคีย์ไลเซนส์จากอีเ�
 success = "เปิดใช้งานไลเซนส์แล้ว!"
 successMessage = "เปิดใช้งานไลเซนส์ของคุณเรียบร้อยแล้ว ตอนนี้คุณสามารถปิดหน้าต่างนี้ได้"
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "พิมพ์ไฟล์ไปยังเครื่องพิมพ์"
 submit = "พิมพ์"
@@ -4992,15 +5019,15 @@ title = "คำที่จะปกปิด"
 failed = "เกิดข้อผิดพลาดขณะปกปิดข้อมูลใน PDF"
 
 [redact.manual]
+activate = "เปิดใช้งานเครื่องมือปกปิด"
+active = "โหมดการปกปิดทำงานอยู่"
 apply = "ใช้"
 applyChanges = "นำการเปลี่ยนแปลงไปใช้"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ การใช้แบบถาวร ไม่สามารถยกเลิกได้ และข้อมูลด้านล่างจะถูกลบ"
 boxRedaction = "วาดกล่องเพื่อปกปิด"
-colourPicker = "ตัวเลือกสี"
 colorLabel = "สีของการปกปิด"
-active = "โหมดการปกปิดทำงานอยู่"
-activate = "เปิดใช้งานเครื่องมือปกปิด"
+colourPicker = "ตัวเลือกสี"
 controlsTitle = "การควบคุมการปกปิดแบบแมนนวล"
 convertPDFToImageLabel = "แปลง PDF เป็น PDF-Image (ใช้เพื่อลบข้อความที่อยู่หลังกรอบ)"
 export = "ส่งออก"
@@ -5396,6 +5423,39 @@ title = "คอนทราสต์สูง"
 text = "กลับสีทั้งหมดใน PDF ให้กลายเป็นภาพเชิงลบ มีประโยชน์สำหรับสร้างเวอร์ชันโหมดมืดของเอกสารหรือช่วยลดอาการล้าตาในที่แสงน้อย"
 title = "กลับสีทั้งหมด"
 
+[rightRail]
+annotations = "คำอธิบายประกอบ"
+applyRedactionsFirst = "ใช้การปกปิดก่อน"
+closePdf = "ปิด PDF"
+closeSelected = "ปิดไฟล์ที่เลือก"
+deleteSelected = "ลบหน้าที่เลือก"
+deselectAll = "ยกเลิกการเลือกทั้งหมด"
+downloadAll = "ดาวน์โหลดทั้งหมด"
+downloadSelected = "ดาวน์โหลดไฟล์ที่เลือก"
+draw = "วาด"
+exitRedaction = "ออกจากโหมดการปกปิด"
+exportAll = "ส่งออก PDF"
+exportSelected = "ส่งออกหน้าที่เลือก"
+formFill = "กรอกแบบฟอร์ม"
+language = "ภาษา"
+panMode = "โหมดเลื่อนดู"
+print = "พิมพ์ PDF"
+redact = "ปกปิด"
+rotateLeft = "หมุนซ้าย"
+rotateRight = "หมุนขวา"
+ruler = "ไม้บรรทัด / วัด"
+save = "บันทึก"
+saveAll = "บันทึกทั้งหมด"
+saveChanges = "บันทึกการเปลี่ยนแปลง"
+search = "ค้นหาใน PDF"
+selectAll = "เลือกทั้งหมด"
+selectByNumber = "เลือกตามหมายเลขหน้า"
+toggleAnnotations = "สลับการแสดงคำอธิบายประกอบ"
+toggleAttachments = "สลับไฟล์แนบ"
+toggleBookmarks = "สลับที่คั่นหน้า"
+toggleSidebar = "สลับแถบข้าง"
+toggleTheme = "สลับธีม"
+
 [rotate]
 rotateLeft = "หมุนทวนเข็มนาฬิกา"
 rotateRight = "หมุนตามเข็มนาฬิกา"
@@ -5647,6 +5707,70 @@ plan = "แผน"
 title = "สิทธิ์การใช้งานและการวิเคราะห์"
 usageAnalytics = "การวิเคราะห์การใช้งาน"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "กฎหมาย"
 privacy = "ความเป็นส่วนตัว"
@@ -5679,6 +5803,9 @@ connections = "การเชื่อมต่อ"
 security = "ความปลอดภัย"
 telegram = "Telegram"
 title = "ความปลอดภัยและการยืนยันตัวตน"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "เปิดใช้งานโหมดเข้าสู่ระบบก่อน"
@@ -6016,6 +6143,11 @@ desc = "สกัดหน้าเฉพาะ (1,3,5-10)"
 name = "หมายเลขหน้า"
 tooltip = "กรอกหมายเลขหน้าคั่นด้วยจุลภาค หรือช่วงด้วยขีด"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "แบ่งหน้าเป็นตารางส่วน"
 name = "ส่วน"
@@ -6029,6 +6161,7 @@ tooltip = "ระบุขนาดไฟล์สูงสุด (เช่น 
 [split.methods.prefix]
 splitAt = "แยกที่"
 splitBy = "แยกตาม"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "คลิกบนการ์ดวิธีเพื่อเลือก"
@@ -6040,6 +6173,21 @@ title = "เลือกวิธีการแยกของคุณ"
 [split.methodSelection.tooltip.header]
 text = "เลือกวิธีที่คุณต้องการแยกเอกสาร PDF ของคุณ แต่ละวิธีถูกปรับให้เหมาะกับกรณีใช้งานและประเภทเอกสารที่ต่างกัน"
 title = "การเลือกวิธีการแยก"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "โปรดเลือกวิธีการแยกก่อน"
@@ -6091,6 +6239,14 @@ bullet2 = "จุดแยกช่วง: 3-8 (ตัดก่อนหน้�
 bullet3 = "ผสม: 2,5-10,15 (ตัดหลังหน้า 2 ก่อนหน้า 5 หลังหน้า 10 และหลังหน้า 15)"
 text = "แยก PDF ที่หมายเลขหน้าที่กำหนด การใช้ 'n' จะตัดหลังหน้า n การใช้ 'n-m' จะตัดก่อนหน้า n และหลังหน้า m"
 title = "แยกที่หมายเลขหน้า"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "แนวนอน: จำนวนแถวที่จะสร้าง"
@@ -6232,6 +6388,82 @@ title = "เอกสาร API"
 
 [tableExtraxt]
 tags = "CSV, การแยกตาราง, แยก, การแปลง"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "กึ่งกลาง"
+left = "ชิดซ้าย"
+right = "ชิดขวา"
 
 [theme]
 toggle = "สลับธีม"
@@ -6507,6 +6739,37 @@ invalid = "ใบรับรองไม่อยู่ใน trust store - ไ
 fileManager = "ตัวจัดการไฟล์"
 pageEditor = "ตัวแก้ไขหน้า"
 viewer = "ตัวดูเอกสาร"
+
+[viewer]
+cannotPreviewFile = "ไม่สามารถแสดงตัวอย่างไฟล์ได้"
+dualPageView = "มุมมองสองหน้า"
+firstPage = "หน้าแรก"
+lastPage = "หน้าสุดท้าย"
+nextPage = "หน้าถัดไป"
+onlyPdfSupported = "ตัวแสดงผลรองรับเฉพาะไฟล์ PDF ไฟล์นี้ดูเหมือนจะเป็นรูปแบบอื่น"
+previousPage = "หน้าก่อนหน้า"
+singlePageView = "มุมมองหน้าเดียว"
+unknownFile = "ไฟล์ไม่รู้จัก"
+zoomIn = "ซูมเข้า"
+zoomOut = "ซูมออก"
+
+[viewer.attachments]
+empty = "ไม่มีไฟล์แนบในเอกสารนี้"
+loading = "กำลังโหลดไฟล์แนบ..."
+noDocument = "เปิด PDF เพื่อดูไฟล์แนบ"
+noMatch = "ไม่มีไฟล์แนบที่ตรงกับการค้นหา"
+noSupport = "ตัวแสดงผลนี้ไม่รองรับไฟล์แนบ"
+searchPlaceholder = "ค้นหาไฟล์แนบ"
+title = "ไฟล์แนบ"
+
+[viewer.formBar]
+apply = "ใช้การเปลี่ยนแปลง"
+dismiss = "ปิด"
+download = "ดาวน์โหลด PDF"
+hasFieldsDesc = "PDF นี้มีช่องที่กรอกได้"
+title = "ช่องแบบฟอร์ม"
+unsavedBadge = "ยังไม่บันทึก"
+unsavedDesc = "คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึก"
 
 [viewPdf]
 header = "ดู PDF"

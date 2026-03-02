@@ -16,13 +16,13 @@ comingSoon = "Binnenkort"
 confirmClose = "Sluiten bevestigen"
 confirmCloseCancel = "Annuleren"
 confirmCloseConfirm = "Bestand sluiten"
-confirmCloseMessage = "Weet u zeker dat u dit bestand wilt sluiten?"
 confirmCloseDiscard = "Wijzigingen verwerpen en sluiten"
+confirmCloseMessage = "Weet u zeker dat u dit bestand wilt sluiten?"
 confirmCloseSave = "Opslaan en sluiten"
+confirmCloseSaveFailed = "Opgeslagen met fouten. {{count}} bestand{{plural}} kon niet worden opgeslagen."
+confirmCloseSaveFailedTitle = "Opslaan mislukt"
 confirmCloseUnsaved = "Dit bestand heeft niet-opgeslagen wijzigingen."
 confirmCloseUnsavedList = "U heeft {{count}} bestand{{plural}} met niet-opgeslagen wijzigingen.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Opslaan mislukt"
-confirmCloseSaveFailed = "Opgeslagen met fouten. {{count}} bestand{{plural}} kon niet worden opgeslagen."
 confirmPasswordErrorMessage = "Nieuw wachtwoord en bevestig wachtwoord moeten overeenkomen."
 custom = "Aangepast..."
 customPosition = "Aangepaste positie"
@@ -42,11 +42,12 @@ downloadComplete = "Download klaar"
 downloadPdf = "PDF downloaden"
 downloadUnavailable = "Download niet beschikbaar voor dit item"
 edit = "Bewerken"
+editSecret = "Edit this value"
 editYourNewFiles = "Uw nieuwe bestand(en) bewerken"
 exportAndContinue = "Exporteren en doorgaan"
 false = "Onwaar"
-fileSavedToDisk = "Bestand opgeslagen op schijf"
 fileNotSavedToDisk = "Niet op schijf opgeslagen"
+fileSavedToDisk = "Bestand opgeslagen op schijf"
 fileSelected = "Geselecteerd: {{filename}}"
 filesSelected = "Bestanden geselecteerd"
 font = "Lettertype"
@@ -841,6 +842,14 @@ title = "API-endpoints"
 userDefaults = "Standaardinstellingen voor gebruikersvoorkeuren"
 userDefaultsDescription = "Stel standaardwaarden in voor gebruikersvoorkeuren. Gebruikers kunnen deze overschrijven in hun persoonlijke instellingen."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Uitgeschakelde conversieopties verbergen in plaats van ze grijs weer te geven"
+label = "Onbeschikbare conversies standaard verbergen"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Uitgeschakelde tools verbergen in plaats van ze grijs weer te geven"
+label = "Onbeschikbare tools standaard verbergen"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Selecteer endpointgroepen om uit te schakelen"
 label = "Uitgeschakelde endpointgroepen"
@@ -848,14 +857,6 @@ label = "Uitgeschakelde endpointgroepen"
 [admin.settings.endpoints.toRemove]
 description = "Selecteer afzonderlijke endpoints om uit te schakelen"
 label = "Uitgeschakelde endpoints"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Uitgeschakelde tools verbergen in plaats van ze grijs weer te geven"
-label = "Onbeschikbare tools standaard verbergen"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Uitgeschakelde conversieopties verbergen in plaats van ze grijs weer te geven"
-label = "Onbeschikbare conversies standaard verbergen"
 
 [admin.settings.enterpriseRequired]
 message = "Voor toegang tot {{featureName}} is een Enterprise-licentie vereist. U bekijkt demogegevens ter referentie."
@@ -1228,6 +1229,14 @@ label = "Initiële gebruikersnaam"
 [admin.settings.security.jwt]
 label = "JWT-configuratie"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolerantie voor tijdsafwijking tussen client en server tijdens tokenvalidatie (standaard: 60 seconden)"
+label = "Tolerantie voor klokafwijking (seconden)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Levensduur van toegangstoken in minuten voor desktopclients. Desktop-apps worden automatisch gedetecteerd via de User-Agent en krijgen langere sessies voor betere UX (standaard: 43200 = 30 dagen)"
+label = "Vervaltijd desktoptoken (minuten)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Automatisch verlopen JWT-sleutels verwijderen"
 label = "Opschonen van sleutels inschakelen"
@@ -1236,29 +1245,21 @@ label = "Opschonen van sleutels inschakelen"
 description = "JWT-ondertekeningssleutels automatisch periodiek roteren"
 label = "Sleutelrotatie inschakelen"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Levensduur van toegangstoken in minuten voor webclients (standaard: 1440 = 24 uur)"
-label = "Vervaltijd webtoken (minuten)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Levensduur van toegangstoken in minuten voor desktopclients. Desktop-apps worden automatisch gedetecteerd via de User-Agent en krijgen langere sessies voor betere UX (standaard: 43200 = 30 dagen)"
-label = "Vervaltijd desktoptoken (minuten)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Tolerantie voor tijdsafwijking tussen client en server tijdens tokenvalidatie (standaard: 60 seconden)"
-label = "Tolerantie voor klokafwijking (seconden)"
+[admin.settings.security.jwt.persistence]
+description = "JWT-sleutels persistent opslaan om serverherstarts te overleven"
+label = "Sleutelpersistentie inschakelen"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Sta tokenvernieuwing toe binnen dit aantal minuten na het verlopen (standaard: 15 minuten, maximaal 3 pogingen)"
 label = "Respijtperiode voor vernieuwen (minuten)"
 
-[admin.settings.security.jwt.persistence]
-description = "JWT-sleutels persistent opslaan om serverherstarts te overleven"
-label = "Sleutelpersistentie inschakelen"
-
 [admin.settings.security.jwt.secureCookie]
 description = "HTTPS vereisen voor JWT-cookies (aanbevolen voor productie)"
 label = "Beveiligde cookie"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Levensduur van toegangstoken in minuten voor webclients (standaard: 1440 = 24 uur)"
+label = "Vervaltijd webtoken (minuten)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Maximaal aantal mislukte inlogpogingen voordat het account wordt vergrendeld"
@@ -2238,6 +2239,9 @@ title = "Rechten wijzigen"
 [changePermissions.tooltip.warning]
 text = "Om deze machtigingen niet wijzigbaar te maken, gebruik de tool Wachtwoord toevoegen om een eigenaarwachtwoord in te stellen."
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "Kies kleur"
 
@@ -2254,9 +2258,11 @@ copy = "Kopiëren"
 done = "Gereed"
 error = "Fout"
 expand = "Uitvouwen"
+learnMore = "Learn more"
 lines = "regels"
 loading = "Laden..."
 next = "Volgende"
+operation = "this operation"
 preview = "Voorbeeld"
 previous = "Vorige"
 refresh = "Vernieuwen"
@@ -2670,6 +2676,77 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "Witruimte autom. bijsnijden"
 header = "PDF bijsnijden"
@@ -2920,6 +2997,7 @@ copyStack = "Tracering kopiëren"
 discordSubmit = "Discord - Support-post indienen"
 dismissAllErrors = "Alle fouten sluiten"
 encryptedPdfMustRemovePassword = "Deze PDF is versleuteld of met een wachtwoord beveiligd. Ontgrendel hem voordat u naar PDF/A converteert."
+generic = "An error occurred"
 github = "Dien een ticket op Github in."
 githubSubmit = "GitHub - Ticket indienen"
 incorrectPasswordProvided = "Het PDF-wachtwoord is onjuist of niet opgegeven."
@@ -3346,10 +3424,6 @@ desc = "Bouw workflows met meerdere stappen door PDF-acties te koppelen. Ideaal 
 tags = "workflow,volgorde,automatisering"
 title = "Automatiseren"
 
-[home.formFill]
-desc = "Vul PDF-formuliervelden interactief in met een visuele editor"
-title = "Formulier invullen"
-
 [home.autoRename]
 desc = "Hernoemt een PDF-bestand automatisch op basis van de gedetecteerde kop"
 tags = "automatisch detecteren,op kop gebaseerd,organiseren,herlabelen"
@@ -3444,6 +3518,10 @@ title = "Pagina's extraheren"
 desc = "Verwijder alle interactieve elementen en formulieren uit een PDF"
 tags = "vereenvoudigen,verwijderen,interactief"
 title = "Afvlakken"
+
+[home.formFill]
+desc = "Vul PDF-formuliervelden interactief in met een visuele editor"
+title = "Formulier invullen"
 
 [home.getPdfInfo]
 desc = "Haalt alle mogelijke informatie op van PDF's"
@@ -4247,75 +4325,6 @@ title = "Pagina-editor"
 zoomIn = "Inzoomen"
 zoomOut = "Uitzoomen"
 
-[viewer]
-cannotPreviewFile = "Kan voorbeeld van bestand niet weergeven"
-dualPageView = "Dubbele paginaweergave"
-firstPage = "Eerste pagina"
-lastPage = "Laatste pagina"
-nextPage = "Volgende pagina"
-onlyPdfSupported = "De viewer ondersteunt alleen PDF-bestanden. Dit bestand lijkt een ander formaat te hebben."
-previousPage = "Vorige pagina"
-singlePageView = "Enkele paginaweergave"
-unknownFile = "Onbekend bestand"
-zoomIn = "Inzoomen"
-zoomOut = "Uitzoomen"
-
-[viewer.attachments]
-title = "Bijlagen"
-searchPlaceholder = "Bijlagen zoeken"
-noSupport = "Ondersteuning voor bijlagen is niet beschikbaar voor deze viewer."
-noDocument = "Open een PDF om de bijlagen te bekijken."
-loading = "Bijlagen laden..."
-empty = "Geen bijlagen in dit document"
-noMatch = "Geen bijlagen komen overeen met uw zoekopdracht"
-
-[viewer.formBar]
-title = "Formuliervelden"
-unsavedBadge = "Niet opgeslagen"
-unsavedDesc = "U heeft niet-opgeslagen wijzigingen"
-hasFieldsDesc = "Deze PDF bevat invulbare velden"
-dismiss = "Sluiten"
-apply = "Wijzigingen toepassen"
-download = "PDF downloaden"
-
-[rightRail]
-closeSelected = "Geselecteerde bestanden sluiten"
-selectAll = "Alles selecteren"
-deselectAll = "Alles deselecteren"
-selectByNumber = "Selecteren op paginanummers"
-deleteSelected = "Geselecteerde pagina's verwijderen"
-closePdf = "PDF sluiten"
-exportAll = "PDF exporteren"
-downloadSelected = "Geselecteerde bestanden downloaden"
-annotations = "Annotaties"
-exportSelected = "Geselecteerde pagina's exporteren"
-formFill = "Formulier invullen"
-saveChanges = "Wijzigingen opslaan"
-toggleAttachments = "Bijlagen tonen/verbergen"
-toggleTheme = "Thema wisselen"
-language = "Taal"
-toggleAnnotations = "Annotaties tonen/verbergen"
-search = "PDF doorzoeken"
-panMode = "Pan-modus"
-applyRedactionsFirst = "Apply redactions first"
-rotateLeft = "Linksom draaien"
-rotateRight = "Rechtsom draaien"
-toggleSidebar = "Zijbalk tonen/verbergen"
-toggleBookmarks = "Bladwijzers tonen/verbergen"
-print = "PDF afdrukken"
-ruler = "Liniaal / Meten"
-draw = "Draw"
-redact = "Redact"
-exitRedaction = "Exit Redaction Mode"
-save = "Save"
-downloadAll = "Alles downloaden"
-saveAll = "Alles opslaan"
-
-[textAlign]
-left = "Links"
-center = "Gecentreerd"
-right = "Rechts"
-
 [pageExtracter]
 header = "Pagina's extraheren"
 placeholder = "(bijv. 1,2,8 of 4,7,12-16 of 2n-1)"
@@ -4424,6 +4433,9 @@ title = "Tips"
 autoClose = "Dit venster wordt automatisch gesloten..."
 billingPeriod = "Facturatieperiode"
 canCloseWindow = "U kunt dit venster nu sluiten."
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "Voer een geldig e-mailadres in"
 enterpriseNote = "Plaatsen kunnen worden aangepast bij het afrekenen (1-1000)."
 error = "Betalingsfout"
@@ -4445,6 +4457,7 @@ perMonth = "/maand"
 perYear = "/jaar"
 preparing = "Afrekenproces voorbereiden..."
 redirecting = "Doorsturen naar beveiligde checkout..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "Stripe niet geconfigureerd"
 stripeNotConfiguredMessage = "Stripe-betalintegratie is niet geconfigureerd. Neem contact op met uw beheerder."
 success = "Betaling geslaagd!"
@@ -4777,6 +4790,13 @@ title = "PDF naar Word"
 [PDFToWord.selectText]
 1 = "Uitvoerbestandsformaat"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "Deze service gebruikt LibreOffice voor bestandsconversie."
 header = "PDF naar XML"
@@ -4835,6 +4855,7 @@ customPricing = "Aangepast"
 featureComparison = "Functievergelijking"
 from = "Vanaf"
 hideComparison = "Functievergelijking verbergen"
+included = "Included"
 includedInCurrent = "Inbegrepen in uw abonnement"
 licensedSeats = "Gelicenseerd: {{count}} plaatsen"
 manage = "Beheren"
@@ -4851,6 +4872,7 @@ subtitle = "Details van uw huidige abonnement"
 title = "Actief abonnement"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "Kies het abonnement dat bij uw behoeften past"
 title = "Beschikbare abonnementen"
 
@@ -4861,6 +4883,7 @@ highlight3 = "Nieuwste functies"
 name = "Enterprise"
 requiresServer = "Server vereist"
 requiresServerMessage = "Upgrade eerst naar het Server-abonnement voordat u naar Enterprise opwaardeert."
+siteLicense = "Site License"
 
 [plan.feature]
 api = "API-toegang"
@@ -4928,6 +4951,10 @@ keyDescription = "Plak de licentiesleutel uit uw e-mail"
 success = "Licentie geactiveerd!"
 successMessage = "Uw licentie is met succes geactiveerd. U kunt dit venster nu sluiten."
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "Print bestand naar printer"
 submit = "Afdrukken"
@@ -4992,15 +5019,15 @@ title = "Woorden om te zwartlakken"
 failed = "Er is een fout opgetreden bij het zwartlakken van de PDF."
 
 [redact.manual]
+activate = "Hulpmiddel voor anonimiseren activeren"
+active = "Anonimiseermodus actief"
 apply = "Apply"
 applyChanges = "Wijzigingen toepassen"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
 boxRedaction = "Vak tekenen voor zwartlakken"
-colourPicker = "Kleurenkiezer"
 colorLabel = "Kleur voor anonimiseren"
-active = "Anonimiseermodus actief"
-activate = "Hulpmiddel voor anonimiseren activeren"
+colourPicker = "Kleurenkiezer"
 controlsTitle = "Manual Redaction Controls"
 convertPDFToImageLabel = "PDF converteren naar PDF-afbeelding (gebruikt om tekst achter het vak te verwijderen)"
 export = "Exporteren"
@@ -5396,6 +5423,39 @@ title = "Hoog contrast"
 text = "Keer alle kleuren in de PDF volledig om, waardoor een negatief-achtig effect ontstaat. Nuttig om donkere modus-versies van documenten te maken of om oogvermoeidheid bij weinig licht te verminderen."
 title = "Alle kleuren inverteren"
 
+[rightRail]
+annotations = "Annotaties"
+applyRedactionsFirst = "Apply redactions first"
+closePdf = "PDF sluiten"
+closeSelected = "Geselecteerde bestanden sluiten"
+deleteSelected = "Geselecteerde pagina's verwijderen"
+deselectAll = "Alles deselecteren"
+downloadAll = "Alles downloaden"
+downloadSelected = "Geselecteerde bestanden downloaden"
+draw = "Draw"
+exitRedaction = "Exit Redaction Mode"
+exportAll = "PDF exporteren"
+exportSelected = "Geselecteerde pagina's exporteren"
+formFill = "Formulier invullen"
+language = "Taal"
+panMode = "Pan-modus"
+print = "PDF afdrukken"
+redact = "Redact"
+rotateLeft = "Linksom draaien"
+rotateRight = "Rechtsom draaien"
+ruler = "Liniaal / Meten"
+save = "Save"
+saveAll = "Alles opslaan"
+saveChanges = "Wijzigingen opslaan"
+search = "PDF doorzoeken"
+selectAll = "Alles selecteren"
+selectByNumber = "Selecteren op paginanummers"
+toggleAnnotations = "Annotaties tonen/verbergen"
+toggleAttachments = "Bijlagen tonen/verbergen"
+toggleBookmarks = "Bladwijzers tonen/verbergen"
+toggleSidebar = "Zijbalk tonen/verbergen"
+toggleTheme = "Thema wisselen"
+
 [rotate]
 rotateLeft = "Tegen de klok in draaien"
 rotateRight = "Met de klok mee draaien"
@@ -5647,6 +5707,70 @@ plan = "Abonnement"
 title = "Licenties & Analyse"
 usageAnalytics = "Gebruiksstatistieken"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "Juridisch"
 privacy = "Privacy"
@@ -5679,6 +5803,9 @@ connections = "Verbindingen"
 security = "Beveiliging"
 telegram = "Telegram"
 title = "Beveiliging & Authenticatie"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "Schakel eerst de loginmodus in"
@@ -6016,6 +6143,11 @@ desc = "Specifieke pagina's extraheren (1,3,5-10)"
 name = "Paginanummers"
 tooltip = "Voer paginanummers in, gescheiden door komma's, of reeksen met koppeltekens"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "Pagina's verdelen in rastersecties"
 name = "Secties"
@@ -6029,6 +6161,7 @@ tooltip = "Specificeer maximale bestandsgrootte (bijv. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Splitsen op"
 splitBy = "Splitsen volgens"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "Klik op een methodekaart om te selecteren"
@@ -6040,6 +6173,21 @@ title = "Kies de splitsmethode"
 [split.methodSelection.tooltip.header]
 text = "Kies hoe u het PDF-document wilt splitsen. Elke methode is geoptimaliseerd voor verschillende use-cases en documenttypen."
 title = "Selectie splitsmethode"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "Selecteer eerst een splitsmethode"
@@ -6091,6 +6239,14 @@ bullet2 = "Reeks-splitspunten: 3-8 (splitst vóór pagina 3 en na pagina 8)"
 bullet3 = "Gemengd: 2,5-10,15 (splitst na pagina 2, vóór pagina 5, na pagina 10 en na pagina 15)"
 text = "Splits de PDF op specifieke paginanummers. Met 'n' wordt gesplitst na pagina n. Met 'n-m' wordt gesplitst vóór pagina n en na pagina m."
 title = "Splitsen op paginanummers"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "Horizontaal: aantal rijen om te maken"
@@ -6232,6 +6388,82 @@ title = "API-documentatie"
 
 [tableExtraxt]
 tags = "CSV,tabel extractie,extractie,converteren"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "Gecentreerd"
+left = "Links"
+right = "Rechts"
 
 [theme]
 toggle = "Thema wisselen"
@@ -6507,6 +6739,37 @@ invalid = "Certificaat niet in vertrouwensopslag - bron kan niet worden geverifi
 fileManager = "Bestandsbeheer"
 pageEditor = "Pagina-editor"
 viewer = "Viewer"
+
+[viewer]
+cannotPreviewFile = "Kan voorbeeld van bestand niet weergeven"
+dualPageView = "Dubbele paginaweergave"
+firstPage = "Eerste pagina"
+lastPage = "Laatste pagina"
+nextPage = "Volgende pagina"
+onlyPdfSupported = "De viewer ondersteunt alleen PDF-bestanden. Dit bestand lijkt een ander formaat te hebben."
+previousPage = "Vorige pagina"
+singlePageView = "Enkele paginaweergave"
+unknownFile = "Onbekend bestand"
+zoomIn = "Inzoomen"
+zoomOut = "Uitzoomen"
+
+[viewer.attachments]
+empty = "Geen bijlagen in dit document"
+loading = "Bijlagen laden..."
+noDocument = "Open een PDF om de bijlagen te bekijken."
+noMatch = "Geen bijlagen komen overeen met uw zoekopdracht"
+noSupport = "Ondersteuning voor bijlagen is niet beschikbaar voor deze viewer."
+searchPlaceholder = "Bijlagen zoeken"
+title = "Bijlagen"
+
+[viewer.formBar]
+apply = "Wijzigingen toepassen"
+dismiss = "Sluiten"
+download = "PDF downloaden"
+hasFieldsDesc = "Deze PDF bevat invulbare velden"
+title = "Formuliervelden"
+unsavedBadge = "Niet opgeslagen"
+unsavedDesc = "U heeft niet-opgeslagen wijzigingen"
 
 [viewPdf]
 header = "PDF bekijken"

@@ -16,13 +16,13 @@ comingSoon = "即将推出"
 confirmClose = "确认关闭"
 confirmCloseCancel = "取消"
 confirmCloseConfirm = "关闭文件"
-confirmCloseMessage = "确定要关闭此文件吗？"
 confirmCloseDiscard = "放弃更改并关闭"
+confirmCloseMessage = "确定要关闭此文件吗？"
 confirmCloseSave = "保存并关闭"
+confirmCloseSaveFailed = "已保存，但存在错误。{{count}} 个文件{{plural}} 未能保存。"
+confirmCloseSaveFailedTitle = "保存失败"
 confirmCloseUnsaved = "此文件有未保存的更改。"
 confirmCloseUnsavedList = "您有 {{count}} 个文件{{plural}} 含有未保存的更改。\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "保存失败"
-confirmCloseSaveFailed = "已保存，但存在错误。{{count}} 个文件{{plural}} 未能保存。"
 confirmPasswordErrorMessage = "གསང་ཚིག་གསར་པ་དང་གསང་ཚིག་གསར་པ་ངོས་སྦྱོར་གཉིས་མཐུན་དགོས།"
 custom = "མཚན་ཉིད་རང་སྒྲིག..."
 customPosition = "自定义位置"
@@ -42,11 +42,12 @@ downloadComplete = "ཕབ་ལེན་ལེགས་གྲུབ།"
 downloadPdf = "PDF ཕབ་ལེན།"
 downloadUnavailable = "此项目不可下载"
 edit = "编辑"
+editSecret = "Edit this value"
 editYourNewFiles = "编辑新文件"
 exportAndContinue = "导出并继续"
 false = "རྫུན་མ།"
-fileSavedToDisk = "文件已保存到磁盘"
 fileNotSavedToDisk = "未保存到磁盘"
+fileSavedToDisk = "文件已保存到磁盘"
 fileSelected = "已选择：{{filename}}"
 filesSelected = "ཡིག་ཆབདམས་ཟིན།"
 font = "ཡིག་གཟུགས་ཌྷ"
@@ -841,6 +842,14 @@ title = "API 端点"
 userDefaults = "用户偏好默认值"
 userDefaultsDescription = "设置用户偏好的默认值。用户可在个人设置中覆盖。"
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "不以灰显方式显示已禁用的转换选项，而是直接隐藏"
+label = "默认隐藏不可用的转换"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "不以灰显方式显示已禁用的工具，而是直接隐藏"
+label = "默认隐藏不可用的工具"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "选择要禁用的端点组"
 label = "已禁用的端点组"
@@ -848,14 +857,6 @@ label = "已禁用的端点组"
 [admin.settings.endpoints.toRemove]
 description = "选择要禁用的单个端点"
 label = "已禁用的端点"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "不以灰显方式显示已禁用的工具，而是直接隐藏"
-label = "默认隐藏不可用的工具"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "不以灰显方式显示已禁用的转换选项，而是直接隐藏"
-label = "默认隐藏不可用的转换"
 
 [admin.settings.enterpriseRequired]
 message = "访问 {{featureName}} 需要企业版许可。您当前查看的是演示数据，仅供参考。"
@@ -1228,6 +1229,14 @@ label = "初始用户名"
 [admin.settings.security.jwt]
 label = "JWT 配置"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "令牌验证期间对客户端/服务器时间偏移的容差（默认：60 秒）"
+label = "时钟偏移容差（秒）"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "桌面客户端的访问令牌有效期（分钟）。通过 User-Agent 自动检测桌面应用，并提供更长会话以获得更佳体验（默认：43200 = 30 天）"
+label = "桌面令牌有效期（分钟）"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "自动移除过期的 JWT 密钥"
 label = "启用密钥清理"
@@ -1236,29 +1245,21 @@ label = "启用密钥清理"
 description = "定期自动轮换 JWT 签名密钥"
 label = "启用密钥轮换"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Web 客户端的访问令牌有效期（分钟）（默认：1440 = 24 小时）"
-label = "Web 令牌有效期（分钟）"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "桌面客户端的访问令牌有效期（分钟）。通过 User-Agent 自动检测桌面应用，并提供更长会话以获得更佳体验（默认：43200 = 30 天）"
-label = "桌面令牌有效期（分钟）"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "令牌验证期间对客户端/服务器时间偏移的容差（默认：60 秒）"
-label = "时钟偏移容差（秒）"
+[admin.settings.security.jwt.persistence]
+description = "持久化存储 JWT 密钥以在服务器重启后保留"
+label = "启用密钥持久化"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "在过期后允许于此分钟数内刷新令牌（默认：15 分钟，最多 3 次尝试）"
 label = "刷新宽限期（分钟）"
 
-[admin.settings.security.jwt.persistence]
-description = "持久化存储 JWT 密钥以在服务器重启后保留"
-label = "启用密钥持久化"
-
 [admin.settings.security.jwt.secureCookie]
 description = "要求 JWT Cookie 使用 HTTPS（生产环境推荐）"
 label = "安全 Cookie"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Web 客户端的访问令牌有效期（分钟）（默认：1440 = 24 小时）"
+label = "Web 令牌有效期（分钟）"
 
 [admin.settings.security.loginAttemptCount]
 description = "在账户锁定前允许的最大失败登录次数"
@@ -2238,6 +2239,9 @@ title = "更改权限"
 [changePermissions.tooltip.warning]
 text = "要使这些权限不可更改，请使用添加密码工具设置所有者密码。"
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "选择颜色"
 
@@ -2254,9 +2258,11 @@ copy = "复制"
 done = "完成"
 error = "错误"
 expand = "展开"
+learnMore = "Learn more"
 lines = "行"
 loading = "正在加载..."
 next = "下一步"
+operation = "this operation"
 preview = "预览"
 previous = "上一步"
 refresh = "刷新"
@@ -2670,6 +2676,77 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog 分析"
 scarf = "Scarf 像素"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "自动裁剪空白"
 header = "PDF གཏུབ་གཅོད།"
@@ -2920,6 +2997,7 @@ copyStack = "Stack Trace པར་སློག"
 discordSubmit = "Discord - རྒྱབ་སྐྱོར་སྙན་ཞུ་འབུལ་བ།"
 dismissAllErrors = "清除所有错误"
 encryptedPdfMustRemovePassword = "此 PDF 已加密或受密码保护。请先解锁再转换为 PDF/A。"
+generic = "An error occurred"
 github = "GitHub སྟེང་དུ་སྙན་ཞུ་འབུལ་བ།"
 githubSubmit = "GitHub - སྙན་ཞུ་འབུལ་བ།"
 incorrectPasswordProvided = "PDF 密码不正确或未提供。"
@@ -3346,10 +3424,6 @@ desc = "通过串联 PDF 动作构建多步工作流。适合重复性任务。"
 tags = "工作流,序列,自动化"
 title = "自动化"
 
-[home.formFill]
-desc = "使用可视化编辑器交互式填写 PDF 表单字段"
-title = "填写表单"
-
 [home.autoRename]
 desc = "根据检测到的页眉自动重命名 PDF 文件"
 tags = "自动检测,基于页眉,组织,重命名"
@@ -3444,6 +3518,10 @@ title = "提取页面"
 desc = "PDF ནས་སྤྱོད་སྒོ་ཅན་གྱི་ཆ་ཤས་དང་འགེངས་ཤོག་ཚང་མ་སུབ་པ།"
 tags = "扁平化,移除,交互"
 title = "སྙོམས་པ།"
+
+[home.formFill]
+desc = "使用可视化编辑器交互式填写 PDF 表单字段"
+title = "填写表单"
 
 [home.getPdfInfo]
 desc = "PDF ཡི་གནས་ཚུལ་ཡོད་ཚད་ལེན་པ།"
@@ -4247,75 +4325,6 @@ title = "页面编辑器"
 zoomIn = "放大"
 zoomOut = "缩小"
 
-[viewer]
-cannotPreviewFile = "无法预览文件"
-dualPageView = "双页视图"
-firstPage = "第一页"
-lastPage = "最后一页"
-nextPage = "下一页"
-onlyPdfSupported = "此查看器仅支持 PDF 文件。该文件似乎为其他格式。"
-previousPage = "上一页"
-singlePageView = "单页视图"
-unknownFile = "未知文件"
-zoomIn = "放大"
-zoomOut = "缩小"
-
-[viewer.attachments]
-title = "附件"
-searchPlaceholder = "搜索附件"
-noSupport = "此查看器不支持附件。"
-noDocument = "打开 PDF 以查看其附件。"
-loading = "正在加载附件..."
-empty = "此文档中没有附件"
-noMatch = "没有与您的搜索匹配的附件"
-
-[viewer.formBar]
-title = "表单字段"
-unsavedBadge = "未保存"
-unsavedDesc = "您有未保存的更改"
-hasFieldsDesc = "此 PDF 包含可填写字段"
-dismiss = "关闭"
-apply = "应用更改"
-download = "下载 PDF"
-
-[rightRail]
-closeSelected = "关闭所选文件"
-selectAll = "全选"
-deselectAll = "取消全选"
-selectByNumber = "按页码选择"
-deleteSelected = "删除所选页面"
-closePdf = "关闭 PDF"
-exportAll = "导出 PDF"
-downloadSelected = "下载所选文件"
-annotations = "注释"
-exportSelected = "导出所选页面"
-formFill = "填写表单"
-saveChanges = "保存更改"
-toggleAttachments = "切换附件"
-toggleTheme = "切换主题"
-language = "语言"
-toggleAnnotations = "切换注释可见性"
-search = "搜索 PDF"
-panMode = "平移模式"
-applyRedactionsFirst = "请先应用涂黑"
-rotateLeft = "向左旋转"
-rotateRight = "向右旋转"
-toggleSidebar = "切换侧边栏"
-toggleBookmarks = "切换书签"
-print = "打印 PDF"
-ruler = "标尺/测量"
-draw = "绘制"
-redact = "涂黑"
-exitRedaction = "退出涂黑模式"
-save = "保存"
-downloadAll = "全部下载"
-saveAll = "全部保存"
-
-[textAlign]
-left = "左对齐"
-center = "居中"
-right = "右对齐"
-
 [pageExtracter]
 header = "ཤོག་ངོས་ཕྱིར་འདོན།"
 placeholder = "(དཔེར་ན། 1,2,8 ཡང་ན་ 4,7,12-16 ཡང་ན་ 2n-1)"
@@ -4424,6 +4433,9 @@ title = "提示"
 autoClose = "此窗口将自动关闭..."
 billingPeriod = "计费周期"
 canCloseWindow = "现在可以关闭此窗口。"
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "请输入有效的电子邮件地址"
 enterpriseNote = "席位可在结账时调整（1-1000）。"
 error = "支付错误"
@@ -4445,6 +4457,7 @@ perMonth = "/月"
 perYear = "/年"
 preparing = "正在准备结账..."
 redirecting = "正在跳转到安全结账..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "未配置 Stripe"
 stripeNotConfiguredMessage = "未配置 Stripe 支付集成。请联系您的管理员。"
 success = "支付成功！"
@@ -4777,6 +4790,13 @@ title = "PDF ནས་ Word ལ།"
 [PDFToWord.selectText]
 1 = "ཕྱིར་འདོན་ཡིག་ཆའི་རྣམ་གཞག"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "此服务使用 LibreOffice 进行文件转换。"
 header = "PDF ནས་ XML ལ།"
@@ -4835,6 +4855,7 @@ customPricing = "自定义"
 featureComparison = "功能对比"
 from = "起价"
 hideComparison = "隐藏功能对比"
+included = "Included"
 includedInCurrent = "已包含在您的方案中"
 licensedSeats = "已授权：{{count}} 个席位"
 manage = "管理"
@@ -4851,6 +4872,7 @@ subtitle = "您当前的订阅详情"
 title = "当前套餐"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "选择最符合您需求的套餐"
 title = "可用套餐"
 
@@ -4861,6 +4883,7 @@ highlight3 = "最新功能"
 name = "企业版"
 requiresServer = "需要服务器"
 requiresServerMessage = "请先升级到服务器方案，再升级到企业版。"
+siteLicense = "Site License"
 
 [plan.feature]
 api = "API 访问"
@@ -4928,6 +4951,10 @@ keyDescription = "粘贴您邮件中的许可证密钥"
 success = "许可证已激活！"
 successMessage = "您的许可证已成功激活。您现在可以关闭此窗口。"
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "ཡིག་ཆ་པར་འདེབས་འཕྲུལ་འཁོར་ལ་པར་འདེབས།"
 submit = "པར་འདེབས།"
@@ -4992,15 +5019,15 @@ title = "要遮盖的词语"
 failed = "对 PDF 进行遮盖时发生错误。"
 
 [redact.manual]
+activate = "启用遮盖工具"
+active = "遮盖模式已启用"
 apply = "应用"
 applyChanges = "应用更改"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ 将永久应用，无法撤销，且底层数据将被删除"
 boxRedaction = "框选遮盖"
-colourPicker = "颜色选择器"
 colorLabel = "遮盖颜色"
-active = "遮盖模式已启用"
-activate = "启用遮盖工具"
+colourPicker = "颜色选择器"
 controlsTitle = "手动涂黑控制"
 convertPDFToImageLabel = "将 PDF 转为 PDF-Image（用于移除框后面的文本）"
 export = "导出"
@@ -5396,6 +5423,39 @@ title = "高对比度"
 text = "完全反转 PDF 中的所有颜色，产生类似底片的效果。适用于创建文档的深色模式版本或在弱光环境中减轻眼疲劳。"
 title = "反转所有颜色"
 
+[rightRail]
+annotations = "注释"
+applyRedactionsFirst = "请先应用涂黑"
+closePdf = "关闭 PDF"
+closeSelected = "关闭所选文件"
+deleteSelected = "删除所选页面"
+deselectAll = "取消全选"
+downloadAll = "全部下载"
+downloadSelected = "下载所选文件"
+draw = "绘制"
+exitRedaction = "退出涂黑模式"
+exportAll = "导出 PDF"
+exportSelected = "导出所选页面"
+formFill = "填写表单"
+language = "语言"
+panMode = "平移模式"
+print = "打印 PDF"
+redact = "涂黑"
+rotateLeft = "向左旋转"
+rotateRight = "向右旋转"
+ruler = "标尺/测量"
+save = "保存"
+saveAll = "全部保存"
+saveChanges = "保存更改"
+search = "搜索 PDF"
+selectAll = "全选"
+selectByNumber = "按页码选择"
+toggleAnnotations = "切换注释可见性"
+toggleAttachments = "切换附件"
+toggleBookmarks = "切换书签"
+toggleSidebar = "切换侧边栏"
+toggleTheme = "切换主题"
+
 [rotate]
 rotateLeft = "逆时针旋转"
 rotateRight = "顺时针旋转"
@@ -5647,6 +5707,70 @@ plan = "方案"
 title = "许可与分析"
 usageAnalytics = "使用分析"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "法律"
 privacy = "隐私"
@@ -5679,6 +5803,9 @@ connections = "连接"
 security = "安全"
 telegram = "Telegram"
 title = "安全与认证"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "请先启用登录模式"
@@ -6016,6 +6143,11 @@ desc = "提取特定页面（1,3,5-10）"
 name = "页码"
 tooltip = "输入用逗号分隔的页码，或用连字符表示范围"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "将页面划分为网格分区"
 name = "分区"
@@ -6029,6 +6161,7 @@ tooltip = "指定最大文件大小（如 10MB、500KB）"
 [split.methods.prefix]
 splitAt = "拆分于"
 splitBy = "按以下方式拆分"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "点击方法卡片以选择"
@@ -6040,6 +6173,21 @@ title = "选择您的拆分方法"
 [split.methodSelection.tooltip.header]
 text = "选择您希望如何拆分 PDF 文档。每种方法都针对不同用例与文档类型进行了优化。"
 title = "拆分方法选择"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "请先选择一种拆分方法"
@@ -6091,6 +6239,14 @@ bullet2 = "范围拆分点：3-8（在第 3 页之前与第 8 页之后拆分）
 bullet3 = "混合：2,5-10,15（在第 2 页之后、第 5 页之前、第 10 页之后以及第 15 页之后拆分）"
 text = "在特定页码处拆分 PDF。使用 'n' 表示在第 n 页之后拆分。使用 'n-m' 表示在第 n 页之前与第 m 页之后拆分。"
 title = "按页码拆分"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "水平：要创建的行数"
@@ -6232,6 +6388,82 @@ title = "API 文档"
 
 [tableExtraxt]
 tags = "CSV,རེའུ་མིག་ཕྱིར་འདོན།,ཕྱིར་འདོན།,བསྒྱུར་བ།"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "居中"
+left = "左对齐"
+right = "右对齐"
 
 [theme]
 toggle = "切换主题"
@@ -6507,6 +6739,37 @@ invalid = "ལག་ཁྱེར་ཡིད་ཆེས་མཛོད་ཁང
 fileManager = "文件管理器"
 pageEditor = "页面编辑器"
 viewer = "查看器"
+
+[viewer]
+cannotPreviewFile = "无法预览文件"
+dualPageView = "双页视图"
+firstPage = "第一页"
+lastPage = "最后一页"
+nextPage = "下一页"
+onlyPdfSupported = "此查看器仅支持 PDF 文件。该文件似乎为其他格式。"
+previousPage = "上一页"
+singlePageView = "单页视图"
+unknownFile = "未知文件"
+zoomIn = "放大"
+zoomOut = "缩小"
+
+[viewer.attachments]
+empty = "此文档中没有附件"
+loading = "正在加载附件..."
+noDocument = "打开 PDF 以查看其附件。"
+noMatch = "没有与您的搜索匹配的附件"
+noSupport = "此查看器不支持附件。"
+searchPlaceholder = "搜索附件"
+title = "附件"
+
+[viewer.formBar]
+apply = "应用更改"
+dismiss = "关闭"
+download = "下载 PDF"
+hasFieldsDesc = "此 PDF 包含可填写字段"
+title = "表单字段"
+unsavedBadge = "未保存"
+unsavedDesc = "您有未保存的更改"
 
 [viewPdf]
 header = "PDF ལྟ་བ།"

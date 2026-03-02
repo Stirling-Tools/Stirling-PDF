@@ -16,13 +16,13 @@ comingSoon = "Už čoskoro"
 confirmClose = "Potvrdiť zatvorenie"
 confirmCloseCancel = "Zrušiť"
 confirmCloseConfirm = "Zatvoriť súbor"
-confirmCloseMessage = "Naozaj chcete zatvoriť tento súbor?"
 confirmCloseDiscard = "Zahodiť zmeny a zavrieť"
+confirmCloseMessage = "Naozaj chcete zatvoriť tento súbor?"
 confirmCloseSave = "Uložiť a zavrieť"
+confirmCloseSaveFailed = "Uložené s chybami. {{count}} súbor{{plural}} sa nepodarilo uložiť."
+confirmCloseSaveFailedTitle = "Uloženie zlyhalo"
 confirmCloseUnsaved = "Tento súbor má neuložené zmeny."
 confirmCloseUnsavedList = "Máte {{count}} súbor{{plural}} s neuloženými zmenami.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Uloženie zlyhalo"
-confirmCloseSaveFailed = "Uložené s chybami. {{count}} súbor{{plural}} sa nepodarilo uložiť."
 confirmPasswordErrorMessage = "Nové heslo a potvrdenie nového hesla sa musia zhodovať."
 custom = "Vlastné..."
 customPosition = "Vlastná pozícia"
@@ -42,11 +42,12 @@ downloadComplete = "Stiahnutie dokončené"
 downloadPdf = "Stiahnuť PDF"
 downloadUnavailable = "Sťahovanie nie je pre túto položku dostupné"
 edit = "Upraviť"
+editSecret = "Edit this value"
 editYourNewFiles = "Upraviť nové súbory"
 exportAndContinue = "Exportovať a pokračovať"
 false = "Nie"
-fileSavedToDisk = "Súbor uložený na disk"
 fileNotSavedToDisk = "Neuložené na disk"
+fileSavedToDisk = "Súbor uložený na disk"
 fileSelected = "Vybrané: {{filename}}"
 filesSelected = "vybrané súbory"
 font = "Písmo"
@@ -841,6 +842,14 @@ title = "API endpointy"
 userDefaults = "Predvolené hodnoty používateľských preferencií"
 userDefaultsDescription = "Nastavte predvolené hodnoty používateľských preferencií. Používatelia ich môžu prepísať vo svojich osobných nastaveniach."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Odstrániť zakázané možnosti konverzie namiesto ich zobrazenia ako zosivených"
+label = "Predvolene skryť nedostupné konverzie"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Odstrániť zakázané nástroje namiesto ich zobrazenia ako zosivených"
+label = "Predvolene skryť nedostupné nástroje"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Vyberte skupiny endpointov na zakázanie"
 label = "Zakázané skupiny endpointov"
@@ -848,14 +857,6 @@ label = "Zakázané skupiny endpointov"
 [admin.settings.endpoints.toRemove]
 description = "Vyberte jednotlivé endpointy na zakázanie"
 label = "Zakázané endpointy"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Odstrániť zakázané nástroje namiesto ich zobrazenia ako zosivených"
-label = "Predvolene skryť nedostupné nástroje"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Odstrániť zakázané možnosti konverzie namiesto ich zobrazenia ako zosivených"
-label = "Predvolene skryť nedostupné konverzie"
 
 [admin.settings.enterpriseRequired]
 message = "Na prístup k {{featureName}} sa vyžaduje podniková licencia. Prezeráte si ukážkové údaje."
@@ -1228,6 +1229,14 @@ label = "Počiatočné používateľské meno"
 [admin.settings.security.jwt]
 label = "Konfigurácia JWT"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolerancia posunu času medzi klientom a serverom počas overovania tokenu (predvolené: 60 sekúnd)"
+label = "Tolerancia časového posunu (sekundy)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Životnosť prístupového tokenu v minútach pre desktopových klientov. Desktopové aplikácie sa automaticky rozpoznajú cez User-Agent a dostanú dlhšie relácie pre lepšie používateľské prostredie (predvolené: 43200 = 30 dní)"
+label = "Platnosť desktopového tokenu (minúty)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Automaticky odstraňovať kľúče JWT po uplynutí ich platnosti"
 label = "Povoliť čistenie kľúčov"
@@ -1236,29 +1245,21 @@ label = "Povoliť čistenie kľúčov"
 description = "Automaticky pravidelne rotovať podpisové kľúče JWT"
 label = "Povoliť rotáciu kľúčov"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Životnosť prístupového tokenu v minútach pre webových klientov (predvolené: 1440 = 24 hodín)"
-label = "Platnosť webového tokenu (minúty)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Životnosť prístupového tokenu v minútach pre desktopových klientov. Desktopové aplikácie sa automaticky rozpoznajú cez User-Agent a dostanú dlhšie relácie pre lepšie používateľské prostredie (predvolené: 43200 = 30 dní)"
-label = "Platnosť desktopového tokenu (minúty)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Tolerancia posunu času medzi klientom a serverom počas overovania tokenu (predvolené: 60 sekúnd)"
-label = "Tolerancia časového posunu (sekundy)"
+[admin.settings.security.jwt.persistence]
+description = "Ukladať JWT kľúče perzistentne, aby prežili reštarty servera"
+label = "Povoliť perzistenciu kľúčov"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Povoliť obnovenie tokenu v tomto počte minút po vypršaní platnosti (predvolené: 15 minút, max. 3 pokusy)"
 label = "Odkladná lehota na obnovenie (minúty)"
 
-[admin.settings.security.jwt.persistence]
-description = "Ukladať JWT kľúče perzistentne, aby prežili reštarty servera"
-label = "Povoliť perzistenciu kľúčov"
-
 [admin.settings.security.jwt.secureCookie]
 description = "Vyžadovať HTTPS pre JWT súbory cookie (odporúčané pre produkciu)"
 label = "Zabezpečený súbor cookie"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Životnosť prístupového tokenu v minútach pre webových klientov (predvolené: 1440 = 24 hodín)"
+label = "Platnosť webového tokenu (minúty)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Maximálny počet neúspešných pokusov o prihlásenie pred zablokovaním účtu"
@@ -2238,6 +2239,9 @@ title = "Zmeniť povolenia"
 [changePermissions.tooltip.warning]
 text = "Aby boli tieto povolenia nezmeniteľné, použite nástroj Add Password na nastavenie hesla vlastníka."
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "Vyberte farbu"
 
@@ -2254,9 +2258,11 @@ copy = "Kopírovať"
 done = "Hotovo"
 error = "Chyba"
 expand = "Rozbaliť"
+learnMore = "Learn more"
 lines = "riadky"
 loading = "Načítava sa..."
 next = "Ďalej"
+operation = "this operation"
 preview = "Náhľad"
 previous = "Predchádzajúce"
 refresh = "Obnoviť"
@@ -2670,6 +2676,77 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "Automaticky orezať biele okraje"
 header = "Orezať PDF"
@@ -2920,6 +2997,7 @@ copyStack = "Kopírovať sledovanie zásobníka"
 discordSubmit = "Discord - Podajte príspevok na podporu"
 dismissAllErrors = "Zavrieť všetky chyby"
 encryptedPdfMustRemovePassword = "Toto PDF je šifrované alebo chránené heslom. Pred konverziou na PDF/A ho odomknite."
+generic = "An error occurred"
 github = "Podajte tiket na GitHub"
 githubSubmit = "GitHub - Podajte tiket"
 incorrectPasswordProvided = "Heslo k PDF je nesprávne alebo nebolo zadané."
@@ -3346,10 +3424,6 @@ desc = "Stavať viacstupňové pracovné postupy spájaním akcií PDF. Ideálne
 tags = "workflow,sekvencia,automatizácia"
 title = "Automatizovať"
 
-[home.formFill]
-desc = "Interaktívne vyplňujte polia formulára PDF pomocou vizuálneho editora"
-title = "Vyplniť formulár"
-
 [home.autoRename]
 desc = "Automaticky premenuje PDF súbor podľa zistenej hlavičky"
 tags = "automaticky zistiť,na základe hlavičky,organizovať,premenovať"
@@ -3444,6 +3518,10 @@ title = "Extrahovať stránky"
 desc = "Odstrániť všetky interaktívne prvky a formuláre z PDF"
 tags = "zjednodušiť,odstrániť,interaktívne"
 title = "Zploštiť"
+
+[home.formFill]
+desc = "Interaktívne vyplňujte polia formulára PDF pomocou vizuálneho editora"
+title = "Vyplniť formulár"
 
 [home.getPdfInfo]
 desc = "Získava všetky dostupné informácie o PDF"
@@ -4247,75 +4325,6 @@ title = "Editor strán"
 zoomIn = "Priblížiť"
 zoomOut = "Oddialiť"
 
-[viewer]
-cannotPreviewFile = "Nedá sa zobraziť náhľad súboru"
-dualPageView = "Dvojstranové zobrazenie"
-firstPage = "Prvá strana"
-lastPage = "Posledná strana"
-nextPage = "Nasledujúca strana"
-onlyPdfSupported = "Prehliadač podporuje iba súbory PDF. Tento súbor sa zdá byť iného formátu."
-previousPage = "Predchádzajúca strana"
-singlePageView = "Zobrazenie jednej strany"
-unknownFile = "Neznámy súbor"
-zoomIn = "Priblížiť"
-zoomOut = "Oddialiť"
-
-[viewer.attachments]
-title = "Prílohy"
-searchPlaceholder = "Hľadať prílohy"
-noSupport = "Podpora príloh nie je pre tento prehliadač dostupná."
-noDocument = "Otvorte PDF, aby ste videli jeho prílohy."
-loading = "Načítavajú sa prílohy..."
-empty = "Tento dokument neobsahuje žiadne prílohy"
-noMatch = "Žiadne prílohy nezodpovedajú vášmu vyhľadávaniu"
-
-[viewer.formBar]
-title = "Polia formulára"
-unsavedBadge = "Neuložené"
-unsavedDesc = "Máte neuložené zmeny"
-hasFieldsDesc = "Toto PDF obsahuje vyplniteľné polia"
-dismiss = "Zavrieť"
-apply = "Použiť zmeny"
-download = "Stiahnuť PDF"
-
-[rightRail]
-closeSelected = "Zavrieť vybrané súbory"
-selectAll = "Vybrať všetko"
-deselectAll = "Zrušiť výber"
-selectByNumber = "Vybrať podľa čísel strán"
-deleteSelected = "Odstrániť vybrané strany"
-closePdf = "Zavrieť PDF"
-exportAll = "Exportovať PDF"
-downloadSelected = "Stiahnuť vybrané súbory"
-annotations = "Anotácie"
-exportSelected = "Exportovať vybrané strany"
-formFill = "Vyplniť formulár"
-saveChanges = "Uložiť zmeny"
-toggleAttachments = "Zobraziť/skryť prílohy"
-toggleTheme = "Prepnúť tému"
-language = "Jazyk"
-toggleAnnotations = "Prepnúť zobrazenie anotácií"
-search = "Hľadať v PDF"
-panMode = "Režim posunu"
-applyRedactionsFirst = "Najprv použite začiernenia"
-rotateLeft = "Otočiť doľava"
-rotateRight = "Otočiť doprava"
-toggleSidebar = "Prepnúť bočný panel"
-toggleBookmarks = "Prepnúť záložky"
-print = "Vytlačiť PDF"
-ruler = "Pravítko / meranie"
-draw = "Kresliť"
-redact = "Začierniť"
-exitRedaction = "Ukončiť režim začiernenia"
-save = "Uložiť"
-downloadAll = "Stiahnuť všetko"
-saveAll = "Uložiť všetko"
-
-[textAlign]
-left = "Vľavo"
-center = "Na stred"
-right = "Vpravo"
-
 [pageExtracter]
 header = "Extrahovať stránky"
 placeholder = "(napr. 1,2,8 alebo 4,7,12-16 alebo 2n-1)"
@@ -4424,6 +4433,9 @@ title = "Tipy"
 autoClose = "Toto okno sa automaticky zatvorí..."
 billingPeriod = "Fakturačné obdobie"
 canCloseWindow = "Teraz môžete toto okno zavrieť."
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "Zadajte platnú emailovú adresu"
 enterpriseNote = "Miesta možno upraviť v pokladni (1-1000)."
 error = "Chyba platby"
@@ -4445,6 +4457,7 @@ perMonth = "/mesiac"
 perYear = "/rok"
 preparing = "Pripravuje sa platba..."
 redirecting = "Presmerovanie na zabezpečenú pokladňu..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "Stripe nie je nastavený"
 stripeNotConfiguredMessage = "Integrácia platieb Stripe nie je nastavená. Kontaktujte svojho administrátora."
 success = "Platba bola úspešná!"
@@ -4777,6 +4790,13 @@ title = "PDF na Word"
 [PDFToWord.selectText]
 1 = "Výstupný formát súboru"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "Táto služba používa LibreOffice na konverziu súborov."
 header = "PDF na XML"
@@ -4835,6 +4855,7 @@ customPricing = "Vlastné"
 featureComparison = "Porovnanie funkcií"
 from = "Od"
 hideComparison = "Skryť porovnanie funkcií"
+included = "Included"
 includedInCurrent = "Súčasť vášho plánu"
 licensedSeats = "Licencovaných: {{count}} miest"
 manage = "Spravovať"
@@ -4851,6 +4872,7 @@ subtitle = "Podrobnosti vášho aktuálneho predplatného"
 title = "Aktívny plán"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "Vyberte si plán, ktorý vám vyhovuje"
 title = "Dostupné plány"
 
@@ -4861,6 +4883,7 @@ highlight3 = "Najnovšie funkcie"
 name = "Enterprise"
 requiresServer = "Vyžaduje server"
 requiresServerMessage = "Pred prechodom na Enterprise najprv prejdite na Server plán."
+siteLicense = "Site License"
 
 [plan.feature]
 api = "Prístup k API"
@@ -4928,6 +4951,10 @@ keyDescription = "Vložte licenčný kľúč z e‑mailu"
 success = "Licencia aktivovaná!"
 successMessage = "Vaša licencia bola úspešne aktivovaná. Teraz môžete toto okno zatvoriť."
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "Vytlačiť súbor na tlačiareň"
 submit = "Vytlačiť"
@@ -4992,15 +5019,15 @@ title = "Slová na redigovanie"
 failed = "Počas redigovania PDF došlo k chybe."
 
 [redact.manual]
+activate = "Aktivovať nástroj na začiernenie"
+active = "Režim začiernenia je aktívny"
 apply = "Použiť"
 applyChanges = "Použiť zmeny"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Trvalé použitie, nedá sa vrátiť späť a údaje pod tým budú odstránené"
 boxRedaction = "Redigovanie ťahaním rámčeka"
-colourPicker = "Výber farby"
 colorLabel = "Farba začiernenia"
-active = "Režim začiernenia je aktívny"
-activate = "Aktivovať nástroj na začiernenie"
+colourPicker = "Výber farby"
 controlsTitle = "Manuálne ovládanie začiernenia"
 convertPDFToImageLabel = "Konvertovať PDF na PDF-Image (Používa sa na odstránenie textu za rámčekom)"
 export = "Exportovať"
@@ -5396,6 +5423,39 @@ title = "Vysoký kontrast"
 text = "Úplne invertuje všetky farby v PDF a vytvorí efekt podobný negatívu. Užitočné na vytváranie verzií dokumentov v tmavom režime alebo na zníženie namáhania očí pri slabom osvetlení."
 title = "Invertovať všetky farby"
 
+[rightRail]
+annotations = "Anotácie"
+applyRedactionsFirst = "Najprv použite začiernenia"
+closePdf = "Zavrieť PDF"
+closeSelected = "Zavrieť vybrané súbory"
+deleteSelected = "Odstrániť vybrané strany"
+deselectAll = "Zrušiť výber"
+downloadAll = "Stiahnuť všetko"
+downloadSelected = "Stiahnuť vybrané súbory"
+draw = "Kresliť"
+exitRedaction = "Ukončiť režim začiernenia"
+exportAll = "Exportovať PDF"
+exportSelected = "Exportovať vybrané strany"
+formFill = "Vyplniť formulár"
+language = "Jazyk"
+panMode = "Režim posunu"
+print = "Vytlačiť PDF"
+redact = "Začierniť"
+rotateLeft = "Otočiť doľava"
+rotateRight = "Otočiť doprava"
+ruler = "Pravítko / meranie"
+save = "Uložiť"
+saveAll = "Uložiť všetko"
+saveChanges = "Uložiť zmeny"
+search = "Hľadať v PDF"
+selectAll = "Vybrať všetko"
+selectByNumber = "Vybrať podľa čísel strán"
+toggleAnnotations = "Prepnúť zobrazenie anotácií"
+toggleAttachments = "Zobraziť/skryť prílohy"
+toggleBookmarks = "Prepnúť záložky"
+toggleSidebar = "Prepnúť bočný panel"
+toggleTheme = "Prepnúť tému"
+
 [rotate]
 rotateLeft = "Otočiť proti smeru hodinových ručičiek"
 rotateRight = "Otočiť v smere hodinových ručičiek"
@@ -5647,6 +5707,70 @@ plan = "Plán"
 title = "Licencovanie a analytika"
 usageAnalytics = "Analytika používania"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "Právne"
 privacy = "Súkromie"
@@ -5679,6 +5803,9 @@ connections = "Pripojenia"
 security = "Zabezpečenie"
 telegram = "Telegram"
 title = "Zabezpečenie a autentifikácia"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "Najprv zapnite režim prihlásenia"
@@ -6016,6 +6143,11 @@ desc = "Extrahovať konkrétne strany (1,3,5-10)"
 name = "Čísla strán"
 tooltip = "Zadajte čísla strán oddelené čiarkami alebo rozsahy s pomlčkami"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "Rozdeliť strany do mriežkových sekcií"
 name = "Sekcie"
@@ -6029,6 +6161,7 @@ tooltip = "Zadajte maximálnu veľkosť súboru (napr. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Rozdeliť na"
 splitBy = "Rozdeliť podľa"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "Kliknutím na kartu metódy ju vyberiete"
@@ -6040,6 +6173,21 @@ title = "Vyberte si metódu rozdelenia"
 [split.methodSelection.tooltip.header]
 text = "Vyberte, ako chcete rozdeliť svoj PDF dokument. Každá metóda je optimalizovaná pre iné prípady použitia a typy dokumentov."
 title = "Výber metódy rozdelenia"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "Prosím, najprv vyberte metódu rozdelenia"
@@ -6091,6 +6239,14 @@ bullet2 = "Rozsahy: 3-8 (rozdelenie pred stranou 3 a po strane 8)"
 bullet3 = "Zmiešané: 2,5-10,15 (rozdelenie po strane 2, pred stranou 5, po strane 10 a po strane 15)"
 text = "Rozdeľte PDF na konkrétnych číslach strán. Použitie 'n' rozdelí po strane n. Použitie 'n-m' rozdelí pred stranou n a po strane m."
 title = "Rozdeliť na číslach strán"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "Horizontálne: Počet riadkov na vytvorenie"
@@ -6232,6 +6388,82 @@ title = "Dokumentácia API"
 
 [tableExtraxt]
 tags = "CSV, extrakcia tabuliek, extrahovať, konvertovať"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "Na stred"
+left = "Vľavo"
+right = "Vpravo"
 
 [theme]
 toggle = "Prepnúť tému"
@@ -6507,6 +6739,37 @@ invalid = "Certifikát nie je v dôveryhodnom úložisku – zdroj nie je možn�
 fileManager = "Správca súborov"
 pageEditor = "Editor strán"
 viewer = "Prehliadač"
+
+[viewer]
+cannotPreviewFile = "Nedá sa zobraziť náhľad súboru"
+dualPageView = "Dvojstranové zobrazenie"
+firstPage = "Prvá strana"
+lastPage = "Posledná strana"
+nextPage = "Nasledujúca strana"
+onlyPdfSupported = "Prehliadač podporuje iba súbory PDF. Tento súbor sa zdá byť iného formátu."
+previousPage = "Predchádzajúca strana"
+singlePageView = "Zobrazenie jednej strany"
+unknownFile = "Neznámy súbor"
+zoomIn = "Priblížiť"
+zoomOut = "Oddialiť"
+
+[viewer.attachments]
+empty = "Tento dokument neobsahuje žiadne prílohy"
+loading = "Načítavajú sa prílohy..."
+noDocument = "Otvorte PDF, aby ste videli jeho prílohy."
+noMatch = "Žiadne prílohy nezodpovedajú vášmu vyhľadávaniu"
+noSupport = "Podpora príloh nie je pre tento prehliadač dostupná."
+searchPlaceholder = "Hľadať prílohy"
+title = "Prílohy"
+
+[viewer.formBar]
+apply = "Použiť zmeny"
+dismiss = "Zavrieť"
+download = "Stiahnuť PDF"
+hasFieldsDesc = "Toto PDF obsahuje vyplniteľné polia"
+title = "Polia formulára"
+unsavedBadge = "Neuložené"
+unsavedDesc = "Máte neuložené zmeny"
 
 [viewPdf]
 header = "Zobraziť PDF"

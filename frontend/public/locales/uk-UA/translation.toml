@@ -16,13 +16,13 @@ comingSoon = "Незабаром"
 confirmClose = "Підтвердити закриття"
 confirmCloseCancel = "Скасувати"
 confirmCloseConfirm = "Закрити файл"
-confirmCloseMessage = "Ви впевнені, що хочете закрити цей файл?"
 confirmCloseDiscard = "Скасувати зміни і закрити"
+confirmCloseMessage = "Ви впевнені, що хочете закрити цей файл?"
 confirmCloseSave = "Зберегти і закрити"
+confirmCloseSaveFailed = "Збережено з помилками. {{count}} файл{{plural}} не вдалося зберегти."
+confirmCloseSaveFailedTitle = "Помилка збереження"
 confirmCloseUnsaved = "У цьому файлі є незбережені зміни."
 confirmCloseUnsavedList = "У вас {{count}} файл{{plural}} із незбереженими змінами.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Помилка збереження"
-confirmCloseSaveFailed = "Збережено з помилками. {{count}} файл{{plural}} не вдалося зберегти."
 confirmPasswordErrorMessage = "Новий пароль і підтвердження нового пароля мають збігатися."
 custom = "Звичай..."
 customPosition = "Користувацьке розташування"
@@ -42,11 +42,12 @@ downloadComplete = "Завантаження завершено"
 downloadPdf = "Завантажити PDF"
 downloadUnavailable = "Завантаження недоступне для цього елемента"
 edit = "Редагувати"
+editSecret = "Edit this value"
 editYourNewFiles = "Редагувати нові файли"
 exportAndContinue = "Експортувати й продовжити"
 false = "Брехня"
-fileSavedToDisk = "Файл збережено на диск"
 fileNotSavedToDisk = "Не збережено на диск"
+fileSavedToDisk = "Файл збережено на диск"
 fileSelected = "Вибрано: {{filename}}"
 filesSelected = "файлів обрано"
 font = "Шрифт"
@@ -841,6 +842,14 @@ title = "API кінцеві точки"
 userDefaults = "Налаштування користувача за замовчуванням"
 userDefaultsDescription = "Встановіть значення за замовчуванням для налаштувань користувача. Користувачі можуть перевизначити їх у своїх особистих налаштуваннях."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Прибирати вимкнені параметри конвертації замість показу їх сірими"
+label = "Приховувати недоступні параметри конвертації за замовчуванням"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Прибирати вимкнені інструменти замість показу їх сірими"
+label = "Приховувати недоступні інструменти за замовчуванням"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Виберіть групи кінцевих точок для вимкнення"
 label = "Вимкнені групи кінцевих точок"
@@ -848,14 +857,6 @@ label = "Вимкнені групи кінцевих точок"
 [admin.settings.endpoints.toRemove]
 description = "Виберіть окремі кінцеві точки для вимкнення"
 label = "Вимкнені кінцеві точки"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Прибирати вимкнені інструменти замість показу їх сірими"
-label = "Приховувати недоступні інструменти за замовчуванням"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Прибирати вимкнені параметри конвертації замість показу їх сірими"
-label = "Приховувати недоступні параметри конвертації за замовчуванням"
 
 [admin.settings.enterpriseRequired]
 message = "Для доступу до {{featureName}} потрібна ліцензія Enterprise. Ви переглядаєте демонстраційні дані для довідки."
@@ -1228,6 +1229,14 @@ label = "Початкове ім’я користувача"
 [admin.settings.security.jwt]
 label = "Конфігурація JWT"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Допуск зсуву часу між клієнтом/сервером під час перевірки токена (типово: 60 секунд)"
+label = "Допуск зсуву годинника (секунди)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Час життя токена доступу в хвилинах для настільних клієнтів. Настільні застосунки автоматично визначаються через User-Agent і отримують довші сесії для кращого UX (типово: 43200 = 30 днів)"
+label = "Строк дії токена для настільних клієнтів (хвилини)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Автоматично видаляти прострочені ключі JWT"
 label = "Увімкнути очищення ключів"
@@ -1236,29 +1245,21 @@ label = "Увімкнути очищення ключів"
 description = "Автоматично періодично змінювати ключі підпису JWT"
 label = "Увімкнути ротацію ключів"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Час життя токена доступу в хвилинах для веб-клієнтів (типово: 1440 = 24 години)"
-label = "Строк дії веб-токена (хвилини)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Час життя токена доступу в хвилинах для настільних клієнтів. Настільні застосунки автоматично визначаються через User-Agent і отримують довші сесії для кращого UX (типово: 43200 = 30 днів)"
-label = "Строк дії токена для настільних клієнтів (хвилини)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Допуск зсуву часу між клієнтом/сервером під час перевірки токена (типово: 60 секунд)"
-label = "Допуск зсуву годинника (секунди)"
+[admin.settings.security.jwt.persistence]
+description = "Зберігати ключі JWT постійно, щоб переживати перезапуски сервера"
+label = "Увімкнути зберігання ключів"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Дозволити оновлення токена протягом стількох хвилин після закінчення строку дії (типово: 15 хвилин, макс. 3 спроби)"
 label = "Пільговий період оновлення (хвилини)"
 
-[admin.settings.security.jwt.persistence]
-description = "Зберігати ключі JWT постійно, щоб переживати перезапуски сервера"
-label = "Увімкнути зберігання ключів"
-
 [admin.settings.security.jwt.secureCookie]
 description = "Вимагати HTTPS для cookie JWT (рекомендовано для продакшену)"
 label = "Захищений cookie"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Час життя токена доступу в хвилинах для веб-клієнтів (типово: 1440 = 24 години)"
+label = "Строк дії веб-токена (хвилини)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Максимальна кількість невдалих спроб входу до блокування облікового запису"
@@ -2238,6 +2239,9 @@ title = "Змінити дозволи"
 [changePermissions.tooltip.warning]
 text = "Щоб зробити ці дозволи незмінними, скористайтесь інструментом «Додати пароль», щоб встановити пароль власника."
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "Виберіть колір"
 
@@ -2254,9 +2258,11 @@ copy = "Копіювати"
 done = "Готово"
 error = "Помилка"
 expand = "Розгорнути"
+learnMore = "Learn more"
 lines = "рядків"
 loading = "Завантаження..."
 next = "Далі"
+operation = "this operation"
 preview = "Попередній перегляд"
 previous = "Назад"
 refresh = "Оновити"
@@ -2670,6 +2676,77 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "Автообрізання білих полів"
 header = "Обрізати PDF-файл"
@@ -2920,6 +2997,7 @@ copyStack = "Скопіювати стек викликів"
 discordSubmit = "Discord - Надіслати повідомлення підтримки"
 dismissAllErrors = "Закрити всі помилки"
 encryptedPdfMustRemovePassword = "Цей PDF зашифрований або захищений паролем. Будь ласка, розблокуйте його перед перетворенням у PDF/A."
+generic = "An error occurred"
 github = "Надіслати запит на GitHub"
 githubSubmit = "GitHub - Надіслати запит"
 incorrectPasswordProvided = "Пароль до PDF невірний або не вказаний."
@@ -3346,10 +3424,6 @@ desc = "Створюйте багатокрокові робочі процес�
 tags = "робочий процес,послідовність,автоматизація"
 title = "Автоматизація"
 
-[home.formFill]
-desc = "Інтерактивне заповнення полів форми PDF у візуальному редакторі"
-title = "Заповнити форму"
-
 [home.autoRename]
 desc = "Автоматично перейменовує PDF-файл на основі виявленого заголовка"
 tags = "автовизначення,на основі заголовка,організувати,перейменувати"
@@ -3444,6 +3518,10 @@ title = "Видобути сторінки"
 desc = "Видалення всіх інтерактивних елементів та форм з PDF"
 tags = "спростити,прибрати,інтерактивність"
 title = "Знеактивування"
+
+[home.formFill]
+desc = "Інтерактивне заповнення полів форми PDF у візуальному редакторі"
+title = "Заповнити форму"
 
 [home.getPdfInfo]
 desc = "Збирає будь-яку можливу інформацію у PDF-файлах."
@@ -4247,75 +4325,6 @@ title = "Редактор сторінок"
 zoomIn = "Збільшити"
 zoomOut = "Зменшити"
 
-[viewer]
-cannotPreviewFile = "Не вдається переглянути файл"
-dualPageView = "Парний перегляд"
-firstPage = "Перша сторінка"
-lastPage = "Остання сторінка"
-nextPage = "Наступна сторінка"
-onlyPdfSupported = "Переглядач підтримує лише файли PDF. Схоже, цей файл має інший формат."
-previousPage = "Попередня сторінка"
-singlePageView = "Одинарний перегляд"
-unknownFile = "Невідомий файл"
-zoomIn = "Збільшити"
-zoomOut = "Зменшити"
-
-[viewer.attachments]
-title = "Вкладення"
-searchPlaceholder = "Пошук вкладень"
-noSupport = "Підтримка вкладень недоступна для цього переглядача."
-noDocument = "Відкрийте PDF, щоб переглянути його вкладення."
-loading = "Завантаження вкладень..."
-empty = "У цьому документі немає вкладень"
-noMatch = "Немає вкладень, що відповідають вашому запиту"
-
-[viewer.formBar]
-title = "Поля форми"
-unsavedBadge = "Не збережено"
-unsavedDesc = "У вас є незбережені зміни"
-hasFieldsDesc = "Цей PDF містить заповнювані поля"
-dismiss = "Закрити"
-apply = "Застосувати зміни"
-download = "Завантажити PDF"
-
-[rightRail]
-closeSelected = "Закрити вибрані файли"
-selectAll = "Вибрати все"
-deselectAll = "Скасувати вибір усіх"
-selectByNumber = "Вибрати за номерами сторінок"
-deleteSelected = "Видалити вибрані сторінки"
-closePdf = "Закрити PDF"
-exportAll = "Експорт PDF"
-downloadSelected = "Завантажити вибрані файли"
-annotations = "Анотації"
-exportSelected = "Експорт вибраних сторінок"
-formFill = "Заповнити форму"
-saveChanges = "Зберегти зміни"
-toggleAttachments = "Показати/приховати вкладення"
-toggleTheme = "Перемкнути тему"
-language = "Мова"
-toggleAnnotations = "Перемкнути видимість анотацій"
-search = "Пошук у PDF"
-panMode = "Режим переміщення"
-applyRedactionsFirst = "Спочатку застосуйте зачорнення"
-rotateLeft = "Повернути ліворуч"
-rotateRight = "Повернути праворуч"
-toggleSidebar = "Перемкнути бічну панель"
-toggleBookmarks = "Перемкнути закладки"
-print = "Надрукувати PDF"
-ruler = "Лінійка / Вимірювання"
-draw = "Малювати"
-redact = "Зачорнити"
-exitRedaction = "Вийти з режиму зачорнення"
-save = "Зберегти"
-downloadAll = "Завантажити все"
-saveAll = "Зберегти все"
-
-[textAlign]
-left = "Ліворуч"
-center = "По центру"
-right = "Праворуч"
-
 [pageExtracter]
 header = "Видобути сторінки"
 placeholder = "(наприклад 1,2,8 або 4,7,12-16 або 2n-1)"
@@ -4424,6 +4433,9 @@ title = "Підказки"
 autoClose = "Це вікно закриється автоматично..."
 billingPeriod = "Період оплати"
 canCloseWindow = "Можете закрити це вікно."
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "Введіть дійсну адресу email"
 enterpriseNote = "Кількість місць можна змінити під час оплати (1–1000)."
 error = "Помилка оплати"
@@ -4445,6 +4457,7 @@ perMonth = "/місяць"
 perYear = "/рік"
 preparing = "Підготовка оплати..."
 redirecting = "Переадресація на безпечну оплату..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "Stripe не налаштовано"
 stripeNotConfiguredMessage = "Інтеграцію оплати Stripe не налаштовано. Зверніться до адміністратора."
 success = "Платіж успішний!"
@@ -4777,6 +4790,13 @@ title = "PDF в Word"
 [PDFToWord.selectText]
 1 = "Формат вихідного файлу"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "Цей сервіс використовує LibreOffice для перетворення файлів."
 header = "PDF в XML"
@@ -4835,6 +4855,7 @@ customPricing = "Індивідуальний"
 featureComparison = "Порівняння можливостей"
 from = "Від"
 hideComparison = "Приховати порівняння можливостей"
+included = "Included"
 includedInCurrent = "Входить у ваш план"
 licensedSeats = "Ліцензовано: {{count}} місць"
 manage = "Керувати"
@@ -4851,6 +4872,7 @@ subtitle = "Деталі вашої поточної підписки"
 title = "Активний план"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "Виберіть план, який відповідає вашим потребам"
 title = "Доступні плани"
 
@@ -4861,6 +4883,7 @@ highlight3 = "Найновіші можливості"
 name = "Enterprise"
 requiresServer = "Потрібен сервер"
 requiresServerMessage = "Спочатку перейдіть на план Server, перш ніж оновлюватися до Enterprise."
+siteLicense = "Site License"
 
 [plan.feature]
 api = "Доступ до API"
@@ -4928,6 +4951,10 @@ keyDescription = "Вставте ліцензійний ключ із листа
 success = "Ліцензію активовано!"
 successMessage = "Вашу ліцензію успішно активовано. Тепер можете закрити це вікно."
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "Роздрукувати файл прінтером"
 submit = "Роздрукувати"
@@ -4992,15 +5019,15 @@ title = "Слова для приховування"
 failed = "Під час приховування в PDF сталася помилка."
 
 [redact.manual]
+activate = "Увімкнути інструмент приховування"
+active = "Режим приховування активний"
 apply = "Застосувати"
 applyChanges = "Застосувати зміни"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Застосовується назавжди, скасувати неможливо, а приховані дані буде видалено"
 boxRedaction = "Приховування прямокутником"
-colourPicker = "Палітра кольорів"
 colorLabel = "Колір приховування"
-active = "Режим приховування активний"
-activate = "Увімкнути інструмент приховування"
+colourPicker = "Палітра кольорів"
 controlsTitle = "Ручні інструменти зачорнення"
 convertPDFToImageLabel = "Перетворити PDF на PDF-Image (щоб видалити текст за прямокутником)"
 export = "Експорт"
@@ -5396,6 +5423,39 @@ title = "Висока контрастність"
 text = "Повністю інвертує всі кольори в PDF, створюючи ефект, схожий на негатив. Корисно для створення темних версій документів або зменшення навантаження на очі в умовах слабкого освітлення."
 title = "Інвертувати всі кольори"
 
+[rightRail]
+annotations = "Анотації"
+applyRedactionsFirst = "Спочатку застосуйте зачорнення"
+closePdf = "Закрити PDF"
+closeSelected = "Закрити вибрані файли"
+deleteSelected = "Видалити вибрані сторінки"
+deselectAll = "Скасувати вибір усіх"
+downloadAll = "Завантажити все"
+downloadSelected = "Завантажити вибрані файли"
+draw = "Малювати"
+exitRedaction = "Вийти з режиму зачорнення"
+exportAll = "Експорт PDF"
+exportSelected = "Експорт вибраних сторінок"
+formFill = "Заповнити форму"
+language = "Мова"
+panMode = "Режим переміщення"
+print = "Надрукувати PDF"
+redact = "Зачорнити"
+rotateLeft = "Повернути ліворуч"
+rotateRight = "Повернути праворуч"
+ruler = "Лінійка / Вимірювання"
+save = "Зберегти"
+saveAll = "Зберегти все"
+saveChanges = "Зберегти зміни"
+search = "Пошук у PDF"
+selectAll = "Вибрати все"
+selectByNumber = "Вибрати за номерами сторінок"
+toggleAnnotations = "Перемкнути видимість анотацій"
+toggleAttachments = "Показати/приховати вкладення"
+toggleBookmarks = "Перемкнути закладки"
+toggleSidebar = "Перемкнути бічну панель"
+toggleTheme = "Перемкнути тему"
+
 [rotate]
 rotateLeft = "Повернути проти годинникової стрілки"
 rotateRight = "Повернути за годинниковою стрілкою"
@@ -5647,6 +5707,70 @@ plan = "План"
 title = "Ліцензування та аналітика"
 usageAnalytics = "Аналітика використання"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "Правові"
 privacy = "Конфіденційність"
@@ -5679,6 +5803,9 @@ connections = "Підключення"
 security = "Безпека"
 telegram = "Telegram"
 title = "Безпека та автентифікація"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "Спочатку увімкніть режим входу"
@@ -6016,6 +6143,11 @@ desc = "Витягти конкретні сторінки (1,3,5-10)"
 name = "Номери сторінок"
 tooltip = "Введіть номери сторінок, розділені комами, або діапазони через дефіс"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "Розділити сторінки на сітку секцій"
 name = "Секції"
@@ -6029,6 +6161,7 @@ tooltip = "Вкажіть максимальний розмір файлу (на
 [split.methods.prefix]
 splitAt = "Розділити на"
 splitBy = "Розділити за"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "Клацніть картку методу, щоб вибрати її"
@@ -6040,6 +6173,21 @@ title = "Оберіть метод розділення"
 [split.methodSelection.tooltip.header]
 text = "Виберіть, як ви хочете розділити свій PDF-документ. Кожен метод оптимізовано для різних випадків і типів документів."
 title = "Вибір методу розділення"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "Будь ласка, спочатку виберіть метод розділення"
@@ -6091,6 +6239,14 @@ bullet2 = "Діапазонні точки: 3-8 (розділяє перед с�
 bullet3 = "Змішано: 2,5-10,15 (розділяє після сторінки 2, перед сторінкою 5, після сторінки 10 і після сторінки 15)"
 text = "Розділіть PDF у вказаних номерах сторінок. Використання 'n' розділяє після сторінки n. Використання 'n-m' розділяє перед сторінкою n та після сторінки m."
 title = "Розділити за номерами сторінок"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "Горизонтально: кількість рядків"
@@ -6232,6 +6388,82 @@ title = "Документація API"
 
 [tableExtraxt]
 tags = "csv,видобуток таблиці,вилучення,конвертація"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "По центру"
+left = "Ліворуч"
+right = "Праворуч"
 
 [theme]
 toggle = "Перемкнути тему"
@@ -6507,6 +6739,37 @@ invalid = "Сертифікат відсутній у довіреному сх�
 fileManager = "Файловий менеджер"
 pageEditor = "Редактор сторінок"
 viewer = "Переглядач"
+
+[viewer]
+cannotPreviewFile = "Не вдається переглянути файл"
+dualPageView = "Парний перегляд"
+firstPage = "Перша сторінка"
+lastPage = "Остання сторінка"
+nextPage = "Наступна сторінка"
+onlyPdfSupported = "Переглядач підтримує лише файли PDF. Схоже, цей файл має інший формат."
+previousPage = "Попередня сторінка"
+singlePageView = "Одинарний перегляд"
+unknownFile = "Невідомий файл"
+zoomIn = "Збільшити"
+zoomOut = "Зменшити"
+
+[viewer.attachments]
+empty = "У цьому документі немає вкладень"
+loading = "Завантаження вкладень..."
+noDocument = "Відкрийте PDF, щоб переглянути його вкладення."
+noMatch = "Немає вкладень, що відповідають вашому запиту"
+noSupport = "Підтримка вкладень недоступна для цього переглядача."
+searchPlaceholder = "Пошук вкладень"
+title = "Вкладення"
+
+[viewer.formBar]
+apply = "Застосувати зміни"
+dismiss = "Закрити"
+download = "Завантажити PDF"
+hasFieldsDesc = "Цей PDF містить заповнювані поля"
+title = "Поля форми"
+unsavedBadge = "Не збережено"
+unsavedDesc = "У вас є незбережені зміни"
 
 [viewPdf]
 header = "Переглянути PDF"

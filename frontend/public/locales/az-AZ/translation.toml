@@ -16,13 +16,13 @@ comingSoon = "Tezliklə"
 confirmClose = "Bağlamağı təsdiq et"
 confirmCloseCancel = "Ləğv et"
 confirmCloseConfirm = "Faylı bağla"
-confirmCloseMessage = "Bu faylı bağlamaq istədiyinizə əminsiniz?"
 confirmCloseDiscard = "Dəyişiklikləri at və bağla"
+confirmCloseMessage = "Bu faylı bağlamaq istədiyinizə əminsiniz?"
 confirmCloseSave = "Yadda saxla və bağla"
+confirmCloseSaveFailed = "Xətalarla yadda saxlanılıb. {{count}} fayl{{plural}} yadda saxlanıla bilmədi."
+confirmCloseSaveFailedTitle = "Yadda saxlanma uğursuz oldu"
 confirmCloseUnsaved = "Bu faylda yadda saxlanılmamış dəyişikliklər var."
 confirmCloseUnsavedList = "Sizdə yadda saxlanılmamış dəyişiklikləri olan {{count}} fayl{{plural}} var.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Yadda saxlanma uğursuz oldu"
-confirmCloseSaveFailed = "Xətalarla yadda saxlanılıb. {{count}} fayl{{plural}} yadda saxlanıla bilmədi."
 confirmPasswordErrorMessage = "Yeni Şifr və Yeni Şifri Doğrula uyğun olmalıdır."
 custom = "Xüsusi..."
 customPosition = "Xüsusi mövqe"
@@ -42,11 +42,12 @@ downloadComplete = "Yükləmə Tamamlandı"
 downloadPdf = "PDF Yüklə"
 downloadUnavailable = "Bu element üçün endirmə mövcud deyil"
 edit = "Redaktə et"
+editSecret = "Edit this value"
 editYourNewFiles = "Yeni fayl(lar)ınızı redaktə edin"
 exportAndContinue = "İxrac et və davam et"
 false = "Yanlış"
-fileSavedToDisk = "Fayl diskə yadda saxlanıldı"
 fileNotSavedToDisk = "Diskə yadda saxlanılmadı"
+fileSavedToDisk = "Fayl diskə yadda saxlanıldı"
 fileSelected = "Seçilən: {{filename}}"
 filesSelected = "seçilmiş fayllar"
 font = "Şrift"
@@ -841,6 +842,14 @@ title = "API Endpointlər"
 userDefaults = "İstifadəçi Seçimlərinin İlkin Dəyərləri"
 userDefaultsDescription = "İstifadəçi seçimləri üçün ilkin dəyərləri təyin edin. İstifadəçilər bunları şəxsi ayarlarında dəyişə bilər."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Deaktiv edilmiş çevirmə seçimlərini boz rəngdə göstərmək əvəzinə gizlədin"
+label = "Standart olaraq mövcud olmayan çevirmələri gizlət"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Deaktiv edilmiş alətləri boz rəngdə göstərmək əvəzinə gizlədin"
+label = "Standart olaraq mövcud olmayan alətləri gizlət"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Deaktiv ediləcək endpoint qruplarını seçin"
 label = "Deaktiv Edilmiş Endpoint Qrupları"
@@ -848,14 +857,6 @@ label = "Deaktiv Edilmiş Endpoint Qrupları"
 [admin.settings.endpoints.toRemove]
 description = "Deaktiv etmək üçün ayrı-ayrı endpointləri seçin"
 label = "Deaktiv Edilmiş Endpointlər"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Deaktiv edilmiş alətləri boz rəngdə göstərmək əvəzinə gizlədin"
-label = "Standart olaraq mövcud olmayan alətləri gizlət"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Deaktiv edilmiş çevirmə seçimlərini boz rəngdə göstərmək əvəzinə gizlədin"
-label = "Standart olaraq mövcud olmayan çevirmələri gizlət"
 
 [admin.settings.enterpriseRequired]
 message = "{{featureName}} funksiyasına daxil olmaq üçün Enterprise lisenziyası tələb olunur. Siz istinad üçün demo məlumatlarına baxırsınız."
@@ -1228,6 +1229,14 @@ label = "İlkin istifadəçi adı"
 [admin.settings.security.jwt]
 label = "JWT Konfiqurasiyası"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tokenin təsdiqlənməsi zamanı müştəri/server vaxt sürüşməsinə dözümlülük (standart: 60 saniyə)"
+label = "Vaxt sürüşməsinə dözümlülük (saniyə)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Masaüstü müştərilər üçün giriş tokeninin ömrü, dəqiqə ilə. Masaüstü tətbiqlər User-Agent vasitəsilə avtomatik aşkar edilir və daha yaxşı UX üçün daha uzun sessiyalar alır (standart: 43200 = 30 gün)"
+label = "Masaüstü tokeninin bitmə vaxtı (dəqiqə)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Müddəti bitmiş JWT açarlarını avtomatik sil"
 label = "Açarların təmizlənməsini aktiv et"
@@ -1236,29 +1245,21 @@ label = "Açarların təmizlənməsini aktiv et"
 description = "JWT imzalama açarlarını mütəmadi olaraq avtomatik rotasiya et"
 label = "Açarların rotasiyasını aktiv et"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Veb müştərilər üçün giriş tokeninin ömrü, dəqiqə ilə (standart: 1440 = 24 saat)"
-label = "Veb tokeninin bitmə vaxtı (dəqiqə)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Masaüstü müştərilər üçün giriş tokeninin ömrü, dəqiqə ilə. Masaüstü tətbiqlər User-Agent vasitəsilə avtomatik aşkar edilir və daha yaxşı UX üçün daha uzun sessiyalar alır (standart: 43200 = 30 gün)"
-label = "Masaüstü tokeninin bitmə vaxtı (dəqiqə)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Tokenin təsdiqlənməsi zamanı müştəri/server vaxt sürüşməsinə dözümlülük (standart: 60 saniyə)"
-label = "Vaxt sürüşməsinə dözümlülük (saniyə)"
+[admin.settings.security.jwt.persistence]
+description = "Server yenidən başladıqda itirilməməsi üçün JWT açarlarını davamlı saxla"
+label = "Açarların davamlı saxlanmasını aktiv et"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Bitdikdən sonra bu qədər dəqiqə ərzində tokenin yenilənməsinə icazə verin (standart: 15 dəqiqə, maksimum 3 cəhd)"
 label = "Yeniləmə üçün möhlət (dəqiqə)"
 
-[admin.settings.security.jwt.persistence]
-description = "Server yenidən başladıqda itirilməməsi üçün JWT açarlarını davamlı saxla"
-label = "Açarların davamlı saxlanmasını aktiv et"
-
 [admin.settings.security.jwt.secureCookie]
 description = "JWT kukiləri üçün HTTPS tələb et (istehsalat üçün tövsiyə olunur)"
 label = "Təhlükəsiz Cookie"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Veb müştərilər üçün giriş tokeninin ömrü, dəqiqə ilə (standart: 1440 = 24 saat)"
+label = "Veb tokeninin bitmə vaxtı (dəqiqə)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Hesabın bloklanmasından əvvəl maksimal uğursuz giriş cəhdlərinin sayı"
@@ -2238,6 +2239,9 @@ title = "İcazələri Dəyişdir"
 [changePermissions.tooltip.warning]
 text = "Bu icazələri dəyişdirilməz etmək üçün, Parol əlavə etmə alətindən istifadə edərək sahib parolu təyin edin."
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "Rəng seçin"
 
@@ -2254,9 +2258,11 @@ copy = "Kopyala"
 done = "Bitdi"
 error = "Xəta"
 expand = "Genişləndir"
+learnMore = "Learn more"
 lines = "sətir"
 loading = "Yüklənir..."
 next = "Növbəti"
+operation = "this operation"
 preview = "Önizləmə"
 previous = "Əvvəlki"
 refresh = "Yenilə"
@@ -2670,6 +2676,77 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analitika"
 scarf = "Scarf Pixel"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "Boşluqları avtomatik qırp"
 header = "Pdf-ləri Kəs"
@@ -2920,6 +2997,7 @@ copyStack = "Stack Trace-i kopyalayın"
 discordSubmit = "Discord - Dəstək postunu göndərin"
 dismissAllErrors = "Bütün xətaları bağla"
 encryptedPdfMustRemovePassword = "Bu PDF şifrələnib və ya parol ilə qorunub. Zəhmət olmasa PDF/A-ya çevirməzdən əvvəl kilidi açın."
+generic = "An error occurred"
 github = "GitHub-da bilet təqdim edin"
 githubSubmit = "GitHub - Bilet təqdim edin"
 incorrectPasswordProvided = "PDF parolu səhvdir və ya daxil edilməyib."
@@ -3346,10 +3424,6 @@ desc = "PDF əməliyyatlarını zəncirləyərək çoxaddımlı iş axınları q
 tags = "iş axını,ardıcıllıq,avtomatlaşdırma"
 title = "Avtomatlaşdır"
 
-[home.formFill]
-desc = "PDF forma sahələrini vizual redaktorla interaktiv doldurun"
-title = "Formu doldur"
-
 [home.autoRename]
 desc = "Aşkarlanmış başlığa əsasən PDF faylını avtomatik adlandırır"
 tags = "avto-aşkarlama,başlığa əsasən,təşkil et,yenidən adlandır"
@@ -3444,6 +3518,10 @@ title = "Səhifələri çıxar"
 desc = "Bütün interaktiv elementləri və anketləri PDF-dən sil"
 tags = "sadələşdir,sil,interaktiv"
 title = "Sadələşdir"
+
+[home.formFill]
+desc = "PDF forma sahələrini vizual redaktorla interaktiv doldurun"
+title = "Formu doldur"
 
 [home.getPdfInfo]
 desc = "PDF barədə mümkün olan bütün məlumatları əldə edir"
@@ -4247,75 +4325,6 @@ title = "Səhifə Redaktoru"
 zoomIn = "Böyüt"
 zoomOut = "Kiçilt"
 
-[viewer]
-cannotPreviewFile = "Faylın önizlənməsi mümkün deyil"
-dualPageView = "İki Səhifə Görünüşü"
-firstPage = "Birinci səhifə"
-lastPage = "Son səhifə"
-nextPage = "Növbəti səhifə"
-onlyPdfSupported = "Görüntüləyici yalnız PDF fayllarını dəstəkləyir. Bu fayl fərqli formatda görünür."
-previousPage = "Əvvəlki səhifə"
-singlePageView = "Tək Səhifə Görünüşü"
-unknownFile = "Naməlum fayl"
-zoomIn = "Böyüt"
-zoomOut = "Kiçilt"
-
-[viewer.attachments]
-title = "Qoşmalar"
-searchPlaceholder = "Qoşmalarda axtar"
-noSupport = "Bu görüntüləyici üçün qoşma dəstəyi mövcud deyil."
-noDocument = "Qoşmalarını görmək üçün PDF açın."
-loading = "Qoşmalar yüklənir..."
-empty = "Bu sənəddə qoşma yoxdur"
-noMatch = "Axtarışınıza uyğun qoşma tapılmadı"
-
-[viewer.formBar]
-title = "Forma sahələri"
-unsavedBadge = "Saxlanılmayıb"
-unsavedDesc = "Yadda saxlanılmamış dəyişiklikləriniz var"
-hasFieldsDesc = "Bu PDF-də doldurula bilən sahələr var"
-dismiss = "Bağla"
-apply = "Dəyişiklikləri tətbiq et"
-download = "PDF-i endir"
-
-[rightRail]
-closeSelected = "Seçilmiş faylları bağla"
-selectAll = "Hamısını Seç"
-deselectAll = "Hamısını Seçməni Ləğv Et"
-selectByNumber = "Səhifə nömrələrinə görə seç"
-deleteSelected = "Seçilmiş səhifələri sil"
-closePdf = "PDF-i bağla"
-exportAll = "PDF-i ixrac et"
-downloadSelected = "Seçilmiş faylları yüklə"
-annotations = "Annotasiyalar"
-exportSelected = "Seçilmiş səhifələri ixrac et"
-formFill = "Formu doldur"
-saveChanges = "Dəyişiklikləri yadda saxla"
-toggleAttachments = "Qoşmaları göstər/gizlət"
-toggleTheme = "Mövzunu dəyiş"
-language = "Dil"
-toggleAnnotations = "Annotasiyaların görünməsini dəyiş"
-search = "PDF-də axtar"
-panMode = "Sürüşdürmə rejimi"
-applyRedactionsFirst = "Əvvəlcə məxfiləşdirmələri tətbiq edin"
-rotateLeft = "Sola döndər"
-rotateRight = "Sağa döndər"
-toggleSidebar = "Yan paneli aç/bağla"
-toggleBookmarks = "Əlfəcinləri aç/bağla"
-print = "PDF-i çap et"
-ruler = "Xətkeş / Ölçmə"
-draw = "Rəsm çək"
-redact = "Məxfiləşdir"
-exitRedaction = "Məxfiləşdirmə rejimindən çıx"
-save = "Yadda saxla"
-downloadAll = "Hamısını yüklə"
-saveAll = "Hamısını saxla"
-
-[textAlign]
-left = "Sol"
-center = "Mərkəz"
-right = "Sağ"
-
 [pageExtracter]
 header = "Səhifələri çıxar"
 placeholder = "(məsələn, 1,2,8 və ya 4,7,12-16 və ya 2n-1)"
@@ -4424,6 +4433,9 @@ title = "Məsləhətlər"
 autoClose = "Bu pəncərə avtomatik bağlanacaq..."
 billingPeriod = "Ödəniş dövrü"
 canCloseWindow = "Bu pəncərəni indi bağlaya bilərsiniz."
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "Zəhmət olmasa düzgün e-poçt ünvanı daxil edin"
 enterpriseNote = "Yerləri checkout zamanı tənzimləyə bilərsiniz (1-1000)."
 error = "Ödəniş xətası"
@@ -4445,6 +4457,7 @@ perMonth = "/ay"
 perYear = "/il"
 preparing = "Ödənişiniz hazırlanır..."
 redirecting = "Təhlükəsiz checkout-a yönləndirilir..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "Stripe konfiqurasiya olunmayıb"
 stripeNotConfiguredMessage = "Stripe ödəniş inteqrasiyası konfiqurasiya olunmayıb. Zəhmət olmasa administratorla əlaqə saxlayın."
 success = "Ödəniş uğurludur!"
@@ -4777,6 +4790,13 @@ title = "PDF-i Word-ə"
 [PDFToWord.selectText]
 1 = "Çıxış Fayl Formatı"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "Bu Servis Fayl Çevirmək Üçün LibreOffice İşlədir"
 header = "PDF-i XML-ə"
@@ -4835,6 +4855,7 @@ customPricing = "Fərdi"
 featureComparison = "Xüsusiyyət Müqayisəsi"
 from = "Başlayır"
 hideComparison = "Xüsusiyyət müqayisəsini gizlət"
+included = "Included"
 includedInCurrent = "Cari planınıza daxildir"
 licensedSeats = "Lisenziyalı: {{count}} yer"
 manage = "İdarə et"
@@ -4851,6 +4872,7 @@ subtitle = "Cari abunəlik detalları"
 title = "Aktiv Plan"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "Ehtiyaclarınıza uyğun planı seçin"
 title = "Mövcud Planlar"
 
@@ -4861,6 +4883,7 @@ highlight3 = "Ən son xüsusiyyətlər"
 name = "Enterprise"
 requiresServer = "Server tələb edir"
 requiresServerMessage = "Enterprise-a yüksəltmədən əvvəl əvvəlcə Server planına keçin."
+siteLicense = "Site License"
 
 [plan.feature]
 api = "API Girişi"
@@ -4928,6 +4951,10 @@ keyDescription = "E-poçtunuzdakı lisenziya açarını yapışdırın"
 success = "Lisenziya aktivləşdirildi!"
 successMessage = "Lisenziyanız uğurla aktivləşdirildi. Bu pəncərəni indi bağlaya bilərsiniz."
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "Faylı printerdə çap edin"
 submit = "Çap et"
@@ -4992,15 +5019,15 @@ title = "Məxfiləşdiriləcək sözlər"
 failed = "PDF-də məxfiləşdirmə aparılarkən xəta baş verdi."
 
 [redact.manual]
+activate = "Qaraltma alətini aktiv et"
+active = "Qaraltma rejimi aktivdir"
 apply = "Tətbiq et"
 applyChanges = "Dəyişiklikləri tətbiq et"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Daimi tətbiqdir, geri qaytarıla bilməz və altındakı məlumat silinəcək"
 boxRedaction = "Qutu çəkərək məxfiləşdirmə"
-colourPicker = "Rəng seçici"
 colorLabel = "Qaraltma rəngi"
-active = "Qaraltma rejimi aktivdir"
-activate = "Qaraltma alətini aktiv et"
+colourPicker = "Rəng seçici"
 controlsTitle = "Əl ilə məxfiləşdirmə idarələri"
 convertPDFToImageLabel = "PDF-i PDF-Image-ə çevir (Qutunun arxasındakı mətni silmək üçün istifadə olunur)"
 export = "İxrac Et"
@@ -5396,6 +5423,39 @@ title = "Yüksək kontrast"
 text = "PDF-dəki bütün rəngləri tam tərsinə çevirərək mənfi effekti kimi görünüş yaradır. Sənədlərin qaranlıq rejim versiyalarını yaratmaq və ya az işıqda göz yorğunluğunu azaltmaq üçün faydalıdır."
 title = "Bütün rəngləri tərsinə çevir"
 
+[rightRail]
+annotations = "Annotasiyalar"
+applyRedactionsFirst = "Əvvəlcə məxfiləşdirmələri tətbiq edin"
+closePdf = "PDF-i bağla"
+closeSelected = "Seçilmiş faylları bağla"
+deleteSelected = "Seçilmiş səhifələri sil"
+deselectAll = "Hamısını Seçməni Ləğv Et"
+downloadAll = "Hamısını yüklə"
+downloadSelected = "Seçilmiş faylları yüklə"
+draw = "Rəsm çək"
+exitRedaction = "Məxfiləşdirmə rejimindən çıx"
+exportAll = "PDF-i ixrac et"
+exportSelected = "Seçilmiş səhifələri ixrac et"
+formFill = "Formu doldur"
+language = "Dil"
+panMode = "Sürüşdürmə rejimi"
+print = "PDF-i çap et"
+redact = "Məxfiləşdir"
+rotateLeft = "Sola döndər"
+rotateRight = "Sağa döndər"
+ruler = "Xətkeş / Ölçmə"
+save = "Yadda saxla"
+saveAll = "Hamısını saxla"
+saveChanges = "Dəyişiklikləri yadda saxla"
+search = "PDF-də axtar"
+selectAll = "Hamısını Seç"
+selectByNumber = "Səhifə nömrələrinə görə seç"
+toggleAnnotations = "Annotasiyaların görünməsini dəyiş"
+toggleAttachments = "Qoşmaları göstər/gizlət"
+toggleBookmarks = "Əlfəcinləri aç/bağla"
+toggleSidebar = "Yan paneli aç/bağla"
+toggleTheme = "Mövzunu dəyiş"
+
 [rotate]
 rotateLeft = "Saat əksinə döndür"
 rotateRight = "Saat istiqamətində döndür"
@@ -5647,6 +5707,70 @@ plan = "Plan"
 title = "Lisenziyalaşdırma və Analitika"
 usageAnalytics = "İstifadə analitikası"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "Hüquqi"
 privacy = "Məxfilik"
@@ -5679,6 +5803,9 @@ connections = "Bağlantılar"
 security = "Təhlükəsizlik"
 telegram = "Telegram"
 title = "Təhlükəsizlik və Autentifikasiya"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "Əvvəlcə login rejimini aktiv edin"
@@ -6016,6 +6143,11 @@ desc = "Müəyyən səhifələri çıxar (1,3,5-10)"
 name = "Səhifə nömrələri"
 tooltip = "Səhifə nömrələrini vergüllə ayırın və ya diapazonlar üçün tire istifadə edin"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "Səhifələri tor bölmələrinə ayır"
 name = "Bölmələr"
@@ -6029,6 +6161,7 @@ tooltip = "Maksimum fayl ölçüsünü göstərin (məs. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Bölünmə nöqtəsi"
 splitBy = "Bölmə üsulu"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "Seçmək üçün üsul kartına klikləyin"
@@ -6040,6 +6173,21 @@ title = "Bölmə üsulunuzu seçin"
 [split.methodSelection.tooltip.header]
 text = "PDF sənədinizi necə bölmək istədiyinizi seçin. Hər bir üsul müxtəlif istifadə hallarına və sənəd tiplərinə görə optimallaşdırılıb."
 title = "Bölmə üsulunun seçimi"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "Zəhmət olmasa əvvəlcə bölmə üsulunu seçin"
@@ -6091,6 +6239,14 @@ bullet2 = "Aralıqlar: 3-8 (3-cü səhifədən əvvəl və 8-ci səhifədən son
 bullet3 = "Qarışıq: 2,5-10,15 (2-dən sonra, 5-dən əvvəl, 10-dan sonra və 15-dən sonra bölür)"
 text = "PDF-i konkret səhifə nömrələrində bölün. 'n' istifadə edildikdə n-ci səhifədən sonra bölünür. 'n-m' istifadə edildikdə n-dən əvvəl və m-dən sonra bölünür."
 title = "Səhifə nömrələrində böl"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "Üfüqi: Yaradılacaq sətir sayı"
@@ -6232,6 +6388,82 @@ title = "API sənədləşməsi"
 
 [tableExtraxt]
 tags = "CSV,Cədvəl xaricetmə,xaric et,çevir"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "Mərkəz"
+left = "Sol"
+right = "Sağ"
 
 [theme]
 toggle = "Mövzunu dəyiş"
@@ -6507,6 +6739,37 @@ invalid = "Sertifikat etibar anbarında deyil - mənbə təsdiqlənə bilmir"
 fileManager = "Fayl Meneceri"
 pageEditor = "Səhifə Redaktoru"
 viewer = "Görüntüləyici"
+
+[viewer]
+cannotPreviewFile = "Faylın önizlənməsi mümkün deyil"
+dualPageView = "İki Səhifə Görünüşü"
+firstPage = "Birinci səhifə"
+lastPage = "Son səhifə"
+nextPage = "Növbəti səhifə"
+onlyPdfSupported = "Görüntüləyici yalnız PDF fayllarını dəstəkləyir. Bu fayl fərqli formatda görünür."
+previousPage = "Əvvəlki səhifə"
+singlePageView = "Tək Səhifə Görünüşü"
+unknownFile = "Naməlum fayl"
+zoomIn = "Böyüt"
+zoomOut = "Kiçilt"
+
+[viewer.attachments]
+empty = "Bu sənəddə qoşma yoxdur"
+loading = "Qoşmalar yüklənir..."
+noDocument = "Qoşmalarını görmək üçün PDF açın."
+noMatch = "Axtarışınıza uyğun qoşma tapılmadı"
+noSupport = "Bu görüntüləyici üçün qoşma dəstəyi mövcud deyil."
+searchPlaceholder = "Qoşmalarda axtar"
+title = "Qoşmalar"
+
+[viewer.formBar]
+apply = "Dəyişiklikləri tətbiq et"
+dismiss = "Bağla"
+download = "PDF-i endir"
+hasFieldsDesc = "Bu PDF-də doldurula bilən sahələr var"
+title = "Forma sahələri"
+unsavedBadge = "Saxlanılmayıb"
+unsavedDesc = "Yadda saxlanılmamış dəyişiklikləriniz var"
 
 [viewPdf]
 header = "PDF-ə baxın"

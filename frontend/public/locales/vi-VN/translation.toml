@@ -16,13 +16,13 @@ comingSoon = "Sắp ra mắt"
 confirmClose = "Xác nhận đóng"
 confirmCloseCancel = "Hủy"
 confirmCloseConfirm = "Đóng tệp"
-confirmCloseMessage = "Bạn có chắc muốn đóng tệp này không?"
 confirmCloseDiscard = "Bỏ các thay đổi và đóng"
+confirmCloseMessage = "Bạn có chắc muốn đóng tệp này không?"
 confirmCloseSave = "Lưu và đóng"
+confirmCloseSaveFailed = "Đã lưu nhưng có lỗi. {{count}} tệp{{plural}} không thể lưu."
+confirmCloseSaveFailedTitle = "Lưu không thành công"
 confirmCloseUnsaved = "Tệp này có các thay đổi chưa được lưu."
 confirmCloseUnsavedList = "Bạn có {{count}} tệp{{plural}} có thay đổi chưa được lưu.\n\n{{fileList}}"
-confirmCloseSaveFailedTitle = "Lưu không thành công"
-confirmCloseSaveFailed = "Đã lưu nhưng có lỗi. {{count}} tệp{{plural}} không thể lưu."
 confirmPasswordErrorMessage = "Mật khẩu mới và Xác nhận mật khẩu mới phải khớp nhau."
 custom = "Tùy chỉnh..."
 customPosition = "Vị trí tùy chỉnh"
@@ -42,11 +42,12 @@ downloadComplete = "Tải xuống hoàn tất"
 downloadPdf = "Tải xuống PDF"
 downloadUnavailable = "Không thể tải xuống mục này"
 edit = "Chỉnh sửa"
+editSecret = "Edit this value"
 editYourNewFiles = "Chỉnh sửa tệp mới của bạn"
 exportAndContinue = "Xuất và tiếp tục"
 false = "Sai"
-fileSavedToDisk = "Tệp đã được lưu vào ổ đĩa"
 fileNotSavedToDisk = "Chưa lưu vào ổ đĩa"
+fileSavedToDisk = "Tệp đã được lưu vào ổ đĩa"
 fileSelected = "Đã chọn: {{filename}}"
 filesSelected = "tệp đã chọn"
 font = "Phông chữ"
@@ -841,6 +842,14 @@ title = "Endpoint API"
 userDefaults = "Mặc định tùy chọn người dùng"
 userDefaultsDescription = "Đặt các giá trị mặc định cho tùy chọn người dùng. Người dùng có thể ghi đè chúng trong cài đặt cá nhân."
 
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Loại bỏ các tùy chọn chuyển đổi bị vô hiệu hóa thay vì hiển thị chúng dưới dạng mờ"
+label = "Ẩn các chuyển đổi không khả dụng theo mặc định"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Loại bỏ các công cụ bị vô hiệu hóa thay vì hiển thị chúng dưới dạng mờ"
+label = "Ẩn các công cụ không khả dụng theo mặc định"
+
 [admin.settings.endpoints.groupsToRemove]
 description = "Chọn các nhóm endpoint để tắt"
 label = "Nhóm endpoint đã tắt"
@@ -848,14 +857,6 @@ label = "Nhóm endpoint đã tắt"
 [admin.settings.endpoints.toRemove]
 description = "Chọn các endpoint riêng lẻ để tắt"
 label = "Endpoint đã tắt"
-
-[admin.settings.endpoints.defaultHideUnavailableTools]
-description = "Loại bỏ các công cụ bị vô hiệu hóa thay vì hiển thị chúng dưới dạng mờ"
-label = "Ẩn các công cụ không khả dụng theo mặc định"
-
-[admin.settings.endpoints.defaultHideUnavailableConversions]
-description = "Loại bỏ các tùy chọn chuyển đổi bị vô hiệu hóa thay vì hiển thị chúng dưới dạng mờ"
-label = "Ẩn các chuyển đổi không khả dụng theo mặc định"
 
 [admin.settings.enterpriseRequired]
 message = "Yêu cầu giấy phép Enterprise để truy cập {{featureName}}. Bạn đang xem dữ liệu demo để tham khảo."
@@ -1228,6 +1229,14 @@ label = "Tên người dùng ban đầu"
 [admin.settings.security.jwt]
 label = "Cấu hình JWT"
 
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Dung sai đối với độ lệch thời gian giữa máy khách/máy chủ trong quá trình xác thực token (mặc định: 60 giây)"
+label = "Dung sai độ lệch đồng hồ (giây)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Thời hạn token truy cập tính theo phút cho máy khách máy tính để bàn. Ứng dụng desktop được tự động phát hiện qua User-Agent và nhận phiên lâu hơn để có UX tốt hơn (mặc định: 43200 = 30 ngày)"
+label = "Thời hạn Token Máy tính để bàn (phút)"
+
 [admin.settings.security.jwt.enableKeyCleanup]
 description = "Tự động xóa khóa JWT đã hết hạn"
 label = "Bật dọn dẹp khóa"
@@ -1236,29 +1245,21 @@ label = "Bật dọn dẹp khóa"
 description = "Tự động xoay vòng khóa ký JWT định kỳ"
 label = "Bật xoay vòng khóa"
 
-[admin.settings.security.jwt.tokenExpiryMinutes]
-description = "Thời hạn token truy cập tính theo phút cho máy khách web (mặc định: 1440 = 24 giờ)"
-label = "Thời hạn Token Web (phút)"
-
-[admin.settings.security.jwt.desktopTokenExpiryMinutes]
-description = "Thời hạn token truy cập tính theo phút cho máy khách máy tính để bàn. Ứng dụng desktop được tự động phát hiện qua User-Agent và nhận phiên lâu hơn để có UX tốt hơn (mặc định: 43200 = 30 ngày)"
-label = "Thời hạn Token Máy tính để bàn (phút)"
-
-[admin.settings.security.jwt.allowedClockSkewSeconds]
-description = "Dung sai đối với độ lệch thời gian giữa máy khách/máy chủ trong quá trình xác thực token (mặc định: 60 giây)"
-label = "Dung sai độ lệch đồng hồ (giây)"
+[admin.settings.security.jwt.persistence]
+description = "Lưu trữ khóa JWT bền vững để tồn tại qua lần khởi động lại máy chủ"
+label = "Bật lưu trữ khóa"
 
 [admin.settings.security.jwt.refreshGraceMinutes]
 description = "Cho phép làm mới token trong số phút này sau khi hết hạn (mặc định: 15 phút, tối đa 3 lần thử)"
 label = "Khoảng ân hạn làm mới (phút)"
 
-[admin.settings.security.jwt.persistence]
-description = "Lưu trữ khóa JWT bền vững để tồn tại qua lần khởi động lại máy chủ"
-label = "Bật lưu trữ khóa"
-
 [admin.settings.security.jwt.secureCookie]
 description = "Yêu cầu HTTPS cho cookie JWT (khuyến nghị cho môi trường sản xuất)"
 label = "Cookie an toàn"
+
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Thời hạn token truy cập tính theo phút cho máy khách web (mặc định: 1440 = 24 giờ)"
+label = "Thời hạn Token Web (phút)"
 
 [admin.settings.security.loginAttemptCount]
 description = "Số lần đăng nhập thất bại tối đa trước khi khóa tài khoản"
@@ -2238,6 +2239,9 @@ title = "Thay đổi quyền"
 [changePermissions.tooltip.warning]
 text = "Để các quyền này không bị thay đổi, hãy dùng công cụ Thêm mật khẩu để đặt mật khẩu chủ sở hữu."
 
+[cloudBadge]
+tooltip = "This operation will use your cloud credits"
+
 [colorPicker]
 title = "Chọn màu"
 
@@ -2254,9 +2258,11 @@ copy = "Sao chép"
 done = "Xong"
 error = "Lỗi"
 expand = "Mở rộng"
+learnMore = "Learn more"
 lines = "dòng"
 loading = "Đang tải..."
 next = "Tiếp"
+operation = "this operation"
 preview = "Xem trước"
 previous = "Trước"
 refresh = "Làm mới"
@@ -2670,6 +2676,77 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
+[credits]
+enableOverageBilling = "Enable Overage Billing"
+maybeLater = "Maybe later"
+upgrade = "Upgrade"
+
+[credits.insufficient]
+brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
+freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
+managedMember = "Please contact your team leader for assistance."
+message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
+messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
+teamMember = "Enable overage billing to never run out of credits."
+title = "Insufficient Credits"
+
+[credits.modal]
+advancedMonitoring = "Advanced monitoring"
+allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
+apiSandbox = "API sandbox"
+contactSales = "Contact Sales"
+creditsRemaining = "{{current}} of {{total}} remaining"
+creditsThisMonth = "Monthly credits"
+current = "Current Plan"
+customPricing = "Custom"
+customSmartFolders = "Custom Smart Folders"
+dedicatedSupportSlas = "Dedicated support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+fasterThroughput = "10x faster throughput"
+forRegularWork = "For regular PDF work:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Fully private files"
+largeFileProcessing = "Large file processing"
+managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
+managedMemberTitle = "Unlimited Credits"
+meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
+meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
+meteringIncluded = "{{credits}} credits/month included with Team"
+meteringNeverRunOut = "Never run out of credits"
+meteringNoCommitment = "No commitment, cancel anytime"
+meteringPayAsYouGo = "Only pay for what you use"
+meteringPrice = "Additional credits at {{price}}/credit"
+meteringTitle = "Pay-What-You-Use Overage Billing"
+monthlyCredits = "monthly credits"
+orgWideAccess = "Org-wide access controls"
+overage = "overage"
+perMonth = "/month"
+popular = "Popular"
+premiumAiModels = "Premium AI models"
+prioritySupport = "Priority support"
+privateDocCloud = "Private Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Secure API access"
+selfHostLink = "Review the docs and plans"
+selfHostPrompt = "Want to self host?"
+standardThroughput = "Standard throughput"
+subtitle = "Upgrade to Team for 10x the credits and faster processing."
+subtitlePro = "Enable automatic overage billing to never run out of credits."
+teamLeaderOnly = "Only team leaders can enable overage billing"
+teamSubscription = "Team"
+titleExhausted = "You've used your free credits"
+titleExhaustedPro = "You have run out of credits"
+unlimitedApiAccess = "Unlimited API access"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unlimited seats"
+
+[credits.modal.features]
+everythingInCredits = "Everything in Credits, plus:"
+everythingInFree = "Everything in Free, plus:"
+forRegularWork = "For regular PDF work:"
+
 [crop]
 autoCrop = "Tự động cắt khoảng trắng"
 header = "Cắt cúp PDF"
@@ -2920,6 +2997,7 @@ copyStack = "Sao chép Stack Trace"
 discordSubmit = "Discord - Gửi bài đăng hỗ trợ"
 dismissAllErrors = "Bỏ qua tất cả lỗi"
 encryptedPdfMustRemovePassword = "PDF này đã được mã hóa hoặc bảo vệ bằng mật khẩu. Vui lòng mở khóa trước khi chuyển đổi sang PDF/A."
+generic = "An error occurred"
 github = "Gửi ticket trên GitHub"
 githubSubmit = "GitHub - Gửi ticket"
 incorrectPasswordProvided = "Mật khẩu PDF không đúng hoặc chưa được cung cấp."
@@ -3346,10 +3424,6 @@ desc = "Xây dựng quy trình nhiều bước bằng cách xâu chuỗi các th
 tags = "quy trình,trình tự,tự động hóa"
 title = "Tự động hóa"
 
-[home.formFill]
-desc = "Điền các trường biểu mẫu PDF một cách tương tác bằng trình chỉnh sửa trực quan"
-title = "Điền biểu mẫu"
-
 [home.autoRename]
 desc = "Tự động đổi tên tệp PDF dựa trên tiêu đề được phát hiện"
 tags = "tự động phát hiện,dựa trên tiêu đề,tổ chức,đổi nhãn"
@@ -3444,6 +3518,10 @@ title = "Trích xuất trang"
 desc = "Xóa tất cả các phần tử tương tác và biểu mẫu từ PDF"
 tags = "làm phẳng,loại bỏ,tương tác"
 title = "Làm phẳng"
+
+[home.formFill]
+desc = "Điền các trường biểu mẫu PDF một cách tương tác bằng trình chỉnh sửa trực quan"
+title = "Điền biểu mẫu"
 
 [home.getPdfInfo]
 desc = "Lấy bất kỳ và tất cả thông tin có thể về PDF"
@@ -4247,75 +4325,6 @@ title = "Trình chỉnh sửa trang"
 zoomIn = "Phóng to"
 zoomOut = "Thu nhỏ"
 
-[viewer]
-cannotPreviewFile = "Không thể xem trước tệp"
-dualPageView = "Chế độ xem hai trang"
-firstPage = "Trang đầu"
-lastPage = "Trang cuối"
-nextPage = "Trang tiếp"
-onlyPdfSupported = "Trình xem chỉ hỗ trợ tệp PDF. Tệp này có vẻ là định dạng khác."
-previousPage = "Trang trước"
-singlePageView = "Chế độ xem trang đơn"
-unknownFile = "Tệp không xác định"
-zoomIn = "Phóng to"
-zoomOut = "Thu nhỏ"
-
-[viewer.attachments]
-title = "Tệp đính kèm"
-searchPlaceholder = "Tìm kiếm tệp đính kèm"
-noSupport = "Trình xem này không hỗ trợ tệp đính kèm."
-noDocument = "Mở một PDF để xem các tệp đính kèm của nó."
-loading = "Đang tải tệp đính kèm..."
-empty = "Không có tệp đính kèm trong tài liệu này"
-noMatch = "Không có tệp đính kèm nào khớp với tìm kiếm của bạn"
-
-[viewer.formBar]
-title = "Trường biểu mẫu"
-unsavedBadge = "Chưa lưu"
-unsavedDesc = "Bạn có các thay đổi chưa được lưu"
-hasFieldsDesc = "PDF này chứa các trường có thể điền"
-dismiss = "Bỏ qua"
-apply = "Áp dụng thay đổi"
-download = "Tải xuống PDF"
-
-[rightRail]
-closeSelected = "Đóng các tệp đã chọn"
-selectAll = "Chọn tất cả"
-deselectAll = "Bỏ chọn tất cả"
-selectByNumber = "Chọn theo số trang"
-deleteSelected = "Xóa các trang đã chọn"
-closePdf = "Đóng PDF"
-exportAll = "Xuất PDF"
-downloadSelected = "Tải xuống các tệp đã chọn"
-annotations = "Chú thích"
-exportSelected = "Xuất các trang đã chọn"
-formFill = "Điền biểu mẫu"
-saveChanges = "Lưu thay đổi"
-toggleAttachments = "Bật/Tắt tệp đính kèm"
-toggleTheme = "Chuyển đổi chủ đề"
-language = "Ngôn ngữ"
-toggleAnnotations = "Chuyển đổi hiển thị chú thích"
-search = "Tìm kiếm PDF"
-panMode = "Chế độ kéo"
-applyRedactionsFirst = "Áp dụng bôi đen trước"
-rotateLeft = "Xoay trái"
-rotateRight = "Xoay phải"
-toggleSidebar = "Chuyển đổi thanh bên"
-toggleBookmarks = "Bật/tắt dấu trang"
-print = "In PDF"
-ruler = "Thước / Đo"
-draw = "Vẽ"
-redact = "Bôi đen"
-exitRedaction = "Thoát chế độ bôi đen"
-save = "Lưu"
-downloadAll = "Tải xuống tất cả"
-saveAll = "Lưu tất cả"
-
-[textAlign]
-left = "Trái"
-center = "Giữa"
-right = "Phải"
-
 [pageExtracter]
 header = "Trích xuất trang"
 placeholder = "(ví dụ: 1,2,8 hoặc 4,7,12-16 hoặc 2n-1)"
@@ -4424,6 +4433,9 @@ title = "Mẹo"
 autoClose = "Cửa sổ này sẽ tự động đóng..."
 billingPeriod = "Chu kỳ thanh toán"
 canCloseWindow = "Bạn có thể đóng cửa sổ này."
+checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
+checkoutOpened = "Checkout Opened in Browser"
+closeLater = "I'll Do This Later"
 emailInvalid = "Vui lòng nhập địa chỉ email hợp lệ"
 enterpriseNote = "Có thể điều chỉnh số ghế khi thanh toán (1-1000)."
 error = "Lỗi thanh toán"
@@ -4445,6 +4457,7 @@ perMonth = "/tháng"
 perYear = "/năm"
 preparing = "Đang chuẩn bị thanh toán của bạn..."
 redirecting = "Đang chuyển đến trang thanh toán an toàn..."
+refreshBilling = "I've Completed Payment - Refresh Billing"
 stripeNotConfigured = "Chưa cấu hình Stripe"
 stripeNotConfiguredMessage = "Tích hợp thanh toán Stripe chưa được cấu hình. Vui lòng liên hệ quản trị viên."
 success = "Thanh toán thành công!"
@@ -4777,6 +4790,13 @@ title = "PDF sang Word"
 [PDFToWord.selectText]
 1 = "Định dạng tệp đầu ra"
 
+[PDFToXLSX]
+header = "PDF to Excel"
+prompt = "Choose pages to extract tables"
+submit = "Convert"
+tags = "spreadsheet,excel,xlsx,table,extract,convert"
+title = "PDF to Excel (XLSX)"
+
 [PDFToXML]
 credit = "Dịch vụ này sử dụng LibreOffice để chuyển đổi tệp."
 header = "PDF sang XML"
@@ -4835,6 +4855,7 @@ customPricing = "Tùy chỉnh"
 featureComparison = "So sánh tính năng"
 from = "Từ"
 hideComparison = "Ẩn so sánh tính năng"
+included = "Included"
 includedInCurrent = "Bao gồm trong gói của bạn"
 licensedSeats = "Đã cấp phép: {{count}} ghế"
 manage = "Quản lý"
@@ -4851,6 +4872,7 @@ subtitle = "Chi tiết đăng ký hiện tại của bạn"
 title = "Gói đang hoạt động"
 
 [plan.availablePlans]
+loadError = "Unable to load plan pricing. Using default values."
 subtitle = "Chọn gói phù hợp với nhu cầu của bạn"
 title = "Các gói khả dụng"
 
@@ -4861,6 +4883,7 @@ highlight3 = "Tính năng mới nhất"
 name = "Enterprise"
 requiresServer = "Cần Server"
 requiresServerMessage = "Vui lòng nâng cấp lên gói Server trước khi nâng cấp lên Enterprise."
+siteLicense = "Site License"
 
 [plan.feature]
 api = "Quyền truy cập API"
@@ -4928,6 +4951,10 @@ keyDescription = "Dán khóa giấy phép từ email của bạn"
 success = "Đã kích hoạt giấy phép!"
 successMessage = "Giấy phép của bạn đã được kích hoạt thành công. Bạn có thể đóng cửa sổ này."
 
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
 [printFile]
 header = "In tệp vào máy in"
 submit = "In"
@@ -4992,15 +5019,15 @@ title = "Từ cần che"
 failed = "Đã xảy ra lỗi khi che thông tin trong PDF."
 
 [redact.manual]
+activate = "Kích hoạt công cụ che"
+active = "Chế độ che đang bật"
 apply = "Áp dụng"
 applyChanges = "Áp dụng thay đổi"
 applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Áp dụng vĩnh viễn, không thể hoàn tác và dữ liệu bên dưới sẽ bị xóa"
 boxRedaction = "Vẽ hộp để che"
-colourPicker = "Bộ chọn màu"
 colorLabel = "Màu che"
-active = "Chế độ che đang bật"
-activate = "Kích hoạt công cụ che"
+colourPicker = "Bộ chọn màu"
 controlsTitle = "Điều khiển bôi đen thủ công"
 convertPDFToImageLabel = "Chuyển PDF thành PDF-Image (Dùng để xóa văn bản phía sau hộp)"
 export = "Xuất"
@@ -5396,6 +5423,39 @@ title = "Tương phản cao"
 text = "Đảo hoàn toàn tất cả màu trong PDF, tạo hiệu ứng giống âm bản. Hữu ích để tạo phiên bản chế độ tối hoặc giảm mỏi mắt trong điều kiện thiếu sáng."
 title = "Đảo tất cả màu"
 
+[rightRail]
+annotations = "Chú thích"
+applyRedactionsFirst = "Áp dụng bôi đen trước"
+closePdf = "Đóng PDF"
+closeSelected = "Đóng các tệp đã chọn"
+deleteSelected = "Xóa các trang đã chọn"
+deselectAll = "Bỏ chọn tất cả"
+downloadAll = "Tải xuống tất cả"
+downloadSelected = "Tải xuống các tệp đã chọn"
+draw = "Vẽ"
+exitRedaction = "Thoát chế độ bôi đen"
+exportAll = "Xuất PDF"
+exportSelected = "Xuất các trang đã chọn"
+formFill = "Điền biểu mẫu"
+language = "Ngôn ngữ"
+panMode = "Chế độ kéo"
+print = "In PDF"
+redact = "Bôi đen"
+rotateLeft = "Xoay trái"
+rotateRight = "Xoay phải"
+ruler = "Thước / Đo"
+save = "Lưu"
+saveAll = "Lưu tất cả"
+saveChanges = "Lưu thay đổi"
+search = "Tìm kiếm PDF"
+selectAll = "Chọn tất cả"
+selectByNumber = "Chọn theo số trang"
+toggleAnnotations = "Chuyển đổi hiển thị chú thích"
+toggleAttachments = "Bật/Tắt tệp đính kèm"
+toggleBookmarks = "Bật/tắt dấu trang"
+toggleSidebar = "Chuyển đổi thanh bên"
+toggleTheme = "Chuyển đổi chủ đề"
+
 [rotate]
 rotateLeft = "Xoay ngược chiều kim đồng hồ"
 rotateRight = "Xoay theo chiều kim đồng hồ"
@@ -5647,6 +5707,70 @@ plan = "Gói"
 title = "Giấy phép & Phân tích"
 usageAnalytics = "Phân tích sử dụng"
 
+[settings.planBilling]
+currentPlan = "Current Plan"
+loading = "Loading billing information..."
+notAvailable = "Plan & Billing is only available when connected to Stirling Cloud (SaaS mode)."
+title = "Plan & Billing"
+
+[settings.planBilling.billing]
+manageBilling = "Manage Billing"
+nextBillingDate = "Next billing date"
+overageCost = "Current overage cost: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Estimated cost: {{amount}}"
+freeTierInfo = "Free plan includes {{freeCredits}} credits per month. Upgrade to Team for {{teamCredits}} credits/month and pay-as-you-go overage billing."
+included = "{{count}} credits/month (included)"
+noOverage = "No overage charges this month. You're using your included {{count}} credits."
+overage = "+ {{count}} overage"
+overageInfo = "Overage credits are billed at {{price}} per credit. You'll only pay for what you use beyond your monthly allowance."
+title = "Credit Usage"
+
+[settings.planBilling.errors]
+fetchFailed = "Unable to fetch billing data"
+retry = "Retry"
+
+[settings.planBilling.status]
+active = "Active"
+canceled = "Canceled"
+pastDue = "Past Due"
+trial = "Trial"
+
+[settings.planBilling.team]
+managedByTeam = "Managed by team"
+memberCount = "{{count}} team members"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Custom enterprise features and support"
+free = "Free"
+freeDescription = "50 credits per month"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/month included, automatic overage billing for uninterrupted service"
+teamTooltipCredits = "Team plan includes {{credits}} credits/month."
+teamTooltipFineprint = "Only pay for what you use beyond included credits."
+teamTooltipOverage = "Automatic overage billing at {{price}}/credit ensures uninterrupted service."
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} days remaining"
+daysRemainingFull = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+endsOn = "Trial ends"
+title = "Free Trial Active"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade to Team"
+featureApi = "API access for automation"
+featureCredits = "{{teamCredits}} credits per month (vs {{freeCredits}} on Free)"
+featureMembers = "Unlimited team members"
+featureSupport = "Priority support"
+featureThroughput = "Faster processing throughput"
+opensInBrowser = "Opens in browser to complete upgrade"
+subtitle = "Upgrade to Team for:"
+title = "Upgrade Your Plan"
+
 [settings.policiesPrivacy]
 legal = "Pháp lý"
 privacy = "Quyền riêng tư"
@@ -5679,6 +5803,9 @@ connections = "Kết nối"
 security = "Bảo mật"
 telegram = "Telegram"
 title = "Bảo mật & Xác thực"
+
+[settings.team]
+title = "Team"
 
 [settings.tooltips]
 enableLoginFirst = "Bật chế độ đăng nhập trước"
@@ -6016,6 +6143,11 @@ desc = "Trích xuất các trang cụ thể (1,3,5-10)"
 name = "Số trang"
 tooltip = "Nhập số trang, phân tách bằng dấu phẩy hoặc khoảng bằng dấu gạch ngang"
 
+[split.methods.byPoster]
+desc = "Split large pages into printable sizes"
+name = "Printable Chunks"
+tooltip = "Divide oversized pages into smaller chunks suitable for printing on standard paper (A4, Letter, etc.)"
+
 [split.methods.bySections]
 desc = "Chia trang thành các ô lưới"
 name = "Phần"
@@ -6029,6 +6161,7 @@ tooltip = "Chỉ định kích thước tệp tối đa (ví dụ: 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Chia tại"
 splitBy = "Chia theo"
+splitInto = "Split into"
 
 [split.methodSelection.tooltip]
 bullet1 = "Nhấp vào một thẻ phương thức để chọn"
@@ -6040,6 +6173,21 @@ title = "Chọn phương thức chia của bạn"
 [split.methodSelection.tooltip.header]
 text = "Chọn cách bạn muốn chia tài liệu PDF. Mỗi phương thức được tối ưu cho trường hợp sử dụng và loại tài liệu khác nhau."
 title = "Chọn phương thức chia"
+
+[split.poster]
+rightToLeft = "Split right-to-left"
+
+[split.poster.pageSize]
+description = "Size of output pages for printing"
+label = "Target Page Size"
+
+[split.poster.xFactor]
+description = "Number of columns to split each page into"
+label = "Horizontal Divisions"
+
+[split.poster.yFactor]
+description = "Number of rows to split each page into"
+label = "Vertical Divisions"
 
 [split.settings]
 selectMethodFirst = "Vui lòng chọn một phương thức chia trước"
@@ -6091,6 +6239,14 @@ bullet2 = "Điểm chia theo khoảng: 3-8 (chia trước trang 3 và sau trang 
 bullet3 = "Kết hợp: 2,5-10,15 (chia sau trang 2, trước trang 5, sau trang 10 và sau trang 15)"
 text = "Chia PDF tại các số trang cụ thể. Dùng 'n' để chia sau trang n. Dùng 'n-m' để chia trước trang n và sau trang m."
 title = "Chia tại số trang"
+
+[split.tooltip.byPoster]
+bullet1 = "Target Page Size: Choose output paper size (A4, Letter, etc.)"
+bullet2 = "Horizontal/Vertical Divisions: Grid size for splitting"
+bullet3 = "Right-to-Left: Reverse column order for RTL layouts"
+bullet4 = "Print and assemble the pieces to create your poster"
+text = "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."
+title = "Split for Poster Print"
 
 [split.tooltip.bySections]
 bullet1 = "Ngang: Số hàng cần tạo"
@@ -6232,6 +6388,82 @@ title = "Tài liệu API"
 
 [tableExtraxt]
 tags = "CSV,Trích xuất bảng,trích xuất,chuyển đổi"
+
+[team]
+cancelInviteError = "Failed to cancel invitation"
+confirmCancelInvite = "Are you sure you want to cancel this invitation?"
+confirmLeave = "Are you sure you want to leave this team?"
+confirmLeaveLeader = "As a team leader, leaving will remove you from the team. Are you sure?"
+confirmRemove = "Are you sure you want to remove this member?"
+editName = "Edit team name"
+inviteCancelled = "Invitation cancelled"
+inviteError = "Failed to send invitation"
+inviteSent = "Invitation sent successfully"
+leader = "Leader"
+leaveButton = "Leave Team"
+leaveError = "Failed to leave team"
+leaveSuccess = "Successfully left team"
+loading = "Loading team information..."
+memberCount = "{{count}} members"
+memberRemoved = "Member removed successfully"
+namePlaceholder = "Enter team name"
+personal = "Personal"
+removeError = "Failed to remove member"
+renameError = "Failed to rename team"
+renameSuccess = "Team renamed successfully"
+
+[team.features]
+badge = "Team Features"
+subtitle = "Collaborate with your team"
+title = "Team Collaboration"
+viewPlans = "View Plans"
+
+[team.features.billing]
+description = "Manage billing and subscriptions"
+title = "Billing Management"
+
+[team.features.credits]
+description = "Shared credit pool for all members"
+title = "Shared Credits"
+
+[team.features.dashboard]
+description = "View team activity and usage"
+title = "Team Dashboard"
+
+[team.features.invite]
+description = "Add members to your team"
+title = "Invite Members"
+
+[team.invitationBanner]
+acceptButton = "Accept"
+message = "has invited you to join"
+rejectButton = "Decline"
+
+[team.invite]
+cancelLabel = "Cancel"
+invalidEmail = "Invalid email address"
+placeholder = "Enter email address"
+sendButton = "Send Invitation"
+title = "Invite Team Member"
+
+[team.members]
+emailColumn = "Email"
+empty = "No team members yet"
+nameColumn = "Name"
+pending = "Pending"
+remove = "Remove"
+roleColumn = "Role"
+title = "Team Members"
+
+[team.upgrade]
+button = "Upgrade to Team"
+description = "Unlock team collaboration features"
+title = "Upgrade to Team Plan"
+
+[textAlign]
+center = "Giữa"
+left = "Trái"
+right = "Phải"
 
 [theme]
 toggle = "Chuyển đổi chủ đề"
@@ -6507,6 +6739,37 @@ invalid = "Chứng chỉ không có trong kho tin cậy - không thể xác minh
 fileManager = "Trình quản lý tệp"
 pageEditor = "Trình chỉnh sửa trang"
 viewer = "Trình xem"
+
+[viewer]
+cannotPreviewFile = "Không thể xem trước tệp"
+dualPageView = "Chế độ xem hai trang"
+firstPage = "Trang đầu"
+lastPage = "Trang cuối"
+nextPage = "Trang tiếp"
+onlyPdfSupported = "Trình xem chỉ hỗ trợ tệp PDF. Tệp này có vẻ là định dạng khác."
+previousPage = "Trang trước"
+singlePageView = "Chế độ xem trang đơn"
+unknownFile = "Tệp không xác định"
+zoomIn = "Phóng to"
+zoomOut = "Thu nhỏ"
+
+[viewer.attachments]
+empty = "Không có tệp đính kèm trong tài liệu này"
+loading = "Đang tải tệp đính kèm..."
+noDocument = "Mở một PDF để xem các tệp đính kèm của nó."
+noMatch = "Không có tệp đính kèm nào khớp với tìm kiếm của bạn"
+noSupport = "Trình xem này không hỗ trợ tệp đính kèm."
+searchPlaceholder = "Tìm kiếm tệp đính kèm"
+title = "Tệp đính kèm"
+
+[viewer.formBar]
+apply = "Áp dụng thay đổi"
+dismiss = "Bỏ qua"
+download = "Tải xuống PDF"
+hasFieldsDesc = "PDF này chứa các trường có thể điền"
+title = "Trường biểu mẫu"
+unsavedBadge = "Chưa lưu"
+unsavedDesc = "Bạn có các thay đổi chưa được lưu"
 
 [viewPdf]
 header = "Xem PDF"
