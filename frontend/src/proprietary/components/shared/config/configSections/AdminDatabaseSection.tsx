@@ -10,7 +10,6 @@ import {
   Loader,
   Group,
   TextInput,
-  PasswordInput,
   Select,
   Badge,
   Table,
@@ -29,6 +28,7 @@ import { useAdminSettings } from "@app/hooks/useAdminSettings";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
+import EditableSecretField from "@app/components/shared/EditableSecretField";
 import apiClient from "@app/services/apiClient";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import databaseManagementService, { DatabaseBackupFile } from "@app/services/databaseManagementService";
@@ -515,17 +515,15 @@ export default function AdminDatabaseSection() {
               </div>
 
               <div>
-                <PasswordInput
-                  label={
-                    <Group gap="xs">
-                      <span>{t("admin.settings.database.password.label", "Password")}</span>
-                      <PendingBadge show={isFieldPending("password")} />
-                    </Group>
-                  }
+                <Group gap="xs" align="center" mb={4}>
+                  <span style={{ fontWeight: 500, fontSize: "0.875rem" }}>{t("admin.settings.database.password.label", "Password")}</span>
+                  <PendingBadge show={isFieldPending("password")} />
+                </Group>
+                <EditableSecretField
                   description={t("admin.settings.database.password.description", "Database authentication password")}
                   value={settings?.password || ""}
-                  onChange={(e) => setSettings({ ...settings, password: e.target.value })}
-                  placeholder="••••••••"
+                  onChange={(value) => setSettings({ ...settings, password: value })}
+                  placeholder="Enter database password"
                   disabled={!loginEnabled}
                 />
               </div>
