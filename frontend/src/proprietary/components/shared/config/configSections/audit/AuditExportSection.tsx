@@ -7,7 +7,6 @@ import {
   Button,
   SegmentedControl,
   Checkbox,
-  Tooltip,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import auditService from '@app/services/auditService';

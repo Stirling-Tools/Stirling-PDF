@@ -161,8 +161,8 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
 
   // Apply sorting to current events
   const sortedEvents = [...events].sort((a, b) => {
-    let aVal: any = '';
-    let bVal: any = '';
+    let aVal: any;
+    let bVal: any;
 
     switch (sortKey) {
       case 'timestamp':
@@ -291,10 +291,8 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
                     let documentName = '';
                     let author = '';
                     let fileHash = '';
-                    let outcome = 'unknown';
                     if (event.details && typeof event.details === 'object') {
                       const details = event.details as Record<string, any>;
-                      outcome = details.outcome || details.status || 'unknown';
                       const files = details.files;
                       if (Array.isArray(files) && files.length > 0) {
                         const firstFile = files[0] as Record<string, any>;

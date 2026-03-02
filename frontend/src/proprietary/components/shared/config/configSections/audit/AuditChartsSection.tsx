@@ -20,9 +20,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
-  LineChart,
-  Line,
   ResponsiveContainer,
 } from 'recharts';
 import { useTranslation } from 'react-i18next';

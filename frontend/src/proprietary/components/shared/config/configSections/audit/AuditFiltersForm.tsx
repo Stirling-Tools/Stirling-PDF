@@ -1,5 +1,5 @@
 import React from 'react';
-import { Group, Select, MultiSelect, Button, Stack, SimpleGrid, Text } from '@mantine/core';
+import { Group, MultiSelect, Button, Stack, SimpleGrid, Text } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useTranslation } from 'react-i18next';
 import { AuditFilters } from '@app/services/auditService';
