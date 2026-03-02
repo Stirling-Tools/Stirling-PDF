@@ -11,6 +11,7 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.ResourcePatternResolver;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Ui;
@@ -125,6 +126,21 @@ class LanguageServiceBasicTest {
         Set<String> supportedLanguages = failingService.getSupportedLanguages();
 
         assertTrue(supportedLanguages.isEmpty(), "On IO failure, service should return empty set");
+    }
+
+    // Added by Pengcheng Xu: exercise the new resolver seam to avoid subclass-based stubbing.
+    @Test
+    void testGetSupportedLanguages_WithInjectedResolver_ReturnsExpectedLanguages_MoreTestable() throws Exception {
+        ResourcePatternResolver resolver = mock(ResourcePatternResolver.class);
+        when(resolver.getResources("classpath*:messages_*.properties"))
+                .thenReturn(new Resource[] {createMockResource("messages_en_US.properties")});
+        when(applicationProperties.getUi().getLanguages()).thenReturn(Collections.emptyList());
+
+        LanguageService directInjectionService = new LanguageService(applicationProperties);
+
+        Set<String> supportedLanguages = directInjectionService.getSupportedLanguagesWithResolver(resolver);
+
+        assertEquals(Collections.singleton("en_US"), supportedLanguages);
     }
 
     // Test subclass
