@@ -128,7 +128,8 @@ public class ControllerAuditAspect {
         HttpServletRequest req = attrs != null ? attrs.getRequest() : null;
         HttpServletResponse resp = attrs != null ? attrs.getResponse() : null;
 
-        // EARLY CAPTURE: Capture from SecurityContext on request thread, store in MDC for async propagation
+        // EARLY CAPTURE: Capture from SecurityContext on request thread, store in MDC for async
+        // propagation
         // MDC.put is necessary for background threads to inherit audit context
         String capturedPrincipal = MDC.get("auditPrincipal");
         if (capturedPrincipal == null) {
