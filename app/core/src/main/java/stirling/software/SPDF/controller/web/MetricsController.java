@@ -51,9 +51,19 @@ public class MetricsController {
             description =
                     "This endpoint returns the status of the application and its version number.")
     public ResponseEntity<?> getStatus() {
-        if (!metricsEnabled) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
-        }
+        return getApplicationStatus();
+    }
+
+    @GetMapping("/health")
+    @Operation(
+            summary = "Application health check",
+            description =
+                    "This endpoint returns the health status of the application and its version number. Mirrors /api/v1/info/status.")
+    public ResponseEntity<?> getHealth() {
+        return getApplicationStatus();
+    }
+
+    private ResponseEntity<?> getApplicationStatus() {
         Map<String, String> status = new HashMap<>();
         status.put("status", "UP");
         String version = getClass().getPackage().getImplementationVersion();
