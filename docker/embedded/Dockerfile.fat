@@ -245,7 +245,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Build all heavy python packages here
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install \
-      weasyprint pdf2image opencv-python-headless ocrmypdf \
+     weasyprint pdf2image opencv-python-headless ocrmypdf \
       "unoserver==${UNOSERVER_VERSION}"
 
 

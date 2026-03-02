@@ -113,10 +113,12 @@ class ConvertPDFToEpubControllerTest {
             ResponseEntity<byte[]> response = controller.convertPdfToEpub(request);
 
             List<String> command = commandCaptor.getValue();
-            assertEquals(11, command.size());
+            assertEquals(13, command.size());
             assertEquals("ebook-convert", command.get(0));
             assertEquals(expectedInput.toString(), command.get(1));
             assertEquals(expectedOutput.toString(), command.get(2));
+            assertTrue(command.contains("--pdf-engine"));
+            assertTrue(command.contains("pdftohtml"));
             assertTrue(command.contains("--enable-heuristics"));
             assertTrue(command.contains("--insert-blank-line"));
             assertTrue(command.contains("--filter-css"));
@@ -206,11 +208,13 @@ class ConvertPDFToEpubControllerTest {
             assertTrue(command.stream().noneMatch(arg -> "--chapter".equals(arg)));
             assertTrue(command.contains("--output-profile"));
             assertTrue(command.contains(TargetDevice.KINDLE_EINK_TEXT.getCalibreProfile()));
+            assertTrue(command.contains("--pdf-engine"));
+            assertTrue(command.contains("pdftohtml"));
             assertTrue(command.contains("--filter-css"));
             assertTrue(
                     command.contains(
                             "font-family,color,background-color,margin-left,margin-right"));
-            assertTrue(command.size() >= 9);
+            assertTrue(command.size() >= 11);
 
             assertEquals(EPUB_MEDIA_TYPE, response.getHeaders().getContentType());
             assertEquals(
@@ -289,6 +293,8 @@ class ConvertPDFToEpubControllerTest {
             assertEquals("ebook-convert", command.get(0));
             assertEquals(expectedInput.toString(), command.get(1));
             assertEquals(expectedOutput.toString(), command.get(2));
+            assertTrue(command.contains("--pdf-engine"));
+            assertTrue(command.contains("pdftohtml"));
             assertTrue(command.contains("--enable-heuristics"));
             assertTrue(command.contains("--insert-blank-line"));
             assertTrue(command.contains("--filter-css"));
