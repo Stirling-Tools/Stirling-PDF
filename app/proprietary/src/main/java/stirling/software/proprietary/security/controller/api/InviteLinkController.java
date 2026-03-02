@@ -358,27 +358,23 @@ public class InviteLinkController {
             Optional<InviteToken> inviteOpt = inviteTokenRepository.findByToken(token);
 
             if (inviteOpt.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("error", "Invalid invite link"));
+                return invalidInviteResponse();
             }
 
             InviteToken invite = inviteOpt.get();
 
             if (invite.isUsed()) {
-                return ResponseEntity.status(HttpStatus.GONE)
-                        .body(Map.of("error", "This invite link has already been used"));
+                return invalidInviteResponse();
             }
 
             if (invite.isExpired()) {
-                return ResponseEntity.status(HttpStatus.GONE)
-                        .body(Map.of("error", "This invite link has expired"));
+                return invalidInviteResponse();
             }
 
             // Check if user already exists (only if email is pre-set)
             if (invite.getEmail() != null
                     && userService.usernameExistsIgnoreCase(invite.getEmail())) {
-                return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .body(Map.of("error", "User already exists"));
+                return invalidInviteResponse();
             }
 
             Map<String, Object> response = new HashMap<>();
@@ -391,8 +387,7 @@ public class InviteLinkController {
 
         } catch (Exception e) {
             log.error("Failed to validate invite token: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to validate invite link"));
+            return invalidInviteResponse();
         }
     }
 
@@ -419,20 +414,17 @@ public class InviteLinkController {
             Optional<InviteToken> inviteOpt = inviteTokenRepository.findByToken(token);
 
             if (inviteOpt.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("error", "Invalid invite link"));
+                return invalidInviteResponse();
             }
 
             InviteToken invite = inviteOpt.get();
 
             if (invite.isUsed()) {
-                return ResponseEntity.status(HttpStatus.GONE)
-                        .body(Map.of("error", "This invite link has already been used"));
+                return invalidInviteResponse();
             }
 
             if (invite.isExpired()) {
-                return ResponseEntity.status(HttpStatus.GONE)
-                        .body(Map.of("error", "This invite link has expired"));
+                return invalidInviteResponse();
             }
 
             // Determine the email to use
@@ -455,8 +447,7 @@ public class InviteLinkController {
 
             // Check if user already exists
             if (userService.usernameExistsIgnoreCase(effectiveEmail)) {
-                return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .body(Map.of("error", "User already exists"));
+                return invalidInviteResponse();
             }
 
             // Create the user account
@@ -484,7 +475,12 @@ public class InviteLinkController {
         } catch (Exception e) {
             log.error("Failed to accept invite: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to create account: " + e.getMessage()));
+                    .body(Map.of("error", "Failed to create account"));
         }
+    }
+
+    private ResponseEntity<Map<String, String>> invalidInviteResponse() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "Invalid invite link"));
     }
 }

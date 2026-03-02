@@ -2,40 +2,50 @@
 # Single JAR contains both frontend and backend with minimal dependencies
 
 # Stage 1: Build application with embedded frontend
-FROM gradle:8.14-jdk21@sha256:051d9a116793bdc5175a3f97a545718b750489eee85a7da20913c8a53f722a72 AS build
+FROM gradle:9.3.1-jdk25 AS build
 
 # Install Node.js and npm for frontend build
-RUN apt-get update && apt-get install -y \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
+    && apt-get install -y --no-install-recommends nodejs \
     && npm --version \
     && node --version \
-    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy gradle files for dependency resolution
-COPY build.gradle .
-COPY settings.gradle .
-COPY gradlew .
-COPY gradle gradle/
-COPY app/core/build.gradle core/.
-COPY app/common/build.gradle common/.
-COPY app/proprietary/build.gradle proprietary/.
-RUN ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube || return 0
-
-# Set working directory
 WORKDIR /app
+
+# Copy gradle files for dependency resolution
+COPY build.gradle settings.gradle gradlew ./
+COPY gradle/                               gradle/
+COPY app/core/build.gradle                  app/core/
+COPY app/common/build.gradle                app/common/
+COPY app/proprietary/build.gradle           app/proprietary/
+
+# JDK 25+: --add-exports is no longer accepted via JAVA_TOOL_OPTIONS; use JDK_JAVA_OPTIONS instead
+ENV JDK_JAVA_OPTIONS="--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED \
+  --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED \
+  --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED \
+  --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED \
+  --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
+
+RUN --mount=type=cache,target=/home/gradle/.gradle/caches \
+    ./gradlew dependencies --no-daemon || true
 
 # Copy entire project
 COPY . .
 
 # Build ultra-lite JAR with embedded frontend (minimal features)
-RUN DISABLE_ADDITIONAL_FEATURES=true \
-    ./gradlew clean build -PbuildWithFrontend=true -x spotlessApply -x spotlessCheck -x test -x sonarqube
+RUN --mount=type=cache,target=/home/gradle/.gradle/caches \
+    DISABLE_ADDITIONAL_FEATURES=true \
+    ./gradlew clean build \
+      -PbuildWithFrontend=true \
+      -x spotlessApply -x spotlessCheck -x test -x sonarqube \
+      --no-daemon
 
 # Stage 2: Runtime image
-FROM alpine:3.23.3@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659
+FROM eclipse-temurin:25-jre-alpine
 
 ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8
@@ -43,30 +53,25 @@ ENV LANG=C.UTF-8 \
 ARG VERSION_TAG
 
 # Labels
-LABEL org.opencontainers.image.title="Stirling-PDF Ultra-Lite"
-LABEL org.opencontainers.image.description="Stirling-PDF with embedded frontend - Ultra-lite version with minimal dependencies"
-LABEL org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF"
-LABEL org.opencontainers.image.licenses="MIT"
-LABEL org.opencontainers.image.vendor="Stirling-Tools"
-LABEL org.opencontainers.image.url="https://www.stirlingpdf.com"
-LABEL org.opencontainers.image.documentation="https://docs.stirlingpdf.com"
-LABEL maintainer="Stirling-Tools"
-LABEL org.opencontainers.image.authors="Stirling-Tools"
-LABEL org.opencontainers.image.version="${VERSION_TAG}"
-LABEL org.opencontainers.image.keywords="PDF, manipulation, ultra-lite, API, Spring Boot, React"
-
-# Copy scripts
-COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
-COPY scripts/installFonts.sh /scripts/installFonts.sh
-COPY scripts/stirling-diagnostics.sh /scripts/stirling-diagnostics.sh
-
-# Copy built JAR from build stage
-COPY --from=build /app/app/core/build/libs/*.jar /app.jar
-COPY --from=build /app/build/libs/restart-helper.jar /restart-helper.jar
+LABEL org.opencontainers.image.title="Stirling-PDF Ultra-Lite" \
+      org.opencontainers.image.description="Stirling-PDF with embedded frontend - Ultra-lite version with minimal dependencies" \
+      org.opencontainers.image.source="https://github.com/Stirling-Tools/Stirling-PDF" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.vendor="Stirling-Tools" \
+      org.opencontainers.image.url="https://www.stirlingpdf.com" \
+      org.opencontainers.image.documentation="https://docs.stirlingpdf.com" \
+      maintainer="Stirling-Tools" \
+      org.opencontainers.image.authors="Stirling-Tools" \
+      org.opencontainers.image.version="${VERSION_TAG}" \
+      org.opencontainers.image.keywords="PDF, manipulation, ultra-lite, API, Spring Boot, React"
 
 # Environment Variables
+# NOTE: Memory flags (InitialRAMPercentage, MaxRAMPercentage, MaxMetaspaceSize)
+# are computed dynamically by init-without-ocr.sh based on container memory limits.
 ENV VERSION_TAG=$VERSION_TAG \
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:MaxRAMPercentage=75 -XX:InitiatingHeapOccupancyPercent=20 -XX:+G1PeriodicGCInvokesConcurrent -XX:G1PeriodicGCInterval=10000 -XX:+UseStringDeduplication -XX:G1PeriodicGCSystemLoadThreshold=70" \
+    STIRLING_JVM_PROFILE="balanced" \
+    _JVM_OPTS_BALANCED="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
+    _JVM_OPTS_PERFORMANCE="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+AlwaysPreTouch -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
     PUID=1000 \
@@ -90,18 +95,28 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     bash \
     curl \
     shadow \
-    su-exec \
-    openjdk21-jre && \
-    mkdir -p $HOME /configs /configs/heap_dumps /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf && \
+    su-exec && \
+    mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps && \
     mkdir -p /usr/share/fonts/opentype/noto && \
-    chmod +x /scripts/*.sh && \
     # User permissions
     addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
-    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /scripts /configs /customFiles /pipeline /tmp/stirling-pdf && \
-    chown stirlingpdfuser:stirlingpdfgroup /app.jar /restart-helper.jar
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /configs /customFiles /pipeline /tmp/stirling-pdf
+
+# Copy scripts and built artifacts after OS package layer to maximize cache reuse.
+COPY --chown=1000:1000 scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
+COPY --chown=1000:1000 scripts/installFonts.sh /scripts/installFonts.sh
+COPY --chown=1000:1000 scripts/stirling-diagnostics.sh /scripts/stirling-diagnostics.sh
+
+# Copy built JARs from build stage
+COPY --from=build --chown=1000:1000 \
+     /app/app/core/build/libs/*.jar /app.jar
+COPY --from=build --chown=1000:1000 \
+     /app/build/libs/restart-helper.jar /restart-helper.jar
+
+RUN chmod +x /scripts/*.sh
 
 EXPOSE 8080/tcp
 
 # Set user and run command
 ENTRYPOINT ["tini", "--", "/scripts/init-without-ocr.sh"]
-CMD ["java", "-Dfile.encoding=UTF-8", "-Djava.io.tmpdir=/tmp/stirling-pdf", "-jar", "/app.jar"]
+CMD []

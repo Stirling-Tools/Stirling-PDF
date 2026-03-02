@@ -38,6 +38,7 @@ export interface ExecuteButtonConfig {
   isVisible?: boolean;
   disabled?: boolean;
   testId?: string;
+  showCloudBadge?: boolean;
 }
 
 export interface ReviewStepConfig<TParams = unknown> {
@@ -105,6 +106,7 @@ export function createToolFlow<TParams = unknown>(config: ToolFlowConfig<TParams
             disabled={config.executeButton.disabled}
             loadingText={config.executeButton.loadingText}
             submitText={config.executeButton.text}
+            showCloudBadge={config.executeButton.showCloudBadge ?? config.review.operation.willUseCloud ?? false}
             data-testid={config.executeButton.testId}
             data-tour="run-button"
           />

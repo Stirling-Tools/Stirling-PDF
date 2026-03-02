@@ -2,7 +2,7 @@ import { useImperativeHandle, forwardRef, useEffect, useCallback, useRef, useSta
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype, uuidV4 } from '@embedpdf/models';
 import { useSignature } from '@app/contexts/SignatureContext';
-import type { SignatureAPI } from '@app/components/viewer/viewerTypes';
+import type { SignatureAPI, AnnotationRect } from '@app/components/viewer/viewerTypes';
 import type { SignParameters } from '@app/hooks/tools/sign/useSignParameters';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
@@ -393,6 +393,13 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
         console.error(`Error getting annotations for page ${pageIndex}:`, error);
         return [];
       }
+    },
+
+    moveAnnotation: (pageIndex: number, annotationId: string, newRect: AnnotationRect) => {
+      if (!annotationApi) return;
+      // v2.7.0: move signature stamp to newRect without regenerating the AP stream,
+      // preserving the original appearance (image data stays intact).
+      (annotationApi as any).moveAnnotation?.(pageIndex, annotationId, newRect);
     },
   }), [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults]);
 

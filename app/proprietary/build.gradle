@@ -1,5 +1,6 @@
 repositories {
     maven { url = "https://build.shibboleth.net/maven/releases" }
+    maven { url = "https://repository.jboss.org/" }
 }
 
 ext {
@@ -13,10 +14,10 @@ bootRun {
 spotless {
         java {
         target 'src/**/java/**/*.java'
+        targetExclude 'src/main/java/org/apache/**'
         googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
 
         importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
-        toggleOffOn()
         trimTrailingWhitespace()
         leadingTabsToSpaces()
         endWithNewline()
@@ -36,6 +37,7 @@ spotless {
 }
 dependencies {
     implementation project(':common')
+    api 'com.google.guava:guava:33.4.8-jre'
 
     api 'org.springframework:spring-jdbc'
     api 'org.springframework:spring-webmvc'
@@ -45,30 +47,27 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-jetty'
     api 'org.springframework.boot:spring-boot-starter-security'
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
-    api 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    api 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
     api 'org.springframework.boot:spring-boot-starter-mail'
     api 'org.springframework.boot:spring-boot-starter-cache'
     api 'com.github.ben-manes.caffeine:caffeine'
-    api 'io.swagger.core.v3:swagger-core-jakarta:2.2.42'
-    implementation 'com.bucket4j:bucket4j_jdk17-core:8.15.0'
+    api 'io.swagger.core.v3:swagger-core-jakarta:2.2.43'
+    implementation 'com.bucket4j:bucket4j_jdk17-core:8.16.1'
 
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
 
     api 'io.micrometer:micrometer-registry-prometheus'
-    implementation 'com.unboundid.product.scim2:scim2-sdk-client:4.1.0'
+    implementation 'com.unboundid.product.scim2:scim2-sdk-client:5.0.0'
 
     api "io.jsonwebtoken:jjwt-api:$jwtVersion"
     runtimeOnly "io.jsonwebtoken:jjwt-impl:$jwtVersion"
     runtimeOnly "io.jsonwebtoken:jjwt-jackson:$jwtVersion"
     runtimeOnly 'com.h2database:h2:2.3.232' // Don't upgrade h2database
-    runtimeOnly 'org.postgresql:postgresql:42.7.9'
-    constraints {
-        implementation "org.opensaml:opensaml-core:$openSamlVersion"
-        implementation "org.opensaml:opensaml-saml-api:$openSamlVersion"
-        implementation "org.opensaml:opensaml-saml-impl:$openSamlVersion"
+    runtimeOnly 'org.postgresql:postgresql:42.7.10'
+    implementation('com.coveo:saml-client:5.0.0') {
+        exclude group: 'org.opensaml', module: 'opensaml-core'
     }
-    implementation 'com.coveo:saml-client:5.0.0'
 }
 
 tasks.register('prepareKotlinBuildScriptModel') {}

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Stack, Text, Group, Button, Box, Popover, UnstyledButton, useMantineTheme, useMantineColorScheme } from "@mantine/core";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface FormatOption {
@@ -8,6 +9,7 @@ interface FormatOption {
   label: string;
   group: string;
   enabled?: boolean;
+  usesCloud?: boolean;
 }
 
 interface GroupedFormatDropdownProps {
@@ -145,10 +147,20 @@ const GroupedFormatDropdown = ({
                       fontSize: '0.75rem',
                       height: '2rem',
                       padding: '0 0.75rem',
-                      flexShrink: 0
+                      flexShrink: 0,
+                      position: 'relative'
                     }}
                   >
                     {option.label}
+                    {option.usesCloud && (
+                      <CloudOutlinedIcon
+                        style={{
+                          fontSize: '0.625rem',
+                          marginLeft: '0.25rem',
+                          opacity: 0.7
+                        }}
+                      />
+                    )}
                   </Button>
                 ))}
               </Group>
