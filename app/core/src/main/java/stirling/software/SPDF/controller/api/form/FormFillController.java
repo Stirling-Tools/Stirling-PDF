@@ -2,11 +2,14 @@ package stirling.software.SPDF.controller.api.form;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opencsv.CSVWriter;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,6 +35,9 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.WebResponseUtils;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping("/api/v1/form")
@@ -136,6 +142,117 @@ public class FormFillController {
             List<FormFieldWithCoordinates> fields =
                     FormUtils.extractFormFieldsWithCoordinates(document);
             return ResponseEntity.ok(fields);
+        }
+    }
+
+    @PostMapping(value = "/extract-csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Extract form fields as CSV",
+            description =
+                    "Returns a CSV file containing all form field names and their current values")
+    public ResponseEntity<byte[]> extractCsv(
+            @Parameter(
+                            description = "The input PDF file",
+                            required = true,
+                            content =
+                                    @Content(
+                                            mediaType = MediaType.APPLICATION_PDF_VALUE,
+                                            schema = @Schema(type = "string", format = "binary")))
+                    @RequestParam("file")
+                    MultipartFile file,
+            @RequestParam(value = "data", required = false) MultipartFile data)
+            throws IOException {
+
+        requirePdf(file);
+        try (PDDocument document = pdfDocumentFactory.load(file, true);
+                StringWriter sw = new StringWriter()) {
+
+            FormUtils.repairMissingWidgetPageReferences(document);
+
+            if (data != null && !data.isEmpty()) {
+                Map<String, String> values =
+                        objectMapper.readValue(
+                                data.getInputStream(), new TypeReference<Map<String, String>>() {});
+                FormUtils.applyFieldValues(document, values, false);
+            }
+
+            List<FormUtils.FormFieldInfo> fields = FormUtils.extractFormFields(document);
+
+            try (CSVWriter csvWriter = new CSVWriter(sw)) {
+                String[] header = {"Field Name", "Value"};
+                csvWriter.writeNext(header);
+
+                for (FormUtils.FormFieldInfo field : fields) {
+                    csvWriter.writeNext(new String[] {field.name(), field.value()});
+                }
+            }
+
+            byte[] csvBytes = sw.toString().getBytes(StandardCharsets.UTF_8);
+            String baseName = buildBaseName(file, "extracted");
+            return WebResponseUtils.bytesToWebResponse(
+                    csvBytes, baseName + ".csv", MediaType.parseMediaType("text/csv"));
+        }
+    }
+
+    @PostMapping(value = "/extract-xlsx", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Extract form fields as XLSX",
+            description =
+                    "Returns an Excel (XLSX) file containing all form field names and their current values")
+    public ResponseEntity<byte[]> extractXlsx(
+            @Parameter(
+                            description = "The input PDF file",
+                            required = true,
+                            content =
+                                    @Content(
+                                            mediaType = MediaType.APPLICATION_PDF_VALUE,
+                                            schema = @Schema(type = "string", format = "binary")))
+                    @RequestParam("file")
+                    MultipartFile file,
+            @RequestParam(value = "data", required = false) MultipartFile data)
+            throws IOException {
+
+        requirePdf(file);
+        try (PDDocument document = pdfDocumentFactory.load(file, true);
+                Workbook workbook = new XSSFWorkbook();
+                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+
+            FormUtils.repairMissingWidgetPageReferences(document);
+
+            if (data != null && !data.isEmpty()) {
+                Map<String, String> values =
+                        objectMapper.readValue(
+                                data.getInputStream(), new TypeReference<Map<String, String>>() {});
+                FormUtils.applyFieldValues(document, values, false);
+            }
+
+            List<FormUtils.FormFieldInfo> fields = FormUtils.extractFormFields(document);
+            Sheet sheet = workbook.createSheet("Form Fields");
+
+            // Header row
+            Row headerRow = sheet.createRow(0);
+            headerRow.createCell(0).setCellValue("Field Name");
+            headerRow.createCell(1).setCellValue("Value");
+
+            // Data rows
+            int rowNum = 1;
+            for (FormUtils.FormFieldInfo field : fields) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(field.name());
+                row.createCell(1).setCellValue(FormUtils.safeValue(field.value()));
+            }
+
+            // Auto-size columns
+            sheet.autoSizeColumn(0);
+            sheet.autoSizeColumn(1);
+
+            workbook.write(baos);
+            String baseName = buildBaseName(file, "extracted");
+            return WebResponseUtils.bytesToWebResponse(
+                    baos.toByteArray(),
+                    baseName + ".xlsx",
+                    MediaType.parseMediaType(
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
         }
     }
 

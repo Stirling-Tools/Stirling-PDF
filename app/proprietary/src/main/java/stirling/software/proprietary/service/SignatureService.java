@@ -15,14 +15,14 @@ import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.service.PersonalSignatureServiceInterface;
 import stirling.software.proprietary.model.api.signature.SavedSignatureRequest;
 import stirling.software.proprietary.model.api.signature.SavedSignatureResponse;
+
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Service for managing user signatures with authentication and storage limits. This proprietary
@@ -36,15 +36,16 @@ public class SignatureService implements PersonalSignatureServiceInterface {
     private static final Pattern FILENAME_VALIDATION_PATTERN = Pattern.compile("^[a-zA-Z0-9_.-]+$");
     private final String SIGNATURE_BASE_PATH;
     private final String ALL_USERS_FOLDER = "ALL_USERS";
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     // Storage limits per user
     private static final int MAX_SIGNATURES_PER_USER = 20;
     private static final long MAX_SIGNATURE_SIZE_BYTES = 2_000_000; // 2MB per signature
     private static final long MAX_TOTAL_USER_STORAGE_BYTES = 20_000_000; // 20MB total per user
 
-    public SignatureService() {
+    public SignatureService(ObjectMapper objectMapper) {
         SIGNATURE_BASE_PATH = InstallationPathConfig.getSignaturesPath();
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -246,6 +247,12 @@ public class SignatureService implements PersonalSignatureServiceInterface {
         }
 
         throw new FileNotFoundException("Signature metadata not found");
+    }
+
+    public boolean isSharedSignature(String signatureId) {
+        validateFileName(signatureId);
+        Path sharedFolder = Paths.get(SIGNATURE_BASE_PATH, ALL_USERS_FOLDER);
+        return Files.exists(sharedFolder.resolve(signatureId + ".json"));
     }
 
     private void updateMetadataLabel(Path metadataPath, String newLabel) throws IOException {

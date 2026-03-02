@@ -136,8 +136,10 @@ Feature: Filter API Endpoints
 
     # ---------------------------------------------------------------------------
     # filter-page-size
-    # Blank pages are 72x72 points (smaller than any standard page size).
-    # Pages with random text use LETTER (612x792 points).
+    # Blank pages use LETTER (612x792 points = 484704 sq pts), same as pages
+    # with random text. Standard page areas for reference:
+    #   A0 ~8031893 sq pts, A4 ~501168 sq pts, LEGAL 616896 sq pts,
+    #   LETTER 484704 sq pts, A6 ~124870 sq pts
     # ---------------------------------------------------------------------------
 
     @filter-page-size @positive
@@ -157,9 +159,20 @@ Feature: Filter API Endpoints
             | standardPageSize |
             | A0               |
             | A4               |
-            | A6               |
-            | LETTER           |
             | LEGAL            |
+
+    @filter-page-size @positive
+    Scenario: filter-page-size returns 200 when blank PDF equals LETTER size
+        Given I generate a PDF file as "fileInput"
+        And the pdf contains 2 pages
+        And the request data includes
+            | parameter        | value  |
+            | standardPageSize | LETTER |
+            | comparator       | Equal  |
+        When I send the API request to the endpoint "/api/v1/filter/filter-page-size"
+        Then the response status code should be 200
+        And the response content type should be "application/pdf"
+        And the response file should have size greater than 0
 
     @filter-page-size @positive
     Scenario: filter-page-size returns 200 when text PDF equals LETTER size
@@ -169,6 +182,19 @@ Feature: Filter API Endpoints
             | parameter        | value  |
             | standardPageSize | LETTER |
             | comparator       | Equal  |
+        When I send the API request to the endpoint "/api/v1/filter/filter-page-size"
+        Then the response status code should be 200
+        And the response content type should be "application/pdf"
+        And the response file should have size greater than 0
+
+    @filter-page-size @positive
+    Scenario: filter-page-size returns 200 when blank PDF is Greater than A6
+        Given I generate a PDF file as "fileInput"
+        And the pdf contains 2 pages
+        And the request data includes
+            | parameter        | value   |
+            | standardPageSize | A6      |
+            | comparator       | Greater |
         When I send the API request to the endpoint "/api/v1/filter/filter-page-size"
         Then the response status code should be 200
         And the response content type should be "application/pdf"
@@ -188,16 +214,15 @@ Feature: Filter API Endpoints
         Examples:
             | standardPageSize |
             | A4               |
-            | LETTER           |
             | LEGAL            |
 
     @filter-page-size @negative
-    Scenario: filter-page-size returns 204 when blank PDF is not Greater than any standard size
+    Scenario: filter-page-size returns 204 when blank PDF is not Greater than A4
         Given I generate a PDF file as "fileInput"
         And the pdf contains 2 pages
         And the request data includes
-            | parameter        | value  |
-            | standardPageSize | A6     |
+            | parameter        | value   |
+            | standardPageSize | A4      |
             | comparator       | Greater |
         When I send the API request to the endpoint "/api/v1/filter/filter-page-size"
         Then the response status code should be 204

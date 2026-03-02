@@ -26,8 +26,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.proprietary.security.model.AuthenticationType;
@@ -42,10 +40,13 @@ import stirling.software.proprietary.security.service.RefreshRateLimitService;
 import stirling.software.proprietary.security.service.TotpService;
 import stirling.software.proprietary.security.service.UserService;
 
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+
 @ExtendWith(MockitoExtension.class)
 class AuthControllerLoginTest {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     private MockMvc mockMvc;
     private ApplicationProperties.Security securityProperties;
@@ -148,7 +149,7 @@ class AuthControllerLoginTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Invalid credentials"));
+                .andExpect(jsonPath("$.error").value("Invalid username or password"));
 
         verify(loginAttemptService).loginFailed("user@example.com");
     }

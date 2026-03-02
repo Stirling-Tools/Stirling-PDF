@@ -916,6 +916,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           "markdown-to-pdf",
           "file-to-pdf",
           "pdf-to-csv",
+          "pdf-to-xlsx",
           "pdf-to-markdown",
           "pdf-to-pdfa",
           "eml-to-pdf",

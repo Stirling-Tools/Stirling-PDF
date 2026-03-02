@@ -37,7 +37,10 @@ export class PDFExportService {
       return { blob, filename: exportFilename };
     } catch (error) {
       console.error('PDF export error:', error);
-      throw new Error(`Failed to export PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to export PDF: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { cause: error }
+      );
     }
   }
 
@@ -68,7 +71,10 @@ export class PDFExportService {
       return { blob, filename: exportFilename };
     } catch (error) {
       console.error('Multi-file PDF export error:', error);
-      throw new Error(`Failed to export PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to export PDF: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { cause: error }
+      );
     }
   }
 

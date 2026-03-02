@@ -1,5 +1,5 @@
 import { openFileDialog } from '@app/services/fileDialogService';
-import { pendingFilePathMappings } from '@app/contexts/FileManagerContext';
+import { pendingFilePathMappings } from '@app/services/pendingFilePathMappings';
 import { getDocumentFileDialogFilter } from '@app/utils/fileDialogUtils';
 
 interface OpenFilesFromDiskOptions {

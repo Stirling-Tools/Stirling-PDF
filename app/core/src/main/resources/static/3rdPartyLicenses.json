@@ -215,6 +215,13 @@
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "com.github.virtuald:curvesapi",
+            "moduleUrl": "https://github.com/virtuald/curvesapi",
+            "moduleVersion": "1.08",
+            "moduleLicense": "BSD License",
+            "moduleLicenseUrl": "http://opensource.org/licenses/BSD-3-Clause"
+        },
+        {
             "moduleName": "com.google.code.findbugs:jsr305",
             "moduleUrl": "http://findbugs.sourceforge.net/",
             "moduleVersion": "3.0.2",
@@ -1009,6 +1016,13 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "org.apache.commons:commons-compress",
+            "moduleUrl": "https://commons.apache.org/proper/commons-compress/",
+            "moduleVersion": "1.28.0",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "org.apache.commons:commons-csv",
             "moduleUrl": "https://commons.apache.org/proper/commons-csv/",
             "moduleVersion": "1.9.0",
@@ -1132,6 +1146,27 @@
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "org.apache.poi:poi",
+            "moduleUrl": "https://poi.apache.org/",
+            "moduleVersion": "5.5.1",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.apache.poi:poi-ooxml",
+            "moduleUrl": "https://poi.apache.org/",
+            "moduleVersion": "5.5.1",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.apache.poi:poi-ooxml-lite",
+            "moduleUrl": "https://poi.apache.org/",
+            "moduleVersion": "5.5.1",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "org.apache.poi:poi-scratchpad",
             "moduleUrl": "https://poi.apache.org/",
             "moduleVersion": "5.2.5",
@@ -1157,6 +1192,13 @@
             "moduleUrl": "https://www.apache.org/",
             "moduleVersion": "2.3",
             "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.apache.xmlbeans:xmlbeans",
+            "moduleUrl": "https://xmlbeans.apache.org/",
+            "moduleVersion": "5.3.0",
+            "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {

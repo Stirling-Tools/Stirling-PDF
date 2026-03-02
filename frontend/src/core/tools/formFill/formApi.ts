@@ -44,3 +44,49 @@ export async function fillFormFields(
   return response.data;
 }
 
+/**
+ * Extract form fields as CSV.
+ * Calls POST /api/v1/form/extract-csv
+ */
+export async function extractFormFieldsCsv(
+  file: File | Blob,
+  values?: Record<string, string>
+): Promise<Blob> {
+  const formData = new FormData();
+  formData.append('file', file);
+  if (values) {
+    formData.append(
+      'data',
+      new Blob([JSON.stringify(values)], { type: 'application/json' })
+    );
+  }
+
+  const response = await apiClient.post('/api/v1/form/extract-csv', formData, {
+    responseType: 'blob',
+  });
+  return response.data;
+}
+
+/**
+ * Extract form fields as XLSX.
+ * Calls POST /api/v1/form/extract-xlsx
+ */
+export async function extractFormFieldsXlsx(
+  file: File | Blob,
+  values?: Record<string, string>
+): Promise<Blob> {
+  const formData = new FormData();
+  formData.append('file', file);
+  if (values) {
+    formData.append(
+      'data',
+      new Blob([JSON.stringify(values)], { type: 'application/json' })
+    );
+  }
+
+  const response = await apiClient.post('/api/v1/form/extract-xlsx', formData, {
+    responseType: 'blob',
+  });
+  return response.data;
+}
+

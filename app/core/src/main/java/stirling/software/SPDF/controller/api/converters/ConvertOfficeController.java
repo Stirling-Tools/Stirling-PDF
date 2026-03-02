@@ -91,22 +91,32 @@ public class ConvertOfficeController {
 
         Path libreOfficeProfile = null;
         try {
-            ProcessExecutorResult result;
-            // Run Unoconvert command
-            if (isUnoconvertAvailable()) {
-                // Unoconvert: schreibe direkt in outputPath innerhalb des workDir
-                List<String> command = new ArrayList<>();
-                command.add(runtimePathConfig.getUnoConvertPath());
-                command.add("--convert-to");
-                command.add("pdf");
-                command.add(inputPath.toString());
-                command.add(outputPath.toString());
+            ProcessExecutorResult result = null;
+            IOException unoconvertException = null;
 
-                result =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
-                                .runCommandWithOutputHandling(command);
-            } // Run soffice command
-            else {
+            // Try unoconvert first if available
+            if (isUnoconvertAvailable()) {
+                try {
+                    List<String> command = new ArrayList<>();
+                    command.add(runtimePathConfig.getUnoConvertPath());
+                    command.add("--convert-to");
+                    command.add("pdf");
+                    command.add(inputPath.toString());
+                    command.add(outputPath.toString());
+
+                    result =
+                            ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
+                                    .runCommandWithOutputHandling(command);
+                } catch (IOException e) {
+                    unoconvertException = e;
+                    log.warn(
+                            "Unoconvert command failed ({}). Falling back to soffice command.",
+                            e.getMessage());
+                }
+            }
+
+            // Fallback to soffice if unoconvert was unavailable or failed
+            if (result == null) {
                 libreOfficeProfile = Files.createTempDirectory("libreoffice_profile_");
                 List<String> command = new ArrayList<>();
                 command.add(runtimePathConfig.getSOfficePath());
@@ -114,14 +124,21 @@ public class ConvertOfficeController {
                 command.add("--headless");
                 command.add("--nologo");
                 command.add("--convert-to");
-                command.add("pdf:writer_pdf_Export");
+                command.add("pdf");
                 command.add("--outdir");
                 command.add(workDir.toString());
                 command.add(inputPath.toString());
 
-                result =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
-                                .runCommandWithOutputHandling(command);
+                try {
+                    result =
+                            ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
+                                    .runCommandWithOutputHandling(command);
+                } catch (IOException e) {
+                    if (unoconvertException != null) {
+                        e.addSuppressed(unoconvertException);
+                    }
+                    throw e;
+                }
             }
 
             // Check the result

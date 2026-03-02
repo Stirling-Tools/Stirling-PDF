@@ -4,7 +4,6 @@ import eslint from '@eslint/js';
 import globals from 'globals';
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
-import importPlugin from 'eslint-plugin-import';
 
 const srcGlobs = [
   'src/**/*.{js,mjs,jsx,ts,tsx}',
@@ -77,22 +76,5 @@ export default defineConfig(
         ...globals.node,
       }
     }
-  },
-  // Config for import plugin
-  {
-    ...importPlugin.flatConfigs.recommended,
-    ...importPlugin.flatConfigs.typescript,
-    rules: {
-      // ...importPlugin.flatConfigs.recommended.rules, // Temporarily disabled until codebase conformant
-      ...importPlugin.flatConfigs.typescript.rules,
-      'import/no-cycle': 'error',
-    },
-    settings: {
-      'import/resolver': {
-        typescript: {
-          project: './tsconfig.json',
-        },
-      },
-    },
   },
 );

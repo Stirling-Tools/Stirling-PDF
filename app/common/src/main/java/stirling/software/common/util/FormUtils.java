@@ -132,7 +132,7 @@ public class FormUtils {
                 continue;
             }
 
-            String currentValue = safeValue(terminalField);
+            String currentValue = safeFieldValue(terminalField);
             boolean required = field.isRequired();
             int pageIndex = resolveFirstWidgetPageIndex(document, terminalField, annotationPageMap);
             List<String> options = resolveOptions(terminalField);
@@ -203,7 +203,7 @@ public class FormUtils {
                 continue;
             }
 
-            String currentValue = safeValue(terminalField);
+            String currentValue = safeFieldValue(terminalField);
             boolean required = field.isRequired();
             boolean readOnly = field.isReadOnly();
             List<String> options = resolveOptions(terminalField);
@@ -1234,7 +1234,11 @@ public class FormUtils {
         return states;
     }
 
-    private String safeValue(PDTerminalField field) {
+    public String safeValue(String value) {
+        return value != null ? value : "";
+    }
+
+    private String safeFieldValue(PDTerminalField field) {
         try {
             // PDChoice.getValueAsString() returns a raw COS string representation
             // that doesn't reliably reflect the selected value. Use getValue()

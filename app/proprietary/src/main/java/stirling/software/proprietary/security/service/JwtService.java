@@ -20,9 +20,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -40,21 +37,25 @@ import stirling.software.proprietary.security.model.JwtVerificationKey;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+
 @Slf4j
 @Service
 public class JwtService implements JwtServiceInterface {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
+    private final ObjectMapper objectMapper;
     private final KeyPersistenceServiceInterface keyPersistenceService;
     private final boolean v2Enabled;
     private final ApplicationProperties.Security securityProperties;
 
     @Autowired
     public JwtService(
+            ObjectMapper objectMapper,
             @Qualifier("v2Enabled") boolean v2Enabled,
             KeyPersistenceServiceInterface keyPersistenceService,
             ApplicationProperties applicationProperties) {
+        this.objectMapper = objectMapper;
         this.v2Enabled = v2Enabled;
         this.keyPersistenceService = keyPersistenceService;
         this.securityProperties = applicationProperties.getSecurity();
@@ -374,14 +375,14 @@ public class JwtService implements JwtServiceInterface {
 
             byte[] headerBytes = Base64.getUrlDecoder().decode(tokenParts[0]);
             Map<String, Object> header =
-                    OBJECT_MAPPER.readValue(
+                    objectMapper.readValue(
                             headerBytes, new TypeReference<Map<String, Object>>() {});
             Object keyId = header.get("kid");
             return keyId instanceof String ? (String) keyId : null;
         } catch (IllegalArgumentException e) {
             log.debug("Failed to decode Base64 JWT header: {}", e.getMessage());
             return null;
-        } catch (java.io.IOException e) {
+        } catch (tools.jackson.core.JacksonException e) {
             log.debug("Failed to parse JWT header as JSON: {}", e.getMessage());
             return null;
         }

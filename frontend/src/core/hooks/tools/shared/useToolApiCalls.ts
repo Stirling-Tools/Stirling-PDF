@@ -77,7 +77,7 @@ export const useToolApiCalls = <TParams = void>() => {
 
       } catch (error) {
         if (axios.isCancel(error)) {
-          throw new Error('Operation was cancelled');
+          throw new Error('Operation was cancelled', { cause: error });
         }
         console.error('[processFiles] Failed', { name: file.name, error });
         failedFiles.push(file.name);

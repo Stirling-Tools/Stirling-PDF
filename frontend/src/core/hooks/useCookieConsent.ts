@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { BASE_PATH } from '@app/constants/app';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { TOUR_STATE_EVENT, type TourStatePayload } from '@app/constants/events';
+import { getCookieConsentOverrides } from '@app/extensions/cookieConsentConfig';
 
 declare global {
   interface Window {
@@ -70,8 +71,7 @@ export const useCookieConsent = ({
           const hasDarkClass = document.documentElement.classList.contains('dark');
           const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-          let isDarkMode = false;
-
+          let isDarkMode: boolean;
           if (mantineScheme) {
             isDarkMode = mantineScheme === 'dark';
           } else if (hasLightClass) {
@@ -93,9 +93,8 @@ export const useCookieConsent = ({
           return;
         }
 
-        let themeObserver: MutationObserver | null = null;
         if (!forceLightMode) {
-          themeObserver = new MutationObserver((mutations) => {
+          const themeObserver = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
               if (mutation.type === 'attributes' &&
                   (mutation.attributeName === 'data-mantine-color-scheme' ||
@@ -112,9 +111,11 @@ export const useCookieConsent = ({
         }
 
         try {
+          const overrides = getCookieConsentOverrides();
           window.CookieConsent.run({
             autoShow: true,
             hideFromBots: false,
+            ...overrides,
             guiOptions: {
               consentModal: {
                 layout: "bar",
@@ -238,7 +239,7 @@ export const useCookieConsent = ({
       const hasDarkClass = document.documentElement.classList.contains('dark');
       const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-      let isDarkMode = false;
+      let isDarkMode: boolean;
       if (mantineScheme) {
         isDarkMode = mantineScheme === 'dark';
       } else if (hasLightClass) {

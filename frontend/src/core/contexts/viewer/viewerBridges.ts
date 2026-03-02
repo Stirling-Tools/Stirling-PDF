@@ -43,7 +43,7 @@ export interface ZoomAPIWrapper {
   zoomIn: () => void;
   zoomOut: () => void;
   toggleMarqueeZoom: () => void;
-  requestZoom: (level: number) => void;
+  requestZoom: (level: any, center?: any) => void;
 }
 
 export interface PanAPIWrapper {
@@ -92,7 +92,6 @@ export interface ThumbnailAPIWrapper {
 }
 
 export interface ExportAPIWrapper {
-  download: () => void;
   saveAsCopy: () => { toPromise: () => Promise<ArrayBuffer> };
 }
 

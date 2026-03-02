@@ -16,10 +16,7 @@ import {
 } from '@app/services/shareBundleUtils';
 import { useTranslation } from 'react-i18next';
 import { openFilesFromDisk } from '@app/services/openFilesFromDisk';
-
-// Module-level storage for file path mappings (quickKey -> localFilePath)
-// Used to pass file paths from Tauri file dialog to FileContext
-export const pendingFilePathMappings = new Map<string, string>();
+export { pendingFilePathMappings } from '@app/services/pendingFilePathMappings';
 
 // Type for the context value - now contains everything directly
 interface FileManagerContextValue {

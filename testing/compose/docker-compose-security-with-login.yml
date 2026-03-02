@@ -1,8 +1,8 @@
 services:
-  backend:
+  stirling-pdf:
     build:
       context: ../..
-      dockerfile: docker/backend/Dockerfile
+      dockerfile: docker/embedded/Dockerfile
     container_name: Stirling-PDF-Security-with-login
     restart: unless-stopped
     deploy:
@@ -35,21 +35,6 @@ services:
       SYSTEM_GOOGLEVISIBILITY: "true"
       SECURITY_CUSTOMGLOBALAPIKEY: "123456789"
       SHOW_SURVEY: "true"
-    networks:
-      - stirling-network
-
-  frontend:
-    build:
-      context: ../..
-      dockerfile: docker/frontend/Dockerfile
-    container_name: stirling-pdf-frontend-security-login
-    restart: unless-stopped
-    ports:
-      - "3000:80"
-    environment:
-      BACKEND_URL: http://backend:8080
-    depends_on:
-      - backend
     networks:
       - stirling-network
 
