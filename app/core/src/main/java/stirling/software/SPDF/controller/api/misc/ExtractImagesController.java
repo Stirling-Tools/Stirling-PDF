@@ -25,6 +25,7 @@ import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
@@ -55,7 +56,7 @@ public class ExtractImagesController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(consumes = "multipart/form-data", value = "/extract-images")
+    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/extract-images")
     @MultiFileResponse
     @Operation(
             summary = "Extract images from a PDF file",
@@ -228,7 +229,8 @@ public class ExtractImagesController {
                     ImageIO.write(bufferedImage, format, imageBaos);
                     byte[] imageData = imageBaos.toByteArray();
 
-                    // Write encoded bytes to zip under lock (ZipOutputStream requires serialization)
+                    // Write encoded bytes to zip under lock (ZipOutputStream requires
+                    // serialization)
                     synchronized (zos) {
                         zos.putNextEntry(new ZipEntry(imageName));
                         zos.write(imageData);

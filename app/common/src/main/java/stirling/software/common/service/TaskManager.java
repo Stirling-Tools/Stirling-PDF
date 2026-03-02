@@ -384,9 +384,7 @@ public class TaskManager {
 
                     extractedFiles.add(resultFile);
                     log.debug(
-                            "Extracted file: {} (size: {} bytes)",
-                            entry.getName(),
-                            stored.size());
+                            "Extracted file: {} (size: {} bytes)", entry.getName(), stored.size());
                 }
                 zipIn.closeEntry();
             }
