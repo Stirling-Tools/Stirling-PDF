@@ -54,6 +54,7 @@ import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.SPDF.pdf.TextFinder;
+import stirling.software.SPDF.service.pdf.PdfiumService;
 import stirling.software.SPDF.utils.text.TextEncodingHelper;
 import stirling.software.SPDF.utils.text.TextFinderUtils;
 import stirling.software.SPDF.utils.text.WidthCalculator;
@@ -85,6 +86,7 @@ public class RedactController {
     private static final COSString EMPTY_COS_STRING = new COSString("");
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final PdfiumService pdfiumService;
 
     private String removeFileExtension(String filename) {
         return GeneralUtils.removeExtension(filename);
@@ -514,15 +516,103 @@ public class RedactController {
                     "error.redaction.no.patterns", "No text patterns provided for redaction");
         }
 
+        if (request.getFileInput() == null) {
+            log.error("File input is null");
+            throw ExceptionUtils.createFileNullOrEmptyException();
+        }
+
+        String outputFilename =
+                removeFileExtension(
+                                Objects.requireNonNull(
+                                        Filenames.toSimpleFileName(
+                                                request.getFileInput().getOriginalFilename())))
+                        + "_redacted.pdf";
+
+        // ── Primary path: PDFium true content-stripping redaction ──
+        if (pdfiumService.isAvailable()) {
+            try {
+                byte[] pdfBytes = request.getFileInput().getBytes();
+                List<String> patterns =
+                        Arrays.stream(listOfText)
+                                .map(String::trim)
+                                .filter(s -> !s.isEmpty())
+                                .collect(Collectors.toList());
+
+                // Parse redact color from hex string to ARGB int
+                int redactColor = parseRedactColor(request.getRedactColor());
+
+                byte[] redacted =
+                        pdfiumService.autoRedact(
+                                pdfBytes, patterns, useRegex, !wholeWordSearchBool && false,
+                                redactColor);
+                // Note: caseSensitive=false for default; PDFium doesn't have whole-word
+                // natively, but regex can handle it. For literal search, case is controlled
+                // by the caseSensitive parameter.
+                // Whole-word search with PDFium: wrap patterns in \b if wholeWordSearch
+                if (wholeWordSearchBool && !useRegex) {
+                    // Re-run as regex with word boundaries for whole-word matching
+                    List<String> wholeWordPatterns =
+                            patterns.stream()
+                                    .map(p -> "\\b" + Pattern.quote(p) + "\\b")
+                                    .collect(Collectors.toList());
+                    redacted =
+                            pdfiumService.autoRedact(
+                                    pdfBytes, wholeWordPatterns, true, false, redactColor);
+                } else {
+                    redacted =
+                            pdfiumService.autoRedact(
+                                    pdfBytes, patterns, useRegex, false, redactColor);
+                }
+
+                log.info(
+                        "[PDFium] Auto-redact completed via PDFium content-stripping path.");
+                return WebResponseUtils.bytesToWebResponse(redacted, outputFilename);
+            } catch (Exception e) {
+                log.warn(
+                        "[PDFium] Auto-redact failed, falling back to PDFBox path: {}",
+                        e.getMessage());
+                // Fall through to PDFBox fallback
+            }
+        }
+
+        // ── Fallback path: PDFBox cosmetic box + flatten redaction ──
+        log.info("Using PDFBox fallback for auto-redact (box overlay + flatten).");
+        return redactPdfWithPdfBox(request, listOfText, useRegex, wholeWordSearchBool,
+                outputFilename);
+    }
+
+    /**
+     * Parse a hex color string (e.g. "#000000" or "#FF0000") to an ARGB int.
+     * Defaults to opaque black (0xFF000000) if parsing fails.
+     */
+    private int parseRedactColor(String colorStr) {
+        if (colorStr == null || colorStr.isBlank()) {
+            return 0xFF000000;
+        }
+        try {
+            Color c = Color.decode(colorStr.trim());
+            return 0xFF000000 | (c.getRed() << 16) | (c.getGreen() << 8) | c.getBlue();
+        } catch (NumberFormatException e) {
+            log.warn("Invalid redact color '{}', defaulting to black.", colorStr);
+            return 0xFF000000;
+        }
+    }
+
+    /**
+     * PDFBox-based fallback redaction: cosmetic black box overlay with optional flatten.
+     * This is the ONLY fallback — it does NOT remove underlying text from the content stream.
+     */
+    private ResponseEntity<byte[]> redactPdfWithPdfBox(
+            RedactPdfRequest request,
+            String[] listOfText,
+            boolean useRegex,
+            boolean wholeWordSearchBool,
+            String outputFilename) {
+
         PDDocument document = null;
         PDDocument fallbackDocument = null;
 
         try {
-            if (request.getFileInput() == null) {
-                log.error("File input is null");
-                throw ExceptionUtils.createFileNullOrEmptyException();
-            }
-
             document = pdfDocumentFactory.load(request.getFileInput());
 
             if (document == null) {
@@ -550,62 +640,10 @@ public class RedactController {
                     document.save(baos);
                     originalContent = baos.toByteArray();
                 }
-
-                return WebResponseUtils.bytesToWebResponse(
-                        originalContent,
-                        removeFileExtension(
-                                        Objects.requireNonNull(
-                                                Filenames.toSimpleFileName(
-                                                        request.getFileInput()
-                                                                .getOriginalFilename())))
-                                + "_redacted.pdf");
+                return WebResponseUtils.bytesToWebResponse(originalContent, outputFilename);
             }
 
-            boolean fallbackToBoxOnlyMode;
-            try {
-                fallbackToBoxOnlyMode =
-                        performTextReplacement(
-                                document,
-                                allFoundTextsByPage,
-                                listOfText,
-                                useRegex,
-                                wholeWordSearchBool);
-            } catch (Exception e) {
-                log.warn(
-                        "Text replacement redaction failed, falling back to box-only mode: {}",
-                        e.getMessage());
-                fallbackToBoxOnlyMode = true;
-            }
-
-            if (fallbackToBoxOnlyMode) {
-                log.warn(
-                        "Font compatibility issues detected. Using box-only redaction mode for better reliability.");
-
-                fallbackDocument = pdfDocumentFactory.load(request.getFileInput());
-
-                allFoundTextsByPage =
-                        findTextToRedact(
-                                fallbackDocument, listOfText, useRegex, wholeWordSearchBool);
-
-                byte[] pdfContent =
-                        finalizeRedaction(
-                                fallbackDocument,
-                                allFoundTextsByPage,
-                                request.getRedactColor(),
-                                request.getCustomPadding(),
-                                request.getConvertPDFToImage(),
-                                false); // Box-only mode, use original box sizes
-
-                return WebResponseUtils.bytesToWebResponse(
-                        pdfContent,
-                        removeFileExtension(
-                                        Objects.requireNonNull(
-                                                Filenames.toSimpleFileName(
-                                                        request.getFileInput()
-                                                                .getOriginalFilename())))
-                                + "_redacted.pdf");
-            }
-
+            // PDFBox fallback: only box overlay + flatten (no text removal)
             byte[] pdfContent =
                     finalizeRedaction(
                             document,
@@ -613,15 +651,9 @@ public class RedactController {
                             request.getRedactColor(),
                             request.getCustomPadding(),
                             request.getConvertPDFToImage(),
-                            true); // Text removal mode, use reduced box sizes
+                            false); // Box-only mode always
 
-            return WebResponseUtils.bytesToWebResponse(
-                    pdfContent,
-                    removeFileExtension(
-                                    Objects.requireNonNull(
-                                            Filenames.toSimpleFileName(
-                                                    request.getFileInput().getOriginalFilename())))
-                            + "_redacted.pdf");
+            return WebResponseUtils.bytesToWebResponse(pdfContent, outputFilename);
 
         } catch (Exception e) {
             log.error("Redaction operation failed: {}", e.getMessage(), e);

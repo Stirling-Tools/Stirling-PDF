@@ -12,7 +12,7 @@ configurations {
 spotless {
     java {
         target 'src/**/java/**/*.java'
-        targetExclude 'src/main/resources/static/**', 'src/main/java/org/apache/**'
+        targetExclude 'src/main/resources/static/**', 'src/main/java/org/apache/**', 'src/gen/**'
         googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
 
         importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
@@ -126,13 +126,47 @@ dependencies {
 
 sourceSets {
     main {
+        java {
+            srcDirs = ['src/main/java']
+        }
         resources {
             srcDirs += ['../configs']
         }
     }
-    test {
+    // Separate source set for code that requires finalized FFM API (JDK 22+).
+    // Includes jextract-generated bindings AND our PDFium service impl/config.
+    pdfium {
+        java {
+            srcDirs = ['src/gen/java', 'src/pdfium/java']
+        }
+        // pdfium code imports from main (PdfiumService interface, NoOpPdfiumService)
+        compileClasspath += main.output
     }
+    test {
+        // Tests can reference PDFium classes transitively
+        runtimeClasspath += pdfium.output
+    }
+}
 
+// Compile pdfium source set with --release 25 (FFM finalized in JDK 22+)
+tasks.named('compilePdfiumJava') {
+    options.release = 25
+}
+
+// The pdfium source set needs the same compile/annotation-processing deps as main.
+// These configurations were auto-created by the sourceSets.pdfium declaration.
+configurations.pdfiumImplementation.extendsFrom configurations.implementation
+configurations.pdfiumCompileOnly.extendsFrom configurations.compileOnly
+configurations.pdfiumAnnotationProcessor.extendsFrom configurations.annotationProcessor
+
+// Include pdfium classes in the runtime classpath (Spring discovers beans at runtime)
+dependencies {
+    runtimeOnly sourceSets.pdfium.output
+}
+
+// Ensure bootJar includes the pdfium classes
+tasks.named('bootJar') {
+    classpath += sourceSets.pdfium.output
 }
 
 

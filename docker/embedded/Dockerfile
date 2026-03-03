@@ -403,6 +403,27 @@ RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     find /opt/venv -name '*.so' -exec strip --strip-unneeded {} + 2>/dev/null || true
 
 
+# ── PDFium native library (BSD-3-Clause, bblanchon/pdfium-binaries) ──
+FROM ubuntu:noble AS pdfium-fetch
+ARG TARGETPLATFORM
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN set -eux; \
+    apt-get update && apt-get install -y --no-install-recommends ca-certificates curl jq && \
+    rm -rf /var/lib/apt/lists/*; \
+    case "${TARGETPLATFORM}" in \
+      linux/amd64)  PDFIUM_ARCH="linux-x64" ;; \
+      linux/arm64)  PDFIUM_ARCH="linux-arm64" ;; \
+      *)            echo "Unsupported platform: ${TARGETPLATFORM}"; exit 1 ;; \
+    esac; \
+    LATEST_URL=$(curl -fsSL https://api.github.com/repos/bblanchon/pdfium-binaries/releases/latest \
+      | jq -r --arg arch "$PDFIUM_ARCH" \
+        '.assets[] | select(.name == "pdfium-" + $arch + ".tgz") | .browser_download_url'); \
+    [ -n "$LATEST_URL" ] || { echo "No PDFium asset found for $PDFIUM_ARCH"; exit 1; }; \
+    mkdir -p /opt/pdfium; \
+    curl -fsSL "$LATEST_URL" | tar xz -C /opt/pdfium; \
+    ls -la /opt/pdfium/lib/libpdfium.so
+
+
 # Final runtime image.
 FROM eclipse-temurin:25-jre-noble AS runtime
 
@@ -651,6 +672,8 @@ COPY --link --from=pdf-tools-build /usr/local/bin/qpdf    /usr/bin/qpdf
 COPY --link --from=pdf-tools-build /magick-export/        /
 COPY --link --from=gs-build        /usr/local/bin/gs                /usr/local/bin/gs
 COPY --link --from=gs-build        /usr/local/share/ghostscript     /usr/local/share/ghostscript
+# PDFium native library for FFM-based redaction
+COPY --link --from=pdfium-fetch    /opt/pdfium/lib/libpdfium.so     /usr/local/lib/libpdfium.so
 # Python venv pre-built in python-venv-build (no pip install at runtime, no build tools needed)
 COPY --link --from=python-venv-build /opt/venv /opt/venv
 RUN ldconfig /usr/local/lib && \
@@ -734,8 +757,8 @@ RUN echo "${VERSION_TAG:-dev}" > /etc/stirling_version
 ENV VERSION_TAG=$VERSION_TAG \
     STIRLING_AOT_ENABLE="false" \
     STIRLING_JVM_PROFILE="balanced" \
-    _JVM_OPTS_BALANCED="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
-    _JVM_OPTS_PERFORMANCE="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+AlwaysPreTouch -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
+    _JVM_OPTS_BALANCED="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:+ExplicitGCInvokesConcurrent --enable-native-access=ALL-UNNAMED -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
+    _JVM_OPTS_PERFORMANCE="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+AlwaysPreTouch -XX:+ExplicitGCInvokesConcurrent --enable-native-access=ALL-UNNAMED -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
     PUID=${PUID} \

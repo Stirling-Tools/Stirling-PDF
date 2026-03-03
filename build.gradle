@@ -242,6 +242,7 @@ subprojects {
 
     tasks.withType(Test).configureEach {
         useJUnitPlatform()
+        jvmArgs '--enable-native-access=ALL-UNNAMED'
         finalizedBy(jacocoReport)
     }
 
@@ -423,7 +424,8 @@ subprojects {
                 "-XX:G1HeapRegionSize=4m",
                 "-XX:+ExplicitGCInvokesConcurrent",
                 "-XX:+UseStringDeduplication",
-                "-XX:+UseCompactObjectHeaders"
+                "-XX:+UseCompactObjectHeaders",
+                "--enable-native-access=ALL-UNNAMED"
             ]
         }
     }
