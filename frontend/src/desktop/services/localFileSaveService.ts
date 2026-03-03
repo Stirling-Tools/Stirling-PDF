@@ -38,11 +38,12 @@ export async function showSaveDialog(
   try {
     const { save } = await import("@tauri-apps/plugin-dialog");
 
+    const ext = defaultFilename.split('.').pop()?.toLowerCase() ?? 'pdf';
     const selectedPath = await save({
       defaultPath: defaultDirectory ? `${defaultDirectory}/${defaultFilename}` : defaultFilename,
       filters: [{
-        name: 'PDF',
-        extensions: ['pdf']
+        name: ext.toUpperCase(),
+        extensions: [ext]
       }],
       title: 'Save As'
     });
