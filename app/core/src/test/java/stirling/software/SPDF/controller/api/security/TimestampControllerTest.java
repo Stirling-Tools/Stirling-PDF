@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -117,8 +115,7 @@ class TimestampControllerTest {
 
             IllegalArgumentException ex =
                     assertThrows(
-                            IllegalArgumentException.class,
-                            () -> controller.timestampPdf(request));
+                            IllegalArgumentException.class, () -> controller.timestampPdf(request));
             assertTrue(ex.getMessage().contains("not in the allowed list"));
         }
 
@@ -175,9 +172,7 @@ class TimestampControllerTest {
             TimestampPdfRequest request =
                     createRequest("https://not-allowed-tsa.evil.com/timestamp");
 
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> controller.timestampPdf(request));
+            assertThrows(IllegalArgumentException.class, () -> controller.timestampPdf(request));
         }
     }
 
@@ -240,9 +235,7 @@ class TimestampControllerTest {
             TimestampPdfRequest request = createRequest("http://evil.com/ssrf");
 
             // Blank entries should not expand the allowlist
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> controller.timestampPdf(request));
+            assertThrows(IllegalArgumentException.class, () -> controller.timestampPdf(request));
         }
 
         @Test
@@ -261,14 +254,11 @@ class TimestampControllerTest {
         @Test
         @DisplayName("Should reject ftp:// protocol in custom URLs")
         void shouldRejectFtpProtocolInCustomUrls() {
-            tsConfig.setCustomTsaUrls(
-                    new ArrayList<>(List.of("ftp://internal-server/timestamp")));
+            tsConfig.setCustomTsaUrls(new ArrayList<>(List.of("ftp://internal-server/timestamp")));
 
             TimestampPdfRequest request = createRequest("ftp://internal-server/timestamp");
 
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () -> controller.timestampPdf(request));
+            assertThrows(IllegalArgumentException.class, () -> controller.timestampPdf(request));
         }
     }
 
@@ -283,8 +273,7 @@ class TimestampControllerTest {
             when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(mockDoc);
             doNothing().when(mockDoc).close();
 
-            TimestampPdfRequest request =
-                    createRequest("HTTP://TIMESTAMP.DIGICERT.COM");
+            TimestampPdfRequest request = createRequest("HTTP://TIMESTAMP.DIGICERT.COM");
 
             try {
                 controller.timestampPdf(request);

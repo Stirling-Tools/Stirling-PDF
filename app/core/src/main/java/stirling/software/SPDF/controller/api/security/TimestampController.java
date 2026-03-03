@@ -15,6 +15,7 @@ import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -56,13 +57,21 @@ public class TimestampController {
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    private static final Set<String> ALLOWED_TSA_PRESETS =
-            Set.of(
-                    "http://timestamp.digicert.com",
-                    "http://timestamp.sectigo.com",
-                    "http://ts.ssl.com",
-                    "http://timestamp.entrust.net/TSS/RFC3161sha2TS",
-                    "http://freetsa.org/tsr");
+    /** Built-in TSA presets with labels — single source of truth for backend + frontend. */
+    public static final List<Map<String, String>> TSA_PRESETS =
+            List.of(
+                    Map.of("label", "DigiCert", "url", "http://timestamp.digicert.com"),
+                    Map.of("label", "Sectigo", "url", "http://timestamp.sectigo.com"),
+                    Map.of("label", "SSL.com", "url", "http://ts.ssl.com"),
+                    Map.of(
+                            "label",
+                            "Entrust",
+                            "url",
+                            "http://timestamp.entrust.net/TSS/RFC3161sha2TS"),
+                    Map.of("label", "FreeTSA", "url", "http://freetsa.org/tsr"));
+
+    private static final Set<String> ALLOWED_TSA_PRESET_URLS =
+            TSA_PRESETS.stream().map(p -> p.get("url")).collect(Collectors.toUnmodifiableSet());
 
     private static final int MAX_TSA_RESPONSE_SIZE = 1024 * 1024; // 1 MB
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
@@ -93,7 +102,7 @@ public class TimestampController {
 
         // Build allowed set: built-in presets + admin-configured custom URLs
         // Filter null/blank entries and validate protocol (TASK-6)
-        Set<String> allowedUrls = new HashSet<>(ALLOWED_TSA_PRESETS);
+        Set<String> allowedUrls = new HashSet<>(ALLOWED_TSA_PRESET_URLS);
         if (tsConfig.getDefaultTsaUrl() != null
                 && !tsConfig.getDefaultTsaUrl().isBlank()
                 && isValidTsaUrlProtocol(tsConfig.getDefaultTsaUrl())) {
@@ -128,8 +137,7 @@ public class TimestampController {
             signature.setSubFilter(COSName.getPDFName("ETSI.RFC3161"));
             signature.setSignDate(Calendar.getInstance());
 
-            document.addSignature(
-                    signature, content -> requestTimestampToken(content, tsaUrl));
+            document.addSignature(signature, content -> requestTimestampToken(content, tsaUrl));
 
             document.saveIncremental(outputStream);
         }

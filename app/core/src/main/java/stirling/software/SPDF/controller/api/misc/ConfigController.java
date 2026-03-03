@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.config.EndpointConfiguration.EndpointAvailability;
 import stirling.software.SPDF.config.InitialSetup;
+import stirling.software.SPDF.controller.api.security.TimestampController;
 import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
@@ -250,18 +251,7 @@ public class ConfigController {
                     applicationProperties.getSecurity().getTimestamp();
             configData.put("timestampDefaultTsaUrl", tsConfig.getDefaultTsaUrl());
             configData.put("timestampCustomTsaUrls", tsConfig.getCustomTsaUrls());
-            configData.put(
-                    "timestampTsaPresets",
-                    List.of(
-                            Map.of("label", "DigiCert", "url", "http://timestamp.digicert.com"),
-                            Map.of("label", "Sectigo", "url", "http://timestamp.sectigo.com"),
-                            Map.of("label", "SSL.com", "url", "http://ts.ssl.com"),
-                            Map.of(
-                                    "label",
-                                    "Entrust",
-                                    "url",
-                                    "http://timestamp.entrust.net/TSS/RFC3161sha2TS"),
-                            Map.of("label", "FreeTSA", "url", "http://freetsa.org/tsr")));
+            configData.put("timestampTsaPresets", TimestampController.TSA_PRESETS);
 
             // Server certificate settings
             configData.put(
