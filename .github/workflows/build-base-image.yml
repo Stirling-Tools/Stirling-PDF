@@ -3,7 +3,7 @@ name: Build and Push Base Image
 on:
   push:
     branches:
-      - baseImage
+      - baseImage-disabled
   workflow_dispatch:
     inputs:
       base_version:
