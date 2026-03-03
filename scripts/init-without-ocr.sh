@@ -583,7 +583,12 @@ generate_aot_cache() {
 # Stores a short hash alongside the cache file; mismatch → cache is deleted and regenerated.
 compute_aot_fingerprint() {
   local fp=""
-  fp+="jdk:$(java -version 2>&1 | head -1);"
+  # Clear JAVA_TOOL_OPTIONS / JDK_JAVA_OPTIONS so the JVM does not prepend
+  # "Picked up JAVA_TOOL_OPTIONS: ..." to stderr before the version line.
+  # Those vars are exported by the time the background subshell runs
+  # save_aot_fingerprint, but are NOT yet set when validate_aot_cache runs on
+  # the next boot -- causing head -1 to return different strings each time.
+  fp+="jdk:$(JAVA_TOOL_OPTIONS= JDK_JAVA_OPTIONS= _JAVA_OPTIONS= java -version 2>&1 | head -1);"
   fp+="arch:$(uname -m);"
   fp+="compact:${COMPACT_HEADERS_FLAG:-none};"
   fp+="oops:${COMPRESSED_OOPS_FLAG:-none};"

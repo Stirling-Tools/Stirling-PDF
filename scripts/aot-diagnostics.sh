@@ -76,7 +76,7 @@ if ! command_exists java; then
   exit 1
 fi
 
-JDK_VER="$(java -version 2>&1 | head -1)"
+JDK_VER="$(JAVA_TOOL_OPTIONS= JDK_JAVA_OPTIONS= _JAVA_OPTIONS= java -version 2>&1 | head -1)"
 info "JDK:          ${JDK_VER}"
 info "java binary:  $(command -v java)"
 
@@ -199,7 +199,7 @@ if [ -f "${AOT_FP}" ]; then
 
   # Recompute fingerprint using the same logic as init-without-ocr.sh
   FP=""
-  FP+="jdk:$(java -version 2>&1 | head -1);"
+  FP+="jdk:$(JAVA_TOOL_OPTIONS= JDK_JAVA_OPTIONS= _JAVA_OPTIONS= java -version 2>&1 | head -1);"
   FP+="arch:${ARCH};"
   FP+="compact:${COMPACT_HEADERS_FLAG:-none};"
   FP+="oops:${COMPRESSED_OOPS_FLAG:-none};"
