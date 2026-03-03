@@ -1,0 +1,107 @@
+name: Build and Push Base Image
+
+on:
+  push:
+    branches:
+      - baseImage
+  workflow_dispatch:
+    inputs:
+      base_version:
+        description: "Version tag for base image (e.g., 1.0.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-8core
+    permissions:
+      packages: write
+      id-token: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
+        with:
+          cosign-release: "v2.4.1"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_API }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
+
+      - name: Convert repository owner to lowercase
+        id: repoowner
+        run: echo "lowercase=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "tag=${{ github.event.inputs.base_version }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=1.0.0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate tags
+        id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+        with:
+          images: |
+            stirlingtools/stirling-pdf-base
+            ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-base
+          tags: |
+            type=raw,value=${{ steps.version.outputs.tag }}
+            type=raw,value=latest
+
+      - name: Build and push base image
+        id: build-push
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./docker/embedded/Dockerfile.base
+          push: true
+          cache-from: type=gha,scope=stirling-pdf-base
+          cache-to: type=gha,mode=max,scope=stirling-pdf-base
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64/v8
+          provenance: true
+          sbom: true
+
+      - name: Sign base image
+        env:
+          DIGEST: ${{ steps.build-push.outputs.digest }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          echo "$TAGS" | tr ',' '\n' | while read -r tag; do
+            cosign sign --yes \
+              --key env://COSIGN_PRIVATE_KEY \
+              "${tag}@${DIGEST}"
+          done
