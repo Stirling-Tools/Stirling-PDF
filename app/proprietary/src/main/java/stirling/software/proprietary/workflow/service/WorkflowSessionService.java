@@ -14,9 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import jakarta.persistence.EntityManager;
 
 import lombok.RequiredArgsConstructor;
@@ -41,6 +38,10 @@ import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.model.WorkflowStatus;
 import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
 import stirling.software.proprietary.workflow.repository.WorkflowSessionRepository;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Core service for workflow session management. Handles creation, participant management, and
@@ -109,7 +110,7 @@ public class WorkflowSessionService {
                 Map<String, Object> metadataMap =
                         objectMapper.readValue(request.getWorkflowMetadata(), Map.class);
                 session.setWorkflowMetadata(metadataMap);
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 log.warn("Failed to parse workflow metadata, using empty map", e);
                 session.setWorkflowMetadata(new HashMap<>());
             }
@@ -179,7 +180,7 @@ public class WorkflowSessionService {
                     Map<String, Object> metadataMap =
                             objectMapper.readValue(request.getParticipantMetadata(), Map.class);
                     participant.setParticipantMetadata(metadataMap);
-                } catch (JsonProcessingException e) {
+                } catch (JacksonException e) {
                     log.warn(
                             "Failed to parse participant metadata for {}, using empty map",
                             request.getEmail(),
@@ -660,11 +661,10 @@ public class WorkflowSessionService {
                 List<WetSignatureMetadata> wetSigs =
                         objectMapper.readValue(
                                 request.getWetSignaturesData(),
-                                new com.fasterxml.jackson.core.type.TypeReference<
-                                        List<WetSignatureMetadata>>() {});
+                                new TypeReference<List<WetSignatureMetadata>>() {});
                 request.setWetSignatures(wetSigs);
                 log.info("Parsed {} wet signatures from wetSignaturesData", wetSigs.size());
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 log.error("Failed to parse wetSignaturesData: {}", e.getMessage());
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST, "Invalid wet signatures data");

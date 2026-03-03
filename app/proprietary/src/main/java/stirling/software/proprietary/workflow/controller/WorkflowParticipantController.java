@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -34,6 +32,9 @@ import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
 import stirling.software.proprietary.workflow.service.WorkflowSessionService;
 import stirling.software.proprietary.workflow.util.WorkflowMapper;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * REST controller for workflow participant actions. Handles participant-facing operations like
@@ -289,8 +290,7 @@ public class WorkflowParticipantController {
             java.util.List<Map<String, Object>> wetSigs =
                     objectMapper.readValue(
                             request.getWetSignaturesData(),
-                            new com.fasterxml.jackson.core.type.TypeReference<
-                                    java.util.List<Map<String, Object>>>() {});
+                            new TypeReference<java.util.List<Map<String, Object>>>() {});
             metadata.put("wetSignatures", wetSigs);
         }
 
