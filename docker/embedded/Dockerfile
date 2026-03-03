@@ -385,7 +385,7 @@ ARG UNOSERVER_VERSION=3.6
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
-      python3 python3-venv ca-certificates && \
+      python3 python3-venv ca-certificates binutils && \
     rm -rf /var/lib/apt/lists/*
 
 RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
@@ -434,9 +434,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       fonts-noto-core fonts-noto-mono fonts-noto-extra \
       fonts-noto-cjk poppler-data \
       # python3-uno required for UNO bridge (accessed by venv via --system-site-packages)
-      # python3-venv required to support the copied /opt/venv
+      # python3-venv is NOT needed: the copied /opt/venv works without it at runtime
       # python3-dev is NOT needed, venv is pre-built in python-venv-build stage
-      python3 python3-venv python3-uno \
+      python3 python3-uno \
       # Python packages are in /opt/venv (copied from python-venv-build stage below)
       # OCR
       tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
@@ -654,9 +654,13 @@ COPY --link --from=gs-build        /usr/local/share/ghostscript     /usr/local/s
 # Python venv pre-built in python-venv-build (no pip install at runtime, no build tools needed)
 COPY --link --from=python-venv-build /opt/venv /opt/venv
 RUN ldconfig /usr/local/lib && \
-    /opt/venv/bin/python -c "import cffi; print('cffi OK:', cffi.__version__)" && \
-    /opt/venv/bin/python -c "import cv2; print('OpenCV', cv2.__version__)" && \
-    /opt/venv/bin/python -c "import ocrmypdf; print('ocrmypdf OK')"
+    PYTHONDONTWRITEBYTECODE=1 \
+      /opt/venv/bin/python -c "import cffi; print('cffi OK:', cffi.__version__)" && \
+    PYTHONDONTWRITEBYTECODE=1 \
+      /opt/venv/bin/python -c "import cv2; print('OpenCV', cv2.__version__)" && \
+    PYTHONDONTWRITEBYTECODE=1 \
+      /opt/venv/bin/python -c "import ocrmypdf; print('ocrmypdf OK')" && \
+    find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
 # ---
 # Non-root user
