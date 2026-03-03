@@ -76,19 +76,19 @@ const AuditSystemStatus: React.FC<AuditSystemStatusProps> = ({ status }) => {
             <Badge color="green" variant="light" size="sm">
               {t('audit.systemStatus.date', 'Date')}
             </Badge>
-            <Badge color={status.pdfMetadataEnabled ? 'green' : 'gray'} variant="light" size="sm">
+            <Badge color={status.capturePdfAuthor ? 'green' : 'gray'} variant="light" size="sm">
               {t('audit.systemStatus.pdfAuthor', 'PDF Author')}
-              {!status.pdfMetadataEnabled && (
+              {!status.capturePdfAuthor && (
                 <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', opacity: 0.7 }}>
-                  ({t('audit.systemStatus.verboseOnly', 'VERBOSE only')})
+                  ({t('audit.systemStatus.captureBySettings', 'Enable in settings')})
                 </span>
               )}
             </Badge>
-            <Badge color={status.pdfMetadataEnabled ? 'green' : 'gray'} variant="light" size="sm">
+            <Badge color={status.captureFileHash ? 'green' : 'gray'} variant="light" size="sm">
               {t('audit.systemStatus.fileHash', 'File Hash')}
-              {!status.pdfMetadataEnabled && (
+              {!status.captureFileHash && (
                 <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', opacity: 0.7 }}>
-                  ({t('audit.systemStatus.verboseOnly', 'VERBOSE only')})
+                  ({t('audit.systemStatus.captureBySettings', 'Enable in settings')})
                 </span>
               )}
             </Badge>

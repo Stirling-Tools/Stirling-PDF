@@ -22,8 +22,8 @@ public enum AuditLevel {
     /**
      * STANDARD - File operations and user actions (level 2) Tracks: Everything in BASIC plus user
      * actions like login/logout, account changes, and general GET requests. Excludes continuous
-     * polling calls (/auth/me, /app-config, /admin/license-info, /endpoints-availability, /health,
-     * /metrics). Ideal for: General audit trail with reasonable log volume for most deployments.
+     * polling calls (e.g., auth/me, app-config, health, metrics endpoints). Ideal for: General
+     * audit trail with reasonable log volume for most deployments.
      */
     STANDARD(2),
 

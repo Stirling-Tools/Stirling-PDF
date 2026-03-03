@@ -68,6 +68,10 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
     @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type = :type")
     List<PersistentAuditEvent> findByTypeForExport(@Param("type") String type);
 
+    @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type = :type AND e.timestamp > :startDate")
+    List<PersistentAuditEvent> findByTypeAndTimestampAfterForExport(
+            @Param("type") String type, @Param("startDate") Instant startDate);
+
     @Query("SELECT e FROM PersistentAuditEvent e WHERE e.timestamp BETWEEN :startDate AND :endDate")
     List<PersistentAuditEvent> findAllByTimestampBetweenForExport(
             @Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
@@ -250,4 +254,9 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
     // Query events excluding a specific type (used for analytics where we want to exclude UI_DATA)
     @Query("SELECT e FROM PersistentAuditEvent e WHERE e.type != :excludeType")
     List<PersistentAuditEvent> findAllExceptTypeForExport(@Param("excludeType") String excludeType);
+
+    @Query(
+            "SELECT e FROM PersistentAuditEvent e WHERE e.type != :excludeType AND e.timestamp > :startDate")
+    List<PersistentAuditEvent> findAllExceptTypeAndTimestampAfterForExport(
+            @Param("excludeType") String excludeType, @Param("startDate") Instant startDate);
 }

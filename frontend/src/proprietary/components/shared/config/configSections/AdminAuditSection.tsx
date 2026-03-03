@@ -59,8 +59,8 @@ const AdminAuditSection: React.FC = () => {
         retentionDays: 90,
         totalEvents: 1234,
         pdfMetadataEnabled: true,
-        captureFileHash: false,
-        capturePdfAuthor: false,
+        captureFileHash: true,
+        capturePdfAuthor: true,
         captureOperationResults: false,
       });
       setLoading(false);
@@ -184,7 +184,11 @@ const AdminAuditSection: React.FC = () => {
           </Tabs.Panel>
 
           <Tabs.Panel value="events" pt="md">
-            <AuditEventsTable loginEnabled={isEnabled} pdfMetadataEnabled={systemStatus?.pdfMetadataEnabled} />
+            <AuditEventsTable
+              loginEnabled={isEnabled}
+              captureFileHash={systemStatus?.captureFileHash}
+              capturePdfAuthor={systemStatus?.capturePdfAuthor}
+            />
           </Tabs.Panel>
 
           <Tabs.Panel value="export" pt="md">

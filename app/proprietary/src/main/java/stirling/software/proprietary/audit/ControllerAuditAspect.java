@@ -128,56 +128,65 @@ public class ControllerAuditAspect {
         HttpServletRequest req = attrs != null ? attrs.getRequest() : null;
         HttpServletResponse resp = attrs != null ? attrs.getResponse() : null;
 
+        String previousPrincipal = MDC.get("auditPrincipal");
+        String previousOrigin = MDC.get("auditOrigin");
+        String previousIp = MDC.get("auditIp");
+
         // EARLY CAPTURE: Capture from SecurityContext on request thread, store in MDC for async
         // propagation
         // MDC.put is necessary for background threads to inherit audit context
-        String capturedPrincipal = MDC.get("auditPrincipal");
+        String capturedPrincipal = previousPrincipal;
         if (capturedPrincipal == null) {
             capturedPrincipal = auditService.captureCurrentPrincipal();
             MDC.put("auditPrincipal", capturedPrincipal);
         }
 
-        String capturedOrigin = MDC.get("auditOrigin");
+        String capturedOrigin = previousOrigin;
         if (capturedOrigin == null) {
             capturedOrigin = auditService.captureCurrentOrigin();
             MDC.put("auditOrigin", capturedOrigin);
         }
 
-        String capturedIp = MDC.get("auditIp");
+        String capturedIp = previousIp;
         if (capturedIp == null && req != null) {
             capturedIp = auditService.extractClientIp(req);
             if (capturedIp != null) {
                 MDC.put("auditIp", capturedIp);
             }
         }
-
-        long start = System.currentTimeMillis();
-
-        // Use auditService to create the base audit data
-        Map<String, Object> data = auditService.createBaseAuditData(joinPoint, level);
-
-        // Add HTTP-specific information
-        auditService.addHttpData(data, httpMethod, path, level);
-
-        // Add file information if present
-        auditService.addFileData(data, joinPoint, level);
-
-        // Add method arguments if at VERBOSE level
-        if (level.includes(AuditLevel.VERBOSE)) {
-            auditService.addMethodArguments(data, joinPoint, level);
-        }
-
-        Object result = null;
         try {
-            result = joinPoint.proceed();
-            data.put("outcome", "success");
-        } catch (Throwable ex) {
-            data.put("outcome", "failure");
-            data.put("errorType", ex.getClass().getSimpleName());
-            data.put("errorMessage", ex.getMessage());
-            throw ex;
-        } finally {
+            // Avoid duplicate events for controller methods explicitly annotated with @Audited.
+            // @Audited methods are audited by AuditAspect.
+            if (auditedAnnotation != null) {
+                return joinPoint.proceed();
+            }
+
+            long start = System.currentTimeMillis();
+
+            // Use auditService to create the base audit data
+            Map<String, Object> data = auditService.createBaseAuditData(joinPoint, level);
+
+            // Add HTTP-specific information
+            auditService.addHttpData(data, httpMethod, path, level);
+
+            // Add file information if present
+            auditService.addFileData(data, joinPoint, level);
+
+            // Add method arguments if at VERBOSE level
+            if (level.includes(AuditLevel.VERBOSE)) {
+                auditService.addMethodArguments(data, joinPoint, level);
+            }
+
+            Object result = null;
             try {
+                result = joinPoint.proceed();
+                data.put("outcome", "success");
+            } catch (Throwable ex) {
+                data.put("outcome", "failure");
+                data.put("errorType", ex.getClass().getSimpleName());
+                data.put("errorMessage", ex.getMessage());
+                throw ex;
+            } finally {
                 // Handle timing directly for HTTP requests
                 if (level.includes(AuditLevel.STANDARD)) {
                     data.put("latencyMs", System.currentTimeMillis() - start);
@@ -232,15 +241,14 @@ public class ControllerAuditAspect {
                     auditService.audit(
                             capturedPrincipal, capturedOrigin, capturedIp, eventType, data, level);
                 }
-            } finally {
-                // Clean up MDC to prevent cross-request contamination (guaranteed to run)
-                MDC.remove("auditPrincipal");
-                MDC.remove("auditOrigin");
-                MDC.remove("auditIp");
             }
-        }
 
-        return result;
+            return result;
+        } finally {
+            restoreMdcValue("auditPrincipal", previousPrincipal);
+            restoreMdcValue("auditOrigin", previousOrigin);
+            restoreMdcValue("auditIp", previousIp);
+        }
     }
 
     // Using AuditUtils.determineAuditEventType instead
@@ -276,6 +284,14 @@ public class ControllerAuditAspect {
         if (ann instanceof DeleteMapping dm && dm.value().length > 0) mp = dm.value()[0];
         if (ann instanceof PatchMapping pam && pam.value().length > 0) mp = pam.value()[0];
         return base + mp;
+    }
+
+    private void restoreMdcValue(String key, String previousValue) {
+        if (previousValue != null) {
+            MDC.put(key, previousValue);
+        } else {
+            MDC.remove(key);
+        }
     }
 
     // Using AuditUtils.getCurrentRequest instead

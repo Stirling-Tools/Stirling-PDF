@@ -23,10 +23,15 @@ import LocalIcon from '@app/components/shared/LocalIcon';
 
 interface AuditEventsTableProps {
   loginEnabled?: boolean;
-  pdfMetadataEnabled?: boolean;
+  captureFileHash?: boolean;
+  capturePdfAuthor?: boolean;
 }
 
-const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true, pdfMetadataEnabled = false }) => {
+const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
+  loginEnabled = true,
+  captureFileHash = false,
+  capturePdfAuthor = false,
+}) => {
   const { t } = useTranslation();
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [totalPages, setTotalPages] = useState(0);
@@ -36,6 +41,9 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
   const [selectedEvent, setSelectedEvent] = useState<AuditEvent | null>(null);
   const [sortKey, setSortKey] = useState<'timestamp' | 'eventType' | 'username' | 'ipAddress' | null>('timestamp');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const showAuthor = capturePdfAuthor;
+  const showFileHash = captureFileHash;
+  const totalColumns = 5 + (showAuthor ? 1 : 0) + (showFileHash ? 1 : 0);
 
   // Use shared filters hook
   const { filters, eventTypes, users, handleFilterChange, handleClearFilters } = useAuditFilters({
@@ -152,6 +160,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
     SETTINGS_CHANGED: 'orange',
     FILE_OPERATION: 'cyan',
     PDF_PROCESS: 'violet',
+    UI_DATA: 'gray',
     HTTP_REQUEST: 'indigo',
   };
 
@@ -251,15 +260,15 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
                   <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
                     {t('audit.events.documentName', 'Document Name')}
                   </Table.Th>
-                  {pdfMetadataEnabled && (
-                    <>
-                      <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
-                        {t('audit.events.author', 'Author')}
-                      </Table.Th>
-                      <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
-                        {t('audit.events.fileHash', 'File Hash')}
-                      </Table.Th>
-                    </>
+                  {showAuthor && (
+                    <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
+                      {t('audit.events.author', 'Author')}
+                    </Table.Th>
+                  )}
+                  {showFileHash && (
+                    <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
+                      {t('audit.events.fileHash', 'File Hash')}
+                    </Table.Th>
                   )}
                   <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm" ta="center">
                     {t('audit.events.actions', 'Actions')}
@@ -269,7 +278,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
               <Table.Tbody>
                 {sortedEvents.length === 0 ? (
                   <Table.Tr>
-                    <Table.Td colSpan={pdfMetadataEnabled ? 7 : 5}>
+                    <Table.Td colSpan={totalColumns}>
                       <Group justify="center" py="xl">
                         <Stack align="center" gap={0}>
                           <LocalIcon icon="search" width="2rem" height="2rem" style={{ opacity: 0.4 }} />
@@ -292,7 +301,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
                       if (Array.isArray(files) && files.length > 0) {
                         const firstFile = files[0] as Record<string, any>;
                         documentName = firstFile.name || '';
-                        if (pdfMetadataEnabled) {
+                        if (showAuthor || showFileHash) {
                           author = firstFile.pdfAuthor || '';
                           fileHash = firstFile.fileHash ? firstFile.fileHash.substring(0, 16) + '...' : '';
                         }
@@ -317,17 +326,17 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({ loginEnabled = true
                             {documentName || '—'}
                           </Text>
                         </Table.Td>
-                        {pdfMetadataEnabled && (
-                          <>
-                            <Table.Td>
-                              <Text size="sm">{author}</Text>
-                            </Table.Td>
-                            <Table.Td>
-                              <Text size="sm" title={fileHash} style={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
-                                {fileHash}
-                              </Text>
-                            </Table.Td>
-                          </>
+                        {showAuthor && (
+                          <Table.Td>
+                            <Text size="sm">{author}</Text>
+                          </Table.Td>
+                        )}
+                        {showFileHash && (
+                          <Table.Td>
+                            <Text size="sm" title={fileHash} style={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
+                              {fileHash}
+                            </Text>
+                          </Table.Td>
                         )}
                         <Table.Td ta="center">
                           <Button

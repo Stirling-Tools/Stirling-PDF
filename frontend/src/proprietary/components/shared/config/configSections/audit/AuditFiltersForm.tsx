@@ -24,10 +24,10 @@ const getDateRange = (preset: string): [Date, Date] | null => {
       end.setHours(23, 59, 59, 999);
       return [start, end];
     case 'last7':
-      start.setDate(start.getDate() - 7);
+      start.setDate(start.getDate() - 6);
       return [start, end];
     case 'last30':
-      start.setDate(start.getDate() - 30);
+      start.setDate(start.getDate() - 29);
       return [start, end];
     case 'thisMonth':
       start.setDate(1);

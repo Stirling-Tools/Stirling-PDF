@@ -45,6 +45,7 @@ import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
+import stirling.software.proprietary.security.service.JwtServiceInterface;
 
 /**
  * Service for audit event creation, data collection, and persistence. Combines persistence logic
@@ -58,16 +59,19 @@ public class AuditService {
     private final AuditConfigurationProperties auditConfig;
     private final boolean runningEE;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final JwtServiceInterface jwtService;
 
     public AuditService(
             AuditEventRepository repository,
             AuditConfigurationProperties auditConfig,
             @Qualifier("runningEE") boolean runningEE,
-            CustomPDFDocumentFactory pdfDocumentFactory) {
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            JwtServiceInterface jwtService) {
         this.repository = repository;
         this.auditConfig = auditConfig;
         this.runningEE = runningEE;
         this.pdfDocumentFactory = pdfDocumentFactory;
+        this.jwtService = jwtService;
     }
 
     // ========== PERSISTENCE METHODS ==========
@@ -753,14 +757,21 @@ public class AuditService {
             return false;
         }
 
-        // List of polling endpoints that should be excluded from STANDARD level auditing
-        return path.contains("/auth/me")
-                || path.contains("/app-config")
-                || path.contains("/footer-info")
-                || path.contains("/admin/license-info")
-                || path.contains("/endpoints-availability")
-                || path.contains("/health")
-                || path.contains("/metrics");
+        // Polling endpoints excluded from STANDARD level auditing.
+        // Use exact/prefix matching to avoid accidental exclusions on unrelated paths.
+        return path.equals("/api/v1/auth/me")
+                || path.equals("/api/v1/app-config")
+                || path.equals("/api/v1/footer-info")
+                || path.equals("/api/v1/admin/license-info")
+                || path.equals("/api/v1/endpoints-availability")
+                || path.equals("/health")
+                || path.startsWith("/health/")
+                || path.equals("/metrics")
+                || path.startsWith("/metrics/")
+                || path.equals("/actuator/health")
+                || path.startsWith("/actuator/health/")
+                || path.equals("/actuator/metrics")
+                || path.startsWith("/actuator/metrics/");
     }
 
     // ========== HELPER METHODS ==========
@@ -803,6 +814,19 @@ public class AuditService {
     /** Get the current authenticated username or "system" if none */
     private String getCurrentUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getName() != null && !"anonymousUser".equals(auth.getName())) {
+            return auth.getName();
+        }
+
+        // Refresh endpoint runs without normal JWT authentication so SecurityContext may be
+        // anonymous.
+        // In that case, derive principal from a signature-verified refresh token for attribution.
+        HttpServletRequest req = getCurrentRequest();
+        String tokenSubject = extractRefreshTokenSubject(req);
+        if (StringUtils.isNotBlank(tokenSubject)) {
+            return tokenSubject;
+        }
+
         return (auth != null && auth.getName() != null) ? auth.getName() : "system";
     }
 
@@ -844,12 +868,71 @@ public class AuditService {
                 return "WEB";
             }
 
+            // Refresh endpoint may still be anonymous in SecurityContext; infer origin from a
+            // verified JWT if present.
+            HttpServletRequest req = getCurrentRequest();
+            String refreshOrigin = extractRefreshTokenOrigin(req);
+            if (refreshOrigin != null) {
+                return refreshOrigin;
+            }
+
             // System or unauthenticated
             return "SYSTEM";
         } catch (Exception e) {
             log.debug("Could not determine origin for audit event", e);
             return "SYSTEM";
         }
+    }
+
+    private String extractRefreshTokenSubject(HttpServletRequest request) {
+        if (!isRefreshEndpoint(request)) {
+            return null;
+        }
+
+        String token = jwtService.extractToken(request);
+        if (StringUtils.isBlank(token)) {
+            return null;
+        }
+
+        try {
+            String subject = jwtService.extractUsernameAllowExpired(token);
+            return StringUtils.isNotBlank(subject) ? subject : null;
+        } catch (Exception e) {
+            log.debug("Could not extract refresh token subject for audit attribution", e);
+            return null;
+        }
+    }
+
+    private String extractRefreshTokenOrigin(HttpServletRequest request) {
+        if (!isRefreshEndpoint(request)) {
+            return null;
+        }
+
+        String token = jwtService.extractToken(request);
+        if (StringUtils.isBlank(token)) {
+            return null;
+        }
+
+        try {
+            Map<String, Object> claims = jwtService.extractClaimsAllowExpired(token);
+            Object authType = claims.get("authType");
+            if (authType != null && "API".equalsIgnoreCase(String.valueOf(authType))) {
+                return "API";
+            }
+            // Any verified non-API JWT refresh request is web/SSO user traffic.
+            return "WEB";
+        } catch (Exception e) {
+            log.debug("Could not extract refresh token origin for audit attribution", e);
+            return null;
+        }
+    }
+
+    private boolean isRefreshEndpoint(HttpServletRequest request) {
+        if (request == null) {
+            return false;
+        }
+        String path = request.getRequestURI();
+        return StringUtils.isNotBlank(path) && path.endsWith("/api/v1/auth/refresh");
     }
 
     /**

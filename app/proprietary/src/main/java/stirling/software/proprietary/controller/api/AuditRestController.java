@@ -1,5 +1,6 @@
 package stirling.software.proprietary.controller.api;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -655,6 +656,7 @@ public class AuditRestController {
         if (selectedFields.contains("outcome")) headerOrder.add("outcome");
         if (selectedFields.contains("author")) headerOrder.add("author");
         if (selectedFields.contains("filehash")) headerOrder.add("filehash");
+        if (selectedFields.contains("operationresults")) headerOrder.add("operationresults");
         if (selectedFields.contains("eventtype")) headerOrder.add("eventtype");
 
         // Write header
@@ -677,9 +679,9 @@ public class AuditRestController {
             csv.append("\n");
         }
 
-        byte[] csvBytes = csv.toString().getBytes();
+        byte[] csvBytes = csv.toString().getBytes(StandardCharsets.UTF_8);
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentType(MediaType.parseMediaType("text/csv;charset=UTF-8"));
         headers.setContentDispositionFormData(
                 "attachment", "audit_export_" + System.currentTimeMillis() + ".csv");
 
@@ -700,9 +702,9 @@ public class AuditRestController {
             csv.append(escapeCSV(event.getData())).append("\n");
         }
 
-        byte[] csvBytes = csv.toString().getBytes();
+        byte[] csvBytes = csv.toString().getBytes(StandardCharsets.UTF_8);
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentType(MediaType.parseMediaType("text/csv;charset=UTF-8"));
         headers.setContentDispositionFormData("attachment", "audit_export.csv");
 
         return ResponseEntity.ok().headers(headers).body(csvBytes);
@@ -721,6 +723,7 @@ public class AuditRestController {
         data.put("outcome", "");
         data.put("author", "");
         data.put("filehash", "");
+        data.put("operationresults", "");
 
         if (event.getData() != null) {
             try {
@@ -738,9 +741,18 @@ public class AuditRestController {
                     data.put("ipaddress", ipAddress);
                 }
 
-                // Extract outcome (success/failure)
+                // Extract outcome (success/failure), supporting legacy "status" key
                 if (eventData.containsKey("outcome")) {
                     data.put("outcome", String.valueOf(eventData.getOrDefault("outcome", "")));
+                } else if (eventData.containsKey("status")) {
+                    data.put("outcome", String.valueOf(eventData.getOrDefault("status", "")));
+                }
+
+                // Extract operation result if present
+                if (eventData.containsKey("result")) {
+                    data.put(
+                            "operationresults",
+                            String.valueOf(eventData.getOrDefault("result", "")));
                 }
 
                 // Extract tool from path
@@ -780,6 +792,7 @@ public class AuditRestController {
             case "outcome" -> "Outcome";
             case "author" -> "Author";
             case "filehash" -> "File Hash";
+            case "operationresults" -> "Operation Results";
             case "eventtype" -> "Event Type";
             default -> field;
         };

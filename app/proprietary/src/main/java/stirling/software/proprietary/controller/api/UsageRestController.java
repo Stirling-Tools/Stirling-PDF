@@ -1,5 +1,7 @@
 package stirling.software.proprietary.controller.api;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -38,15 +40,19 @@ public class UsageRestController {
      * @param limit Optional limit on number of endpoints to return
      * @param dataType Type of data to include: "all" (default), "api" (operational endpoints), or
      *     "ui" (UI data endpoints)
+     * @param days Lookback window in days (default 30, clamped to 1-365)
      * @return Endpoint statistics response
      */
     @GetMapping("/usage-endpoint-statistics")
     public ResponseEntity<EndpointStatisticsResponse> getEndpointStatistics(
             @RequestParam(value = "limit", required = false) Integer limit,
-            @RequestParam(value = "dataType", defaultValue = "all") String dataType) {
+            @RequestParam(value = "dataType", defaultValue = "all") String dataType,
+            @RequestParam(value = "days", defaultValue = "30") Integer days) {
+
+        int lookbackDays = Math.max(1, Math.min(days, 365));
 
         // Get audit events filtered by type
-        List<PersistentAuditEvent> events = getEventsByDataType(dataType);
+        List<PersistentAuditEvent> events = getEventsByDataType(dataType, lookbackDays);
 
         // Count visits per endpoint
         Map<String, Long> endpointCounts = new HashMap<>();
@@ -165,18 +171,22 @@ public class UsageRestController {
      * Get audit events filtered by data type. UI = UI_DATA events. API = everything except UI_DATA.
      *
      * @param dataType "all", "api" (not UI_DATA), or "ui" (UI_DATA only)
+     * @param days lookback window in days
      * @return List of audit events matching the data type filter
      */
-    private List<PersistentAuditEvent> getEventsByDataType(String dataType) {
+    private List<PersistentAuditEvent> getEventsByDataType(String dataType, int days) {
+        Instant start = Instant.now().minus(Duration.ofDays(days));
+
         if ("all".equalsIgnoreCase(dataType)) {
-            // Return all events
-            return auditRepository.findAll();
+            return auditRepository.findByTimestampAfter(start);
         } else if ("ui".equalsIgnoreCase(dataType)) {
             // UI data endpoints only
-            return auditRepository.findByTypeForExport(AuditEventType.UI_DATA.name());
+            return auditRepository.findByTypeAndTimestampAfterForExport(
+                    AuditEventType.UI_DATA.name(), start);
         } else if ("api".equalsIgnoreCase(dataType)) {
             // API = everything except UI_DATA (queried at DB level, not filtered in-memory)
-            return auditRepository.findAllExceptTypeForExport(AuditEventType.UI_DATA.name());
+            return auditRepository.findAllExceptTypeAndTimestampAfterForExport(
+                    AuditEventType.UI_DATA.name(), start);
         }
 
         return new ArrayList<>();

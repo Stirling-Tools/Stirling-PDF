@@ -2,6 +2,7 @@ package stirling.software.common.aop;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -303,14 +304,14 @@ public class AutoJobAspect {
      * thread and restores it in the background thread. Ensures proper cleanup to prevent context
      * leakage across jobs in thread pools.
      */
-    private Supplier<Object> wrapWithMDC(Supplier<Object> supplier) {
+    private <T> Supplier<T> wrapWithMDC(Supplier<T> supplier) {
         final Map<String, String> captured = MDC.getCopyOfContextMap();
         return () -> {
             final Map<String, String> previous = MDC.getCopyOfContextMap();
             try {
                 // Set the captured context (or clear if none was captured)
                 if (captured != null) {
-                    MDC.setContextMap(captured);
+                    MDC.setContextMap(new HashMap<>(captured));
                 } else {
                     MDC.clear();
                 }

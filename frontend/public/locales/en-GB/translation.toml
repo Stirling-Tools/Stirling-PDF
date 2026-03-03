@@ -1588,6 +1588,7 @@ verboseRequired = "Requires VERBOSE audit level"
 [audit.systemStatus]
 autoRefresh = "Auto-refresh"
 autoRefreshLabel = "Auto-refresh every 30s"
+captureBySettings = "Enable in settings"
 capturedFields = "Captured Fields"
 date = "Date"
 days = "days"

@@ -34,7 +34,7 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({ loginEnab
 
   const handleClearData = async () => {
     if (confirmationCode !== generatedCode) {
-      setError('Confirmation code does not match');
+      setError(t('audit.clearData.codeDoesNotMatch', 'Code does not match'));
       return;
     }
 
