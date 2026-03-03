@@ -6,11 +6,19 @@
         "src/proprietary/*",
         "src/core/*"
       ],
-      "@core/*": ["src/core/*"],
-      "@proprietary/*": ["src/proprietary/*"]
+      "@core/*": [
+        "src/core/*"
+      ],
+      "@proprietary/*": [
+        "src/proprietary/*"
+      ],
+      "posthog-js/react": [
+        "node_modules/posthog-js/react/dist/types/index.d.ts"
+      ]
     }
   },
   "include": [
+    "src/global.d.ts",
     "src/*.js",
     "src/*.ts",
     "src/*.tsx",

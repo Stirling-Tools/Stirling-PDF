@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Enumeration;
@@ -30,15 +31,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @UtilityClass
 public class CbzUtils {
 
-    public byte[] convertCbzToPdf(
-            MultipartFile cbzFile,
-            CustomPDFDocumentFactory pdfDocumentFactory,
-            TempFileManager tempFileManager)
-            throws IOException {
-        return convertCbzToPdf(cbzFile, pdfDocumentFactory, tempFileManager, false);
-    }
-
-    public byte[] convertCbzToPdf(
+    public TempFile convertCbzToPdf(
             MultipartFile cbzFile,
             CustomPDFDocumentFactory pdfDocumentFactory,
             TempFileManager tempFileManager,
@@ -64,70 +57,90 @@ public class CbzUtils {
 
             try (PDDocument document = pdfDocumentFactory.createNewDocument();
                     ZipFile zipFile = new ZipFile(tempFile.getFile())) {
+
+                // Pass 1: collect sorted image names (cheap just strings, no image data)
+                List<String> sortedImageNames = new ArrayList<>();
                 Enumeration<? extends ZipEntry> entries = zipFile.entries();
-                List<ImageEntryData> imageEntries = new ArrayList<>();
                 while (entries.hasMoreElements()) {
                     ZipEntry entry = entries.nextElement();
                     if (!entry.isDirectory() && isImageFile(entry.getName())) {
-                        try (InputStream is = zipFile.getInputStream(entry)) {
-                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                            is.transferTo(baos);
-                            imageEntries.add(
-                                    new ImageEntryData(entry.getName(), baos.toByteArray()));
-                        } catch (IOException e) {
-                            log.warn("Error reading image {}: {}", entry.getName(), e.getMessage());
-                        }
+                        sortedImageNames.add(entry.getName());
                     }
                 }
+                sortedImageNames.sort(new NaturalOrderComparator());
 
-                imageEntries.sort(
-                        Comparator.comparing(ImageEntryData::name, new NaturalOrderComparator()));
-
-                if (imageEntries.isEmpty()) {
+                if (sortedImageNames.isEmpty()) {
                     throw ExceptionUtils.createCbzNoImagesException();
                 }
 
-                for (ImageEntryData imageEntry : imageEntries) {
-                    try {
-                        PDImageXObject pdImage =
-                                PDImageXObject.createFromByteArray(
-                                        document, imageEntry.data(), imageEntry.name());
-                        PDPage page =
-                                new PDPage(
-                                        new PDRectangle(pdImage.getWidth(), pdImage.getHeight()));
-                        document.addPage(page);
-                        try (PDPageContentStream contentStream =
-                                new PDPageContentStream(
-                                        document,
-                                        page,
-                                        PDPageContentStream.AppendMode.OVERWRITE,
-                                        true,
-                                        true)) {
-                            contentStream.drawImage(pdImage, 0, 0);
+                // Pass 2: load ONE image at a time peak memory = max(single image)
+                for (String imageName : sortedImageNames) {
+                    ZipEntry entry = zipFile.getEntry(imageName);
+                    try (InputStream is = zipFile.getInputStream(entry)) {
+                        ByteArrayOutputStream imgBaos = new ByteArrayOutputStream();
+                        is.transferTo(imgBaos);
+                        byte[] imageBytes = imgBaos.toByteArray();
+                        try {
+                            PDImageXObject pdImage =
+                                    PDImageXObject.createFromByteArray(
+                                            document, imageBytes, imageName);
+                            PDPage page =
+                                    new PDPage(
+                                            new PDRectangle(
+                                                    pdImage.getWidth(), pdImage.getHeight()));
+                            document.addPage(page);
+                            try (PDPageContentStream contentStream =
+                                    new PDPageContentStream(
+                                            document,
+                                            page,
+                                            PDPageContentStream.AppendMode.OVERWRITE,
+                                            true,
+                                            true)) {
+                                contentStream.drawImage(pdImage, 0, 0);
+                            }
+                        } catch (IOException e) {
+                            log.warn("Error processing image {}: {}", imageName, e.getMessage());
                         }
+                        // imageBytes eligible for GC after each iteration
                     } catch (IOException e) {
-                        log.warn(
-                                "Error processing image {}: {}", imageEntry.name(), e.getMessage());
+                        log.warn("Error reading image {}: {}", imageName, e.getMessage());
                     }
                 }
 
                 if (document.getNumberOfPages() == 0) {
                     throw ExceptionUtils.createCbzCorruptedImagesException();
                 }
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                document.save(baos);
-                byte[] pdfBytes = baos.toByteArray();
 
-                // Apply Ghostscript optimization if requested
-                if (optimizeForEbook) {
-                    try {
-                        return GeneralUtils.optimizePdfWithGhostscript(pdfBytes);
-                    } catch (IOException e) {
-                        log.warn("Ghostscript optimization failed, returning unoptimized PDF", e);
+                // Write to TempFile (not BAOS)
+                TempFile pdfTempFile = new TempFile(tempFileManager, ".pdf");
+                try {
+                    document.save(pdfTempFile.getFile());
+
+                    if (optimizeForEbook) {
+                        try {
+                            byte[] pdfBytes = Files.readAllBytes(pdfTempFile.getPath());
+                            byte[] optimized = GeneralUtils.optimizePdfWithGhostscript(pdfBytes);
+                            pdfTempFile.close();
+                            TempFile optimizedFile = new TempFile(tempFileManager, ".pdf");
+                            try {
+                                Files.write(optimizedFile.getPath(), optimized);
+                                return optimizedFile;
+                            } catch (Exception e) {
+                                optimizedFile.close();
+                                throw e;
+                            }
+                        } catch (IOException e) {
+                            log.warn(
+                                    "Ghostscript optimization failed, returning unoptimized PDF",
+                                    e);
+                        }
                     }
-                }
 
-                return pdfBytes;
+                    return pdfTempFile;
+                } catch (Exception e) {
+                    pdfTempFile.close();
+                    throw e;
+                }
             }
         }
     }
@@ -174,8 +187,6 @@ public class CbzUtils {
     private boolean isImageFile(String filename) {
         return RegexPatternUtils.getInstance().getImageFilePattern().matcher(filename).matches();
     }
-
-    private record ImageEntryData(String name, byte[] data) {}
 
     private class NaturalOrderComparator implements Comparator<String> {
         @Override
