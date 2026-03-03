@@ -347,12 +347,12 @@ public class SigningSessionController {
             // Mark session as finalized
             workflowSessionService.finalizeSession(sessionId, owner);
 
-            // Step 4: Clean up wet signature metadata (GDPR compliance)
+            // Step 4: Clear sensitive metadata (GDPR compliance)
             try {
-                clearWetSignatureMetadata(session);
+                clearSensitiveMetadata(session);
             } catch (Exception e) {
                 log.error(
-                        "Failed to clear wet signature metadata for session {}: {}",
+                        "Failed to clear sensitive metadata for session {}: {}",
                         sessionId,
                         e.getMessage());
                 // Don't fail the finalization if cleanup fails
@@ -1165,11 +1165,11 @@ public class SigningSessionController {
     }
 
     /**
-     * Clears wet signature metadata from all participants (GDPR compliance). Removes sensitive
-     * visual signature data after finalization.
+     * Clears sensitive metadata from all participants (GDPR compliance). Removes wet signature
+     * image data and certificate submission data (keystores + passwords) after finalization.
      */
-    private void clearWetSignatureMetadata(WorkflowSession session) {
-        log.info("Clearing wet signature metadata for session {}", session.getSessionId());
+    private void clearSensitiveMetadata(WorkflowSession session) {
+        log.info("Clearing sensitive metadata for session {}", session.getSessionId());
 
         for (WorkflowParticipant participant : session.getParticipants()) {
             Map<String, Object> metadata = participant.getParticipantMetadata();
@@ -1177,11 +1177,20 @@ public class SigningSessionController {
                 continue;
             }
 
+            boolean modified = false;
             if (metadata.containsKey("wetSignatures")) {
                 metadata.remove("wetSignatures");
+                modified = true;
+            }
+            if (metadata.containsKey("certificateSubmission")) {
+                metadata.remove("certificateSubmission");
+                modified = true;
+            }
+            if (modified) {
                 participant.setParticipantMetadata(metadata);
                 participantRepository.save(participant);
-                log.debug("Cleared wet signatures for participant {}", participant.getEmail());
+                log.debug(
+                        "Cleared sensitive metadata for participant {}", participant.getEmail());
             }
         }
     }
