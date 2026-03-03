@@ -4205,15 +4205,21 @@ title = "Extract Pages"
 
 [pageLayout]
 addBorder = "Add Borders"
+borderWidth = "Border Thickness"
+bottom = "Bottom Margin"
 cols = "Columns"
 header = "Multi Page Layout"
+innerMargin = "Inner Margin"
+left = "Left Margin"
 orientation = "Orientation:"
 pagesPerSheet = "Pages per sheet:"
+right = "Right Margin"
 readingDirection = "Reading Direction:"
 rows = "Rows"
 submit = "Submit"
 tags = "merge,composite,single-view,organize"
 title = "Multi Page Layout"
+top = "Top Margin"
 
 [pageLayout.arrangement]
 byColumns = "By Columns"
@@ -4280,6 +4286,44 @@ bullet2 = "RTL: Right to left."
 [pageLayout.tooltip.addBorder]
 title = "Add Borders"
 text = "Draws border lines around each page cell for cutting guides or visual separation."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Margins and Borders"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Margins"
+text = "Use top, bottom, left, and right margins to control spacing around the full sheet output."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Inner Margin"
+text = "Inner margin adds spacing between cells in the page grid to improve separation and readability."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Add Borders"
+text = "Enable borders to draw lines around each placed page. This can help visual separation or trimming."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Border Thickness"
+text = "Border thickness is only applied when borders are enabled. Higher values produce thicker lines."
+
+[pageLayout.advanced.tooltip.header]
+title = "Advanced Layout Options"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Orientation"
+text = "Choose the final sheet direction. Portrait works better for tall content, while landscape fits wider layouts."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Page Arrangement"
+text = "Controls whether pages fill the grid row-by-row or column-by-column."
+bullet1 = "By Rows: Fill each row first."
+bullet2 = "By Columns: Fill each column first."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Reading Direction"
+text = "Sets horizontal ordering in the grid, useful for left-to-right and right-to-left document conventions."
+bullet1 = "LTR: Left to right order."
+bullet2 = "RTL: Right to left order."
 
 [pageRemover]
 header = "PDF Page remover"
