@@ -49,6 +49,7 @@ import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.SPDF.service.pdf.PdfiumService;
 
 @DisplayName("PDF Redaction Controller tests")
 @ExtendWith(MockitoExtension.class)
@@ -58,6 +59,7 @@ class RedactControllerTest {
     private static final Logger log = LoggerFactory.getLogger(RedactControllerTest.class);
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private PdfiumService pdfiumService;
 
     @InjectMocks private RedactController redactController;
 
