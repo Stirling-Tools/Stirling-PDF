@@ -8,8 +8,8 @@ export const FALLBACK_TSA_PRESETS = [
   { label: 'DigiCert', url: 'http://timestamp.digicert.com' },
   { label: 'Sectigo', url: 'http://timestamp.sectigo.com' },
   { label: 'SSL.com', url: 'http://ts.ssl.com' },
-  { label: 'Entrust', url: 'http://timestamp.entrust.net/TSS/RFC3161sha2TS' },
-  { label: 'FreeTSA', url: 'http://freetsa.org/tsr' },
+  { label: 'FreeTSA', url: 'https://freetsa.org/tsr' },
+  { label: 'MeSign', url: 'http://tsa.mesign.com' },
 ] as const;
 
 export interface TimestampPdfParameters extends BaseParameters {

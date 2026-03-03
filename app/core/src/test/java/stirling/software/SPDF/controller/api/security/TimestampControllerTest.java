@@ -75,8 +75,8 @@ class TimestampControllerTest {
                     "http://timestamp.digicert.com",
                     "http://timestamp.sectigo.com",
                     "http://ts.ssl.com",
-                    "http://timestamp.entrust.net/TSS/RFC3161sha2TS",
-                    "http://freetsa.org/tsr"
+                    "https://freetsa.org/tsr",
+                    "http://tsa.mesign.com"
                 })
         void shouldAcceptPresetUrls(String presetUrl) throws Exception {
             // Mock PDF loading to avoid actual TSA call — we only test validation here

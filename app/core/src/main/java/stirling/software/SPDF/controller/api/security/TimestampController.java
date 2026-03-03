@@ -63,12 +63,8 @@ public class TimestampController {
                     Map.of("label", "DigiCert", "url", "http://timestamp.digicert.com"),
                     Map.of("label", "Sectigo", "url", "http://timestamp.sectigo.com"),
                     Map.of("label", "SSL.com", "url", "http://ts.ssl.com"),
-                    Map.of(
-                            "label",
-                            "Entrust",
-                            "url",
-                            "http://timestamp.entrust.net/TSS/RFC3161sha2TS"),
-                    Map.of("label", "FreeTSA", "url", "http://freetsa.org/tsr"));
+                    Map.of("label", "FreeTSA", "url", "https://freetsa.org/tsr"),
+                    Map.of("label", "MeSign", "url", "http://tsa.mesign.com"));
 
     private static final Set<String> ALLOWED_TSA_PRESET_URLS =
             TSA_PRESETS.stream().map(p -> p.get("url")).collect(Collectors.toUnmodifiableSet());

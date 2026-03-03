@@ -15,7 +15,7 @@ public class TimestampPdfRequest extends PDFFile {
             description =
                     "URL of the RFC 3161 Time Stamp Authority (TSA) server."
                             + " Must be one of the built-in presets (DigiCert, Sectigo, SSL.com,"
-                            + " Entrust, FreeTSA) or an admin-configured URL in"
+                            + " FreeTSA, MeSign) or an admin-configured URL in"
                             + " settings.yml (security.timestamp.customTsaUrls)."
                             + " If omitted, the server default is used.",
             defaultValue = "http://timestamp.digicert.com",
