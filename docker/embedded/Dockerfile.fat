@@ -3,7 +3,7 @@
 
 FROM ubuntu:noble AS calibre-build
 
-ARG CALIBRE_VERSION=9.3.1
+ARG CALIBRE_VERSION=9.4.0
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     set -eux; \

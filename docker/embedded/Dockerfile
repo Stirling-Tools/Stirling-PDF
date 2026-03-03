@@ -1,8 +1,9 @@
 # Stirling-PDF - Full version (embedded frontend)
 
 FROM ubuntu:noble AS calibre-build
-
-ARG CALIBRE_VERSION=9.3.1
+ARG TARGETPLATFORM
+ARG CALIBRE_VERSION=9.4.0
+ARG CALIBRE_STRIP_WEBENGINE=false
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     set -eux; \
@@ -27,7 +28,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     tar xJf /tmp/calibre.txz -C /opt/calibre; \
     rm /tmp/calibre.txz; \
     \
-    # We only need Qt6 WebEngine (Chromium) for ebook→PDF output.
+    # We only need Qt6 WebEngine (Chromium) for ebook->PDF output.
     # PDF INPUT now uses the pdftohtml engine (poppler), not Qt.
     rm -f  /opt/calibre/lib/libQt6Designer* \
            /opt/calibre/lib/libQt6Multimedia* \
@@ -229,7 +230,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     find /opt/calibre -name '*.pyc' -delete 2>/dev/null || true; \
     \
     # ── Verify conversion still works ──
-    # NOTE: txt→epub used intentionally NOT txt→pdf.
+    # NOTE: txt->epub used intentionally NOT txt->pdf.
     # Calibre 7+ uses WebEngine (Chromium) for PDF output, which requires kernel
     # capabilities unavailable in Docker RUN steps and segfaults under QEMU.
     # epub output exercises the same Python/plugin stack without touching WebEngine.
@@ -241,6 +242,21 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     # Verify pdftohtml (poppler) is available for the pdftohtml PDF engine.
     pdftohtml -v >/dev/null 2>&1 && echo "pdftohtml OK" || { echo "ERROR: pdftohtml not found"; exit 1; }; \
     echo "=== Calibre stripped successfully ==="
+
+# Optional: strip Chromium/WebEngine (~80 MB savings) when PDF output via Calibre is not needed.
+# Build with --build-arg CALIBRE_STRIP_WEBENGINE=true to enable.
+RUN if [ "${CALIBRE_STRIP_WEBENGINE}" = "true" ]; then \
+      echo "Stripping Calibre WebEngine (Chromium), PDF output via Calibre will be disabled"; \
+      rm -rf /opt/calibre/lib/qt6/libexec/QtWebEngineProcess \
+             /opt/calibre/lib/qt6/resources \
+             /opt/calibre/lib/libQt6WebEngine*.so.* \
+             /opt/calibre/lib/libQt6Quick*.so.* \
+             /opt/calibre/lib/libQt6Qml*.so.* \
+             /opt/calibre/translations/qtwebengine_locales 2>/dev/null || true; \
+      echo "WebEngine stripped, Calibre PDF output disabled"; \
+    else \
+      echo "CALIBRE_STRIP_WEBENGINE=false, keeping WebEngine for PDF output"; \
+    fi
 
 
 # Build the Java application and frontend.
@@ -294,6 +310,7 @@ RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
 
 # Build Ghostscript 10.06.0 from source in an isolated stage (avoids library conflicts).
 FROM ubuntu:noble AS gs-build
+ARG TARGETPLATFORM
 ARG GS_VERSION=10.06.0
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/tmp/gs-build,id=gs-build-${TARGETPLATFORM:-local} \
@@ -316,6 +333,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 # Build PDF Tools (QPDF and ImageMagick 7).
 FROM ubuntu:noble AS pdf-tools-build
+ARG TARGETPLATFORM
 ARG QPDF_VERSION=12.3.2
 ARG IM_VERSION=7.1.2-13
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -345,6 +363,44 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     sed -i 's/rights="none" pattern="EPS"/rights="read|write" pattern="EPS"/' /usr/local/etc/ImageMagick-7/policy.xml && \
     cd .. && \
     ldconfig /usr/local/lib
+
+# Stage ImageMagick outputs into a single directory so runtime can import them with one COPY
+# (reduces 4 separate COPY layers to 1 independent --link layer).
+RUN mkdir -p /magick-export/usr/bin \
+             /magick-export/usr/local/lib \
+             /magick-export/usr/local/etc && \
+    cp /usr/local/bin/magick /magick-export/usr/bin/ && \
+    cp -a /usr/local/lib/libMagick*.so* /magick-export/usr/local/lib/ && \
+    cp -a /usr/local/lib/ImageMagick-7* /magick-export/usr/local/lib/ && \
+    cp -a /usr/local/etc/ImageMagick-7  /magick-export/usr/local/etc/
+
+
+# Build Python venv in an isolated stage so runtime image never needs build tools.
+# Packages with native extensions (opencv, cryptography) use pre-built wheels (--prefer-binary).
+# python3-uno is intentionally NOT installed here, it is a system package in the runtime stage
+# and accessed via --system-site-packages at runtime.
+FROM ubuntu:noble AS python-venv-build
+ARG TARGETPLATFORM
+ARG UNOSERVER_VERSION=3.6
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
+      python3 python3-venv ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
+    python3 -m venv /opt/venv --system-site-packages && \
+    /opt/venv/bin/pip install --no-cache-dir --prefer-binary \
+      weasyprint pdf2image opencv-python-headless ocrmypdf \
+      cryptography \
+      "unoserver==${UNOSERVER_VERSION}" && \
+    find /opt/venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
+    find /opt/venv \( -name '*.pyc' -o -name '*.pyi' \) -delete 2>/dev/null || true && \
+    rm -rf /opt/venv/lib/python*/site-packages/pip \
+           /opt/venv/lib/python*/site-packages/pip-*.dist-info \
+           /opt/venv/lib/python*/site-packages/setuptools \
+           /opt/venv/lib/python*/site-packages/setuptools-*.dist-info && \
+    find /opt/venv -name '*.so' -exec strip --strip-unneeded {} + 2>/dev/null || true
 
 
 # Final runtime image.
@@ -377,10 +433,11 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       fonts-crosextra-caladea fonts-crosextra-carlito \
       fonts-noto-core fonts-noto-mono fonts-noto-extra \
       fonts-noto-cjk poppler-data \
-      # We install these via apt to avoid downloading "fat wheels" from pip
-      # python3-full replaced with minimal set
-      python3 python3-dev python3-venv python3-uno \
-      # Python dependencies via pip to avoid conflicts, so we don't install them here
+      # python3-uno required for UNO bridge (accessed by venv via --system-site-packages)
+      # python3-venv required to support the copied /opt/venv
+      # python3-dev is NOT needed, venv is pre-built in python-venv-build stage
+      python3 python3-venv python3-uno \
+      # Python packages are in /opt/venv (copied from python-venv-build stage below)
       # OCR
       tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-fra \
       tesseract-ocr-por tesseract-ocr-chi-sim \
@@ -401,35 +458,20 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     ; \
     \
     \
-    # Note: We do NOT install numpy/pillow/cv2 here; it uses the system versions
-    python3 -m venv /opt/venv --system-site-packages; \
-    /opt/venv/bin/pip install --no-cache-dir \
-      weasyprint pdf2image opencv-python-headless ocrmypdf \
-      cryptography \
-      "unoserver==${UNOSERVER_VERSION}"; \
-    \
-    ln -sf /opt/venv/bin/unoconvert /usr/local/bin/unoconvert; \
-    ln -sf /opt/venv/bin/unoserver  /usr/local/bin/unoserver; \
-    \
     # Verify and fix LibreOffice
     libreoffice --version; \
     soffice --version 2>/dev/null || true; \
     # Rebuild UNO bridge type database
     /usr/lib/libreoffice/program/soffice.bin --headless --convert-to pdf /dev/null 2>/dev/null || true; \
-    # Force font cache rebuild and verify filters are available
+    # Force font cache rebuild
     fc-cache -f -v 2>&1 | awk 'NR <= 20'; \
-    /opt/venv/bin/python -c "import cv2; print('OpenCV', cv2.__version__)"; \
-    /opt/venv/bin/python -c "import ocrmypdf; print('ocrmypdf OK')"; \
     \
     # Cleanup stage.
     \
-    # Remove build-only packages no longer needed at runtime.
-    apt-get remove --purge -y software-properties-common python3-dev || true; \
+    # Remove PPA helper, no longer needed after apt-get update
+    apt-get remove --purge -y software-properties-common || true; \
     apt-get autoremove --purge -y || true; \
     rm -rf /var/lib/apt/lists/*; \
-    \
-    # Remove C/C++ headers (no longer needed after pip install)
-    rm -rf /usr/include/*; \
     \
     # Docs / man / info / icons / themes / GUI assets (headless server)
     rm -rf /usr/share/doc/* /usr/share/man/* /usr/share/info/* \
@@ -499,15 +541,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
            /usr/lib/libreoffice/program/libdbu* \
            /usr/lib/libreoffice/program/libreport* 2>/dev/null || true; \
     \
-    find /opt/venv -type d -name __pycache__ \
-      -exec rm -rf {} + 2>/dev/null || true; \
-    find /opt/venv \
-      \( -name '*.pyc' -o -name '*.pyi' \) -delete 2>/dev/null || true; \
-    rm -rf /opt/venv/lib/python*/site-packages/pip \
-           /opt/venv/lib/python*/site-packages/pip-*.dist-info \
-           /opt/venv/lib/python*/site-packages/setuptools \
-           /opt/venv/lib/python*/site-packages/setuptools-*.dist-info; \
-    \
     rm -rf /usr/lib/python3.12/test \
            /usr/lib/python3.12/idlelib \
            /usr/lib/python3.12/tkinter \
@@ -524,8 +557,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       /usr/lib/python3/dist-packages/_cffi_backend*.so \
       /usr/lib/python3/dist-packages/_cffi_backend*.cpython*.so \
       2>/dev/null || true; \
-    /opt/venv/bin/python -c "import cffi; print('cffi OK:', cffi.__version__)" \
-      || { echo 'ERROR: cffi broken after system package cleanup'; exit 1; }; \
     \
     # Strip debug symbols from ALL shared libraries
     find /usr/lib -name '*.so*' -type f \
@@ -597,7 +628,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     # to be rebuilt without --enable-libflite (not worth the complexity).
     \
     # ── dpkg metadata cleanup (~14MB) ──
-    # Not needed at runtime — container won't run apt-get.
+    # Not needed at runtime, container won't run apt-get.
     rm -rf /var/lib/dpkg/info/*.list \
            /var/lib/dpkg/info/*.md5sums \
            /var/lib/dpkg/info/*.conffiles \
@@ -613,17 +644,19 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     # Misc caches
     rm -rf /var/cache/fontconfig/* /tmp/*
 
-# Calibre and QPDF tools.
-COPY --from=calibre-build /opt/calibre /opt/calibre
-COPY --from=pdf-tools-build /usr/local/bin/qpdf /usr/bin/qpdf
-COPY --from=pdf-tools-build /usr/local/bin/magick /usr/bin/magick
-COPY --from=pdf-tools-build /usr/local/lib/libMagick*.so* /usr/local/lib/
-# Copy loadable coder/filter modules (required when built with --with-modules)
-COPY --from=pdf-tools-build /usr/local/lib/ImageMagick-7* /usr/local/lib/
-COPY --from=pdf-tools-build /usr/local/etc/ImageMagick-7 /usr/local/etc/ImageMagick-7
-COPY --from=gs-build /usr/local/bin/gs /usr/local/bin/gs
-COPY --from=gs-build /usr/local/share/ghostscript /usr/local/share/ghostscript
-RUN ldconfig /usr/local/lib
+# External tool layers, all use --link for independent layer caching and parallel pulls.
+COPY --link --from=calibre-build   /opt/calibre           /opt/calibre
+COPY --link --from=pdf-tools-build /usr/local/bin/qpdf    /usr/bin/qpdf
+# ImageMagick: 4 layers collapsed to 1 via the magick-export staging dir in pdf-tools-build
+COPY --link --from=pdf-tools-build /magick-export/        /
+COPY --link --from=gs-build        /usr/local/bin/gs                /usr/local/bin/gs
+COPY --link --from=gs-build        /usr/local/share/ghostscript     /usr/local/share/ghostscript
+# Python venv pre-built in python-venv-build (no pip install at runtime, no build tools needed)
+COPY --link --from=python-venv-build /opt/venv /opt/venv
+RUN ldconfig /usr/local/lib && \
+    /opt/venv/bin/python -c "import cffi; print('cffi OK:', cffi.__version__)" && \
+    /opt/venv/bin/python -c "import cv2; print('OpenCV', cv2.__version__)" && \
+    /opt/venv/bin/python -c "import ocrmypdf; print('ocrmypdf OK')"
 
 # ---
 # Non-root user
@@ -646,16 +679,16 @@ RUN set -eux; \
 
 # Application files.
 WORKDIR /app
-COPY --from=jar-extract --chown=1000:1000 /layers/dependencies/           /app/
-COPY --from=jar-extract --chown=1000:1000 /layers/spring-boot-loader/     /app/
-COPY --from=jar-extract --chown=1000:1000 /layers/snapshot-dependencies/  /app/
-COPY --from=jar-extract --chown=1000:1000 /layers/application/            /app/
+COPY --link --from=jar-extract --chown=1000:1000 /layers/dependencies/           /app/
+COPY --link --from=jar-extract --chown=1000:1000 /layers/spring-boot-loader/     /app/
+COPY --link --from=jar-extract --chown=1000:1000 /layers/snapshot-dependencies/  /app/
+COPY --link --from=jar-extract --chown=1000:1000 /layers/application/            /app/
 
-COPY --from=app-build --chown=1000:1000 \
+COPY --link --from=app-build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar
-COPY --chown=1000:1000 scripts/ /scripts/
+COPY --link --chown=1000:1000 scripts/ /scripts/
 
-# Fonts go to system dir — root ownership is correct (world-readable)
+# Fonts go to system dir, root ownership is correct (world-readable)
 COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
 
 # Permissions and configuration.
@@ -667,7 +700,7 @@ RUN set -eux; \
     ln -sf /opt/venv/bin/weasyprint /usr/local/bin/weasyprint; \
     ln -sf /opt/venv/bin/unoping    /usr/local/bin/unoping; \
     chmod +x /scripts/*; \
-    mkdir -p /configs /logs /customFiles \
+    mkdir -p /configs /configs/cache /configs/heap_dumps /logs /customFiles \
              /pipeline/watchedFolders /pipeline/finishedFolders \
              /tmp/stirling-pdf/heap_dumps; \
     # Create symlinks to allow app to find these in /app/
@@ -684,11 +717,16 @@ RUN set -eux; \
     chmod 750 /tmp/stirling-pdf/heap_dumps; \
     fc-cache -f
     # NOTE: Project Leyden AOT cache is generated in the background on first boot
-    # by init-without-ocr.sh. The cache is picked up on subsequent boots for
-    # 15-25% faster startup. See: JEP 483 + 514 + 515 (JDK 25).
+    # by init-without-ocr.sh and stored in /configs/cache/stirling.aot (persistent volume).
+    # The cache is picked up on subsequent boots for 15-25% faster startup.
+    # See: JEP 483 + 514 + 515 (JDK 25).
 
 # Environment variables.
 ARG VERSION_TAG
+# Write version to a file so it is readable by scripts without env-var inheritance.
+# init-without-ocr.sh reads /etc/stirling_version for the AOT cache fingerprint.
+RUN echo "${VERSION_TAG:-dev}" > /etc/stirling_version
+
 ENV VERSION_TAG=$VERSION_TAG \
     STIRLING_JVM_PROFILE="balanced" \
     _JVM_OPTS_BALANCED="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
@@ -724,8 +762,8 @@ LABEL org.opencontainers.image.title="Stirling-PDF" \
 EXPOSE 8080/tcp
 STOPSIGNAL SIGTERM
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD curl -fs --show-error http://localhost:8080/api/v1/info/status || exit 1
+HEALTHCHECK --interval=30s --timeout=15s --start-period=120s --retries=5 \
+  CMD curl -fs --max-time 10 http://localhost:8080/api/v1/info/status || exit 1
 
 ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
 CMD []

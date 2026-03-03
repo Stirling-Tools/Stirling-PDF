@@ -23,6 +23,11 @@ if [ -x /scripts/stirling-diagnostics.sh ]; then
   ln -sf /scripts/stirling-diagnostics.sh /usr/local/bin/debug
   ln -sf /scripts/stirling-diagnostics.sh /usr/local/bin/diagnostic
 fi
+if [ -x /scripts/aot-diagnostics.sh ]; then
+  mkdir -p /usr/local/bin
+  ln -sf /scripts/aot-diagnostics.sh /usr/local/bin/aot-diag
+  ln -sf /scripts/aot-diagnostics.sh /usr/local/bin/aot-diagnostics
+fi
 
 print_versions() {
   set +o pipefail
@@ -46,17 +51,45 @@ print_versions() {
 }
 
 cleanup() {
+  # Prevent re-entrance from double signals
+  trap '' SIGTERM EXIT
+
   log "Shutdown signal received. Cleaning up..."
-  # Kill background AOT generation if still running
-  [ -n "${AOT_GEN_PID:-}" ] && kill -TERM "$AOT_GEN_PID" 2>/dev/null || true
-  # Kill background processes (unoservers, watchdog, Xvfb)
-  pkill -P $$ || true
-  # Kill Java if it was backgrounded (though it handles its own shutdown)
-  [ -n "${JAVA_PID:-}" ] && kill -TERM "$JAVA_PID" 2>/dev/null || true
+
+  # Kill background AOT generation first (least important, clean up tmp files)
+  if [ -n "${AOT_GEN_PID:-}" ] && kill -0 "$AOT_GEN_PID" 2>/dev/null; then
+    kill -TERM "$AOT_GEN_PID" 2>/dev/null || true
+    wait "$AOT_GEN_PID" 2>/dev/null || true
+  fi
+
+  # Signal unoserver instances to shut down
+  for pid in "${UNOSERVER_PIDS[@]:-}"; do
+    [ -n "$pid" ] && kill -TERM "$pid" 2>/dev/null || true
+  done
+
+  # Signal Java to shut down gracefully, Spring Boot handles SIGTERM cleanly
+  if [ -n "${JAVA_PID:-}" ] && kill -0 "$JAVA_PID" 2>/dev/null; then
+    kill -TERM "$JAVA_PID" 2>/dev/null || true
+    # Wait up to 30s for graceful shutdown before forcing
+    local _i=0
+    while [ "$_i" -lt 30 ] && kill -0 "$JAVA_PID" 2>/dev/null; do
+      sleep 1
+      _i=$((_i + 1))
+    done
+    if kill -0 "$JAVA_PID" 2>/dev/null; then
+      log "Java did not exit within 30s, sending SIGKILL"
+      kill -KILL "$JAVA_PID" 2>/dev/null || true
+    fi
+  fi
+
+  # Kill any remaining children (watchdog, Xvfb, etc.)
+  pkill -P $$ 2>/dev/null || true
+
   log "Cleanup complete."
 }
 
-trap cleanup SIGTERM EXIT
+trap cleanup SIGTERM
+trap cleanup EXIT
 
 print_versions
 
@@ -408,9 +441,9 @@ compute_dynamic_memory() {
 
 # ---------- Project Leyden AOT Cache (JEP 483 + 514 + 515) ----------
 # Replaces legacy AppCDS with JDK 25's AOT cache. Uses the three-step workflow:
-#   1. RECORD  — runs Spring context init, captures class loading + method profiles
-#   2. CREATE  — builds the AOT cache file (does NOT start the app)
-#   3. RUNTIME — java -XX:AOTCache=... starts with pre-linked classes + compiled methods
+#   1. RECORD , runs Spring context init, captures class loading + method profiles
+#   2. CREATE , builds the AOT cache file (does NOT start the app)
+#   3. RUNTIME, java -XX:AOTCache=... starts with pre-linked classes + compiled methods
 # Constraints:
 # - Cache must be generated on the same JDK build + OS + arch as production (satisfied
 #   because we generate inside the same container image at runtime)
@@ -426,64 +459,182 @@ generate_aot_cache() {
   mkdir -p "$aot_dir" 2>/dev/null || true
 
   local aot_conf="/tmp/stirling.aotconf"
+  local arch
+  arch=$(uname -m)
 
-  log "AOT: Phase 1/2 — Recording class loading + method profiles..."
+  # ── ARM-aware heap sizing ──
+  # ARM devices (Raspberry Pi, Ampere) often have tighter memory.
+  # Scale training heap down to avoid OOM-killing the background generation.
+  local record_xmx="512m"
+  local create_xmx="256m"
+  if [ "${CONTAINER_MEM_MB:-0}" -gt 0 ] && [ "${CONTAINER_MEM_MB}" -le 1024 ]; then
+    record_xmx="256m"
+    create_xmx="128m"
+  fi
 
-  # RECORD — starts Spring context, observes class loading + collects method profiles (JEP 515).
-  # -Dspring.context.exit=onRefresh stops after Spring context loads (good training coverage).
-  # Uses -Xmx512m: enough for Spring context init without starving the running application.
-  # -Xlog:aot=error suppresses harmless "Skipping"/"Preload Warning" messages for proxies,
-  #   signed JARs (BouncyCastle), JFR events, CGLIB classes, etc. The JVM handles all of
-  #   these internally they are informational, not errors.
-  # Non-zero exit is expected — onRefresh triggers controlled shutdown.
-  # Uses in-memory H2 database to avoid file-lock conflicts with the running application.
-  # Note: DatabaseConfig reads System.getProperty("stirling.datasource.url") to override
-  # the default file-based H2 URL. We use MODE=PostgreSQL to match the production config.
-  # Redirect both stdout and stderr to suppress duplicate startup logs (banner + Spring init).
-  # IMPORTANT: COMPRESSED_OOPS_FLAG must match the runtime setting to avoid AOT cache
-  # invalidation on restart ("saved state of UseCompressedOops ... is different" error).
-  java -Xmx512m -XX:+UseCompactObjectHeaders ${COMPRESSED_OOPS_FLAG} \
-       -Xlog:aot=error \
-       -XX:AOTMode=record \
-       -XX:AOTConfiguration="$aot_conf" \
-       -Dspring.main.banner-mode=off \
-       -Dspring.context.exit=onRefresh \
-       -Dstirling.datasource.url="jdbc:h2:mem:aottraining;DB_CLOSE_DELAY=-1;MODE=PostgreSQL" \
-       "$@" >/tmp/aot-record.log 2>&1 || true
+  # ── ARM-aware timeouts ──
+  # ARM under QEMU or on slow SD/eMMC can take much longer than x86_64.
+  local record_timeout=300
+  local create_timeout=180
+  if [ "$arch" = "aarch64" ]; then
+    record_timeout=600
+    create_timeout=300
+  fi
+
+  log "AOT: arch=${arch} mem=${CONTAINER_MEM_MB:-?}MB heap=${record_xmx} timeouts=${record_timeout}s/${create_timeout}s"
+  log "AOT: COMPACT_HEADERS='${COMPACT_HEADERS_FLAG:-<none>}' COMPRESSED_OOPS='${COMPRESSED_OOPS_FLAG}'"
+  log "AOT: Phase 1/2, Recording class loading + method profiles..."
+
+  # RECORD, starts Spring context, observes class loading + collects method profiles (JEP 515).
+  # Non-zero exit is expected: -Dspring.context.exit=onRefresh triggers controlled shutdown.
+  # Uses in-memory H2 to avoid file-lock conflicts with the running app.
+  # COMPACT_HEADERS_FLAG/COMPRESSED_OOPS_FLAG must exactly match the runtime invocation.
+  local record_exit=0
+  if command_exists timeout; then
+    timeout "${record_timeout}s" \
+      java "-Xmx${record_xmx}" ${COMPACT_HEADERS_FLAG:-} ${COMPRESSED_OOPS_FLAG} \
+           -Xlog:aot=error \
+           -XX:AOTMode=record \
+           -XX:AOTConfiguration="$aot_conf" \
+           -Dspring.main.banner-mode=off \
+           -Dspring.context.exit=onRefresh \
+           -Dstirling.datasource.url="jdbc:h2:mem:aottraining;DB_CLOSE_DELAY=-1;MODE=PostgreSQL" \
+           "$@" >/tmp/aot-record.log 2>&1 || record_exit=$?
+  else
+    java "-Xmx${record_xmx}" ${COMPACT_HEADERS_FLAG:-} ${COMPRESSED_OOPS_FLAG} \
+         -Xlog:aot=error \
+         -XX:AOTMode=record \
+         -XX:AOTConfiguration="$aot_conf" \
+         -Dspring.main.banner-mode=off \
+         -Dspring.context.exit=onRefresh \
+         -Dstirling.datasource.url="jdbc:h2:mem:aottraining;DB_CLOSE_DELAY=-1;MODE=PostgreSQL" \
+         "$@" >/tmp/aot-record.log 2>&1 || record_exit=$?
+  fi
+
+  if [ "$record_exit" -eq 124 ]; then
+    log "AOT: RECORD phase timed out after ${record_timeout}s, skipping"
+    rm -f "$aot_conf" /tmp/aot-record.log
+    return 1
+  fi
+  if [ "$record_exit" -eq 137 ]; then
+    log "AOT: RECORD phase OOM-killed (exit 137), container memory too low for training"
+    log "AOT: Set STIRLING_AOT_DISABLE=true or increase container memory above 1GB"
+    rm -f "$aot_conf" /tmp/aot-record.log
+    return 1
+  fi
 
   if [ ! -f "$aot_conf" ]; then
-    log "AOT: Training produced no configuration file."
-    tail -5 /tmp/aot-record.log 2>/dev/null | while IFS= read -r line; do log "  $line"; done
+    log "AOT: Training produced no configuration file (exit=${record_exit}), last 30 lines:"
+    tail -30 /tmp/aot-record.log 2>/dev/null | while IFS= read -r line; do log "  $line"; done
     rm -f /tmp/aot-record.log
     return 1
   fi
+  log "AOT: Phase 1 complete, conf $(du -h "$aot_conf" 2>/dev/null | cut -f1)"
+  log "AOT: Phase 2/2, Creating AOT cache from recorded profile..."
 
-  log "AOT: Phase 2/2 — Creating AOT cache from recorded profile..."
-
-  # CREATE — does NOT start the application. Processes the recorded configuration
-  # to build the AOT cache with pre-linked classes and optimized native code.
-  # Uses less memory than the training run.
-  # -Xlog:aot=error: same as record phase — suppress harmless skip/preload warnings.
-  # Redirect both stdout and stderr to avoid polluting container logs.
-  # IMPORTANT: COMPRESSED_OOPS_FLAG must match both RECORD and RUNTIME.
-  if java -Xmx256m -XX:+UseCompactObjectHeaders ${COMPRESSED_OOPS_FLAG} \
-       -Xlog:aot=error \
-       -XX:AOTMode=create \
-       -XX:AOTConfiguration="$aot_conf" \
-       -XX:AOTCache="$aot_path" \
-       "$@" >/tmp/aot-create.log 2>&1; then
-
-    local cache_size
-    cache_size=$(du -h "$aot_path" 2>/dev/null | cut -f1)
-    log "AOT: Cache created successfully: $aot_path ($cache_size)"
-    rm -f "$aot_conf" /tmp/aot-record.log /tmp/aot-create.log
-    return 0
+  # CREATE, does NOT start the application; builds pre-linked class + method data.
+  local create_exit=0
+  if command_exists timeout; then
+    timeout "${create_timeout}s" \
+      java "-Xmx${create_xmx}" ${COMPACT_HEADERS_FLAG:-} ${COMPRESSED_OOPS_FLAG} \
+           -Xlog:aot=error \
+           -XX:AOTMode=create \
+           -XX:AOTConfiguration="$aot_conf" \
+           -XX:AOTCache="$aot_path" \
+           "$@" >/tmp/aot-create.log 2>&1 || create_exit=$?
   else
-    log "AOT: Cache creation failed."
-    tail -5 /tmp/aot-create.log 2>/dev/null | while IFS= read -r line; do log "  $line"; done
+    java "-Xmx${create_xmx}" ${COMPACT_HEADERS_FLAG:-} ${COMPRESSED_OOPS_FLAG} \
+         -Xlog:aot=error \
+         -XX:AOTMode=create \
+         -XX:AOTConfiguration="$aot_conf" \
+         -XX:AOTCache="$aot_path" \
+         "$@" >/tmp/aot-create.log 2>&1 || create_exit=$?
+  fi
+
+  if [ "$create_exit" -eq 124 ]; then
+    log "AOT: CREATE phase timed out after ${create_timeout}s"
     rm -f "$aot_conf" "$aot_path" /tmp/aot-record.log /tmp/aot-create.log
     return 1
   fi
+  if [ "$create_exit" -eq 137 ]; then
+    log "AOT: CREATE phase OOM-killed (exit 137)"
+    rm -f "$aot_conf" "$aot_path" /tmp/aot-record.log /tmp/aot-create.log
+    return 1
+  fi
+
+  if [ "$create_exit" -eq 0 ] && [ -f "$aot_path" ] && [ -s "$aot_path" ]; then
+    local cache_size
+    cache_size=$(du -h "$aot_path" 2>/dev/null | cut -f1)
+    log "AOT: Cache created successfully: $aot_path ($cache_size)"
+    chmod 644 "$aot_path" 2>/dev/null || true
+    save_aot_fingerprint "$aot_path"
+    rm -f "$aot_conf" /tmp/aot-record.log /tmp/aot-create.log
+    return 0
+  else
+    log "AOT: Cache creation failed (exit=${create_exit}), last 30 lines:"
+    tail -30 /tmp/aot-create.log 2>/dev/null | while IFS= read -r line; do log "  $line"; done
+    rm -f "$aot_conf" "$aot_path" /tmp/aot-record.log /tmp/aot-create.log
+    return 1
+  fi
+}
+
+# ---------- AOT Cache Fingerprinting ----------
+# Detects stale caches automatically when the app JAR, JDK version, arch, or JVM flags change.
+# Stores a short hash alongside the cache file; mismatch → cache is deleted and regenerated.
+compute_aot_fingerprint() {
+  local fp=""
+  fp+="jdk:$(java -version 2>&1 | head -1);"
+  fp+="arch:$(uname -m);"
+  fp+="compact:${COMPACT_HEADERS_FLAG:-none};"
+  fp+="oops:${COMPRESSED_OOPS_FLAG:-none};"
+  # App identity: size+mtime is fast (avoids hashing 200MB JARs)
+  if [ -f /app/app.jar ]; then
+    fp+="app:$(stat -c '%s-%Y' /app/app.jar 2>/dev/null || echo unknown);"
+  elif [ -f /app.jar ]; then
+    fp+="app:$(stat -c '%s-%Y' /app.jar 2>/dev/null || echo unknown);"
+  elif [ -d /app/lib ]; then
+    fp+="app:$(ls -la /app/lib/ 2>/dev/null | md5sum 2>/dev/null | cut -c1-16 || echo unknown);"
+  fi
+  fp+="ver:${VERSION_TAG:-unknown};"
+  if command_exists md5sum; then
+    printf '%s' "$fp" | md5sum | cut -c1-16
+  elif command_exists sha256sum; then
+    printf '%s' "$fp" | sha256sum | cut -c1-16
+  else
+    printf '%s' "$fp" | cksum | cut -d' ' -f1
+  fi
+}
+
+validate_aot_cache() {
+  local cache_path="$1"
+  local fp_file="${cache_path}.fingerprint"
+
+  [ -f "$cache_path" ] || return 1
+  if [ ! -s "$cache_path" ]; then
+    log "AOT: Cache file is empty, removing."
+    rm -f "$cache_path" "$fp_file"
+    return 1
+  fi
+
+  local expected_fp stored_fp=""
+  expected_fp=$(compute_aot_fingerprint)
+  [ -f "$fp_file" ] && stored_fp=$(cat "$fp_file" 2>/dev/null || true)
+
+  if [ "$stored_fp" != "$expected_fp" ]; then
+    log "AOT: Fingerprint mismatch (stored=${stored_fp:-<none>} expected=${expected_fp})."
+    log "AOT: JAR, JDK, arch, or flags changed, removing stale cache."
+    rm -f "$cache_path" "$fp_file"
+    return 1
+  fi
+  log "AOT: Cache fingerprint valid (${expected_fp})"
+  return 0
+}
+
+save_aot_fingerprint() {
+  local cache_path="$1"
+  local fp_file="${cache_path}.fingerprint"
+  compute_aot_fingerprint > "$fp_file" 2>/dev/null || true
+  chmod 644 "$fp_file" 2>/dev/null || true
 }
 
 # ---------- Memory Detection ----------
@@ -509,7 +660,7 @@ if [ "$CONTAINER_MEM_MB" -gt 0 ] 2>/dev/null; then
     COMPRESSED_OOPS_FLAG="-XX:+UseCompressedOops"
   fi
 else
-  # Cannot detect memory — default matches small-heap behaviour
+  # Cannot detect memory, default matches small-heap behaviour
   COMPRESSED_OOPS_FLAG="-XX:+UseCompressedOops"
 fi
 
@@ -563,18 +714,30 @@ else
   fi
 fi
 
-# Check if Project Lilliput is supported (standard in Java 25+)
+# Check if Project Lilliput is supported (standard in Java 25+, but experimental on some ARM builds)
+# COMPACT_HEADERS_FLAG is used by generate_aot_cache() to ensure training/runtime consistency.
 if java -XX:+UseCompactObjectHeaders -version >/dev/null 2>&1; then
+  COMPACT_HEADERS_FLAG="-XX:+UseCompactObjectHeaders"
   # Only append if not already present in JAVA_BASE_OPTS
   case "${JAVA_BASE_OPTS}" in
     *UseCompactObjectHeaders*) ;;
     *)
-      log "JVM supports Compact Object Headers. Enabling Project Lilliput..."
+      log "JVM supports Compact Object Headers ($(uname -m)). Enabling Project Lilliput..."
       JAVA_BASE_OPTS="${JAVA_BASE_OPTS} -XX:+UseCompactObjectHeaders"
       ;;
   esac
 else
-  log "JVM does not support Compact Object Headers. Skipping Project Lilliput flags."
+  COMPACT_HEADERS_FLAG=""
+  log "JVM does not support Compact Object Headers on $(uname -m). Skipping Project Lilliput flags."
+fi
+
+# ---------- AOT Support Check ----------
+# Verify this JVM build actually supports Project Leyden AOT mode before attempting cache.
+# Some vendor JDK 25 builds (GraalVM, custom ARM builds) may omit Leyden.
+AOT_SUPPORTED=true
+if ! java -XX:AOTMode=off -version >/dev/null 2>&1; then
+  log "AOT: JVM on $(uname -m) does not support -XX:AOTMode, AOT cache disabled"
+  AOT_SUPPORTED=false
 fi
 
 # ---------- Clean deprecated/invalid JVM flags ----------
@@ -592,28 +755,30 @@ JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E \
    s/-Xshare:(auto|on|off)//g;
    s/-XX:AOTCache=[^ ]*//g')
 
-AOT_CACHE="/app/stirling.aot"
+# AOT cache lives in the persistent config volume so it survives container restarts.
+# /app is in the container's writable layer (lost on re-create or with read-only filesystems).
+# /configs is always volume-mounted and writable by the runtime user.
+AOT_CACHE="/configs/cache/stirling.aot"
 AOT_GENERATE_BACKGROUND=false
 
 # Support both new (STIRLING_AOT_DISABLE) and legacy (STIRLING_CDS_DISABLE) env vars
 AOT_DISABLED="${STIRLING_AOT_DISABLE:-${STIRLING_CDS_DISABLE:-false}}"
 
-if [ -f "$AOT_CACHE" ]; then
-  # Cache exists from a previous boot — use it.
-  # If the file is corrupt or from a different JDK build, the JVM issues a warning
-  # and continues without the cache (graceful degradation, no crash).
-  log "AOT cache found: $AOT_CACHE"
-  JAVA_BASE_OPTS="${JAVA_BASE_OPTS} -XX:AOTCache=${AOT_CACHE}"
-
-  # Clean up legacy .jsa if still present
-  rm -f /app/stirling.jsa 2>/dev/null || true
-elif [ "$AOT_DISABLED" = "true" ]; then
+if [ "$AOT_DISABLED" = "true" ]; then
   log "AOT cache disabled via STIRLING_AOT_DISABLE=true"
+elif [ "$AOT_SUPPORTED" = false ]; then
+  log "AOT: Not supported on this JVM/platform, skipping"
+elif validate_aot_cache "$AOT_CACHE"; then
+  # Cache exists and fingerprint matches, use it.
+  # If corrupt or from a different JDK build the JVM warns and continues without it.
+  log "AOT cache valid: $AOT_CACHE"
+  JAVA_BASE_OPTS="${JAVA_BASE_OPTS} -XX:AOTCache=${AOT_CACHE}"
+  # Clean up legacy cache locations if still present
+  rm -f /app/stirling.jsa /app/stirling.aot /app/stirling.aot.fingerprint 2>/dev/null || true
 else
-  # No cache exists — schedule background generation after app starts.
-  # The app starts immediately (no training delay). The AOT cache will be
-  # ready for the NEXT boot, giving 15-25% faster startup from then on.
-  log "No AOT cache found. Will generate in background after app starts."
+  # No valid cache, schedule background generation after app starts.
+  # App starts immediately; cache is ready from the NEXT boot (15-25% faster startup).
+  log "No valid AOT cache found. Will generate in background after app starts."
   AOT_GENERATE_BACKGROUND=true
 fi
 
@@ -688,7 +853,7 @@ fi
 # ---------- Permissions ----------
 # Ensure required directories exist and set correct permissions.
 log "Setting permissions..."
-mkdir -p /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps /logs /configs /configs/heap_dumps /customFiles /pipeline || true
+mkdir -p /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps /logs /configs /configs/heap_dumps /configs/cache /customFiles /pipeline || true
 CHOWN_PATHS=("$HOME" "/logs" "/scripts" "/configs" "/customFiles" "/pipeline" "/tmp/stirling-pdf" "/app.jar")
 [ -d /usr/share/fonts/truetype ] && CHOWN_PATHS+=("/usr/share/fonts/truetype")
 CHOWN_OK=true
@@ -705,6 +870,7 @@ if command_exists Xvfb; then
   log "Starting Xvfb on :99"
   Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset > /dev/null 2>&1 &
   export DISPLAY=:99
+  # Brief pause so Xvfb accepts connections before unoserver tries to attach
   sleep 1
 else
   log "Xvfb not installed; skipping virtual display setup"
@@ -712,44 +878,22 @@ fi
 
 # ---------- unoserver ----------
 # Start LibreOffice UNO server for document conversions.
+# Java and unoserver start in parallel, do NOT block here waiting for readiness.
+# Readiness is verified after Java is launched; the watchdog handles any restarts.
 UNOSERVER_BIN="$(command -v unoserver || true)"
 UNOCONVERT_BIN="$(command -v unoconvert || true)"
 UNOPING_BIN="$(command -v unoping || true)"
 if [ -n "$UNOSERVER_BIN" ] && [ -n "$UNOCONVERT_BIN" ]; then
   LIBREOFFICE_PROFILE="${HOME:-/home/${RUNTIME_USER}}/.libreoffice_uno_${RUID}"
   run_as_runtime_user mkdir -p "$LIBREOFFICE_PROFILE"
-
   start_unoserver_pool
-  log "unoserver pool started (Profile: $LIBREOFFICE_PROFILE)"
-
-
-  # Wait until UNO server is ready.
-  log "Waiting for unoserver..."
-  for _ in {1..20}; do
-    # Pass 'silent' to check_unoserver_ready to suppress unoping failure logs during wait
-    if check_unoserver_ready "silent"; then
-      log "unoserver is ready!"
-      break
-    fi
-    sleep 1
-  done
-
-  start_unoserver_watchdog
-
-  if ! check_unoserver_ready; then
-    log "ERROR: unoserver failed!"
-    for pid in "${UNOSERVER_PIDS[@]}"; do
-      kill "$pid" 2>/dev/null || true
-      wait "$pid" 2>/dev/null || true
-    done
-    exit 1
-  fi
+  log "unoserver pool started (Profile: $LIBREOFFICE_PROFILE), Java starting in parallel"
 else
   log "unoserver/unoconvert not installed; skipping UNO setup"
 fi
 
 # ---------- Java ----------
-# Start Stirling PDF Java application.
+# Start Stirling PDF Java application immediately (parallel with unoserver startup).
 log "Starting Stirling PDF"
 JAVA_CMD=(
   java
@@ -780,46 +924,108 @@ fi
 
 JAVA_PID=$!
 
+# ---------- Unoserver Readiness + Watchdog ----------
+# Now that Java is running, check unoserver readiness and start the watchdog.
+# Runs in the main shell (not a subshell) so UNOSERVER_PIDS/PORTS arrays are accessible.
+# Java handles unoserver being temporarily unavailable, no fatal exit on timeout.
+if [ "${#UNOSERVER_PORTS[@]}" -gt 0 ]; then
+  log "Waiting for unoserver (Java already starting in parallel)..."
+  UNOSERVER_READY=false
+  for _ in {1..30}; do
+    if check_unoserver_ready "silent"; then
+      log "unoserver is ready!"
+      UNOSERVER_READY=true
+      break
+    fi
+    sleep 1
+  done
+
+  start_unoserver_watchdog
+
+  if [ "$UNOSERVER_READY" = false ] && ! check_unoserver_ready; then
+    log "WARNING: unoserver not ready after 30s. Watchdog will manage restarts. Document conversion may be temporarily unavailable."
+  fi
+fi
+
 # ---------- Background AOT Cache Generation ----------
-# On first boot (no existing cache), generate the AOT cache in the background
-# so the app starts immediately. The cache is picked up on the next boot.
-# Only runs on containers with >768MB memory to avoid starving the main process.
+# On first boot (no valid cache), generate the AOT cache in the background so the app
+# starts immediately. The cache is ready for the NEXT boot (15-25% faster startup).
 AOT_GEN_PID=""
 if [ "$AOT_GENERATE_BACKGROUND" = true ]; then
-  if [ "$CONTAINER_MEM_MB" -gt 768 ] || [ "$CONTAINER_MEM_MB" -eq 0 ]; then
-    (
-      # Wait for the app to finish starting before competing for resources.
-      # This avoids CPU/memory contention during Spring Boot initialization.
-      sleep 45
+  # ARM devices need more memory for training due to JIT differences
+  _aot_min_mem=768
+  if [ "$(uname -m)" = "aarch64" ]; then
+    _aot_min_mem=1024
+  fi
 
-      # Verify the main app is still running before investing in cache generation
+  if [ "$CONTAINER_MEM_MB" -gt "$_aot_min_mem" ] || [ "$CONTAINER_MEM_MB" -eq 0 ]; then
+    (
+      # Wait for Spring Boot to finish initializing before competing for CPU/memory.
+      # ARM devices (Raspberry Pi 4, Ampere) need extra time, 90s vs 45s on x86_64.
+      _startup_wait=45
+      if [ "$(uname -m)" = "aarch64" ]; then
+        _startup_wait=90
+        log "AOT: ARM, waiting ${_startup_wait}s for app stabilization before training"
+      fi
+      sleep "$_startup_wait"
+
       if ! kill -0 "$JAVA_PID" 2>/dev/null; then
         log "AOT: Main process exited; skipping cache generation."
         exit 0
       fi
 
-      log "AOT: Starting background cache generation for next boot..."
-      if [ -f /app/app.jar ] && [ -d /app/lib ]; then
-        generate_aot_cache "$AOT_CACHE" -cp "/app/app.jar:/app/lib/*" stirling.software.SPDF.SPDFApplication
-      elif [ -f /app.jar ]; then
-        generate_aot_cache "$AOT_CACHE" -jar /app.jar
-      elif [ -d /app/BOOT-INF ]; then
-        # Spring Boot exploded layer layout (produced by 'java -Djarmode=tools extract --layers').
-        # The actual JAVA_CMD uses JarLauncher with default classpath = CWD (/app).
-        # Mirror that exactly: -cp /app resolves the same classes.
-        generate_aot_cache "$AOT_CACHE" -cp /app org.springframework.boot.loader.launch.JarLauncher
-      else
-        log "AOT: Cannot determine JAR layout; skipping cache generation."
-      fi
+      _attempt=1
+      _max_attempts=2
+      while [ "$_attempt" -le "$_max_attempts" ]; do
+        log "AOT: Background cache generation attempt ${_attempt}/${_max_attempts}..."
+        _gen_rc=0
+        if [ -f /app/app.jar ] && [ -d /app/lib ]; then
+          generate_aot_cache "$AOT_CACHE" \
+            -cp "/app/app.jar:/app/lib/*" stirling.software.SPDF.SPDFApplication || _gen_rc=$?
+        elif [ -f /app.jar ]; then
+          generate_aot_cache "$AOT_CACHE" -jar /app.jar || _gen_rc=$?
+        elif [ -d /app/BOOT-INF ]; then
+          # Spring Boot exploded layer layout, mirror the exact JAVA_CMD classpath
+          generate_aot_cache "$AOT_CACHE" \
+            -cp /app org.springframework.boot.loader.launch.JarLauncher || _gen_rc=$?
+        else
+          log "AOT: Cannot determine JAR layout; skipping cache generation."
+          exit 0
+        fi
+
+        if [ "$_gen_rc" -eq 0 ] && [ -f "$AOT_CACHE" ]; then
+          log "AOT: Cache ready for next boot!"
+          exit 0
+        fi
+
+        log "AOT: Attempt ${_attempt} failed (rc=${_gen_rc})"
+        _attempt=$((_attempt + 1))
+        if [ "$_attempt" -le "$_max_attempts" ]; then
+          if ! kill -0 "$JAVA_PID" 2>/dev/null; then
+            log "AOT: Main process exited during retry; aborting."
+            exit 0
+          fi
+          log "AOT: Retrying in 30s..."
+          sleep 30
+        fi
+      done
+      log "AOT: All attempts failed. App runs normally without cache."
+      log "AOT: To suppress these attempts set STIRLING_AOT_DISABLE=true"
     ) &
     AOT_GEN_PID=$!
-    log "AOT: Background cache generation scheduled (PID $AOT_GEN_PID)"
+    log "AOT: Background generation scheduled (PID $AOT_GEN_PID, arch=$(uname -m))"
   else
-    log "AOT: Container memory (${CONTAINER_MEM_MB}MB) too low for background generation (need >768MB). Cache will not be created."
+    log "AOT: Container memory (${CONTAINER_MEM_MB}MB) below minimum (${_aot_min_mem}MB on $(uname -m)), skipping cache generation"
   fi
 fi
 
-wait "$JAVA_PID"
+wait "$JAVA_PID" || true
 exit_code=$?
-# Propagate Java's actual exit code so container orchestrators can detect crashes
+case "$exit_code" in
+  0)   log "Stirling PDF exited normally." ;;
+  137) log "Stirling PDF was OOM-killed (exit 137). Check container memory limits." ;;
+  143) log "Stirling PDF terminated by SIGTERM (normal orchestrator shutdown)." ;;
+  *)   log "Stirling PDF exited with code ${exit_code}." ;;
+esac
+# Propagate exit code so orchestrators can detect crashes vs clean shutdowns
 exit "${exit_code}"
