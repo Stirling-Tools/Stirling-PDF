@@ -5,11 +5,18 @@ export type { DownloadRequest, DownloadResult };
 
 export async function downloadFile(request: DownloadRequest): Promise<DownloadResult> {
   if (request.localPath) {
-    const result = await saveToLocalPath(request.data, request.localPath);
-    if (!result.success) {
-      throw new Error(result.error || "Failed to save file");
+    const outputExt = request.filename.split('.').pop()?.toLowerCase();
+    const savedExt = request.localPath.split('.').pop()?.toLowerCase();
+    // Only overwrite in-place when the extension matches. A differing extension
+    // (e.g. ZIP output → original .pdf path) means the format changed, so fall
+    // through to the Save As dialog instead of silently corrupting the file.
+    if (outputExt === savedExt) {
+      const result = await saveToLocalPath(request.data, request.localPath);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to save file");
+      }
+      return { savedPath: request.localPath };
     }
-    return { savedPath: request.localPath };
   }
 
   const savePath = await showSaveDialog(request.filename);

@@ -137,13 +137,19 @@ export default function RightRail() {
   const handleExportAll = useCallback(async () => {
     if (currentView === 'viewer') {
       const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
-      if (!buffer) return;
       const fileToExport = selectedFiles.length > 0 ? selectedFiles[0] : activeFiles[0];
       if (!fileToExport) return;
       const stub = isStirlingFile(fileToExport) ? selectors.getStirlingFileStub(fileToExport.fileId) : undefined;
+      // If the viewer produced a serialised PDF buffer, save that (preserves annotations etc.).
+      // Otherwise fall back to saving the raw file bytes (e.g. ZIP output that PDF.js can't render).
+      const rawFile = isStirlingFile(fileToExport) ? selectors.getFile(fileToExport.fileId) : null;
+      const dataToSave = buffer
+        ? new Blob([buffer], { type: 'application/pdf' })
+        : rawFile ?? null;
+      if (!dataToSave) return;
       try {
         const result = await downloadFile({
-          data: new Blob([buffer], { type: 'application/pdf' }),
+          data: dataToSave,
           filename: fileToExport.name,
           localPath: stub?.localFilePath,
         });
