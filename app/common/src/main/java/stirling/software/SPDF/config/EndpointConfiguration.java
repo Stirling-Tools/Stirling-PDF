@@ -356,6 +356,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Security", "cert-sign");
         addEndpointToGroup("Security", "remove-cert-sign");
         addEndpointToGroup("Security", "sanitize-pdf");
+        addEndpointToGroup("Security", "timestamp-pdf");
         addEndpointToGroup("Security", "auto-redact");
         addEndpointToGroup("Security", "validate-signature");
         addEndpointToGroup("Security", "add-stamp");
@@ -473,6 +474,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "auto-rename");
         addEndpointToGroup("Java", "auto-split-pdf");
         addEndpointToGroup("Java", "sanitize-pdf");
+        addEndpointToGroup("Java", "timestamp-pdf");
         addEndpointToGroup("Java", "crop");
         addEndpointToGroup("Java", "get-info-on-pdf");
         addEndpointToGroup("Java", "pdf-to-single-page");

@@ -3713,6 +3713,11 @@ desc = "Recherche et affiche tout JavaScript injecté dans un PDF."
 tags = "javascript,code,script"
 title = "Afficher le JavaScript"
 
+[home.timestampPdf]
+desc = "Ajoutez un horodatage RFC 3161 pour prouver la date d'existence de votre PDF"
+tags = "horodatage,RFC 3161,TSA,autorité de timestamp,horodatage de document,preuve d'existence,jeton d'horodatage,timestamp de confiance,signer horodatage,notariser"
+title = "Horodater le PDF"
+
 [home.sign]
 desc = "Ajoutez une signature au PDF avec un dessin, du texte ou une image."
 tags = "signature,autographe"
@@ -5630,6 +5635,36 @@ text = "Faites pivoter les pages de votre PDF dans le sens horaire ou antihorair
 
 [rotate.tooltip.header]
 title = "Aperçu des paramètres de rotation"
+
+[timestampPdf]
+completed = "PDF horodaté avec succès"
+desc = "Ajoutez un horodatage RFC 3161 à votre PDF via un serveur d'autorité d'horodatage (TSA) de confiance."
+filenamePrefix = "horodaté"
+results = "Résultats de l'horodatage"
+submit = "Appliquer l'horodatage"
+title = "Horodater le PDF"
+
+[timestampPdf.error]
+failed = "Une erreur est survenue lors de l'horodatage du PDF."
+generic = "Échec de l'horodatage"
+
+[timestampPdf.files]
+placeholder = "Sélectionnez un fichier PDF dans la vue principale pour commencer"
+
+[timestampPdf.options]
+note = "Seul le hash SHA-256 de votre document est envoyé au serveur TSA. Le PDF reste sur le serveur."
+title = "Serveur d'horodatage (TSA)"
+
+[timestampPdf.options.tsaUrl]
+custom = "URL TSA personnalisée..."
+desc = "Choisissez une autorité d'horodatage de confiance ou entrez une URL personnalisée"
+label = "Sélectionner un serveur TSA"
+
+[timestampPdf.options.customTsaUrl]
+label = "URL TSA personnalisée"
+
+[timestampPdf.steps]
+settings = "Paramètres"
 
 [sanitize]
 completed = "Assainissement effectué avec succès"

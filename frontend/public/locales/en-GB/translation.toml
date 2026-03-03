@@ -3758,6 +3758,11 @@ desc = "Adds signature to PDF by drawing, text or image"
 tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
 title = "Sign"
 
+[home.timestampPdf]
+desc = "Add an RFC 3161 document timestamp to prove when your PDF existed"
+tags = "timestamp,RFC 3161,TSA,time stamp authority,document timestamp,proof of existence,timestamp token,trusted timestamp,sign timestamp,notarise"
+title = "Timestamp PDF"
+
 [home.split]
 desc = "Split PDFs into multiple documents"
 tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
@@ -5696,6 +5701,36 @@ text = "Rotate your PDF pages clockwise or anticlockwise in 90-degree increments
 
 [rotate.tooltip.header]
 title = "Rotate Settings Overview"
+
+[timestampPdf]
+completed = "PDF timestamped successfully"
+desc = "Add an RFC 3161 document timestamp to your PDF using a trusted Time Stamp Authority (TSA) server."
+filenamePrefix = "timestamped"
+results = "Timestamp Results"
+submit = "Apply Timestamp"
+title = "Timestamp PDF"
+
+[timestampPdf.error]
+failed = "An error occurred while timestamping the PDF."
+generic = "Timestamping failed"
+
+[timestampPdf.files]
+placeholder = "Select a PDF file in the main view to get started"
+
+[timestampPdf.options]
+note = "Only a SHA-256 hash of your document is sent to the TSA server. The PDF itself stays on the server."
+title = "Timestamp Server (TSA)"
+
+[timestampPdf.options.tsaUrl]
+custom = "Custom TSA URL..."
+desc = "Pick a trusted Time Stamp Authority or enter a custom URL"
+label = "Select a TSA server"
+
+[timestampPdf.options.customTsaUrl]
+label = "Custom TSA URL"
+
+[timestampPdf.steps]
+settings = "Settings"
 
 [sanitize]
 completed = "Sanitisation completed successfully"
