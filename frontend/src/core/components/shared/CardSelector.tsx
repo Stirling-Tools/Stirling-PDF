@@ -35,16 +35,23 @@ const CardSelector = <T, K extends CardOption<T>>({
     if (getTooltipContent) {
       return getTooltipContent(option);
     }
+    if (option.tooltipKey) {
+      const text = t(option.tooltipKey, '');
+      if (text) return [{ description: text }];
+    }
     return [];
   };
 
   return (
     <Stack gap="sm">
-      {options.map((option) => (
+      {options.map((option) => {
+        const tips = getTooltips(option);
+        return (
         <Tooltip
           key={option.value as string}
           sidebarTooltip
-          tips={getTooltips(option)}
+          tips={tips}
+          disabled={tips.length === 0}
         >
           <Card
             radius="md"
@@ -91,7 +98,8 @@ const CardSelector = <T, K extends CardOption<T>>({
             </Flex>
           </Card>
         </Tooltip>
-      ))}
+      );
+      })}
     </Stack>
   );
 };
