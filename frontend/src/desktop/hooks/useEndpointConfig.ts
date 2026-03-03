@@ -215,12 +215,28 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
     try {
       setError(null);
 
-      const response = await apiClient.get<Record<string, EndpointAvailabilityDetails>>(
-        `/api/v1/config/endpoints-availability`,
-        {
-          suppressErrorToast: true,
+      // Try new API first (no params — new servers return all endpoints).
+      // Fall back to the old ?endpoints= form for servers that predate the
+      // "large query reduction" change and still require the parameter.
+      let response: Awaited<ReturnType<typeof apiClient.get<Record<string, EndpointAvailabilityDetails>>>>;
+      try {
+        response = await apiClient.get<Record<string, EndpointAvailabilityDetails>>(
+          `/api/v1/config/endpoints-availability`,
+          { suppressErrorToast: true }
+        );
+      } catch (innerErr) {
+        if (isAxiosError(innerErr) && innerErr.response?.status === 400) {
+          // Old server — requires explicit endpoints query param
+          console.debug('[useMultipleEndpointsEnabled] Server requires endpoints param, retrying with legacy format');
+          const endpointsParam = endpoints.join(',');
+          response = await apiClient.get<Record<string, EndpointAvailabilityDetails>>(
+            `/api/v1/config/endpoints-availability?endpoints=${encodeURIComponent(endpointsParam)}`,
+            { suppressErrorToast: true }
+          );
+        } else {
+          throw innerErr;
         }
-      );
+      }
 
       const details = Object.entries(response.data).reduce((acc, [endpointName, detail]) => {
         acc[endpointName] = {
