@@ -13,10 +13,18 @@ export async function saveOperationResults(context: OperationSaveContext): Promi
       const stub = context.getStub(fileId as FileId);
       if (!file) continue;
 
+      // Don't overwrite the original path if the output file type has changed
+      // (e.g. a PDF→image conversion produces a ZIP, not a PDF — saving to the
+      // original .pdf path would corrupt it). Fall back to a Save As dialog instead.
+      const localPath = stub?.localFilePath;
+      const outputExt = file.name.split('.').pop()?.toLowerCase();
+      const originalExt = localPath?.split('.').pop()?.toLowerCase();
+      const overwritePath = localPath && outputExt === originalExt ? localPath : undefined;
+
       const result = await downloadFile({
         data: file,
         filename: file.name,
-        localPath: stub?.localFilePath
+        localPath: overwritePath
       });
 
       if (result.savedPath) {
