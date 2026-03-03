@@ -56,6 +56,19 @@ Default role when none is specified: `EDITOR`.
 
 Owners always have full access regardless of role.
 
+#### Role Semantics: COMMENTER vs VIEWER
+
+In the file storage layer, `COMMENTER` and `VIEWER` are equivalent — both grant read-only access and neither can replace file content. The distinction is meaningful in the **signing workflow** context:
+
+| Context | COMMENTER | VIEWER |
+|---------|-----------|--------|
+| File storage | Read only (same as VIEWER) | Read only |
+| Signing workflow | Can submit a signing action | Read only |
+
+`WorkflowParticipant.canEdit()` returns `true` for `COMMENTER` (and `EDITOR`) roles, which the signing workflow uses to determine if a participant can still submit a signature. Once a participant has signed or declined, their effective role is automatically downgraded to `VIEWER` regardless of their configured role.
+
+The rationale: "annotating" a document (submitting a signature) is not the same as "replacing" it. COMMENTER grants annotation rights without file-replacement rights.
+
 ### Backend Architecture
 
 #### Service Layer
@@ -257,6 +270,8 @@ GET /api/v1/storage/share-links/{token}?inline=false
 - Returns 410 if the link has expired
 - Records a `FileShareAccess` entry on success
 
+> **Token-as-credential semantics:** Any authenticated user who holds the token can access the file — the token is the credential. If you need per-user access control (only a specific person can open it), use "Share with User" instead. Share links are appropriate for broader distribution where possession of the token implies authorization.
+
 ### Get Share Link Metadata
 
 ```bash
@@ -283,13 +298,11 @@ Returns per-user access history (username, VIEW/DOWNLOAD, timestamp), sorted des
 
 ## Workflow Share Integration
 
-`FileShare` records with a non-null `workflow_participant_id` are **workflow shares**. They differ from regular shares:
+Signing workflow participants access documents via their own `WorkflowParticipant.shareToken`. No `FileShare` record is created for participants; access control is self-contained in the `WorkflowParticipant` entity.
 
-- Not returned in `GET /api/v1/storage/files` (filtered out)
-- Used internally by the signing workflow to link a participant's token to a file
-- `isWorkflowShare()` helper distinguishes the two types
+The `FileShare.workflow_participant_id` column and the `FileShare.isWorkflowShare()` method are **deprecated**. Legacy data (sessions created before this change) may still have `FileShare` records with `workflow_participant_id` set, which continue to work via the existing token lookup path in `UnifiedAccessControlService`. No new records are created.
 
-This keeps the file manager clean — participants only see signing-workflow files via the workflow-specific endpoints, not in their general file list.
+`GET /api/v1/storage/files` returns all files owned by or shared with the current user (via `FileShare`). Signing-session PDFs use the `file_purpose` field (`SIGNING_ORIGINAL`, `SIGNING_SIGNED`, etc.) to distinguish them from generic files. The file manager UI can filter on this field if needed.
 
 ## API Reference
 
@@ -377,9 +390,9 @@ storage:
 - Check `sharing.emailEnabled: true`
 - Verify `mail.enabled: true` and mail configuration
 
-**File listed despite being a workflow file:**
-- Workflow participant files should have `workflow_participant_id` set on their `FileShare`
-- If appearing in the file list, check `listAccessibleFiles` query filters
+**Signing-session PDF appearing in the general file list:**
+- This is expected — signing PDFs are accessible to owners and shared users
+- Filter by `file_purpose` (`SIGNING_ORIGINAL`, `SIGNING_SIGNED`) in the UI to distinguish them
 
 **Share link returns 410:**
 - Link has expired — check `expires_at` in `file_shares` table
@@ -428,4 +441,4 @@ The File Sharing feature provides:
 - ✅ Per-access audit trail for share links
 - ✅ Storage quotas (per-user, total, per-file)
 - ✅ Automatic cleanup of expired links and orphaned storage
-- ✅ Workflow share integration (signing sessions use `FileShare` for participant access)
+- ✅ Workflow integration (signing-session PDFs stored via same infrastructure; participant access via `WorkflowParticipant.shareToken`)

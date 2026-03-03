@@ -37,7 +37,7 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
                     + "LEFT JOIN FETCH f.shares s "
                     + "LEFT JOIN FETCH s.sharedWithUser "
                     + "WHERE f.owner = :user "
-                    + "OR (s.sharedWithUser = :user AND s.workflowParticipant IS NULL)")
+                    + "OR s.sharedWithUser = :user")
     List<StoredFile> findAccessibleFiles(@Param("user") User user);
 
     @Query(

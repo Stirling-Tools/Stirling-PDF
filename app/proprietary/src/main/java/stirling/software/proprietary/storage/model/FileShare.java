@@ -81,7 +81,12 @@ public class FileShare implements Serializable {
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
 
-    // Link to workflow participant if this share is for a workflow
+    /**
+     * @deprecated No new records are created with this field set. Workflow participants access
+     *     documents directly via {@code WorkflowParticipant.shareToken}. Existing records are still
+     *     read for backward compatibility.
+     */
+    @Deprecated
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "workflow_participant_id")
     private WorkflowParticipant workflowParticipant;
@@ -92,6 +97,10 @@ public class FileShare implements Serializable {
 
     // Helper methods
 
+    /**
+     * @deprecated Use {@code WorkflowParticipant.shareToken} to identify participant access.
+     */
+    @Deprecated
     public boolean isWorkflowShare() {
         return workflowParticipant != null;
     }

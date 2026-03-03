@@ -22,12 +22,10 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.FilePurpose;
-import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.ShareAccessRole;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.provider.StoredObject;
-import stirling.software.proprietary.storage.repository.FileShareRepository;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
 import stirling.software.proprietary.workflow.dto.ParticipantRequest;
 import stirling.software.proprietary.workflow.dto.WetSignatureMetadata;
@@ -59,7 +57,6 @@ public class WorkflowSessionService {
     private final WorkflowSessionRepository workflowSessionRepository;
     private final WorkflowParticipantRepository workflowParticipantRepository;
     private final StoredFileRepository storedFileRepository;
-    private final FileShareRepository fileShareRepository;
     private final UserRepository userRepository;
     private final StorageProvider storageProvider;
     private final ObjectMapper objectMapper;
@@ -67,7 +64,7 @@ public class WorkflowSessionService {
 
     /**
      * Creates a new workflow session with participants. Stores the original file using
-     * StorageProvider and creates FileShare entries for participants.
+     * StorageProvider.
      */
     public WorkflowSession createSession(
             User owner, MultipartFile file, WorkflowCreationRequest request) throws IOException {
@@ -160,7 +157,7 @@ public class WorkflowSessionService {
         return session;
     }
 
-    /** Adds participants to a workflow session and creates corresponding FileShare entries. */
+    /** Adds participants to a workflow session. */
     private void addParticipantsToSession(
             WorkflowSession session, List<ParticipantRequest> participantRequests) {
         for (ParticipantRequest request : participantRequests) {
@@ -229,30 +226,7 @@ public class WorkflowSessionService {
 
             session.addParticipant(participant);
             participant = workflowParticipantRepository.save(participant);
-
-            // Create FileShare entry for unified access control
-            createFileShareForParticipant(session.getOriginalFile(), participant);
         }
-    }
-
-    /**
-     * Creates a FileShare entry linking the participant to the file. This enables unified access
-     * control through the file sharing infrastructure.
-     */
-    private void createFileShareForParticipant(StoredFile file, WorkflowParticipant participant) {
-        FileShare share = new FileShare();
-        share.setFile(file);
-        share.setSharedWithUser(participant.getUser());
-        share.setShareToken(participant.getShareToken());
-        share.setAccessRole(participant.getAccessRole());
-        share.setExpiresAt(participant.getExpiresAt());
-        share.setWorkflowParticipant(participant);
-
-        fileShareRepository.save(share);
-        log.debug(
-                "Created FileShare for participant {} with token {}",
-                participant.getEmail(),
-                participant.getShareToken());
     }
 
     /** Stores a file as part of a workflow using the StorageProvider. */

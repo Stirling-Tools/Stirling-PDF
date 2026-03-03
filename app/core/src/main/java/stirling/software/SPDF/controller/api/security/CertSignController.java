@@ -113,7 +113,7 @@ public class CertSignController {
         this.serverCertificateService = serverCertificateService;
     }
 
-    static void sign(
+    public static void sign(
             CustomPDFDocumentFactory pdfDocumentFactory,
             MultipartFile input,
             OutputStream output,
@@ -304,7 +304,7 @@ public class CertSignController {
         }
     }
 
-    static class CreateSignature extends CreateSignatureBase {
+    public static class CreateSignature extends CreateSignatureBase {
         File logoFile;
 
         public CreateSignature(KeyStore keystore, char[] pin)

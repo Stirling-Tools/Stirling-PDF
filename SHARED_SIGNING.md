@@ -28,9 +28,11 @@ The Shared Signing feature enables collaborative document signing workflows wher
 
 **`workflow_participants`**
 - One record per participant per session
-- Tracks participant status: PENDING → NOTIFIED → VIEWED → SIGNED/DECLINED
+- Tracks participant status: PENDING → VIEWED → SIGNED/DECLINED
+  - `NOTIFIED` status is reserved for a future email notification feature; no current code path sets it
 - Stores participant-specific metadata (certificates, wet signatures) as JSONB
-- Links to FileShare for unified access control
+- Each participant holds their own `shareToken` (UUID) for token-based access — no separate `FileShare` record is created
+- `accessRole` controls what actions the participant can perform. `COMMENTER` (and `EDITOR`) allow submitting a signature; `VIEWER` does not. After signing/declining, effective role is automatically downgraded to `VIEWER`
 
 **`user_server_certificates`**
 - Stores auto-generated certificates per user
@@ -43,8 +45,8 @@ The Shared Signing feature enables collaborative document signing workflows wher
 - Added `file_purpose` enum (SIGNING_ORIGINAL, SIGNING_SIGNED, etc.)
 
 **`file_shares`**
-- Added `workflow_participant_id` to link shares to workflow participants
-- Enables unified token-based access control
+- Regular file shares are created when the session owner shares the document with other users via the file manager
+- The `workflow_participant_id` column is deprecated; participant access is self-contained in `WorkflowParticipant.shareToken`
 
 ### Backend Architecture
 
@@ -182,9 +184,7 @@ Owner → Uploads PDF → Selects participants → Creates session
         ↓
 System creates:
   - WorkflowSession record
-  - WorkflowParticipant records (one per participant)
-  - FileShare entries for access control
-  - Unique tokens for each participant
+  - WorkflowParticipant records (one per participant, each with a unique shareToken)
         ↓
 Participants receive token (via email or share link)
 ```
@@ -415,10 +415,10 @@ Owner downloads signed PDF
    session.setProcessedFile(signedFile);
    session.setFinalized(true);
 
-   // GDPR: Clear wet signature image data after finalization
+   // GDPR: Clear sensitive metadata after finalization
    for (Participant p : participants) {
-     p.metadata.remove("wetSignatures");
-     // Note: certificate passwords are NOT removed (TODO: encrypt at rest)
+     p.metadata.remove("wetSignatures");         // Clears wet signature image data
+     p.metadata.remove("certificateSubmission"); // Clears keystore bytes + password
    }
    ```
 
@@ -577,9 +577,9 @@ storage.maxFileSize=100GB
 ## Security Considerations
 
 ### Data Protection
-- Certificate passwords stored but not encrypted at rest (TODO)
 - Wet signature image data cleared after finalization (GDPR compliance)
-- Certificate keystores stored as base64 in database; not cleared after finalization (TODO)
+- Certificate submission data (keystore bytes + password) cleared after finalization (GDPR compliance)
+- Certificate passwords are not encrypted at rest while stored (TODO: encrypt at rest)
 - Token expiration support
 
 ### Access Control
