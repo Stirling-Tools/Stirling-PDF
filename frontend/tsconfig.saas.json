@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@app/*": [
+        "src/saas/*",
+        "src/proprietary/*",
+        "src/core/*"
+      ],
+      "@proprietary/*": ["src/proprietary/*"],
+      "@core/*": ["src/core/*"],
+      "posthog-js/react": ["node_modules/posthog-js/react/dist/types/index.d.ts"]
+    }
+  },
+  "include": [
+    "src/global.d.ts",
+    "src/*.js",
+    "src/*.ts",
+    "src/*.tsx",
+    "src/saas"
+  ]
+}

@@ -4,6 +4,16 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import path from 'path';
 
+const VALID_MODES = ['core', 'proprietary', 'saas', 'desktop'] as const;
+type BuildMode = typeof VALID_MODES[number];
+
+const TSCONFIG_MAP: Record<BuildMode, string> = {
+  core: './tsconfig.core.vite.json',
+  proprietary: './tsconfig.proprietary.vite.json',
+  saas: './tsconfig.saas.vite.json',
+  desktop: './tsconfig.desktop.vite.json',
+};
+
 export default defineConfig(({ mode }) => {
 
   // Load env file based on `mode` in the current working directory.
@@ -11,15 +21,15 @@ export default defineConfig(({ mode }) => {
   // `VITE_` prefix.
   const env = loadEnv(mode, process.cwd(), '')
 
-  // When DISABLE_ADDITIONAL_FEATURES is false (or unset), enable proprietary features
-  const isProprietary = process.env.DISABLE_ADDITIONAL_FEATURES !== 'true';
-  const isDesktopMode =
-    mode === 'desktop' ||
-    env.STIRLING_DESKTOP === 'true' ||
-    env.VITE_DESKTOP === 'true';
+  // Resolve the effective build mode.
+  // Explicit --mode flags take precedence; otherwise default to proprietary
+  // unless DISABLE_ADDITIONAL_FEATURES=true, in which case default to core.
+  const effectiveMode: BuildMode = (VALID_MODES as readonly string[]).includes(mode)
+    ? (mode as BuildMode)
+    : process.env.DISABLE_ADDITIONAL_FEATURES === 'true' ? 'core' : 'proprietary';
 
   // Validate required environment variables for desktop builds
-  if (isDesktopMode) {
+  if (effectiveMode === 'desktop') {
     const requiredEnvVars = [
       'VITE_SAAS_SERVER_URL',
       'VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY',
@@ -35,9 +45,7 @@ export default defineConfig(({ mode }) => {
     }
   }
 
-  const baseProject = isProprietary ? './tsconfig.proprietary.vite.json' : './tsconfig.core.vite.json';
-  const desktopProject = isProprietary ? './tsconfig.desktop.vite.json' : baseProject;
-  const tsconfigProject = isDesktopMode ? desktopProject : baseProject;
+  const tsconfigProject = TSCONFIG_MAP[effectiveMode];
 
   return {
     plugins: [
@@ -71,7 +79,7 @@ export default defineConfig(({ mode }) => {
         ignored: ['**/src-tauri/**'],
       },
       // Only use proxy in web mode - Tauri handles backend connections directly
-      proxy: isDesktopMode ? undefined : {
+      proxy: effectiveMode === 'desktop' ? undefined : {
         '/api': {
           target: 'http://localhost:8080',
           changeOrigin: true,
