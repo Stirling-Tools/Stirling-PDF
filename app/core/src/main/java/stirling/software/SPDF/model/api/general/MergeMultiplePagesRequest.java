@@ -76,48 +76,43 @@ public class MergeMultiplePagesRequest extends PDFFile {
     private int innerMargin;
 
     @Schema(
-        description = "Top margin (in points) to apply to the output pages when merging",
-        type = "number",
-        defaultValue = "0",
-        minimum = "0",
-        example = "200"
-    )
+            description = "Top margin (in points) to apply to the output pages when merging",
+            type = "number",
+            defaultValue = "0",
+            minimum = "0",
+            example = "200")
     private int topMargin;
 
     @Schema(
-        description = "Bottom margin (in points) to apply to the output pages when merging",
-        type = "number",
-        defaultValue = "0",
-        minimum = "0",
-        example = "200"
-    )
+            description = "Bottom margin (in points) to apply to the output pages when merging",
+            type = "number",
+            defaultValue = "0",
+            minimum = "0",
+            example = "200")
     private int bottomMargin;
 
     @Schema(
-        description = "Left margin (in points) to apply to the output pages when merging",
-        type = "number",
-        defaultValue = "0",
-        minimum = "0",
-        example = "200"
-    )
+            description = "Left margin (in points) to apply to the output pages when merging",
+            type = "number",
+            defaultValue = "0",
+            minimum = "0",
+            example = "200")
     private int leftMargin;
 
     @Schema(
-        description = "Right margin (in points) to apply to the output pages when merging",
-        type = "number",
-        defaultValue = "0",
-        minimum = "0",
-        example = "200"
-    )
+            description = "Right margin (in points) to apply to the output pages when merging",
+            type = "number",
+            defaultValue = "0",
+            minimum = "0",
+            example = "200")
     private int rightMargin;
 
     @Schema(
-        description = "Border width (in points) to apply around each page when merging",
-        type = "number",
-        defaultValue = "0",
-        minimum = "0",
-        example = "2"
-    )
+            description = "Border width (in points) to apply around each page when merging",
+            type = "number",
+            defaultValue = "0",
+            minimum = "0",
+            example = "2")
     private int borderWidth;
 
     @Schema(description = "Boolean for if you wish to add border around the pages")

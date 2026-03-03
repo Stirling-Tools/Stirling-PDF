@@ -170,16 +170,20 @@ public class MultiPageLayoutController {
         int rightMargin = request.getRightMargin();
         int innerMargin = request.getInnerMargin();
 
-        if (topMargin <= 0 || bottomMargin <= 0 || leftMargin <= 0 || rightMargin <= 0 || innerMargin <= 0) {
+        if (topMargin < 0
+                || bottomMargin < 0
+                || leftMargin < 0
+                || rightMargin < 0
+                || innerMargin < 0) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.invalidFormat",
                     "Invalid {0} format: {1}",
                     "Margins",
-                    "only strictly positive values are allowed");
+                    "only positive values are allowed");
         }
 
-        int borderThickness = request.getBorderWidth();
-        if (addBorder && borderThickness <= 0) {
+        int borderWidth = request.getBorderWidth();
+        if (addBorder && borderWidth <= 0) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.invalidFormat",
                     "Invalid {0} format: {1}",
@@ -235,7 +239,7 @@ public class MultiPageLayoutController {
                                     PDPageContentStream.AppendMode.APPEND,
                                     true,
                                     true)) {
-                        contentStream.setLineWidth(borderThickness);
+                        contentStream.setLineWidth(borderWidth);
                         contentStream.setStrokingColor(Color.BLACK);
 
                         // Process all pages in this group
