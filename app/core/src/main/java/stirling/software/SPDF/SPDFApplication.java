@@ -134,7 +134,7 @@ public class SPDFApplication {
         baseUrlStatic = normalizeBackendUrl(backendUrl, serverPort);
         contextPathStatic = contextPath;
         serverPortStatic = serverPort;
-        String url = buildFullUrl(baseUrlStatic, getStaticPort(), contextPathStatic);
+        String url = buildFullUrl(baseUrlStatic, serverPortStatic, contextPathStatic);
 
         // Log Tauri mode information
         if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))) {
@@ -188,7 +188,7 @@ public class SPDFApplication {
 
     private static void printStartupLogs() {
         log.info("Stirling-PDF Started.");
-        String url = buildFullUrl(baseUrlStatic, getStaticPort(), contextPathStatic);
+        String url = buildFullUrl(baseUrlStatic, serverPortStatic, contextPathStatic);
         log.info("Navigate to {}", url);
     }
 

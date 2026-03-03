@@ -43,6 +43,7 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.SessionEntity;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.model.dto.AdminUserSummary;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.DatabaseService;
@@ -357,8 +358,12 @@ public class ProprietaryUIDataController {
         int licenseMaxUsers = licenseSettingsService.getSettings().getLicenseMaxUsers();
         boolean premiumEnabled = applicationProperties.getPremium().isEnabled();
 
+        // Convert User entities to AdminUserSummary DTOs to exclude sensitive fields
+        List<AdminUserSummary> userSummaries =
+                sortedUsers.stream().map(this::convertUserToSummary).toList();
+
         AdminSettingsData data = new AdminSettingsData();
-        data.setUsers(sortedUsers);
+        data.setUsers(userSummaries);
         data.setCurrentUsername(authentication.getName());
         data.setRoleDetails(roleDetails);
         data.setUserSessions(userSessions);
@@ -518,6 +523,34 @@ public class ProprietaryUIDataController {
         return ResponseEntity.ok(data);
     }
 
+    /**
+     * Convert User entity to AdminUserSummary DTO, excluding sensitive fields like password and
+     * apiKey.
+     */
+    private AdminUserSummary convertUserToSummary(User user) {
+        AdminUserSummary summary = new AdminUserSummary();
+        summary.setId(user.getId());
+        summary.setUsername(user.getUsername());
+        summary.setEmail(user.getUsername()); // Use username as email for consistency
+        summary.setRoleName(user.getRoleName());
+        summary.setRolesAsString(user.getRolesAsString());
+        summary.setEnabled(user.isEnabled());
+        summary.setIsFirstLogin(user.isFirstLogin());
+        summary.setAuthenticationType(user.getAuthenticationType());
+        summary.setCreatedAt(user.getCreatedAt());
+        summary.setUpdatedAt(user.getUpdatedAt());
+
+        // Map team if present
+        if (user.getTeam() != null) {
+            AdminUserSummary.TeamSummary teamSummary = new AdminUserSummary.TeamSummary();
+            teamSummary.setId(user.getTeam().getId());
+            teamSummary.setName(user.getTeam().getName());
+            summary.setTeam(teamSummary);
+        }
+
+        return summary;
+    }
+
     // Data classes
     @Data
     public static class AuditDashboardData {
@@ -544,7 +577,7 @@ public class ProprietaryUIDataController {
 
     @Data
     public static class AdminSettingsData {
-        private List<User> users;
+        private List<AdminUserSummary> users;
         private String currentUsername;
         private Map<String, String> roleDetails;
         private Map<String, Boolean> userSessions;

@@ -54,6 +54,12 @@ public class ConvertPDFToEpubController {
         command.add(inputPath.toString());
         command.add(outputPath.toString());
 
+        // Use pdftohtml engine (poppler) for PDF input instead of calibre's Qt-based engine.
+        // This avoids the Qt WebEngine dependency for PDF parsing and uses the lighter
+        // poppler-utils pdftohtml binary which is already available in the container.
+        command.add("--pdf-engine");
+        command.add("pdftohtml");
+
         // Golden defaults
         command.add("--enable-heuristics");
         command.add("--insert-blank-line");
