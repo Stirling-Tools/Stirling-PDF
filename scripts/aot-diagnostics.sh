@@ -369,7 +369,7 @@ printf "\n${C_BLD}=== Summary: PASS=%d WARN=%d FAIL=%d ===${C_RST}\n" \
 
 if [ "$FAIL" -gt 0 ]; then
   printf "${C_RED}AOT cache has issues. See FAIL items above.${C_RST}\n"
-  printf "To disable AOT cache entirely: STIRLING_AOT_DISABLE=true\n"
+  printf "To disable AOT: omit STIRLING_AOT_ENABLE (default is off) or set STIRLING_AOT_ENABLE=false\n"
   exit 1
 elif [ "$WARN" -gt 0 ]; then
   printf "${C_YLW}AOT cache may not function optimally. See WARN items above.${C_RST}\n"

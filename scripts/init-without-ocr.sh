@@ -23,7 +23,7 @@ if [ -x /scripts/stirling-diagnostics.sh ]; then
   ln -sf /scripts/stirling-diagnostics.sh /usr/local/bin/debug
   ln -sf /scripts/stirling-diagnostics.sh /usr/local/bin/diagnostic
 fi
-if [ -x /scripts/aot-diagnostics.sh ]; then
+if [ -x /scripts/aot-diagnostics.sh ] && [ "${STIRLING_AOT_ENABLE:-false}" = "true" ]; then
   mkdir -p /usr/local/bin
   ln -sf /scripts/aot-diagnostics.sh /usr/local/bin/aot-diag
   ln -sf /scripts/aot-diagnostics.sh /usr/local/bin/aot-diagnostics
@@ -354,6 +354,10 @@ if [ -z "${VERSION_TAG:-}" ] && [ -f /etc/stirling_version ]; then
   export VERSION_TAG
 fi
 
+# ---------- AOT ----------
+# OFF by default. Set STIRLING_AOT_ENABLE=true to opt in.
+AOT_ENABLED="${STIRLING_AOT_ENABLE:-false}"
+
 # ---------- Dynamic Memory Detection ----------
 # Detects the container memory limit (in MB) from cgroups v2/v1 or /proc/meminfo.
 detect_container_memory_mb() {
@@ -522,7 +526,7 @@ generate_aot_cache() {
   fi
   if [ "$record_exit" -eq 137 ]; then
     log "AOT: RECORD phase OOM-killed (exit 137), container memory too low for training"
-    log "AOT: Set STIRLING_AOT_DISABLE=true or increase container memory above 1GB"
+    log "AOT: Set STIRLING_AOT_ENABLE=false or increase container memory above 1GB"
     rm -f "$aot_conf" /tmp/aot-record.log
     return 1
   fi
@@ -655,24 +659,18 @@ compute_dynamic_memory "$CONTAINER_MEM_MB" "$JVM_PROFILE"
 MEMORY_FLAGS="-XX:InitialRAMPercentage=${DYNAMIC_INITIAL_RAM_PCT} -XX:MaxRAMPercentage=${DYNAMIC_MAX_RAM_PCT} -XX:MaxMetaspaceSize=${DYNAMIC_MAX_METASPACE}m"
 
 # ---------- Compressed Oops Detection ----------
-# AOT/CDS cache is sensitive to UseCompressedOops. The setting must be identical
-# between the training run (generate_aot_cache) and all subsequent runtime boots.
-# With small -Xmx during training the JVM defaults to +UseCompressedOops, but at
-# runtime a large MaxRAMPercentage (e.g. 50% of 64GB ≈ 32GB) may cause the JVM to
-# disable it, invalidating the cache. We compute the expected max heap and lock the
-# flag so every invocation agrees.
-if [ "$CONTAINER_MEM_MB" -gt 0 ] 2>/dev/null; then
-  MAX_HEAP_MB=$((CONTAINER_MEM_MB * DYNAMIC_MAX_RAM_PCT / 100))
-  # JVM disables compressed oops when max heap >= ~32 GB (exact threshold varies
-  # by alignment / JVM build). Use a conservative 31744 MB (~31 GB) cutoff.
-  if [ "$MAX_HEAP_MB" -ge 31744 ]; then
-    COMPRESSED_OOPS_FLAG="-XX:-UseCompressedOops"
+# Only needed for AOT cache consistency (training and runtime must agree on this flag).
+if [ "$AOT_ENABLED" = "true" ]; then
+  if [ "$CONTAINER_MEM_MB" -gt 0 ] 2>/dev/null; then
+    MAX_HEAP_MB=$((CONTAINER_MEM_MB * DYNAMIC_MAX_RAM_PCT / 100))
+    if [ "$MAX_HEAP_MB" -ge 31744 ]; then
+      COMPRESSED_OOPS_FLAG="-XX:-UseCompressedOops"
+    else
+      COMPRESSED_OOPS_FLAG="-XX:+UseCompressedOops"
+    fi
   else
     COMPRESSED_OOPS_FLAG="-XX:+UseCompressedOops"
   fi
-else
-  # Cannot detect memory, default matches small-heap behaviour
-  COMPRESSED_OOPS_FLAG="-XX:+UseCompressedOops"
 fi
 
 # ---------- JVM Profile Selection ----------
@@ -743,54 +741,45 @@ else
 fi
 
 # ---------- AOT Support Check ----------
-# Verify this JVM build actually supports Project Leyden AOT mode before attempting cache.
-# Some vendor JDK 25 builds (GraalVM, custom ARM builds) may omit Leyden.
-AOT_SUPPORTED=true
-if ! java -XX:AOTMode=off -version >/dev/null 2>&1; then
-  log "AOT: JVM on $(uname -m) does not support -XX:AOTMode, AOT cache disabled"
-  AOT_SUPPORTED=false
+AOT_SUPPORTED=false
+if [ "$AOT_ENABLED" = "true" ]; then
+  AOT_SUPPORTED=true
+  if ! java -XX:AOTMode=off -version >/dev/null 2>&1; then
+    log "AOT: JVM on $(uname -m) does not support -XX:AOTMode, AOT cache disabled"
+    AOT_SUPPORTED=false
+  fi
 fi
 
 # ---------- Clean deprecated/invalid JVM flags ----------
 # Remove UseCompressedClassPointers (deprecated in Java 25+ with Lilliput)
 JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E 's/-XX:[+-]UseCompressedClassPointers//g')
-# Remove any existing UseCompressedOops (we manage it explicitly for AOT consistency)
-JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E 's/-XX:[+-]UseCompressedOops//g')
-# Append the computed compressed oops flag (must match AOT training)
-JAVA_BASE_OPTS="${JAVA_BASE_OPTS} ${COMPRESSED_OOPS_FLAG}"
+# Manage UseCompressedOops explicitly only when AOT is enabled (training/runtime must agree)
+if [ "$AOT_ENABLED" = "true" ]; then
+  JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E 's/-XX:[+-]UseCompressedOops//g')
+  JAVA_BASE_OPTS="${JAVA_BASE_OPTS} ${COMPRESSED_OOPS_FLAG}"
+fi
 
 # ---------- AOT Cache Management (Project Leyden) ----------
-# Strip any legacy CDS/AOT references from base opts (we manage AOT dynamically below)
-JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E \
-  's/-XX:SharedArchiveFile=[^ ]*//g;
-   s/-Xshare:(auto|on|off)//g;
-   s/-XX:AOTCache=[^ ]*//g')
-
-# AOT cache lives in the persistent config volume so it survives container restarts.
-# /app is in the container's writable layer (lost on re-create or with read-only filesystems).
-# /configs is always volume-mounted and writable by the runtime user.
 AOT_CACHE="/configs/cache/stirling.aot"
 AOT_GENERATE_BACKGROUND=false
 
-# Support both new (STIRLING_AOT_DISABLE) and legacy (STIRLING_CDS_DISABLE) env vars
-AOT_DISABLED="${STIRLING_AOT_DISABLE:-${STIRLING_CDS_DISABLE:-false}}"
+if [ "$AOT_ENABLED" = "true" ]; then
+  # Strip any legacy CDS/AOT references from base opts (managed dynamically here)
+  JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E \
+    's/-XX:SharedArchiveFile=[^ ]*//g;
+     s/-Xshare:(auto|on|off)//g;
+     s/-XX:AOTCache=[^ ]*//g')
 
-if [ "$AOT_DISABLED" = "true" ]; then
-  log "AOT cache disabled via STIRLING_AOT_DISABLE=true"
-elif [ "$AOT_SUPPORTED" = false ]; then
-  log "AOT: Not supported on this JVM/platform, skipping"
-elif validate_aot_cache "$AOT_CACHE"; then
-  # Cache exists and fingerprint matches, use it.
-  # If corrupt or from a different JDK build the JVM warns and continues without it.
-  log "AOT cache valid: $AOT_CACHE"
-  JAVA_BASE_OPTS="${JAVA_BASE_OPTS} -XX:AOTCache=${AOT_CACHE}"
-  # Clean up legacy cache locations if still present
-  rm -f /app/stirling.jsa /app/stirling.aot /app/stirling.aot.fingerprint 2>/dev/null || true
-else
-  # No valid cache, schedule background generation after app starts.
-  # App starts immediately; cache is ready from the NEXT boot (15-25% faster startup).
-  log "No valid AOT cache found. Will generate in background after app starts."
-  AOT_GENERATE_BACKGROUND=true
+  if [ "$AOT_SUPPORTED" = false ]; then
+    log "AOT: Not supported on this JVM/platform, skipping"
+  elif validate_aot_cache "$AOT_CACHE"; then
+    log "AOT cache valid: $AOT_CACHE"
+    JAVA_BASE_OPTS="${JAVA_BASE_OPTS} -XX:AOTCache=${AOT_CACHE}"
+    rm -f /app/stirling.jsa /app/stirling.aot /app/stirling.aot.fingerprint 2>/dev/null || true
+  else
+    log "No valid AOT cache found. Will generate in background after app starts."
+    AOT_GENERATE_BACKGROUND=true
+  fi
 fi
 
 # Collapse duplicate whitespace
@@ -1021,7 +1010,7 @@ if [ "$AOT_GENERATE_BACKGROUND" = true ]; then
         fi
       done
       log "AOT: All attempts failed. App runs normally without cache."
-      log "AOT: To suppress these attempts set STIRLING_AOT_DISABLE=true"
+      log "AOT: To disable, set STIRLING_AOT_ENABLE=false (or omit it, default is off)"
     ) &
     AOT_GEN_PID=$!
     log "AOT: Background generation scheduled (PID $AOT_GEN_PID, arch=$(uname -m))"
