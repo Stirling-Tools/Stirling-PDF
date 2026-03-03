@@ -60,6 +60,7 @@ public class MultiPageLayoutController {
         int rows;
         int cols;
         int pagesPerSheet;
+
         switch (mode) {
             case "DEFAULT":
                 pagesPerSheet = request.getPagesPerSheet();
@@ -125,7 +126,6 @@ public class MultiPageLayoutController {
                     "must be less than " + MAX_ROWS);
         }
 
-        MultipartFile file = request.getFileInput();
         String orientation = request.getOrientation();
         if (orientation == null || orientation.trim().isEmpty()) {
             orientation = "PORTRAIT";
@@ -137,6 +137,7 @@ public class MultiPageLayoutController {
                     "orientation",
                     "only 'PORTRAIT' and 'LANDSCAPE' are supported");
         }
+
         String arrangement = request.getArrangement();
         if (arrangement == null || arrangement.trim().isEmpty()) {
             arrangement = "BY_ROWS";
@@ -163,22 +164,54 @@ public class MultiPageLayoutController {
 
         boolean addBorder = Boolean.TRUE.equals(request.getAddBorder());
 
+        int topMargin = request.getTopMargin();
+        int bottomMargin = request.getBottomMargin();
+        int leftMargin = request.getLeftMargin();
+        int rightMargin = request.getRightMargin();
+        int innerMargin = request.getInnerMargin();
+
+        if (topMargin <= 0 || bottomMargin <= 0 || leftMargin <= 0 || rightMargin <= 0 || innerMargin <= 0) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidFormat",
+                    "Invalid {0} format: {1}",
+                    "Margins",
+                    "only strictly positive values are allowed");
+        }
+
+        int borderThickness = request.getBorderWidth();
+        if (addBorder && borderThickness <= 0) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidFormat",
+                    "Invalid {0} format: {1}",
+                    "borderWidth",
+                    "only strictly positive values are allowed when addBorder is true");
+        }
+
+        MultipartFile file = request.getFileInput();
+
         try (PDDocument sourceDocument = pdfDocumentFactory.load(file)) {
             try (PDDocument newDocument =
                     pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument)) {
                 int totalPages = sourceDocument.getNumberOfPages();
                 LayerUtility layerUtility = new LayerUtility(newDocument);
 
+                // Margin between page and content:
+                float pageWidth =
+                        "PORTRAIT".equals(orientation)
+                                ? PDRectangle.A4.getWidth()
+                                : PDRectangle.A4.getHeight();
+                float pageHeight =
+                        "PORTRAIT".equals(orientation)
+                                ? PDRectangle.A4.getHeight()
+                                : PDRectangle.A4.getWidth();
+
                 // Calculate cell dimensions once (all output pages are A4) - declare outside try
                 // blocks
-                float cellWidth =
-                        "PORTRAIT".equals(orientation)
-                                ? PDRectangle.A4.getWidth() / cols
-                                : PDRectangle.A4.getHeight() / cols;
-                float cellHeight =
-                        "PORTRAIT".equals(orientation)
-                                ? PDRectangle.A4.getHeight() / rows
-                                : PDRectangle.A4.getWidth() / rows;
+                float cellWidth = (pageWidth - leftMargin - rightMargin) / cols;
+                float cellHeight = (pageHeight - topMargin - bottomMargin) / rows;
+
+                float innerWidth = cellWidth - 2 * innerMargin;
+                float innerHeight = cellHeight - 2 * innerMargin;
 
                 // Process pages in groups of pagesPerSheet, creating a new page and content stream
                 // for each group
@@ -202,7 +235,6 @@ public class MultiPageLayoutController {
                                     PDPageContentStream.AppendMode.APPEND,
                                     true,
                                     true)) {
-                        float borderThickness = 1.5f; // Specify border thickness as required
                         contentStream.setLineWidth(borderThickness);
                         contentStream.setStrokingColor(Color.BLACK);
 
@@ -211,8 +243,8 @@ public class MultiPageLayoutController {
                             int pageIndex = i + j;
                             PDPage sourcePage = sourceDocument.getPage(pageIndex);
                             PDRectangle rect = sourcePage.getMediaBox();
-                            float scaleWidth = cellWidth / rect.getWidth();
-                            float scaleHeight = cellHeight / rect.getHeight();
+                            float scaleWidth = innerWidth / rect.getWidth();
+                            float scaleHeight = innerHeight / rect.getHeight();
                             float scale = Math.min(scaleWidth, scaleHeight);
 
                             int adjustedPageIndex = j % pagesPerSheet;
@@ -236,12 +268,16 @@ public class MultiPageLayoutController {
                             }
 
                             float x =
-                                    colIndex * cellWidth
-                                            + (cellWidth - rect.getWidth() * scale) / 2;
+                                    leftMargin
+                                            + colIndex * cellWidth
+                                            + innerMargin
+                                            + (innerWidth - rect.getWidth() * scale) / 2;
                             float y =
                                     newPage.getMediaBox().getHeight()
+                                            - topMargin
                                             - ((rowIndex + 1) * cellHeight
-                                                    - (cellHeight - rect.getHeight() * scale) / 2);
+                                                    - innerMargin
+                                                    - (innerHeight - rect.getHeight() * scale) / 2);
 
                             contentStream.saveGraphicsState();
                             contentStream.transform(Matrix.getTranslateInstance(x, y));
