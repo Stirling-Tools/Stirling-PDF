@@ -54,8 +54,8 @@ if errorlevel 1 (
     exit /b 1
 )
 set "JAVA_EFFECTIVE_MAJOR=%JAVA_EFFECTIVE_MAJOR_NUM%"
-if %JAVA_EFFECTIVE_MAJOR% LSS 17 (
-    echo ❌ Java 17 or higher is required. Found Java %JAVA_EFFECTIVE_MAJOR%
+if %JAVA_EFFECTIVE_MAJOR% LSS 21 (
+    echo ❌ Java 21 or higher is required. Found Java %JAVA_EFFECTIVE_MAJOR%
     exit /b 1
 )
 echo ✅ Java %JAVA_EFFECTIVE_MAJOR% and jlink detected
