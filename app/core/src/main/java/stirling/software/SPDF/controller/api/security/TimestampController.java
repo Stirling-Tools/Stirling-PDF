@@ -7,13 +7,16 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -61,6 +64,9 @@ public class TimestampController {
                     "http://timestamp.entrust.net/TSS/RFC3161sha2TS",
                     "http://freetsa.org/tsr");
 
+    private static final int MAX_TSA_RESPONSE_SIZE = 1024 * 1024; // 1 MB
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ApplicationProperties applicationProperties;
 
@@ -86,21 +92,33 @@ public class TimestampController {
                         : tsConfig.getDefaultTsaUrl();
 
         // Build allowed set: built-in presets + admin-configured custom URLs
+        // Filter null/blank entries and validate protocol (TASK-6)
         Set<String> allowedUrls = new HashSet<>(ALLOWED_TSA_PRESETS);
-        allowedUrls.add(tsConfig.getDefaultTsaUrl());
+        if (tsConfig.getDefaultTsaUrl() != null
+                && !tsConfig.getDefaultTsaUrl().isBlank()
+                && isValidTsaUrlProtocol(tsConfig.getDefaultTsaUrl())) {
+            allowedUrls.add(tsConfig.getDefaultTsaUrl());
+        }
         List<String> customUrls = tsConfig.getCustomTsaUrls();
         if (customUrls != null) {
-            allowedUrls.addAll(customUrls);
+            customUrls.stream()
+                    .filter(u -> u != null && !u.isBlank() && isValidTsaUrlProtocol(u))
+                    .forEach(allowedUrls::add);
         }
 
+        // Normalize for case-insensitive comparison (TASK-12)
+        Set<String> normalizedAllowed =
+                allowedUrls.stream()
+                        .map(TimestampController::normalizeTsaUrl)
+                        .collect(Collectors.toSet());
+
         // Validate TSA URL against allowed set to prevent SSRF
-        if (!allowedUrls.contains(tsaUrl)) {
+        if (!normalizedAllowed.contains(normalizeTsaUrl(tsaUrl))) {
             throw new IllegalArgumentException(
                     "TSA URL is not in the allowed list. Contact your administrator to add it"
                             + " via settings.yml (security.timestamp.customTsaUrls).");
         }
 
-        final String effectiveTsaUrl = tsaUrl;
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
@@ -111,7 +129,7 @@ public class TimestampController {
             signature.setSignDate(Calendar.getInstance());
 
             document.addSignature(
-                    signature, content -> requestTimestampToken(content, effectiveTsaUrl));
+                    signature, content -> requestTimestampToken(content, tsaUrl));
 
             document.saveIncremental(outputStream);
         }
@@ -122,6 +140,7 @@ public class TimestampController {
     }
 
     private byte[] requestTimestampToken(InputStream content, String tsaUrl) throws IOException {
+        HttpURLConnection connection = null;
         try {
             // Hash the PDF content byte range with SHA-256
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -135,14 +154,13 @@ public class TimestampController {
             // Build the RFC 3161 timestamp request
             TimeStampRequestGenerator generator = new TimeStampRequestGenerator();
             generator.setCertReq(true);
-            BigInteger nonce = BigInteger.valueOf(new SecureRandom().nextLong() & Long.MAX_VALUE);
+            BigInteger nonce = BigInteger.valueOf(SECURE_RANDOM.nextLong() & Long.MAX_VALUE);
             ASN1ObjectIdentifier digestAlgorithm = NISTObjectIdentifiers.id_sha256;
             TimeStampRequest tsaRequest = generator.generate(digestAlgorithm, hash, nonce);
             byte[] requestBytes = tsaRequest.getEncoded();
 
             // Contact the TSA server (redirects disabled to prevent SSRF via redirect)
-            HttpURLConnection connection =
-                    (HttpURLConnection) URI.create(tsaUrl).toURL().openConnection();
+            connection = (HttpURLConnection) URI.create(tsaUrl).toURL().openConnection();
             connection.setInstanceFollowRedirects(false);
             connection.setDoOutput(true);
             connection.setDoInput(true);
@@ -158,13 +176,26 @@ public class TimestampController {
 
             int responseCode = connection.getResponseCode();
             if (responseCode != HttpURLConnection.HTTP_OK) {
+                // Read error stream for debugging (TASK-5)
+                String errorBody = readErrorStream(connection);
                 throw new IOException(
-                        "TSA server returned HTTP " + responseCode + " for URL: " + tsaUrl);
+                        "TSA server returned HTTP "
+                                + responseCode
+                                + " for URL: "
+                                + tsaUrl
+                                + (errorBody.isEmpty() ? "" : " — " + errorBody));
             }
 
+            // Read response with size limit to prevent OOM (TASK-4)
             byte[] responseBytes;
             try (InputStream in = connection.getInputStream()) {
-                responseBytes = in.readAllBytes();
+                responseBytes = in.readNBytes(MAX_TSA_RESPONSE_SIZE);
+                if (in.read() != -1) {
+                    throw new IOException(
+                            "TSA response exceeds maximum allowed size of "
+                                    + MAX_TSA_RESPONSE_SIZE
+                                    + " bytes");
+                }
             }
 
             // Parse and validate the TSA response
@@ -191,6 +222,39 @@ public class TimestampController {
             throw new IOException(
                     "Failed to obtain RFC 3161 timestamp from " + tsaUrl + ": " + e.getMessage(),
                     e);
+        } finally {
+            // Always disconnect to release the underlying socket (TASK-1)
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
+
+    private static boolean isValidTsaUrlProtocol(String url) {
+        String lower = url.toLowerCase(Locale.ROOT);
+        return lower.startsWith("http://") || lower.startsWith("https://");
+    }
+
+    private static String normalizeTsaUrl(String url) {
+        try {
+            URI uri = URI.create(url.trim());
+            String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase(Locale.ROOT);
+            String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase(Locale.ROOT);
+            int port = uri.getPort();
+            String path = uri.getPath() == null ? "" : uri.getPath();
+            return scheme + "://" + host + (port == -1 ? "" : ":" + port) + path;
+        } catch (Exception e) {
+            return url.toLowerCase(Locale.ROOT);
+        }
+    }
+
+    private static String readErrorStream(HttpURLConnection connection) {
+        try (InputStream err = connection.getErrorStream()) {
+            if (err == null) return "";
+            byte[] body = err.readNBytes(2048);
+            return new String(body, StandardCharsets.UTF_8).trim();
+        } catch (IOException e) {
+            return "";
         }
     }
 }

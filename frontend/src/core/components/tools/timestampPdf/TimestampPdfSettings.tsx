@@ -1,8 +1,9 @@
+import { useEffect, useRef } from "react";
 import { Stack, Text, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import {
   TimestampPdfParameters,
-  TSA_PRESETS,
+  FALLBACK_TSA_PRESETS,
 } from "@app/hooks/tools/timestampPdf/useTimestampPdfParameters";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 
@@ -22,13 +23,31 @@ const TimestampPdfSettings = ({
 }: TimestampPdfSettingsProps) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
+  const defaultApplied = useRef(false);
 
-  // Build dropdown: built-in presets + admin-configured custom URLs from settings.yml
-  const adminCustomUrls = config?.timestampCustomTsaUrls ?? [];
+  // Use backend presets (single source of truth) with fallback (TASK-10)
+  const presets = config?.timestampTsaPresets ?? FALLBACK_TSA_PRESETS;
+
+  // Build dropdown: presets + admin custom URLs, deduplicated (TASK-9)
+  const presetUrls = new Set(presets.map((p) => p.url));
+  const adminCustomUrls = (config?.timestampCustomTsaUrls ?? []).filter(
+    (url) => !presetUrls.has(url)
+  );
   const selectData = [
-    ...TSA_PRESETS.map((preset) => ({ value: preset.url, label: preset.label })),
+    ...presets.map((preset) => ({ value: preset.url, label: preset.label })),
     ...adminCustomUrls.map((url) => ({ value: url, label: url })),
   ];
+
+  // Apply admin default TSA URL on first config load (TASK-2)
+  useEffect(() => {
+    if (!defaultApplied.current && config?.timestampDefaultTsaUrl) {
+      defaultApplied.current = true;
+      const adminDefault = config.timestampDefaultTsaUrl;
+      if (adminDefault && adminDefault !== parameters.tsaUrl) {
+        onParameterChange("tsaUrl", adminDefault);
+      }
+    }
+  }, [config?.timestampDefaultTsaUrl]);
 
   return (
     <Stack gap="md">
@@ -44,7 +63,7 @@ const TimestampPdfSettings = ({
         )}
         data={selectData}
         value={parameters.tsaUrl}
-        onChange={(value) => onParameterChange("tsaUrl", value ?? TSA_PRESETS[0].url)}
+        onChange={(value) => onParameterChange("tsaUrl", value ?? presets[0].url)}
         disabled={disabled}
       />
 

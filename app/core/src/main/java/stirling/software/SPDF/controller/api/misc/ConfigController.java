@@ -245,14 +245,23 @@ public class ConfigController {
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
 
-            // Timestamp TSA settings — expose admin-configured custom URLs to frontend
+            // Timestamp TSA settings — single source of truth for presets + admin URLs
             ApplicationProperties.Security.Timestamp tsConfig =
                     applicationProperties.getSecurity().getTimestamp();
             configData.put("timestampDefaultTsaUrl", tsConfig.getDefaultTsaUrl());
-            java.util.List<String> customTsaUrls = tsConfig.getCustomTsaUrls();
+            configData.put("timestampCustomTsaUrls", tsConfig.getCustomTsaUrls());
             configData.put(
-                    "timestampCustomTsaUrls",
-                    customTsaUrls != null ? customTsaUrls : java.util.List.of());
+                    "timestampTsaPresets",
+                    List.of(
+                            Map.of("label", "DigiCert", "url", "http://timestamp.digicert.com"),
+                            Map.of("label", "Sectigo", "url", "http://timestamp.sectigo.com"),
+                            Map.of("label", "SSL.com", "url", "http://ts.ssl.com"),
+                            Map.of(
+                                    "label",
+                                    "Entrust",
+                                    "url",
+                                    "http://timestamp.entrust.net/TSS/RFC3161sha2TS"),
+                            Map.of("label", "FreeTSA", "url", "http://freetsa.org/tsr")));
 
             // Server certificate settings
             configData.put(

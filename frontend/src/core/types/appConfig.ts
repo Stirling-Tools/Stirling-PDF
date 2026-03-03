@@ -52,6 +52,7 @@ export interface AppConfig {
   googleDriveAppId?: string;
   timestampDefaultTsaUrl?: string;
   timestampCustomTsaUrls?: string[];
+  timestampTsaPresets?: { label: string; url: string }[];
 }
 
 export type AppConfigBootstrapMode = 'blocking' | 'non-blocking';
