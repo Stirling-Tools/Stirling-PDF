@@ -5718,16 +5718,12 @@ generic = "Timestamping failed"
 placeholder = "Select a PDF file in the main view to get started"
 
 [timestampPdf.options]
-note = "Only a SHA-256 hash of your document is sent to the TSA server. The PDF itself stays on the server."
+note = "Only a SHA-256 hash of your document is sent to the TSA server; the PDF file itself is never sent to the TSA server."
 title = "Timestamp Server (TSA)"
 
 [timestampPdf.options.tsaUrl]
-custom = "Custom TSA URL..."
-desc = "Pick a trusted Time Stamp Authority or enter a custom URL"
+desc = "Pick a trusted Time Stamp Authority"
 label = "Select a TSA server"
-
-[timestampPdf.options.customTsaUrl]
-label = "Custom TSA URL"
 
 [timestampPdf.steps]
 settings = "Settings"

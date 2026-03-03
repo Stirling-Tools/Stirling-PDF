@@ -14,12 +14,11 @@ public class TimestampPdfRequest extends PDFFile {
     @Schema(
             description =
                     "URL of the RFC 3161 Time Stamp Authority (TSA) server."
-                            + " Common options: http://timestamp.digicert.com (DigiCert),"
-                            + " http://timestamp.sectigo.com (Sectigo),"
-                            + " http://ts.ssl.com (SSL.com),"
-                            + " http://timestamp.entrust.net/TSS/RFC3161sha2TS (Entrust),"
-                            + " http://freetsa.org/tsr (FreeTSA).",
+                            + " Must be one of the built-in presets (DigiCert, Sectigo, SSL.com,"
+                            + " Entrust, FreeTSA) or an admin-configured URL in"
+                            + " settings.yml (security.timestamp.customTsaUrls)."
+                            + " If omitted, the server default is used.",
             defaultValue = "http://timestamp.digicert.com",
-            requiredMode = Schema.RequiredMode.REQUIRED)
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String tsaUrl;
 }

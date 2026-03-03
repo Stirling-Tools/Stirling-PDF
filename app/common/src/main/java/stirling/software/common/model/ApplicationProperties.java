@@ -213,6 +213,7 @@ public class ApplicationProperties {
         private String customGlobalAPIKey;
         private Jwt jwt = new Jwt();
         private Validation validation = new Validation();
+        private Timestamp timestamp = new Timestamp();
         private String xFrameOptions = "DENY";
 
         public Boolean isAltLogin() {
@@ -530,6 +531,12 @@ public class ApplicationProperties {
                 private String mode = "none";
                 private boolean hardFail = false;
             }
+        }
+
+        @Data
+        public static class Timestamp {
+            private String defaultTsaUrl = "http://timestamp.digicert.com";
+            private List<String> customTsaUrls = new ArrayList<>();
         }
     }
 

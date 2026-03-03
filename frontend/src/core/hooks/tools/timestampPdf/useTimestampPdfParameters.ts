@@ -9,16 +9,12 @@ export const TSA_PRESETS = [
   { label: 'FreeTSA', url: 'http://freetsa.org/tsr' },
 ] as const;
 
-export const CUSTOM_TSA_VALUE = 'custom';
-
 export interface TimestampPdfParameters extends BaseParameters {
   tsaUrl: string;
-  customTsaUrl: string;
 }
 
 export const defaultParameters: TimestampPdfParameters = {
   tsaUrl: TSA_PRESETS[0].url,
-  customTsaUrl: '',
 };
 
 export type TimestampPdfParametersHook = BaseParametersHook<TimestampPdfParameters>;
@@ -28,8 +24,7 @@ export const useTimestampPdfParameters = (): TimestampPdfParametersHook => {
     defaultParameters,
     endpointName: 'timestamp-pdf',
     validateFn: (params) => {
-      const url = params.tsaUrl === CUSTOM_TSA_VALUE ? params.customTsaUrl : params.tsaUrl;
-      return url.trim().length > 0;
+      return params.tsaUrl.trim().length > 0;
     },
   });
 };

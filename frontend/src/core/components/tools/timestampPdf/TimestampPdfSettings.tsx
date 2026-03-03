@@ -1,10 +1,10 @@
-import { Stack, Text, Select, TextInput } from "@mantine/core";
+import { Stack, Text, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import {
   TimestampPdfParameters,
   TSA_PRESETS,
-  CUSTOM_TSA_VALUE,
 } from "@app/hooks/tools/timestampPdf/useTimestampPdfParameters";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 interface TimestampPdfSettingsProps {
   parameters: TimestampPdfParameters;
@@ -21,10 +21,13 @@ const TimestampPdfSettings = ({
   disabled = false,
 }: TimestampPdfSettingsProps) => {
   const { t } = useTranslation();
+  const { config } = useAppConfig();
 
+  // Build dropdown: built-in presets + admin-configured custom URLs from settings.yml
+  const adminCustomUrls = config?.timestampCustomTsaUrls ?? [];
   const selectData = [
     ...TSA_PRESETS.map((preset) => ({ value: preset.url, label: preset.label })),
-    { value: CUSTOM_TSA_VALUE, label: t("timestampPdf.options.tsaUrl.custom", "Custom TSA URL...") },
+    ...adminCustomUrls.map((url) => ({ value: url, label: url })),
   ];
 
   return (
@@ -37,7 +40,7 @@ const TimestampPdfSettings = ({
         label={t("timestampPdf.options.tsaUrl.label", "Select a TSA server")}
         description={t(
           "timestampPdf.options.tsaUrl.desc",
-          "Pick a trusted Time Stamp Authority or enter a custom URL"
+          "Pick a trusted Time Stamp Authority"
         )}
         data={selectData}
         value={parameters.tsaUrl}
@@ -45,20 +48,10 @@ const TimestampPdfSettings = ({
         disabled={disabled}
       />
 
-      {parameters.tsaUrl === CUSTOM_TSA_VALUE && (
-        <TextInput
-          label={t("timestampPdf.options.customTsaUrl.label", "Custom TSA URL")}
-          placeholder="https://your-tsa-server.com/timestamp"
-          value={parameters.customTsaUrl}
-          onChange={(e) => onParameterChange("customTsaUrl", e.currentTarget.value)}
-          disabled={disabled}
-        />
-      )}
-
       <Text size="xs" c="dimmed">
         {t(
           "timestampPdf.options.note",
-          "Only a SHA-256 hash of your document is sent to the TSA server. The PDF itself stays on the server."
+          "Only a SHA-256 hash of your document is sent to the TSA server; the PDF file itself is never sent to the TSA server."
         )}
       </Text>
     </Stack>

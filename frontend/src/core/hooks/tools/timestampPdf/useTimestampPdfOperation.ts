@@ -1,17 +1,13 @@
 import { useTranslation } from 'react-i18next';
 import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
 import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
-import { TimestampPdfParameters, defaultParameters, CUSTOM_TSA_VALUE } from '@app/hooks/tools/timestampPdf/useTimestampPdfParameters';
+import { TimestampPdfParameters, defaultParameters } from '@app/hooks/tools/timestampPdf/useTimestampPdfParameters';
 
 export const buildTimestampPdfFormData = (parameters: TimestampPdfParameters, file: File): FormData => {
   const formData = new FormData();
   formData.append('fileInput', file);
 
-  const tsaUrl =
-    parameters.tsaUrl === CUSTOM_TSA_VALUE
-      ? parameters.customTsaUrl
-      : parameters.tsaUrl;
-  formData.append('tsaUrl', tsaUrl);
+  formData.append('tsaUrl', parameters.tsaUrl);
 
   return formData;
 };

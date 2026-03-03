@@ -245,6 +245,15 @@ public class ConfigController {
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
 
+            // Timestamp TSA settings — expose admin-configured custom URLs to frontend
+            ApplicationProperties.Security.Timestamp tsConfig =
+                    applicationProperties.getSecurity().getTimestamp();
+            configData.put("timestampDefaultTsaUrl", tsConfig.getDefaultTsaUrl());
+            java.util.List<String> customTsaUrls = tsConfig.getCustomTsaUrls();
+            configData.put(
+                    "timestampCustomTsaUrls",
+                    customTsaUrls != null ? customTsaUrls : java.util.List.of());
+
             // Server certificate settings
             configData.put(
                     "serverCertificateEnabled",

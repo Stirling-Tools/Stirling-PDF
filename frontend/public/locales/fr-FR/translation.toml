@@ -5652,16 +5652,12 @@ generic = "Échec de l'horodatage"
 placeholder = "Sélectionnez un fichier PDF dans la vue principale pour commencer"
 
 [timestampPdf.options]
-note = "Seul le hash SHA-256 de votre document est envoyé au serveur TSA. Le PDF reste sur le serveur."
+note = "Seul le hash SHA-256 de votre document est envoyé au serveur TSA ; le fichier PDF lui-même n'est jamais envoyé au serveur TSA."
 title = "Serveur d'horodatage (TSA)"
 
 [timestampPdf.options.tsaUrl]
-custom = "URL TSA personnalisée..."
-desc = "Choisissez une autorité d'horodatage de confiance ou entrez une URL personnalisée"
+desc = "Choisissez une autorité d'horodatage de confiance"
 label = "Sélectionner un serveur TSA"
-
-[timestampPdf.options.customTsaUrl]
-label = "URL TSA personnalisée"
 
 [timestampPdf.steps]
 settings = "Paramètres"

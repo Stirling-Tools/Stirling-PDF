@@ -11,6 +11,9 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.util.Calendar;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -36,6 +39,7 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.security.TimestampPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
@@ -49,7 +53,16 @@ public class TimestampController {
         Security.addProvider(new BouncyCastleProvider());
     }
 
+    private static final Set<String> ALLOWED_TSA_PRESETS =
+            Set.of(
+                    "http://timestamp.digicert.com",
+                    "http://timestamp.sectigo.com",
+                    "http://ts.ssl.com",
+                    "http://timestamp.entrust.net/TSS/RFC3161sha2TS",
+                    "http://freetsa.org/tsr");
+
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final ApplicationProperties applicationProperties;
 
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/timestamp-pdf")
     @StandardPdfResponse
@@ -63,10 +76,29 @@ public class TimestampController {
     public ResponseEntity<byte[]> timestampPdf(@ModelAttribute TimestampPdfRequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
+        ApplicationProperties.Security.Timestamp tsConfig =
+                applicationProperties.getSecurity().getTimestamp();
+
+        // Determine effective TSA URL: use request value if provided, otherwise config default
         String tsaUrl =
                 (request.getTsaUrl() != null && !request.getTsaUrl().isBlank())
                         ? request.getTsaUrl()
-                        : "http://timestamp.digicert.com";
+                        : tsConfig.getDefaultTsaUrl();
+
+        // Build allowed set: built-in presets + admin-configured custom URLs
+        Set<String> allowedUrls = new HashSet<>(ALLOWED_TSA_PRESETS);
+        allowedUrls.add(tsConfig.getDefaultTsaUrl());
+        List<String> customUrls = tsConfig.getCustomTsaUrls();
+        if (customUrls != null) {
+            allowedUrls.addAll(customUrls);
+        }
+
+        // Validate TSA URL against allowed set to prevent SSRF
+        if (!allowedUrls.contains(tsaUrl)) {
+            throw new IllegalArgumentException(
+                    "TSA URL is not in the allowed list. Contact your administrator to add it"
+                            + " via settings.yml (security.timestamp.customTsaUrls).");
+        }
 
         final String effectiveTsaUrl = tsaUrl;
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

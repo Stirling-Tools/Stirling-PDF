@@ -50,6 +50,8 @@ export interface AppConfig {
   googleDriveClientId?: string;
   googleDriveApiKey?: string;
   googleDriveAppId?: string;
+  timestampDefaultTsaUrl?: string;
+  timestampCustomTsaUrls?: string[];
 }
 
 export type AppConfigBootstrapMode = 'blocking' | 'non-blocking';
