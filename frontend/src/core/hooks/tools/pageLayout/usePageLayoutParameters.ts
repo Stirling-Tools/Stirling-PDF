@@ -9,7 +9,13 @@ export interface PageLayoutParameters extends BaseParameters {
   orientation: "PORTRAIT" | "LANDSCAPE"
   arrangement: "BY_COLUMNS" | "BY_ROWS"
   readingDirection: "LTR" | "RTL"
+  innerMargin?: number;
+  topMargin?: number;
+  bottomMargin?: number;
+  leftMargin?: number;
+  rightMargin?: number;
   addBorder: boolean;
+  borderWidth?: number;
 }
 
 export const defaultParameters: PageLayoutParameters = {
@@ -21,6 +27,12 @@ export const defaultParameters: PageLayoutParameters = {
   arrangement: "BY_COLUMNS",
   readingDirection: "LTR",
   addBorder: false,
+  innerMargin: 0,
+  topMargin: 0,
+  bottomMargin: 0,
+  leftMargin: 0,
+  rightMargin: 0,
+  borderWidth: 1,
 };
 
 export type PageLayoutParametersHook = BaseParametersHook<PageLayoutParameters>;
