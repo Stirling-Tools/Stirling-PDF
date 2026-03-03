@@ -48,11 +48,11 @@ pass()  { printf "${C_GRN}[PASS]${C_RST} %s\n" "$*"; PASS=$((PASS+1)); }
 warn()  { printf "${C_YLW}[WARN]${C_RST} %s\n" "$*"; WARN=$((WARN+1)); }
 fail()  { printf "${C_RED}[FAIL]${C_RST} %s\n" "$*"; FAIL=$((FAIL+1)); }
 info()  { printf "${C_CYN}[INFO]${C_RST} %s\n" "$*"; }
-head()  { printf "\n${C_BLD}=== %s ===${C_RST}\n" "$*"; }
+hdr()   { printf "\n${C_BLD}=== %s ===${C_RST}\n" "$*"; }
 command_exists() { command -v "$1" >/dev/null 2>&1; }
 
 # ── Section 1: Environment ────────────────────────────────────────────────────
-head "Environment"
+hdr "Environment"
 info "Date:         $(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date)"
 info "Hostname:     $(hostname 2>/dev/null || echo unknown)"
 info "Architecture: $(uname -m)"
@@ -69,8 +69,19 @@ if [ -f /etc/os-release ]; then
   info "OS:           $(. /etc/os-release; echo "${PRETTY_NAME:-${NAME:-unknown}}")"
 fi
 
+# Warn about external JVM option vars — these break AOT training if set
+for _jvm_var in JAVA_TOOL_OPTIONS JDK_JAVA_OPTIONS _JAVA_OPTIONS; do
+  _jvm_val="$(eval echo "\${${_jvm_var}:-}")"
+  if [ -n "$_jvm_val" ]; then
+    warn "${_jvm_var}='${_jvm_val}'"
+    warn "  External JVM options are cleared during AOT training (fixed), but may"
+    warn "  affect the running app. Ensure they are compatible with -Xmx limits."
+  fi
+done
+unset _jvm_var _jvm_val
+
 # ── Section 2: JVM Detection ──────────────────────────────────────────────────
-head "JVM Detection"
+hdr "JVM Detection"
 if ! command_exists java; then
   fail "java not found in PATH. PATH=${PATH}"
   exit 1
@@ -120,7 +131,7 @@ else
 fi
 
 # ── Section 3: Memory Limits ──────────────────────────────────────────────────
-head "Memory Limits"
+hdr "Memory Limits"
 
 MEM_MB=0
 if [ -f /sys/fs/cgroup/memory.max ]; then
@@ -169,7 +180,7 @@ if command_exists free; then
 fi
 
 # ── Section 4: AOT Cache State ────────────────────────────────────────────────
-head "AOT Cache State"
+hdr "AOT Cache State"
 info "Cache path:       ${AOT_CACHE}"
 info "Fingerprint path: ${AOT_FP}"
 
@@ -240,7 +251,7 @@ else
 fi
 
 # ── Section 5: JAR Layout Detection ──────────────────────────────────────────
-head "JAR Layout"
+hdr "JAR Layout"
 if [ -f /app/app.jar ] && [ -d /app/lib ]; then
   pass "Spring Boot 4 layered layout: /app/app.jar + /app/lib/"
   info "  Classpath: -cp /app/app.jar:/app/lib/* stirling.software.SPDF.SPDFApplication"
@@ -262,7 +273,7 @@ else
 fi
 
 # ── Section 6: Disk Space ─────────────────────────────────────────────────────
-head "Disk Space"
+hdr "Disk Space"
 CACHE_DIR="$(dirname "${AOT_CACHE}")"
 if [ -d "$CACHE_DIR" ]; then
   DF="$(df -h "$CACHE_DIR" 2>/dev/null | tail -1 || echo '')"
@@ -282,7 +293,7 @@ fi
 
 # ── Section 7: Optional Smoke Test ───────────────────────────────────────────
 if [ "$RUN_SMOKE_TEST" = true ]; then
-  head "AOT RECORD Smoke Test"
+  hdr "AOT RECORD Smoke Test"
   if [ "$AOT_SUPPORTED" = false ]; then
     warn "Skipping smoke test — AOTMode not supported on this JVM"
   elif [ "$JAR_LAYOUT" = "unknown" ]; then
@@ -310,9 +321,11 @@ if [ "$RUN_SMOKE_TEST" = true ]; then
     info "Command: ${SMOKE_CMD[*]}"
     SMOKE_EXIT=0
     if command_exists timeout; then
-      timeout 120s "${SMOKE_CMD[@]}" >"$SMOKE_LOG" 2>&1 || SMOKE_EXIT=$?
+      JAVA_TOOL_OPTIONS= JDK_JAVA_OPTIONS= _JAVA_OPTIONS= \
+        timeout 120s "${SMOKE_CMD[@]}" >"$SMOKE_LOG" 2>&1 || SMOKE_EXIT=$?
     else
-      "${SMOKE_CMD[@]}" >"$SMOKE_LOG" 2>&1 || SMOKE_EXIT=$?
+      JAVA_TOOL_OPTIONS= JDK_JAVA_OPTIONS= _JAVA_OPTIONS= \
+        "${SMOKE_CMD[@]}" >"$SMOKE_LOG" 2>&1 || SMOKE_EXIT=$?
     fi
 
     case "$SMOKE_EXIT" in

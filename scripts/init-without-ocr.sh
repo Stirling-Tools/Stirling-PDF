@@ -489,8 +489,11 @@ generate_aot_cache() {
   # Non-zero exit is expected: -Dspring.context.exit=onRefresh triggers controlled shutdown.
   # Uses in-memory H2 to avoid file-lock conflicts with the running app.
   # COMPACT_HEADERS_FLAG/COMPRESSED_OOPS_FLAG must exactly match the runtime invocation.
+  # Clear all JVM option env vars so external settings (e.g. _JAVA_OPTIONS=-Xms14G) cannot
+  # conflict with the explicit -Xmx we pass here. Training uses its own minimal flag set.
   local record_exit=0
   if command_exists timeout; then
+    JAVA_TOOL_OPTIONS= JDK_JAVA_OPTIONS= _JAVA_OPTIONS= \
     timeout "${record_timeout}s" \
       java "-Xmx${record_xmx}" ${COMPACT_HEADERS_FLAG:-} ${COMPRESSED_OOPS_FLAG} \
            -Xlog:aot=error \
@@ -501,6 +504,7 @@ generate_aot_cache() {
            -Dstirling.datasource.url="jdbc:h2:mem:aottraining;DB_CLOSE_DELAY=-1;MODE=PostgreSQL" \
            "$@" >/tmp/aot-record.log 2>&1 || record_exit=$?
   else
+    JAVA_TOOL_OPTIONS= JDK_JAVA_OPTIONS= _JAVA_OPTIONS= \
     java "-Xmx${record_xmx}" ${COMPACT_HEADERS_FLAG:-} ${COMPRESSED_OOPS_FLAG} \
          -Xlog:aot=error \
          -XX:AOTMode=record \
@@ -535,6 +539,7 @@ generate_aot_cache() {
   # CREATE, does NOT start the application; builds pre-linked class + method data.
   local create_exit=0
   if command_exists timeout; then
+    JAVA_TOOL_OPTIONS= JDK_JAVA_OPTIONS= _JAVA_OPTIONS= \
     timeout "${create_timeout}s" \
       java "-Xmx${create_xmx}" ${COMPACT_HEADERS_FLAG:-} ${COMPRESSED_OOPS_FLAG} \
            -Xlog:aot=error \
@@ -543,6 +548,7 @@ generate_aot_cache() {
            -XX:AOTCache="$aot_path" \
            "$@" >/tmp/aot-create.log 2>&1 || create_exit=$?
   else
+    JAVA_TOOL_OPTIONS= JDK_JAVA_OPTIONS= _JAVA_OPTIONS= \
     java "-Xmx${create_xmx}" ${COMPACT_HEADERS_FLAG:-} ${COMPRESSED_OOPS_FLAG} \
          -Xlog:aot=error \
          -XX:AOTMode=create \
