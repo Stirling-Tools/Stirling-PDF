@@ -38,30 +38,39 @@ public class RotationController {
                             + " a multiple of 90. Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<byte[]> rotatePDF(@ModelAttribute RotatePDFRequest request)
             throws IOException {
+
         MultipartFile pdfFile = request.getFileInput();
         Integer angle = request.getAngle();
 
-        // Validate the angle is a multiple of 90
+        // Validate the angle
         validateAngleMultipleOf90(angle);
 
-        // Load the PDF document with proper resource management
-        try (PDDocument document = pdfDocumentFactory.load(request)) {
+        // Load PDF (via wrapper to allow stubbing)
+        try (PDDocument document = loadDocument(request)) {
 
-            // Get the list of pages in the document
             PDPageTree pages = document.getPages();
 
             for (PDPage page : pages) {
                 page.setRotation(page.getRotation() + angle);
             }
 
-            // Return the rotated PDF as a response
-            return WebResponseUtils.pdfDocToWebResponse(
-                    document,
-                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_rotated.pdf"));
+            // Build response (via wrapper to allow stubbing)
+            String outName =
+                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_rotated.pdf");
+            return respondPdf(document, outName);
         }
     }
 
-    // Added by Dazhi Wang, more testable version (dummy helper method)
+    // Added by Dazhi Wang
+    protected PDDocument loadDocument(RotatePDFRequest request) throws IOException {
+        return pdfDocumentFactory.load(request);
+    }
+
+    protected ResponseEntity<byte[]> respondPdf(PDDocument document, String filename)
+            throws IOException {
+        return WebResponseUtils.pdfDocToWebResponse(document, filename);
+    }
+
     static void validateAngleMultipleOf90(int angle) {
         if (angle % 90 != 0) {
             throw ExceptionUtils.createIllegalArgumentException(
