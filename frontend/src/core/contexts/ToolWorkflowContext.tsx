@@ -3,7 +3,7 @@
  * Eliminates prop drilling with a single, simple context
  */
 
-import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useToolManagement, type ToolAvailabilityMap } from '@app/hooks/useToolManagement';
 import { PageEditorFunctions } from '@app/types/pageEditor';
 import { ToolRegistryEntry, ToolRegistry } from '@app/data/toolsTaxonomy';
@@ -112,6 +112,12 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const { actions } = useNavigationActions();
   const navigationState = useNavigationState();
 
+  // Keep a ref to current navigation state so callbacks don't need it as a dependency
+  const navigationStateRef = useRef(navigationState);
+  useEffect(() => {
+    navigationStateRef.current = navigationState;
+  });
+
   // Tool management hook
   const { toolRegistry, getSelectedTool, toolAvailability } = useToolManagement();
   const { allTools } = useToolRegistry();
@@ -192,10 +198,10 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       return updated;
     });
 
-    if (removedView && navigationState.workbench === removedView.workbenchId) {
+    if (removedView && navigationStateRef.current.workbench === removedView.workbenchId) {
       actions.setWorkbench(getDefaultWorkbench());
     }
-  }, [actions, navigationState.workbench]);
+  }, [actions]);
 
   const setCustomWorkbenchViewData = useCallback((id: string, data: any) => {
     setCustomViewData(prev => ({ ...prev, [id]: data }));
