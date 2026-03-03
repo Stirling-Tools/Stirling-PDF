@@ -140,9 +140,10 @@ public class TimestampController {
             TimeStampRequest tsaRequest = generator.generate(digestAlgorithm, hash, nonce);
             byte[] requestBytes = tsaRequest.getEncoded();
 
-            // Contact the TSA server
+            // Contact the TSA server (redirects disabled to prevent SSRF via redirect)
             HttpURLConnection connection =
                     (HttpURLConnection) URI.create(tsaUrl).toURL().openConnection();
+            connection.setInstanceFollowRedirects(false);
             connection.setDoOutput(true);
             connection.setDoInput(true);
             connection.setRequestMethod("POST");
