@@ -1,0 +1,108 @@
+name: Resolve Embedded Base Image
+description: Resolve pinned base image and optionally build/push a temporary base image when Dockerfile.base changed.
+
+inputs:
+  default-base-image:
+    description: Fallback base image when ref file is missing/empty.
+    required: false
+    default: stirlingtools/stirling-pdf-base:1.0.0
+  ref-file:
+    description: File containing pinned base image reference.
+    required: false
+    default: docker/embedded/base-image.ref
+  base-dockerfile:
+    description: Base Dockerfile path to watch/build.
+    required: false
+    default: docker/embedded/Dockerfile.base
+  buildx-builder:
+    description: Optional buildx builder name.
+    required: false
+    default: ""
+  platforms:
+    description: Platforms for temporary base build.
+    required: false
+    default: linux/amd64
+  cache-scope:
+    description: GHA cache scope for base builds.
+    required: false
+    default: stirling-pdf-base
+  can-push-temp:
+    description: Whether this workflow run can push temporary base images.
+    required: false
+    default: "true"
+  temp-registry:
+    description: Registry for temporary base image.
+    required: false
+    default: ghcr.io
+  temp-image-name:
+    description: Image name for temporary base image.
+    required: false
+    default: stirling-pdf-base
+
+outputs:
+  base_image:
+    description: Resolved base image reference.
+    value: ${{ steps.resolve.outputs.base_image }}
+
+runs:
+  using: composite
+  steps:
+    - id: resolve
+      shell: bash
+      env:
+        DEFAULT_BASE_IMAGE: ${{ inputs.default-base-image }}
+        REF_FILE: ${{ inputs.ref-file }}
+        BASE_DOCKERFILE: ${{ inputs.base-dockerfile }}
+        BUILDX_BUILDER: ${{ inputs.buildx-builder }}
+        PLATFORMS: ${{ inputs.platforms }}
+        CACHE_SCOPE: ${{ inputs.cache-scope }}
+        CAN_PUSH_TEMP: ${{ inputs.can-push-temp }}
+        TEMP_REGISTRY: ${{ inputs.temp-registry }}
+        TEMP_IMAGE_NAME: ${{ inputs.temp-image-name }}
+      run: |
+        set -euo pipefail
+
+        BASE_IMAGE="$DEFAULT_BASE_IMAGE"
+        if [ -f "$REF_FILE" ]; then
+          REF_VALUE="$(head -n1 "$REF_FILE" | tr -d '\r')"
+          if [ -n "$REF_VALUE" ]; then
+            BASE_IMAGE="$REF_VALUE"
+          fi
+        fi
+
+        BASE_CHANGED=false
+        if git rev-parse --verify HEAD^ >/dev/null 2>&1; then
+          if git diff --name-only HEAD^ HEAD | grep -Fxq "$BASE_DOCKERFILE"; then
+            BASE_CHANGED=true
+          fi
+        elif git show --name-only --pretty='' HEAD | grep -Fxq "$BASE_DOCKERFILE"; then
+          BASE_CHANGED=true
+        fi
+
+        CAN_PUSH_TEMP_LC="$(echo "$CAN_PUSH_TEMP" | tr '[:upper:]' '[:lower:]')"
+        if [ "$BASE_CHANGED" = true ] && [ "$CAN_PUSH_TEMP_LC" = "true" ]; then
+          OWNER_LC="$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
+          BASE_IMAGE="${TEMP_REGISTRY}/${OWNER_LC}/${TEMP_IMAGE_NAME}:ci-${GITHUB_SHA}"
+          echo "$BASE_DOCKERFILE changed, building temporary base image: $BASE_IMAGE"
+
+          BUILDER_ARG=""
+          if [ -n "$BUILDX_BUILDER" ]; then
+            BUILDER_ARG="--builder $BUILDX_BUILDER"
+          fi
+
+          # shellcheck disable=SC2086
+          docker buildx build \
+            ${BUILDER_ARG} \
+            --file "$BASE_DOCKERFILE" \
+            --platform "$PLATFORMS" \
+            --cache-from "type=gha,scope=${CACHE_SCOPE}" \
+            --cache-to "type=gha,mode=max,scope=${CACHE_SCOPE}" \
+            --push \
+            --tag "$BASE_IMAGE" \
+            .
+        elif [ "$BASE_CHANGED" = true ]; then
+          echo "$BASE_DOCKERFILE changed but temp push is disabled; using $BASE_IMAGE"
+        fi
+
+        echo "base_image=$BASE_IMAGE" >> "$GITHUB_OUTPUT"
+        echo "Using BASE_IMAGE=$BASE_IMAGE"

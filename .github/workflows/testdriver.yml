@@ -18,6 +18,7 @@ concurrency:
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   deploy:
@@ -66,6 +67,19 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_API }}
 
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Resolve embedded base image
+        id: base-image
+        uses: ./.github/actions/resolve-base-image
+        with:
+          platforms: linux/amd64
+
       - name: Build and push test image
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
@@ -75,7 +89,9 @@ jobs:
           cache-from: type=gha,scope=stirling-pdf-latest
           cache-to: type=gha,mode=max,scope=stirling-pdf-latest
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:test-${{ github.sha }}
-          build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+          build-args: |
+            VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+            BASE_IMAGE=${{ steps.base-image.outputs.base_image }}
           platforms: linux/amd64
 
       - name: Set up SSH

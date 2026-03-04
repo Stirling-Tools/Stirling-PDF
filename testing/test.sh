@@ -31,6 +31,62 @@ find_root() {
 
 PROJECT_ROOT=$(find_root)
 
+# Resolve which base image fat builds should use.
+# Priority:
+# 1) Explicit BASE_IMAGE env var
+# 2) docker/embedded/base-image.ref (if present)
+# 3) Hardcoded default tag
+# If Dockerfile.base changed locally/recently, build a fresh local base and use it.
+resolve_base_image_for_tests() {
+    local base_dockerfile="docker/embedded/Dockerfile.base"
+    local base_ref_file="$PROJECT_ROOT/docker/embedded/base-image.ref"
+    local default_base_image="stirlingtools/stirling-pdf-base:1.0.0"
+    local should_rebuild=false
+
+    if [ -n "${BASE_IMAGE:-}" ]; then
+        RESOLVED_BASE_IMAGE="$BASE_IMAGE"
+        echo "Using BASE_IMAGE from environment: $RESOLVED_BASE_IMAGE"
+        return 0
+    fi
+
+    if [ -f "$base_ref_file" ]; then
+        RESOLVED_BASE_IMAGE="$(head -n1 "$base_ref_file" | tr -d '\r')"
+    else
+        RESOLVED_BASE_IMAGE="$default_base_image"
+    fi
+
+    # Detect local/staged changes to Dockerfile.base, or a latest commit that touched it.
+    if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        if ! git diff --quiet -- "$base_dockerfile" || ! git diff --cached --quiet -- "$base_dockerfile"; then
+            should_rebuild=true
+        elif git rev-parse --verify HEAD >/dev/null 2>&1 && \
+             git show --name-only --pretty='' HEAD | grep -Fxq "$base_dockerfile"; then
+            should_rebuild=true
+        fi
+    fi
+
+    if [ "$should_rebuild" = true ]; then
+        local local_tag="stirlingtools/stirling-pdf-base:test-$(date +%s)"
+        echo "Detected changes in $base_dockerfile; building local base image: $local_tag"
+
+        if [ -n "${ACTIONS_RUNTIME_TOKEN}" ] && { [ -n "${ACTIONS_RESULTS_URL}" ] || [ -n "${ACTIONS_CACHE_URL}" ]; }; then
+            DOCKER_CACHE_ARGS_BASE="--cache-from type=gha,scope=stirling-pdf-base --cache-to type=gha,mode=max,scope=stirling-pdf-base"
+        else
+            DOCKER_CACHE_ARGS_BASE=""
+        fi
+
+        docker buildx build \
+            -t "$local_tag" \
+            -f ./docker/embedded/Dockerfile.base \
+            --load \
+            ${DOCKER_CACHE_ARGS_BASE} .
+
+        RESOLVED_BASE_IMAGE="$local_tag"
+    fi
+
+    echo "Using BASE_IMAGE=$RESOLVED_BASE_IMAGE"
+}
+
 # Function to check application readiness via HTTP instead of Docker's health status
 check_health() {
     local container_name=$1          # real container name
@@ -411,6 +467,7 @@ main() {
 
     export DOCKER_CLI_EXPERIMENTAL=enabled
     export COMPOSE_DOCKER_CLI_BUILD=0
+    resolve_base_image_for_tests
 
     # ==================================================================
     # 1. Ultra-Lite (no additional features)
@@ -506,6 +563,7 @@ main() {
             DOCKER_CACHE_ARGS_FAT=""
         fi
         docker buildx build --build-arg VERSION_TAG=alpha \
+            --build-arg BASE_IMAGE="$RESOLVED_BASE_IMAGE" \
             -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat \
             -f ./docker/embedded/Dockerfile.fat \
             --load \

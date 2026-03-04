@@ -104,6 +104,13 @@ jobs:
         id: repoowner
         run: echo "lowercase=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
 
+      - name: Resolve embedded base image
+        id: base-image
+        uses: ./.github/actions/resolve-base-image
+        with:
+          buildx-builder: ${{ steps.buildx.outputs.name }}
+          platforms: linux/amd64,linux/arm64/v8
+
       - name: Generate tags for latest
         id: meta
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
@@ -130,7 +137,9 @@ jobs:
           cache-to: type=gha,mode=max,scope=stirling-pdf-latest
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+          build-args: |
+            VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+            BASE_IMAGE=${{ steps.base-image.outputs.base_image }}
           platforms: linux/amd64,linux/arm64/v8
           provenance: true
           sbom: true
@@ -176,7 +185,9 @@ jobs:
           cache-to: type=gha,mode=max,scope=stirling-pdf-fat
           tags: ${{ steps.meta-fat.outputs.tags }}
           labels: ${{ steps.meta-fat.outputs.labels }}
-          build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+          build-args: |
+            VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+            BASE_IMAGE=${{ steps.base-image.outputs.base_image }}
           platforms: linux/amd64,linux/arm64/v8
           provenance: true
           sbom: true
