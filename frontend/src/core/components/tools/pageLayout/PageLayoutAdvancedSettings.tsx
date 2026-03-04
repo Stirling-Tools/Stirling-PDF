@@ -20,7 +20,7 @@ export default function PageLayoutSettings({
     <Stack gap="sm">
 
       <Select
-        label={t('pageLayout.orientation', 'Orientation:')}
+        label={t('pageLayout.orientation.label', 'Orientation:')}
         data={[
           { value: 'PORTRAIT', label: t('pageLayout.orientation.portrait', 'Portrait') },
           { value: 'LANDSCAPE', label: t('pageLayout.orientation.landscape', 'Landscape') },
@@ -38,7 +38,7 @@ export default function PageLayoutSettings({
       <Divider />
 
       <Select
-        label={t('pageLayout.arrangement', 'Page arrangement:')}
+        label={t('pageLayout.arrangement.label', 'Page arrangement:')}
         data={[
           { value: 'BY_ROWS', label: t('pageLayout.arrangement.byRows', 'By Rows') },
           { value: 'BY_COLUMNS', label: t('pageLayout.arrangement.byColumns', 'By Columns') },
@@ -54,7 +54,7 @@ export default function PageLayoutSettings({
       />
 
       <Select
-        label={t('pageLayout.readingDirection', 'Reading Direction:')}
+        label={t('pageLayout.readingDirection.label', 'Reading Direction:')}
         data={[
           { value: 'LTR', label: t('pageLayout.readingDirection.ltr', 'Left to Right') },
           { value: 'RTL', label: t('pageLayout.readingDirection.rtl', 'Right to Left') },

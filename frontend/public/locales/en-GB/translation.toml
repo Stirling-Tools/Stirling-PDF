@@ -4304,10 +4304,8 @@ cols = "Columns"
 header = "Multi Page Layout"
 innerMargin = "Inner Margin"
 left = "Left Margin"
-orientation = "Orientation:"
 pagesPerSheet = "Pages per sheet:"
 right = "Right Margin"
-readingDirection = "Reading Direction:"
 rows = "Rows"
 submit = "Submit"
 tags = "merge,composite,single-view,organize"
@@ -4331,10 +4329,12 @@ failed = "An error occurred while creating the multi-page layout."
 [pageLayout.orientation]
 landscape = "Landscape"
 portrait = "Portrait"
+label = "Orientation:"
 
 [pageLayout.readingDirection]
 ltr = "Left to Right"
 rtl = "Right to Left"
+label = "Reading Direction:"
 
 [pageLayout.tooltip.header]
 title = "Page Layout Guide"
