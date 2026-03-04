@@ -1,75 +1,52 @@
-# Node modules and build artifacts
-node_modules
-frontend/node_modules
-frontend/dist
-frontend/build
-frontend/.vite
-frontend/.tauri
-frontend/src-tauri/target
-
-# Gradle build artifacts
-.gradle
-build
-bin
-target
-out
-
-# Git
-.git
+# Version control
+.git/
 .gitignore
 
-# IDE
-.vscode
-.idea
+# Build outputs
+build/
+*/build/
+**/build/
+out/
+target/
+
+# Gradle caches (local, not what's in the container)
+.gradle/
+**/.gradle/
+
+# Node / frontend
+node_modules/
+**/node_modules/
+.npm/
+.yarn/
+
+# IDE and editor
+.idea/
+.vscode/
 *.iml
-*.iws
 *.ipr
+*.iws
 
-# Logs
+# Logs and temp files
 *.log
-logs
-
-# Environment files
-.env
-.env.*
-!.env.example
-
-# OS files
+*.tmp
+*.pid
 .DS_Store
 Thumbs.db
 
-# Java compiled files
-*.class
-*.jar
-*.war
-*.ear
-
-# Test reports
-test-results
-coverage
-
-# Docker
-docker-compose.override.yml
+# Docker itself
+Dockerfile*
 .dockerignore
 
-# Temporary files
-tmp
-temp
-*.tmp
-*.swp
-*~
-
-# Runtime database and config files (locked by running app)
-app/core/configs/**
-stirling/**
-stirling-pdf-DB*.mv.db
-stirling-pdf-DB*.trace.db
-
-# Documentation
-*.md
-!README.md
-docs
-
-# CI/CD
-.github
+# CI / CD configs (not needed in build context)
+.github/
+.circleci/
 .gitlab-ci.yml
+
+# Test reports
+**/test-results/
+**/jacoco/
+
+# Local env
+.env
+.env.*
+!.env.example

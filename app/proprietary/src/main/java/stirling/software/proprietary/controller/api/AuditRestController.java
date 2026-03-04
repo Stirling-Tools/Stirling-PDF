@@ -20,9 +20,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,6 +28,9 @@ import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.model.security.PersistentAuditEvent;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /** REST API controller for audit data used by React frontend. */
 @Slf4j
@@ -332,7 +332,7 @@ public class AuditRestController {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> parsed = objectMapper.readValue(event.getData(), Map.class);
                 details = parsed;
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 log.warn("Failed to parse audit event data as JSON: {}", event.getData());
                 details.put("rawData", event.getData());
             }
@@ -380,7 +380,7 @@ public class AuditRestController {
             headers.setContentDispositionFormData("attachment", "audit_export.json");
 
             return ResponseEntity.ok().headers(headers).body(jsonBytes);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Error serializing audit events to JSON", e);
             return ResponseEntity.internalServerError().build();
         }

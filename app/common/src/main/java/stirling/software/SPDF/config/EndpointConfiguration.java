@@ -103,8 +103,9 @@ public class EndpointConfiguration {
 
         // Rule 2: Functional-group override - check if endpoint belongs to any disabled functional
         // group
-        for (String group : endpointGroups.keySet()) {
-            if (disabledGroups.contains(group) && endpointGroups.get(group).contains(endpoint)) {
+        for (Map.Entry<String, Set<String>> entry : endpointGroups.entrySet()) {
+            String group = entry.getKey();
+            if (disabledGroups.contains(group) && entry.getValue().contains(endpoint)) {
                 // Skip tool groups (qpdf, OCRmyPDF, Ghostscript, LibreOffice, etc.)
                 if (!isToolGroup(group)) {
                     log.debug(
@@ -131,10 +132,11 @@ public class EndpointConfiguration {
 
         // Rule 4: Single-dependency check - if no alternatives defined, check if endpoint belongs
         // to any disabled tool groups
-        for (String group : endpointGroups.keySet()) {
+        for (Map.Entry<String, Set<String>> entry : endpointGroups.entrySet()) {
+            String group = entry.getKey();
             if (isToolGroup(group)
                     && disabledGroups.contains(group)
-                    && endpointGroups.get(group).contains(endpoint)) {
+                    && entry.getValue().contains(endpoint)) {
                 log.debug(
                         "isEndpointEnabled('{}') -> false (single tool group '{}' disabled, no alternatives)",
                         original,
@@ -391,13 +393,24 @@ public class EndpointConfiguration {
         addEndpointToGroup("Advance", "extract-image-scans");
         addEndpointToGroup("Advance", "repair");
         addEndpointToGroup("Advance", "auto-rename");
-        addEndpointToGroup("Advance", "handleData");
         addEndpointToGroup("Advance", "scanner-effect");
-        addEndpointToGroup("Advance", "show-javascript");
         addEndpointToGroup("Advance", "overlay-pdf");
         // Backend-only endpoints
         addEndpointToGroup("Advance", "adjust-contrast");
-        addEndpointToGroup("Advance", "pipeline");
+
+        // Adding endpoints to "Automation" group
+        addEndpointToGroup("Automation", "handleData");
+        addEndpointToGroup("Automation", "automate"); // Alias for handleData (user-friendly name)
+        addEndpointToGroup("Automation", "pipeline");
+
+        // Adding endpoints to "DeveloperTools" group
+        addEndpointToGroup("DeveloperTools", "show-javascript");
+
+        // Adding endpoints to "DeveloperDocs" group (fake endpoints for link-only tools)
+        addEndpointToGroup("DeveloperDocs", "dev-api-docs");
+        addEndpointToGroup("DeveloperDocs", "dev-folder-scanning-docs");
+        addEndpointToGroup("DeveloperDocs", "dev-sso-guide-docs");
+        addEndpointToGroup("DeveloperDocs", "dev-airgapped-docs");
 
         // CLI
         addEndpointToGroup("CLI", "compress-pdf");
@@ -595,6 +608,12 @@ public class EndpointConfiguration {
         return endpointGroups.getOrDefault(group, new HashSet<>());
     }
 
+    public Set<String> getAllEndpoints() {
+        return endpointGroups.values().stream()
+                .flatMap(Set::stream)
+                .collect(java.util.stream.Collectors.toSet());
+    }
+
     private boolean isToolGroup(String group) {
         return "qpdf".equals(group)
                 || "OCRmyPDF".equals(group)
@@ -628,8 +647,9 @@ public class EndpointConfiguration {
         }
 
         // Check if endpoint belongs to any disabled functional group
-        for (String group : endpointGroups.keySet()) {
-            if (disabledGroups.contains(group) && endpointGroups.get(group).contains(endpoint)) {
+        for (Map.Entry<String, Set<String>> entry : endpointGroups.entrySet()) {
+            String group = entry.getKey();
+            if (disabledGroups.contains(group) && entry.getValue().contains(endpoint)) {
                 if (!isToolGroup(group)) {
                     return false;
                 }

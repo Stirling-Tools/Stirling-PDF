@@ -4,13 +4,12 @@ import iconSet from '../../../assets/material-symbols-icons.json'; // eslint-dis
 
 // Load icons synchronously at import time - guaranteed to be ready on first render
 let iconsLoaded = false;
-let localIconCount = 0;
 
 try {
   if (iconSet) {
     addCollection(iconSet);
     iconsLoaded = true;
-    localIconCount = Object.keys(iconSet.icons || {}).length;
+    const localIconCount = Object.keys(iconSet.icons || {}).length;
     console.info(`✅ Local icons loaded: ${localIconCount} icons (${Math.round(JSON.stringify(iconSet).length / 1024)}KB)`);
   }
 } catch {

@@ -3,11 +3,12 @@ import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useFileHandler } from '@app/hooks/useFileHandler';
-import { useFileState } from '@app/contexts/FileContext';
+import { useFileState, useFileActions } from '@app/contexts/FileContext';
 import { useNavigationState, useNavigationActions, useNavigationGuard } from '@app/contexts/NavigationContext';
 import { isBaseWorkbench } from '@app/types/workbench';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { FileId } from '@app/types/file';
 import styles from '@app/components/layout/Workbench.module.css';
 
 import TopControls from '@app/components/shared/TopControls';
@@ -26,6 +27,7 @@ export default function Workbench() {
 
   // Use context-based hooks to eliminate all prop drilling
   const { selectors } = useFileState();
+  const { actions: fileActions } = useFileActions();
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
@@ -61,12 +63,16 @@ export default function Workbench() {
   const handleFileSelect = useCallback((index: number) => {
     // Don't do anything if selecting the same file
     if (index === activeFileIndex) return;
-    
+
     // requestNavigation handles the unsaved changes check internally
     requestNavigation(() => {
       setActiveFileIndex(index);
     });
   }, [activeFileIndex, requestNavigation, setActiveFileIndex]);
+
+  const handleFileRemove = useCallback(async (fileId: FileId) => {
+    await fileActions.removeFiles([fileId], false); // false = don't delete from IndexedDB, just remove from context
+  }, [fileActions]);
 
   const handlePreviewClose = () => {
     setPreviewFile(null);
@@ -201,6 +207,7 @@ export default function Workbench() {
           })}
           currentFileIndex={activeFileIndex}
           onFileSelect={handleFileSelect}
+          onFileRemove={handleFileRemove}
         />
       )}
 

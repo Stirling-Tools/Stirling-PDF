@@ -17,6 +17,12 @@ confirmClose = "Itxiera berretsi"
 confirmCloseCancel = "Utzi"
 confirmCloseConfirm = "Itxi fitxategia"
 confirmCloseMessage = "Ziur zaude fitxategi hau ixtea nahi duzula?"
+confirmCloseDiscard = "Baztertu aldaketak eta itxi"
+confirmCloseSave = "Gorde eta itxi"
+confirmCloseUnsaved = "Fitxategi honek gorde gabeko aldaketak ditu."
+confirmCloseUnsavedList = "Gorde gabeko aldaketak dituzten {{count}} fitxategi{{plural}} dituzu.\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "Gordetzeak huts egin du"
+confirmCloseSaveFailed = "Akats batzuekin gorde da. {{count}} fitxategi{{plural}} ezin izan dira gorde."
 confirmPasswordErrorMessage = "Pasahitz berria eta Pasahitz berria berretsi bat etorri behar dira."
 custom = "Pertsonalizatu..."
 customPosition = "Posizio pertsonalizatua"
@@ -39,6 +45,8 @@ edit = "Editatu"
 editYourNewFiles = "Editatu zure fitxategi berria(k)"
 exportAndContinue = "Esportatu eta jarraitu"
 false = "Faltsua"
+fileSavedToDisk = "Fitxategia diskoan gorde da"
+fileNotSavedToDisk = "Ez da diskoan gorde"
 fileSelected = "Hautatuta: {{filename}}"
 filesSelected = "Hautatutako fitxategiak"
 font = "Letra-tipoa"
@@ -829,8 +837,9 @@ label = "Erabiltzaile-izena"
 [admin.settings.endpoints]
 description = "Kontrolatu zein API endpoint eta endpoint-talde dauden erabilgarri."
 management = "Endpointen kudeaketa"
-note = "Oharra: Endpointak desgaitzeak API sarbidea mugatzen du baina ez ditu UI osagaiak kentzen. Berrabiaraztea beharrezkoa da aldaketek eragina izan dezaten."
 title = "API endpointak"
+userDefaults = "Erabiltzaile-hobespenen balio lehenetsiak"
+userDefaultsDescription = "Ezarri erabiltzaile-hobespenentzako balio lehenetsiak. Erabiltzaileek balio hauek gainidatz ditzakete beren ezarpen pertsonaletan."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "Hautatu desgaitu beharreko endpoint-taldeak"
@@ -839,6 +848,14 @@ label = "Ezgaitutako endpoint-taldeak"
 [admin.settings.endpoints.toRemove]
 description = "Hautatu desgaitu beharreko banakako endpointak"
 label = "Ezgaitutako endpointak"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Kendu desgaitutako tresnak, gris kolorean erakutsi ordez"
+label = "Ezkutatu erabilgarri ez dauden tresnak lehenetsita"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Kendu desgaitutako bihurketa aukerak, gris kolorean erakutsi ordez"
+label = "Ezkutatu erabilgarri ez dauden bihurketak lehenetsita"
 
 [admin.settings.enterpriseRequired]
 message = "{{featureName}} atzitzeko Enterprise lizentzia behar da. Erreferentzia gisa demo datuak ikusten ari zara."
@@ -1219,9 +1236,21 @@ label = "Gakoen garbiketa gaitu"
 description = "Automatikoki biratu JWT sinadura-gakoak aldian-aldian"
 label = "Gakoen biraketa gaitu"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "Egiaztapenerako JWT gako zaharrak gordetzeko egun kopurua"
-label = "Gakoak gordetzeko egunak"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Sarbide-tokenaren bizi-iraupena minututan web bezeroentzat (lehenetsia: 1440 = 24 ordu)"
+label = "Web tokenaren iraungitzea (minutuak)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Sarbide-tokenaren bizi-iraupena minututan mahaigaineko bezeroentzat. Mahaigaineko aplikazioak automatikoki detektatzen dira User-Agent bidez eta saio luzeagoak jasotzen dituzte UX hobea lortzeko (lehenetsia: 43200 = 30 egun)"
+label = "Mahaigaineko tokenaren iraungitzea (minutuak)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tokena balioztatzean bezero/zerbitzari denboraren desbideratzearen tolerantzia (lehenetsia: 60 segundo)"
+label = "Ordulari-desbideratzearen tolerantzia (segundoak)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "Onartu tokena freskatzea iraungi ondorengo minutu kopuru honetan (lehenetsia: 15 minutu, gehienez 3 saiakera)"
+label = "Freskatze tolerantzia-epea (minutuak)"
 
 [admin.settings.security.jwt.persistence]
 description = "JWT gakoak modu iraunkorrean gorde zerbitzaria berrabiaraztea gainditzeko"
@@ -1422,13 +1451,16 @@ applyChanges = "Aplikatu aldaketak"
 backgroundColor = "Atzeko planoaren kolorea"
 borderOff = "Ertza: desaktibo"
 borderOn = "Ertza: aktibo"
+changeColor = "Aldatu kolorea"
 chooseColor = "Aukeratu kolorea"
 circle = "Zirkulua"
 clearBackground = "Kendu atzeko planoa"
 color = "Kolorea"
 contents = "Testua"
+delete = "Ezabatu"
 desc = "Erabili nabarmentzea, boligrafoa, testua eta oharrak. Aldaketak bere horretan geratzen dira—ez da lautu beharrik."
 drawing = "Marrazkia"
+duplicate = "Bikoiztu"
 editCircle = "Editatu zirkulua"
 editInk = "Editatu boligrafoa"
 editLine = "Editatu marra"
@@ -1458,6 +1490,7 @@ notesStamps = "Oharrak eta zigiluak"
 opacity = "Opakutasuna"
 pen = "Boligrafoa"
 polygon = "Poligonoa"
+properties = "Propietateak"
 rectangle = "Laukizuzena"
 redo = "Berregin"
 saveChanges = "Gorde aldaketak"
@@ -1483,6 +1516,7 @@ title = "Oharrak"
 underline = "Azpimarra"
 undo = "Desegin"
 unsupportedType = "Oharpen mota hau ez dago guztiz onartuta editatzeko."
+width = "Zabalera"
 
 [app]
 description = "Adobe Acrobat-en doako alternatiba (10M+ deskarga)"
@@ -3312,6 +3346,10 @@ desc = "Eraiki hainbat pausotako workflowak PDF ekintzak kateatuz. Egokia zeregi
 tags = "workflow,sekuentzia,automatizazioa"
 title = "Automatizatu"
 
+[home.formFill]
+desc = "Bete PDF inprimakiaren eremuak modu interaktiboan editore bisual batekin"
+title = "Bete inprimakia"
+
 [home.autoRename]
 desc = "PDF fitxategi bat automatikoki berrizendatzen du detektatutako goiburuaren arabera"
 tags = "auto-detektatu,goiburuetan oinarritua,antolatu,berrerrotulatu"
@@ -4209,6 +4247,75 @@ title = "Orri-editorea"
 zoomIn = "Zoom handitu"
 zoomOut = "Zoom txikitu"
 
+[viewer]
+cannotPreviewFile = "Ezin da fitxategia aurreikusi"
+dualPageView = "Orri biko ikuspegia"
+firstPage = "Lehen orria"
+lastPage = "Azken orria"
+nextPage = "Hurrengo orria"
+onlyPdfSupported = "Ikustaileak PDF fitxategiak bakarrik onartzen ditu. Fitxategi honek beste formatu batekoa dirudi."
+previousPage = "Aurreko orria"
+singlePageView = "Orri bakarreko ikuspegia"
+unknownFile = "Fitxategi ezezaguna"
+zoomIn = "Zoom handitu"
+zoomOut = "Zoom txikitu"
+
+[viewer.attachments]
+title = "Eranskinak"
+searchPlaceholder = "Bilatu eranskinak"
+noSupport = "Eranskinetarako euskarria ez dago erabilgarri ikusgailu honetan."
+noDocument = "Ireki PDF bat bere eranskinak ikusteko."
+loading = "Eranskinak kargatzen..."
+empty = "Ez dago eranskinik dokumentu honetan"
+noMatch = "Ez dago zure bilaketarekin bat datorren eranskinik"
+
+[viewer.formBar]
+title = "Inprimaki-eremuak"
+unsavedBadge = "Gorde gabe"
+unsavedDesc = "Gorde gabeko aldaketak dituzu"
+hasFieldsDesc = "PDF honek betetzeko eremuak ditu"
+dismiss = "Baztertu"
+apply = "Aplikatu aldaketak"
+download = "Deskargatu PDF"
+
+[rightRail]
+closeSelected = "Itxi hautatutako fitxategiak"
+selectAll = "Hautatu dena"
+deselectAll = "Deshautatu dena"
+selectByNumber = "Hautatu orri-zenbakien arabera"
+deleteSelected = "Ezabatu hautatutako orriak"
+closePdf = "Itxi PDFa"
+exportAll = "Esportatu PDFa"
+downloadSelected = "Deskargatu hautatutako fitxategiak"
+annotations = "Oharpenak"
+exportSelected = "Esportatu hautatutako orriak"
+formFill = "Bete inprimakia"
+saveChanges = "Aldaketak gorde"
+toggleAttachments = "Eranskinak erakutsi/ezkutatu"
+toggleTheme = "Gaia txandakatu"
+language = "Hizkuntza"
+toggleAnnotations = "Oharpenen ikusgarritasuna txandakatu"
+search = "Bilatu PDF"
+panMode = "Pan modua"
+applyRedactionsFirst = "Lehenik aplikatu zentsurak"
+rotateLeft = "Biratu ezkerrera"
+rotateRight = "Biratu eskuinera"
+toggleSidebar = "Alboko barra txandakatu"
+toggleBookmarks = "Laster-markak txandakatu"
+print = "Inprimatu PDFa"
+ruler = "Erregela / Neurketa"
+draw = "Marraztu"
+redact = "Zentsuratu"
+exitRedaction = "Irten zentsura modutik"
+save = "Gorde"
+downloadAll = "Deskargatu dena"
+saveAll = "Gorde dena"
+
+[textAlign]
+left = "Ezkerrera"
+center = "Erdira"
+right = "Eskuinera"
+
 [pageExtracter]
 header = "Atera orriak"
 placeholder = "(adib. 1,2,8 edo 4,7,12-16 edo 2n-1)"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Aplikazio iraunkorra; ezin da desegin eta azpiko datuak ezabatu egingo dira"
 boxRedaction = "Koadro marrazketa bidezko zentsura"
 colourPicker = "Kolore-hautatzailea"
+colorLabel = "Zentsuratze kolorea"
+active = "Zentsuratze modua aktibatuta"
+activate = "Aktibatu zentsuratze tresna"
 controlsTitle = "Eskuzko zentsura-kontrolak"
 convertPDFToImageLabel = "Bihurtu PDFa PDF-Irudira (koadroaren atzeko testua kentzeko erabiltzen da)"
 export = "Esportatu"
@@ -5285,36 +5395,6 @@ title = "Kontraste handia"
 [replaceColor.tooltip.invertAll]
 text = "PDFko kolore guztiak erabat alderantzikatu, negatibo moduko efektua sortuz. Erabilgarria da dokumentuen gaueko bertsioak sortzeko edo argi gutxiko inguruneetan nekea murrizteko."
 title = "Kolore guztiak alderantzikatu"
-
-[rightRail]
-annotations = "Oharpenak"
-applyRedactionsFirst = "Lehenik aplikatu zentsurak"
-closePdf = "Itxi PDFa"
-closeSelected = "Itxi hautatutako fitxategiak"
-deleteSelected = "Ezabatu hautatutako orriak"
-deselectAll = "Deshautatu dena"
-downloadAll = "Deskargatu dena"
-downloadSelected = "Deskargatu hautatutako fitxategiak"
-draw = "Marraztu"
-exitRedaction = "Irten zentsura modutik"
-exportAll = "Esportatu PDFa"
-exportSelected = "Esportatu hautatutako orriak"
-language = "Hizkuntza"
-panMode = "Pan modua"
-print = "Inprimatu PDFa"
-redact = "Zentsuratu"
-rotateLeft = "Biratu ezkerrera"
-rotateRight = "Biratu eskuinera"
-save = "Gorde"
-saveAll = "Gorde dena"
-saveChanges = "Aldaketak gorde"
-search = "Bilatu PDF"
-selectAll = "Hautatu dena"
-selectByNumber = "Hautatu orri-zenbakien arabera"
-toggleAnnotations = "Oharpenen ikusgarritasuna txandakatu"
-toggleBookmarks = "Laster-markak txandakatu"
-toggleSidebar = "Alboko barra txandakatu"
-toggleTheme = "Gaia txandakatu"
 
 [rotate]
 rotateLeft = "Biratu erlojuaren aurkako noranzkoan"
@@ -6153,11 +6233,6 @@ title = "API Dokumentazioa"
 [tableExtraxt]
 tags = "CSV,Taula erauzketa,erauzi,bihurtu"
 
-[textAlign]
-center = "Erdira"
-left = "Ezkerrera"
-right = "Eskuinera"
-
 [theme]
 toggle = "Gaia txandakatu"
 
@@ -6432,19 +6507,6 @@ invalid = "Ziurtagiria ez dago konfiantza-biltegiean - ezin da iturburua egiazta
 fileManager = "Fitxategi-kudeatzailea"
 pageEditor = "Orri-editorea"
 viewer = "Ikuslea"
-
-[viewer]
-cannotPreviewFile = "Ezin da fitxategia aurreikusi"
-dualPageView = "Orri biko ikuspegia"
-firstPage = "Lehen orria"
-lastPage = "Azken orria"
-nextPage = "Hurrengo orria"
-onlyPdfSupported = "Ikustaileak PDF fitxategiak bakarrik onartzen ditu. Fitxategi honek beste formatu batekoa dirudi."
-previousPage = "Aurreko orria"
-singlePageView = "Orri bakarreko ikuspegia"
-unknownFile = "Fitxategi ezezaguna"
-zoomIn = "Zoom handitu"
-zoomOut = "Zoom txikitu"
 
 [viewPdf]
 header = "Ikusi PDF"

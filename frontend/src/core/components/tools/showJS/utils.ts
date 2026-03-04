@@ -1,3 +1,5 @@
+import { downloadFromUrl } from "@app/services/downloadService";
+
 export type ShowJsTokenType = "kw" | "str" | "num" | "com" | "plain";
 export type ShowJsToken = { type: ShowJsTokenType; text: string };
 
@@ -372,11 +374,6 @@ export async function copyTextToClipboard(text: string, fallbackElement?: HTMLEl
   }
 }
 
-export function triggerDownload(url: string, filename: string): void {
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+export async function triggerDownload(url: string, filename: string): Promise<void> {
+  await downloadFromUrl(url, filename);
 }

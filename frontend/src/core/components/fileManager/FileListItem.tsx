@@ -46,7 +46,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { t } = useTranslation();
-  const {expandedFileIds, onToggleExpansion, onUnzipFile } = useFileManagerContext();
+  const { expandedFileIds, onToggleExpansion, onUnzipFile } = useFileManagerContext();
   const { removeFiles } = useFileManagement();
 
   // Check if this is a ZIP file
@@ -269,6 +269,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
               >
                 {t('fileManager.delete', 'Delete')}
               </Menu.Item>
+
             </Menu.Dropdown>
           </Menu>
         </Group>

@@ -17,6 +17,12 @@ confirmClose = "Bekreft lukking"
 confirmCloseCancel = "Avbryt"
 confirmCloseConfirm = "Lukk fil"
 confirmCloseMessage = "Er du sikker på at du vil lukke denne filen?"
+confirmCloseDiscard = "Forkast endringer og lukk"
+confirmCloseSave = "Lagre og lukk"
+confirmCloseUnsaved = "Denne filen har ulagrede endringer."
+confirmCloseUnsavedList = "Du har {{count}} fil{{plural}} med ulagrede endringer.\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "Lagring mislyktes"
+confirmCloseSaveFailed = "Lagret med feil. {{count}} fil{{plural}} kunne ikke lagres."
 confirmPasswordErrorMessage = "Nytt passord og Bekreft nytt passord må være like."
 custom = "Tilpasset..."
 customPosition = "Egendefinert posisjon"
@@ -39,6 +45,8 @@ edit = "Rediger"
 editYourNewFiles = "Rediger den nye filen(e)"
 exportAndContinue = "Eksporter og fortsett"
 false = "Usann"
+fileSavedToDisk = "Fil lagret til disk"
+fileNotSavedToDisk = "Ikke lagret til disk"
 fileSelected = "Valgt: {{filename}}"
 filesSelected = "filer valgt"
 font = "Skrifttype"
@@ -829,8 +837,9 @@ label = "Brukernavn"
 [admin.settings.endpoints]
 description = "Kontroller hvilke API-endepunkter og endepunktgrupper som er tilgjengelige."
 management = "Endepunktadministrasjon"
-note = "Merk: Deaktivering av endepunkter begrenser API-tilgang, men fjerner ikke UI-komponenter. Omstart kreves for at endringene skal tre i kraft."
 title = "API-endepunkter"
+userDefaults = "Standardverdier for brukerpreferanser"
+userDefaultsDescription = "Angi standardverdier for brukerpreferanser. Brukere kan overstyre disse i sine personlige innstillinger."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "Velg endepunktgrupper som skal deaktiveres"
@@ -839,6 +848,14 @@ label = "Deaktiverte endepunktgrupper"
 [admin.settings.endpoints.toRemove]
 description = "Velg individuelle endepunkter som skal deaktiveres"
 label = "Deaktiverte endepunkter"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Fjern deaktiverte verktøy i stedet for å vise dem nedtonet"
+label = "Skjul utilgjengelige verktøy som standard"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Fjern deaktiverte konverteringer i stedet for å vise dem nedtonet"
+label = "Skjul utilgjengelige konverteringer som standard"
 
 [admin.settings.enterpriseRequired]
 message = "En Enterprise-lisens kreves for å få tilgang til {{featureName}}. Du ser demodata som referanse."
@@ -1219,9 +1236,21 @@ label = "Aktiver opprydding av nøkler"
 description = "Roter automatisk JWT-signeringsnøkler periodisk"
 label = "Aktiver nøkkelrotasjon"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "Antall dager gamle JWT-nøkler beholdes for verifisering"
-label = "Dager for nøkkeloppbevaring"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Levetid for tilgangstoken i minutter for nettklienter (standard: 1440 = 24 timer)"
+label = "Utløp for webtoken (minutter)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Levetid for tilgangstoken i minutter for desktop-klienter. Desktop-apper oppdages automatisk via User-Agent og får lengre økter for bedre brukeropplevelse (standard: 43200 = 30 dager)"
+label = "Utløp for desktop-token (minutter)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Toleranse for klient/server tidsavvik under tokenvalidering (standard: 60 sekunder)"
+label = "Toleranse for klokkeavvik (sekunder)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "Tillat fornyelse av token innen så mange minutter etter utløp (standard: 15 minutter, maks 3 forsøk)"
+label = "Fornyelsesfrist (minutter)"
 
 [admin.settings.security.jwt.persistence]
 description = "Lagre JWT-nøkler vedvarende for å tåle serveromstarter"
@@ -1422,13 +1451,16 @@ applyChanges = "Bruk endringer"
 backgroundColor = "Bakgrunnsfarge"
 borderOff = "Kant: Av"
 borderOn = "Kant: På"
+changeColor = "Endre farge"
 chooseColor = "Velg farge"
 circle = "Sirkel"
 clearBackground = "Fjern bakgrunn"
 color = "Farge"
 contents = "Tekst"
+delete = "Slett"
 desc = "Bruk utheving, penn, tekst og notater. Endringer er levende—ingen utflating nødvendig."
 drawing = "Tegning"
+duplicate = "Dupliser"
 editCircle = "Rediger sirkel"
 editInk = "Rediger penn"
 editLine = "Rediger linje"
@@ -1458,6 +1490,7 @@ notesStamps = "Notater og stempler"
 opacity = "Opasitet"
 pen = "Penn"
 polygon = "Polygon"
+properties = "Egenskaper"
 rectangle = "Rektangel"
 redo = "Gjør om"
 saveChanges = "Lagre endringer"
@@ -1483,6 +1516,7 @@ title = "Annoter"
 underline = "Understrek"
 undo = "Angre"
 unsupportedType = "Denne merknadstypen er ikke fullt støttet for redigering."
+width = "Bredde"
 
 [app]
 description = "Det gratis alternativet til Adobe Acrobat (10M+ nedlastinger)"
@@ -3312,6 +3346,10 @@ desc = "Bygg flertrinns arbeidsflyter ved å lenke sammen PDF-handlinger. Ideelt
 tags = "arbeidsflyt,sekvens,automatisering"
 title = "Automatiser"
 
+[home.formFill]
+desc = "Fyll ut felter i PDF-skjemaer interaktivt med en visuell editor"
+title = "Fyll ut skjema"
+
 [home.autoRename]
 desc = "Gir automatisk nytt navn til en PDF-fil basert på den oppdagede overskriften"
 tags = "autogjenkjenning,overskriftsbasert,organiser,gi nytt navn"
@@ -4209,6 +4247,75 @@ title = "Sideeditor"
 zoomIn = "Zoom inn"
 zoomOut = "Zoom ut"
 
+[viewer]
+cannotPreviewFile = "Kan ikke forhåndsvise fil"
+dualPageView = "Dobbelsidevisning"
+firstPage = "Første side"
+lastPage = "Siste side"
+nextPage = "Neste side"
+onlyPdfSupported = "Visningsprogrammet støtter bare PDF-filer. Denne filen ser ut til å ha et annet format."
+previousPage = "Forrige side"
+singlePageView = "Enkeltsidevisning"
+unknownFile = "Ukjent fil"
+zoomIn = "Zoom inn"
+zoomOut = "Zoom ut"
+
+[viewer.attachments]
+title = "Vedlegg"
+searchPlaceholder = "Søk i vedlegg"
+noSupport = "Støtte for vedlegg er ikke tilgjengelig i denne viseren."
+noDocument = "Åpne en PDF for å se vedleggene."
+loading = "Laster vedlegg..."
+empty = "Ingen vedlegg i dette dokumentet"
+noMatch = "Ingen vedlegg samsvarer med søket ditt"
+
+[viewer.formBar]
+title = "Skjemafelter"
+unsavedBadge = "Ulagret"
+unsavedDesc = "Du har ulagrede endringer"
+hasFieldsDesc = "Denne PDF-en inneholder utfyllbare felter"
+dismiss = "Avvis"
+apply = "Bruk endringer"
+download = "Last ned PDF"
+
+[rightRail]
+closeSelected = "Lukk valgte filer"
+selectAll = "Velg alle"
+deselectAll = "Fjern all markering"
+selectByNumber = "Velg etter sidenummer"
+deleteSelected = "Slett valgte sider"
+closePdf = "Lukk PDF"
+exportAll = "Eksporter PDF"
+downloadSelected = "Last ned valgte filer"
+annotations = "Merknader"
+exportSelected = "Eksporter valgte sider"
+formFill = "Fyll ut skjema"
+saveChanges = "Lagre endringer"
+toggleAttachments = "Vis/skjul vedlegg"
+toggleTheme = "Bytt tema"
+language = "Språk"
+toggleAnnotations = "Vis/skjul merknader"
+search = "Søk i PDF"
+panMode = "Panoreringsmodus"
+applyRedactionsFirst = "Bruk sladding først"
+rotateLeft = "Roter til venstre"
+rotateRight = "Roter til høyre"
+toggleSidebar = "Vis/skjul sidepanel"
+toggleBookmarks = "Veksle bokmerker"
+print = "Skriv ut PDF"
+ruler = "Linjal / Måling"
+draw = "Tegn"
+redact = "Sladd"
+exitRedaction = "Avslutt sladdemodus"
+save = "Lagre"
+downloadAll = "Last ned alle"
+saveAll = "Lagre alle"
+
+[textAlign]
+left = "Venstre"
+center = "Sentrert"
+right = "Høyre"
+
 [pageExtracter]
 header = "Trekk ut Sider"
 placeholder = "(f.eks. 1,2,8 eller 4,7,12-16 eller 2n-1)"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Permanent handling, kan ikke angres og data under blir slettet"
 boxRedaction = "Sladding ved å tegne boks"
 colourPicker = "Fargevelger"
+colorLabel = "Farge for sladding"
+active = "Sladdemodus aktiv"
+activate = "Aktiver sladdeverktøy"
 controlsTitle = "Manuelle sladdekontroller"
 convertPDFToImageLabel = "Konverter PDF til PDF-bilde (brukes til å fjerne tekst bak boksen)"
 export = "Eksporter"
@@ -5285,36 +5395,6 @@ title = "Høy kontrast"
 [replaceColor.tooltip.invertAll]
 text = "Inverterer alle farger i PDF-en fullstendig og skaper en negativ-effekt. Nyttig for å lage mørk-modus-versjoner av dokumenter eller redusere øyebelastning i lite lys."
 title = "Inverter alle farger"
-
-[rightRail]
-annotations = "Merknader"
-applyRedactionsFirst = "Bruk sladding først"
-closePdf = "Lukk PDF"
-closeSelected = "Lukk valgte filer"
-deleteSelected = "Slett valgte sider"
-deselectAll = "Fjern all markering"
-downloadAll = "Last ned alle"
-downloadSelected = "Last ned valgte filer"
-draw = "Tegn"
-exitRedaction = "Avslutt sladdemodus"
-exportAll = "Eksporter PDF"
-exportSelected = "Eksporter valgte sider"
-language = "Språk"
-panMode = "Panoreringsmodus"
-print = "Skriv ut PDF"
-redact = "Sladd"
-rotateLeft = "Roter til venstre"
-rotateRight = "Roter til høyre"
-save = "Lagre"
-saveAll = "Lagre alle"
-saveChanges = "Lagre endringer"
-search = "Søk i PDF"
-selectAll = "Velg alle"
-selectByNumber = "Velg etter sidenummer"
-toggleAnnotations = "Vis/skjul merknader"
-toggleBookmarks = "Veksle bokmerker"
-toggleSidebar = "Vis/skjul sidepanel"
-toggleTheme = "Bytt tema"
 
 [rotate]
 rotateLeft = "Roter mot klokken"
@@ -6153,11 +6233,6 @@ title = "API-dokumentasjon"
 [tableExtraxt]
 tags = "CSV,tabelluttrekk,ekstrahere,konvertere"
 
-[textAlign]
-center = "Sentrert"
-left = "Venstre"
-right = "Høyre"
-
 [theme]
 toggle = "Bytt tema"
 
@@ -6432,19 +6507,6 @@ invalid = "Sertifikatet er ikke i tillitslager - kilden kan ikke verifiseres"
 fileManager = "Filbehandling"
 pageEditor = "Sideeditor"
 viewer = "Visning"
-
-[viewer]
-cannotPreviewFile = "Kan ikke forhåndsvise fil"
-dualPageView = "Dobbelsidevisning"
-firstPage = "Første side"
-lastPage = "Siste side"
-nextPage = "Neste side"
-onlyPdfSupported = "Visningsprogrammet støtter bare PDF-filer. Denne filen ser ut til å ha et annet format."
-previousPage = "Forrige side"
-singlePageView = "Enkeltsidevisning"
-unknownFile = "Ukjent fil"
-zoomIn = "Zoom inn"
-zoomOut = "Zoom ut"
 
 [viewPdf]
 header = "Vis PDF"

@@ -17,6 +17,12 @@ confirmClose = "Potvrdi zatvaranje"
 confirmCloseCancel = "Odustani"
 confirmCloseConfirm = "Zatvori datoteku"
 confirmCloseMessage = "Jeste li sigurni da želite zatvoriti ovu datoteku?"
+confirmCloseDiscard = "Odbaci promjene i zatvori"
+confirmCloseSave = "Spremi i zatvori"
+confirmCloseUnsaved = "Ova datoteka ima nespremljene promjene."
+confirmCloseUnsavedList = "Imate {{count}} datoteka{{plural}} s nespremljenim promjenama.\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "Spremanje nije uspjelo"
+confirmCloseSaveFailed = "Spremljeno s pogreškama. {{count}} datoteka{{plural}} nije se moglo spremiti."
 confirmPasswordErrorMessage = "Nova lozinka i potvrda nove lozinke moraju biti identične."
 custom = "Prilagođeno..."
 customPosition = "Prilagođeni položaj"
@@ -39,6 +45,8 @@ edit = "Uredi"
 editYourNewFiles = "Uredite svoje nove datoteke"
 exportAndContinue = "Izvezi i nastavi"
 false = "Netočno"
+fileSavedToDisk = "Datoteka spremljena na disk"
+fileNotSavedToDisk = "Nije spremljeno na disk"
 fileSelected = "Odabrano: {{filename}}"
 filesSelected = "odabrane datoteke"
 font = "Pismo"
@@ -829,8 +837,9 @@ label = "Korisničko ime"
 [admin.settings.endpoints]
 description = "Kontrolirajte koje su API krajnje točke i grupe krajnjih točaka dostupne."
 management = "Upravljanje krajnjim točkama"
-note = "Napomena: Onemogućavanje krajnjih točaka ograničava pristup API-ju, ali ne uklanja UI komponente. Za stupanje promjena na snagu potrebno je ponovno pokretanje."
 title = "API krajnje točke"
+userDefaults = "Zadane vrijednosti korisničkih postavki"
+userDefaultsDescription = "Postavite zadane vrijednosti za korisničke postavke. Korisnici ih mogu nadjačati u svojim osobnim postavkama."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "Odaberite grupe krajnjih točaka za onemogućavanje"
@@ -839,6 +848,14 @@ label = "Onemogućene grupe krajnjih točaka"
 [admin.settings.endpoints.toRemove]
 description = "Odaberite pojedinačne krajnje točke za onemogućavanje"
 label = "Onemogućene krajnje točke"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Ukloni onemogućene alate umjesto prikazivanja zasivljenima"
+label = "Po zadanom sakrij nedostupne alate"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Ukloni onemogućene opcije pretvorbe umjesto prikazivanja zasivljenima"
+label = "Po zadanom sakrij nedostupne pretvorbe"
 
 [admin.settings.enterpriseRequired]
 message = "Za pristup {{featureName}} potrebna je Enterprise licenca. Prikazuju se ogledni podaci radi reference."
@@ -1219,9 +1236,21 @@ label = "Omogući čišćenje ključeva"
 description = "Automatski periodički rotiraj potpisne JWT ključeve"
 label = "Omogući rotaciju ključeva"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "Broj dana zadržavanja starih JWT ključeva za provjeru"
-label = "Dani zadržavanja ključeva"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Vrijeme trajanja pristupnog tokena u minutama za web klijente (zadano: 1440 = 24 sata)"
+label = "Istek web tokena (minute)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Vrijeme trajanja pristupnog tokena u minutama za desktop klijente. Desktop aplikacije se automatski prepoznaju putem User-Agent i dobivaju dulje sesije radi boljeg korisničkog iskustva (zadano: 43200 = 30 dana)"
+label = "Istek desktop tokena (minute)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolerancija odstupanja vremena klijent/poslužitelj tijekom provjere tokena (zadano: 60 sekundi)"
+label = "Tolerancija vremenskog odstupanja (sekunde)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "Dopusti osvježavanje tokena unutar ovoliko minuta nakon isteka (zadano: 15 minuta, najviše 3 pokušaja)"
+label = "Razdoblje tolerancije za osvježavanje (minute)"
 
 [admin.settings.security.jwt.persistence]
 description = "Trajno pohrani JWT ključeve kako bi preživjeli ponovno pokretanje poslužitelja"
@@ -1422,13 +1451,16 @@ applyChanges = "Primijeni promjene"
 backgroundColor = "Boja pozadine"
 borderOff = "Obrub: isključen"
 borderOn = "Obrub: uključen"
+changeColor = "Promijeni boju"
 chooseColor = "Odaberi boju"
 circle = "Krug"
 clearBackground = "Ukloni pozadinu"
 color = "Boja"
 contents = "Tekst"
+delete = "Izbriši"
 desc = "Koristite isticanje, olovku, tekst i napomene. Promjene ostaju aktivne — nije potrebno spljoštavanje."
 drawing = "Crtanje"
+duplicate = "Dupliciraj"
 editCircle = "Uredi krug"
 editInk = "Uredi olovku"
 editLine = "Uredi liniju"
@@ -1458,6 +1490,7 @@ notesStamps = "Napomene i pečati"
 opacity = "Neprozirnost"
 pen = "Olovka"
 polygon = "Poligon"
+properties = "Svojstva"
 rectangle = "Pravokutnik"
 redo = "Ponovi"
 saveChanges = "Spremi promjene"
@@ -1483,6 +1516,7 @@ title = "Anotiraj"
 underline = "Podcrtavanje"
 undo = "Poništi"
 unsupportedType = "Ova vrsta anotacije nije u potpunosti podržana za uređivanje."
+width = "Širina"
 
 [app]
 description = "Besplatna alternativa Adobe Acrobatu (10M+ preuzimanja)"
@@ -3312,6 +3346,10 @@ desc = "Izgradite višekoračne tijekove rada povezivanjem PDF radnji. Idealno z
 tags = "tijek rada,sekvenca,automatizacija"
 title = "Automatiziraj"
 
+[home.formFill]
+desc = "Interaktivno ispunite polja PDF obrasca pomoću vizualnog uređivača"
+title = "Ispuni obrazac"
+
 [home.autoRename]
 desc = "Automatski preimenuje PDF datoteku na temelju detektiranog zaglavlja"
 tags = "automatski-detekcija,temeljen-na-zaglavlju,organiziraj,preimenuj"
@@ -4209,6 +4247,75 @@ title = "Uređivač stranica"
 zoomIn = "Povećaj"
 zoomOut = "Umanji"
 
+[viewer]
+cannotPreviewFile = "Nije moguće pregledati datoteku"
+dualPageView = "Prikaz dviju stranica"
+firstPage = "Prva stranica"
+lastPage = "Zadnja stranica"
+nextPage = "Sljedeća stranica"
+onlyPdfSupported = "Preglednik podržava samo PDF datoteke. Čini se da je ova datoteka u drugačijem formatu."
+previousPage = "Prethodna stranica"
+singlePageView = "Prikaz jedne stranice"
+unknownFile = "Nepoznata datoteka"
+zoomIn = "Povećaj"
+zoomOut = "Umanji"
+
+[viewer.attachments]
+title = "Prilozi"
+searchPlaceholder = "Pretraži priloge"
+noSupport = "Podrška za priloge nije dostupna u ovom pregledniku."
+noDocument = "Otvorite PDF za prikaz njegovih priloga."
+loading = "Učitavanje priloga..."
+empty = "Nema priloga u ovom dokumentu"
+noMatch = "Nema priloga koji odgovaraju vašem pretraživanju"
+
+[viewer.formBar]
+title = "Polja obrasca"
+unsavedBadge = "Nespremljeno"
+unsavedDesc = "Imate nespremljene promjene"
+hasFieldsDesc = "Ovaj PDF sadrži polja koja je moguće ispuniti"
+dismiss = "Odbaci"
+apply = "Primijeni promjene"
+download = "Preuzmi PDF"
+
+[rightRail]
+closeSelected = "Zatvori odabrane datoteke"
+selectAll = "Odaberi sve"
+deselectAll = "Poništi sav odabir"
+selectByNumber = "Odaberi po brojevima stranica"
+deleteSelected = "Izbriši odabrane stranice"
+closePdf = "Zatvori PDF"
+exportAll = "Izvezi PDF"
+downloadSelected = "Preuzmi odabrane datoteke"
+annotations = "Anotacije"
+exportSelected = "Izvezi odabrane stranice"
+formFill = "Ispuni obrazac"
+saveChanges = "Spremi promjene"
+toggleAttachments = "Prikaži/sakrij priloge"
+toggleTheme = "Prebaci temu"
+language = "Jezik"
+toggleAnnotations = "Prebaci vidljivost bilješki"
+search = "Pretraži PDF"
+panMode = "Način pomicanja"
+applyRedactionsFirst = "Najprije primijeni zacrnjivanja"
+rotateLeft = "Rotiraj ulijevo"
+rotateRight = "Rotiraj udesno"
+toggleSidebar = "Prebaci bočnu traku"
+toggleBookmarks = "Prebaci knjižne oznake"
+print = "Ispis PDF-a"
+ruler = "Ravnalo / mjerenje"
+draw = "Crtaj"
+redact = "Zacrni"
+exitRedaction = "Izađi iz načina zacrnjivanja"
+save = "Spremi"
+downloadAll = "Preuzmi sve"
+saveAll = "Spremi sve"
+
+[textAlign]
+left = "Lijevo"
+center = "Centar"
+right = "Desno"
+
 [pageExtracter]
 header = "Izdvojiti stranice"
 placeholder = "(t.j. 1,2,8 ili 4,7,12-16 ili 2n-1)"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Trajna primjena, ne može se poništiti i podaci ispod će biti izbrisani"
 boxRedaction = "Redakcija crtanjem okvira"
 colourPicker = "Birač boja"
+colorLabel = "Boja zacrnjivanja"
+active = "Način zacrnjivanja aktivan"
+activate = "Aktiviraj alat za zacrnjivanje"
 controlsTitle = "Kontrole ručnog zacrnjivanja"
 convertPDFToImageLabel = "Pretvori PDF u PDF-Image (koristi se za uklanjanje teksta iza okvira)"
 export = "Izvoz"
@@ -5285,36 +5395,6 @@ title = "Visoki kontrast"
 [replaceColor.tooltip.invertAll]
 text = "U potpunosti invertirajte sve boje u PDF-u, stvarajući efekt sličan negativu. Korisno za izradu tamnih verzija dokumenata ili smanjenje naprezanja očiju pri slabom osvjetljenju."
 title = "Invertiraj sve boje"
-
-[rightRail]
-annotations = "Anotacije"
-applyRedactionsFirst = "Najprije primijeni zacrnjivanja"
-closePdf = "Zatvori PDF"
-closeSelected = "Zatvori odabrane datoteke"
-deleteSelected = "Izbriši odabrane stranice"
-deselectAll = "Poništi sav odabir"
-downloadAll = "Preuzmi sve"
-downloadSelected = "Preuzmi odabrane datoteke"
-draw = "Crtaj"
-exitRedaction = "Izađi iz načina zacrnjivanja"
-exportAll = "Izvezi PDF"
-exportSelected = "Izvezi odabrane stranice"
-language = "Jezik"
-panMode = "Način pomicanja"
-print = "Ispis PDF-a"
-redact = "Zacrni"
-rotateLeft = "Rotiraj ulijevo"
-rotateRight = "Rotiraj udesno"
-save = "Spremi"
-saveAll = "Spremi sve"
-saveChanges = "Spremi promjene"
-search = "Pretraži PDF"
-selectAll = "Odaberi sve"
-selectByNumber = "Odaberi po brojevima stranica"
-toggleAnnotations = "Prebaci vidljivost bilješki"
-toggleBookmarks = "Prebaci knjižne oznake"
-toggleSidebar = "Prebaci bočnu traku"
-toggleTheme = "Prebaci temu"
 
 [rotate]
 rotateLeft = "Zakreni suprotno od kazaljke na satu"
@@ -6153,11 +6233,6 @@ title = "API dokumentacija"
 [tableExtraxt]
 tags = "CSV,Izdvajanje tabela,izdvajanje,pretvaranje"
 
-[textAlign]
-center = "Centar"
-left = "Lijevo"
-right = "Desno"
-
 [theme]
 toggle = "Prebaci temu"
 
@@ -6432,19 +6507,6 @@ invalid = "Certifikat nije u spremniku povjerenja - izvor se ne može potvrditi"
 fileManager = "Upravitelj datoteka"
 pageEditor = "Uređivač stranica"
 viewer = "Preglednik"
-
-[viewer]
-cannotPreviewFile = "Nije moguće pregledati datoteku"
-dualPageView = "Prikaz dviju stranica"
-firstPage = "Prva stranica"
-lastPage = "Zadnja stranica"
-nextPage = "Sljedeća stranica"
-onlyPdfSupported = "Preglednik podržava samo PDF datoteke. Čini se da je ova datoteka u drugačijem formatu."
-previousPage = "Prethodna stranica"
-singlePageView = "Prikaz jedne stranice"
-unknownFile = "Nepoznata datoteka"
-zoomIn = "Povećaj"
-zoomOut = "Umanji"
 
 [viewPdf]
 header = "Pogledaj PDF"

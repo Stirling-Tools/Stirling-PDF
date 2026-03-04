@@ -25,7 +25,7 @@ Stirling-PDF is built using:
 
 - Docker
 - Git
-- Java JDK 17 or later
+- Java JDK 21 or later (JDK 25 recommended)
 - Gradle 7.0 or later (Included within the repo)
 
 ### Setup Steps
@@ -37,7 +37,7 @@ Stirling-PDF is built using:
    cd Stirling-PDF
    ```
 
-2. Install Docker and JDK17 if not already installed.
+2. Install Docker and JDK 21 (or JDK 25 recommended) if not already installed.
 
 3. Install a recommended Java IDE such as Eclipse, IntelliJ, or VSCode
    1. Only VSCode

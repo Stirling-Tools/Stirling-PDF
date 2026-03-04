@@ -22,7 +22,7 @@ const CompactToolItem: React.FC<CompactToolItemProps> = ({ id, tool, isSelected,
   const iconBg = getIconBackground(categoryColor, false);
   const iconClasses = 'tool-panel__fullscreen-list-icon';
 
-  let iconNode: React.ReactNode = null;
+  let iconNode: React.ReactNode;
   if (React.isValidElement<{ style?: React.CSSProperties }>(tool.icon)) {
     const element = tool.icon as React.ReactElement<{ style?: React.CSSProperties }>;
     iconNode = React.cloneElement(element, {
@@ -119,5 +119,4 @@ const CompactToolItem: React.FC<CompactToolItemProps> = ({ id, tool, isSelected,
 };
 
 export default CompactToolItem;
-
 

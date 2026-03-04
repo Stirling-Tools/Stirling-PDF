@@ -17,6 +17,12 @@ confirmClose = "Bekræft lukning"
 confirmCloseCancel = "Annuller"
 confirmCloseConfirm = "Luk fil"
 confirmCloseMessage = "Er du sikker på, at du vil lukke denne fil?"
+confirmCloseDiscard = "Kassér ændringer og luk"
+confirmCloseSave = "Gem og luk"
+confirmCloseUnsaved = "Denne fil har ikke-gemte ændringer."
+confirmCloseUnsavedList = "Du har {{count}} fil{{plural}} med ikke-gemte ændringer.\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "Gemning mislykkedes"
+confirmCloseSaveFailed = "Gemt med fejl. {{count}} fil{{plural}} kunne ikke gemmes."
 confirmPasswordErrorMessage = "Ny adgangskode og Bekræft ny adgangskode skal matche."
 custom = "Brugerdefineret..."
 customPosition = "Tilpasset placering"
@@ -39,6 +45,8 @@ edit = "Rediger"
 editYourNewFiles = "Rediger din(e) nye fil(er)"
 exportAndContinue = "Eksportér og fortsæt"
 false = "Falsk"
+fileSavedToDisk = "Fil gemt på disken"
+fileNotSavedToDisk = "Ikke gemt på disken"
 fileSelected = "Valgt: {{filename}}"
 filesSelected = "Filer valgt"
 font = "Skrifttype"
@@ -829,8 +837,9 @@ label = "Brugernavn"
 [admin.settings.endpoints]
 description = "Styr hvilke API-endpoints og endpointgrupper der er tilgængelige."
 management = "Endpointstyring"
-note = "Bemærk: Deaktivering af endpoints begrænser API-adgang, men fjerner ikke UI-komponenter. Genstart kræves for at ændringerne træder i kraft."
 title = "API-endpoints"
+userDefaults = "Standardindstillinger for brugerpræferencer"
+userDefaultsDescription = "Angiv standardværdier for brugerpræferencer. Brugere kan tilsidesætte disse i deres personlige indstillinger."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "Vælg endpointgrupper, der skal deaktiveres"
@@ -839,6 +848,14 @@ label = "Deaktiverede endpointgrupper"
 [admin.settings.endpoints.toRemove]
 description = "Vælg individuelle endpoints, der skal deaktiveres"
 label = "Deaktiverede endpoints"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Fjern deaktiverede værktøjer i stedet for at vise dem nedtonet"
+label = "Skjul utilgængelige værktøjer som standard"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Fjern deaktiverede konverteringer i stedet for at vise dem nedtonet"
+label = "Skjul utilgængelige konverteringer som standard"
 
 [admin.settings.enterpriseRequired]
 message = "En Enterprise-licens er påkrævet for at få adgang til {{featureName}}. Du ser demodata til reference."
@@ -1219,9 +1236,21 @@ label = "Aktivér nøgleoprydning"
 description = "Rotér automatisk JWT-signeringsnøgler periodisk"
 label = "Aktivér nøglerotation"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "Antal dage gamle JWT-nøgler opbevares til verifikation"
-label = "Dage for nøgleopbevaring"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Levetid for adgangstoken i minutter for webklienter (standard: 1440 = 24 timer)"
+label = "Web-token-udløb (minutter)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Levetid for adgangstoken i minutter for desktopklienter. Desktopapps registreres automatisk via User-Agent og får længere sessioner for bedre brugeroplevelse (standard: 43200 = 30 dage)"
+label = "Desktop-token-udløb (minutter)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolereret tidsdrift mellem klient/server under tokenvalidering (standard: 60 sekunder)"
+label = "Tidsafvigelsestolerance (sekunder)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "Tillad fornyelse af token inden for så mange minutter efter udløb (standard: 15 minutter, maks. 3 forsøg)"
+label = "Fornyelsesfrist (minutter)"
 
 [admin.settings.security.jwt.persistence]
 description = "Gem JWT-nøgler vedvarende, så de overlever servergenstarter"
@@ -1422,13 +1451,16 @@ applyChanges = "Anvend ændringer"
 backgroundColor = "Baggrundsfarve"
 borderOff = "Kant: Fra"
 borderOn = "Kant: Til"
+changeColor = "Skift farve"
 chooseColor = "Vælg farve"
 circle = "Cirkel"
 clearBackground = "Fjern baggrund"
 color = "Farve"
 contents = "Tekst"
+delete = "Slet"
 desc = "Brug fremhævning, pen, tekst og noter. Ændringer er aktive—ingen udfladning påkrævet."
 drawing = "Tegning"
+duplicate = "Dupliker"
 editCircle = "Redigér cirkel"
 editInk = "Redigér pen"
 editLine = "Redigér linje"
@@ -1458,6 +1490,7 @@ notesStamps = "Noter og stempler"
 opacity = "Gennemsigtighed"
 pen = "Pen"
 polygon = "Polygon"
+properties = "Egenskaber"
 rectangle = "Rektangel"
 redo = "Omgør"
 saveChanges = "Gem ændringer"
@@ -1483,6 +1516,7 @@ title = "Annotér"
 underline = "Understreg"
 undo = "Fortryd"
 unsupportedType = "Denne anmærkningstype understøttes ikke fuldt ud til redigering."
+width = "Bredde"
 
 [app]
 description = "Det gratis alternativ til Adobe Acrobat (10M+ downloads)"
@@ -3312,6 +3346,10 @@ desc = "Byg flertrins-workflows ved at kæde PDF-handlinger sammen. Ideelt til t
 tags = "workflow,sekvens,automatisering"
 title = "Automatiser"
 
+[home.formFill]
+desc = "Udfyld PDF-formularfelter interaktivt med en visuel editor"
+title = "Udfyld formular"
+
 [home.autoRename]
 desc = "Omdøber automatisk en PDF-fil baseret på dens detekterede overskrift"
 tags = "auto-detektér,header-baseret,organiser,omdøb"
@@ -4209,6 +4247,75 @@ title = "Sideeditor"
 zoomIn = "Zoom ind"
 zoomOut = "Zoom ud"
 
+[viewer]
+cannotPreviewFile = "Kan ikke forhåndsvise fil"
+dualPageView = "To-siders visning"
+firstPage = "Første side"
+lastPage = "Sidste side"
+nextPage = "Næste side"
+onlyPdfSupported = "Visningen understøtter kun PDF-filer. Denne fil ser ud til at være et andet format."
+previousPage = "Forrige side"
+singlePageView = "Enkelt-sides visning"
+unknownFile = "Ukendt fil"
+zoomIn = "Zoom ind"
+zoomOut = "Zoom ud"
+
+[viewer.attachments]
+title = "Vedhæftninger"
+searchPlaceholder = "Søg i vedhæftninger"
+noSupport = "Understøttelse af vedhæftninger er ikke tilgængelig i denne fremviser."
+noDocument = "Åbn en PDF for at se dens vedhæftninger."
+loading = "Indlæser vedhæftninger..."
+empty = "Ingen vedhæftninger i dette dokument"
+noMatch = "Ingen vedhæftninger matcher din søgning"
+
+[viewer.formBar]
+title = "Formularfelter"
+unsavedBadge = "Ikke gemt"
+unsavedDesc = "Du har ikke-gemte ændringer"
+hasFieldsDesc = "Denne PDF indeholder udfyldelige felter"
+dismiss = "Afvis"
+apply = "Anvend ændringer"
+download = "Download PDF"
+
+[rightRail]
+closeSelected = "Luk valgte filer"
+selectAll = "Vælg alle"
+deselectAll = "Fravælg alle"
+selectByNumber = "Vælg efter sidetal"
+deleteSelected = "Slet valgte sider"
+closePdf = "Luk PDF"
+exportAll = "Eksporter PDF"
+downloadSelected = "Download valgte filer"
+annotations = "Anmærkninger"
+exportSelected = "Eksporter valgte sider"
+formFill = "Udfyld formular"
+saveChanges = "Gem ændringer"
+toggleAttachments = "Vis/skjul vedhæftninger"
+toggleTheme = "Skift tema"
+language = "Sprog"
+toggleAnnotations = "Skift visning af annoteringer"
+search = "Søg i PDF"
+panMode = "Pan-tilstand"
+applyRedactionsFirst = "Anvend maskeringer først"
+rotateLeft = "Rotér venstre"
+rotateRight = "Rotér højre"
+toggleSidebar = "Skift sidepanel"
+toggleBookmarks = "Skift bogmærker"
+print = "Udskriv PDF"
+ruler = "Lineal / Måling"
+draw = "Tegn"
+redact = "Maskér"
+exitRedaction = "Afslut maskeringstilstand"
+save = "Gem"
+downloadAll = "Download alle"
+saveAll = "Gem alle"
+
+[textAlign]
+left = "Venstre"
+center = "Centreret"
+right = "Højre"
+
 [pageExtracter]
 header = "Udtræk Sider"
 placeholder = "(f.eks. 1,2,8 eller 4,7,12-16 eller 2n-1)"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Permanent handling, kan ikke fortrydes, og dataene nedenunder bliver slettet"
 boxRedaction = "Maskering ved tegning af boks"
 colourPicker = "Farvevælger"
+colorLabel = "Maskeringsfarve"
+active = "Maskeringstilstand aktiv"
+activate = "Aktivér maskeringsværktøj"
 controlsTitle = "Manuelle maskeringskontroller"
 convertPDFToImageLabel = "Konvertér PDF til PDF-billede (bruges til at fjerne tekst bag boksen)"
 export = "Eksportér"
@@ -5285,36 +5395,6 @@ title = "Høj kontrast"
 [replaceColor.tooltip.invertAll]
 text = "Invertér alle farver i PDF'en fuldstændigt, hvilket skaber en negativ-lignende effekt. Nyttigt til at lave dark mode-versioner af dokumenter eller reducere øjenbelastning i svag belysning."
 title = "Invertér alle farver"
-
-[rightRail]
-annotations = "Anmærkninger"
-applyRedactionsFirst = "Anvend maskeringer først"
-closePdf = "Luk PDF"
-closeSelected = "Luk valgte filer"
-deleteSelected = "Slet valgte sider"
-deselectAll = "Fravælg alle"
-downloadAll = "Download alle"
-downloadSelected = "Download valgte filer"
-draw = "Tegn"
-exitRedaction = "Afslut maskeringstilstand"
-exportAll = "Eksporter PDF"
-exportSelected = "Eksporter valgte sider"
-language = "Sprog"
-panMode = "Pan-tilstand"
-print = "Udskriv PDF"
-redact = "Maskér"
-rotateLeft = "Rotér venstre"
-rotateRight = "Rotér højre"
-save = "Gem"
-saveAll = "Gem alle"
-saveChanges = "Gem ændringer"
-search = "Søg i PDF"
-selectAll = "Vælg alle"
-selectByNumber = "Vælg efter sidetal"
-toggleAnnotations = "Skift visning af annoteringer"
-toggleBookmarks = "Skift bogmærker"
-toggleSidebar = "Skift sidepanel"
-toggleTheme = "Skift tema"
 
 [rotate]
 rotateLeft = "Rotér mod uret"
@@ -6153,11 +6233,6 @@ title = "API-dokumentation"
 [tableExtraxt]
 tags = "CSV,Tabeludtrækning,udtræk,konvertér"
 
-[textAlign]
-center = "Centreret"
-left = "Venstre"
-right = "Højre"
-
 [theme]
 toggle = "Skift tema"
 
@@ -6432,19 +6507,6 @@ invalid = "Certifikat ikke i tillidslageret – kilde kan ikke verificeres"
 fileManager = "Filhåndtering"
 pageEditor = "Sideeditor"
 viewer = "Fremviser"
-
-[viewer]
-cannotPreviewFile = "Kan ikke forhåndsvise fil"
-dualPageView = "To-siders visning"
-firstPage = "Første side"
-lastPage = "Sidste side"
-nextPage = "Næste side"
-onlyPdfSupported = "Visningen understøtter kun PDF-filer. Denne fil ser ud til at være et andet format."
-previousPage = "Forrige side"
-singlePageView = "Enkelt-sides visning"
-unknownFile = "Ukendt fil"
-zoomIn = "Zoom ind"
-zoomOut = "Zoom ud"
 
 [viewPdf]
 header = "Se PDF"

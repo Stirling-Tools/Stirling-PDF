@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
@@ -118,6 +119,12 @@ public class CropController {
         return r >= threshold && g >= threshold && b >= threshold;
     }
 
+    private final EndpointConfiguration endpointConfiguration;
+
+    private boolean isGhostscriptEnabled() {
+        return endpointConfiguration.isGroupEnabled("Ghostscript");
+    }
+
     @AutoJobPostMapping(value = "/crop", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Crops a PDF document",
@@ -137,7 +144,7 @@ public class CropController {
                     "Crop coordinates (x, y, width, height) are required when auto-crop is not enabled");
         }
 
-        if (request.isRemoveDataOutsideCrop()) {
+        if (request.isRemoveDataOutsideCrop() && isGhostscriptEnabled()) {
             return cropWithGhostscript(request);
         } else {
             return cropWithPDFBox(request);

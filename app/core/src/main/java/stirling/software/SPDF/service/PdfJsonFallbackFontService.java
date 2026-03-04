@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.font.PDFont;
@@ -310,6 +311,11 @@ public class PdfJsonFallbackFontService {
                                     "classpath:/static/fonts/DejaVuSansMono-BoldOblique.ttf",
                                     "DejaVuSansMono-BoldOblique",
                                     "ttf")));
+    private static final Pattern BOLD_FONT_WEIGHT_PATTERN =
+            Pattern.compile(".*[_-]?[6-9]00(wght)?.*");
+    private static final Pattern FONT_NAME_DELIMITER_PATTERN = Pattern.compile("[-_,+]");
+    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
+    private static final Pattern PATTERN = Pattern.compile("^[A-Z]{6}\\+");
 
     private final ResourceLoader resourceLoader;
     private final stirling.software.common.model.ApplicationProperties applicationProperties;
@@ -418,16 +424,18 @@ public class PdfJsonFallbackFontService {
             // Normalize font name: remove subset prefix (e.g. "PXAAAC+"), convert to lowercase,
             // remove spaces
             String normalized =
-                    originalFontName
-                            .replaceAll("^[A-Z]{6}\\+", "") // Remove subset prefix
-                            .toLowerCase()
-                            .replaceAll("\\s+", ""); // Remove spaces (e.g. "Times New Roman" ->
+                    WHITESPACE_PATTERN
+                            .matcher(
+                                    PATTERN.matcher(originalFontName)
+                                            .replaceAll("") // Remove subset prefix
+                                            .toLowerCase())
+                            .replaceAll(""); // Remove spaces (e.g. "Times New Roman" ->
             // "timesnewroman")
 
             // Extract base name without weight/style suffixes
             // Split on common delimiters: hyphen, underscore, comma, plus
             // Handles: "Arimo_700wght" -> "arimo", "Arial-Bold" -> "arial", "Arial,Bold" -> "arial"
-            String baseName = normalized.split("[-_,+]")[0];
+            String baseName = FONT_NAME_DELIMITER_PATTERN.split(normalized)[0];
 
             String aliasedFontId = FONT_NAME_ALIASES.get(baseName);
             if (aliasedFontId != null) {
@@ -470,7 +478,7 @@ public class PdfJsonFallbackFontService {
 
         // Check for numeric weight indicators (600-900 = bold)
         // Handles: "Arimo_700wght", "Arial-700", "Font-w700"
-        if (normalizedFontName.matches(".*[_-]?[6-9]00(wght)?.*")) {
+        if (BOLD_FONT_WEIGHT_PATTERN.matcher(normalizedFontName).matches()) {
             return true;
         }
 
@@ -514,7 +522,7 @@ public class PdfJsonFallbackFontService {
         // Supported: Liberation (Sans/Serif/Mono), Noto Sans, DejaVu (Sans/Serif/Mono)
         boolean isSupported =
                 baseFontId.startsWith("fallback-liberation-")
-                        || baseFontId.equals("fallback-noto-sans")
+                        || "fallback-noto-sans".equals(baseFontId)
                         || baseFontId.startsWith("fallback-dejavu-");
 
         if (!isSupported) {
@@ -523,8 +531,8 @@ public class PdfJsonFallbackFontService {
 
         // DejaVu Sans and Mono use "oblique" instead of "italic"
         boolean useOblique =
-                baseFontId.equals("fallback-dejavu-sans")
-                        || baseFontId.equals("fallback-dejavu-mono");
+                "fallback-dejavu-sans".equals(baseFontId)
+                        || "fallback-dejavu-mono".equals(baseFontId);
 
         if (isBold && isItalic) {
             return baseFontId + (useOblique ? "-boldoblique" : "-bolditalic");

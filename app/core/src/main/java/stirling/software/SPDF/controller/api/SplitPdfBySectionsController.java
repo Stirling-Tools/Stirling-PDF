@@ -23,6 +23,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,7 +59,7 @@ public class SplitPdfBySectionsController {
                             + " which page to split, and how to split"
                             + " ( halves, thirds, quarters, etc.), both vertically and horizontally."
                             + " Input:PDF Output:ZIP-PDF Type:SISO")
-    public ResponseEntity<byte[]> splitPdf(@ModelAttribute SplitPdfBySectionsRequest request)
+    public ResponseEntity<byte[]> splitPdf(@Valid @ModelAttribute SplitPdfBySectionsRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();
         String pageNumbers = request.getPageNumbers();

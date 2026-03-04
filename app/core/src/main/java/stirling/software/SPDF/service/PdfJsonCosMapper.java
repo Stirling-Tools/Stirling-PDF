@@ -37,23 +37,68 @@ import stirling.software.SPDF.model.json.PdfJsonStream;
 @Component
 public class PdfJsonCosMapper {
 
+    public enum SerializationContext {
+        DEFAULT,
+        ANNOTATION_RAW_DATA,
+        FORM_FIELD_RAW_DATA,
+        CONTENT_STREAMS_LIGHTWEIGHT,
+        RESOURCES_LIGHTWEIGHT;
+
+        public boolean omitStreamData() {
+            return this == CONTENT_STREAMS_LIGHTWEIGHT || this == RESOURCES_LIGHTWEIGHT;
+        }
+    }
+
     public PdfJsonStream serializeStream(PDStream stream) throws IOException {
         if (stream == null) {
             return null;
         }
         return serializeStream(
-                stream.getCOSObject(), Collections.newSetFromMap(new IdentityHashMap<>()));
+                stream.getCOSObject(),
+                Collections.newSetFromMap(new IdentityHashMap<>()),
+                SerializationContext.DEFAULT);
     }
 
     public PdfJsonStream serializeStream(COSStream cosStream) throws IOException {
         if (cosStream == null) {
             return null;
         }
-        return serializeStream(cosStream, Collections.newSetFromMap(new IdentityHashMap<>()));
+        return serializeStream(
+                cosStream,
+                Collections.newSetFromMap(new IdentityHashMap<>()),
+                SerializationContext.DEFAULT);
+    }
+
+    public PdfJsonStream serializeStream(COSStream cosStream, SerializationContext context)
+            throws IOException {
+        if (cosStream == null) {
+            return null;
+        }
+        SerializationContext effective = context != null ? context : SerializationContext.DEFAULT;
+        return serializeStream(
+                cosStream, Collections.newSetFromMap(new IdentityHashMap<>()), effective);
+    }
+
+    public PdfJsonStream serializeStream(PDStream stream, SerializationContext context)
+            throws IOException {
+        if (stream == null) {
+            return null;
+        }
+        return serializeStream(stream.getCOSObject(), context);
     }
 
     public PdfJsonCosValue serializeCosValue(COSBase base) throws IOException {
-        return serializeCosValue(base, Collections.newSetFromMap(new IdentityHashMap<>()));
+        return serializeCosValue(
+                base,
+                Collections.newSetFromMap(new IdentityHashMap<>()),
+                SerializationContext.DEFAULT);
+    }
+
+    public PdfJsonCosValue serializeCosValue(COSBase base, SerializationContext context)
+            throws IOException {
+        SerializationContext effective = context != null ? context : SerializationContext.DEFAULT;
+        return serializeCosValue(
+                base, Collections.newSetFromMap(new IdentityHashMap<>()), effective);
     }
 
     public COSBase deserializeCosValue(PdfJsonCosValue value, PDDocument document)
@@ -165,8 +210,8 @@ public class PdfJsonCosMapper {
         return cosStream;
     }
 
-    private PdfJsonCosValue serializeCosValue(COSBase base, Set<COSBase> visited)
-            throws IOException {
+    private PdfJsonCosValue serializeCosValue(
+            COSBase base, Set<COSBase> visited, SerializationContext context) throws IOException {
         if (base == null) {
             return null;
         }
@@ -220,21 +265,23 @@ public class PdfJsonCosMapper {
             if (base instanceof COSArray array) {
                 List<PdfJsonCosValue> items = new ArrayList<>(array.size());
                 for (COSBase item : array) {
-                    PdfJsonCosValue serialized = serializeCosValue(item, visited);
+                    PdfJsonCosValue serialized = serializeCosValue(item, visited, context);
                     items.add(serialized);
                 }
                 builder.type(PdfJsonCosValue.Type.ARRAY).items(items);
                 return builder.build();
             }
             if (base instanceof COSStream stream) {
-                builder.type(PdfJsonCosValue.Type.STREAM).stream(serializeStream(stream, visited));
+                builder.type(PdfJsonCosValue.Type.STREAM).stream(
+                        serializeStream(stream, visited, context));
                 return builder.build();
             }
             if (base instanceof COSDictionary dictionary) {
                 Map<String, PdfJsonCosValue> entries = new LinkedHashMap<>();
                 for (COSName key : dictionary.keySet()) {
                     PdfJsonCosValue serialized =
-                            serializeCosValue(dictionary.getDictionaryObject(key), visited);
+                            serializeCosValue(
+                                    dictionary.getDictionaryObject(key), visited, context);
                     entries.put(key.getName(), serialized);
                 }
                 builder.type(PdfJsonCosValue.Type.DICTIONARY).entries(entries);
@@ -248,16 +295,23 @@ public class PdfJsonCosMapper {
         }
     }
 
-    private PdfJsonStream serializeStream(COSStream cosStream, Set<COSBase> visited)
+    private PdfJsonStream serializeStream(
+            COSStream cosStream, Set<COSBase> visited, SerializationContext context)
             throws IOException {
         Map<String, PdfJsonCosValue> dictionary = new LinkedHashMap<>();
         for (COSName key : cosStream.keySet()) {
             COSBase value = cosStream.getDictionaryObject(key);
-            PdfJsonCosValue serialized = serializeCosValue(value, visited);
+            PdfJsonCosValue serialized = serializeCosValue(value, visited, context);
             if (serialized != null) {
                 dictionary.put(key.getName(), serialized);
             }
         }
+
+        if (context != null && context.omitStreamData()) {
+            log.debug("Omitting stream rawData during {} serialization", context);
+            return PdfJsonStream.builder().dictionary(dictionary).rawData(null).build();
+        }
+
         String rawData = null;
         try (InputStream inputStream = cosStream.createRawInputStream();
                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {

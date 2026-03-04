@@ -1,10 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { fileOpenService } from '@app/services/fileOpenService';
 import { listen } from '@tauri-apps/api/event';
 
 export function useOpenedFile() {
   const [openedFilePaths, setOpenedFilePaths] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const openedFilePathsRef = useRef<string[]>([]);
+
+  const clearOpenedFilePaths = useCallback(() => {
+    openedFilePathsRef.current = [];
+    setOpenedFilePaths([]);
+  }, []);
+
+  const consumeOpenedFilePaths = useCallback(() => {
+    const current = openedFilePathsRef.current;
+    openedFilePathsRef.current = [];
+    setOpenedFilePaths([]);
+    return current;
+  }, []);
 
   useEffect(() => {
     // Function to read and process files from storage
@@ -16,8 +29,8 @@ export function useOpenedFile() {
 
         if (filePaths.length > 0) {
           console.log(`✅ Found ${filePaths.length} file(s) in storage:`, filePaths);
+          openedFilePathsRef.current = filePaths;
           setOpenedFilePaths(filePaths);
-          await fileOpenService.clearOpenedFiles();
         }
       } catch (error) {
         console.error('❌ Failed to read files from storage:', error);
@@ -44,5 +57,5 @@ export function useOpenedFile() {
     };
   }, []);
 
-  return { openedFilePaths, loading };
+  return { openedFilePaths, loading, clearOpenedFilePaths, consumeOpenedFilePaths };
 }

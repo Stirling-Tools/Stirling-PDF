@@ -227,6 +227,10 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
               disabled={testing || loading}
               onClick={() => {
                 setCustomUrl(serverUrl);
+                // Auto-submit the form after setting the URL
+                setTimeout(() => {
+                  handleSubmit(new Event('submit') as any);
+                }, 0);
               }}
             >
               {t('setup.server.useLast', 'Last used server: {{serverUrl}}', { serverUrl: serverUrl })}

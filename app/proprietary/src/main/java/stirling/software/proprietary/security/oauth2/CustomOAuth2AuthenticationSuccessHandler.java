@@ -36,6 +36,7 @@ import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.security.util.DesktopClientUtils;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -48,6 +49,7 @@ public class CustomOAuth2AuthenticationSuccessHandler
     private final JwtServiceInterface jwtService;
     private final stirling.software.proprietary.service.UserLicenseSettingsService
             licenseSettingsService;
+    private final ApplicationProperties applicationProperties;
 
     @Override
     @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)
@@ -150,9 +152,27 @@ public class CustomOAuth2AuthenticationSuccessHandler
 
                 // Generate JWT if v2 is enabled
                 if (jwtService.isJwtEnabled()) {
-                    String jwt =
-                            jwtService.generateToken(
-                                    authentication, Map.of("authType", AuthenticationType.OAUTH2));
+                    Map<String, Object> claims = Map.of("authType", AuthenticationType.OAUTH2);
+
+                    // Detect desktop client and issue longer-lived tokens
+                    boolean isDesktopClient = DesktopClientUtils.isDesktopClient(request);
+                    String jwt;
+                    if (isDesktopClient) {
+                        // Desktop: Use configured desktop token expiry (default 30 days)
+                        int desktopExpiryMinutes =
+                                DesktopClientUtils.getDesktopTokenExpiryMinutes(
+                                        applicationProperties);
+                        jwt = jwtService.generateToken(username, claims, desktopExpiryMinutes);
+                        log.info(
+                                "Issued DESKTOP OAuth2 token for user '{}': expiry={}min ({}d)",
+                                username,
+                                desktopExpiryMinutes,
+                                desktopExpiryMinutes / 1440);
+                    } else {
+                        // Web: Use default expiry
+                        jwt = jwtService.generateToken(authentication, claims);
+                        log.debug("Issued WEB OAuth2 token for user '{}'", username);
+                    }
 
                     // Build context-aware redirect URL based on the original request
                     String redirectUrl =

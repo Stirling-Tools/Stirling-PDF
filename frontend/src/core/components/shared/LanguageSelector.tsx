@@ -52,12 +52,15 @@ const LanguageItem: React.FC<LanguageItemProps> = ({
 }) => {
   const { t } = useTranslation();
 
+  const labelText = option.label;
+  const comingSoonText = t('comingSoon', 'Coming soon');
+
   const label = disabled ? (
-    <Tooltip content={t('comingSoon', 'Coming soon')} position="left" arrow>
-      <p>{option.label}</p>
+    <Tooltip content={comingSoonText} position="left" arrow>
+      <p>{labelText}</p>
     </Tooltip>
   ) : (
-    <p>{option.label}</p>
+    <p>{labelText}</p>
   );
 
   return (
@@ -157,11 +160,26 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   compact = false,
   tooltip
 }) => {
-  const { i18n } = useTranslation();
+  const { i18n, ready } = useTranslation();
   const [opened, setOpened] = useState(false);
   const [animationTriggered, setAnimationTriggered] = useState(false);
   const [pendingLanguage, setPendingLanguage] = useState<string | null>(null);
   const [rippleEffect, setRippleEffect] = useState<RippleEffect | null>(null);
+
+  // Trigger animation when dropdown opens
+  useEffect(() => {
+    if (opened) {
+      setAnimationTriggered(false);
+      // Small delay to ensure DOM is ready
+      setTimeout(() => setAnimationTriggered(true), 20);
+    }
+  }, [opened]);
+
+  // Don't render until i18n is ready to prevent race condition
+  // during SAML auth where components render before i18n initializes
+  if (!ready || !i18n.language) {
+    return null;
+  }
 
   // Get the filtered list of supported languages from i18n
   // This respects server config (ui.languages) applied by AppConfigLoader
@@ -175,12 +193,6 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
       value: code,
       label: name,
     }));
-
-  // Hide the language selector if there's only one language option
-  // (no point showing a selector when there's nothing to select)
-  if (languageOptions.length <= 1) {
-    return null;
-  }
 
   // Calculate dropdown width and grid columns based on number of languages
   // 2-4: 300px/2 cols, 5-9: 400px/3 cols, 10+: 600px/4 cols
@@ -225,16 +237,14 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   };
 
   const currentLanguage = supportedLanguages[i18n.language as keyof typeof supportedLanguages] ||
-                         supportedLanguages['en-GB'];
+                         supportedLanguages['en-GB'] ||
+                         'English'; // Fallback if supportedLanguages lookup fails
 
-  // Trigger animation when dropdown opens
-  useEffect(() => {
-    if (opened) {
-      setAnimationTriggered(false);
-      // Small delay to ensure DOM is ready
-      setTimeout(() => setAnimationTriggered(true), 20);
-    }
-  }, [opened]);
+  // Hide the language selector if there's only one language option
+  // (no point showing a selector when there's nothing to select)
+  if (languageOptions.length <= 1) {
+    return null;
+  }
 
   return (
     <>

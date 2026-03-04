@@ -38,6 +38,12 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
 const STORAGE_KEY = 'stirlingpdf_preferences';
 
 class PreferencesService {
+  private serverDefaults: Partial<UserPreferences> = {};
+
+  setServerDefaults(defaults: Partial<UserPreferences>): void {
+    this.serverDefaults = defaults;
+  }
+
   getPreference<K extends keyof UserPreferences>(
     key: K
   ): UserPreferences[K] {
@@ -52,6 +58,10 @@ class PreferencesService {
       }
     } catch (error) {
       console.error('Error reading preference:', key, error);
+    }
+    // Use server defaults if available, otherwise use hardcoded defaults
+    if (key in this.serverDefaults && this.serverDefaults[key] !== undefined) {
+      return this.serverDefaults[key]!;
     }
     return DEFAULT_PREFERENCES[key];
   }
@@ -75,16 +85,18 @@ class PreferencesService {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const preferences = JSON.parse(stored) as Partial<UserPreferences>;
-        // Merge with defaults to ensure all preferences exist
+        // Merge with server defaults first, then stored preferences
         return {
           ...DEFAULT_PREFERENCES,
+          ...this.serverDefaults,
           ...preferences,
         };
       }
     } catch (error) {
       console.error('Error reading preferences', error);
     }
-    return { ...DEFAULT_PREFERENCES };
+    // Merge server defaults with hardcoded defaults
+    return { ...DEFAULT_PREFERENCES, ...this.serverDefaults };
   }
 
   clearAllPreferences(): void {

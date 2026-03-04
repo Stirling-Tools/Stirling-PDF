@@ -17,6 +17,12 @@ confirmClose = "Xác nhận đóng"
 confirmCloseCancel = "Hủy"
 confirmCloseConfirm = "Đóng tệp"
 confirmCloseMessage = "Bạn có chắc muốn đóng tệp này không?"
+confirmCloseDiscard = "Bỏ các thay đổi và đóng"
+confirmCloseSave = "Lưu và đóng"
+confirmCloseUnsaved = "Tệp này có các thay đổi chưa được lưu."
+confirmCloseUnsavedList = "Bạn có {{count}} tệp{{plural}} có thay đổi chưa được lưu.\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "Lưu không thành công"
+confirmCloseSaveFailed = "Đã lưu nhưng có lỗi. {{count}} tệp{{plural}} không thể lưu."
 confirmPasswordErrorMessage = "Mật khẩu mới và Xác nhận mật khẩu mới phải khớp nhau."
 custom = "Tùy chỉnh..."
 customPosition = "Vị trí tùy chỉnh"
@@ -39,6 +45,8 @@ edit = "Chỉnh sửa"
 editYourNewFiles = "Chỉnh sửa tệp mới của bạn"
 exportAndContinue = "Xuất và tiếp tục"
 false = "Sai"
+fileSavedToDisk = "Tệp đã được lưu vào ổ đĩa"
+fileNotSavedToDisk = "Chưa lưu vào ổ đĩa"
 fileSelected = "Đã chọn: {{filename}}"
 filesSelected = "tệp đã chọn"
 font = "Phông chữ"
@@ -829,8 +837,9 @@ label = "Tên người dùng"
 [admin.settings.endpoints]
 description = "Kiểm soát những endpoint API và nhóm endpoint khả dụng."
 management = "Quản lý endpoint"
-note = "Lưu ý: Tắt endpoint sẽ hạn chế truy cập API nhưng không xóa các thành phần giao diện. Cần khởi động lại để áp dụng thay đổi."
 title = "Endpoint API"
+userDefaults = "Mặc định tùy chọn người dùng"
+userDefaultsDescription = "Đặt các giá trị mặc định cho tùy chọn người dùng. Người dùng có thể ghi đè chúng trong cài đặt cá nhân."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "Chọn các nhóm endpoint để tắt"
@@ -839,6 +848,14 @@ label = "Nhóm endpoint đã tắt"
 [admin.settings.endpoints.toRemove]
 description = "Chọn các endpoint riêng lẻ để tắt"
 label = "Endpoint đã tắt"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Loại bỏ các công cụ bị vô hiệu hóa thay vì hiển thị chúng dưới dạng mờ"
+label = "Ẩn các công cụ không khả dụng theo mặc định"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Loại bỏ các tùy chọn chuyển đổi bị vô hiệu hóa thay vì hiển thị chúng dưới dạng mờ"
+label = "Ẩn các chuyển đổi không khả dụng theo mặc định"
 
 [admin.settings.enterpriseRequired]
 message = "Yêu cầu giấy phép Enterprise để truy cập {{featureName}}. Bạn đang xem dữ liệu demo để tham khảo."
@@ -1219,9 +1236,21 @@ label = "Bật dọn dẹp khóa"
 description = "Tự động xoay vòng khóa ký JWT định kỳ"
 label = "Bật xoay vòng khóa"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "Số ngày lưu khóa JWT cũ để xác minh"
-label = "Số ngày lưu khóa"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Thời hạn token truy cập tính theo phút cho máy khách web (mặc định: 1440 = 24 giờ)"
+label = "Thời hạn Token Web (phút)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Thời hạn token truy cập tính theo phút cho máy khách máy tính để bàn. Ứng dụng desktop được tự động phát hiện qua User-Agent và nhận phiên lâu hơn để có UX tốt hơn (mặc định: 43200 = 30 ngày)"
+label = "Thời hạn Token Máy tính để bàn (phút)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Dung sai đối với độ lệch thời gian giữa máy khách/máy chủ trong quá trình xác thực token (mặc định: 60 giây)"
+label = "Dung sai độ lệch đồng hồ (giây)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "Cho phép làm mới token trong số phút này sau khi hết hạn (mặc định: 15 phút, tối đa 3 lần thử)"
+label = "Khoảng ân hạn làm mới (phút)"
 
 [admin.settings.security.jwt.persistence]
 description = "Lưu trữ khóa JWT bền vững để tồn tại qua lần khởi động lại máy chủ"
@@ -1422,13 +1451,16 @@ applyChanges = "Áp dụng thay đổi"
 backgroundColor = "Màu nền"
 borderOff = "Viền: Tắt"
 borderOn = "Viền: Bật"
+changeColor = "Đổi màu"
 chooseColor = "Chọn màu"
 circle = "Hình tròn"
 clearBackground = "Xóa nền"
 color = "Màu"
 contents = "Văn bản"
+delete = "Xóa"
 desc = "Dùng tô sáng, bút, văn bản và ghi chú. Thay đổi được giữ nguyên trực tiếp—không cần làm phẳng."
 drawing = "Vẽ"
+duplicate = "Nhân bản"
 editCircle = "Chỉnh sửa Hình tròn"
 editInk = "Chỉnh sửa Bút"
 editLine = "Chỉnh sửa Đường thẳng"
@@ -1458,6 +1490,7 @@ notesStamps = "Ghi chú & Dấu"
 opacity = "Độ mờ"
 pen = "Bút"
 polygon = "Đa giác"
+properties = "Thuộc tính"
 rectangle = "Hình chữ nhật"
 redo = "Làm lại"
 saveChanges = "Lưu thay đổi"
@@ -1483,6 +1516,7 @@ title = "Chú thích"
 underline = "Gạch dưới"
 undo = "Hoàn tác"
 unsupportedType = "Loại chú thích này chưa được hỗ trợ đầy đủ để chỉnh sửa."
+width = "Độ rộng"
 
 [app]
 description = "Giải pháp thay thế Adobe Acrobat miễn phí (10M+ lượt tải xuống)"
@@ -3312,6 +3346,10 @@ desc = "Xây dựng quy trình nhiều bước bằng cách xâu chuỗi các th
 tags = "quy trình,trình tự,tự động hóa"
 title = "Tự động hóa"
 
+[home.formFill]
+desc = "Điền các trường biểu mẫu PDF một cách tương tác bằng trình chỉnh sửa trực quan"
+title = "Điền biểu mẫu"
+
 [home.autoRename]
 desc = "Tự động đổi tên tệp PDF dựa trên tiêu đề được phát hiện"
 tags = "tự động phát hiện,dựa trên tiêu đề,tổ chức,đổi nhãn"
@@ -4209,6 +4247,75 @@ title = "Trình chỉnh sửa trang"
 zoomIn = "Phóng to"
 zoomOut = "Thu nhỏ"
 
+[viewer]
+cannotPreviewFile = "Không thể xem trước tệp"
+dualPageView = "Chế độ xem hai trang"
+firstPage = "Trang đầu"
+lastPage = "Trang cuối"
+nextPage = "Trang tiếp"
+onlyPdfSupported = "Trình xem chỉ hỗ trợ tệp PDF. Tệp này có vẻ là định dạng khác."
+previousPage = "Trang trước"
+singlePageView = "Chế độ xem trang đơn"
+unknownFile = "Tệp không xác định"
+zoomIn = "Phóng to"
+zoomOut = "Thu nhỏ"
+
+[viewer.attachments]
+title = "Tệp đính kèm"
+searchPlaceholder = "Tìm kiếm tệp đính kèm"
+noSupport = "Trình xem này không hỗ trợ tệp đính kèm."
+noDocument = "Mở một PDF để xem các tệp đính kèm của nó."
+loading = "Đang tải tệp đính kèm..."
+empty = "Không có tệp đính kèm trong tài liệu này"
+noMatch = "Không có tệp đính kèm nào khớp với tìm kiếm của bạn"
+
+[viewer.formBar]
+title = "Trường biểu mẫu"
+unsavedBadge = "Chưa lưu"
+unsavedDesc = "Bạn có các thay đổi chưa được lưu"
+hasFieldsDesc = "PDF này chứa các trường có thể điền"
+dismiss = "Bỏ qua"
+apply = "Áp dụng thay đổi"
+download = "Tải xuống PDF"
+
+[rightRail]
+closeSelected = "Đóng các tệp đã chọn"
+selectAll = "Chọn tất cả"
+deselectAll = "Bỏ chọn tất cả"
+selectByNumber = "Chọn theo số trang"
+deleteSelected = "Xóa các trang đã chọn"
+closePdf = "Đóng PDF"
+exportAll = "Xuất PDF"
+downloadSelected = "Tải xuống các tệp đã chọn"
+annotations = "Chú thích"
+exportSelected = "Xuất các trang đã chọn"
+formFill = "Điền biểu mẫu"
+saveChanges = "Lưu thay đổi"
+toggleAttachments = "Bật/Tắt tệp đính kèm"
+toggleTheme = "Chuyển đổi chủ đề"
+language = "Ngôn ngữ"
+toggleAnnotations = "Chuyển đổi hiển thị chú thích"
+search = "Tìm kiếm PDF"
+panMode = "Chế độ kéo"
+applyRedactionsFirst = "Áp dụng bôi đen trước"
+rotateLeft = "Xoay trái"
+rotateRight = "Xoay phải"
+toggleSidebar = "Chuyển đổi thanh bên"
+toggleBookmarks = "Bật/tắt dấu trang"
+print = "In PDF"
+ruler = "Thước / Đo"
+draw = "Vẽ"
+redact = "Bôi đen"
+exitRedaction = "Thoát chế độ bôi đen"
+save = "Lưu"
+downloadAll = "Tải xuống tất cả"
+saveAll = "Lưu tất cả"
+
+[textAlign]
+left = "Trái"
+center = "Giữa"
+right = "Phải"
+
 [pageExtracter]
 header = "Trích xuất trang"
 placeholder = "(ví dụ: 1,2,8 hoặc 4,7,12-16 hoặc 2n-1)"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Áp dụng vĩnh viễn, không thể hoàn tác và dữ liệu bên dưới sẽ bị xóa"
 boxRedaction = "Vẽ hộp để che"
 colourPicker = "Bộ chọn màu"
+colorLabel = "Màu che"
+active = "Chế độ che đang bật"
+activate = "Kích hoạt công cụ che"
 controlsTitle = "Điều khiển bôi đen thủ công"
 convertPDFToImageLabel = "Chuyển PDF thành PDF-Image (Dùng để xóa văn bản phía sau hộp)"
 export = "Xuất"
@@ -5285,36 +5395,6 @@ title = "Tương phản cao"
 [replaceColor.tooltip.invertAll]
 text = "Đảo hoàn toàn tất cả màu trong PDF, tạo hiệu ứng giống âm bản. Hữu ích để tạo phiên bản chế độ tối hoặc giảm mỏi mắt trong điều kiện thiếu sáng."
 title = "Đảo tất cả màu"
-
-[rightRail]
-annotations = "Chú thích"
-applyRedactionsFirst = "Áp dụng bôi đen trước"
-closePdf = "Đóng PDF"
-closeSelected = "Đóng các tệp đã chọn"
-deleteSelected = "Xóa các trang đã chọn"
-deselectAll = "Bỏ chọn tất cả"
-downloadAll = "Tải xuống tất cả"
-downloadSelected = "Tải xuống các tệp đã chọn"
-draw = "Vẽ"
-exitRedaction = "Thoát chế độ bôi đen"
-exportAll = "Xuất PDF"
-exportSelected = "Xuất các trang đã chọn"
-language = "Ngôn ngữ"
-panMode = "Chế độ kéo"
-print = "In PDF"
-redact = "Bôi đen"
-rotateLeft = "Xoay trái"
-rotateRight = "Xoay phải"
-save = "Lưu"
-saveAll = "Lưu tất cả"
-saveChanges = "Lưu thay đổi"
-search = "Tìm kiếm PDF"
-selectAll = "Chọn tất cả"
-selectByNumber = "Chọn theo số trang"
-toggleAnnotations = "Chuyển đổi hiển thị chú thích"
-toggleBookmarks = "Bật/tắt dấu trang"
-toggleSidebar = "Chuyển đổi thanh bên"
-toggleTheme = "Chuyển đổi chủ đề"
 
 [rotate]
 rotateLeft = "Xoay ngược chiều kim đồng hồ"
@@ -6153,11 +6233,6 @@ title = "Tài liệu API"
 [tableExtraxt]
 tags = "CSV,Trích xuất bảng,trích xuất,chuyển đổi"
 
-[textAlign]
-center = "Giữa"
-left = "Trái"
-right = "Phải"
-
 [theme]
 toggle = "Chuyển đổi chủ đề"
 
@@ -6432,19 +6507,6 @@ invalid = "Chứng chỉ không có trong kho tin cậy - không thể xác minh
 fileManager = "Trình quản lý tệp"
 pageEditor = "Trình chỉnh sửa trang"
 viewer = "Trình xem"
-
-[viewer]
-cannotPreviewFile = "Không thể xem trước tệp"
-dualPageView = "Chế độ xem hai trang"
-firstPage = "Trang đầu"
-lastPage = "Trang cuối"
-nextPage = "Trang tiếp"
-onlyPdfSupported = "Trình xem chỉ hỗ trợ tệp PDF. Tệp này có vẻ là định dạng khác."
-previousPage = "Trang trước"
-singlePageView = "Chế độ xem trang đơn"
-unknownFile = "Tệp không xác định"
-zoomIn = "Phóng to"
-zoomOut = "Thu nhỏ"
 
 [viewPdf]
 header = "Xem PDF"

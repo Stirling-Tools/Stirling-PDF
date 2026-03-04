@@ -1,4 +1,4 @@
-import { PDFFont, PDFPage } from 'pdf-lib';
+import { PDFFont, PDFPage } from '@cantoo/pdf-lib';
 import { wrapText } from '@app/hooks/tools/validateSignature/utils/pdfText';
 import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalette';
 

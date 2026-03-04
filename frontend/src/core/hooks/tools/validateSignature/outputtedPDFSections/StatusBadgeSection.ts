@@ -1,4 +1,4 @@
-import { PDFFont, PDFPage, rgb } from 'pdf-lib';
+import { PDFFont, PDFPage, rgb } from '@cantoo/pdf-lib';
 
 interface StatusBadgeOptions {
   page: PDFPage;

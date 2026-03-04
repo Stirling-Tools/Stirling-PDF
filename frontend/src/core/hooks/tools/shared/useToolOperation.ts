@@ -11,9 +11,12 @@ import { FILE_EVENTS } from '@app/services/errorUtils';
 import { getFilenameWithoutExtension } from '@app/utils/fileUtils';
 import { ResponseHandler } from '@app/utils/toolResponseProcessor';
 import { createChildStub, generateProcessedFileMetadata } from '@app/contexts/file/fileActions';
+import { createNewStirlingFileStub } from '@app/types/fileContext';
 import { ToolOperation } from '@app/types/file';
 import { ToolId } from '@app/types/toolId';
 import { ensureBackendReady } from '@app/services/backendReadinessGuard';
+import { useWillUseCloud } from '@app/hooks/useWillUseCloud';
+import { useCreditCheck } from '@app/hooks/useCreditCheck';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
@@ -140,10 +143,13 @@ export interface ToolOperationHook<TParams = void> {
   isGeneratingThumbnails: boolean;
   downloadUrl: string | null;
   downloadFilename: string;
+  downloadLocalPath?: string | null;
+  outputFileIds?: string[] | null;
   isLoading: boolean;
   status: string;
   errorMessage: string | null;
   progress: ProcessingProgress | null;
+  willUseCloud?: boolean;
 
   // Actions
   executeOperation: (params: TParams, selectedFiles: StirlingFile[]) => Promise<void>;
@@ -180,6 +186,16 @@ export const useToolOperation = <TParams>(
   const { processFiles, cancelOperation: cancelApiCalls } = useToolApiCalls<TParams>();
   const { generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles } = useToolResources();
 
+  const { checkCredits } = useCreditCheck(config.operationType);
+
+  // Determine endpoint for cloud usage check
+  const endpointString = config.toolType !== ToolType.custom && config.endpoint
+    ? (typeof config.endpoint === 'function'
+        ? (config.defaultParameters ? config.endpoint(config.defaultParameters) : undefined)
+        : config.endpoint)
+    : undefined;
+  const willUseCloud = useWillUseCloud(endpointString);
+
   // Track last operation for undo functionality
   const lastOperationRef = useRef<{
     inputFiles: File[];
@@ -214,7 +230,24 @@ export const useToolOperation = <TParams>(
       return;
     }
 
-    const backendReady = await ensureBackendReady();
+    // Get endpoint (static or dynamic) for backend readiness check
+    const endpoint = config.customProcessor
+      ? undefined // Custom processors may not have endpoints
+      : typeof config.endpoint === 'function'
+        ? config.endpoint(params)
+        : config.endpoint;
+
+    // Credit check for cloud operations (desktop SaaS mode only, no-op in web builds)
+    if (willUseCloud && endpoint) {
+      const creditError = await checkCredits();
+      if (creditError !== null) {
+        actions.setError(creditError);
+        return;
+      }
+    }
+
+    // Backend readiness check (will skip for SaaS-routed endpoints)
+    const backendReady = await ensureBackendReady(endpoint);
     if (!backendReady) {
       actions.setError(t('backendHealth.offline', 'Embedded backend is offline. Please try again shortly.'));
       return;
@@ -375,7 +408,10 @@ export const useToolOperation = <TParams>(
         actions.setGeneratingThumbnails(false);
 
         actions.setThumbnails(thumbnails);
-        actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename);
+        const downloadLocalPath =
+          validFiles.length === 1 && processedFiles.length === 1
+            ? selectors.getStirlingFileStub(validFiles[0].fileId)?.localFilePath ?? null
+            : null;
 
         // Replace input files with processed files (consumeFiles handles pinning)
         const inputFileIds: FileId[] = [];
@@ -390,6 +426,9 @@ export const useToolOperation = <TParams>(
             inputStirlingFileStubs.push(record);
           } else {
             console.warn(`No file stub found for file: ${file.name}`);
+            const fallbackStub = createNewStirlingFileStub(file, fileId);
+            inputFileIds.push(fileId);
+            inputStirlingFileStubs.push(fallbackStub);
           }
         }
 
@@ -436,6 +475,18 @@ export const useToolOperation = <TParams>(
         // Outputs and stubs are already ordered by success sequence
         console.debug('[useToolOperation] Consuming files', { inputCount: inputFileIds.length, toConsume: toConsumeInputIds.length });
         const outputFileIds = await consumeFiles(toConsumeInputIds, outputStirlingFiles, outputStirlingFileStubs);
+
+        if (toConsumeInputIds.length === 1 && outputFileIds.length === 1) {
+          const inputStub = selectors.getStirlingFileStub(toConsumeInputIds[0]);
+          if (inputStub?.localFilePath) {
+            fileActions.updateStirlingFileStub(outputFileIds[0], {
+              localFilePath: inputStub.localFilePath
+            });
+          }
+        }
+
+        // Pass output file IDs to download info for marking clean after save
+        actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename, downloadLocalPath, outputFileIds);
 
         // Store operation data for undo (only store what we need to avoid memory bloat)
         lastOperationRef.current = {
@@ -486,7 +537,7 @@ export const useToolOperation = <TParams>(
       actions.setLoading(false);
       actions.setProgress(null);
     }
-  }, [t, config, actions, addFiles, consumeFiles, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles]);
+  }, [t, config, actions, addFiles, consumeFiles, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, willUseCloud, checkCredits]);
 
   const cancelOperation = useCallback(() => {
     cancelApiCalls();
@@ -532,7 +583,6 @@ export const useToolOperation = <TParams>(
       // Undo the consume operation
       await undoConsumeFiles(inputFiles, inputStirlingFileStubs, outputFileIds);
 
-
       // Clear results and operation tracking
       resetResults();
       lastOperationRef.current = null;
@@ -565,10 +615,13 @@ export const useToolOperation = <TParams>(
     isGeneratingThumbnails: state.isGeneratingThumbnails,
     downloadUrl: state.downloadUrl,
     downloadFilename: state.downloadFilename,
+    downloadLocalPath: state.downloadLocalPath,
+    outputFileIds: state.outputFileIds,
     isLoading: state.isLoading,
     status: state.status,
     errorMessage: state.errorMessage,
     progress: state.progress,
+    willUseCloud,
 
     // Actions
     executeOperation,

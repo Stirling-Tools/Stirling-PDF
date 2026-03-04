@@ -108,6 +108,13 @@ const ALL_CONVERSION_ENDPOINTS: ConversionEndpoint[] = [
     apiPath: '/api/v1/convert/pdf/csv'
   },
   {
+    endpoint: 'pdf-to-xlsx',
+    fromFormat: 'pdf',
+    toFormat: 'xlsx',
+    description: 'Extract Excel spreadsheet from PDF',
+    apiPath: '/api/v1/convert/pdf/xlsx'
+  },
+  {
     endpoint: 'pdf-to-markdown',
     fromFormat: 'pdf',
     toFormat: 'md',

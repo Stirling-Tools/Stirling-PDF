@@ -83,7 +83,13 @@ public class ConvertMarkdownToPdf {
                     java.util.zip.ZipEntry entry;
                     while ((entry = zipIn.getNextEntry()) != null) {
                         if (!entry.isDirectory()) {
-                            java.nio.file.Path filePath = tempDirPath.resolve(entry.getName());
+                            java.nio.file.Path filePath =
+                                    tempDirPath.resolve(entry.getName()).normalize();
+                            if (!filePath.startsWith(tempDirPath)) {
+                                throw new java.io.IOException(
+                                        "ZIP entry is outside of target directory: "
+                                                + entry.getName());
+                            }
                             java.nio.file.Files.createDirectories(filePath.getParent());
                             java.nio.file.Files.copy(zipIn, filePath);
                         }

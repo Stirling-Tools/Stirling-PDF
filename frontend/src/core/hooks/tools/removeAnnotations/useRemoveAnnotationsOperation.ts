@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useToolOperation, ToolType, CustomProcessorResult } from '@app/hooks/tools/shared/useToolOperation';
 import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
 import { RemoveAnnotationsParameters, defaultParameters } from '@app/hooks/tools/removeAnnotations/useRemoveAnnotationsParameters';
-import { PDFDocument, PDFName, PDFRef, PDFDict } from 'pdf-lib';
+import { PDFDocument, PDFName, PDFRef, PDFDict } from '@cantoo/pdf-lib';
 // Client-side PDF processing using PDF-lib
 const removeAnnotationsProcessor = async (_parameters: RemoveAnnotationsParameters, files: File[]): Promise<CustomProcessorResult> => {
   const processedFiles: File[] = [];
@@ -71,7 +71,10 @@ const removeAnnotationsProcessor = async (_parameters: RemoveAnnotationsParamete
       processedFiles.push(processedFile);
     } catch (error) {
       console.error('Error processing file:', file.name, error);
-      throw new Error(`Failed to process ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to process ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { cause: error }
+      );
     }
   }
 

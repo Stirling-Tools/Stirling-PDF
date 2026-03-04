@@ -17,6 +17,12 @@ confirmClose = "닫기 확인"
 confirmCloseCancel = "취소"
 confirmCloseConfirm = "파일 닫기"
 confirmCloseMessage = "이 파일을 닫으시겠습니까?"
+confirmCloseDiscard = "변경 사항 버리고 닫기"
+confirmCloseSave = "저장하고 닫기"
+confirmCloseUnsaved = "이 파일에는 저장되지 않은 변경 사항이 있습니다."
+confirmCloseUnsavedList = "저장되지 않은 변경 사항이 있는 파일{{plural}}이(가) {{count}}개 있습니다.\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "저장 실패"
+confirmCloseSaveFailed = "오류가 있는 상태로 저장되었습니다. {{count}}개 파일{{plural}}은(는) 저장할 수 없었습니다."
 confirmPasswordErrorMessage = "새 비밀번호와 새 비밀번호 확인이 일치해야 합니다."
 custom = "사용자 지정..."
 customPosition = "사용자 지정 위치"
@@ -39,6 +45,8 @@ edit = "편집"
 editYourNewFiles = "새 파일 편집"
 exportAndContinue = "내보내고 계속"
 false = "거짓"
+fileSavedToDisk = "파일이 디스크에 저장되었습니다"
+fileNotSavedToDisk = "디스크에 저장되지 않았습니다"
 fileSelected = "선택됨: {{filename}}"
 filesSelected = "개의 파일이 선택됨"
 font = "글꼴"
@@ -829,8 +837,9 @@ label = "사용자 이름"
 [admin.settings.endpoints]
 description = "사용 가능한 API 엔드포인트 및 엔드포인트 그룹을 제어합니다."
 management = "엔드포인트 관리"
-note = "참고: 엔드포인트를 비활성화하면 API 액세스가 제한되지만 UI 구성요소는 제거되지 않습니다. 변경 사항을 적용하려면 재시작이 필요합니다."
 title = "API 엔드포인트"
+userDefaults = "사용자 환경설정 기본값"
+userDefaultsDescription = "사용자 환경설정의 기본값을 설정합니다. 사용자는 개인 설정에서 이를 재정의할 수 있습니다."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "비활성화할 엔드포인트 그룹 선택"
@@ -839,6 +848,14 @@ label = "비활성화된 엔드포인트 그룹"
 [admin.settings.endpoints.toRemove]
 description = "비활성화할 개별 엔드포인트 선택"
 label = "비활성화된 엔드포인트"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "비활성화된 도구를 회색으로 표시하는 대신 숨깁니다"
+label = "기본적으로 사용 불가 도구 숨기기"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "비활성화된 변환 옵션을 회색으로 표시하는 대신 숨깁니다"
+label = "기본적으로 사용 불가 변환 숨기기"
 
 [admin.settings.enterpriseRequired]
 message = "{{featureName}}에 액세스하려면 Enterprise 라이선스가 필요합니다. 참고용으로 데모 데이터를 보고 있습니다."
@@ -1219,9 +1236,21 @@ label = "키 정리 활성화"
 description = "JWT 서명 키를 주기적으로 자동 순환"
 label = "키 순환 활성화"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "이전 JWT 키를 검증 용도로 보존할 기간(일)"
-label = "키 보존 일수"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "웹 클라이언트용 액세스 토큰 수명(분). (기본값: 1440 = 24시간)"
+label = "웹 토큰 만료 시간(분)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "데스크톱 클라이언트용 액세스 토큰 수명(분). User-Agent로 자동 감지된 데스크톱 앱은 더 나은 UX를 위해 더 긴 세션을 받습니다(기본값: 43200 = 30일)."
+label = "데스크톱 토큰 만료 시간(분)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "토큰 검증 중 클라이언트/서버 시간 오차 허용치(기본값: 60초)"
+label = "클록 스큐 허용치(초)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "만료 후 지정된 분 수 이내에 토큰 갱신을 허용합니다(기본값: 15분, 최대 3회 시도)."
+label = "갱신 유예 기간(분)"
 
 [admin.settings.security.jwt.persistence]
 description = "서버 재시작 후에도 유지되도록 JWT 키를 영구 저장"
@@ -1422,13 +1451,16 @@ applyChanges = "변경 사항 적용"
 backgroundColor = "배경색"
 borderOff = "테두리: 꺼짐"
 borderOn = "테두리: 켜짐"
+changeColor = "색상 변경"
 chooseColor = "색상 선택"
 circle = "원"
 clearBackground = "배경 제거"
 color = "색상"
 contents = "텍스트"
+delete = "삭제"
 desc = "강조, 펜, 텍스트, 메모를 사용하세요. 변경 사항은 실시간으로 유지되며 평탄화가 필요 없습니다."
 drawing = "그리기"
+duplicate = "복제"
 editCircle = "원 편집"
 editInk = "펜 편집"
 editLine = "선 편집"
@@ -1458,6 +1490,7 @@ notesStamps = "메모 및 스탬프"
 opacity = "불투명도"
 pen = "펜"
 polygon = "다각형"
+properties = "속성"
 rectangle = "사각형"
 redo = "다시 실행"
 saveChanges = "변경 사항 저장"
@@ -1483,6 +1516,7 @@ title = "주석"
 underline = "밑줄"
 undo = "실행 취소"
 unsupportedType = "이 주석 유형은 편집을 완전히 지원하지 않습니다."
+width = "너비"
 
 [app]
 description = "무료 Adobe Acrobat 대안(1,000만+ 다운로드)"
@@ -3312,6 +3346,10 @@ desc = "PDF 작업을 연결하여 다단계 워크플로를 구성하세요. �
 tags = "워크플로,시퀀스,자동화"
 title = "자동화"
 
+[home.formFill]
+desc = "시각적 편집기로 PDF 양식 필드를 대화형으로 작성합니다"
+title = "양식 작성"
+
 [home.autoRename]
 desc = "감지된 헤더를 기반으로 PDF 파일 이름을 자동으로 변경합니다."
 tags = "자동 감지,헤더 기반,정리,이름 변경"
@@ -4209,6 +4247,75 @@ title = "페이지 편집기"
 zoomIn = "확대"
 zoomOut = "축소"
 
+[viewer]
+cannotPreviewFile = "파일을 미리보기할 수 없습니다"
+dualPageView = "두 페이지 보기"
+firstPage = "첫 페이지"
+lastPage = "마지막 페이지"
+nextPage = "다음 페이지"
+onlyPdfSupported = "뷰어는 PDF 파일만 지원합니다. 이 파일은 다른 형식인 것으로 보입니다."
+previousPage = "이전 페이지"
+singlePageView = "단일 페이지 보기"
+unknownFile = "알 수 없는 파일"
+zoomIn = "확대"
+zoomOut = "축소"
+
+[viewer.attachments]
+title = "첨부 파일"
+searchPlaceholder = "첨부 파일 검색"
+noSupport = "이 뷰어는 첨부 파일을 지원하지 않습니다."
+noDocument = "첨부 파일을 보려면 PDF를 여세요."
+loading = "첨부 파일 불러오는 중..."
+empty = "이 문서에는 첨부 파일이 없습니다"
+noMatch = "검색과 일치하는 첨부 파일이 없습니다"
+
+[viewer.formBar]
+title = "양식 필드"
+unsavedBadge = "미저장"
+unsavedDesc = "저장되지 않은 변경 사항이 있습니다"
+hasFieldsDesc = "이 PDF에는 작성 가능한 필드가 있습니다"
+dismiss = "닫기"
+apply = "변경 사항 적용"
+download = "PDF 다운로드"
+
+[rightRail]
+closeSelected = "선택한 파일 닫기"
+selectAll = "모두 선택"
+deselectAll = "모두 선택 해제"
+selectByNumber = "페이지 번호로 선택"
+deleteSelected = "선택한 페이지 삭제"
+closePdf = "PDF 닫기"
+exportAll = "PDF 내보내기"
+downloadSelected = "선택한 파일 다운로드"
+annotations = "주석"
+exportSelected = "선택한 페이지 내보내기"
+formFill = "양식 작성"
+saveChanges = "변경 내용 저장"
+toggleAttachments = "첨부 파일 표시/숨기기"
+toggleTheme = "테마 전환"
+language = "언어"
+toggleAnnotations = "주석 가시성 전환"
+search = "PDF 검색"
+panMode = "이동 모드"
+applyRedactionsFirst = "먼저 가리기 적용"
+rotateLeft = "왼쪽으로 회전"
+rotateRight = "오른쪽으로 회전"
+toggleSidebar = "사이드바 전환"
+toggleBookmarks = "북마크 표시/숨기기"
+print = "PDF 인쇄"
+ruler = "눈금자/측정"
+draw = "그리기"
+redact = "가리기"
+exitRedaction = "가리기 모드 종료"
+save = "저장"
+downloadAll = "전체 다운로드"
+saveAll = "모두 저장"
+
+[textAlign]
+left = "왼쪽"
+center = "가운데"
+right = "오른쪽"
+
 [pageExtracter]
 header = "페이지 추출"
 placeholder = "(예: 1,2,8 또는 4,7,12-16 또는 2n-1)"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ 영구 적용되며 되돌릴 수 없고, 아래 데이터는 삭제됩니다"
 boxRedaction = "박스 그리기 가리기"
 colourPicker = "색상 선택기"
+colorLabel = "비공개 처리 색상"
+active = "비공개 처리 모드 활성화됨"
+activate = "비공개 처리 도구 활성화"
 controlsTitle = "수동 가리기 컨트롤"
 convertPDFToImageLabel = "PDF를 PDF-Image로 변환(박스 뒤 텍스트 제거용)"
 export = "내보내기"
@@ -5285,36 +5395,6 @@ title = "고대비"
 [replaceColor.tooltip.invertAll]
 text = "PDF의 모든 색상을 완전히 반전하여 네거티브와 같은 효과를 만듭니다. 문서의 다크 모드 버전을 만들거나 저조도 환경에서 눈의 피로를 줄이는 데 유용합니다."
 title = "모든 색상 반전"
-
-[rightRail]
-annotations = "주석"
-applyRedactionsFirst = "먼저 가리기 적용"
-closePdf = "PDF 닫기"
-closeSelected = "선택한 파일 닫기"
-deleteSelected = "선택한 페이지 삭제"
-deselectAll = "모두 선택 해제"
-downloadAll = "전체 다운로드"
-downloadSelected = "선택한 파일 다운로드"
-draw = "그리기"
-exitRedaction = "가리기 모드 종료"
-exportAll = "PDF 내보내기"
-exportSelected = "선택한 페이지 내보내기"
-language = "언어"
-panMode = "이동 모드"
-print = "PDF 인쇄"
-redact = "가리기"
-rotateLeft = "왼쪽으로 회전"
-rotateRight = "오른쪽으로 회전"
-save = "저장"
-saveAll = "모두 저장"
-saveChanges = "변경 내용 저장"
-search = "PDF 검색"
-selectAll = "모두 선택"
-selectByNumber = "페이지 번호로 선택"
-toggleAnnotations = "주석 가시성 전환"
-toggleBookmarks = "북마크 표시/숨기기"
-toggleSidebar = "사이드바 전환"
-toggleTheme = "테마 전환"
 
 [rotate]
 rotateLeft = "반시계 방향으로 회전"
@@ -6153,11 +6233,6 @@ title = "API 문서"
 [tableExtraxt]
 tags = "CSV,테이블-추출,추출,변환"
 
-[textAlign]
-center = "가운데"
-left = "왼쪽"
-right = "오른쪽"
-
 [theme]
 toggle = "테마 전환"
 
@@ -6432,19 +6507,6 @@ invalid = "인증서가 신뢰 저장소에 없음 - 출처를 확인할 수 없
 fileManager = "파일 관리자"
 pageEditor = "페이지 편집기"
 viewer = "뷰어"
-
-[viewer]
-cannotPreviewFile = "파일을 미리보기할 수 없습니다"
-dualPageView = "두 페이지 보기"
-firstPage = "첫 페이지"
-lastPage = "마지막 페이지"
-nextPage = "다음 페이지"
-onlyPdfSupported = "뷰어는 PDF 파일만 지원합니다. 이 파일은 다른 형식인 것으로 보입니다."
-previousPage = "이전 페이지"
-singlePageView = "단일 페이지 보기"
-unknownFile = "알 수 없는 파일"
-zoomIn = "확대"
-zoomOut = "축소"
 
 [viewPdf]
 header = "PDF 보기"

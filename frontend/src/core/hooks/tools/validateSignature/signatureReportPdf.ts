@@ -1,4 +1,4 @@
-import { PDFDocument, PDFPage, StandardFonts } from 'pdf-lib';
+import { PDFDocument, PDFPage, StandardFonts } from '@cantoo/pdf-lib';
 import type { TFunction } from 'i18next';
 import { SignatureValidationReportEntry } from '@app/types/validateSignature';
 import { REPORT_PDF_FILENAME } from '@app/hooks/tools/validateSignature/utils/signatureUtils';
@@ -71,7 +71,7 @@ export const createReportPdf = async (
     cursorY -= 16;
 
     if (entry.error) {
-      cursorY = drawCenteredMessage({
+      drawCenteredMessage({
         page,
         font,
         fontBold,
@@ -86,7 +86,7 @@ export const createReportPdf = async (
     }
 
     if (entry.signatures.length === 0) {
-      cursorY = drawCenteredMessage({
+      drawCenteredMessage({
         page,
         font,
         fontBold,

@@ -17,6 +17,12 @@ confirmClose = "ยืนยันการปิด"
 confirmCloseCancel = "ยกเลิก"
 confirmCloseConfirm = "ปิดไฟล์"
 confirmCloseMessage = "แน่ใจหรือไม่ว่าต้องการปิดไฟล์นี้?"
+confirmCloseDiscard = "ยกเลิกการเปลี่ยนแปลงและปิด"
+confirmCloseSave = "บันทึกและปิด"
+confirmCloseUnsaved = "ไฟล์นี้มีการเปลี่ยนแปลงที่ยังไม่บันทึก"
+confirmCloseUnsavedList = "คุณมี {{count}} ไฟล์{{plural}} ที่ยังไม่บันทึกการเปลี่ยนแปลง\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "บันทึกล้มเหลว"
+confirmCloseSaveFailed = "บันทึกพร้อมข้อผิดพลาด มี {{count}} ไฟล์{{plural}} ที่ไม่สามารถบันทึกได้"
 confirmPasswordErrorMessage = "รหัสผ่านใหม่และยืนยันรหัสผ่านใหม่ต้องตรงกัน"
 custom = "ปรับแต่ง..."
 customPosition = "ตำแหน่งกำหนดเอง"
@@ -39,6 +45,8 @@ edit = "แก้ไข"
 editYourNewFiles = "แก้ไขไฟล์ใหม่ของคุณ"
 exportAndContinue = "ส่งออกและทำต่อ"
 false = "เท็จ"
+fileSavedToDisk = "บันทึกไฟล์ลงดิสก์แล้ว"
+fileNotSavedToDisk = "ยังไม่ได้บันทึกลงดิสก์"
 fileSelected = "ที่เลือก: {{filename}}"
 filesSelected = "ไฟล์ที่เลือก"
 font = "ฟอนต์"
@@ -829,8 +837,9 @@ label = "ชื่อผู้ใช้"
 [admin.settings.endpoints]
 description = "ควบคุมว่า API Endpoints และกลุ่ม Endpoint ใดที่ใช้งานได้"
 management = "การจัดการ Endpoint"
-note = "หมายเหตุ: การปิดการใช้งาน endpoints จะจำกัดการเข้าถึง API แต่จะไม่ลบส่วนติดต่อผู้ใช้ ต้องรีสตาร์ทจึงจะมีผล"
 title = "API Endpoints"
+userDefaults = "ค่าเริ่มต้นของการตั้งค่าผู้ใช้"
+userDefaultsDescription = "กำหนดค่าเริ่มต้นสำหรับการตั้งค่าผู้ใช้ ผู้ใช้สามารถแทนที่ได้ในการตั้งค่าส่วนตัวของตน"
 
 [admin.settings.endpoints.groupsToRemove]
 description = "เลือกกลุ่มจุดปลายทางที่จะปิดใช้งาน"
@@ -839,6 +848,14 @@ label = "กลุ่ม Endpoints ที่ปิดใช้งาน"
 [admin.settings.endpoints.toRemove]
 description = "เลือกจุดปลายทางเป็นรายรายการเพื่อปิดใช้งาน"
 label = "Endpoints ที่ปิดใช้งาน"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "นำเครื่องมือที่ปิดใช้งานออกแทนที่จะแสดงเป็นสีเทา"
+label = "ซ่อนเครื่องมือที่ไม่พร้อมใช้งานโดยค่าเริ่มต้น"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "นำตัวเลือกการแปลงที่ปิดใช้งานออกแทนที่จะแสดงเป็นสีเทา"
+label = "ซ่อนการแปลงที่ไม่พร้อมใช้งานโดยค่าเริ่มต้น"
 
 [admin.settings.enterpriseRequired]
 message = "ต้องมีสิทธิ์การใช้งานสำหรับองค์กรเพื่อเข้าถึง {{featureName}} ขณะนี้คุณกำลังดูข้อมูลสาธิตเพื่อเป็นข้อมูลอ้างอิง"
@@ -1219,9 +1236,21 @@ label = "เปิดใช้งานการล้างคีย์"
 description = "หมุนคีย์ลงนาม JWT โดยอัตโนมัติเป็นระยะ"
 label = "เปิดใช้งานการหมุนคีย์"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "จำนวนวันที่เก็บคีย์ JWT เก่าไว้เพื่อการตรวจสอบความถูกต้อง"
-label = "จำนวนวันเก็บรักษาคีย์"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "อายุการใช้งานโทเค็นการเข้าถึงสำหรับไคลเอนต์เว็บเป็นนาที (ค่าเริ่มต้น: 1440 = 24 ชั่วโมง)"
+label = "การหมดอายุของโทเค็นเว็บ (นาที)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "อายุการใช้งานโทเค็นการเข้าถึงสำหรับไคลเอนต์เดสก์ท็อปเป็นนาที ตรวจพบแอปเดสก์ท็อปโดยอัตโนมัติผ่าน User-Agent และจะได้รับช่วงเวลาเซสชันที่ยาวขึ้นเพื่อ UX ที่ดีกว่า (ค่าเริ่มต้น: 43200 = 30 วัน)"
+label = "การหมดอายุของโทเค็นเดสก์ท็อป (นาที)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "ค่าความคลาดเคลื่อนเวลาระหว่างไคลเอนต์/เซิร์ฟเวอร์ระหว่างการตรวจสอบโทเค็น (ค่าเริ่มต้น: 60 วินาที)"
+label = "ค่าความคลาดเคลื่อนของนาฬิกา (วินาที)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "อนุญาตให้รีเฟรชโทเค็นภายในจำนวนนาทีนับจากหมดอายุ (ค่าเริ่มต้น: 15 นาที สูงสุด 3 ครั้ง)"
+label = "ช่วงผ่อนผันสำหรับการรีเฟรช (นาที)"
 
 [admin.settings.security.jwt.persistence]
 description = "จัดเก็บคีย์ JWT แบบคงอยู่เพื่อให้ผ่านการรีสตาร์ทเซิร์ฟเวอร์"
@@ -1422,13 +1451,16 @@ applyChanges = "ใช้การเปลี่ยนแปลง"
 backgroundColor = "สีพื้นหลัง"
 borderOff = "เส้นขอบ: ปิด"
 borderOn = "เส้นขอบ: เปิด"
+changeColor = "เปลี่ยนสี"
 chooseColor = "เลือกสี"
 circle = "วงกลม"
 clearBackground = "ลบพื้นหลัง"
 color = "สี"
 contents = "ข้อความ"
+delete = "ลบ"
 desc = "ใช้ไฮไลต์ ปากกา ข้อความ และโน้ต การเปลี่ยนแปลงมีผลทันที—ไม่ต้องแปลงเป็นชั้นเดียว"
 drawing = "การวาด"
+duplicate = "ทำซ้ำ"
 editCircle = "แก้ไขวงกลม"
 editInk = "แก้ไขปากกา"
 editLine = "แก้ไขเส้น"
@@ -1458,6 +1490,7 @@ notesStamps = "โน้ตและตราประทับ"
 opacity = "ความทึบ"
 pen = "ปากกา"
 polygon = "รูปหลายเหลี่ยม"
+properties = "คุณสมบัติ"
 rectangle = "สี่เหลี่ยมผืนผ้า"
 redo = "ทำซ้ำ"
 saveChanges = "บันทึกการเปลี่ยนแปลง"
@@ -1483,6 +1516,7 @@ title = "ใส่คำอธิบายประกอบ"
 underline = "ขีดเส้นใต้"
 undo = "เลิกทำ"
 unsupportedType = "ประเภทคำอธิบายประกอบนี้ยังไม่รองรับการแก้ไขอย่างสมบูรณ์"
+width = "ความกว้าง"
 
 [app]
 description = "ทางเลือกแทน Adobe Acrobat ฟรี (ดาวน์โหลด 10M+)"
@@ -3312,6 +3346,10 @@ desc = "สร้างเวิร์กโฟลว์หลายขั้น
 tags = "เวิร์กโฟลว์,ลำดับ,ระบบอัตโนมัติ"
 title = "ทำให้อัตโนมัติ"
 
+[home.formFill]
+desc = "กรอกช่องแบบฟอร์ม PDF แบบโต้ตอบด้วยเครื่องมือแก้ไขแบบภาพ"
+title = "กรอกแบบฟอร์ม"
+
 [home.autoRename]
 desc = "เปลี่ยนชื่อไฟล์ PDF อัตโนมัติตามส่วนหัวที่ตรวจพบ"
 tags = "ตรวจจับอัตโนมัติ,จากหัวกระดาษ,จัดระเบียบ,เปลี่ยนชื่อ"
@@ -4209,6 +4247,75 @@ title = "ตัวแก้ไขหน้า"
 zoomIn = "ซูมเข้า"
 zoomOut = "ซูมออก"
 
+[viewer]
+cannotPreviewFile = "ไม่สามารถแสดงตัวอย่างไฟล์ได้"
+dualPageView = "มุมมองสองหน้า"
+firstPage = "หน้าแรก"
+lastPage = "หน้าสุดท้าย"
+nextPage = "หน้าถัดไป"
+onlyPdfSupported = "ตัวแสดงผลรองรับเฉพาะไฟล์ PDF ไฟล์นี้ดูเหมือนจะเป็นรูปแบบอื่น"
+previousPage = "หน้าก่อนหน้า"
+singlePageView = "มุมมองหน้าเดียว"
+unknownFile = "ไฟล์ไม่รู้จัก"
+zoomIn = "ซูมเข้า"
+zoomOut = "ซูมออก"
+
+[viewer.attachments]
+title = "ไฟล์แนบ"
+searchPlaceholder = "ค้นหาไฟล์แนบ"
+noSupport = "ตัวแสดงผลนี้ไม่รองรับไฟล์แนบ"
+noDocument = "เปิด PDF เพื่อดูไฟล์แนบ"
+loading = "กำลังโหลดไฟล์แนบ..."
+empty = "ไม่มีไฟล์แนบในเอกสารนี้"
+noMatch = "ไม่มีไฟล์แนบที่ตรงกับการค้นหา"
+
+[viewer.formBar]
+title = "ช่องแบบฟอร์ม"
+unsavedBadge = "ยังไม่บันทึก"
+unsavedDesc = "คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึก"
+hasFieldsDesc = "PDF นี้มีช่องที่กรอกได้"
+dismiss = "ปิด"
+apply = "ใช้การเปลี่ยนแปลง"
+download = "ดาวน์โหลด PDF"
+
+[rightRail]
+closeSelected = "ปิดไฟล์ที่เลือก"
+selectAll = "เลือกทั้งหมด"
+deselectAll = "ยกเลิกการเลือกทั้งหมด"
+selectByNumber = "เลือกตามหมายเลขหน้า"
+deleteSelected = "ลบหน้าที่เลือก"
+closePdf = "ปิด PDF"
+exportAll = "ส่งออก PDF"
+downloadSelected = "ดาวน์โหลดไฟล์ที่เลือก"
+annotations = "คำอธิบายประกอบ"
+exportSelected = "ส่งออกหน้าที่เลือก"
+formFill = "กรอกแบบฟอร์ม"
+saveChanges = "บันทึกการเปลี่ยนแปลง"
+toggleAttachments = "สลับไฟล์แนบ"
+toggleTheme = "สลับธีม"
+language = "ภาษา"
+toggleAnnotations = "สลับการแสดงคำอธิบายประกอบ"
+search = "ค้นหาใน PDF"
+panMode = "โหมดเลื่อนดู"
+applyRedactionsFirst = "ใช้การปกปิดก่อน"
+rotateLeft = "หมุนซ้าย"
+rotateRight = "หมุนขวา"
+toggleSidebar = "สลับแถบข้าง"
+toggleBookmarks = "สลับที่คั่นหน้า"
+print = "พิมพ์ PDF"
+ruler = "ไม้บรรทัด / วัด"
+draw = "วาด"
+redact = "ปกปิด"
+exitRedaction = "ออกจากโหมดการปกปิด"
+save = "บันทึก"
+downloadAll = "ดาวน์โหลดทั้งหมด"
+saveAll = "บันทึกทั้งหมด"
+
+[textAlign]
+left = "ชิดซ้าย"
+center = "กึ่งกลาง"
+right = "ชิดขวา"
+
 [pageExtracter]
 header = "แยกหน้า"
 placeholder = "(เช่น 1,2,8 หรือ 4,7,12-16 หรือ 2n-1)"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ การใช้แบบถาวร ไม่สามารถยกเลิกได้ และข้อมูลด้านล่างจะถูกลบ"
 boxRedaction = "วาดกล่องเพื่อปกปิด"
 colourPicker = "ตัวเลือกสี"
+colorLabel = "สีของการปกปิด"
+active = "โหมดการปกปิดทำงานอยู่"
+activate = "เปิดใช้งานเครื่องมือปกปิด"
 controlsTitle = "การควบคุมการปกปิดแบบแมนนวล"
 convertPDFToImageLabel = "แปลง PDF เป็น PDF-Image (ใช้เพื่อลบข้อความที่อยู่หลังกรอบ)"
 export = "ส่งออก"
@@ -5285,36 +5395,6 @@ title = "คอนทราสต์สูง"
 [replaceColor.tooltip.invertAll]
 text = "กลับสีทั้งหมดใน PDF ให้กลายเป็นภาพเชิงลบ มีประโยชน์สำหรับสร้างเวอร์ชันโหมดมืดของเอกสารหรือช่วยลดอาการล้าตาในที่แสงน้อย"
 title = "กลับสีทั้งหมด"
-
-[rightRail]
-annotations = "คำอธิบายประกอบ"
-applyRedactionsFirst = "ใช้การปกปิดก่อน"
-closePdf = "ปิด PDF"
-closeSelected = "ปิดไฟล์ที่เลือก"
-deleteSelected = "ลบหน้าที่เลือก"
-deselectAll = "ยกเลิกการเลือกทั้งหมด"
-downloadAll = "ดาวน์โหลดทั้งหมด"
-downloadSelected = "ดาวน์โหลดไฟล์ที่เลือก"
-draw = "วาด"
-exitRedaction = "ออกจากโหมดการปกปิด"
-exportAll = "ส่งออก PDF"
-exportSelected = "ส่งออกหน้าที่เลือก"
-language = "ภาษา"
-panMode = "โหมดเลื่อนดู"
-print = "พิมพ์ PDF"
-redact = "ปกปิด"
-rotateLeft = "หมุนซ้าย"
-rotateRight = "หมุนขวา"
-save = "บันทึก"
-saveAll = "บันทึกทั้งหมด"
-saveChanges = "บันทึกการเปลี่ยนแปลง"
-search = "ค้นหาใน PDF"
-selectAll = "เลือกทั้งหมด"
-selectByNumber = "เลือกตามหมายเลขหน้า"
-toggleAnnotations = "สลับการแสดงคำอธิบายประกอบ"
-toggleBookmarks = "สลับที่คั่นหน้า"
-toggleSidebar = "สลับแถบข้าง"
-toggleTheme = "สลับธีม"
 
 [rotate]
 rotateLeft = "หมุนทวนเข็มนาฬิกา"
@@ -6153,11 +6233,6 @@ title = "เอกสาร API"
 [tableExtraxt]
 tags = "CSV, การแยกตาราง, แยก, การแปลง"
 
-[textAlign]
-center = "กึ่งกลาง"
-left = "ชิดซ้าย"
-right = "ชิดขวา"
-
 [theme]
 toggle = "สลับธีม"
 
@@ -6432,19 +6507,6 @@ invalid = "ใบรับรองไม่อยู่ใน trust store - ไ
 fileManager = "ตัวจัดการไฟล์"
 pageEditor = "ตัวแก้ไขหน้า"
 viewer = "ตัวดูเอกสาร"
-
-[viewer]
-cannotPreviewFile = "ไม่สามารถแสดงตัวอย่างไฟล์ได้"
-dualPageView = "มุมมองสองหน้า"
-firstPage = "หน้าแรก"
-lastPage = "หน้าสุดท้าย"
-nextPage = "หน้าถัดไป"
-onlyPdfSupported = "ตัวแสดงผลรองรับเฉพาะไฟล์ PDF ไฟล์นี้ดูเหมือนจะเป็นรูปแบบอื่น"
-previousPage = "หน้าก่อนหน้า"
-singlePageView = "มุมมองหน้าเดียว"
-unknownFile = "ไฟล์ไม่รู้จัก"
-zoomIn = "ซูมเข้า"
-zoomOut = "ซูมออก"
 
 [viewPdf]
 header = "ดู PDF"

@@ -17,6 +17,12 @@ confirmClose = "确认关闭"
 confirmCloseCancel = "取消"
 confirmCloseConfirm = "关闭文件"
 confirmCloseMessage = "确定要关闭此文件吗？"
+confirmCloseDiscard = "放弃更改并关闭"
+confirmCloseSave = "保存并关闭"
+confirmCloseUnsaved = "此文件有未保存的更改。"
+confirmCloseUnsavedList = "您有 {{count}} 个文件{{plural}}存在未保存的更改。\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "保存失败"
+confirmCloseSaveFailed = "保存时出现错误。{{count}} 个文件{{plural}}无法保存。"
 confirmPasswordErrorMessage = "两次密码不一致。"
 custom = "自定义..."
 customPosition = "自定义位置"
@@ -39,6 +45,8 @@ edit = "编辑"
 editYourNewFiles = "编辑您的新文件"
 exportAndContinue = "导出并继续"
 false = "错"
+fileSavedToDisk = "文件已保存到磁盘"
+fileNotSavedToDisk = "未保存到磁盘"
 fileSelected = "已选：{{filename}}"
 filesSelected = "选中的文件"
 font = "字体"
@@ -829,8 +837,9 @@ label = "用户名"
 [admin.settings.endpoints]
 description = "控制可用的 API 端点及端点组。"
 management = "端点管理"
-note = "注意：禁用端点会限制 API 访问，但不会移除 UI 组件。更改生效需要重启。"
 title = "API 端点"
+userDefaults = "用户偏好默认值"
+userDefaultsDescription = "为用户偏好设置默认值。用户可在个人设置中覆盖。"
 
 [admin.settings.endpoints.groupsToRemove]
 description = "选择要禁用的端点组"
@@ -839,6 +848,14 @@ label = "已禁用的端点组"
 [admin.settings.endpoints.toRemove]
 description = "选择要禁用的单个端点"
 label = "已禁用的端点"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "将已禁用的工具移除，而非以灰显显示"
+label = "默认隐藏不可用工具"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "将已禁用的转换选项移除，而非以灰显显示"
+label = "默认隐藏不可用的转换"
 
 [admin.settings.enterpriseRequired]
 message = "访问 {{featureName}} 需要企业许可证。您正在查看演示数据以供参考。"
@@ -1219,9 +1236,21 @@ label = "启用密钥清理"
 description = "定期自动轮换 JWT 签名密钥"
 label = "启用密钥轮换"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "保留旧JWT密钥用于验证的天数"
-label = "密钥保留天数"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Web 客户端访问令牌的有效期（分钟）（默认：1440 = 24 小时）"
+label = "Web 令牌有效期（分钟）"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "桌面客户端访问令牌的有效期（分钟）。通过 User-Agent 自动检测桌面应用，并为更佳体验提供更长会话（默认：43200 = 30 天）"
+label = "桌面令牌有效期（分钟）"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "令牌验证期间客户端/服务器时间偏差的容差（默认：60 秒）"
+label = "时钟偏差容差（秒）"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "允许在到期后于此分钟数内刷新令牌（默认：15 分钟，最多 3 次尝试）"
+label = "刷新宽限期（分钟）"
 
 [admin.settings.security.jwt.persistence]
 description = "持久化存储 JWT 密钥以跨越服务器重启"
@@ -1422,13 +1451,16 @@ applyChanges = "应用更改"
 backgroundColor = "背景颜色"
 borderOff = "边框：关"
 borderOn = "边框：开"
+changeColor = "更改颜色"
 chooseColor = "选择颜色"
 circle = "圆形"
 clearBackground = "移除背景"
 color = "颜色"
 contents = "文本"
+delete = "删除"
 desc = "使用高亮、画笔、文本和便笺。更改实时生效——无需合并层。"
 drawing = "绘图"
+duplicate = "复制"
 editCircle = "编辑圆形"
 editInk = "编辑画笔"
 editLine = "编辑直线"
@@ -1458,6 +1490,7 @@ notesStamps = "便笺与图章"
 opacity = "不透明度"
 pen = "画笔"
 polygon = "多边形"
+properties = "属性"
 rectangle = "矩形"
 redo = "重做"
 saveChanges = "保存更改"
@@ -1483,6 +1516,7 @@ title = "注释"
 underline = "下划线"
 undo = "撤销"
 unsupportedType = "此注释类型暂不完全支持编辑。"
+width = "宽度"
 
 [app]
 description = "免费的 Adobe Acrobat 替代品（下载量 1000 万+）"
@@ -3312,6 +3346,10 @@ desc = "通过串联 PDF 操作构建多步工作流。适合重复性任务。"
 tags = "工作流,序列,自动化"
 title = "自动化"
 
+[home.formFill]
+desc = "使用可视化编辑器交互式填写 PDF 表单字段"
+title = "填写表单"
+
 [home.autoRename]
 desc = "基于检测到的页眉自动重命名 PDF 文件"
 tags = "自动检测,基于标题,组织,重新标记"
@@ -4209,6 +4247,75 @@ title = "页面编辑器"
 zoomIn = "放大"
 zoomOut = "缩小"
 
+[viewer]
+cannotPreviewFile = "无法预览文件"
+dualPageView = "双页视图"
+firstPage = "第一页"
+lastPage = "最后一页"
+nextPage = "下一页"
+onlyPdfSupported = "该查看器仅支持 PDF 文件。此文件似乎是其他格式。"
+previousPage = "上一页"
+singlePageView = "单页视图"
+unknownFile = "未知文件"
+zoomIn = "放大"
+zoomOut = "缩小"
+
+[viewer.attachments]
+title = "附件"
+searchPlaceholder = "搜索附件"
+noSupport = "此查看器不支持附件。"
+noDocument = "打开 PDF 以查看其附件。"
+loading = "正在加载附件..."
+empty = "此文档没有附件"
+noMatch = "没有与您的搜索匹配的附件"
+
+[viewer.formBar]
+title = "表单字段"
+unsavedBadge = "未保存"
+unsavedDesc = "您有未保存的更改"
+hasFieldsDesc = "此 PDF 包含可填写的字段"
+dismiss = "关闭"
+apply = "应用更改"
+download = "下载 PDF"
+
+[rightRail]
+closeSelected = "关闭所选文件"
+selectAll = "选择所有"
+deselectAll = "取消选择所有"
+selectByNumber = "按页码选择"
+deleteSelected = "删除所选页面"
+closePdf = "关闭 PDF"
+exportAll = "导出 PDF"
+downloadSelected = "下载所选文件"
+annotations = "注释"
+exportSelected = "导出所选页面"
+formFill = "填写表单"
+saveChanges = "保存更改"
+toggleAttachments = "切换附件"
+toggleTheme = "切换主题"
+language = "语言"
+toggleAnnotations = "切换注释可见性"
+search = "搜索 PDF"
+panMode = "平移模式"
+applyRedactionsFirst = "请先应用涂黑"
+rotateLeft = "向左旋转"
+rotateRight = "向右旋转"
+toggleSidebar = "切换侧边栏"
+toggleBookmarks = "切换书签"
+print = "打印 PDF"
+ruler = "标尺/测量"
+draw = "绘制"
+redact = "涂黑"
+exitRedaction = "退出涂黑模式"
+save = "保存"
+downloadAll = "全部下载"
+saveAll = "全部保存"
+
+[textAlign]
+left = "左对齐"
+center = "居中"
+right = "右对齐"
+
 [pageExtracter]
 header = "提取页面"
 placeholder = "（例如：1,2,8 或 4,7,12-16 或 2n-1）"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ 永久应用，无法撤销，且底层数据将被删除"
 boxRedaction = "框选涂黑"
 colourPicker = "取色器"
+colorLabel = "遮盖颜色"
+active = "遮盖模式已激活"
+activate = "启用遮盖工具"
 controlsTitle = "手动涂黑控制"
 convertPDFToImageLabel = "将 PDF 转为图像 PDF（用于移除框后面的文字）"
 export = "导出全部"
@@ -5285,36 +5395,6 @@ title = "高对比度"
 [replaceColor.tooltip.invertAll]
 text = "完全反转 PDF 中的所有颜色，形成类似底片的效果。用于创建文档的深色模式版本，或在弱光环境下减轻眼疲劳。"
 title = "反转所有颜色"
-
-[rightRail]
-annotations = "注释"
-applyRedactionsFirst = "请先应用涂黑"
-closePdf = "关闭 PDF"
-closeSelected = "关闭所选文件"
-deleteSelected = "删除所选页面"
-deselectAll = "取消选择所有"
-downloadAll = "全部下载"
-downloadSelected = "下载所选文件"
-draw = "绘制"
-exitRedaction = "退出涂黑模式"
-exportAll = "导出 PDF"
-exportSelected = "导出所选页面"
-language = "语言"
-panMode = "平移模式"
-print = "打印 PDF"
-redact = "涂黑"
-rotateLeft = "向左旋转"
-rotateRight = "向右旋转"
-save = "保存"
-saveAll = "全部保存"
-saveChanges = "保存更改"
-search = "搜索 PDF"
-selectAll = "选择所有"
-selectByNumber = "按页码选择"
-toggleAnnotations = "切换注释可见性"
-toggleBookmarks = "切换书签"
-toggleSidebar = "切换侧边栏"
-toggleTheme = "切换主题"
 
 [rotate]
 rotateLeft = "逆时针旋转"
@@ -6153,11 +6233,6 @@ title = "API 文档"
 [tableExtraxt]
 tags = "CSV、表格提取、提取、转换"
 
-[textAlign]
-center = "居中"
-left = "左对齐"
-right = "右对齐"
-
 [theme]
 toggle = "切换主题"
 
@@ -6432,19 +6507,6 @@ invalid = "证书不在信任存储区中 - 无法验证来源"
 fileManager = "文件管理器"
 pageEditor = "页面编辑器"
 viewer = "查看器"
-
-[viewer]
-cannotPreviewFile = "无法预览文件"
-dualPageView = "双页视图"
-firstPage = "第一页"
-lastPage = "最后一页"
-nextPage = "下一页"
-onlyPdfSupported = "该查看器仅支持 PDF 文件。此文件似乎是其他格式。"
-previousPage = "上一页"
-singlePageView = "单页视图"
-unknownFile = "未知文件"
-zoomIn = "放大"
-zoomOut = "缩小"
 
 [viewPdf]
 header = "浏览 PDF"

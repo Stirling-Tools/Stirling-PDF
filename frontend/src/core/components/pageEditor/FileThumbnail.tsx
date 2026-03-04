@@ -14,6 +14,7 @@ import { FileId } from '@app/types/file';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
 import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
 import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
+import { downloadFile } from '@app/services/downloadService';
 
 interface FileItem {
   id: FileId;
@@ -79,13 +80,7 @@ const FileThumbnail = ({
     // Fallback: attempt to download using the File object if provided
     const maybeFile = (file as unknown as { file?: File }).file;
     if (maybeFile instanceof File) {
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(maybeFile);
-      link.download = maybeFile.name || file.name || 'download';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
+      void downloadFile({ data: maybeFile, filename: maybeFile.name || file.name || 'download' });
       return;
     }
 

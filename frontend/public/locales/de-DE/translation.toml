@@ -17,6 +17,12 @@ confirmClose = "Schließen bestätigen"
 confirmCloseCancel = "Abbrechen"
 confirmCloseConfirm = "Datei schließen"
 confirmCloseMessage = "Sind Sie sicher, dass Sie diese Datei schließen möchten?"
+confirmCloseDiscard = "Discard changes and close"
+confirmCloseSave = "Save and close"
+confirmCloseUnsaved = "This file has unsaved changes."
+confirmCloseUnsavedList = "You have {{count}} file{{plural}} with unsaved changes.\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "Save Failed"
+confirmCloseSaveFailed = "Saved with errors. {{count}} file{{plural}} could not be saved."
 confirmPasswordErrorMessage = "„Neues Passwort“ und „Neues Passwort bestätigen“ müssen übereinstimmen."
 custom = "Benutzerdefiniert..."
 customPosition = "Benutzerdefinierte Position"
@@ -27,7 +33,7 @@ deleteUsernameExistsMessage = "Der Benutzername existiert nicht und kann nicht g
 details = "Details"
 disabledCurrentUserMessage = "Der aktuelle Benutzer kann nicht deaktiviert werden"
 discardChanges = "Änderungen verwerfen"
-discardRedactions = "Discard & Leave"
+discardRedactions = "Verwerfen & Verlassen"
 donate = "Spenden"
 downgradeCurrentUserLongMessage = "Die Rolle des aktuellen Benutzers kann nicht herabgestuft werden. Daher wird der aktuelle Benutzer nicht angezeigt."
 downgradeCurrentUserMessage = "Die Rolle des aktuellen Benutzers kann nicht herabgestuft werden"
@@ -39,6 +45,8 @@ edit = "Bearbeiten"
 editYourNewFiles = "Ihre neuen Dateien bearbeiten"
 exportAndContinue = "Exportieren & Fortfahren"
 false = "Falsch"
+fileSavedToDisk = "File saved to disk"
+fileNotSavedToDisk = "Not saved to disk"
 fileSelected = "Ausgewählt: {{filename}}"
 filesSelected = "Dateien ausgewählt"
 font = "Schriftart"
@@ -82,8 +90,8 @@ pages = "Seiten"
 pageSelectionPrompt = "Benutzerdefinierte Seitenauswahl (Geben Sie eine durch Kommas getrennte Liste von Seitenzahlen 1,5,6 oder Funktionen wie 2n+1 ein):"
 password = "Passwort"
 pdfPrompt = "PDF(s) auswählen"
-pendingRedactions = "You have unapplied redactions that will be lost."
-pendingRedactionsTitle = "Unapplied Redactions"
+pendingRedactions = "Sie haben nicht angewendete Schwärzungen, die verloren gehen."
+pendingRedactionsTitle = "Nicht angewendete Schwärzungen"
 pin = "Datei anheften (nach Tool-Ausführung aktiv halten)"
 poweredBy = "Bereitgestellt von"
 pro = "Pro"
@@ -137,11 +145,11 @@ accountSettings = "Kontoeinstellungen"
 adminSettings = "Admin-Einstellungen – Benutzer anzeigen und hinzufügen"
 changePassword = "Passwort ändern"
 changeUsername = "Benutzername ändern"
-changeUsernameDescription = "Update your username. You will be logged out after updating."
+changeUsernameDescription = "Benutzernamen aktualisieren. Sie werden nach der Aktualisierung abgemeldet."
 confirmNewPassword = "Neues Passwort bestätigen"
 newPassword = "Neues Passwort"
 newUsername = "Neuer Benutzername"
-newUsernamePlaceholder = "Enter your new username"
+newUsernamePlaceholder = "Neuen Benutzernamen eingeben"
 oldPassword = "Altes Passwort"
 password = "Bestätigungspasswort"
 property = "Eigenschaft"
@@ -216,7 +224,7 @@ title = "Bild hinzufügen"
 failed = "Beim Hinzufügen des Bildes zum PDF ist ein Fehler aufgetreten."
 
 [addImage.image]
-hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
+hint = "Unterstützt PNG, JPEG, GIF, BMP, TIFF und SVG-Dateien. SVG-Dateien werden für die Einbettung in PNG konvertiert."
 label = "Bilddatei"
 name = "Bild"
 placeholder = "Ein Bild hochladen"
@@ -265,7 +273,7 @@ previewDisclaimer = "Vorschau ist ungefähr. Das Endergebnis kann aufgrund der P
 submit = "Seitenzahlen hinzufügen"
 title = "Seitenzahlen hinzufügen"
 zeroPad = "Zero‑pad Width (Bates Stamping)"
-zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
+zeroPadTooltip = "Seitenzahlen mit Nullen auffüllen (Bates-Stempel) auf diese Breite (z.B. 3 ⇒ 001). Auf 0 setzen zum Deaktivieren."
 
 [addPageNumbers.error]
 failed = "Seitenzahlen hinzufügen fehlgeschlagen"
@@ -334,53 +342,53 @@ title = "Berechtigungen ändern"
 
 [AddStampRequest]
 alphabet = "Alphabet"
-clickToExpand = "Click to expand"
+clickToExpand = "Zum Erweitern klicken"
 customColor = "Benutzerdefinierte Textfarbe"
-customDateDesc = "Custom format"
+customDateDesc = "Benutzerdefiniertes Format"
 customMargin = "Benutzerdefinierter Rand"
 customPosition = "Ziehen Sie den Stempel an die gewünschte Stelle im Vorschaufenster."
-dateDesc = "Current date"
-datetimeDesc = "Date and time combined"
-dateTimeVars = "Date & Time"
-dynamicVariables = "Dynamic Variables"
-examples = "Examples"
-filenameDesc = "Filename without extension"
-filenameFullDesc = "Filename with extension"
-fileVars = "File Information"
+dateDesc = "Aktuelles Datum"
+datetimeDesc = "Datum und Uhrzeit kombiniert"
+dateTimeVars = "Datum & Uhrzeit"
+dynamicVariables = "Dynamische Variablen"
+examples = "Beispiele"
+filenameDesc = "Dateiname ohne Erweiterung"
+filenameFullDesc = "Dateiname mit Erweiterung"
+fileVars = "Datei-Informationen"
 fontSize = "Schriftart/Bildgröße"
 header = "PDF Stempel"
 imageSize = "Bildgröße"
 margin = "Rand"
-metadataDesc = "From PDF document properties"
-metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "Aus PDF-Dokumenteigenschaften"
+metadataVars = "Dokument-Metadaten"
+multiLine = "mehrzeilig"
 noStampSelected = "Kein Stempel ausgewählt. Kehren Sie zu Schritt 1 zurück."
 opacity = "Deckkraft"
-otherVars = "Other"
+otherVars = "Sonstiges"
 overrideX = "X-Koordinate überschreiben"
 overrideY = "Y-Koordinate überschreiben"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
+pageNumberDesc = "Aktuelle Seitenzahl"
+pageVars = "Seiten-Informationen"
 position = "Position"
 positionAndFormatting = "Position & Formatierung"
-preview = "Preview:"
+preview = "Vorschau:"
 quickPosition = "Wählen Sie eine Position auf der Seite, um den Stempel zu platzieren."
 rotation = "Drehung"
-selectTemplate = "Select a template..."
+selectTemplate = "Vorlage auswählen..."
 stampImage = "Stempelbild"
 stampSetup = "Stempel-Einstellungen"
 stampText = "Stempeltext"
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+stampTextDescription = "Verwenden Sie die unten stehenden dynamischen Variablen. Verwenden Sie @@ für ein wörtliches @. Verwenden Sie \\n für neue Zeilen."
 stampType = "Stempeltyp"
 submit = "Abschicken"
 tags = "stempeln,bild hinzufügen,bild zentrieren,wasserzeichen,pdf,einbetten,anpassen"
-timeDesc = "Current time"
+timeDesc = "Aktuelle Uhrzeit"
 title = "PDF Stempel"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
-uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+totalPagesDesc = "Gesamtzahl der Seiten"
+useTemplate = "Vorlage verwenden"
+uuidDesc = "Kurze eindeutige Kennung (8 Zeichen)"
+variablesHelp = "Klicken Sie auf eine Variable, um sie in Ihren Stempeltext einzufügen. Verwenden Sie @@ für ein wörtliches @."
+yearMonthDayDesc = "Einzelne Datumsbestandteile"
 
 [AddStampRequest.error]
 failed = "Beim Hinzufügen des Stempels zum PDF ist ein Fehler aufgetreten."
@@ -389,17 +397,17 @@ failed = "Beim Hinzufügen des Stempels zum PDF ist ein Fehler aufgetreten."
 title = "Stempel-Ergebnisse"
 
 [AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-doc-info = "Document Info"
-draft = "Draft Watermark"
-draftWatermark = "Draft Watermark"
-european-date = "European Date (DD/MM/YYYY)"
-europeanDate = "European Date"
-legal-footer = "Legal Footer"
-page-numbers = "Page Numbers"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
+custom = "Benutzerdefiniert"
+dateHeader = "Datumskopfzeile"
+doc-info = "Dokument-Informationen"
+draft = "Entwurf-Wasserzeichen"
+draftWatermark = "Entwurf-Wasserzeichen"
+european-date = "Europäisches Datum (TT/MM/JJJJ)"
+europeanDate = "Europäisches Datum"
+legal-footer = "Rechtliche Fußzeile"
+page-numbers = "Seitenzahlen"
+pageNumberFooter = "Seitenzahl-Fußzeile"
+timestamp = "Zeitstempel"
 
 [addText]
 applySignatures = "Text anwenden"
@@ -510,7 +518,7 @@ success = "Erfolg"
 
 [admin.settings]
 discard = "Verwerfen"
-error = "Failed to save settings"
+error = "Einstellungen konnten nicht gespeichert werden"
 fetchError = "Einstellungen konnten nicht geladen werden"
 loginRequired = "Der Anmeldemodus muss aktiviert sein, um Admin-Einstellungen zu ändern"
 restartError = "Server konnte nicht neu gestartet werden. Bitte manuell neu starten."
@@ -521,7 +529,7 @@ save = "Änderungen speichern"
 saved = "Einstellungen erfolgreich gespeichert"
 saveError = "Einstellungen konnten nicht gespeichert werden"
 saveSuccess = "Einstellungen erfolgreich gespeichert"
-success = "Settings saved successfully"
+success = "Einstellungen erfolgreich gespeichert"
 title = "Admin-Einstellungen"
 workspace = "Arbeitsbereich"
 
@@ -635,7 +643,7 @@ noLanguages = "Keine tessdata-Sprachen im konfigurierten Verzeichnis gefunden."
 permissionNotice = "Der tessdata-Pfad ist nicht beschreibbar. Downloads werden im Browser geöffnet; bitte die .traineddata-Dateien manuell in den tessdata-Ordner speichern."
 
 [admin.settings.badge]
-clickToUpgrade = "Click to view plan details"
+clickToUpgrade = "Klicken Sie, um Plandetails anzuzeigen"
 
 [admin.settings.connections]
 connect = "Verbinden"
@@ -643,41 +651,41 @@ description = "Externe Authentifizierungsanbieter wie OAuth2 und SAML konfigurie
 disconnect = "Trennen"
 disconnected = "Anbieter erfolgreich getrennt"
 disconnectError = "Anbieter konnte nicht getrennt werden"
-imageResolutionFull = "Full (Original Size)"
-imageResolutionReduced = "Reduced (Max 1200px)"
+imageResolutionFull = "Voll (Originalgröße)"
+imageResolutionReduced = "Reduziert (Max 1200px)"
 linkedServices = "Verknüpfte Dienste"
-mobileScannerConvertToPdf = "Convert Images to PDF"
-mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
-mobileScannerImageResolution = "Image Resolution"
-mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
-mobileScannerPageFormat = "Page Format"
-mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
-mobileScannerStretchToFit = "Stretch to Fit"
-mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
+mobileScannerConvertToPdf = "Bilder in PDF konvertieren"
+mobileScannerConvertToPdfDesc = "Hochgeladene Bilder automatisch in das PDF-Format konvertieren. Falls deaktiviert, werden Bilder unverändert beibehalten."
+mobileScannerImageResolution = "Bildauflösung"
+mobileScannerImageResolutionDesc = "Auflösung der hochgeladenen Bilder. \"Reduziert\" skaliert Bilder auf maximal 1200px, um die Dateigröße zu reduzieren."
+mobileScannerPageFormat = "Seitenformat"
+mobileScannerPageFormatDesc = "PDF-Seitengröße für konvertierte Bilder. \"Beibehalten\" verwendet die ursprünglichen Bildabmessungen."
+mobileScannerStretchToFit = "Auf Seite strecken"
+mobileScannerStretchToFitDesc = "Bilder strecken, um die gesamte Seite zu füllen. Falls deaktiviert, werden Bilder zentriert mit erhaltenem Seitenverhältnis."
 pageFormatA4 = "A4 (210×297mm)"
-pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatKeep = "Beibehalten (Originalabmessungen)"
 pageFormatLetter = "Letter (8.5×11in)"
 title = "Verbindungen"
 unlinkedServices = "Nicht verknüpfte Dienste"
 
 [admin.settings.connections.mobileScanner]
-description = "Allow users to upload files from mobile devices by scanning a QR code"
-enable = "Enable QR Code Upload"
-imageResolutionFull = "Full (Original Size)"
-imageResolutionReduced = "Reduced (Max 1200px)"
-label = "Mobile Phone Upload"
-link = "Configure in System Settings"
-mobileScannerConvertToPdf = "Convert Images to PDF"
-mobileScannerConvertToPdfDesc = "Automatically convert uploaded images to PDF format. If disabled, images will be kept as-is."
-mobileScannerImageResolution = "Image Resolution"
-mobileScannerImageResolutionDesc = "Resolution of uploaded images. \"Reduced\" scales images to max 1200px to reduce file size."
-mobileScannerPageFormat = "Page Format"
-mobileScannerPageFormatDesc = "PDF page size for converted images. \"Keep\" uses original image dimensions."
-mobileScannerStretchToFit = "Stretch to Fit"
-mobileScannerStretchToFitDesc = "Stretch images to fill the entire page. If disabled, images are centered with preserved aspect ratio."
-note = "Note: Requires Frontend URL to be configured. "
+description = "Benutzern erlauben, Dateien von Mobilgeräten durch Scannen eines QR-Codes hochzuladen"
+enable = "QR-Code-Upload aktivieren"
+imageResolutionFull = "Voll (Originalgröße)"
+imageResolutionReduced = "Reduziert (Max 1200px)"
+label = "Mobiltelefon-Upload"
+link = "In Systemeinstellungen konfigurieren"
+mobileScannerConvertToPdf = "Bilder in PDF konvertieren"
+mobileScannerConvertToPdfDesc = "Hochgeladene Bilder automatisch in das PDF-Format konvertieren. Falls deaktiviert, werden Bilder unverändert beibehalten."
+mobileScannerImageResolution = "Bildauflösung"
+mobileScannerImageResolutionDesc = "Auflösung der hochgeladenen Bilder. \"Reduziert\" skaliert Bilder auf maximal 1200px, um die Dateigröße zu reduzieren."
+mobileScannerPageFormat = "Seitenformat"
+mobileScannerPageFormatDesc = "PDF-Seitengröße für konvertierte Bilder. \"Beibehalten\" verwendet die ursprünglichen Bildabmessungen."
+mobileScannerStretchToFit = "Auf Seite strecken"
+mobileScannerStretchToFitDesc = "Bilder strecken, um die gesamte Seite zu füllen. Falls deaktiviert, werden Bilder zentriert mit erhaltenem Seitenverhältnis."
+note = "Hinweis: Erfordert die Konfiguration der Frontend-URL. "
 pageFormatA4 = "A4 (210×297mm)"
-pageFormatKeep = "Keep (Original Dimensions)"
+pageFormatKeep = "Beibehalten (Originalabmessungen)"
 pageFormatLetter = "Letter (8.5×11in)"
 
 [admin.settings.connections.oauth2]
@@ -829,8 +837,9 @@ label = "Benutzername"
 [admin.settings.endpoints]
 description = "Steuern, welche API-Endpunkte und Endpunktgruppen verfügbar sind."
 management = "Endpunktverwaltung"
-note = "Hinweis: Das Deaktivieren von Endpunkten beschränkt den API-Zugriff, entfernt jedoch keine UI-Komponenten. Neustart erforderlich, damit Änderungen wirksam werden."
 title = "API-Endpunkte"
+userDefaults = "User Preference Defaults"
+userDefaultsDescription = "Set default values for user preferences. Users can override these in their personal settings."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "Zu deaktivierende Endpunktgruppen auswählen"
@@ -839,6 +848,14 @@ label = "Deaktivierte Endpunktgruppen"
 [admin.settings.endpoints.toRemove]
 description = "Einzelne zu deaktivierende Endpunkte auswählen"
 label = "Deaktivierte Endpunkte"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Remove disabled tools instead of showing them greyed out"
+label = "Hide unavailable tools by default"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Remove disabled conversion options instead of showing them greyed out"
+label = "Hide unavailable conversions by default"
 
 [admin.settings.enterpriseRequired]
 message = "Für den Zugriff auf {{featureName}} ist eine Enterprise-Lizenz erforderlich. Sie sehen zu Referenzzwecken Demodaten."
@@ -928,7 +945,7 @@ description = "Verzeichnis, in das verarbeitete PDFs ausgegeben werden (leer las
 label = "Verzeichnis für fertiggestellte Ordner"
 
 [admin.settings.general.customPaths.pipeline.pipelineDir]
-description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
+description = "Basisverzeichnis für Pipeline-Ressourcen (leer lassen für Standard: /pipeline)"
 label = "Pipeline Directory"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
@@ -936,7 +953,7 @@ description = "Verzeichnis, in dem die Pipeline nach eingehenden PDFs überwacht
 label = "Verzeichnis für überwachte Ordner"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
-description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
+description = "Verzeichnisse, in denen die Pipeline nach eingehenden PDFs sucht (eines pro Zeile oder durch Komma getrennt; leer lassen für Standard: /pipeline/watchedFolders)"
 label = "Watched Folders Directories"
 
 [admin.settings.general.defaultLocale]
@@ -948,7 +965,7 @@ description = "Maximale Dateiupload-Größe (z. B. 100MB, 1GB)"
 label = "Upload-Limit für Dateien"
 
 [admin.settings.general.frontendUrl]
-description = "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL."
+description = "Basis-URL für Frontend (z.B. https://pdf.example.com). Wird für E-Mail-Einladungslinks und mobile QR-Code-Uploads verwendet. Leer lassen, um Backend-URL zu verwenden."
 label = "Frontend URL"
 
 [admin.settings.general.homeDescription]
@@ -1031,8 +1048,8 @@ description = "Basis-URL für das Frontend (z. B. https://pdf.example.com). Wird
 label = "Frontend-URL"
 
 [admin.settings.mail.frontendUrlNote]
-link = "Configure in System Settings"
-note = "Note: Requires Frontend URL to be configured. "
+link = "In Systemeinstellungen konfigurieren"
+note = "Hinweis: Erfordert die Konfiguration der Frontend-URL. "
 
 [admin.settings.mail.host]
 description = "Hostname oder IP-Adresse Ihres SMTP-Servers"
@@ -1219,9 +1236,21 @@ label = "Schlüsselbereinigung aktivieren"
 description = "JWT-Signaturschlüssel automatisch regelmäßig rotieren"
 label = "Schlüsselrotation aktivieren"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "Anzahl der Tage, die alte JWT-Schlüssel zur Verifikation aufbewahrt werden"
-label = "Schlüsselaufbewahrung (Tage)"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Access token lifetime in minutes for web clients (default: 1440 = 24 hours)"
+label = "Web Token Expiry (minutes)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Access token lifetime in minutes for desktop clients. Desktop apps automatically detected via User-Agent and receive longer sessions for better UX (default: 43200 = 30 days)"
+label = "Desktop Token Expiry (minutes)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolerance for client/server time drift during token validation (default: 60 seconds)"
+label = "Clock Skew Tolerance (seconds)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "Allow token refresh within this many minutes after expiry (default: 15 minutes, max 3 attempts)"
+label = "Refresh Grace Period (minutes)"
 
 [admin.settings.security.jwt.persistence]
 description = "JWT-Schlüssel persistent speichern, damit Serverneustarts überstanden werden"
@@ -1252,106 +1281,106 @@ message = "OAuth2- und SAML2-Authentifizierungsanbieter wurden zur einfacheren V
 title = "Auf der Suche nach SSO/SAML-Einstellungen?"
 
 [admin.settings.security.xFrameOptions]
-deny = "Deny (Prevents all framing)"
-description = "Controls whether the application can be embedded in iframes"
+deny = "Verweigern (Verhindert jegliches Einbetten)"
+description = "Steuert, ob die Anwendung in iframes eingebettet werden kann"
 disabled = "Disabled (No X-Frame-Options header)"
 label = "X-Frame-Options"
-sameorigin = "Same Origin (Allow framing from same domain)"
+sameorigin = "Gleiche Herkunft (Einbetten von derselben Domain erlauben)"
 
 [admin.settings.telegram]
-description = "Configure Telegram bot connectivity, access controls, and feedback behavior."
+description = "Telegram-Bot-Konnektivität, Zugriffskontrollen und Feedback-Verhalten konfigurieren."
 title = "Telegram Bot"
 
 [admin.settings.telegram.accessControl]
-description = "Restrict which users or channels can interact with the bot."
+description = "Einschränken, welche Benutzer oder Kanäle mit dem Bot interagieren können."
 title = "Access Control"
 
 [admin.settings.telegram.allowChannelIDs]
-description = "Enter Telegram channel IDs allowed to interact with the bot."
+description = "Telegram-Kanal-IDs eingeben, die mit dem Bot interagieren dürfen."
 label = "Allowed Channel IDs"
-placeholder = "Add channel ID and press enter"
+placeholder = "Kanal-ID hinzufügen und Enter drücken"
 
 [admin.settings.telegram.allowUserIDs]
-description = "Enter Telegram user IDs allowed to interact with the bot."
+description = "Telegram-Benutzer-IDs eingeben, die mit dem Bot interagieren dürfen."
 label = "Allowed User IDs"
-placeholder = "Add user ID and press enter"
+placeholder = "Benutzer-ID hinzufügen und Enter drücken"
 
 [admin.settings.telegram.botToken]
-description = "API token provided by BotFather for your Telegram bot."
+description = "API-Token, das von BotFather für Ihren Telegram-Bot bereitgestellt wird."
 label = "Bot Token"
 
 [admin.settings.telegram.botUsername]
-description = "The public username of your Telegram bot."
+description = "Der öffentliche Benutzername Ihres Telegram-Bots."
 label = "Bot Username"
 
 [admin.settings.telegram.customFolderSuffix]
-description = "Append the chat ID to incoming file folders to isolate uploads per chat."
+description = "Chat-ID an eingehende Dateiordner anhängen, um Uploads pro Chat zu isolieren."
 label = "Use Custom Folder Suffix"
 
 [admin.settings.telegram.enableAllowChannelIDs]
-description = "When enabled, only listed channel IDs can use the bot."
+description = "Wenn aktiviert, können nur aufgelistete Kanal-IDs den Bot verwenden."
 label = "Allow Specific Channel IDs"
 
 [admin.settings.telegram.enableAllowUserIDs]
-description = "When enabled, only listed user IDs can use the bot."
+description = "Wenn aktiviert, können nur aufgelistete Benutzer-IDs den Bot verwenden."
 label = "Allow Specific User IDs"
 
 [admin.settings.telegram.enabled]
-description = "Allow users to interact with Stirling PDF through your configured Telegram bot."
-label = "Enable Telegram Bot"
+description = "Benutzern erlauben, über Ihren konfigurierten Telegram-Bot mit Stirling PDF zu interagieren."
+label = "Telegram-Bot aktivieren"
 
 [admin.settings.telegram.feedback]
-description = "Choose when the bot should send feedback to users and channels."
+description = "Wählen Sie, wann der Bot Feedback an Benutzer und Kanäle senden soll."
 title = "Feedback Messages"
 
 [admin.settings.telegram.feedback.channel]
 title = "Channel Feedback Rules"
 
 [admin.settings.telegram.feedback.channel.errorMessage]
-description = "Show detailed error messages for channels."
+description = "Detaillierte Fehlermeldungen für Kanäle anzeigen."
 label = "Show error messages (Channel)"
 
 [admin.settings.telegram.feedback.channel.errorProcessing]
-description = "Send processing error messages to channels."
+description = "Verarbeitungsfehlermeldungen an Kanäle senden."
 label = "Show processing errors (Channel)"
 
 [admin.settings.telegram.feedback.channel.noValidDocument]
-description = "Suppress the no valid document response for channel uploads."
+description = "Die Antwort 'kein gültiges Dokument' für Kanal-Uploads unterdrücken."
 label = "Show \"No valid document\" (Channel)"
 
 [admin.settings.telegram.feedback.general.enabled]
-description = "Control whether the bot sends feedback messages at all."
-label = "Enable Feedback"
+description = "Steuern, ob der Bot überhaupt Feedback-Nachrichten sendet."
+label = "Feedback aktivieren"
 
 [admin.settings.telegram.feedback.user]
 title = "User Feedback Rules"
 
 [admin.settings.telegram.feedback.user.errorMessage]
-description = "Show detailed error messages for users."
+description = "Detaillierte Fehlermeldungen für Benutzer anzeigen."
 label = "Show error messages (User)"
 
 [admin.settings.telegram.feedback.user.errorProcessing]
-description = "Send processing error messages to users."
+description = "Verarbeitungsfehlermeldungen an Benutzer senden."
 label = "Show processing errors (User)"
 
 [admin.settings.telegram.feedback.user.noValidDocument]
-description = "Suppress the no valid document response for user uploads."
+description = "Die Antwort 'kein gültiges Dokument' für Benutzer-Uploads unterdrücken."
 label = "Show \"No valid document\" (User)"
 
 [admin.settings.telegram.pipelineInboxFolder]
-description = "Folder under the pipeline directory where incoming Telegram files are stored."
+description = "Ordner im Pipeline-Verzeichnis, in dem eingehende Telegram-Dateien gespeichert werden."
 label = "Inbox Folder"
 
 [admin.settings.telegram.pollingIntervalMillis]
-description = "Interval between checks for new Telegram updates."
+description = "Intervall zwischen Prüfungen auf neue Telegram-Updates."
 label = "Polling Interval (ms)"
 
 [admin.settings.telegram.processing]
-description = "Control polling intervals and processing timeouts for Telegram uploads."
+description = "Polling-Intervalle und Verarbeitungs-Timeouts für Telegram-Uploads steuern."
 title = "Processing"
 
 [admin.settings.telegram.processingTimeoutSeconds]
-description = "Maximum time to wait for a processing job before reporting an error."
+description = "Maximale Wartezeit für einen Verarbeitungsauftrag, bevor ein Fehler gemeldet wird."
 label = "Processing Timeout (seconds)"
 
 [admin.settings.unsavedChanges]
@@ -1422,13 +1451,16 @@ applyChanges = "Änderungen anwenden"
 backgroundColor = "Hintergrundfarbe"
 borderOff = "Rahmen: Aus"
 borderOn = "Rahmen: Ein"
+changeColor = "Change Colour"
 chooseColor = "Farbe wählen"
 circle = "Kreis"
 clearBackground = "Hintergrund entfernen"
 color = "Farbe"
 contents = "Text"
+delete = "Delete"
 desc = "Markieren, Stift, Text und Notizen verwenden. Änderungen bleiben live – kein Abflachen erforderlich."
 drawing = "Zeichnung"
+duplicate = "Duplicate"
 editCircle = "Kreis bearbeiten"
 editInk = "Stift bearbeiten"
 editLine = "Linie bearbeiten"
@@ -1458,6 +1490,7 @@ notesStamps = "Notizen & Stempel"
 opacity = "Deckkraft"
 pen = "Stift"
 polygon = "Polygon"
+properties = "Properties"
 rectangle = "Rechteck"
 redo = "Wiederholen"
 saveChanges = "Save Changes"
@@ -1483,6 +1516,7 @@ title = "Annotieren"
 underline = "Unterstreichen"
 undo = "Rückgängig"
 unsupportedType = "Dieser Anmerkungstyp wird für die Bearbeitung nicht vollständig unterstützt."
+width = "Width"
 
 [app]
 description = "Die kostenlose Adobe Acrobat Alternative (über 10 Millionen Downloads)"
@@ -2285,7 +2319,7 @@ title = "Diese PDFs sehen sehr unterschiedlich aus"
 
 [compare.edited]
 label = "Bearbeitetes PDF"
-placeholder = "Select the edited PDF"
+placeholder = "Bearbeitete PDF auswählen"
 
 [compare.error]
 filesMissing = "Die ausgewählten Dateien konnten nicht gefunden werden. Bitte wählen Sie sie erneut aus."
@@ -2462,11 +2496,11 @@ usage = "Fügen Sie diesen Schlüssel bei allen API-Anfragen im X-API-KEY-Header
 [config.apiKeys.alert]
 apiKeyErrorTitle = "API Key Error"
 apiKeyRefreshed = "API Key Refreshed"
-apiKeyRefreshedBody = "Your API key has been successfully refreshed."
-failedToCreateApiKey = "Failed to create API key."
-failedToFetchApiKey = "Failed to fetch API key."
-failedToRefreshApiKey = "Failed to refresh API key."
-failedToRetrieveApiKey = "Failed to retrieve API key from response."
+apiKeyRefreshedBody = "Ihr API-Schlüssel wurde erfolgreich aktualisiert."
+failedToCreateApiKey = "API-Schlüssel konnte nicht erstellt werden."
+failedToFetchApiKey = "API-Schlüssel konnte nicht abgerufen werden."
+failedToRefreshApiKey = "API-Schlüssel konnte nicht aktualisiert werden."
+failedToRetrieveApiKey = "API-Schlüssel konnte nicht aus der Antwort abgerufen werden."
 
 [config.apiKeys.refreshModal]
 confirmCta = "Schlüssel aktualisieren"
@@ -2503,7 +2537,7 @@ colorType = "Farbtyp"
 combineImages = "Bilder kombinieren"
 combineImagesDescription = "Alle Bilder in eine PDF kombinieren oder separate PDFs für jedes Bild erstellen"
 combineSvgs = "Combine SVGs into single PDF"
-combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+combineSvgsDescription = "Alle SVG-Dateien in ein PDF mit mehreren Seiten kombinieren oder separate PDFs für jedes SVG erstellen"
 conversionCompleted = "Konvertierung abgeschlossen"
 conversionResults = "Konvertierungsergebnisse"
 convertFiles = "Dateien konvertieren"
@@ -2561,9 +2595,9 @@ settings = "Einstellungen"
 single = "Einzeln"
 sourceFormatPlaceholder = "Quellformat"
 strictMode = "Strict Mode"
-strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
-svgPdfOptions = "SVG to PDF Options"
-svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
+strictModeDesc = "Fehler, wenn Konvertierung nicht perfekt ist (verwendet VeraPDF-Überprüfung)"
+svgPdfOptions = "SVG zu PDF-Optionen"
+svgVectorNote = "SVG-Dateien werden als Vektorgrafiken für gestochen scharfe Ausgabe in jeder Auflösung gerendert. Die Abmessungen des SVG bestimmen die PDF-Seitengröße."
 targetFormatPlaceholder = "Zielformat"
 textRtf = "Text/RTF"
 title = "Umwandeln"
@@ -2587,15 +2621,15 @@ optimizeForEbookPdfDesc = "PDF für das Lesen auf E-Book-Readern optimieren (kle
 
 [convert.epubOptions]
 detectChapters = "Detect chapters"
-detectChaptersDesc = "Detect headings that look like chapters and insert EPUB page breaks"
-epubOptions = "PDF to eBook Options"
-epubOptionsDesc = "Options for converting PDF to EPUB/AZW3"
+detectChaptersDesc = "Überschriften erkennen, die wie Kapitel aussehen, und EPUB-Seitenumbrüche einfügen"
+epubOptions = "PDF zu eBook-Optionen"
+epubOptionsDesc = "Optionen für die Konvertierung von PDF zu EPUB/AZW3"
 kindleEink = "Kindle e-Ink (text optimized)"
 outputFormat = "Output format"
-outputFormatDesc = "Choose the output format for the ebook"
-tabletPhone = "Tablet/Phone (with images)"
+outputFormatDesc = "Ausgabeformat für das eBook wählen"
+tabletPhone = "Tablet/Telefon (mit Bildern)"
 targetDevice = "Target device"
-targetDeviceDesc = "Choose an output profile optimized for the reader device"
+targetDeviceDesc = "Ein für das Lesegerät optimiertes Ausgabeprofil wählen"
 
 [cookieBanner.popUp]
 acceptAllBtn = "OK"
@@ -2983,7 +3017,7 @@ loadingHistory = "Lade Verlauf..."
 localFiles = "Lokale Dateien"
 mobileShort = "Mobile"
 mobileUpload = "Mobile Upload"
-mobileUploadNotAvailable = "Mobile upload not enabled"
+mobileUploadNotAvailable = "Mobiler Upload nicht aktiviert"
 myFiles = "Meine Dateien"
 noFiles = "Keine Dateien verfügbar"
 noFileSelected = "Keine Dateien ausgewählt"
@@ -3312,6 +3346,10 @@ desc = "Mehrstufige Arbeitsabläufe durch Verkettung von PDF-Aktionen erstellen.
 tags = "arbeitsablauf,sequenz,automatisierung"
 title = "Automatisieren"
 
+[home.formFill]
+desc = "Fill PDF form fields interactively with a visual editor"
+title = "Fill Form"
+
 [home.autoRename]
 desc = "Benennt eine PDF-Datei automatisch basierend auf der erkannten Überschrift um"
 tags = "auto-erkennung,kopfzeilen-basiert,organisieren,umbenennen"
@@ -3344,7 +3382,7 @@ title = "Metadaten ändern"
 
 [home.changePermissions]
 desc = "Dokumentbeschränkungen und -berechtigungen ändern"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
+tags = "berechtigungen,einschränkungen,rechte,zugriffskontrolle,erlauben,verweigern,drucken,kopieren,bearbeiten,berechtigungen ändern,sicherheitseinstellungen,benutzerrechte"
 title = "Berechtigungen ändern"
 
 [home.compare]
@@ -3459,7 +3497,7 @@ title = "Organisieren"
 
 [home.pdfTextEditor]
 desc = "Vorhandenen Text und Bilder in PDFs bearbeiten"
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
+tags = "text bearbeiten,text ändern,text modifizieren,inhalt bearbeiten,text aktualisieren,umschreiben,korrigieren,ändern,durchstreichen,überarbeiten,texteditor,inhaltseditor"
 title = "PDF-Texteditor"
 
 [home.pdfToSinglePage]
@@ -3519,7 +3557,7 @@ title = "Reparatur"
 
 [home.replaceColor]
 desc = "Farben in PDF-Dokumenten ersetzen oder invertieren"
-tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
+tags = "farbe ersetzen,farbe invertieren,farbersetzung,farben tauschen,farbe ändern,invertieren,negativ,farbtausch,farbe suchen und ersetzen,farbe konvertieren,farbwechsel"
 title = "Farbe ersetzen & invertieren"
 
 [home.rotate]
@@ -3665,7 +3703,7 @@ welcomeTitle = "Sie wurden eingeladen!"
 
 [landing]
 addFiles = "Dateien hinzufügen"
-mobileUpload = "Upload from Mobile"
+mobileUpload = "Von Mobilgerät hochladen"
 openFromComputer = "Vom Computer öffnen"
 uploadFromComputer = "Vom Computer hochladen"
 
@@ -3824,35 +3862,35 @@ sort = "Sortieren"
 title = "Übersicht zu Zusammenführen-Einstellungen"
 
 [mobileScanner]
-addToBatch = "Add to Batch"
+addToBatch = "Zum Stapel hinzufügen"
 back = "Back"
 batchImages = "Batch"
 camera = "Camera"
-cameraAccessDenied = "Camera access denied. Please enable camera access."
-cameraDescription = "Scan documents using your device camera with automatic edge detection"
+cameraAccessDenied = "Kamerazugriff verweigert. Bitte aktivieren Sie den Kamerazugriff."
+cameraDescription = "Dokumente mit der Gerätekamera mit automatischer Kantenerkennung scannen"
 capture = "Capture Photo"
 chooseMethod = "Choose Upload Method"
-chooseMethodDescription = "Select how you want to scan and upload documents"
+chooseMethodDescription = "Wählen Sie, wie Sie Dokumente scannen und hochladen möchten"
 clearBatch = "Clear"
 connected = "Connected"
 connecting = "Connecting..."
 edgeDetection = "Edge Detection"
-fileDescription = "Upload existing photos or documents from your device"
+fileDescription = "Vorhandene Fotos oder Dokumente von Ihrem Gerät hochladen"
 fileUpload = "File Upload"
 flash = "Flash"
 flashlight = "Flashlight"
-httpsRequired = "Camera access requires HTTPS or localhost. Please use HTTPS or access via localhost."
+httpsRequired = "Kamerazugriff erfordert HTTPS oder localhost. Bitte verwenden Sie HTTPS oder greifen Sie über localhost zu."
 noSession = "Invalid Session"
-noSessionMessage = "Please scan a valid QR code to access this page."
+noSessionMessage = "Bitte scannen Sie einen gültigen QR-Code, um auf diese Seite zuzugreifen."
 preview = "Preview"
 processing = "Processing..."
 retake = "Retake"
-selectFilesPrompt = "Select files to upload"
+selectFilesPrompt = "Dateien zum Hochladen auswählen"
 selectImage = "Select Image"
-sessionExpired = "This session has expired. Please refresh and try again."
+sessionExpired = "Diese Sitzung ist abgelaufen. Bitte aktualisieren Sie und versuchen Sie es erneut."
 sessionInvalid = "Session Error"
-sessionNotFound = "Session not found. Please refresh and try again."
-sessionValidationError = "Unable to verify session. Please try again."
+sessionNotFound = "Sitzung nicht gefunden. Bitte aktualisieren Sie und versuchen Sie es erneut."
+sessionValidationError = "Sitzung kann nicht verifiziert werden. Bitte versuchen Sie es erneut."
 settings = "Settings"
 title = "Mobile Scanner"
 upload = "Upload"
@@ -3860,23 +3898,23 @@ uploadAll = "Upload All"
 uploadFailed = "Upload failed. Please try again."
 uploading = "Uploading..."
 uploadSuccess = "Upload Successful!"
-uploadSuccessMessage = "Your images have been transferred."
+uploadSuccessMessage = "Ihre Bilder wurden übertragen."
 validating = "Validating session..."
 
 [mobileUpload]
 connected = "Mobile device connected"
-description = "Scan to upload photos. Images auto-convert to PDF."
-descriptionNoConvert = "Scan to upload photos from your mobile device."
+description = "Scannen Sie, um Fotos hochzuladen. Bilder werden automatisch in PDF konvertiert."
+descriptionNoConvert = "Scannen Sie, um Fotos von Ihrem Mobilgerät hochzuladen."
 error = "Connection Error"
 expiryWarning = "Session Expiring Soon"
-expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
+expiryWarningMessage = "Dieser QR-Code läuft in {{seconds}} Sekunden ab. Ein neuer Code wird automatisch generiert."
 filesReceived = "{{count}} file(s) received"
-instructions = "Scan with your phone camera. Images convert to PDF automatically."
-instructionsNoConvert = "Scan with your phone camera to upload files."
-pollingError = "Error checking for files"
-sessionCreateError = "Failed to create session"
+instructions = "Mit Ihrer Telefonkamera scannen. Bilder werden automatisch in PDF konvertiert."
+instructionsNoConvert = "Mit Ihrer Telefonkamera scannen, um Dateien hochzuladen."
+pollingError = "Fehler beim Prüfen auf Dateien"
+sessionCreateError = "Sitzung konnte nicht erstellt werden"
 sessionId = "Session ID"
-title = "Upload from Mobile"
+title = "Von Mobilgerät hochladen"
 
 [multiTool]
 addFile = "Datei hinzufügen"
@@ -4209,6 +4247,75 @@ title = "Seiten-Editor"
 zoomIn = "Vergrößern"
 zoomOut = "Verkleinern"
 
+[viewer]
+cannotPreviewFile = "Datei kann nicht in der Vorschau angezeigt werden"
+dualPageView = "Doppelseitenansicht"
+firstPage = "Erste Seite"
+lastPage = "Letzte Seite"
+nextPage = "Nächste Seite"
+onlyPdfSupported = "Der Viewer unterstützt nur PDF-Dateien. Diese Datei scheint ein anderes Format zu haben."
+previousPage = "Vorherige Seite"
+singlePageView = "Einzelseitenansicht"
+unknownFile = "Unbekannte Datei"
+zoomIn = "Vergrößern"
+zoomOut = "Verkleinern"
+
+[viewer.attachments]
+title = "Attachments"
+searchPlaceholder = "Search attachments"
+noSupport = "Attachment support is unavailable for this viewer."
+noDocument = "Open a PDF to view its attachments."
+loading = "Loading attachments..."
+empty = "No attachments in this document"
+noMatch = "No attachments match your search"
+
+[viewer.formBar]
+title = "Form Fields"
+unsavedBadge = "Unsaved"
+unsavedDesc = "You have unsaved changes"
+hasFieldsDesc = "This PDF contains fillable fields"
+dismiss = "Dismiss"
+apply = "Apply Changes"
+download = "Download PDF"
+
+[rightRail]
+closeSelected = "Ausgewählte Dateien schließen"
+selectAll = "Alle auswählen"
+deselectAll = "Auswahl aufheben"
+selectByNumber = "Nach Seitenzahlen auswählen"
+deleteSelected = "Ausgewählte Seiten löschen"
+closePdf = "PDF schließen"
+exportAll = "PDF exportieren"
+downloadSelected = "Ausgewählte Dateien herunterladen"
+annotations = "Annotations"
+exportSelected = "Ausgewählte Seiten exportieren"
+formFill = "Fill Form"
+saveChanges = "Änderungen speichern"
+toggleAttachments = "Toggle Attachments"
+toggleTheme = "Design wechseln"
+language = "Sprache"
+toggleAnnotations = "Anmerkungen ein-/ausblenden"
+search = "PDF durchsuchen"
+panMode = "Verschiebemodus"
+applyRedactionsFirst = "Apply redactions first"
+rotateLeft = "Nach links drehen"
+rotateRight = "Nach rechts drehen"
+toggleSidebar = "Seitenleiste umschalten"
+toggleBookmarks = "Lesezeichen ein-/ausblenden"
+print = "PDF drucken"
+ruler = "Lineal / Messen"
+draw = "Draw"
+redact = "Redact"
+exitRedaction = "Exit Redaction Mode"
+save = "Save"
+downloadAll = "Alle herunterladen"
+saveAll = "Alle speichern"
+
+[textAlign]
+left = "Links"
+center = "Zentriert"
+right = "Rechts"
+
 [pageExtracter]
 header = "Seiten extrahieren"
 placeholder = "(z.B. 1,2,8 oder 4,7,12-16 oder 2n-1)"
@@ -4241,7 +4348,7 @@ submit = "Seiten löschen"
 title = "Seiten entfernen"
 
 [pageSelection.tooltip]
-description = "Wählen Sie, welche Seiten für den Vorgang verwendet werden. Unterstützt Einzelseiten, Bereiche, Formeln und das Schlüsselwort all."
+description = "Wählen Sie, welche Seiten für den Vorgang verwendet werden. Unterstützt Einzelseiten, Bereiche, Formeln und das Schlüsselwort alle."
 
 [pageSelection.tooltip.advanced]
 title = "Erweiterte Funktionen"
@@ -4888,19 +4995,22 @@ failed = "Ein Fehler ist beim Schwärzen der PDF aufgetreten."
 apply = "Apply"
 applyChanges = "Änderungen anwenden"
 applyRedactions = "Apply Redactions"
-applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
+applyWarning = "⚠️ Permanente Anwendung, kann nicht rückgängig gemacht werden und die darunterliegenden Daten werden gelöscht"
 boxRedaction = "Kasten-Zeichen-Schwärzung"
 colourPicker = "Farbwähler"
+colorLabel = "Redaction Colour"
+active = "Redaction Mode Active"
+activate = "Activate Redaction Tool"
 controlsTitle = "Manual Redaction Controls"
 convertPDFToImageLabel = "PDF zu PDF-Bild konvertieren (Verwendet, um Text hinter dem Kasten zu entfernen)"
 export = "Herunterladen"
 findCurrentOutlineItem = "Aktuelles Gliederungselement finden"
 header = "Manuelle Schwärzung"
-instructions = "Select text or draw areas on the PDF to mark content for redaction."
+instructions = "Text auswählen oder Bereiche auf dem PDF zeichnen, um Inhalte zur Schwärzung zu markieren."
 markArea = "Mark Area"
 markText = "Mark Text"
 nextPage = "Nächste Seite"
-noMarks = "No redaction marks. Use the tools above to mark content for redaction."
+noMarks = "Keine Schwärzungsmarkierungen. Verwenden Sie die obigen Werkzeuge, um Inhalte zur Schwärzung zu markieren."
 pageBasedRedaction = "Seitenbasierte Schwärzung"
 pendingLabel = "Pending:"
 previousPage = "Vorherige Seite"
@@ -4926,7 +5036,7 @@ title = "Schwärzungsfarbe"
 [redact.modeSelector]
 automatic = "Automatisch"
 automaticDesc = "Text basierend auf Suchbegriffen schwärzen"
-automaticDisabledTooltip = "Select files in the file manager to redact multiple files at once"
+automaticDisabledTooltip = "Wählen Sie Dateien im Dateimanager aus, um mehrere Dateien auf einmal zu schwärzen"
 manual = "Manuell"
 manualComingSoon = "Manuelle Schwärzung kommt bald"
 manualDesc = "Klicken und ziehen zum Schwärzen bestimmter Bereiche"
@@ -4956,20 +5066,20 @@ title = "Ganze Wörter suchen"
 
 [redact.tooltip.manual.apply]
 bullet1 = "Mark as many areas as needed before applying"
-bullet2 = "All pending redactions are applied at once"
-bullet3 = "Redactions cannot be undone after applying"
-text = "After marking content, click 'Apply' to permanently redact all marked areas. The pending count shows how many redactions are ready to be applied."
+bullet2 = "Alle ausstehenden Schwärzungen werden auf einmal angewendet"
+bullet3 = "Schwärzungen können nach der Anwendung nicht rückgängig gemacht werden"
+text = "Nachdem Sie Inhalte markiert haben, klicken Sie auf 'Anwenden', um alle markierten Bereiche dauerhaft zu schwärzen. Die Anzahl der ausstehenden Schwärzungen zeigt, wie viele zur Anwendung bereit sind."
 title = "Apply Redactions"
 
 [redact.tooltip.manual.header]
 title = "Manual Redaction Controls"
 
 [redact.tooltip.manual.markArea]
-text = "Draw rectangular areas on the PDF to mark regions for redaction. Useful for redacting images, signatures, or irregular shapes."
+text = "Rechteckige Bereiche auf dem PDF zeichnen, um Regionen zur Schwärzung zu markieren. Nützlich zum Schwärzen von Bildern, Unterschriften oder unregelmäßigen Formen."
 title = "Mark Area Tool"
 
 [redact.tooltip.manual.markText]
-text = "Select text directly on the PDF to mark it for redaction. Click and drag to highlight specific text that you want to redact."
+text = "Text direkt auf dem PDF auswählen, um ihn zur Schwärzung zu markieren. Klicken und ziehen Sie, um bestimmten Text zu markieren, den Sie schwärzen möchten."
 title = "Mark Text Tool"
 
 [redact.tooltip.mode.automatic]
@@ -5286,36 +5396,6 @@ title = "Hoher Kontrast"
 text = "Alle Farben im PDF vollständig invertieren und einen negativähnlichen Effekt erzeugen. Nützlich, um Dark-Mode-Versionen von Dokumenten zu erstellen oder die Augenbelastung bei schwachem Licht zu reduzieren."
 title = "Alle Farben invertieren"
 
-[rightRail]
-annotations = "Annotations"
-applyRedactionsFirst = "Apply redactions first"
-closePdf = "PDF schließen"
-closeSelected = "Ausgewählte Dateien schließen"
-deleteSelected = "Ausgewählte Seiten löschen"
-deselectAll = "Auswahl aufheben"
-downloadAll = "Alle herunterladen"
-downloadSelected = "Ausgewählte Dateien herunterladen"
-draw = "Draw"
-exitRedaction = "Exit Redaction Mode"
-exportAll = "PDF exportieren"
-exportSelected = "Ausgewählte Seiten exportieren"
-language = "Sprache"
-panMode = "Verschiebemodus"
-print = "PDF drucken"
-redact = "Redact"
-rotateLeft = "Nach links drehen"
-rotateRight = "Nach rechts drehen"
-save = "Save"
-saveAll = "Alle speichern"
-saveChanges = "Änderungen speichern"
-search = "PDF durchsuchen"
-selectAll = "Alle auswählen"
-selectByNumber = "Nach Seitenzahlen auswählen"
-toggleAnnotations = "Anmerkungen ein-/ausblenden"
-toggleBookmarks = "Lesezeichen ein-/ausblenden"
-toggleSidebar = "Seitenleiste umschalten"
-toggleTheme = "Design wechseln"
-
 [rotate]
 rotateLeft = "Gegen den Uhrzeigersinn drehen"
 rotateRight = "Im Uhrzeigersinn drehen"
@@ -5532,13 +5612,13 @@ currentBackendVersion = "Current Backend Version"
 currentFrontendVersion = "Current Frontend Version"
 description = "Nach Updates suchen und Versionsinformationen anzeigen"
 latestVersion = "Neueste Version"
-serverNeedsUpdate = "Server needs to be updated by administrator"
+serverNeedsUpdate = "Server muss vom Administrator aktualisiert werden"
 title = "Software-Updates"
-versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
+versionMismatch = "Warnung: Eine Nichtübereinstimmung wurde zwischen der Client-Version und der AppConfig-Version erkannt. Die Verwendung verschiedener Versionen kann zu Kompatibilitätsproblemen, Fehlern und Sicherheitsrisiken führen. Bitte stellen Sie sicher, dass Server und Client dieselbe Version verwenden."
 viewDetails = "Details anzeigen"
 
 [settings.general.versionInfo]
-description = "Desktop and server version details"
+description = "Desktop- und Server-Versionsdetails"
 desktop = "Desktop Version"
 server = "Server Version"
 title = "Version Information"
@@ -5674,7 +5754,7 @@ useLast = "Last used server: {{serverUrl}}"
 [setup.server.error]
 configFetch = "Serverkonfiguration konnte nicht abgerufen werden. Bitte überprüfen Sie die URL und versuchen Sie es erneut."
 emptyUrl = "Bitte eine Server-URL eingeben"
-invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
+invalidUrl = "Ungültiges URL-Format. Bitte geben Sie eine gültige URL ein wie https://ihr-server.de"
 testFailed = "Verbindungstest fehlgeschlagen"
 unreachable = "Verbindung zum Server konnte nicht hergestellt werden"
 
@@ -6153,11 +6233,6 @@ title = "API-Dokumentation"
 [tableExtraxt]
 tags = "CSV,tabelle,extrahieren"
 
-[textAlign]
-center = "Zentriert"
-left = "Links"
-right = "Rechts"
-
 [theme]
 toggle = "Design umschalten"
 
@@ -6432,19 +6507,6 @@ invalid = "Zertifikat nicht im Truststore - Quelle kann nicht verifiziert werden
 fileManager = "Dateiverwaltung"
 pageEditor = "Seiteneditor"
 viewer = "Betrachter"
-
-[viewer]
-cannotPreviewFile = "Datei kann nicht in der Vorschau angezeigt werden"
-dualPageView = "Doppelseitenansicht"
-firstPage = "Erste Seite"
-lastPage = "Letzte Seite"
-nextPage = "Nächste Seite"
-onlyPdfSupported = "Der Viewer unterstützt nur PDF-Dateien. Diese Datei scheint ein anderes Format zu haben."
-previousPage = "Vorherige Seite"
-singlePageView = "Einzelseitenansicht"
-unknownFile = "Unbekannte Datei"
-zoomIn = "Vergrößern"
-zoomOut = "Verkleinern"
 
 [viewPdf]
 header = "PDF anzeigen"

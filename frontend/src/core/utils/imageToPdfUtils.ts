@@ -1,4 +1,4 @@
-import { PDFDocument, PageSizes } from 'pdf-lib';
+import { PDFDocument, PageSizes } from '@cantoo/pdf-lib';
 
 export interface ImageToPdfOptions {
   imageResolution?: 'full' | 'reduced';
@@ -139,7 +139,8 @@ export async function convertImageToPdf(
   } catch (error) {
     console.error('Error converting image to PDF:', error);
     throw new Error(
-      `Failed to convert image to PDF: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Failed to convert image to PDF: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      { cause: error }
     );
   }
 }

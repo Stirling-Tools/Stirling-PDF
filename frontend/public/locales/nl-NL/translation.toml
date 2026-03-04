@@ -17,6 +17,12 @@ confirmClose = "Sluiten bevestigen"
 confirmCloseCancel = "Annuleren"
 confirmCloseConfirm = "Bestand sluiten"
 confirmCloseMessage = "Weet u zeker dat u dit bestand wilt sluiten?"
+confirmCloseDiscard = "Wijzigingen verwerpen en sluiten"
+confirmCloseSave = "Opslaan en sluiten"
+confirmCloseUnsaved = "Dit bestand heeft niet-opgeslagen wijzigingen."
+confirmCloseUnsavedList = "U heeft {{count}} bestand{{plural}} met niet-opgeslagen wijzigingen.\n\n{{fileList}}"
+confirmCloseSaveFailedTitle = "Opslaan mislukt"
+confirmCloseSaveFailed = "Opgeslagen met fouten. {{count}} bestand{{plural}} kon niet worden opgeslagen."
 confirmPasswordErrorMessage = "Nieuw wachtwoord en bevestig wachtwoord moeten overeenkomen."
 custom = "Aangepast..."
 customPosition = "Aangepaste positie"
@@ -39,6 +45,8 @@ edit = "Bewerken"
 editYourNewFiles = "Uw nieuwe bestand(en) bewerken"
 exportAndContinue = "Exporteren en doorgaan"
 false = "Onwaar"
+fileSavedToDisk = "Bestand opgeslagen op schijf"
+fileNotSavedToDisk = "Niet op schijf opgeslagen"
 fileSelected = "Geselecteerd: {{filename}}"
 filesSelected = "Bestanden geselecteerd"
 font = "Lettertype"
@@ -829,8 +837,9 @@ label = "Gebruikersnaam"
 [admin.settings.endpoints]
 description = "Bepaal welke API-endpoints en endpointgroepen beschikbaar zijn."
 management = "Endpointbeheer"
-note = "Opmerking: Het uitschakelen van endpoints beperkt de API-toegang maar verwijdert geen UI-onderdelen. Herstart vereist om wijzigingen door te voeren."
 title = "API-endpoints"
+userDefaults = "Standaardinstellingen voor gebruikersvoorkeuren"
+userDefaultsDescription = "Stel standaardwaarden in voor gebruikersvoorkeuren. Gebruikers kunnen deze overschrijven in hun persoonlijke instellingen."
 
 [admin.settings.endpoints.groupsToRemove]
 description = "Selecteer endpointgroepen om uit te schakelen"
@@ -839,6 +848,14 @@ label = "Uitgeschakelde endpointgroepen"
 [admin.settings.endpoints.toRemove]
 description = "Selecteer afzonderlijke endpoints om uit te schakelen"
 label = "Uitgeschakelde endpoints"
+
+[admin.settings.endpoints.defaultHideUnavailableTools]
+description = "Uitgeschakelde tools verbergen in plaats van ze grijs weer te geven"
+label = "Onbeschikbare tools standaard verbergen"
+
+[admin.settings.endpoints.defaultHideUnavailableConversions]
+description = "Uitgeschakelde conversieopties verbergen in plaats van ze grijs weer te geven"
+label = "Onbeschikbare conversies standaard verbergen"
 
 [admin.settings.enterpriseRequired]
 message = "Voor toegang tot {{featureName}} is een Enterprise-licentie vereist. U bekijkt demogegevens ter referentie."
@@ -1219,9 +1236,21 @@ label = "Opschonen van sleutels inschakelen"
 description = "JWT-ondertekeningssleutels automatisch periodiek roteren"
 label = "Sleutelrotatie inschakelen"
 
-[admin.settings.security.jwt.keyRetentionDays]
-description = "Aantal dagen dat oude JWT-sleutels voor verificatie bewaard blijven"
-label = "Bewaartermijn sleutels (dagen)"
+[admin.settings.security.jwt.tokenExpiryMinutes]
+description = "Levensduur van toegangstoken in minuten voor webclients (standaard: 1440 = 24 uur)"
+label = "Vervaltijd webtoken (minuten)"
+
+[admin.settings.security.jwt.desktopTokenExpiryMinutes]
+description = "Levensduur van toegangstoken in minuten voor desktopclients. Desktop-apps worden automatisch gedetecteerd via de User-Agent en krijgen langere sessies voor betere UX (standaard: 43200 = 30 dagen)"
+label = "Vervaltijd desktoptoken (minuten)"
+
+[admin.settings.security.jwt.allowedClockSkewSeconds]
+description = "Tolerantie voor tijdsafwijking tussen client en server tijdens tokenvalidatie (standaard: 60 seconden)"
+label = "Tolerantie voor klokafwijking (seconden)"
+
+[admin.settings.security.jwt.refreshGraceMinutes]
+description = "Sta tokenvernieuwing toe binnen dit aantal minuten na het verlopen (standaard: 15 minuten, maximaal 3 pogingen)"
+label = "Respijtperiode voor vernieuwen (minuten)"
 
 [admin.settings.security.jwt.persistence]
 description = "JWT-sleutels persistent opslaan om serverherstarts te overleven"
@@ -1422,13 +1451,16 @@ applyChanges = "Wijzigingen toepassen"
 backgroundColor = "Achtergrondkleur"
 borderOff = "Rand: Uit"
 borderOn = "Rand: Aan"
+changeColor = "Kleur wijzigen"
 chooseColor = "Kies een kleur"
 circle = "Cirkel"
 clearBackground = "Achtergrond verwijderen"
 color = "Kleur"
 contents = "Tekst"
+delete = "Verwijderen"
 desc = "Markering, pen, tekst en notities toevoegen. Wijzigingen blijven actief—geen afvlakking nodig."
 drawing = "Tekening"
+duplicate = "Dupliceren"
 editCircle = "Cirkel bewerken"
 editInk = "Pen bewerken"
 editLine = "Lijn bewerken"
@@ -1458,6 +1490,7 @@ notesStamps = "Notities & Stempels"
 opacity = "Dekking"
 pen = "Pen"
 polygon = "Veelhoek"
+properties = "Eigenschappen"
 rectangle = "Rechthoek"
 redo = "Opnieuw uitvoeren"
 saveChanges = "Save Changes"
@@ -1483,6 +1516,7 @@ title = "Annoteren"
 underline = "Understrepen"
 undo = "Ongedaan maken"
 unsupportedType = "Dit annotatietype wordt niet volledig ondersteund voor bewerking."
+width = "Breedte"
 
 [app]
 description = "Het gratis alternatief voor Adobe Acrobat (10M+ downloads)"
@@ -3312,6 +3346,10 @@ desc = "Bouw workflows met meerdere stappen door PDF-acties te koppelen. Ideaal 
 tags = "workflow,volgorde,automatisering"
 title = "Automatiseren"
 
+[home.formFill]
+desc = "Vul PDF-formuliervelden interactief in met een visuele editor"
+title = "Formulier invullen"
+
 [home.autoRename]
 desc = "Hernoemt een PDF-bestand automatisch op basis van de gedetecteerde kop"
 tags = "automatisch detecteren,op kop gebaseerd,organiseren,herlabelen"
@@ -4209,6 +4247,75 @@ title = "Pagina-editor"
 zoomIn = "Inzoomen"
 zoomOut = "Uitzoomen"
 
+[viewer]
+cannotPreviewFile = "Kan voorbeeld van bestand niet weergeven"
+dualPageView = "Dubbele paginaweergave"
+firstPage = "Eerste pagina"
+lastPage = "Laatste pagina"
+nextPage = "Volgende pagina"
+onlyPdfSupported = "De viewer ondersteunt alleen PDF-bestanden. Dit bestand lijkt een ander formaat te hebben."
+previousPage = "Vorige pagina"
+singlePageView = "Enkele paginaweergave"
+unknownFile = "Onbekend bestand"
+zoomIn = "Inzoomen"
+zoomOut = "Uitzoomen"
+
+[viewer.attachments]
+title = "Bijlagen"
+searchPlaceholder = "Bijlagen zoeken"
+noSupport = "Ondersteuning voor bijlagen is niet beschikbaar voor deze viewer."
+noDocument = "Open een PDF om de bijlagen te bekijken."
+loading = "Bijlagen laden..."
+empty = "Geen bijlagen in dit document"
+noMatch = "Geen bijlagen komen overeen met uw zoekopdracht"
+
+[viewer.formBar]
+title = "Formuliervelden"
+unsavedBadge = "Niet opgeslagen"
+unsavedDesc = "U heeft niet-opgeslagen wijzigingen"
+hasFieldsDesc = "Deze PDF bevat invulbare velden"
+dismiss = "Sluiten"
+apply = "Wijzigingen toepassen"
+download = "PDF downloaden"
+
+[rightRail]
+closeSelected = "Geselecteerde bestanden sluiten"
+selectAll = "Alles selecteren"
+deselectAll = "Alles deselecteren"
+selectByNumber = "Selecteren op paginanummers"
+deleteSelected = "Geselecteerde pagina's verwijderen"
+closePdf = "PDF sluiten"
+exportAll = "PDF exporteren"
+downloadSelected = "Geselecteerde bestanden downloaden"
+annotations = "Annotaties"
+exportSelected = "Geselecteerde pagina's exporteren"
+formFill = "Formulier invullen"
+saveChanges = "Wijzigingen opslaan"
+toggleAttachments = "Bijlagen tonen/verbergen"
+toggleTheme = "Thema wisselen"
+language = "Taal"
+toggleAnnotations = "Annotaties tonen/verbergen"
+search = "PDF doorzoeken"
+panMode = "Pan-modus"
+applyRedactionsFirst = "Apply redactions first"
+rotateLeft = "Linksom draaien"
+rotateRight = "Rechtsom draaien"
+toggleSidebar = "Zijbalk tonen/verbergen"
+toggleBookmarks = "Bladwijzers tonen/verbergen"
+print = "PDF afdrukken"
+ruler = "Liniaal / Meten"
+draw = "Draw"
+redact = "Redact"
+exitRedaction = "Exit Redaction Mode"
+save = "Save"
+downloadAll = "Alles downloaden"
+saveAll = "Alles opslaan"
+
+[textAlign]
+left = "Links"
+center = "Gecentreerd"
+right = "Rechts"
+
 [pageExtracter]
 header = "Pagina's extraheren"
 placeholder = "(bijv. 1,2,8 of 4,7,12-16 of 2n-1)"
@@ -4891,6 +4998,9 @@ applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
 boxRedaction = "Vak tekenen voor zwartlakken"
 colourPicker = "Kleurenkiezer"
+colorLabel = "Kleur voor anonimiseren"
+active = "Anonimiseermodus actief"
+activate = "Hulpmiddel voor anonimiseren activeren"
 controlsTitle = "Manual Redaction Controls"
 convertPDFToImageLabel = "PDF converteren naar PDF-afbeelding (gebruikt om tekst achter het vak te verwijderen)"
 export = "Exporteren"
@@ -5285,36 +5395,6 @@ title = "Hoog contrast"
 [replaceColor.tooltip.invertAll]
 text = "Keer alle kleuren in de PDF volledig om, waardoor een negatief-achtig effect ontstaat. Nuttig om donkere modus-versies van documenten te maken of om oogvermoeidheid bij weinig licht te verminderen."
 title = "Alle kleuren inverteren"
-
-[rightRail]
-annotations = "Annotaties"
-applyRedactionsFirst = "Apply redactions first"
-closePdf = "PDF sluiten"
-closeSelected = "Geselecteerde bestanden sluiten"
-deleteSelected = "Geselecteerde pagina's verwijderen"
-deselectAll = "Alles deselecteren"
-downloadAll = "Alles downloaden"
-downloadSelected = "Geselecteerde bestanden downloaden"
-draw = "Draw"
-exitRedaction = "Exit Redaction Mode"
-exportAll = "PDF exporteren"
-exportSelected = "Geselecteerde pagina's exporteren"
-language = "Taal"
-panMode = "Pan-modus"
-print = "PDF afdrukken"
-redact = "Redact"
-rotateLeft = "Linksom draaien"
-rotateRight = "Rechtsom draaien"
-save = "Save"
-saveAll = "Alles opslaan"
-saveChanges = "Wijzigingen opslaan"
-search = "PDF doorzoeken"
-selectAll = "Alles selecteren"
-selectByNumber = "Selecteren op paginanummers"
-toggleAnnotations = "Annotaties tonen/verbergen"
-toggleBookmarks = "Bladwijzers tonen/verbergen"
-toggleSidebar = "Zijbalk tonen/verbergen"
-toggleTheme = "Thema wisselen"
 
 [rotate]
 rotateLeft = "Tegen de klok in draaien"
@@ -6153,11 +6233,6 @@ title = "API-documentatie"
 [tableExtraxt]
 tags = "CSV,tabel extractie,extractie,converteren"
 
-[textAlign]
-center = "Gecentreerd"
-left = "Links"
-right = "Rechts"
-
 [theme]
 toggle = "Thema wisselen"
 
@@ -6432,19 +6507,6 @@ invalid = "Certificaat niet in vertrouwensopslag - bron kan niet worden geverifi
 fileManager = "Bestandsbeheer"
 pageEditor = "Pagina-editor"
 viewer = "Viewer"
-
-[viewer]
-cannotPreviewFile = "Kan voorbeeld van bestand niet weergeven"
-dualPageView = "Dubbele paginaweergave"
-firstPage = "Eerste pagina"
-lastPage = "Laatste pagina"
-nextPage = "Volgende pagina"
-onlyPdfSupported = "De viewer ondersteunt alleen PDF-bestanden. Dit bestand lijkt een ander formaat te hebben."
-previousPage = "Vorige pagina"
-singlePageView = "Enkele paginaweergave"
-unknownFile = "Onbekend bestand"
-zoomIn = "Inzoomen"
-zoomOut = "Uitzoomen"
 
 [viewPdf]
 header = "PDF bekijken"

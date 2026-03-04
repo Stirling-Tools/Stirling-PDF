@@ -82,6 +82,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
             logger.info("Tauri mode detected - enabling CORS for Tauri protocols (v1 and v2)");
             registry.addMapping("/**")
                     .allowedOriginPatterns(
+                            "http://localhost:*",
+                            "https://localhost:*",
+                            "tauri://*", // Add this for Tauri apps
                             "tauri://localhost",
                             "http://tauri.localhost",
                             "https://tauri.localhost")
@@ -154,8 +157,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     .maxAge(3600);
         } else {
             // Default to allowing all origins when nothing is configured
-            logger.info(
-                    "No CORS allowed origins configured in settings.yml (system.corsAllowedOrigins); allowing all origins.");
+            logger.debug(
+                    "No CORS allowed origins configured in settings.yml (system.corsAllowedOrigins); WebMvcConfig allowing all origins.");
             registry.addMapping("/**")
                     .allowedOriginPatterns("*")
                     .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")

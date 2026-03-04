@@ -1,0 +1,163 @@
+/* Attachment Sidebar - Modern styling to match AllTools section */
+
+.attachment-sidebar {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--bg-toolbar) 96%, transparent),
+    color-mix(in srgb, var(--bg-background) 90%, transparent)
+  );
+  border-left: 1px solid color-mix(in srgb, var(--border-subtle) 75%, transparent);
+  box-shadow: -2px 0 16px color-mix(in srgb, var(--shadow-color, rgba(15, 23, 42, 0.35)) 20%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+/* Header Section */
+.attachment-sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0.875rem;
+  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.attachment-sidebar__header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.attachment-sidebar__header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mantine-color-blue-6);
+  font-size: 1.1rem;
+}
+
+/* Search Section */
+.attachment-sidebar__search {
+  background: var(--tool-panel-search-bg, var(--bg-toolbar));
+  border-bottom: 1px solid var(--tool-panel-search-border-bottom, var(--border-subtle));
+  padding-top: 0.75rem !important;
+}
+
+/* Content Section */
+.attachment-sidebar__content {
+  padding-top: 0.5rem !important;
+}
+
+.attachment-sidebar__empty-state,
+.attachment-sidebar__error {
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.attachment-sidebar__loading {
+  padding: 2rem 1rem !important;
+}
+
+/* Attachment List */
+.attachment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Attachment Items */
+.attachment-item-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.65rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: color-mix(in srgb, var(--bg-toolbar) 86%, transparent);
+  border: 1px solid transparent;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  text-align: left;
+  outline: none;
+}
+
+.attachment-item:hover {
+  background: color-mix(in srgb, var(--text-primary) 8%, var(--bg-toolbar));
+  border-color: color-mix(in srgb, var(--text-primary) 20%, var(--border-subtle));
+  transform: translateX(2px);
+}
+
+.attachment-item:active {
+  transform: translateX(3px);
+}
+
+.attachment-item:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--text-primary) 30%, var(--border-subtle));
+  outline-offset: 2px;
+}
+
+/* Download Icon */
+.attachment-item__download-icon {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  color: var(--text-muted);
+}
+
+.attachment-item:hover .attachment-item__download-icon {
+  color: var(--mantine-color-blue-6);
+  transform: scale(1.1);
+}
+
+/* Content */
+.attachment-item__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.attachment-item__title {
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  color: var(--text-primary);
+}
+
+.attachment-item__meta {
+  line-height: 1.3;
+  font-size: 0.75rem;
+}
+
+/* Smooth fade-in animation */
+@keyframes attachment-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.attachment-list {
+  animation: attachment-fade-in 0.2s ease;
+}
+
+/* Accessibility & Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .attachment-item,
+  .attachment-list {
+    transition: none;
+    animation: none;
+  }
+}

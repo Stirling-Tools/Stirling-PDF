@@ -1209,7 +1209,7 @@ export const buildUpdatedDocument = (
       ...page,
       textElements: updatedElements,
       imageElements: images.map(cloneImageElement),
-      contentStreams: page.contentStreams ?? [],
+      contentStreams: page.contentStreams ?? null,
     };
   });
 
@@ -1282,7 +1282,7 @@ export const restoreGlyphElements = (
       ...page,
       textElements: rebuiltElements,
       imageElements: images.map(cloneImageElement),
-      contentStreams: page.contentStreams ?? [],
+      contentStreams: page.contentStreams ?? null,
     };
   });
 

@@ -88,10 +88,10 @@ public abstract class CreateSignatureBase implements SignatureInterface {
         Certificate cert = null;
         while (cert == null && aliases.hasMoreElements()) {
             alias = aliases.nextElement();
-            setPrivateKey((PrivateKey) keystore.getKey(alias, pin));
+            privateKey = (PrivateKey) keystore.getKey(alias, pin);
             Certificate[] certChain = keystore.getCertificateChain(alias);
             if (certChain != null) {
-                setCertificateChain(certChain);
+                certificateChain = certChain;
                 cert = certChain[0];
                 if (cert instanceof X509Certificate) {
                     // avoid expired certificate

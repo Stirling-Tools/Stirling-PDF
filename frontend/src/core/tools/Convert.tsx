@@ -19,7 +19,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const convertParams = useConvertParameters();
-  const convertOperation = useConvertOperation();
+  const convertOperation = useConvertOperation(convertParams.parameters);
 
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(convertParams.getEndpointName());
 

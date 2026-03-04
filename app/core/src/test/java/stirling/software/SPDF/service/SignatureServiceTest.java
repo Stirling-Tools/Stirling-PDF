@@ -20,14 +20,16 @@ import org.mockito.MockedStatic;
 import stirling.software.SPDF.model.SignatureFile;
 import stirling.software.common.configuration.InstallationPathConfig;
 
+import tools.jackson.databind.json.JsonMapper;
+
 class SignatureServiceTest {
 
     @TempDir Path tempDir;
     private SharedSignatureService signatureService;
     private Path personalSignatureFolder;
     private Path sharedSignatureFolder;
-    private final String ALL_USERS_FOLDER = "ALL_USERS";
-    private final String TEST_USER = "testUser";
+    private static final String ALL_USERS_FOLDER = "ALL_USERS";
+    private static final String TEST_USER = "testUser";
 
     @BeforeEach
     void setUp() throws IOException {
@@ -53,7 +55,7 @@ class SignatureServiceTest {
                     .thenReturn(tempDir.toString());
 
             // Initialize the service with our temp directory
-            signatureService = new SharedSignatureService();
+            signatureService = new SharedSignatureService(JsonMapper.builder().build());
         }
     }
 

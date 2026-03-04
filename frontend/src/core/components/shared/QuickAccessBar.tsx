@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef, useEffect } from "react";
+import React, { useState, useRef, forwardRef, useEffect, useMemo } from "react";
 import { Stack, Divider, Menu, Indicator } from "@mantine/core";
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -27,6 +27,7 @@ import {
   getActiveNavButton,
 } from '@app/components/shared/quickAccessBar/QuickAccessBar';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
+import { QuickAccessBarFooterExtensions } from '@app/components/quickAccessBar/QuickAccessBarFooterExtensions';
 
 const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { t } = useTranslation();
@@ -34,7 +35,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const location = useLocation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
-  const { handleReaderToggle, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool } = useToolWorkflow();
+  const { handleReaderToggle, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool, toolAvailability } = useToolWorkflow();
   const { hasUnsavedChanges } = useNavigationState();
   const { actions: navigationActions } = useNavigationActions();
   const { getToolNavigation } = useSidebarNavigation();
@@ -119,14 +120,14 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     );
   };
 
-  const mainButtons: ButtonConfig[] = [
+  const mainButtons: ButtonConfig[] = useMemo(() => [
     {
       id: 'read',
       name: t("quickAccess.reader", "Reader"),
       icon: <LocalIcon icon="menu-book-rounded" width="1.25rem" height="1.25rem" />,
-      size: 'md',
+      size: 'md' as const,
       isRound: false,
-      type: 'navigation',
+      type: 'navigation' as const,
       onClick: () => {
         setActiveButton('read');
         handleReaderToggle();
@@ -136,9 +137,9 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       id: 'automate',
       name: t("quickAccess.automate", "Automate"),
       icon: <LocalIcon icon="automation-outline" width="1.25rem" height="1.25rem" />,
-      size: 'md',
+      size: 'md' as const,
       isRound: false,
-      type: 'navigation',
+      type: 'navigation' as const,
       onClick: () => {
         setActiveButton('automate');
         // If already on automate tool, reset it directly
@@ -149,7 +150,14 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         }
       }
     },
-  ];
+  ].filter(button => {
+    // Filter out buttons for disabled tools
+    // 'read' is always available (viewer mode)
+    if (button.id === 'read') return true;
+    // Check if tool is actually available (not just present in registry)
+    const availability = toolAvailability[button.id as keyof typeof toolAvailability];
+    return availability?.available !== false;
+  }), [t, setActiveButton, handleReaderToggle, selectedToolKey, resetTool, handleToolSelect, toolAvailability]);
 
   const middleButtons: ButtonConfig[] = [
     {
@@ -257,6 +265,8 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
 
           {/* Spacer to push bottom buttons to bottom */}
           <div className="spacer" />
+
+          <QuickAccessBarFooterExtensions className="quick-access-footer" />
 
           {/* Bottom section */}
           <Stack gap="lg" align="stretch">

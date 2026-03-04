@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { AppProviders as ProprietaryAppProviders } from "@proprietary/components/AppProviders";
 import { DesktopConfigSync } from '@app/components/DesktopConfigSync';
 import { DesktopBannerInitializer } from '@app/components/DesktopBannerInitializer';
+import { SaveShortcutListener } from '@app/components/SaveShortcutListener';
 import { SetupWizard } from '@app/components/SetupWizard';
 import { useFirstLaunchCheck } from '@app/hooks/useFirstLaunchCheck';
 import { useBackendInitializer } from '@app/hooks/useBackendInitializer';
@@ -9,8 +10,27 @@ import { DESKTOP_DEFAULT_APP_CONFIG } from '@app/config/defaultAppConfig';
 import { connectionModeService } from '@app/services/connectionModeService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { authService } from '@app/services/authService';
+import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { isTauri } from '@tauri-apps/api/core';
+import { SaaSTeamProvider } from '@app/contexts/SaaSTeamContext';
+import { SaasBillingProvider } from '@app/contexts/SaasBillingContext';
+import { SaaSCheckoutProvider } from '@app/contexts/SaaSCheckoutContext';
+import { CreditModalBootstrap } from '@app/components/shared/modals/CreditModalBootstrap';
+
+// Common tool endpoints to preload for faster first-use
+const COMMON_TOOL_ENDPOINTS = [
+  '/api/v1/misc/compress-pdf',
+  '/api/v1/general/merge-pdfs',
+  '/api/v1/general/split-pages',
+  '/api/v1/convert/pdf/img',
+  '/api/v1/convert/img/pdf',
+  '/api/v1/general/rotate-pdf',
+  '/api/v1/misc/add-watermark',
+  '/api/v1/security/add-password',
+  '/api/v1/security/remove-password',
+  '/api/v1/general/extract-pages',
+];
 
 /**
  * Desktop application providers
@@ -51,6 +71,39 @@ export function AppProviders({ children }: { children: ReactNode }) {
   // This sets up port detection and health checks
   const shouldMonitorBackend = setupComplete && !isFirstLaunch && connectionMode === 'saas';
   useBackendInitializer(shouldMonitorBackend);
+
+  // Preload endpoint availability after backend is healthy
+  useEffect(() => {
+    if (!shouldMonitorBackend) {
+      return; // Only preload in SaaS mode with bundled backend
+    }
+
+    const preloadEndpoints = async () => {
+      const backendHealthy = tauriBackendService.isBackendHealthy();
+      if (backendHealthy) {
+        console.debug('[AppProviders] Preloading common tool endpoints');
+        await endpointAvailabilityService.preloadEndpoints(
+          COMMON_TOOL_ENDPOINTS,
+          tauriBackendService.getBackendUrl()
+        );
+        console.debug('[AppProviders] Endpoint preloading complete');
+      }
+    };
+
+    // Subscribe to backend status changes
+    const unsubscribe = tauriBackendService.subscribeToStatus((status) => {
+      if (status === 'healthy') {
+        preloadEndpoints();
+      }
+    });
+
+    // Also check immediately in case backend is already healthy
+    if (tauriBackendService.isBackendHealthy()) {
+      preloadEndpoints();
+    }
+
+    return unsubscribe;
+  }, [shouldMonitorBackend]);
 
   useEffect(() => {
     if (!authChecked) {
@@ -147,9 +200,17 @@ export function AppProviders({ children }: { children: ReactNode }) {
         autoFetch: false,
       }}
     >
-      <DesktopConfigSync />
-      <DesktopBannerInitializer />
-      {children}
+      <SaaSTeamProvider>
+        <SaasBillingProvider>
+          <SaaSCheckoutProvider>
+            <DesktopConfigSync />
+            <DesktopBannerInitializer />
+            <SaveShortcutListener />
+            <CreditModalBootstrap />
+            {children}
+          </SaaSCheckoutProvider>
+        </SaasBillingProvider>
+      </SaaSTeamProvider>
     </ProprietaryAppProviders>
   );
 }

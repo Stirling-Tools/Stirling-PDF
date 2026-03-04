@@ -28,6 +28,7 @@ export const CONVERSION_ENDPOINTS = {
   'pdf-office-presentation': '/api/v1/convert/pdf/presentation',
   'pdf-office-text': '/api/v1/convert/pdf/text',
   'pdf-csv': '/api/v1/convert/pdf/csv',
+  'pdf-xlsx': '/api/v1/convert/pdf/xlsx',
   'pdf-markdown': '/api/v1/convert/pdf/markdown',
   'pdf-html': '/api/v1/convert/pdf/html',
   'pdf-xml': '/api/v1/convert/pdf/xml',
@@ -54,6 +55,7 @@ export const ENDPOINT_NAMES = {
   'pdf-office-presentation': 'pdf-to-presentation',
   'pdf-office-text': 'pdf-to-text',
   'pdf-csv': 'pdf-to-csv',
+  'pdf-xlsx': 'pdf-to-xlsx',
   'pdf-markdown': 'pdf-to-markdown',
   'pdf-html': 'pdf-to-html',
   'pdf-xml': 'pdf-to-xml',
@@ -116,6 +118,7 @@ export const TO_FORMAT_OPTIONS = [
   { value: 'cbz', label: 'CBZ', group: 'Archive' },
   { value: 'cbr', label: 'CBR', group: 'Archive' },
   { value: 'csv', label: 'CSV', group: 'Spreadsheet' },
+  { value: 'xlsx', label: 'XLSX', group: 'Spreadsheet' },
   { value: 'pptx', label: 'PPTX', group: 'Presentation' },
   { value: 'odp', label: 'ODP', group: 'Presentation' },
   { value: 'txt', label: 'TXT', group: 'Text' },
@@ -137,7 +140,7 @@ export const TO_FORMAT_OPTIONS = [
 export const CONVERSION_MATRIX: Record<string, string[]> = {
   'any': ['pdf'], // Mixed files always convert to PDF
   'image': ['pdf'], // Multiple images always convert to PDF
-  'pdf': ['png', 'jpg', 'gif', 'tiff', 'bmp', 'webp', 'docx', 'odt', 'pptx', 'odp', 'csv', 'txt', 'rtf', 'md', 'html', 'xml', 'pdfa', 'pdfx', 'cbz', 'cbr', 'epub', 'azw3'],
+  'pdf': ['png', 'jpg', 'gif', 'tiff', 'bmp', 'webp', 'docx', 'odt', 'pptx', 'odp', 'csv', 'xlsx', 'txt', 'rtf', 'md', 'html', 'xml', 'pdfa', 'pdfx', 'cbz', 'cbr', 'epub', 'azw3'],
   'cbz': ['pdf'],
   'docx': ['pdf'], 'doc': ['pdf'], 'odt': ['pdf'],
   'xlsx': ['pdf'], 'xls': ['pdf'], 'ods': ['pdf'],
@@ -162,6 +165,7 @@ export const EXTENSION_TO_ENDPOINT: Record<string, Record<string, string>> = {
     'docx': 'pdf-to-word', 'odt': 'pdf-to-word',
     'pptx': 'pdf-to-presentation', 'odp': 'pdf-to-presentation',
     'csv': 'pdf-to-csv',
+    'xlsx': 'pdf-to-xlsx',
     'txt': 'pdf-to-text', 'rtf': 'pdf-to-text', 'md': 'pdf-to-markdown',
     'html': 'pdf-to-html', 'xml': 'pdf-to-xml',
     'pdfa': 'pdf-to-pdfa',

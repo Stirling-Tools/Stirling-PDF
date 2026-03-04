@@ -2,9 +2,14 @@ import { useImperativeHandle, forwardRef, useEffect, useCallback, useRef, useSta
 import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
 import { PdfAnnotationSubtype, uuidV4 } from '@embedpdf/models';
 import { useSignature } from '@app/contexts/SignatureContext';
-import type { SignatureAPI } from '@app/components/viewer/viewerTypes';
+import type { SignatureAPI, AnnotationRect } from '@app/components/viewer/viewerTypes';
 import type { SignParameters } from '@app/hooks/tools/sign/useSignParameters';
 import { useViewer } from '@app/contexts/ViewerContext';
+import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
+
+/**
+ * Connects the PDF signature (stamp/ink) tools to the shared ViewerContext and SignatureContext.
+ */
 
 // Minimum allowed width/height (in pixels) for a signature image or text stamp.
 // This prevents rendering issues and ensures signatures are always visible and usable.
@@ -132,6 +137,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
   const { provides: annotationApi } = useAnnotationCapability();
   const { signatureConfig, storeImageData, isPlacementMode, placementPreviewSize, setSignaturesApplied } = useSignature();
   const { getZoomState, registerImmediateZoomUpdate } = useViewer();
+  const documentReady = useDocumentReady();
   const [currentZoom, setCurrentZoom] = useState(() => getZoomState()?.currentZoom ?? 1);
   const lastStampImageRef = useRef<string | null>(null);
 
@@ -211,7 +217,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
   // Enable keyboard deletion of selected annotations
   useEffect(() => {
     // Always enable delete key when we have annotation API and are in sign mode
-    if (!annotationApi || (isPlacementMode === undefined)) return;
+    if (!annotationApi || (isPlacementMode === undefined) || !documentReady) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       // Skip delete/backspace while a text input/textarea is focused (e.g., editing textbox)
@@ -388,10 +394,17 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
         return [];
       }
     },
+
+    moveAnnotation: (pageIndex: number, annotationId: string, newRect: AnnotationRect) => {
+      if (!annotationApi) return;
+      // v2.7.0: move signature stamp to newRect without regenerating the AP stream,
+      // preserving the original appearance (image data stays intact).
+      (annotationApi as any).moveAnnotation?.(pageIndex, annotationId, newRect);
+    },
   }), [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults]);
 
   useEffect(() => {
-    if (!annotationApi?.onAnnotationEvent) {
+    if (!annotationApi?.onAnnotationEvent || !documentReady) {
       return;
     }
 
@@ -430,10 +443,10 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
     return () => {
       unsubscribe?.();
     };
-  }, [annotationApi, storeImageData, setSignaturesApplied]);
+  }, [annotationApi, storeImageData, setSignaturesApplied, documentReady]);
 
   useEffect(() => {
-    if (!isPlacementMode) {
+    if (!isPlacementMode || !documentReady) {
       return;
     }
 
@@ -447,66 +460,7 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
     return () => {
       cancelled = true;
     };
-  }, [isPlacementMode, configureStampDefaults, placementPreviewSize, signatureConfig]);
-
-  useEffect(() => {
-    if (!annotationApi?.onAnnotationEvent) {
-      return;
-    }
-
-    const unsubscribe = annotationApi.onAnnotationEvent(event => {
-      if (event.type !== 'create' && event.type !== 'update') {
-        return;
-      }
-
-      const annotation: any = event.annotation;
-      const annotationId: string | undefined = annotation?.id;
-      if (!annotationId) {
-        return;
-      }
-
-      // Mark signatures as not applied when a new signature is placed
-      if (event.type === 'create') {
-        setSignaturesApplied(false);
-      }
-
-      const directData =
-        extractDataUrl(annotation.imageSrc) ||
-        extractDataUrl(annotation.imageData) ||
-        extractDataUrl(annotation.appearance) ||
-        extractDataUrl(annotation.stampData) ||
-        extractDataUrl(annotation.contents) ||
-        extractDataUrl(annotation.data) ||
-        extractDataUrl(annotation.customData) ||
-        extractDataUrl(annotation.asset);
-
-      const dataToStore = directData || lastStampImageRef.current;
-      if (dataToStore) {
-        storeImageData(annotationId, dataToStore);
-      }
-    });
-
-    return () => {
-      unsubscribe?.();
-    };
-  }, [annotationApi, storeImageData, setSignaturesApplied]);
-
-  useEffect(() => {
-    if (!isPlacementMode) {
-      return;
-    }
-
-    let cancelled = false;
-    configureStampDefaults().catch((error) => {
-      if (!cancelled) {
-        console.error('Error updating signature defaults:', error);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isPlacementMode, configureStampDefaults, placementPreviewSize, signatureConfig]);
+  }, [isPlacementMode, configureStampDefaults, placementPreviewSize, signatureConfig, documentReady]);
 
 
   return null; // This is a bridge component with no UI

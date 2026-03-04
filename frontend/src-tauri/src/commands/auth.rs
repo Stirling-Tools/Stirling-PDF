@@ -6,8 +6,8 @@ use tauri_plugin_store::StoreExt;
 use tiny_http::{Response, Server};
 use sha2::{Sha256, Digest};
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
-use rand::{thread_rng, Rng};
-use rand::distributions::Alphanumeric;
+use rand::Rng;
+use rand::distr::Alphanumeric;
 
 const STORE_FILE: &str = "connection.json";
 const USER_INFO_KEY: &str = "user_info";
@@ -336,6 +336,7 @@ pub async fn login(
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
         .timeout(std::time::Duration::from_secs(30))
+        .user_agent("StirlingPDF-Desktop/1.0 Tauri")
         .build()
         .map_err(|e| {
             log::error!("Failed to create HTTP client: {}", e);
@@ -523,8 +524,8 @@ pub async fn login(
 
 /// Generate PKCE code_verifier (random 43-128 character string)
 fn generate_code_verifier() -> String {
-    thread_rng()
-        .sample_iter(&Alphanumeric)
+    rand::rng()
+        .sample_iter(Alphanumeric)
         .take(128)
         .map(char::from)
         .collect()
@@ -689,6 +690,7 @@ async fn exchange_code_for_token(
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
         .timeout(std::time::Duration::from_secs(30))
+        .user_agent("StirlingPDF-Desktop/1.0 Tauri")
         .build()
         .map_err(|e| {
             log::error!("Failed to create HTTP client: {}", e);

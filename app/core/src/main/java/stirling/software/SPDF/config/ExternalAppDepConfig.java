@@ -51,9 +51,7 @@ public class ExternalAppDepConfig {
      */
     private final Map<String, List<String>> commandToGroupMapping;
 
-    private final ExecutorService pool =
-            Executors.newFixedThreadPool(
-                    Math.max(2, Runtime.getRuntime().availableProcessors() / 2));
+    private final ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor();
 
     public ExternalAppDepConfig(
             EndpointConfiguration endpointConfiguration, RuntimePathConfig runtimePathConfig) {

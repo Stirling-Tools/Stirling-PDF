@@ -14,6 +14,7 @@ import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 import MobileUploadModal from '@app/components/shared/MobileUploadModal';
+import { openFilesFromDisk } from '@app/services/openFilesFromDisk';
 
 const LandingPage = () => {
   const { addFiles } = useFileHandler();
@@ -41,8 +42,14 @@ const LandingPage = () => {
     openFilesModal();
   };
 
-  const handleNativeUploadClick = () => {
-    fileInputRef.current?.click();
+  const handleNativeUploadClick = async () => {
+    const files = await openFilesFromDisk({
+      multiple: true,
+      onFallbackOpen: () => fileInputRef.current?.click()
+    });
+    if (files.length > 0) {
+      await addFiles(files);
+    }
   };
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {

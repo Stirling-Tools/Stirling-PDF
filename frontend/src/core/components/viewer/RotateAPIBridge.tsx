@@ -2,15 +2,20 @@ import { useEffect, useRef } from 'react';
 import { useRotate } from '@embedpdf/plugin-rotate/react';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
+import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
 
+/**
+ * Connects the PDF rotation plugin to the shared ViewerContext.
+ */
 export function RotateAPIBridge() {
   const activeDocumentId = useActiveDocumentId();
-  
-  // Don't render the inner component until we have a valid document ID
-  if (!activeDocumentId) {
+  const documentReady = useDocumentReady();
+
+  // Don't render the inner component until we have a valid document ID and document is ready
+  if (!activeDocumentId || !documentReady) {
     return null;
   }
-  
+
   return <RotateAPIBridgeInner documentId={activeDocumentId} />;
 }
 
@@ -42,6 +47,10 @@ function RotateAPIBridgeInner({ documentId }: { documentId: string }) {
         }
       });
     }
+
+    return () => {
+      registerBridge('rotation', null);
+    };
   }, [rotation, registerBridge]);
 
   return null;

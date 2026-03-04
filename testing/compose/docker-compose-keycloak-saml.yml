@@ -74,7 +74,7 @@ services:
       DOCKER_ENABLE_SECURITY: "true"
       SECURITY_ENABLELOGIN: "true"
       SECURITY_LOGINMETHOD: "${SECURITY_LOGINMETHOD:-all}"
-      SYSTEM_DEFAULTLOCALE: en-US
+      SYSTEM_DEFAULTLOCALE: "${SYSTEM_DEFAULTLOCALE:-en-US}"
       SYSTEM_BACKENDURL: "http://localhost:8080"
 
       # Enterprise License (required for SAML)

@@ -7,8 +7,8 @@ import { FilesModalProvider } from "@app/contexts/FilesModalContext";
 import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
 import { HotkeyProvider } from "@app/contexts/HotkeyContext";
 import { SidebarProvider } from "@app/contexts/SidebarContext";
-import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { AppConfigProvider, AppConfigProviderProps, AppConfigRetryOptions } from "@app/contexts/AppConfigContext";
+import { PreferencesProvider, usePreferences } from "@app/contexts/PreferencesContext";
+import { AppConfigProvider, AppConfigProviderProps, AppConfigRetryOptions, useAppConfig } from "@app/contexts/AppConfigContext";
 import { RightRailProvider } from "@app/contexts/RightRailContext";
 import { ViewerProvider } from "@app/contexts/ViewerContext";
 import { SignatureProvider } from "@app/contexts/SignatureContext";
@@ -23,6 +23,7 @@ import { useAppInitialization } from "@app/hooks/useAppInitialization";
 import { useLogoAssets } from '@app/hooks/useLogoAssets';
 import AppConfigLoader from '@app/components/shared/AppConfigLoader';
 import { RedactionProvider } from "@app/contexts/RedactionContext";
+import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
 
 // Component to initialize scarf tracking (must be inside AppConfigProvider)
 function ScarfTrackingInitializer() {
@@ -69,6 +70,24 @@ export interface AppProvidersProps {
   appConfigProviderProps?: Partial<AppConfigProviderOverrides>;
 }
 
+// Component to sync server defaults to preferences when AppConfig loads
+function ServerDefaultsSync() {
+  const { config } = useAppConfig();
+  const { updateServerDefaults } = usePreferences();
+
+  useEffect(() => {
+    if (config) {
+      const serverDefaults = {
+        hideUnavailableTools: config.defaultHideUnavailableTools ?? false,
+        hideUnavailableConversions: config.defaultHideUnavailableConversions ?? false,
+      };
+      updateServerDefaults(serverDefaults);
+    }
+  }, [config, updateServerDefaults]);
+
+  return null;
+}
+
 /**
  * Core application providers
  * Contains all providers needed for the core
@@ -85,6 +104,7 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
               >
                 <ScarfTrackingInitializer />
                 <AppConfigLoader />
+                <ServerDefaultsSync />
                 <FileContextProvider enableUrlSync={true} enablePersistence={true}>
                   <AppInitializer />
                   <BrandingAssetManager />
@@ -98,6 +118,7 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                                   <PageEditorProvider>
                                     <SignatureProvider>
                                       <RedactionProvider>
+                                      <FormFillProvider>
                                       <AnnotationProvider>
                                         <RightRailProvider>
                                           <TourOrchestrationProvider>
@@ -107,6 +128,7 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                                           </TourOrchestrationProvider>
                                         </RightRailProvider>
                                       </AnnotationProvider>
+                                      </FormFillProvider>
                                       </RedactionProvider>
                                     </SignatureProvider>
                                   </PageEditorProvider>

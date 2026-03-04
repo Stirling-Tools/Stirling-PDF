@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { TooltipContent } from '@app/types/tips';
 import { SPLIT_METHODS, type SplitMethod } from '@app/constants/splitConstants';
 
-export const useSplitSettingsTips = (method: SplitMethod | ''): TooltipContent | null => {
+export const useSplitSettingsTips = (method: SplitMethod | null): TooltipContent | null => {
   const { t } = useTranslation();
 
   if (!method) return null;
@@ -124,6 +124,24 @@ export const useSplitSettingsTips = (method: SplitMethod | ''): TooltipContent |
             t("split.tooltip.byPageDivider.bullet3", "Scan all documents together as one PDF"),
             t("split.tooltip.byPageDivider.bullet4", "Upload - divider pages are automatically detected and removed"),
             t("split.tooltip.byPageDivider.bullet5", "Enable Duplex Mode if scanning both sides of divider sheets")
+          ]
+        }
+      ]
+    },
+
+    [SPLIT_METHODS.BY_POSTER]: {
+      header: {
+        title: t("split.tooltip.byPoster.title", "Split for Poster Print")
+      },
+      tips: [
+        {
+          title: t("split.tooltip.byPoster.title", "Split for Poster Print"),
+          description: t("split.tooltip.byPoster.text", "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages."),
+          bullets: [
+            t("split.tooltip.byPoster.bullet1", "Target Page Size: Choose output paper size (A4, Letter, etc.)"),
+            t("split.tooltip.byPoster.bullet2", "Horizontal/Vertical Divisions: Grid size for splitting"),
+            t("split.tooltip.byPoster.bullet3", "Right-to-Left: Reverse column order for RTL layouts"),
+            t("split.tooltip.byPoster.bullet4", "Print and assemble the pieces to create your poster")
           ]
         }
       ]

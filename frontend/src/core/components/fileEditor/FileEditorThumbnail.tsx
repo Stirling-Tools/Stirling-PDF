@@ -23,6 +23,8 @@ import { FileId } from '@app/types/file';
 import { formatFileSize } from '@app/utils/fileUtils';
 import ToolChain from '@app/components/shared/ToolChain';
 import HoverActionMenu, { HoverAction } from '@app/components/shared/HoverActionMenu';
+import { downloadFile } from '@app/services/downloadService';
+import FileEditorFileName from '@app/components/fileEditor/FileEditorFileName';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
 
 
@@ -69,7 +71,7 @@ const FileEditorThumbnail = ({
     actions: fileActions,
     openEncryptedUnlockPrompt,
   } = useFileContext();
-  const { state } = useFileState();
+  const { state, selectors } = useFileState();
   const hasError = state.ui.errorFileIds.includes(file.id);
 
   // ---- Drag state ----
@@ -191,6 +193,37 @@ const FileEditorThumbnail = ({
     setShowCloseModal(false);
   }, [file.id, file.name, onCloseFile]);
 
+  const handleSaveAndClose = useCallback(async () => {
+    const fileToSave = selectors.getFile(file.id);
+    if (fileToSave) {
+      try {
+        const result = await downloadFile({
+          data: fileToSave,
+          filename: file.name,
+          localPath: file.localFilePath
+        });
+        if (!result.cancelled && result.savedPath) {
+          fileActions.updateStirlingFileStub(file.id, {
+            localFilePath: file.localFilePath ?? result.savedPath,
+            isDirty: false
+          });
+        } else if (result.cancelled) {
+          setShowCloseModal(false);
+          return;
+        }
+      } catch (error) {
+        console.error(`Failed to save ${file.name}:`, error);
+        alert({ alertType: 'error', title: 'Save failed', body: `Could not save ${file.name}`, expandable: true });
+        setShowCloseModal(false);
+        return;
+      }
+    }
+    // Then close
+    onCloseFile(file.id);
+    alert({ alertType: 'success', title: `Saved and closed ${file.name}`, expandable: false, durationMs: 3500 });
+    setShowCloseModal(false);
+  }, [file.id, file.name, file.localFilePath, onCloseFile, selectors, fileActions]);
+
   const handleCancelClose = useCallback(() => {
     setShowCloseModal(false);
   }, []);
@@ -213,7 +246,6 @@ const FileEditorThumbnail = ({
       onClick: (e) => {
         e.stopPropagation();
         onDownloadFile(file.id);
-        alert({ alertType: 'success', title: `Downloading ${file.name}`, expandable: false, durationMs: 2500 });
       },
     },
     {
@@ -365,8 +397,8 @@ const FileEditorThumbnail = ({
         marginTop: '0.5rem',
         marginBottom: '0.5rem',
       }}>
-        <Text  size="lg" fw={700} className={styles.title}  lineClamp={2}>
-          <PrivateContent>{file.name}</PrivateContent>
+        <Text  size="lg" fw={700} className={styles.title}  lineClamp={2} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
+          <FileEditorFileName file={file} />
         </Text>
         <Text
           size="sm"
@@ -469,18 +501,40 @@ const FileEditorThumbnail = ({
         size="auto"
       >
         <Stack gap="md">
-          <Text size="md">{t('confirmCloseMessage', 'Are you sure you want to close this file?')}</Text>
-          <Text size="sm" c="dimmed" fw={500}>
-            {file.name}
-          </Text>
-          <Group justify="flex-end" gap="sm">
-            <Button variant="light" onClick={handleCancelClose}>
-              {t('confirmCloseCancel', 'Cancel')}
-            </Button>
-            <Button variant="filled" color="red" onClick={handleConfirmClose}>
-              {t('confirmCloseConfirm', 'Close File')}
-            </Button>
-          </Group>
+          {file.isDirty && file.localFilePath ? (
+            <>
+              <Text size="md">{t('confirmCloseUnsaved', 'This file has unsaved changes.')}</Text>
+              <Text size="sm" c="dimmed" fw={500}>
+                {file.name}
+              </Text>
+              <Group justify="flex-end" gap="sm">
+                <Button variant="light" onClick={handleCancelClose}>
+                  {t('confirmCloseCancel', 'Cancel')}
+                </Button>
+                <Button variant="filled" color="red" onClick={handleConfirmClose}>
+                  {t('confirmCloseDiscard', 'Discard changes and close')}
+                </Button>
+                <Button variant="filled" onClick={handleSaveAndClose}>
+                  {t('confirmCloseSave', 'Save and close')}
+                </Button>
+              </Group>
+            </>
+          ) : (
+            <>
+              <Text size="md">{t('confirmCloseMessage', 'Are you sure you want to close this file?')}</Text>
+              <Text size="sm" c="dimmed" fw={500}>
+                {file.name}
+              </Text>
+              <Group justify="flex-end" gap="sm">
+                <Button variant="light" onClick={handleCancelClose}>
+                  {t('confirmCloseCancel', 'Cancel')}
+                </Button>
+                <Button variant="filled" color="red" onClick={handleConfirmClose}>
+                  {t('confirmCloseConfirm', 'Close File')}
+                </Button>
+              </Group>
+            </>
+          )}
         </Stack>
       </Modal>
     </div>

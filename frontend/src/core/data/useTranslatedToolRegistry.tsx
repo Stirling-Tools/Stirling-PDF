@@ -39,6 +39,7 @@ import AutoRename from "@app/tools/AutoRename";
 import SingleLargePage from "@app/tools/SingleLargePage";
 import PageLayout from "@app/tools/PageLayout";
 import UnlockPdfForms from "@app/tools/UnlockPdfForms";
+import FormFill from "@app/tools/formFill/FormFill";
 import RemoveCertificateSign from "@app/tools/RemoveCertificateSign";
 import RemoveImage from "@app/tools/RemoveImage";
 import CertSign from "@app/tools/CertSign";
@@ -345,6 +346,19 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         operationConfig: unlockPdfFormsOperationConfig,
         synonyms: getSynonyms(t, "unlockPDFForms"),
         automationSettings: null
+      },
+      formFill: {
+        icon: <LocalIcon icon="text-fields-rounded" width="1.5rem" height="1.5rem" />,
+        name: t('home.formFill.title', 'Fill Form'),
+        component: FormFill,
+        description: t('home.formFill.desc', 'Fill PDF form fields interactively with a visual editor'),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        workbench: 'viewer' as const,
+        endpoints: ['form-fill'],
+        automationSettings: null,
+        supportsAutomate: false,
+        synonyms: ['form', 'fill', 'fillable', 'input', 'field', 'acroform'],
       },
       changePermissions: {
         icon: <LocalIcon icon="lock-outline" width="1.5rem" height="1.5rem" />,
@@ -689,7 +703,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.AUTOMATION,
         maxFiles: -1,
         supportedFormats: CONVERT_SUPPORTED_FORMATS,
-        endpoints: ["handleData"],
+        endpoints: ["automate"],
         synonyms: getSynonyms(t, "automate"),
         automationSettings: null,
       },
@@ -808,6 +822,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         link: devApiLink,
+        endpoints: ["dev-api-docs"],
         synonyms: getSynonyms(t, "devApi"),
         supportsAutomate: false,
         automationSettings: null
@@ -820,6 +835,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://docs.stirlingpdf.com/Configuration/Folder%20Scanning/",
+        endpoints: ["dev-folder-scanning-docs"],
         synonyms: getSynonyms(t, "devFolderScanning"),
         supportsAutomate: false,
         automationSettings: null
@@ -832,6 +848,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://docs.stirlingpdf.com/Configuration/Single%20Sign-On%20Configuration/",
+        endpoints: ["dev-sso-guide-docs"],
         synonyms: getSynonyms(t, "devSsoGuide"),
         supportsAutomate: false,
         automationSettings: null
@@ -844,6 +861,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         categoryId: ToolCategoryId.ADVANCED_TOOLS,
         subcategoryId: SubcategoryId.DEVELOPER_TOOLS,
         link: "https://docs.stirlingpdf.com/Paid-Offerings/#activating-your-license",
+        endpoints: ["dev-airgapped-docs"],
         synonyms: getSynonyms(t, "devAirgapped"),
         supportsAutomate: false,
         automationSettings: null
@@ -898,6 +916,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           "markdown-to-pdf",
           "file-to-pdf",
           "pdf-to-csv",
+          "pdf-to-xlsx",
           "pdf-to-markdown",
           "pdf-to-pdfa",
           "eml-to-pdf",

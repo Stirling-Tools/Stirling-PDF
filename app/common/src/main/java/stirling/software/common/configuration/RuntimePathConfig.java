@@ -91,9 +91,9 @@ public class RuntimePathConfig {
 
         // Initialize Operation paths
         String defaultWeasyPrintPath = isDocker ? "/opt/venv/bin/weasyprint" : "weasyprint";
-        String defaultUnoConvertPath = isDocker ? "/opt/venv/bin/unoconvert" : "unoconvert";
+        String defaultUnoConvertPath = isDocker ? "/usr/local/bin/unoconvert" : "unoconvert";
         String defaultCalibrePath = isDocker ? "/opt/calibre/ebook-convert" : "ebook-convert";
-        String defaultOcrMyPdfPath = isDocker ? "/usr/bin/ocrmypdf" : "ocrmypdf";
+        String defaultOcrMyPdfPath = isDocker ? "/opt/venv/bin/ocrmypdf" : "ocrmypdf";
         String defaultSOfficePath = isDocker ? "/usr/bin/soffice" : "soffice";
 
         Operations operations = customPaths.getOperations();

@@ -2,15 +2,20 @@ import { useEffect, useRef } from 'react';
 import { useScroll } from '@embedpdf/plugin-scroll/react';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
+import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
 
+/**
+ * Connects the PDF scroll plugin to the shared ViewerContext.
+ */
 export function ScrollAPIBridge() {
   const activeDocumentId = useActiveDocumentId();
-  
-  // Don't render the inner component until we have a valid document ID
-  if (!activeDocumentId) {
+  const documentReady = useDocumentReady();
+
+  // Don't render the inner component until we have a valid document ID and document is ready
+  if (!activeDocumentId || !documentReady) {
     return null;
   }
-  
+
   return <ScrollAPIBridgeInner documentId={activeDocumentId} />;
 }
 
@@ -35,7 +40,7 @@ function ScrollAPIBridgeInner({ documentId }: { documentId: string }) {
         currentPage,
         totalPages,
       };
-      
+
       // Trigger immediate update for responsive UI
       triggerImmediateScrollUpdate(newState.currentPage, newState.totalPages);
 
@@ -44,6 +49,10 @@ function ScrollAPIBridgeInner({ documentId }: { documentId: string }) {
         api: currentScroll
       });
     }
+
+    return () => {
+      registerBridge('scroll', null);
+    };
   }, [currentPage, totalPages, registerBridge, triggerImmediateScrollUpdate]);
 
   return null;

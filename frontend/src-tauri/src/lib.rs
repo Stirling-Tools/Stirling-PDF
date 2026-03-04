@@ -16,6 +16,7 @@ use commands::{
     get_backend_port,
     get_connection_config,
     get_opened_files,
+    pop_opened_files,
     get_refresh_token,
     get_user_info,
     is_first_launch,
@@ -55,6 +56,7 @@ pub fn run() {
     .plugin(tauri_plugin_opener::init())
     .plugin(tauri_plugin_shell::init())
     .plugin(tauri_plugin_fs::init())
+    .plugin(tauri_plugin_dialog::init())
     .plugin(tauri_plugin_http::init())
     .plugin(tauri_plugin_store::Builder::new().build())
     .plugin(tauri_plugin_deep_link::init())
@@ -139,6 +141,7 @@ pub fn run() {
       start_backend,
       get_backend_port,
       get_opened_files,
+      pop_opened_files,
       clear_opened_files,
       get_tauri_logs,
       get_connection_config,
@@ -170,9 +173,9 @@ pub fn run() {
           app_handle.cleanup_before_exit();
         }
         RunEvent::WindowEvent { event: WindowEvent::CloseRequested {.. }, .. } => {
-          add_log("🔄 Window close requested, cleaning up...".to_string());
-          cleanup_backend();
-          // Allow the window to close
+          add_log("🔄 Window close requested (will cleanup on actual exit)...".to_string());
+          // Don't cleanup here - let JavaScript handler prevent close if needed
+          // Backend cleanup happens in ExitRequested when window actually closes
         }
         RunEvent::WindowEvent { event: WindowEvent::DragDrop(drag_drop_event), .. } => {
           use tauri::DragDropEvent;

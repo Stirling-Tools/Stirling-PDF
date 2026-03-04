@@ -57,6 +57,7 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class StampController {
 
+    private static final Pattern NEWLINE_PATTERN = Pattern.compile("\\r?\\n");
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
@@ -232,7 +233,7 @@ public class StampController {
                 };
 
         ClassPathResource classPathResource = new ClassPathResource(resourceDir);
-        String fileExtension = resourceDir.substring(resourceDir.lastIndexOf("."));
+        String fileExtension = resourceDir.substring(resourceDir.lastIndexOf('.'));
 
         // Use TempFile with try-with-resources for automatic cleanup
         try (TempFile tempFileWrapper = new TempFile(tempFileManager, fileExtension)) {
@@ -266,7 +267,7 @@ public class StampController {
                         .getEscapedNewlinePattern()
                         .matcher(processedStampText)
                         .replaceAll("\n");
-        String[] lines = normalizedText.split("\\r?\\n");
+        String[] lines = NEWLINE_PATTERN.split(normalizedText);
 
         PDRectangle pageSize = page.getMediaBox();
 
