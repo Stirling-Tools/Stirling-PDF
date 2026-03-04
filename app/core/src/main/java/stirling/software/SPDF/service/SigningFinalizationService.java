@@ -25,8 +25,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,6 +38,8 @@ import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
 import stirling.software.proprietary.workflow.service.UserServerCertificateService;
+
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Service responsible for finalizing a signing session. Encapsulates all PDF manipulation logic
@@ -743,16 +743,24 @@ public class SigningFinalizationService {
             }
 
             try {
-                var node = objectMapper.valueToTree(metadata);
-                var wetSigsNode = node.get("wetSignatures");
-                if (wetSigsNode != null && wetSigsNode.isArray()) {
-                    log.info(
-                            "Found {} wet signature(s) for participant {}",
-                            wetSigsNode.size(),
-                            fresh.getEmail());
-                    for (var sigNode : wetSigsNode) {
-                        signatures.add(
-                                objectMapper.treeToValue(sigNode, WetSignatureMetadata.class));
+                Object wetSigsRaw = metadata.get("wetSignatures");
+                if (!(wetSigsRaw instanceof List)) {
+                    log.warn(
+                            "wetSignatures for participant {} is not a List (was {}), skipping",
+                            fresh.getEmail(),
+                            wetSigsRaw == null ? "null" : wetSigsRaw.getClass().getName());
+                    continue;
+                }
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> wetSigsList = (List<Map<String, Object>>) wetSigsRaw;
+                log.info(
+                        "Found {} wet signature(s) for participant {}",
+                        wetSigsList.size(),
+                        fresh.getEmail());
+                for (Map<String, Object> sigMap : wetSigsList) {
+                    WetSignatureMetadata wetSig = mapToWetSignature(sigMap);
+                    if (wetSig != null) {
+                        signatures.add(wetSig);
                     }
                 }
             } catch (Exception e) {
@@ -762,6 +770,35 @@ public class SigningFinalizationService {
 
         log.info("Total wet signatures extracted: {}", signatures.size());
         return signatures;
+    }
+
+    /**
+     * Converts a raw metadata map entry to a WetSignatureMetadata object. Uses direct map access to
+     * avoid any Jackson version-specific POJO deserialization issues.
+     */
+    private WetSignatureMetadata mapToWetSignature(Map<String, Object> sigMap) {
+        if (sigMap == null) {
+            return null;
+        }
+        try {
+            WetSignatureMetadata wetSig = new WetSignatureMetadata();
+            wetSig.setType((String) sigMap.get("type"));
+            wetSig.setData((String) sigMap.get("data"));
+            Object page = sigMap.get("page");
+            wetSig.setPage(page instanceof Number ? ((Number) page).intValue() : null);
+            Object x = sigMap.get("x");
+            wetSig.setX(x instanceof Number ? ((Number) x).doubleValue() : null);
+            Object y = sigMap.get("y");
+            wetSig.setY(y instanceof Number ? ((Number) y).doubleValue() : null);
+            Object width = sigMap.get("width");
+            wetSig.setWidth(width instanceof Number ? ((Number) width).doubleValue() : null);
+            Object height = sigMap.get("height");
+            wetSig.setHeight(height instanceof Number ? ((Number) height).doubleValue() : null);
+            return wetSig;
+        } catch (Exception e) {
+            log.error("Failed to map wet signature entry {}: {}", sigMap, e.getMessage());
+            return null;
+        }
     }
 
     // ===== PRIVATE INNER TYPES =====

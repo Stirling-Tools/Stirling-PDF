@@ -429,6 +429,11 @@ public class WorkflowSessionService {
     @Transactional(readOnly = true)
     public byte[] getOriginalFile(String sessionId) throws IOException {
         WorkflowSession session = getSession(sessionId);
+        if (session.getOriginalFile() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Original file no longer available (session may be finalized)");
+        }
         String storageKey = session.getOriginalFile().getStorageKey();
         org.springframework.core.io.Resource resource = storageProvider.load(storageKey);
         return resource.getContentAsByteArray();
@@ -452,6 +457,30 @@ public class WorkflowSessionService {
 
         workflowSessionRepository.delete(session);
         log.info("Deleted workflow session {}", sessionId);
+    }
+
+    /**
+     * Deletes the original (presigned) file from storage after finalization. The original file is
+     * no longer needed once the signed document has been stored. Non-fatal: logs errors but does
+     * not fail finalization.
+     */
+    public void deleteOriginalFile(WorkflowSession session) {
+        if (session.getOriginalFile() == null) {
+            return;
+        }
+        try {
+            storageProvider.delete(session.getOriginalFile().getStorageKey());
+            StoredFile originalFile = session.getOriginalFile();
+            session.setOriginalFile(null);
+            workflowSessionRepository.save(session);
+            storedFileRepository.delete(originalFile);
+            log.info("Deleted original presigned file for session {}", session.getSessionId());
+        } catch (Exception e) {
+            log.error(
+                    "Failed to delete original file for session {}: {}",
+                    session.getSessionId(),
+                    e.getMessage());
+        }
     }
 
     // ===== SIGN REQUEST METHODS (Participant View) =====
@@ -549,6 +578,9 @@ public class WorkflowSessionService {
     /**
      * Get the document for a sign request.
      *
+     * <p>After finalization, returns the signed document. Before finalization, returns the
+     * original.
+     *
      * @param sessionId The session ID
      * @param user The participant user
      * @return PDF document bytes
@@ -558,9 +590,20 @@ public class WorkflowSessionService {
         WorkflowSession session = getSession(sessionId);
         getParticipantForUser(session, user); // Verify participant access
 
+        // After finalization, serve the signed document instead of the original
+        StoredFile fileToServe =
+                (session.isFinalized() && session.getProcessedFile() != null)
+                        ? session.getProcessedFile()
+                        : session.getOriginalFile();
+
+        if (fileToServe == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Document not available for this session");
+        }
+
         try {
             org.springframework.core.io.Resource resource =
-                    storageProvider.load(session.getOriginalFile().getStorageKey());
+                    storageProvider.load(fileToServe.getStorageKey());
             return resource.getContentAsByteArray();
         } catch (IOException e) {
             log.error("Failed to retrieve document for session {}", sessionId, e);

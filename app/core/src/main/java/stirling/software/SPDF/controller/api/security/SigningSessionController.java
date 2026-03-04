@@ -228,6 +228,7 @@ public class SigningSessionController {
             String filename = session.getDocumentName().replace(".pdf", "") + "_shared_signed.pdf";
             workflowSessionService.storeProcessedFile(session, pdf, filename);
             workflowSessionService.finalizeSession(sessionId, owner);
+            workflowSessionService.deleteOriginalFile(session);
 
             try {
                 signingFinalizationService.clearSensitiveMetadata(session);
