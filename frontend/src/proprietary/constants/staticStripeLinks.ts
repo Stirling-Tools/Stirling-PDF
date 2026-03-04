@@ -28,7 +28,7 @@ export const STATIC_STRIPE_LINKS: StaticStripeLinks = {
     monthly: '',
     yearly: '',
   },
-  billingPortal: 'https://billing.stripe.com/p/login/test_aFa5kv1Mz2s10Fr3Cp83C00',
+  billingPortal: 'https://billing.stripe.com/p/login/5kA6pT6Xa7z59HO4gg',
 };
 
 // LINKS FOR TEST SERVER: 
