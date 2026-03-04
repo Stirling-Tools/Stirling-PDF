@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api.security;
+package stirling.software.proprietary.workflow.controller;
 
 import java.security.Principal;
 import java.util.List;
@@ -28,7 +28,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
-import stirling.software.SPDF.service.SigningFinalizationService;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.proprietary.security.model.User;
@@ -36,6 +35,7 @@ import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.workflow.dto.ParticipantRequest;
 import stirling.software.proprietary.workflow.dto.WorkflowCreationRequest;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
+import stirling.software.proprietary.workflow.service.SigningFinalizationService;
 import stirling.software.proprietary.workflow.service.WorkflowSessionService;
 
 @Slf4j

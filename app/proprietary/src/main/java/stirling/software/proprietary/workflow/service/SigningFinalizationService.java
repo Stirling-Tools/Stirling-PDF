@@ -1,4 +1,4 @@
-package stirling.software.SPDF.service;
+package stirling.software.proprietary.workflow.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -28,8 +28,8 @@ import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.controller.api.security.CertSignController;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.PdfSigningService;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.proprietary.workflow.dto.CertificateSubmission;
 import stirling.software.proprietary.workflow.dto.WetSignatureMetadata;
@@ -37,7 +37,6 @@ import stirling.software.proprietary.workflow.model.ParticipantStatus;
 import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
-import stirling.software.proprietary.workflow.service.UserServerCertificateService;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -54,6 +53,7 @@ public class SigningFinalizationService {
     private final WorkflowParticipantRepository participantRepository;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ObjectMapper objectMapper;
+    private final PdfSigningService pdfSigningService;
 
     @Autowired(required = false)
     private final ServerCertificateServiceInterface serverCertificateService;
@@ -486,32 +486,24 @@ public class SigningFinalizationService {
         KeyStore keystore = buildKeystore(submission, participant);
         String password = getKeystorePassword(submission, participant);
 
-        CertSignController.CreateSignature createSignature =
-                new CertSignController.CreateSignature(
-                        keystore, password != null ? password.toCharArray() : new char[0]);
-
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        ByteArrayMultipartFile inputFile =
-                new ByteArrayMultipartFile(pdfBytes, "document.pdf", "application/pdf");
-
-        CertSignController.sign(
-                pdfDocumentFactory,
-                inputFile,
-                outputStream,
-                createSignature,
-                showSignature != null ? showSignature : false,
-                pageNumber != null ? pageNumber - 1 : null,
-                participant.getName() != null ? participant.getName() : "Shared Signing",
-                location != null ? location : "",
-                reason != null ? reason : "Document Signing",
-                showLogo != null ? showLogo : false);
+        byte[] signed =
+                pdfSigningService.signWithKeystore(
+                        pdfBytes,
+                        keystore,
+                        password != null ? password.toCharArray() : new char[0],
+                        showSignature != null ? showSignature : false,
+                        pageNumber != null ? pageNumber - 1 : null,
+                        participant.getName() != null ? participant.getName() : "Shared Signing",
+                        location != null ? location : "",
+                        reason != null ? reason : "Document Signing",
+                        showLogo != null ? showLogo : false);
 
         log.info(
                 "Digital signature applied for {} using cert type {}",
                 participant.getEmail(),
                 submission.getCertType());
 
-        return outputStream.toByteArray();
+        return signed;
     }
 
     private KeyStore buildKeystore(
@@ -828,60 +820,6 @@ public class SigningFinalizationService {
         ParticipantSignatureMetadata(String reason, String location) {
             this.reason = reason;
             this.location = location;
-        }
-    }
-
-    /** Minimal MultipartFile wrapper for passing raw PDF bytes to CertSignController.sign(). */
-    private static class ByteArrayMultipartFile
-            implements org.springframework.web.multipart.MultipartFile {
-        private final byte[] content;
-        private final String filename;
-        private final String contentType;
-
-        ByteArrayMultipartFile(byte[] content, String filename, String contentType) {
-            this.content = content;
-            this.filename = filename;
-            this.contentType = contentType;
-        }
-
-        @Override
-        public String getName() {
-            return "file";
-        }
-
-        @Override
-        public String getOriginalFilename() {
-            return filename;
-        }
-
-        @Override
-        public String getContentType() {
-            return contentType;
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return content == null || content.length == 0;
-        }
-
-        @Override
-        public long getSize() {
-            return content == null ? 0 : content.length;
-        }
-
-        @Override
-        public byte[] getBytes() {
-            return content;
-        }
-
-        @Override
-        public java.io.InputStream getInputStream() {
-            return new ByteArrayInputStream(content);
-        }
-
-        @Override
-        public void transferTo(java.io.File dest) throws java.io.IOException {
-            java.nio.file.Files.write(dest.toPath(), content);
         }
     }
 }
