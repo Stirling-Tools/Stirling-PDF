@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-export type ProviderType = 'oauth2' | 'saml2' | 'telegram';
+export type ProviderType = 'oauth2' | 'saml2' | 'telegram' | 'googledrive';
 
 export interface ProviderField {
   key: string;
@@ -18,6 +18,7 @@ export interface Provider {
   type: ProviderType;
   scope: string; // Summary of what this provider does
   businessTier?: boolean; // Enterprise only
+  documentationUrl?: string; // Optional link to documentation
   fields: ProviderField[];
 }
 
@@ -28,6 +29,7 @@ export const OAUTH2_PROVIDERS: Provider[] = [
     icon: '/Login/google.svg',
     type: 'oauth2',
     scope: 'Sign-in authentication',
+    documentationUrl: 'https://docs.stirlingpdf.com/Configuration/OAuth%20SSO%20Configuration',
     fields: [
       {
         key: 'clientId',
@@ -64,6 +66,7 @@ export const OAUTH2_PROVIDERS: Provider[] = [
     icon: '/Login/github.svg',
     type: 'oauth2',
     scope: 'Sign-in authentication',
+    documentationUrl: 'https://docs.stirlingpdf.com/Configuration/OAuth%20SSO%20Configuration',
     fields: [
       {
         key: 'clientId',
@@ -100,6 +103,7 @@ export const OAUTH2_PROVIDERS: Provider[] = [
     type: 'oauth2',
     scope: 'SSO',
     businessTier: false, // Server tier - OAuth2/OIDC SSO
+    documentationUrl: 'https://docs.stirlingpdf.com/Configuration/OAuth%20SSO%20Configuration',
     fields: [
       {
         key: 'issuer',
@@ -145,6 +149,7 @@ export const GENERIC_OAUTH2_PROVIDER: Provider = {
   type: 'oauth2',
   scope: 'SSO',
   businessTier: false, // Server tier - OAuth2/OIDC SSO
+  documentationUrl: 'https://docs.stirlingpdf.com/Configuration/OAuth%20SSO%20Configuration',
   fields: [
     {
       key: 'enabled',
@@ -216,6 +221,7 @@ export const SMTP_PROVIDER: Provider = {
   icon: 'mail-rounded',
   type: 'oauth2', // Using oauth2 as the base type, but it's really just a generic provider
   scope: 'Email Notifications',
+  documentationUrl: 'https://docs.stirlingpdf.com/Configuration/System%20and%20Security/#email-configuration',
   fields: [
     {
       key: 'enabled',
@@ -478,6 +484,7 @@ export const SAML2_PROVIDER: Provider = {
   type: 'saml2',
   scope: 'SSO (SAML)',
   businessTier: true, // Enterprise tier - SAML only
+  documentationUrl: 'https://docs.stirlingpdf.com/Configuration/SAML%20SSO%20Configuration/',
   fields: [
     {
       key: 'enabled',
@@ -564,6 +571,45 @@ export const SAML2_PROVIDER: Provider = {
   ],
 };
 
+export const GOOGLEDRIVE_PROVIDER: Provider = {
+  id: 'googledrive',
+  name: 'Google Drive',
+  icon: '/Login/google-drive.svg',
+  type: 'googledrive',
+  scope: 'File Import',
+  documentationUrl: 'https://docs.stirlingpdf.com/Configuration/Google%20Drive%20File%20Picker/',
+  fields: [
+    {
+      key: 'enabled',
+      type: 'switch',
+      label: 'Enable Google Drive File Picker',
+      description: 'Allow users to import files directly from Google Drive',
+      defaultValue: false,
+    },
+    {
+      key: 'clientId',
+      type: 'text',
+      label: 'Client ID',
+      description: 'Google OAuth 2.0 Client ID from Google Cloud Console',
+      placeholder: 'xxx.apps.googleusercontent.com',
+    },
+    {
+      key: 'apiKey',
+      type: 'text',
+      label: 'API Key',
+      description: 'Google API Key for Google Picker API from Google Cloud Console',
+      placeholder: 'AIza...',
+    },
+    {
+      key: 'appId',
+      type: 'text',
+      label: 'App ID',
+      description: 'Google Drive App ID from Google Cloud Console',
+      placeholder: 'xxxxxxxxxxxxx',
+    },
+  ],
+};
+
 export const useAllProviders = (): Provider[] => {
   const telegramProvider = useTelegramProvider();
 
@@ -573,5 +619,6 @@ export const useAllProviders = (): Provider[] => {
     SAML2_PROVIDER,
     SMTP_PROVIDER,
     telegramProvider,
+    GOOGLEDRIVE_PROVIDER,
   ];
 };

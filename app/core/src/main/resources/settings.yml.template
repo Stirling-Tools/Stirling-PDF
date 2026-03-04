@@ -96,6 +96,11 @@ premium:
       author: username
       creator: Stirling-PDF
       producer: Stirling-PDF
+    googleDrive:
+      enabled: false # Enable Google Drive file picker integration
+      clientId: "" # Google OAuth 2.0 client ID (obtain from Google Cloud Console)
+      apiKey: "" # Google API key for Google Picker API (obtain from Google Cloud Console)
+      appId: "" # Google Drive app ID
   enterpriseFeatures:
     audit:
       enabled: true # Enable audit logging
@@ -235,6 +240,9 @@ ui:
   languages: [] # If empty, all languages are enabled. To display only German and Polish ["de_DE", "pl_PL"]. British English is always enabled.
   defaultHideUnavailableTools: false # Default user preference: hide disabled tools instead of greying them out
   defaultHideUnavailableConversions: false # Default user preference: hide disabled conversion options instead of greying them out
+  hideDisabledTools:
+    googleDrive: false # Hide Google Drive button when not enabled
+    mobileQRScanner: false # Hide mobile QR scanner button when not enabled
 
 endpoints:
   toRemove: [] # list endpoints to disable (e.g. ['img-to-pdf', 'remove-pages'])

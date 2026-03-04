@@ -76,6 +76,10 @@ interface ConnectionsSettingsData {
   mobileScannerImageResolution?: string;
   mobileScannerPageFormat?: string;
   mobileScannerStretchToFit?: boolean;
+  googleDriveEnabled?: boolean;
+  googleDriveClientId?: string;
+  googleDriveApiKey?: string;
+  googleDriveAppId?: string;
 }
 
 export default function AdminConnectionsSection() {
@@ -118,7 +122,11 @@ export default function AdminConnectionsSection() {
         mobileScannerConvertToPdf: systemData.mobileScannerSettings?.convertToPdf !== false,
         mobileScannerImageResolution: systemData.mobileScannerSettings?.imageResolution || 'full',
         mobileScannerPageFormat: systemData.mobileScannerSettings?.pageFormat || 'A4',
-        mobileScannerStretchToFit: systemData.mobileScannerSettings?.stretchToFit || false
+        mobileScannerStretchToFit: systemData.mobileScannerSettings?.stretchToFit || false,
+        googleDriveEnabled: premiumData.proFeatures?.googleDrive?.enabled || false,
+        googleDriveClientId: premiumData.proFeatures?.googleDrive?.clientId || '',
+        googleDriveApiKey: premiumData.proFeatures?.googleDrive?.apiKey || '',
+        googleDriveAppId: premiumData.proFeatures?.googleDrive?.appId || ''
       };
 
       // Merge pending blocks from all four endpoints
@@ -152,6 +160,18 @@ export default function AdminConnectionsSection() {
       }
       if (systemData._pending?.mobileScannerSettings?.stretchToFit !== undefined) {
         pendingBlock.mobileScannerStretchToFit = systemData._pending.mobileScannerSettings.stretchToFit;
+      }
+      if (premiumData._pending?.proFeatures?.googleDrive?.enabled !== undefined) {
+        pendingBlock.googleDriveEnabled = premiumData._pending.proFeatures.googleDrive.enabled;
+      }
+      if (premiumData._pending?.proFeatures?.googleDrive?.clientId !== undefined) {
+        pendingBlock.googleDriveClientId = premiumData._pending.proFeatures.googleDrive.clientId;
+      }
+      if (premiumData._pending?.proFeatures?.googleDrive?.apiKey !== undefined) {
+        pendingBlock.googleDriveApiKey = premiumData._pending.proFeatures.googleDrive.apiKey;
+      }
+      if (premiumData._pending?.proFeatures?.googleDrive?.appId !== undefined) {
+        pendingBlock.googleDriveAppId = premiumData._pending.proFeatures.googleDrive.appId;
       }
 
       if (Object.keys(pendingBlock).length > 0) {
@@ -200,6 +220,10 @@ export default function AdminConnectionsSection() {
       return settings?.telegram?.enabled === true;
     }
 
+    if (provider.id === 'googledrive') {
+      return settings?.googleDriveEnabled === true;
+    }
+
     if (provider.id === 'oauth2-generic') {
       return settings?.oauth2?.enabled === true;
     }
@@ -220,6 +244,15 @@ export default function AdminConnectionsSection() {
 
     if (provider.id === 'telegram') {
       return settings?.telegram || {};
+    }
+
+    if (provider.id === 'googledrive') {
+      return {
+        enabled: settings?.googleDriveEnabled,
+        clientId: settings?.googleDriveClientId,
+        apiKey: settings?.googleDriveApiKey,
+        appId: settings?.googleDriveAppId,
+      };
     }
 
     if (provider.id === 'oauth2-generic') {
@@ -248,7 +281,27 @@ export default function AdminConnectionsSection() {
     }
 
     try {
-      if (provider.id === 'smtp') {
+      if (provider.id === 'googledrive') {
+        // Google Drive settings use delta settings
+        const deltaSettings: Record<string, any> = {};
+        Object.keys(providerSettings).forEach((key) => {
+          deltaSettings[`premium.proFeatures.googleDrive.${key}`] = providerSettings[key];
+        });
+
+        const response = await apiClient.put('/api/v1/admin/settings', { settings: deltaSettings });
+
+        if (response.status === 200) {
+          await fetchSettings(); // Refresh settings
+          alert({
+            alertType: 'success',
+            title: t('admin.success', 'Success'),
+            body: t('admin.settings.saveSuccess', 'Settings saved successfully'),
+          });
+          showRestartModal();
+        } else {
+          throw new Error('Failed to save');
+        }
+      } else if (provider.id === 'smtp') {
         // Mail settings use a different endpoint
         const response = await apiClient.put('/api/v1/admin/settings/section/mail', providerSettings);
 
@@ -343,7 +396,25 @@ export default function AdminConnectionsSection() {
     }
 
     try {
-      if (provider.id === 'smtp') {
+      if (provider.id === 'googledrive') {
+        const deltaSettings = {
+          'premium.proFeatures.googleDrive.enabled': false,
+        };
+
+        const response = await apiClient.put('/api/v1/admin/settings', { settings: deltaSettings });
+
+        if (response.status === 200) {
+          await fetchSettings();
+          alert({
+            alertType: 'success',
+            title: t('admin.success', 'Success'),
+            body: t('admin.settings.connections.disconnected', 'Provider disconnected successfully'),
+          });
+          showRestartModal();
+        } else {
+          throw new Error('Failed to disconnect');
+        }
+      } else if (provider.id === 'smtp') {
         // Mail settings use a different endpoint
         const response = await apiClient.put('/api/v1/admin/settings/section/mail', { enabled: false });
 
@@ -579,6 +650,16 @@ export default function AdminConnectionsSection() {
             <LocalIcon icon="qr-code-rounded" width="1.25rem" height="1.25rem" />
             <Text fw={600} size="sm">{t('admin.settings.connections.mobileScanner.label', 'Mobile Phone Upload')}</Text>
           </Group>
+
+          {/* Documentation Link */}
+          <Anchor
+            href="https://docs.stirlingpdf.com/Functionality/Mobile-Scanner"
+            target="_blank"
+            size="xs"
+            c="blue"
+          >
+            {t('admin.settings.connections.documentation', 'View documentation')} ↗
+          </Anchor>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>

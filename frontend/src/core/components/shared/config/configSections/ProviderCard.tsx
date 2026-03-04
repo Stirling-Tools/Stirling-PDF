@@ -11,6 +11,7 @@ import {
   Switch,
   NumberInput,
   TagsInput,
+  Anchor,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -223,6 +224,18 @@ export default function ProviderCard({
         {/* Expandable Settings */}
         <Collapse in={expanded}>
           <Stack gap="md" mt="xs">
+            {/* Documentation Link */}
+            {provider.documentationUrl && (
+              <Anchor
+                href={provider.documentationUrl}
+                target="_blank"
+                size="xs"
+                c="blue"
+              >
+                {t('admin.settings.connections.documentation', 'View documentation')} ↗
+              </Anchor>
+            )}
+
             {provider.fields.map((field) => renderField(field))}
 
             <Group justify="flex-end" mt="sm">
