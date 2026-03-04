@@ -67,7 +67,7 @@ public class ExtractImageScansController {
         MultipartFile inputFile = request.getFileInput();
 
         String fileName = inputFile.getOriginalFilename();
-        String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
+        String extension = fileName.substring(fileName.lastIndexOf('.') + 1);
 
         List<String> images = new ArrayList<>();
 

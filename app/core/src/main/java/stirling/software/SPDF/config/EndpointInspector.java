@@ -104,7 +104,7 @@ public class EndpointInspector implements ApplicationListener<ContextRefreshedEv
             String infoString = mappingInfo.toString();
             if (infoString.contains("{")) {
                 String patternsSection =
-                        infoString.substring(infoString.indexOf("{") + 1, infoString.indexOf("}"));
+                        infoString.substring(infoString.indexOf('{') + 1, infoString.indexOf('}'));
 
                 for (String pattern : patternsSection.split(",")) {
                     pattern = pattern.trim();

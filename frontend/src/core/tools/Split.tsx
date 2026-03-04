@@ -60,7 +60,7 @@ const Split = (props: BaseToolProps) => {
       {
         title: t("split.steps.chooseMethod", "Choose Method"),
         isCollapsed: !!base.params.parameters.method, // Collapse when method is selected
-        onCollapsedClick: () => base.params.updateParameter('method', ''),
+        onCollapsedClick: () => base.params.updateParameter('method', null),
         tooltip: methodTips,
         content: (
           <CardSelector<SplitMethod, MethodOption>
