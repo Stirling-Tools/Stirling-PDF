@@ -11,6 +11,7 @@ import PageLayoutMarginsBordersSettings from '@app/components/tools/pageLayout/P
 import { usePageLayoutTips } from '@app/components/tooltips/PageLayout/usePageLayoutTips';
 import { usePageLayoutAdvancedTips } from '@app/components/tooltips/PageLayout/usePageLayoutAdvancedTips';
 import { usePageLayoutMarginsBordersTips } from '@app/components/tooltips/PageLayout/usePageLayoutMarginsBordersTips';
+import PageLayoutPreview from '@app/components/tools/pageLayout/PageLayoutPreview';
 
 enum PageLayoutStep {
   NONE = 'none',
@@ -48,6 +49,9 @@ const PageLayout = (props: BaseToolProps) => {
       selectedFiles: base.selectedFiles,
       isCollapsed: base.hasResults,
     },
+    preview: (
+      <PageLayoutPreview parameters={base.params.parameters} />
+    ),
     steps: [
       {
         title: 'Layout settings',
@@ -63,7 +67,7 @@ const PageLayout = (props: BaseToolProps) => {
         ),
       },
       {
-        title: 'Advanced Settings',
+        title: 'Advanced settings',
         isCollapsed: accordion.getCollapsedState(PageLayoutStep.ADVANCED),
         onCollapsedClick: () => accordion.handleStepToggle(PageLayoutStep.ADVANCED),
         tooltip: pageLayoutAdvancedTips,

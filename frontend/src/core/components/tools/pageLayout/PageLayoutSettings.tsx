@@ -1,10 +1,9 @@
-import { Divider, Select, Stack, NumberInput } from '@mantine/core';
+import { Select, Stack, NumberInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { PageLayoutParameters } from '@app/hooks/tools/pageLayout/usePageLayoutParameters';
 import { getPagesPerSheetOptions } from '@app/components/tools/pageLayout/constants';
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 import ButtonSelector from '@app/components/shared/ButtonSelector';
-import LayoutPreview from '@app/components/tools/pageLayout/LayoutPreview';
 
 export default function PageLayoutSettings({
   parameters,
@@ -26,10 +25,6 @@ export default function PageLayoutSettings({
 
   return (
     <Stack gap="sm">
-
-      <LayoutPreview parameters={parameters} />
-      <Divider />
-
       <ButtonSelector
         label={'Mode'}
         options={[
