@@ -65,24 +65,17 @@ public class MultiPageLayoutController {
             case "DEFAULT":
                 pagesPerSheet = request.getPagesPerSheet();
                 if (pagesPerSheet != 2
-                        && pagesPerSheet != 3
                         && pagesPerSheet
                                 != (int) Math.sqrt(pagesPerSheet) * Math.sqrt(pagesPerSheet)) {
                     throw ExceptionUtils.createIllegalArgumentException(
                             "error.invalidFormat",
                             "Invalid {0} format: {1}",
                             "pagesPerSheet",
-                            "must be 2, 3 or a perfect square");
+                            "must be 2 or a perfect square");
                 }
 
-                cols =
-                        pagesPerSheet == 2 || pagesPerSheet == 3
-                                ? pagesPerSheet
-                                : (int) Math.sqrt(pagesPerSheet);
-                rows =
-                        pagesPerSheet == 2 || pagesPerSheet == 3
-                                ? 1
-                                : (int) Math.sqrt(pagesPerSheet);
+                cols = pagesPerSheet == 2 ? pagesPerSheet : (int) Math.sqrt(pagesPerSheet);
+                rows = pagesPerSheet == 2 ? 1 : (int) Math.sqrt(pagesPerSheet);
                 break;
             case "CUSTOM":
                 rows = request.getRows();
