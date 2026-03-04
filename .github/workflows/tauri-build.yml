@@ -14,7 +14,7 @@ on:
           - macos
           - linux
   pull_request:
-    branches: [main, V2-tauri-windows]
+    branches: [main]
     types: [opened, reopened, synchronize, ready_for_review]
     paths:
       - "frontend/src-tauri/**"
@@ -43,26 +43,41 @@ jobs:
 
       - name: Determine build matrix
         id: set-matrix
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
         run: |
+          WINDOWS='{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"}'
+          MACOS_ARM='{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"}'
+          MACOS_INTEL='{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"}'
+          LINUX='{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}'
+
+          # Resolve requested platform (non-dispatch events always build all)
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            case "${{ github.event.inputs.platform }}" in
-              "windows")
-                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"}]}' >> $GITHUB_OUTPUT
-                ;;
-              "macos")
-                echo 'matrix={"include":[{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"}]}' >> $GITHUB_OUTPUT
-                ;;
-              "linux")
-                echo 'matrix={"include":[{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
-                ;;
-              *)
-                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
-                ;;
-            esac
+            PLATFORM="${{ github.event.inputs.platform }}"
           else
-            # For PR/push events, build all platforms
-            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+            PLATFORM="all"
           fi
+
+          # Build candidate list
+          case "$PLATFORM" in
+            windows) ENTRIES=("$WINDOWS") ;;
+            macos)   ENTRIES=("$MACOS_ARM" "$MACOS_INTEL") ;;
+            linux)   ENTRIES=("$LINUX") ;;
+            *)       ENTRIES=("$WINDOWS" "$MACOS_ARM" "$MACOS_INTEL" "$LINUX") ;;
+          esac
+
+          # Drop macOS entries when Apple certificate secret is unavailable
+          if [ -z "$APPLE_CERTIFICATE" ]; then
+            echo "⚠️ APPLE_CERTIFICATE secret not available - skipping macOS builds"
+            FILTERED=()
+            for entry in "${ENTRIES[@]}"; do
+              [[ "$entry" != *'"macos'* ]] && FILTERED+=("$entry")
+            done
+            ENTRIES=("${FILTERED[@]}")
+          fi
+
+          JOINED=$(IFS=','; echo "${ENTRIES[*]}")
+          echo "matrix={\"include\":[$JOINED]}" >> $GITHUB_OUTPUT
 
   build:
     needs: determine-matrix
