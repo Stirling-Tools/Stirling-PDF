@@ -55,17 +55,17 @@ FROM ${BASE_IMAGE}
 
 # Application files.
 WORKDIR /app
-COPY --from=jar-extract --chown=1000:1000 /layers/dependencies/           /app/
-COPY --from=jar-extract --chown=1000:1000 /layers/spring-boot-loader/     /app/
-COPY --from=jar-extract --chown=1000:1000 /layers/snapshot-dependencies/  /app/
-COPY --from=jar-extract --chown=1000:1000 /layers/application/            /app/
+COPY --link --from=jar-extract --chown=1000:1000 /layers/dependencies/           /app/
+COPY --link --from=jar-extract --chown=1000:1000 /layers/spring-boot-loader/     /app/
+COPY --link --from=jar-extract --chown=1000:1000 /layers/snapshot-dependencies/  /app/
+COPY --link --from=jar-extract --chown=1000:1000 /layers/application/            /app/
 
-COPY --from=app-build --chown=1000:1000 \
+COPY --link --from=app-build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar
-COPY --chown=1000:1000 scripts/ /scripts/
+COPY --link --chown=1000:1000 scripts/ /scripts/
 
 # Fonts go to system dir — root ownership is correct (world-readable)
-COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
+COPY --link app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
 
 # Permissions and configuration.
 RUN set -eux; \
@@ -74,21 +74,51 @@ RUN set -eux; \
     ln -sf /opt/venv/bin/weasyprint /usr/local/bin/weasyprint; \
     ln -sf /opt/venv/bin/unoping    /usr/local/bin/unoping; \
     chmod +x /scripts/*; \
-    # Create /app symlinks
+    mkdir -p /configs /configs/cache /configs/heap_dumps /logs /customFiles \
+             /pipeline/watchedFolders /pipeline/finishedFolders \
+             /tmp/stirling-pdf/heap_dumps; \
+    # Create symlinks to allow app to find these in /app/
     ln -s /logs /app/logs; \
     ln -s /configs /app/configs; \
     ln -s /customFiles /app/customFiles; \
     ln -s /pipeline /app/pipeline; \
+    chown -R stirlingpdfuser:stirlingpdfgroup \
+      /home/stirlingpdfuser /configs /logs /customFiles /pipeline \
+      /tmp/stirling-pdf; \
     chown -h stirlingpdfuser:stirlingpdfgroup /app/logs /app/configs /app/customFiles /app/pipeline; \
     chown stirlingpdfuser:stirlingpdfgroup /app; \
-    fc-cache -f
+    fc-cache -f; \
+    find /opt/calibre -type d -name __pycache__ \
+      -exec rm -rf {} + 2>/dev/null || true
     # NOTE: Project Leyden AOT cache is generated in the background on first boot
     # by init-without-ocr.sh. The cache is picked up on subsequent boots for
     # 15-25% faster startup. See: JEP 483 + 514 + 515 (JDK 25).
 
 # Environment variables.
 ARG VERSION_TAG
-ENV VERSION_TAG=$VERSION_TAG
+# Write version to a file so it is readable by scripts without env-var inheritance.
+# init-without-ocr.sh reads /etc/stirling_version for the AOT cache fingerprint.
+RUN echo "${VERSION_TAG:-dev}" > /etc/stirling_version
+
+ENV VERSION_TAG=$VERSION_TAG \
+    STIRLING_AOT_ENABLE="false" \
+    STIRLING_JVM_PROFILE="balanced" \
+    _JVM_OPTS_BALANCED="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
+    _JVM_OPTS_PERFORMANCE="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+AlwaysPreTouch -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
+    JAVA_CUSTOM_OPTS="" \
+    HOME=/home/stirlingpdfuser \
+    PUID=${PUID} \
+    PGID=${PGID} \
+    UMASK=022 \
+    PATH="/opt/venv/bin:${PATH}" \
+    UNO_PATH=/usr/lib/libreoffice/program \
+    LIBREOFFICE_BIN_PATH=/usr/lib/libreoffice/program/soffice.bin \
+    STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
+    TMPDIR=/tmp/stirling-pdf \
+    TEMP=/tmp/stirling-pdf \
+    TMP=/tmp/stirling-pdf \
+    QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox --disable-gpu --disable-software-rasterizer" \
+    DBUS_SESSION_BUS_ADDRESS=/dev/null
 
 # Metadata labels.
 LABEL org.opencontainers.image.title="Stirling-PDF" \
@@ -106,8 +136,8 @@ LABEL org.opencontainers.image.title="Stirling-PDF" \
 EXPOSE 8080/tcp
 STOPSIGNAL SIGTERM
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD curl -fs --show-error http://localhost:8080/api/v1/info/status || exit 1
+HEALTHCHECK --interval=30s --timeout=15s --start-period=120s --retries=5 \
+  CMD curl -fs --max-time 10 http://localhost:8080/api/v1/info/status || exit 1
 
 ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
 CMD []
