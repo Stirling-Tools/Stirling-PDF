@@ -175,7 +175,8 @@ public class MultiPageLayoutController {
                     "only positive values are allowed");
         }
 
-        int borderWidth = request.getBorderWidth();
+        int borderWidth = request.getBorderWidth() == 0 ? 1 : request.getBorderWidth();
+
         if (addBorder && borderWidth <= 0) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.invalidFormat",
