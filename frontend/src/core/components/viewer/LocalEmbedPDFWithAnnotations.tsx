@@ -38,6 +38,24 @@ import { DocumentReadyWrapper } from '@app/components/viewer/DocumentReadyWrappe
 
 const DOCUMENT_NAME = 'stirling-pdf-signing-viewer';
 
+/**
+ * Fires a zoom reset after the Viewport mounts and the browser has computed layout.
+ * Fixes a race condition where the Viewport initializes with size 0 before the browser
+ * completes flex layout, causing the PDF to be invisible until the user zooms.
+ */
+function ViewportMountTrigger({ zoomApiRef }: { zoomApiRef: { current: any } }) {
+  useEffect(() => {
+    const outer = requestAnimationFrame(() => {
+      const inner = requestAnimationFrame(() => {
+        zoomApiRef.current?.resetZoom();
+      });
+      return () => cancelAnimationFrame(inner);
+    });
+    return () => cancelAnimationFrame(outer);
+  }, [zoomApiRef]);
+  return null;
+}
+
 export interface SignaturePreview {
   id: string;
   pageIndex: number;
@@ -358,7 +376,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
               <Viewport
                 documentId={documentId}
                 style={{
-                  backgroundColor: 'var(--bg-surface)',
+                  backgroundColor: 'var(--bg-background)',
                   height: '100%',
                   width: '100%',
                   maxHeight: '100%',
@@ -371,6 +389,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                   contain: 'strict',
                 }}
               >
+                <ViewportMountTrigger zoomApiRef={zoomApiRef} />
                 <Scroller
                   documentId={documentId}
                   renderPage={({ width, height, pageIndex }) => (
@@ -386,6 +405,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                             MozUserSelect: 'none',
                             msUserSelect: 'none',
                             cursor: placementMode ? 'crosshair' : 'default',
+                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
                           }}
                           draggable={false}
                           onDragStart={(e) => e.preventDefault()}

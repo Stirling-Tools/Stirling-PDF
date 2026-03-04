@@ -209,7 +209,8 @@ export const useFileManager = () => {
           console.warn('Failed to load server files:', error);
         }
 
-        try {
+        if (config?.storageShareLinksEnabled === true) {
+          try {
           const sharedResponse = await apiClient.get<AccessedShareLinkResponse[]>(
             '/api/v1/storage/share-links/accessed',
             { suppressErrorToast: true, skipAuthRedirect: true } as any
@@ -300,8 +301,9 @@ export const useFileManager = () => {
           }
 
           combinedStubs = [...combinedStubs, ...sharedStubs];
-        } catch (error) {
-          console.warn('Failed to load shared links:', error);
+          } catch (error) {
+            console.warn('Failed to load shared links:', error);
+          }
         }
       }
 
@@ -315,7 +317,7 @@ export const useFileManager = () => {
     } finally {
       setLoading(false);
     }
-  }, [indexedDB, config?.enableLogin, config?.storageEnabled, normalizeServerFileName]);
+  }, [indexedDB, config?.enableLogin, config?.storageEnabled, config?.storageShareLinksEnabled, normalizeServerFileName]);
 
   const handleRemoveFile = useCallback(async (index: number, files: StirlingFileStub[], setFiles: (files: StirlingFileStub[]) => void) => {
     const file = files[index];

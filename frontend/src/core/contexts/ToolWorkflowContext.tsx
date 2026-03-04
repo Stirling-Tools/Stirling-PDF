@@ -32,6 +32,7 @@ export interface CustomWorkbenchViewRegistration {
   label: string;
   icon?: React.ReactNode;
   component: React.ComponentType<{ data: any }>;
+  hideTopControls?: boolean;
 }
 
 export interface CustomWorkbenchViewInstance extends CustomWorkbenchViewRegistration {

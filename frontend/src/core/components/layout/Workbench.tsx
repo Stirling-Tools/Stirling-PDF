@@ -192,7 +192,7 @@ export default function Workbench() {
       }
     >
       {/* Top Controls */}
-      {activeFiles.length > 0 && (
+      {activeFiles.length > 0 && !customWorkbenchViews.find(v => v.workbenchId === currentView)?.hideTopControls && (
         <TopControls
           currentView={currentView}
           setCurrentView={setCurrentView}

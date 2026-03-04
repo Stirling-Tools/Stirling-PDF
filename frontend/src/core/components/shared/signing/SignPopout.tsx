@@ -10,7 +10,7 @@ import apiClient from '@app/services/apiClient';
 import { alert } from '@app/components/toast';
 import { SignRequestSummary, SignRequestDetail, SessionSummary, SessionDetail } from '@app/types/signingSession';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import { useNavigationActions } from '@app/contexts/NavigationContext';
+import { useNavigationActions, useNavigationState } from '@app/contexts/NavigationContext';
 import { useFileSelection } from '@app/contexts/file/fileHooks';
 import { fileStorage } from '@app/services/fileStorage';
 import { uploadHistoryChain } from '@app/services/serverStorageUpload';
@@ -57,6 +57,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL }: SignPopoutProps) => {
   const { selectedFiles } = useFileSelection();
   const { actions: fileActions } = useFileActions();
   const { actions: navigationActions } = useNavigationActions();
+  const { workbench: currentView } = useNavigationState();
   const {
     registerCustomWorkbenchView,
     unregisterCustomWorkbenchView,
@@ -77,6 +78,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL }: SignPopoutProps) => {
       workbenchId: SIGN_REQUEST_WORKBENCH_TYPE,
       label: t('certSign.collab.signRequest.workbenchTitle', 'Sign Request'),
       component: SignRequestWorkbenchView,
+      hideTopControls: true,
     });
 
     registerCustomWorkbenchView({
@@ -91,6 +93,13 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL }: SignPopoutProps) => {
       unregisterCustomWorkbenchView(SESSION_DETAIL_WORKBENCH_ID);
     };
   }, []);
+
+  // Clear sign request workbench data when the user navigates away from it
+  useEffect(() => {
+    if (currentView !== SIGN_REQUEST_WORKBENCH_TYPE) {
+      clearCustomWorkbenchViewData(SIGN_REQUEST_WORKBENCH_ID);
+    }
+  }, [currentView]);
 
   // Position popover
   useEffect(() => {

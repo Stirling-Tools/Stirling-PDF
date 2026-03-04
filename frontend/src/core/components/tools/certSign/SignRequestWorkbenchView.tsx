@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Paper, Group, Button, Text, Divider } from '@mantine/core';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { Paper, Group, Button, Text, Divider, CloseButton } from '@mantine/core';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
+import { LocalIcon } from '@app/components/shared/LocalIcon';
 import { Z_INDEX_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 import { SignRequestDetail } from '@app/types/signingSession';
 import { LocalEmbedPDFWithAnnotations, AnnotationAPI } from '@app/components/viewer/LocalEmbedPDFWithAnnotations';
@@ -13,6 +14,7 @@ import { alert } from '@app/components/toast';
 import SignControlsStrip from '@app/components/tools/certSign/SignControlsStrip';
 import { CertificateConfigModal } from '@app/components/tools/certSign/modals/CertificateConfigModal';
 import { SignParameters } from '@app/hooks/tools/sign/useSignParameters';
+import { useFileActions } from '@app/contexts/file/fileHooks';
 
 export interface SignRequestWorkbenchData {
   signRequest: SignRequestDetail;
@@ -30,6 +32,7 @@ interface SignRequestWorkbenchViewProps {
 const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
   const { t } = useTranslation();
   const { signRequest, pdfFile, onSign, onDecline, onBack, canSign } = data;
+  const { actions: fileActions } = useFileActions();
 
   // Ref for annotation API
   const annotationApiRef = useRef<AnnotationAPI | null>(null);
@@ -174,6 +177,18 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
     }
   };
 
+  const handleAddToActiveFiles = async () => {
+    await fileActions.addFiles([pdfFile]);
+    alert({
+      alertType: 'success',
+      title: t('success'),
+      body: t('certSign.collab.signRequest.addedToFiles', 'Document added to active files'),
+      expandable: false,
+      durationMs: 2500,
+    });
+    onBack();
+  };
+
   const handleDeleteSelected = () => {
     (annotationApiRef.current as any)?.deleteSelectedAnnotation?.();
   };
@@ -195,15 +210,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
       <Paper p="sm" shadow="sm" style={{ flexShrink: 0, zIndex: Z_INDEX_FULLSCREEN_SURFACE, position: 'relative' }}>
         <Group justify="space-between">
           <Group gap="md">
-            <Button
-              leftSection={<ArrowBackIcon />}
-              variant="subtle"
-              onClick={onBack}
-              size="sm"
-            >
-              {t('certSign.collab.signRequest.backToList', 'Back to Sign Requests')}
-            </Button>
-            <Divider orientation="vertical" />
+            <LocalIcon icon="signature-rounded" width="1.5rem" height="1.5rem" />
             <div>
               <Text size="sm" fw={600}>
                 {signRequest.documentName}
@@ -216,9 +223,23 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
           </Group>
 
           <Group gap="xs">
+            <Button
+              variant="light"
+              size="sm"
+              leftSection={<FolderOpenIcon fontSize="small" />}
+              onClick={handleAddToActiveFiles}
+              style={{
+                backgroundColor: 'var(--landing-inner-paper-bg)',
+                color: 'var(--btn-open-file)',
+                border: '1px solid var(--landing-inner-paper-border)',
+              }}
+            >
+              {t('certSign.collab.signRequest.addToFiles', 'Add to Active Files')}
+            </Button>
+            <Divider orientation="vertical" />
             <Button.Group>
               <Button
-                variant="default"
+                variant="subtle"
                 size="sm"
                 onClick={() => annotationApiRef.current?.zoomOut()}
                 title={t('viewer.zoomOut', 'Zoom out')}
@@ -226,7 +247,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
                 <ZoomOutIcon fontSize="small" />
               </Button>
               <Button
-                variant="default"
+                variant="subtle"
                 size="sm"
                 onClick={() => annotationApiRef.current?.resetZoom()}
                 title={t('viewer.resetZoom', 'Reset zoom')}
@@ -234,7 +255,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
                 <ZoomOutMapIcon fontSize="small" />
               </Button>
               <Button
-                variant="default"
+                variant="subtle"
                 size="sm"
                 onClick={() => annotationApiRef.current?.zoomIn()}
                 title={t('viewer.zoomIn', 'Zoom in')}
@@ -242,6 +263,8 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
                 <ZoomInIcon fontSize="small" />
               </Button>
             </Button.Group>
+            <Divider orientation="vertical" />
+            <CloseButton size="md" onClick={onBack} title={t('certSign.collab.signRequest.backToList', 'Back to Sign Requests')} />
           </Group>
         </Group>
       </Paper>
@@ -289,7 +312,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
       )}
 
       {/* Decline Button (for view-only users) */}
-      {!canSign && (
+      {!canSign && signRequest.myStatus !== 'SIGNED' && (
         <Paper p="md" shadow="sm" style={{ flexShrink: 0 }}>
           <Group justify="center">
             <Button
