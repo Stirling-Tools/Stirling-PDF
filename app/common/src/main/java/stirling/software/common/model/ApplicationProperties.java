@@ -365,11 +365,11 @@ public class ApplicationProperties {
             }
 
             public boolean isSettingsValid() {
-                return !ValidationUtils.isStringEmpty(this.getIssuer())
-                        && !ValidationUtils.isStringEmpty(this.getClientId())
-                        && !ValidationUtils.isStringEmpty(this.getClientSecret())
-                        && !ValidationUtils.isCollectionEmpty(this.getScopes())
-                        && !ValidationUtils.isStringEmpty(this.getUseAsUsername());
+                return !ValidationUtils.isStringEmpty(this.issuer)
+                        && !ValidationUtils.isStringEmpty(this.clientId)
+                        && !ValidationUtils.isStringEmpty(this.clientSecret)
+                        && !ValidationUtils.isCollectionEmpty(this.scopes)
+                        && !ValidationUtils.isStringEmpty(this.useAsUsername);
             }
 
             @Data
@@ -575,19 +575,17 @@ public class ApplicationProperties {
         }
 
         public boolean isAnalyticsEnabled() {
-            return this.getEnableAnalytics() != null && this.getEnableAnalytics();
+            return this.enableAnalytics != null && this.enableAnalytics;
         }
 
         public boolean isPosthogEnabled() {
             // Treat null as enabled when analytics is enabled
-            return this.isAnalyticsEnabled()
-                    && (this.getEnablePosthog() == null || this.getEnablePosthog());
+            return this.isAnalyticsEnabled() && (this.enablePosthog == null || this.enablePosthog);
         }
 
         public boolean isScarfEnabled() {
             // Treat null as enabled when analytics is enabled
-            return this.isAnalyticsEnabled()
-                    && (this.getEnableScarf() == null || this.getEnableScarf());
+            return this.isAnalyticsEnabled() && (this.enableScarf == null || this.enableScarf);
         }
     }
 

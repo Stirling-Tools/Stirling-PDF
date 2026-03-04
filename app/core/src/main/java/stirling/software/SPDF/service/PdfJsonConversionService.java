@@ -273,11 +273,11 @@ public class PdfJsonConversionService {
 
         // Get job ID from request context if running in async mode
         String contextJobId = getJobIdFromRequest();
-        boolean isRealJobId = (contextJobId != null && !contextJobId.isEmpty());
+        boolean useLazyImages = (contextJobId != null && !contextJobId.isEmpty());
 
         // Generate synthetic jobId for synchronous conversions to prevent cache collisions
         final String jobId;
-        if (!isRealJobId) {
+        if (!useLazyImages) {
             jobId = "pdf2json:" + java.util.UUID.randomUUID().toString();
             log.debug("Generated synthetic jobId for synchronous conversion: {}", jobId);
         } else {
@@ -302,7 +302,7 @@ public class PdfJsonConversionService {
                                             : "");
                             progressCallback.accept(p);
                         }
-                        : isRealJobId
+                        : useLazyImages
                                 ? (p) -> {
                                     log.debug(
                                             "Progress: [{}%] {} - {}{}",
@@ -369,7 +369,6 @@ public class PdfJsonConversionService {
                 int totalPages = document.getNumberOfPages();
                 // Always enable lazy mode for real async jobs so cache is available regardless of
                 // page count. Synchronous calls with synthetic jobId still do full extraction.
-                boolean useLazyImages = isRealJobId;
                 Map<COSBase, FontModelCacheEntry> fontCache = new IdentityHashMap<>();
                 Map<COSBase, EncodedImage> imageCache = new IdentityHashMap<>();
                 log.debug(
@@ -377,7 +376,7 @@ public class PdfJsonConversionService {
                         totalPages,
                         useLazyImages ? "lazy image" : "standard",
                         jobId,
-                        isRealJobId);
+                        useLazyImages);
                 Map<String, PdfJsonFont> fonts = new LinkedHashMap<>();
                 Map<Integer, List<PdfJsonTextElement>> textByPage = new LinkedHashMap<>();
                 Map<Integer, Map<PDFont, String>> pageFontResources = new HashMap<>();
@@ -431,7 +430,7 @@ public class PdfJsonConversionService {
                 progress.accept(
                         PdfJsonConversionProgress.of(
                                 80, "annotations", "Collecting annotations and form fields"));
-                boolean includeAnnotationRawData = !(lightweight && isRealJobId);
+                boolean includeAnnotationRawData = !(lightweight && useLazyImages);
                 Map<Integer, List<PdfJsonAnnotation>> annotationsByPage =
                         collectAnnotations(
                                 document, totalPages, progress, includeAnnotationRawData);
@@ -463,8 +462,8 @@ public class PdfJsonConversionService {
                                 textByPage,
                                 imagesByPage,
                                 annotationsByPage,
-                                lightweight && isRealJobId));
-                if (lightweight && isRealJobId) {
+                                lightweight && useLazyImages));
+                if (lightweight && useLazyImages) {
                     // Lightweight async editor flow does not use form fields and this payload can
                     // be
                     // very large due nested raw dictionaries.
@@ -474,12 +473,11 @@ public class PdfJsonConversionService {
                 }
 
                 // Only cache for real async jobIds, not synthetic synchronous ones
-                if (useLazyImages && isRealJobId) {
+                if (useLazyImages) {
                     log.debug(
-                            "Creating cache for jobId: {} (useLazyImages={}, isRealJobId={})",
+                            "Creating cache for jobId: {} (useLazyImages={})",
                             jobId,
-                            useLazyImages,
-                            isRealJobId);
+                            useLazyImages);
                     PdfJsonDocumentMetadata docMetadata = new PdfJsonDocumentMetadata();
                     docMetadata.setMetadata(pdfJson.getMetadata());
                     docMetadata.setXmpMetadata(pdfJson.getXmpMetadata());
@@ -529,16 +527,15 @@ public class PdfJsonConversionService {
                     scheduleDocumentCleanup(jobId);
                 } else {
                     log.warn(
-                            "Skipping cache creation: useLazyImages={}, isRealJobId={}, jobId={}",
+                            "Skipping cache creation: useLazyImages={}, jobId={}",
                             useLazyImages,
-                            isRealJobId,
                             jobId);
                 }
 
                 if (lightweight) {
                     applyLightweightTransformations(pdfJson);
                 }
-                if (lightweight && isRealJobId) {
+                if (lightweight && useLazyImages) {
                     stripFontProgramPayloads(responseFonts);
                     stripFontCosStreamData(responseFonts);
                 }
@@ -2503,11 +2500,12 @@ public class PdfJsonConversionService {
                     PDRectangle rect = annotation.getRectangle();
                     if (rect != null) {
                         ann.setRect(
-                                List.of(
-                                        rect.getLowerLeftX(),
-                                        rect.getLowerLeftY(),
-                                        rect.getUpperRightX(),
-                                        rect.getUpperRightY()));
+                                new float[] {
+                                    rect.getLowerLeftX(),
+                                    rect.getLowerLeftY(),
+                                    rect.getUpperRightX(),
+                                    rect.getUpperRightY()
+                                });
                     }
 
                     COSName appearanceState = annotation.getAppearanceState();
@@ -2516,12 +2514,7 @@ public class PdfJsonConversionService {
                     }
 
                     if (annotation.getColor() != null) {
-                        float[] colorComponents = annotation.getColor().getComponents();
-                        List<Float> colorList = new ArrayList<>(colorComponents.length);
-                        for (float c : colorComponents) {
-                            colorList.add(c);
-                        }
-                        ann.setColor(colorList);
+                        ann.setColor(annotation.getColor().getComponents());
                     }
 
                     COSDictionary annotDict = annotation.getCOSObject();
@@ -2636,11 +2629,12 @@ public class PdfJsonConversionService {
                             PDRectangle rect = widget.getRectangle();
                             if (rect != null) {
                                 formField.setRect(
-                                        List.of(
-                                                rect.getLowerLeftX(),
-                                                rect.getLowerLeftY(),
-                                                rect.getUpperRightX(),
-                                                rect.getUpperRightY()));
+                                        new float[] {
+                                            rect.getLowerLeftX(),
+                                            rect.getLowerLeftY(),
+                                            rect.getUpperRightX(),
+                                            rect.getUpperRightY()
+                                        });
                             }
                         }
                     }
@@ -3351,7 +3345,7 @@ public class PdfJsonConversionService {
         PDFont currentFont = baseFont;
         String currentFontId = baseFontId;
 
-        List<Integer> elementCodes = element.getCharCodes();
+        int[] elementCodes = element.getCharCodes();
         int codeIndex = 0;
         boolean rawType3CodesUsed = false;
         int rawType3GlyphCount = 0;
@@ -3363,8 +3357,8 @@ public class PdfJsonConversionService {
             PDFont targetFont = baseFont;
             String targetFontId = baseFontId;
             Integer rawCode = null;
-            if (elementCodes != null && codeIndex < elementCodes.size()) {
-                rawCode = elementCodes.get(codeIndex);
+            if (elementCodes != null && codeIndex < elementCodes.length) {
+                rawCode = elementCodes[codeIndex];
             }
             codeIndex++;
 
@@ -3667,10 +3661,7 @@ public class PdfJsonConversionService {
         if (color == null || color.getComponents() == null) {
             return;
         }
-        float[] components = new float[color.getComponents().size()];
-        for (int i = 0; i < components.length; i++) {
-            components[i] = color.getComponents().get(i);
-        }
+        float[] components = color.getComponents();
         String space = color.getColorSpace();
         if (space == null) {
             // Infer color space from component count
@@ -4287,8 +4278,11 @@ public class PdfJsonConversionService {
         List<Integer> combinedCodes = new ArrayList<>();
         for (PdfJsonTextElement element : elements) {
             builder.append(Objects.toString(element.getText(), ""));
-            if (element.getCharCodes() != null && !element.getCharCodes().isEmpty()) {
-                combinedCodes.addAll(element.getCharCodes());
+            int[] codes = element.getCharCodes();
+            if (codes != null && codes.length > 0) {
+                for (int code : codes) {
+                    combinedCodes.add(code);
+                }
             }
         }
         return new MergedText(builder.toString(), combinedCodes.isEmpty() ? null : combinedCodes);
@@ -4354,9 +4348,9 @@ public class PdfJsonConversionService {
         }
 
         private int countGlyphs(PdfJsonTextElement element) {
-            List<Integer> codes = element.getCharCodes();
-            if (codes != null && !codes.isEmpty()) {
-                return codes.size();
+            int[] codes = element.getCharCodes();
+            if (codes != null && codes.length > 0) {
+                return codes.length;
             }
             String text = element.getText();
             if (text != null && !text.isEmpty()) {
@@ -4920,15 +4914,15 @@ public class PdfJsonConversionService {
 
     private void applyTextMatrix(PDPageContentStream contentStream, PdfJsonTextElement element)
             throws IOException {
-        List<Float> matrix = element.getTextMatrix();
-        if (matrix != null && matrix.size() == 6) {
+        float[] matrix = element.getTextMatrix();
+        if (matrix != null && matrix.length == 6) {
             float fontScale = resolveFontMatrixSize(element);
-            float a = matrix.get(0);
-            float b = matrix.get(1);
-            float c = matrix.get(2);
-            float d = matrix.get(3);
-            float e = matrix.get(4);
-            float f = matrix.get(5);
+            float a = matrix[0];
+            float b = matrix[1];
+            float c = matrix[2];
+            float d = matrix[3];
+            float e = matrix[4];
+            float f = matrix[5];
 
             if (fontScale != 0f) {
                 a /= fontScale;
@@ -4950,12 +4944,12 @@ public class PdfJsonConversionService {
         if (fromElement != null && fromElement > 0f) {
             return fromElement;
         }
-        List<Float> matrix = element.getTextMatrix();
-        if (matrix != null && matrix.size() >= 4) {
-            float a = matrix.get(0);
-            float b = matrix.get(1);
-            float c = matrix.get(2);
-            float d = matrix.get(3);
+        float[] matrix = element.getTextMatrix();
+        if (matrix != null && matrix.length >= 4) {
+            float a = matrix[0];
+            float b = matrix[1];
+            float c = matrix[2];
+            float d = matrix[3];
             float verticalScale = (float) Math.hypot(b, d);
             if (verticalScale > 0f) {
                 return verticalScale;
@@ -5048,7 +5042,7 @@ public class PdfJsonConversionService {
             }
             Matrix ctm = getGraphicsState().getCurrentTransformationMatrix();
             Bounds bounds = computeBounds(ctm);
-            List<Float> matrixValues = toMatrixValues(ctm);
+            float[] matrixValues = toMatrixValues(ctm);
 
             PdfJsonImageElement element =
                     PdfJsonImageElement.builder()
@@ -5222,15 +5216,15 @@ public class PdfJsonConversionService {
 
     private record EncodedImage(String base64, String format) {}
 
-    private List<Float> toMatrixValues(Matrix matrix) {
-        List<Float> values = new ArrayList<>(6);
-        values.add(matrix.getValue(0, 0));
-        values.add(matrix.getValue(0, 1));
-        values.add(matrix.getValue(1, 0));
-        values.add(matrix.getValue(1, 1));
-        values.add(matrix.getValue(2, 0));
-        values.add(matrix.getValue(2, 1));
-        return values;
+    private float[] toMatrixValues(Matrix matrix) {
+        return new float[] {
+            matrix.getValue(0, 0),
+            matrix.getValue(0, 1),
+            matrix.getValue(1, 0),
+            matrix.getValue(1, 1),
+            matrix.getValue(2, 0),
+            matrix.getValue(2, 1)
+        };
     }
 
     private EncodedImage encodeImage(PDImage image) {
@@ -5341,16 +5335,16 @@ public class PdfJsonConversionService {
             cache.put(cacheKey, image);
         }
 
-        List<Float> transform = element.getTransform();
-        if (transform != null && transform.size() == 6) {
+        float[] transform = element.getTransform();
+        if (transform != null && transform.length == 6) {
             Matrix matrix =
                     new Matrix(
-                            safeFloat(transform.get(0), 1f),
-                            safeFloat(transform.get(1), 0f),
-                            safeFloat(transform.get(2), 0f),
-                            safeFloat(transform.get(3), 1f),
-                            safeFloat(transform.get(4), 0f),
-                            safeFloat(transform.get(5), 0f));
+                            safeFloat(transform[0], 1f),
+                            safeFloat(transform[1], 0f),
+                            safeFloat(transform[2], 0f),
+                            safeFloat(transform[3], 1f),
+                            safeFloat(transform[4], 0f),
+                            safeFloat(transform[5], 0f));
             contentStream.drawImage(image, matrix);
             return;
         }
@@ -5516,14 +5510,17 @@ public class PdfJsonConversionService {
             if (pdfont instanceof PDType3Font) {
                 int[] codes = position.getCharacterCodes();
                 if (codes != null && codes.length > 0) {
-                    List<Integer> codeList = new ArrayList<>(codes.length);
+                    int count = 0;
                     for (int code : codes) {
-                        if (code >= 0) {
-                            codeList.add(code);
-                        }
+                        if (code >= 0) count++;
                     }
-                    if (!codeList.isEmpty()) {
-                        element.setCharCodes(codeList);
+                    if (count > 0) {
+                        int[] filtered = new int[count];
+                        int idx = 0;
+                        for (int code : codes) {
+                            if (code >= 0) filtered[idx++] = code;
+                        }
+                        element.setCharCodes(filtered);
                     }
                 }
             }
@@ -5552,11 +5549,11 @@ public class PdfJsonConversionService {
                 return;
             }
 
-            List<Float> matrix = element.getTextMatrix();
+            float[] matrix = element.getTextMatrix();
             if (matrix != null) {
-                if (matrix.isEmpty()) {
+                if (matrix.length == 0) {
                     element.setTextMatrix(null);
-                } else if (matrix.size() == 6) {
+                } else if (matrix.length == 6) {
                     element.setX(null);
                     element.setY(null);
                 }
@@ -5597,29 +5594,29 @@ public class PdfJsonConversionService {
             if (color == null || color.getComponents() == null) {
                 return true;
             }
-            List<Float> components = color.getComponents();
-            if (components.isEmpty()) {
+            float[] components = color.getComponents();
+            if (components.length == 0) {
                 return true;
             }
             String space = color.getColorSpace();
             if (space == null || "DeviceRGB".equals(space)) {
-                if (components.size() < 3) {
+                if (components.length < 3) {
                     return false;
                 }
-                return Math.abs(components.get(0)) < FLOAT_EPSILON
-                        && Math.abs(components.get(1)) < FLOAT_EPSILON
-                        && Math.abs(components.get(2)) < FLOAT_EPSILON;
+                return Math.abs(components[0]) < FLOAT_EPSILON
+                        && Math.abs(components[1]) < FLOAT_EPSILON
+                        && Math.abs(components[2]) < FLOAT_EPSILON;
             }
             if ("DeviceGray".equals(space)) {
-                return Math.abs(components.get(0)) < FLOAT_EPSILON;
+                return Math.abs(components[0]) < FLOAT_EPSILON;
             }
             return false;
         }
 
         private Float baselineFrom(PdfJsonTextElement element) {
-            List<Float> matrix = element.getTextMatrix();
-            if (matrix != null && matrix.size() >= 6) {
-                return matrix.get(5);
+            float[] matrix = element.getTextMatrix();
+            if (matrix != null && matrix.length >= 6) {
+                return matrix[5];
             }
             return element.getY();
         }
@@ -5648,11 +5645,12 @@ public class PdfJsonConversionService {
             private final float orientationC;
             private final float orientationD;
             private final Float baseline;
-            private final List<Float> baseMatrix;
+            private final float[] baseMatrix;
             private final float startXCoord;
             private final float startYCoord;
             private final StringBuilder textBuilder = new StringBuilder();
-            private final List<Integer> charCodeBuffer = new ArrayList<>();
+            private int[] charCodeBuf = new int[16];
+            private int charCodeLen = 0;
             private float totalWidth;
             private float maxHeight;
             private float endXCoord;
@@ -5660,17 +5658,15 @@ public class PdfJsonConversionService {
             TextRunAccumulator(PdfJsonTextElement element, TextPosition position) {
                 this.baseElement = element;
                 this.styleKey = buildStyleKey(element);
-                this.baseMatrix =
-                        element.getTextMatrix() != null
-                                ? new ArrayList<>(element.getTextMatrix())
-                                : null;
-                if (baseMatrix != null && baseMatrix.size() >= 6) {
-                    orientationA = baseMatrix.get(0);
-                    orientationB = baseMatrix.get(1);
-                    orientationC = baseMatrix.get(2);
-                    orientationD = baseMatrix.get(3);
-                    startXCoord = baseMatrix.get(4);
-                    startYCoord = baseMatrix.get(5);
+                float[] tm = element.getTextMatrix();
+                this.baseMatrix = tm != null ? tm.clone() : null;
+                if (baseMatrix != null && baseMatrix.length >= 6) {
+                    orientationA = baseMatrix[0];
+                    orientationB = baseMatrix[1];
+                    orientationC = baseMatrix[2];
+                    orientationD = baseMatrix[3];
+                    startXCoord = baseMatrix[4];
+                    startYCoord = baseMatrix[5];
                 } else {
                     orientationA = 1f;
                     orientationB = 0f;
@@ -5684,25 +5680,23 @@ public class PdfJsonConversionService {
                 this.maxHeight = element.getHeight() != null ? element.getHeight() : 0f;
                 this.endXCoord = position.getXDirAdj() + position.getWidthDirAdj();
                 this.textBuilder.append(element.getText());
-                if (element.getCharCodes() != null) {
-                    charCodeBuffer.addAll(element.getCharCodes());
-                }
+                appendCharCodes(element.getCharCodes());
             }
 
             boolean canAppend(PdfJsonTextElement element, TextPosition position) {
                 if (!styleKey.equals(buildStyleKey(element))) {
                     return false;
                 }
-                List<Float> matrix = element.getTextMatrix();
+                float[] matrix = element.getTextMatrix();
                 float a = 1f;
                 float b = 0f;
                 float c = 0f;
                 float d = 1f;
-                if (matrix != null && matrix.size() >= 4) {
-                    a = matrix.get(0);
-                    b = matrix.get(1);
-                    c = matrix.get(2);
-                    d = matrix.get(3);
+                if (matrix != null && matrix.length >= 4) {
+                    a = matrix[0];
+                    b = matrix[1];
+                    c = matrix[2];
+                    d = matrix[3];
                 }
                 if (Math.abs(a - orientationA) > ORIENTATION_TOLERANCE
                         || Math.abs(b - orientationB) > ORIENTATION_TOLERANCE
@@ -5734,9 +5728,19 @@ public class PdfJsonConversionService {
                     maxHeight = height;
                 }
                 endXCoord = position.getXDirAdj() + position.getWidthDirAdj();
-                if (element.getCharCodes() != null) {
-                    charCodeBuffer.addAll(element.getCharCodes());
+                appendCharCodes(element.getCharCodes());
+            }
+
+            private void appendCharCodes(int[] codes) {
+                if (codes == null) return;
+                int needed = charCodeLen + codes.length;
+                if (needed > charCodeBuf.length) {
+                    charCodeBuf =
+                            java.util.Arrays.copyOf(
+                                    charCodeBuf, Math.max(needed, charCodeBuf.length * 2));
                 }
+                System.arraycopy(codes, 0, charCodeBuf, charCodeLen, codes.length);
+                charCodeLen += codes.length;
             }
 
             PdfJsonTextElement build() {
@@ -5748,22 +5752,21 @@ public class PdfJsonConversionService {
                 }
                 result.setWidth(totalWidth);
                 result.setHeight(maxHeight);
-                if (baseMatrix != null && baseMatrix.size() == 6) {
-                    List<Float> matrix = new ArrayList<>(baseMatrix);
-                    matrix.set(0, orientationA);
-                    matrix.set(1, orientationB);
-                    matrix.set(2, orientationC);
-                    matrix.set(3, orientationD);
-                    matrix.set(4, startXCoord);
-                    matrix.set(5, startYCoord);
+                if (baseMatrix != null && baseMatrix.length == 6) {
+                    float[] matrix =
+                            new float[] {
+                                orientationA, orientationB,
+                                orientationC, orientationD,
+                                startXCoord, startYCoord
+                            };
                     result.setTextMatrix(matrix);
                     result.setX(null);
                     result.setY(null);
                 }
-                if (charCodeBuffer.isEmpty()) {
+                if (charCodeLen == 0) {
                     result.setCharCodes(null);
                 } else {
-                    result.setCharCodes(new ArrayList<>(charCodeBuffer));
+                    result.setCharCodes(java.util.Arrays.copyOf(charCodeBuf, charCodeLen));
                 }
                 compactTextElement(result);
                 return result;
@@ -5784,29 +5787,25 @@ public class PdfJsonConversionService {
                 Integer renderingMode,
                 Float spaceWidth) {}
 
-        private List<Float> extractMatrix(TextPosition position) {
-            float[] values = new float[6];
-            values[0] = position.getTextMatrix().getValue(0, 0);
-            values[1] = position.getTextMatrix().getValue(0, 1);
-            values[2] = position.getTextMatrix().getValue(1, 0);
-            values[3] = position.getTextMatrix().getValue(1, 1);
-            values[4] = position.getTextMatrix().getValue(2, 0);
-            values[5] = position.getTextMatrix().getValue(2, 1);
-            List<Float> matrix = new ArrayList<>(6);
-            for (float value : values) {
-                matrix.add(value);
-            }
-            return matrix;
+        private float[] extractMatrix(TextPosition position) {
+            return new float[] {
+                position.getTextMatrix().getValue(0, 0),
+                position.getTextMatrix().getValue(0, 1),
+                position.getTextMatrix().getValue(1, 0),
+                position.getTextMatrix().getValue(1, 1),
+                position.getTextMatrix().getValue(2, 0),
+                position.getTextMatrix().getValue(2, 1)
+            };
         }
 
-        private Float computeFontMatrixSize(List<Float> matrix) {
-            if (matrix == null || matrix.size() < 4) {
+        private Float computeFontMatrixSize(float[] matrix) {
+            if (matrix == null || matrix.length < 4) {
                 return null;
             }
-            float a = matrix.get(0);
-            float b = matrix.get(1);
-            float c = matrix.get(2);
-            float d = matrix.get(3);
+            float a = matrix[0];
+            float b = matrix[1];
+            float c = matrix[2];
+            float d = matrix[3];
             float scaleX = (float) Math.hypot(a, c);
             float scaleY = (float) Math.hypot(b, d);
             float scale = Math.max(scaleX, scaleY);
@@ -5850,11 +5849,10 @@ public class PdfJsonConversionService {
                         colorSpaceName,
                         ex.getMessage());
             }
-            List<Float> values = new ArrayList<>(effective.length);
-            for (float component : effective) {
-                values.add(component);
-            }
-            return PdfJsonTextColor.builder().colorSpace(colorSpaceName).components(values).build();
+            return PdfJsonTextColor.builder()
+                    .colorSpace(colorSpaceName)
+                    .components(effective)
+                    .build();
         }
 
         private String sanitizeForLog(String value) {
@@ -6241,11 +6239,12 @@ public class PdfJsonConversionService {
                     PDRectangle rect = annotation.getRectangle();
                     if (rect != null) {
                         ann.setRect(
-                                List.of(
-                                        rect.getLowerLeftX(),
-                                        rect.getLowerLeftY(),
-                                        rect.getUpperRightX(),
-                                        rect.getUpperRightY()));
+                                new float[] {
+                                    rect.getLowerLeftX(),
+                                    rect.getLowerLeftY(),
+                                    rect.getUpperRightX(),
+                                    rect.getUpperRightY()
+                                });
                     }
 
                     COSName appearanceState = annotation.getAppearanceState();
@@ -6254,12 +6253,7 @@ public class PdfJsonConversionService {
                     }
 
                     if (annotation.getColor() != null) {
-                        float[] colorComponents = annotation.getColor().getComponents();
-                        List<Float> colorList = new ArrayList<>(colorComponents.length);
-                        for (float c : colorComponents) {
-                            colorList.add(c);
-                        }
-                        ann.setColor(colorList);
+                        ann.setColor(annotation.getColor().getComponents());
                     }
 
                     COSDictionary annotDict = annotation.getCOSObject();
