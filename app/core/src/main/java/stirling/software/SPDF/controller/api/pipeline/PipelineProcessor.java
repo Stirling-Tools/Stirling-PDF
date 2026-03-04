@@ -67,7 +67,7 @@ public class PipelineProcessor {
 
     public static String removeTrailingNaming(String filename) {
         // Splitting filename into name and extension
-        int dotIndex = filename.lastIndexOf(".");
+        int dotIndex = filename.lastIndexOf('.');
         if (dotIndex == -1) {
             // No extension found
             return filename;
@@ -75,7 +75,7 @@ public class PipelineProcessor {
         String name = filename.substring(0, dotIndex);
         String extension = filename.substring(dotIndex);
         // Finding the last underscore
-        int underscoreIndex = name.lastIndexOf("_");
+        int underscoreIndex = name.lastIndexOf('_');
         if (underscoreIndex == -1) {
             // No underscore found
             return filename;
@@ -173,7 +173,7 @@ public class PipelineProcessor {
                         String providedExtension = "no extension";
                         if (filename != null && filename.contains(".")) {
                             providedExtension =
-                                    filename.substring(filename.lastIndexOf("."))
+                                    filename.substring(filename.lastIndexOf('.'))
                                             .toLowerCase(Locale.ROOT);
                         }
 
@@ -248,7 +248,7 @@ public class PipelineProcessor {
                                                 String filename = file.getFilename();
                                                 if (filename != null && filename.contains(".")) {
                                                     return filename.substring(
-                                                                    filename.lastIndexOf("."))
+                                                                    filename.lastIndexOf('.'))
                                                             .toLowerCase(Locale.ROOT);
                                                 }
                                                 return "no extension";
@@ -450,7 +450,21 @@ public class PipelineProcessor {
         return isZip(data, null);
     }
 
+    private static final int MAX_UNZIP_DEPTH = 10;
+
     private List<Resource> unzip(Resource data, PipelineResult result) throws IOException {
+        return unzip(data, result, 0);
+    }
+
+    private List<Resource> unzip(Resource data, PipelineResult result, int depth)
+            throws IOException {
+        if (depth > MAX_UNZIP_DEPTH) {
+            log.warn(
+                    "ZIP nesting depth {} exceeds limit {}, treating as file",
+                    depth,
+                    MAX_UNZIP_DEPTH);
+            return List.of(data);
+        }
         log.info("Unzipping data of length: {}", data.contentLength());
         List<Resource> unzippedFiles = new ArrayList<>();
         try (InputStream bais = data.getInputStream();
@@ -481,7 +495,7 @@ public class PipelineProcessor {
                 // If the unzipped file is a zip file, unzip it
                 if (isZip(fileResource, filename)) {
                     log.info("File {} is a zip file. Unzipping...", filename);
-                    unzippedFiles.addAll(unzip(fileResource, result));
+                    unzippedFiles.addAll(unzip(fileResource, result, depth + 1));
                 } else {
                     unzippedFiles.add(fileResource);
                 }
