@@ -166,8 +166,13 @@ export default function RightRail() {
     }
 
     if (currentView === 'pageEditor') {
-      pageEditorFunctions?.onExportAll?.();
-      return;
+      const fileToCheck = selectedFiles.length > 0 ? selectedFiles[0] : activeFiles[0];
+      const isPdf = fileToCheck?.name.toLowerCase().endsWith('.pdf');
+      if (isPdf || !fileToCheck) {
+        pageEditorFunctions?.onExportAll?.();
+        return;
+      }
+      // Non-PDF file in page editor (e.g. ZIP) — fall through to generic save below
     }
 
     const filesToExport = selectedFiles.length > 0 ? selectedFiles : activeFiles;
