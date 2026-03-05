@@ -26,7 +26,7 @@ import {
 } from '@app/types/fileContext';
 
 // Import modular components
-import { fileContextReducer, initialFileContextState } from '@app/contexts/file/fileReducer';
+import { fileContextReducer, initialFileContextState } from '@app/contexts/file/FileReducer';
 import { createFileSelectors } from '@app/contexts/file/fileSelectors';
 import { addFiles, addStirlingFileStubs, consumeFiles, undoConsumeFiles, createFileActions, createChildStub, generateProcessedFileMetadata } from '@app/contexts/file/fileActions';
 import { FileLifecycleManager } from '@app/contexts/file/lifecycle';
@@ -103,7 +103,7 @@ function FileContextInner({
 
   useEffect(() => {
     const previousIds = observedFileIdsRef.current;
-    const nextIds = new Set(state.files.ids);
+    const nextIds = new Set<FileId>(state.files.ids);
     const newEncryptedIds: FileId[] = [];
 
     for (const id of state.files.ids) {
