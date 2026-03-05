@@ -1,6 +1,9 @@
 # Stirling-PDF - Full version (embedded frontend)
 # Uses pre-compiled base image with tools, extends with app JAR
 
+# Global build argument - must be before any FROM statements
+ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:1.0.0
+
 FROM gradle:9.3.1-jdk25 AS app-build
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -50,7 +53,6 @@ RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
 
 
 # Final runtime image - based on pre-compiled tools.
-ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:1.0.0
 FROM ${BASE_IMAGE}
 
 # Application files.
