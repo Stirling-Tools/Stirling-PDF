@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TextInput, Switch, Button, Stack, Paper, Text, Loader, Group, Alert, List } from '@mantine/core';
+import { TextInput, Switch, Stack, Paper, Text, Loader, Group, Alert, List } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';

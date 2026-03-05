@@ -1,7 +1,7 @@
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { TextInput, Textarea, Switch, Button, Stack, Paper, Text, Loader, Group, MultiSelect, Badge, SegmentedControl, Select } from '@mantine/core';
+import { TextInput, Textarea, Switch, Stack, Paper, Text, Loader, Group, MultiSelect, Badge, SegmentedControl, Select } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';

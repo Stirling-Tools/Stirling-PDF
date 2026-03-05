@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Anchor } from '@mantine/core';
+import { TextInput, NumberInput, Switch, Stack, Paper, Text, Loader, Group, Anchor } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';

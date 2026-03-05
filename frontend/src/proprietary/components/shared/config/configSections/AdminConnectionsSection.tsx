@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Stack, Text, Loader, Group, Divider, Paper, Switch, Badge, Anchor, Select, Collapse } from '@mantine/core';
@@ -83,8 +83,8 @@ interface ConnectionsSettingsData {
 export default function AdminConnectionsSection() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
-  const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
+  const { loginEnabled, getDisabledStyles } = useLoginRequired();
+  const { restartModalOpened, closeRestartModal, restartServer } = useRestartServer();
   const allProviders = useAllProviders();
 
   const adminSettings = useAdminSettings<ConnectionsSettingsData>({
@@ -238,7 +238,7 @@ export default function AdminConnectionsSection() {
     markSaved();
     try {
       await adminSettings.saveSettings();
-    } catch (error) {
+    } catch (_error) {
       alert({
         alertType: 'error',
         title: t('admin.error', 'Error'),
