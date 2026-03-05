@@ -6,7 +6,9 @@ import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
+import { useSettingsDirty } from '@app/hooks/useSettingsDirty';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
+import { SettingsStickyFooter } from '@app/components/shared/config/SettingsStickyFooter';
 import apiClient from '@app/services/apiClient';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
@@ -56,7 +58,7 @@ export default function AdminGeneralSection() {
   const { loginEnabled, validateLoginEnabled } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
   const { preferences, updatePreference } = usePreferences();
-  const { setIsDirty, markClean } = useUnsavedChanges();
+  const { markClean } = useUnsavedChanges();
   const languageOptions = useMemo(
     () => Object.entries(supportedLanguages)
       .map(([code, label]) => ({ value: toUnderscoreFormat(code), label: `${label} (${code})` }))
@@ -75,12 +77,6 @@ export default function AdminGeneralSection() {
     return uniquePaths;
   }, []);
   
-  // Track original settings for dirty detection
-  const [originalSettingsSnapshot, setOriginalSettingsSnapshot] = useState<string>('');
-  const [isDirty, setLocalIsDirty] = useState(false);
-  const isInitialLoad = useRef(true);
-  const justSavedRef = useRef(false);
-
   const {
     settings,
     setSettings,
@@ -196,6 +192,8 @@ export default function AdminGeneralSection() {
     }
   });
 
+  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(settings, loading);
+
   const selectedLanguages = useMemo(
     () => toUnderscoreLanguages(settings.ui?.languages || []),
     [settings.ui?.languages]
@@ -266,49 +264,13 @@ export default function AdminGeneralSection() {
     }
   }, [loginEnabled, fetchSettings]);
 
-  // Snapshot original settings after initial load OR after successful save (when refetch completes)
+  // Sync local preference with server setting on initial load
   useEffect(() => {
-    if (loading || Object.keys(settings).length === 0) return;
-    
-    // After initial load: set snapshot and sync preference
-    if (isInitialLoad.current) {
-      setOriginalSettingsSnapshot(JSON.stringify(settings));
-      
-      // Sync local preference with server setting on initial load to ensure they're in sync
-      // This ensures localStorage always reflects the server's authoritative value
-      if (loginEnabled && settings.ui?.logoStyle) {
-        updatePreference('logoVariant', settings.ui.logoStyle);
-      }
-      
-      isInitialLoad.current = false;
-      return;
-    }
-    
-    // After save: update snapshot to new server state so dirty tracking is accurate
-    if (justSavedRef.current) {
-      setOriginalSettingsSnapshot(JSON.stringify(settings));
-      setLocalIsDirty(false);
-      setIsDirty(false);
-      justSavedRef.current = false;
-    }
-  }, [loading, settings, loginEnabled, updatePreference, setIsDirty]);
+    if (loading || !loginEnabled || !settings.ui?.logoStyle) return;
 
-  // Track dirty state by comparing current settings to snapshot
-  useEffect(() => {
-    if (!originalSettingsSnapshot || loading) return;
-    
-    const currentSnapshot = JSON.stringify(settings);
-    const dirty = currentSnapshot !== originalSettingsSnapshot;
-    setLocalIsDirty(dirty);
-    setIsDirty(dirty);
-  }, [settings, originalSettingsSnapshot, loading, setIsDirty]);
-
-  // Clean up dirty state on unmount
-  useEffect(() => {
-    return () => {
-      setIsDirty(false);
-    };
-  }, [setIsDirty]);
+    // This ensures localStorage always reflects the server's authoritative value
+    updatePreference('logoVariant', settings.ui.logoStyle);
+  }, [loading, loginEnabled, settings.ui?.logoStyle, updatePreference]);
 
   // Handle hash navigation for deep linking to specific fields
   useEffect(() => {
@@ -324,17 +286,9 @@ export default function AdminGeneralSection() {
   }, [location.hash, loading]);
 
   const handleDiscard = useCallback(() => {
-    if (originalSettingsSnapshot) {
-      try {
-        const original = JSON.parse(originalSettingsSnapshot);
-        setSettings(original);
-        setLocalIsDirty(false);
-        setIsDirty(false);
-      } catch (e) {
-        console.error('Failed to parse original settings:', e);
-      }
-    }
-  }, [originalSettingsSnapshot, setSettings, setIsDirty]);
+    const original = resetToSnapshot();
+    setSettings(original);
+  }, [resetToSnapshot, setSettings]);
 
   // Override loading state when login is disabled
   const actualLoading = loginEnabled ? loading : false;
@@ -372,21 +326,18 @@ export default function AdminGeneralSection() {
 
     try {
       // Mark that we just saved - the snapshot will be updated when refetch completes
-      justSavedRef.current = true;
-      
+      markSaved();
+
       await saveSettings();
-      
+
       // Update local preference after successful save so the app reflects the saved logo style
       if (settings.ui?.logoStyle) {
         updatePreference('logoVariant', settings.ui.logoStyle);
       }
-      
-      // Clear dirty state immediately (snapshot will be updated by effect when refetch completes)
-      setLocalIsDirty(false);
+
       markClean();
       showRestartModal();
     } catch (_error) {
-      justSavedRef.current = false;
       alert({
         alertType: 'error',
         title: t('admin.error', 'Error'),
@@ -877,24 +828,13 @@ export default function AdminGeneralSection() {
 
       </Stack>
 
-      {/* Sticky Save Footer - only shows when there are changes */}
-      {isDirty && loginEnabled && (
-        <div className="settings-sticky-footer">
-          <Group justify="space-between" w="100%">
-            <Text size="sm" c="dimmed">
-              {t('admin.settings.unsavedChanges.hint', 'You have unsaved changes')}
-            </Text>
-            <Group gap="sm">
-              <Button variant="default" onClick={handleDiscard} size="sm">
-                {t('admin.settings.discard', 'Discard')}
-              </Button>
-              <Button onClick={handleSave} loading={saving} size="sm">
-                {t('admin.settings.save', 'Save Changes')}
-              </Button>
-            </Group>
-          </Group>
-        </div>
-      )}
+      <SettingsStickyFooter
+        isDirty={isDirty}
+        saving={saving}
+        loginEnabled={loginEnabled}
+        onSave={handleSave}
+        onDiscard={handleDiscard}
+      />
 
       {/* Restart Confirmation Modal */}
       <RestartConfirmationModal

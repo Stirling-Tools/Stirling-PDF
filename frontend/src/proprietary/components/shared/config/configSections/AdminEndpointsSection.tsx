@@ -1,11 +1,13 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Stack, Paper, Text, Loader, Group, MultiSelect, Switch } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
+import { useSettingsDirty } from '@app/hooks/useSettingsDirty';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
+import { SettingsStickyFooter } from '@app/components/shared/config/SettingsStickyFooter';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
 
@@ -55,13 +57,25 @@ export default function AdminEndpointsSection() {
     }
   }, [loginEnabled, fetchSettings, fetchUiSettings]);
 
+  const { isDirty: isEndpointsDirty, resetToSnapshot: resetEndpointsSnapshot, markSaved: markEndpointsSaved } = useSettingsDirty(settings, loading);
+  const { isDirty: isUiDirty, resetToSnapshot: resetUiSnapshot, markSaved: markUiSaved } = useSettingsDirty(uiSettings, uiLoading);
+
+  const isDirty = isEndpointsDirty || isUiDirty;
+
   const handleSave = async () => {
     if (!validateLoginEnabled()) {
       return;
     }
 
     try {
-      await saveSettings();
+      if (isEndpointsDirty) {
+        markEndpointsSaved();
+        await saveSettings();
+      }
+      if (isUiDirty) {
+        markUiSaved();
+        await saveUiSettings();
+      }
       showRestartModal();
     } catch (_error) {
       alert({
@@ -72,26 +86,16 @@ export default function AdminEndpointsSection() {
     }
   };
 
-  const handleUiSave = async () => {
-    if (!validateLoginEnabled()) {
-      return;
+  const handleDiscard = useCallback(() => {
+    if (isEndpointsDirty) {
+      const original = resetEndpointsSnapshot();
+      setSettings(original);
     }
-
-    try {
-      await saveUiSettings();
-      alert({
-        alertType: 'success',
-        title: t('admin.success', 'Success'),
-        body: t('admin.settings.saveSuccess', 'Settings saved successfully. Restart required for changes to take effect.'),
-      });
-    } catch (_error) {
-      alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t('admin.settings.saveError', 'Failed to save settings'),
-      });
+    if (isUiDirty) {
+      const original = resetUiSnapshot();
+      setUiSettings(original);
     }
-  };
+  }, [isEndpointsDirty, isUiDirty, resetEndpointsSnapshot, resetUiSnapshot, setSettings, setUiSettings]);
 
   // Override loading state when login is disabled
   const actualLoading = loginEnabled ? (loading || uiLoading) : false;
@@ -214,8 +218,9 @@ export default function AdminEndpointsSection() {
   ];
 
   return (
-    <Stack gap="lg">
-      <LoginRequiredBanner show={!loginEnabled} />
+    <div className="settings-section-container">
+      <Stack gap="lg" className="settings-section-content">
+        <LoginRequiredBanner show={!loginEnabled} />
 
       <div>
         <Text fw={600} size="lg">{t('admin.settings.endpoints.title', 'API Endpoints')}</Text>
@@ -276,12 +281,6 @@ export default function AdminEndpointsSection() {
         </Stack>
       </Paper>
 
-      <Group justify="flex-end">
-        <Button onClick={handleSave} loading={saving} size="sm" disabled={!loginEnabled}>
-          {t('admin.settings.save', 'Save Endpoint Settings')}
-        </Button>
-      </Group>
-
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
           <div>
@@ -324,12 +323,15 @@ export default function AdminEndpointsSection() {
           />
         </Stack>
       </Paper>
+      </Stack>
 
-      <Group justify="flex-end">
-        <Button onClick={handleUiSave} loading={uiSaving} size="sm" disabled={!loginEnabled}>
-          {t('admin.settings.save', 'Save User Defaults')}
-        </Button>
-      </Group>
+      <SettingsStickyFooter
+        isDirty={isDirty}
+        saving={saving || uiSaving}
+        loginEnabled={loginEnabled}
+        onSave={handleSave}
+        onDiscard={handleDiscard}
+      />
 
       {/* Restart Confirmation Modal */}
       <RestartConfirmationModal
@@ -337,6 +339,6 @@ export default function AdminEndpointsSection() {
         onClose={closeRestartModal}
         onRestart={restartServer}
       />
-    </Stack>
+    </div>
   );
 }
