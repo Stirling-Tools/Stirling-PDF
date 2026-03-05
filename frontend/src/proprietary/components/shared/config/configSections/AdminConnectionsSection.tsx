@@ -131,26 +131,54 @@ export default function AdminConnectionsSection() {
         googleDriveAppId: premiumData.proFeatures?.googleDrive?.appId || ''
       };
 
-<<<<<<< HEAD
-      // Merge pending blocks from all endpoints - initialize with defaults to avoid warnings
-      const pendingBlock: Record<string, any> = {
-        oauth2: securityData._pending?.oauth2,
-        saml2: securityData._pending?.saml2,
-        mail: mailData._pending,
-        telegram: telegramData._pending,
-        ssoAutoLogin: premiumData._pending?.proFeatures?.ssoAutoLogin,
-        enableMobileScanner: systemData._pending?.enableMobileScanner,
-        mobileScannerConvertToPdf: systemData._pending?.mobileScannerSettings?.convertToPdf,
-        mobileScannerImageResolution: systemData._pending?.mobileScannerSettings?.imageResolution,
-        mobileScannerPageFormat: systemData._pending?.mobileScannerSettings?.pageFormat,
-        mobileScannerStretchToFit: systemData._pending?.mobileScannerSettings?.stretchToFit,
-        googleDriveEnabled: premiumData._pending?.proFeatures?.googleDrive?.enabled,
-        googleDriveClientId: premiumData._pending?.proFeatures?.googleDrive?.clientId,
-        googleDriveApiKey: premiumData._pending?.proFeatures?.googleDrive?.apiKey,
-        googleDriveAppId: premiumData._pending?.proFeatures?.googleDrive?.appId,
-      };
+      // Merge pending blocks from all endpoints
+      const pendingBlock: Record<string, any> = {};
+      if (securityData._pending?.oauth2) {
+        pendingBlock.oauth2 = securityData._pending.oauth2;
+      }
+      if (securityData._pending?.saml2) {
+        pendingBlock.saml2 = securityData._pending.saml2;
+      }
+      if (mailData._pending) {
+        pendingBlock.mail = mailData._pending;
+      }
+      if (telegramData._pending) {
+        pendingBlock.telegram = telegramData._pending;
+      }
+      if (premiumData._pending?.proFeatures?.ssoAutoLogin !== undefined) {
+        pendingBlock.ssoAutoLogin = premiumData._pending.proFeatures.ssoAutoLogin;
+      }
+      if (systemData._pending?.enableMobileScanner !== undefined) {
+        pendingBlock.enableMobileScanner = systemData._pending.enableMobileScanner;
+      }
+      if (systemData._pending?.mobileScannerSettings?.convertToPdf !== undefined) {
+        pendingBlock.mobileScannerConvertToPdf = systemData._pending.mobileScannerSettings.convertToPdf;
+      }
+      if (systemData._pending?.mobileScannerSettings?.imageResolution !== undefined) {
+        pendingBlock.mobileScannerImageResolution = systemData._pending.mobileScannerSettings.imageResolution;
+      }
+      if (systemData._pending?.mobileScannerSettings?.pageFormat !== undefined) {
+        pendingBlock.mobileScannerPageFormat = systemData._pending.mobileScannerSettings.pageFormat;
+      }
+      if (systemData._pending?.mobileScannerSettings?.stretchToFit !== undefined) {
+        pendingBlock.mobileScannerStretchToFit = systemData._pending.mobileScannerSettings.stretchToFit;
+      }
+      if (premiumData._pending?.proFeatures?.googleDrive?.enabled !== undefined) {
+        pendingBlock.googleDriveEnabled = premiumData._pending.proFeatures.googleDrive.enabled;
+      }
+      if (premiumData._pending?.proFeatures?.googleDrive?.clientId !== undefined) {
+        pendingBlock.googleDriveClientId = premiumData._pending.proFeatures.googleDrive.clientId;
+      }
+      if (premiumData._pending?.proFeatures?.googleDrive?.apiKey !== undefined) {
+        pendingBlock.googleDriveApiKey = premiumData._pending.proFeatures.googleDrive.apiKey;
+      }
+      if (premiumData._pending?.proFeatures?.googleDrive?.appId !== undefined) {
+        pendingBlock.googleDriveAppId = premiumData._pending.proFeatures.googleDrive.appId;
+      }
 
-      result._pending = pendingBlock;
+      if (Object.keys(pendingBlock).length > 0) {
+        result._pending = pendingBlock;
+      }
 
       return result;
     },
@@ -218,6 +246,20 @@ export default function AdminConnectionsSection() {
       }
       if (currentSettings?.mobileScannerStretchToFit !== undefined) {
         deltaSettings['system.mobileScannerSettings.stretchToFit'] = currentSettings.mobileScannerStretchToFit;
+      }
+
+      // Google Drive settings
+      if (currentSettings?.googleDriveEnabled !== undefined) {
+        deltaSettings['premium.proFeatures.googleDrive.enabled'] = currentSettings.googleDriveEnabled;
+      }
+      if (currentSettings?.googleDriveClientId !== undefined) {
+        deltaSettings['premium.proFeatures.googleDrive.clientId'] = currentSettings.googleDriveClientId;
+      }
+      if (currentSettings?.googleDriveApiKey !== undefined) {
+        deltaSettings['premium.proFeatures.googleDrive.apiKey'] = currentSettings.googleDriveApiKey;
+      }
+      if (currentSettings?.googleDriveAppId !== undefined) {
+        deltaSettings['premium.proFeatures.googleDrive.appId'] = currentSettings.googleDriveAppId;
       }
 
       return {
@@ -331,216 +373,6 @@ export default function AdminConnectionsSection() {
     return settings?.oauth2?.client?.[provider.id] || {};
   };
 
-<<<<<<< HEAD
-  const handleProviderSave = async (provider: Provider, providerSettings: Record<string, any>) => {
-    // Block save if login is disabled
-    if (!validateLoginEnabled()) {
-      return;
-    }
-
-    try {
-      if (provider.id === 'googledrive') {
-        // Google Drive settings use delta settings
-        const deltaSettings: Record<string, any> = {};
-        Object.keys(providerSettings).forEach((key) => {
-          deltaSettings[`premium.proFeatures.googleDrive.${key}`] = providerSettings[key];
-        });
-
-        const response = await apiClient.put('/api/v1/admin/settings', { settings: deltaSettings });
-
-        if (response.status === 200) {
-          await fetchSettings(); // Refresh settings
-          alert({
-            alertType: 'success',
-            title: t('admin.success', 'Success'),
-            body: t('admin.settings.saveSuccess', 'Settings saved successfully'),
-          });
-          showRestartModal();
-        } else {
-          throw new Error('Failed to save');
-        }
-      } else if (provider.id === 'smtp') {
-        // Mail settings use a different endpoint
-        const response = await apiClient.put('/api/v1/admin/settings/section/mail', providerSettings);
-
-        if (response.status === 200) {
-          await fetchSettings(); // Refresh settings
-          alert({
-            alertType: 'success',
-            title: t('admin.success', 'Success'),
-            body: t('admin.settings.saveSuccess', 'Settings saved successfully'),
-          });
-          showRestartModal();
-        } else {
-          throw new Error('Failed to save');
-        }
-      } else if (provider.id === 'telegram') {
-        const parseToNumberArray = (values: any) =>
-          (Array.isArray(values) ? values : [])
-            .map((value) => Number(value))
-            .filter((value) => !Number.isNaN(value));
-
-        const response = await apiClient.put('/api/v1/admin/settings/section/telegram', {
-          ...providerSettings,
-          allowUserIDs: parseToNumberArray(providerSettings.allowUserIDs),
-          allowChannelIDs: parseToNumberArray(providerSettings.allowChannelIDs),
-          processingTimeoutSeconds: providerSettings.processingTimeoutSeconds
-            ? Number(providerSettings.processingTimeoutSeconds)
-            : undefined,
-          pollingIntervalMillis: providerSettings.pollingIntervalMillis
-            ? Number(providerSettings.pollingIntervalMillis)
-            : undefined,
-        });
-
-        if (response.status === 200) {
-          await fetchSettings(); // Refresh settings
-          alert({
-            alertType: 'success',
-            title: t('admin.success', 'Success'),
-            body: t('admin.settings.saveSuccess', 'Settings saved successfully'),
-          });
-          showRestartModal();
-        } else {
-          throw new Error('Failed to save');
-        }
-      } else {
-        // OAuth2/SAML2 use delta settings
-        const deltaSettings: Record<string, any> = {};
-
-        if (provider.id === 'saml2') {
-          // SAML2 settings
-          Object.keys(providerSettings).forEach((key) => {
-            deltaSettings[`security.saml2.${key}`] = providerSettings[key];
-          });
-        } else if (provider.id === 'oauth2-generic') {
-          // Generic OAuth2 settings at root level
-          Object.keys(providerSettings).forEach((key) => {
-            deltaSettings[`security.oauth2.${key}`] = providerSettings[key];
-          });
-        } else {
-          // Specific OAuth2 provider (google, github, keycloak)
-          Object.keys(providerSettings).forEach((key) => {
-            deltaSettings[`security.oauth2.client.${provider.id}.${key}`] = providerSettings[key];
-          });
-        }
-
-        const response = await apiClient.put('/api/v1/admin/settings', { settings: deltaSettings });
-
-        if (response.status === 200) {
-          await fetchSettings(); // Refresh settings
-          alert({
-            alertType: 'success',
-            title: t('admin.success', 'Success'),
-            body: t('admin.settings.saveSuccess', 'Settings saved successfully'),
-          });
-          showRestartModal();
-        } else {
-          throw new Error('Failed to save');
-        }
-      }
-    } catch (_error) {
-      alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t('admin.settings.saveError', 'Failed to save settings'),
-      });
-    }
-  };
-
-  const handleProviderDisconnect = async (provider: Provider) => {
-    // Block disconnect if login is disabled
-    if (!validateLoginEnabled()) {
-      return;
-    }
-
-    try {
-      if (provider.id === 'googledrive') {
-        const deltaSettings = {
-          'premium.proFeatures.googleDrive.enabled': false,
-        };
-
-        const response = await apiClient.put('/api/v1/admin/settings', { settings: deltaSettings });
-
-        if (response.status === 200) {
-          await fetchSettings();
-          alert({
-            alertType: 'success',
-            title: t('admin.success', 'Success'),
-            body: t('admin.settings.connections.disconnected', 'Provider disconnected successfully'),
-          });
-          showRestartModal();
-        } else {
-          throw new Error('Failed to disconnect');
-        }
-      } else if (provider.id === 'smtp') {
-        // Mail settings use a different endpoint
-        const response = await apiClient.put('/api/v1/admin/settings/section/mail', { enabled: false });
-
-        if (response.status === 200) {
-          await fetchSettings();
-          alert({
-            alertType: 'success',
-            title: t('admin.success', 'Success'),
-            body: t('admin.settings.connections.disconnected', 'Provider disconnected successfully'),
-          });
-          showRestartModal();
-        } else {
-          throw new Error('Failed to disconnect');
-        }
-      } else if (provider.id === 'telegram') {
-        const response = await apiClient.put('/api/v1/admin/settings/section/telegram', {
-          enabled: false,
-        });
-
-        if (response.status === 200) {
-          await fetchSettings();
-          alert({
-            alertType: 'success',
-            title: t('admin.success', 'Success'),
-            body: t('admin.settings.connections.disconnected', 'Provider disconnected successfully'),
-          });
-          showRestartModal();
-        } else {
-          throw new Error('Failed to disconnect');
-        }
-      } else {
-        const deltaSettings: Record<string, any> = {};
-
-        if (provider.id === 'saml2') {
-          deltaSettings['security.saml2.enabled'] = false;
-        } else if (provider.id === 'oauth2-generic') {
-          deltaSettings['security.oauth2.enabled'] = false;
-        } else {
-          // Clear all fields for specific OAuth2 provider
-          provider.fields.forEach((field) => {
-            deltaSettings[`security.oauth2.client.${provider.id}.${field.key}`] = '';
-          });
-        }
-
-        const response = await apiClient.put('/api/v1/admin/settings', { settings: deltaSettings });
-
-        if (response.status === 200) {
-          await fetchSettings();
-          alert({
-            alertType: 'success',
-            title: t('admin.success', 'Success'),
-            body: t('admin.settings.connections.disconnected', 'Provider disconnected successfully'),
-          });
-          showRestartModal();
-        } else {
-          throw new Error('Failed to disconnect');
-        }
-      }
-    } catch (_error) {
-      alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t('admin.settings.connections.disconnectError', 'Failed to disconnect provider'),
-      });
-    }
-  };
-=======
->>>>>>> origin/main
 
   if (actualLoading) {
     return (
@@ -559,6 +391,14 @@ export default function AdminConnectionsSection() {
       setSettings({ ...settings, mail: updatedSettings });
     } else if (provider.id === 'telegram') {
       setSettings({ ...settings, telegram: updatedSettings });
+    } else if (provider.id === 'googledrive') {
+      setSettings({
+        ...settings,
+        googleDriveEnabled: updatedSettings.enabled,
+        googleDriveClientId: updatedSettings.clientId,
+        googleDriveApiKey: updatedSettings.apiKey,
+        googleDriveAppId: updatedSettings.appId,
+      });
     } else if (provider.id === 'saml2') {
       setSettings({ ...settings, saml2: updatedSettings });
     } else if (provider.id === 'oauth2-generic') {
