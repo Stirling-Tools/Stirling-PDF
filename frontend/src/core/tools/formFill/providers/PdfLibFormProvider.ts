@@ -18,6 +18,7 @@ import { PDFDocument, PDFForm, PDFField, PDFTextField, PDFCheckBox,
   PDFDropdown, PDFRadioGroup, PDFOptionList, PDFButton, PDFSignature,
   PDFName, PDFDict, PDFArray, PDFNumber, PDFRef, PDFPage,
   PDFString, PDFHexString, PDFStream } from '@cantoo/pdf-lib';
+import type { PDFDocumentProxy } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import type { FormField, FormFieldType, WidgetCoordinates } from '@app/tools/formFill/types';
 import type { IFormDataProvider } from '@app/tools/formFill/providers/types';
 
@@ -581,7 +582,7 @@ async function attachSignatureAppearances(
 
   const { pdfWorkerManager } = await import('@app/services/pdfWorkerManager');
 
-  let pdfDoc: import('pdfjs-dist').PDFDocumentProxy | null = null;
+  let pdfDoc: PDFDocumentProxy | null = null;
   try {
     // Slice so pdf-lib's retained references to the original buffer are unaffected
     pdfDoc = await pdfWorkerManager.createDocument(arrayBuffer.slice(0));
@@ -606,10 +607,8 @@ async function attachSignatureAppearances(
       const canvas = document.createElement('canvas');
       canvas.width = viewport.width;
       canvas.height = viewport.height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) { page.cleanup(); continue; }
 
-      await page.render({ canvasContext: ctx, viewport }).promise;
+      await page.render({ canvas, viewport }).promise;
 
       for (const field of fields) {
         for (const widget of field.widgets ?? []) {
