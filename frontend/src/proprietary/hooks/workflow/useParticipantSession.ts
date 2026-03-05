@@ -3,7 +3,7 @@ import workflowService, {
   WorkflowSessionResponse,
   ParticipantResponse,
   SignatureSubmissionRequest,
-} from '@app/proprietary/services/workflowService';
+} from '@app/services/workflowService';
 
 export interface UseParticipantSessionResult {
   session: WorkflowSessionResponse | null;
@@ -59,7 +59,7 @@ export const useParticipantSession = (token?: string): UseParticipantSessionResu
         const errorMsg =
           err.response?.data?.message || err.message || 'Failed to submit signature';
         setError(errorMsg);
-        throw new Error(errorMsg);
+        throw new Error(errorMsg, { cause: err });
       } finally {
         setLoading(false);
       }
@@ -83,7 +83,7 @@ export const useParticipantSession = (token?: string): UseParticipantSessionResu
         const errorMsg =
           err.response?.data?.message || err.message || 'Failed to decline';
         setError(errorMsg);
-        throw new Error(errorMsg);
+        throw new Error(errorMsg, { cause: err });
       } finally {
         setLoading(false);
       }

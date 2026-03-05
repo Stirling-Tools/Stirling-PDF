@@ -123,7 +123,6 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
           <ColorPicker
             value={penColor}
             onChange={setPenColor}
-            disabled={disabled}
             format="hex"
             size="xs"
           />

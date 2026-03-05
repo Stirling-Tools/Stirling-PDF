@@ -5620,14 +5620,6 @@ title = "Search PDF"
 expired = "Your session has expired. Please refresh the page and try again."
 refreshPage = "Refresh Page"
 
-[settings.configuration]
-advanced = "Advanced"
-database = "Database"
-endpoints = "Endpoints"
-features = "Features"
-systemSettings = "System Settings"
-title = "Configuration"
-
 [settings.connection]
 logout = "Log Out"
 server = "Server"

@@ -98,7 +98,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const isRTL = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
   const hasSelectedFiles = selectedFiles.length > 0;
   const selectedFileStubs = useMemo(
-    () => selectedFileIds.map((id) => selectors.getStirlingFileStub(id)).filter(Boolean),
+    () => selectedFileIds.map((id) => selectors.getStirlingFileStub(id)).filter((x): x is StirlingFileStub => Boolean(x)),
     [selectedFileIds, selectors, state.files.byId]
   );
   const selectedAccessFileStub =
@@ -332,6 +332,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   }, [ensureStoredFile, inviteRows, resetInviteRows, selectedAccessFileStub, t]);
 
   const handleCopyShareLink = async () => {
+    if (!selectedAccessFileStub) return;
     if (!shareLinksEnabled) {
       alert({
         alertType: 'warning',

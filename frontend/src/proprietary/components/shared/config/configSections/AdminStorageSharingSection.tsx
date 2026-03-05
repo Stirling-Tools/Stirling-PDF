@@ -120,7 +120,7 @@ export default function AdminStorageSharingSection() {
         <Stack gap="md">
           <Group justify="space-between" align="center">
             <Text fw={600} size="sm">{t('admin.settings.storage.enabled.label', 'Enable Server File Storage')}</Text>
-            {isFieldPending('enabled') && <PendingBadge />}
+            {isFieldPending('enabled') && <PendingBadge show={true} />}
           </Group>
           <Text size="xs" c="dimmed">
             {t('admin.settings.storage.enabled.description', 'Allow users to store files on the server.')}
@@ -129,7 +129,7 @@ export default function AdminStorageSharingSection() {
             checked={storageEnabled}
             onChange={(e) => setSettings({ ...settings, enabled: e.currentTarget.checked })}
             disabled={!loginEnabled}
-            styles={getDisabledStyles(!loginEnabled)}
+            styles={getDisabledStyles()}
           />
         </Stack>
       </Paper>
@@ -138,7 +138,7 @@ export default function AdminStorageSharingSection() {
         <Stack gap="md">
           <Group justify="space-between" align="center">
             <Text fw={600} size="sm">{t('admin.settings.storage.sharing.enabled.label', 'Enable Sharing')}</Text>
-            {isFieldPending('sharing.enabled') && <PendingBadge />}
+            {isFieldPending('sharing.enabled') && <PendingBadge show={true} />}
           </Group>
           <Text size="xs" c="dimmed">
             {t('admin.settings.storage.sharing.enabled.description', 'Allow users to share stored files.')}
@@ -152,7 +152,7 @@ export default function AdminStorageSharingSection() {
               })
             }
             disabled={!loginEnabled || !storageEnabled}
-            styles={getDisabledStyles(!loginEnabled || !storageEnabled)}
+            styles={getDisabledStyles()}
           />
         </Stack>
       </Paper>
@@ -161,7 +161,7 @@ export default function AdminStorageSharingSection() {
         <Stack gap="md">
           <Group justify="space-between" align="center">
             <Text fw={600} size="sm">{t('admin.settings.storage.sharing.links.label', 'Enable Share Links')}</Text>
-            {isFieldPending('sharing.linkEnabled') && <PendingBadge />}
+            {isFieldPending('sharing.linkEnabled') && <PendingBadge show={true} />}
           </Group>
           <Text size="xs" c="dimmed">
             {t('admin.settings.storage.sharing.links.description', 'Allow sharing via signed-in links.')}
@@ -191,7 +191,7 @@ export default function AdminStorageSharingSection() {
               })
             }
             disabled={!loginEnabled || !sharingEnabled || !frontendUrlConfigured}
-            styles={getDisabledStyles(!loginEnabled || !sharingEnabled || !frontendUrlConfigured)}
+            styles={getDisabledStyles()}
           />
         </Stack>
       </Paper>
@@ -200,7 +200,7 @@ export default function AdminStorageSharingSection() {
         <Stack gap="md">
           <Group justify="space-between" align="center">
             <Text fw={600} size="sm">{t('admin.settings.storage.sharing.email.label', 'Enable Email Sharing')}</Text>
-            {isFieldPending('sharing.emailEnabled') && <PendingBadge />}
+            {isFieldPending('sharing.emailEnabled') && <PendingBadge show={true} />}
           </Group>
           <Text size="xs" c="dimmed">
             {t('admin.settings.storage.sharing.email.description', 'Allow sharing with email addresses.')}
@@ -230,7 +230,7 @@ export default function AdminStorageSharingSection() {
               })
             }
             disabled={!loginEnabled || !sharingEnabled || !mailEnabled}
-            styles={getDisabledStyles(!loginEnabled || !sharingEnabled || !mailEnabled)}
+            styles={getDisabledStyles()}
           />
         </Stack>
       </Paper>
@@ -244,7 +244,7 @@ export default function AdminStorageSharingSection() {
       <RestartConfirmationModal
         opened={restartModalOpened}
         onClose={closeRestartModal}
-        onConfirm={restartServer}
+        onRestart={restartServer}
       />
     </Stack>
   );

@@ -28,7 +28,7 @@ interface AddSignaturesStepProps {
 }
 
 export const AddSignaturesStep: React.FC<AddSignaturesStepProps> = ({
-  signatureCount,
+  _signatureCount,
   onRequestPlacement,
   onCancelPlacement,
   placementMode,

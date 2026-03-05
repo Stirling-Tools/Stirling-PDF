@@ -330,7 +330,7 @@ export async function addFiles(
 
     // Check for pending file path mapping from Tauri file dialog (desktop only)
     try {
-      const { pendingFilePathMappings } = await import('@app/contexts/FileManagerContext');
+      const { pendingFilePathMappings } = await import('@app/services/pendingFilePathMappings');
       console.log(`[FileActions] Checking for localFilePath mapping for quickKey: ${quickKey}`);
       console.log(`[FileActions] Available mappings:`, Array.from(pendingFilePathMappings.keys()));
       const localFilePath = pendingFilePathMappings.get(quickKey);

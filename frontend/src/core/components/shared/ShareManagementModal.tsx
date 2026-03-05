@@ -413,7 +413,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
           </Alert>
         )}
 
-        <SimpleGrid cols={2} spacing="lg" breakpoints={[{ maxWidth: 'md', cols: 1 }]}>
+        <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
           <Stack gap="lg">
             {shareLinksEnabled && (
               <Paper withBorder radius="md" p="md">

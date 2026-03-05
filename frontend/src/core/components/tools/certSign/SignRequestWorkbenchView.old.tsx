@@ -65,6 +65,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
 
   // Handle signature placement when user clicks on PDF
   const handlePlaceSignatureAtPosition = (
+    _id: string,
     pageIndex: number,
     x: number,
     y: number,
@@ -272,7 +273,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
         <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
           <LocalEmbedPDFWithAnnotations
             ref={annotationApiRef}
-            file={pdfFile}
+            file={pdfFile ?? undefined}
             onAnnotationChange={setAnnotations}
             placementMode={placementMode}
             signatureData={signatureData}

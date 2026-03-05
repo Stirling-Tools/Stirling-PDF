@@ -9,7 +9,7 @@ import {
   Loader,
   Alert,
 } from '@mantine/core';
-import { useWorkflowSession } from '@app/proprietary/hooks/workflow/useWorkflowSession';
+import { useWorkflowSession } from '@app/hooks/workflow/useWorkflowSession';
 import InfoIcon from '@mui/icons-material/Info';
 import DownloadIcon from '@mui/icons-material/Download';
 import DeleteIcon from '@mui/icons-material/Delete';

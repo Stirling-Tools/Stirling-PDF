@@ -46,3 +46,12 @@ export interface BaseFileMetadata {
   remoteHasShareLinks?: boolean; // True when owner has shared this file
   remoteShareToken?: string; // Share token when file is from a share link
 }
+
+/**
+ * Minimal file shape used by signing workflow components.
+ * Both StirlingFile (extends File) and StirlingFileStub are assignable to this.
+ */
+export interface FileState {
+  name: string;
+  size: number;
+}

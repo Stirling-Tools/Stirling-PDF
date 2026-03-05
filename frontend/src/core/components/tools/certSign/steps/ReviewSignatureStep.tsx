@@ -1,9 +1,8 @@
-import { Button, Stack, Text, Group, Divider, Image, Paper } from '@mantine/core';
+import { Button, Stack, Text, Group, Divider, Paper } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DrawIcon from '@mui/icons-material/Draw';
 import SecurityIcon from '@mui/icons-material/Security';
-import PlaceIcon from '@mui/icons-material/Place';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';

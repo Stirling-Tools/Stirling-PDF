@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Loader, Center, Text, Badge } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
-import { SignRequestSummary, SessionSummary } from '@app/types/signingSession';
 
 interface SessionItem {
   itemType: 'signRequest' | 'mySession';

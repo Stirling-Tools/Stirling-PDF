@@ -44,6 +44,9 @@ export interface AppConfig {
   isNewUser?: boolean;
   defaultHideUnavailableTools?: boolean;
   defaultHideUnavailableConversions?: boolean;
+  storageEnabled?: boolean;
+  storageSharingEnabled?: boolean;
+  storageShareLinksEnabled?: boolean;
 }
 
 export type AppConfigBootstrapMode = 'blocking' | 'non-blocking';

@@ -48,7 +48,7 @@ export const TypeSignatureText: React.FC<TypeSignatureTextProps> = ({
     ctx.font = `${fontSize}px ${fontFamily}`;
     const metrics = ctx.measureText(text);
     const textWidth = metrics.width;
-    const textHeight = fontSize * 1.2; // Approximate height
+    const _textHeight = fontSize * 1.2; // Approximate height
 
     // Center text on canvas
     ctx.fillStyle = color;
@@ -118,7 +118,6 @@ export const TypeSignatureText: React.FC<TypeSignatureTextProps> = ({
         <ColorPicker
           value={color}
           onChange={onColorChange}
-          disabled={disabled}
           format="hex"
         />
       </div>

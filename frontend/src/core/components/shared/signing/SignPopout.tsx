@@ -3,9 +3,9 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
-import ActiveSessionsPanel from './ActiveSessionsPanel';
-import CompletedSessionsPanel from './CompletedSessionsPanel';
-import CreateSessionPanel from './CreateSessionPanel';
+import ActiveSessionsPanel from '@app/components/shared/signing/ActiveSessionsPanel';
+import CompletedSessionsPanel from '@app/components/shared/signing/CompletedSessionsPanel';
+import CreateSessionPanel from '@app/components/shared/signing/CreateSessionPanel';
 import apiClient from '@app/services/apiClient';
 import { alert } from '@app/components/toast';
 import { SignRequestSummary, SignRequestDetail, SessionSummary, SessionDetail } from '@app/types/signingSession';
@@ -24,7 +24,7 @@ import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 interface SignPopoutProps {
   isOpen: boolean;
   onClose: () => void;
-  buttonRef: React.RefObject<HTMLDivElement>;
+  buttonRef: React.RefObject<HTMLDivElement | null>;
   isRTL: boolean;
 }
 
@@ -230,7 +230,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL }: SignPopoutProps) => {
   ];
 
   // Helper to ensure file is stored
-  const ensureStoredFile = useCallback(async (fileStub: StirlingFileStub): Promise<number> => {
+  const _ensureStoredFile = useCallback(async (fileStub: StirlingFileStub): Promise<number> => {
     const localUpdatedAt = fileStub.createdAt ?? fileStub.lastModified ?? 0;
     const isUpToDate =
       Boolean(fileStub.remoteStorageId) &&

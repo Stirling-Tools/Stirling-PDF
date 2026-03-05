@@ -221,7 +221,7 @@ export const useFileManager = () => {
               .map((link) => link.shareToken)
               .filter((token): token is string => Boolean(token))
           );
-          const shareClearUpdates: Array<Promise<void>> = [];
+          const shareClearUpdates: Array<Promise<boolean>> = [];
           combinedStubs = combinedStubs.map((stub) => {
             if (
               stub.remoteSharedViaLink &&

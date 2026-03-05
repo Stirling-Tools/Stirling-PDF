@@ -2,8 +2,7 @@ import { useState, useCallback } from 'react';
 import workflowService, {
   WorkflowCreationRequest,
   WorkflowSessionResponse,
-  SignatureSubmissionRequest,
-} from '@app/proprietary/services/workflowService';
+} from '@app/services/workflowService';
 
 export interface UseWorkflowSessionResult {
   sessions: WorkflowSessionResponse[];
@@ -42,7 +41,7 @@ export const useWorkflowSession = (): UseWorkflowSessionResult => {
       } catch (err: any) {
         const errorMsg = err.response?.data?.message || err.message || 'Failed to create session';
         setError(errorMsg);
-        throw new Error(errorMsg);
+        throw new Error(errorMsg, { cause: err });
       } finally {
         setLoading(false);
       }
@@ -106,7 +105,7 @@ export const useWorkflowSession = (): UseWorkflowSessionResult => {
     } catch (err: any) {
       const errorMsg = err.response?.data?.message || err.message || 'Failed to delete session';
       setError(errorMsg);
-      throw new Error(errorMsg);
+      throw new Error(errorMsg, { cause: err });
     } finally {
       setLoading(false);
     }
@@ -123,7 +122,7 @@ export const useWorkflowSession = (): UseWorkflowSessionResult => {
     } catch (err: any) {
       const errorMsg = err.response?.data?.message || err.message || 'Failed to finalize session';
       setError(errorMsg);
-      throw new Error(errorMsg);
+      throw new Error(errorMsg, { cause: err });
     } finally {
       setLoading(false);
     }

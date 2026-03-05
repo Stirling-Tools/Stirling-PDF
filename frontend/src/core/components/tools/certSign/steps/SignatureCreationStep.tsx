@@ -1,5 +1,4 @@
 import { Button, Stack } from '@mantine/core';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SignatureTypeSelector, SignatureType } from '@app/components/shared/wetSignature/SignatureTypeSelector';
 import { DrawSignatureCanvas } from '@app/components/shared/wetSignature/DrawSignatureCanvas';

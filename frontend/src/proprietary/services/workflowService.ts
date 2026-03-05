@@ -1,4 +1,4 @@
-import api from '@app/services/api';
+import api from '@app/services/apiClient';
 
 export interface WorkflowCreationRequest {
   workflowType: 'SIGNING' | 'REVIEW' | 'APPROVAL';

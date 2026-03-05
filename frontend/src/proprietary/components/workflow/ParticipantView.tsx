@@ -11,9 +11,8 @@ import {
   TextInput,
   FileInput,
   Select,
-  Textarea,
 } from '@mantine/core';
-import { useParticipantSession } from '@app/proprietary/hooks/workflow/useParticipantSession';
+import { useParticipantSession } from '@app/hooks/workflow/useParticipantSession';
 import InfoIcon from '@mui/icons-material/Info';
 import DownloadIcon from '@mui/icons-material/Download';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -32,9 +31,9 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
   const [certFile, setCertFile] = useState<File | null>(null);
   const [location, setLocation] = useState<string>('');
   const [reason, setReason] = useState<string>('Document Signing');
-  const [showSignature, setShowSignature] = useState<boolean>(true);
+  const [showSignature, _setShowSignature] = useState<boolean>(true);
   const [pageNumber, setPageNumber] = useState<number>(1);
-  const [declineReason, setDeclineReason] = useState<string>('');
+  const [declineReason, _setDeclineReason] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const handleSubmitSignature = async () => {

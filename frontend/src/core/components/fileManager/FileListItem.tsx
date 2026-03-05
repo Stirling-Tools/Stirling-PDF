@@ -319,7 +319,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
                   leftSection={<DownloadIcon style={{ fontSize: 16 }} />}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onDownload();
+                    onDownload?.();
                   }}
                 >
                   {t('fileManager.download', 'Download')}

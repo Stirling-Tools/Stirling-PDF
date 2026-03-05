@@ -2,7 +2,7 @@ import apiClient from '@app/services/apiClient';
 import { fileStorage } from '@app/services/fileStorage';
 import type { FileId } from '@app/types/file';
 import type { StirlingFile } from '@app/types/fileContext';
-import type { FileContextActionsValue } from '@app/contexts/file/contexts';
+import type { FileContextActions } from '@app/types/fileContext';
 import {
   getShareBundleEntryRootId,
   isZipBundle,
@@ -54,7 +54,7 @@ export async function downloadShareLink(token: string): Promise<{
 
 export async function importShareLinkToWorkbench(
   token: string,
-  actions: FileContextActionsValue,
+  actions: FileContextActions,
   shareMetadata?: ShareLinkMetadata | null
 ): Promise<FileId[]> {
   const { blob, filename, contentType } = await downloadShareLink(token);

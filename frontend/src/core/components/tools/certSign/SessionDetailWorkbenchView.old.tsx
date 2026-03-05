@@ -276,7 +276,7 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
 
         {/* Center - PDF Viewer */}
         <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
-          <LocalEmbedPDF file={pdfFile} />
+          <LocalEmbedPDF file={pdfFile ?? undefined} />
         </div>
 
         {/* Right Panel - Session Info and Actions */}

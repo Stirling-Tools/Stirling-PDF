@@ -13,7 +13,7 @@ import { ColorPicker } from '@app/components/annotation/shared/ColorPicker';
 import { TextInputWithFont } from '@app/components/annotation/shared/TextInputWithFont';
 import { buildSignaturePreview } from '@app/utils/signaturePreview';
 
-import styles from './SignControlsStrip.module.css';
+import styles from '@app/components/tools/certSign/SignControlsStrip.module.css';
 
 interface SignControlsStripProps {
   visible: boolean;
@@ -44,8 +44,6 @@ export default function SignControlsStrip({
     addSignature,
     isAtCapacity,
     byTypeCounts,
-    markSignatureUsed,
-    refreshSignatures,
   } = useSavedSignatures();
 
   const [createSignatureType, setCreateSignatureType] = useState<'canvas' | 'text' | 'image' | null>(null);
@@ -147,8 +145,6 @@ export default function SignControlsStrip({
 
   const applySavedSignature = useCallback(
     (sig: SavedSignature) => {
-      void markSignatureUsed?.(sig.id);
-
       if (sig.type === 'text') {
         beginPlacement({
           signatureType: 'text',
@@ -162,7 +158,7 @@ export default function SignControlsStrip({
       }
       beginPlacement({ signatureType: sig.type, signatureData: sig.dataUrl });
     },
-    [beginPlacement, markSignatureUsed]
+    [beginPlacement]
   );
 
   const pausePlacement = useCallback(() => {
@@ -216,7 +212,6 @@ export default function SignControlsStrip({
       `${baseLabel} ${nextIndex}`,
       'localStorage'
     );
-    await refreshSignatures?.();
     return {
       signerName,
       fontFamily: textFontFamily,
@@ -228,7 +223,6 @@ export default function SignControlsStrip({
     addSignature,
     byTypeCounts?.text,
     isAtCapacity,
-    refreshSignatures,
     t,
     textColor,
     textFontFamily,
@@ -242,9 +236,8 @@ export default function SignControlsStrip({
       const nextIndex = (byTypeCounts?.image ?? 0) + 1;
       const baseLabel = t('certSign.collab.signRequest.saved.defaultImageLabel', 'Uploaded signature');
       await addSignature({ type: 'image', dataUrl }, `${baseLabel} ${nextIndex}`, 'localStorage');
-      await refreshSignatures?.();
     },
-    [addSignature, byTypeCounts?.image, isAtCapacity, refreshSignatures, t]
+    [addSignature, byTypeCounts?.image, isAtCapacity, t]
   );
 
   const readFileAsDataUrl = useCallback(async (file: File): Promise<string> => {
@@ -266,9 +259,8 @@ export default function SignControlsStrip({
       const nextIndex = (byTypeCounts?.canvas ?? 0) + 1;
       const baseLabel = t('certSign.collab.signRequest.saved.defaultCanvasLabel', 'Drawing signature');
       await addSignature({ type: 'canvas', dataUrl }, `${baseLabel} ${nextIndex}`, 'localStorage');
-      await refreshSignatures?.();
     },
-    [addSignature, byTypeCounts?.canvas, isAtCapacity, refreshSignatures, t]
+    [addSignature, byTypeCounts?.canvas, isAtCapacity, t]
   );
 
   useEffect(() => {

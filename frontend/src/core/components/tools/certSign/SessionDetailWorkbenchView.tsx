@@ -153,7 +153,7 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
   const wetSignaturePreviews = useMemo<SignaturePreview[]>(() => {
     const previews: SignaturePreview[] = [];
 
-    session.participants.forEach((participant, participantIndex) => {
+    session.participants.forEach((participant, _participantIndex) => {
       if (participant.wetSignatures && participant.wetSignatures.length > 0) {
         participant.wetSignatures.forEach((wetSig, sigIndex) => {
           previews.push({
@@ -164,6 +164,7 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
             width: wetSig.width,
             height: wetSig.height,
             signatureData: wetSig.data,
+            signatureType: 'image' as const,
           });
         });
       }
@@ -270,7 +271,7 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
         <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
           <LocalEmbedPDFWithAnnotations
             ref={annotationApiRef}
-            file={pdfFile}
+            file={pdfFile ?? undefined}
             initialSignatures={wetSignaturePreviews}
             readOnly={true}
           />

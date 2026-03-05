@@ -184,6 +184,11 @@ const WetSignatureInput = ({
           onTextColorChange={setTextColor}
           disabled={disabled}
           onAnyChange={() => {}}
+          label={t('certSign.collab.signRequest.signatureText', 'Signature Text')}
+          placeholder={t('certSign.collab.signRequest.signatureTextPlaceholder', 'Enter your name...')}
+          fontLabel={t('certSign.collab.signRequest.fontFamily', 'Font Family')}
+          fontSizeLabel={t('certSign.collab.signRequest.fontSize', 'Font Size')}
+          fontSizePlaceholder={t('certSign.collab.signRequest.fontSizePlaceholder', 'Size')}
         />
       </Stack>
     );
