@@ -574,7 +574,7 @@ export const SAML2_PROVIDER: Provider = {
 export const GOOGLEDRIVE_PROVIDER: Provider = {
   id: 'googledrive',
   name: 'Google Drive',
-  icon: '/Login/google-drive.svg',
+  icon: '/images/google-drive.svg',
   type: 'googledrive',
   scope: 'File Import',
   documentationUrl: 'https://docs.stirlingpdf.com/Configuration/Google%20Drive%20File%20Picker/',

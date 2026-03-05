@@ -21,7 +21,7 @@ interface FileSourceButtonsProps {
  */
 const GoogleDriveIcon: React.FC<{ disabled?: boolean }> = ({ disabled }) => (
   <img
-    src="/Login/google-drive.svg"
+    src="/images/google-drive.svg"
     alt="Google Drive"
     style={{
       width: '20px',
