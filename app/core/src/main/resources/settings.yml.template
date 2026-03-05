@@ -232,7 +232,7 @@ system:
 ui:
   appNameNavbar: "" # name displayed on the navigation bar
   logoStyle: classic # Options: 'classic' (default - classic S icon) or 'modern' (minimalist logo)
-  languages: [] # If empty, all languages are enabled. To display only German and Polish ["de_DE", "pl_PL"]. British English is always enabled.
+  languages: [] # If empty, all languages are enabled. To restrict to specific languages, use a whitelist like ["de_DE", "pl_PL", "sv_SE"]. Empty list or not restricting any languages will enable all available languages.
   defaultHideUnavailableTools: false # Default user preference: hide disabled tools instead of greying them out
   defaultHideUnavailableConversions: false # Default user preference: hide disabled conversion options instead of greying them out
 
