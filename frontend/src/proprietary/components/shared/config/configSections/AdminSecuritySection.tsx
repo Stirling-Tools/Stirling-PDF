@@ -1,12 +1,14 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Select, Alert, Badge, Accordion, Textarea } from '@mantine/core';
+import { NumberInput, Switch, Stack, Paper, Text, Loader, Group, Select, Alert, Badge, Accordion, Textarea } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
+import { useSettingsDirty } from '@app/hooks/useSettingsDirty';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
+import { SettingsStickyFooter } from '@app/components/shared/config/SettingsStickyFooter';
 import apiClient from '@app/services/apiClient';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
@@ -62,7 +64,7 @@ export default function AdminSecuritySection() {
     isFieldPending,
   } = useAdminSettings<SecuritySettingsData>({
     sectionName: 'security',
-    fetchTransformer: async () => {
+    fetchTransformer: async (): Promise<SecuritySettingsData & { _pending?: Record<string, any> }> => {
       const [securityResponse, premiumResponse, systemResponse] = await Promise.all([
         apiClient.get('/api/v1/admin/settings/section/security'),
         apiClient.get('/api/v1/admin/settings/section/premium'),
@@ -88,7 +90,7 @@ export default function AdminSecuritySection() {
         systemPending: JSON.parse(JSON.stringify(systemPending || {}))
       });
 
-      const combined: any = {
+      const combined: SecuritySettingsData & { _pending?: Record<string, any> } = {
         ...securityActive
       };
 
@@ -103,7 +105,7 @@ export default function AdminSecuritySection() {
       }
 
       // Merge all _pending blocks
-      const mergedPending: any = {};
+      const mergedPending: Record<string, any> = {};
       if (securityPending) {
         Object.assign(mergedPending, securityPending);
       }
@@ -120,7 +122,7 @@ export default function AdminSecuritySection() {
 
       return combined;
     },
-    saveTransformer: (settings) => {
+    saveTransformer: (settings: SecuritySettingsData) => {
       const { audit, html, ...securitySettings } = settings;
 
       const deltaSettings: Record<string, any> = {
@@ -165,6 +167,8 @@ export default function AdminSecuritySection() {
     }
   });
 
+  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(settings, loading);
+
   useEffect(() => {
     if (loginEnabled) {
       fetchSettings();
@@ -181,6 +185,7 @@ export default function AdminSecuritySection() {
     }
 
     try {
+      markSaved();
       await saveSettings();
       showRestartModal();
     } catch (_error) {
@@ -192,6 +197,11 @@ export default function AdminSecuritySection() {
     }
   };
 
+  const handleDiscard = useCallback(() => {
+    const original = resetToSnapshot();
+    setSettings(original);
+  }, [resetToSnapshot, setSettings]);
+
   if (actualLoading) {
     return (
       <Stack align="center" justify="center" h={200}>
@@ -201,8 +211,9 @@ export default function AdminSecuritySection() {
   }
 
   return (
-    <Stack gap="lg">
-      <LoginRequiredBanner show={!loginEnabled} />
+    <div className="settings-section-container">
+      <Stack gap="lg" className="settings-section-content">
+        <LoginRequiredBanner show={!loginEnabled} />
 
       <div>
         <Text fw={600} size="lg">{t('admin.settings.security.title', 'Security')}</Text>
@@ -803,13 +814,15 @@ export default function AdminSecuritySection() {
           </Accordion>
         </Stack>
       </Paper>
+      </Stack>
 
-      {/* Save Button */}
-      <Group justify="flex-end">
-        <Button onClick={handleSave} loading={saving} size="sm" disabled={!loginEnabled}>
-          {t('admin.settings.save', 'Save Changes')}
-        </Button>
-      </Group>
+      <SettingsStickyFooter
+        isDirty={isDirty}
+        saving={saving}
+        loginEnabled={loginEnabled}
+        onSave={handleSave}
+        onDiscard={handleDiscard}
+      />
 
       {/* Restart Confirmation Modal */}
       <RestartConfirmationModal
@@ -817,6 +830,6 @@ export default function AdminSecuritySection() {
         onClose={closeRestartModal}
         onRestart={restartServer}
       />
-    </Stack>
+    </div>
   );
 }

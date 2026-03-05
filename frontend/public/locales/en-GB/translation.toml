@@ -966,6 +966,18 @@ label = "Default Locale"
 description = "Maximum file upload size (e.g., 100MB, 1GB)"
 label = "File Upload Limit"
 
+[admin.settings.general.hideDisabledTools]
+description = "Hide disabled tools from the interface"
+label = "Hide Disabled Tools"
+
+[admin.settings.general.hideDisabledTools.googleDrive]
+description = "Hide Google Drive button when not enabled"
+label = "Hide Google Drive"
+
+[admin.settings.general.hideDisabledTools.mobileScanner]
+description = "Hide mobile QR scanner button when not enabled"
+label = "Hide Mobile Scanner"
+
 [admin.settings.general.frontendUrl]
 description = "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL."
 label = "Frontend URL"
