@@ -57,6 +57,9 @@
     "shell:allow-open",
     "notification:allow-notify",
     "notification:allow-request-permission",
-    "notification:allow-is-permission-granted"
+    "notification:allow-is-permission-granted",
+    "window-state:allow-filename",
+    "window-state:allow-restore-state",
+    "window-state:allow-save-window-state"
   ]
 }
