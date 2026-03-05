@@ -260,6 +260,10 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
                   searchable
                   clearable={false}
                   w={isMobile ? 170 : 260}
+                  comboboxProps={{
+                    withinPortal: true,
+                    zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                  }}
                 />
                 <ActionIcon variant="subtle" onClick={handleClose} aria-label="Close">
                   <LocalIcon icon="close-rounded" width={18} height={18} />
