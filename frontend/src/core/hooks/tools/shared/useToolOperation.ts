@@ -29,8 +29,8 @@ import {
   ResponseHandler,
 } from '@app/hooks/tools/shared/toolOperationTypes';
 
-export {
-  ToolType,
+export { ToolType };
+export type {
   ToolOperationConfig,
   ToolOperationHook,
   CustomProcessorResult,
@@ -291,19 +291,19 @@ export const useToolOperation = <TParams>(
 
         actions.setThumbnails(thumbnails);
 
-        // Determine whether outputs are a new version of the same file or independent artifacts.
-        // A version operation is strictly 1-in/1-out with the same file extension (e.g. compress,
-        // rotate, redact). Everything else — format conversions, merges, splits — produces outputs
-        // that have no meaningful parent-child relationship with the inputs.
-        const inputExt = validFiles.length === 1
-          ? validFiles[0].name.split('.').pop()?.toLowerCase()
-          : null;
-        const outputExt = processedFiles.length === 1
-          ? processedFiles[0].name.split('.').pop()?.toLowerCase()
-          : null;
-        const isVersionOp = validFiles.length === 1
-          && processedFiles.length === 1
-          && inputExt === outputExt;
+        // Determine whether outputs are new versions of their inputs or independent artifacts.
+        // A version operation produces exactly one output per successful input, all in the same
+        // format (e.g. compress, rotate, redact: 1→1 or N→N same extension).
+        // Everything else — format conversions (ext change), merges (N→1), splits (1→N) —
+        // produces outputs that have no meaningful parent-child relationship with the inputs.
+        const isVersionOp = processedFiles.length > 0
+          && successSourceIds.length === processedFiles.length
+          && successSourceIds.every((id, i) => {
+            const inputFile = validFiles.find(f => f.fileId === id);
+            const inExt = inputFile?.name.split('.').pop()?.toLowerCase();
+            const outExt = processedFiles[i].name.split('.').pop()?.toLowerCase();
+            return inExt != null && inExt === outExt;
+          });
 
         actions.setStatus('Generating metadata for processed files...');
         const processedFileMetadataArray = await Promise.all(

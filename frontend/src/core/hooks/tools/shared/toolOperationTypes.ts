@@ -1,9 +1,9 @@
 import { StirlingFile } from '@app/types/fileContext';
-import { ResponseHandler } from '@app/utils/toolResponseProcessor';
+import type { ResponseHandler } from '@app/utils/toolResponseProcessor';
 import { ToolId } from '@app/types/toolId';
 import type { ProcessingProgress } from '@app/hooks/tools/shared/useToolState';
 
-export { ProcessingProgress, ResponseHandler };
+export type { ProcessingProgress, ResponseHandler };
 
 export enum ToolType {
   singleFile,
