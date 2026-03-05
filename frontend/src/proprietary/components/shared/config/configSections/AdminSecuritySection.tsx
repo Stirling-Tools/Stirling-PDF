@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Select, Alert, Badge, Accordion, Textarea, Collapse } from '@mantine/core';
+import { NumberInput, Switch, Stack, Paper, Text, Loader, Group, Select, Alert, Badge, Accordion, Textarea } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
+import { useSettingsDirty } from '@app/hooks/useSettingsDirty';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
+import { SettingsStickyFooter } from '@app/components/shared/config/SettingsStickyFooter';
 import apiClient from '@app/services/apiClient';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
@@ -54,7 +56,6 @@ export default function AdminSecuritySection() {
   const { t } = useTranslation();
   const { loginEnabled, validateLoginEnabled } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
-  const [expandAuditDetails, setExpandAuditDetails] = useState(false);
 
   const {
     settings,
@@ -66,7 +67,7 @@ export default function AdminSecuritySection() {
     isFieldPending,
   } = useAdminSettings<SecuritySettingsData>({
     sectionName: 'security',
-    fetchTransformer: async () => {
+    fetchTransformer: async (): Promise<SecuritySettingsData & { _pending?: Record<string, any> }> => {
       const [securityResponse, premiumResponse, systemResponse] = await Promise.all([
         apiClient.get('/api/v1/admin/settings/section/security'),
         apiClient.get('/api/v1/admin/settings/section/premium'),
@@ -92,7 +93,7 @@ export default function AdminSecuritySection() {
         systemPending: JSON.parse(JSON.stringify(systemPending || {}))
       });
 
-      const combined: any = {
+      const combined: SecuritySettingsData & { _pending?: Record<string, any> } = {
         ...securityActive
       };
 
@@ -107,7 +108,7 @@ export default function AdminSecuritySection() {
       }
 
       // Merge all _pending blocks
-      const mergedPending: any = {};
+      const mergedPending: Record<string, any> = {};
       if (securityPending) {
         Object.assign(mergedPending, securityPending);
       }
@@ -124,7 +125,7 @@ export default function AdminSecuritySection() {
 
       return combined;
     },
-    saveTransformer: (settings) => {
+    saveTransformer: (settings: SecuritySettingsData) => {
       const { audit, html, ...securitySettings } = settings;
 
       const deltaSettings: Record<string, any> = {
@@ -172,6 +173,8 @@ export default function AdminSecuritySection() {
     }
   });
 
+  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(settings, loading);
+
   useEffect(() => {
     if (loginEnabled) {
       fetchSettings();
@@ -188,6 +191,7 @@ export default function AdminSecuritySection() {
     }
 
     try {
+      markSaved();
       await saveSettings();
       showRestartModal();
     } catch (_error) {
@@ -199,6 +203,11 @@ export default function AdminSecuritySection() {
     }
   };
 
+  const handleDiscard = useCallback(() => {
+    const original = resetToSnapshot();
+    setSettings(original);
+  }, [resetToSnapshot, setSettings]);
+
   if (actualLoading) {
     return (
       <Stack align="center" justify="center" h={200}>
@@ -208,8 +217,9 @@ export default function AdminSecuritySection() {
   }
 
   return (
-    <Stack gap="lg">
-      <LoginRequiredBanner show={!loginEnabled} />
+    <div className="settings-section-container">
+      <Stack gap="lg" className="settings-section-content">
+        <LoginRequiredBanner show={!loginEnabled} />
 
       <div>
         <Text fw={600} size="lg">{t('admin.settings.security.title', 'Security')}</Text>
@@ -489,7 +499,7 @@ export default function AdminSecuritySection() {
       </Paper>
 
       {/* Audit Logging - Enterprise Feature */}
-      <Paper withBorder p="md" radius="md" id="auditLogging">
+      <Paper withBorder p="md" radius="md">
         <Stack gap="md">
           <Group justify="space-between" align="center">
             <Text fw={600} size="sm">{t('admin.settings.security.audit.label', 'Audit Logging')}</Text>
@@ -523,7 +533,7 @@ export default function AdminSecuritySection() {
                   <PendingBadge show={isFieldPending('audit.level')} />
                 </Group>
               }
-              description={t('admin.settings.security.audit.level.description', 'Audit Level: OFF (0) = no logging | BASIC (1) = file modifications & settings | STANDARD (2) = file operations + user actions (excludes polling) | VERBOSE (3) = everything including polling. Higher levels include all events from lower levels.')}
+              description={t('admin.settings.security.audit.level.description', '0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE')}
               value={settings?.audit?.level || 2}
               onChange={(value) => setSettings({ ...settings, audit: { ...settings?.audit, level: Number(value) } })}
               min={0}
@@ -531,71 +541,6 @@ export default function AdminSecuritySection() {
               disabled={!loginEnabled}
             />
           </div>
-
-          {/* Audit Level Details - Collapsible */}
-          <Button
-            variant="subtle"
-            onClick={() => setExpandAuditDetails(!expandAuditDetails)}
-            p={0}
-            h="auto"
-            fullWidth
-            justify="flex-start"
-          >
-            <Group gap="xs">
-              <LocalIcon
-                icon={expandAuditDetails ? "chevron-up" : "chevron-down"}
-                width="1rem"
-                height="1rem"
-              />
-              <Text size="xs" fw={500} c="blue">
-                {expandAuditDetails
-                  ? t('admin.settings.security.audit.hideDetails', 'Hide audit level details')
-                  : t('admin.settings.security.audit.showDetails', 'Show audit level details')}
-              </Text>
-            </Group>
-          </Button>
-
-          <Collapse in={expandAuditDetails}>
-            <Alert color="blue" variant="light" p="md" radius="md">
-              <Stack gap="xs">
-                <div>
-                  <Text fw={500} size="xs" c={settings?.audit?.level === 0 ? 'blue' : 'dimmed'}>
-                    Level 0 - OFF
-                  </Text>
-                  <Text size="xs" c="dimmed">
-                    {t('admin.settings.security.audit.levelDetails.off', 'No audit logging (except critical security events)')}
-                  </Text>
-                </div>
-
-                <div>
-                  <Text fw={500} size="xs" c={settings?.audit?.level === 1 ? 'blue' : 'dimmed'}>
-                    Level 1 - BASIC: File Modifications
-                  </Text>
-                  <Text size="xs" c="dimmed">
-                    {t('admin.settings.security.audit.levelDetails.basic', 'PDF file operations like compress, split, merge, etc., and settings changes. Minimal log volume.')}
-                  </Text>
-                </div>
-
-                <div>
-                  <Text fw={500} size="xs" c={settings?.audit?.level === 2 ? 'blue' : 'dimmed'}>
-                    Level 2 - STANDARD: File Operations + User Actions (Recommended)
-                  </Text>
-                  <Text size="xs" c="dimmed">
-                    {t('admin.settings.security.audit.levelDetails.standard', 'BASIC events plus: user login/logout, account changes, general GET requests. Excludes continuous polling calls (/auth/me, /app-config, /health, etc.) to reduce log noise. Ideal for most deployments.')}
-                  </Text>
-                </div>
-
-                <div>
-                  <Text fw={500} size="xs" c={settings?.audit?.level === 3 ? 'blue' : 'dimmed'}>
-                    Level 3 - VERBOSE: Everything Including Polling
-                  </Text>
-                  <Text size="xs" c="dimmed">
-                    {t('admin.settings.security.audit.levelDetails.verbose', 'STANDARD events plus: continuous polling calls, all GET requests. Captures method parameters, request timing. Warning: high log volume and performance impact.')}
-                  </Text>
-                </div>
-              </Stack>
-            </Alert>
-          </Collapse>
 
           <div>
             <NumberInput
@@ -606,75 +551,58 @@ export default function AdminSecuritySection() {
                   <PendingBadge show={isFieldPending('audit.retentionDays')} />
                 </Group>
               }
-              description={t('admin.settings.security.audit.retentionDays.description', 'Number of days to retain audit logs (0 = infinite retention)')}
+              description={t('admin.settings.security.audit.retentionDays.description', 'Number of days to retain audit logs')}
               value={settings?.audit?.retentionDays || 90}
               onChange={(value) => setSettings({ ...settings, audit: { ...settings?.audit, retentionDays: Number(value) } })}
-              min={0}
+              min={1}
               max={3650}
               disabled={!loginEnabled}
             />
           </div>
 
-          <Alert color="orange" title={t('admin.settings.security.audit.metadata.warning', 'Optional Metadata Capture')} p="sm" radius="md">
+          {/* Capture Options */}
+          <div>
+            <Text fw={500} size="sm" mb="xs">{t('admin.settings.security.audit.captureOptions.label', 'Capture Options')}</Text>
             <Stack gap="xs">
-              <Text size="xs" c="dimmed">
-                {t('admin.settings.security.audit.metadata.description', 'Enable additional metadata extraction. Each option independently increases processing time per file (50-200ms depending on file size).')}
-              </Text>
+              <Group justify="space-between" align="center">
+                <div>
+                  <Text size="sm">{t('admin.settings.security.audit.captureFileHash.label', 'Capture File Hash')}</Text>
+                  <Text size="xs" c="dimmed">{t('admin.settings.security.audit.captureFileHash.description', 'Store MD5 hash of processed files')}</Text>
+                </div>
+                <Switch
+                  checked={settings?.audit?.captureFileHash || false}
+                  onChange={(e) => setSettings({ ...settings, audit: { ...settings?.audit, captureFileHash: e.currentTarget.checked } })}
+                  disabled={!loginEnabled}
+                />
+                <PendingBadge show={isFieldPending('audit.captureFileHash')} />
+              </Group>
+
+              <Group justify="space-between" align="center">
+                <div>
+                  <Text size="sm">{t('admin.settings.security.audit.capturePdfAuthor.label', 'Capture PDF Author')}</Text>
+                  <Text size="xs" c="dimmed">{t('admin.settings.security.audit.capturePdfAuthor.description', 'Store PDF metadata author information')}</Text>
+                </div>
+                <Switch
+                  checked={settings?.audit?.capturePdfAuthor || false}
+                  onChange={(e) => setSettings({ ...settings, audit: { ...settings?.audit, capturePdfAuthor: e.currentTarget.checked } })}
+                  disabled={!loginEnabled}
+                />
+                <PendingBadge show={isFieldPending('audit.capturePdfAuthor')} />
+              </Group>
+
+              <Group justify="space-between" align="center">
+                <div>
+                  <Text size="sm">{t('admin.settings.security.audit.captureOperationResults.label', 'Capture Operation Results')}</Text>
+                  <Text size="xs" c="dimmed">{t('admin.settings.security.audit.captureOperationResults.description', 'Store output file information and processing results')}</Text>
+                </div>
+                <Switch
+                  checked={settings?.audit?.captureOperationResults || false}
+                  onChange={(e) => setSettings({ ...settings, audit: { ...settings?.audit, captureOperationResults: e.currentTarget.checked } })}
+                  disabled={!loginEnabled}
+                />
+                <PendingBadge show={isFieldPending('audit.captureOperationResults')} />
+              </Group>
             </Stack>
-          </Alert>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <Text fw={500} size="sm">{t('admin.settings.security.audit.captureFileHash.label', 'Capture File Hash (SHA-256)')}</Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t('admin.settings.security.audit.captureFileHash.description', 'Extract SHA-256 hash of uploaded PDF files for integrity verification. Independent of audit level.')}
-              </Text>
-            </div>
-            <Group gap="xs">
-              <Switch
-                name="audit_captureFileHash"
-                checked={settings?.audit?.captureFileHash || false}
-                onChange={(e) => setSettings({ ...settings, audit: { ...settings?.audit, captureFileHash: e.target.checked } })}
-                disabled={!loginEnabled}
-              />
-              <PendingBadge show={isFieldPending('audit.captureFileHash')} />
-            </Group>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <Text fw={500} size="sm">{t('admin.settings.security.audit.capturePdfAuthor.label', 'Capture PDF Author Metadata')}</Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t('admin.settings.security.audit.capturePdfAuthor.description', 'Extract author field from PDF documents during processing. Requires PDF parsing, increases latency. Independent of audit level.')}
-              </Text>
-            </div>
-            <Group gap="xs">
-              <Switch
-                name="audit_capturePdfAuthor"
-                checked={settings?.audit?.capturePdfAuthor || false}
-                onChange={(e) => setSettings({ ...settings, audit: { ...settings?.audit, capturePdfAuthor: e.target.checked } })}
-                disabled={!loginEnabled}
-              />
-              <PendingBadge show={isFieldPending('audit.capturePdfAuthor')} />
-            </Group>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <Text fw={500} size="sm">{t('admin.settings.security.audit.captureOperationResults.label', 'Capture Operation Results')}</Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t('admin.settings.security.audit.captureOperationResults.description', 'Capture method return values. Not recommended: significantly increases log volume and disk usage. Note: UI data requests (fetching settings, auth info, etc.) are excluded to reduce bloat.')}
-              </Text>
-            </div>
-            <Group gap="xs">
-              <Switch
-                name="audit_captureOperationResults"
-                checked={settings?.audit?.captureOperationResults || false}
-                onChange={(e) => setSettings({ ...settings, audit: { ...settings?.audit, captureOperationResults: e.target.checked } })}
-                disabled={!loginEnabled}
-              />
-              <PendingBadge show={isFieldPending('audit.captureOperationResults')} />
-            </Group>
           </div>
         </Stack>
       </Paper>
@@ -937,13 +865,15 @@ export default function AdminSecuritySection() {
           </Accordion>
         </Stack>
       </Paper>
+      </Stack>
 
-      {/* Save Button */}
-      <Group justify="flex-end">
-        <Button onClick={handleSave} loading={saving} size="sm" disabled={!loginEnabled}>
-          {t('admin.settings.save', 'Save Changes')}
-        </Button>
-      </Group>
+      <SettingsStickyFooter
+        isDirty={isDirty}
+        saving={saving}
+        loginEnabled={loginEnabled}
+        onSave={handleSave}
+        onDiscard={handleDiscard}
+      />
 
       {/* Restart Confirmation Modal */}
       <RestartConfirmationModal
@@ -951,6 +881,6 @@ export default function AdminSecuritySection() {
         onClose={closeRestartModal}
         onRestart={restartServer}
       />
-    </Stack>
+    </div>
   );
 }
