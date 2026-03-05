@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { Modal, Text, ActionIcon, Tooltip, Group } from '@mantine/core';
+import { Modal, Text, ActionIcon, Tooltip, Group, Select } from '@mantine/core';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { useConfigNavSections } from '@app/components/shared/config/configNavSections';
@@ -10,6 +10,7 @@ import { useIsMobile } from '@app/hooks/useIsMobile';
 import { Z_INDEX_CONFIG_MODAL, Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { useLicenseAlert } from '@app/hooks/useLicenseAlert';
 import { UnsavedChangesProvider, useUnsavedChanges } from '@app/contexts/UnsavedChangesContext';
+import { useTranslation } from 'react-i18next';
 
 interface AppConfigModalProps {
   opened: boolean;
@@ -18,9 +19,11 @@ interface AppConfigModalProps {
 
 const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   const [active, setActive] = useState<NavKey>('general');
+  const [searchValue, setSearchValue] = useState('');
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const { config } = useAppConfig();
   const licenseAlert = useLicenseAlert();
   const { confirmIfDirty } = useUnsavedChanges();
@@ -96,6 +99,19 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
     return null;
   }, [configNavSections, active]);
 
+  // Build a global index from every accessible settings tab in the modal navigation.
+  // This does not render section components, so API calls still happen only when a tab is opened.
+  const searchableSections = useMemo(() => {
+    return configNavSections.flatMap((section) =>
+      section.items
+        .filter((item) => !item.disabled)
+        .map((item) => ({
+          value: item.key,
+          label: `${item.label} · ${section.title}`,
+        }))
+    );
+  }, [configNavSections]);
+
   const handleClose = useCallback(async () => {
     const canProceed = await confirmIfDirty();
     if (!canProceed) return;
@@ -110,8 +126,15 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
     if (!canProceed) return;
     
     setActive(key);
+    setSearchValue('');
     navigate(`/settings/${key}`);
   }, [confirmIfDirty, navigate]);
+
+  const handleSearchNavigation = useCallback(async (value: string | null) => {
+    if (!value) return;
+    if (!VALID_NAV_KEYS.includes(value as NavKey)) return;
+    await handleNavigation(value as NavKey);
+  }, [handleNavigation]);
 
   return (
     <Modal
@@ -158,12 +181,16 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
                     const navItemContent = (
                       <div
                         key={item.key}
-                        onClick={() => handleNavigation(item.key)}
+                        onClick={() => {
+                          if (!isDisabled) {
+                            handleNavigation(item.key);
+                          }
+                        }}
                         className={`modal-nav-item ${isMobile ? 'mobile' : ''}`}
                         style={{
                           background: isActive ? colors.navItemActiveBg : 'transparent',
                           opacity: isDisabled ? 0.6 : 1,
-                          cursor: 'pointer',
+                          cursor: isDisabled ? 'not-allowed' : 'pointer',
                         }}
                         data-tour={`admin-${item.key}-nav`}
                       >
@@ -218,9 +245,26 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
               }}
             >
               <Text fw={700} size="lg">{activeLabel}</Text>
-              <ActionIcon variant="subtle" onClick={handleClose} aria-label="Close">
-                <LocalIcon icon="close-rounded" width={18} height={18} />
-              </ActionIcon>
+              <Group gap="xs" wrap="nowrap">
+                <Select
+                  className="settings-search-select"
+                  data={searchableSections}
+                  value={null}
+                  searchValue={searchValue}
+                  onSearchChange={setSearchValue}
+                  onChange={handleSearchNavigation}
+                  placeholder={t('search.placeholder', 'Enter search term...')}
+                  leftSection={<LocalIcon icon="search-rounded" width={16} height={16} />}
+                  aria-label={t('navbar.search', 'Search')}
+                  nothingFoundMessage={t('search.noResults', 'No results found')}
+                  searchable
+                  clearable={false}
+                  w={isMobile ? 170 : 260}
+                />
+                <ActionIcon variant="subtle" onClick={handleClose} aria-label="Close">
+                  <LocalIcon icon="close-rounded" width={18} height={18} />
+                </ActionIcon>
+              </Group>
             </div>
             <div className="modal-body">
               {activeComponent}

@@ -163,6 +163,10 @@
   padding-top: 1rem;
 }
 
+.settings-search-select {
+  min-width: 10rem;
+}
+
 .confirm-modal-content {
   display: flex;
   flex-direction: column;
