@@ -33,6 +33,9 @@ interface SecuritySettingsData {
     enabled?: boolean;
     level?: number;
     retentionDays?: number;
+    captureFileHash?: boolean;
+    capturePdfAuthor?: boolean;
+    captureOperationResults?: boolean;
   };
   html?: {
     urlSecurity?: {
@@ -144,7 +147,10 @@ export default function AdminSecuritySection() {
         // Premium audit settings
         'premium.enterpriseFeatures.audit.enabled': audit?.enabled,
         'premium.enterpriseFeatures.audit.level': audit?.level,
-        'premium.enterpriseFeatures.audit.retentionDays': audit?.retentionDays
+        'premium.enterpriseFeatures.audit.retentionDays': audit?.retentionDays,
+        'premium.enterpriseFeatures.audit.captureFileHash': audit?.captureFileHash,
+        'premium.enterpriseFeatures.audit.capturePdfAuthor': audit?.capturePdfAuthor,
+        'premium.enterpriseFeatures.audit.captureOperationResults': audit?.captureOperationResults
       };
 
       // System HTML settings
@@ -552,6 +558,64 @@ export default function AdminSecuritySection() {
               max={3650}
               disabled={!loginEnabled}
             />
+          </div>
+
+          <Alert color="yellow" icon={<LocalIcon icon="info" />} title={t('admin.settings.security.audit.advancedOptions.title', 'Advanced Options')}>
+            {t('admin.settings.security.audit.advancedOptions.description', 'The following options increase processing time and memory usage. Enable only if truly needed.')}
+          </Alert>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <Text fw={500} size="sm">{t('admin.settings.security.audit.captureFileHash.label', 'Capture File Hash')}</Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t('admin.settings.security.audit.captureFileHash.description', 'Store MD5 hash of processed files for audit trail verification')}
+              </Text>
+            </div>
+            <Group gap="xs">
+              <Switch
+                name="audit_captureFileHash"
+                checked={settings?.audit?.captureFileHash || false}
+                onChange={(e) => setSettings({ ...settings, audit: { ...settings?.audit, captureFileHash: e.target.checked } })}
+                disabled={!loginEnabled}
+              />
+              <PendingBadge show={isFieldPending('audit.captureFileHash')} />
+            </Group>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <Text fw={500} size="sm">{t('admin.settings.security.audit.capturePdfAuthor.label', 'Capture PDF Author')}</Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t('admin.settings.security.audit.capturePdfAuthor.description', 'Extract author field from PDF documents during processing')}
+              </Text>
+            </div>
+            <Group gap="xs">
+              <Switch
+                name="audit_capturePdfAuthor"
+                checked={settings?.audit?.capturePdfAuthor || false}
+                onChange={(e) => setSettings({ ...settings, audit: { ...settings?.audit, capturePdfAuthor: e.target.checked } })}
+                disabled={!loginEnabled}
+              />
+              <PendingBadge show={isFieldPending('audit.capturePdfAuthor')} />
+            </Group>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <Text fw={500} size="sm">{t('admin.settings.security.audit.captureOperationResults.label', 'Capture Operation Results')}</Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t('admin.settings.security.audit.captureOperationResults.description', 'Store output file information and processing results in audit logs')}
+              </Text>
+            </div>
+            <Group gap="xs">
+              <Switch
+                name="audit_captureOperationResults"
+                checked={settings?.audit?.captureOperationResults || false}
+                onChange={(e) => setSettings({ ...settings, audit: { ...settings?.audit, captureOperationResults: e.target.checked } })}
+                disabled={!loginEnabled}
+              />
+              <PendingBadge show={isFieldPending('audit.captureOperationResults')} />
+            </Group>
           </div>
         </Stack>
       </Paper>
