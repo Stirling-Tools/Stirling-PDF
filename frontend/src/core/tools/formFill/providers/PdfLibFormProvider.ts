@@ -19,6 +19,7 @@ import { PDFDocument, PDFForm, PDFField, PDFTextField, PDFCheckBox,
   PDFName, PDFDict, PDFArray, PDFNumber, PDFRef, PDFPage,
   PDFString, PDFHexString, PDFStream } from '@cantoo/pdf-lib';
 import type { PDFDocumentProxy } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
 import type { FormField, FormFieldType, WidgetCoordinates } from '@app/tools/formFill/types';
 import type { IFormDataProvider } from '@app/tools/formFill/providers/types';
 
@@ -579,8 +580,6 @@ async function attachSignatureAppearances(
   arrayBuffer: ArrayBuffer,
 ): Promise<void> {
   if (signatureFields.length === 0) return;
-
-  const { pdfWorkerManager } = await import('@app/services/pdfWorkerManager');
 
   let pdfDoc: PDFDocumentProxy | null = null;
   try {
