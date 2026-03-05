@@ -429,7 +429,7 @@ export function FormFieldOverlay({
 
   const pageFields = useMemo(
     () => fieldsByPage.get(pageIndex) || [],
-    [fieldsByPage, pageIndex]
+    [fieldsByPage, pageIndex],
   );
 
   const handleFocus = useCallback(

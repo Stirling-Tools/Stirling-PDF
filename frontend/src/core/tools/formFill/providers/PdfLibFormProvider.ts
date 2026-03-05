@@ -549,6 +549,65 @@ function getFieldLabel(field: PDFField): string {
 }
 
 /**
+ * Extracts only signed signature fields (those with an /AP/N stream) from a PDF,
+ * renders their appearances via PDF.js, and returns them as FormField objects.
+ *
+ * Used by FormFillContext to inject signature overlays when the pdfbox provider
+ * is active (fill form tool), where the backend doesn't return signature fields.
+ */
+export async function fetchSignatureFieldsWithAppearances(file: File | Blob): Promise<FormField[]> {
+  const arrayBuffer = await readAsArrayBuffer(file);
+  let doc: PDFDocument;
+  try {
+    doc = await PDFDocument.load(arrayBuffer, {
+      ignoreEncryption: true,
+      updateMetadata: false,
+      throwOnInvalidObject: false,
+    });
+  } catch { return []; }
+
+  let form: PDFForm;
+  try { form = doc.getForm(); } catch { return []; }
+
+  let pdfFields: PDFField[];
+  try { pdfFields = form.getFields(); } catch { return []; }
+
+  let pages: PDFPage[];
+  try { pages = doc.getPages(); } catch { return []; }
+
+  const result: FormField[] = [];
+
+  for (const field of pdfFields) {
+    if (!(field instanceof PDFSignature)) continue;
+    if (!signatureHasAppearance(field)) continue;
+
+    const widgets = extractWidgets(field, pages, doc);
+    if (widgets.length === 0) continue;
+
+    result.push({
+      name: field.getName(),
+      label: getFieldLabel(field),
+      type: 'signature',
+      value: '',
+      options: null,
+      displayOptions: null,
+      required: false,
+      readOnly: true,
+      multiSelect: false,
+      multiline: false,
+      tooltip: getFieldTooltip((field.acroField as any).dict as PDFDict),
+      widgets,
+    });
+  }
+
+  if (result.length > 0) {
+    await attachSignatureAppearances(result, arrayBuffer);
+  }
+
+  return result;
+}
+
+/**
  * Returns true if the signature field has at least one widget with a normal
  * (/AP/N) appearance stream — i.e. the signature has actually been signed.
  */

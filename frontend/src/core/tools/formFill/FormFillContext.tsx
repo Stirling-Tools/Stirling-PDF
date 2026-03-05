@@ -32,7 +32,7 @@ import React, {
 import { useDebouncedCallback } from '@mantine/hooks';
 import type { FormField, FormFillState, WidgetCoordinates } from '@app/tools/formFill/types';
 import type { IFormDataProvider } from '@app/tools/formFill/providers/types';
-import { PdfLibFormProvider } from '@app/tools/formFill/providers/PdfLibFormProvider';
+import { PdfLibFormProvider, fetchSignatureFieldsWithAppearances } from '@app/tools/formFill/providers/PdfLibFormProvider';
 import { PdfBoxFormProvider } from '@app/tools/formFill/providers/PdfBoxFormProvider';
 
 // ---------------------------------------------------------------------------
@@ -319,12 +319,27 @@ export function FormFillProvider({
     dispatch({ type: 'RESET' });
     dispatch({ type: 'FETCH_START' });
     try {
-      const fields = await providerRef.current.fetchFields(file);
+      let fields = await providerRef.current.fetchFields(file);
       // If another fetch or reset happened while we were waiting, discard this result
       if (fetchVersionRef.current !== version) {
         console.log('[FormFill] Discarding stale fetch result (version mismatch)');
         return;
       }
+
+      // When the pdfbox provider is active the backend doesn't return signature fields
+      // (they're not fillable). Fetch them via pdflib so their appearances still render.
+      if (providerModeRef.current === 'pdfbox') {
+        try {
+          const sigFields = await fetchSignatureFieldsWithAppearances(file);
+          if (fetchVersionRef.current !== version) return; // stale check after async
+          if (sigFields.length > 0) {
+            fields = [...fields, ...sigFields];
+          }
+        } catch (e) {
+          console.warn('[FormFill] Failed to extract signature appearances for pdfbox mode:', e);
+        }
+      }
+
       // Initialise values in the external store
       const values: Record<string, string> = {};
       for (const field of fields) {
