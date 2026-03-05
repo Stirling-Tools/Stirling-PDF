@@ -38,6 +38,10 @@ inputs:
     description: Image name for temporary base image.
     required: false
     default: stirling-pdf-base
+  base-ref:
+    description: Base branch to compare against for detecting changes (e.g., main, develop).
+    required: false
+    default: origin/main
 
 outputs:
   base_image:
@@ -59,6 +63,7 @@ runs:
         CAN_PUSH_TEMP: ${{ inputs.can-push-temp }}
         TEMP_REGISTRY: ${{ inputs.temp-registry }}
         TEMP_IMAGE_NAME: ${{ inputs.temp-image-name }}
+        BASE_REF: ${{ inputs.base-ref }}
       run: |
         set -euo pipefail
 
@@ -71,11 +76,19 @@ runs:
         fi
 
         BASE_CHANGED=false
-        if git rev-parse --verify HEAD^ >/dev/null 2>&1; then
+        # Ensure base ref is available (fetch if needed)
+        if git rev-parse --verify "$BASE_REF" >/dev/null 2>&1; then
+          # Compare current branch against base branch
+          if git diff --name-only "$BASE_REF"...HEAD | grep -Fxq "$BASE_DOCKERFILE"; then
+            BASE_CHANGED=true
+          fi
+        elif git rev-parse --verify HEAD^ >/dev/null 2>&1; then
+          # Fallback: compare against parent commit
           if git diff --name-only HEAD^ HEAD | grep -Fxq "$BASE_DOCKERFILE"; then
             BASE_CHANGED=true
           fi
         elif git show --name-only --pretty='' HEAD | grep -Fxq "$BASE_DOCKERFILE"; then
+          # Fallback: check if file exists in current commit
           BASE_CHANGED=true
         fi
 

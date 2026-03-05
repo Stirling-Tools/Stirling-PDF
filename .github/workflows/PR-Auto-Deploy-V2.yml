@@ -202,11 +202,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
+      - name: Fetch main for base image detection
+        run: git fetch origin main --depth=1 2>/dev/null || true
+
       - name: Resolve embedded base image
         id: base-image
         uses: ./.github/actions/resolve-base-image
         with:
           platforms: linux/amd64
+          base-ref: origin/main
+          can-push-temp: ${{ needs.check-pr.outputs.is_fork == 'false' }}
 
       - name: Get commit hash for app
         id: commit-hash
