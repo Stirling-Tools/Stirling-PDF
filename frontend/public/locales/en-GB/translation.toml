@@ -1009,7 +1009,7 @@ label = "Show Update Notifications"
 description = "Restrict update notifications to admin users only"
 label = "Show Updates to Admins Only"
 
-[admin.settings.general.hideDisabledTools]
+[admin.settings.general.hideDisabledTools.general]
 description = "Hide tools in the interface when they are not enabled"
 title = "Hide Disabled Tools"
 
