@@ -652,6 +652,7 @@ description = "Configure external authentication providers like OAuth2 and SAML.
 disconnect = "Disconnect"
 disconnected = "Provider disconnected successfully"
 disconnectError = "Failed to disconnect provider"
+documentation = "View documentation"
 imageResolutionFull = "Full (Original Size)"
 imageResolutionReduced = "Reduced (Max 1200px)"
 linkedServices = "Linked Services"
@@ -993,6 +994,18 @@ label = "Show Update Notifications"
 [admin.settings.general.showUpdateOnlyAdmin]
 description = "Restrict update notifications to admin users only"
 label = "Show Updates to Admins Only"
+
+[admin.settings.general.hideDisabledTools]
+description = "Hide tools in the interface when they are not enabled"
+title = "Hide Disabled Tools"
+
+[admin.settings.general.hideDisabledTools.googleDrive]
+label = "Hide Google Drive"
+description = "Hide Google Drive button when not enabled"
+
+[admin.settings.general.hideDisabledTools.mobileScanner]
+label = "Hide Mobile Scanner"
+description = "Hide mobile QR scanner button when not enabled"
 
 [admin.settings.legal]
 description = "Configure links to legal documents and policies."
