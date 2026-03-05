@@ -69,6 +69,8 @@ public class RotationControllerTest {
                         "file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {1, 2, 3});
         RotatePDFRequest request = new RotatePDFRequest();
         request.setFileInput(mockFile);
+
+        // new set
         request.setAngle(0);
 
         PDDocument mockDocument = mock(PDDocument.class);
@@ -95,6 +97,8 @@ public class RotationControllerTest {
                         "file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {1, 2, 3});
         RotatePDFRequest request = new RotatePDFRequest();
         request.setFileInput(mockFile);
+
+        // new set
         request.setAngle(-90);
 
         PDDocument mockDocument = mock(PDDocument.class);
@@ -122,9 +126,10 @@ public class RotationControllerTest {
                         "file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {1, 2, 3});
         RotatePDFRequest request = new RotatePDFRequest();
         request.setFileInput(mockFile);
+
+        // new set
         request.setAngle(45); // Invalid angle
 
-        // Act & Assert: Controller direkt aufrufen und Exception erwarten
         IllegalArgumentException exception =
                 assertThrows(
                         IllegalArgumentException.class,
