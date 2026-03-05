@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
 import { useUnsavedChanges } from '@app/contexts/UnsavedChangesContext';
 
-interface UseSettingsDirtyReturn {
+interface UseSettingsDirtyReturn<T> {
   isDirty: boolean;
-  resetToSnapshot: () => unknown;
+  resetToSnapshot: () => T;
   markSaved: () => void;
 }
 
@@ -11,7 +11,7 @@ interface UseSettingsDirtyReturn {
  * Hook for managing dirty state in settings sections
  * Handles JSON snapshot comparison and UnsavedChangesContext integration
  */
-export function useSettingsDirty(settings: unknown, loading: boolean): UseSettingsDirtyReturn {
+export function useSettingsDirty<T>(settings: T, loading: boolean): UseSettingsDirtyReturn<T> {
   const { setIsDirty } = useUnsavedChanges();
   const [originalSettingsSnapshot, setOriginalSettingsSnapshot] = useState<string>('');
   const [isDirty, setLocalIsDirty] = useState(false);
@@ -55,10 +55,10 @@ export function useSettingsDirty(settings: unknown, loading: boolean): UseSettin
     };
   }, [setIsDirty]);
 
-  const resetToSnapshot = () => {
+  const resetToSnapshot = (): T => {
     if (originalSettingsSnapshot) {
       try {
-        return JSON.parse(originalSettingsSnapshot);
+        return JSON.parse(originalSettingsSnapshot) as T;
       } catch (e) {
         console.error('Failed to parse original settings:', e);
         return settings;

@@ -68,7 +68,7 @@ export default function AdminDatabaseSection() {
   const { settings, setSettings, loading, saving, fetchSettings, saveSettings, isFieldPending } =
     useAdminSettings<DatabaseSettingsData>({
       sectionName: "database",
-      fetchTransformer: async () => {
+      fetchTransformer: async (): Promise<DatabaseSettingsData & { _pending?: Record<string, any> }> => {
         const response = await apiClient.get("/api/v1/admin/settings/section/system");
         const systemData = response.data || {};
 
@@ -85,14 +85,14 @@ export default function AdminDatabaseSection() {
         };
 
         // Map pending changes from system._pending.datasource to root level
-        const result: any = { ...datasource };
+        const result: DatabaseSettingsData & { _pending?: Record<string, any> } = { ...datasource };
         if (systemData._pending?.datasource) {
           result._pending = systemData._pending.datasource;
         }
 
         return result;
       },
-      saveTransformer: (settings) => {
+      saveTransformer: (settings: DatabaseSettingsData) => {
         // Convert flat settings to dot-notation for delta endpoint
         const deltaSettings: Record<string, any> = {
           "system.datasource.enableCustomDatabase": settings.enableCustomDatabase,

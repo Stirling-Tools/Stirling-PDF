@@ -72,7 +72,7 @@ export default function AdminAdvancedSection() {
     isFieldPending,
   } = useAdminSettings<AdvancedSettingsData>({
     sectionName: 'advanced',
-    fetchTransformer: async () => {
+    fetchTransformer: async (): Promise<AdvancedSettingsData & { _pending?: Record<string, any> }> => {
       const [systemResponse, processExecutorResponse] = await Promise.all([
         apiClient.get('/api/v1/admin/settings/section/system'),
         apiClient.get('/api/v1/admin/settings/section/processExecutor')
@@ -81,7 +81,7 @@ export default function AdminAdvancedSection() {
       const systemData = systemResponse.data || {};
       const processExecutorData = processExecutorResponse.data || {};
 
-      const result: any = {
+      const result: AdvancedSettingsData & { _pending?: Record<string, any> } = {
         enableAlphaFunctionality: systemData.enableAlphaFunctionality || false,
         maxDPI: systemData.maxDPI || 0,
         enableUrlToPDF: systemData.enableUrlToPDF || false,
@@ -101,7 +101,7 @@ export default function AdminAdvancedSection() {
       };
 
       // Merge pending blocks from both endpoints
-      const pendingBlock: any = {};
+      const pendingBlock: Record<string, any> = {};
       if (systemData._pending?.enableAlphaFunctionality !== undefined) {
         pendingBlock.enableAlphaFunctionality = systemData._pending.enableAlphaFunctionality;
       }

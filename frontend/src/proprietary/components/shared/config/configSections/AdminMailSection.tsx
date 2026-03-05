@@ -46,11 +46,11 @@ export default function AdminMailSection() {
     isFieldPending,
   } = useAdminSettings<MailSettingsData>({
     sectionName: 'mail',
-    fetchTransformer: async () => {
+    fetchTransformer: async (): Promise<MailSettingsData & { _pending?: Partial<MailSettingsData> }> => {
       const mailResponse = await apiClient.get<MailApiResponse>('/api/v1/admin/settings/section/mail');
       return mailResponse.data || {};
     },
-    saveTransformer: (settings) => {
+    saveTransformer: (settings: MailSettingsData) => {
       return {
         sectionData: settings,
         deltaSettings: {}

@@ -38,11 +38,11 @@ export default function AdminFeaturesSection() {
     isFieldPending,
   } = useAdminSettings<FeaturesSettingsData>({
     sectionName: 'features',
-    fetchTransformer: async () => {
+    fetchTransformer: async (): Promise<FeaturesSettingsData & { _pending?: Record<string, any> }> => {
       const systemResponse = await apiClient.get('/api/v1/admin/settings/section/system');
       const systemData = systemResponse.data || {};
 
-      const result: any = {
+      const result: FeaturesSettingsData & { _pending?: Record<string, any> } = {
         serverCertificate: systemData.serverCertificate || {
           enabled: true,
           organizationName: 'Stirling-PDF',
@@ -58,7 +58,7 @@ export default function AdminFeaturesSection() {
 
       return result;
     },
-    saveTransformer: (settings) => {
+    saveTransformer: (settings: FeaturesSettingsData) => {
       const deltaSettings: Record<string, any> = {};
 
       if (settings.serverCertificate) {

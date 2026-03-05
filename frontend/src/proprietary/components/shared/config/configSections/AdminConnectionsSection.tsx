@@ -89,7 +89,7 @@ export default function AdminConnectionsSection() {
 
   const adminSettings = useAdminSettings<ConnectionsSettingsData>({
     sectionName: 'connections',
-    fetchTransformer: async () => {
+    fetchTransformer: async (): Promise<ConnectionsSettingsData & { _pending?: Record<string, any> }> => {
       // Fetch security settings (oauth2, saml2)
       const securityResponse = await apiClient.get('/api/v1/admin/settings/section/security');
       const securityData = securityResponse.data || {};
@@ -110,7 +110,7 @@ export default function AdminConnectionsSection() {
       const systemResponse = await apiClient.get('/api/v1/admin/settings/section/system');
       const systemData = systemResponse.data || {};
 
-      const result: any = {
+      const result: ConnectionsSettingsData & { _pending?: Record<string, any> } = {
         oauth2: securityData.oauth2 || {},
         saml2: securityData.saml2 || {},
         mail: mailData || {},
@@ -124,7 +124,7 @@ export default function AdminConnectionsSection() {
       };
 
       // Merge pending blocks from all endpoints - initialize with defaults to avoid warnings
-      const pendingBlock: any = {
+      const pendingBlock: Record<string, any> = {
         oauth2: securityData._pending?.oauth2,
         saml2: securityData._pending?.saml2,
         mail: mailData._pending,
@@ -141,21 +141,22 @@ export default function AdminConnectionsSection() {
 
       return result;
     },
-    saveTransformer: (currentSettings) => {
+    saveTransformer: (currentSettings: ConnectionsSettingsData) => {
       const deltaSettings: Record<string, any> = {};
 
       // Build delta for oauth2 settings
-      if (currentSettings?.oauth2) {
+      if (currentSettings.oauth2) {
         Object.keys(currentSettings.oauth2).forEach((key) => {
           if (key !== 'client') {
-            deltaSettings[`security.oauth2.${key}`] = currentSettings.oauth2[key];
+            deltaSettings[`security.oauth2.${key}`] = (currentSettings.oauth2 as Record<string, any>)[key];
           }
         });
 
         // Build delta for specific OAuth2 providers
-        if (currentSettings.oauth2.client) {
-          Object.keys(currentSettings.oauth2.client).forEach((providerId) => {
-            const providerSettings = currentSettings.oauth2.client[providerId];
+        const oauth2Client = currentSettings.oauth2.client;
+        if (oauth2Client) {
+          Object.keys(oauth2Client).forEach((providerId) => {
+            const providerSettings = oauth2Client[providerId];
             Object.keys(providerSettings).forEach((key) => {
               deltaSettings[`security.oauth2.client.${providerId}.${key}`] = providerSettings[key];
             });
@@ -164,23 +165,23 @@ export default function AdminConnectionsSection() {
       }
 
       // Build delta for saml2 settings
-      if (currentSettings?.saml2) {
+      if (currentSettings.saml2) {
         Object.keys(currentSettings.saml2).forEach((key) => {
-          deltaSettings[`security.saml2.${key}`] = currentSettings.saml2[key];
+          deltaSettings[`security.saml2.${key}`] = (currentSettings.saml2 as Record<string, any>)[key];
         });
       }
 
       // Mail settings
-      if (currentSettings?.mail) {
+      if (currentSettings.mail) {
         Object.keys(currentSettings.mail).forEach((key) => {
-          deltaSettings[`mail.${key}`] = currentSettings.mail[key];
+          deltaSettings[`mail.${key}`] = (currentSettings.mail as Record<string, any>)[key];
         });
       }
 
       // Telegram settings
-      if (currentSettings?.telegram) {
+      if (currentSettings.telegram) {
         Object.keys(currentSettings.telegram).forEach((key) => {
-          deltaSettings[`telegram.${key}`] = currentSettings.telegram[key];
+          deltaSettings[`telegram.${key}`] = (currentSettings.telegram as Record<string, any>)[key];
         });
       }
 
