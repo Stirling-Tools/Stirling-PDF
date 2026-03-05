@@ -98,9 +98,12 @@ premium:
       producer: Stirling-PDF
   enterpriseFeatures:
     audit:
-      enabled: true # Enable audit logging
-      level: 2 # Audit logging level: 0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE
-      retentionDays: 90 # Number of days to retain audit logs
+      enabled: true # Enable audit logging for security and compliance tracking
+      level: 2 # Audit logging level: 0=OFF, 1=BASIC (compress/split/merge/etc and settings), 2=STANDARD (BASIC + user actions, excludes polling), 3=VERBOSE (everything including polling).
+      retentionDays: 90 # Number of days to retain audit logs (0 or negative = infinite retention)
+      captureFileHash: false # Capture SHA-256 hash of uploaded/processed files. Warning: adds 50-200ms per file depending on size. Only enabled independently of audit level.
+      capturePdfAuthor: false # Capture author metadata from PDF documents. Warning: requires PDF parsing which increases processing time. Only enabled independently of audit level.
+      captureOperationResults: false # Capture operation return values and responses in audit log. Warning: not recommended, significantly increases log volume and disk usage. Use only for debugging.
     databaseNotifications:
       backups:
         successful: false # set to 'true' to enable email notifications for successful database backups
