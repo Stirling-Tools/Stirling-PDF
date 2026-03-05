@@ -263,7 +263,7 @@ export class SaasBillingService {
         throw error;
       }
 
-      throw new Error('Failed to fetch billing status', { cause: error });
+      throw new Error('Failed to fetch billing status');
     }
   }
 
@@ -313,7 +313,7 @@ export class SaasBillingService {
         throw error;
       }
 
-      throw new Error('Failed to open billing portal', { cause: error });
+      throw new Error('Failed to open billing portal');
     }
   }
 
@@ -428,7 +428,7 @@ export class SaasBillingService {
         throw error;
       }
 
-      throw new Error('Failed to create checkout session', { cause: error });
+      throw new Error('Failed to create checkout session');
     }
   }
 }
