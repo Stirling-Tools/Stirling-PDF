@@ -1183,9 +1183,9 @@ verbose = "STANDARD events plus: continuous polling calls, all GET requests, det
 description = "Number of days to retain audit logs (0 = infinite retention)"
 label = "Audit Retention (days)"
 
-[admin.settings.security.audit.metadata]
-description = "Enable additional metadata extraction. Each option independently increases processing time per file (50-200ms depending on file size)."
-warning = "Optional Metadata Capture"
+[admin.settings.security.audit.advancedOptions]
+title = "Advanced Options"
+description = "The following options increase processing time and memory usage. Enable only if truly needed."
 
 [admin.settings.security.audit.captureFileHash]
 description = "Extract SHA-256 hash of uploaded PDF files for integrity verification. Independent of audit level."
