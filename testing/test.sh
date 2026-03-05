@@ -69,17 +69,12 @@ resolve_base_image_for_tests() {
         local local_tag="stirlingtools/stirling-pdf-base:test-$(date +%s)"
         echo "Detected changes in $base_dockerfile; building local base image: $local_tag"
 
-        if [ -n "${ACTIONS_RUNTIME_TOKEN}" ] && { [ -n "${ACTIONS_RESULTS_URL}" ] || [ -n "${ACTIONS_CACHE_URL}" ]; }; then
-            DOCKER_CACHE_ARGS_BASE="--cache-from type=gha,scope=stirling-pdf-base --cache-to type=gha,mode=max,scope=stirling-pdf-base"
-        else
-            DOCKER_CACHE_ARGS_BASE=""
-        fi
-
-        docker buildx build \
+        # Use docker build instead of buildx for local builds - buildx --load doesn't properly
+        # resolve locally-loaded base images in subsequent FROM statements
+        docker build \
             -t "$local_tag" \
             -f ./docker/embedded/Dockerfile.base \
-            --load \
-            ${DOCKER_CACHE_ARGS_BASE} .
+            .
 
         RESOLVED_BASE_IMAGE="$local_tag"
     fi
@@ -557,17 +552,13 @@ main() {
 
         # Build Fat (Security) image with embedded frontend (matching all 'fat' compose files)
         echo "Building fat image for tests that require it..."
-        if [ -n "${ACTIONS_RUNTIME_TOKEN}" ] && { [ -n "${ACTIONS_RESULTS_URL}" ] || [ -n "${ACTIONS_CACHE_URL}" ]; }; then
-            DOCKER_CACHE_ARGS_FAT="--cache-from type=gha,scope=stirling-pdf-fat --cache-to type=gha,mode=max,scope=stirling-pdf-fat"
-        else
-            DOCKER_CACHE_ARGS_FAT=""
-        fi
-        docker buildx build --build-arg VERSION_TAG=alpha \
+        # Use docker build instead of buildx for local builds with --load
+        # buildx --load has issues resolving locally-loaded base images
+        docker build --build-arg VERSION_TAG=alpha \
             --build-arg BASE_IMAGE="$RESOLVED_BASE_IMAGE" \
             -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat \
             -f ./docker/embedded/Dockerfile.fat \
-            --load \
-            ${DOCKER_CACHE_ARGS_FAT} .
+            .
     else
         echo "Skipping fat image build - no fat tests in rerun list"
     fi
