@@ -292,10 +292,6 @@ public class MultiPageLayoutController {
 
                             if (addBorder) {
                                 // Draw border around each page
-                                // float borderX = colIndex * cellWidth;
-                                /*float borderY =
-                                newPage.getMediaBox().getHeight()
-                                        - (rowIndex + 1) * cellHeight;*/
                                 contentStream.addRect(
                                         x, y, rect.getWidth() * scale, rect.getHeight() * scale);
                                 contentStream.stroke();
