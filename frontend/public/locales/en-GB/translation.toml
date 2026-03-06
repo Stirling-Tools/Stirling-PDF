@@ -1009,14 +1009,6 @@ label = "Show Update Notifications"
 description = "Restrict update notifications to admin users only"
 label = "Show Updates to Admins Only"
 
-[admin.settings.general.hideDisabledTools.general]
-description = "Hide tools in the interface when they are not enabled"
-title = "Hide Disabled Tools"
-
-[admin.settings.general.hideDisabledTools.mobileScanner]
-label = "Hide Mobile Scanner"
-description = "Hide mobile QR scanner button when not enabled"
-
 [admin.settings.legal]
 description = "Configure links to legal documents and policies."
 title = "Legal Documents"
