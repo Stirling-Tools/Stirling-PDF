@@ -696,7 +696,8 @@ public class ApplicationProperties {
 
         @Override
         public String toString() {
-            return """
+            return
+                    """
             Driver {
               driverName='%s'
             }
@@ -712,6 +713,7 @@ public class ApplicationProperties {
         private String logoStyle = "classic"; // Options: "classic" (default) or "modern"
         private boolean defaultHideUnavailableTools = false;
         private boolean defaultHideUnavailableConversions = false;
+        private HideDisabledTools hideDisabledTools = new HideDisabledTools();
 
         public String getAppNameNavbar() {
             return appNameNavbar != null && !appNameNavbar.trim().isEmpty() ? appNameNavbar : null;
@@ -723,6 +725,12 @@ public class ApplicationProperties {
                 return "modern";
             }
             return "classic"; // default
+        }
+
+        @Data
+        public static class HideDisabledTools {
+            private boolean googleDrive = false;
+            private boolean mobileQRScanner = false;
         }
     }
 
@@ -911,6 +919,15 @@ public class ApplicationProperties {
             private boolean ssoAutoLogin;
             private boolean database;
             private CustomMetadata customMetadata = new CustomMetadata();
+            private GoogleDrive googleDrive = new GoogleDrive();
+
+            @Data
+            public static class GoogleDrive {
+                private boolean enabled = false;
+                private String clientId = "";
+                private String apiKey = "";
+                private String appId = "";
+            }
 
             @Data
             public static class CustomMetadata {
@@ -960,6 +977,12 @@ public class ApplicationProperties {
                 private boolean enabled = true;
                 private int level = 2; // 0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE
                 private int retentionDays = 90;
+                private boolean captureFileHash =
+                        false; // Capture SHA-256 hash of files (increases processing time)
+                private boolean capturePdfAuthor =
+                        false; // Capture PDF author metadata (increases processing time)
+                private boolean captureOperationResults =
+                        false; // Capture operation return values (not recommended, high volume)
             }
 
             @Data
