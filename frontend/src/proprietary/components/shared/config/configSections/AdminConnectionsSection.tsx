@@ -78,6 +78,10 @@ interface ConnectionsSettingsData {
   mobileScannerImageResolution?: string;
   mobileScannerPageFormat?: string;
   mobileScannerStretchToFit?: boolean;
+  googleDriveEnabled?: boolean;
+  googleDriveClientId?: string;
+  googleDriveApiKey?: string;
+  googleDriveAppId?: string;
 }
 
 export default function AdminConnectionsSection() {
@@ -120,24 +124,61 @@ export default function AdminConnectionsSection() {
         mobileScannerConvertToPdf: systemData.mobileScannerSettings?.convertToPdf !== false,
         mobileScannerImageResolution: systemData.mobileScannerSettings?.imageResolution || 'full',
         mobileScannerPageFormat: systemData.mobileScannerSettings?.pageFormat || 'A4',
-        mobileScannerStretchToFit: systemData.mobileScannerSettings?.stretchToFit || false
+        mobileScannerStretchToFit: systemData.mobileScannerSettings?.stretchToFit || false,
+        googleDriveEnabled: premiumData.proFeatures?.googleDrive?.enabled || false,
+        googleDriveClientId: premiumData.proFeatures?.googleDrive?.clientId || '',
+        googleDriveApiKey: premiumData.proFeatures?.googleDrive?.apiKey || '',
+        googleDriveAppId: premiumData.proFeatures?.googleDrive?.appId || ''
       };
 
-      // Merge pending blocks from all endpoints - initialize with defaults to avoid warnings
-      const pendingBlock: Record<string, any> = {
-        oauth2: securityData._pending?.oauth2,
-        saml2: securityData._pending?.saml2,
-        mail: mailData._pending,
-        telegram: telegramData._pending,
-        ssoAutoLogin: premiumData._pending?.proFeatures?.ssoAutoLogin,
-        enableMobileScanner: systemData._pending?.enableMobileScanner,
-        mobileScannerConvertToPdf: systemData._pending?.mobileScannerSettings?.convertToPdf,
-        mobileScannerImageResolution: systemData._pending?.mobileScannerSettings?.imageResolution,
-        mobileScannerPageFormat: systemData._pending?.mobileScannerSettings?.pageFormat,
-        mobileScannerStretchToFit: systemData._pending?.mobileScannerSettings?.stretchToFit,
-      };
+      // Merge pending blocks from all endpoints
+      const pendingBlock: Record<string, any> = {};
+      if (securityData._pending?.oauth2) {
+        pendingBlock.oauth2 = securityData._pending.oauth2;
+      }
+      if (securityData._pending?.saml2) {
+        pendingBlock.saml2 = securityData._pending.saml2;
+      }
+      if (mailData._pending) {
+        pendingBlock.mail = mailData._pending;
+      }
+      if (telegramData._pending) {
+        pendingBlock.telegram = telegramData._pending;
+      }
+      if (premiumData._pending?.proFeatures?.ssoAutoLogin !== undefined) {
+        pendingBlock.ssoAutoLogin = premiumData._pending.proFeatures.ssoAutoLogin;
+      }
+      if (systemData._pending?.enableMobileScanner !== undefined) {
+        pendingBlock.enableMobileScanner = systemData._pending.enableMobileScanner;
+      }
+      if (systemData._pending?.mobileScannerSettings?.convertToPdf !== undefined) {
+        pendingBlock.mobileScannerConvertToPdf = systemData._pending.mobileScannerSettings.convertToPdf;
+      }
+      if (systemData._pending?.mobileScannerSettings?.imageResolution !== undefined) {
+        pendingBlock.mobileScannerImageResolution = systemData._pending.mobileScannerSettings.imageResolution;
+      }
+      if (systemData._pending?.mobileScannerSettings?.pageFormat !== undefined) {
+        pendingBlock.mobileScannerPageFormat = systemData._pending.mobileScannerSettings.pageFormat;
+      }
+      if (systemData._pending?.mobileScannerSettings?.stretchToFit !== undefined) {
+        pendingBlock.mobileScannerStretchToFit = systemData._pending.mobileScannerSettings.stretchToFit;
+      }
+      if (premiumData._pending?.proFeatures?.googleDrive?.enabled !== undefined) {
+        pendingBlock.googleDriveEnabled = premiumData._pending.proFeatures.googleDrive.enabled;
+      }
+      if (premiumData._pending?.proFeatures?.googleDrive?.clientId !== undefined) {
+        pendingBlock.googleDriveClientId = premiumData._pending.proFeatures.googleDrive.clientId;
+      }
+      if (premiumData._pending?.proFeatures?.googleDrive?.apiKey !== undefined) {
+        pendingBlock.googleDriveApiKey = premiumData._pending.proFeatures.googleDrive.apiKey;
+      }
+      if (premiumData._pending?.proFeatures?.googleDrive?.appId !== undefined) {
+        pendingBlock.googleDriveAppId = premiumData._pending.proFeatures.googleDrive.appId;
+      }
 
-      result._pending = pendingBlock;
+      if (Object.keys(pendingBlock).length > 0) {
+        result._pending = pendingBlock;
+      }
 
       return result;
     },
@@ -207,6 +248,20 @@ export default function AdminConnectionsSection() {
         deltaSettings['system.mobileScannerSettings.stretchToFit'] = currentSettings.mobileScannerStretchToFit;
       }
 
+      // Google Drive settings
+      if (currentSettings?.googleDriveEnabled !== undefined) {
+        deltaSettings['premium.proFeatures.googleDrive.enabled'] = currentSettings.googleDriveEnabled;
+      }
+      if (currentSettings?.googleDriveClientId !== undefined) {
+        deltaSettings['premium.proFeatures.googleDrive.clientId'] = currentSettings.googleDriveClientId;
+      }
+      if (currentSettings?.googleDriveApiKey !== undefined) {
+        deltaSettings['premium.proFeatures.googleDrive.apiKey'] = currentSettings.googleDriveApiKey;
+      }
+      if (currentSettings?.googleDriveAppId !== undefined) {
+        deltaSettings['premium.proFeatures.googleDrive.appId'] = currentSettings.googleDriveAppId;
+      }
+
       return {
         sectionData: {},
         deltaSettings
@@ -264,6 +319,10 @@ export default function AdminConnectionsSection() {
       return settings?.telegram?.enabled === true;
     }
 
+    if (provider.id === 'googledrive') {
+      return settings?.googleDriveEnabled === true;
+    }
+
     if (provider.id === 'oauth2-generic') {
       return settings?.oauth2?.enabled === true;
     }
@@ -284,6 +343,15 @@ export default function AdminConnectionsSection() {
 
     if (provider.id === 'telegram') {
       return settings?.telegram || {};
+    }
+
+    if (provider.id === 'googledrive') {
+      return {
+        enabled: settings?.googleDriveEnabled,
+        clientId: settings?.googleDriveClientId,
+        apiKey: settings?.googleDriveApiKey,
+        appId: settings?.googleDriveAppId,
+      };
     }
 
     if (provider.id === 'oauth2-generic') {
@@ -323,6 +391,14 @@ export default function AdminConnectionsSection() {
       setSettings({ ...settings, mail: updatedSettings });
     } else if (provider.id === 'telegram') {
       setSettings({ ...settings, telegram: updatedSettings });
+    } else if (provider.id === 'googledrive') {
+      setSettings({
+        ...settings,
+        googleDriveEnabled: updatedSettings.enabled,
+        googleDriveClientId: updatedSettings.clientId,
+        googleDriveApiKey: updatedSettings.apiKey,
+        googleDriveAppId: updatedSettings.appId,
+      });
     } else if (provider.id === 'saml2') {
       setSettings({ ...settings, saml2: updatedSettings });
     } else if (provider.id === 'oauth2-generic') {
@@ -406,6 +482,16 @@ export default function AdminConnectionsSection() {
             <LocalIcon icon="qr-code-rounded" width="1.25rem" height="1.25rem" />
             <Text fw={600} size="sm">{t('admin.settings.connections.mobileScanner.label', 'Mobile Phone Upload')}</Text>
           </Group>
+
+          {/* Documentation Link */}
+          <Anchor
+            href="https://docs.stirlingpdf.com/Functionality/Mobile-Scanner"
+            target="_blank"
+            size="xs"
+            c="blue"
+          >
+            {t('admin.settings.connections.documentation', 'View documentation')} ↗
+          </Anchor>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
