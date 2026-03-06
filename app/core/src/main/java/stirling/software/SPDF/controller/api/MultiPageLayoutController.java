@@ -233,8 +233,11 @@ public class MultiPageLayoutController {
                                     PDPageContentStream.AppendMode.APPEND,
                                     true,
                                     true)) {
-                        contentStream.setLineWidth(borderWidth);
-                        contentStream.setStrokingColor(Color.BLACK);
+
+                        if (addBorder) {
+                            contentStream.setLineWidth(borderWidth);
+                            contentStream.setStrokingColor(Color.BLACK);
+                        }
 
                         // Process all pages in this group
                         for (int j = 0; j < pagesPerSheet && (i + j) < totalPages; j++) {
