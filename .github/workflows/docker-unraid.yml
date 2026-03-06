@@ -27,14 +27,19 @@ jobs:
         id: prep
         shell: bash
         env:
-          DOCKER_IMAGE_NAME: ${{ vars.DOCKER_IMAGE_NAME }}
+          DOCKER_IMAGE_NAMESPACE: ${{ vars.DOCKER_IMAGE_NAMESPACE }}
           REPO_NAME: ${{ github.event.repository.name }}
         run: |
           set -euo pipefail
 
-          RAW_NAME="${DOCKER_IMAGE_NAME:-$REPO_NAME}"
-          IMAGE_NAME="$(printf '%s' "$RAW_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')"
+          IMAGE_NAMESPACE="$(printf '%s' "${DOCKER_IMAGE_NAMESPACE}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
+          IMAGE_NAME="$(printf '%s' "$REPO_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')"
           IMAGE_NAME="${IMAGE_NAME//_/-}"
+
+          if [[ -z "$IMAGE_NAMESPACE" ]] || ! printf '%s' "$IMAGE_NAMESPACE" | grep -Eq '^[a-z0-9]+([._-][a-z0-9]+)*$'; then
+            echo "::error::Invalid Docker image namespace '$IMAGE_NAMESPACE'"
+            exit 1
+          fi
 
           if [[ -z "$IMAGE_NAME" ]] || ! printf '%s' "$IMAGE_NAME" | grep -Eq '^[a-z0-9]+([._-][a-z0-9]+)*$'; then
             echo "::error::Invalid Docker image name '$IMAGE_NAME'"
@@ -42,7 +47,7 @@ jobs:
           fi
 
           SHORT_SHA="$(git rev-parse --short=12 HEAD)"
-          IMAGE="johnnyp20/$IMAGE_NAME"
+          IMAGE="$IMAGE_NAMESPACE/$IMAGE_NAME"
 
           echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
           echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
@@ -50,8 +55,8 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: johnnyp20
-          password: ${{ secrets.DOCKER_PASSWORD || secrets.DOCKER_HUB_API }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -71,7 +76,6 @@ jobs:
     name: Request Unraid update
     needs: build-and-push
     runs-on: ubuntu-latest
-    environment: unraid
 
     steps:
       - name: Checkout repository
@@ -85,8 +89,6 @@ jobs:
 
       - name: Trigger Unraid Docker update
         env:
-          UNRAID_BASE_URL: ${{ vars.UNRAID_BASE_URL }}
-          UNRAID_CONTAINERS: ${{ vars.UNRAID_CONTAINERS || 'Stirling-PDF' }}
           UNRAID_USERNAME: ${{ secrets.UNRAID_USERNAME }}
           UNRAID_PASSWORD: ${{ secrets.UNRAID_PASSWORD }}
         run: node tools/unraid/update-containers.mjs
