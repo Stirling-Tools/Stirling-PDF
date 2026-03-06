@@ -110,7 +110,7 @@ public class MergeMultiplePagesRequest extends PDFFile {
     @Schema(
             description = "Border width (in points) to apply around each page when merging",
             type = "number",
-            defaultValue = "0",
+            defaultValue = "1",
             minimum = "0",
             example = "2")
     private int borderWidth;
