@@ -22,7 +22,69 @@ interface SettingsSearchOption {
   label: string;
   sectionTitle: string;
   destinationPath: string;
+  searchableContent: string[];
+  matchedContext?: string;
 }
+
+const SETTINGS_SEARCH_TRANSLATION_PREFIXES: Partial<Record<NavKey, string[]>> = {
+  general: ['settings.general'],
+  hotkeys: ['settings.hotkeys'],
+  account: ['account'],
+  people: ['people'],
+  teams: ['teams'],
+  'api-keys': ['settings.developer'],
+  adminGeneral: ['admin.settings.general'],
+  adminFeatures: ['admin.settings.features'],
+  adminEndpoints: ['admin.settings.endpoints'],
+  adminDatabase: ['admin.settings.database'],
+  adminAdvanced: ['admin.settings.advanced'],
+  adminSecurity: ['admin.settings.security'],
+  adminConnections: ['admin.settings.connections', 'admin.settings.mail'],
+  adminPlan: ['settings.planBilling', 'admin.settings.premium'],
+  adminAudit: ['admin.settings.audit'],
+  adminUsage: ['admin.settings.usage'],
+  adminLegal: ['admin.settings.legal'],
+  adminPrivacy: ['admin.settings.privacy'],
+};
+
+const flattenTranslationStrings = (value: unknown): string[] => {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed ? [trimmed] : [];
+  }
+
+  if (Array.isArray(value)) {
+    return value.flatMap(flattenTranslationStrings);
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.values(value as Record<string, unknown>).flatMap(flattenTranslationStrings);
+  }
+
+  return [];
+};
+
+const buildMatchSnippet = (text: string, query: string): string => {
+  const normalizedText = text.toLocaleLowerCase();
+  const normalizedQuery = query.toLocaleLowerCase();
+  const matchIndex = normalizedText.indexOf(normalizedQuery);
+
+  if (matchIndex === -1) {
+    return text;
+  }
+
+  const maxLength = 84;
+  const contextPadding = 28;
+  const start = Math.max(0, matchIndex - contextPadding);
+  const end = Math.min(text.length, matchIndex + query.length + contextPadding);
+  const snippet = text.slice(start, end);
+
+  if (snippet.length <= maxLength) {
+    return `${start > 0 ? '…' : ''}${snippet}${end < text.length ? '…' : ''}`;
+  }
+
+  return `${start > 0 ? '…' : ''}${snippet.slice(0, maxLength)}${end < text.length ? '…' : ''}`;
+};
 
 const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   const [active, setActive] = useState<NavKey>('general');
@@ -55,6 +117,12 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
       navigate('/settings/general', { replace: true });
     }
   }, [location.pathname, opened, navigate]);
+
+  useEffect(() => {
+    if (opened) {
+      setSearchValue('');
+    }
+  }, [opened]);
 
   // Handle custom events for backwards compatibility
   useEffect(() => {
@@ -112,14 +180,57 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
     return configNavSections.flatMap((section) =>
       section.items
         .filter((item) => !item.disabled)
-        .map((item) => ({
-          value: item.key,
-          label: item.label,
-          sectionTitle: section.title,
-          destinationPath: `/settings/${item.key}`,
-        }))
+        .map((item) => {
+          const translationPrefixes = SETTINGS_SEARCH_TRANSLATION_PREFIXES[item.key] ?? [];
+          const translationContent = translationPrefixes.flatMap((prefix) =>
+            flattenTranslationStrings(t(prefix, { returnObjects: true, defaultValue: {} } as any))
+          );
+
+          const searchableContent = Array.from(
+            new Set([
+              item.label,
+              section.title,
+              `/settings/${item.key}`,
+              ...translationContent,
+            ])
+          );
+
+          return {
+            value: item.key,
+            label: item.label,
+            sectionTitle: section.title,
+            destinationPath: `/settings/${item.key}`,
+            searchableContent,
+          };
+        })
     );
-  }, [configNavSections]);
+  }, [configNavSections, t]);
+
+  const filteredSearchableSections = useMemo<SettingsSearchOption[]>(() => {
+    const query = searchValue.trim();
+    if (!query) {
+      return searchableSections;
+    }
+
+    const normalizedQuery = query.toLocaleLowerCase();
+
+    return searchableSections.reduce<SettingsSearchOption[]>((accumulator, option) => {
+      const matchedEntry = option.searchableContent.find((entry) =>
+        entry.toLocaleLowerCase().includes(normalizedQuery)
+      );
+
+      if (!matchedEntry) {
+        return accumulator;
+      }
+
+      accumulator.push({
+        ...option,
+        matchedContext: buildMatchSnippet(matchedEntry, query),
+      });
+
+      return accumulator;
+    }, []);
+  }, [searchValue, searchableSections]);
 
   const handleClose = useCallback(async () => {
     const canProceed = await confirmIfDirty();
@@ -257,7 +368,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
               <Group gap="xs" wrap="nowrap">
                 <Select
                   className="settings-search-select"
-                  data={searchableSections}
+                  data={filteredSearchableSections}
                   value={null}
                   searchValue={searchValue}
                   onSearchChange={setSearchValue}
@@ -275,7 +386,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
                       <div className="settings-search-option">
                         <Text size="sm" fw={600}>{searchOption.label}</Text>
                         <Text size="xs" c="dimmed">
-                          {searchOption.sectionTitle} · {searchOption.destinationPath}
+                          {searchOption.sectionTitle} · {searchOption.matchedContext || searchOption.destinationPath}
                         </Text>
                       </div>
                     );
