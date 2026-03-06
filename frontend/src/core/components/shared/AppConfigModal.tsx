@@ -26,13 +26,15 @@ interface SettingsSearchOption {
   matchedContext?: string;
 }
 
-const SETTINGS_SEARCH_TRANSLATION_PREFIXES: Partial<Record<NavKey, string[]>> = {
+const SETTINGS_SEARCH_TRANSLATION_PREFIXES: Partial<Record<string, string[]>> = {
   general: ['settings.general'],
   hotkeys: ['settings.hotkeys'],
   account: ['account'],
-  people: ['people'],
-  teams: ['teams'],
+  people: ['settings.workspace'],
+  teams: ['settings.workspace', 'settings.team'],
   'api-keys': ['settings.developer'],
+  connectionMode: ['settings.connection'],
+  planBilling: ['settings.planBilling'],
   adminGeneral: ['admin.settings.general'],
   adminFeatures: ['admin.settings.features'],
   adminEndpoints: ['admin.settings.endpoints'],
@@ -46,15 +48,17 @@ const SETTINGS_SEARCH_TRANSLATION_PREFIXES: Partial<Record<NavKey, string[]>> = 
     'admin.settings.telegram',
     'admin.settings.premium',
     'admin.settings.general',
+    'settings.securityAuth',
+    'settings.connection',
   ],
-  adminPlan: ['settings.planBilling', 'admin.settings.premium'],
-  adminAudit: ['admin.settings.audit'],
-  adminUsage: ['admin.settings.usage'],
+  adminPlan: ['settings.planBilling', 'admin.settings.premium', 'settings.licensingAnalytics'],
+  adminAudit: ['settings.licensingAnalytics'],
+  adminUsage: ['settings.licensingAnalytics'],
   adminLegal: ['admin.settings.legal'],
   adminPrivacy: ['admin.settings.privacy'],
 };
 
-const getTranslationPrefixesForNavKey = (key: NavKey): string[] => {
+const getTranslationPrefixesForNavKey = (key: string): string[] => {
   const explicitPrefixes = SETTINGS_SEARCH_TRANSLATION_PREFIXES[key] ?? [];
 
   const inferredPrefixes: string[] = [];
