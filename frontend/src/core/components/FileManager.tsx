@@ -1,16 +1,17 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Modal } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import { StirlingFileStub } from '@app/types/fileContext';
 import { useFileManager } from '@app/hooks/useFileManager';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { Tool } from '@app/types/tool';
 import MobileLayout from '@app/components/fileManager/MobileLayout';
 import DesktopLayout from '@app/components/fileManager/DesktopLayout';
 import DragOverlay from '@app/components/fileManager/DragOverlay';
 import { FileManagerProvider } from '@app/contexts/FileManagerContext';
 import { Z_INDEX_FILE_MANAGER_MODAL } from '@app/styles/zIndex';
-import { isGoogleDriveConfigured } from '@app/services/googleDrivePickerService';
+import { isGoogleDriveConfigured, extractGoogleDriveBackendConfig } from '@app/services/googleDrivePickerService';
 import { loadScript } from '@app/utils/scriptLoader';
 import { useAllFiles } from '@app/contexts/FileContext';
 
@@ -20,6 +21,7 @@ interface FileManagerProps {
 
 const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
   const { isFilesModalOpen, closeFilesModal, onFileUpload, onRecentFileSelect } = useFilesModalContext();
+  const { config } = useAppConfig();
   const [recentFiles, setRecentFiles] = useState<StirlingFileStub[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -92,9 +94,14 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
   }, []);
 
   // Preload Google Drive scripts if configured
+  // Use useMemo to only track Google Drive config changes, not all config updates
+  const googleDriveBackendConfig = useMemo(
+    () => extractGoogleDriveBackendConfig(config),
+    [config?.googleDriveEnabled, config?.googleDriveClientId, config?.googleDriveApiKey, config?.googleDriveAppId]
+  );
 
   useEffect(() => {
-    if (isGoogleDriveConfigured()) {
+    if (isGoogleDriveConfigured(googleDriveBackendConfig)) {
       // Load scripts in parallel without blocking
       Promise.all([
         loadScript({
@@ -113,7 +120,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
         console.warn('Failed to preload Google Drive scripts:', error);
       });
     }
-  }, []);
+  }, [googleDriveBackendConfig]);
 
   // Modal size constants for consistent scaling
   const modalHeight = '80vh';

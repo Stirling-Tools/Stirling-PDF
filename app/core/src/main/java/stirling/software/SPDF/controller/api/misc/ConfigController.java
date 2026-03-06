@@ -159,6 +159,24 @@ public class ConfigController {
                     "defaultHideUnavailableConversions",
                     applicationProperties.getUi().isDefaultHideUnavailableConversions());
 
+            // Hide disabled tools settings
+            configData.put(
+                    "hideDisabledToolsGoogleDrive",
+                    applicationProperties.getUi().getHideDisabledTools().isGoogleDrive());
+            configData.put(
+                    "hideDisabledToolsMobileQRScanner",
+                    applicationProperties.getUi().getHideDisabledTools().isMobileQRScanner());
+
+            // Google Drive backend settings (only if enabled)
+            ApplicationProperties.Premium.ProFeatures.GoogleDrive googleDrive =
+                    applicationProperties.getPremium().getProFeatures().getGoogleDrive();
+            if (googleDrive.isEnabled()) {
+                configData.put("googleDriveEnabled", true);
+                configData.put("googleDriveClientId", googleDrive.getClientId());
+                configData.put("googleDriveApiKey", googleDrive.getApiKey());
+                configData.put("googleDriveAppId", googleDrive.getAppId());
+            }
+
             // Security settings
             // enableLogin requires both the config flag AND proprietary features to be loaded
             // If userService is null, proprietary module isn't loaded

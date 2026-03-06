@@ -14,6 +14,13 @@ interface GoogleDriveConfig {
   appId: string;
 }
 
+interface BackendGoogleDriveConfig {
+  enabled?: boolean;
+  clientId?: string;
+  apiKey?: string;
+  appId?: string;
+}
+
 interface PickerOptions {
   multiple?: boolean;
   mimeTypes?: string | null;
@@ -270,8 +277,21 @@ export function getGoogleDrivePickerService(): GoogleDrivePickerService {
 
 /**
  * Check if Google Drive credentials are configured
+ * Supports both backend settings and environment variables
  */
-export function isGoogleDriveConfigured(): boolean {
+export function isGoogleDriveConfigured(backendConfig?: BackendGoogleDriveConfig): boolean {
+  // If backend config is provided, use it exclusively (don't fall back to env vars)
+  if (backendConfig) {
+    if (backendConfig.enabled === false) {
+      return false; // Admin explicitly disabled it
+    }
+    if (backendConfig.enabled) {
+      return !!(backendConfig.clientId && backendConfig.apiKey && backendConfig.appId);
+    }
+    return false; // No backend config provided
+  }
+
+  // Fall back to environment variables only when backend config is not available
   const clientId = import.meta.env.VITE_GOOGLE_DRIVE_CLIENT_ID;
   const apiKey = import.meta.env.VITE_GOOGLE_DRIVE_API_KEY;
   const appId = import.meta.env.VITE_GOOGLE_DRIVE_APP_ID;
@@ -280,16 +300,50 @@ export function isGoogleDriveConfigured(): boolean {
 }
 
 /**
- * Get Google Drive configuration from environment variables
+ * Get Google Drive configuration from backend settings or environment variables
+ * Backend settings take priority over environment variables
  */
-export function getGoogleDriveConfig(): GoogleDriveConfig | null {
-  if (!isGoogleDriveConfigured()) {
-    return null;
+export function getGoogleDriveConfig(backendConfig?: BackendGoogleDriveConfig): GoogleDriveConfig | null {
+  // If backend config is provided, use it exclusively (don't fall back to env vars)
+  if (backendConfig) {
+    if (backendConfig.enabled === false) {
+      return null; // Admin explicitly disabled it
+    }
+    if (backendConfig.enabled && backendConfig.clientId && backendConfig.apiKey && backendConfig.appId) {
+      return {
+        clientId: backendConfig.clientId,
+        apiKey: backendConfig.apiKey,
+        appId: backendConfig.appId,
+      };
+    }
+    return null; // Backend config provided but incomplete
   }
 
+  // Fall back to environment variables only when backend config is not available
+  const envClientId = import.meta.env.VITE_GOOGLE_DRIVE_CLIENT_ID;
+  const envApiKey = import.meta.env.VITE_GOOGLE_DRIVE_API_KEY;
+  const envAppId = import.meta.env.VITE_GOOGLE_DRIVE_APP_ID;
+
+  if (envClientId && envApiKey && envAppId) {
+    return {
+      clientId: envClientId,
+      apiKey: envApiKey,
+      appId: envAppId,
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Extract Google Drive backend config from AppConfig object
+ * Eliminates duplicated config construction pattern
+ */
+export function extractGoogleDriveBackendConfig(appConfig: any): BackendGoogleDriveConfig {
   return {
-    clientId: import.meta.env.VITE_GOOGLE_DRIVE_CLIENT_ID,
-    apiKey: import.meta.env.VITE_GOOGLE_DRIVE_API_KEY,
-    appId: import.meta.env.VITE_GOOGLE_DRIVE_APP_ID,
+    enabled: appConfig?.googleDriveEnabled,
+    clientId: appConfig?.googleDriveClientId,
+    apiKey: appConfig?.googleDriveApiKey,
+    appId: appConfig?.googleDriveAppId,
   };
 }

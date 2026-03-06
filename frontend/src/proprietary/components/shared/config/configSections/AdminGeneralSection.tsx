@@ -22,6 +22,10 @@ interface GeneralSettingsData {
     appNameNavbar?: string;
     languages?: string[];
     logoStyle?: 'modern' | 'classic';
+    hideDisabledTools?: {
+      googleDrive?: boolean;
+      mobileQRScanner?: boolean;
+    };
   };
   system: {
     defaultLocale?: string;
@@ -162,6 +166,8 @@ export default function AdminGeneralSection() {
         'ui.appNameNavbar': settings.ui?.appNameNavbar,
         'ui.languages': settings.ui?.languages,
         'ui.logoStyle': settings.ui?.logoStyle,
+        'ui.hideDisabledTools.googleDrive': settings.ui?.hideDisabledTools?.googleDrive,
+        'ui.hideDisabledTools.mobileQRScanner': settings.ui?.hideDisabledTools?.mobileQRScanner,
         // System settings
         'system.defaultLocale': settings.system?.defaultLocale,
         'system.showUpdate': settings.system?.showUpdate,
@@ -501,6 +507,41 @@ export default function AdminGeneralSection() {
               placeholder="https://pdf.example.com"
               disabled={!loginEnabled}
             />
+          </div>
+
+          {/* Hide Disabled Tools Settings */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <div>
+                <Text fw={500} size="sm">{t('admin.settings.general.hideDisabledTools.googleDrive.label', 'Hide Google Drive')}</Text>
+                <Text size="xs" c="dimmed" mt={4}>
+                  {t('admin.settings.general.hideDisabledTools.googleDrive.description', 'Hide Google Drive button when not enabled')}
+                </Text>
+              </div>
+              <Group gap="xs">
+                <Switch
+                  checked={settings.ui?.hideDisabledTools?.googleDrive || false}
+                  onChange={(e) => setSettings({ ...settings, ui: { ...settings.ui, hideDisabledTools: { ...settings.ui?.hideDisabledTools, googleDrive: e.target.checked } } })}
+                  disabled={!loginEnabled}
+                />
+                <PendingBadge show={isFieldPending('ui.hideDisabledTools.googleDrive')} />
+              </Group>
+            </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <Text fw={500} size="sm">{t('admin.settings.general.hideDisabledTools.mobileScanner.label', 'Hide Mobile Scanner')}</Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t('admin.settings.general.hideDisabledTools.mobileScanner.description', 'Hide mobile QR scanner button when not enabled')}
+              </Text>
+            </div>
+            <Group gap="xs">
+              <Switch
+                checked={settings.ui?.hideDisabledTools?.mobileQRScanner || false}
+                onChange={(e) => setSettings({ ...settings, ui: { ...settings.ui, hideDisabledTools: { ...settings.ui?.hideDisabledTools, mobileQRScanner: e.target.checked } } })}
+                disabled={!loginEnabled}
+              />
+              <PendingBadge show={isFieldPending('ui.hideDisabledTools.mobileQRScanner')} />
+            </Group>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

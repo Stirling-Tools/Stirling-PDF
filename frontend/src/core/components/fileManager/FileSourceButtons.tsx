@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Stack, Text, Button, Group } from '@mantine/core';
 import HistoryIcon from '@mui/icons-material/History';
-import CloudIcon from '@mui/icons-material/Cloud';
 import PhonelinkIcon from '@mui/icons-material/Phonelink';
 import { useTranslation } from 'react-i18next';
 import { useFileManagerContext } from '@app/contexts/FileManagerContext';
@@ -15,6 +14,23 @@ import MobileUploadModal from '@app/components/shared/MobileUploadModal';
 interface FileSourceButtonsProps {
   horizontal?: boolean;
 }
+
+/**
+ * Google Drive icon component - displays the branded SVG icon
+ * Shows grayscale when disabled
+ */
+const GoogleDriveIcon: React.FC<{ disabled?: boolean }> = ({ disabled }) => (
+  <img
+    src="/images/google-drive.svg"
+    alt="Google Drive"
+    style={{
+      width: '20px',
+      height: '20px',
+      opacity: disabled ? 0.5 : 1,
+      filter: disabled ? 'grayscale(100%)' : 'none',
+    }}
+  />
+);
 
 const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
   horizontal = false
@@ -50,6 +66,12 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
       onNewFilesSelect(files);
     }
   };
+
+  // Determine visibility of Google Drive button
+  const shouldHideGoogleDrive = !isGoogleDriveEnabled && config?.hideDisabledToolsGoogleDrive;
+
+  // Determine visibility of Mobile QR Scanner button
+  const shouldHideMobileQR = !isMobileUploadEnabled && config?.hideDisabledToolsMobileQRScanner;
 
   const buttonProps = {
     variant: (source: string) => activeSource === source ? 'filled' : 'subtle',
@@ -101,51 +123,55 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
         {horizontal ? terminology.upload : terminology.uploadFiles}
       </Button>
 
-      <Button
-        variant="subtle"
-        color='var(--mantine-color-gray-6)'
-        leftSection={<CloudIcon />}
-        justify={horizontal ? "center" : "flex-start"}
-        onClick={handleGoogleDriveClick}
-        fullWidth={!horizontal}
-        size={horizontal ? "xs" : "sm"}
-        disabled={!isGoogleDriveEnabled}
-        styles={{
-          root: {
-            backgroundColor: 'transparent',
-            border: 'none',
-            '&:hover': {
-              backgroundColor: isGoogleDriveEnabled ? 'var(--mantine-color-gray-0)' : 'transparent'
+      {!shouldHideGoogleDrive && (
+        <Button
+          variant="subtle"
+          color='var(--mantine-color-gray-6)'
+          leftSection={<GoogleDriveIcon disabled={!isGoogleDriveEnabled} />}
+          justify={horizontal ? "center" : "flex-start"}
+          onClick={handleGoogleDriveClick}
+          fullWidth={!horizontal}
+          size={horizontal ? "xs" : "sm"}
+          disabled={!isGoogleDriveEnabled}
+          styles={{
+            root: {
+              backgroundColor: 'transparent',
+              border: 'none',
+              '&:hover': {
+                backgroundColor: isGoogleDriveEnabled ? 'var(--mantine-color-gray-0)' : 'transparent'
+              }
             }
-          }
-        }}
-        title={!isGoogleDriveEnabled ? t('fileManager.googleDriveNotAvailable', 'Google Drive integration not available') : undefined}
-      >
-        {horizontal ? t('fileManager.googleDriveShort', 'Drive') : t('fileManager.googleDrive', 'Google Drive')}
-      </Button>
+          }}
+          title={!isGoogleDriveEnabled ? t('fileManager.googleDriveNotAvailable', 'Google Drive integration not available') : undefined}
+        >
+          {horizontal ? t('fileManager.googleDriveShort', 'Drive') : t('fileManager.googleDrive', 'Google Drive')}
+        </Button>
+      )}
 
-      <Button
-        variant="subtle"
-        color='var(--mantine-color-gray-6)'
-        leftSection={<PhonelinkIcon />}
-        justify={horizontal ? "center" : "flex-start"}
-        onClick={handleMobileUploadClick}
-        fullWidth={!horizontal}
-        size={horizontal ? "xs" : "sm"}
-        disabled={!isMobileUploadEnabled}
-        styles={{
-          root: {
-            backgroundColor: 'transparent',
-            border: 'none',
-            '&:hover': {
-              backgroundColor: isMobileUploadEnabled ? 'var(--mantine-color-gray-0)' : 'transparent'
+      {!shouldHideMobileQR && (
+        <Button
+          variant="subtle"
+          color='var(--mantine-color-gray-6)'
+          leftSection={<PhonelinkIcon />}
+          justify={horizontal ? "center" : "flex-start"}
+          onClick={handleMobileUploadClick}
+          fullWidth={!horizontal}
+          size={horizontal ? "xs" : "sm"}
+          disabled={!isMobileUploadEnabled}
+          styles={{
+            root: {
+              backgroundColor: 'transparent',
+              border: 'none',
+              '&:hover': {
+                backgroundColor: isMobileUploadEnabled ? 'var(--mantine-color-gray-0)' : 'transparent'
+              }
             }
-          }
-        }}
-        title={!isMobileUploadEnabled ? t('fileManager.mobileUploadNotAvailable', 'Mobile upload not available') : undefined}
-      >
-        {horizontal ? t('fileManager.mobileShort', 'Mobile') : t('fileManager.mobileUpload', 'Mobile Upload')}
-      </Button>
+          }}
+          title={!isMobileUploadEnabled ? t('fileManager.mobileUploadNotAvailable', 'Mobile upload not available') : undefined}
+        >
+          {horizontal ? t('fileManager.mobileShort', 'Mobile') : t('fileManager.mobileUpload', 'Mobile Upload')}
+        </Button>
+      )}
     </>
   );
 
