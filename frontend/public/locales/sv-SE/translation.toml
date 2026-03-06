@@ -96,6 +96,8 @@ pin = "Fäst fil (behåll aktiv efter verktygskörning)"
 poweredBy = "Drivs av"
 pro = "Pro"
 processTimeWarning = "Varning: Denna process kan ta upp till en minut beroende på filstorlek"
+processingComplete = "Din fil är klar."
+processingCompleteMultiple = "{{count}} filer är klara."
 property = "Egenskap"
 quickPosition = "Snabbposition"
 red = "Röd"
@@ -105,6 +107,7 @@ save = "Spara"
 saveToBrowser = "Spara till webbläsare"
 saveUnavailable = "Spara är inte tillgängligt för detta objekt"
 seeDockerHub = "Se Docker Hub"
+editSecret = "Redigera detta värde"
 selectFillter = "-- Välj --"
 size = "Storlek"
 sponsor = "Sponsör"
@@ -651,6 +654,7 @@ description = "Konfigurera externa autentiseringsleverantörer som OAuth2 och SA
 disconnect = "Koppla från"
 disconnected = "Leverantör frånkopplad"
 disconnectError = "Det gick inte att koppla från leverantören"
+documentation = "Visa dokumentation"
 imageResolutionFull = "Full (originalstorlek)"
 imageResolutionReduced = "Reducerad (max 1200px)"
 linkedServices = "Länkade tjänster"
@@ -964,6 +968,18 @@ label = "Standardlocale"
 description = "Maximal filuppladdningsstorlek (t.ex. 100MB, 1GB)"
 label = "Gräns för filuppladdning"
 
+[admin.settings.general.hideDisabledTools]
+description = "Dölj inaktiverade verktyg i gränssnittet"
+label = "Dölj inaktiverade verktyg"
+
+[admin.settings.general.hideDisabledTools.googleDrive]
+description = "Dölj Google Drive-knappen när den inte är aktiverad"
+label = "Dölj Google Drive"
+
+[admin.settings.general.hideDisabledTools.mobileScanner]
+description = "Dölj knappen för mobil QR-skanner när den inte är aktiverad"
+label = "Dölj mobil QR-skanner"
+
 [admin.settings.general.frontendUrl]
 description = "Bas-URL för frontend (t.ex. https://pdf.example.com). Används för e-postinbjudningslänkar och mobila QR-koduppladdningar. Lämna tomt för att använda backend-URL."
 label = "Frontend-URL"
@@ -1148,6 +1164,8 @@ title = "Säkerhet"
 
 [admin.settings.security.audit]
 label = "Granskningsloggning"
+showDetails = "Visa granskningsnivåns detaljer"
+hideDetails = "Dölj granskningsnivåns detaljer"
 
 [admin.settings.security.audit.enabled]
 description = "Spåra användaråtgärder och systemhändelser för regelefterlevnad och säkerhetsövervakning"
@@ -1157,9 +1175,31 @@ label = "Aktivera granskningsloggning"
 description = "0=AV, 1=GRUNDLÄGGANDE, 2=STANDARD, 3=UTFÖRLIG"
 label = "Granskningsnivå"
 
+[admin.settings.security.audit.levelDetails]
+off = "Ingen granskningsloggning (förutom kritiska säkerhetshändelser)"
+basic = "PDF-filåtgärder (komprimera, dela, slå ihop osv.) och ändringar av inställningar. Registrerar: åtgärdsstatus (lyckad/misslyckad), metodparametrar, tidsåtgång. Minimal loggvolym."
+standard = "BASIC-händelser plus: inloggning/utloggning, kontoförändringar, allmänna GET-begäranden. Utesluter kontinuerliga pollningsanrop (/auth/me, /app-config, /health osv.) för att minska loggbrus. Idealiskt för de flesta installationer."
+verbose = "STANDARD-händelser plus: kontinuerliga pollningsanrop, alla GET-begäranden, detaljerad tidsmätning. Varning: hög loggvolym och prestandapåverkan."
+
 [admin.settings.security.audit.retentionDays]
 description = "Antal dagar att behålla granskningsloggar"
 label = "Behållningstid (dagar)"
+
+[admin.settings.security.audit.advancedOptions]
+title = "Avancerade alternativ"
+description = "Följande alternativ ökar behandlingstid och minnesanvändning. Aktivera endast om det verkligen behövs."
+
+[admin.settings.security.audit.captureFileHash]
+description = "Extrahera SHA-256-hash för uppladdade PDF-filer för integritetsverifiering. Oberoende av granskningsnivå."
+label = "Registrera filhash (SHA-256)"
+
+[admin.settings.security.audit.capturePdfAuthor]
+description = "Extrahera författarfältet från PDF-dokument under bearbetning. Kräver PDF-parsning, ökar svarstiden. Oberoende av granskningsnivå."
+label = "Registrera PDF-författarmetadata"
+
+[admin.settings.security.audit.captureOperationResults]
+description = "Registrera metodernas returvärden. Rekommenderas inte: ökar loggvolym och diskutrymme avsevärt."
+label = "Registrera åtgärdsresultat"
 
 [admin.settings.security.csrfDisabled]
 description = "Inaktivera skydd mot Cross-Site Request Forgery (rekommenderas inte)"
@@ -1536,43 +1576,18 @@ tags = "embed,attach,file,attachment,attachments"
 title = "Add attachments"
 
 [audit]
+configureAudit = "Konfigurera granskningsloggning"
+configureAuditMessage = "Justera granskningsnivå, lagringsperiod och andra inställningar i avsnittet Säkerhet och autentisering."
 disabled = "Granskningsloggning är inaktiverad"
 disabledMessage = "Aktivera granskningsloggning i din applikationskonfiguration för att spåra systemhändelser."
 enterpriseRequired = "Enterprise-licens krävs"
 enterpriseRequiredMessage = "Revisionsloggningen är en Enterprise-funktion. Uppgradera till en Enterprise-licens för att få åtkomst till revisionsloggar och analys."
+goToSettings = "Gå till granskningsinställningar"
 notAvailable = "Granskningssystemet är inte tillgängligt"
 notAvailableMessage = "Granskningssystemet är inte konfigurerat eller inte tillgängligt."
 
-[audit.charts]
-byType = "Händelser efter typ"
-byUser = "Händelser per användare"
-day = "Dag"
-error = "Fel vid inläsning av diagram"
-month = "Månad"
-overTime = "Händelser över tid"
-title = "Granskningsinstrumentpanel"
-week = "Vecka"
-
 [audit.error]
 title = "Fel vid inläsning av granskningssystemet"
-
-[audit.events]
-actions = "Åtgärder"
-clearFilters = "Rensa"
-details = "Detaljer"
-endDate = "Slutdatum"
-error = "Fel vid inläsning av händelser"
-eventDetails = "Händelsedetaljer"
-filterByType = "Filtrera efter typ"
-filterByUser = "Filtrera efter användare"
-ipAddress = "IP-adress"
-noEvents = "Inga händelser hittades"
-startDate = "Startdatum"
-timestamp = "Tidsstämpel"
-title = "Granskningshändelser"
-type = "Typ"
-user = "Användare"
-viewDetails = "Visa detaljer"
 
 [audit.export]
 clearFilters = "Rensa"
@@ -1580,27 +1595,132 @@ description = "Exportera granskningshändelser till CSV- eller JSON-format. Anv�
 endDate = "Slutdatum"
 error = "Det gick inte att exportera data"
 exportButton = "Exportera data"
+fieldAuthor = "Författare (från PDF)"
+fieldDate = "Datum"
+fieldDocumentName = "Dokumentnamn"
+fieldFileHash = "Filhash (SHA-256)"
+fieldIpAddress = "IP-adress"
+fieldOperationResults = "Åtgärdsresultat"
+fieldOutcome = "Utfall (Lyckat/Misslyckat)"
+fieldTool = "Verktyg"
+fieldUsername = "Användarnamn"
 filterByType = "Filtrera efter typ"
 filterByUser = "Filtrera efter användare"
 filters = "Filter (valfritt)"
 format = "Exportformat"
+selectFields = "Välj fält att inkludera"
 startDate = "Startdatum"
 title = "Exportera granskningsdata"
+verboseRequired = "Kräver VERBOSE-granskningsnivå"
 
 [audit.systemStatus]
+autoRefresh = "Automatisk uppdatering"
+autoRefreshLabel = "Uppdatera automatiskt var 30 s"
+captureBySettings = "Aktivera i inställningarna"
+capturedFields = "Registrerade fält"
+date = "Datum"
 days = "dagar"
 disabled = "Inaktiverad"
+documentName = "Dokumentnamn"
 enabled = "Aktiverad"
+fileHash = "Filhash"
 level = "Granskningsnivå"
+pdfAuthor = "PDF-författare"
 retention = "Lagringsperiod"
 status = "Granskningsloggning"
 title = "Systemstatus"
+tool = "Verktyg"
 totalEvents = "Totalt antal händelser"
+username = "Användarnamn"
+verboseOnly = "Endast VERBOSE"
+
+[audit.stats]
+activeUsers = "Aktiva användare"
+attention = "Åtgärd krävs"
+avgLatency = "Genomsnittlig latens"
+error = "Fel vid inläsning av statistik"
+errorLoadingStats = "Det gick inte att läsa in statistik"
+excellent = "Utmärkt"
+good = "Bra"
+noData = "Ej tillämpligt"
+successRate = "Lyckandefrekvens"
+title = "Översikt"
+totalEvents = "Totalt antal händelser"
+vsLastPeriod = "jämfört med föregående period"
+
+[audit.charts]
+byTool = "Mest använda verktyg"
+byType = "Händelser efter typ"
+byUser = "Händelser per användare"
+day = "Dag"
+error = "Fel vid inläsning av diagram"
+hourlyActivity = "Timvis aktivitet"
+month = "Månad"
+noData = "Inga data för denna period"
+overTime = "Händelser över tid"
+title = "Granskningsinstrumentpanel"
+week = "Vecka"
+
+[audit.events]
+actions = "Åtgärder"
+author = "Författare"
+clearFilters = "Rensa"
+details = "Detaljer"
+documentName = "Dokument"
+endDate = "Slutdatum"
+error = "Fel vid inläsning av händelser"
+eventDetails = "Händelsedetaljer"
+failure = "Misslyckad"
+fileHash = "Filhash"
+filterByType = "Filtrera efter typ"
+filterByUser = "Filtrera efter användare"
+ipAddress = "IP-adress"
+noEvents = "Inga händelser hittades"
+outcome = "Status"
+sortAsc = "Sortera stigande"
+sortDesc = "Sortera fallande"
+startDate = "Startdatum"
+success = "Lyckad"
+timestamp = "Tidsstämpel"
+title = "Granskningshändelser"
+type = "Typ"
+user = "Användare"
+viewDetails = "Visa detaljer"
+
+[audit.filters]
+allOutcomes = "Alla"
+failureOnly = "Endast misslyckade"
+last7Days = "Senaste 7 dagarna"
+last30Days = "Senaste 30 dagarna"
+outcomeFilter = "Utfall"
+quickPresets = "Snabbfilter"
+successOnly = "Endast lyckade"
+thisMonth = "Denna månad"
+today = "Idag"
 
 [audit.tabs]
+clearData = "Rensa data"
 dashboard = "Instrumentpanel"
 events = "Granskningshändelser"
 export = "Exportera"
+
+[audit.clearData]
+cancel = "Avbryt"
+codeDoesNotMatch = "Koden stämmer inte"
+codePlaceholder = "Skriv koden här"
+confirmationCode = "Bekräftelsekod"
+confirmationRequired = "Ta bort all granskningsdata"
+confirmMessage = "Detta tar permanent bort alla granskningsloggar. Ange bekräftelsekoden nedan för att fortsätta."
+confirmTitle = "Bekräfta att du vill ta bort"
+deleteButton = "Ta bort"
+enterCode = "Bekräftelsekod"
+enterCodeBelow = "Ange koden exakt som ovan (skiftlägeskänsligt)"
+initiateDelete = "Ta bort all data"
+irreversible = "OÅTERKALLELIGT"
+success = "Lyckades"
+successMessage = "All granskningsdata har rensats"
+warning1 = "Denna åtgärd kan inte ångras"
+warning2 = "Att ta bort granskningsdata tar permanent bort alla historiska granskningsloggar, inklusive säkerhetshändelser, användaraktiviteter och filåtgärder från databasen."
 
 [auth]
 accessDenied = "Åtkomst nekad"
@@ -2254,9 +2374,11 @@ copy = "Kopiera"
 done = "Klar"
 error = "Fel"
 expand = "Fäll ut"
+learnMore = "Läs mer"
 lines = "rader"
 loading = "Läser in..."
 next = "Nästa"
+operation = "denna åtgärd"
 preview = "Förhandsgranska"
 previous = "Föregående"
 refresh = "Uppdatera"
@@ -2920,6 +3042,7 @@ copyStack = "Kopiera stackspårning"
 discordSubmit = "Discord - Skicka in ett supportinlägg"
 dismissAllErrors = "Avfärda alla fel"
 encryptedPdfMustRemovePassword = "Denna PDF är krypterad eller lösenordsskyddad. Lås upp den innan konvertering till PDF/A."
+generic = "Ett fel inträffade"
 github = "Skicka in en fråga på GitHub"
 githubSubmit = "GitHub - Skicka in en fråga"
 incorrectPasswordProvided = "PDF‑lösenordet är felaktigt eller saknas."
@@ -4456,6 +4579,10 @@ upgradeCompleteMessage = "Din prenumeration har uppgraderats. Din befintliga lic
 upgradeSuccess = "Betalning lyckades! Din prenumeration har uppgraderats. Licensen har uppdaterats på din server. Du får snart en bekräftelse via e-post."
 upgradeTitle = "Uppgradera till {{planName}}"
 yearly = "Årsvis"
+checkoutOpened = "Kassan öppnades i webbläsaren"
+checkoutInstructions = "Slutför ditt köp i webbläsarfönstret som just öppnades. När betalningen är klar, återvänd hit och klicka på knappen nedan för att uppdatera din faktureringsinformation."
+refreshBilling = "Jag har slutfört betalningen – uppdatera fakturering"
+closeLater = "Jag gör detta senare"
 
 [payment.emailStage]
 continue = "Fortsätt"
@@ -4679,6 +4806,13 @@ prompt = "Välj sida för att extrahera tabell"
 submit = "Extrahera"
 title = "PDF till CSV"
 
+[PDFToXLSX]
+header = "PDF till Excel"
+prompt = "Välj sidor för att extrahera tabeller"
+submit = "Konvertera"
+title = "PDF till Excel (XLSX)"
+tags = "kalkylblad,excel,xlsx,tabell,extrahera,konvertera"
+
 [PDFToHTML]
 credit = "Denna tjänst använder pdftohtml för filkonvertering."
 header = "PDF till HTML"
@@ -4835,6 +4969,7 @@ customPricing = "Anpassad"
 featureComparison = "Funktionsjämförelse"
 from = "Från"
 hideComparison = "Dölj funktionsjämförelse"
+included = "Ingår"
 includedInCurrent = "Ingår i din plan"
 licensedSeats = "Licensierade: {{count}} platser"
 manage = "Hantera"
@@ -4852,9 +4987,11 @@ title = "Aktiv plan"
 
 [plan.availablePlans]
 subtitle = "Välj den plan som passar dina behov"
+loadError = "Det gick inte att läsa in planpriser. Använder standardvärden."
 title = "Tillgängliga planer"
 
 [plan.enterprise]
+siteLicense = "Sitelicens"
 highlight1 = "Anpassad prissättning"
 highlight2 = "Dedikerad support"
 highlight3 = "Senaste funktionerna"
@@ -4927,6 +5064,81 @@ instructions = "Slutför ditt köp i Stripe-fliken. När betalningen är klar f�
 keyDescription = "Klistra in licensnyckeln från ditt e‑postmeddelande"
 success = "Licens aktiverad!"
 successMessage = "Din licens har aktiverats. Du kan nu stänga detta fönster."
+
+[plan.team]
+name = "Team"
+siteLicense = "Sitelicens"
+
+[credits]
+enableOverageBilling = "Aktivera debitering vid överförbrukning"
+maybeLater = "Kanske senare"
+upgrade = "Uppgradera"
+
+[credits.modal]
+advancedMonitoring = "Avancerad övervakning"
+allInOneWorkspace = "Allt-i-ett PDF-arbetsyta (visare, verktyg och agent)"
+apiSandbox = "API-sandbox"
+contactSales = "Kontakta säljteamet"
+creditsRemaining = "{{current}} av {{total}} kvar"
+creditsThisMonth = "Månatliga krediter"
+current = "Nuvarande plan"
+customPricing = "Anpassad"
+customSmartFolders = "Anpassade smarta mappar"
+dedicatedSupportSlas = "Dedikerad support och SLA:er"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Allt i Credits, plus:"
+everythingInFree = "Allt i Free, plus:"
+fasterThroughput = "10x snabbare genomströmning"
+forRegularWork = "För regelbundet PDF-arbete:"
+freeTier = "Gratisnivå"
+fullyPrivateFiles = "Helt privata filer"
+largeFileProcessing = "Hantering av stora filer"
+managedMemberMessage = "Du har obegränsad tillgång till krediter via ditt team. Om du behöver hjälp, kontakta din teamledare."
+managedMemberTitle = "Obegränsade krediter"
+meteringBillingNote = "Krediter för överförbrukning debiteras månadsvis tillsammans med din Team-prenumeration. Följ din användning när som helst i kontoinställningarna."
+meteringExplanation = "Din Team-plan inkluderar {{credits}} krediter per månad. När de tar slut tillhandahåller debitering vid överförbrukning automatiskt extra krediter så att du aldrig behöver sluta arbeta."
+meteringIncluded = "{{credits}} krediter/månad ingår med Team"
+meteringNoCommitment = "Ingen bindningstid, avbryt när som helst"
+meteringNeverRunOut = "Få aldrig slut på krediter"
+meteringPayAsYouGo = "Betala bara för det du använder"
+meteringPrice = "Ytterligare krediter för {{price}}/kredit"
+meteringTitle = "Betala‑för‑användning vid överförbrukning"
+monthlyCredits = "månatliga krediter"
+orgWideAccess = "Organisationstäckande åtkomstkontroller"
+overage = "överförbrukning"
+perMonth = "/månad"
+popular = "Populär"
+premiumAiModels = "Premium AI-modeller"
+prioritySupport = "Prioriterad support"
+privateDocCloud = "Privat dokumentmoln"
+ragFineTuning = "RAG + finjustering"
+secureApiAccess = "Säker API-åtkomst"
+selfHostLink = "Granska dokumentation och planer"
+selfHostPrompt = "Vill du självhosta?"
+standardThroughput = "Standardgenomströmning"
+subtitle = "Uppgradera till Team för 10x fler krediter och snabbare bearbetning."
+subtitlePro = "Aktivera automatisk debitering vid överförbrukning för att aldrig få slut på krediter."
+teamLeaderOnly = "Endast teamledare kan aktivera debitering vid överförbrukning"
+teamSubscription = "Team"
+titleExhausted = "Du har använt dina gratiskrediter"
+titleExhaustedPro = "Du har slut på krediter"
+unlimitedApiAccess = "Obegränsad API-åtkomst"
+unlimitedMonthlyCredits = "Sitelicens"
+unlimitedSeats = "Obegränsat antal platser"
+
+[credits.modal.features]
+everythingInCredits = "Allt i Credits, plus:"
+everythingInFree = "Allt i Free, plus:"
+forRegularWork = "För regelbundet PDF-arbete:"
+
+[credits.insufficient]
+brief = "Otillräckliga krediter. Du behöver {{required}} krediter men har {{current}}."
+freeTier = "Uppgradera till Team för 10x fler krediter och obegränsad debitering vid överförbrukning."
+managedMember = "Kontakta din teamledare för hjälp."
+message = "Du har inte tillräckligt med krediter för att köra {{tool}}. Du har för närvarande {{current}} krediter."
+messageWithAmount = "Du behöver {{required}} krediter för att köra {{tool}}, men du har bara {{current}}."
+teamMember = "Aktivera debitering vid överförbrukning för att aldrig få slut på krediter."
+title = "Otillräckliga krediter"
 
 [printFile]
 header = "Skriv ut fil till skrivare"
@@ -5565,6 +5777,70 @@ user = "Inloggad som"
 saas = "Stirling Cloud"
 selfhosted = "Självhostad"
 
+[settings.planBilling]
+currentPlan = "Nuvarande plan"
+loading = "Läser in faktureringsinformation..."
+notAvailable = "Plan och fakturering är endast tillgängligt när du är ansluten till Stirling Cloud (SaaS-läge)."
+title = "Plan och fakturering"
+
+[settings.planBilling.billing]
+manageBilling = "Hantera fakturering"
+nextBillingDate = "Nästa faktureringsdatum"
+overageCost = "Aktuell kostnad för överförbrukning: {{amount}} ({{credits}} krediter)"
+
+[settings.planBilling.credits]
+estimatedCost = "Beräknad kostnad: {{amount}}"
+freeTierInfo = "Gratisplanen inkluderar {{freeCredits}} krediter per månad. Uppgradera till Team för {{teamCredits}} krediter/månad och debitering vid överförbrukning enligt användning."
+included = "{{count}} krediter/månad (ingår)"
+noOverage = "Inga överförbrukningsavgifter denna månad. Du använder dina inkluderade {{count}} krediter."
+overage = "+ {{count}} överförbrukning"
+overageInfo = "Krediter för överförbrukning debiteras med {{price}} per kredit. Du betalar bara för det du använder utöver din månatliga tilldelning."
+title = "Kreditanvändning"
+
+[settings.planBilling.errors]
+fetchFailed = "Det gick inte att hämta faktureringsdata"
+retry = "Försök igen"
+
+[settings.planBilling.status]
+active = "Aktiv"
+canceled = "Avslutad"
+pastDue = "Försenad"
+trial = "Provperiod"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Anpassade företagsfunktioner och support"
+free = "Free"
+freeDescription = "50 krediter per månad"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 krediter/månad ingår, automatisk debitering vid överförbrukning för oavbruten tjänst"
+teamTooltipCredits = "Team-planen inkluderar {{credits}} krediter/månad."
+teamTooltipFineprint = "Betala bara för det du använder utöver inkluderade krediter."
+teamTooltipOverage = "Automatisk debitering vid överförbrukning med {{price}}/kredit säkerställer oavbruten tjänst."
+
+[settings.planBilling.team]
+managedByTeam = "Hanteras av team"
+memberCount = "{{count}} teammedlemmar"
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} dagar kvar"
+daysRemainingFull = "Din provperiod slutar om {{days}} dagar"
+endDate = "Löper ut: {{date}}"
+endsOn = "Provperioden slutar"
+title = "Aktiv provperiod"
+
+[settings.planBilling.upgrade]
+cta = "Uppgradera till Team"
+featureApi = "API-åtkomst för automatisering"
+featureCredits = "{{teamCredits}} krediter per månad (jämfört med {{freeCredits}} i Free)"
+featureMembers = "Obegränsade teammedlemmar"
+featureSupport = "Prioriterad support"
+featureThroughput = "Snabbare genomströmning"
+opensInBrowser = "Öppnas i webbläsaren för att slutföra uppgraderingen"
+subtitle = "Uppgradera till Team för:"
+title = "Uppgradera din plan"
+
 [settings.developer]
 apiKeys = "API-nycklar"
 title = "Utvecklare"
@@ -5688,6 +5964,9 @@ requiresEnterprise = "Kräver Enterprise-licens"
 people = "Personer"
 teams = "Team"
 title = "Arbetsyta"
+
+[settings.team]
+title = "Team"
 
 [setup]
 description = "Kom igång genom att välja hur du vill använda Stirling PDF"
@@ -6011,6 +6290,11 @@ desc = "Auto‑dela med avdelarblad"
 name = "Avdelarsida"
 tooltip = "Använd QR‑kod‑avdelarblad mellan dokument vid skanning"
 
+[split.methods.byPoster]
+name = "Utskrivbara delar"
+desc = "Dela upp stora sidor i utskrivbara storlekar"
+tooltip = "Dela upp överstora sidor i mindre delar som passar utskrift på standardpapper (A4, Letter osv.)"
+
 [split.methods.byPages]
 desc = "Extrahera specifika sidor (1,3,5-10)"
 name = "Sidnummer"
@@ -6029,6 +6313,7 @@ tooltip = "Ange maximal filstorlek (t.ex. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Dela vid"
 splitBy = "Dela efter"
+splitInto = "Dela upp i"
 
 [split.methodSelection.tooltip]
 bullet1 = "Klicka på ett metodkort för att välja det"
@@ -6047,6 +6332,21 @@ selectMethodFirst = "Välj först en delningsmetod"
 [split.steps]
 chooseMethod = "Välj metod"
 settings = "Inställningar"
+
+[split.poster]
+rightToLeft = "Dela från höger till vänster"
+
+[split.poster.pageSize]
+label = "Målstorlek för sida"
+description = "Storlek på utmatade sidor för utskrift"
+
+[split.poster.xFactor]
+label = "Horisontella indelningar"
+description = "Antal kolumner att dela varje sida i"
+
+[split.poster.yFactor]
+label = "Vertikala indelningar"
+description = "Antal rader att dela varje sida i"
 
 [split.tooltip.byChapters]
 bullet1 = "Bokmärkesnivå: Vilken nivå som ska delas på (1=topnivå)"
@@ -6084,6 +6384,14 @@ bullet4 = "Ladda upp – avdelarsidor upptäcks och tas bort automatiskt"
 bullet5 = "Aktivera duplexläge om du skannar båda sidor av avdelarbladen"
 text = "Dela automatiskt skannade dokument med fysiska avdelarblad med QR‑koder. Perfekt för att bearbeta flera dokument skannade tillsammans."
 title = "Dela med avdelarsidor"
+
+[split.tooltip.byPoster]
+bullet1 = "Målstorlek för sida: Välj pappersstorlek (A4, Letter osv.)"
+bullet2 = "Horisontella/vertikala indelningar: Rutnätsstorlek för delning"
+bullet3 = "Höger‑till‑vänster: Omvänd kolumnordning för RTL‑layouter"
+bullet4 = "Skriv ut och montera delarna för att skapa din affisch"
+text = "Dela upp stora PDF-sidor i mindre utskrivbara delar som passar standardpappersstorlekar. Perfekt för att skapa affischutskrifter från överstora sidor."
+title = "Dela för affischutskrift"
 
 [split.tooltip.byPages]
 bullet1 = "Enstaka delningspunkter: 3,7 (delar efter sidorna 3 och 7)"
@@ -6364,9 +6672,13 @@ tags = "webbfångst,spara-sida,webb-till-dokument,arkivera"
 title = "URL till PDF"
 
 [usage]
+aboutUsageAnalytics = "Om användningsanalys"
+configureSettings = "Konfigurera analysinställningar"
 error = "Fel vid inläsning av användningsstatistik"
 noData = "Ingen data tillgänglig"
 noDataMessage = "Ingen användningsstatistik är tillgänglig för närvarande."
+usageAnalyticsExplanation = "Användningsanalys spårar slutpunktsanrop och mönster i verktygsanvändning. I kombination med instrumentpanelen för granskningsloggning får du full insyn i systemaktivitet, prestanda och säkerhetshändelser."
+viewAuditLogs = "Visa granskningsloggar"
 
 [usage.chart]
 title = "Diagram över användning av slutpunkter"
@@ -6947,3 +7259,278 @@ cancel = "Avbryt"
 confirm = "Extrahera"
 message = "Denna ZIP innehåller {{count}} filer. Extrahera ändå?"
 title = "Stor ZIP-fil"
+
+[cloudBadge]
+tooltip = "Denna åtgärd kommer att använda dina molnkrediter"
+
+[team]
+cancelInviteError = "Det gick inte att avbryta inbjudan"
+confirmCancelInvite = "Är du säker på att du vill avbryta denna inbjudan?"
+confirmLeave = "Är du säker på att du vill lämna detta team?"
+confirmLeaveLeader = "Som teamledare tas du bort från teamet om du lämnar. Är du säker?"
+confirmRemove = "Är du säker på att du vill ta bort den här medlemmen?"
+editName = "Redigera teamnamn"
+inviteCancelled = "Inbjudan avbruten"
+inviteError = "Det gick inte att skicka inbjudan"
+inviteSent = "Inbjudan skickades"
+leader = "Teamledare"
+leaveButton = "Lämna team"
+leaveError = "Det gick inte att lämna teamet"
+leaveSuccess = "Du har lämnat teamet"
+loading = "Läser in teaminformation..."
+memberCount = "{{count}} medlemmar"
+memberRemoved = "Medlem borttagen"
+namePlaceholder = "Ange teamnamn"
+personal = "Personligt"
+removeError = "Det gick inte att ta bort medlem"
+renameError = "Det gick inte att byta namn på teamet"
+renameSuccess = "Teamets namn har uppdaterats"
+
+[team.invitationBanner]
+message = "har bjudit in dig att gå med"
+acceptButton = "Acceptera"
+rejectButton = "Avböj"
+
+[team.features]
+badge = "Teamfunktioner"
+subtitle = "Samarbeta med ditt team"
+title = "Teamsamarbete"
+viewPlans = "Visa planer"
+
+[team.features.billing]
+description = "Hantera fakturering och prenumerationer"
+title = "Faktureringshantering"
+
+[team.features.credits]
+description = "Delad kreditpool för alla medlemmar"
+title = "Delade krediter"
+
+[team.features.dashboard]
+description = "Visa teamaktivitet och användning"
+title = "Teaminstrumentpanel"
+
+[team.features.invite]
+description = "Lägg till medlemmar i ditt team"
+title = "Bjud in medlemmar"
+
+[team.invite]
+cancelLabel = "Avbryt"
+invalidEmail = "Ogiltig e-postadress"
+placeholder = "Ange e-postadress"
+sendButton = "Skicka inbjudan"
+title = "Bjud in teammedlem"
+
+[team.members]
+emailColumn = "E-post"
+empty = "Inga teammedlemmar än"
+nameColumn = "Namn"
+pending = "Väntande"
+remove = "Ta bort"
+roleColumn = "Roll"
+title = "Teammedlemmar"
+
+[team.upgrade]
+button = "Uppgradera till Team"
+description = "Lås upp funktioner för teamsamarbete"
+title = "Uppgradera till Team-plan"
+
+[provider.oauth2.google]
+scope = "Autentisering för inloggning"
+
+[provider.oauth2.google.clientId]
+label = "Client ID"
+description = "OAuth2 Client ID från Google Cloud Console"
+
+[provider.oauth2.google.clientSecret]
+label = "Client Secret"
+description = "OAuth2 Client Secret från Google Cloud Console"
+
+[provider.oauth2.google.scopes]
+label = "Scopes"
+description = "Kommaseparerade OAuth2-scopes"
+
+[provider.oauth2.google.useAsUsername]
+label = "Använd som användarnamn"
+description = "Fält att använda som användarnamn (email, name, given_name, family_name)"
+
+[provider.oauth2.github]
+scope = "Autentisering för inloggning"
+
+[provider.oauth2.github.clientId]
+label = "Client ID"
+description = "OAuth2 Client ID från GitHub Developer Settings"
+
+[provider.oauth2.github.clientSecret]
+label = "Client Secret"
+description = "OAuth2 Client Secret från GitHub Developer Settings"
+
+[provider.oauth2.github.scopes]
+label = "Scopes"
+description = "Kommaseparerade OAuth2-scopes"
+
+[provider.oauth2.github.useAsUsername]
+label = "Använd som användarnamn"
+description = "Fält att använda som användarnamn (email, login, name)"
+
+[provider.oauth2.keycloak]
+scope = "SSO"
+
+[provider.oauth2.keycloak.issuer]
+label = "Utfärdarens URL"
+description = "URL till Keycloak-realmets OpenID Connect Discovery-slutpunkt"
+
+[provider.oauth2.keycloak.clientId]
+label = "Client ID"
+description = "OAuth2 Client ID från Keycloak"
+
+[provider.oauth2.keycloak.clientSecret]
+label = "Client Secret"
+description = "OAuth2 Client Secret från Keycloak"
+
+[provider.oauth2.keycloak.scopes]
+label = "Scopes"
+description = "Kommaseparerade OAuth2-scopes"
+
+[provider.oauth2.keycloak.useAsUsername]
+label = "Använd som användarnamn"
+description = "Fält att använda som användarnamn (email, name, given_name, family_name, preferred_username)"
+
+[provider.oauth2.generic]
+name = "Generisk OAuth2"
+scope = "SSO"
+
+[provider.oauth2.generic.enabled]
+label = "Aktivera generisk OAuth2"
+description = "Aktivera autentisering via en anpassad OAuth2-leverantör"
+
+[provider.oauth2.generic.provider]
+label = "Leverantörsnamn"
+description = "Namnet på din OAuth2-leverantör (t.ex. Azure AD, Okta)"
+
+[provider.oauth2.generic.issuer]
+label = "Utfärdarens URL"
+description = "Leverantör som stöder OpenID Connect Discovery (/.well-known/openid-configuration)"
+
+[provider.oauth2.generic.clientId]
+label = "Client ID"
+description = "OAuth2 Client ID från din leverantör"
+
+[provider.oauth2.generic.clientSecret]
+label = "Client Secret"
+description = "OAuth2 Client Secret från din leverantör"
+
+[provider.oauth2.generic.scopes]
+label = "Scopes"
+description = "Kommaseparerade OAuth2-scopes"
+
+[provider.oauth2.generic.useAsUsername]
+label = "Använd som användarnamn"
+description = "Fält att använda som användarnamn"
+
+[provider.oauth2.generic.autoCreateUser]
+label = "Skapa användare automatiskt"
+description = "Skapa automatiskt användarkonton vid första OAuth2-inloggningen"
+
+[provider.oauth2.generic.blockRegistration]
+label = "Blockera registrering"
+description = "Förhindra ny användarregistrering via OAuth2"
+
+[provider.smtp]
+name = "SMTP-e-post"
+scope = "E-postaviseringar"
+
+[provider.smtp.enabled]
+label = "Aktivera e-post"
+description = "Aktivera e-postaviseringar och SMTP-funktionalitet"
+
+[provider.smtp.host]
+label = "SMTP-värd"
+description = "Värdnamn eller IP-adress för din SMTP-server"
+
+[provider.smtp.port]
+label = "SMTP-port"
+description = "Portnummer för SMTP-anslutning (vanligen 25, 465 eller 587)"
+
+[provider.smtp.username]
+label = "SMTP-användarnamn"
+description = "Användarnamn för SMTP-autentisering"
+
+[provider.smtp.password]
+label = "SMTP-lösenord"
+description = "Lösenord för SMTP-autentisering"
+
+[provider.smtp.from]
+label = "Från-adress"
+description = "E-postadressen som ska användas som avsändare"
+
+[provider.saml2]
+name = "SAML2"
+scope = "SSO (SAML)"
+
+[provider.saml2.enabled]
+label = "Aktivera SAML2"
+description = "Aktivera SAML2-autentisering (endast Enterprise)"
+
+[provider.saml2.provider]
+label = "Leverantörsnamn"
+description = "Namnet på din SAML2-leverantör"
+
+[provider.saml2.registrationId]
+label = "Registrerings-ID"
+description = "Namnet på din Service Provider (SP)-app"
+
+[provider.saml2.idpMetadataUri]
+label = "IDP Metadata URI"
+description = "URI till din leverantörs metadata"
+
+[provider.saml2.idpSingleLoginUrl]
+label = "IDP Single Login URL"
+description = "URL för att initiera SSO"
+
+[provider.saml2.idpSingleLogoutUrl]
+label = "IDP Single Logout URL"
+description = "URL för att initiera SLO"
+
+[provider.saml2.idpIssuer]
+label = "IDP Issuer"
+description = "ID för din leverantör"
+
+[provider.saml2.idpCert]
+label = "IDP-certifikat"
+description = "Certifikatets sökväg (t.ex. classpath:okta.cert)"
+
+[provider.saml2.privateKey]
+label = "Privat nyckel"
+description = "Sökväg till din privata nyckel"
+
+[provider.saml2.spCert]
+label = "SP-certifikat"
+description = "Sökväg till ditt signeringscertifikat"
+
+[provider.saml2.autoCreateUser]
+label = "Skapa användare automatiskt"
+description = "Skapa automatiskt användarkonton vid första SAML2-inloggningen"
+
+[provider.saml2.blockRegistration]
+label = "Blockera registrering"
+description = "Förhindra ny användarregistrering via SAML2"
+
+[provider.googledrive]
+name = "Google Drive"
+scope = "Filimport"
+
+[provider.googledrive.enabled]
+label = "Aktivera filväljare för Google Drive"
+description = "Tillåt användare att importera filer direkt från Google Drive"
+
+[provider.googledrive.clientId]
+label = "Client ID"
+description = "Google OAuth 2.0 Client ID från Google Cloud Console"
+
+[provider.googledrive.apiKey]
+label = "API-nyckel"
+description = "Google API-nyckel för Google Picker API från Google Cloud Console"
+
+[provider.googledrive.appId]
+label = "App-ID"
+description = "Google Drive App ID från Google Cloud Console"
