@@ -96,6 +96,8 @@ pin = "Pionnáil Comhad (coinnigh gníomhach tar éis rith na huirlise)"
 poweredBy = "Cumhachtaithe ag"
 pro = "Pro"
 processTimeWarning = "Rabhadh: Féadfaidh an próiseas seo suas le nóiméad a ghlacadh ag brath ar mhéid an chomhaid"
+processingComplete = "Tá do chomhad réidh."
+processingCompleteMultiple = "Tá {{count}} comhaid réidh."
 property = "Maoin"
 quickPosition = "Suíomh Tapa"
 red = "Dearg"
@@ -105,6 +107,7 @@ save = "Sábháil"
 saveToBrowser = "Sábháil go Brabhsálaí"
 saveUnavailable = "Níl sábháil ar fáil don mhír seo"
 seeDockerHub = "Féach Docker Hub"
+editSecret = "Cuir an luach seo in eagar"
 selectFillter = "-- Roghnaigh --"
 size = "Méid"
 sponsor = "Urraitheoir"
@@ -651,6 +654,7 @@ description = "Cumraigh soláthraithe fíordheimhnithe seachtracha cosúil le OA
 disconnect = "Dícheangail"
 disconnected = "Dícheanglaíodh an soláthraí go rathúil"
 disconnectError = "Theip ar an soláthraí a dhícheangal"
+documentation = "Féach an doiciméadú"
 imageResolutionFull = "Iomlán (Bunmhéid)"
 imageResolutionReduced = "Laghdaithe (Uasmhéid 1200px)"
 linkedServices = "Seirbhísí Nasctha"
@@ -964,6 +968,18 @@ label = "Teanga Réamhshocraithe"
 description = "Méid uasta uaslódála comhaid (m.sh., 100MB, 1GB)"
 label = "Teorainn Uaslódála Comhaid"
 
+[admin.settings.general.hideDisabledTools]
+description = "Folaigh uirlisí díchumasaithe ón gcomhéadan"
+label = "Folaigh Uirlisí Díchumasaithe"
+
+[admin.settings.general.hideDisabledTools.googleDrive]
+description = "Folaigh cnaipe Google Drive nuair nach bhfuil sé cumasaithe"
+label = "Folaigh Google Drive"
+
+[admin.settings.general.hideDisabledTools.mobileScanner]
+description = "Folaigh cnaipe scanóra QR soghluaiste nuair nach bhfuil sé cumasaithe"
+label = "Folaigh Scanóir Soghluaiste"
+
 [admin.settings.general.frontendUrl]
 description = "URL bunúsach don tosaigh (m.sh., https://pdf.example.com). Úsáidtear é le haghaidh naisc cuireadh ríomhphoist agus uaslódálacha cóid QR soghluaiste. Fág folamh chun URL cúil a úsáid."
 label = "URL tosaigh"
@@ -1148,6 +1164,8 @@ title = "Slándáil"
 
 [admin.settings.security.audit]
 label = "Logáil Iniúchta"
+showDetails = "Taispeáin sonraí leibhéil iniúchta"
+hideDetails = "Folaigh sonraí leibhéil iniúchta"
 
 [admin.settings.security.audit.enabled]
 description = "Rianaigh gníomhartha úsáideoirí agus imeachtaí córais le haghaidh comhlíonta agus monatóireachta slándála"
@@ -1157,9 +1175,31 @@ label = "Cumasaigh Logáil Iniúchta"
 description = "0=AS, 1=BUNÚSACH, 2=CAIGHDEÁNACH, 3=FOLLASACH"
 label = "Leibhéal Iniúchta"
 
+[admin.settings.security.audit.levelDetails]
+off = "Gan logáil iniúchta (seachas imeachtaí slándála criticiúla)"
+basic = "Oibríochtaí comhaid PDF (comhbhrú, scoilt, cumasc, srl.) agus athruithe socruithe. Gabhann: stádas oibríochta (rath/teip), paraiméadair mhodha, amú. Íosmhéid logaí."
+standard = "Imeachtaí BASIC móide: logáil isteach/amárach úsáideora, athruithe cuntais, iarratais GET ghinearálta. Fágann sé glaonna pailnithe leanúnacha (/auth/me, /app-config, /health, srl.) chun torann loga a laghdú. Oiriúnach don chuid is mó d’imlonnuithe."
+verbose = "Imeachtaí STANDARD móide: glaonna pailnithe leanúnacha, gach iarratas GET, amú mionsonrach. Rabhadh: ardtoirte logaí agus tionchar feidhmíochta."
+
 [admin.settings.security.audit.retentionDays]
 description = "Líon na laethanta chun logaí iniúchta a choinneáil"
 label = "Coinneáil Iniúchta (laethanta)"
+
+[admin.settings.security.audit.advancedOptions]
+title = "Ardroghanna"
+description = "Méadaíonn na roghanna seo am próiseála agus úsáid cuimhne. Ná cumasaigh ach má tá gá fíor leo."
+
+[admin.settings.security.audit.captureFileHash]
+description = "Bain hais SHA-256 as comhaid PDF uaslódáilte chun sláine a fhíorú. Neamhspleách ar leibhéal iniúchta."
+label = "Gabh Hais an Chomhaid (SHA-256)"
+
+[admin.settings.security.audit.capturePdfAuthor]
+description = "Bain an réimse údair as doiciméid PDF le linn próiseála. Éilíonn parsáil PDF, méadaíonn moill. Neamhspleách ar leibhéal iniúchta."
+label = "Gabh Meiteashonraí Údair PDF"
+
+[admin.settings.security.audit.captureOperationResults]
+description = "Gabh luachanna tuairisceáin modhanna. Ní mholtar: méadaíonn go mór toirt logaí agus úsáid diosca."
+label = "Gabh Torthaí Oibríochta"
 
 [admin.settings.security.csrfDisabled]
 description = "Díchumasaigh cosaint Cross-Site Request Forgery (ní mholtar)"
@@ -1536,43 +1576,18 @@ tags = "embed,attach,file,attachment,attachments"
 title = "Cuir Ceangaltáin leis"
 
 [audit]
+configureAudit = "Cumraigh Logáil Iniúchta"
+configureAuditMessage = "Coigeartaigh leibhéal logála iniúchta, tréimhse coinneála, agus socruithe eile sa rannán Slándáil & Fíordheimhniú."
 disabled = "Tá logáil iniúchta díchumasaithe"
 disabledMessage = "Cumasaigh logáil iniúchta i gcumraíocht d’fheidhmchláir chun imeachtaí an chórais a rianú."
 enterpriseRequired = "Ceadúnas Fiontraíochta Riachtanach"
 enterpriseRequiredMessage = "Is gné fiontraíochta é an córas logála iniúchóireachta. Uasghrádaigh go ceadúnas fiontraíochta le rochtain a fháil ar logaí iniúchóireachta agus anailísíocht."
+goToSettings = "Téigh go Socruithe Iniúchta"
 notAvailable = "Níl an córas iniúchta ar fáil"
 notAvailableMessage = "Níl an córas iniúchta cumraithe nó níl sé ar fáil."
 
-[audit.charts]
-byType = "Imeachtaí de réir Cineáil"
-byUser = "Imeachtaí de réir Úsáideora"
-day = "Lá"
-error = "Earráid agus cairteacha á lódáil"
-month = "Mí"
-overTime = "Imeachtaí le himeacht ama"
-title = "Deais Iniúchta"
-week = "Seachtain"
-
 [audit.error]
 title = "Earráid agus an córas iniúchta á lódáil"
-
-[audit.events]
-actions = "Gníomhartha"
-clearFilters = "Glan"
-details = "Sonraí"
-endDate = "Dáta deiridh"
-error = "Earráid agus imeachtaí á luchtú"
-eventDetails = "Sonraí an imeachta"
-filterByType = "Scag de réir cineáil"
-filterByUser = "Scag de réir úsáideora"
-ipAddress = "Seoladh IP"
-noEvents = "Níor aimsíodh aon imeachtaí"
-startDate = "Dáta tosaigh"
-timestamp = "Stampa ama"
-title = "Imeachtaí Iniúchta"
-type = "Cineál"
-user = "Úsáideoir"
-viewDetails = "Féach sonraí"
 
 [audit.export]
 clearFilters = "Glan"
@@ -1580,27 +1595,132 @@ description = "Onnmhairigh imeachtaí iniúchta i bhformáid CSV nó JSON. Úsá
 endDate = "Dáta deiridh"
 error = "Theip ar onnmhairiú sonraí"
 exportButton = "Onnmhairigh sonraí"
+fieldAuthor = "Údar (ón PDF)"
+fieldDate = "Dáta"
+fieldDocumentName = "Ainm an Doiciméid"
+fieldFileHash = "Hais an Chomhaid (SHA-256)"
+fieldIpAddress = "Seoladh IP"
+fieldOperationResults = "Torthaí Oibríochta"
+fieldOutcome = "Toradh (Rath/Teip)"
+fieldTool = "Uirlis"
+fieldUsername = "Ainm Úsáideora"
 filterByType = "Scag de réir cineáil"
 filterByUser = "Scag de réir úsáideora"
 filters = "Scagairí (Roghnach)"
 format = "Formáid onnmhairithe"
+selectFields = "Roghnaigh Réimsí le Cuir san Áireamh"
 startDate = "Dáta tosaigh"
 title = "Onnmhairigh sonraí iniúchta"
+verboseRequired = "Éilíonn leibhéal iniúchta VERBOSE"
 
 [audit.systemStatus]
+autoRefresh = "Uathnuashonrú"
+autoRefreshLabel = "Uathnuashonrú gach 30s"
+captureBySettings = "Cumasaigh sna socruithe"
+capturedFields = "Réimsí Gafa"
+date = "Dáta"
 days = "laethanta"
 disabled = "Díchumasaithe"
+documentName = "Ainm an Doiciméid"
 enabled = "Cumasaithe"
+fileHash = "Hais an Chomhaid"
 level = "Leibhéal Iniúchta"
+pdfAuthor = "Údar PDF"
 retention = "Tréimhse Coinneála"
 status = "Logáil Iniúchta"
 title = "Stádas an Chórais"
+tool = "Uirlis"
 totalEvents = "Iomlán Imeachtaí"
+username = "Ainm úsáideora"
+verboseOnly = "VERBOSE amháin"
+
+[audit.stats]
+activeUsers = "Úsáideoirí Gníomhacha"
+attention = "Aird de dhíth"
+avgLatency = "Meánmhoill"
+error = "Earráid agus staitisticí á lódáil"
+errorLoadingStats = "Theip ar luchtú staitisticí"
+excellent = "Ar fheabhas"
+good = "Maith"
+noData = "N/B"
+successRate = "Ráta Ratha"
+title = "Achoimre"
+totalEvents = "Iomlán Imeachtaí"
+vsLastPeriod = "i gcomparáid leis an tréimhse roimhe"
+
+[audit.charts]
+byTool = "Uirlisí is mó Úsáidte"
+byType = "Imeachtaí de réir Cineáil"
+byUser = "Imeachtaí de réir Úsáideora"
+day = "Lá"
+error = "Earráid agus cairteacha á lódáil"
+hourlyActivity = "Gníomhaíocht Uaireanta"
+month = "Mí"
+noData = "Níl sonraí don tréimhse seo"
+overTime = "Imeachtaí le himeacht ama"
+title = "Deais Iniúchta"
+week = "Seachtain"
+
+[audit.events]
+actions = "Gníomhartha"
+author = "Údar"
+clearFilters = "Glan"
+details = "Sonraí"
+documentName = "Doiciméad"
+endDate = "Dáta deiridh"
+error = "Earráid agus imeachtaí á luchtú"
+eventDetails = "Sonraí an imeachta"
+failure = "Teip"
+fileHash = "Hais Comhaid"
+filterByType = "Scag de réir cineáil"
+filterByUser = "Scag de réir úsáideora"
+ipAddress = "Seoladh IP"
+noEvents = "Níor aimsíodh aon imeachtaí"
+outcome = "Stádas"
+sortAsc = "Sórtáil in ord ardaitheach"
+sortDesc = "Sórtáil in ord íslitheach"
+startDate = "Dáta tosaigh"
+success = "Rath"
+timestamp = "Stampa ama"
+title = "Imeachtaí Iniúchta"
+type = "Cineál"
+user = "Úsáideoir"
+viewDetails = "Féach sonraí"
+
+[audit.filters]
+allOutcomes = "Uile"
+failureOnly = "Teipeanna amháin"
+last7Days = "An 7 lá anuas"
+last30Days = "Na 30 lá anuas"
+outcomeFilter = "Toradh"
+quickPresets = "Scagairí tapa"
+successOnly = "Rath amháin"
+thisMonth = "An mhí seo"
+today = "Inniu"
 
 [audit.tabs]
+clearData = "Glan Sonraí"
 dashboard = "Deais"
 events = "Imeachtaí Iniúchta"
 export = "Easpórtáil"
+
+[audit.clearData]
+cancel = "Cealaigh"
+codeDoesNotMatch = "Ní mheaitseálann an cód"
+codePlaceholder = "Clóscríobh an cód anseo"
+confirmationCode = "Cód Deimhnithe"
+confirmationRequired = "Scrios Gach Sonraí Iniúchta"
+confirmMessage = "Bainfidh sé seo gach loga iniúchta go buan. Iontráil an cód deimhnithe thíos chun leanúint ar aghaidh."
+confirmTitle = "Dearbhaigh go bhfuil tú ag iarraidh scriosadh"
+deleteButton = "Scrios"
+enterCode = "Cód Deimhnithe"
+enterCodeBelow = "Iontráil an cód díreach mar a thaispeántar thuas (cásíogair)"
+initiateDelete = "Scrios Gach Sonraí"
+irreversible = "NEAMH-INAISIOMPTHA"
+success = "Rath"
+successMessage = "Glanadh gach sonraí iniúchta go rathúil"
+warning1 = "Ní féidir an gníomh seo a chur ar ceal"
+warning2 = "Trí shonraí iniúchta a scriosadh, bainfear gach loga iniúchta stairiúil go buan, lena n-áirítear imeachtaí slándála, gníomhaíochtaí úsáideora, agus oibríochtaí comhaid ón mbunachar sonraí."
 
 [auth]
 accessDenied = "Rochtain diúltaithe"
@@ -2254,9 +2374,11 @@ copy = "Cóipeáil"
 done = "Déanta"
 error = "Earráid"
 expand = "Leathnaigh"
+learnMore = "Tuilleadh eolais"
 lines = "línte"
 loading = "Á lódáil..."
 next = "Ar Aghaidh"
+operation = "an oibríocht seo"
 preview = "Réamhamharc"
 previous = "Roimhe Seo"
 refresh = "Athnuaigh"
@@ -2920,6 +3042,7 @@ copyStack = "Cóipeáil Stack Trace"
 discordSubmit = "Discord - Cuir post Tacaíochta"
 dismissAllErrors = "Díbhe gach earráid"
 encryptedPdfMustRemovePassword = "Tá an PDF seo cripteáilte nó cosanta le focal faire. Díghlasáil é roimh é a thiontú go PDF/A."
+generic = "Tharla earráid"
 github = "Cuir ticéad isteach ar GitHub"
 githubSubmit = "GitHub - Cuir ticéad isteach"
 incorrectPasswordProvided = "Tá focal faire an PDF mícheart nó níor soláthraíodh é."
@@ -4456,6 +4579,10 @@ upgradeCompleteMessage = "Uasghrádaíodh do shíntiús go rathúil. Nuashonraí
 upgradeSuccess = "D’éirigh leis an íocaíocht! Uasghrádaíodh do shíntiús. Nuashonraíodh an ceadúnas ar do fhreastalaí. Gheobhaidh tú ríomhphost deimhnithe go luath."
 upgradeTitle = "Uasghrádaigh go {{planName}}"
 yearly = "Bliantúil"
+checkoutOpened = "Seiceáil oscailte sa bhrabhsálaí"
+checkoutInstructions = "Críochnaigh do cheannach sa fhuinneog bhrabhsálaí a d’oscail díreach anois. Tar éis don íocaíocht a bheith críochnaithe, fill anseo agus cliceáil an cnaipe thíos chun d’eolas billeála a nuashonrú."
+refreshBilling = "Tá an íocaíocht déanta agam - Nuashonraigh Billeáil"
+closeLater = "Déanfaidh mé é seo níos déanaí"
 
 [payment.emailStage]
 continue = "Lean ar aghaidh"
@@ -4679,6 +4806,13 @@ prompt = "Roghnaigh leathanach chun tábla a bhaint as"
 submit = "Sliocht"
 title = "Ó CSV go PDF"
 
+[PDFToXLSX]
+header = "PDF go Excel"
+prompt = "Roghnaigh leathanaigh le táblaí a bhaint"
+submit = "Tiontaigh"
+title = "PDF go Excel (XLSX)"
+tags = "scarbhileog,excel,xlsx,tábla,bain,tiontaigh"
+
 [PDFToHTML]
 credit = "Úsáideann an tseirbhís seo PDF go html chun comhaid a thiontú."
 header = "Ó HTML go PDF"
@@ -4835,6 +4969,7 @@ customPricing = "Saincheaptha"
 featureComparison = "Comparáid Gnéithe"
 from = "Ó"
 hideComparison = "Folaigh Comparáid Gnéithe"
+included = "San áireamh"
 includedInCurrent = "San Áireamh i do Phlean"
 licensedSeats = "Ceadúnaithe: {{count}} suíochán"
 manage = "Bainistigh"
@@ -4852,9 +4987,11 @@ title = "Plean Gníomhach"
 
 [plan.availablePlans]
 subtitle = "Roghnaigh an plean a oireann do do riachtanais"
+loadError = "Ní féidir praghsáil plean a lódáil. Ag úsáid luachanna réamhshocraithe."
 title = "Pleananna atá ar fáil"
 
 [plan.enterprise]
+siteLicense = "Ceadúnas Suímh"
 highlight1 = "Praghsáil shaincheaptha"
 highlight2 = "Tacaíocht thiomnaithe"
 highlight3 = "Na gnéithe is déanaí"
@@ -4927,6 +5064,81 @@ instructions = "Comhlánaigh do cheannachán sa chluaisín Stripe. Nuair a bheid
 keyDescription = "Greamaigh an eochair cheadúnais ó do ríomhphost"
 success = "Ceadúnas Gníomhachtaithe!"
 successMessage = "Tá do cheadúnas gníomhachtaithe go rathúil. Is féidir leat an fhuinneog seo a dhúnadh anois."
+
+[plan.team]
+name = "Team"
+siteLicense = "Ceadúnas Suímh"
+
+[credits]
+enableOverageBilling = "Cumasaigh Billeáil Ró-Úsáide"
+maybeLater = "B’fhéidir níos déanaí"
+upgrade = "Uasghrádaigh"
+
+[credits.modal]
+advancedMonitoring = "Monatóireacht ardleibhéil"
+allInOneWorkspace = "Spás oibre uile-i-aon PDF (amharcán, uirlisí & gníomhaire)"
+apiSandbox = "Bosca gainimh API"
+contactSales = "Déan Teagmháil le Díolacháin"
+creditsRemaining = "{{current}} de {{total}} fágtha"
+creditsThisMonth = "Creidmheasanna míosúla"
+current = "Plean Reatha"
+customPricing = "Saincheaptha"
+customSmartFolders = "Fillteáin Chliste Shaincheaptha"
+dedicatedSupportSlas = "Tacaíocht thiomnaithe & SLAanna"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Gach rud i gCreidmheasa, móide:"
+everythingInFree = "Gach rud sa leagan Saor, móide:"
+fasterThroughput = "Ráta próiseála 10x níos tapúla"
+forRegularWork = "Le haghaidh gnáthobair PDF:"
+freeTier = "Sraith Shaor"
+fullyPrivateFiles = "Comhaid go hiomlán príobháideacha"
+largeFileProcessing = "Próiseáil comhad mór"
+managedMemberMessage = "Tá rochtain neamhtheoranta agat ar chreidmheasanna trí d’fhoireann. Má theastaíonn cabhair uait, déan teagmháil le do cheannaire foirne le do thoil."
+managedMemberTitle = "Creidmheasanna Neamhtheoranta"
+meteringBillingNote = "Déantar billeáil ar chreidmheasanna ró-úsáide go míosúil taobh le do shíntiús Team. Is féidir leat d’úsáid a rianú am ar bith i do shocruithe cuntais."
+meteringExplanation = "Cuimsíonn do phlean Team {{credits}} creidmheasanna sa mhí. Nuair a rithfidh tú as, soláthraíonn billeáil ró-úsáide go huathoibríoch creidmheasanna breise ionas nach gá duit stopadh ag obair choíche."
+meteringIncluded = "{{credits}} creidmheas/mí san áireamh le Team"
+meteringNoCommitment = "Gan aon cheangal, cealaigh am ar bith"
+meteringNeverRunOut = "Ná rith as creidmheasanna choíche"
+meteringPayAsYouGo = "Íoc as an méid a úsáideann tú amháin"
+meteringPrice = "Creidmheasanna breise ag {{price}}/creidmheas"
+meteringTitle = "Billeáil Ró-Úsáide de réir Úsáide"
+monthlyCredits = "creidmheasanna míosúla"
+orgWideAccess = "Rialuithe rochtana ar fud na heagraíochta"
+overage = "ró-úsáid"
+perMonth = "/mí"
+popular = "Coitianta"
+premiumAiModels = "Samhlacha AI préimhe"
+prioritySupport = "Tacaíocht tosaíochta"
+privateDocCloud = "Scamall Doiciméad Príobháideach"
+ragFineTuning = "RAG + mionchoigeartú"
+secureApiAccess = "Rochtain API shlán"
+selfHostLink = "Athbhreithnigh na doiciméid agus na pleananna"
+selfHostPrompt = "Ar mhaith leat féinóstáil?"
+standardThroughput = "Ráta próiseála caighdeánach"
+subtitle = "Uasghrádaigh go Team le haghaidh 10x na gcreidmheasanna agus próiseáil níos tapúla."
+subtitlePro = "Cumasaigh billeáil uathoibríoch ró-úsáide chun gan riamh rith as creidmheasanna."
+teamLeaderOnly = "Ní féidir ach le ceannairí foirne billeáil ró-úsáide a chumasú"
+teamSubscription = "Team"
+titleExhausted = "D’úsáid tú do chreidmheasanna saor in aisce"
+titleExhaustedPro = "Tá do chreidmheasanna ídithe agat"
+unlimitedApiAccess = "Rochtain API neamhtheoranta"
+unlimitedMonthlyCredits = "Ceadúnas Suímh"
+unlimitedSeats = "Suíocháin neamhtheoranta"
+
+[credits.modal.features]
+everythingInCredits = "Gach rud i gCreidmheasa, móide:"
+everythingInFree = "Gach rud sa leagan Saor, móide:"
+forRegularWork = "Le haghaidh gnáthobair PDF:"
+
+[credits.insufficient]
+brief = "Níl dóthain creidmheasanna ann. Teastaíonn {{required}} creidmheasanna uait ach níl ach {{current}} agat."
+freeTier = "Uasghrádaigh go Team le haghaidh 10x níos mó creidmheasanna agus billeáil ró-úsáide neamhtheoranta."
+managedMember = "Déan teagmháil le do cheannaire foirne le do thoil."
+message = "Níl go leor creidmheasanna agat chun {{tool}} a rith. Faoi láthair tá {{current}} creidmheasanna agat."
+messageWithAmount = "Teastaíonn {{required}} creidmheasanna chun {{tool}} a rith, ach níl ach {{current}} agat."
+teamMember = "Cumasaigh billeáil ró-úsáide chun gan riamh rith as creidmheasanna."
+title = "Creidmheasanna Neamhdhóthain"
 
 [printFile]
 header = "Priontáil an Comhad go Printéir"
@@ -5565,6 +5777,70 @@ user = "Logáilte isteach mar"
 saas = "Stirling Cloud"
 selfhosted = "Féin-óstáilte"
 
+[settings.planBilling]
+currentPlan = "Plean Reatha"
+loading = "Eolas billeála á lódáil..."
+notAvailable = "Tá Plean & Billeáil ar fáil ach amháin nuair a bhíonn ceangal le Stirling Cloud (mód SaaS)."
+title = "Plean & Billeáil"
+
+[settings.planBilling.billing]
+manageBilling = "Bainistigh Billeáil"
+nextBillingDate = "Dáta billeála eile"
+overageCost = "Costas reatha ró-úsáide: {{amount}} ({{credits}} creidmheasanna)"
+
+[settings.planBilling.credits]
+estimatedCost = "Costas measta: {{amount}}"
+freeTierInfo = "Cuimsíonn an plean saor {{freeCredits}} creidmheas sa mhí. Uasghrádaigh go Team le haghaidh {{teamCredits}} creidmheas/mí agus billeáil ró-úsáide íoc-de-réchur."
+included = "{{count}} creidmheas/mí (san áireamh)"
+noOverage = "Gan táillí ró-úsáide an mhí seo. Tá tú ag úsáid do {{count}} creidmheasanna san áireamh."
+overage = "+ {{count}} ró-úsáid"
+overageInfo = "Déantar billeáil ar chreidmheasanna ró-úsáide ag {{price}} in aghaidh an chreidmheasa. Ní íocfaidh tú ach as an méid a úsáideann tú thar do chead míosúil."
+title = "Úsáid Creidmheasanna"
+
+[settings.planBilling.errors]
+fetchFailed = "Níorbh fhéidir sonraí billeála a fháil"
+retry = "Atriail"
+
+[settings.planBilling.status]
+active = "Gníomhach"
+canceled = "Cealaithe"
+pastDue = "As Dáta"
+trial = "Triail"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Gnéithe agus tacaíocht fiontair shaincheaptha"
+free = "Saor"
+freeDescription = "50 creidmheas sa mhí"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 creidmheas/mí san áireamh, billeáil uathoibríoch ró-úsáide le seirbhís gan bhriseadh"
+teamTooltipCredits = "Cuimsíonn an plean Team {{credits}} creidmheas/mí."
+teamTooltipFineprint = "Íoc ach as an méid a úsáideann tú thar na creidmheasanna san áireamh."
+teamTooltipOverage = "Billeáil uathoibríoch ró-úsáide ag {{price}}/creidmheas chun seirbhís gan bhriseadh a chinntiú."
+
+[settings.planBilling.team]
+managedByTeam = "Bainistithe ag foireann"
+memberCount = "{{count}} ball foirne"
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} lá fágtha"
+daysRemainingFull = "Críochnaíonn do thriail i gceann {{days}} lá"
+endDate = "Le síothlú: {{date}}"
+endsOn = "Críochnaíonn an triail"
+title = "Triail Shaor Gníomhach"
+
+[settings.planBilling.upgrade]
+cta = "Uasghrádaigh go Team"
+featureApi = "Rochtain API le huathoibriú"
+featureCredits = "{{teamCredits}} creidmheas sa mhí (i gcomparáid le {{freeCredits}} ar Saor)"
+featureMembers = "Baill foirne neamhtheoranta"
+featureSupport = "Tacaíocht tosaíochta"
+featureThroughput = "Ráta próiseála níos tapúla"
+opensInBrowser = "Osclaítear sa bhrabhsálaí é chun an t-uasghrádú a chomhlánú"
+subtitle = "Uasghrádaigh go Team le haghaidh:"
+title = "Uasghrádaigh do Phlean"
+
 [settings.developer]
 apiKeys = "Eochracha API"
 title = "Forbróir"
@@ -5688,6 +5964,9 @@ requiresEnterprise = "Teastaíonn ceadúnas Enterprise"
 people = "Daoine"
 teams = "Foirne"
 title = "Spás Oibre"
+
+[settings.team]
+title = "Foireann"
 
 [setup]
 description = "Tosaigh trí roghnú conas is mian leat Stirling PDF a úsáid"
@@ -6011,6 +6290,11 @@ desc = "Uath‑scoilt le bileoga deighilteora"
 name = "Rannán Leathanach"
 tooltip = "Úsáid bileoga deighilteora cód QR idir cáipéisí agus iad á scanadh"
 
+[split.methods.byPoster]
+name = "Giotaí Inphriontáilte"
+desc = "Roinn leathanaigh mhóra ina méideanna inphriontáilte"
+tooltip = "Roinn leathanaigh rómhóra ina ngiotaí níos lú oiriúnacha le priontáil ar pháipéar caighdeánach (A4, Letter, srl.)"
+
 [split.methods.byPages]
 desc = "Bain leathanaigh shonracha (1,3,5-10)"
 name = "Uimhreacha Leathanach"
@@ -6029,6 +6313,7 @@ tooltip = "Sonraigh uasmhéid comhaid (m.sh. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Scoilt ag"
 splitBy = "Scoilt de réir"
+splitInto = "Roinn ina"
 
 [split.methodSelection.tooltip]
 bullet1 = "Cliceáil ar chárta modha chun é a roghnú"
@@ -6047,6 +6332,21 @@ selectMethodFirst = "Roghnaigh modh scoilte ar dtús, le do thoil"
 [split.steps]
 chooseMethod = "Roghnaigh Modh"
 settings = "Socruithe"
+
+[split.poster]
+rightToLeft = "Roinn ó dheis go clé"
+
+[split.poster.pageSize]
+label = "Spriocmhéid Leathanaigh"
+description = "Méid na leathanach aschuir le haghaidh priontála"
+
+[split.poster.xFactor]
+label = "Roinnteanna Cothrománacha"
+description = "Líon na gcolún chun gach leathanach a roinnt ina gcuid"
+
+[split.poster.yFactor]
+label = "Roinnteanna Ingearacha"
+description = "Líon na rónna chun gach leathanach a roinnt ina gcuid"
 
 [split.tooltip.byChapters]
 bullet1 = "Leibhéal Leabharmhairc: Cén leibhéal le scoilt (1=barrleibhéal)"
@@ -6084,6 +6384,14 @@ bullet4 = "Uaslódáil - braitear agus baintear leathanaigh deighilteora go huat
 bullet5 = "Cumasaigh Mód Dé‑Aghaidh má tá tú ag scanadh an dá thaobh de na bileoga deighilteora"
 text = "Scoilt go huathoibríoch cáipéisí scanta ag baint úsáid as bileoga deighilteora fisiciúla le cóid QR. Foirfe chun ilcháipéisí scanta le chéile a phróiseáil."
 title = "Scoilt de réir Rannáin Leathanach"
+
+[split.tooltip.byPoster]
+bullet1 = "Spriocmhéid Leathanaigh: Roghnaigh méid an pháipéir aschuir (A4, Letter, srl.)"
+bullet2 = "Roinnteanna Cothrománacha/Ingearacha: Méid na greille le haghaidh roinnte"
+bullet3 = "Ó Dheis go Clé: Aisiompaigh ord na gcolún do leagananna RTL"
+bullet4 = "Priontáil agus cóimeáil na píosaí chun do phóstaer a chruthú"
+text = "Roinn leathanaigh mhóra PDF ina ngiotaí beaga inphriontáilte, oiriúnach do mhéideanna caighdeánacha páipéir. Foirfe chun priontaí póstaeir a chruthú ó leathanaigh mhóra."
+title = "Roinn le haghaidh Priontála Póstaeir"
 
 [split.tooltip.byPages]
 bullet1 = "Pointí scoilte aonair: 3,7 (scoilteann sé tar éis leathanaigh 3 agus 7)"
@@ -6364,9 +6672,13 @@ tags = "gréasán a ghabháil, a shábháil-leathanach, gréasán-go-doc, cartla
 title = "URL go PDF"
 
 [usage]
+aboutUsageAnalytics = "Maidir le hAnailísíocht Úsáide"
+configureSettings = "Cumraigh Socruithe Anailísíochta"
 error = "Earráid agus staitisticí úsáide á luchtú"
 noData = "Níl aon sonraí ar fáil"
 noDataMessage = "Níl aon staitisticí úsáide ar fáil faoi láthair."
+usageAnalyticsExplanation = "Rianaíonn anailísíocht úsáide iarratais ar chríochphointí agus patrúin úsáide uirlisí. In éineacht leis an bpainéal Logála Iniúchta, faigheann tú infheictheacht iomlán ar ghníomhaíocht an chórais, ar fheidhmíocht, agus ar imeachtaí slándála."
+viewAuditLogs = "Féach Logaí Iniúchta"
 
 [usage.chart]
 title = "Cairt úsáide críochphointí"
@@ -6947,3 +7259,278 @@ cancel = "Cealaigh"
 confirm = "Bain Amach"
 message = "Tá {{count}} comhad sa ZIP seo. An mbaineann tú amach mar sin féin?"
 title = "Comhad ZIP Mór"
+
+[cloudBadge]
+tooltip = "Úsáidfidh an oibríocht seo do chreidmheasanna scamall"
+
+[team]
+cancelInviteError = "Theip ar an gcuireadh a chealú"
+confirmCancelInvite = "An bhfuil tú cinnte gur mian leat an cuireadh seo a chealú?"
+confirmLeave = "An bhfuil tú cinnte gur mian leat an fhoireann seo a fhágáil?"
+confirmLeaveLeader = "Mar cheannaire foirne, bainfear díot ón bhfoireann má fhágann tú. An bhfuil tú cinnte?"
+confirmRemove = "An bhfuil tú cinnte gur mian leat an ball seo a bhaint?"
+editName = "Cuir ainm na foirne in eagar"
+inviteCancelled = "Cuireadh cealaithe"
+inviteError = "Theip ar an gcuireadh a sheoladh"
+inviteSent = "Seoladh an cuireadh go rathúil"
+leader = "Ceannaire"
+leaveButton = "Fág an Fhoireann"
+leaveError = "Theip ar an bhfoireann a fhágáil"
+leaveSuccess = "D’éirigh leat an fhoireann a fhágáil"
+loading = "Eolas foirne á lódáil..."
+memberCount = "{{count}} ball"
+memberRemoved = "Baineadh an ball go rathúil"
+namePlaceholder = "Iontráil ainm na foirne"
+personal = "Pearsanta"
+removeError = "Theip ar an mball a bhaint"
+renameError = "Theip ar an bhfoireann a athainmniú"
+renameSuccess = "Athainmníodh an fhoireann go rathúil"
+
+[team.invitationBanner]
+message = "thug cuireadh duit a bheith páirteach"
+acceptButton = "Glac"
+rejectButton = "Diúltaigh"
+
+[team.features]
+badge = "Gnéithe Team"
+subtitle = "Comhoibrigh le d’fhoireann"
+title = "Comhoibriú Foirne"
+viewPlans = "Féach ar Phleananna"
+
+[team.features.billing]
+description = "Bainistigh billeáil agus síntiúis"
+title = "Bainistíocht Billeála"
+
+[team.features.credits]
+description = "Linn chreidmheasanna roinnte do gach ball"
+title = "Creidmheasanna Comhroinnte"
+
+[team.features.dashboard]
+description = "Féach gníomhaíocht agus úsáid na foirne"
+title = "Deais Foirne"
+
+[team.features.invite]
+description = "Cuir baill le do fhoireann"
+title = "Tabhair Cuireadh do Bhaill"
+
+[team.invite]
+cancelLabel = "Cealaigh"
+invalidEmail = "Seoladh ríomhphoist neamhbhailí"
+placeholder = "Iontráil seoladh ríomhphoist"
+sendButton = "Seol Cuireadh"
+title = "Tabhair Cuireadh do Bhall Foirne"
+
+[team.members]
+emailColumn = "Ríomhphost"
+empty = "Níl aon bhaill foirne fós"
+nameColumn = "Ainm"
+pending = "Ar feitheamh"
+remove = "Bain"
+roleColumn = "Ról"
+title = "Baill Foirne"
+
+[team.upgrade]
+button = "Uasghrádaigh go Team"
+description = "Díghlasáil gnéithe comhoibrithe foirne"
+title = "Uasghrádaigh go Plean Team"
+
+[provider.oauth2.google]
+scope = "Fíordheimhniú sínithe isteach"
+
+[provider.oauth2.google.clientId]
+label = "Client ID"
+description = "An OAuth2 client ID ó Google Cloud Console"
+
+[provider.oauth2.google.clientSecret]
+label = "Client Secret"
+description = "An OAuth2 client secret ó Google Cloud Console"
+
+[provider.oauth2.google.scopes]
+label = "Raon feidhme"
+description = "Scopes OAuth2 scartha le camóga"
+
+[provider.oauth2.google.useAsUsername]
+label = "Úsáid mar Ainm Úsáideora"
+description = "Réimse le húsáid mar ainm úsáideora (email, name, given_name, family_name)"
+
+[provider.oauth2.github]
+scope = "Fíordheimhniú sínithe isteach"
+
+[provider.oauth2.github.clientId]
+label = "Client ID"
+description = "An OAuth2 client ID ó GitHub Developer Settings"
+
+[provider.oauth2.github.clientSecret]
+label = "Client Secret"
+description = "An OAuth2 client secret ó GitHub Developer Settings"
+
+[provider.oauth2.github.scopes]
+label = "Raon feidhme"
+description = "Scopes OAuth2 scartha le camóga"
+
+[provider.oauth2.github.useAsUsername]
+label = "Úsáid mar Ainm Úsáideora"
+description = "Réimse le húsáid mar ainm úsáideora (email, login, name)"
+
+[provider.oauth2.keycloak]
+scope = "SSO"
+
+[provider.oauth2.keycloak.issuer]
+label = "URL an Eisiúnaí"
+description = "URL de chríochphointe OpenID Connect Discovery an ríochta Keycloak"
+
+[provider.oauth2.keycloak.clientId]
+label = "Client ID"
+description = "An OAuth2 client ID ó Keycloak"
+
+[provider.oauth2.keycloak.clientSecret]
+label = "Client Secret"
+description = "An OAuth2 client secret ó Keycloak"
+
+[provider.oauth2.keycloak.scopes]
+label = "Raon feidhme"
+description = "Scopes OAuth2 scartha le camóga"
+
+[provider.oauth2.keycloak.useAsUsername]
+label = "Úsáid mar Ainm Úsáideora"
+description = "Réimse le húsáid mar ainm úsáideora (email, name, given_name, family_name, preferred_username)"
+
+[provider.oauth2.generic]
+name = "OAuth2 Ginearálta"
+scope = "SSO"
+
+[provider.oauth2.generic.enabled]
+label = "Cumasaigh OAuth2 Ginearálta"
+description = "Cumasaigh fíordheimhniú ag úsáid soláthraí OAuth2 saincheaptha"
+
+[provider.oauth2.generic.provider]
+label = "Ainm an tSoláthraí"
+description = "Ainm do sholáthraí OAuth2 (m.sh., Azure AD, Okta)"
+
+[provider.oauth2.generic.issuer]
+label = "URL an Eisiúnaí"
+description = "Soláthraí a thacaíonn le OpenID Connect Discovery (/.well-known/openid-configuration)"
+
+[provider.oauth2.generic.clientId]
+label = "Client ID"
+description = "An OAuth2 client ID ó do sholáthraí"
+
+[provider.oauth2.generic.clientSecret]
+label = "Client Secret"
+description = "An OAuth2 client secret ó do sholáthraí"
+
+[provider.oauth2.generic.scopes]
+label = "Raon feidhme"
+description = "Scopes OAuth2 scartha le camóga"
+
+[provider.oauth2.generic.useAsUsername]
+label = "Úsáid mar Ainm Úsáideora"
+description = "Réimse le húsáid mar ainm úsáideora"
+
+[provider.oauth2.generic.autoCreateUser]
+label = "Cruthaigh Úsáideoirí go hUathoibríoch"
+description = "Cruthaigh cuntais úsáideora go huathoibríoch ag an gcéad logáil isteach OAuth2"
+
+[provider.oauth2.generic.blockRegistration]
+label = "Cuir Clárú Cosc"
+description = "Cuir cosc ar chlárú úsáideoirí nua trí OAuth2"
+
+[provider.smtp]
+name = "Ríomhphost SMTP"
+scope = "Fógraí Ríomhphoist"
+
+[provider.smtp.enabled]
+label = "Cumasaigh Ríomhphost"
+description = "Cumasaigh fógraí ríomhphoist agus feidhmiúlacht SMTP"
+
+[provider.smtp.host]
+label = "Óstríomhaire SMTP"
+description = "Óstainm nó seoladh IP do fhreastalaí SMTP"
+
+[provider.smtp.port]
+label = "Port SMTP"
+description = "Uimhir an phoirt don cheangal SMTP (de ghnáth 25, 465, nó 587)"
+
+[provider.smtp.username]
+label = "Ainm Úsáideora SMTP"
+description = "Ainm úsáideora le haghaidh fíordheimhnithe SMTP"
+
+[provider.smtp.password]
+label = "Focal Faire SMTP"
+description = "Focal faire le haghaidh fíordheimhnithe SMTP"
+
+[provider.smtp.from]
+label = "Seoladh 'Ó'"
+description = "An seoladh ríomhphoist le húsáid mar an seoltóir"
+
+[provider.saml2]
+name = "SAML2"
+scope = "SSO (SAML)"
+
+[provider.saml2.enabled]
+label = "Cumasaigh SAML2"
+description = "Cumasaigh fíordheimhniú SAML2 (do Fiontar amháin)"
+
+[provider.saml2.provider]
+label = "Ainm an tSoláthraí"
+description = "Ainm do sholáthraí SAML2"
+
+[provider.saml2.registrationId]
+label = "Registration ID"
+description = "Ainm d’aip an tSoláthraí Seirbhíse (SP)"
+
+[provider.saml2.idpMetadataUri]
+label = "IDP Metadata URI"
+description = "An URI do mheitashonraí do sholáthraí"
+
+[provider.saml2.idpSingleLoginUrl]
+label = "IDP Single Login URL"
+description = "An URL chun SSO a thosú"
+
+[provider.saml2.idpSingleLogoutUrl]
+label = "IDP Single Logout URL"
+description = "An URL chun SLO a thosú"
+
+[provider.saml2.idpIssuer]
+label = "Eisiúnaí IDP"
+description = "Aitheantas do sholáthraí"
+
+[provider.saml2.idpCert]
+label = "Teastas IDP"
+description = "Conair an teastais (m.sh., classpath:okta.cert)"
+
+[provider.saml2.privateKey]
+label = "Eochair Phríobháideach"
+description = "Do chosán eochrach príobháidigh"
+
+[provider.saml2.spCert]
+label = "Teastas SP"
+description = "Conair do theastais sínithe"
+
+[provider.saml2.autoCreateUser]
+label = "Cruthaigh Úsáideoirí go hUathoibríoch"
+description = "Cruthaigh cuntais úsáideora go huathoibríoch ag an gcéad logáil isteach SAML2"
+
+[provider.saml2.blockRegistration]
+label = "Cuir Clárú Cosc"
+description = "Cuir cosc ar chlárú úsáideoirí nua trí SAML2"
+
+[provider.googledrive]
+name = "Google Drive"
+scope = "Iompórtáil Comhad"
+
+[provider.googledrive.enabled]
+label = "Cumasaigh Roghnóir Comhad Google Drive"
+description = "Ceadaigh d’úsáideoirí comhaid a iompórtáil go díreach ó Google Drive"
+
+[provider.googledrive.clientId]
+label = "Client ID"
+description = "Google OAuth 2.0 Client ID ó Google Cloud Console"
+
+[provider.googledrive.apiKey]
+label = "API Key"
+description = "Google API Key don Google Picker API ó Google Cloud Console"
+
+[provider.googledrive.appId]
+label = "App ID"
+description = "App ID Google Drive ó Google Cloud Console"

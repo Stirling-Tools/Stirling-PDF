@@ -96,6 +96,8 @@ pin = "Prikvači datoteku (zadrži aktivnu nakon pokretanja alata)"
 poweredBy = "Pokreće"
 pro = "Pro"
 processTimeWarning = "Upozorenje: Ovaj proces može trajati i do minutu, u zavisnosti od veličine dokumenta"
+processingComplete = "Vaša datoteka je spremna."
+processingCompleteMultiple = "{{count}} datoteka je spremno."
 property = "Svojstvo"
 quickPosition = "Brzi položaj"
 red = "Crveno"
@@ -105,6 +107,7 @@ save = "Spremi"
 saveToBrowser = "spremi u Preglednik"
 saveUnavailable = "Spremanje nije dostupno za ovu stavku"
 seeDockerHub = "Vidi Docker Hub"
+editSecret = "Uredite ovu vrijednost"
 selectFillter = "-- Odaberi --"
 size = "Veličina"
 sponsor = "Sponzor"
@@ -651,6 +654,7 @@ description = "Konfigurirajte vanjske pružatelje autentikacije poput OAuth2 i S
 disconnect = "Prekini vezu"
 disconnected = "Pružatelj je uspješno odspojen"
 disconnectError = "Nije uspjelo odspajanje pružatelja"
+documentation = "Prikaži dokumentaciju"
 imageResolutionFull = "Puna (izvorna veličina)"
 imageResolutionReduced = "Smanjena (maks. 1200 px)"
 linkedServices = "Povezane usluge"
@@ -964,6 +968,18 @@ label = "Zadani jezik"
 description = "Maksimalna veličina otpremanja datoteka (npr. 100MB, 1GB)"
 label = "Ograničenje otpremanja datoteka"
 
+[admin.settings.general.hideDisabledTools]
+description = "Sakrij onemogućene alate iz sučelja"
+label = "Sakrij onemogućene alate"
+
+[admin.settings.general.hideDisabledTools.googleDrive]
+description = "Sakrij gumb Google Drive kada nije omogućen"
+label = "Sakrij Google Drive"
+
+[admin.settings.general.hideDisabledTools.mobileScanner]
+description = "Sakrij gumb za mobilni QR skener kada nije omogućen"
+label = "Sakrij mobilni skener"
+
 [admin.settings.general.frontendUrl]
 description = "Osnovni URL za frontend (npr. https://pdf.example.com). Koristi se za poveznice pozivnica e-poštom i otpremanje putem mobilnog QR koda. Ostavite prazno za korištenje backend URL-a."
 label = "Frontend URL"
@@ -1148,6 +1164,8 @@ title = "Sigurnost"
 
 [admin.settings.security.audit]
 label = "Revizijsko zapisivanje"
+showDetails = "Prikaži detalje razine revizije"
+hideDetails = "Sakrij detalje razine revizije"
 
 [admin.settings.security.audit.enabled]
 description = "Prati radnje korisnika i događaje sustava radi usklađenosti i sigurnosnog nadzora"
@@ -1157,9 +1175,31 @@ label = "Omogući revizijsko zapisivanje"
 description = "0=ISKLJUČENO, 1=OSNOVNO, 2=STANDARDNO, 3=DETALJNO"
 label = "Razina revizije"
 
+[admin.settings.security.audit.levelDetails]
+off = "Bez zapisivanja revizije (osim kritičnih sigurnosnih događaja)"
+basic = "Radnje nad PDF datotekama (kompresija, podjela, spajanje itd.) i promjene postavki. Bilježi: status operacije (uspjeh/neuspjeh), parametre metoda, vrijeme izvršavanja. Minimalan obujam zapisnika."
+standard = "BASIC događaji plus: prijava/odjava korisnika, promjene računa, opći GET zahtjevi. Isključuje kontinuirane upite (/auth/me, /app-config, /health itd.) radi smanjenja buke u zapisniku. Idealno za većinu implementacija."
+verbose = "STANDARD događaji plus: kontinuirani upiti, svi GET zahtjevi, detaljna vremena. Upozorenje: velik obujam zapisnika i utjecaj na performanse."
+
 [admin.settings.security.audit.retentionDays]
 description = "Broj dana zadržavanja revizijskih zapisa"
 label = "Zadržavanje revizije (dani)"
+
+[admin.settings.security.audit.advancedOptions]
+title = "Napredne opcije"
+description = "Sljedeće opcije povećavaju vrijeme obrade i potrošnju memorije. Omogućite samo ako je doista potrebno."
+
+[admin.settings.security.audit.captureFileHash]
+description = "Izdvoji SHA-256 hash učitanih PDF datoteka radi provjere integriteta. Neovisno o razini revizije."
+label = "Zabilježi hash datoteke (SHA-256)"
+
+[admin.settings.security.audit.capturePdfAuthor]
+description = "Izdvoji polje autora iz PDF dokumenata tijekom obrade. Zahtijeva raščlambu PDF-a, povećava latenciju. Neovisno o razini revizije."
+label = "Zabilježi metapodatke autora PDF-a"
+
+[admin.settings.security.audit.captureOperationResults]
+description = "Zabilježi povratne vrijednosti metoda. Nije preporučljivo: značajno povećava obujam zapisnika i potrošnju diska."
+label = "Zabilježi rezultate operacija"
 
 [admin.settings.security.csrfDisabled]
 description = "Onemogući zaštitu od Cross-Site Request Forgery (ne preporučuje se)"
@@ -1536,43 +1576,18 @@ tags = "embed,attach,file,attachment,attachments"
 title = "Add attachments"
 
 [audit]
+configureAudit = "Konfiguriraj revizijsko zapisivanje"
+configureAuditMessage = "Podesite razinu zapisivanja revizije, razdoblje zadržavanja i druge postavke u odjeljku Sigurnost i autentikacija."
 disabled = "Revizijsko zapisivanje je onemogućeno"
 disabledMessage = "Omogućite revizijsko zapisivanje u konfiguraciji aplikacije kako biste pratili sustavne događaje."
 enterpriseRequired = "Potrebna je Enterprise licenca"
 enterpriseRequiredMessage = "Sustav zapisivanja revizije je Enterprise značajka. Nadogradite na Enterprise licencu za pristup revizijskim zapisima i analitici."
+goToSettings = "Idi na postavke revizije"
 notAvailable = "Sustav revizije nije dostupan"
 notAvailableMessage = "Sustav revizije nije konfiguriran ili nije dostupan."
 
-[audit.charts]
-byType = "Događaji prema vrsti"
-byUser = "Događaji prema korisniku"
-day = "Dan"
-error = "Pogreška pri učitavanju grafikona"
-month = "Mjesec"
-overTime = "Događaji kroz vrijeme"
-title = "Revizijska nadzorna ploča"
-week = "Tjedan"
-
 [audit.error]
 title = "Pogreška pri učitavanju sustava revizije"
-
-[audit.events]
-actions = "Radnje"
-clearFilters = "Očisti"
-details = "Detalji"
-endDate = "Završni datum"
-error = "Pogreška pri učitavanju događaja"
-eventDetails = "Detalji događaja"
-filterByType = "Filtriraj prema vrsti"
-filterByUser = "Filtriraj prema korisniku"
-ipAddress = "IP adresa"
-noEvents = "Nema pronađenih događaja"
-startDate = "Početni datum"
-timestamp = "Vremenska oznaka"
-title = "Revizijski događaji"
-type = "Vrsta"
-user = "Korisnik"
-viewDetails = "Prikaži detalje"
 
 [audit.export]
 clearFilters = "Očisti"
@@ -1580,27 +1595,132 @@ description = "Izvezite revizijske događaje u CSV ili JSON format. Upotrijebite
 endDate = "Završni datum"
 error = "Nije uspio izvoz podataka"
 exportButton = "Izvezi podatke"
+fieldAuthor = "Autor (iz PDF-a)"
+fieldDate = "Datum"
+fieldDocumentName = "Naziv dokumenta"
+fieldFileHash = "Hash datoteke (SHA-256)"
+fieldIpAddress = "IP adresa"
+fieldOperationResults = "Rezultati operacija"
+fieldOutcome = "Ishod (uspjeh/neuspjeh)"
+fieldTool = "Alat"
+fieldUsername = "Korisničko ime"
 filterByType = "Filtriraj prema vrsti"
 filterByUser = "Filtriraj prema korisniku"
 filters = "Filteri (neobavezno)"
 format = "Format izvoza"
+selectFields = "Odaberite polja za uključivanje"
 startDate = "Početni datum"
 title = "Izvoz podataka revizije"
+verboseRequired = "Zahtijeva razinu VERBOSE revizije"
 
 [audit.systemStatus]
+autoRefresh = "Automatsko osvježavanje"
+autoRefreshLabel = "Automatski osvježi svakih 30 s"
+captureBySettings = "Omogući u postavkama"
+capturedFields = "Zabilježena polja"
+date = "Datum"
 days = "dana"
 disabled = "Onemogućeno"
+documentName = "Naziv dokumenta"
 enabled = "Omogućeno"
+fileHash = "Hash datoteke"
 level = "Razina revizije"
+pdfAuthor = "Autor PDF-a"
 retention = "Razdoblje zadržavanja"
 status = "Revizijsko zapisivanje"
 title = "Status sustava"
+tool = "Alat"
 totalEvents = "Ukupno događaja"
+username = "Korisničko ime"
+verboseOnly = "Samo VERBOSE"
+
+[audit.stats]
+activeUsers = "Aktivni korisnici"
+attention = "Potrebna pozornost"
+avgLatency = "Prosj. latencija"
+error = "Pogreška pri učitavanju statistike"
+errorLoadingStats = "Neuspjelo učitavanje statistike"
+excellent = "Odlično"
+good = "Dobro"
+noData = "N/A"
+successRate = "Stopa uspjeha"
+title = "Sažetak"
+totalEvents = "Ukupno događaja"
+vsLastPeriod = "u odnosu na prethodno razdoblje"
+
+[audit.charts]
+byTool = "Najčešće korišteni alati"
+byType = "Događaji prema vrsti"
+byUser = "Događaji prema korisniku"
+day = "Dan"
+error = "Pogreška pri učitavanju grafikona"
+hourlyActivity = "Satna aktivnost"
+month = "Mjesec"
+noData = "Nema podataka za ovo razdoblje"
+overTime = "Događaji kroz vrijeme"
+title = "Revizijska nadzorna ploča"
+week = "Tjedan"
+
+[audit.events]
+actions = "Radnje"
+author = "Autor"
+clearFilters = "Očisti"
+details = "Detalji"
+documentName = "Dokument"
+endDate = "Završni datum"
+error = "Pogreška pri učitavanju događaja"
+eventDetails = "Detalji događaja"
+failure = "Neuspjeh"
+fileHash = "Hash datoteke"
+filterByType = "Filtriraj prema vrsti"
+filterByUser = "Filtriraj prema korisniku"
+ipAddress = "IP adresa"
+noEvents = "Nema pronađenih događaja"
+outcome = "Status"
+sortAsc = "Sortiraj uzlazno"
+sortDesc = "Sortiraj silazno"
+startDate = "Početni datum"
+success = "Uspjeh"
+timestamp = "Vremenska oznaka"
+title = "Revizijski događaji"
+type = "Vrsta"
+user = "Korisnik"
+viewDetails = "Prikaži detalje"
+
+[audit.filters]
+allOutcomes = "Sve"
+failureOnly = "Samo neuspjesi"
+last7Days = "Zadnjih 7 dana"
+last30Days = "Zadnjih 30 dana"
+outcomeFilter = "Ishod"
+quickPresets = "Brzi filtri"
+successOnly = "Samo uspjesi"
+thisMonth = "Ovaj mjesec"
+today = "Danas"
 
 [audit.tabs]
+clearData = "Obriši podatke"
 dashboard = "Nadzorna ploča"
 events = "Revizijski događaji"
 export = "Izvoz"
+
+[audit.clearData]
+cancel = "Odustani"
+codeDoesNotMatch = "Kod se ne podudara"
+codePlaceholder = "Upišite kod ovdje"
+confirmationCode = "Potvrdni kod"
+confirmationRequired = "Obriši sve podatke revizije"
+confirmMessage = "Ovo će trajno ukloniti sve revizijske zapise. U nastavku unesite potvrdni kod kako biste nastavili."
+confirmTitle = "Potvrdite da želite obrisati"
+deleteButton = "Obriši"
+enterCode = "Potvrdni kod"
+enterCodeBelow = "Unesite kod točno kao iznad (razlikuju se velika i mala slova)"
+initiateDelete = "Obriši sve podatke"
+irreversible = "NEPOVRATNO"
+success = "Uspjeh"
+successMessage = "Svi podaci revizije uspješno su obrisani"
+warning1 = "Ova radnja se ne može poništiti"
+warning2 = "Brisanjem podataka revizije trajno ćete ukloniti sve povijesne revizijske zapise, uključujući sigurnosne događaje, aktivnosti korisnika i radnje nad datotekama iz baze podataka."
 
 [auth]
 accessDenied = "Pristup odbijen"
@@ -2254,9 +2374,11 @@ copy = "Kopiraj"
 done = "Gotovo"
 error = "Pogreška"
 expand = "Proširi"
+learnMore = "Saznaj više"
 lines = "redaka"
 loading = "Učitavanje..."
 next = "Sljedeće"
+operation = "ovu radnju"
 preview = "Pregled"
 previous = "Prethodno"
 refresh = "Osvježi"
@@ -2920,6 +3042,7 @@ copyStack = "Kopiraj Stack Trace"
 discordSubmit = "Discord - Pošalji objavu podrške"
 dismissAllErrors = "Zanemari sve pogreške"
 encryptedPdfMustRemovePassword = "Ovaj PDF je šifriran ili zaštićen lozinkom. Otključajte ga prije pretvorbe u PDF/A."
+generic = "Došlo je do pogreške"
 github = "Pošaljite ticket na GitHub"
 githubSubmit = "GitHub - Pošaljite ticket"
 incorrectPasswordProvided = "Lozinka za PDF je netočna ili nije navedena."
@@ -4456,6 +4579,10 @@ upgradeCompleteMessage = "Vaša je pretplata uspješno nadograđena. Postojeći 
 upgradeSuccess = "Plaćanje uspješno! Vaša je pretplata nadograđena. Licenca je ažurirana na vašem poslužitelju. Uskoro ćete dobiti potvrdu e-poštom."
 upgradeTitle = "Nadogradi na {{planName}}"
 yearly = "Godišnje"
+checkoutOpened = "Plaćanje otvoreno u pregledniku"
+checkoutInstructions = "Dovršite kupnju u prozoru preglednika koji se upravo otvorio. Nakon dovršetka plaćanja vratite se ovamo i kliknite gumb ispod za osvježavanje podataka o naplati."
+refreshBilling = "Dovršio/la sam plaćanje – Osvježi naplatu"
+closeLater = "Učinit ću to kasnije"
 
 [payment.emailStage]
 continue = "Nastavi"
@@ -4679,6 +4806,13 @@ prompt = "Odaberite stranicu za izdvajanje tablice"
 submit = "Izvuci"
 title = "PDF u CSV"
 
+[PDFToXLSX]
+header = "PDF u Excel"
+prompt = "Odaberite stranice za izdvajanje tablica"
+submit = "Pretvori"
+title = "PDF u Excel (XLSX)"
+tags = "proračunska tablica,excel,xlsx,tablica,izdvoji,pretvori"
+
 [PDFToHTML]
 credit = "Ova usluga koristi pdftohtml za konverziju datoteka."
 header = "PDF u HTML"
@@ -4835,6 +4969,7 @@ customPricing = "Prilagođeno"
 featureComparison = "Usporedba značajki"
 from = "Od"
 hideComparison = "Sakrij usporedbu značajki"
+included = "Uključeno"
 includedInCurrent = "Uključeno u vaš plan"
 licensedSeats = "Licencirano: {{count}} mjesta"
 manage = "Upravljaj"
@@ -4852,9 +4987,11 @@ title = "Aktivni plan"
 
 [plan.availablePlans]
 subtitle = "Odaberite plan koji odgovara vašim potrebama"
+loadError = "Nije moguće učitati cijene planova. Koriste se zadane vrijednosti."
 title = "Dostupni planovi"
 
 [plan.enterprise]
+siteLicense = "Site licenca"
 highlight1 = "Prilagođeno određivanje cijene"
 highlight2 = "Namjenska podrška"
 highlight3 = "Najnovije značajke"
@@ -4927,6 +5064,81 @@ instructions = "Dovršite kupnju na Stripe kartici. Nakon dovršenog plaćanja d
 keyDescription = "Zalijepite licenčni ključ iz e-poruke"
 success = "Licenca aktivirana!"
 successMessage = "Vaša licenca je uspješno aktivirana. Sada možete zatvoriti ovaj prozor."
+
+[plan.team]
+name = "Tim"
+siteLicense = "Site licenca"
+
+[credits]
+enableOverageBilling = "Omogući naplatu prekoračenja"
+maybeLater = "Možda kasnije"
+upgrade = "Nadogradi"
+
+[credits.modal]
+advancedMonitoring = "Napredno nadziranje"
+allInOneWorkspace = "Sve-u-jednom PDF radni prostor (preglednik, alati i agent)"
+apiSandbox = "API sandbox"
+contactSales = "Kontaktirajte prodaju"
+creditsRemaining = "Preostalo: {{current}} od {{total}}"
+creditsThisMonth = "Mjesečni krediti"
+current = "Trenutni plan"
+customPricing = "Prilagođeno"
+customSmartFolders = "Prilagođene pametne mape"
+dedicatedSupportSlas = "Namjenska podrška i SLA-ovi"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Sve iz Kredita, plus:"
+everythingInFree = "Sve iz Besplatnog, plus:"
+fasterThroughput = "10x brži protok"
+forRegularWork = "Za redovan rad s PDF-om:"
+freeTier = "Besplatan paket"
+fullyPrivateFiles = "Potpuno privatne datoteke"
+largeFileProcessing = "Obrada velikih datoteka"
+managedMemberMessage = "Imate neograničen pristup kreditima putem svojeg tima. Ako trebate pomoć, obratite se svom voditelju tima."
+managedMemberTitle = "Neograničeni krediti"
+meteringBillingNote = "Dodatni krediti naplaćuju se mjesečno uz vašu pretplatu na Tim. Svoju potrošnju možete pratiti u bilo kojem trenutku u postavkama računa."
+meteringExplanation = "Vaš plan Tim uključuje {{credits}} kredita mjesečno. Kada ih potrošite, automatska naplata prekoračenja osigurava dodatne kredite kako ne biste morali prekidati rad."
+meteringIncluded = "{{credits}} kredita/mj uključenih uz Tim"
+meteringNoCommitment = "Bez obveze, otkaz u bilo kojem trenutku"
+meteringNeverRunOut = "Nikad ne ostanite bez kredita"
+meteringPayAsYouGo = "Plaćajte samo ono što koristite"
+meteringPrice = "Dodatni krediti po {{price}}/kreditu"
+meteringTitle = "Naplata prekoračenja prema potrošnji"
+monthlyCredits = "mjesečni krediti"
+orgWideAccess = "Organizacijska kontrola pristupa"
+overage = "prekoračenje"
+perMonth = "/mj"
+popular = "Popularno"
+premiumAiModels = "Premium AI modeli"
+prioritySupport = "Prioritetna podrška"
+privateDocCloud = "Privatni oblak dokumenata"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Siguran API pristup"
+selfHostLink = "Pregledajte dokumentaciju i planove"
+selfHostPrompt = "Želite samostalno hostati?"
+standardThroughput = "Standardni protok"
+subtitle = "Nadogradite na Tim za 10x više kredita i bržu obradu."
+subtitlePro = "Omogućite automatsku naplatu prekoračenja kako nikad ne biste ostali bez kredita."
+teamLeaderOnly = "Samo voditelji tima mogu omogućiti naplatu prekoračenja"
+teamSubscription = "Tim"
+titleExhausted = "Iskoristili ste svoje besplatne kredite"
+titleExhaustedPro = "Ponestalo vam je kredita"
+unlimitedApiAccess = "Neograničen API pristup"
+unlimitedMonthlyCredits = "Site licenca"
+unlimitedSeats = "Neograničen broj korisnika"
+
+[credits.modal.features]
+everythingInCredits = "Sve iz Kredita, plus:"
+everythingInFree = "Sve iz Besplatnog, plus:"
+forRegularWork = "Za redovan rad s PDF-om:"
+
+[credits.insufficient]
+brief = "Nedovoljno kredita. Potrebno je {{required}} kredita, a imate {{current}}."
+freeTier = "Nadogradite na Tim za 10x više kredita i neograničenu naplatu prekoračenja."
+managedMember = "Obratite se svom voditelju tima za pomoć."
+message = "Nemate dovoljno kredita za pokretanje alata {{tool}}. Trenutno imate {{current}} kredita."
+messageWithAmount = "Za pokretanje alata {{tool}} potrebno je {{required}} kredita, a imate samo {{current}}."
+teamMember = "Omogućite naplatu prekoračenja kako nikad ne biste ostali bez kredita."
+title = "Nedovoljno kredita"
 
 [printFile]
 header = "Ispis datoteke na pisač"
@@ -5565,6 +5777,70 @@ user = "Prijavljeni kao"
 saas = "Stirling Cloud"
 selfhosted = "Self-hosted"
 
+[settings.planBilling]
+currentPlan = "Trenutni plan"
+loading = "Učitavanje podataka o naplati..."
+notAvailable = "Plan i naplata dostupni su samo kada ste povezani sa Stirling Cloudom (SaaS način rada)."
+title = "Plan i naplata"
+
+[settings.planBilling.billing]
+manageBilling = "Upravljaj naplatom"
+nextBillingDate = "Sljedeći datum naplate"
+overageCost = "Trenutni trošak prekoračenja: {{amount}} ({{credits}} kredita)"
+
+[settings.planBilling.credits]
+estimatedCost = "Procijenjeni trošak: {{amount}}"
+freeTierInfo = "Besplatni plan uključuje {{freeCredits}} kredita mjesečno. Nadogradite na Tim za {{teamCredits}} kredita/mj i naplatu prekoračenja po potrošnji."
+included = "{{count}} kredita/mj (uključeno)"
+noOverage = "Ovaj mjesec nema naplate prekoračenja. Koristite uključene {{count}} kredita."
+overage = "+ {{count}} prekoračenja"
+overageInfo = "Dodatni krediti naplaćuju se po {{price}} po kreditu. Plaćat ćete samo ono što potrošite izvan mjesečnog limita."
+title = "Potrošnja kredita"
+
+[settings.planBilling.errors]
+fetchFailed = "Nije moguće dohvatiti podatke o naplati"
+retry = "Pokušaj ponovno"
+
+[settings.planBilling.status]
+active = "Aktivno"
+canceled = "Otkazano"
+pastDue = "Dospjelo"
+trial = "Probno razdoblje"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Prilagođene enterprise značajke i podrška"
+free = "Besplatno"
+freeDescription = "50 kredita mjesečno"
+team = "Tim"
+teamBadge = "Tim"
+teamDescription = "Uključeno 500 kredita/mj, automatska naplata prekoračenja za neprekinutu uslugu"
+teamTooltipCredits = "Plan Tim uključuje {{credits}} kredita/mj."
+teamTooltipFineprint = "Plaćate samo ono što potrošite iznad uključenih kredita."
+teamTooltipOverage = "Automatska naplata prekoračenja po {{price}}/kreditu osigurava neprekinutu uslugu."
+
+[settings.planBilling.team]
+managedByTeam = "Upravlja tim"
+memberCount = "{{count}} članova tima"
+
+[settings.planBilling.trial]
+daysRemaining = "Preostalo {{days}} dana"
+daysRemainingFull = "Vaše probno razdoblje završava za {{days}} dana"
+endDate = "Istječe: {{date}}"
+endsOn = "Kraj probnog razdoblja"
+title = "Probno razdoblje aktivno"
+
+[settings.planBilling.upgrade]
+cta = "Nadogradi na Tim"
+featureApi = "API pristup za automatizaciju"
+featureCredits = "{{teamCredits}} kredita mjesečno (naspram {{freeCredits}} u Besplatnom)"
+featureMembers = "Neograničen broj članova tima"
+featureSupport = "Prioritetna podrška"
+featureThroughput = "Brži protok obrade"
+opensInBrowser = "Otvara se u pregledniku za dovršetak nadogradnje"
+subtitle = "Nadogradite na Tim za:"
+title = "Nadogradite svoj plan"
+
 [settings.developer]
 apiKeys = "API ključevi"
 title = "Razvoj"
@@ -5688,6 +5964,9 @@ requiresEnterprise = "Zahtijeva Enterprise licencu"
 people = "Korisnici"
 teams = "Timovi"
 title = "Radni prostor"
+
+[settings.team]
+title = "Tim"
 
 [setup]
 description = "Započnite tako da odaberete kako želite koristiti Stirling PDF"
@@ -6011,6 +6290,11 @@ desc = "Automatsko razdvajanje s razdjelnim listovima"
 name = "Razdjelnik stranica"
 tooltip = "Koristite QR kod razdjelne listove između dokumenata pri skeniranju"
 
+[split.methods.byPoster]
+name = "Ispisivi dijelovi"
+desc = "Podijelite velike stranice na formate pogodne za ispis"
+tooltip = "Podijelite prevelike stranice na manje dijelove pogodne za ispis na standardni papir (A4, Letter itd.)"
+
 [split.methods.byPages]
 desc = "Izdvojite određene stranice (1,3,5-10)"
 name = "Brojevi stranica"
@@ -6029,6 +6313,7 @@ tooltip = "Navedite maksimalnu veličinu datoteke (npr. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Razdvoji na"
 splitBy = "Razdvoji po"
+splitInto = "Podijeli na"
 
 [split.methodSelection.tooltip]
 bullet1 = "Kliknite na karticu metode da je odaberete"
@@ -6047,6 +6332,21 @@ selectMethodFirst = "Najprije odaberite metodu razdvajanja"
 [split.steps]
 chooseMethod = "Odaberi metodu"
 settings = "Postavke"
+
+[split.poster]
+rightToLeft = "Dijeli zdesna nalijevo"
+
+[split.poster.pageSize]
+label = "Ciljana veličina stranice"
+description = "Veličina izlaznih stranica za ispis"
+
+[split.poster.xFactor]
+label = "Vodoravne podjele"
+description = "Broj stupaca na koje se dijeli svaka stranica"
+
+[split.poster.yFactor]
+label = "Okomite podjele"
+description = "Broj redaka na koje se dijeli svaka stranica"
 
 [split.tooltip.byChapters]
 bullet1 = "Razina knjižne oznake: Po kojoj razini razdvojiti (1=gornja razina)"
@@ -6084,6 +6384,14 @@ bullet4 = "Učitajte - razdjelne stranice se automatski otkrivaju i uklanjaju"
 bullet5 = "Omogućite dupleks način ako skenirate obje strane razdjelnih listova"
 text = "Automatski razdvajajte skenirane dokumente koristeći fizičke razdjelne listove s QR kodovima. Savršeno za obradu više dokumenata skeniranih zajedno."
 title = "Razdvoji po razdjelniku stranica"
+
+[split.tooltip.byPoster]
+bullet1 = "Ciljana veličina stranice: Odaberite veličinu papira (A4, Letter itd.)"
+bullet2 = "Vodoravne/okomite podjele: Veličina mreže za podjelu"
+bullet3 = "Zdesna nalijevo: Obrni redoslijed stupaca za RTL raspored"
+bullet4 = "Isprintajte i sastavite dijelove kako biste napravili plakat"
+text = "Podijelite velike PDF stranice na manje, ispisive dijelove pogodne za standardne veličine papira. Savršeno za izradu plakata od prevelikih stranica."
+title = "Podjela za ispis plakata"
 
 [split.tooltip.byPages]
 bullet1 = "Pojedinačne točke razdvajanja: 3,7 (razdvaja nakon stranica 3 i 7)"
@@ -6364,9 +6672,13 @@ tags = "uhvati-web,sačuvaj-stranicu,web-u-doc,arhiva"
 title = "URL u PDF"
 
 [usage]
+aboutUsageAnalytics = "O analitici upotrebe"
+configureSettings = "Konfiguriraj postavke analitike"
 error = "Pogreška pri učitavanju statistike korištenja"
 noData = "Podaci nisu dostupni"
 noDataMessage = "Trenutačno nema dostupne statistike korištenja."
+usageAnalyticsExplanation = "Analitika upotrebe prati zahtjeve prema krajnjim točkama i obrasce korištenja alata. U kombinaciji s nadzornom pločom revizijskog zapisivanja dobivate potpun uvid u aktivnost sustava, performanse i sigurnosne događaje."
+viewAuditLogs = "Pogledaj revizijske zapise"
 
 [usage.chart]
 title = "Grafikon korištenja krajnjih točaka"
@@ -6947,3 +7259,278 @@ cancel = "Odustani"
 confirm = "Izdvoji"
 message = "Ovaj ZIP sadrži {{count}} datoteka. Ipak izdvojiti?"
 title = "Velika ZIP datoteka"
+
+[cloudBadge]
+tooltip = "Ova radnja će iskoristiti vaše kredite u oblaku"
+
+[team]
+cancelInviteError = "Nije uspjelo otkazivanje pozivnice"
+confirmCancelInvite = "Jeste li sigurni da želite otkazati ovu pozivnicu?"
+confirmLeave = "Jeste li sigurni da želite napustiti ovaj tim?"
+confirmLeaveLeader = "Kao voditelj tima, odlaskom ćete biti uklonjeni iz tima. Jeste li sigurni?"
+confirmRemove = "Jeste li sigurni da želite ukloniti ovog člana?"
+editName = "Uredi naziv tima"
+inviteCancelled = "Pozivnica otkazana"
+inviteError = "Slanje pozivnice nije uspjelo"
+inviteSent = "Pozivnica je uspješno poslana"
+leader = "Voditelj"
+leaveButton = "Napusti tim"
+leaveError = "Neuspješan izlazak iz tima"
+leaveSuccess = "Uspješno ste napustili tim"
+loading = "Učitavanje informacija o timu..."
+memberCount = "{{count}} članova"
+memberRemoved = "Član je uspješno uklonjen"
+namePlaceholder = "Unesite naziv tima"
+personal = "Osobno"
+removeError = "Uklanjanje člana nije uspjelo"
+renameError = "Preimenovanje tima nije uspjelo"
+renameSuccess = "Tim je uspješno preimenovan"
+
+[team.invitationBanner]
+message = "vas je pozvao da se pridružite"
+acceptButton = "Prihvati"
+rejectButton = "Odbij"
+
+[team.features]
+badge = "Značajke tima"
+subtitle = "Surađujte sa svojim timom"
+title = "Timska suradnja"
+viewPlans = "Pogledaj planove"
+
+[team.features.billing]
+description = "Upravljaj naplatom i pretplatama"
+title = "Upravljanje naplatom"
+
+[team.features.credits]
+description = "Zajednički fond kredita za sve članove"
+title = "Zajednički krediti"
+
+[team.features.dashboard]
+description = "Pogledaj aktivnost i upotrebu tima"
+title = "Nadzorna ploča tima"
+
+[team.features.invite]
+description = "Dodajte članove svom timu"
+title = "Pozovi članove"
+
+[team.invite]
+cancelLabel = "Odustani"
+invalidEmail = "Neispravna adresa e-pošte"
+placeholder = "Unesite adresu e-pošte"
+sendButton = "Pošalji pozivnicu"
+title = "Pozovi člana tima"
+
+[team.members]
+emailColumn = "E-pošta"
+empty = "Još nema članova tima"
+nameColumn = "Ime"
+pending = "Na čekanju"
+remove = "Ukloni"
+roleColumn = "Uloga"
+title = "Članovi tima"
+
+[team.upgrade]
+button = "Nadogradi na Tim"
+description = "Otključajte značajke timske suradnje"
+title = "Nadogradite na plan Tim"
+
+[provider.oauth2.google]
+scope = "Autentikacija prijave"
+
+[provider.oauth2.google.clientId]
+label = "ID klijenta"
+description = "OAuth2 ID klijenta iz Google Cloud Console"
+
+[provider.oauth2.google.clientSecret]
+label = "Tajna klijenta"
+description = "OAuth2 tajna klijenta iz Google Cloud Console"
+
+[provider.oauth2.google.scopes]
+label = "Opsezi"
+description = "Zarezom odvojeni OAuth2 opsezi"
+
+[provider.oauth2.google.useAsUsername]
+label = "Koristi kao korisničko ime"
+description = "Polje koje će se koristiti kao korisničko ime (email, name, given_name, family_name)"
+
+[provider.oauth2.github]
+scope = "Autentikacija prijave"
+
+[provider.oauth2.github.clientId]
+label = "ID klijenta"
+description = "OAuth2 ID klijenta iz GitHub Developer Settings"
+
+[provider.oauth2.github.clientSecret]
+label = "Tajna klijenta"
+description = "OAuth2 tajna klijenta iz GitHub Developer Settings"
+
+[provider.oauth2.github.scopes]
+label = "Opsezi"
+description = "Zarezom odvojeni OAuth2 opsezi"
+
+[provider.oauth2.github.useAsUsername]
+label = "Koristi kao korisničko ime"
+description = "Polje koje će se koristiti kao korisničko ime (email, login, name)"
+
+[provider.oauth2.keycloak]
+scope = "SSO"
+
+[provider.oauth2.keycloak.issuer]
+label = "URL izdavatelja"
+description = "URL Discovery krajnje točke OpenID Connecta za Keycloak realm"
+
+[provider.oauth2.keycloak.clientId]
+label = "ID klijenta"
+description = "OAuth2 ID klijenta iz Keycloaka"
+
+[provider.oauth2.keycloak.clientSecret]
+label = "Tajna klijenta"
+description = "OAuth2 tajna klijenta iz Keycloaka"
+
+[provider.oauth2.keycloak.scopes]
+label = "Opsezi"
+description = "Zarezom odvojeni OAuth2 opsezi"
+
+[provider.oauth2.keycloak.useAsUsername]
+label = "Koristi kao korisničko ime"
+description = "Polje koje će se koristiti kao korisničko ime (email, name, given_name, family_name, preferred_username)"
+
+[provider.oauth2.generic]
+name = "Opći OAuth2"
+scope = "SSO"
+
+[provider.oauth2.generic.enabled]
+label = "Omogući opći OAuth2"
+description = "Omogući autentikaciju pomoću prilagođenog OAuth2 pružatelja"
+
+[provider.oauth2.generic.provider]
+label = "Naziv pružatelja"
+description = "Naziv vašeg OAuth2 pružatelja (npr. Azure AD, Okta)"
+
+[provider.oauth2.generic.issuer]
+label = "URL izdavatelja"
+description = "Pružatelj koji podržava OpenID Connect Discovery (/.well-known/openid-configuration)"
+
+[provider.oauth2.generic.clientId]
+label = "ID klijenta"
+description = "OAuth2 ID klijenta od vašeg pružatelja"
+
+[provider.oauth2.generic.clientSecret]
+label = "Tajna klijenta"
+description = "OAuth2 tajna klijenta od vašeg pružatelja"
+
+[provider.oauth2.generic.scopes]
+label = "Opsezi"
+description = "Zarezom odvojeni OAuth2 opsezi"
+
+[provider.oauth2.generic.useAsUsername]
+label = "Koristi kao korisničko ime"
+description = "Polje koje će se koristiti kao korisničko ime"
+
+[provider.oauth2.generic.autoCreateUser]
+label = "Automatski kreiraj korisnike"
+description = "Automatski kreiraj korisničke račune pri prvoj OAuth2 prijavi"
+
+[provider.oauth2.generic.blockRegistration]
+label = "Blokiraj registraciju"
+description = "Spriječi novu registraciju korisnika putem OAuth2"
+
+[provider.smtp]
+name = "SMTP pošta"
+scope = "Obavijesti e-poštom"
+
+[provider.smtp.enabled]
+label = "Omogući e-poštu"
+description = "Omogući obavijesti e-poštom i SMTP funkcionalnost"
+
+[provider.smtp.host]
+label = "SMTP poslužitelj"
+description = "Naziv hosta ili IP adresa vašeg SMTP poslužitelja"
+
+[provider.smtp.port]
+label = "SMTP port"
+description = "Broj porta za SMTP vezu (obično 25, 465 ili 587)"
+
+[provider.smtp.username]
+label = "SMTP korisničko ime"
+description = "Korisničko ime za SMTP autentikaciju"
+
+[provider.smtp.password]
+label = "SMTP lozinka"
+description = "Lozinka za SMTP autentikaciju"
+
+[provider.smtp.from]
+label = "Adresa pošiljatelja"
+description = "Adresa e-pošte koja će se koristiti kao pošiljatelj"
+
+[provider.saml2]
+name = "SAML2"
+scope = "SSO (SAML)"
+
+[provider.saml2.enabled]
+label = "Omogući SAML2"
+description = "Omogući SAML2 autentikaciju (samo Enterprise)"
+
+[provider.saml2.provider]
+label = "Naziv pružatelja"
+description = "Naziv vašeg SAML2 pružatelja"
+
+[provider.saml2.registrationId]
+label = "ID registracije"
+description = "Naziv vaše SP (Service Provider) aplikacije"
+
+[provider.saml2.idpMetadataUri]
+label = "IDP Metadata URI"
+description = "URI za metapodatke vašeg pružatelja"
+
+[provider.saml2.idpSingleLoginUrl]
+label = "IDP Single Login URL"
+description = "URL za pokretanje SSO-a"
+
+[provider.saml2.idpSingleLogoutUrl]
+label = "IDP Single Logout URL"
+description = "URL za pokretanje SLO-a"
+
+[provider.saml2.idpIssuer]
+label = "Izdavatelj IDP-a"
+description = "ID vašeg pružatelja"
+
+[provider.saml2.idpCert]
+label = "Certifikat IDP-a"
+description = "Putanja certifikata (npr. classpath:okta.cert)"
+
+[provider.saml2.privateKey]
+label = "Privatni ključ"
+description = "Putanja vašeg privatnog ključa"
+
+[provider.saml2.spCert]
+label = "SP certifikat"
+description = "Putanja vašeg potpisnog certifikata"
+
+[provider.saml2.autoCreateUser]
+label = "Automatski kreiraj korisnike"
+description = "Automatski kreiraj korisničke račune pri prvoj SAML2 prijavi"
+
+[provider.saml2.blockRegistration]
+label = "Blokiraj registraciju"
+description = "Spriječi novu registraciju korisnika putem SAML2"
+
+[provider.googledrive]
+name = "Google Drive"
+scope = "Uvoz datoteka"
+
+[provider.googledrive.enabled]
+label = "Omogući birač datoteka za Google Drive"
+description = "Dopusti korisnicima uvoz datoteka izravno s Google Drivea"
+
+[provider.googledrive.clientId]
+label = "ID klijenta"
+description = "Google OAuth 2.0 ID klijenta iz Google Cloud Console"
+
+[provider.googledrive.apiKey]
+label = "API ključ"
+description = "Google API ključ za Google Picker API iz Google Cloud Console"
+
+[provider.googledrive.appId]
+label = "ID aplikacije"
+description = "Google Drive ID aplikacije iz Google Cloud Console"

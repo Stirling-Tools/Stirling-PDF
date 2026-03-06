@@ -96,6 +96,8 @@ pin = "Ainguratu fitxategia (aktibo mantendu tresna exekutatu ondoren)"
 poweredBy = "Honako honek bultzatzen du"
 pro = "Pro"
 processTimeWarning = "Oharra: prozesu honetarako minutu bat ere beharko da fitxategiaren tamaiaren arabera"
+processingComplete = "Zure fitxategia prest dago."
+processingCompleteMultiple = "{{count}} fitxategi prest daude."
 property = "Propietate"
 quickPosition = "Posizio azkarra"
 red = "Gorria"
@@ -105,6 +107,7 @@ save = "Gorde"
 saveToBrowser = "Gorde nabigatzailean"
 saveUnavailable = "Ezin da gorde elementu honetarako"
 seeDockerHub = "Ikusi Docker Hub"
+editSecret = "Editatu balio hau"
 selectFillter = "-- Aukeratu filtroa --"
 size = "Tamaina"
 sponsor = "Babestu"
@@ -651,6 +654,7 @@ description = "Konfiguratu kanpoko autentifikazio-hornitzaileak, hala nola OAuth
 disconnect = "Deskonektatu"
 disconnected = "Hornitzailea ondo deskonektatu da"
 disconnectError = "Hornitzailea deskonektatzeak huts egin du"
+documentation = "Ikusi dokumentazioa"
 imageResolutionFull = "Osoa (Jatorrizko tamaina)"
 imageResolutionReduced = "Murriztua (Gehienez 1200px)"
 linkedServices = "Estekatutako zerbitzuak"
@@ -964,6 +968,18 @@ label = "Hizkuntza lehenetsia"
 description = "Fitxategiak igotzeko gehienezko tamaina (adib., 100MB, 1GB)"
 label = "Fitxategi-igoeraren muga"
 
+[admin.settings.general.hideDisabledTools]
+description = "Ezkutatu desgaitutako tresnak interfazean"
+label = "Ezkutatu desgaitutako tresnak"
+
+[admin.settings.general.hideDisabledTools.googleDrive]
+description = "Ezkutatu Google Drive botoia gaituta ez dagoenean"
+label = "Ezkutatu Google Drive"
+
+[admin.settings.general.hideDisabledTools.mobileScanner]
+description = "Ezkutatu mugikorreko QR eskaneatzailearen botoia gaituta ez dagoenean"
+label = "Ezkutatu mugikorreko eskaneatzailea"
+
 [admin.settings.general.frontendUrl]
 description = "Frontendarentzako oinarrizko URL (adib., https://pdf.example.com). Postaz bidalitako gonbidapen esteketarako eta mugikorreko QR kode bidezko igoeretarako erabiltzen da. Utzi hutsik backend URLa erabiltzeko."
 label = "Frontend URL"
@@ -1148,6 +1164,8 @@ title = "Segurtasuna"
 
 [admin.settings.security.audit]
 label = "Ikuskaritza-erregistroa"
+showDetails = "Erakutsi ikuskaritza-mailaren xehetasunak"
+hideDetails = "Ezkutatu ikuskaritza-mailaren xehetasunak"
 
 [admin.settings.security.audit.enabled]
 description = "Erabiltzaileen ekintzak eta sistemaren gertaerak jarraitu betebeharrak eta segurtasuna kontrolatzeko"
@@ -1157,9 +1175,31 @@ label = "Ikuskaritza-erregistroa gaitu"
 description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
 label = "Ikuskaritza maila"
 
+[admin.settings.security.audit.levelDetails]
+off = "Ez dago ikuskaritza-erregistrorik (segurtasun gertaera kritikoak izan ezik)"
+basic = "PDF fitxategi eragiketak (konprimitu, zatitu, batu, eta abar) eta ezarpenen aldaketak. Erregistratzen du: eragiketaren egoera (arrakasta/hutsegitea), metodoaren parametroak, denboraketa. Erregistro bolumen minimoa."
+standard = "BASIC gertaerak gehi: erabiltzailearen saio-hasiera/saio-amaiera, kontu-aldaketak, GET eskaera orokorrak. Ez ditu barne etengabeko inkesta-deiak (/auth/me, /app-config, /health, eta abar) erregistroen zarata murrizteko. Instalazio gehienentzat egokia."
+verbose = "STANDARD gertaerak gehi: etengabeko inkesta-deiak, GET eskaera guztiak, denboraketa xehea. Abisua: erregistro bolumen handia eta errendimenduari eragina."
+
 [admin.settings.security.audit.retentionDays]
 description = "Ikuskaritza-erregistroak gordetzeko egun kopurua"
 label = "Ikuskaritza atxikipena (egunak)"
+
+[admin.settings.security.audit.advancedOptions]
+title = "Aukera aurreratuak"
+description = "Ondoko aukerek prozesatzeko denbora eta memoria erabilera handitzen dute. Behar-beharrezkoa denean bakarrik gaitu."
+
+[admin.settings.security.audit.captureFileHash]
+description = "Igotako PDF fitxategien SHA-256 hash-a ateratzea osotasuna egiaztatzeko. Ikuskaritza-mailatik independentea."
+label = "Atzeman fitxategiaren hash-a (SHA-256)"
+
+[admin.settings.security.audit.capturePdfAuthor]
+description = "PDF dokumentuetako egile eremua ateratzea prozesatzean. PDF azterketa behar du; latentzia handitzen du. Ikuskaritza-mailatik independentea."
+label = "Atzeman PDF egilearen metadatuak"
+
+[admin.settings.security.audit.captureOperationResults]
+description = "Itzulera-balioak atzematea. Ez da gomendagarria: nabarmen handitzen du erregistro bolumena eta disko erabilera."
+label = "Atzeman eragiketen emaitzak"
 
 [admin.settings.security.csrfDisabled]
 description = "Desgaitu Cross-Site Request Forgery babesa (ez da gomendatzen)"
@@ -1536,43 +1576,18 @@ tags = "embed,attach,file,attachment,attachments"
 title = "Add attachments"
 
 [audit]
+configureAudit = "Ikuskaritza-erregistroa konfiguratu"
+configureAuditMessage = "Doitu ikuskaritza-erregistro maila, atxikipen epea eta beste ezarpenak Segurtasuna eta Autentifikazioa atalean."
 disabled = "Auditoretza-erregistroa desgaituta dago"
 disabledMessage = "Gaitu auditoretza-erregistroa zure aplikazioaren konfigurazioan sistemaren gertaerak jarraitzeko."
 enterpriseRequired = "Enterprise lizentzia behar da"
 enterpriseRequiredMessage = "Ikuskaritza-erregistroen sistema Enterprise ezaugarria da. Eguneratu Enterprise lizentziara auditoretza-erregistroak eta analitikak atzitzeko."
+goToSettings = "Joan ikuskaritza ezarpenetara"
 notAvailable = "Auditoretza-sistema ez dago eskuragarri"
 notAvailableMessage = "Auditoretza-sistema ez dago konfiguratuta edo ez dago eskuragarri."
 
-[audit.charts]
-byType = "Gertaerak motaren arabera"
-byUser = "Gertaerak erabiltzailearen arabera"
-day = "Egun"
-error = "Errorea grafikoak kargatzean"
-month = "Hilabetea"
-overTime = "Gertaerak denboran zehar"
-title = "Auditoretza aginte-panela"
-week = "Astea"
-
 [audit.error]
 title = "Errorea auditoretza-sistema kargatzean"
-
-[audit.events]
-actions = "Ekintzak"
-clearFilters = "Garbitu"
-details = "Xehetasunak"
-endDate = "Amaiera-data"
-error = "Errorea gertaerak kargatzean"
-eventDetails = "Gertaeraren xehetasunak"
-filterByType = "Iragazi motaren arabera"
-filterByUser = "Iragazi erabiltzailearen arabera"
-ipAddress = "IP helbidea"
-noEvents = "Ez da gertaerarik aurkitu"
-startDate = "Hasiera-data"
-timestamp = "Denbora-zigilua"
-title = "Auditoretza-gertaerak"
-type = "Mota"
-user = "Erabiltzailea"
-viewDetails = "Ikusi xehetasunak"
 
 [audit.export]
 clearFilters = "Garbitu"
@@ -1580,27 +1595,132 @@ description = "Esportatu auditoretza-gertaerak CSV edo JSON formatura. Erabili i
 endDate = "Amaiera-data"
 error = "Ezin izan dira datuak esportatu"
 exportButton = "Esportatu datuak"
+fieldAuthor = "Egilea (PDFtik)"
+fieldDate = "Data"
+fieldDocumentName = "Dokumentuaren izena"
+fieldFileHash = "Fitxategiaren hash-a (SHA-256)"
+fieldIpAddress = "IP helbidea"
+fieldOperationResults = "Eragiketen emaitzak"
+fieldOutcome = "Emaitza (Arrakasta/Hutsegitea)"
+fieldTool = "Tresna"
+fieldUsername = "Erabiltzaile-izena"
 filterByType = "Iragazi motaren arabera"
 filterByUser = "Iragazi erabiltzailearen arabera"
 filters = "Iragazkiak (aukerakoa)"
 format = "Esportazio-formatua"
+selectFields = "Hautatu sartu beharreko eremuak"
 startDate = "Hasiera-data"
 title = "Auditoretza-datuak esportatu"
+verboseRequired = "VERBOSE ikuskaritza-maila behar da"
 
 [audit.systemStatus]
+autoRefresh = "Auto-freskatzea"
+autoRefreshLabel = "Auto-freskatu 30 segundoro"
+captureBySettings = "Gaitu ezarpenetan"
+capturedFields = "Atzemandako eremuak"
+date = "Data"
 days = "egun"
 disabled = "Desgaituta"
+documentName = "Dokumentuaren izena"
 enabled = "Gaituta"
+fileHash = "Fitxategiaren hash-a"
 level = "Auditoretza-maila"
+pdfAuthor = "PDF egilea"
 retention = "Atxikipen epea"
 status = "Auditoretza-erregistroa"
 title = "Sistemaren egoera"
+tool = "Tresna"
 totalEvents = "Gertaerak guztira"
+username = "Erabiltzaile-izena"
+verboseOnly = "Soilik VERBOSE"
+
+[audit.stats]
+activeUsers = "Erabiltzaile aktiboak"
+attention = "Arreta behar da"
+avgLatency = "Batez besteko latentzia"
+error = "Errorea estatistikak kargatzean"
+errorLoadingStats = "Ezin izan dira estatistikak kargatu"
+excellent = "Bikain"
+good = "Ona"
+noData = "N/A"
+successRate = "Arrakasta tasa"
+title = "Laburpena"
+totalEvents = "Gertaera kopurua"
+vsLastPeriod = "aurreko aldiarekin alderatuta"
+
+[audit.charts]
+byTool = "Gehien erabilitako tresnak"
+byType = "Gertaerak motaren arabera"
+byUser = "Gertaerak erabiltzailearen arabera"
+day = "Egun"
+error = "Errorea grafikoak kargatzean"
+hourlyActivity = "Orduz orduko jarduera"
+month = "Hilabetea"
+noData = "Ez dago daturik epe honetarako"
+overTime = "Gertaerak denboran zehar"
+title = "Auditoretza aginte-panela"
+week = "Astea"
+
+[audit.events]
+actions = "Ekintzak"
+author = "Egilea"
+clearFilters = "Garbitu"
+details = "Xehetasunak"
+documentName = "Dokumentua"
+endDate = "Amaiera-data"
+error = "Errorea gertaerak kargatzean"
+eventDetails = "Gertaeraren xehetasunak"
+failure = "Hutsegitea"
+fileHash = "Fitxategiaren hash-a"
+filterByType = "Iragazi motaren arabera"
+filterByUser = "Iragazi erabiltzailearen arabera"
+ipAddress = "IP helbidea"
+noEvents = "Ez da gertaerarik aurkitu"
+outcome = "Egoera"
+sortAsc = "Ordenatu gorantz"
+sortDesc = "Ordenatu beherantz"
+startDate = "Hasiera-data"
+success = "Arrakasta"
+timestamp = "Denbora-zigilua"
+title = "Auditoretza-gertaerak"
+type = "Mota"
+user = "Erabiltzailea"
+viewDetails = "Ikusi xehetasunak"
+
+[audit.filters]
+allOutcomes = "Guztiak"
+failureOnly = "Hutsegiteak bakarrik"
+last7Days = "Azken 7 egunak"
+last30Days = "Azken 30 egunak"
+outcomeFilter = "Emaitza"
+quickPresets = "Iragazki azkarrak"
+successOnly = "Arrakasta bakarrik"
+thisMonth = "Hilabete hau"
+today = "Gaur"
 
 [audit.tabs]
+clearData = "Garbitu datuak"
 dashboard = "Aginte-panela"
 events = "Auditoretza-gertaerak"
 export = "Esportatu"
+
+[audit.clearData]
+cancel = "Utzi"
+codeDoesNotMatch = "Kodea ez dator bat"
+codePlaceholder = "Idatzi kodea hemen"
+confirmationCode = "Baieztapen-kodea"
+confirmationRequired = "Ezabatu ikuskaritza-datu guztiak"
+confirmMessage = "Honek betiko kenduko ditu ikuskaritza erregistro guztiak. Sartu behean baieztapen-kodea jarraitzeko."
+confirmTitle = "Mesedez baieztatu ezabatu nahi duzula"
+deleteButton = "Ezabatu"
+enterCode = "Baieztapen-kodea"
+enterCodeBelow = "Sartu kodea goian agertzen den bezala zehazki (maiuskulak/minuskulak bereizten dira)"
+initiateDelete = "Ezabatu datu guztiak"
+irreversible = "ITZULEZINA"
+success = "Arrakasta"
+successMessage = "Ikuskaritza-datu guztiak ongi garbitu dira"
+warning1 = "Ekintza hau ezin da desegin"
+warning2 = "Ikuskaritza-datuak ezabatzeak betiko kenduko ditu datu-baseko aurreko ikuskaritza erregistro guztiak, segurtasun gertaerak, erabiltzaile jarduerak eta fitxategi eragiketak barne."
 
 [auth]
 accessDenied = "Sarbidea ukatuta"
@@ -2254,9 +2374,11 @@ copy = "Kopiatu"
 done = "Eginda"
 error = "Errorea"
 expand = "Zabaldu"
+learnMore = "Gehiago jakin"
 lines = "lerro"
 loading = "Kargatzen..."
 next = "Hurrengoa"
+operation = "eragiketa hau"
 preview = "Aurrebista"
 previous = "Aurrekoa"
 refresh = "Freskatu"
@@ -2920,6 +3042,7 @@ copyStack = "Kopiatu stack trazadura"
 discordSubmit = "Discord - Bidali laguntza-mezua"
 dismissAllErrors = "Itxi errore guztiak"
 encryptedPdfMustRemovePassword = "PDF hau zifratuta edo pasahitzarekin babestuta dago. Mesedez, desblokeatu PDF/A bihurtu aurretik."
+generic = "Errore bat gertatu da"
 github = "Bidali tiketa GitHuben"
 githubSubmit = "GitHub - Bidali tiketa"
 incorrectPasswordProvided = "PDFaren pasahitza okerra da edo ez da eman."
@@ -4456,6 +4579,10 @@ upgradeCompleteMessage = "Zure harpidetza behar bezala eguneratu da. Zure oraing
 upgradeSuccess = "Ordainketa arrakastatsua! Zure harpidetza eguneratu da. Lizentzia zure zerbitzarian eguneratu da. Laster jasoko duzu berrespen email bat."
 upgradeTitle = "Bertsio-berritu {{planName}} planera"
 yearly = "Urtero"
+checkoutOpened = "Ordainketa-leihoa arakatzailean ireki da"
+checkoutInstructions = "Amaitu zure erosketa orain ireki den arakatzaile-leihoan. Ordainketa amaitutakoan, itzuli hona eta egin klik beheko botoian zure fakturazio informazioa freskatzeko."
+refreshBilling = "Ordainketa egin dut - Freskatu fakturazioa"
+closeLater = "Geroago egingo dut"
 
 [payment.emailStage]
 continue = "Jarraitu"
@@ -4679,6 +4806,13 @@ prompt = "Hautatu taula erauzteko orria"
 submit = "Extracto"
 title = "PDF a CSV"
 
+[PDFToXLSX]
+header = "PDFtik Excelera"
+prompt = "Aukeratu orriak taulak erauzteko"
+submit = "Bihurtu"
+title = "PDFtik Excelera (XLSX)"
+tags = "kalkulu-orria,excel,xlsx,taula,erauzi,bihurtu"
+
 [PDFToHTML]
 credit = "Zerbitzu honek pdftohtml erabiltzen du fitxategiak bihurtzeko"
 header = "PDFa HTML bihurtu"
@@ -4835,6 +4969,7 @@ customPricing = "Pertsonalizatua"
 featureComparison = "Ezaugarrien konparazioa"
 from = "Hasita"
 hideComparison = "Ezkutatu ezaugarrien konparazioa"
+included = "Sartuta"
 includedInCurrent = "Zure planean sartuta"
 licensedSeats = "Lizentziadunak: {{count}} eserleku"
 manage = "Kudeatu"
@@ -4852,9 +4987,11 @@ title = "Plan aktiboa"
 
 [plan.availablePlans]
 subtitle = "Aukeratu zure beharretara egokitzen den plana"
+loadError = "Ezin izan da planaren prezioa kargatu. Balio lehenetsiak erabiliko dira."
 title = "Plan eskuragarriak"
 
 [plan.enterprise]
+siteLicense = "Site License"
 highlight1 = "Prezio pertsonalizatua"
 highlight2 = "Laguntza espezializatua"
 highlight3 = "Azken ezaugarriak"
@@ -4927,6 +5064,81 @@ instructions = "Amaitu zure erosketa Stripe fitxan. Ordainketa osatuta dagoenean
 keyDescription = "Itsatsi lizentzia-gakoa zure postatik"
 success = "Lizentzia aktibatuta!"
 successMessage = "Zure lizentzia ongi aktibatu da. Orain leiho hau itxi dezakezu."
+
+[plan.team]
+name = "Taldea"
+siteLicense = "Site License"
+
+[credits]
+enableOverageBilling = "Gaitu gain-erabileraren fakturazioa"
+maybeLater = "Agian geroago"
+upgrade = "Eguneratu"
+
+[credits.modal]
+advancedMonitoring = "Monitorizazio aurreratua"
+allInOneWorkspace = "PDF lanerako ingurune osoa (ikusgailua, tresnak eta agentea)"
+apiSandbox = "API sandbox"
+contactSales = "Jarri harremanetan salmentekin"
+creditsRemaining = "{{current}}/{{total}} geratzen dira"
+creditsThisMonth = "Hileko kredituak"
+current = "Uneko plana"
+customPricing = "Pertsonalizatua"
+customSmartFolders = "Karpeta adimendun pertsonalizatuak"
+dedicatedSupportSlas = "Laguntza dedikatua eta SLAak"
+enterpriseSubscription = "Enpresa"
+everythingInCredits = "Kredituetan dagoen guztia, gehi:"
+everythingInFree = "Doakoan dagoen guztia, gehi:"
+fasterThroughput = "10x azkarragoa"
+forRegularWork = "PDF lan arrunterako:"
+freeTier = "Doako maila"
+fullyPrivateFiles = "Fitxategi erabat pribatuak"
+largeFileProcessing = "Fitxategi handien prozesamendua"
+managedMemberMessage = "Taldearen bidez kredituetarako sarbide mugagabea duzu. Laguntza behar baduzu, jar zaitez harremanetan zure talde-buruarekin."
+managedMemberTitle = "Kreditu mugagabeak"
+meteringBillingNote = "Gain-erabilerako kredituak hilero fakturatzen dira zure Team harpidetzarekin batera. Jarraitu zure erabilera edozein unetan zure kontuaren ezarpenetan."
+meteringExplanation = "Zure Team planak {{credits}} kreditu hilean ditu. Agortzen direnean, gain-erabileraren fakturazio automatikoak kreditu gehigarriak emango dizkizu inoiz gelditu behar ez dezazun."
+meteringIncluded = "{{credits}} kreditu/hil Team-ekin sartuta"
+meteringNoCommitment = "Konpromisorik ez, ezeztatu edonoiz"
+meteringNeverRunOut = "Inoiz ez geratu krediturik gabe"
+meteringPayAsYouGo = "Erabili ahala ordaindu"
+meteringPrice = "Kreditu gehigarriak {{price}}/kreditu"
+meteringTitle = "Erabileraren araberako gain-erabilera fakturazioa"
+monthlyCredits = "hileko kredituak"
+orgWideAccess = "Erakunde osoko sarbide-kontrolak"
+overage = "gain-erabilera"
+perMonth = "/hilean"
+popular = "Ezaguna"
+premiumAiModels = "Premium IA ereduak"
+prioritySupport = "Lehentasunezko laguntza"
+privateDocCloud = "Dokumentu-hodei pribatua"
+ragFineTuning = "RAG + fintzea"
+secureApiAccess = "API sarbide segurua"
+selfHostLink = "Ikusi dokumentazioa eta planak"
+selfHostPrompt = "Auto-ostatzea nahi duzu?"
+standardThroughput = "Errendimendu estandarra"
+subtitle = "Eguneratu Team-era 10x kreditu eta prozesamendu azkarragoa izateko."
+subtitlePro = "Gaitu gain-erabileraren fakturazio automatikoa inoiz kreditu gabe ez gelditzeko."
+teamLeaderOnly = "Talde-buruek bakarrik gaitu dezakete gain-erabilera fakturazioa"
+teamSubscription = "Taldea"
+titleExhausted = "Zure doako kredituak erabili dituzu"
+titleExhaustedPro = "Kredituak agortu zaizkizu"
+unlimitedApiAccess = "API sarbide mugagabea"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Eserleku mugagabeak"
+
+[credits.modal.features]
+everythingInCredits = "Kredituetan dagoen guztia, gehi:"
+everythingInFree = "Doakoan dagoen guztia, gehi:"
+forRegularWork = "PDF lan arrunterako:"
+
+[credits.insufficient]
+brief = "Kreditu nahikorik ez. {{required}} kreditu behar dituzu baina {{current}}."
+freeTier = "Eguneratu Team-era 10x kreditu gehiago eta gain-erabileraren fakturazio mugagabea izateko."
+managedMember = "Mesedez, jar zaitez harremanetan zure talde-buruarekin laguntza lortzeko."
+message = "Ez duzu nahikoa kreditu {{tool}} exekutatzeko. Une honetan {{current}} kreditu dituzu."
+messageWithAmount = "{{tool}} exekutatzeko {{required}} kreditu behar dituzu, baina {{current}} besterik ez daukazu."
+teamMember = "Gaitu gain-erabilera fakturazioa inoiz kreditu gabe ez gelditzeko."
+title = "Kreditu nahikorik ez"
 
 [printFile]
 header = "Inprimatu fitxategia inprimagailuan"
@@ -5565,6 +5777,70 @@ user = "Saioa hasita:"
 saas = "Stirling Cloud"
 selfhosted = "Auto-ostatua"
 
+[settings.planBilling]
+currentPlan = "Uneko plana"
+loading = "Fakturazio-informazioa kargatzen..."
+notAvailable = "Planak eta Fakturazioa erabilgarri daude soilik Stirling Cloud-era konektatuta dagoenean (SaaS modua)."
+title = "Plana eta Fakturazioa"
+
+[settings.planBilling.billing]
+manageBilling = "Kudeatu fakturazioa"
+nextBillingDate = "Hurrengo fakturazio-data"
+overageCost = "Uneko gain-erabileraren kostua: {{amount}} ({{credits}} kreditu)"
+
+[settings.planBilling.credits]
+estimatedCost = "Kostu estimatua: {{amount}}"
+freeTierInfo = "Doako planak {{freeCredits}} kreditu hilean barne hartzen ditu. Eguneratu Team-era {{teamCredits}} kreditu/hil izateko eta erabili ahala gain-erabilera fakturatzea."
+included = "{{count}} kreditu/hil (sartuta)"
+noOverage = "Hil honetan ez dago gain-erabilerako kargurik. Zure {{count}} kreditu sartuekin ari zara erabiltzen."
+overage = "+ {{count}} gain-erabilera"
+overageInfo = "Gain-erabilerako kredituak {{price}} kreditu bakoitzeko fakturatzen dira. Hileko muga gainditzen duzun erabileragatik soilik ordainduko duzu."
+title = "Kredituen erabilera"
+
+[settings.planBilling.errors]
+fetchFailed = "Ezin izan da fakturazio-daturik eskuratu"
+retry = "Saiatu berriro"
+
+[settings.planBilling.status]
+active = "Aktibo"
+canceled = "Ezeztatuta"
+pastDue = "Atzeratua"
+trial = "Proba"
+
+[settings.planBilling.tier]
+enterprise = "Enpresa"
+enterpriseDescription = "Enpresa-mailako ezaugarri eta laguntza pertsonalizatuak"
+free = "Doakoa"
+freeDescription = "50 kreditu hilean"
+team = "Taldea"
+teamBadge = "Taldea"
+teamDescription = "500 kreditu/hil sartuta, gain-erabilera fakturazio automatikoa zerbitzua etenik gabe izateko"
+teamTooltipCredits = "Team planak {{credits}} kreditu/hil barne hartzen ditu."
+teamTooltipFineprint = "Sartutako kredituak gainditzen dituzun erabileragatik bakarrik ordaindu."
+teamTooltipOverage = "Gain-erabilera automatikoa {{price}}/kreditu prezioan, zerbitzua etenik gabe bermatzeko."
+
+[settings.planBilling.team]
+managedByTeam = "Taldeak kudeatua"
+memberCount = "{{count}} taldeko kide"
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} egun falta dira"
+daysRemainingFull = "Zure probaldia {{days}} egunetan amaituko da"
+endDate = "Iraungitzen da: {{date}}"
+endsOn = "Probaldia amaitzen da"
+title = "Doako probaldia aktibo"
+
+[settings.planBilling.upgrade]
+cta = "Eguneratu Team-era"
+featureApi = "Automatizaziorako API sarbidea"
+featureCredits = "{{teamCredits}} kreditu hilean (Free-n {{freeCredits}} baino)"
+featureMembers = "Taldekide mugagabeak"
+featureSupport = "Lehentasunezko laguntza"
+featureThroughput = "Prozesamendu azkarragoa"
+opensInBrowser = "Arakatzailean irekiko da eguneratzea osatzeko"
+subtitle = "Eguneratu Team-era, honakoetarako:"
+title = "Eguneratu zure plana"
+
 [settings.developer]
 apiKeys = "API gakoak"
 title = "Garatzailea"
@@ -5688,6 +5964,9 @@ requiresEnterprise = "Enterprise lizentzia behar da"
 people = "Pertsonak"
 teams = "Taldeak"
 title = "Lan-espazioa"
+
+[settings.team]
+title = "Taldea"
 
 [setup]
 description = "Hasi Stirling PDF nola erabili nahi duzun aukeratuz"
@@ -6011,6 +6290,11 @@ desc = "Banaketa automatikoa banatzaile-orriak erabiliz"
 name = "Orri-banatzailea"
 tooltip = "Erabili QR kode banatzaile orriak dokumentuen artean eskaneatzean"
 
+[split.methods.byPoster]
+name = "Inprimagarri zatitan"
+desc = "Zatitu orri handiak inprimagarri tamainetan"
+tooltip = "Tamaina handiko orriak zatitu paper estandarrean (A4, Letter, eta abar) inprimatzeko egokiak diren zatitan"
+
 [split.methods.byPages]
 desc = "Atera orrialde zehatzak (1,3,5-10)"
 name = "Orri-zenbakiak"
@@ -6029,6 +6313,7 @@ tooltip = "Zehaztu gehieneko fitxategi-tamaina (adib. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Zatitu hemen"
 splitBy = "Zatitu honen arabera"
+splitInto = "Zatitu zatitan"
 
 [split.methodSelection.tooltip]
 bullet1 = "Egin klik metodo txartelean hura hautatzeko"
@@ -6047,6 +6332,21 @@ selectMethodFirst = "Mesedez, hautatu banaketa-metodo bat lehenik"
 [split.steps]
 chooseMethod = "Aukeratu metodoa"
 settings = "Ezarpenak"
+
+[split.poster]
+rightToLeft = "Zatitu eskuinetik ezkerrera"
+
+[split.poster.pageSize]
+label = "Helburu orri tamaina"
+description = "Inprimatzeko irteerako orrien tamaina"
+
+[split.poster.xFactor]
+label = "Zatiketa horizontalak"
+description = "Orri bakoitza zatitzeko zutabe kopurua"
+
+[split.poster.yFactor]
+label = "Zatiketa bertikalak"
+description = "Orri bakoitza zatitzeko errenkada kopurua"
 
 [split.tooltip.byChapters]
 bullet1 = "Laster-marka maila: Zein mailatan zatitu (1=goi maila)"
@@ -6084,6 +6384,14 @@ bullet4 = "Kargatu - banaketako orriak automatikoki detektatu eta kenduko dira"
 bullet5 = "Gaitu Duplex modua banaketa-orriaren bi aldeak eskaneatzen badituzu"
 text = "Automatikoki zatitu eskaneatutako dokumentuak QR kodeak dituzten banaketa-orri fisikoak erabiliz. Aproposa batera eskaneatutako dokumentu anitzak prozesatzeko."
 title = "Zatitu orrialde-banatzaileren bidez"
+
+[split.tooltip.byPoster]
+bullet1 = "Helburu orri tamaina: Aukeratu irteerako paper tamaina (A4, Letter, eta abar)"
+bullet2 = "Zatiketa horizontal/bertikalak: banatzeko sarearen tamaina"
+bullet3 = "Eskuinetik ezkerrera: alderantzikatu zutabeen ordena RTL diseinuetarako"
+bullet4 = "Inprimatu eta elkartu piezak zure posterra sortzeko"
+text = "Zatitu PDFko orri handiak paper estandar tamainetarako egokiak diren zati inprimagarrietan. Ezin hobea tamaina handiegiko orrietatik poster inprimatzeko."
+title = "Zatitu poster inprimaketarako"
 
 [split.tooltip.byPages]
 bullet1 = "Banaketa-puntu bakarrak: 3,7 (3. eta 7. orrien ondoren zatitzen du)"
@@ -6364,9 +6672,13 @@ tags = "web-harrapaketa,orria-gorde,webetik-dokumentura,artxibatu"
 title = "URL bat PDF-ra"
 
 [usage]
+aboutUsageAnalytics = "Erabilera-analitikari buruz"
+configureSettings = "Konfiguratu analitika ezarpenak"
 error = "Errorea erabilera-estatistikak kargatzean"
 noData = "Ez dago daturik eskuragarri"
 noDataMessage = "Une honetan ez dago erabilera-estatistikarik eskuragarri."
+usageAnalyticsExplanation = "Erabilera-analitikak endpoint-eskaerak eta tresnen erabilera ereduak jarraitzen ditu. Ikuskaritza-erregistroen aginte-panelekin batera, sistemaren jardueraren, errendimenduaren eta segurtasun gertaeren ikusgarritasun osoa lortzen duzu."
+viewAuditLogs = "Ikusi ikuskaritza-erregistroak"
 
 [usage.chart]
 title = "Endpoints erabileraren diagrama"
@@ -6947,3 +7259,278 @@ cancel = "Utzi"
 confirm = "Erauzi"
 message = "ZIP honek {{count}} fitxategi ditu. Erauzi hala ere?"
 title = "ZIP fitxategi handia"
+
+[cloudBadge]
+tooltip = "Eragiketa honek zure hodeiko kredituak erabiliko ditu"
+
+[team]
+cancelInviteError = "Ezin izan da gonbidapena ezeztatu"
+confirmCancelInvite = "Ziur zaude gonbidapen hau ezeztatu nahi duzula?"
+confirmLeave = "Ziur zaude talde hau utzi nahi duzula?"
+confirmLeaveLeader = "Talde-burua zaren heinean, alde eginez gero taldetik kenduko zara. Ziur zaude?"
+confirmRemove = "Ziur zaude kide hau kendu nahi duzula?"
+editName = "Editatu taldearen izena"
+inviteCancelled = "Gonbidapena ezeztatua"
+inviteError = "Ezin izan da gonbidapena bidali"
+inviteSent = "Gonbidapena ongi bidali da"
+leader = "Burua"
+leaveButton = "Utzi taldea"
+leaveError = "Ezin izan da taldea utzi"
+leaveSuccess = "Taldea ongi utzi da"
+loading = "Talde-informazioa kargatzen..."
+memberCount = "{{count}} kide"
+memberRemoved = "Kidea ongi kendu da"
+namePlaceholder = "Sartu taldearen izena"
+personal = "Pertsonala"
+removeError = "Ezin izan da kidea kendu"
+renameError = "Ezin izan da taldea berrizendatu"
+renameSuccess = "Taldea ongi berrizendatu da"
+
+[team.invitationBanner]
+message = "bat egitera gonbidatu zaitu"
+acceptButton = "Onartu"
+rejectButton = "Ukatu"
+
+[team.features]
+badge = "Taldearen ezaugarriak"
+subtitle = "Elkarlanean aritu zure taldearekin"
+title = "Taldeko lankidetza"
+viewPlans = "Ikusi planak"
+
+[team.features.billing]
+description = "Kudeatu fakturazioa eta harpidetzak"
+title = "Fakturazio kudeaketa"
+
+[team.features.credits]
+description = "Kreditu partekatuen multzoa kide guztientzat"
+title = "Kreditu partekatuak"
+
+[team.features.dashboard]
+description = "Ikusi taldearen jarduera eta erabilera"
+title = "Taldearen panela"
+
+[team.features.invite]
+description = "Gehitu kideak zure taldera"
+title = "Gonbidatu kideak"
+
+[team.invite]
+cancelLabel = "Utzi"
+invalidEmail = "Helbide elektroniko baliogabea"
+placeholder = "Sartu helbide elektronikoa"
+sendButton = "Bidali gonbidapena"
+title = "Gonbidatu taldeko kidea"
+
+[team.members]
+emailColumn = "Posta elektronikoa"
+empty = "Oraindik ez dago taldekiderik"
+nameColumn = "Izena"
+pending = "Zain"
+remove = "Kendu"
+roleColumn = "Rola"
+title = "Taldekideak"
+
+[team.upgrade]
+button = "Eguneratu Team-era"
+description = "Desblokeatu talde-lankidetzako ezaugarriak"
+title = "Eguneratu Team planera"
+
+[provider.oauth2.google]
+scope = "Saioa hasteko autentifikazioa"
+
+[provider.oauth2.google.clientId]
+label = "Bezeroaren IDa"
+description = "Google Cloud Console-ko OAuth2 bezeroaren IDa"
+
+[provider.oauth2.google.clientSecret]
+label = "Bezeroaren sekretua"
+description = "Google Cloud Console-ko OAuth2 bezeroaren sekretua"
+
+[provider.oauth2.google.scopes]
+label = "Esparruak"
+description = "Komez bereizitako OAuth2 esparruak"
+
+[provider.oauth2.google.useAsUsername]
+label = "Erabili erabiltzaile-izen gisa"
+description = "Erabiltzaile-izen gisa erabiliko den eremua (email, name, given_name, family_name)"
+
+[provider.oauth2.github]
+scope = "Saioa hasteko autentifikazioa"
+
+[provider.oauth2.github.clientId]
+label = "Bezeroaren IDa"
+description = "GitHub Developer Settings-etik ateratako OAuth2 bezeroaren IDa"
+
+[provider.oauth2.github.clientSecret]
+label = "Bezeroaren sekretua"
+description = "GitHub Developer Settings-etik ateratako OAuth2 bezeroaren sekretua"
+
+[provider.oauth2.github.scopes]
+label = "Esparruak"
+description = "Komez bereizitako OAuth2 esparruak"
+
+[provider.oauth2.github.useAsUsername]
+label = "Erabili erabiltzaile-izen gisa"
+description = "Erabiltzaile-izen gisa erabiliko den eremua (email, login, name)"
+
+[provider.oauth2.keycloak]
+scope = "SSO"
+
+[provider.oauth2.keycloak.issuer]
+label = "Jaulkitzailearen URLa"
+description = "Keycloak erreinuaren OpenID Connect Discovery endpoint-aren URLa"
+
+[provider.oauth2.keycloak.clientId]
+label = "Bezeroaren IDa"
+description = "Keycloak-eko OAuth2 bezeroaren IDa"
+
+[provider.oauth2.keycloak.clientSecret]
+label = "Bezeroaren sekretua"
+description = "Keycloak-eko OAuth2 bezeroaren sekretua"
+
+[provider.oauth2.keycloak.scopes]
+label = "Esparruak"
+description = "Komez bereizitako OAuth2 esparruak"
+
+[provider.oauth2.keycloak.useAsUsername]
+label = "Erabili erabiltzaile-izen gisa"
+description = "Erabiltzaile-izen gisa erabiliko den eremua (email, name, given_name, family_name, preferred_username)"
+
+[provider.oauth2.generic]
+name = "OAuth2 generikoa"
+scope = "SSO"
+
+[provider.oauth2.generic.enabled]
+label = "Gaitu OAuth2 generikoa"
+description = "Gaitu autentifikazioa pertsonalizatutako OAuth2 hornitzaile batekin"
+
+[provider.oauth2.generic.provider]
+label = "Hornitzailearen izena"
+description = "Zure OAuth2 hornitzailearen izena (adib., Azure AD, Okta)"
+
+[provider.oauth2.generic.issuer]
+label = "Jaulkitzailearen URLa"
+description = "OpenID Connect Discovery (/.well-known/openid-configuration) onartzen duen hornitzailea"
+
+[provider.oauth2.generic.clientId]
+label = "Bezeroaren IDa"
+description = "Zure hornitzailearen OAuth2 bezeroaren IDa"
+
+[provider.oauth2.generic.clientSecret]
+label = "Bezeroaren sekretua"
+description = "Zure hornitzailearen OAuth2 bezeroaren sekretua"
+
+[provider.oauth2.generic.scopes]
+label = "Esparruak"
+description = "Komez bereizitako OAuth2 esparruak"
+
+[provider.oauth2.generic.useAsUsername]
+label = "Erabili erabiltzaile-izen gisa"
+description = "Erabiltzaile-izen gisa erabiliko den eremua"
+
+[provider.oauth2.generic.autoCreateUser]
+label = "Erabiltzaileak automatikoki sortu"
+description = "Automatikoki sortu erabiltzaile-kontuak lehen OAuth2 saio-hasieran"
+
+[provider.oauth2.generic.blockRegistration]
+label = "Erregistroa blokeatu"
+description = "Eragotzi erabiltzaile berrien erregistroa OAuth2 bidez"
+
+[provider.smtp]
+name = "SMTP posta"
+scope = "Posta jakinarazpenak"
+
+[provider.smtp.enabled]
+label = "Gaitu posta"
+description = "Gaitu posta jakinarazpenak eta SMTP funtzionaltasuna"
+
+[provider.smtp.host]
+label = "SMTP ostalaria"
+description = "Zure SMTP zerbitzariaren ostalari-izena edo IP helbidea"
+
+[provider.smtp.port]
+label = "SMTP ataka"
+description = "SMTP konexiorako ataka zenbakia (normalean 25, 465 edo 587)"
+
+[provider.smtp.username]
+label = "SMTP erabiltzaile-izena"
+description = "Erabiltzaile-izena SMTP autentifikaziorako"
+
+[provider.smtp.password]
+label = "SMTP pasahitza"
+description = "Pasahitza SMTP autentifikaziorako"
+
+[provider.smtp.from]
+label = "Bidaltzailearen helbidea"
+description = "Bidaltzaile gisa erabiliko den helbide elektronikoa"
+
+[provider.saml2]
+name = "SAML2"
+scope = "SSO (SAML)"
+
+[provider.saml2.enabled]
+label = "Gaitu SAML2"
+description = "Gaitu SAML2 autentifikazioa (Enterprise soilik)"
+
+[provider.saml2.provider]
+label = "Hornitzailearen izena"
+description = "Zure SAML2 hornitzailearen izena"
+
+[provider.saml2.registrationId]
+label = "Erregistro IDa"
+description = "Zure Service Provider (SP) aplikazioaren izena"
+
+[provider.saml2.idpMetadataUri]
+label = "IDP Metadata URIa"
+description = "Zure hornitzailearen metadatarako URIa"
+
+[provider.saml2.idpSingleLoginUrl]
+label = "IDP Single Login URLa"
+description = "SSO abiarazteko URLa"
+
+[provider.saml2.idpSingleLogoutUrl]
+label = "IDP Single Logout URLa"
+description = "SLO abiarazteko URLa"
+
+[provider.saml2.idpIssuer]
+label = "IDP jaulkitzailea"
+description = "Zure hornitzailearen IDa"
+
+[provider.saml2.idpCert]
+label = "IDP ziurtagiria"
+description = "Ziurtagiriaren bidea (adib., classpath:okta.cert)"
+
+[provider.saml2.privateKey]
+label = "Gako pribatua"
+description = "Zure gako pribatuaren bidea"
+
+[provider.saml2.spCert]
+label = "SP ziurtagiria"
+description = "Zure sinadura-ziurtagiriaren bidea"
+
+[provider.saml2.autoCreateUser]
+label = "Erabiltzaileak automatikoki sortu"
+description = "Automatikoki sortu erabiltzaile-kontuak lehen SAML2 saio-hasieran"
+
+[provider.saml2.blockRegistration]
+label = "Erregistroa blokeatu"
+description = "Eragotzi erabiltzaile berrien erregistroa SAML2 bidez"
+
+[provider.googledrive]
+name = "Google Drive"
+scope = "Fitxategi inportazioa"
+
+[provider.googledrive.enabled]
+label = "Gaitu Google Drive fitxategi hautatzailea"
+description = "Baimendu erabiltzaileei fitxategiak zuzenean Google Drivetik inportatzea"
+
+[provider.googledrive.clientId]
+label = "Bezeroaren IDa"
+description = "Google Cloud Console-ko Google OAuth 2.0 Bezero IDa"
+
+[provider.googledrive.apiKey]
+label = "API gakoa"
+description = "Google Picker API-rako Google API gakoa Google Cloud Console-tik"
+
+[provider.googledrive.appId]
+label = "Aplikazioaren IDa"
+description = "Google Cloud-eko Google Drive Aplikazioaren IDa"

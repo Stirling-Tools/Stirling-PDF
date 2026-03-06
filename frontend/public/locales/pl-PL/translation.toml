@@ -96,6 +96,8 @@ pin = "Przypnij plik (pozostaw aktywny po uruchomieniu narzędzia)"
 poweredBy = "Zasilany"
 pro = "Pro"
 processTimeWarning = "Ostrzeżenie: Ten proces może potrwać do minuty, w zależności od rozmiaru pliku"
+processingComplete = "Twój plik jest gotowy."
+processingCompleteMultiple = "{{count}} plików jest gotowych."
 property = "własność"
 quickPosition = "Szybka pozycja"
 red = "czerwony"
@@ -105,6 +107,7 @@ save = "Zapisz"
 saveToBrowser = "Zapisz w przeglądarce"
 saveUnavailable = "Zapisywanie niedostępne dla tego elementu"
 seeDockerHub = "Docker Hub"
+editSecret = "Edytuj tę wartość"
 selectFillter = "-- Wybierz --"
 size = "Rozmiar"
 sponsor = "sponsor"
@@ -651,6 +654,7 @@ description = "Skonfiguruj zewnętrznych dostawców uwierzytelniania, takich jak
 disconnect = "Odłącz"
 disconnected = "Pomyślnie odłączono dostawcę"
 disconnectError = "Nie udało się odłączyć dostawcy"
+documentation = "Zobacz dokumentację"
 imageResolutionFull = "Pełna (oryginalny rozmiar)"
 imageResolutionReduced = "Zredukowana (maks. 1200 px)"
 linkedServices = "Połączone usługi"
@@ -964,6 +968,18 @@ label = "Domyślne ustawienia regionalne"
 description = "Maksymalny rozmiar przesyłanego pliku (np. 100MB, 1GB)"
 label = "Limit przesyłania plików"
 
+[admin.settings.general.hideDisabledTools]
+description = "Ukryj wyłączone narzędzia w interfejsie"
+label = "Ukryj wyłączone narzędzia"
+
+[admin.settings.general.hideDisabledTools.googleDrive]
+description = "Ukryj przycisk Google Drive, gdy nie jest włączony"
+label = "Ukryj Google Drive"
+
+[admin.settings.general.hideDisabledTools.mobileScanner]
+description = "Ukryj przycisk mobilnego skanera QR, gdy nie jest włączony"
+label = "Ukryj mobilny skaner"
+
 [admin.settings.general.frontendUrl]
 description = "Bazowy adres URL frontendu (np. https://pdf.example.com). Używany dla linków w zaproszeniach e-mail i mobilnych przesłań przez kod QR. Pozostaw puste, aby użyć adresu URL backendu."
 label = "Adres URL frontendu"
@@ -1148,6 +1164,8 @@ title = "Bezpieczeństwo"
 
 [admin.settings.security.audit]
 label = "Rejestrowanie audytu"
+showDetails = "Pokaż szczegóły poziomu audytu"
+hideDetails = "Ukryj szczegóły poziomu audytu"
 
 [admin.settings.security.audit.enabled]
 description = "Śledź działania użytkowników i zdarzenia systemowe na potrzeby zgodności i monitorowania bezpieczeństwa"
@@ -1157,9 +1175,31 @@ label = "Włącz rejestrowanie audytu"
 description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
 label = "Poziom audytu"
 
+[admin.settings.security.audit.levelDetails]
+off = "Brak rejestrowania audytu (z wyjątkiem krytycznych zdarzeń bezpieczeństwa)"
+basic = "Operacje na plikach PDF (kompresja, podział, łączenie itp.) oraz zmiany ustawień. Rejestrowane: status operacji (sukces/niepowodzenie), parametry metod, czasy. Minimalna objętość dzienników."
+standard = "Zdarzenia BASIC, a ponadto: logowanie/wylogowanie użytkownika, zmiany konta, ogólne żądania GET. Wyklucza ciągłe odpytywanie (/auth/me, /app-config, /health itp.), aby ograniczyć szum w dziennikach. Idealne dla większości wdrożeń."
+verbose = "Zdarzenia STANDARD, a ponadto: ciągłe wywołania odpytywania, wszystkie żądania GET, szczegółowe pomiary czasu. Uwaga: duża objętość dzienników i wpływ na wydajność."
+
 [admin.settings.security.audit.retentionDays]
 description = "Liczba dni przechowywania dzienników audytu"
 label = "Przechowywanie audytu (dni)"
+
+[admin.settings.security.audit.advancedOptions]
+title = "Opcje zaawansowane"
+description = "Poniższe opcje zwiększają czas przetwarzania i zużycie pamięci. Włączaj tylko, jeśli jest to naprawdę potrzebne."
+
+[admin.settings.security.audit.captureFileHash]
+description = "Wyodrębnij skrót SHA-256 przesłanych plików PDF w celu weryfikacji integralności. Niezależne od poziomu audytu."
+label = "Rejestrowanie skrótu pliku (SHA-256)"
+
+[admin.settings.security.audit.capturePdfAuthor]
+description = "Wyodrębnij pole autora z dokumentów PDF podczas przetwarzania. Wymaga parsowania PDF, zwiększa opóźnienie. Niezależne od poziomu audytu."
+label = "Rejestrowanie metadanych autora PDF"
+
+[admin.settings.security.audit.captureOperationResults]
+description = "Rejestruj wartości zwracane przez metody. Niezalecane: znacząco zwiększa objętość dzienników i użycie dysku."
+label = "Rejestrowanie wyników operacji"
 
 [admin.settings.security.csrfDisabled]
 description = "Wyłącz ochronę przed Cross-Site Request Forgery (niezalecane)"
@@ -1536,43 +1576,18 @@ tags = "embed,attach,file,attachment,attachments"
 title = "Add attachments"
 
 [audit]
+configureAudit = "Skonfiguruj rejestrowanie audytu"
+configureAuditMessage = "Dostosuj poziom rejestrowania audytu, okres retencji i inne ustawienia w sekcji Bezpieczeństwo i uwierzytelnianie."
 disabled = "Rejestrowanie audytu jest wyłączone"
 disabledMessage = "Włącz rejestrowanie audytu w konfiguracji aplikacji, aby śledzić zdarzenia systemowe."
 enterpriseRequired = "Wymagana licencja Enterprise"
 enterpriseRequiredMessage = "System rejestrowania zdarzeń to funkcja Enterprise. Uaktualnij do licencji Enterprise, aby uzyskać dostęp do dzienników i analityki."
+goToSettings = "Przejdź do ustawień audytu"
 notAvailable = "System audytu niedostępny"
 notAvailableMessage = "System audytu nie jest skonfigurowany lub jest niedostępny."
 
-[audit.charts]
-byType = "Zdarzenia wg typu"
-byUser = "Zdarzenia wg użytkownika"
-day = "Dzień"
-error = "Błąd ładowania wykresów"
-month = "Miesiąc"
-overTime = "Zdarzenia w czasie"
-title = "Pulpit audytu"
-week = "Tydzień"
-
 [audit.error]
 title = "Błąd podczas ładowania systemu audytu"
-
-[audit.events]
-actions = "Akcje"
-clearFilters = "Wyczyść"
-details = "Szczegóły"
-endDate = "Data końcowa"
-error = "Błąd ładowania zdarzeń"
-eventDetails = "Szczegóły zdarzenia"
-filterByType = "Filtruj wg typu"
-filterByUser = "Filtruj wg użytkownika"
-ipAddress = "Adres IP"
-noEvents = "Nie znaleziono zdarzeń"
-startDate = "Data początkowa"
-timestamp = "Znacznik czasu"
-title = "Zdarzenia audytu"
-type = "Typ"
-user = "Użytkownik"
-viewDetails = "Pokaż szczegóły"
 
 [audit.export]
 clearFilters = "Wyczyść"
@@ -1580,27 +1595,132 @@ description = "Eksportuj zdarzenia audytu do formatu CSV lub JSON. Użyj filtró
 endDate = "Data końcowa"
 error = "Nie udało się wyeksportować danych"
 exportButton = "Eksportuj dane"
+fieldAuthor = "Autor (z PDF)"
+fieldDate = "Data"
+fieldDocumentName = "Nazwa dokumentu"
+fieldFileHash = "Skrót pliku (SHA-256)"
+fieldIpAddress = "Adres IP"
+fieldOperationResults = "Wyniki operacji"
+fieldOutcome = "Wynik (Sukces/Niepowodzenie)"
+fieldTool = "Narzędzie"
+fieldUsername = "Nazwa użytkownika"
 filterByType = "Filtruj wg typu"
 filterByUser = "Filtruj wg użytkownika"
 filters = "Filtry (opcjonalnie)"
 format = "Format eksportu"
+selectFields = "Wybierz pola do uwzględnienia"
 startDate = "Data początkowa"
 title = "Eksportuj dane audytu"
+verboseRequired = "Wymaga poziomu audytu VERBOSE"
 
 [audit.systemStatus]
+autoRefresh = "Automatyczne odświeżanie"
+autoRefreshLabel = "Automatyczne odświeżanie co 30 s"
+captureBySettings = "Włącz w ustawieniach"
+capturedFields = "Rejestrowane pola"
+date = "Data"
 days = "dni"
 disabled = "Wyłączone"
+documentName = "Nazwa dokumentu"
 enabled = "Włączone"
+fileHash = "Skrót pliku"
 level = "Poziom audytu"
+pdfAuthor = "Autor PDF"
 retention = "Okres retencji"
 status = "Rejestrowanie audytu"
 title = "Status systemu"
+tool = "Narzędzie"
 totalEvents = "Łączna liczba zdarzeń"
+username = "Nazwa użytkownika"
+verboseOnly = "Tylko VERBOSE"
+
+[audit.stats]
+activeUsers = "Aktywni użytkownicy"
+attention = "Wymaga uwagi"
+avgLatency = "Śr. opóźnienie"
+error = "Błąd ładowania statystyk"
+errorLoadingStats = "Nie udało się wczytać statystyk"
+excellent = "Znakomite"
+good = "Dobre"
+noData = "N/D"
+successRate = "Wskaźnik powodzenia"
+title = "Podsumowanie"
+totalEvents = "Łącznie zdarzeń"
+vsLastPeriod = "względem poprzedniego okresu"
+
+[audit.charts]
+byTool = "Najczęściej używane narzędzia"
+byType = "Zdarzenia wg typu"
+byUser = "Zdarzenia wg użytkownika"
+day = "Dzień"
+error = "Błąd ładowania wykresów"
+hourlyActivity = "Aktywność godzinowa"
+month = "Miesiąc"
+noData = "Brak danych dla tego okresu"
+overTime = "Zdarzenia w czasie"
+title = "Pulpit audytu"
+week = "Tydzień"
+
+[audit.events]
+actions = "Akcje"
+author = "Autor"
+clearFilters = "Wyczyść"
+details = "Szczegóły"
+documentName = "Dokument"
+endDate = "Data końcowa"
+error = "Błąd ładowania zdarzeń"
+eventDetails = "Szczegóły zdarzenia"
+failure = "Niepowodzenie"
+fileHash = "Skrót pliku"
+filterByType = "Filtruj wg typu"
+filterByUser = "Filtruj wg użytkownika"
+ipAddress = "Adres IP"
+noEvents = "Nie znaleziono zdarzeń"
+outcome = "Status"
+sortAsc = "Sortuj rosnąco"
+sortDesc = "Sortuj malejąco"
+startDate = "Data początkowa"
+success = "Sukces"
+timestamp = "Znacznik czasu"
+title = "Zdarzenia audytu"
+type = "Typ"
+user = "Użytkownik"
+viewDetails = "Pokaż szczegóły"
+
+[audit.filters]
+allOutcomes = "Wszystkie"
+failureOnly = "Tylko niepowodzenia"
+last7Days = "Ostatnie 7 dni"
+last30Days = "Ostatnie 30 dni"
+outcomeFilter = "Wynik"
+quickPresets = "Szybkie filtry"
+successOnly = "Tylko sukcesy"
+thisMonth = "Ten miesiąc"
+today = "Dzisiaj"
 
 [audit.tabs]
+clearData = "Wyczyść dane"
 dashboard = "Pulpit"
 events = "Zdarzenia audytu"
 export = "Eksport"
+
+[audit.clearData]
+cancel = "Anuluj"
+codeDoesNotMatch = "Kod nie pasuje"
+codePlaceholder = "Wpisz tutaj kod"
+confirmationCode = "Kod potwierdzenia"
+confirmationRequired = "Usuń wszystkie dane audytu"
+confirmMessage = "Spowoduje to trwałe usunięcie wszystkich dzienników audytu. Wprowadź poniżej kod potwierdzający, aby kontynuować."
+confirmTitle = "Potwierdź, że chcesz usunąć"
+deleteButton = "Usuń"
+enterCode = "Kod potwierdzenia"
+enterCodeBelow = "Wprowadź kod dokładnie tak, jak pokazano powyżej (rozróżniana wielkość liter)"
+initiateDelete = "Usuń wszystkie dane"
+irreversible = "NIEODWRACALNE"
+success = "Sukces"
+successMessage = "Wszystkie dane audytu zostały pomyślnie wyczyszczone"
+warning1 = "Tej operacji nie można cofnąć"
+warning2 = "Usunięcie danych audytu trwale usunie wszystkie historyczne dzienniki audytu, w tym zdarzenia bezpieczeństwa, aktywności użytkowników i operacje na plikach z bazy danych."
 
 [auth]
 accessDenied = "Odmowa dostępu"
@@ -2254,9 +2374,11 @@ copy = "Kopiuj"
 done = "Gotowe"
 error = "Błąd"
 expand = "Rozwiń"
+learnMore = "Dowiedz się więcej"
 lines = "wiersze"
 loading = "Wczytywanie..."
 next = "Dalej"
+operation = "ta operacja"
 preview = "Podgląd"
 previous = "Wstecz"
 refresh = "Odśwież"
@@ -2920,6 +3042,7 @@ copyStack = "Kopiuj Stack Trace"
 discordSubmit = "Discord - wyślij posta z prośbą o pomoc"
 dismissAllErrors = "Zamknij wszystkie błędy"
 encryptedPdfMustRemovePassword = "Ten PDF jest zaszyfrowany lub chroniony hasłem. Odblokuj go przed konwersją do PDF/A."
+generic = "Wystąpił błąd"
 github = "Zgłoś problem na GitHub"
 githubSubmit = "GitHub - wyślij zgłoszenie"
 incorrectPasswordProvided = "Hasło do PDF jest nieprawidłowe lub nie zostało podane."
@@ -4456,6 +4579,10 @@ upgradeCompleteMessage = "Subskrypcja została pomyślnie ulepszona. Zaktualizow
 upgradeSuccess = "Płatność zakończona! Twoja subskrypcja została ulepszona. Licencję zaktualizowano na Twoim serwerze. Wkrótce otrzymasz e‑mail z potwierdzeniem."
 upgradeTitle = "Uaktualnij do {{planName}}"
 yearly = "Rocznie"
+checkoutOpened = "Otworzono płatność w przeglądarce"
+checkoutInstructions = "Dokończ zakup w oknie przeglądarki, które właśnie się otworzyło. Po zakończeniu płatności wróć tutaj i kliknij poniższy przycisk, aby odświeżyć informacje rozliczeniowe."
+refreshBilling = "Płatność zakończona – odśwież rozliczenia"
+closeLater = "Zrobię to później"
 
 [payment.emailStage]
 continue = "Kontynuuj"
@@ -4679,6 +4806,13 @@ prompt = "Wybierz stronę do wyodrębnienia tabeli"
 submit = "Zatwierdź"
 title = "PDF na CSV"
 
+[PDFToXLSX]
+header = "PDF do Excel"
+prompt = "Wybierz strony do wyodrębnienia tabel"
+submit = "Konwertuj"
+title = "PDF do Excel (XLSX)"
+tags = "arkusz kalkulacyjny,excel,xlsx,tabela,wyodrębnij,konwertuj"
+
 [PDFToHTML]
 credit = "Ta usługa używa pdftohtml do konwersji plików."
 header = "PDF na HTML"
@@ -4835,6 +4969,7 @@ customPricing = "Niestandardowy"
 featureComparison = "Porównanie funkcji"
 from = "Od"
 hideComparison = "Ukryj porównanie funkcji"
+included = "Wliczone"
 includedInCurrent = "Wliczone w Twój plan"
 licensedSeats = "Licencjonowane: {{count}} miejsc"
 manage = "Zarządzaj"
@@ -4852,9 +4987,11 @@ title = "Aktywny plan"
 
 [plan.availablePlans]
 subtitle = "Wybierz plan dopasowany do Twoich potrzeb"
+loadError = "Nie można wczytać cen planów. Użyto wartości domyślnych."
 title = "Dostępne plany"
 
 [plan.enterprise]
+siteLicense = "Licencja dla całej organizacji"
 highlight1 = "Ceny niestandardowe"
 highlight2 = "Dedykowane wsparcie"
 highlight3 = "Najnowsze funkcje"
@@ -4927,6 +5064,81 @@ instructions = "Dokończ zakup w karcie Stripe. Po zakończeniu płatności otrz
 keyDescription = "Wklej klucz licencyjny z e-maila"
 success = "Licencja aktywowana!"
 successMessage = "Twoja licencja została pomyślnie aktywowana. Możesz zamknąć to okno."
+
+[plan.team]
+name = "Team"
+siteLicense = "Licencja dla całej organizacji"
+
+[credits]
+enableOverageBilling = "Włącz rozliczanie nadwyżek"
+maybeLater = "Może później"
+upgrade = "Ulepsz"
+
+[credits.modal]
+advancedMonitoring = "Zaawansowany monitoring"
+allInOneWorkspace = "Wszechstronne środowisko pracy PDF (przeglądarka, narzędzia i agent)"
+apiSandbox = "Piaskownica API"
+contactSales = "Skontaktuj się z działem sprzedaży"
+creditsRemaining = "Pozostało {{current}} z {{total}}"
+creditsThisMonth = "Miesięczne kredyty"
+current = "Bieżący plan"
+customPricing = "Niestandardowy"
+customSmartFolders = "Niestandardowe inteligentne foldery"
+dedicatedSupportSlas = "Dedykowane wsparcie i SLA"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Wszystko w planie Credits, a także:"
+everythingInFree = "Wszystko w planie Free, a także:"
+fasterThroughput = "10× większa przepustowość"
+forRegularWork = "Do regularnej pracy z PDF:"
+freeTier = "Bezpłatny plan"
+fullyPrivateFiles = "W pełni prywatne pliki"
+largeFileProcessing = "Przetwarzanie dużych plików"
+managedMemberMessage = "Masz nieograniczony dostęp do kredytów dzięki swojemu zespołowi. Jeśli potrzebujesz pomocy, skontaktuj się z liderem zespołu."
+managedMemberTitle = "Nielimitowane kredyty"
+meteringBillingNote = "Kredyty nadwyżkowe są rozliczane miesięcznie wraz z subskrypcją Team. Śledź wykorzystanie w ustawieniach konta w dowolnym momencie."
+meteringExplanation = "Twój plan Team obejmuje {{credits}} kredytów miesięcznie. Gdy się skończą, rozliczanie nadwyżek automatycznie zapewni dodatkowe kredyty, abyś nie musiał przerywać pracy."
+meteringIncluded = "{{credits}} kredytów/mies. wliczone w Team"
+meteringNoCommitment = "Bez zobowiązań, anuluj w dowolnym momencie"
+meteringNeverRunOut = "Nigdy nie zabraknie kredytów"
+meteringPayAsYouGo = "Płać tylko za to, czego używasz"
+meteringPrice = "Dodatkowe kredyty po {{price}}/kredyt"
+meteringTitle = "Rozliczanie nadwyżek wg zużycia"
+monthlyCredits = "miesięczne kredyty"
+orgWideAccess = "Kontrola dostępu w całej organizacji"
+overage = "nadwyżka"
+perMonth = "/mies."
+popular = "Popularne"
+premiumAiModels = "Modele AI klasy premium"
+prioritySupport = "Priorytetowe wsparcie"
+privateDocCloud = "Prywatna chmura dokumentów"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Bezpieczny dostęp do API"
+selfHostLink = "Zobacz dokumentację i plany"
+selfHostPrompt = "Chcesz hostować samodzielnie?"
+standardThroughput = "Standardowa przepustowość"
+subtitle = "Ulepsz do Team, aby zyskać 10× więcej kredytów i szybsze przetwarzanie."
+subtitlePro = "Włącz automatyczne rozliczanie nadwyżek, aby nigdy nie zabrakło kredytów."
+teamLeaderOnly = "Tylko liderzy zespołu mogą włączyć rozliczanie nadwyżek"
+teamSubscription = "Team"
+titleExhausted = "Wykorzystałeś bezpłatne kredyty"
+titleExhaustedPro = "Skończyły Ci się kredyty"
+unlimitedApiAccess = "Nielimitowany dostęp do API"
+unlimitedMonthlyCredits = "Licencja dla całej organizacji"
+unlimitedSeats = "Nielimitowana liczba użytkowników"
+
+[credits.modal.features]
+everythingInCredits = "Wszystko w planie Credits, a także:"
+everythingInFree = "Wszystko w planie Free, a także:"
+forRegularWork = "Do regularnej pracy z PDF:"
+
+[credits.insufficient]
+brief = "Niewystarczająca liczba kredytów. Potrzebujesz {{required}} kredytów, ale masz {{current}}."
+freeTier = "Ulepsz do Team, aby mieć 10× więcej kredytów i nielimitowane rozliczanie nadwyżek."
+managedMember = "Skontaktuj się z liderem zespołu, aby uzyskać pomoc."
+message = "Nie masz wystarczającej liczby kredytów, aby uruchomić {{tool}}. Obecnie masz {{current}} kredytów."
+messageWithAmount = "Potrzebujesz {{required}} kredytów, aby uruchomić {{tool}}, ale masz tylko {{current}}."
+teamMember = "Włącz rozliczanie nadwyżek, aby nigdy nie zabrakło kredytów."
+title = "Niewystarczające kredyty"
 
 [printFile]
 header = "Drukuj plik za pomocą drukarki"
@@ -5565,6 +5777,70 @@ user = "Zalogowano jako"
 saas = "Stirling Cloud"
 selfhosted = "Własny serwer"
 
+[settings.planBilling]
+currentPlan = "Bieżący plan"
+loading = "Wczytywanie informacji rozliczeniowych..."
+notAvailable = "Plan i rozliczenia są dostępne tylko po połączeniu ze Stirling Cloud (tryb SaaS)."
+title = "Plan i rozliczenia"
+
+[settings.planBilling.billing]
+manageBilling = "Zarządzaj rozliczeniami"
+nextBillingDate = "Następna data rozliczenia"
+overageCost = "Bieżący koszt nadwyżek: {{amount}} ({{credits}} kredytów)"
+
+[settings.planBilling.credits]
+estimatedCost = "Szacowany koszt: {{amount}}"
+freeTierInfo = "Plan Free obejmuje {{freeCredits}} kredytów miesięcznie. Ulepsz do Team, aby mieć {{teamCredits}} kredytów/mies. i rozliczanie nadwyżek wg zużycia."
+included = "{{count}} kredytów/mies. (wliczone)"
+noOverage = "Brak opłat za nadwyżki w tym miesiącu. Korzystasz z wliczonych {{count}} kredytów."
+overage = "+ {{count}} nadwyżki"
+overageInfo = "Kredyty nadwyżkowe są rozliczane po {{price}} za kredyt. Zapłacisz tylko za to, co wykorzystasz ponad miesięczny przydział."
+title = "Wykorzystanie kredytów"
+
+[settings.planBilling.errors]
+fetchFailed = "Nie można pobrać danych rozliczeniowych"
+retry = "Ponów próbę"
+
+[settings.planBilling.status]
+active = "Aktywny"
+canceled = "Anulowany"
+pastDue = "Zaległy"
+trial = "Wersja próbna"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Niestandardowe funkcje i wsparcie dla przedsiębiorstw"
+free = "Free"
+freeDescription = "50 kredytów miesięcznie"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 kredytów/mies. wliczone, automatyczne rozliczanie nadwyżek dla nieprzerwanej obsługi"
+teamTooltipCredits = "Plan Team obejmuje {{credits}} kredytów/mies."
+teamTooltipFineprint = "Płacisz tylko za to, co wykorzystasz ponad wliczone kredyty."
+teamTooltipOverage = "Automatyczne rozliczanie nadwyżek po {{price}}/kredyt zapewnia nieprzerwaną obsługę."
+
+[settings.planBilling.team]
+managedByTeam = "Zarządzane przez zespół"
+memberCount = "{{count}} członków zespołu"
+
+[settings.planBilling.trial]
+daysRemaining = "Pozostało {{days}} dni"
+daysRemainingFull = "Twoja wersja próbna kończy się za {{days}} dni"
+endDate = "Wygasa: {{date}}"
+endsOn = "Koniec wersji próbnej"
+title = "Aktywna wersja próbna"
+
+[settings.planBilling.upgrade]
+cta = "Ulepsz do Team"
+featureApi = "Dostęp do API do automatyzacji"
+featureCredits = "{{teamCredits}} kredytów miesięcznie (vs {{freeCredits}} w Free)"
+featureMembers = "Nielimitowani członkowie zespołu"
+featureSupport = "Priorytetowe wsparcie"
+featureThroughput = "Szybsza przepustowość przetwarzania"
+opensInBrowser = "Otwiera się w przeglądarce, aby dokończyć ulepszenie"
+subtitle = "Ulepsz do Team, aby zyskać:"
+title = "Ulepsz swój plan"
+
 [settings.developer]
 apiKeys = "Klucze API"
 title = "Deweloper"
@@ -5688,6 +5964,9 @@ requiresEnterprise = "Wymaga licencji Enterprise"
 people = "Osoby"
 teams = "Zespoły"
 title = "Przestrzeń robocza"
+
+[settings.team]
+title = "Zespół"
 
 [setup]
 description = "Zacznij od wyboru sposobu korzystania ze Stirling PDF"
@@ -6011,6 +6290,11 @@ desc = "Auto-dzielenie z arkuszami separatorów"
 name = "Separator stron"
 tooltip = "Użyj arkuszy rozdzielających z kodami QR między dokumentami podczas skanowania"
 
+[split.methods.byPoster]
+name = "Drukowalne fragmenty"
+desc = "Podziel duże strony na rozmiary do druku"
+tooltip = "Podziel za duże strony na mniejsze fragmenty nadające się do druku na standardowym papierze (A4, Letter itp.)"
+
 [split.methods.byPages]
 desc = "Wyodrębnij konkretne strony (1,3,5-10)"
 name = "Numery stron"
@@ -6029,6 +6313,7 @@ tooltip = "Określ maksymalny rozmiar pliku (np. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Podziel przy"
 splitBy = "Podziel według"
+splitInto = "Podziel na"
 
 [split.methodSelection.tooltip]
 bullet1 = "Kliknij kartę metody, aby ją wybrać"
@@ -6047,6 +6332,21 @@ selectMethodFirst = "Najpierw wybierz metodę dzielenia"
 [split.steps]
 chooseMethod = "Wybierz metodę"
 settings = "Ustawienia"
+
+[split.poster]
+rightToLeft = "Dziel od prawej do lewej"
+
+[split.poster.pageSize]
+label = "Docelowy rozmiar strony"
+description = "Rozmiar stron wyjściowych do druku"
+
+[split.poster.xFactor]
+label = "Podziały poziome"
+description = "Liczba kolumn, na które podzielić każdą stronę"
+
+[split.poster.yFactor]
+label = "Podziały pionowe"
+description = "Liczba wierszy, na które podzielić każdą stronę"
 
 [split.tooltip.byChapters]
 bullet1 = "Poziom zakładek: na którym poziomie dzielić (1 = najwyższy)"
@@ -6084,6 +6384,14 @@ bullet4 = "Prześlij – strony separatorów zostaną automatycznie wykryte i us
 bullet5 = "Włącz tryb dupleks, jeśli skanujesz obie strony arkuszy separatorów"
 text = "Automatycznie dziel zeskanowane dokumenty przy użyciu fizycznych arkuszy separatorów z kodami QR. Idealne do przetwarzania wielu dokumentów zeskanowanych razem."
 title = "Podział według separatora stron"
+
+[split.tooltip.byPoster]
+bullet1 = "Docelowy rozmiar strony: wybierz rozmiar papieru wyjściowego (A4, Letter itp.)"
+bullet2 = "Podziały poziome/pionowe: rozmiar siatki do podziału"
+bullet3 = "Od prawej do lewej: odwróć kolejność kolumn dla układów RTL"
+bullet4 = "Wydrukuj i złóż fragmenty, aby utworzyć plakat"
+text = "Podziel duże strony PDF na mniejsze, nadające się do wydruku na standardowych rozmiarach papieru. Idealne do tworzenia plakatów z ponadwymiarowych stron."
+title = "Podział do wydruku plakatu"
 
 [split.tooltip.byPages]
 bullet1 = "Pojedyncze punkty podziału: 3,7 (dzieli po stronach 3 i 7)"
@@ -6364,9 +6672,13 @@ tags = "przechwytywanie stron internetowych, zapisywanie strony, strona internet
 title = "URL do PDF"
 
 [usage]
+aboutUsageAnalytics = "O analityce użycia"
+configureSettings = "Skonfiguruj ustawienia analityki"
 error = "Błąd ładowania statystyk użycia"
 noData = "Brak dostępnych danych"
 noDataMessage = "Obecnie brak dostępnych statystyk użycia."
+usageAnalyticsExplanation = "Analityka użycia śledzi żądania do endpointów i wzorce korzystania z narzędzi. W połączeniu z pulpitem dzienników audytu zyskujesz pełną widoczność aktywności systemu, wydajności i zdarzeń bezpieczeństwa."
+viewAuditLogs = "Zobacz dzienniki audytu"
 
 [usage.chart]
 title = "Wykres użycia endpointów"
@@ -6947,3 +7259,278 @@ cancel = "Anuluj"
 confirm = "Rozpakuj"
 message = "Ten ZIP zawiera {{count}} plików. Mimo to rozpakować?"
 title = "Duży plik ZIP"
+
+[cloudBadge]
+tooltip = "Ta operacja wykorzysta Twoje kredyty w chmurze"
+
+[team]
+cancelInviteError = "Nie udało się anulować zaproszenia"
+confirmCancelInvite = "Czy na pewno chcesz anulować to zaproszenie?"
+confirmLeave = "Czy na pewno chcesz opuścić ten zespół?"
+confirmLeaveLeader = "Jako lider zespołu, opuszczenie spowoduje usunięcie Cię z zespołu. Czy na pewno?"
+confirmRemove = "Czy na pewno chcesz usunąć tego członka?"
+editName = "Edytuj nazwę zespołu"
+inviteCancelled = "Zaproszenie anulowane"
+inviteError = "Nie udało się wysłać zaproszenia"
+inviteSent = "Zaproszenie wysłane pomyślnie"
+leader = "Lider"
+leaveButton = "Opuść zespół"
+leaveError = "Nie udało się opuścić zespołu"
+leaveSuccess = "Pomyślnie opuszczono zespół"
+loading = "Wczytywanie informacji o zespole..."
+memberCount = "{{count}} członków"
+memberRemoved = "Pomyślnie usunięto członka"
+namePlaceholder = "Wpisz nazwę zespołu"
+personal = "Osobisty"
+removeError = "Nie udało się usunąć członka"
+renameError = "Nie udało się zmienić nazwy zespołu"
+renameSuccess = "Pomyślnie zmieniono nazwę zespołu"
+
+[team.invitationBanner]
+message = "zaprosił(a) Cię do dołączenia"
+acceptButton = "Akceptuj"
+rejectButton = "Odrzuć"
+
+[team.features]
+badge = "Funkcje zespołowe"
+subtitle = "Współpracuj ze swoim zespołem"
+title = "Współpraca zespołowa"
+viewPlans = "Zobacz plany"
+
+[team.features.billing]
+description = "Zarządzaj rozliczeniami i subskrypcjami"
+title = "Zarządzanie rozliczeniami"
+
+[team.features.credits]
+description = "Wspólna pula kredytów dla wszystkich członków"
+title = "Wspólne kredyty"
+
+[team.features.dashboard]
+description = "Wyświetl aktywność i wykorzystanie zespołu"
+title = "Pulpit zespołu"
+
+[team.features.invite]
+description = "Dodaj członków do zespołu"
+title = "Zaproś członków"
+
+[team.invite]
+cancelLabel = "Anuluj"
+invalidEmail = "Nieprawidłowy adres e-mail"
+placeholder = "Wpisz adres e-mail"
+sendButton = "Wyślij zaproszenie"
+title = "Zaproś członka zespołu"
+
+[team.members]
+emailColumn = "E-mail"
+empty = "Brak członków zespołu"
+nameColumn = "Imię i nazwisko"
+pending = "Oczekujące"
+remove = "Usuń"
+roleColumn = "Rola"
+title = "Członkowie zespołu"
+
+[team.upgrade]
+button = "Ulepsz do Team"
+description = "Odblokuj funkcje współpracy zespołowej"
+title = "Ulepsz do planu Team"
+
+[provider.oauth2.google]
+scope = "Uwierzytelnianie logowania"
+
+[provider.oauth2.google.clientId]
+label = "Client ID"
+description = "Identyfikator klienta OAuth2 z Google Cloud Console"
+
+[provider.oauth2.google.clientSecret]
+label = "Client Secret"
+description = "Tajny klucz klienta OAuth2 z Google Cloud Console"
+
+[provider.oauth2.google.scopes]
+label = "Zakresy"
+description = "Zakresy OAuth2 oddzielone przecinkami"
+
+[provider.oauth2.google.useAsUsername]
+label = "Użyj jako nazwy użytkownika"
+description = "Pole używane jako nazwa użytkownika (email, name, given_name, family_name)"
+
+[provider.oauth2.github]
+scope = "Uwierzytelnianie logowania"
+
+[provider.oauth2.github.clientId]
+label = "Client ID"
+description = "Identyfikator klienta OAuth2 z GitHub Developer Settings"
+
+[provider.oauth2.github.clientSecret]
+label = "Client Secret"
+description = "Tajny klucz klienta OAuth2 z GitHub Developer Settings"
+
+[provider.oauth2.github.scopes]
+label = "Zakresy"
+description = "Zakresy OAuth2 oddzielone przecinkami"
+
+[provider.oauth2.github.useAsUsername]
+label = "Użyj jako nazwy użytkownika"
+description = "Pole używane jako nazwa użytkownika (email, login, name)"
+
+[provider.oauth2.keycloak]
+scope = "SSO"
+
+[provider.oauth2.keycloak.issuer]
+label = "Issuer URL"
+description = "Adres URL punktu OpenID Connect Discovery dla obszaru (realm) w Keycloak"
+
+[provider.oauth2.keycloak.clientId]
+label = "Client ID"
+description = "Identyfikator klienta OAuth2 z Keycloak"
+
+[provider.oauth2.keycloak.clientSecret]
+label = "Client Secret"
+description = "Tajny klucz klienta OAuth2 z Keycloak"
+
+[provider.oauth2.keycloak.scopes]
+label = "Zakresy"
+description = "Zakresy OAuth2 oddzielone przecinkami"
+
+[provider.oauth2.keycloak.useAsUsername]
+label = "Użyj jako nazwy użytkownika"
+description = "Pole używane jako nazwa użytkownika (email, name, given_name, family_name, preferred_username)"
+
+[provider.oauth2.generic]
+name = "Ogólny OAuth2"
+scope = "SSO"
+
+[provider.oauth2.generic.enabled]
+label = "Włącz ogólny OAuth2"
+description = "Włącz uwierzytelnianie przy użyciu niestandardowego dostawcy OAuth2"
+
+[provider.oauth2.generic.provider]
+label = "Nazwa dostawcy"
+description = "Nazwa Twojego dostawcy OAuth2 (np. Azure AD, Okta)"
+
+[provider.oauth2.generic.issuer]
+label = "Issuer URL"
+description = "Dostawca obsługujący OpenID Connect Discovery (/.well-known/openid-configuration)"
+
+[provider.oauth2.generic.clientId]
+label = "Client ID"
+description = "Identyfikator klienta OAuth2 od Twojego dostawcy"
+
+[provider.oauth2.generic.clientSecret]
+label = "Client Secret"
+description = "Tajny klucz klienta OAuth2 od Twojego dostawcy"
+
+[provider.oauth2.generic.scopes]
+label = "Zakresy"
+description = "Zakresy OAuth2 oddzielone przecinkami"
+
+[provider.oauth2.generic.useAsUsername]
+label = "Użyj jako nazwy użytkownika"
+description = "Pole używane jako nazwa użytkownika"
+
+[provider.oauth2.generic.autoCreateUser]
+label = "Automatyczne tworzenie użytkowników"
+description = "Automatycznie twórz konta użytkowników przy pierwszym logowaniu OAuth2"
+
+[provider.oauth2.generic.blockRegistration]
+label = "Zablokuj rejestrację"
+description = "Zabroń rejestracji nowych użytkowników przez OAuth2"
+
+[provider.smtp]
+name = "Poczta SMTP"
+scope = "Powiadomienia e-mail"
+
+[provider.smtp.enabled]
+label = "Włącz pocztę"
+description = "Włącz powiadomienia e-mail i funkcjonalność SMTP"
+
+[provider.smtp.host]
+label = "Host SMTP"
+description = "Nazwa hosta lub adres IP Twojego serwera SMTP"
+
+[provider.smtp.port]
+label = "Port SMTP"
+description = "Numer portu do połączenia SMTP (zwykle 25, 465 lub 587)"
+
+[provider.smtp.username]
+label = "Nazwa użytkownika SMTP"
+description = "Nazwa użytkownika do uwierzytelniania SMTP"
+
+[provider.smtp.password]
+label = "Hasło SMTP"
+description = "Hasło do uwierzytelniania SMTP"
+
+[provider.smtp.from]
+label = "Adres nadawcy"
+description = "Adres e-mail używany jako nadawca"
+
+[provider.saml2]
+name = "SAML2"
+scope = "SSO (SAML)"
+
+[provider.saml2.enabled]
+label = "Włącz SAML2"
+description = "Włącz uwierzytelnianie SAML2 (tylko Enterprise)"
+
+[provider.saml2.provider]
+label = "Nazwa dostawcy"
+description = "Nazwa Twojego dostawcy SAML2"
+
+[provider.saml2.registrationId]
+label = "Identyfikator rejestracji"
+description = "Nazwa Twojej aplikacji Service Provider (SP)"
+
+[provider.saml2.idpMetadataUri]
+label = "IDP Metadata URI"
+description = "URI metadanych Twojego dostawcy"
+
+[provider.saml2.idpSingleLoginUrl]
+label = "IDP Single Login URL"
+description = "URL inicjujący SSO"
+
+[provider.saml2.idpSingleLogoutUrl]
+label = "IDP Single Logout URL"
+description = "URL inicjujący SLO"
+
+[provider.saml2.idpIssuer]
+label = "IDP Issuer"
+description = "Identyfikator Twojego dostawcy"
+
+[provider.saml2.idpCert]
+label = "Certyfikat IDP"
+description = "Ścieżka do certyfikatu (np. classpath:okta.cert)"
+
+[provider.saml2.privateKey]
+label = "Klucz prywatny"
+description = "Ścieżka do Twojego klucza prywatnego"
+
+[provider.saml2.spCert]
+label = "Certyfikat SP"
+description = "Ścieżka do Twojego certyfikatu podpisującego"
+
+[provider.saml2.autoCreateUser]
+label = "Automatyczne tworzenie użytkowników"
+description = "Automatycznie twórz konta użytkowników przy pierwszym logowaniu SAML2"
+
+[provider.saml2.blockRegistration]
+label = "Zablokuj rejestrację"
+description = "Zabroń rejestracji nowych użytkowników przez SAML2"
+
+[provider.googledrive]
+name = "Google Drive"
+scope = "Import plików"
+
+[provider.googledrive.enabled]
+label = "Włącz selektor plików Google Drive"
+description = "Pozwól użytkownikom importować pliki bezpośrednio z Google Drive"
+
+[provider.googledrive.clientId]
+label = "Client ID"
+description = "Identyfikator klienta Google OAuth 2.0 z Google Cloud Console"
+
+[provider.googledrive.apiKey]
+label = "API Key"
+description = "Klucz Google API dla Google Picker API z Google Cloud Console"
+
+[provider.googledrive.appId]
+label = "App ID"
+description = "App ID Google Drive z Google Cloud Console"
