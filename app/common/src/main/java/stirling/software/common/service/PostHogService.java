@@ -67,9 +67,6 @@ public class PostHogService {
 
     public void captureEvent(String eventName, Map<String, Object> properties) {
         return;
-
-        properties.put("app_version", appVersion);
-        postHog.capture(uniqueId, eventName, properties);
     }
 
     public Map<String, Object> captureServerMetrics() {
