@@ -46,6 +46,7 @@ export default function PageLayoutSettings({
           data={pagesPerSheetOptions.map(o => ({ value: String(o.value), label: o.label }))}
           value={String(parameters.pagesPerSheet)}
           onChange={(v) => onParameterChange('pagesPerSheet', Number(v))}
+          allowDeselect={false}
           disabled={disabled}
           comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
         />
