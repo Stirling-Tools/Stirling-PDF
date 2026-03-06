@@ -333,8 +333,6 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
                         : t('workspace.people.license.noSlotsAvailable', 'No user slots available')}
                     </Text>
                   </Group>
-                  {licenseInfo.availableSlots === 0 && (
-                  )}
                 </Group>
                 <Text size="xs" c="dimmed">
                   {t('workspace.people.license.currentUsage', {
