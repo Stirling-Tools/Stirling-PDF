@@ -134,7 +134,12 @@ export function useConversionCloudStatus(): ConversionStatus {
     // Re-check when self-hosted server goes offline or comes back online.
     // By the time the server is confirmed offline, the local port is already
     // discovered (waitForPort completes in ~500ms vs the 8s server poll timeout).
+    // selfHostedServerMonitor.subscribe immediately invokes the listener with the
+    // current state, which would cause a duplicate check alongside the one above.
+    // Skip the first invocation since checkConversions() was already called above.
+    let skipFirst = true;
     const unsubServer = selfHostedServerMonitor.subscribe(() => {
+      if (skipFirst) { skipFirst = false; return; }
       void checkConversions();
     });
 

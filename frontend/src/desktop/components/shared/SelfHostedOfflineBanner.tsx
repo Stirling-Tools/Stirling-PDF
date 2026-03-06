@@ -28,30 +28,14 @@ const SPLIT_ENDPOINT_I18N: Record<string, [string, string]> = {
   'split-for-poster-print':   ['split.methods.byPoster.name',      'Printable Chunks'],
 };
 
-const CONVERSION_ENDPOINT_SUFFIXES: Record<string, string> = {
-  'file-to-pdf': 'Office/Document → PDF',
-  'pdf-to-img': 'PDF → Image',
-  'img-to-pdf': 'Image → PDF',
-  'svg-to-pdf': 'SVG → PDF',
-  'cbz-to-pdf': 'CBZ → PDF',
-  'pdf-to-cbz': 'PDF → CBZ',
-  'pdf-to-word': 'PDF → Word',
-  'pdf-to-presentation': 'PDF → Presentation',
-  'pdf-to-text': 'PDF → Text',
-  'pdf-to-csv': 'PDF → CSV',
-  'pdf-to-xlsx': 'PDF → XLSX',
-  'pdf-to-markdown': 'PDF → Markdown',
-  'pdf-to-html': 'PDF → HTML',
-  'pdf-to-xml': 'PDF → XML',
-  'pdf-to-pdfa': 'PDF → PDF/A',
-  'html-to-pdf': 'HTML → PDF',
-  'markdown-to-pdf': 'Markdown → PDF',
-  'eml-to-pdf': 'Email → PDF',
-  'cbr-to-pdf': 'CBR → PDF',
-  'pdf-to-cbr': 'PDF → CBR',
-  'ebook-to-pdf': 'eBook → PDF',
-  'pdf-to-epub': 'PDF → EPUB',
-};
+/** Conversion endpoint keys that have translations under selfHosted.offline.conversionTypes */
+const KNOWN_CONVERSION_ENDPOINTS = new Set([
+  'file-to-pdf', 'pdf-to-img', 'img-to-pdf', 'svg-to-pdf', 'cbz-to-pdf',
+  'pdf-to-cbz', 'pdf-to-word', 'pdf-to-presentation', 'pdf-to-text', 'pdf-to-csv',
+  'pdf-to-xlsx', 'pdf-to-markdown', 'pdf-to-html', 'pdf-to-xml', 'pdf-to-pdfa',
+  'html-to-pdf', 'markdown-to-pdf', 'eml-to-pdf', 'cbr-to-pdf', 'pdf-to-cbr',
+  'ebook-to-pdf', 'pdf-to-epub',
+]);
 
 
 /**
@@ -152,8 +136,10 @@ export function SelfHostedOfflineBanner() {
     }
     const conversionNames = [...unavailableEndpoints]
       .map(ep => {
-        const suffix = CONVERSION_ENDPOINT_SUFFIXES[ep];
-        return suffix ? `${convertPrefix}: ${suffix}` : ep;
+        const suffix = KNOWN_CONVERSION_ENDPOINTS.has(ep)
+          ? t(`selfHosted.offline.conversionTypes.${ep}`, ep)
+          : ep;
+        return `${convertPrefix}: ${suffix}`;
       })
       .filter(Boolean);
 

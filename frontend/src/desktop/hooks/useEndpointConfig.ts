@@ -17,6 +17,13 @@ interface EndpointConfig {
 
 const RETRY_DELAY_MS = 2500;
 
+function isSelfHostedOffline(): boolean {
+  return (
+    selfHostedServerMonitor.getSnapshot().status === 'offline' &&
+    !!tauriBackendService.getBackendUrl()
+  );
+}
+
 function getErrorMessage(err: unknown): string {
   if (isAxiosError(err)) {
     const data = err.response?.data as { message?: string } | undefined;
@@ -151,10 +158,6 @@ export function useEndpointEnabled(endpoint: string): {
     // In self-hosted offline mode, enable optimistically when the local backend is ready.
     // ConvertSettings already filters unsupported endpoints from the dropdown,
     // so by the time the user has a valid endpoint selected it is supported locally.
-    const isSelfHostedOffline = () =>
-      selfHostedServerMonitor.getSnapshot().status === 'offline' &&
-      !!tauriBackendService.getBackendUrl();
-
     if (isSelfHostedOffline()) {
       setEnabled(true);
       setLoading(false);
@@ -360,10 +363,6 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
       setLoading(false);
       return;
     }
-
-    const isSelfHostedOffline = () =>
-      selfHostedServerMonitor.getSnapshot().status === 'offline' &&
-      !!tauriBackendService.getBackendUrl();
 
     if (isSelfHostedOffline()) {
       fetchAllEndpointStatuses();

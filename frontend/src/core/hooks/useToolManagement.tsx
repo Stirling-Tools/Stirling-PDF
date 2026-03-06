@@ -39,10 +39,18 @@ export const useToolManagement = (): ToolManagementResult => {
   const { endpointStatus, endpointDetails, loading: endpointsLoading } = useMultipleEndpointsEnabled(allEndpoints);
 
   const toolEndpointList = useMemo(
-    () => (Object.keys(baseRegistry) as ToolId[]).map(id => ({
-      id,
-      endpoints: baseRegistry[id]?.endpoints ?? [],
-    })),
+    () => (Object.keys(baseRegistry) as ToolId[])
+      // Exclude coming-soon tools (no component and no link) — they are already
+      // unavailable regardless of server state and should not appear in the
+      // self-hosted offline banner.
+      .filter(id => {
+        const tool = baseRegistry[id];
+        return !!(tool?.component ?? tool?.link);
+      })
+      .map(id => ({
+        id,
+        endpoints: baseRegistry[id]?.endpoints ?? [],
+      })),
     [baseRegistry]
   );
   const selfHostedOfflineIds = useSelfHostedToolAvailability(toolEndpointList);

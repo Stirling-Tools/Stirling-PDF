@@ -34,15 +34,27 @@ export async function ensureBackendReady(endpoint?: string): Promise<boolean> {
 
   const mode = await connectionModeService.getCurrentMode();
   if (mode === 'selfhosted') {
-    const { status } = selfHostedServerMonitor.getSnapshot();
+    let { status } = selfHostedServerMonitor.getSnapshot();
+
+    // 'checking' means the first poll hasn't returned yet. Wait briefly (up to
+    // 1.5 s) for it to resolve so we don't surface raw network errors during the
+    // first few seconds after launch. If it doesn't resolve in time we fall
+    // through and allow the operation — the HTTP layer will handle any error.
+    if (status === 'checking') {
+      await Promise.race([
+        selfHostedServerMonitor.checkNow(),
+        new Promise<void>(resolve => setTimeout(resolve, 1500)),
+      ]);
+      status = selfHostedServerMonitor.getSnapshot().status;
+    }
+
     if (status === 'offline') {
       // Server offline: allow through if local backend port is known.
       // operationRouter will route to local for supported endpoints.
       // Suppress the toast — SelfHostedOfflineBanner communicates the outage.
       return !!tauriBackendService.getBackendUrl();
     }
-    // Server online or still checking: allow through — the operation targets the
-    // remote server and will fail at the HTTP layer if it is unreachable.
+    // Server online: allow through — the operation targets the remote server.
     return true;
   }
 

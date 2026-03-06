@@ -1,3 +1,4 @@
+import i18n from '@app/i18n';
 import { connectionModeService } from '@app/services/connectionModeService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
@@ -202,7 +203,11 @@ export class OperationRouter {
           }
         }
         throw new Error(
-          `Your Stirling-PDF server is offline and "${endpointName}" is not available on the local backend.`
+          i18n.t(
+            'selfHosted.offline.toolNotAvailableLocally',
+            'Your Stirling-PDF server is offline and "{{endpoint}}" is not available on the local backend.',
+            { endpoint: endpointName }
+          )
         );
       }
     }
