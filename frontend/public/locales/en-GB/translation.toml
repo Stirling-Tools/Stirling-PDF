@@ -96,6 +96,8 @@ pin = "Pin File (keep active after tool run)"
 poweredBy = "Powered by"
 pro = "Pro"
 processTimeWarning = "Warning: This process can take up to a minute depending on file-size"
+processingComplete = "Your file is ready."
+processingCompleteMultiple = "{{count}} files are ready."
 property = "Property"
 quickPosition = "Quick Position"
 red = "Red"
@@ -652,6 +654,7 @@ description = "Configure external authentication providers like OAuth2 and SAML.
 disconnect = "Disconnect"
 disconnected = "Provider disconnected successfully"
 disconnectError = "Failed to disconnect provider"
+documentation = "View documentation"
 imageResolutionFull = "Full (Original Size)"
 imageResolutionReduced = "Reduced (Max 1200px)"
 linkedServices = "Linked Services"
@@ -965,6 +968,18 @@ label = "Default Locale"
 description = "Maximum file upload size (e.g., 100MB, 1GB)"
 label = "File Upload Limit"
 
+[admin.settings.general.hideDisabledTools]
+description = "Hide disabled tools from the interface"
+label = "Hide Disabled Tools"
+
+[admin.settings.general.hideDisabledTools.googleDrive]
+description = "Hide Google Drive button when not enabled"
+label = "Hide Google Drive"
+
+[admin.settings.general.hideDisabledTools.mobileScanner]
+description = "Hide mobile QR scanner button when not enabled"
+label = "Hide Mobile Scanner"
+
 [admin.settings.general.frontendUrl]
 description = "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL."
 label = "Frontend URL"
@@ -1149,18 +1164,42 @@ title = "Security"
 
 [admin.settings.security.audit]
 label = "Audit Logging"
+showDetails = "Show audit level details"
+hideDetails = "Hide audit level details"
 
 [admin.settings.security.audit.enabled]
 description = "Track user actions and system events for compliance and security monitoring"
 label = "Enable Audit Logging"
 
 [admin.settings.security.audit.level]
-description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+description = "Audit Level: OFF (0) = no logging | BASIC (1) = file modifications (compress/split/merge/etc) & settings | STANDARD (2) = file operations + user actions | VERBOSE (3) = all requests including polling. Higher levels include all events from lower levels."
 label = "Audit Level"
 
+[admin.settings.security.audit.levelDetails]
+off = "No audit logging (except critical security events)"
+basic = "PDF file operations (compress, split, merge, etc.) and settings changes. Captures: operation status (success/failure), method parameters, timing. Minimal log volume."
+standard = "BASIC events plus: user login/logout, account changes, general GET requests. Excludes continuous polling calls (/auth/me, /app-config, /health, etc.) to reduce log noise. Ideal for most deployments."
+verbose = "STANDARD events plus: continuous polling calls, all GET requests, detailed timing. Warning: high log volume and performance impact."
+
 [admin.settings.security.audit.retentionDays]
-description = "Number of days to retain audit logs"
+description = "Number of days to retain audit logs (0 = infinite retention)"
 label = "Audit Retention (days)"
+
+[admin.settings.security.audit.advancedOptions]
+title = "Advanced Options"
+description = "The following options increase processing time and memory usage. Enable only if truly needed."
+
+[admin.settings.security.audit.captureFileHash]
+description = "Extract SHA-256 hash of uploaded PDF files for integrity verification. Independent of audit level."
+label = "Capture File Hash (SHA-256)"
+
+[admin.settings.security.audit.capturePdfAuthor]
+description = "Extract author field from PDF documents during processing. Requires PDF parsing, increases latency. Independent of audit level."
+label = "Capture PDF Author Metadata"
+
+[admin.settings.security.audit.captureOperationResults]
+description = "Capture method return values. Not recommended: significantly increases log volume and disk usage."
+label = "Capture Operation Results"
 
 [admin.settings.security.csrfDisabled]
 description = "Disable Cross-Site Request Forgery protection (not recommended)"
@@ -1525,43 +1564,18 @@ tags = "attachments,add,remove,embed,file"
 title = "Add Attachments"
 
 [audit]
+configureAudit = "Configure Audit Logging"
+configureAuditMessage = "Adjust audit logging level, retention period, and other settings in the Security & Authentication section."
 disabled = "Audit logging is disabled"
 disabledMessage = "Enable audit logging in your application configuration to track system events."
 enterpriseRequired = "Enterprise License Required"
 enterpriseRequiredMessage = "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics."
+goToSettings = "Go to Audit Settings"
 notAvailable = "Audit system not available"
 notAvailableMessage = "The audit system is not configured or not available."
 
-[audit.charts]
-byType = "Events by Type"
-byUser = "Events by User"
-day = "Day"
-error = "Error loading charts"
-month = "Month"
-overTime = "Events Over Time"
-title = "Audit Dashboard"
-week = "Week"
-
 [audit.error]
 title = "Error loading audit system"
-
-[audit.events]
-actions = "Actions"
-clearFilters = "Clear"
-details = "Details"
-endDate = "End date"
-error = "Error loading events"
-eventDetails = "Event Details"
-filterByType = "Filter by type"
-filterByUser = "Filter by user"
-ipAddress = "IP Address"
-noEvents = "No events found"
-startDate = "Start date"
-timestamp = "Timestamp"
-title = "Audit Events"
-type = "Type"
-user = "User"
-viewDetails = "View Details"
 
 [audit.export]
 clearFilters = "Clear"
@@ -1569,27 +1583,132 @@ description = "Export audit events to CSV or JSON format. Use filters to limit t
 endDate = "End date"
 error = "Failed to export data"
 exportButton = "Export Data"
+fieldAuthor = "Author (from PDF)"
+fieldDate = "Date"
+fieldDocumentName = "Document Name"
+fieldFileHash = "File Hash (SHA-256)"
+fieldIpAddress = "IP Address"
+fieldOperationResults = "Operation Results"
+fieldOutcome = "Outcome (Success/Failure)"
+fieldTool = "Tool"
+fieldUsername = "Username"
 filterByType = "Filter by type"
 filterByUser = "Filter by user"
 filters = "Filters (Optional)"
 format = "Export Format"
+selectFields = "Select Fields to Include"
 startDate = "Start date"
 title = "Export Audit Data"
+verboseRequired = "Requires VERBOSE audit level"
 
 [audit.systemStatus]
+autoRefresh = "Auto-refresh"
+autoRefreshLabel = "Auto-refresh every 30s"
+captureBySettings = "Enable in settings"
+capturedFields = "Captured Fields"
+date = "Date"
 days = "days"
 disabled = "Disabled"
+documentName = "Document Name"
 enabled = "Enabled"
+fileHash = "File Hash"
 level = "Audit Level"
+pdfAuthor = "PDF Author"
 retention = "Retention Period"
 status = "Audit Logging"
 title = "System Status"
+tool = "Tool"
 totalEvents = "Total Events"
+username = "Username"
+verboseOnly = "VERBOSE only"
+
+[audit.stats]
+activeUsers = "Active Users"
+attention = "Attention needed"
+avgLatency = "Avg Latency"
+error = "Error loading statistics"
+errorLoadingStats = "Failed to load statistics"
+excellent = "Excellent"
+good = "Good"
+noData = "N/A"
+successRate = "Success Rate"
+title = "Summary"
+totalEvents = "Total Events"
+vsLastPeriod = "vs last period"
+
+[audit.charts]
+byTool = "Top Tools Used"
+byType = "Events by Type"
+byUser = "Top Users"
+day = "Day"
+error = "Error loading charts"
+hourlyActivity = "Hourly Activity"
+month = "Month"
+noData = "No data for this period"
+overTime = "Events Over Time"
+title = "Audit Dashboard"
+week = "Week"
+
+[audit.events]
+actions = "Actions"
+author = "Author"
+clearFilters = "Clear"
+details = "Details"
+documentName = "Document"
+endDate = "End date"
+error = "Error loading events"
+eventDetails = "Event Details"
+failure = "Failure"
+fileHash = "File Hash"
+filterByType = "Filter by type"
+filterByUser = "Filter by user"
+ipAddress = "IP Address"
+noEvents = "No events found"
+outcome = "Status"
+sortAsc = "Sort ascending"
+sortDesc = "Sort descending"
+startDate = "Start date"
+success = "Success"
+timestamp = "Timestamp"
+title = "Audit Events"
+type = "Type"
+user = "User"
+viewDetails = "View Details"
+
+[audit.filters]
+allOutcomes = "All"
+failureOnly = "Failures only"
+last7Days = "Last 7 days"
+last30Days = "Last 30 days"
+outcomeFilter = "Outcome"
+quickPresets = "Quick filters"
+successOnly = "Success only"
+thisMonth = "This month"
+today = "Today"
 
 [audit.tabs]
+clearData = "Clear Data"
 dashboard = "Dashboard"
 events = "Audit Events"
 export = "Export"
+
+[audit.clearData]
+cancel = "Cancel"
+codeDoesNotMatch = "Code does not match"
+codePlaceholder = "Type the code here"
+confirmationCode = "Confirmation Code"
+confirmationRequired = "Delete All Audit Data"
+confirmMessage = "This will permanently remove all audit logs. Enter the confirmation code below to proceed."
+confirmTitle = "Please confirm you want to delete"
+deleteButton = "Delete"
+enterCode = "Confirmation Code"
+enterCodeBelow = "Enter the code exactly as shown above (case-sensitive)"
+initiateDelete = "Delete All Data"
+irreversible = "IRREVERSIBLE"
+success = "Success"
+successMessage = "All audit data has been cleared successfully"
+warning1 = "This action cannot be undone"
+warning2 = "Deleting audit data will permanently remove all historical audit logs, including security events, user activities, and file operations from the database."
 
 [auth]
 accessDenied = "Access Denied"
@@ -6527,9 +6646,13 @@ tags = "web-capture,save-page,web-to-doc,archive"
 title = "URL To PDF"
 
 [usage]
+aboutUsageAnalytics = "About Usage Analytics"
+configureSettings = "Configure Analytics Settings"
 error = "Error loading usage statistics"
 noData = "No data available"
 noDataMessage = "No usage statistics are currently available."
+usageAnalyticsExplanation = "Usage analytics track endpoint requests and tool usage patterns. Combined with the Audit Logging dashboard, you get complete visibility into system activity, performance, and security events."
+viewAuditLogs = "View Audit Logs"
 
 [usage.chart]
 title = "Endpoint Usage Chart"
@@ -7203,3 +7326,204 @@ title = "Team Members"
 button = "Upgrade to Team"
 description = "Unlock team collaboration features"
 title = "Upgrade to Team Plan"
+
+[provider.oauth2.google]
+scope = "Sign-in authentication"
+
+[provider.oauth2.google.clientId]
+label = "Client ID"
+description = "The OAuth2 client ID from Google Cloud Console"
+
+[provider.oauth2.google.clientSecret]
+label = "Client Secret"
+description = "The OAuth2 client secret from Google Cloud Console"
+
+[provider.oauth2.google.scopes]
+label = "Scopes"
+description = "Comma-separated OAuth2 scopes"
+
+[provider.oauth2.google.useAsUsername]
+label = "Use as Username"
+description = "Field to use as username (email, name, given_name, family_name)"
+
+[provider.oauth2.github]
+scope = "Sign-in authentication"
+
+[provider.oauth2.github.clientId]
+label = "Client ID"
+description = "The OAuth2 client ID from GitHub Developer Settings"
+
+[provider.oauth2.github.clientSecret]
+label = "Client Secret"
+description = "The OAuth2 client secret from GitHub Developer Settings"
+
+[provider.oauth2.github.scopes]
+label = "Scopes"
+description = "Comma-separated OAuth2 scopes"
+
+[provider.oauth2.github.useAsUsername]
+label = "Use as Username"
+description = "Field to use as username (email, login, name)"
+
+[provider.oauth2.keycloak]
+scope = "SSO"
+
+[provider.oauth2.keycloak.issuer]
+label = "Issuer URL"
+description = "URL of the Keycloak realm's OpenID Connect Discovery endpoint"
+
+[provider.oauth2.keycloak.clientId]
+label = "Client ID"
+description = "The OAuth2 client ID from Keycloak"
+
+[provider.oauth2.keycloak.clientSecret]
+label = "Client Secret"
+description = "The OAuth2 client secret from Keycloak"
+
+[provider.oauth2.keycloak.scopes]
+label = "Scopes"
+description = "Comma-separated OAuth2 scopes"
+
+[provider.oauth2.keycloak.useAsUsername]
+label = "Use as Username"
+description = "Field to use as username (email, name, given_name, family_name, preferred_username)"
+
+[provider.oauth2.generic]
+name = "Generic OAuth2"
+scope = "SSO"
+
+[provider.oauth2.generic.enabled]
+label = "Enable Generic OAuth2"
+description = "Enable authentication using a custom OAuth2 provider"
+
+[provider.oauth2.generic.provider]
+label = "Provider Name"
+description = "The name of your OAuth2 provider (e.g., Azure AD, Okta)"
+
+[provider.oauth2.generic.issuer]
+label = "Issuer URL"
+description = "Provider that supports OpenID Connect Discovery (/.well-known/openid-configuration)"
+
+[provider.oauth2.generic.clientId]
+label = "Client ID"
+description = "The OAuth2 client ID from your provider"
+
+[provider.oauth2.generic.clientSecret]
+label = "Client Secret"
+description = "The OAuth2 client secret from your provider"
+
+[provider.oauth2.generic.scopes]
+label = "Scopes"
+description = "Comma-separated OAuth2 scopes"
+
+[provider.oauth2.generic.useAsUsername]
+label = "Use as Username"
+description = "Field to use as username"
+
+[provider.oauth2.generic.autoCreateUser]
+label = "Auto Create Users"
+description = "Automatically create user accounts on first OAuth2 login"
+
+[provider.oauth2.generic.blockRegistration]
+label = "Block Registration"
+description = "Prevent new user registration via OAuth2"
+
+[provider.smtp]
+name = "SMTP Mail"
+scope = "Email Notifications"
+
+[provider.smtp.enabled]
+label = "Enable Mail"
+description = "Enable email notifications and SMTP functionality"
+
+[provider.smtp.host]
+label = "SMTP Host"
+description = "The hostname or IP address of your SMTP server"
+
+[provider.smtp.port]
+label = "SMTP Port"
+description = "The port number for SMTP connection (typically 25, 465, or 587)"
+
+[provider.smtp.username]
+label = "SMTP Username"
+description = "Username for SMTP authentication"
+
+[provider.smtp.password]
+label = "SMTP Password"
+description = "Password for SMTP authentication"
+
+[provider.smtp.from]
+label = "From Address"
+description = "The email address to use as the sender"
+
+[provider.saml2]
+name = "SAML2"
+scope = "SSO (SAML)"
+
+[provider.saml2.enabled]
+label = "Enable SAML2"
+description = "Enable SAML2 authentication (Enterprise only)"
+
+[provider.saml2.provider]
+label = "Provider Name"
+description = "The name of your SAML2 provider"
+
+[provider.saml2.registrationId]
+label = "Registration ID"
+description = "The name of your Service Provider (SP) app name"
+
+[provider.saml2.idpMetadataUri]
+label = "IDP Metadata URI"
+description = "The URI for your provider's metadata"
+
+[provider.saml2.idpSingleLoginUrl]
+label = "IDP Single Login URL"
+description = "The URL for initiating SSO"
+
+[provider.saml2.idpSingleLogoutUrl]
+label = "IDP Single Logout URL"
+description = "The URL for initiating SLO"
+
+[provider.saml2.idpIssuer]
+label = "IDP Issuer"
+description = "The ID of your provider"
+
+[provider.saml2.idpCert]
+label = "IDP Certificate"
+description = "The certificate path (e.g., classpath:okta.cert)"
+
+[provider.saml2.privateKey]
+label = "Private Key"
+description = "Your private key path"
+
+[provider.saml2.spCert]
+label = "SP Certificate"
+description = "Your signing certificate path"
+
+[provider.saml2.autoCreateUser]
+label = "Auto Create Users"
+description = "Automatically create user accounts on first SAML2 login"
+
+[provider.saml2.blockRegistration]
+label = "Block Registration"
+description = "Prevent new user registration via SAML2"
+
+[provider.googledrive]
+name = "Google Drive"
+scope = "File Import"
+
+[provider.googledrive.enabled]
+label = "Enable Google Drive File Picker"
+description = "Allow users to import files directly from Google Drive"
+
+[provider.googledrive.clientId]
+label = "Client ID"
+description = "Google OAuth 2.0 Client ID from Google Cloud Console"
+
+[provider.googledrive.apiKey]
+label = "API Key"
+description = "Google API Key for Google Picker API from Google Cloud Console"
+
+[provider.googledrive.appId]
+label = "App ID"
+description = "Google Drive App ID from Google Cloud Console"

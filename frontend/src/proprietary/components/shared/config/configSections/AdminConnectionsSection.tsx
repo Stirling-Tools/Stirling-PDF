@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Stack, Text, Loader, Group, Divider, Paper, Switch, Badge, Anchor, Select, Collapse } from '@mantine/core';
@@ -7,7 +7,9 @@ import LocalIcon from '@app/components/shared/LocalIcon';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
+import { useSettingsDirty } from '@app/hooks/useSettingsDirty';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
+import { SettingsStickyFooter } from '@app/components/shared/config/SettingsStickyFooter';
 import { Z_INDEX_CONFIG_MODAL } from '@app/styles/zIndex';
 import ProviderCard from '@app/components/shared/config/configSections/ProviderCard';
 import { Provider, useAllProviders } from '@app/components/shared/config/configSections/providerDefinitions';
@@ -76,18 +78,22 @@ interface ConnectionsSettingsData {
   mobileScannerImageResolution?: string;
   mobileScannerPageFormat?: string;
   mobileScannerStretchToFit?: boolean;
+  googleDriveEnabled?: boolean;
+  googleDriveClientId?: string;
+  googleDriveApiKey?: string;
+  googleDriveAppId?: string;
 }
 
 export default function AdminConnectionsSection() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
-  const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
+  const { loginEnabled, getDisabledStyles } = useLoginRequired();
+  const { restartModalOpened, closeRestartModal, restartServer } = useRestartServer();
   const allProviders = useAllProviders();
 
   const adminSettings = useAdminSettings<ConnectionsSettingsData>({
     sectionName: 'connections',
-    fetchTransformer: async () => {
+    fetchTransformer: async (): Promise<ConnectionsSettingsData & { _pending?: Record<string, any> }> => {
       // Fetch security settings (oauth2, saml2)
       const securityResponse = await apiClient.get('/api/v1/admin/settings/section/security');
       const securityData = securityResponse.data || {};
@@ -108,7 +114,7 @@ export default function AdminConnectionsSection() {
       const systemResponse = await apiClient.get('/api/v1/admin/settings/section/system');
       const systemData = systemResponse.data || {};
 
-      const result: any = {
+      const result: ConnectionsSettingsData & { _pending?: Record<string, any> } = {
         oauth2: securityData.oauth2 || {},
         saml2: securityData.saml2 || {},
         mail: mailData || {},
@@ -118,11 +124,15 @@ export default function AdminConnectionsSection() {
         mobileScannerConvertToPdf: systemData.mobileScannerSettings?.convertToPdf !== false,
         mobileScannerImageResolution: systemData.mobileScannerSettings?.imageResolution || 'full',
         mobileScannerPageFormat: systemData.mobileScannerSettings?.pageFormat || 'A4',
-        mobileScannerStretchToFit: systemData.mobileScannerSettings?.stretchToFit || false
+        mobileScannerStretchToFit: systemData.mobileScannerSettings?.stretchToFit || false,
+        googleDriveEnabled: premiumData.proFeatures?.googleDrive?.enabled || false,
+        googleDriveClientId: premiumData.proFeatures?.googleDrive?.clientId || '',
+        googleDriveApiKey: premiumData.proFeatures?.googleDrive?.apiKey || '',
+        googleDriveAppId: premiumData.proFeatures?.googleDrive?.appId || ''
       };
 
-      // Merge pending blocks from all four endpoints
-      const pendingBlock: any = {};
+      // Merge pending blocks from all endpoints
+      const pendingBlock: Record<string, any> = {};
       if (securityData._pending?.oauth2) {
         pendingBlock.oauth2 = securityData._pending.oauth2;
       }
@@ -153,6 +163,18 @@ export default function AdminConnectionsSection() {
       if (systemData._pending?.mobileScannerSettings?.stretchToFit !== undefined) {
         pendingBlock.mobileScannerStretchToFit = systemData._pending.mobileScannerSettings.stretchToFit;
       }
+      if (premiumData._pending?.proFeatures?.googleDrive?.enabled !== undefined) {
+        pendingBlock.googleDriveEnabled = premiumData._pending.proFeatures.googleDrive.enabled;
+      }
+      if (premiumData._pending?.proFeatures?.googleDrive?.clientId !== undefined) {
+        pendingBlock.googleDriveClientId = premiumData._pending.proFeatures.googleDrive.clientId;
+      }
+      if (premiumData._pending?.proFeatures?.googleDrive?.apiKey !== undefined) {
+        pendingBlock.googleDriveApiKey = premiumData._pending.proFeatures.googleDrive.apiKey;
+      }
+      if (premiumData._pending?.proFeatures?.googleDrive?.appId !== undefined) {
+        pendingBlock.googleDriveAppId = premiumData._pending.proFeatures.googleDrive.appId;
+      }
 
       if (Object.keys(pendingBlock).length > 0) {
         result._pending = pendingBlock;
@@ -160,12 +182,89 @@ export default function AdminConnectionsSection() {
 
       return result;
     },
-    saveTransformer: () => {
-      // This section doesn't have a global save button
-      // Individual providers save through their own handlers
+    saveTransformer: (currentSettings: ConnectionsSettingsData) => {
+      const deltaSettings: Record<string, any> = {};
+
+      // Build delta for oauth2 settings
+      if (currentSettings.oauth2) {
+        Object.keys(currentSettings.oauth2).forEach((key) => {
+          if (key !== 'client') {
+            deltaSettings[`security.oauth2.${key}`] = (currentSettings.oauth2 as Record<string, any>)[key];
+          }
+        });
+
+        // Build delta for specific OAuth2 providers
+        const oauth2Client = currentSettings.oauth2.client;
+        if (oauth2Client) {
+          Object.keys(oauth2Client).forEach((providerId) => {
+            const providerSettings = oauth2Client[providerId];
+            Object.keys(providerSettings).forEach((key) => {
+              deltaSettings[`security.oauth2.client.${providerId}.${key}`] = providerSettings[key];
+            });
+          });
+        }
+      }
+
+      // Build delta for saml2 settings
+      if (currentSettings.saml2) {
+        Object.keys(currentSettings.saml2).forEach((key) => {
+          deltaSettings[`security.saml2.${key}`] = (currentSettings.saml2 as Record<string, any>)[key];
+        });
+      }
+
+      // Mail settings
+      if (currentSettings.mail) {
+        Object.keys(currentSettings.mail).forEach((key) => {
+          deltaSettings[`mail.${key}`] = (currentSettings.mail as Record<string, any>)[key];
+        });
+      }
+
+      // Telegram settings
+      if (currentSettings.telegram) {
+        Object.keys(currentSettings.telegram).forEach((key) => {
+          deltaSettings[`telegram.${key}`] = (currentSettings.telegram as Record<string, any>)[key];
+        });
+      }
+
+      // SSO Auto Login
+      if (currentSettings?.ssoAutoLogin !== undefined) {
+        deltaSettings['premium.proFeatures.ssoAutoLogin'] = currentSettings.ssoAutoLogin;
+      }
+
+      // Mobile Scanner settings
+      if (currentSettings?.enableMobileScanner !== undefined) {
+        deltaSettings['system.enableMobileScanner'] = currentSettings.enableMobileScanner;
+      }
+      if (currentSettings?.mobileScannerConvertToPdf !== undefined) {
+        deltaSettings['system.mobileScannerSettings.convertToPdf'] = currentSettings.mobileScannerConvertToPdf;
+      }
+      if (currentSettings?.mobileScannerImageResolution !== undefined) {
+        deltaSettings['system.mobileScannerSettings.imageResolution'] = currentSettings.mobileScannerImageResolution;
+      }
+      if (currentSettings?.mobileScannerPageFormat !== undefined) {
+        deltaSettings['system.mobileScannerSettings.pageFormat'] = currentSettings.mobileScannerPageFormat;
+      }
+      if (currentSettings?.mobileScannerStretchToFit !== undefined) {
+        deltaSettings['system.mobileScannerSettings.stretchToFit'] = currentSettings.mobileScannerStretchToFit;
+      }
+
+      // Google Drive settings
+      if (currentSettings?.googleDriveEnabled !== undefined) {
+        deltaSettings['premium.proFeatures.googleDrive.enabled'] = currentSettings.googleDriveEnabled;
+      }
+      if (currentSettings?.googleDriveClientId !== undefined) {
+        deltaSettings['premium.proFeatures.googleDrive.clientId'] = currentSettings.googleDriveClientId;
+      }
+      if (currentSettings?.googleDriveApiKey !== undefined) {
+        deltaSettings['premium.proFeatures.googleDrive.apiKey'] = currentSettings.googleDriveApiKey;
+      }
+      if (currentSettings?.googleDriveAppId !== undefined) {
+        deltaSettings['premium.proFeatures.googleDrive.appId'] = currentSettings.googleDriveAppId;
+      }
+
       return {
         sectionData: {},
-        deltaSettings: {}
+        deltaSettings
       };
     }
   });
@@ -184,6 +283,26 @@ export default function AdminConnectionsSection() {
     }
   }, [loginEnabled, fetchSettings]);
 
+  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(settings, loading);
+
+  const handleDiscard = useCallback(() => {
+    const original = resetToSnapshot();
+    setSettings(original);
+  }, [resetToSnapshot, setSettings]);
+
+  const handleSave = async () => {
+    markSaved();
+    try {
+      await adminSettings.saveSettings();
+    } catch (_error) {
+      alert({
+        alertType: 'error',
+        title: t('admin.error', 'Error'),
+        body: t('admin.settings.saveError', 'Failed to save settings'),
+      });
+    }
+  };
+
   // Override loading state when login is disabled
   const actualLoading = loginEnabled ? loading : false;
 
@@ -198,6 +317,10 @@ export default function AdminConnectionsSection() {
 
     if (provider.id === 'telegram') {
       return settings?.telegram?.enabled === true;
+    }
+
+    if (provider.id === 'googledrive') {
+      return settings?.googleDriveEnabled === true;
     }
 
     if (provider.id === 'oauth2-generic') {
@@ -222,6 +345,15 @@ export default function AdminConnectionsSection() {
       return settings?.telegram || {};
     }
 
+    if (provider.id === 'googledrive') {
+      return {
+        enabled: settings?.googleDriveEnabled,
+        clientId: settings?.googleDriveClientId,
+        apiKey: settings?.googleDriveApiKey,
+        appId: settings?.googleDriveAppId,
+      };
+    }
+
     if (provider.id === 'oauth2-generic') {
       // Generic OAuth2 settings are at the root oauth2 level
       return {
@@ -241,175 +373,6 @@ export default function AdminConnectionsSection() {
     return settings?.oauth2?.client?.[provider.id] || {};
   };
 
-  const handleProviderSave = async (provider: Provider, providerSettings: Record<string, any>) => {
-    // Block save if login is disabled
-    if (!validateLoginEnabled()) {
-      return;
-    }
-
-    try {
-      if (provider.id === 'smtp') {
-        // Mail settings use a different endpoint
-        const response = await apiClient.put('/api/v1/admin/settings/section/mail', providerSettings);
-
-        if (response.status === 200) {
-          await fetchSettings(); // Refresh settings
-          alert({
-            alertType: 'success',
-            title: t('admin.success', 'Success'),
-            body: t('admin.settings.saveSuccess', 'Settings saved successfully'),
-          });
-          showRestartModal();
-        } else {
-          throw new Error('Failed to save');
-        }
-      } else if (provider.id === 'telegram') {
-        const parseToNumberArray = (values: any) =>
-          (Array.isArray(values) ? values : [])
-            .map((value) => Number(value))
-            .filter((value) => !Number.isNaN(value));
-
-        const response = await apiClient.put('/api/v1/admin/settings/section/telegram', {
-          ...providerSettings,
-          allowUserIDs: parseToNumberArray(providerSettings.allowUserIDs),
-          allowChannelIDs: parseToNumberArray(providerSettings.allowChannelIDs),
-          processingTimeoutSeconds: providerSettings.processingTimeoutSeconds
-            ? Number(providerSettings.processingTimeoutSeconds)
-            : undefined,
-          pollingIntervalMillis: providerSettings.pollingIntervalMillis
-            ? Number(providerSettings.pollingIntervalMillis)
-            : undefined,
-        });
-
-        if (response.status === 200) {
-          await fetchSettings(); // Refresh settings
-          alert({
-            alertType: 'success',
-            title: t('admin.success', 'Success'),
-            body: t('admin.settings.saveSuccess', 'Settings saved successfully'),
-          });
-          showRestartModal();
-        } else {
-          throw new Error('Failed to save');
-        }
-      } else {
-        // OAuth2/SAML2 use delta settings
-        const deltaSettings: Record<string, any> = {};
-
-        if (provider.id === 'saml2') {
-          // SAML2 settings
-          Object.keys(providerSettings).forEach((key) => {
-            deltaSettings[`security.saml2.${key}`] = providerSettings[key];
-          });
-        } else if (provider.id === 'oauth2-generic') {
-          // Generic OAuth2 settings at root level
-          Object.keys(providerSettings).forEach((key) => {
-            deltaSettings[`security.oauth2.${key}`] = providerSettings[key];
-          });
-        } else {
-          // Specific OAuth2 provider (google, github, keycloak)
-          Object.keys(providerSettings).forEach((key) => {
-            deltaSettings[`security.oauth2.client.${provider.id}.${key}`] = providerSettings[key];
-          });
-        }
-
-        const response = await apiClient.put('/api/v1/admin/settings', { settings: deltaSettings });
-
-        if (response.status === 200) {
-          await fetchSettings(); // Refresh settings
-          alert({
-            alertType: 'success',
-            title: t('admin.success', 'Success'),
-            body: t('admin.settings.saveSuccess', 'Settings saved successfully'),
-          });
-          showRestartModal();
-        } else {
-          throw new Error('Failed to save');
-        }
-      }
-    } catch (_error) {
-      alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t('admin.settings.saveError', 'Failed to save settings'),
-      });
-    }
-  };
-
-  const handleProviderDisconnect = async (provider: Provider) => {
-    // Block disconnect if login is disabled
-    if (!validateLoginEnabled()) {
-      return;
-    }
-
-    try {
-      if (provider.id === 'smtp') {
-        // Mail settings use a different endpoint
-        const response = await apiClient.put('/api/v1/admin/settings/section/mail', { enabled: false });
-
-        if (response.status === 200) {
-          await fetchSettings();
-          alert({
-            alertType: 'success',
-            title: t('admin.success', 'Success'),
-            body: t('admin.settings.connections.disconnected', 'Provider disconnected successfully'),
-          });
-          showRestartModal();
-        } else {
-          throw new Error('Failed to disconnect');
-        }
-      } else if (provider.id === 'telegram') {
-        const response = await apiClient.put('/api/v1/admin/settings/section/telegram', {
-          enabled: false,
-        });
-
-        if (response.status === 200) {
-          await fetchSettings();
-          alert({
-            alertType: 'success',
-            title: t('admin.success', 'Success'),
-            body: t('admin.settings.connections.disconnected', 'Provider disconnected successfully'),
-          });
-          showRestartModal();
-        } else {
-          throw new Error('Failed to disconnect');
-        }
-      } else {
-        const deltaSettings: Record<string, any> = {};
-
-        if (provider.id === 'saml2') {
-          deltaSettings['security.saml2.enabled'] = false;
-        } else if (provider.id === 'oauth2-generic') {
-          deltaSettings['security.oauth2.enabled'] = false;
-        } else {
-          // Clear all fields for specific OAuth2 provider
-          provider.fields.forEach((field) => {
-            deltaSettings[`security.oauth2.client.${provider.id}.${field.key}`] = '';
-          });
-        }
-
-        const response = await apiClient.put('/api/v1/admin/settings', { settings: deltaSettings });
-
-        if (response.status === 200) {
-          await fetchSettings();
-          alert({
-            alertType: 'success',
-            title: t('admin.success', 'Success'),
-            body: t('admin.settings.connections.disconnected', 'Provider disconnected successfully'),
-          });
-          showRestartModal();
-        } else {
-          throw new Error('Failed to disconnect');
-        }
-      }
-    } catch (_error) {
-      alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t('admin.settings.connections.disconnectError', 'Failed to disconnect provider'),
-      });
-    }
-  };
 
   if (actualLoading) {
     return (
@@ -419,105 +382,46 @@ export default function AdminConnectionsSection() {
     );
   }
 
-  const handleSSOAutoLoginSave = async () => {
-    // Block save if login is disabled
-    if (!validateLoginEnabled()) {
-      return;
-    }
-
-    try {
-      const deltaSettings = {
-        'premium.proFeatures.ssoAutoLogin': settings?.ssoAutoLogin
-      };
-
-      const response = await apiClient.put('/api/v1/admin/settings', { settings: deltaSettings });
-
-      if (response.status === 200) {
-        alert({
-          alertType: 'success',
-          title: t('admin.success', 'Success'),
-          body: t('admin.settings.saveSuccess', 'Settings saved successfully'),
-        });
-        showRestartModal();
-      } else {
-        throw new Error('Failed to save');
-      }
-    } catch (_error) {
-      alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t('admin.settings.saveError', 'Failed to save settings'),
-      });
-    }
-  };
-
-  const handleMobileScannerSave = async (newValue: boolean) => {
-    // Block save if login is disabled
-    if (!validateLoginEnabled()) {
-      return;
-    }
-
-    try {
-      const deltaSettings = {
-        'system.enableMobileScanner': newValue
-      };
-
-      const response = await apiClient.put('/api/v1/admin/settings', { settings: deltaSettings });
-
-      if (response.status === 200) {
-        alert({
-          alertType: 'success',
-          title: t('admin.settings.success', 'Settings saved successfully')
-        });
-        fetchSettings();
-      }
-    } catch (error) {
-      console.error('Failed to save mobile scanner setting:', error);
-      alert({
-        alertType: 'error',
-        title: t('admin.settings.error', 'Failed to save settings')
-      });
-    }
-  };
-
-  const handleMobileScannerSettingsSave = async (settingKey: string, newValue: string | boolean) => {
-    // Block save if login is disabled or mobile scanner is not enabled
-    if (!validateLoginEnabled() || !settings?.enableMobileScanner) {
-      return;
-    }
-
-    try {
-      const deltaSettings = {
-        [`system.mobileScannerSettings.${settingKey}`]: newValue
-      };
-
-      const response = await apiClient.put('/api/v1/admin/settings', { settings: deltaSettings });
-
-      if (response.status === 200) {
-        alert({
-          alertType: 'success',
-          title: t('admin.success', 'Success'),
-          body: t('admin.settings.saveSuccess', 'Settings saved successfully'),
-        });
-        showRestartModal();
-      } else {
-        throw new Error('Failed to save');
-      }
-    } catch (_error) {
-      alert({
-        alertType: 'error',
-        title: t('admin.error', 'Error'),
-        body: t('admin.settings.saveError', 'Failed to save settings'),
-      });
-    }
-  };
 
   const linkedProviders = allProviders.filter((p) => isProviderConfigured(p));
   const availableProviders = allProviders.filter((p) => !isProviderConfigured(p));
 
+  const updateProviderSettings = (provider: Provider, updatedSettings: Record<string, any>) => {
+    if (provider.id === 'smtp') {
+      setSettings({ ...settings, mail: updatedSettings });
+    } else if (provider.id === 'telegram') {
+      setSettings({ ...settings, telegram: updatedSettings });
+    } else if (provider.id === 'googledrive') {
+      setSettings({
+        ...settings,
+        googleDriveEnabled: updatedSettings.enabled,
+        googleDriveClientId: updatedSettings.clientId,
+        googleDriveApiKey: updatedSettings.apiKey,
+        googleDriveAppId: updatedSettings.appId,
+      });
+    } else if (provider.id === 'saml2') {
+      setSettings({ ...settings, saml2: updatedSettings });
+    } else if (provider.id === 'oauth2-generic') {
+      setSettings({ ...settings, oauth2: updatedSettings });
+    } else {
+      // Specific OAuth2 provider
+      setSettings({
+        ...settings,
+        oauth2: {
+          ...settings.oauth2,
+          client: {
+            ...settings.oauth2?.client,
+            [provider.id]: updatedSettings
+          }
+        }
+      });
+    }
+  };
+
   return (
-    <Stack gap="xl">
-      <LoginRequiredBanner show={!loginEnabled} />
+    <div className="settings-section-container">
+      <Stack gap="xl" className="settings-section-content">
+        <LoginRequiredBanner show={!loginEnabled} />
 
       {/* Header */}
       <div>
@@ -561,7 +465,6 @@ export default function AdminConnectionsSection() {
                 onChange={(e) => {
                   if (!loginEnabled) return; // Block change when login disabled
                   setSettings({ ...settings, ssoAutoLogin: e.target.checked });
-                  handleSSOAutoLoginSave();
                 }}
                 disabled={!loginEnabled}
                 styles={getDisabledStyles()}
@@ -579,6 +482,16 @@ export default function AdminConnectionsSection() {
             <LocalIcon icon="qr-code-rounded" width="1.25rem" height="1.25rem" />
             <Text fw={600} size="sm">{t('admin.settings.connections.mobileScanner.label', 'Mobile Phone Upload')}</Text>
           </Group>
+
+          {/* Documentation Link */}
+          <Anchor
+            href="https://docs.stirlingpdf.com/Functionality/Mobile-Scanner"
+            target="_blank"
+            size="xs"
+            c="blue"
+          >
+            {t('admin.settings.connections.documentation', 'View documentation')} ↗
+          </Anchor>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
@@ -598,9 +511,7 @@ export default function AdminConnectionsSection() {
                 checked={settings?.enableMobileScanner || false}
                 onChange={(e) => {
                   if (!loginEnabled) return; // Block change when login disabled
-                  const newValue = e.target.checked;
-                  setSettings({ ...settings, enableMobileScanner: newValue });
-                  handleMobileScannerSave(newValue);
+                  setSettings({ ...settings, enableMobileScanner: e.target.checked });
                 }}
                 disabled={!loginEnabled}
                 styles={getDisabledStyles()}
@@ -625,9 +536,7 @@ export default function AdminConnectionsSection() {
                     checked={settings?.mobileScannerConvertToPdf !== false}
                     onChange={(e) => {
                       if (!loginEnabled) return;
-                      const newValue = e.target.checked;
-                      setSettings({ ...settings, mobileScannerConvertToPdf: newValue });
-                      handleMobileScannerSettingsSave('convertToPdf', newValue);
+                      setSettings({ ...settings, mobileScannerConvertToPdf: e.target.checked });
                     }}
                     disabled={!loginEnabled}
                   />
@@ -652,7 +561,6 @@ export default function AdminConnectionsSection() {
                         onChange={(value) => {
                           if (!loginEnabled) return;
                           setSettings({ ...settings, mobileScannerImageResolution: value || 'full' });
-                          handleMobileScannerSettingsSave('imageResolution', value || 'full');
                         }}
                         data={[
                           { value: 'full', label: t('admin.settings.connections.imageResolutionFull', 'Full (Original Size)') },
@@ -680,7 +588,6 @@ export default function AdminConnectionsSection() {
                         onChange={(value) => {
                           if (!loginEnabled) return;
                           setSettings({ ...settings, mobileScannerPageFormat: value || 'A4' });
-                          handleMobileScannerSettingsSave('pageFormat', value || 'A4');
                         }}
                         data={[
                           { value: 'keep', label: t('admin.settings.connections.pageFormatKeep', 'Keep (Original Dimensions)') },
@@ -708,9 +615,7 @@ export default function AdminConnectionsSection() {
                         checked={settings?.mobileScannerStretchToFit || false}
                         onChange={(e) => {
                           if (!loginEnabled) return;
-                          const newValue = e.target.checked;
-                          setSettings({ ...settings, mobileScannerStretchToFit: newValue });
-                          handleMobileScannerSettingsSave('stretchToFit', newValue);
+                          setSettings({ ...settings, mobileScannerStretchToFit: e.target.checked });
                         }}
                         disabled={!loginEnabled}
                       />
@@ -738,8 +643,7 @@ export default function AdminConnectionsSection() {
                   provider={provider}
                   isConfigured={true}
                   settings={getProviderSettings(provider)}
-                  onSave={(providerSettings) => handleProviderSave(provider, providerSettings)}
-                  onDisconnect={() => handleProviderDisconnect(provider)}
+                  onChange={(updatedSettings) => updateProviderSettings(provider, updatedSettings)}
                   disabled={!loginEnabled}
                 />
               ))}
@@ -764,7 +668,7 @@ export default function AdminConnectionsSection() {
                 provider={provider}
                 isConfigured={false}
                 settings={getProviderSettings(provider)}
-                onSave={(providerSettings) => handleProviderSave(provider, providerSettings)}
+                onChange={(updatedSettings) => updateProviderSettings(provider, updatedSettings)}
                 disabled={!loginEnabled}
               />
             ))}
@@ -778,6 +682,15 @@ export default function AdminConnectionsSection() {
         onClose={closeRestartModal}
         onRestart={restartServer}
       />
-    </Stack>
+      </Stack>
+
+      <SettingsStickyFooter
+        isDirty={isDirty}
+        saving={adminSettings.saving}
+        loginEnabled={loginEnabled}
+        onSave={handleSave}
+        onDiscard={handleDiscard}
+      />
+    </div>
   );
 }

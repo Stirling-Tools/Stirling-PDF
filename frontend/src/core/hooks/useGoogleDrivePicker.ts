@@ -2,11 +2,13 @@
  * React hook for Google Drive file picker
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
 import {
   getGoogleDrivePickerService,
   isGoogleDriveConfigured,
   getGoogleDriveConfig,
+  extractGoogleDriveBackendConfig,
 } from '@app/services/googleDrivePickerService';
 
 interface UseGoogleDrivePickerOptions {
@@ -25,16 +27,27 @@ interface UseGoogleDrivePickerReturn {
  * Hook to use Google Drive file picker
  */
 export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
+  const { config } = useAppConfig();
   const [isEnabled, setIsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Check if Google Drive is configured on mount
+  // Memoize backend config to only track Google Drive specific properties
+  const googleDriveBackendConfig = useMemo(
+    () => extractGoogleDriveBackendConfig(config),
+    [config?.googleDriveEnabled, config?.googleDriveClientId, config?.googleDriveApiKey, config?.googleDriveAppId]
+  );
+
+  // Check if Google Drive is configured and reset initialization if disabled
   useEffect(() => {
-    const configured = isGoogleDriveConfigured();
+    const configured = isGoogleDriveConfigured(googleDriveBackendConfig);
     setIsEnabled(configured);
-  }, []);
+    // Reset initialization state if Google Drive becomes disabled
+    if (!configured) {
+      setIsInitialized(false);
+    }
+  }, [googleDriveBackendConfig]);
 
   /**
    * Initialize the Google Drive service (lazy initialization)
@@ -42,15 +55,15 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
   const initializeService = useCallback(async () => {
     if (isInitialized) return;
 
-    const config = getGoogleDriveConfig();
-    if (!config) {
+    const googleDriveConfig = getGoogleDriveConfig(googleDriveBackendConfig);
+    if (!googleDriveConfig) {
       throw new Error('Google Drive is not configured');
     }
 
     const service = getGoogleDrivePickerService();
-    await service.initialize(config);
+    await service.initialize(googleDriveConfig);
     setIsInitialized(true);
-  }, [isInitialized]);
+  }, [isInitialized, googleDriveBackendConfig]);
 
   /**
    * Open the Google Drive picker
