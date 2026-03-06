@@ -240,10 +240,11 @@ export function updateSupportedLanguages(configLanguages?: string[] | null, defa
   i18n.options.supportedLngs = validLanguages;
   i18n.options.fallbackLng = fallback;
 
-  // If current language is not in the new supported list, switch to fallback
+  // If current language is not in the new supported list, switch to fallback with higher priority to override browser detection
   const currentLang = normalizeLanguageCode(i18n.language || '');
   if (currentLang && !validLanguages.includes(currentLang)) {
-    setLanguageWithPriority(fallback, LanguageSource.Fallback);
+    // Use ServerDefault priority to override browser detection when language not in whitelist
+    setLanguageWithPriority(fallback, LanguageSource.ServerDefault);
   } else if (validDefault) {
     // Apply server default (respects user choice if already set)
     setLanguageWithPriority(validDefault, LanguageSource.ServerDefault);
