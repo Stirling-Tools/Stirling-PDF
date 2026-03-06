@@ -24,7 +24,7 @@ export const defaultParameters: PageLayoutParameters = {
   rows: 1,
   cols: 1,
   orientation: "PORTRAIT",
-  arrangement: "BY_COLUMNS",
+  arrangement: "BY_ROWS",
   readingDirection: "LTR",
   addBorder: false,
   innerMargin: 0,
