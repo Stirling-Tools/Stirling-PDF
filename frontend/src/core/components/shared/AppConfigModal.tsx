@@ -10,7 +10,6 @@ import { useIsMobile } from '@app/hooks/useIsMobile';
 import { Z_INDEX_CONFIG_MODAL, Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { useLicenseAlert } from '@app/hooks/useLicenseAlert';
 import { UnsavedChangesProvider, useUnsavedChanges } from '@app/contexts/UnsavedChangesContext';
-import { useTranslation } from 'react-i18next';
 import { SettingsSearchBar } from '@app/components/shared/config/SettingsSearchBar';
 
 interface AppConfigModalProps {
@@ -23,7 +22,6 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useTranslation();
   const { config } = useAppConfig();
   const licenseAlert = useLicenseAlert();
   const { confirmIfDirty } = useUnsavedChanges();
