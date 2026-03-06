@@ -17,6 +17,13 @@ interface AppConfigModalProps {
   onClose: () => void;
 }
 
+interface SettingsSearchOption {
+  value: NavKey;
+  label: string;
+  sectionTitle: string;
+  destinationPath: string;
+}
+
 const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   const [active, setActive] = useState<NavKey>('general');
   const [searchValue, setSearchValue] = useState('');
@@ -101,13 +108,15 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
 
   // Build a global index from every accessible settings tab in the modal navigation.
   // This does not render section components, so API calls still happen only when a tab is opened.
-  const searchableSections = useMemo(() => {
+  const searchableSections = useMemo<SettingsSearchOption[]>(() => {
     return configNavSections.flatMap((section) =>
       section.items
         .filter((item) => !item.disabled)
         .map((item) => ({
           value: item.key,
-          label: `${item.label} · ${section.title}`,
+          label: item.label,
+          sectionTitle: section.title,
+          destinationPath: `/settings/${item.key}`,
         }))
     );
   }, [configNavSections]);
@@ -253,13 +262,24 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
                   searchValue={searchValue}
                   onSearchChange={setSearchValue}
                   onChange={handleSearchNavigation}
-                  placeholder={t('search.placeholder', 'Enter search term...')}
+                  placeholder={t('settings.search.placeholder', 'Search settings pages...')}
                   leftSection={<LocalIcon icon="search-rounded" width={16} height={16} />}
                   aria-label={t('navbar.search', 'Search')}
                   nothingFoundMessage={t('search.noResults', 'No results found')}
                   searchable
                   clearable={false}
-                  w={isMobile ? 170 : 260}
+                  w={isMobile ? 170 : 320}
+                  renderOption={({ option }) => {
+                    const searchOption = option as unknown as SettingsSearchOption;
+                    return (
+                      <div className="settings-search-option">
+                        <Text size="sm" fw={600}>{searchOption.label}</Text>
+                        <Text size="xs" c="dimmed">
+                          {searchOption.sectionTitle} · {searchOption.destinationPath}
+                        </Text>
+                      </div>
+                    );
+                  }}
                   comboboxProps={{
                     withinPortal: true,
                     zIndex: Z_INDEX_OVER_CONFIG_MODAL,
