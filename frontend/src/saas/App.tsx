@@ -1,6 +1,8 @@
 import { Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AppProviders } from '@app/components/AppProviders';
+import { setBaseUrl } from '@app/constants/app';
+import type { AppConfig } from '@app/contexts/AppConfigContext';
 import { AppLayout } from '@app/components/AppLayout';
 import { LoadingFallback } from '@app/components/shared/LoadingFallback';
 import OnboardingTour from '@app/components/onboarding/OnboardingTour';
@@ -21,10 +23,14 @@ import '@app/styles/index.css';
 // Import file ID debugging helpers (development only)
 import '@app/utils/fileIdSafety';
 
+function handleConfigLoaded(config: AppConfig) {
+  if (config.baseUrl) setBaseUrl(config.baseUrl);
+}
+
 export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <AppProviders>
+      <AppProviders appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}>
         <AppLayout>
           <OnboardingBootstrap />
           <TrialExpiredBootstrap />
