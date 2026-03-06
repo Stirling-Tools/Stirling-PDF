@@ -96,6 +96,8 @@ pin = "Bestand vastzetten (actief houden na tooluitvoering)"
 poweredBy = "Mogelijk gemaakt door"
 pro = "Pro"
 processTimeWarning = "Waarschuwing: Dit proces kan tot een minuut duren afhankelijk van de bestandsgrootte"
+processingComplete = "Je bestand is klaar."
+processingCompleteMultiple = "{{count}} bestanden zijn klaar."
 property = "Eigenschap"
 quickPosition = "Snelle positie"
 red = "Rood"
@@ -105,6 +107,7 @@ save = "Opslaan"
 saveToBrowser = "Opslaan in browser"
 saveUnavailable = "Opslaan niet beschikbaar voor dit item"
 seeDockerHub = "Zie Docker Hub"
+editSecret = "Bewerk deze waarde"
 selectFillter = "-- Selecteren --"
 size = "Grootte"
 sponsor = "Sponsor"
@@ -651,6 +654,7 @@ description = "Configureer externe authenticatieproviders zoals OAuth2 en SAML."
 disconnect = "Verbinding verbreken"
 disconnected = "Provider succesvol ontkoppeld"
 disconnectError = "Ontkoppelen van provider mislukt"
+documentation = "Documentatie bekijken"
 imageResolutionFull = "Full (Original Size)"
 imageResolutionReduced = "Reduced (Max 1200px)"
 linkedServices = "Gekoppelde diensten"
@@ -964,6 +968,18 @@ label = "Standaardlocale"
 description = "Maximale bestandsgrootte voor uploaden (bijv. 100MB, 1GB)"
 label = "Uploadlimiet"
 
+[admin.settings.general.hideDisabledTools]
+description = "Uitgeschakelde tools in de interface verbergen"
+label = "Uitgeschakelde tools verbergen"
+
+[admin.settings.general.hideDisabledTools.googleDrive]
+description = "Google Drive-knop verbergen als niet ingeschakeld"
+label = "Google Drive verbergen"
+
+[admin.settings.general.hideDisabledTools.mobileScanner]
+description = "Mobiele QR-scannerknop verbergen als niet ingeschakeld"
+label = "Mobiele scanner verbergen"
+
 [admin.settings.general.frontendUrl]
 description = "Base URL for frontend (e.g., https://pdf.example.com). Used for email invite links and mobile QR code uploads. Leave empty to use backend URL."
 label = "Frontend URL"
@@ -1148,6 +1164,8 @@ title = "Beveiliging"
 
 [admin.settings.security.audit]
 label = "Auditlogboek"
+showDetails = "Auditniveau-details weergeven"
+hideDetails = "Auditniveau-details verbergen"
 
 [admin.settings.security.audit.enabled]
 description = "Gebruikersacties en systeemgebeurtenissen bijhouden voor compliance en beveiligingsmonitoring"
@@ -1157,9 +1175,31 @@ label = "Auditlogboek inschakelen"
 description = "0=UIT, 1=BASIS, 2=STANDAARD, 3=UITGEBREID"
 label = "Auditniveau"
 
+[admin.settings.security.audit.levelDetails]
+off = "Geen auditlogging (behalve kritieke beveiligingsgebeurtenissen)"
+basic = "PDF-bestandsbewerkingen (comprimeren, splitsen, samenvoegen, enz.) en instellingenwijzigingen. Legt vast: status van bewerking (succes/mislukt), methodeparameters, timing. Minimaal logvolume."
+standard = "BASIC-gebeurtenissen plus: inloggen/uitloggen, accountwijzigingen, algemene GET-verzoeken. Sluit continue polling-aanroepen (/auth/me, /app-config, /health, enz.) uit om logruis te verminderen. Ideaal voor de meeste implementaties."
+verbose = "STANDARD-gebeurtenissen plus: continue polling-aanroepen, alle GET-verzoeken, gedetailleerde timing. Waarschuwing: hoog logvolume en prestatie-impact."
+
 [admin.settings.security.audit.retentionDays]
 description = "Aantal dagen dat auditlogs bewaard blijven"
 label = "Bewaartermijn audit (dagen)"
+
+[admin.settings.security.audit.advancedOptions]
+title = "Geavanceerde opties"
+description = "De volgende opties vergroten verwerkingstijd en geheugengebruik. Schakel alleen in als het echt nodig is."
+
+[admin.settings.security.audit.captureFileHash]
+description = "Extraheer SHA-256-hash van geüploade PDF-bestanden voor integriteitscontrole. Onafhankelijk van auditniveau."
+label = "Bestandshash vastleggen (SHA-256)"
+
+[admin.settings.security.audit.capturePdfAuthor]
+description = "Extraheer auteursveld uit PDF-documenten tijdens verwerking. Vereist PDF-parsing, verhoogt latentie. Onafhankelijk van auditniveau."
+label = "PDF-auteursmetadata vastleggen"
+
+[admin.settings.security.audit.captureOperationResults]
+description = "Retourwaarden van methoden vastleggen. Niet aanbevolen: verhoogt logvolume en schijfgebruik aanzienlijk."
+label = "Resultaten van bewerkingen vastleggen"
 
 [admin.settings.security.csrfDisabled]
 description = "Cross-Site Request Forgery-bescherming uitschakelen (niet aanbevolen)"
@@ -1536,43 +1576,18 @@ tags = "embed,attach,file,attachment,attachments"
 title = "Add attachments"
 
 [audit]
+configureAudit = "Auditlogging configureren"
+configureAuditMessage = "Pas auditlogniveau, bewaartermijn en andere instellingen aan in het gedeelte Beveiliging & Authenticatie."
 disabled = "Auditlogging is uitgeschakeld"
 disabledMessage = "Schakel auditlogging in uw applicatieconfiguratie in om systeemevenementen te volgen."
 enterpriseRequired = "Enterprise-licentie vereist"
 enterpriseRequiredMessage = "Het audit-loggingsysteem is een functie voor ondernemingen. Upgrade naar een ondernemingslicentie om toegang te krijgen tot auditlogboeken en analyses."
+goToSettings = "Ga naar auditinstellingen"
 notAvailable = "Auditsysteem niet beschikbaar"
 notAvailableMessage = "Het auditsysteem is niet geconfigureerd of niet beschikbaar."
 
-[audit.charts]
-byType = "Gebeurtenissen per type"
-byUser = "Gebeurtenissen per gebruiker"
-day = "Dag"
-error = "Fout bij laden van grafieken"
-month = "Maand"
-overTime = "Gebeurtenissen in de tijd"
-title = "Auditdashboard"
-week = "Week"
-
 [audit.error]
 title = "Fout bij laden van auditsysteem"
-
-[audit.events]
-actions = "Acties"
-clearFilters = "Wissen"
-details = "Details"
-endDate = "Einddatum"
-error = "Fout bij laden van gebeurtenissen"
-eventDetails = "Gebeurtenisdetails"
-filterByType = "Filteren op type"
-filterByUser = "Filteren op gebruiker"
-ipAddress = "IP-adres"
-noEvents = "Geen gebeurtenissen gevonden"
-startDate = "Startdatum"
-timestamp = "Tijdstempel"
-title = "Auditgebeurtenissen"
-type = "Type"
-user = "Gebruiker"
-viewDetails = "Details bekijken"
 
 [audit.export]
 clearFilters = "Wissen"
@@ -1580,27 +1595,132 @@ description = "Exporteer auditgebeurtenissen naar CSV- of JSON-formaat. Gebruik 
 endDate = "Einddatum"
 error = "Gegevens exporteren mislukt"
 exportButton = "Gegevens exporteren"
+fieldAuthor = "Auteur (uit PDF)"
+fieldDate = "Datum"
+fieldDocumentName = "Documentnaam"
+fieldFileHash = "Bestandshash (SHA-256)"
+fieldIpAddress = "IP-adres"
+fieldOperationResults = "Bewerkingsresultaten"
+fieldOutcome = "Uitkomst (Succes/Mislukt)"
+fieldTool = "Tool"
+fieldUsername = "Gebruikersnaam"
 filterByType = "Filteren op type"
 filterByUser = "Filteren op gebruiker"
 filters = "Filters (optioneel)"
 format = "Exportformaat"
+selectFields = "Velden selecteren om op te nemen"
 startDate = "Startdatum"
 title = "Auditgegevens exporteren"
+verboseRequired = "Vereist VERBOSE auditniveau"
 
 [audit.systemStatus]
+autoRefresh = "Automatisch vernieuwen"
+autoRefreshLabel = "Automatisch elke 30s vernieuwen"
+captureBySettings = "Inschakelen in instellingen"
+capturedFields = "Vastgelegde velden"
+date = "Datum"
 days = "dagen"
 disabled = "Uitgeschakeld"
+documentName = "Documentnaam"
 enabled = "Ingeschakeld"
+fileHash = "Bestandshash"
 level = "Auditniveau"
+pdfAuthor = "PDF-auteur"
 retention = "Bewaartermijn"
 status = "Auditlogging"
 title = "Systeemstatus"
+tool = "Tool"
 totalEvents = "Totaal aantal gebeurtenissen"
+username = "Gebruikersnaam"
+verboseOnly = "Alleen VERBOSE"
+
+[audit.stats]
+activeUsers = "Actieve gebruikers"
+attention = "Aandacht vereist"
+avgLatency = "Gem. latentie"
+error = "Fout bij laden van statistieken"
+errorLoadingStats = "Statistieken laden mislukt"
+excellent = "Uitstekend"
+good = "Goed"
+noData = "N.v.t."
+successRate = "Succesratio"
+title = "Samenvatting"
+totalEvents = "Totaal aantal gebeurtenissen"
+vsLastPeriod = "t.o.v. vorige periode"
+
+[audit.charts]
+byTool = "Meest gebruikte tools"
+byType = "Gebeurtenissen per type"
+byUser = "Gebeurtenissen per gebruiker"
+day = "Dag"
+error = "Fout bij laden van grafieken"
+hourlyActivity = "Activiteit per uur"
+month = "Maand"
+noData = "Geen gegevens voor deze periode"
+overTime = "Gebeurtenissen in de tijd"
+title = "Auditdashboard"
+week = "Week"
+
+[audit.events]
+actions = "Acties"
+author = "Auteur"
+clearFilters = "Wissen"
+details = "Details"
+documentName = "Document"
+endDate = "Einddatum"
+error = "Fout bij laden van gebeurtenissen"
+eventDetails = "Gebeurtenisdetails"
+failure = "Mislukt"
+fileHash = "Bestandshash"
+filterByType = "Filteren op type"
+filterByUser = "Filteren op gebruiker"
+ipAddress = "IP-adres"
+noEvents = "Geen gebeurtenissen gevonden"
+outcome = "Status"
+sortAsc = "Oplopend sorteren"
+sortDesc = "Aflopend sorteren"
+startDate = "Startdatum"
+success = "Succes"
+timestamp = "Tijdstempel"
+title = "Auditgebeurtenissen"
+type = "Type"
+user = "Gebruiker"
+viewDetails = "Details bekijken"
+
+[audit.filters]
+allOutcomes = "Alles"
+failureOnly = "Alleen mislukkingen"
+last7Days = "Afgelopen 7 dagen"
+last30Days = "Afgelopen 30 dagen"
+outcomeFilter = "Uitkomst"
+quickPresets = "Snelle filters"
+successOnly = "Alleen successen"
+thisMonth = "Deze maand"
+today = "Vandaag"
 
 [audit.tabs]
+clearData = "Gegevens wissen"
 dashboard = "Dashboard"
 events = "Auditgebeurtenissen"
 export = "Exporteren"
+
+[audit.clearData]
+cancel = "Annuleren"
+codeDoesNotMatch = "Code komt niet overeen"
+codePlaceholder = "Typ de code hier"
+confirmationCode = "Bevestigingscode"
+confirmationRequired = "Alle auditgegevens verwijderen"
+confirmMessage = "Dit verwijdert permanent alle auditlogs. Voer hieronder de bevestigingscode in om door te gaan."
+confirmTitle = "Bevestig dat je wilt verwijderen"
+deleteButton = "Verwijderen"
+enterCode = "Bevestigingscode"
+enterCodeBelow = "Voer de code exact in zoals hierboven weergegeven (hoofdlettergevoelig)"
+initiateDelete = "Alle gegevens verwijderen"
+irreversible = "ONOMKEERBAAR"
+success = "Succes"
+successMessage = "Alle auditgegevens zijn succesvol gewist"
+warning1 = "Deze actie kan niet ongedaan worden gemaakt"
+warning2 = "Het verwijderen van auditgegevens verwijdert permanent alle historische auditlogs, inclusief beveiligingsgebeurtenissen, gebruikersactiviteiten en bestandsbewerkingen uit de database."
 
 [auth]
 accessDenied = "Toegang geweigerd"
@@ -2254,9 +2374,11 @@ copy = "Kopiëren"
 done = "Gereed"
 error = "Fout"
 expand = "Uitvouwen"
+learnMore = "Meer informatie"
 lines = "regels"
 loading = "Laden..."
 next = "Volgende"
+operation = "deze bewerking"
 preview = "Voorbeeld"
 previous = "Vorige"
 refresh = "Vernieuwen"
@@ -2920,6 +3042,7 @@ copyStack = "Tracering kopiëren"
 discordSubmit = "Discord - Support-post indienen"
 dismissAllErrors = "Alle fouten sluiten"
 encryptedPdfMustRemovePassword = "Deze PDF is versleuteld of met een wachtwoord beveiligd. Ontgrendel hem voordat u naar PDF/A converteert."
+generic = "Er is een fout opgetreden"
 github = "Dien een ticket op Github in."
 githubSubmit = "GitHub - Ticket indienen"
 incorrectPasswordProvided = "Het PDF-wachtwoord is onjuist of niet opgegeven."
@@ -4456,6 +4579,10 @@ upgradeCompleteMessage = "Uw abonnement is succesvol geüpgraded. Uw bestaande l
 upgradeSuccess = "Betaling geslaagd! Uw abonnement is geüpgraded. De licentie is op uw server bijgewerkt. U ontvangt binnenkort een bevestigingsmail."
 upgradeTitle = "Upgraden naar {{planName}}"
 yearly = "Jaarlijks"
+checkoutOpened = "Afrekenen geopend in browser"
+checkoutInstructions = "Rond je aankoop af in het browservenster dat zojuist is geopend. Ga na de betaling hier terug en klik op de knop hieronder om je factureringsinformatie te vernieuwen."
+refreshBilling = "Ik heb betaald - Facturering vernieuwen"
+closeLater = "Ik doe dit later"
 
 [payment.emailStage]
 continue = "Doorgaan"
@@ -4679,6 +4806,13 @@ prompt = "Kies pagina om tabel te extraheren"
 submit = "Extraheren"
 title = "PDF naar CSV"
 
+[PDFToXLSX]
+header = "PDF naar Excel"
+prompt = "Kies pagina's om tabellen te extraheren"
+submit = "Converteren"
+title = "PDF naar Excel (XLSX)"
+tags = "spreadsheet,excel,xlsx,tabel,extraheren,converteren"
+
 [PDFToHTML]
 credit = "Deze service gebruikt pdftohtml voor bestandsconversie."
 header = "PDF naar HTML"
@@ -4835,6 +4969,7 @@ customPricing = "Aangepast"
 featureComparison = "Functievergelijking"
 from = "Vanaf"
 hideComparison = "Functievergelijking verbergen"
+included = "Inbegrepen"
 includedInCurrent = "Inbegrepen in uw abonnement"
 licensedSeats = "Gelicenseerd: {{count}} plaatsen"
 manage = "Beheren"
@@ -4852,9 +4987,11 @@ title = "Actief abonnement"
 
 [plan.availablePlans]
 subtitle = "Kies het abonnement dat bij uw behoeften past"
+loadError = "Kan planprijzen niet laden. Standaardwaarden worden gebruikt."
 title = "Beschikbare abonnementen"
 
 [plan.enterprise]
+siteLicense = "Site-licentie"
 highlight1 = "Aangepaste prijzen"
 highlight2 = "Toegewijde ondersteuning"
 highlight3 = "Nieuwste functies"
@@ -4927,6 +5064,81 @@ instructions = "Voltooi de aankoop in het Stripe-tabblad. Zodra de betaling is v
 keyDescription = "Plak de licentiesleutel uit uw e-mail"
 success = "Licentie geactiveerd!"
 successMessage = "Uw licentie is met succes geactiveerd. U kunt dit venster nu sluiten."
+
+[plan.team]
+name = "Team"
+siteLicense = "Site-licentie"
+
+[credits]
+enableOverageBilling = "Overschrijdingsfacturering inschakelen"
+maybeLater = "Misschien later"
+upgrade = "Upgraden"
+
+[credits.modal]
+advancedMonitoring = "Geavanceerde monitoring"
+allInOneWorkspace = "Alles-in-één PDF-werkruimte (viewer, tools & agent)"
+apiSandbox = "API-sandbox"
+contactSales = "Neem contact op met Sales"
+creditsRemaining = "{{current}} van {{total}} resterend"
+creditsThisMonth = "Maandelijkse credits"
+current = "Huidig abonnement"
+customPricing = "Aangepast"
+customSmartFolders = "Aangepaste Smart Folders"
+dedicatedSupportSlas = "Toegewijde support & SLA's"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Alles in Credits, plus:"
+everythingInFree = "Alles in Free, plus:"
+fasterThroughput = "10x snellere doorvoer"
+forRegularWork = "Voor regulier PDF-werk:"
+freeTier = "Gratis niveau"
+fullyPrivateFiles = "Volledige bestandsprivacy"
+largeFileProcessing = "Verwerking van grote bestanden"
+managedMemberMessage = "Je hebt onbeperkte toegang tot credits via je team. Neem contact op met je teamleider als je hulp nodig hebt."
+managedMemberTitle = "Onbeperkte credits"
+meteringBillingNote = "Overschrijdingscredits worden maandelijks gefactureerd samen met je Team-abonnement. Volg je gebruik op elk moment in je accountinstellingen."
+meteringExplanation = "Je Team-abonnement bevat {{credits}} credits per maand. Wanneer ze op zijn, levert overschrijdingsfacturering automatisch extra credits zodat je nooit hoeft te stoppen met werken."
+meteringIncluded = "{{credits}} credits/maand inbegrepen bij Team"
+meteringNoCommitment = "Geen verplichting, op elk moment opzegbaar"
+meteringNeverRunOut = "Nooit zonder credits"
+meteringPayAsYouGo = "Alleen betalen voor wat je gebruikt"
+meteringPrice = "Extra credits voor {{price}}/credit"
+meteringTitle = "Betaal-naar-gebruik overschrijdingsfacturering"
+monthlyCredits = "maandelijkse credits"
+orgWideAccess = "Organisatiebrede toegangscontrole"
+overage = "overschrijding"
+perMonth = "/maand"
+popular = "Populair"
+premiumAiModels = "Premium AI-modellen"
+prioritySupport = "Prioritaire support"
+privateDocCloud = "Privé Document Cloud"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Beveiligde API-toegang"
+selfHostLink = "Bekijk de documentatie en plannen"
+selfHostPrompt = "Wil je zelf hosten?"
+standardThroughput = "Standaard doorvoer"
+subtitle = "Upgrade naar Team voor 10x de credits en snellere verwerking."
+subtitlePro = "Schakel automatische overschrijdingsfacturering in zodat je nooit zonder credits zit."
+teamLeaderOnly = "Alleen teamleiders kunnen overschrijdingsfacturering inschakelen"
+teamSubscription = "Team"
+titleExhausted = "Je hebt je gratis credits gebruikt"
+titleExhaustedPro = "Je hebt geen credits meer"
+unlimitedApiAccess = "Onbeperkte API-toegang"
+unlimitedMonthlyCredits = "Site-licentie"
+unlimitedSeats = "Onbeperkte seats"
+
+[credits.modal.features]
+everythingInCredits = "Alles in Credits, plus:"
+everythingInFree = "Alles in Free, plus:"
+forRegularWork = "Voor regulier PDF-werk:"
+
+[credits.insufficient]
+brief = "Onvoldoende credits. Je hebt {{required}} credits nodig maar hebt er {{current}}."
+freeTier = "Upgrade naar Team voor 10x meer credits en onbeperkte overschrijdingsfacturering."
+managedMember = "Neem contact op met je teamleider voor hulp."
+message = "Je hebt niet genoeg credits om {{tool}} uit te voeren. Je hebt momenteel {{current}} credits."
+messageWithAmount = "Je hebt {{required}} credits nodig om {{tool}} uit te voeren, maar je hebt er slechts {{current}}."
+teamMember = "Schakel overschrijdingsfacturering in zodat je nooit zonder credits komt te zitten."
+title = "Onvoldoende credits"
 
 [printFile]
 header = "Print bestand naar printer"
@@ -5565,6 +5777,70 @@ user = "Ingelogd als"
 saas = "Stirling Cloud"
 selfhosted = "Self-hosted"
 
+[settings.planBilling]
+currentPlan = "Huidig abonnement"
+loading = "Factureringsinformatie laden..."
+notAvailable = "Abonnement & facturering is alleen beschikbaar wanneer verbonden met Stirling Cloud (SaaS-modus)."
+title = "Abonnement & facturering"
+
+[settings.planBilling.billing]
+manageBilling = "Facturering beheren"
+nextBillingDate = "Volgende facturatiedatum"
+overageCost = "Huidige overschrijdingskosten: {{amount}} ({{credits}} credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Geschatte kosten: {{amount}}"
+freeTierInfo = "Gratis abonnement bevat {{freeCredits}} credits per maand. Upgrade naar Team voor {{teamCredits}} credits/maand en betaal-naar-gebruik overschrijdingsfacturering."
+included = "{{count}} credits/maand (inbegrepen)"
+noOverage = "Geen overschrijdingskosten deze maand. Je gebruikt je inbegrepen {{count}} credits."
+overage = "+ {{count}} overschrijding"
+overageInfo = "Overschrijdingscredits worden gefactureerd tegen {{price}} per credit. Je betaalt alleen voor wat je gebruikt boven je maandelijkse tegoed."
+title = "Creditgebruik"
+
+[settings.planBilling.errors]
+fetchFailed = "Kan factureringsgegevens niet ophalen"
+retry = "Opnieuw proberen"
+
+[settings.planBilling.status]
+active = "Actief"
+canceled = "Geannuleerd"
+pastDue = "Achterstallig"
+trial = "Proef"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Aangepaste enterprise-functies en support"
+free = "Gratis"
+freeDescription = "50 credits per maand"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 credits/maand inbegrepen, automatische overschrijdingsfacturering voor ononderbroken service"
+teamTooltipCredits = "Team-abonnement bevat {{credits}} credits/maand."
+teamTooltipFineprint = "Je betaalt alleen voor wat je gebruikt boven de inbegrepen credits."
+teamTooltipOverage = "Automatische overschrijdingsfacturering tegen {{price}}/credit zorgt voor ononderbroken service."
+
+[settings.planBilling.team]
+managedByTeam = "Beheerd door team"
+memberCount = "{{count}} teamleden"
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} dagen resterend"
+daysRemainingFull = "Je proefperiode eindigt over {{days}} dagen"
+endDate = "Verloopt: {{date}}"
+endsOn = "Proef eindigt"
+title = "Gratis proef actief"
+
+[settings.planBilling.upgrade]
+cta = "Upgrade naar Team"
+featureApi = "API-toegang voor automatisering"
+featureCredits = "{{teamCredits}} credits per maand (vs {{freeCredits}} op Free)"
+featureMembers = "Onbeperkt aantal teamleden"
+featureSupport = "Prioritaire support"
+featureThroughput = "Snellere verwerkingsdoorvoer"
+opensInBrowser = "Opent in browser om upgrade te voltooien"
+subtitle = "Upgrade naar Team voor:"
+title = "Upgrade je abonnement"
+
 [settings.developer]
 apiKeys = "API-sleutels"
 title = "Ontwikkelaar"
@@ -5688,6 +5964,9 @@ requiresEnterprise = "Enterprise-licentie vereist"
 people = "Personen"
 teams = "Teams"
 title = "Werkruimte"
+
+[settings.team]
+title = "Team"
 
 [setup]
 description = "Begin door te kiezen hoe u Stirling PDF wilt gebruiken"
@@ -6011,6 +6290,11 @@ desc = "Automatisch splitsen met scheidingsvellen"
 name = "Paginascheider"
 tooltip = "Gebruik QR-code scheidingsvellen tussen documenten tijdens het scannen"
 
+[split.methods.byPoster]
+name = "Afdrukbare delen"
+desc = "Grote pagina's splitsen in afdrukbare formaten"
+tooltip = "Groot formaat pagina's opdelen in kleinere delen geschikt voor afdrukken op standaardpapier (A4, Letter, enz.)"
+
 [split.methods.byPages]
 desc = "Specifieke pagina's extraheren (1,3,5-10)"
 name = "Paginanummers"
@@ -6029,6 +6313,7 @@ tooltip = "Specificeer maximale bestandsgrootte (bijv. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Splitsen op"
 splitBy = "Splitsen volgens"
+splitInto = "Splitsen in"
 
 [split.methodSelection.tooltip]
 bullet1 = "Klik op een methodekaart om te selecteren"
@@ -6047,6 +6332,21 @@ selectMethodFirst = "Selecteer eerst een splitsmethode"
 [split.steps]
 chooseMethod = "Methode kiezen"
 settings = "Instellingen"
+
+[split.poster]
+rightToLeft = "Rechts-naar-links splitsen"
+
+[split.poster.pageSize]
+label = "Doelpaginaformaat"
+description = "Formaat van uitvoerpagina's voor afdrukken"
+
+[split.poster.xFactor]
+label = "Horizontale verdelingen"
+description = "Aantal kolommen waarin elke pagina wordt gesplitst"
+
+[split.poster.yFactor]
+label = "Verticale verdelingen"
+description = "Aantal rijen waarin elke pagina wordt gesplitst"
 
 [split.tooltip.byChapters]
 bullet1 = "Bladwijzerniveau: welk niveau om op te splitsen (1=bovenste niveau)"
@@ -6084,6 +6384,14 @@ bullet4 = "Uploaden - scheidingspagina's worden automatisch gedetecteerd en verw
 bullet5 = "Schakel Duplex-modus in als u beide zijden van scheidingsvellen scant"
 text = "Scans automatisch splitsen met fysieke scheidingsvellen met QR-codes. Perfect voor meerdere documenten die samen zijn gescand."
 title = "Splitsen met paginascheider"
+
+[split.tooltip.byPoster]
+bullet1 = "Doelpaginaformaat: Kies uitvoerpapierformaat (A4, Letter, enz.)"
+bullet2 = "Horizontale/Verticale verdelingen: Rastergrootte voor splitsen"
+bullet3 = "Rechts-naar-links: Keer kolomvolgorde om voor RTL-indelingen"
+bullet4 = "Print en zet de stukken in elkaar om je poster te maken"
+text = "Splits grote PDF-pagina's in kleinere, afdrukbare delen die geschikt zijn voor standaardpapierformaten. Perfect voor posterprints van oversized pagina's."
+title = "Splitsen voor posterafdruk"
 
 [split.tooltip.byPages]
 bullet1 = "Enkele splitspunten: 3,7 (splitst na pagina's 3 en 7)"
@@ -6364,9 +6672,13 @@ tags = "web-capture,pagina opslaan,web-naar-doc,archief"
 title = "URL naar PDF"
 
 [usage]
+aboutUsageAnalytics = "Over gebruiksanalyses"
+configureSettings = "Analytics-instellingen configureren"
 error = "Fout bij laden van gebruiksstatistieken"
 noData = "Geen gegevens beschikbaar"
 noDataMessage = "Er zijn momenteel geen gebruiksstatistieken beschikbaar."
+usageAnalyticsExplanation = "Gebruiksanalyses volgen endpointverzoeken en toolgebruikspatronen. In combinatie met het Audit Logging-dashboard krijg je volledig inzicht in systeemactiviteit, prestaties en beveiligingsgebeurtenissen."
+viewAuditLogs = "Auditlogs bekijken"
 
 [usage.chart]
 title = "Grafiek van endpointgebruik"
@@ -6947,3 +7259,278 @@ cancel = "Annuleren"
 confirm = "Uitpakken"
 message = "Dit ZIP-bestand bevat {{count}} bestanden. Toch uitpakken?"
 title = "Groot ZIP-bestand"
+
+[cloudBadge]
+tooltip = "Deze bewerking gebruikt je cloud-credits"
+
+[team]
+cancelInviteError = "Uitnodiging annuleren mislukt"
+confirmCancelInvite = "Weet je zeker dat je deze uitnodiging wilt annuleren?"
+confirmLeave = "Weet je zeker dat je dit team wilt verlaten?"
+confirmLeaveLeader = "Als teamleider word je door te vertrekken uit het team verwijderd. Weet je het zeker?"
+confirmRemove = "Weet je zeker dat je dit lid wilt verwijderen?"
+editName = "Teamnaam bewerken"
+inviteCancelled = "Uitnodiging geannuleerd"
+inviteError = "Uitnodiging verzenden mislukt"
+inviteSent = "Uitnodiging succesvol verzonden"
+leader = "Teamleider"
+leaveButton = "Team verlaten"
+leaveError = "Team verlaten mislukt"
+leaveSuccess = "Team succesvol verlaten"
+loading = "Teamgegevens laden..."
+memberCount = "{{count}} leden"
+memberRemoved = "Lid succesvol verwijderd"
+namePlaceholder = "Voer teamnaam in"
+personal = "Persoonlijk"
+removeError = "Lid verwijderen mislukt"
+renameError = "Team hernoemen mislukt"
+renameSuccess = "Team succesvol hernoemd"
+
+[team.invitationBanner]
+message = "heeft je uitgenodigd om lid te worden van"
+acceptButton = "Accepteren"
+rejectButton = "Weigeren"
+
+[team.features]
+badge = "Teamfuncties"
+subtitle = "Werk samen met je team"
+title = "Teamsamenwerking"
+viewPlans = "Plannen bekijken"
+
+[team.features.billing]
+description = "Facturering en abonnementen beheren"
+title = "Beheer van facturering"
+
+[team.features.credits]
+description = "Gedeelde creditpool voor alle leden"
+title = "Gedeelde credits"
+
+[team.features.dashboard]
+description = "Teamactiviteit en gebruik bekijken"
+title = "Teamdashboard"
+
+[team.features.invite]
+description = "Voeg leden toe aan je team"
+title = "Leden uitnodigen"
+
+[team.invite]
+cancelLabel = "Annuleren"
+invalidEmail = "Ongeldig e-mailadres"
+placeholder = "Voer e-mailadres in"
+sendButton = "Uitnodiging verzenden"
+title = "Teamlid uitnodigen"
+
+[team.members]
+emailColumn = "E-mail"
+empty = "Nog geen teamleden"
+nameColumn = "Naam"
+pending = "In afwachting"
+remove = "Verwijderen"
+roleColumn = "Rol"
+title = "Teamleden"
+
+[team.upgrade]
+button = "Upgrade naar Team"
+description = "Ontgrendel teamsamenwerkingsfuncties"
+title = "Upgrade naar Team-abonnement"
+
+[provider.oauth2.google]
+scope = "Aanmeldingsauthenticatie"
+
+[provider.oauth2.google.clientId]
+label = "Client-ID"
+description = "De OAuth2 client-ID van Google Cloud Console"
+
+[provider.oauth2.google.clientSecret]
+label = "Clientgeheim"
+description = "Het OAuth2 clientgeheim van Google Cloud Console"
+
+[provider.oauth2.google.scopes]
+label = "Scopes"
+description = "Komma-gescheiden OAuth2-scopes"
+
+[provider.oauth2.google.useAsUsername]
+label = "Gebruiken als gebruikersnaam"
+description = "Veld om als gebruikersnaam te gebruiken (email, name, given_name, family_name)"
+
+[provider.oauth2.github]
+scope = "Aanmeldingsauthenticatie"
+
+[provider.oauth2.github.clientId]
+label = "Client-ID"
+description = "De OAuth2 client-ID van GitHub Developer Settings"
+
+[provider.oauth2.github.clientSecret]
+label = "Clientgeheim"
+description = "Het OAuth2 clientgeheim van GitHub Developer Settings"
+
+[provider.oauth2.github.scopes]
+label = "Scopes"
+description = "Komma-gescheiden OAuth2-scopes"
+
+[provider.oauth2.github.useAsUsername]
+label = "Gebruiken als gebruikersnaam"
+description = "Veld om als gebruikersnaam te gebruiken (email, login, name)"
+
+[provider.oauth2.keycloak]
+scope = "SSO"
+
+[provider.oauth2.keycloak.issuer]
+label = "Issuer-URL"
+description = "URL van het OpenID Connect Discovery-eindpunt van de Keycloak-realm"
+
+[provider.oauth2.keycloak.clientId]
+label = "Client-ID"
+description = "De OAuth2 client-ID van Keycloak"
+
+[provider.oauth2.keycloak.clientSecret]
+label = "Clientgeheim"
+description = "Het OAuth2 clientgeheim van Keycloak"
+
+[provider.oauth2.keycloak.scopes]
+label = "Scopes"
+description = "Komma-gescheiden OAuth2-scopes"
+
+[provider.oauth2.keycloak.useAsUsername]
+label = "Gebruiken als gebruikersnaam"
+description = "Veld om als gebruikersnaam te gebruiken (email, name, given_name, family_name, preferred_username)"
+
+[provider.oauth2.generic]
+name = "Generieke OAuth2"
+scope = "SSO"
+
+[provider.oauth2.generic.enabled]
+label = "Generieke OAuth2 inschakelen"
+description = "Authenticatie inschakelen via een aangepaste OAuth2-provider"
+
+[provider.oauth2.generic.provider]
+label = "Naam provider"
+description = "De naam van je OAuth2-provider (bijv. Azure AD, Okta)"
+
+[provider.oauth2.generic.issuer]
+label = "Issuer-URL"
+description = "Provider die OpenID Connect Discovery ondersteunt (/.well-known/openid-configuration)"
+
+[provider.oauth2.generic.clientId]
+label = "Client-ID"
+description = "De OAuth2 client-ID van je provider"
+
+[provider.oauth2.generic.clientSecret]
+label = "Clientgeheim"
+description = "Het OAuth2 clientgeheim van je provider"
+
+[provider.oauth2.generic.scopes]
+label = "Scopes"
+description = "Komma-gescheiden OAuth2-scopes"
+
+[provider.oauth2.generic.useAsUsername]
+label = "Gebruiken als gebruikersnaam"
+description = "Veld om als gebruikersnaam te gebruiken"
+
+[provider.oauth2.generic.autoCreateUser]
+label = "Gebruikers automatisch aanmaken"
+description = "Automatisch gebruikersaccounts aanmaken bij de eerste OAuth2-aanmelding"
+
+[provider.oauth2.generic.blockRegistration]
+label = "Registratie blokkeren"
+description = "Nieuwe gebruikersregistratie via OAuth2 voorkomen"
+
+[provider.smtp]
+name = "SMTP-mail"
+scope = "E-mailmeldingen"
+
+[provider.smtp.enabled]
+label = "Mail inschakelen"
+description = "E-mailmeldingen en SMTP-functionaliteit inschakelen"
+
+[provider.smtp.host]
+label = "SMTP-host"
+description = "De hostnaam of het IP-adres van je SMTP-server"
+
+[provider.smtp.port]
+label = "SMTP-poort"
+description = "Het poortnummer voor de SMTP-verbinding (meestal 25, 465 of 587)"
+
+[provider.smtp.username]
+label = "SMTP-gebruikersnaam"
+description = "Gebruikersnaam voor SMTP-authenticatie"
+
+[provider.smtp.password]
+label = "SMTP-wachtwoord"
+description = "Wachtwoord voor SMTP-authenticatie"
+
+[provider.smtp.from]
+label = "Van-adres"
+description = "Het e-mailadres dat als afzender wordt gebruikt"
+
+[provider.saml2]
+name = "SAML2"
+scope = "SSO (SAML)"
+
+[provider.saml2.enabled]
+label = "SAML2 inschakelen"
+description = "SAML2-authenticatie inschakelen (alleen Enterprise)"
+
+[provider.saml2.provider]
+label = "Naam provider"
+description = "De naam van je SAML2-provider"
+
+[provider.saml2.registrationId]
+label = "Registratie-ID"
+description = "De naam van je Service Provider (SP)-appnaam"
+
+[provider.saml2.idpMetadataUri]
+label = "IDP-metadata-URI"
+description = "De URI voor de metadata van je provider"
+
+[provider.saml2.idpSingleLoginUrl]
+label = "IDP Single Login-URL"
+description = "De URL voor het initiëren van SSO"
+
+[provider.saml2.idpSingleLogoutUrl]
+label = "IDP Single Logout-URL"
+description = "De URL voor het initiëren van SLO"
+
+[provider.saml2.idpIssuer]
+label = "IDP-issuer"
+description = "De ID van je provider"
+
+[provider.saml2.idpCert]
+label = "IDP-certificaat"
+description = "Het certificaatpad (bijv. classpath:okta.cert)"
+
+[provider.saml2.privateKey]
+label = "Privésleutel"
+description = "Het pad naar je privésleutel"
+
+[provider.saml2.spCert]
+label = "SP-certificaat"
+description = "Het pad naar je ondertekeningscertificaat"
+
+[provider.saml2.autoCreateUser]
+label = "Gebruikers automatisch aanmaken"
+description = "Automatisch gebruikersaccounts aanmaken bij de eerste SAML2-aanmelding"
+
+[provider.saml2.blockRegistration]
+label = "Registratie blokkeren"
+description = "Nieuwe gebruikersregistratie via SAML2 voorkomen"
+
+[provider.googledrive]
+name = "Google Drive"
+scope = "Bestandsimport"
+
+[provider.googledrive.enabled]
+label = "Google Drive-bestandskiezer inschakelen"
+description = "Sta gebruikers toe om bestanden rechtstreeks vanaf Google Drive te importeren"
+
+[provider.googledrive.clientId]
+label = "Client-ID"
+description = "Google OAuth 2.0 Client-ID van Google Cloud Console"
+
+[provider.googledrive.apiKey]
+label = "API-sleutel"
+description = "Google API-sleutel voor Google Picker API van Google Cloud Console"
+
+[provider.googledrive.appId]
+label = "App-ID"
+description = "Google Drive App-ID van Google Cloud Console"
