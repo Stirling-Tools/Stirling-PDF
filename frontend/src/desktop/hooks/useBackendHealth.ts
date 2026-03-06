@@ -6,12 +6,17 @@ import { connectionModeService } from '@app/services/connectionModeService';
 import type { BackendHealthState } from '@app/types/backendHealth';
 
 /**
- * Hook to read the shared backend health monitor state.
- * All consumers subscribe to a single poller managed by backendHealthMonitor.
+ * Hook to read backend health state for UI (Run button, BackendHealthIndicator).
  *
- * In self-hosted mode when the remote server is offline, reports healthy if the
- * local bundled backend port is known — the operation router will route supported
- * tools to local, so the Run button should remain enabled.
+ * backendHealthMonitor tracks the local bundled backend.
+ * selfHostedServerMonitor tracks the remote server in self-hosted mode.
+ *
+ * isOnline logic:
+ * - SaaS mode: true when local backend is healthy
+ * - Self-hosted mode (server online): true (remote is up)
+ * - Self-hosted mode (server offline, local port known): true so the Run button
+ *   stays enabled — operationRouter routes supported tools to local
+ * - Self-hosted mode (server offline, local port unknown): false
  */
 export function useBackendHealth() {
   const [health, setHealth] = useState<BackendHealthState>(() => backendHealthMonitor.getSnapshot());
@@ -35,9 +40,6 @@ export function useBackendHealth() {
     return selfHostedServerMonitor.subscribe(state => setServerStatus(state.status));
   }, []);
 
-  // Re-read local URL when tauriBackendService emits a status event.
-  // waitForPort() broadcasts the current status once the port is discovered,
-  // so this will fire when the local backend becomes reachable.
   useEffect(() => {
     return tauriBackendService.subscribeToStatus(() => {
       setLocalUrl(tauriBackendService.getBackendUrl());
@@ -48,16 +50,14 @@ export function useBackendHealth() {
     return backendHealthMonitor.checkNow();
   }, []);
 
-  // When self-hosted server is confirmed offline but the local backend port is
-  // known, treat the backend as healthy so the Run button stays enabled.
-  // The operation router handles routing supported tools to local.
-  const isHealthy =
-    (connectionMode === 'selfhosted' && serverStatus === 'offline' && !!localUrl) ||
-    health.isHealthy;
+  const isOnline =
+    connectionMode === 'selfhosted'
+      ? serverStatus !== 'offline' || !!localUrl
+      : health.isOnline;
 
   return {
     ...health,
-    isHealthy,
+    isOnline,
     checkHealth,
   };
 }

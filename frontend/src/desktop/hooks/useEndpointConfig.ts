@@ -160,13 +160,13 @@ export function useEndpointEnabled(endpoint: string): {
       setLoading(false);
       // Re-evaluate if the server comes back online
       return selfHostedServerMonitor.subscribe(() => {
-        if (!isSelfHostedOffline() && tauriBackendService.isBackendHealthy()) {
+        if (!isSelfHostedOffline() && tauriBackendService.isOnline) {
           fetchEndpointStatus();
         }
       });
     }
 
-    if (tauriBackendService.isBackendHealthy()) {
+    if (tauriBackendService.isOnline) {
       fetchEndpointStatus();
     }
 
@@ -368,14 +368,14 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
     if (isSelfHostedOffline()) {
       fetchAllEndpointStatuses();
       const unsubServer = selfHostedServerMonitor.subscribe(() => {
-        if (!isSelfHostedOffline() && tauriBackendService.isBackendHealthy()) {
+        if (!isSelfHostedOffline() && tauriBackendService.isOnline) {
           fetchAllEndpointStatuses();
         }
       });
       return unsubServer;
     }
 
-    if (tauriBackendService.isBackendHealthy()) {
+    if (tauriBackendService.isOnline) {
       fetchAllEndpointStatuses();
     }
 

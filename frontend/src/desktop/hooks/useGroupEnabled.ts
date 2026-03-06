@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import apiClient from '@app/services/apiClient';
 import { selfHostedServerMonitor } from '@app/services/selfHostedServerMonitor';
-import { tauriBackendService } from '@app/services/tauriBackendService';
-import type { GroupEnabledResult } from '@app/hooks/useGroupEnabled';
+import type { GroupEnabledResult } from '@app/types/groupEnabled';
 
 /**
  * Desktop override: skips the network request entirely when the self-hosted
@@ -11,11 +10,19 @@ import type { GroupEnabledResult } from '@app/hooks/useGroupEnabled';
  */
 export function useGroupEnabled(group: string): GroupEnabledResult {
   const { t } = useTranslation();
-  const [result, setResult] = useState<GroupEnabledResult>({ enabled: null, unavailableReason: null });
+  // Initialise synchronously so the first render already reflects offline state —
+  // avoids a flash where the option appears enabled before the effect runs.
+  const [result, setResult] = useState<GroupEnabledResult>(() => {
+    const { status } = selfHostedServerMonitor.getSnapshot();
+    if (status === 'offline') {
+      return { enabled: false, unavailableReason: null }; // reason set by effect once t() is available
+    }
+    return { enabled: null, unavailableReason: null };
+  });
 
   useEffect(() => {
     const { status } = selfHostedServerMonitor.getSnapshot();
-    if (status === 'offline' && !tauriBackendService.isBackendHealthy()) {
+    if (status === 'offline') {
       setResult({
         enabled: false,
         unavailableReason: t('toolPanel.fullscreen.selfHostedOffline', 'Requires your Stirling-PDF server (currently offline)'),

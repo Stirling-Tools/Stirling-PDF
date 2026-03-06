@@ -70,6 +70,10 @@ class SelfHostedServerMonitor {
     this.updateState({ status: 'idle', isOnline: false, serverUrl: null });
   }
 
+  get isOnline(): boolean {
+    return this.state.isOnline;
+  }
+
   getSnapshot(): SelfHostedServerState {
     return this.state;
   }

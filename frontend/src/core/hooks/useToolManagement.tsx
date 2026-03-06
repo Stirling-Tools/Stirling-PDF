@@ -4,6 +4,7 @@ import { usePreferences } from '@app/contexts/PreferencesContext';
 import { getAllEndpoints, type ToolRegistryEntry, type ToolRegistry } from "@app/data/toolsTaxonomy";
 import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
 import { useSelfHostedToolAvailability } from "@app/hooks/useSelfHostedToolAvailability";
+import { useSaaSMode } from "@app/hooks/useSaaSMode";
 import { FileId } from '@app/types/file';
 import { ToolId } from "@app/types/toolId";
 import type { EndpointDisableReason } from '@app/types/endpointAvailability';
@@ -29,15 +30,14 @@ interface ToolManagementResult {
 export const useToolManagement = (): ToolManagementResult => {
   const [toolSelectedFileIds, setToolSelectedFileIds] = useState<FileId[]>([]);
 
-  // Build endpoints list from registry entries with fallback to legacy mapping
   const { allTools } = useToolRegistry();
   const baseRegistry = allTools;
   const { preferences } = usePreferences();
+  const isSaaSMode = useSaaSMode();
 
   const allEndpoints = useMemo(() => getAllEndpoints(baseRegistry), [baseRegistry]);
   const { endpointStatus, endpointDetails, loading: endpointsLoading } = useMultipleEndpointsEnabled(allEndpoints);
 
-  // Build a stable list of {id, endpoints} for the self-hosted offline availability check
   const toolEndpointList = useMemo(
     () => (Object.keys(baseRegistry) as ToolId[]).map(id => ({
       id,
@@ -48,23 +48,27 @@ export const useToolManagement = (): ToolManagementResult => {
   const selfHostedOfflineIds = useSelfHostedToolAvailability(toolEndpointList);
 
   const isToolAvailable = useCallback((toolKey: string): boolean => {
-    // Keep tools enabled during loading (optimistic UX)
-    if (endpointsLoading) return true;
-
-    // Tool is disabled because self-hosted server is offline and local backend
-    // doesn't support it
+    // Self-hosted offline check must come before the loading gate:
+    // in self-hosted offline mode endpointsLoading stays true indefinitely
+    // (health check never resolves), so checking it first would wrongly
+    // keep all tools enabled.
     if (selfHostedOfflineIds.has(toolKey)) return false;
+
+    // Keep tools enabled while endpoint status is loading (optimistic UX)
+    if (endpointsLoading) return true;
 
     const tool = baseRegistry[toolKey as ToolId];
     const endpoints = tool?.endpoints || [];
 
-    // Tools without endpoints are always available
     if (endpoints.length === 0) return true;
 
-    // Check if at least one endpoint is enabled
-    // If endpoint is not in status map, assume enabled (optimistic fallback)
-    return endpoints.some((endpoint: string) => endpointStatus[endpoint] !== false);
-  }, [endpointsLoading, endpointStatus, baseRegistry, selfHostedOfflineIds]);
+    const hasLocalSupport = endpoints.some((endpoint: string) => endpointStatus[endpoint] !== false);
+
+    // In SaaS mode tools without local support can route to the cloud backend
+    if (!hasLocalSupport && isSaaSMode) return true;
+
+    return hasLocalSupport;
+  }, [endpointsLoading, endpointStatus, baseRegistry, isSaaSMode, selfHostedOfflineIds]);
 
   const deriveToolDisableReason = useCallback((toolKey: ToolId): ToolDisableCause => {
     if (selfHostedOfflineIds.has(toolKey)) {
@@ -93,7 +97,10 @@ export const useToolManagement = (): ToolManagementResult => {
   }, [baseRegistry, endpointDetails, endpointStatus, selfHostedOfflineIds]);
 
   const toolAvailability = useMemo(() => {
-    if (endpointsLoading) {
+    // Skip computation during loading UNLESS some tools are already known offline.
+    // In self-hosted offline mode endpointsLoading never clears, so we must still
+    // compute the map to surface the selfHostedOfflineIds set.
+    if (endpointsLoading && selfHostedOfflineIds.size === 0) {
       return {};
     }
     const availability: ToolAvailabilityMap = {};
@@ -104,7 +111,7 @@ export const useToolManagement = (): ToolManagementResult => {
         : { available: false, reason: deriveToolDisableReason(toolKey) };
     });
     return availability;
-  }, [baseRegistry, deriveToolDisableReason, endpointsLoading, isToolAvailable]);
+  }, [baseRegistry, deriveToolDisableReason, endpointsLoading, isToolAvailable, selfHostedOfflineIds]);
 
   const toolRegistry: Partial<ToolRegistry> = useMemo(() => {
     const availableToolRegistry: Partial<ToolRegistry> = {};
@@ -134,7 +141,7 @@ export const useToolManagement = (): ToolManagementResult => {
   }, [toolRegistry]);
 
   return {
-    selectedTool: getSelectedTool(null), // This will be unused, kept for compatibility
+    selectedTool: getSelectedTool(null),
     toolSelectedFileIds,
     toolRegistry,
     setToolSelectedFileIds,

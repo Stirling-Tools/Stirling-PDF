@@ -1,7 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
 import { fetch } from '@tauri-apps/plugin-http';
-import { connectionModeService } from '@app/services/connectionModeService';
-import { getAuthTokenFromAnySource } from '@app/services/authTokenStore';
 
 export type BackendStatus = 'stopped' | 'starting' | 'healthy' | 'unhealthy';
 
@@ -29,7 +27,7 @@ export class TauriBackendService {
     return this.backendStatus;
   }
 
-  isBackendHealthy(): boolean {
+  get isOnline(): boolean {
     return this.backendStatus === 'healthy';
   }
 
@@ -126,19 +124,6 @@ export class TauriBackendService {
     }
   }
 
-  /**
-   * Get auth token with expiry validation
-   * Delegates to authService which handles caching and expiry checking
-   */
-  private async getAuthToken(): Promise<string | null> {
-    try {
-      return await getAuthTokenFromAnySource();
-    } catch (error) {
-      console.debug('[TauriBackendService] Failed to get auth token:', error);
-      return null;
-    }
-  }
-
   private beginHealthMonitoring() {
     if (this.healthMonitor) {
       return;
@@ -152,67 +137,31 @@ export class TauriBackendService {
       });
   }
 
+  /** Always checks the local bundled backend at localhost:{port}. */
   async checkBackendHealth(): Promise<boolean> {
-    const mode = await connectionModeService.getCurrentMode();
-
-    // Determine base URL based on mode
-    let baseUrl: string;
-    if (mode === 'selfhosted') {
-      const serverConfig = await connectionModeService.getServerConfig();
-      if (!serverConfig) {
-        console.error('[TauriBackendService] Self-hosted mode but no server URL configured');
-        this.setStatus('unhealthy');
-        return false;
-      }
-      baseUrl = serverConfig.url.replace(/\/$/, '');
-    } else {
-      // SaaS mode - check bundled local backend
-      if (!this.backendStarted) {
-        console.debug('[TauriBackendService] Health check: backend not started');
-        this.setStatus('stopped');
-        return false;
-      }
-      if (!this.backendPort) {
-        console.debug('[TauriBackendService] Health check: backend port not available');
-        return false;
-      }
-      baseUrl = `http://localhost:${this.backendPort}`;
+    if (!this.backendStarted) {
+      console.debug('[TauriBackendService] Health check: backend not started');
+      this.setStatus('stopped');
+      return false;
+    }
+    if (!this.backendPort) {
+      console.debug('[TauriBackendService] Health check: backend port not available');
+      return false;
     }
 
-    // Check if backend is ready (dependencies checked)
+    const configUrl = `http://localhost:${this.backendPort}/api/v1/config/app-config`;
+    console.debug(`[TauriBackendService] Checking local backend health at: ${configUrl}`);
+
     try {
-      const configUrl = `${baseUrl}/api/v1/config/app-config`;
-      console.debug(`[TauriBackendService] Checking backend health at: ${configUrl}`);
-
-      // For self-hosted mode, include auth token if available
-      const headers: Record<string, string> = {};
-      if (mode === 'selfhosted') {
-        const token = await this.getAuthToken();
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-          console.debug(`[TauriBackendService] Adding auth token to health check`);
-        } else {
-          console.debug(`[TauriBackendService] No auth token available for health check`);
-        }
-      }
-
-      const response = await fetch(configUrl, {
-        method: 'GET',
-        connectTimeout: 5000,
-        headers,
-      });
-
-      console.debug(`[TauriBackendService] Health check response: status=${response.status}, ok=${response.ok}`);
+      const response = await fetch(configUrl, { method: 'GET', connectTimeout: 5000 });
 
       if (!response.ok) {
-        console.warn(`[TauriBackendService] Health check failed: response not ok (status ${response.status})`);
+        console.warn(`[TauriBackendService] Health check failed: ${response.status}`);
         this.setStatus('unhealthy');
         return false;
       }
 
       const data = await response.json();
-      console.debug(`[TauriBackendService] Health check data:`, data);
-
       const dependenciesReady = data.dependenciesReady === true;
       console.debug(`[TauriBackendService] dependenciesReady=${dependenciesReady}`);
 

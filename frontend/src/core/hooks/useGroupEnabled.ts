@@ -1,11 +1,8 @@
 import { useState, useEffect } from 'react';
 import apiClient from '@app/services/apiClient';
+import type { GroupEnabledResult } from '@app/types/groupEnabled';
 
-export interface GroupEnabledResult {
-  enabled: boolean | null;
-  /** Human-readable reason shown when the feature is unavailable. Null while loading or when enabled. */
-  unavailableReason: string | null;
-}
+export type { GroupEnabledResult };
 
 /**
  * Checks whether a named feature group is enabled on the backend.

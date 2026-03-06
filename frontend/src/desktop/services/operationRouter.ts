@@ -187,9 +187,9 @@ export class OperationRouter {
     if (mode === 'selfhosted' && operation && this.isToolEndpoint(operation)) {
       const { status } = selfHostedServerMonitor.getSnapshot();
       if (status === 'offline') {
+        const endpointName = this.extractEndpointName(operation);
         const localUrl = tauriBackendService.getBackendUrl();
         if (localUrl) {
-          const endpointName = this.extractEndpointName(operation);
           const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(
             endpointName,
             localUrl
@@ -201,7 +201,6 @@ export class OperationRouter {
             return localUrl.replace(/\/$/, '');
           }
         }
-        const endpointName = this.extractEndpointName(operation);
         throw new Error(
           `Your Stirling-PDF server is offline and "${endpointName}" is not available on the local backend.`
         );

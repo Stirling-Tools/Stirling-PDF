@@ -9,14 +9,15 @@ const BACKEND_TOAST_COOLDOWN_MS = 4000;
 let lastBackendToast = 0;
 
 /**
- * Desktop-specific guard that ensures the embedded backend is healthy
- * before tools attempt to call any API endpoints.
- * Enhanced to skip checks for endpoints routed to SaaS backend.
- * In self-hosted mode:
- *   - If the remote server is online, checks remote server health.
- *   - If the remote server is offline, allows through if the local backend port is
- *     known (the operation router will route to local); suppresses the error toast
- *     since the SelfHostedOfflineBanner already communicates the outage.
+ * Desktop-specific guard that ensures the relevant backend is ready before
+ * tools attempt to call any API endpoints.
+ *
+ * - SaaS mode: checks the local bundled backend via tauriBackendService.isOnline
+ * - Self-hosted mode (server online/checking): allows through — the operation
+ *   targets the remote server and will surface network errors naturally
+ * - Self-hosted mode (server confirmed offline): allows through if local port is
+ *   known (operationRouter falls back to local); suppresses toast since
+ *   SelfHostedOfflineBanner already communicates the outage
  *
  * @param endpoint - Optional endpoint path to check if it needs local backend
  * @returns true if backend is ready OR endpoint will be routed to SaaS
@@ -31,29 +32,28 @@ export async function ensureBackendReady(endpoint?: string): Promise<boolean> {
     }
   }
 
-  // In self-hosted mode, handle server-offline + local fallback case
   const mode = await connectionModeService.getCurrentMode();
   if (mode === 'selfhosted') {
     const { status } = selfHostedServerMonitor.getSnapshot();
     if (status === 'offline') {
       // Server offline: allow through if local backend port is known.
-      // The operation router will route to local for supported endpoints.
-      // Suppress the toast — the banner already communicates the outage.
-      const localUrl = tauriBackendService.getBackendUrl();
-      return !!localUrl;
+      // operationRouter will route to local for supported endpoints.
+      // Suppress the toast — SelfHostedOfflineBanner communicates the outage.
+      return !!tauriBackendService.getBackendUrl();
     }
-    // Server online: fall through to the existing health check (which checks self-hosted server)
-  }
-
-  // Check backend health (in self-hosted mode this checks the remote server;
-  // in SaaS mode this checks the local bundled backend)
-  if (tauriBackendService.isBackendHealthy()) {
+    // Server online or still checking: allow through — the operation targets the
+    // remote server and will fail at the HTTP layer if it is unreachable.
     return true;
   }
 
-  // Trigger a health check so we get the freshest status
+  // SaaS mode: check local bundled backend
+  if (tauriBackendService.isOnline) {
+    return true;
+  }
+
+  // Trigger a fresh check so we get the latest status
   await tauriBackendService.checkBackendHealth();
-  if (tauriBackendService.isBackendHealthy()) {
+  if (tauriBackendService.isOnline) {
     return true;
   }
 

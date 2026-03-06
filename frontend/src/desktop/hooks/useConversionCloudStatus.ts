@@ -72,7 +72,7 @@ export function useConversionCloudStatus(): ConversionStatus {
       }
 
       // Don't check until backend is healthy (SaaS startup guard)
-      if (!tauriBackendService.isBackendHealthy()) {
+      if (!tauriBackendService.isOnline) {
         setStatus({ availability: {}, cloudStatus: {}, localOnly: {} });
         return;
       }
