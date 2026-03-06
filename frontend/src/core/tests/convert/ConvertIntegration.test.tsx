@@ -15,6 +15,8 @@ import { renderHook, act } from '@testing-library/react';
 import { useConvertOperation } from '@app/hooks/tools/convert/useConvertOperation';
 import { ConvertParameters } from '@app/hooks/tools/convert/useConvertParameters';
 import { FileContextProvider } from '@app/contexts/FileContext';
+import { NavigationProvider } from '@app/contexts/NavigationContext';
+import { ToolRegistryProvider } from '@app/contexts/ToolRegistryProvider';
 import { PreferencesProvider } from '@app/contexts/PreferencesContext';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '@app/i18n/config';
@@ -92,9 +94,13 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <MantineProvider>
     <I18nextProvider i18n={i18n}>
       <PreferencesProvider>
-        <FileContextProvider>
-          {children}
-        </FileContextProvider>
+        <ToolRegistryProvider>
+          <NavigationProvider>
+            <FileContextProvider>
+              {children}
+            </FileContextProvider>
+          </NavigationProvider>
+        </ToolRegistryProvider>
       </PreferencesProvider>
     </I18nextProvider>
   </MantineProvider>
