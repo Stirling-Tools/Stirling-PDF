@@ -4312,6 +4312,11 @@ tags = "merge,composite,single-view,organize"
 title = "Multi Page Layout"
 top = "Top Margin"
 
+[pageLayout.mode]
+default = "Default"
+custom = "Custom"
+label = "Mode:"
+
 [pageLayout.arrangement]
 byColumns = "By Columns"
 byRows = "By Rows"

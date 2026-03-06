@@ -26,10 +26,10 @@ export default function PageLayoutSettings({
   return (
     <Stack gap="sm">
       <ButtonSelector
-        label={'Mode'}
+        label={t('pageLayout.mode.label', 'Mode:')}
         options={[
-          {value: "DEFAULT", label: 'Default'},
-          {value: "CUSTOM", label: 'Custom'}
+          {value: "DEFAULT", label: t('pageLayout.mode.default', 'Default')},
+          {value: "CUSTOM", label: t('pageLayout.mode.custom', 'Custom')}
         ]}
         value={String(parameters.mode)}
         onChange={(v) => {
