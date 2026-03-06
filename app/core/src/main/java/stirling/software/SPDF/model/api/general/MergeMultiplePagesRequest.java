@@ -23,7 +23,7 @@ public class MergeMultiplePagesRequest extends PDFFile {
     @Schema(
             description = "The number of pages to fit onto a single sheet in the output PDF.",
             type = "integer",
-            allowableValues = {"2", "3", "4", "9", "16"})
+            allowableValues = {"2", "4", "9", "16"})
     private int pagesPerSheet = 2;
 
     @Schema(
