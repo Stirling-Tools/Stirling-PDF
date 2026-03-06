@@ -41,6 +41,36 @@ export const usePageLayoutParameters = (): PageLayoutParametersHook => {
   return useBaseParameters<PageLayoutParameters>({
     defaultParameters,
     endpointName: 'multi-page-layout',
+    validateFn: (params) => {
+      const cols = params.mode === 'DEFAULT'
+        ? Math.ceil(Math.sqrt(params.pagesPerSheet))
+        : params.cols;
+      const rows = params.mode === 'DEFAULT'
+        ? Math.ceil(params.pagesPerSheet / cols)
+        : params.rows;
+
+      if (cols <= 0 || rows <= 0) return false;
+
+      const pageWidth = params.orientation === 'PORTRAIT' ? 595.28 : 841.89;
+      const pageHeight = params.orientation === 'PORTRAIT' ? 841.89 : 595.28;
+
+      const left = params.leftMargin ?? 0;
+      const right = params.rightMargin ?? 0;
+      const top = params.topMargin ?? 0;
+      const bottom = params.bottomMargin ?? 0;
+      const inner = params.innerMargin ?? 0;
+
+      // Reject impossible outer margins first.
+      if (left + right >= pageWidth) return false;
+      if (top + bottom >= pageHeight) return false;
+
+      const cellWidth = (pageWidth - left - right) / cols;
+      const cellHeight = (pageHeight - top - bottom) / rows;
+      const innerWidth = cellWidth - 2 * inner;
+      const innerHeight = cellHeight - 2 * inner;
+
+      return innerWidth > 0 && innerHeight > 0;
+    },
   });
 };
 
