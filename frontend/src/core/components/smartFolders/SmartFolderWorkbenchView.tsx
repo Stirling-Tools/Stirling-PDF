@@ -18,15 +18,19 @@ import { useSmartFolders } from '@app/hooks/useSmartFolders';
 import { useFolderData } from '@app/hooks/useFolderData';
 import { useFolderRunState } from '@app/hooks/useFolderRunState';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { SMART_FOLDER_VIEW_ID } from '@app/components/smartFolders/SmartFoldersRegistration';
 import { automationStorage } from '@app/services/automationStorage';
 import { folderStorage } from '@app/services/folderStorage';
 import { executeAutomationSequence } from '@app/utils/automationExecutor';
 import { SmartFolderRunEntry } from '@app/types/smartFolders';
 import { AutomationConfig } from '@app/types/automation';
 import { iconMap } from '@app/components/tools/automate/iconMap';
+import { fileStorage } from '@app/services/fileStorage';
+import { FileId } from '@app/types/fileContext';
+import { SmartFolderHomePage } from '@app/components/smartFolders/SmartFolderHomePage';
 
 interface SmartFolderWorkbenchViewProps {
-  data: { folderId: string };
+  data: { folderId: string | null; pendingFileId?: string };
 }
 
 interface StepProgress {
@@ -41,7 +45,7 @@ type FilterTab = 'all' | 'pending' | 'processing' | 'processed';
 export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps) {
   const { folderId } = data;
   const { t } = useTranslation();
-  const { toolRegistry } = useToolWorkflow();
+  const { toolRegistry, setCustomWorkbenchViewData } = useToolWorkflow();
   const { folders } = useSmartFolders();
   const folder = folders.find(f => f.id === folderId);
 
@@ -62,6 +66,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   const [filterTab, setFilterTab] = useState<FilterTab>('all');
   const [outputFiles, setOutputFiles] = useState<{ fileId: string; name: string; blob: Blob }[]>([]);
   const processingRef = useRef<Set<string>>(new Set());
+  const handledPendingRef = useRef<string | null>(null);
 
   // Load output files
   useEffect(() => {
@@ -154,6 +159,18 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
     [addFile, runAutomation]
   );
 
+  // Auto-process a file passed via workbench data (e.g. from sidebar or "Add to Smart Folder")
+  useEffect(() => {
+    const { pendingFileId } = data;
+    if (!pendingFileId || handledPendingRef.current === pendingFileId) return;
+    handledPendingRef.current = pendingFileId;
+    // Clear pendingFileId from workbench data so re-mounting doesn't replay it
+    setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId });
+    fileStorage.getStirlingFile(pendingFileId as FileId).then((stirlingFile) => {
+      if (stirlingFile) handleFiles([stirlingFile]);
+    });
+  }, [data, folderId, handleFiles, setCustomWorkbenchViewData]);
+
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -194,6 +211,11 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
     if (filterTab === 'processed') return processedFileIds;
     return fileIds;
   })();
+
+  // Home page: no specific folder selected
+  if (!folderId) {
+    return <SmartFolderHomePage />;
+  }
 
   const FolderIcon = folder ? (iconMap[folder.icon as keyof typeof iconMap] || iconMap.SettingsIcon) : iconMap.SettingsIcon;
 

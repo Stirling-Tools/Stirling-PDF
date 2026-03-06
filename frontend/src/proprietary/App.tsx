@@ -12,7 +12,7 @@ import AuthCallback from "@app/routes/AuthCallback";
 import InviteAccept from "@app/routes/InviteAccept";
 import MobileScannerPage from "@app/pages/MobileScannerPage";
 import Onboarding from "@app/components/onboarding/Onboarding";
-
+import SmartFoldersRegistration from "@app/components/smartFolders/SmartFoldersRegistration";
 // Import global styles
 import "@app/styles/tailwind.css";
 import "@app/styles/cookieconsent.css";
@@ -64,6 +64,7 @@ export default function App() {
                   <Route path="/*" element={<Landing />} />
                 </Routes>
                 <Onboarding />
+                <SmartFoldersRegistration />
               </AppLayout>
             </AppProviders>
           }

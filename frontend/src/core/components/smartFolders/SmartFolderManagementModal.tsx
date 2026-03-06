@@ -15,7 +15,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { SmartFolder } from '@app/types/smartFolders';
 import { AutomationConfig, AutomationMode } from '@app/types/automation';
-import IconSelector from '@app/components/tools/automate/IconSelector';
+import { IconPicker as IconSelector } from '@app/components/smartFolders/IconPicker';
 import AutomationCreation from '@app/components/tools/automate/AutomationCreation';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { smartFolderStorage } from '@app/services/smartFolderStorage';
@@ -119,8 +119,8 @@ export function SmartFolderManagementModal({
   };
 
   const title = isEditMode
-    ? t('smartFolders.modal.editTitle', 'Edit Smart Folder')
-    : t('smartFolders.modal.createTitle', 'New Smart Folder');
+    ? t('smartFolders.modal.editTitle', 'Edit Watch Folder')
+    : t('smartFolders.modal.createTitle', 'New Watch Folder');
 
   return (
     <Modal
@@ -136,7 +136,7 @@ export function SmartFolderManagementModal({
           <Group gap="xs" align="flex-end">
             <TextInput
               label={t('smartFolders.modal.name', 'Folder name')}
-              placeholder={t('smartFolders.modal.namePlaceholder', 'My Smart Folder')}
+              placeholder={t('smartFolders.modal.namePlaceholder', 'My Watch Folder')}
               value={name}
               onChange={(e) => { setName(e.currentTarget.value); setNameError(''); }}
               error={nameError}
@@ -197,7 +197,7 @@ export function SmartFolderManagementModal({
           onComplete={handleAutomationComplete}
           toolRegistry={toolRegistry}
           hideMetadata
-          nameOverride={name.trim() || 'Smart Folder Automation'}
+          nameOverride={name.trim() || 'Watch Folder Automation'}
           saveTriggerRef={automationSaveTrigger}
         />
 

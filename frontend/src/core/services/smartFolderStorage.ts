@@ -7,7 +7,7 @@ import { SmartFolder } from '@app/types/smartFolders';
 const STORAGE_CHANGE_EVENT = 'smart-folder-storage-changed';
 
 class SmartFolderStorage {
-  private dbName = 'StirlingPDF_SmartFolders';
+  private dbName = 'stirling-pdf-smart-folders';
   private dbVersion = 1;
   private storeName = 'smartFolders';
   private db: IDBDatabase | null = null;

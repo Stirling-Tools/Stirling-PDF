@@ -191,6 +191,8 @@
   --icon-files-color: #0A8BFF;
   --icon-activity-bg: #D3E7F7;
   --icon-activity-color: #0A8BFF;
+  --icon-watchFolders-bg: #F59E0B;
+  --icon-watchFolders-color: #FFFFFF;
   --icon-config-bg: #9CA3AF;
   --icon-config-color: #FFFFFF;
 
@@ -475,6 +477,8 @@
   --icon-files-color: #EAEAEA;
   --icon-activity-bg: #4B525A;
   --icon-activity-color: #EAEAEA;
+  --icon-watchFolders-bg: #4B525A;
+  --icon-watchFolders-color: #EAEAEA;
   --icon-config-bg: #4B525A;
   --icon-config-color: #EAEAEA;
 

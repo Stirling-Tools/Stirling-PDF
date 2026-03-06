@@ -7,6 +7,7 @@ import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvi
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
+import { SMART_FOLDER_VIEW_ID, SMART_FOLDER_WORKBENCH_ID } from '@app/components/smartFolders/SmartFoldersRegistration';
 import { useSidebarNavigation } from '@app/hooks/useSidebarNavigation';
 import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
 import { ButtonConfig } from '@app/types/sidebar';
@@ -15,6 +16,7 @@ import { Tooltip } from '@app/components/shared/Tooltip';
 import AllToolsNavButton from '@app/components/shared/AllToolsNavButton';
 import ActiveToolButton from "@app/components/shared/quickAccessBar/ActiveToolButton";
 import AppConfigModal from '@app/components/shared/AppConfigModal';
+import FolderSpecialRoundedIcon from '@mui/icons-material/FolderSpecialRounded';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
 import { requestStartTour } from '@app/constants/events';
@@ -34,8 +36,8 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const location = useLocation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { openFilesModal, isFilesModalOpen } = useFilesModalContext();
-  const { handleReaderToggle, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool, toolAvailability } = useToolWorkflow();
-  const { hasUnsavedChanges } = useNavigationState();
+  const { handleReaderToggle, handleToolSelect, selectedToolKey, leftPanelView, toolRegistry, readerMode, resetTool, toolAvailability, setCustomWorkbenchViewData } = useToolWorkflow();
+  const { hasUnsavedChanges, workbench } = useNavigationState();
   const { actions: navigationActions } = useNavigationActions();
   const { getToolNavigation } = useSidebarNavigation();
   const { config } = useAppConfig();
@@ -61,9 +63,13 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   }, [location.pathname]);
 
   useEffect(() => {
+    if (workbench === SMART_FOLDER_WORKBENCH_ID) {
+      setActiveButton('watchFolders');
+      return;
+    }
     const next = getActiveNavButton(selectedToolKey, readerMode);
     setActiveButton(next);
-  }, [leftPanelView, selectedToolKey, toolRegistry, readerMode]);
+  }, [leftPanelView, selectedToolKey, toolRegistry, readerMode, workbench]);
 
   const handleFilesButtonClick = () => {
     openFilesModal();
@@ -158,6 +164,8 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     return availability?.available !== false;
   }), [t, setActiveButton, handleReaderToggle, selectedToolKey, resetTool, handleToolSelect, toolAvailability]);
 
+  const isWatchFoldersActive = workbench === SMART_FOLDER_WORKBENCH_ID;
+
   const middleButtons: ButtonConfig[] = [
     {
       id: 'files',
@@ -167,6 +175,19 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       size: 'md',
       type: 'modal',
       onClick: handleFilesButtonClick
+    },
+    {
+      id: 'watchFolders',
+      name: t("quickAccess.watchFolders", "Watch Folders"),
+      icon: <FolderSpecialRoundedIcon style={{ width: '1.25rem', height: '1.25rem' }} />,
+      isRound: true,
+      size: 'md',
+      type: 'navigation',
+      onClick: () => {
+        setActiveButton('watchFolders');
+        setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId: null });
+        navigationActions.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
+      }
     },
   ];
   //TODO: Activity

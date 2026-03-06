@@ -11,7 +11,7 @@ interface RunStateRecord {
 }
 
 class FolderRunStateStorage {
-  private dbName = 'StirlingPDF_FolderRunState';
+  private dbName = 'stirling-pdf-folder-run-state';
   private dbVersion = 1;
   private storeName = 'runStates';
   private db: IDBDatabase | null = null;

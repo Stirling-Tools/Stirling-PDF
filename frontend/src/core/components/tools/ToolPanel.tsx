@@ -19,6 +19,8 @@ import { useRightRail } from '@app/contexts/RightRailContext';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import '@app/components/tools/ToolPanel.css';
 import { SmartFolderSection } from '@app/components/smartFolders/SmartFolderSection';
+import { SmartFolderSidebarPanel } from '@app/components/smartFolders/SmartFolderSidebarPanel';
+import { useSmartFolderSidebar } from '@app/hooks/useSmartFolderSidebar';
 
 // No props needed - component uses context
 
@@ -47,6 +49,8 @@ export default function ToolPanel() {
 
   const { setAllRightRailButtonsDisabled } = useRightRail();
   const { preferences, updatePreference } = usePreferences();
+
+  const { isActive: isSmartFolderSidebar } = useSmartFolderSidebar();
 
   const isFullscreenMode = toolPanelMode === 'fullscreen';
   const toolPickerVisible = !readerMode;
@@ -124,84 +128,94 @@ export default function ToolPanel() {
             flexDirection: 'column'
           }}
         >
-          <div
-            className="tool-panel__search-row"
-            style={{
-              backgroundColor: 'var(--tool-panel-search-bg)',
-              borderBottom: '1px solid var(--tool-panel-search-border-bottom)'
-            }}
-          >
-            <ToolSearch
-              value={searchQuery}
-              onChange={setSearchQuery}
-              toolRegistry={toolRegistry}
-              mode="filter"
-            />
-            {!isMobile && leftPanelView === 'toolPicker' && (
-              <Tooltip
-                content={toggleLabel}
-                position="bottom"
-                arrow={true}
-                openOnFocus={false}
-              >
-                <ActionIcon
-                  variant="subtle"
-                  radius="xl"
-                  style={{ color: 'var(--right-rail-icon)' }}
-                  onClick={handleModeToggle}
-                  aria-label={toggleLabel}
-                  className="tool-panel__mode-toggle"
+          {!isSmartFolderSidebar && (
+            <div
+              className="tool-panel__search-row"
+              style={{
+                backgroundColor: 'var(--tool-panel-search-bg)',
+                borderBottom: '1px solid var(--tool-panel-search-border-bottom)'
+              }}
+            >
+              <ToolSearch
+                value={searchQuery}
+                onChange={setSearchQuery}
+                toolRegistry={toolRegistry}
+                mode="filter"
+              />
+              {!isMobile && leftPanelView === 'toolPicker' && (
+                <Tooltip
+                  content={toggleLabel}
+                  position="bottom"
+                  arrow={true}
+                  openOnFocus={false}
                 >
-                  <DoubleArrowIcon
-                    fontSize="small"
-                    style={{ transform: isRTL ? 'scaleX(-1)' : undefined }}
-                  />
-                </ActionIcon>
-              </Tooltip>
-            )}
-          </div>
-
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              {searchQuery.trim().length > 0 ? (
-                <div className="flex-1 flex flex-col overflow-y-auto">
-                  <SearchResults
-                    filteredTools={filteredTools}
-                    onSelect={(id) => handleToolSelect(id as ToolId)}
-                    searchQuery={searchQuery}
-                  />
-                </div>
-              ) : leftPanelView === 'toolPicker' ? (
-                <div className="flex-1 flex flex-col overflow-auto">
-                  <ToolPicker
-                    selectedToolKey={selectedToolKey}
-                    onSelect={(id) => handleToolSelect(id as ToolId)}
-                    filteredTools={filteredTools}
-                    isSearching={Boolean(searchQuery && searchQuery.trim().length > 0)}
-                  />
-                </div>
-              ) : (
-                <div className="flex-1 flex flex-col overflow-hidden">
-                  <div className="flex-1 min-h-0 overflow-hidden">
-                    <ScrollArea h="100%">
-                      {selectedToolKey ? (
-                        <ToolRenderer
-                          selectedToolKey={selectedToolKey}
-                          onPreviewFile={setPreviewFile}
-                        />
-                      ) : (
-                        <div className="tool-panel__placeholder">
-                          {t('toolPanel.placeholder', 'Choose a tool to get started')}
-                        </div>
-                      )}
-                    </ScrollArea>
-                  </div>
-                </div>
+                  <ActionIcon
+                    variant="subtle"
+                    radius="xl"
+                    style={{ color: 'var(--right-rail-icon)' }}
+                    onClick={handleModeToggle}
+                    aria-label={toggleLabel}
+                    className="tool-panel__mode-toggle"
+                  >
+                    <DoubleArrowIcon
+                      fontSize="small"
+                      style={{ transform: isRTL ? 'scaleX(-1)' : undefined }}
+                    />
+                  </ActionIcon>
+                </Tooltip>
               )}
             </div>
-            <div style={{ flex: '0 0 50%', minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              <SmartFolderSection />
-            </div>
+          )}
+
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            {isSmartFolderSidebar ? (
+              <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                <SmartFolderSidebarPanel />
+              </div>
+            ) : (
+              <>
+                <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                  {searchQuery.trim().length > 0 ? (
+                    <div className="flex-1 flex flex-col overflow-y-auto">
+                      <SearchResults
+                        filteredTools={filteredTools}
+                        onSelect={(id) => handleToolSelect(id as ToolId)}
+                        searchQuery={searchQuery}
+                      />
+                    </div>
+                  ) : leftPanelView === 'toolPicker' ? (
+                    <div className="flex-1 flex flex-col overflow-auto">
+                      <ToolPicker
+                        selectedToolKey={selectedToolKey}
+                        onSelect={(id) => handleToolSelect(id as ToolId)}
+                        filteredTools={filteredTools}
+                        isSearching={Boolean(searchQuery && searchQuery.trim().length > 0)}
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex-1 flex flex-col overflow-hidden">
+                      <div className="flex-1 min-h-0 overflow-hidden">
+                        <ScrollArea h="100%">
+                          {selectedToolKey ? (
+                            <ToolRenderer
+                              selectedToolKey={selectedToolKey}
+                              onPreviewFile={setPreviewFile}
+                            />
+                          ) : (
+                            <div className="tool-panel__placeholder">
+                              {t('toolPanel.placeholder', 'Choose a tool to get started')}
+                            </div>
+                          )}
+                        </ScrollArea>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div style={{ flex: '0 0 50%', minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                  <SmartFolderSection />
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

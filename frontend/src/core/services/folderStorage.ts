@@ -15,7 +15,7 @@ interface OutputFileRecord {
 }
 
 class FolderStorage {
-  private dbName = 'StirlingPDF_FolderFiles';
+  private dbName = 'stirling-pdf-folder-files';
   private dbVersion = 1;
   private recordsStore = 'folderRecords';
   private outputStore = 'folderOutputFiles';

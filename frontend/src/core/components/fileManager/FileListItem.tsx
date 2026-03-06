@@ -16,6 +16,10 @@ import ToolChain from '@app/components/shared/ToolChain';
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from '@app/styles/zIndex';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
 import { useFileManagement } from '@app/contexts/FileContext';
+import { useAllSmartFolders } from '@app/hooks/useAllSmartFolders';
+import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
+import { useNavigationActions } from '@app/contexts/NavigationContext';
+import { iconMap } from '@app/components/tools/automate/iconMap';
 
 interface FileListItemProps {
   file: StirlingFileStub;
@@ -48,6 +52,12 @@ const FileListItem: React.FC<FileListItemProps> = ({
   const { t } = useTranslation();
   const { expandedFileIds, onToggleExpansion, onUnzipFile } = useFileManagerContext();
   const { removeFiles } = useFileManagement();
+  const smartFolders = useAllSmartFolders();
+  const { setCustomWorkbenchViewData } = useToolWorkflow();
+  const { actions } = useNavigationActions();
+
+  const isPdf = file.name?.toLowerCase().endsWith('.pdf') ?? false;
+  const showSmartFolders = isPdf && smartFolders.length > 0;
 
   // Check if this is a ZIP file
   const isZipFile = zipFileService.isZipFileStub(file);
@@ -256,6 +266,30 @@ const FileListItem: React.FC<FileListItemProps> = ({
                   >
                     {t('fileManager.unzip', 'Unzip')}
                   </Menu.Item>
+                  <Menu.Divider />
+                </>
+              )}
+
+              {showSmartFolders && (
+                <>
+                  <Menu.Divider />
+                  <Menu.Label>{t('fileManager.addToSmartFolder', 'Add to Watch Folder')}</Menu.Label>
+                  {smartFolders.map((folder) => {
+                    const FolderItemIcon = iconMap[folder.icon as keyof typeof iconMap] || iconMap.FolderIcon;
+                    return (
+                      <Menu.Item
+                        key={folder.id}
+                        leftSection={<FolderItemIcon style={{ fontSize: 16, color: folder.accentColor }} />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCustomWorkbenchViewData('smartFolder', { folderId: folder.id, pendingFileId: file.id });
+                          actions.setWorkbench('custom:smartFolder');
+                        }}
+                      >
+                        {folder.name}
+                      </Menu.Item>
+                    );
+                  })}
                   <Menu.Divider />
                 </>
               )}
