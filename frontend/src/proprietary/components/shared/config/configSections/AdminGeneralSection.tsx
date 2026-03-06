@@ -58,7 +58,6 @@ interface GeneralSettingsData {
 export default function AdminGeneralSection() {
   const { t } = useTranslation();
   const location = useLocation();
-  const navigate = useNavigate();
   const { loginEnabled, validateLoginEnabled } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
   const { preferences, updatePreference } = usePreferences();
@@ -92,15 +91,13 @@ export default function AdminGeneralSection() {
   } = useAdminSettings<GeneralSettingsData>({
     sectionName: 'general',
     fetchTransformer: async (): Promise<GeneralSettingsData & { _pending?: Record<string, any> }> => {
-      const [uiResponse, systemResponse, premiumResponse] = await Promise.all([
+      const [uiResponse, systemResponse] = await Promise.all([
         apiClient.get('/api/v1/admin/settings/section/ui'),
-        apiClient.get('/api/v1/admin/settings/section/system'),
-        apiClient.get('/api/v1/admin/settings/section/premium')
+        apiClient.get('/api/v1/admin/settings/section/system')
       ]);
 
       const ui = { ...(uiResponse.data || {}) };
       const system = { ...(systemResponse.data || {}) };
-      const premium = { ...(premiumResponse.data || {}) };
 
       ui.languages = Array.isArray(ui.languages) ? toUnderscoreLanguages(ui.languages) : [];
 
@@ -131,7 +128,7 @@ export default function AdminGeneralSection() {
             unoconvert: system.customPaths?.operations?.unoconvert || ''
           }
         },
-        customMetadata: premium.proFeatures?.customMetadata || {
+        customMetadata: system.metadataDefaults || {
           autoUpdateMetadata: false,
           author: '',
           creator: '',
@@ -150,8 +147,8 @@ export default function AdminGeneralSection() {
       if (system._pending?.customPaths) {
         pendingBlock.customPaths = system._pending.customPaths;
       }
-      if (premium._pending?.proFeatures?.customMetadata) {
-        pendingBlock.customMetadata = premium._pending.proFeatures.customMetadata;
+      if (system._pending?.metadataDefaults) {
+        pendingBlock.customMetadata = system._pending.metadataDefaults;
       }
 
       if (Object.keys(pendingBlock).length > 0) {
@@ -175,11 +172,10 @@ export default function AdminGeneralSection() {
         'system.customHTMLFiles': settings.system?.customHTMLFiles,
         'system.fileUploadLimit': settings.system?.fileUploadLimit,
         'system.frontendUrl': settings.system?.frontendUrl,
-        // Premium custom metadata
-        'premium.proFeatures.customMetadata.autoUpdateMetadata': settings.customMetadata?.autoUpdateMetadata,
-        'premium.proFeatures.customMetadata.author': settings.customMetadata?.author,
-        'premium.proFeatures.customMetadata.creator': settings.customMetadata?.creator,
-        'premium.proFeatures.customMetadata.producer': settings.customMetadata?.producer
+        'system.metadataDefaults.autoUpdateMetadata': settings.customMetadata?.autoUpdateMetadata,
+        'system.metadataDefaults.author': settings.customMetadata?.author,
+        'system.metadataDefaults.creator': settings.customMetadata?.creator,
+        'system.metadataDefaults.producer': settings.customMetadata?.producer
       };
 
       if (settings.customPaths) {
@@ -597,20 +593,11 @@ export default function AdminGeneralSection() {
         </Stack>
       </Paper>
 
-      {/* Custom Metadata - Premium Feature */}
+      {/* Metadata Defaults */}
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
           <Group justify="space-between" align="center">
-            <Text fw={600} size="sm">{t('admin.settings.general.customMetadata.label', 'Custom Metadata')}</Text>
-            <Badge
-              color="grape"
-              size="sm"
-              style={{ cursor: 'pointer' }}
-              onClick={() => navigate('/settings/adminPlan')}
-              title={t('admin.settings.badge.clickToUpgrade', 'Click to view plan details')}
-            >
-              PRO
-            </Badge>
+            <Text fw={600} size="sm">{t('admin.settings.general.customMetadata.label', 'Metadata Defaults')}</Text>
           </Group>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

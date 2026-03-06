@@ -14,9 +14,9 @@ export const PLAN_FEATURES = {
     { name: 'Regular updates', included: true },
     { name: 'up to 5 users', included: true },
     { name: 'Unlimited users', included: false },
-    { name: 'Google drive integration', included: false },
+    { name: 'Google drive integration', included: true },
     { name: 'External Database', included: false },
-    { name: 'Editing text in pdfs', included: false },
+    { name: 'Editing text in pdfs', included: true },
     { name: 'Users limited to seats', included: false },
     { name: 'SSO', included: false },
     { name: 'SAML', included: false },
@@ -42,8 +42,8 @@ export const PLAN_FEATURES = {
     { name: 'SAML', included: false },
     { name: 'Auditing', included: false },
     { name: 'Usage tracking', included: false },
-    { name: 'Prometheus Support', included: false },
-    { name: 'Custom PDF metadata', included: false },
+    { name: 'Prometheus Support', included: true },
+    { name: 'Custom PDF metadata', included: true },
   ] as PlanFeature[],
 
   ENTERPRISE: [
@@ -76,29 +76,29 @@ export const PLAN_HIGHLIGHTS = {
   SERVER_MONTHLY: [
     'Self-hosted on your infrastructure',
     'Unlimited users',
-    'Advanced integrations',
     'SSO (OAuth2/OIDC)',
+    'Prometheus metrics & custom PDF metadata',
     'Editing text in PDFs',
     'Cancel anytime'
   ],
   SERVER_YEARLY: [
     'Self-hosted on your infrastructure',
     'Unlimited users',
-    'Advanced integrations',
     'SSO (OAuth2/OIDC)',
+    'Prometheus metrics & custom PDF metadata',
     'Editing text in PDFs',
     'Save with annual billing'
   ],
   ENTERPRISE_MONTHLY: [
     'Enterprise features (SAML, Auditing)',
-    'Usage tracking & Prometheus',
-    'Custom PDF metadata',
-    'Per-seat licensing'
+    'Usage tracking analytics',
+    'Per-seat licensing',
+    'Advanced compliance controls'
   ],
   ENTERPRISE_YEARLY: [
     'Enterprise features (SAML, Auditing)',
-    'Usage tracking & Prometheus',
-    'Custom PDF metadata',
+    'Usage tracking analytics',
+    'Advanced compliance controls',
     'Save with annual billing'
   ]
 } as const;

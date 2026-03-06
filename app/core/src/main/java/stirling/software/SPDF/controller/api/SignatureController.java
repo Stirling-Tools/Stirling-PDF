@@ -1,4 +1,4 @@
-package stirling.software.proprietary.controller.api;
+package stirling.software.SPDF.controller.api;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,32 +23,26 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.model.api.signature.SavedSignatureRequest;
+import stirling.software.SPDF.model.api.signature.SavedSignatureResponse;
+import stirling.software.SPDF.service.SignatureService;
 import stirling.software.common.configuration.InstallationPathConfig;
-import stirling.software.proprietary.model.api.signature.SavedSignatureRequest;
-import stirling.software.proprietary.model.api.signature.SavedSignatureResponse;
-import stirling.software.proprietary.security.service.UserService;
-import stirling.software.proprietary.service.SignatureService;
+import stirling.software.common.service.UserServiceInterface;
 
 /**
- * Controller for managing user signatures in proprietary/authenticated mode only. Requires user
- * authentication and enforces per-user storage limits. All endpoints require authentication
- * via @PreAuthorize("isAuthenticated()").
+ * Controller for managing authenticated user signatures in the free/self-hosted path.
  */
 @Slf4j
 @RestController
-@ConditionalOnProperty(name = "stirling.legacy.proprietary.endpoints", havingValue = "true")
-@RequestMapping("/api/v1/proprietary/signatures")
+@RequestMapping({"/api/v1/signatures", "/api/v1/proprietary/signatures"})
 @RequiredArgsConstructor
+@ConditionalOnBean(UserServiceInterface.class)
 public class SignatureController {
 
     private final SignatureService signatureService;
-    private final UserService userService;
+    private final UserServiceInterface userService;
     private static final String ALL_USERS_FOLDER = "ALL_USERS";
 
-    /**
-     * Save a new signature for the authenticated user. Enforces storage limits and authentication
-     * requirements.
-     */
     @PostMapping
     @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
     public ResponseEntity<SavedSignatureResponse> saveSignature(
@@ -63,7 +57,6 @@ public class SignatureController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
-            // Validate request
             if (request.getDataUrl() == null || request.getDataUrl().isEmpty()) {
                 log.warn("User {} attempted to save signature without dataUrl", username);
                 return ResponseEntity.badRequest().build();
@@ -81,10 +74,6 @@ public class SignatureController {
         }
     }
 
-    /**
-     * List all signatures accessible to the authenticated user. Includes both personal and shared
-     * signatures.
-     */
     @GetMapping
     @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
     public ResponseEntity<List<SavedSignatureResponse>> listSignatures() {
@@ -98,10 +87,6 @@ public class SignatureController {
         }
     }
 
-    /**
-     * Update a signature label. Users can update labels for their own personal signatures and for
-     * shared signatures.
-     */
     @PostMapping("/{signatureId}/label")
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     public ResponseEntity<Void> updateSignatureLabel(
@@ -111,7 +96,7 @@ public class SignatureController {
             String newLabel = body.get("label");
             boolean isAdmin = userService.isCurrentUserAdmin();
 
-            if (newLabel == null || newLabel.trim().isEmpty()) {
+            if (newLabel == null || newLabel.strip().isEmpty()) {
                 log.warn("Invalid label update request");
                 return ResponseEntity.badRequest().build();
             }
@@ -133,10 +118,6 @@ public class SignatureController {
         }
     }
 
-    /**
-     * Delete a signature owned by the authenticated user. Users can delete their own personal
-     * signatures. Admins can also delete shared signatures.
-     */
     @DeleteMapping("/{signatureId}")
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     public ResponseEntity<Void> deleteSignature(@PathVariable String signatureId) {
@@ -144,7 +125,6 @@ public class SignatureController {
             String username = userService.getCurrentUsername();
             boolean isAdmin = userService.isCurrentUserAdmin();
 
-            // Validate filename to prevent path traversal
             if (signatureId.contains("..")
                     || signatureId.contains("/")
                     || signatureId.contains("\\")) {
@@ -152,21 +132,23 @@ public class SignatureController {
                 return ResponseEntity.badRequest().build();
             }
 
-            // Try to delete from personal folder first
+            if (signatureService.isSharedSignature(signatureId) && !isAdmin) {
+                log.warn(
+                        "User {} attempted to delete shared signature {} without admin role",
+                        username,
+                        signatureId);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
             try {
                 signatureService.deleteSignature(username, signatureId);
-                log.info("User {} deleted personal signature {}", username, signatureId);
+                log.info("User {} deleted signature {}", username, signatureId);
                 return ResponseEntity.noContent().build();
             } catch (IOException e) {
-                // If not found in personal folder, check if it's in shared folder
-                if (isAdmin) {
-                    // Admin can delete from shared folder
-                    if (deleteFromSharedFolder(signatureId)) {
-                        log.info("Admin {} deleted shared signature {}", username, signatureId);
-                        return ResponseEntity.noContent().build();
-                    }
+                if (isAdmin && deleteFromSharedFolder(signatureId)) {
+                    log.info("Admin {} deleted shared signature {}", username, signatureId);
+                    return ResponseEntity.noContent().build();
                 }
-                // If not admin or not found in shared folder either, return 404
                 throw e;
             }
         } catch (IOException e) {
@@ -175,9 +157,6 @@ public class SignatureController {
         }
     }
 
-    /**
-     * Delete a signature from the shared (ALL_USERS) folder. Only admins should call this method.
-     */
     private boolean deleteFromSharedFolder(String signatureId) throws IOException {
         String signatureBasePath = InstallationPathConfig.getSignaturesPath();
         Path sharedFolder = Paths.get(signatureBasePath, ALL_USERS_FOLDER);
@@ -199,7 +178,6 @@ public class SignatureController {
                 }
             }
 
-            // Also delete metadata file if it exists
             Path metadataPath = sharedFolder.resolve(signatureId + ".json");
             if (Files.exists(metadataPath)) {
                 Files.delete(metadataPath);

@@ -1,6 +1,5 @@
-package stirling.software.proprietary.security.controller.api;
+package stirling.software.SPDF.controller.api.admin;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 
 @RestController
-@ConditionalOnProperty(name = "stirling.legacy.proprietary.endpoints", havingValue = "true")
 @RequestMapping("/api/v1/admin/server-certificate")
 @Slf4j
 @Tag(

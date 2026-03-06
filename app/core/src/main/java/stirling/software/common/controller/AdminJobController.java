@@ -1,8 +1,7 @@
-package stirling.software.proprietary.controller.api;
+package stirling.software.common.controller;
 
 import java.util.Map;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +24,6 @@ import stirling.software.common.service.TaskManager;
  * into system jobs and queues.
  */
 @RestController
-@ConditionalOnProperty(name = "stirling.legacy.proprietary.endpoints", havingValue = "true")
 @RequiredArgsConstructor
 @Slf4j
 @RequestMapping("/api/v1/admin")

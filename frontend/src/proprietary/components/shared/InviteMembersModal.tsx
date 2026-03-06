@@ -22,7 +22,6 @@ import { userManagementService } from '@app/services/userManagementService';
 import { teamService, Team } from '@app/services/teamService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
-import { useNavigate } from 'react-router-dom';
 
 interface InviteMembersModalProps {
   opened: boolean;
@@ -33,7 +32,6 @@ interface InviteMembersModalProps {
 export default function InviteMembersModal({ opened, onClose, onSuccess }: InviteMembersModalProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
-  const navigate = useNavigate();
   const [teams, setTeams] = useState<Team[]>([]);
   const [processing, setProcessing] = useState(false);
   const [inviteMode, setInviteMode] = useState<'email' | 'direct' | 'link'>('direct');
@@ -273,10 +271,6 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
     onClose();
   };
 
-  const handleGoToPlan = () => {
-    handleClose();
-    navigate('/settings/adminPlan');
-  };
 
   const handlePrimaryAction = () => {
     if (inviteMode === 'email') {
@@ -340,9 +334,6 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
                     </Text>
                   </Group>
                   {licenseInfo.availableSlots === 0 && (
-                    <Button size="xs" variant="light" onClick={handleGoToPlan}>
-                      {t('workspace.people.actions.upgrade', 'Upgrade')}
-                    </Button>
                   )}
                 </Group>
                 <Text size="xs" c="dimmed">

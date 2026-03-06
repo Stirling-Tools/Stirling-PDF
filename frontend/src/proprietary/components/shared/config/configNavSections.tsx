@@ -10,11 +10,8 @@ import AdminPrivacySection from '@app/components/shared/config/configSections/Ad
 import AdminDatabaseSection from '@app/components/shared/config/configSections/AdminDatabaseSection';
 import AdminAdvancedSection from '@app/components/shared/config/configSections/AdminAdvancedSection';
 import AdminLegalSection from '@app/components/shared/config/configSections/AdminLegalSection';
-import AdminPlanSection from '@app/components/shared/config/configSections/AdminPlanSection';
 import AdminFeaturesSection from '@app/components/shared/config/configSections/AdminFeaturesSection';
 import AdminEndpointsSection from '@app/components/shared/config/configSections/AdminEndpointsSection';
-import AdminAuditSection from '@app/components/shared/config/configSections/AdminAuditSection';
-import AdminUsageSection from '@app/components/shared/config/configSections/AdminUsageSection';
 import ApiKeys from '@app/components/shared/config/configSections/ApiKeys';
 import AccountSection from '@app/components/shared/config/configSections/AccountSection';
 import GeneralSection from '@app/components/shared/config/configSections/GeneralSection';
@@ -144,37 +141,6 @@ export const useConfigNavSections = (
           component: <AdminConnectionsSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined
-        },
-      ],
-    });
-
-    // Licensing & Analytics
-    sections.push({
-      title: t('settings.licensingAnalytics.title', 'Licensing & Analytics'),
-      items: [
-        {
-          key: 'adminPlan',
-          label: t('settings.licensingAnalytics.plan', 'Plan'),
-          icon: 'star-rounded',
-          component: <AdminPlanSection />,
-          disabled: requiresLogin,
-          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined
-        },
-        {
-          key: 'adminAudit',
-          label: t('settings.licensingAnalytics.audit', 'Audit'),
-          icon: 'fact-check-rounded',
-          component: <AdminAuditSection />,
-          disabled: !runningEE || requiresLogin,
-          disabledTooltip: requiresLogin ? enableLoginTooltip : requiresEnterpriseTooltip
-        },
-        {
-          key: 'adminUsage',
-          label: t('settings.licensingAnalytics.usageAnalytics', 'Usage Analytics'),
-          icon: 'analytics-rounded',
-          component: <AdminUsageSection />,
-          disabled: !runningEE || requiresLogin,
-          disabledTooltip: requiresLogin ? enableLoginTooltip : requiresEnterpriseTooltip
         },
       ],
     });
@@ -349,37 +315,6 @@ export const createConfigNavSections = (
           component: <AdminConnectionsSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? 'Enable login mode first' : undefined
-        },
-      ],
-    });
-
-    // Licensing & Analytics
-    sections.push({
-      title: 'Licensing & Analytics',
-      items: [
-        {
-          key: 'adminPlan',
-          label: 'Plan',
-          icon: 'star-rounded',
-          component: <AdminPlanSection />,
-          disabled: requiresLogin,
-          disabledTooltip: requiresLogin ? 'Enable login mode first' : undefined
-        },
-        {
-          key: 'adminAudit',
-          label: 'Audit',
-          icon: 'fact-check-rounded',
-          component: <AdminAuditSection />,
-          disabled: !runningEE || requiresLogin,
-          disabledTooltip: requiresLogin ? 'Enable login mode first' : 'Requires Enterprise license'
-        },
-        {
-          key: 'adminUsage',
-          label: 'Usage Analytics',
-          icon: 'analytics-rounded',
-          component: <AdminUsageSection />,
-          disabled: !runningEE || requiresLogin,
-          disabledTooltip: requiresLogin ? 'Enable login mode first' : 'Requires Enterprise license'
         },
       ],
     });

@@ -80,6 +80,8 @@ public class ConfigInitializer {
             YamlHelper settingsFile = new YamlHelper(settingTempPath);
 
             migrateEnterpriseEditionToPremium(settingsFile, settingsTemplateFile);
+            migratePremiumGoogleDriveToTopLevel(settingsFile, settingsTemplateFile);
+            migratePremiumMetadataDefaultsToSystem(settingsFile, settingsTemplateFile);
 
             boolean changesMade =
                     settingsTemplateFile.updateValuesFromYaml(settingsFile, settingsTemplateFile);
@@ -122,25 +124,71 @@ public class ConfigInitializer {
         if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "autoUpdateMetadata")
                 != null) {
             template.updateValue(
-                    List.of("premium", "proFeatures", "CustomMetadata", "autoUpdateMetadata"),
+                    List.of("system", "metadataDefaults", "autoUpdateMetadata"),
                     yaml.getValueByExactKeyPath(
                             "enterpriseEdition", "CustomMetadata", "autoUpdateMetadata"));
         }
         if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "author") != null) {
             template.updateValue(
-                    List.of("premium", "proFeatures", "CustomMetadata", "author"),
+                    List.of("system", "metadataDefaults", "author"),
                     yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "author"));
         }
         if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "creator") != null) {
             template.updateValue(
-                    List.of("premium", "proFeatures", "CustomMetadata", "creator"),
+                    List.of("system", "metadataDefaults", "creator"),
                     yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "creator"));
         }
         if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "producer")
                 != null) {
             template.updateValue(
-                    List.of("premium", "proFeatures", "CustomMetadata", "producer"),
+                    List.of("system", "metadataDefaults", "producer"),
                     yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "producer"));
+        }
+    }
+
+    private void migratePremiumMetadataDefaultsToSystem(YamlHelper yaml, YamlHelper template) {
+        if (yaml.getValueByExactKeyPath("premium", "proFeatures", "CustomMetadata", "autoUpdateMetadata") != null) {
+            template.updateValue(
+                    List.of("system", "metadataDefaults", "autoUpdateMetadata"),
+                    yaml.getValueByExactKeyPath("premium", "proFeatures", "CustomMetadata", "autoUpdateMetadata"));
+        }
+        if (yaml.getValueByExactKeyPath("premium", "proFeatures", "CustomMetadata", "author") != null) {
+            template.updateValue(
+                    List.of("system", "metadataDefaults", "author"),
+                    yaml.getValueByExactKeyPath("premium", "proFeatures", "CustomMetadata", "author"));
+        }
+        if (yaml.getValueByExactKeyPath("premium", "proFeatures", "CustomMetadata", "creator") != null) {
+            template.updateValue(
+                    List.of("system", "metadataDefaults", "creator"),
+                    yaml.getValueByExactKeyPath("premium", "proFeatures", "CustomMetadata", "creator"));
+        }
+        if (yaml.getValueByExactKeyPath("premium", "proFeatures", "CustomMetadata", "producer") != null) {
+            template.updateValue(
+                    List.of("system", "metadataDefaults", "producer"),
+                    yaml.getValueByExactKeyPath("premium", "proFeatures", "CustomMetadata", "producer"));
+        }
+    }
+
+    private void migratePremiumGoogleDriveToTopLevel(YamlHelper yaml, YamlHelper template) {
+        if (yaml.getValueByExactKeyPath("premium", "proFeatures", "googleDrive", "enabled") != null) {
+            template.updateValue(
+                    List.of("googleDrive", "enabled"),
+                    yaml.getValueByExactKeyPath("premium", "proFeatures", "googleDrive", "enabled"));
+        }
+        if (yaml.getValueByExactKeyPath("premium", "proFeatures", "googleDrive", "clientId") != null) {
+            template.updateValue(
+                    List.of("googleDrive", "clientId"),
+                    yaml.getValueByExactKeyPath("premium", "proFeatures", "googleDrive", "clientId"));
+        }
+        if (yaml.getValueByExactKeyPath("premium", "proFeatures", "googleDrive", "apiKey") != null) {
+            template.updateValue(
+                    List.of("googleDrive", "apiKey"),
+                    yaml.getValueByExactKeyPath("premium", "proFeatures", "googleDrive", "apiKey"));
+        }
+        if (yaml.getValueByExactKeyPath("premium", "proFeatures", "googleDrive", "appId") != null) {
+            template.updateValue(
+                    List.of("googleDrive", "appId"),
+                    yaml.getValueByExactKeyPath("premium", "proFeatures", "googleDrive", "appId"));
         }
     }
 }

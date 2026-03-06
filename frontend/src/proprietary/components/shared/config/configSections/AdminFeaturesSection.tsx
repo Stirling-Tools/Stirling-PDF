@@ -1,7 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
-import { TextInput, NumberInput, Switch, Stack, Paper, Text, Loader, Group, Badge } from '@mantine/core';
+import { TextInput, NumberInput, Switch, Stack, Paper, Text, Loader, Group } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
@@ -24,7 +23,6 @@ interface FeaturesSettingsData {
 
 export default function AdminFeaturesSection() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
@@ -126,20 +124,11 @@ export default function AdminFeaturesSection() {
         </Text>
       </div>
 
-      {/* Server Certificate - Pro Feature */}
+      {/* Server Certificate */}
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
           <Group justify="space-between" align="center">
             <Text fw={600} size="sm">{t('admin.settings.features.serverCertificate.label', 'Server Certificate')}</Text>
-            <Badge
-              color="grape"
-              size="sm"
-              style={{ cursor: 'pointer' }}
-              onClick={() => navigate('/settings/adminPlan')}
-              title={t('admin.settings.badge.clickToUpgrade', 'Click to view plan details')}
-            >
-              PRO
-            </Badge>
           </Group>
 
           <Text size="xs" c="dimmed">

@@ -75,7 +75,7 @@ export default function Onboarding() {
 
   // Check if we should show analytics modal before onboarding
   useEffect(() => {
-    if (!isLoading && !analyticsModalDismissed && serverExperience.effectiveIsAdmin && config?.enableAnalytics == null) {
+    if (false) {
       setShowAnalyticsModal(true);
     }
   }, [isLoading, analyticsModalDismissed, serverExperience.effectiveIsAdmin, config?.enableAnalytics]);
@@ -146,7 +146,6 @@ export default function Onboarding() {
         break;
       case 'see-plans':
         actions.complete();
-        navigate('/settings/adminPlan');
         break;
       case 'enable-analytics':
         await handleAnalyticsChoice(true);
@@ -155,7 +154,7 @@ export default function Onboarding() {
         await handleAnalyticsChoice(false);
         break;
     }
-  }, [actions, handleAnalyticsChoice, handleDownloadSelected, navigate, runtimeState.selectedRole, serverExperience.effectiveIsAdmin]);
+  }, [actions, handleAnalyticsChoice, handleDownloadSelected, runtimeState.selectedRole, serverExperience.effectiveIsAdmin]);
 
   const isRTL = typeof document !== 'undefined' ? document.documentElement.dir === 'rtl' : false;
   const [isTourOpen, setIsTourOpen] = useState(false);
@@ -423,7 +422,7 @@ export default function Onboarding() {
     );
   }
 
-  if (showLicenseSlide) {
+  if (false && showLicenseSlide) {
     const baseSlideDefinition = SLIDE_DEFINITIONS['server-license'];
     // Remove back button for external license notice
     const slideDefinition = {
@@ -453,7 +452,7 @@ export default function Onboarding() {
         onAction={(action) => {
           if (action === 'see-plans') {
             closeLicenseSlide();
-            navigate('/settings/adminPlan');
+            actions.complete();
           } else {
             closeLicenseSlide();
           }

@@ -52,7 +52,6 @@ public class PostHogService {
         this.userService = userService;
         this.env = env;
         this.configDirMounted = configDirMounted;
-        captureSystemInfo();
     }
 
     private void captureSystemInfo() {
@@ -67,9 +66,7 @@ public class PostHogService {
     }
 
     public void captureEvent(String eventName, Map<String, Object> properties) {
-        if (!applicationProperties.getSystem().isPosthogEnabled()) {
-            return;
-        }
+        return;
 
         properties.put("app_version", appVersion);
         postHog.capture(uniqueId, eventName, properties);

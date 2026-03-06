@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.api.TeamApi;
 import stirling.software.proprietary.model.Team;
-import stirling.software.proprietary.security.config.PremiumEndpoint;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
@@ -24,7 +23,6 @@ import stirling.software.proprietary.security.service.TeamService;
 @TeamApi
 @Slf4j
 @RequiredArgsConstructor
-@PremiumEndpoint
 public class TeamController {
 
     private final TeamRepository teamRepository;

@@ -102,9 +102,9 @@ export default function AdminConnectionsSection() {
       const mailResponse = await apiClient.get('/api/v1/admin/settings/section/mail');
       const mailData = mailResponse.data || {};
 
-      // Fetch premium settings for SSO Auto Login
-      const premiumResponse = await apiClient.get('/api/v1/admin/settings/section/premium');
-      const premiumData = premiumResponse.data || {};
+      // Fetch Google Drive settings
+      const googleDriveResponse = await apiClient.get('/api/v1/admin/settings/section/googleDrive');
+      const googleDriveData = googleDriveResponse.data || {};
 
       // Fetch Telegram settings
       const telegramResponse = await apiClient.get('/api/v1/admin/settings/section/telegram');
@@ -119,16 +119,15 @@ export default function AdminConnectionsSection() {
         saml2: securityData.saml2 || {},
         mail: mailData || {},
         telegram: telegramData || {},
-        ssoAutoLogin: premiumData.proFeatures?.ssoAutoLogin || false,
         enableMobileScanner: systemData.enableMobileScanner || false,
         mobileScannerConvertToPdf: systemData.mobileScannerSettings?.convertToPdf !== false,
         mobileScannerImageResolution: systemData.mobileScannerSettings?.imageResolution || 'full',
         mobileScannerPageFormat: systemData.mobileScannerSettings?.pageFormat || 'A4',
         mobileScannerStretchToFit: systemData.mobileScannerSettings?.stretchToFit || false,
-        googleDriveEnabled: premiumData.proFeatures?.googleDrive?.enabled || false,
-        googleDriveClientId: premiumData.proFeatures?.googleDrive?.clientId || '',
-        googleDriveApiKey: premiumData.proFeatures?.googleDrive?.apiKey || '',
-        googleDriveAppId: premiumData.proFeatures?.googleDrive?.appId || ''
+        googleDriveEnabled: googleDriveData.enabled || false,
+        googleDriveClientId: googleDriveData.clientId || '',
+        googleDriveApiKey: googleDriveData.apiKey || '',
+        googleDriveAppId: googleDriveData.appId || ''
       };
 
       // Merge pending blocks from all endpoints
@@ -145,9 +144,6 @@ export default function AdminConnectionsSection() {
       if (telegramData._pending) {
         pendingBlock.telegram = telegramData._pending;
       }
-      if (premiumData._pending?.proFeatures?.ssoAutoLogin !== undefined) {
-        pendingBlock.ssoAutoLogin = premiumData._pending.proFeatures.ssoAutoLogin;
-      }
       if (systemData._pending?.enableMobileScanner !== undefined) {
         pendingBlock.enableMobileScanner = systemData._pending.enableMobileScanner;
       }
@@ -163,17 +159,17 @@ export default function AdminConnectionsSection() {
       if (systemData._pending?.mobileScannerSettings?.stretchToFit !== undefined) {
         pendingBlock.mobileScannerStretchToFit = systemData._pending.mobileScannerSettings.stretchToFit;
       }
-      if (premiumData._pending?.proFeatures?.googleDrive?.enabled !== undefined) {
-        pendingBlock.googleDriveEnabled = premiumData._pending.proFeatures.googleDrive.enabled;
+      if (googleDriveData._pending?.enabled !== undefined) {
+        pendingBlock.googleDriveEnabled = googleDriveData._pending.enabled;
       }
-      if (premiumData._pending?.proFeatures?.googleDrive?.clientId !== undefined) {
-        pendingBlock.googleDriveClientId = premiumData._pending.proFeatures.googleDrive.clientId;
+      if (googleDriveData._pending?.clientId !== undefined) {
+        pendingBlock.googleDriveClientId = googleDriveData._pending.clientId;
       }
-      if (premiumData._pending?.proFeatures?.googleDrive?.apiKey !== undefined) {
-        pendingBlock.googleDriveApiKey = premiumData._pending.proFeatures.googleDrive.apiKey;
+      if (googleDriveData._pending?.apiKey !== undefined) {
+        pendingBlock.googleDriveApiKey = googleDriveData._pending.apiKey;
       }
-      if (premiumData._pending?.proFeatures?.googleDrive?.appId !== undefined) {
-        pendingBlock.googleDriveAppId = premiumData._pending.proFeatures.googleDrive.appId;
+      if (googleDriveData._pending?.appId !== undefined) {
+        pendingBlock.googleDriveAppId = googleDriveData._pending.appId;
       }
 
       if (Object.keys(pendingBlock).length > 0) {
@@ -226,11 +222,6 @@ export default function AdminConnectionsSection() {
         });
       }
 
-      // SSO Auto Login
-      if (currentSettings?.ssoAutoLogin !== undefined) {
-        deltaSettings['premium.proFeatures.ssoAutoLogin'] = currentSettings.ssoAutoLogin;
-      }
-
       // Mobile Scanner settings
       if (currentSettings?.enableMobileScanner !== undefined) {
         deltaSettings['system.enableMobileScanner'] = currentSettings.enableMobileScanner;
@@ -250,16 +241,16 @@ export default function AdminConnectionsSection() {
 
       // Google Drive settings
       if (currentSettings?.googleDriveEnabled !== undefined) {
-        deltaSettings['premium.proFeatures.googleDrive.enabled'] = currentSettings.googleDriveEnabled;
+        deltaSettings['googleDrive.enabled'] = currentSettings.googleDriveEnabled;
       }
       if (currentSettings?.googleDriveClientId !== undefined) {
-        deltaSettings['premium.proFeatures.googleDrive.clientId'] = currentSettings.googleDriveClientId;
+        deltaSettings['googleDrive.clientId'] = currentSettings.googleDriveClientId;
       }
       if (currentSettings?.googleDriveApiKey !== undefined) {
-        deltaSettings['premium.proFeatures.googleDrive.apiKey'] = currentSettings.googleDriveApiKey;
+        deltaSettings['googleDrive.apiKey'] = currentSettings.googleDriveApiKey;
       }
       if (currentSettings?.googleDriveAppId !== undefined) {
-        deltaSettings['premium.proFeatures.googleDrive.appId'] = currentSettings.googleDriveAppId;
+        deltaSettings['googleDrive.appId'] = currentSettings.googleDriveAppId;
       }
 
       return {
@@ -435,45 +426,6 @@ export default function AdminConnectionsSection() {
           )}
         </Text>
       </div>
-
-      {/* SSO Auto Login - Premium Feature */}
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
-          <Group justify="space-between" align="center">
-            <Text fw={600} size="sm">{t('admin.settings.connections.ssoAutoLogin.label', 'SSO Auto Login')}</Text>
-            <Badge
-              color="grape"
-              size="sm"
-              style={{ cursor: 'pointer' }}
-              onClick={() => navigate('/settings/adminPlan')}
-              title={t('admin.settings.badge.clickToUpgrade', 'Click to view plan details')}
-            >
-              PRO
-            </Badge>
-          </Group>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <Text fw={500} size="sm">{t('admin.settings.connections.ssoAutoLogin.enable', 'Enable SSO Auto Login')}</Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t('admin.settings.connections.ssoAutoLogin.description', 'Automatically redirect to SSO login when authentication is required')}
-              </Text>
-            </div>
-            <Group gap="xs">
-              <Switch
-                checked={settings?.ssoAutoLogin || false}
-                onChange={(e) => {
-                  if (!loginEnabled) return; // Block change when login disabled
-                  setSettings({ ...settings, ssoAutoLogin: e.target.checked });
-                }}
-                disabled={!loginEnabled}
-                styles={getDisabledStyles()}
-              />
-              <PendingBadge show={isFieldPending('ssoAutoLogin')} />
-            </Group>
-          </div>
-        </Stack>
-      </Paper>
 
       {/* Mobile Scanner (QR Code) Upload */}
       <Paper withBorder p="md" radius="md">

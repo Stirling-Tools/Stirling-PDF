@@ -36,9 +36,9 @@ export default function Footer({
   const { showCookiePreferences } = useCookieConsent({ analyticsEnabled: finalAnalyticsEnabled, forceLightMode });
 
   // Default URLs
-  const defaultTermsUrl = "https://www.stirling.com/legal/terms-of-service";
-  const defaultPrivacyUrl = "https://www.stirling.com/legal/privacy-policy";
-  const defaultAccessibilityUrl = "https://www.stirling.com/accessibility";
+  const defaultTermsUrl = "";
+  const defaultPrivacyUrl = "";
+  const defaultAccessibilityUrl = "";
 
   // Use provided URLs or fall back to defaults
   const finalTermsUrl = finalTermsAndConditions || defaultTermsUrl;
@@ -65,31 +65,26 @@ export default function Footer({
             fontSize: '0.75rem',
             color: forceLightMode ? '#495057' : undefined
           }}>
-          <a
-            className="footer-link px-3"
-            id="survey"
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://stirlingpdf.info/s/cm28y3niq000o56dv7liv8wsu"
-          >
-            {t('survey.nav', 'Survey')}
-          </a>
-          <a
-            className="footer-link px-3"
-            target="_blank"
-            rel="noopener noreferrer"
-            href={finalPrivacyUrl}
-          >
-            {t('legal.privacy', 'Privacy Policy')}
-          </a>
-          <a
-            className="footer-link px-3"
-            target="_blank"
-            rel="noopener noreferrer"
-            href={finalTermsUrl}
-          >
-            {t('legal.terms', 'Terms and Conditions')}
-          </a>
+          {isValidLink(finalPrivacyUrl) && (
+            <a
+              className="footer-link px-3"
+              target="_blank"
+              rel="noopener noreferrer"
+              href={finalPrivacyUrl}
+            >
+              {t('legal.privacy', 'Privacy Policy')}
+            </a>
+          )}
+          {isValidLink(finalTermsUrl) && (
+            <a
+              className="footer-link px-3"
+              target="_blank"
+              rel="noopener noreferrer"
+              href={finalTermsUrl}
+            >
+              {t('legal.terms', 'Terms and Conditions')}
+            </a>
+          )}
           <a
             className="footer-link px-3"
             target="_blank"
@@ -106,14 +101,16 @@ export default function Footer({
           >
             {t('footer.issues', 'GitHub')}
           </a>
-          <a
-            className="footer-link px-3"
-            target="_blank"
-            rel="noopener noreferrer"
-            href={finalAccessibilityUrl}
-          >
-            {t('legal.accessibility', 'Accessibility')}
-          </a>
+          {isValidLink(finalAccessibilityUrl) && (
+            <a
+              className="footer-link px-3"
+              target="_blank"
+              rel="noopener noreferrer"
+              href={finalAccessibilityUrl}
+            >
+              {t('legal.accessibility', 'Accessibility')}
+            </a>
+          )}
           {isValidLink(finalCookiePolicy) && (
             <a
               className="footer-link px-3"

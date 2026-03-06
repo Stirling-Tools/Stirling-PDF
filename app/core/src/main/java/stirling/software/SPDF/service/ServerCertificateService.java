@@ -1,4 +1,4 @@
-package stirling.software.proprietary.service;
+package stirling.software.SPDF.service;
 
 import java.io.*;
 import java.math.BigInteger;
@@ -23,7 +23,6 @@ import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -31,11 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.service.ServerCertificateServiceInterface;
-import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
-import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
 
 @Service
-@ConditionalOnProperty(name = "stirling.legacy.proprietary.endpoints", havingValue = "true")
 @Slf4j
 public class ServerCertificateService implements ServerCertificateServiceInterface {
 
@@ -55,12 +51,6 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
     @Value("${system.serverCertificate.regenerateOnStartup:false}")
     private boolean regenerateOnStartup;
 
-    private final LicenseKeyChecker licenseKeyChecker;
-
-    public ServerCertificateService(LicenseKeyChecker licenseKeyChecker) {
-        this.licenseKeyChecker = licenseKeyChecker;
-    }
-
     static {
         Security.addProvider(new BouncyCastleProvider());
     }
@@ -69,13 +59,8 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
         return Paths.get(InstallationPathConfig.getConfigPath(), KEYSTORE_FILENAME);
     }
 
-    private boolean hasProOrEnterpriseAccess() {
-        License license = licenseKeyChecker.getPremiumLicenseEnabledResult();
-        return license == License.SERVER || license == License.ENTERPRISE;
-    }
-
     public boolean isEnabled() {
-        return enabled && hasProOrEnterpriseAccess();
+        return enabled;
     }
 
     public boolean hasServerCertificate() {
@@ -85,11 +70,6 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
     public void initializeServerCertificate() {
         if (!enabled) {
             log.debug("Server certificate feature is disabled");
-            return;
-        }
-
-        if (!hasProOrEnterpriseAccess()) {
-            log.info("Server certificate feature requires Pro or Enterprise license");
             return;
         }
 
@@ -108,11 +88,6 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
     }
 
     public KeyStore getServerKeyStore() throws Exception {
-        if (!hasProOrEnterpriseAccess()) {
-            throw new IllegalStateException(
-                    "Server certificate feature requires Pro or Enterprise license");
-        }
-
         if (!enabled || !hasServerCertificate()) {
             throw new IllegalStateException("Server certificate is not available");
         }
@@ -139,11 +114,6 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
     }
 
     public void uploadServerCertificate(InputStream p12Stream, String password) throws Exception {
-        if (!hasProOrEnterpriseAccess()) {
-            throw new IllegalStateException(
-                    "Server certificate feature requires Pro or Enterprise license");
-        }
-
         // Validate the uploaded certificate
         KeyStore uploadedKeyStore = KeyStore.getInstance("PKCS12");
         uploadedKeyStore.load(p12Stream, password.toCharArray());
@@ -204,11 +174,6 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
     }
 
     private void generateServerCertificate() throws Exception {
-        if (!hasProOrEnterpriseAccess()) {
-            throw new IllegalStateException(
-                    "Server certificate feature requires Pro or Enterprise license");
-        }
-
         // Generate key pair
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA", "BC");
         keyPairGenerator.initialize(2048, new SecureRandom());

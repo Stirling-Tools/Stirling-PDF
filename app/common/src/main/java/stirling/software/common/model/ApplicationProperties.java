@@ -65,6 +65,7 @@ public class ApplicationProperties {
 
     private Mail mail = new Mail();
     private Telegram telegram = new Telegram();
+    private GoogleDrive googleDrive = new GoogleDrive();
 
     private Premium premium = new Premium();
 
@@ -565,6 +566,7 @@ public class ApplicationProperties {
         // 'https://app.example.com'). If not set, falls back to backendUrl.
         private boolean enableMobileScanner = false; // Enable mobile phone QR code upload feature
         private MobileScannerSettings mobileScannerSettings = new MobileScannerSettings();
+        private MetadataDefaults metadataDefaults = new MetadataDefaults();
 
         @Data
         public static class MobileScannerSettings {
@@ -579,13 +581,28 @@ public class ApplicationProperties {
         }
 
         public boolean isPosthogEnabled() {
-            // Treat null as enabled when analytics is enabled
-            return this.isAnalyticsEnabled() && (this.enablePosthog == null || this.enablePosthog);
+            return false;
         }
 
         public boolean isScarfEnabled() {
-            // Treat null as enabled when analytics is enabled
-            return this.isAnalyticsEnabled() && (this.enableScarf == null || this.enableScarf);
+            return false;
+        }
+
+
+        @Data
+        public static class MetadataDefaults {
+            private boolean autoUpdateMetadata;
+            private String author;
+            private String creator;
+            private String producer;
+
+            public String getCreator() {
+                return creator == null || creator.trim().isEmpty() ? "Stirling-PDF" : creator;
+            }
+
+            public String getProducer() {
+                return producer == null || producer.trim().isEmpty() ? "Stirling-PDF" : producer;
+            }
         }
     }
 
@@ -904,6 +921,51 @@ public class ApplicationProperties {
                 private Boolean processing = true;
             }
         }
+    }
+
+    @PostConstruct
+    public void migrateLegacyPremiumGoogleDriveSettings() {
+        GoogleDrive currentGoogleDrive = googleDrive != null ? googleDrive : new GoogleDrive();
+        Premium.ProFeatures.GoogleDrive legacyGoogleDrive =
+                premium != null
+                                && premium.getProFeatures() != null
+                                && premium.getProFeatures().getGoogleDrive() != null
+                        ? premium.getProFeatures().getGoogleDrive()
+                        : null;
+
+        if (legacyGoogleDrive == null) {
+            googleDrive = currentGoogleDrive;
+            return;
+        }
+
+        boolean hasCurrentConfig =
+                currentGoogleDrive.isEnabled()
+                        || !currentGoogleDrive.getClientId().isBlank()
+                        || !currentGoogleDrive.getApiKey().isBlank()
+                        || !currentGoogleDrive.getAppId().isBlank();
+
+        boolean hasLegacyConfig =
+                legacyGoogleDrive.isEnabled()
+                        || !legacyGoogleDrive.getClientId().isBlank()
+                        || !legacyGoogleDrive.getApiKey().isBlank()
+                        || !legacyGoogleDrive.getAppId().isBlank();
+
+        if (!hasCurrentConfig && hasLegacyConfig) {
+            currentGoogleDrive.setEnabled(legacyGoogleDrive.isEnabled());
+            currentGoogleDrive.setClientId(legacyGoogleDrive.getClientId());
+            currentGoogleDrive.setApiKey(legacyGoogleDrive.getApiKey());
+            currentGoogleDrive.setAppId(legacyGoogleDrive.getAppId());
+        }
+
+        googleDrive = currentGoogleDrive;
+    }
+
+    @Data
+    public static class GoogleDrive {
+        private boolean enabled = false;
+        private String clientId = "";
+        private String apiKey = "";
+        private String appId = "";
     }
 
     @Data

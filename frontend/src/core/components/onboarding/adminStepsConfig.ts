@@ -32,7 +32,7 @@ export function createAdminStepsConfig({ t, actions }: CreateAdminStepsConfigArg
   return {
     [AdminTourStep.WELCOME]: {
       selector: '[data-tour="config-button"]',
-      content: t('adminOnboarding.welcome', "Welcome to the <strong>Admin Tour</strong>! Let's explore the powerful enterprise features and settings available to system administrators."),
+      content: t('adminOnboarding.welcome', "Welcome to the <strong>Admin Tour</strong>! Let's explore the administrative tools and settings available to system administrators."),
       position: 'right',
       padding: 10,
       action: () => {
@@ -88,7 +88,7 @@ export function createAdminStepsConfig({ t, actions }: CreateAdminStepsConfigArg
     [AdminTourStep.DATABASE_SECTION]: {
       selector: '[data-tour="admin-adminDatabase-nav"]',
       highlightedSelectors: ['[data-tour="admin-adminDatabase-nav"]', '[data-tour="settings-content-area"]'],
-      content: t('adminOnboarding.databaseSection', "For advanced production environments, we have settings to allow <strong>external database hookups</strong> so you can integrate with your existing infrastructure."),
+      content: t('adminOnboarding.databaseSection', "The <strong>Database</strong> section lets you manage embedded H2 backup and restore directly. If you need to integrate with existing infrastructure, paid plans add external database connections."),
       position: 'right',
       padding: 10,
       action: () => {
@@ -132,7 +132,7 @@ export function createAdminStepsConfig({ t, actions }: CreateAdminStepsConfigArg
     },
     [AdminTourStep.WRAP_UP]: {
       selector: '[data-tour="help-button"]',
-      content: t('adminOnboarding.wrapUp', "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. Access this tour anytime from the <strong>Help</strong> menu."),
+      content: t('adminOnboarding.wrapUp', "That's the admin tour! You've seen the administrative tools that make Stirling PDF a powerful, customisable solution for organisations. Access this tour anytime from the <strong>Help</strong> menu."),
       position: 'right',
       padding: 10,
       action: () => {

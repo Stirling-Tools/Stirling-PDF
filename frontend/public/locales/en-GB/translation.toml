@@ -780,7 +780,7 @@ deleteConfirmAction = "Delete backup"
 deleteFailed = "Failed to delete backup"
 deleteSuccess = "Backup deleted"
 deleteTitle = "Delete backup"
-description = "Configure custom database connection settings for enterprise deployments."
+description = "Manage embedded H2 backup and restore, or configure external database connections for paid deployments."
 download = "Download"
 downloadFailed = "Failed to download backup"
 embedded = "Embedded H2"
@@ -811,8 +811,9 @@ description = "Full JDBC connection string (e.g., jdbc:postgresql://localhost:54
 label = "Custom Database URL"
 
 [admin.settings.database.enableCustom]
-description = "Use your own custom database configuration instead of the default embedded database"
+description = "Use your own external database configuration instead of the default embedded H2 database. Requires the Server plan."
 label = "Enable Custom Database"
+configurationNote = "Embedded H2 backup and restore is free. External database connections require the Server plan."
 
 [admin.settings.database.hostName]
 description = "Database server hostname (not used if custom URL is provided)"
@@ -1426,12 +1427,12 @@ inactive = "Inactive"
 adminTools = "Finally, we have advanced administration tools like <strong>Auditing</strong> to track system activity and <strong>Usage Analytics</strong> to monitor how your users interact with the platform."
 configButton = "Click the <strong>Config</strong> button to access all system settings and administrative controls."
 connectionsSection = "The <strong>Connections</strong> section supports various login methods including custom SSO and SAML providers like Google and GitHub, plus email integrations for notifications and communications."
-databaseSection = "For advanced production environments, we have settings to allow <strong>external database hookups</strong> so you can integrate with your existing infrastructure."
+databaseSection = "The <strong>Database</strong> section lets you manage embedded H2 backup and restore directly. If you need to integrate with existing infrastructure, paid plans add external database connections."
 settingsOverview = "This is the <strong>Settings Panel</strong>. Admin settings are organised by category for easy navigation."
 systemCustomization = "We have extensive ways to customise the UI: <strong>System Settings</strong> let you change the app name and languages, <strong>Features</strong> allows server certificate management, and <strong>Endpoints</strong> lets you enable or disable specific tools for your users."
 teamsAndUsers = "Manage <strong>Teams</strong> and individual users here. You can invite new users via email, shareable links, or create custom accounts for them yourself."
-welcome = "Welcome to the <strong>Admin Tour</strong>! Let's explore the powerful enterprise features and settings available to system administrators."
-wrapUp = "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. Access this tour anytime from the <strong>Help</strong> menu."
+welcome = "Welcome to the <strong>Admin Tour</strong>! Let's explore the administrative tools and settings available to system administrators."
+wrapUp = "That's the admin tour! You've seen the administrative tools that make Stirling PDF a powerful, customisable solution for organisations. Access this tour anytime from the <strong>Help</strong> menu."
 
 [adminUserSettings]
 actions = "Actions"
@@ -4236,7 +4237,7 @@ message = "The application has undergone significant changes recently. Your serv
 [onboarding.serverLicense]
 freeBody = "Our <strong>Open-Core</strong> licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. To scale uninterrupted, we recommend the Stirling Server plan - <strong>unlimited seats</strong> and <strong>SSO support</strong> for $99/server/mo."
 freeTitle = "Server License"
-overLimitBody = "Our licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. You have <strong>{{overLimitUserCopy}}</strong> Stirling users. To continue uninterrupted, upgrade to the Stirling Server plan - <strong>unlimited seats</strong>, PDF text editing, and full admin control for $99/server/mo."
+overLimitBody = "Our licensing permits up to <strong>{{freeTierLimit}}</strong> users for free per server. You have <strong>{{overLimitUserCopy}}</strong> Stirling users. To continue uninterrupted, upgrade to the Stirling Server plan - <strong>unlimited seats</strong> and <strong>SSO support</strong> for $99/server/mo."
 overLimitTitle = "Server License Needed"
 seePlans = "See Plans →"
 skip = "Skip for now"
@@ -5843,7 +5844,7 @@ user = "User"
 [settings.general.enableFeatures]
 action = "Configure"
 and = "and"
-benefit = "Enables user roles, team collaboration, admin controls, and enterprise features."
+benefit = "Enables user roles, team collaboration, admin controls, and advanced workspace features."
 dismiss = "Dismiss"
 intro = "Enable user authentication, team management, and workspace features for your organisation."
 learnMore = "Learn more in documentation"

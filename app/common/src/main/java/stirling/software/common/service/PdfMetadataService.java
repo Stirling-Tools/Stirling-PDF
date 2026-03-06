@@ -20,17 +20,14 @@ public class PdfMetadataService {
     private final ApplicationProperties applicationProperties;
     private final String stirlingPDFLabel;
     private final UserServiceInterface userService;
-    private final boolean runningProOrHigher;
 
     public PdfMetadataService(
             ApplicationProperties applicationProperties,
             @Qualifier("StirlingPDFLabel") String stirlingPDFLabel,
-            @Qualifier("runningProOrHigher") boolean runningProOrHigher,
             @Autowired(required = false) UserServiceInterface userService) {
         this.applicationProperties = applicationProperties;
         this.stirlingPDFLabel = stirlingPDFLabel;
         this.userService = userService;
-        this.runningProOrHigher = runningProOrHigher;
     }
 
     /**
@@ -114,19 +111,9 @@ public class PdfMetadataService {
 
         String creator = stirlingPDFLabel;
 
-        if (applicationProperties
-                        .getPremium()
-                        .getProFeatures()
-                        .getCustomMetadata()
-                        .isAutoUpdateMetadata()
-                && runningProOrHigher) {
+        if (applicationProperties.getSystem().getMetadataDefaults().isAutoUpdateMetadata()) {
 
-            creator =
-                    applicationProperties
-                            .getPremium()
-                            .getProFeatures()
-                            .getCustomMetadata()
-                            .getCreator();
+            creator = applicationProperties.getSystem().getMetadataDefaults().getCreator();
             pdf.getDocumentInformation().setProducer(stirlingPDFLabel);
         }
 
@@ -155,18 +142,8 @@ public class PdfMetadataService {
         pdf.getDocumentInformation().setModificationDate(modificationCal);
 
         String author = pdfMetadata.getAuthor();
-        if (applicationProperties
-                        .getPremium()
-                        .getProFeatures()
-                        .getCustomMetadata()
-                        .isAutoUpdateMetadata()
-                && runningProOrHigher) {
-            author =
-                    applicationProperties
-                            .getPremium()
-                            .getProFeatures()
-                            .getCustomMetadata()
-                            .getAuthor();
+        if (applicationProperties.getSystem().getMetadataDefaults().isAutoUpdateMetadata()) {
+            author = applicationProperties.getSystem().getMetadataDefaults().getAuthor();
 
             if (userService != null) {
                 String username = userService.getCurrentUsername();

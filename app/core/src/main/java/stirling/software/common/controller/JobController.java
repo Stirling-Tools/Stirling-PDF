@@ -147,7 +147,7 @@ public class JobController {
         return ResponseEntity.ok(result.getResult());
     }
 
-    // Admin-only endpoints have been moved to AdminJobController in the proprietary package
+    // Admin-only endpoints are handled by AdminJobController in the core admin controller package
 
     /**
      * Cancel a job by its ID

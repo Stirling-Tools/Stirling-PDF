@@ -20,8 +20,8 @@ import stirling.software.common.service.UserServiceInterface;
 /**
  * Unified signature image controller that works for both authenticated and unauthenticated users.
  * Uses composition pattern: - Core SharedSignatureService (always available): reads shared
- * signatures - PersonalSignatureService (proprietary, optional): reads personal signatures For
- * authenticated signature management (save/delete), see proprietary SignatureController.
+ * signatures - PersonalSignatureService (optional): reads personal signatures For
+ * authenticated signature management (save/delete), see the signatures API controller.
  */
 @Slf4j
 @RestController

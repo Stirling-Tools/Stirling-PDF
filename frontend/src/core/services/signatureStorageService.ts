@@ -39,8 +39,8 @@ class SignatureStorageService {
 
   private async _performDetection(): Promise<SignatureStorageCapabilities> {
     try {
-      // Probe the proprietary signatures endpoint (requires authentication)
-      await apiClient.get('/api/v1/proprietary/signatures', {
+      // Probe the authenticated signatures endpoint (requires authentication)
+      await apiClient.get('/api/v1/signatures', {
         timeout: 3000,
       });
 
@@ -57,7 +57,7 @@ class SignatureStorageService {
         console.log('[SignatureStorage] Backend signature API requires authentication, using localStorage');
       } else if (error?.response?.status === 404) {
         // Endpoint doesn't exist (not running proprietary mode)
-        console.log('[SignatureStorage] Backend signature API not available (not in proprietary mode), using localStorage');
+        console.log('[SignatureStorage] Backend signature API not available, using localStorage');
       } else {
         // Network error, timeout, or other error
         console.log('[SignatureStorage] Backend signature API not available, using localStorage');
@@ -135,7 +135,7 @@ class SignatureStorageService {
   // Backend methods
   private async _loadFromBackend(): Promise<SavedSignature[]> {
     try {
-      const response = await apiClient.get<SavedSignature[]>('/api/v1/proprietary/signatures');
+      const response = await apiClient.get<SavedSignature[]>('/api/v1/signatures');
       const signatures = response.data;
 
       // Fetch image data for each signature and convert to data URLs
@@ -177,15 +177,15 @@ class SignatureStorageService {
   }
 
   private async _saveToBackend(signature: SavedSignature): Promise<void> {
-    await apiClient.post('/api/v1/proprietary/signatures', signature);
+    await apiClient.post('/api/v1/signatures', signature);
   }
 
   private async _deleteFromBackend(id: string): Promise<void> {
-    await apiClient.delete(`/api/v1/proprietary/signatures/${id}`);
+    await apiClient.delete(`/api/v1/signatures/${id}`);
   }
 
   private async _updateLabelInBackend(id: string, label: string): Promise<void> {
-    await apiClient.post(`/api/v1/proprietary/signatures/${id}/label`, { label });
+    await apiClient.post(`/api/v1/signatures/${id}/label`, { label });
   }
 
   // LocalStorage methods

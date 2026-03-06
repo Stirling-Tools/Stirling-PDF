@@ -40,7 +40,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { actions: navigationActions } = useNavigationActions();
   const { getToolNavigation } = useSidebarNavigation();
   const { config } = useAppConfig();
-  const licenseAlert = useLicenseAlert();
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [activeButton, setActiveButton] = useState<string>('tools');
   const scrollableRef = useRef<HTMLDivElement>(null);
@@ -356,10 +355,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
               }
 
               const buttonNode = renderNavButton(buttonConfig, index);
-              const shouldShowSettingsBadge =
-                buttonConfig.id === 'config' &&
-                licenseAlert.active &&
-                licenseAlert.audience === 'admin';
+              const shouldShowSettingsBadge = false;
 
               return (
                 <React.Fragment key={buttonConfig.id}>

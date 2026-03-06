@@ -86,6 +86,12 @@ security:
       hardFail: false # Fail validation if revocation status cannot be determined (true=strict, false=soft-fail)
   xFrameOptions: DENY # X-Frame-Options header value. Options: 'DENY' (default, prevents all framing), 'SAMEORIGIN' (allows framing from same domain), 'DISABLED' (no X-Frame-Options header sent). Note: automatically set to DISABLED when login is disabled
 
+googleDrive:
+  enabled: false # Enable Google Drive file picker integration
+  clientId: "" # Google OAuth 2.0 client ID (obtain from Google Cloud Console)
+  apiKey: "" # Google API key for Google Picker API (obtain from Google Cloud Console)
+  appId: "" # Google Drive app ID
+
 premium:
   key: 00000000-0000-0000-0000-000000000000
   enabled: false # Enable license key checks for pro/enterprise features
@@ -96,11 +102,6 @@ premium:
       author: username
       creator: Stirling-PDF
       producer: Stirling-PDF
-    googleDrive:
-      enabled: false # Enable Google Drive file picker integration
-      clientId: "" # Google OAuth 2.0 client ID (obtain from Google Cloud Console)
-      apiKey: "" # Google API key for Google Picker API (obtain from Google Cloud Console)
-      appId: "" # Google Drive app ID
   enterpriseFeatures:
     audit:
       enabled: true # Enable audit logging for security and compliance tracking

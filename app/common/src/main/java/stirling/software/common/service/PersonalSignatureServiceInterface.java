@@ -3,8 +3,7 @@ package stirling.software.common.service;
 import java.io.IOException;
 
 /**
- * Interface for personal signature access (proprietary feature). Implemented only in proprietary
- * module to provide authenticated users access to their personal signatures.
+ * Interface for authenticated personal signature access in self-hosted deployments.
  */
 public interface PersonalSignatureServiceInterface {
 

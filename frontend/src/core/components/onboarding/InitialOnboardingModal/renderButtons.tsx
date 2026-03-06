@@ -38,15 +38,6 @@ export function SlideButtons({ slideDefinition, licenseNotice, flowState, onActi
         };
 
   const resolveButtonLabel = (button: ButtonDefinition) => {
-    // Special case: override "See Plans" with "Upgrade now" when over limit
-    if (
-      button.type === 'button' &&
-      slideDefinition.id === 'server-license' &&
-      button.action === 'see-plans' &&
-      licenseNotice.isOverLimit
-    ) {
-      return t('onboarding.serverLicense.upgrade', 'Upgrade now →');
-    }
 
     // Translate the label (it's a translation key)
     const label = button.label ?? '';

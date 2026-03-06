@@ -1,4 +1,4 @@
-package stirling.software.proprietary.service;
+package stirling.software.SPDF.service;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -13,25 +13,21 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.service.PersonalSignatureServiceInterface;
-import stirling.software.proprietary.model.api.signature.SavedSignatureRequest;
-import stirling.software.proprietary.model.api.signature.SavedSignatureResponse;
+import stirling.software.SPDF.model.api.signature.SavedSignatureRequest;
+import stirling.software.SPDF.model.api.signature.SavedSignatureResponse;
 
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Service for managing user signatures with authentication and storage limits. This proprietary
- * version enforces per-user quotas and requires authentication. Provides access to personal
- * signatures only (shared signatures handled by core service).
+ * Service for managing authenticated user signatures with storage limits in the free/self-hosted path. Provides access to personal signatures only (shared signatures are handled separately).
  */
 @Service
-@ConditionalOnProperty(name = "stirling.legacy.proprietary.endpoints", havingValue = "true")
 @Slf4j
 public class SignatureService implements PersonalSignatureServiceInterface {
 

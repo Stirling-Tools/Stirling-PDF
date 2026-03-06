@@ -27,9 +27,6 @@ import { useAppConfig } from '@app/contexts/AppConfigContext';
 import InviteMembersModal from '@app/components/shared/InviteMembersModal';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
-import { useNavigate } from 'react-router-dom';
-import UpdateSeatsButton from '@app/components/shared/UpdateSeatsButton';
-import { useLicense } from '@app/contexts/LicenseContext';
 import ChangeUserPasswordModal from '@app/components/shared/ChangeUserPasswordModal';
 import { useAuth } from '@app/auth/UseSession';
 
@@ -38,8 +35,6 @@ export default function PeopleSection() {
   const { config } = useAppConfig();
   const { loginEnabled } = useLoginRequired();
   const { user: currentUser } = useAuth();
-  const navigate = useNavigate();
-  const { licenseInfo: globalLicenseInfo } = useLicense();
   const [users, setUsers] = useState<User[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,11 +58,7 @@ export default function PeopleSection() {
   } | null>(null);
   const hasNoSlots = licenseInfo ? licenseInfo.availableSlots === 0 : false;
   const handleAddMembersClick = () => {
-    if (!loginEnabled) {
-      return;
-    }
-    if (hasNoSlots) {
-      navigate('/settings/adminPlan');
+    if (!loginEnabled || hasNoSlots) {
       return;
     }
     setInviteModalOpened(true);
@@ -365,21 +356,6 @@ export default function PeopleSection() {
             <Text component="span" c="dimmed"> {t('workspace.people.license.users', 'users')}</Text>
           </Text>
 
-          {licenseInfo.availableSlots === 0 && (
-            <Group gap="xs" wrap="nowrap" align="center">
-              <Badge color="red" variant="light" size="sm">
-                {t('workspace.people.license.noSlotsAvailable', 'No slots available')}
-              </Badge>
-              <Button
-                size="compact-sm"
-                variant="outline"
-                onClick={() => navigate('/settings/adminPlan')}
-              >
-                {t('workspace.people.actions.upgrade', 'Upgrade')}
-              </Button>
-            </Group>
-          )}
-
           {licenseInfo.grandfatheredUserCount > 0 && (
             <Text size="sm" c="dimmed" span>
               •
@@ -389,22 +365,7 @@ export default function PeopleSection() {
             </Text>
           )}
 
-          {licenseInfo.premiumEnabled && licenseInfo.licenseMaxUsers > 0 && (
-            <Badge color="blue" variant="light" size="sm">
-              +{licenseInfo.licenseMaxUsers} {t('workspace.people.license.fromLicense', 'from license')}
-            </Badge>
-          )}
-
           {/* Enterprise Seat Management Button */}
-          {globalLicenseInfo?.licenseType === 'ENTERPRISE' && (
-            <>
-              <Text size="sm" c="dimmed" span>•</Text>
-              <UpdateSeatsButton
-                size="xs"
-                onSuccess={fetchData}
-              />
-            </>
-          )}
         </Group>
       )}
 

@@ -168,8 +168,7 @@ public class ConfigController {
                     applicationProperties.getUi().getHideDisabledTools().isMobileQRScanner());
 
             // Google Drive backend settings (only if enabled)
-            ApplicationProperties.Premium.ProFeatures.GoogleDrive googleDrive =
-                    applicationProperties.getPremium().getProFeatures().getGoogleDrive();
+            ApplicationProperties.GoogleDrive googleDrive = applicationProperties.getGoogleDrive();
             if (googleDrive.isEnabled()) {
                 configData.put("googleDriveEnabled", true);
                 configData.put("googleDriveClientId", googleDrive.getClientId());

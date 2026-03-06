@@ -23,11 +23,7 @@ export const VALID_NAV_KEYS = [
   'adminDatabase',
   'adminAdvanced',
   'adminLegal',
-  'adminPremium',
   'adminFeatures',
-  'adminPlan',
-  'adminAudit',
-  'adminUsage',
   'adminEndpoints',
 ] as const;
 

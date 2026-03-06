@@ -1,4 +1,4 @@
-package stirling.software.proprietary.security.controller.api;
+package stirling.software.SPDF.controller.api;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,7 +11,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,7 +33,6 @@ import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 @RestController
-@ConditionalOnProperty(name = "stirling.legacy.proprietary.endpoints", havingValue = "true")
 @RequestMapping("/api/v1/ui-data")
 @RequiredArgsConstructor
 public class UIDataTessdataController {

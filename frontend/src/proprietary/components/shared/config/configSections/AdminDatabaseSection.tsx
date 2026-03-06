@@ -363,182 +363,39 @@ export default function AdminDatabaseSection() {
             <Text size="sm" c="dimmed">
               {t(
                 "admin.settings.database.description",
-                "Configure custom database connection settings for enterprise deployments.",
+                "Manage embedded H2 backup and restore, or configure external database connections for paid deployments.",
               )}
             </Text>
           </div>
-          <Badge color="grape" size="lg">
-            ENTERPRISE
-          </Badge>
         </Group>
       </div>
 
       {/* Database Configuration */}
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
-          <Text fw={600} size="sm" mb="xs">
+          <Text fw={600} size="sm">
             {t("admin.settings.database.configuration", "Database Configuration")}
           </Text>
-
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div>
-              <Text fw={500} size="sm">
-                {t("admin.settings.database.enableCustom.label", "Enable Custom Database")}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t(
-                  "admin.settings.database.enableCustom.description",
-                  "Use your own custom database configuration instead of the default embedded database",
-                )}
-              </Text>
-            </div>
-            <Group gap="xs">
-              <Switch
-                checked={settings?.enableCustomDatabase || false}
-                onChange={(e) => {
-                  if (!loginEnabled) return;
-                  setSettings({ ...settings, enableCustomDatabase: e.target.checked });
-                }}
-                disabled={!loginEnabled}
-                styles={getDisabledStyles()}
-              />
-              <PendingBadge show={isFieldPending("enableCustomDatabase")} />
-            </Group>
-          </div>
-
-          {settings?.enableCustomDatabase && (
-            <>
-              <div>
-                <TextInput
-                  label={
-                    <Group gap="xs">
-                      <span>{t("admin.settings.database.customUrl.label", "Custom Database URL")}</span>
-                      <PendingBadge show={isFieldPending("customDatabaseUrl")} />
-                    </Group>
-                  }
-                  description={t(
-                    "admin.settings.database.customUrl.description",
-                    "Full JDBC connection string (e.g., jdbc:postgresql://localhost:5432/postgres). If provided, individual connection settings below are not used.",
-                  )}
-                  value={settings?.customDatabaseUrl || ""}
-                  onChange={(e) => setSettings({ ...settings, customDatabaseUrl: e.target.value })}
-                  placeholder="jdbc:postgresql://localhost:5432/postgres"
-                  disabled={!loginEnabled}
-                />
-              </div>
-
-              <div>
-                <Select
-                  label={
-                    <Group gap="xs">
-                      <span>{t("admin.settings.database.type.label", "Database Type")}</span>
-                      <PendingBadge show={isFieldPending("type")} />
-                    </Group>
-                  }
-                  description={t(
-                    "admin.settings.database.type.description",
-                    "Type of database (not used if custom URL is provided)",
-                  )}
-                  value={settings?.type || "postgresql"}
-                  onChange={(value) => setSettings({ ...settings, type: value || "postgresql" })}
-                  data={[
-                    { value: "postgresql", label: "PostgreSQL" },
-                    { value: "h2", label: "H2" },
-                    { value: "mysql", label: "MySQL" },
-                    { value: "mariadb", label: "MariaDB" },
-                  ]}
-                  disabled={!loginEnabled}
-                />
-              </div>
-
-              <div>
-                <TextInput
-                  label={
-                    <Group gap="xs">
-                      <span>{t("admin.settings.database.hostName.label", "Host Name")}</span>
-                      <PendingBadge show={isFieldPending("hostName")} />
-                    </Group>
-                  }
-                  description={t(
-                    "admin.settings.database.hostName.description",
-                    "Database server hostname (not used if custom URL is provided)",
-                  )}
-                  value={settings?.hostName || ""}
-                  onChange={(e) => setSettings({ ...settings, hostName: e.target.value })}
-                  placeholder="localhost"
-                  disabled={!loginEnabled}
-                />
-              </div>
-
-              <div>
-                <NumberInput
-                  label={
-                    <Group gap="xs">
-                      <span>{t("admin.settings.database.port.label", "Port")}</span>
-                      <PendingBadge show={isFieldPending("port")} />
-                    </Group>
-                  }
-                  description={t(
-                    "admin.settings.database.port.description",
-                    "Database server port (not used if custom URL is provided)",
-                  )}
-                  value={settings?.port || 5432}
-                  onChange={(value) => setSettings({ ...settings, port: Number(value) })}
-                  min={1}
-                  max={65535}
-                  disabled={!loginEnabled}
-                />
-              </div>
-
-              <div>
-                <TextInput
-                  label={
-                    <Group gap="xs">
-                      <span>{t("admin.settings.database.name.label", "Database Name")}</span>
-                      <PendingBadge show={isFieldPending("name")} />
-                    </Group>
-                  }
-                  description={t(
-                    "admin.settings.database.name.description",
-                    "Name of the database (not used if custom URL is provided)",
-                  )}
-                  value={settings?.name || ""}
-                  onChange={(e) => setSettings({ ...settings, name: e.target.value })}
-                  placeholder="postgres"
-                  disabled={!loginEnabled}
-                />
-              </div>
-
-              <div>
-                <TextInput
-                  label={
-                    <Group gap="xs">
-                      <span>{t("admin.settings.database.username.label", "Username")}</span>
-                      <PendingBadge show={isFieldPending("username")} />
-                    </Group>
-                  }
-                  description={t("admin.settings.database.username.description", "Database authentication username")}
-                  value={settings?.username || ""}
-                  onChange={(e) => setSettings({ ...settings, username: e.target.value })}
-                  placeholder="postgres"
-                  disabled={!loginEnabled}
-                />
-              </div>
-
-              <div>
-                <Group gap="xs" align="center" mb={4}>
-                  <span style={{ fontWeight: 500, fontSize: "0.875rem" }}>{t("admin.settings.database.password.label", "Password")}</span>
-                  <PendingBadge show={isFieldPending("password")} />
-                </Group>
-                <EditableSecretField
-                  description={t("admin.settings.database.password.description", "Database authentication password")}
-                  value={settings?.password || ""}
-                  onChange={(value) => setSettings({ ...settings, password: value })}
-                  placeholder="Enter database password"
-                  disabled={!loginEnabled}
-                />
-              </div>
-            </>
+          <Text size="xs" c="dimmed">
+            {t(
+              "admin.settings.database.configurationNote",
+              "Embedded H2 backup and restore is free. External database connections require the Server plan.",
+            )}
+          </Text>
+          <Group gap="xs">
+            <Badge color={isEmbeddedH2 ? "green" : "grape"} variant="light">
+              {isEmbeddedH2
+                ? t("admin.settings.database.embedded", "Embedded H2")
+                : t("admin.settings.database.external", "External DB")}
+            </Badge>
+          </Group>
+          {!isEmbeddedH2 && (
+            <Text size="sm" c="dimmed">
+              {t(
+                "admin.settings.database.externalHiddenMessage",
+                "External database settings are hidden in this build.",
+              )}
+            </Text>
           )}
         </Stack>
       </Paper>

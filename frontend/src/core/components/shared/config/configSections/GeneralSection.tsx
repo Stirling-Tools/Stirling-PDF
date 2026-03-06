@@ -199,7 +199,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
             <Text size="xs" c="dimmed" fs="italic">
               {t(
                 "settings.general.enableFeatures.benefit",
-                "Enables user roles, team collaboration, admin controls, and enterprise features.",
+                "Enables user roles, team collaboration, admin controls, and advanced workspace features.",
               )}
             </Text>
             <Anchor

@@ -8,7 +8,6 @@ import { useAppConfig } from '@app/contexts/AppConfigContext';
 import '@app/components/shared/AppConfigModal.css';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 import { Z_INDEX_CONFIG_MODAL, Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
-import { useLicenseAlert } from '@app/hooks/useLicenseAlert';
 import { UnsavedChangesProvider, useUnsavedChanges } from '@app/contexts/UnsavedChangesContext';
 import { SettingsSearchBar } from '@app/components/shared/config/SettingsSearchBar';
 
@@ -23,7 +22,6 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
   const navigate = useNavigate();
   const location = useLocation();
   const { config } = useAppConfig();
-  const licenseAlert = useLicenseAlert();
   const { confirmIfDirty } = useUnsavedChanges();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -105,6 +103,13 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
     return null;
   }, [configNavSections, active]);
 
+  useEffect(() => {
+    if (opened && !activeComponent) {
+      setActive('general');
+      navigate('/settings/general', { replace: true });
+    }
+  }, [opened, activeComponent, navigate]);
+
   const handleClose = useCallback(async () => {
     const canProceed = await confirmIfDirty();
     if (!canProceed) return;
@@ -159,10 +164,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
                     const isDisabled = item.disabled ?? false;
                     const color = isActive ? colors.navItemActive : colors.navItem;
                     const iconSize = isMobile ? 28 : 18;
-                    const showPlanWarning =
-                      item.key === 'adminPlan' &&
-                      licenseAlert.active &&
-                      licenseAlert.audience === 'admin';
+                    const showPlanWarning = false;
 
                     const navItemContent = (
                       <div
