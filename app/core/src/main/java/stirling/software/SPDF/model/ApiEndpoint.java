@@ -25,8 +25,9 @@ public class ApiEndpoint {
     }
 
     public boolean areParametersValid(Map<String, Object> providedParams) {
-        for (String requiredParam : parameters.keySet()) {
-            if (!providedParams.containsKey(requiredParam)) {
+        for (Map.Entry<String, JsonNode> entry : parameters.entrySet()) {
+            boolean isRequired = entry.getValue().path("required").asBoolean(false);
+            if (isRequired && !providedParams.containsKey(entry.getKey())) {
                 return false;
             }
         }
