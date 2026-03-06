@@ -47,6 +47,22 @@ const SETTINGS_SEARCH_TRANSLATION_PREFIXES: Partial<Record<NavKey, string[]>> = 
   adminPrivacy: ['admin.settings.privacy'],
 };
 
+const getTranslationPrefixesForNavKey = (key: NavKey): string[] => {
+  const explicitPrefixes = SETTINGS_SEARCH_TRANSLATION_PREFIXES[key] ?? [];
+
+  const inferredPrefixes: string[] = [];
+
+  if (key.startsWith('admin')) {
+    const adminSuffix = key.replace(/^admin/, '');
+    const normalizedAdminSuffix = adminSuffix.charAt(0).toLowerCase() + adminSuffix.slice(1);
+    inferredPrefixes.push(`admin.settings.${normalizedAdminSuffix}`);
+  } else {
+    inferredPrefixes.push(`settings.${key}`);
+  }
+
+  return Array.from(new Set([...explicitPrefixes, ...inferredPrefixes]));
+};
+
 const flattenTranslationStrings = (value: unknown): string[] => {
   if (typeof value === 'string') {
     const trimmed = value.trim();
@@ -181,7 +197,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
       section.items
         .filter((item) => !item.disabled)
         .map((item) => {
-          const translationPrefixes = SETTINGS_SEARCH_TRANSLATION_PREFIXES[item.key] ?? [];
+          const translationPrefixes = getTranslationPrefixesForNavKey(item.key);
           const translationContent = translationPrefixes.flatMap((prefix) =>
             flattenTranslationStrings(t(prefix, { returnObjects: true, defaultValue: {} } as any))
           );
@@ -380,6 +396,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
                   searchable
                   clearable={false}
                   w={isMobile ? 170 : 320}
+                  filter={({ options }) => options}
                   renderOption={({ option }) => {
                     const searchOption = option as unknown as SettingsSearchOption;
                     return (
