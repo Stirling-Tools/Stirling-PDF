@@ -6,6 +6,7 @@ import { useTranslation } from '@app/hooks/useTranslation'
 import { useDocumentMeta } from '@app/hooks/useDocumentMeta'
 import AuthLayout from '@app/routes/authShared/AuthLayout'
 import '@app/routes/authShared/auth.css'
+import '@app/routes/authShared/saas-auth.css'
 import GuestSignInButton from '@app/routes/authShared/GuestSignInButton'
 
 // Import login components

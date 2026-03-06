@@ -1,5 +1,6 @@
 import { useTranslation } from '@app/hooks/useTranslation'
 import '@app/routes/authShared/auth.css'
+import '@app/routes/authShared/saas-auth.css'
 
 interface MagicLinkFormProps {
   showMagicLink: boolean

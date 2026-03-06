@@ -7,6 +7,7 @@ import { useDocumentMeta } from '@app/hooks/useDocumentMeta'
 import { getBaseUrl } from '@app/constants/app'
 import AuthLayout from '@app/routes/authShared/AuthLayout'
 import '@app/routes/authShared/auth.css'
+import '@app/routes/authShared/saas-auth.css'
 import GuestSignInButton from '@app/routes/authShared/GuestSignInButton'
 import { alert } from '@app/components/toast'
 

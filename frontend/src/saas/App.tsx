@@ -14,6 +14,7 @@ import TrialExpiredBootstrap from '@app/components/TrialExpiredBootstrap';
 
 // Import global styles
 import '@app/styles/tailwind.css';
+import '@app/styles/saas-theme.css';
 import '@app/styles/cookieconsent.css';
 import '@app/styles/index.css';
 
