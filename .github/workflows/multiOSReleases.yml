@@ -299,7 +299,7 @@ jobs:
       - name: Setup DigiCert KeyLocker
         id: digicert-setup
         if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') }}
-        uses: digicert/ssm-code-signing@af7f4b07694120e514fe5b19f0598af3c20256e3 # v1.2.0
+        uses: digicert/ssm-code-signing@1d820463733701cf1484c7eb5d7d24a15ca2c454 # v1.2.1
         env:
           SM_API_KEY: ${{ secrets.SM_API_KEY }}
           SM_CLIENT_CERT_FILE_B64: ${{ secrets.SM_CLIENT_CERT_FILE_B64 }}
