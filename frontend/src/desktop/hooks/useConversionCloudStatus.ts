@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { connectionModeService } from '@app/services/connectionModeService';
 import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
+import { selfHostedServerMonitor } from '@app/services/selfHostedServerMonitor';
 import { EXTENSION_TO_ENDPOINT } from '@app/constants/convertConstants';
 import { getEndpointName } from '@app/utils/convertUtils';
 
@@ -28,16 +29,56 @@ export function useConversionCloudStatus(): ConversionStatus {
 
   useEffect(() => {
     const checkConversions = async () => {
-      // Don't check until backend is healthy
-      // This prevents showing incorrect status during startup
+      const mode = await connectionModeService.getCurrentMode();
+
+      // Self-hosted offline path: server is down but local backend is available.
+      // Check each conversion against the local backend only (no cloud routing).
+      if (mode === 'selfhosted') {
+        const { status } = selfHostedServerMonitor.getSnapshot();
+        const localUrl = tauriBackendService.getBackendUrl();
+        if (status === 'offline' && localUrl) {
+          const pairs: [string, string, string][] = [];
+          for (const fromExt of Object.keys(EXTENSION_TO_ENDPOINT)) {
+            for (const toExt of Object.keys(EXTENSION_TO_ENDPOINT[fromExt] || {})) {
+              const endpointName = getEndpointName(fromExt, toExt);
+              if (endpointName) pairs.push([fromExt, toExt, endpointName]);
+            }
+          }
+          const availability: Record<string, boolean> = {};
+          const cloudStatus: Record<string, boolean> = {};
+          const localOnly: Record<string, boolean> = {};
+          const results = await Promise.all(
+            pairs.map(async ([fromExt, toExt, endpointName]) => {
+              const key = `${fromExt}-${toExt}`;
+              try {
+                const supported = await endpointAvailabilityService.isEndpointSupportedLocally(endpointName, localUrl);
+                return { key, supported };
+              } catch {
+                return { key, supported: false };
+              }
+            })
+          );
+          for (const { key, supported } of results) {
+            availability[key] = supported;
+            cloudStatus[key] = false;
+            localOnly[key] = supported;
+          }
+          setStatus({ availability, cloudStatus, localOnly });
+          return;
+        }
+        // Server online or local not ready: let normal endpoint checking handle it
+        setStatus({ availability: {}, cloudStatus: {}, localOnly: {} });
+        return;
+      }
+
+      // Don't check until backend is healthy (SaaS startup guard)
       if (!tauriBackendService.isBackendHealthy()) {
         setStatus({ availability: {}, cloudStatus: {}, localOnly: {} });
         return;
       }
 
-      const mode = await connectionModeService.getCurrentMode();
       if (mode !== 'saas') {
-        // In non-SaaS modes, local endpoint checking handles everything
+        // Non-SaaS, non-self-hosted: local endpoint checking handles everything
         setStatus({ availability: {}, cloudStatus: {}, localOnly: {} });
         return;
       }
@@ -83,14 +124,24 @@ export function useConversionCloudStatus(): ConversionStatus {
     // Initial check
     checkConversions();
 
-    // Subscribe to backend status changes to re-check when backend becomes healthy
-    const unsubscribe = tauriBackendService.subscribeToStatus((status) => {
+    // Re-check when SaaS local backend becomes healthy
+    const unsubLocal = tauriBackendService.subscribeToStatus((status) => {
       if (status === 'healthy') {
         checkConversions();
       }
     });
 
-    return unsubscribe;
+    // Re-check when self-hosted server goes offline or comes back online.
+    // By the time the server is confirmed offline, the local port is already
+    // discovered (waitForPort completes in ~500ms vs the 8s server poll timeout).
+    const unsubServer = selfHostedServerMonitor.subscribe(() => {
+      void checkConversions();
+    });
+
+    return () => {
+      unsubLocal();
+      unsubServer();
+    };
   }, []);
 
   return status;

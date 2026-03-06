@@ -1,6 +1,7 @@
 import { connectionModeService } from '@app/services/connectionModeService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
+import { selfHostedServerMonitor } from '@app/services/selfHostedServerMonitor';
 import { STIRLING_SAAS_BACKEND_API_URL } from '@app/constants/connection';
 import { CONVERSION_ENDPOINTS, ENDPOINT_NAMES } from '@app/constants/convertConstants';
 
@@ -179,6 +180,32 @@ export class OperationRouter {
 
       // Supported locally - continue with local backend
       console.debug(`[operationRouter] Routing ${operation} to local backend (supported locally)`);
+    }
+
+    // Self-hosted fallback: when the remote server is offline, route tool endpoints
+    // to the local bundled backend if it supports them.
+    if (mode === 'selfhosted' && operation && this.isToolEndpoint(operation)) {
+      const { status } = selfHostedServerMonitor.getSnapshot();
+      if (status === 'offline') {
+        const localUrl = tauriBackendService.getBackendUrl();
+        if (localUrl) {
+          const endpointName = this.extractEndpointName(operation);
+          const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(
+            endpointName,
+            localUrl
+          );
+          if (supportedLocally) {
+            console.debug(
+              `[operationRouter] Self-hosted server offline, routing ${operation} to local backend`
+            );
+            return localUrl.replace(/\/$/, '');
+          }
+        }
+        const endpointName = this.extractEndpointName(operation);
+        throw new Error(
+          `Your Stirling-PDF server is offline and "${endpointName}" is not available on the local backend.`
+        );
+      }
     }
 
     // Existing logic for local/remote routing

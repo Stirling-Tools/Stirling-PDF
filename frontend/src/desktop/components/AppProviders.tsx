@@ -9,6 +9,7 @@ import { useBackendInitializer } from '@app/hooks/useBackendInitializer';
 import { DESKTOP_DEFAULT_APP_CONFIG } from '@app/config/defaultAppConfig';
 import { connectionModeService } from '@app/services/connectionModeService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
+import { selfHostedServerMonitor } from '@app/services/selfHostedServerMonitor';
 import { authService } from '@app/services/authService';
 import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
 import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -64,7 +65,17 @@ export function AppProviders({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (setupComplete && !isFirstLaunch && connectionMode === 'selfhosted') {
       void tauriBackendService.initializeExternalBackend();
+      // Also start the self-hosted server monitor so the operation router and UI
+      // can detect when the remote server goes offline and fall back to local backend.
+      connectionModeService.getServerConfig().then(cfg => {
+        if (cfg?.url) {
+          selfHostedServerMonitor.start(cfg.url);
+        }
+      });
     }
+    return () => {
+      selfHostedServerMonitor.stop();
+    };
   }, [setupComplete, isFirstLaunch, connectionMode]);
 
   // Initialize monitoring for bundled backend (already started in Rust)
