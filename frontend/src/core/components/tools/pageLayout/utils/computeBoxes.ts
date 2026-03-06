@@ -21,7 +21,7 @@ export function computeBoxes(sheet: Sheet, parameters: PageLayoutParameters): Bo
 
   const cols = mode === "DEFAULT" ? Math.ceil(Math.sqrt(parameters.pagesPerSheet)) : parameters.cols;
   const rows = mode === "DEFAULT" ? Math.ceil(parameters.pagesPerSheet / cols) : parameters.rows;
-  const pagesPerSheet = mode == "DEFAULT" ? parameters.pagesPerSheet : cols * rows;
+  const pagesPerSheet = mode === "DEFAULT" ? parameters.pagesPerSheet : cols * rows;
 
   const boxes: Box[] = [];
 
@@ -50,12 +50,12 @@ export function computeBoxes(sheet: Sheet, parameters: PageLayoutParameters): Bo
       }
     }
     boxes.push({
-        x: sheet.x + colIndex * cellWidth + margin,
-        y: sheet.y + rowIndex * cellHeight + margin,
-        width: cellWidth - margin * 2,
-        height: cellHeight - margin * 2,
-        label: i + 1
-      });
+      x: sheet.x + colIndex * cellWidth + margin,
+      y: sheet.y + rowIndex * cellHeight + margin,
+      width: cellWidth - margin * 2,
+      height: cellHeight - margin * 2,
+      label: i + 1
+    });
   }
 
   return boxes;
