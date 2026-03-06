@@ -68,3 +68,8 @@ updates:
     schedule:
       interval: "weekly"
     rebase-strategy: "auto"
+
+  - package-ecosystem: cargo
+    directory: /frontend/src-tauri/provisioner
+    schedule:
+      interval: daily

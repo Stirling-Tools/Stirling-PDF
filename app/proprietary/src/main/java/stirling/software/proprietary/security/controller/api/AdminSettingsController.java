@@ -172,7 +172,7 @@ public class AdminSettingsController {
                         .body(Map.of("error", "No settings provided to update"));
             }
 
-            int updatedCount = 0;
+            // Validate all settings first before applying any changes
             for (Map.Entry<String, Object> entry : settings.entrySet()) {
                 String key = entry.getKey();
                 Object value = entry.getValue();
@@ -192,14 +192,18 @@ public class AdminSettingsController {
                     return ResponseEntity.badRequest()
                             .body(Map.of("error", HtmlUtils.htmlEscape(validationError)));
                 }
+            }
 
+            // Apply all updates in a single transaction (load once, update all, save once)
+            // This ensures nested settings like oauth2.client.* don't lose sibling values
+            GeneralUtils.updateSettingsTransactional(settings);
+
+            // Track all as pending changes
+            for (Map.Entry<String, Object> entry : settings.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
                 log.info("Admin updating setting: {} = {}", key, value);
-                GeneralUtils.saveKeyToSettings(key, value);
-
-                // Track this as a pending change
-                pendingChanges.put(key, value);
-
-                updatedCount++;
+                pendingChanges.put(key, value != null ? value : "");
             }
 
             return ResponseEntity.ok(
@@ -208,7 +212,7 @@ public class AdminSettingsController {
                             String.format(
                                     "Successfully updated %d setting(s). Changes will take effect on"
                                             + " application restart.",
-                                    updatedCount)));
+                                    settings.size())));
 
         } catch (IOException e) {
             log.error("Failed to save settings to file: {}", e.getMessage(), e);
@@ -267,6 +271,9 @@ public class AdminSettingsController {
                     sectionMap.put("_pending", sectionPending);
                 }
             }
+
+            // Mask sensitive fields before returning to frontend
+            sectionMap = maskSensitiveFields(sectionMap);
 
             log.debug(
                     "Admin requested settings section: {} (includePending={})",
@@ -404,6 +411,13 @@ public class AdminSettingsController {
                 return ResponseEntity.badRequest()
                         .body("Setting key not found: " + HtmlUtils.htmlEscape(key));
             }
+
+            // Mask sensitive values before returning
+            String keyName = key.contains(".") ? key.substring(key.lastIndexOf(".") + 1) : key;
+            if (isSensitiveFieldWithPath(keyName, key)) {
+                value = createMaskedValue(value);
+            }
+
             log.debug("Admin requested setting: {}", key);
             return ResponseEntity.ok(new SettingValueResponse(key, value));
         } catch (IllegalArgumentException e) {
@@ -441,6 +455,20 @@ public class AdminSettingsController {
             }
 
             Object value = request.getValue();
+
+            // Prevent saving masked values for sensitive fields to avoid data loss
+            if ("********".equals(value)) {
+                String keyName = key.contains(".") ? key.substring(key.lastIndexOf(".") + 1) : key;
+                if (isSensitiveFieldWithPath(keyName, key)) {
+                    log.warn(
+                            "Admin attempted to save masked value for sensitive field: {}. This operation is blocked to prevent data loss.",
+                            key);
+                    return ResponseEntity.badRequest()
+                            .body(
+                                    "Cannot save masked values for sensitive settings. Please provide the actual value.");
+                }
+            }
+
             log.info("Admin updating single setting: {} = {}", key, value);
             GeneralUtils.saveKeyToSettings(key, value);
 

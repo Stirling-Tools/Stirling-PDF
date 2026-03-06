@@ -85,7 +85,7 @@ export function FormSaveBar({ file, isFormFillToolActive, onApply }: FormSaveBar
   // - no form fields found
   // - still loading
   // - user dismissed the bar
-  const hasFields = fields.length > 0;
+  const hasFields = fields.some(f => f.type !== 'signature' && f.type !== 'button');
   const visible = !isFormFillToolActive && hasFields && !loading && !dismissed;
 
   return (

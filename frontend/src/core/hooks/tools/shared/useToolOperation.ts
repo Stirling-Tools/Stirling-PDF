@@ -16,6 +16,7 @@ import { ToolOperation } from '@app/types/file';
 import { ensureBackendReady } from '@app/services/backendReadinessGuard';
 import { useWillUseCloud } from '@app/hooks/useWillUseCloud';
 import { useCreditCheck } from '@app/hooks/useCreditCheck';
+import { notifyPdfProcessingComplete } from '@app/services/desktopNotificationService';
 import { buildInputTracking, buildOutputPairs } from '@app/hooks/tools/shared/toolOperationHelpers';
 import {
   ToolType,
@@ -347,6 +348,9 @@ export const useToolOperation = <TParams>(
           console.debug('[useToolOperation] Consuming files (version)', { inputCount: inputFileIds.length, toConsume: toConsumeInputIds.length });
           const outputFileIds = await consumeFiles(toConsumeInputIds, outputStirlingFiles, outputStirlingFileStubs);
 
+          // Notify on desktop when processing completes
+          await notifyPdfProcessingComplete(outputFileIds.length);
+
           // Carry the desktop save path forward so the output can be saved back to the same file
           if (toConsumeInputIds.length === 1 && outputFileIds.length === 1) {
             const inputStub = selectors.getStirlingFileStub(toConsumeInputIds[0]);
@@ -377,6 +381,9 @@ export const useToolOperation = <TParams>(
           const toConsumeInputIds = successSourceIds.filter((id) => inputFileIds.includes(id));
           console.debug('[useToolOperation] Consuming files (independent)', { inputCount: inputFileIds.length, toConsume: toConsumeInputIds.length });
           const outputFileIds = await consumeFiles(toConsumeInputIds, outputStirlingFiles, outputStirlingFileStubs);
+
+          // Notify on desktop when processing completes
+          await notifyPdfProcessingComplete(outputFileIds.length);
 
           actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename, null, outputFileIds);
 
