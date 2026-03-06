@@ -207,9 +207,27 @@ public class MultiPageLayoutController {
                 // blocks
                 float cellWidth = (pageWidth - leftMargin - rightMargin) / cols;
                 float cellHeight = (pageHeight - topMargin - bottomMargin) / rows;
+                // Validate that outer margins and grid configuration yield positive cell size
+                if (cellWidth <= 0 || cellHeight <= 0) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidFormat",
+                        "Invalid {0} format: {1}",
+                        "margin/layout configuration",
+                        "Invalid margin or layout configuration: resulting cell size is non-positive. "
+                                + "Please reduce outer margins or adjust rows/columns.");
+                }
 
                 float innerWidth = cellWidth - 2 * innerMargin;
                 float innerHeight = cellHeight - 2 * innerMargin;
+                // Validate that inner margin fits within each cell
+                if (innerWidth <= 0 || innerHeight <= 0) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.invalidFormat",
+                            "Invalid {0} format: {1}",
+                            "inner margin",
+                            "Invalid inner margin: resulting inner content area is non-positive. "
+                                    + "Please reduce inner margin or adjust outer margins/layout.");
+                }
 
                 // Process pages in groups of pagesPerSheet, creating a new page and content stream
                 // for each group
