@@ -103,7 +103,7 @@ function FileContextInner({
 
   useEffect(() => {
     const previousIds = observedFileIdsRef.current;
-    const nextIds = new Set(state.files.ids);
+    const nextIds = new Set<FileId>(state.files.ids);
     const newEncryptedIds: FileId[] = [];
 
     for (const id of state.files.ids) {
