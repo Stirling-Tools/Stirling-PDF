@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import org.slf4j.MDC;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -522,19 +523,35 @@ public class UserService implements UserServiceInterface {
 
     @Override
     public String getCurrentUsername() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        // Try SecurityContext first (normal request context)
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null) {
+                Object principal = auth.getPrincipal();
 
-        if (principal instanceof UserDetails detailsUser) {
-            return detailsUser.getUsername();
-        } else if (principal instanceof User domainUser) {
-            return domainUser.getUsername();
-        } else if (principal instanceof OAuth2User oAuth2User) {
-            return oAuth2User.getAttribute(oAuth2.getUseAsUsername());
-        } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-            return saml2User.name();
-        } else if (principal instanceof String stringUser) {
-            return stringUser;
+                if (principal instanceof UserDetails detailsUser) {
+                    return detailsUser.getUsername();
+                } else if (principal instanceof User domainUser) {
+                    return domainUser.getUsername();
+                } else if (principal instanceof OAuth2User oAuth2User) {
+                    return oAuth2User.getAttribute(oAuth2.getUseAsUsername());
+                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
+                    return saml2User.name();
+                } else if (principal instanceof String stringUser) {
+                    return stringUser;
+                }
+            }
+        } catch (Exception e) {
+            log.trace("Error retrieving username from SecurityContext, falling back to MDC", e);
         }
+
+        // Fallback to MDC for async contexts (e.g., when called from async job threads)
+        // ControllerAuditAspect captures principal in MDC and AutoJobAspect propagates it
+        String mdcPrincipal = MDC.get("auditPrincipal");
+        if (mdcPrincipal != null && !mdcPrincipal.isEmpty()) {
+            return mdcPrincipal;
+        }
+
         return null;
     }
 

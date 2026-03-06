@@ -17,6 +17,7 @@ import { ToolId } from '@app/types/toolId';
 import { ensureBackendReady } from '@app/services/backendReadinessGuard';
 import { useWillUseCloud } from '@app/hooks/useWillUseCloud';
 import { useCreditCheck } from '@app/hooks/useCreditCheck';
+import { notifyPdfProcessingComplete } from '@app/services/desktopNotificationService';
 
 // Re-export for backwards compatibility
 export type { ProcessingProgress, ResponseHandler };
@@ -475,6 +476,9 @@ export const useToolOperation = <TParams>(
         // Outputs and stubs are already ordered by success sequence
         console.debug('[useToolOperation] Consuming files', { inputCount: inputFileIds.length, toConsume: toConsumeInputIds.length });
         const outputFileIds = await consumeFiles(toConsumeInputIds, outputStirlingFiles, outputStirlingFileStubs);
+
+        // Notify on desktop when processing completes
+        await notifyPdfProcessingComplete(outputFileIds.length);
 
         if (toConsumeInputIds.length === 1 && outputFileIds.length === 1) {
           const inputStub = selectors.getStirlingFileStub(toConsumeInputIds[0]);

@@ -23,7 +23,9 @@ interface ProviderCardProps {
   settings?: Record<string, any>;
   onSave?: (settings: Record<string, any>) => void;
   onDisconnect?: () => void;
+  onChange?: (settings: Record<string, any>) => void;
   disabled?: boolean;
+  readOnly?: boolean;
 }
 
 export default function ProviderCard({
@@ -32,18 +34,19 @@ export default function ProviderCard({
   settings = {},
   onSave,
   onDisconnect,
+  onChange,
   disabled = false,
+  readOnly = false,
 }: ProviderCardProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [localSettings, setLocalSettings] = useState<Record<string, any>>(settings);
 
   // Keep local settings in sync with incoming settings (values loaded from settings.yml)
+  // Update whenever parent settings change, whether expanded or not (important for Discard to work)
   useEffect(() => {
-    if (!expanded) {
-      setLocalSettings(settings);
-    }
-  }, [settings, expanded]);
+    setLocalSettings(settings);
+  }, [settings]);
 
   // Initialize local settings with defaults when opening an unconfigured provider
   const handleConnectToggle = () => {
@@ -63,7 +66,12 @@ export default function ProviderCard({
 
   const handleFieldChange = (key: string, value: any) => {
     if (disabled) return; // Block changes when disabled
-    setLocalSettings((prev) => ({ ...prev, [key]: value }));
+    const updated = { ...localSettings, [key]: value };
+    setLocalSettings(updated);
+    // Notify parent of changes if onChange callback provided
+    if (onChange) {
+      onChange(updated);
+    }
   };
 
   const handleSave = () => {
@@ -225,22 +233,26 @@ export default function ProviderCard({
           <Stack gap="md" mt="xs">
             {provider.fields.map((field) => renderField(field))}
 
-            <Group justify="flex-end" mt="sm">
-              {onDisconnect && (
-                <Button
-                  variant="outline"
-                  color="red"
-                  size="sm"
-                  onClick={onDisconnect}
-                  disabled={disabled}
-                >
-                  {t('admin.settings.connections.disconnect', 'Disconnect')}
-                </Button>
-              )}
-              <Button size="sm" onClick={handleSave} disabled={disabled}>
-                {t('admin.settings.save', 'Save Changes')}
-              </Button>
-            </Group>
+            {!readOnly && (onSave || onDisconnect) && (
+              <Group justify="flex-end" mt="sm">
+                {onDisconnect && (
+                  <Button
+                    variant="outline"
+                    color="red"
+                    size="sm"
+                    onClick={onDisconnect}
+                    disabled={disabled}
+                  >
+                    {t('admin.settings.connections.disconnect', 'Disconnect')}
+                  </Button>
+                )}
+                {onSave && (
+                  <Button size="sm" onClick={handleSave} disabled={disabled}>
+                    {t('admin.settings.save', 'Save Changes')}
+                  </Button>
+                )}
+              </Group>
+            )}
           </Stack>
         </Collapse>
       </Stack>

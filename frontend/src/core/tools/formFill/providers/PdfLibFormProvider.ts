@@ -17,7 +17,9 @@
 import { PDFDocument, PDFForm, PDFField, PDFTextField, PDFCheckBox,
   PDFDropdown, PDFRadioGroup, PDFOptionList, PDFButton, PDFSignature,
   PDFName, PDFDict, PDFArray, PDFNumber, PDFRef, PDFPage,
-  PDFString, PDFHexString } from '@cantoo/pdf-lib';
+  PDFString, PDFHexString, PDFStream } from '@cantoo/pdf-lib';
+import type { PDFDocumentProxy } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
 import type { FormField, FormFieldType, WidgetCoordinates } from '@app/tools/formFill/types';
 import type { IFormDataProvider } from '@app/tools/formFill/providers/types';
 
@@ -546,6 +548,159 @@ function getFieldLabel(field: PDFField): string {
   return parts[parts.length - 1] || name;
 }
 
+/**
+ * Extracts only signed signature fields (those with an /AP/N stream) from a PDF,
+ * renders their appearances via PDF.js, and returns them as FormField objects.
+ *
+ * Used by FormFillContext to inject signature overlays when the pdfbox provider
+ * is active (fill form tool), where the backend doesn't return signature fields.
+ */
+export async function fetchSignatureFieldsWithAppearances(file: File | Blob): Promise<FormField[]> {
+  const arrayBuffer = await readAsArrayBuffer(file);
+  let doc: PDFDocument;
+  try {
+    doc = await PDFDocument.load(arrayBuffer, {
+      ignoreEncryption: true,
+      updateMetadata: false,
+      throwOnInvalidObject: false,
+    });
+  } catch { return []; }
+
+  let form: PDFForm;
+  try { form = doc.getForm(); } catch { return []; }
+
+  let pdfFields: PDFField[];
+  try { pdfFields = form.getFields(); } catch { return []; }
+
+  let pages: PDFPage[];
+  try { pages = doc.getPages(); } catch { return []; }
+
+  const result: FormField[] = [];
+
+  for (const field of pdfFields) {
+    if (!(field instanceof PDFSignature)) continue;
+    if (!signatureHasAppearance(field)) continue;
+
+    const widgets = extractWidgets(field, pages, doc);
+    if (widgets.length === 0) continue;
+
+    result.push({
+      name: field.getName(),
+      label: getFieldLabel(field),
+      type: 'signature',
+      value: '',
+      options: null,
+      displayOptions: null,
+      required: false,
+      readOnly: true,
+      multiSelect: false,
+      multiline: false,
+      tooltip: getFieldTooltip((field.acroField as any).dict as PDFDict),
+      widgets,
+    });
+  }
+
+  if (result.length > 0) {
+    await attachSignatureAppearances(result, arrayBuffer);
+  }
+
+  return result;
+}
+
+/**
+ * Returns true if the signature field has at least one widget with a normal
+ * (/AP/N) appearance stream — i.e. the signature has actually been signed.
+ */
+function signatureHasAppearance(field: PDFField): boolean {
+  if (!(field instanceof PDFSignature)) return false;
+  try {
+    const acroDict = (field.acroField as any).dict as PDFDict;
+    const widgets = getFieldWidgets(acroDict);
+    for (const wDict of widgets) {
+      const ap = wDict.lookup(PDFName.of('AP'));
+      if (ap instanceof PDFDict) {
+        const n = ap.lookup(PDFName.of('N'));
+        if (n instanceof PDFStream) return true;
+      }
+    }
+  } catch { /* ignore malformed fields */ }
+  return false;
+}
+
+/**
+ * For each signature FormField that has an /AP/N stream, renders the
+ * containing page via PDF.js and crops out the widget rectangle,
+ * attaching the result as field.appearanceDataUrl.
+ *
+ * Uses the existing pdfWorkerManager for proper worker lifecycle management.
+ */
+async function attachSignatureAppearances(
+  signatureFields: FormField[],
+  arrayBuffer: ArrayBuffer,
+): Promise<void> {
+  if (signatureFields.length === 0) return;
+
+  let pdfDoc: PDFDocumentProxy | null = null;
+  try {
+    // Slice so pdf-lib's retained references to the original buffer are unaffected
+    pdfDoc = await pdfWorkerManager.createDocument(arrayBuffer.slice(0));
+
+    // Group fields by the pageIndex of their first widget
+    const byPage = new Map<number, FormField[]>();
+    for (const field of signatureFields) {
+      for (const w of field.widgets ?? []) {
+        const arr = byPage.get(w.pageIndex) ?? [];
+        arr.push(field);
+        byPage.set(w.pageIndex, arr);
+        break; // first widget identifies the page
+      }
+    }
+
+    const RENDER_SCALE = 2; // 2× for crisp appearance
+
+    for (const [pageIndex, fields] of byPage) {
+      const page = await pdfDoc.getPage(pageIndex + 1); // PDF.js is 1-indexed
+      const viewport = page.getViewport({ scale: RENDER_SCALE });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      await page.render({ canvas, viewport }).promise;
+
+      for (const field of fields) {
+        for (const widget of field.widgets ?? []) {
+          if (widget.pageIndex !== pageIndex) continue;
+
+          // widget.x/y are PDF points, CSS upper-left origin (relative to CropBox).
+          // PDF.js renders the CropBox starting at canvas (0,0), so multiplying by
+          // RENDER_SCALE gives the correct canvas pixel coordinates for the crop.
+          const cx = Math.round(widget.x * RENDER_SCALE);
+          const cy = Math.round(widget.y * RENDER_SCALE);
+          const cw = Math.max(1, Math.round(widget.width * RENDER_SCALE));
+          const ch = Math.max(1, Math.round(widget.height * RENDER_SCALE));
+
+          const crop = document.createElement('canvas');
+          crop.width = cw;
+          crop.height = ch;
+          const cropCtx = crop.getContext('2d');
+          if (!cropCtx) continue;
+
+          cropCtx.drawImage(canvas, cx, cy, cw, ch, 0, 0, cw, ch);
+          field.appearanceDataUrl = crop.toDataURL('image/png');
+          break; // first widget is representative
+        }
+      }
+
+      page.cleanup();
+    }
+  } catch (e) {
+    console.warn('[PdfLibFormProvider] Failed to extract signature appearances:', e);
+  } finally {
+    if (pdfDoc) pdfWorkerManager.destroyDocument(pdfDoc);
+  }
+}
+
 export class PdfLibFormProvider implements IFormDataProvider {
   readonly name = 'pdf-lib';
 
@@ -627,6 +782,15 @@ export class PdfLibFormProvider implements IFormDataProvider {
         // Skip individual malformed fields but continue processing
         console.warn(`[PdfLibFormProvider] Skipping field "${fieldName}":`, fieldError);
       }
+    }
+
+    // Render appearance streams for signed signature fields so the overlay
+    // can display them as images instead of placeholder boxes.
+    const sigFieldsWithAp = result.filter(
+      f => f.type === 'signature' && signatureHasAppearance(form.getField(f.name)),
+    );
+    if (sigFieldsWithAp.length > 0) {
+      await attachSignatureAppearances(sigFieldsWithAp, arrayBuffer);
     }
 
     return result;
