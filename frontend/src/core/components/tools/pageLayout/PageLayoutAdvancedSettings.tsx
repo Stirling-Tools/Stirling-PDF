@@ -27,7 +27,7 @@ export default function PageLayoutAdvancedSettings({
         ]}
         value={String(parameters.orientation)}
         onChange={(v) => {
-          if (v === "PORTRAIT" || v == "LANDSCAPE") {
+          if (v === "PORTRAIT" || v === "LANDSCAPE") {
             onParameterChange('orientation', v)
           }
         }}
@@ -45,7 +45,7 @@ export default function PageLayoutAdvancedSettings({
         ]}
         value={String(parameters.arrangement)}
         onChange={(v) => {
-          if (v === "BY_COLUMNS" || v == "BY_ROWS") {
+          if (v === "BY_COLUMNS" || v === "BY_ROWS") {
             onParameterChange('arrangement', v)
           }
         }}
@@ -61,7 +61,7 @@ export default function PageLayoutAdvancedSettings({
         ]}
         value={String(parameters.readingDirection)}
         onChange={(v) => {
-          if (v === "LTR" || v == "RTL") {
+          if (v === "LTR" || v === "RTL") {
             onParameterChange('readingDirection', v)
           }
         }}
