@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { PageLayoutParameters } from '@app/hooks/tools/pageLayout/usePageLayoutParameters';
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
-export default function PageLayoutSettings({
+export default function PageLayoutAdvancedSettings({
   parameters,
   onParameterChange,
   disabled,
