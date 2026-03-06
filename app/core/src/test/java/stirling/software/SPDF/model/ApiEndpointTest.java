@@ -18,6 +18,11 @@ class ApiEndpointTest {
     private final ObjectMapper mapper = JsonMapper.builder().build();
 
     private JsonNode postNodeWithParams(String description, String... names) {
+        return postNodeWithParams(description, true, names);
+    }
+
+    private JsonNode postNodeWithParams(
+            String description, boolean required, String... names) {
         ObjectNode post = mapper.createObjectNode();
         post.put("description", description);
         ArrayNode params = mapper.createArrayNode();
@@ -26,6 +31,7 @@ class ApiEndpointTest {
             if (n != null) {
                 p.put("name", n);
             }
+            p.put("required", required);
             params.add(p);
         }
         post.set("parameters", params);
@@ -90,6 +96,75 @@ class ApiEndpointTest {
         assertFalse(endpoint.areParametersValid(Map.of()));
 
         assertTrue(endpoint.areParametersValid(Map.of("", 42)));
+    }
+
+    @Test
+    void optional_parameters_can_be_omitted() {
+        JsonNode post = postNodeWithParams("desc", false, "fileOrder");
+        ApiEndpoint endpoint = new ApiEndpoint("merge", post);
+
+        assertTrue(
+                endpoint.areParametersValid(Map.of()),
+                "Should be valid when optional param is omitted");
+    }
+
+    @Test
+    void mixed_required_and_optional_validates_only_required() {
+        ObjectNode post = mapper.createObjectNode();
+        post.put("description", "merge pdfs");
+        ArrayNode params = mapper.createArrayNode();
+
+        ObjectNode required = mapper.createObjectNode();
+        required.put("name", "sortType");
+        required.put("required", true);
+        params.add(required);
+
+        ObjectNode optional = mapper.createObjectNode();
+        optional.put("name", "fileOrder");
+        optional.put("required", false);
+        params.add(optional);
+
+        post.set("parameters", params);
+        ApiEndpoint endpoint = new ApiEndpoint("/api/v1/general/merge-pdfs", post);
+
+        Map<String, Object> provided = new HashMap<>();
+        provided.put("sortType", "byFileName");
+
+        assertTrue(
+                endpoint.areParametersValid(provided),
+                "Should pass when required params present and optional omitted");
+
+        provided.put("fileOrder", "0,1,2");
+        assertTrue(
+                endpoint.areParametersValid(provided),
+                "Should also pass when optional param is provided");
+    }
+
+    @Test
+    void missing_required_param_with_optional_present_still_fails() {
+        ObjectNode post = mapper.createObjectNode();
+        post.put("description", "desc");
+        ArrayNode params = mapper.createArrayNode();
+
+        ObjectNode required = mapper.createObjectNode();
+        required.put("name", "file");
+        required.put("required", true);
+        params.add(required);
+
+        ObjectNode optional = mapper.createObjectNode();
+        optional.put("name", "fileOrder");
+        optional.put("required", false);
+        params.add(optional);
+
+        post.set("parameters", params);
+        ApiEndpoint endpoint = new ApiEndpoint("x", post);
+
+        Map<String, Object> provided = new HashMap<>();
+        provided.put("fileOrder", "0,1");
+
+        assertFalse(
+                endpoint.areParametersValid(provided),
+                "Should fail when required param is missing even if optional is present");
     }
 
     @Test
