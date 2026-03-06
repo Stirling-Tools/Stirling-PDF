@@ -38,6 +38,8 @@ export const TOOL_CREDIT_COSTS: Record<ToolId, number> = {
   scalePages: CREDIT_COSTS.SMALL,
   editTableOfContents: CREDIT_COSTS.SMALL,
   sign: CREDIT_COSTS.SMALL,
+  annotate: CREDIT_COSTS.SMALL,
+  formFill: CREDIT_COSTS.SMALL,
   removeAnnotations: CREDIT_COSTS.SMALL,
   removeImage: CREDIT_COSTS.SMALL,
   scannerImageSplit: CREDIT_COSTS.SMALL,

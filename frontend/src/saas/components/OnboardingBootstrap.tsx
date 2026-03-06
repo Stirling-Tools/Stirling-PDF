@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { usePreferences } from '@app/contexts/PreferencesContext';
 import { useOnboarding } from '@app/contexts/OnboardingContext';
 import { useAuth } from '@app/auth/UseSession';
-import { ONBOARDING_SESSION_BLOCK_KEY } from '@app/constants/events';
 import SaasOnboardingModal from '@app/components/onboarding/SaasOnboardingModal';
 
 const STORAGE_KEY = 'saas_onboarding_seen';
+const ONBOARDING_SESSION_BLOCK_KEY = 'stirling-onboarding-session-active';
 
 /**
  * SaaS-only bootstrap to clear deferred tour requests, mark tool panel prompt as completed,

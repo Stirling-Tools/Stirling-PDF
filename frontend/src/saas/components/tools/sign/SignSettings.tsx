@@ -14,7 +14,7 @@ import { ImageUploader } from "@app/components/annotation/shared/ImageUploader";
 import { TextInputWithFont } from "@app/components/annotation/shared/TextInputWithFont";
 import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
-import { useSavedSignatures, SavedSignature, SavedSignaturePayload, SavedSignatureType, MAX_SAVED_SIGNATURES, AddSignatureResult } from '@app/hooks/tools/sign/useSavedSignatures';
+import { useSavedSignatures, SavedSignature, SavedSignaturePayload, SavedSignatureType, AddSignatureResult } from '@app/hooks/tools/sign/useSavedSignatures';
 import { SavedSignaturesSection } from '@app/components/tools/sign/SavedSignaturesSection';
 import { buildSignaturePreview } from '@app/utils/signaturePreview';
 
@@ -96,6 +96,7 @@ const SignSettings = ({
   const {
     savedSignatures,
     isAtCapacity: isSavedSignatureLimitReached,
+    maxLimit,
     addSignature,
     removeSignature,
     updateSignatureLabel,
@@ -327,7 +328,7 @@ const SignSettings = ({
       tooltipMessage = translate('saved.noChanges', 'Current signature is already saved.');
     } else if (isSavedSignatureLimitReached) {
       tooltipMessage = translate('saved.limitDescription', 'Remove a saved signature before adding new ones (max {{max}}).', {
-        max: MAX_SAVED_SIGNATURES,
+        max: maxLimit,
       });
     }
 
@@ -814,6 +815,7 @@ const SignSettings = ({
           signatures={savedSignatures}
           disabled={disabled}
           isAtCapacity={isSavedSignatureLimitReached}
+          maxLimit={maxLimit}
           storageType={storageType}
           onUseSignature={handleUseSavedSignature}
           onDeleteSignature={handleDeleteSavedSignature}
@@ -869,6 +871,11 @@ const SignSettings = ({
           textColor={parameters.textColor || '#000000'}
           onTextColorChange={(color) => onParameterChange('textColor', color)}
           disabled={disabled}
+          label={translate('text.name', 'Text')}
+          placeholder={translate('text.placeholder', 'Enter text')}
+          fontLabel={translate('text.fontLabel', 'Font')}
+          fontSizeLabel={translate('text.fontSizeLabel', 'Font size')}
+          fontSizePlaceholder={translate('text.fontSizePlaceholder', 'Type or select font size (8-200)')}
           onAnyChange={() => {
             setPlacementManuallyPaused(false);
             lastAppliedPlacementKey.current = null;
