@@ -4330,6 +4330,9 @@ label = "Page arrangement:"
 
 [pageLayout.error]
 failed = "An error occurred while creating the multi-page layout."
+outerVerticalMarginsTooLarge = "Top/Bottom margins are too large for this page size."
+outerHorizontalMarginsTooLarge = "Left/Right margins are too large for this page size."
+innerMarginTooLarge = "Inner margin is too large for the selected layout."
 
 [pageLayout.orientation]
 landscape = "Landscape"
