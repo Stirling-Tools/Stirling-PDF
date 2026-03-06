@@ -331,6 +331,29 @@ function WidgetInputInner({
     }
 
     case 'signature':
+      // Signed signatures have a pre-rendered appearance image; render it.
+      if (field.appearanceDataUrl) {
+        return (
+          <img
+            src={field.appearanceDataUrl}
+            style={{
+              position: 'absolute',
+              left,
+              top,
+              width,
+              height,
+              zIndex: 10,
+              pointerEvents: 'none',
+              userSelect: 'none',
+              display: 'block',
+            }}
+            alt={field.label || 'Signature'}
+            draggable={false}
+          />
+        );
+      }
+      // Unsigned signature — fall through to placeholder
+      // falls through
     case 'button':
       // Just render a highlighted area — not editable
       return (
@@ -406,7 +429,7 @@ export function FormFieldOverlay({
 
   const pageFields = useMemo(
     () => fieldsByPage.get(pageIndex) || [],
-    [fieldsByPage, pageIndex]
+    [fieldsByPage, pageIndex],
   );
 
   const handleFocus = useCallback(

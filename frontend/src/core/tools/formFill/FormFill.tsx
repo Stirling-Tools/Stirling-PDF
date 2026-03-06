@@ -289,10 +289,15 @@ const FormFill = (_props: BaseToolProps) => {
     [setActiveField, scrollActions]
   );
 
-  // Memoize fields grouped by page
+  // Progress tracking
+  const fillableFields = useMemo(() => {
+    return formState.fields.filter((f) => f.type !== 'button' && f.type !== 'signature');
+  }, [formState.fields]);
+
+  // Memoize fillable fields grouped by page (signatures/buttons excluded)
   const { sortedPages, fieldsByPage } = useMemo(() => {
     const byPage = new Map<number, FormField[]>();
-    for (const field of formState.fields) {
+    for (const field of fillableFields) {
       const pageIndex =
         field.widgets && field.widgets.length > 0 ? field.widgets[0].pageIndex : 0;
       if (!byPage.has(pageIndex)) {
@@ -302,13 +307,7 @@ const FormFill = (_props: BaseToolProps) => {
     }
     const pages = Array.from(byPage.keys()).sort((a, b) => a - b);
     return { sortedPages: pages, fieldsByPage: byPage };
-  }, [formState.fields]);
-
-  // Progress tracking
-
-  const fillableFields = useMemo(() => {
-    return formState.fields.filter((f) => f.type !== 'button' && f.type !== 'signature');
-  }, [formState.fields]);
+  }, [fillableFields]);
 
   const fillableCount = fillableFields.length;
 

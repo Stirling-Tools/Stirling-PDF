@@ -30,6 +30,8 @@ export interface FormField {
   multiline: boolean;
   tooltip: string | null;
   widgets: WidgetCoordinates[] | null;
+  /** Pre-rendered appearance image for signed signature fields (data URL). */
+  appearanceDataUrl?: string;
 }
 
 export type FormFieldType =
