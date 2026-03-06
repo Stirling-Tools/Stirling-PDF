@@ -127,6 +127,17 @@ export function createSaasConfigNavSections(
   };
 
   let sections = [accountSection, ...baseSections];
+
+  // Suppress OSS-only sections (update checker, login config banner) not relevant in SaaS
+  sections = sections.map(section => ({
+    ...section,
+    items: section.items.map(item =>
+      item.key === 'general'
+        ? { ...item, component: <GeneralSection hideUpdateSection hideAdminBanner /> }
+        : item
+    ),
+  }));
+
   sections = ensurePreferencesSection(sections);
   sections = appendDeveloperSection(sections);
 
