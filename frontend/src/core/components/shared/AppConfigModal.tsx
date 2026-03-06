@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { Modal, Text, ActionIcon, Tooltip, Group, Select } from '@mantine/core';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -39,7 +39,14 @@ const SETTINGS_SEARCH_TRANSLATION_PREFIXES: Partial<Record<NavKey, string[]>> = 
   adminDatabase: ['admin.settings.database'],
   adminAdvanced: ['admin.settings.advanced'],
   adminSecurity: ['admin.settings.security'],
-  adminConnections: ['admin.settings.connections', 'admin.settings.mail'],
+  adminConnections: [
+    'admin.settings.connections',
+    'admin.settings.mail',
+    'admin.settings.security',
+    'admin.settings.telegram',
+    'admin.settings.premium',
+    'admin.settings.general',
+  ],
   adminPlan: ['settings.planBilling', 'admin.settings.premium'],
   adminAudit: ['admin.settings.audit'],
   adminUsage: ['admin.settings.usage'],
@@ -112,6 +119,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
   const { config } = useAppConfig();
   const licenseAlert = useLicenseAlert();
   const { confirmIfDirty } = useUnsavedChanges();
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   // Extract section from URL path (e.g., /settings/people -> people)
   const getSectionFromPath = (pathname: string): NavKey | null => {
@@ -137,6 +145,13 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
   useEffect(() => {
     if (opened) {
       setSearchValue('');
+    }
+  }, [opened]);
+
+  useEffect(() => {
+    if (opened) {
+      // Keep search closed initially by moving autofocus away from the searchable Select input.
+      closeButtonRef.current?.focus();
     }
   }, [opened]);
 
@@ -413,7 +428,13 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
                     zIndex: Z_INDEX_OVER_CONFIG_MODAL,
                   }}
                 />
-                <ActionIcon variant="subtle" onClick={handleClose} aria-label="Close">
+                <ActionIcon
+                  ref={closeButtonRef}
+                  variant="subtle"
+                  onClick={handleClose}
+                  aria-label="Close"
+                  data-autofocus
+                >
                   <LocalIcon icon="close-rounded" width={18} height={18} />
                 </ActionIcon>
               </Group>
