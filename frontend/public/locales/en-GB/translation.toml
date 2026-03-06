@@ -5902,6 +5902,9 @@ title = "Policies & Privacy"
 [settings.preferences]
 title = "Preferences"
 
+[settings.search]
+placeholder = "Search settings pages..."
+
 [settings.security]
 description = "Update your password to keep your account secure."
 title = "Security"
