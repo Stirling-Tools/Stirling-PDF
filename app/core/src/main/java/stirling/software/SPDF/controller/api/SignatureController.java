@@ -43,12 +43,25 @@ public class SignatureController {
     private final UserServiceInterface userService;
     private static final String ALL_USERS_FOLDER = "ALL_USERS";
 
+    private String getAuthenticatedUsername() {
+        String username = userService.getCurrentUsername();
+        if (username == null
+                || username.isBlank()
+                || "anonymousUser".equalsIgnoreCase(username)) {
+            return null;
+        }
+        return username;
+    }
+
     @PostMapping
     @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
     public ResponseEntity<SavedSignatureResponse> saveSignature(
             @RequestBody SavedSignatureRequest request) {
         try {
-            String username = userService.getCurrentUsername();
+            String username = getAuthenticatedUsername();
+            if (username == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
 
             if ("shared".equals(request.getScope()) && !userService.isCurrentUserAdmin()) {
                 log.warn(
@@ -78,7 +91,10 @@ public class SignatureController {
     @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
     public ResponseEntity<List<SavedSignatureResponse>> listSignatures() {
         try {
-            String username = userService.getCurrentUsername();
+            String username = getAuthenticatedUsername();
+            if (username == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
             List<SavedSignatureResponse> signatures = signatureService.getSavedSignatures(username);
             return ResponseEntity.ok(signatures);
         } catch (IOException e) {
@@ -92,7 +108,10 @@ public class SignatureController {
     public ResponseEntity<Void> updateSignatureLabel(
             @PathVariable String signatureId, @RequestBody Map<String, String> body) {
         try {
-            String username = userService.getCurrentUsername();
+            String username = getAuthenticatedUsername();
+            if (username == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
             String newLabel = body.get("label");
             boolean isAdmin = userService.isCurrentUserAdmin();
 
@@ -122,7 +141,10 @@ public class SignatureController {
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     public ResponseEntity<Void> deleteSignature(@PathVariable String signatureId) {
         try {
-            String username = userService.getCurrentUsername();
+            String username = getAuthenticatedUsername();
+            if (username == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
             boolean isAdmin = userService.isCurrentUserAdmin();
 
             if (signatureId.contains("..")

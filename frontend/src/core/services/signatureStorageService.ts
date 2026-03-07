@@ -42,7 +42,8 @@ class SignatureStorageService {
       // Probe the authenticated signatures endpoint (requires authentication)
       await apiClient.get('/api/v1/signatures', {
         timeout: 3000,
-      });
+        suppressErrorToast: true,
+      } as any);
 
       // 200 = Backend available and accessible (authenticated)
       console.log('[SignatureStorage] Backend signature API detected and accessible (authenticated)');
