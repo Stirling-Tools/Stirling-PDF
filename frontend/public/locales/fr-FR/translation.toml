@@ -5962,6 +5962,9 @@ title = "Politiques et confidentialité"
 [settings.preferences]
 title = "Préférences"
 
+[settings.search]
+placeholder = "Rechercher dans les paramètres…"
+
 [settings.security]
 description = "Mettez à jour votre mot de passe pour sécuriser votre compte."
 title = "Sécurité"
