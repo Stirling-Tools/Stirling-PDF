@@ -164,7 +164,7 @@ legal:
   impressum: "" # URL to the impressum of your application (e.g. https://example.com/impressum). Empty string to disable or filename to load from local file in static folder
 
 system:
-  defaultLocale: en-US # set the default language (e.g. 'de-DE', 'fr-FR', etc)
+  defaultLocale: vi_VN # set the default language (e.g. 'de-DE', 'fr-FR', etc)
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
   enableAlphaFunctionality: false # set to enable functionality which might need more testing before it fully goes live (this feature might make no changes)
   showUpdate: false # see when a new update is available
@@ -253,7 +253,7 @@ endpoints:
   groupsToRemove: [] # list groups to disable (e.g. ['LibreOffice', 'DeveloperTools', 'DeveloperDocs', 'Automation'])
 
 metrics:
-  enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
+  enabled: false # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
 
 # Automatically Generated Settings (Do Not Edit Directly)
 AutomaticallyGenerated:

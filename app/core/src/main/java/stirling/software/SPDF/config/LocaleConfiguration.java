@@ -37,8 +37,8 @@ public class LocaleConfiguration implements WebMvcConfigurer {
     public LocaleResolver localeResolver() {
         SessionLocaleResolver slr = new SessionLocaleResolver();
         String appLocaleEnv = applicationProperties.getSystem().getDefaultLocale();
-        Locale defaultLocale = // Fallback to UK locale if environment variable is not set
-                Locale.UK;
+        Locale defaultLocale = // Fallback to Vietnamese locale if system.defaultLocale is not set
+                Locale.forLanguageTag("vi-VN");
         if (appLocaleEnv != null && !appLocaleEnv.isEmpty()) {
             Locale tempLocale = Locale.forLanguageTag(appLocaleEnv);
             String tempLanguageTag = tempLocale.toLanguageTag();
@@ -51,7 +51,7 @@ public class LocaleConfiguration implements WebMvcConfigurer {
                     defaultLocale = tempLocale;
                 } else {
                     System.err.println(
-                            "Invalid SYSTEM_DEFAULTLOCALE environment variable value. Falling back to default en-GB.");
+                            "Invalid SYSTEM_DEFAULTLOCALE environment variable value. Falling back to default vi-VN.");
                 }
             }
         }
