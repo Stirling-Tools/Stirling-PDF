@@ -51,6 +51,34 @@ const processMultiFileResponse = async (
 /**
  * Core execution function for API requests
  */
+const extractErrorMessage = async (error: any): Promise<string> => {
+  const raw = error?.response?.data;
+
+  if (raw instanceof Blob) {
+    try {
+      const text = await raw.text();
+      try {
+        const parsed = JSON.parse(text);
+        return parsed.error || parsed.detail || parsed.message || text;
+      } catch {
+        return text;
+      }
+    } catch {
+      return error?.message || 'Unknown error';
+    }
+  }
+
+  if (typeof raw === 'string') {
+    return raw;
+  }
+
+  if (raw && typeof raw === 'object') {
+    return raw.error || raw.detail || raw.message || error?.message || 'Unknown error';
+  }
+
+  return error?.message || 'Unknown error';
+};
+
 const executeApiRequest = async (
   endpoint: string,
   formData: FormData,
@@ -159,6 +187,16 @@ export const executeToolOperationWithPrefix = async (
   if (allInputsAlreadyMatchConvertTarget) {
     return files;
   }
+
+  if (operationName === 'ocr') {
+    const response = await apiClient.get('/api/v1/ui-data/ocr-pdf', {
+      suppressErrorToast: true,
+    } as any);
+    const availableLanguages = response?.data?.languages;
+    if (!Array.isArray(availableLanguages) || availableLanguages.length === 0) {
+      throw new Error('OCR is not configured on this server. No Tesseract languages were found in the tessdata directory. Add at least one language such as eng.traineddata, or remove the OCR step from this automation.');
+    }
+  }
   const config = toolRegistry[operationName as ToolId]?.operationConfig;
   if (!config) {
     throw new Error(`Tool operation not supported: ${operationName}`);
@@ -183,7 +221,8 @@ export const executeToolOperationWithPrefix = async (
 
   } catch (error: any) {
     console.error(`❌ ${operationName} failed:`, error);
-    throw new Error(`${operationName} operation failed: ${error.response?.data || error.message}`, {
+    const errorMessage = await extractErrorMessage(error);
+    throw new Error(`${operationName} operation failed: ${errorMessage}`, {
       cause: error,
     });
   }
