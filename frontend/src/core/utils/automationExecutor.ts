@@ -150,6 +150,15 @@ export const executeToolOperationWithPrefix = async (
   toolRegistry: ToolRegistry,
   filePrefix: string = AUTOMATION_CONSTANTS.FILE_PREFIX
 ): Promise<File[]> => {
+  const allInputsAlreadyMatchConvertTarget =
+    operationName === 'convert' &&
+    parameters?.toExtension === 'pdf' &&
+    files.length > 0 &&
+    files.every((file) => file.name.toLowerCase().endsWith('.pdf'));
+
+  if (allInputsAlreadyMatchConvertTarget) {
+    return files;
+  }
   const config = toolRegistry[operationName as ToolId]?.operationConfig;
   if (!config) {
     throw new Error(`Tool operation not supported: ${operationName}`);
