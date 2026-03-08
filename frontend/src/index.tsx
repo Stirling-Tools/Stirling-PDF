@@ -18,6 +18,7 @@ posthog.init('phc_VOdeYnlevc2T63m3myFGjeBlRcIusRgmhfx6XL5a1iz', {
   capture_exceptions: true, // This enables capturing exceptions using Error Tracking, set to false if you don't want this
   debug: false,
   opt_out_capturing_by_default: true, // Opt-out by default, controlled by cookie consent
+  cross_subdomain_cookie: false,
 });
 
 function updatePosthogConsent(){
