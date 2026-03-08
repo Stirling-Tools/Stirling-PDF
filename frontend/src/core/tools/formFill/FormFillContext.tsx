@@ -32,7 +32,7 @@ import React, {
 import { useDebouncedCallback } from '@mantine/hooks';
 import type { FormField, FormFillState, WidgetCoordinates } from '@app/tools/formFill/types';
 import type { IFormDataProvider } from '@app/tools/formFill/providers/types';
-import { PdfLibFormProvider } from '@app/tools/formFill/providers/PdfLibFormProvider';
+import { PdfiumFormProvider } from '@app/tools/formFill/providers/PdfiumFormProvider';
 import { PdfBoxFormProvider } from '@app/tools/formFill/providers/PdfBoxFormProvider';
 
 // ---------------------------------------------------------------------------
@@ -268,7 +268,7 @@ export function useAllFormValues(): Record<string, string> {
 }
 
 /** Singleton provider instances */
-const pdfLibProvider = new PdfLibFormProvider();
+const pdfiumProvider = new PdfiumFormProvider();
 const pdfBoxProvider = new PdfBoxFormProvider();
 
 export function FormFillProvider({
@@ -283,7 +283,7 @@ export function FormFillProvider({
   const [providerMode, setProviderModeState] = useState<'pdflib' | 'pdfbox'>(initialMode);
   const providerModeRef = useRef(initialMode as 'pdflib' | 'pdfbox');
   providerModeRef.current = providerMode;
-  const provider = providerProp ?? (providerMode === 'pdfbox' ? pdfBoxProvider : pdfLibProvider);
+  const provider = providerProp ?? (providerMode === 'pdfbox' ? pdfBoxProvider : pdfiumProvider);
   const providerRef = useRef(provider);
   providerRef.current = provider;
 
@@ -405,7 +405,7 @@ export function FormFillProvider({
       if (providerModeRef.current === mode) return;
 
       // provider (pdfbox vs pdflib).
-      const newProvider = mode === 'pdfbox' ? pdfBoxProvider : pdfLibProvider;
+      const newProvider = mode === 'pdfbox' ? pdfBoxProvider : pdfiumProvider;
       providerRef.current = newProvider;
       providerModeRef.current = mode;
 

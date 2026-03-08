@@ -20,7 +20,96 @@
 import React, { useCallback, useMemo, memo } from 'react';
 import { useDocumentState } from '@embedpdf/core/react';
 import { useFormFill, useFieldValue } from '@app/tools/formFill/FormFillContext';
-import type { FormField, WidgetCoordinates } from '@app/tools/formFill/types';
+import { useViewer } from '@app/contexts/ViewerContext';
+import type { FormField, WidgetCoordinates, ButtonAction } from '@app/tools/formFill/types';
+
+/**
+ * Execute PDF JavaScript in a sandboxed context with a minimal Acrobat-compatible API.
+ *
+ * The sandbox covers the most common patterns seen in real-world PDF form buttons:
+ *   - `this.print()` / `this.resetForm()` / `this.save()` (via `this` = doc)
+ *   - `app.execMenuItem("Print")` / `app.alert(...)` (via named `app` param)
+ *   - `doc.resetForm()` (via named `doc` param)
+ *   - `event` stubs for field calculation scripts
+ *
+ * Unknown APIs throw inside the sandbox and are caught silently so they never
+ * bubble up to the UI. Debug logging is emitted for easier tracing.
+ */
+function executePdfJs(
+  js: string,
+  handlers: {
+    print: () => void;
+    save: () => void;
+    submitForm: (url: string) => void;
+    resetForm: () => void;
+  },
+): void {
+  const doOpenUrl = (url: string) => {
+    try {
+      const u = new URL(url);
+      if (['http:', 'https:', 'mailto:'].includes(u.protocol)) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    } catch { /* invalid URL — ignore */ }
+  };
+
+  const app = {
+    print: (_params?: unknown) => handlers.print(),
+    alert: (msg: unknown) => { console.debug('[PDF JS] alert:', msg); },
+    beep: () => {},
+    response: () => null,
+    execMenuItem: (item: string) => {
+      switch (item) {
+        case 'Print': handlers.print(); break;
+        case 'Save':  handlers.save();  break;
+        case 'Close': break; // no-op in browser context
+        default:
+          console.debug('[PDF JS] execMenuItem: unhandled item:', item);
+      }
+    },
+    fs: { writeFile: () => {}, readFile: () => null },
+  };
+
+  const doc = {
+    print: (_params?: unknown) => handlers.print(),
+    save: (_params?: unknown) => handlers.save(),
+    saveAs: (_params?: unknown) => handlers.save(),
+    submitForm: (urlOrParams: unknown) => {
+      const url =
+        typeof urlOrParams === 'string'
+          ? urlOrParams
+          : (urlOrParams as Record<string, unknown>)?.cURL as string ?? '';
+      if (url) doOpenUrl(url); else handlers.submitForm(url);
+    },
+    resetForm: (_fields?: unknown) => handlers.resetForm(),
+    getField: (_name: string) => null,
+    getAnnot: () => null,
+    getURL: (url: string) => doOpenUrl(url),
+    numPages: 1,
+    dirty: false,
+  };
+
+  // Stub event object — used by field calculation/validation scripts
+  const event = {
+    value: '',
+    changeEx: '',
+    change: '',
+    rc: true,
+    willCommit: false,
+    target: null as null,
+  };
+
+  try {
+    // Pass doc, app, event as both `this` AND named parameters so scripts that
+    // reference them as free variables (not just via `this`) work correctly.
+    // eslint-disable-next-line no-new-func
+    const fn = new Function('app', 'doc', 'event', js);
+    fn.call(doc, app, doc, event);
+  } catch (err) {
+    // Swallow errors from missing PDF APIs; log in debug mode for tracing
+    console.debug('[PDF JS] Script execution error (expected for unsupported APIs):', err, '\nScript:', js.slice(0, 200));
+  }
+}
 
 interface WidgetInputProps {
   field: FormField;
@@ -31,6 +120,7 @@ interface WidgetInputProps {
   scaleY: number;
   onFocus: (fieldName: string) => void;
   onChange: (fieldName: string, value: string) => void;
+  onButtonClick: (field: FormField, action?: ButtonAction | null) => void;
 }
 
 /**
@@ -47,6 +137,7 @@ function WidgetInputInner({
   scaleY,
   onFocus,
   onChange,
+  onButtonClick,
 }: WidgetInputProps) {
   // Per-field value subscription — only this widget re-renders when its value changes
   const value = useFieldValue(field.name);
@@ -287,10 +378,12 @@ function WidgetInputInner({
     }
 
     case 'radio': {
-      // Each radio widget has an exportValue set by the backend
-      const optionValue = widget.exportValue || '';
-      if (!optionValue) return null; // no export value, skip
-      const isSelected = value === optionValue;
+      // Identify this widget by its index within the field's widgets array.
+      // This avoids issues with duplicate exportValues (e.g., all "Yes").
+      const widgetIndex = field.widgets?.indexOf(widget) ?? -1;
+      if (widgetIndex < 0) return null;
+      const widgetIndexStr = String(widgetIndex);
+      const isSelected = value === widgetIndexStr;
       return (
         <div
           {...commonProps}
@@ -304,11 +397,11 @@ function WidgetInputInner({
             paddingLeft: Math.max(1, (height - Math.min(width, height) * 0.8) / 2), // Slight offset
             cursor: field.readOnly ? 'default' : 'pointer',
           }}
-          title={error || field.tooltip || `${field.label}: ${optionValue}`}
+          title={error || field.tooltip || `${field.label}: ${widget.exportValue || widgetIndexStr}`}
           onClick={(e) => {
-            if (field.readOnly || value === optionValue) return; // Don't deselect radio buttons
+            if (field.readOnly || value === widgetIndexStr) return; // Don't deselect radio buttons
             handleFocus();
-            onChange(field.name, optionValue);
+            onChange(field.name, widgetIndexStr);
             stopPropagation(e);
           }}
         >
@@ -317,8 +410,8 @@ function WidgetInputInner({
               width: Math.min(width, height) * 0.8,
               height: Math.min(width, height) * 0.8,
               borderRadius: '50%',
-              border: `1.5px solid ${isSelected || isActive ? '#2196F3' : '#666'}`,
-              background: isSelected ? '#2196F3' : '#FFF',
+              border: `1.5px solid ${isSelected ? '#2196F3' : isActive ? '#2196F3' : '#999'}`,
+              background: isSelected ? '#2196F3' : 'transparent',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -331,21 +424,58 @@ function WidgetInputInner({
     }
 
     case 'signature':
-    case 'button':
-      // Just render a highlighted area — not editable
+      // Signature fields are handled entirely by SignatureFieldOverlay (bitmap canvas).
+      // Rendering a placeholder here creates a visible grey overlay on top of the
+      // signature appearance, so we skip it entirely.
+      return null;
+
+    case 'button': {
+      // Transparent hit-target only — visual appearance is rendered by ButtonAppearanceOverlay
+      // (which paints the PDF's native /AP bitmap onto a canvas behind this div).
+      const buttonLabel = field.buttonLabel || field.value || field.label || 'Button';
+      const isClickable = !field.readOnly;
+
+      let actionHint = '';
+      if (field.buttonAction) {
+        switch (field.buttonAction.type) {
+          case 'named': actionHint = field.buttonAction.namedAction ?? ''; break;
+          case 'resetForm': actionHint = 'Reset Form'; break;
+          case 'submitForm': actionHint = `Submit to: ${field.buttonAction.url ?? ''}`.trim(); break;
+          case 'uri': actionHint = field.buttonAction.url ?? ''; break;
+          case 'javascript': actionHint = 'Script'; break;
+        }
+      }
+      const titleText = field.tooltip || (actionHint ? `${buttonLabel} (${actionHint})` : buttonLabel);
+
       return (
         <div
           {...commonProps}
           style={{
             ...commonStyle,
-            background: 'rgba(200,200,200,0.3)',
-            border: '1px dashed #999',
-            cursor: 'default',
+            background: 'transparent',
+            border: 'none',
+            boxShadow: 'none',
+            cursor: isClickable ? 'pointer' : 'default',
           }}
-          title={field.tooltip || `${field.type}: ${field.label}`}
-          onClick={handleFocus}
+          title={titleText}
+          role="button"
+          tabIndex={isClickable ? 0 : -1}
+          aria-label={buttonLabel}
+          onClick={(e) => {
+            handleFocus();
+            if (isClickable) onButtonClick(field, field.buttonAction);
+            stopPropagation(e);
+          }}
+          onKeyDown={(e) => {
+            if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
+              e.preventDefault();
+              onButtonClick(field, field.buttonAction);
+            }
+            stopPropagation(e);
+          }}
         />
       );
+    }
 
     default:
       return (
@@ -384,6 +514,7 @@ export function FormFieldOverlay({
 }: FormFieldOverlayProps) {
   const { setValue, setActiveField, fieldsByPage, state, forFileId } = useFormFill();
   const { activeFieldName, validationErrors } = state;
+  const { printActions, scrollActions, exportActions } = useViewer();
 
   // Get scale from EmbedPDF document state — same pattern as LinkLayer
   // NOTE: All hooks must be called unconditionally (before any early returns)
@@ -393,15 +524,23 @@ export function FormFieldOverlay({
     const pdfPage = documentState?.document?.pages?.[pageIndex];
     if (!pdfPage || !pdfPage.size || !pageWidth || !pageHeight) {
       const s = documentState?.scale ?? 1;
+      if (pageIndex === 0) {
+        console.debug('[FormFieldOverlay] page 0 using fallback scale=%f (missing pdfPage.size)', s);
+      }
       return { scaleX: s, scaleY: s };
     }
 
-    // pdfPage.size contains un-rotated (MediaBox) dimensions;
-    // pageWidth/pageHeight from Scroller also use these un-rotated dims * scale
-    return {
-      scaleX: pageWidth / pdfPage.size.width,
-      scaleY: pageHeight / pdfPage.size.height,
-    };
+    const sx = pageWidth / pdfPage.size.width;
+    const sy = pageHeight / pdfPage.size.height;
+    if (pageIndex === 0) {
+      console.debug(
+        '[FormFieldOverlay] page 0 scale: pageW=%f pageH=%f pdfW=%f pdfH=%f → scaleX=%f scaleY=%f docScale=%f',
+        pageWidth, pageHeight, pdfPage.size.width, pdfPage.size.height, sx, sy, documentState?.scale,
+      );
+    }
+    // pdfPage.size contains un-rotated dimensions from the engine;
+    // pageWidth/pageHeight from Scroller = pdfPage.size * documentScale
+    return { scaleX: sx, scaleY: sy };
   }, [documentState, pageIndex, pageWidth, pageHeight]);
 
   const pageFields = useMemo(
@@ -417,6 +556,64 @@ export function FormFieldOverlay({
   const handleChange = useCallback(
     (fieldName: string, value: string) => setValue(fieldName, value),
     [setValue]
+  );
+
+  const handleButtonClick = useCallback(
+    (field: FormField, action?: ButtonAction | null) => {
+      const doOpenUrl = (url: string) => {
+        try {
+          const u = new URL(url);
+          if (['http:', 'https:', 'mailto:'].includes(u.protocol)) {
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }
+        } catch { /* invalid URL */ }
+      };
+      const doResetForm = () => {
+        for (const f of state.fields) setValue(f.name, f.value ?? '');
+      };
+      const doSave = () => { exportActions.saveAsCopy(); };
+
+      if (!action) {
+        // Action extraction failed — fall back to label matching as a last resort
+        const label = (field.buttonLabel || field.label || '').toLowerCase();
+        if (/print/.test(label)) printActions.print();
+        else if (/save|download/.test(label)) doSave();
+        else if (/reset|clear/.test(label)) doResetForm();
+        return;
+      }
+
+      switch (action.type) {
+        case 'named':
+          switch (action.namedAction) {
+            case 'Print': printActions.print(); break;
+            case 'Save': doSave(); break;
+            case 'NextPage': scrollActions.scrollToNextPage(); break;
+            case 'PrevPage': scrollActions.scrollToPreviousPage(); break;
+            case 'FirstPage': scrollActions.scrollToFirstPage(); break;
+            case 'LastPage': scrollActions.scrollToLastPage(); break;
+          }
+          break;
+        case 'resetForm':
+          doResetForm();
+          break;
+        case 'submitForm':
+        case 'uri':
+          if (action.url) doOpenUrl(action.url);
+          break;
+        case 'javascript':
+          // Execute in a sandboxed PDF JS environment instead of just logging
+          if (action.javascript) {
+            executePdfJs(action.javascript, {
+              print: () => printActions.print(),
+              save: doSave,
+              submitForm: doOpenUrl,
+              resetForm: doResetForm,
+            });
+          }
+          break;
+      }
+    },
+    [printActions, scrollActions, exportActions, state.fields, setValue],
   );
 
   // Guard: don't render fields from a previous document.
@@ -462,6 +659,7 @@ export function FormFieldOverlay({
                 scaleY={scaleY}
                 onFocus={handleFocus}
                 onChange={handleChange}
+                onButtonClick={handleButtonClick}
               />
             );
           })

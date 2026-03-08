@@ -1,9 +1,9 @@
-import { PDFFont, PDFPage, rgb } from '@cantoo/pdf-lib';
+import { PdfiumFont, PdfiumPage, rgb } from '@app/services/pdfiumDocBuilder';
 
 interface StatusBadgeOptions {
-  page: PDFPage;
-  font: PDFFont;
-  fontBold: PDFFont;
+  page: PdfiumPage;
+  font: PdfiumFont;
+  fontBold: PdfiumFont;
   text: string;
   x: number;
   y: number;
