@@ -13,6 +13,7 @@
  * never have to deal with raw pointers or Tasks.
  */
 import { init, type WrappedPdfiumModule } from '@embedpdf/pdfium';
+import type { FormField, WidgetCoordinates } from '@app/tools/formFill/types';
 
 // PDF form field type constants (matching PDFium C API FPDF_FORMFIELD_* values)
 const FPDF_FORMFIELD_UNKNOWN = 0;
@@ -1621,4 +1622,64 @@ export async function renderButtonFieldAppearances(
   } finally {
     closeDocAndFreeBuffer(m, docPtr);
   }
+}
+
+/**
+ * Fetch signature fields with their rendered appearances.
+ *
+ * This combines extractSignatureFieldRects and renderSignatureFieldAppearances
+ * to return FormField objects suitable for use in pdfbox mode where signature
+ * fields are not returned by the backend.
+ *
+ * @param data - PDF file data
+ * @param password - Optional PDF password
+ * @returns Array of FormField objects for signature fields with appearanceDataUrl populated
+ */
+export async function fetchSignatureFieldsWithAppearances(
+  data: ArrayBuffer | Uint8Array,
+  password?: string,
+): Promise<FormField[]> {
+  const appearances = await renderSignatureFieldAppearances(data, password);
+  const formFields: FormField[] = [];
+
+  for (const appearance of appearances) {
+    const widget: WidgetCoordinates = {
+      pageIndex: appearance.pageIndex,
+      x: appearance.x,
+      y: appearance.y,
+      width: appearance.width,
+      height: appearance.height,
+    };
+
+    // Convert ImageData to data URL for the appearance
+    let appearanceDataUrl: string | undefined;
+    if (appearance.imageData) {
+      const canvas = document.createElement('canvas');
+      canvas.width = appearance.imageData.width;
+      canvas.height = appearance.imageData.height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.putImageData(appearance.imageData, 0, 0);
+        appearanceDataUrl = canvas.toDataURL('image/png');
+      }
+    }
+
+    formFields.push({
+      name: appearance.fieldName,
+      label: appearance.fieldName,
+      type: 'signature',
+      value: '',
+      options: null,
+      displayOptions: null,
+      required: false,
+      readOnly: false,
+      multiSelect: false,
+      multiline: false,
+      tooltip: null,
+      widgets: [widget],
+      appearanceDataUrl,
+    });
+  }
+
+  return formFields;
 }
