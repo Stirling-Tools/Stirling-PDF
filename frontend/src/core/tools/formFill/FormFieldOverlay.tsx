@@ -24,16 +24,14 @@ import { useViewer } from '@app/contexts/ViewerContext';
 import type { FormField, WidgetCoordinates, ButtonAction } from '@app/tools/formFill/types';
 
 /**
- * Execute PDF JavaScript in a sandboxed context with a minimal Acrobat-compatible API.
+ * Execute PDF JavaScript in a minimally sandboxed context.
  *
- * The sandbox covers the most common patterns seen in real-world PDF form buttons:
- *   - `this.print()` / `this.resetForm()` / `this.save()` (via `this` = doc)
- *   - `app.execMenuItem("Print")` / `app.alert(...)` (via named `app` param)
- *   - `doc.resetForm()` (via named `doc` param)
- *   - `event` stubs for field calculation scripts
+ * Implements a heuristic security check by statically rejecting scripts containing
+ * common browser globals (`window`, `document`, `fetch`), reflection APIs,
+ * or execution sinks (`eval`, `Function`).
  *
- * Unknown APIs throw inside the sandbox and are caught silently so they never
- * bubble up to the UI. Debug logging is emitted for easier tracing.
+ * Valid scripts run in strict mode with dangerous globals explicitly masked
+ * to `undefined`, allowing safe Acrobat APIs like `this.print()` or `app.alert()`.
  */
 function executePdfJs(
   js: string,
@@ -44,6 +42,23 @@ function executePdfJs(
     resetForm: () => void;
   },
 ): void {
+  // 1. Static sanitization: Reject scripts with potentially harmful or unneeded keywords.
+  // This blocks most elementary exploits and prevents prototype tampering.
+  const forbidden = [
+    'window', 'document', 'fetch', 'xmlhttprequest', 'websocket', 'worker',
+    'eval', 'settimeout', 'setinterval', 'function', 'constructor',
+    '__proto__', 'prototype', 'globalthis', 'import', 'require'
+  ];
+
+  const lowerJs = js.toLowerCase();
+  for (const word of forbidden) {
+    if (lowerJs.includes(word)) {
+      console.warn(`[PDF JS] Execution blocked: Script contains suspicious keyword "${word}".`, 'Script:', js);
+      return;
+    }
+  }
+
+  // 2. Mock Acrobat API
   const doOpenUrl = (url: string) => {
     try {
       const u = new URL(url);
@@ -63,11 +78,11 @@ function executePdfJs(
         case 'Print': handlers.print(); break;
         case 'Save':  handlers.save();  break;
         case 'Close': break; // no-op in browser context
-        default:
-          console.debug('[PDF JS] execMenuItem: unhandled item:', item);
+        default: console.debug('[PDF JS] execMenuItem: unhandled item:', item);
       }
     },
-    fs: { writeFile: () => {}, readFile: () => null },
+    // Prevent prototype walking
+    __proto__: null
   };
 
   const doc = {
