@@ -873,6 +873,36 @@ public class GeneralUtils {
         settingsYaml.saveOverride(settingsPath);
     }
 
+    /**
+     * Updates multiple settings in a single transaction. This ensures that nested settings (e.g.,
+     * oauth2.client.google.*) don't lose sibling values when partial updates are made.
+     *
+     * <p>Instead of multiple read-update-write cycles (which could cause race conditions), this
+     * method loads the YAML once, applies all updates, and saves once.
+     *
+     * @param settingsMap Map of dotted-notation keys to values to update
+     * @throws IOException if file read/write fails
+     */
+    public void updateSettingsTransactional(Map<String, Object> settingsMap) throws IOException {
+        if (settingsMap == null || settingsMap.isEmpty()) {
+            return;
+        }
+
+        Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
+        YamlHelper settingsYaml = new YamlHelper(settingsPath);
+
+        // Apply all updates to the same YamlHelper instance
+        for (Map.Entry<String, Object> entry : settingsMap.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            String[] keyArray = key.split("\\.");
+            settingsYaml.updateValue(Arrays.asList(keyArray), value);
+        }
+
+        // Save only once after all updates are applied
+        settingsYaml.saveOverride(settingsPath);
+    }
+
     /*
      * Machine fingerprint generation with better error logging and fallbacks.
      *

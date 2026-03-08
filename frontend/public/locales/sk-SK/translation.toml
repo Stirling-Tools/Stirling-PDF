@@ -96,6 +96,8 @@ pin = "Pripnúť súbor (ponechať aktívny po spustení nástroja)"
 poweredBy = "Poskytované"
 pro = "Pro"
 processTimeWarning = "Varovanie: Tento proces môže trvať až minútu v závislosti od veľkosti súboru"
+processingComplete = "Váš súbor je pripravený."
+processingCompleteMultiple = "Je pripravených {{count}} súborov."
 property = "Vlastnosť"
 quickPosition = "Rýchla pozícia"
 red = "Červená"
@@ -105,6 +107,7 @@ save = "Uložiť"
 saveToBrowser = "Uložiť do prehliadača"
 saveUnavailable = "Uloženie pre túto položku nie je dostupné"
 seeDockerHub = "Pozrieť Docker Hub"
+editSecret = "Upraviť túto hodnotu"
 selectFillter = "-- Vyberte --"
 size = "Veľkosť"
 sponsor = "Sponzorovať"
@@ -651,6 +654,7 @@ description = "Nakonfigurujte externých poskytovateľov overenia ako OAuth2 a S
 disconnect = "Odpojiť"
 disconnected = "Poskytovateľ bol úspešne odpojený"
 disconnectError = "Poskytovateľa sa nepodarilo odpojiť"
+documentation = "Zobraziť dokumentáciu"
 imageResolutionFull = "Plné (pôvodná veľkosť)"
 imageResolutionReduced = "Znížené (max. 1200 px)"
 linkedServices = "Prepojené služby"
@@ -964,6 +968,18 @@ label = "Predvolená lokalizácia"
 description = "Maximálna veľkosť nahrávaného súboru (napr. 100MB, 1GB)"
 label = "Limit nahrávania súborov"
 
+[admin.settings.general.hideDisabledTools]
+description = "Skryť deaktivované nástroje v rozhraní"
+label = "Skryť deaktivované nástroje"
+
+[admin.settings.general.hideDisabledTools.googleDrive]
+description = "Skryť tlačidlo Google Drive, keď nie je povolené"
+label = "Skryť Google Drive"
+
+[admin.settings.general.hideDisabledTools.mobileScanner]
+description = "Skryť tlačidlo mobilného QR skenera, keď nie je povolené"
+label = "Skryť mobilný skener"
+
 [admin.settings.general.frontendUrl]
 description = "Základná URL pre frontend (napr. https://pdf.example.com). Používa sa pre odkazy v e-mailových pozvánkach a mobilné nahrávanie cez QR kód. Nechajte prázdne, aby sa použila URL backendu."
 label = "Frontend URL"
@@ -1148,6 +1164,8 @@ title = "Zabezpečenie"
 
 [admin.settings.security.audit]
 label = "Auditné logovanie"
+showDetails = "Zobraziť detaily úrovne auditu"
+hideDetails = "Skryť detaily úrovne auditu"
 
 [admin.settings.security.audit.enabled]
 description = "Sledovať akcie používateľov a systémové udalosti na účely súladu a bezpečnostného monitoringu"
@@ -1157,9 +1175,31 @@ label = "Povoliť auditné logovanie"
 description = "0=VYP., 1=ZÁKLADNÉ, 2=ŠTANDARD, 3=PODROBNÉ"
 label = "Úroveň auditu"
 
+[admin.settings.security.audit.levelDetails]
+off = "Žiadne auditné logovanie (okrem kritických bezpečnostných udalostí)"
+basic = "Operácie so súbormi PDF (kompresia, rozdelenie, zlúčenie atď.) a zmeny nastavení. Zaznamenáva: stav operácie (úspech/zlyhanie), parametre metódy, načasovanie. Minimálny objem záznamov."
+standard = "Udalosti BASIC plus: prihlásenie/odhlásenie používateľa, zmeny účtu, všeobecné požiadavky GET. Vylučuje priebežné dotazovacie volania (/auth/me, /app-config, /health atď.) na zníženie šumu v logoch. Ideálne pre väčšinu nasadení."
+verbose = "Udalosti STANDARD plus: priebežné dotazovacie volania, všetky požiadavky GET, podrobné načasovanie. Upozornenie: vysoký objem záznamov a vplyv na výkon."
+
 [admin.settings.security.audit.retentionDays]
 description = "Počet dní uchovávania auditných záznamov"
 label = "Doba uchovania auditu (dni)"
+
+[admin.settings.security.audit.advancedOptions]
+title = "Pokročilé možnosti"
+description = "Nasledujúce voľby zvyšujú čas spracovania a využitie pamäte. Povoľte len v prípade skutočnej potreby."
+
+[admin.settings.security.audit.captureFileHash]
+description = "Extrahovať hash SHA-256 nahraných PDF súborov na overenie integrity. Nezávislé od úrovne auditu."
+label = "Zachytiť hash súboru (SHA-256)"
+
+[admin.settings.security.audit.capturePdfAuthor]
+description = "Extrahovať pole autora z dokumentov PDF počas spracovania. Vyžaduje parsovanie PDF, zvyšuje latenciu. Nezávislé od úrovne auditu."
+label = "Zachytiť metadáta autora PDF"
+
+[admin.settings.security.audit.captureOperationResults]
+description = "Zachytiť návratové hodnoty metód. Neodporúča sa: výrazne zvyšuje objem záznamov a využitie disku."
+label = "Zachytiť výsledky operácií"
 
 [admin.settings.security.csrfDisabled]
 description = "Zakázať ochranu proti Cross-Site Request Forgery (neodporúča sa)"
@@ -1536,43 +1576,18 @@ tags = "embed,attach,file,attachment,attachments"
 title = "Add attachments"
 
 [audit]
+configureAudit = "Nakonfigurovať auditné logovanie"
+configureAuditMessage = "Upravte úroveň auditného logovania, dobu uchovania a ďalšie nastavenia v sekcii Zabezpečenie a autentifikácia."
 disabled = "Auditné protokolovanie je vypnuté"
 disabledMessage = "Povolením auditného protokolovania v konfigurácii aplikácie môžete sledovať udalosti systému."
 enterpriseRequired = "Vyžaduje sa licencia Enterprise"
 enterpriseRequiredMessage = "Systém auditných záznamov je funkcia Enterprise. Ak chcete získať prístup k auditným záznamom a analytike, prejdite na licenciu Enterprise."
+goToSettings = "Prejsť do nastavení auditu"
 notAvailable = "Auditný systém nie je k dispozícii"
 notAvailableMessage = "Auditný systém nie je nakonfigurovaný alebo nie je k dispozícii."
 
-[audit.charts]
-byType = "Udalosti podľa typu"
-byUser = "Udalosti podľa používateľa"
-day = "Deň"
-error = "Chyba pri načítaní grafov"
-month = "Mesiac"
-overTime = "Udalosti v čase"
-title = "Auditný prehľad"
-week = "Týždeň"
-
 [audit.error]
 title = "Chyba pri načítaní auditného systému"
-
-[audit.events]
-actions = "Akcie"
-clearFilters = "Vymazať"
-details = "Podrobnosti"
-endDate = "Dátum konca"
-error = "Chyba pri načítaní udalostí"
-eventDetails = "Podrobnosti udalosti"
-filterByType = "Filter podľa typu"
-filterByUser = "Filter podľa používateľa"
-ipAddress = "IP adresa"
-noEvents = "Nenašli sa žiadne udalosti"
-startDate = "Dátum začiatku"
-timestamp = "Časová pečiatka"
-title = "Auditné udalosti"
-type = "Typ"
-user = "Používateľ"
-viewDetails = "Zobraziť podrobnosti"
 
 [audit.export]
 clearFilters = "Vymazať"
@@ -1580,27 +1595,132 @@ description = "Exportujte auditné udalosti do formátu CSV alebo JSON. Pomocou 
 endDate = "Dátum konca"
 error = "Nepodarilo sa exportovať údaje"
 exportButton = "Exportovať údaje"
+fieldAuthor = "Autor (z PDF)"
+fieldDate = "Dátum"
+fieldDocumentName = "Názov dokumentu"
+fieldFileHash = "Hash súboru (SHA-256)"
+fieldIpAddress = "IP adresa"
+fieldOperationResults = "Výsledky operácie"
+fieldOutcome = "Výsledok (úspech/zlyhanie)"
+fieldTool = "Nástroj"
+fieldUsername = "Používateľské meno"
 filterByType = "Filter podľa typu"
 filterByUser = "Filter podľa používateľa"
 filters = "Filtre (voliteľné)"
 format = "Formát exportu"
+selectFields = "Vyberte polia na zahrnutie"
 startDate = "Dátum začiatku"
 title = "Exportovať auditné údaje"
+verboseRequired = "Vyžaduje úroveň auditu VERBOSE"
 
 [audit.systemStatus]
+autoRefresh = "Automatické obnovenie"
+autoRefreshLabel = "Automaticky obnovovať každých 30 s"
+captureBySettings = "Povoliť v nastaveniach"
+capturedFields = "Zachytené polia"
+date = "Dátum"
 days = "dní"
 disabled = "Zakázané"
+documentName = "Názov dokumentu"
 enabled = "Povolené"
+fileHash = "Hash súboru"
 level = "Úroveň auditu"
+pdfAuthor = "Autor PDF"
 retention = "Doba uchovávania"
 status = "Auditné protokolovanie"
 title = "Stav systému"
+tool = "Nástroj"
 totalEvents = "Celkovo udalostí"
+username = "Používateľské meno"
+verboseOnly = "Iba VERBOSE"
+
+[audit.stats]
+activeUsers = "Aktívni používatelia"
+attention = "Vyžaduje pozornosť"
+avgLatency = "Priem. latencia"
+error = "Chyba pri načítavaní štatistík"
+errorLoadingStats = "Nepodarilo sa načítať štatistiky"
+excellent = "Vynikajúce"
+good = "Dobré"
+noData = "Nedostupné"
+successRate = "Miera úspešnosti"
+title = "Zhrnutie"
+totalEvents = "Celkom udalostí"
+vsLastPeriod = "v porovnaní s minulým obdobím"
+
+[audit.charts]
+byTool = "Najpoužívanejšie nástroje"
+byType = "Udalosti podľa typu"
+byUser = "Udalosti podľa používateľa"
+day = "Deň"
+error = "Chyba pri načítaní grafov"
+hourlyActivity = "Hodinová aktivita"
+month = "Mesiac"
+noData = "Žiadne údaje pre toto obdobie"
+overTime = "Udalosti v čase"
+title = "Auditný prehľad"
+week = "Týždeň"
+
+[audit.events]
+actions = "Akcie"
+author = "Autor"
+clearFilters = "Vymazať"
+details = "Podrobnosti"
+documentName = "Dokument"
+endDate = "Dátum konca"
+error = "Chyba pri načítaní udalostí"
+eventDetails = "Podrobnosti udalosti"
+failure = "Zlyhanie"
+fileHash = "Hash súboru"
+filterByType = "Filter podľa typu"
+filterByUser = "Filter podľa používateľa"
+ipAddress = "IP adresa"
+noEvents = "Nenašli sa žiadne udalosti"
+outcome = "Stav"
+sortAsc = "Triediť vzostupne"
+sortDesc = "Triediť zostupne"
+startDate = "Dátum začiatku"
+success = "Úspech"
+timestamp = "Časová pečiatka"
+title = "Auditné udalosti"
+type = "Typ"
+user = "Používateľ"
+viewDetails = "Zobraziť podrobnosti"
+
+[audit.filters]
+allOutcomes = "Všetky"
+failureOnly = "Len zlyhania"
+last7Days = "Posledných 7 dní"
+last30Days = "Posledných 30 dní"
+outcomeFilter = "Výsledok"
+quickPresets = "Rýchle filtre"
+successOnly = "Len úspechy"
+thisMonth = "Tento mesiac"
+today = "Dnes"
 
 [audit.tabs]
+clearData = "Vymazať údaje"
 dashboard = "Prehľad"
 events = "Auditné udalosti"
 export = "Export"
+
+[audit.clearData]
+cancel = "Zrušiť"
+codeDoesNotMatch = "Kód sa nezhoduje"
+codePlaceholder = "Sem zadajte kód"
+confirmationCode = "Potvrdzovací kód"
+confirmationRequired = "Vymazať všetky auditné údaje"
+confirmMessage = "Týmto sa natrvalo odstránia všetky auditné záznamy. Na pokračovanie nižšie zadajte potvrdzovací kód."
+confirmTitle = "Potvrďte, že chcete odstrániť"
+deleteButton = "Odstrániť"
+enterCode = "Potvrdzovací kód"
+enterCodeBelow = "Zadajte kód presne tak, ako je uvedený vyššie (rozlišujú sa veľké/malé písmená)"
+initiateDelete = "Vymazať všetky údaje"
+irreversible = "NEVRATNÉ"
+success = "Úspech"
+successMessage = "Všetky auditné údaje boli úspešne vymazané"
+warning1 = "Túto akciu nemožno vrátiť späť"
+warning2 = "Vymazaním auditných údajov natrvalo odstránite všetky historické auditné záznamy vrátane bezpečnostných udalostí, aktivít používateľov a operácií so súbormi z databázy."
 
 [auth]
 accessDenied = "Prístup zamietnutý"
@@ -2254,9 +2374,11 @@ copy = "Kopírovať"
 done = "Hotovo"
 error = "Chyba"
 expand = "Rozbaliť"
+learnMore = "Ďalšie informácie"
 lines = "riadky"
 loading = "Načítava sa..."
 next = "Ďalej"
+operation = "túto operáciu"
 preview = "Náhľad"
 previous = "Predchádzajúce"
 refresh = "Obnoviť"
@@ -2920,6 +3042,7 @@ copyStack = "Kopírovať sledovanie zásobníka"
 discordSubmit = "Discord - Podajte príspevok na podporu"
 dismissAllErrors = "Zavrieť všetky chyby"
 encryptedPdfMustRemovePassword = "Toto PDF je šifrované alebo chránené heslom. Pred konverziou na PDF/A ho odomknite."
+generic = "Vyskytla sa chyba"
 github = "Podajte tiket na GitHub"
 githubSubmit = "GitHub - Podajte tiket"
 incorrectPasswordProvided = "Heslo k PDF je nesprávne alebo nebolo zadané."
@@ -4456,6 +4579,10 @@ upgradeCompleteMessage = "Vaše predplatné bolo úspešne upgradované. Existuj
 upgradeSuccess = "Platba úspešná! Vaše predplatné bolo upgradované. Licencia bola aktualizovaná na vašom serveri. Čoskoro dostanete potvrdzujúci email."
 upgradeTitle = "Inovovať na {{planName}}"
 yearly = "Ročne"
+checkoutOpened = "Platba otvorená v prehliadači"
+checkoutInstructions = "Dokončite nákup v okne prehliadača, ktoré sa práve otvorilo. Po dokončení platby sa vráťte sem a kliknite na tlačidlo nižšie na obnovenie fakturačných informácií."
+refreshBilling = "Platbu som dokončil(a) – obnoviť fakturáciu"
+closeLater = "Urobím to neskôr"
 
 [payment.emailStage]
 continue = "Pokračovať"
@@ -4679,6 +4806,13 @@ prompt = "Vyberte stránku na extrakciu tabuľky"
 submit = "Extrahovať"
 title = "PDF na CSV"
 
+[PDFToXLSX]
+header = "PDF do Excelu"
+prompt = "Vyberte strany na extrakciu tabuliek"
+submit = "Konvertovať"
+title = "PDF do Excelu (XLSX)"
+tags = "tabuľkový hárok,excel,xlsx,tabuľka,extrakcia,konverzia"
+
 [PDFToHTML]
 credit = "Táto služba používa pdftohtml na konverziu súborov."
 header = "PDF na HTML"
@@ -4835,6 +4969,7 @@ customPricing = "Vlastné"
 featureComparison = "Porovnanie funkcií"
 from = "Od"
 hideComparison = "Skryť porovnanie funkcií"
+included = "Zahrnuté"
 includedInCurrent = "Súčasť vášho plánu"
 licensedSeats = "Licencovaných: {{count}} miest"
 manage = "Spravovať"
@@ -4852,9 +4987,11 @@ title = "Aktívny plán"
 
 [plan.availablePlans]
 subtitle = "Vyberte si plán, ktorý vám vyhovuje"
+loadError = "Nie je možné načítať ceny plánov. Používajú sa predvolené hodnoty."
 title = "Dostupné plány"
 
 [plan.enterprise]
+siteLicense = "Licencia pre celú organizáciu"
 highlight1 = "Vlastné ceny"
 highlight2 = "Vyhradená podpora"
 highlight3 = "Najnovšie funkcie"
@@ -4927,6 +5064,81 @@ instructions = "Dokončite nákup na karte Stripe. Po dokončení platby dostane
 keyDescription = "Vložte licenčný kľúč z e‑mailu"
 success = "Licencia aktivovaná!"
 successMessage = "Vaša licencia bola úspešne aktivovaná. Teraz môžete toto okno zatvoriť."
+
+[plan.team]
+name = "Tím"
+siteLicense = "Licencia pre celú organizáciu"
+
+[credits]
+enableOverageBilling = "Povoliť nadlimitné účtovanie"
+maybeLater = "Možno neskôr"
+upgrade = "Prejsť na vyšší plán"
+
+[credits.modal]
+advancedMonitoring = "Pokročilé monitorovanie"
+allInOneWorkspace = "Všetko v jednom: pracovné prostredie pre PDF (prehliadač, nástroje a agent)"
+apiSandbox = "API sandbox"
+contactSales = "Kontaktovať obchod"
+creditsRemaining = "{{current}} z {{total}} zostáva"
+creditsThisMonth = "Mesačné kredity"
+current = "Aktuálny plán"
+customPricing = "Vlastné"
+customSmartFolders = "Vlastné inteligentné priečinky"
+dedicatedSupportSlas = "Vyhradená podpora a SLA"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Všetko z Credits, navyše:"
+everythingInFree = "Všetko z Free, navyše:"
+fasterThroughput = "10× rýchlejšia priepustnosť"
+forRegularWork = "Na bežnú prácu s PDF:"
+freeTier = "Bezplatný plán"
+fullyPrivateFiles = "Plne súkromné súbory"
+largeFileProcessing = "Spracovanie veľkých súborov"
+managedMemberMessage = "Máte neobmedzený prístup ku kreditom cez svoj tím. Ak potrebujete pomoc, kontaktujte svojho vedúceho tímu."
+managedMemberTitle = "Neobmedzené kredity"
+meteringBillingNote = "Nadlimitné kredity sa fakturujú mesačne spolu s vaším predplatným Team. Svoju spotrebu môžete kedykoľvek sledovať v nastaveniach účtu."
+meteringExplanation = "Váš plán Team obsahuje {{credits}} kreditov mesačne. Keď sa minú, nadlimitné účtovanie automaticky poskytne ďalšie kredity, aby ste nemuseli prerušovať prácu."
+meteringIncluded = "{{credits}} kreditov/mesiac zahrnutých v pláne Team"
+meteringNoCommitment = "Bez viazanosti, zrušiť môžete kedykoľvek"
+meteringNeverRunOut = "Kredity sa vám nikdy neminú"
+meteringPayAsYouGo = "Platíte len za skutočné použitie"
+meteringPrice = "Dodatočné kredity za {{price}}/kredit"
+meteringTitle = "Nadlimitné účtovanie podľa skutočného využitia"
+monthlyCredits = "mesačné kredity"
+orgWideAccess = "Celopodnikové riadenie prístupu"
+overage = "nadlimit"
+perMonth = "/mesiac"
+popular = "Obľúbené"
+premiumAiModels = "Prémiové modely AI"
+prioritySupport = "Prioritná podpora"
+privateDocCloud = "Súkromný cloud dokumentov"
+ragFineTuning = "RAG + fine-tuning"
+secureApiAccess = "Zabezpečený prístup k API"
+selfHostLink = "Pozrite si dokumentáciu a plány"
+selfHostPrompt = "Chcete self‑hosting?"
+standardThroughput = "Štandardná priepustnosť"
+subtitle = "Prejdite na Team a získajte 10× viac kreditov a rýchlejšie spracovanie."
+subtitlePro = "Povoľte automatické nadlimitné účtovanie, aby sa vám kredity nikdy neminuli."
+teamLeaderOnly = "Nadlimitné účtovanie môžu povoliť len vedúci tímu"
+teamSubscription = "Team"
+titleExhausted = "Minuli ste svoje bezplatné kredity"
+titleExhaustedPro = "Minuli sa vám kredity"
+unlimitedApiAccess = "Neobmedzený prístup k API"
+unlimitedMonthlyCredits = "Licencia pre celú organizáciu"
+unlimitedSeats = "Neobmedzený počet používateľov"
+
+[credits.modal.features]
+everythingInCredits = "Všetko z Credits, navyše:"
+everythingInFree = "Všetko z Free, navyše:"
+forRegularWork = "Na bežnú prácu s PDF:"
+
+[credits.insufficient]
+brief = "Nedostatok kreditov. Potrebujete {{required}} kreditov, ale máte {{current}}."
+freeTier = "Prejdite na Team a získajte 10× viac kreditov a neobmedzené nadlimitné účtovanie."
+managedMember = "Kontaktujte svojho vedúceho tímu."
+message = "Nemáte dostatok kreditov na spustenie {{tool}}. Aktuálne máte {{current}} kreditov."
+messageWithAmount = "Na spustenie {{tool}} potrebujete {{required}} kreditov, ale máte len {{current}}."
+teamMember = "Povoľte nadlimitné účtovanie, aby sa vám kredity nikdy neminuli."
+title = "Nedostatok kreditov"
 
 [printFile]
 header = "Vytlačiť súbor na tlačiareň"
@@ -5565,6 +5777,70 @@ user = "Prihlásený ako"
 saas = "Stirling Cloud"
 selfhosted = "Self-hostovaný"
 
+[settings.planBilling]
+currentPlan = "Aktuálny plán"
+loading = "Načítavajú sa fakturačné informácie..."
+notAvailable = "Plán a fakturácia sú dostupné len pri pripojení k Stirling Cloud (režim SaaS)."
+title = "Plán a fakturácia"
+
+[settings.planBilling.billing]
+manageBilling = "Spravovať fakturáciu"
+nextBillingDate = "Ďalší dátum fakturácie"
+overageCost = "Aktuálne náklady na nadlimit: {{amount}} ({{credits}} kreditov)"
+
+[settings.planBilling.credits]
+estimatedCost = "Odhadované náklady: {{amount}}"
+freeTierInfo = "Bezplatný plán obsahuje {{freeCredits}} kreditov mesačne. Prejdite na Team pre {{teamCredits}} kreditov/mesiac a nadlimitné účtovanie podľa skutočného využitia."
+included = "{{count}} kreditov/mesiac (zahrnuté)"
+noOverage = "Tento mesiac bez nadlimitných poplatkov. Používate svoje zahrnuté {{count}} kreditov."
+overage = "+ {{count}} nadlimit"
+overageInfo = "Nadlimitné kredity sa účtujú sadzbou {{price}} za kredit. Zaplatíte len za to, čo presiahne váš mesačný limit."
+title = "Využitie kreditov"
+
+[settings.planBilling.errors]
+fetchFailed = "Nepodarilo sa získať fakturačné údaje"
+retry = "Skúsiť znova"
+
+[settings.planBilling.status]
+active = "Aktívny"
+canceled = "Zrušený"
+pastDue = "Po splatnosti"
+trial = "Skúšobná verzia"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Vlastné enterprise funkcie a podpora"
+free = "Free"
+freeDescription = "50 kreditov mesačne"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 kreditov/mesiac zahrnutých, automatické nadlimitné účtovanie pre nepretržitú prevádzku"
+teamTooltipCredits = "Plán Team zahŕňa {{credits}} kreditov/mesiac."
+teamTooltipFineprint = "Platíte len za to, čo presiahne zahrnuté kredity."
+teamTooltipOverage = "Automatické nadlimitné účtovanie za {{price}}/kredit zaručuje nepretržitú prevádzku."
+
+[settings.planBilling.team]
+managedByTeam = "Spravované tímom"
+memberCount = "{{count}} členov tímu"
+
+[settings.planBilling.trial]
+daysRemaining = "Zostáva {{days}} dní"
+daysRemainingFull = "Vaša skúšobná verzia skončí o {{days}} dní"
+endDate = "Platnosť do: {{date}}"
+endsOn = "Koniec skúšobnej verzie"
+title = "Skúšobná verzia je aktívna"
+
+[settings.planBilling.upgrade]
+cta = "Prejsť na Team"
+featureApi = "Prístup k API pre automatizáciu"
+featureCredits = "{{teamCredits}} kreditov za mesiac (oproti {{freeCredits}} v pláne Free)"
+featureMembers = "Neobmedzený počet členov tímu"
+featureSupport = "Prioritná podpora"
+featureThroughput = "Rýchlejšie spracovanie"
+opensInBrowser = "Otvorí sa v prehliadači na dokončenie prechodu"
+subtitle = "Prejdite na Team a získajte:"
+title = "Prejdite na vyšší plán"
+
 [settings.developer]
 apiKeys = "API kľúče"
 title = "Vývojár"
@@ -5688,6 +5964,9 @@ requiresEnterprise = "Vyžaduje licenciu Enterprise"
 people = "Ľudia"
 teams = "Tímy"
 title = "Pracovný priestor"
+
+[settings.team]
+title = "Tím"
 
 [setup]
 description = "Začnite výberom spôsobu používania Stirling PDF"
@@ -6011,6 +6290,11 @@ desc = "Automatické rozdelenie s oddeľovacími listami"
 name = "Oddeľovač strán"
 tooltip = "Použite oddeľovacie listy s QR kódmi medzi dokumentmi pri skenovaní"
 
+[split.methods.byPoster]
+name = "Tlačiteľné časti"
+desc = "Rozdeľte veľké strany na tlačiteľné rozmery"
+tooltip = "Rozdeľte nadrozmerné strany na menšie časti vhodné na tlač na štandardný papier (A4, Letter atď.)"
+
 [split.methods.byPages]
 desc = "Extrahovať konkrétne strany (1,3,5-10)"
 name = "Čísla strán"
@@ -6029,6 +6313,7 @@ tooltip = "Zadajte maximálnu veľkosť súboru (napr. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Rozdeliť na"
 splitBy = "Rozdeliť podľa"
+splitInto = "Rozdeliť na"
 
 [split.methodSelection.tooltip]
 bullet1 = "Kliknutím na kartu metódy ju vyberiete"
@@ -6047,6 +6332,21 @@ selectMethodFirst = "Prosím, najprv vyberte metódu rozdelenia"
 [split.steps]
 chooseMethod = "Vyberte metódu"
 settings = "Nastavenia"
+
+[split.poster]
+rightToLeft = "Deliť sprava doľava"
+
+[split.poster.pageSize]
+label = "Cieľová veľkosť strany"
+description = "Veľkosť výstupných strán na tlač"
+
+[split.poster.xFactor]
+label = "Horizontálne delenia"
+description = "Počet stĺpcov, na ktoré sa má každá strana rozdeliť"
+
+[split.poster.yFactor]
+label = "Vertikálne delenia"
+description = "Počet riadkov, na ktoré sa má každá strana rozdeliť"
 
 [split.tooltip.byChapters]
 bullet1 = "Úroveň záložiek: Na ktorej úrovni deliť (1=horná úroveň)"
@@ -6084,6 +6384,14 @@ bullet4 = "Nahrajte – oddeľovacie strany sa automaticky detegujú a odstráni
 bullet5 = "Povoľte duplexný režim, ak skenujete obe strany oddeľovacích listov"
 text = "Automaticky rozdeľujte skenované dokumenty pomocou fyzických oddeľovacích listov s QR kódmi. Perfektné na spracovanie viacerých dokumentov naskenovaných spolu."
 title = "Rozdeliť podľa oddeľovača strán"
+
+[split.tooltip.byPoster]
+bullet1 = "Cieľová veľkosť strany: Vyberte výstupný formát papiera (A4, Letter atď.)"
+bullet2 = "Horizontálne/vertikálne delenia: Veľkosť mriežky na rozdelenie"
+bullet3 = "Sprava doľava: Obráti poradie stĺpcov pre RTL rozloženia"
+bullet4 = "Vytlačte a poskladajte diely pre vytvorenie plagátu"
+text = "Rozdeľte veľké strany PDF na menšie tlačiteľné časti vhodné pre štandardné formáty papiera. Ideálne na vytváranie plagátových tlačí z nadrozmerných strán."
+title = "Rozdeliť pre tlač plagátu"
 
 [split.tooltip.byPages]
 bullet1 = "Jednotlivé body: 3,7 (rozdelenie po stranách 3 a 7)"
@@ -6364,9 +6672,13 @@ tags = "webová snímka, uložiť stránku, web do dokumentu, archív"
 title = "URL do PDF"
 
 [usage]
+aboutUsageAnalytics = "O analytike používania"
+configureSettings = "Nastaviť analytiku"
 error = "Chyba pri načítaní štatistík používania"
 noData = "Údaje nie sú k dispozícii"
 noDataMessage = "Aktuálne nie sú k dispozícii žiadne štatistiky používania."
+usageAnalyticsExplanation = "Analytika používania sleduje požiadavky na endpointy a vzorce používania nástrojov. V kombinácii s panelom auditného logovania získate úplný prehľad o aktivite systému, výkone a bezpečnostných udalostiach."
+viewAuditLogs = "Zobraziť auditné záznamy"
 
 [usage.chart]
 title = "Graf využitia koncových bodov"
@@ -6947,3 +7259,278 @@ cancel = "Zrušiť"
 confirm = "Rozbaliť"
 message = "Tento ZIP obsahuje {{count}} súborov. Aj tak rozbaliť?"
 title = "Veľký ZIP súbor"
+
+[cloudBadge]
+tooltip = "Táto operácia použije vaše cloudové kredity"
+
+[team]
+cancelInviteError = "Pozvánku sa nepodarilo zrušiť"
+confirmCancelInvite = "Naozaj chcete zrušiť túto pozvánku?"
+confirmLeave = "Naozaj chcete opustiť tento tím?"
+confirmLeaveLeader = "Ako vedúci tímu budete po odchode odstránený z tímu. Ste si istý/istá?"
+confirmRemove = "Naozaj chcete odstrániť tohto člena?"
+editName = "Upraviť názov tímu"
+inviteCancelled = "Pozvánka zrušená"
+inviteError = "Pozvánku sa nepodarilo odoslať"
+inviteSent = "Pozvánka úspešne odoslaná"
+leader = "Vedúci"
+leaveButton = "Opustiť tím"
+leaveError = "Tím sa nepodarilo opustiť"
+leaveSuccess = "Tím ste úspešne opustili"
+loading = "Načítavajú sa informácie o tíme..."
+memberCount = "{{count}} členov"
+memberRemoved = "Člen bol úspešne odstránený"
+namePlaceholder = "Zadajte názov tímu"
+personal = "Osobné"
+removeError = "Člena sa nepodarilo odstrániť"
+renameError = "Tím sa nepodarilo premenovať"
+renameSuccess = "Tím bol úspešne premenovaný"
+
+[team.invitationBanner]
+message = "vás pozval(a), aby ste sa pripojili"
+acceptButton = "Prijať"
+rejectButton = "Odmietnuť"
+
+[team.features]
+badge = "Funkcie tímu"
+subtitle = "Spolupracujte so svojím tímom"
+title = "Tímová spolupráca"
+viewPlans = "Zobraziť plány"
+
+[team.features.billing]
+description = "Spravujte fakturáciu a predplatné"
+title = "Správa fakturácie"
+
+[team.features.credits]
+description = "Zdieľaný fond kreditov pre všetkých členov"
+title = "Zdieľané kredity"
+
+[team.features.dashboard]
+description = "Zobraziť aktivitu a využitie tímu"
+title = "Tímový prehľad"
+
+[team.features.invite]
+description = "Pridajte členov do svojho tímu"
+title = "Pozvať členov"
+
+[team.invite]
+cancelLabel = "Zrušiť"
+invalidEmail = "Neplatná e‑mailová adresa"
+placeholder = "Zadajte e‑mailovú adresu"
+sendButton = "Odoslať pozvánku"
+title = "Pozvať člena tímu"
+
+[team.members]
+emailColumn = "E‑mail"
+empty = "Zatiaľ žiadni členovia tímu"
+nameColumn = "Meno"
+pending = "Čakajúce"
+remove = "Odstrániť"
+roleColumn = "Rola"
+title = "Členovia tímu"
+
+[team.upgrade]
+button = "Prejsť na Team"
+description = "Odomknite tímové funkcie spolupráce"
+title = "Prejsť na plán Team"
+
+[provider.oauth2.google]
+scope = "Autentifikácia pri prihlásení"
+
+[provider.oauth2.google.clientId]
+label = "ID klienta"
+description = "OAuth2 Client ID z Google Cloud Console"
+
+[provider.oauth2.google.clientSecret]
+label = "Tajný kľúč klienta"
+description = "OAuth2 Client Secret z Google Cloud Console"
+
+[provider.oauth2.google.scopes]
+label = "Rozsahy"
+description = "Čiarkou oddelené OAuth2 rozsahy"
+
+[provider.oauth2.google.useAsUsername]
+label = "Použiť ako používateľské meno"
+description = "Pole použité ako používateľské meno (email, name, given_name, family_name)"
+
+[provider.oauth2.github]
+scope = "Autentifikácia pri prihlásení"
+
+[provider.oauth2.github.clientId]
+label = "ID klienta"
+description = "OAuth2 Client ID z GitHub Developer Settings"
+
+[provider.oauth2.github.clientSecret]
+label = "Tajný kľúč klienta"
+description = "OAuth2 Client Secret z GitHub Developer Settings"
+
+[provider.oauth2.github.scopes]
+label = "Rozsahy"
+description = "Čiarkou oddelené OAuth2 rozsahy"
+
+[provider.oauth2.github.useAsUsername]
+label = "Použiť ako používateľské meno"
+description = "Pole použité ako používateľské meno (email, login, name)"
+
+[provider.oauth2.keycloak]
+scope = "SSO"
+
+[provider.oauth2.keycloak.issuer]
+label = "URL vydavateľa"
+description = "URL koncového bodu OpenID Connect Discovery pre realm Keycloak"
+
+[provider.oauth2.keycloak.clientId]
+label = "ID klienta"
+description = "OAuth2 Client ID z Keycloak"
+
+[provider.oauth2.keycloak.clientSecret]
+label = "Tajný kľúč klienta"
+description = "OAuth2 Client Secret z Keycloak"
+
+[provider.oauth2.keycloak.scopes]
+label = "Rozsahy"
+description = "Čiarkou oddelené OAuth2 rozsahy"
+
+[provider.oauth2.keycloak.useAsUsername]
+label = "Použiť ako používateľské meno"
+description = "Pole použité ako používateľské meno (email, name, given_name, family_name, preferred_username)"
+
+[provider.oauth2.generic]
+name = "Všeobecné OAuth2"
+scope = "SSO"
+
+[provider.oauth2.generic.enabled]
+label = "Povoliť všeobecné OAuth2"
+description = "Povoliť autentifikáciu pomocou vlastného poskytovateľa OAuth2"
+
+[provider.oauth2.generic.provider]
+label = "Názov poskytovateľa"
+description = "Názov vášho poskytovateľa OAuth2 (napr. Azure AD, Okta)"
+
+[provider.oauth2.generic.issuer]
+label = "URL vydavateľa"
+description = "Poskytovateľ, ktorý podporuje OpenID Connect Discovery (/.well-known/openid-configuration)"
+
+[provider.oauth2.generic.clientId]
+label = "ID klienta"
+description = "OAuth2 Client ID od vášho poskytovateľa"
+
+[provider.oauth2.generic.clientSecret]
+label = "Tajný kľúč klienta"
+description = "OAuth2 Client Secret od vášho poskytovateľa"
+
+[provider.oauth2.generic.scopes]
+label = "Rozsahy"
+description = "Čiarkou oddelené OAuth2 rozsahy"
+
+[provider.oauth2.generic.useAsUsername]
+label = "Použiť ako používateľské meno"
+description = "Pole použité ako používateľské meno"
+
+[provider.oauth2.generic.autoCreateUser]
+label = "Automaticky vytvárať používateľov"
+description = "Automaticky vytvoriť používateľské účty pri prvom prihlásení cez OAuth2"
+
+[provider.oauth2.generic.blockRegistration]
+label = "Blokovať registráciu"
+description = "Zabrániť registrácii nových používateľov cez OAuth2"
+
+[provider.smtp]
+name = "SMTP pošta"
+scope = "E‑mailové upozornenia"
+
+[provider.smtp.enabled]
+label = "Povoliť poštu"
+description = "Povoliť e‑mailové upozornenia a funkcionalitu SMTP"
+
+[provider.smtp.host]
+label = "Hostiteľ SMTP"
+description = "Názov hostiteľa alebo IP adresa vášho servera SMTP"
+
+[provider.smtp.port]
+label = "Port SMTP"
+description = "Číslo portu pre pripojenie SMTP (zvyčajne 25, 465 alebo 587)"
+
+[provider.smtp.username]
+label = "Používateľské meno SMTP"
+description = "Používateľské meno pre overenie SMTP"
+
+[provider.smtp.password]
+label = "Heslo SMTP"
+description = "Heslo pre overenie SMTP"
+
+[provider.smtp.from]
+label = "Adresa odosielateľa"
+description = "E‑mailová adresa použitá ako odosielateľ"
+
+[provider.saml2]
+name = "SAML2"
+scope = "SSO (SAML)"
+
+[provider.saml2.enabled]
+label = "Povoliť SAML2"
+description = "Povoliť autentifikáciu SAML2 (iba pre Enterprise)"
+
+[provider.saml2.provider]
+label = "Názov poskytovateľa"
+description = "Názov vášho poskytovateľa SAML2"
+
+[provider.saml2.registrationId]
+label = "ID registrácie"
+description = "Názov vašej aplikácie poskytovateľa služby (SP)"
+
+[provider.saml2.idpMetadataUri]
+label = "URI metadát IDP"
+description = "URI pre metadáta vášho poskytovateľa"
+
+[provider.saml2.idpSingleLoginUrl]
+label = "URL jednotného prihlásenia IDP"
+description = "URL na spustenie SSO"
+
+[provider.saml2.idpSingleLogoutUrl]
+label = "URL jednotného odhlásenia IDP"
+description = "URL na spustenie SLO"
+
+[provider.saml2.idpIssuer]
+label = "Vydavateľ IDP"
+description = "ID vášho poskytovateľa"
+
+[provider.saml2.idpCert]
+label = "Certifikát IDP"
+description = "Cesta k certifikátu (napr. classpath:okta.cert)"
+
+[provider.saml2.privateKey]
+label = "Súkromný kľúč"
+description = "Cesta k vášmu súkromnému kľúču"
+
+[provider.saml2.spCert]
+label = "Certifikát SP"
+description = "Cesta k vášmu podpisovému certifikátu"
+
+[provider.saml2.autoCreateUser]
+label = "Automaticky vytvárať používateľov"
+description = "Automaticky vytvoriť používateľské účty pri prvom prihlásení cez SAML2"
+
+[provider.saml2.blockRegistration]
+label = "Blokovať registráciu"
+description = "Zabrániť registrácii nových používateľov cez SAML2"
+
+[provider.googledrive]
+name = "Google Drive"
+scope = "Import súborov"
+
+[provider.googledrive.enabled]
+label = "Povoliť výber súborov z Google Drive"
+description = "Umožniť používateľom importovať súbory priamo z Google Drive"
+
+[provider.googledrive.clientId]
+label = "ID klienta"
+description = "Google OAuth 2.0 Client ID z Google Cloud Console"
+
+[provider.googledrive.apiKey]
+label = "API kľúč"
+description = "Google API kľúč pre Google Picker API z Google Cloud Console"
+
+[provider.googledrive.appId]
+label = "ID aplikácie"
+description = "Google Drive App ID z Google Cloud Console"

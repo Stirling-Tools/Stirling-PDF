@@ -30,10 +30,12 @@ export interface FormField {
   multiline: boolean;
   tooltip: string | null;
   widgets: WidgetCoordinates[] | null;
-  /** Visual label for push buttons (from /MK/CA in the PDF appearance dict) */
-  buttonLabel?: string | null;
-  /** Action descriptor for push buttons */
-  buttonAction?: ButtonAction | null;
+/** Visual label for push buttons (from /MK/CA in the PDF appearance dict) */
+buttonLabel?: string | null;
+/** Action descriptor for push buttons */
+buttonAction?: ButtonAction | null;
+/** Pre-rendered appearance image for signed signature fields (data URL). */
+appearanceDataUrl?: string;
 }
 
 export type FormFieldType =
