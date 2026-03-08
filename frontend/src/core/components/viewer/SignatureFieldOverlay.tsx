@@ -38,10 +38,6 @@ interface ResolvedSignatureField extends SignatureFieldAppearance {
   /** Signing time string (if available). */
   time?: string;
 }
-
-/* ------------------------------------------------------------------ */
-/*  Simple per-source cache (same pattern as before)                  */
-/* ------------------------------------------------------------------ */
 let _cachedSource: File | Blob | null = null;
 let _cachedFields: ResolvedSignatureField[] = [];
 let _cachePromise: Promise<ResolvedSignatureField[]> | null = null;
@@ -70,10 +66,6 @@ async function resolveFields(
   _cachedFields = await _cachePromise;
   return _cachedFields;
 }
-
-/* ------------------------------------------------------------------ */
-/*  Canvas cell — paints one rendered appearance bitmap               */
-/* ------------------------------------------------------------------ */
 
 function SignatureBitmapCanvas({
   imageData,
@@ -106,10 +98,6 @@ function SignatureBitmapCanvas({
     />
   );
 }
-
-/* ------------------------------------------------------------------ */
-/*  Main overlay component                                            */
-/* ------------------------------------------------------------------ */
 
 function SignatureFieldOverlayInner({
   pageIndex,

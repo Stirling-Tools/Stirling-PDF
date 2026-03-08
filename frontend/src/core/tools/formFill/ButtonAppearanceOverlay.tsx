@@ -17,10 +17,6 @@ interface ButtonAppearanceOverlayProps {
   pageWidth: number;
   pageHeight: number;
 }
-
-/* ------------------------------------------------------------------ */
-/*  Simple per-source cache                                            */
-/* ------------------------------------------------------------------ */
 let _cachedSource: File | Blob | null = null;
 let _cachePromise: Promise<SignatureFieldAppearance[]> | null = null;
 
@@ -30,10 +26,6 @@ async function resolveButtonAppearances(source: File | Blob): Promise<SignatureF
   _cachePromise = source.arrayBuffer().then((buf) => renderButtonFieldAppearances(buf));
   return _cachePromise;
 }
-
-/* ------------------------------------------------------------------ */
-/*  Canvas cell                                                        */
-/* ------------------------------------------------------------------ */
 function ButtonBitmapCanvas({ imageData, cssWidth, cssHeight }: {
   imageData: ImageData;
   cssWidth: number;
@@ -57,10 +49,6 @@ function ButtonBitmapCanvas({ imageData, cssWidth, cssHeight }: {
     />
   );
 }
-
-/* ------------------------------------------------------------------ */
-/*  Main overlay                                                       */
-/* ------------------------------------------------------------------ */
 function ButtonAppearanceOverlayInner({
   pageIndex,
   pdfSource,
