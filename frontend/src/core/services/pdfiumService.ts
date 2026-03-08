@@ -124,14 +124,14 @@ export function parseRectToCss(
   rectBuf: number,
   pageHeight: number,
 ): { x: number; y: number; width: number; height: number } {
-  const left   = m.pdfium.getValue(rectBuf,      'float');
-  const top    = m.pdfium.getValue(rectBuf + 4,  'float'); // FS_RECTF.top  (larger y)
-  const right  = m.pdfium.getValue(rectBuf + 8,  'float');
+  const left = m.pdfium.getValue(rectBuf, 'float');
+  const top = m.pdfium.getValue(rectBuf + 4, 'float'); // FS_RECTF.top  (larger y)
+  const right = m.pdfium.getValue(rectBuf + 8, 'float');
   const bottom = m.pdfium.getValue(rectBuf + 12, 'float'); // FS_RECTF.bottom (smaller y)
 
-  const pdfLeft   = Math.min(left, right);
-  const pdfTop    = Math.max(top, bottom);
-  const pdfWidth  = Math.abs(right - left);
+  const pdfLeft = Math.min(left, right);
+  const pdfTop = Math.max(top, bottom);
+  const pdfWidth = Math.abs(right - left);
   const pdfHeight = Math.abs(top - bottom);
 
   return {
@@ -164,9 +164,9 @@ export function readEffectivePageBox(
   const buf = m.pdfium.wasmExports.malloc(4 * 4); // 4 floats
 
   const read = (): PageBox | null => {
-    const l = m.pdfium.getValue(buf,      'float');
-    const b = m.pdfium.getValue(buf + 4,  'float');
-    const r = m.pdfium.getValue(buf + 8,  'float');
+    const l = m.pdfium.getValue(buf, 'float');
+    const b = m.pdfium.getValue(buf + 4, 'float');
+    const r = m.pdfium.getValue(buf + 8, 'float');
     const t = m.pdfium.getValue(buf + 12, 'float');
     const w = Math.abs(r - l);
     const h = Math.abs(t - b);
@@ -239,27 +239,14 @@ export async function openRawDocument(
 }
 
 /**
- * Open a raw document and copy page data into WASM heap properly.
+ * Open a raw document — convenience alias that delegates to {@link openRawDocument}.
+ * Kept for API compatibility with callers that were updated to use the "Safe" variant.
  */
 export async function openRawDocumentSafe(
   data: ArrayBuffer | Uint8Array,
   password?: string,
 ): Promise<number> {
-  const m = await getPdfiumModule();
-  const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
-  const len = bytes.length;
-  const ptr = m.pdfium.wasmExports.malloc(len);
-  copyToWasmHeap(m, bytes, ptr);
-
-  const docPtr = m.FPDF_LoadMemDocument(ptr, len, password ?? '');
-  if (!docPtr) {
-    m.pdfium.wasmExports.free(ptr);
-    const err = m.FPDF_GetLastError();
-    throw new Error(`PDFium: failed to open document (error ${err})`);
-  }
-  // Keep the buffer alive — freed in closeRawDocument()
-  _docDataPtrs.set(docPtr, ptr);
-  return docPtr;
+  return openRawDocument(data, password);
 }
 
 /**
@@ -414,7 +401,7 @@ export async function extractFormFields(
       // Read effective page box (CropBox if available, else MediaBox)
       // Mirrors PDFBox's page.getCropBox() approach for coordinate adjustment.
       const pageBox = readEffectivePageBox(m, pagePtr);
-      const cropWidth  = pageBox.right - pageBox.left;
+      const cropWidth = pageBox.right - pageBox.left;
       const cropHeight = pageBox.top - pageBox.bottom;
       const annotCount = m.FPDFPage_GetAnnotCount(pagePtr);
 
@@ -495,8 +482,8 @@ function this_extractAnnotation(
       ? m.FPDFAnnot_GetFormFieldType(formEnvPtr, annotPtr)
       : 0;
 
-    // Get field name
-    const nameLen = m.FPDFAnnot_GetFormFieldName(formEnvPtr, annotPtr, 0, 0);
+    // Get field name (requires a valid form environment pointer)
+    const nameLen = formEnvPtr ? m.FPDFAnnot_GetFormFieldName(formEnvPtr, annotPtr, 0, 0) : 0;
     let fieldName = '';
     if (nameLen > 0) {
       const nameBuf = m.pdfium.wasmExports.malloc(nameLen);
@@ -505,8 +492,8 @@ function this_extractAnnotation(
       m.pdfium.wasmExports.free(nameBuf);
     }
 
-    // Get field value
-    const valLen = m.FPDFAnnot_GetFormFieldValue(formEnvPtr, annotPtr, 0, 0);
+    // Get field value (requires a valid form environment pointer)
+    const valLen = formEnvPtr ? m.FPDFAnnot_GetFormFieldValue(formEnvPtr, annotPtr, 0, 0) : 0;
     let fieldValue = '';
     if (valLen > 0) {
       const valBuf = m.pdfium.wasmExports.malloc(valLen);
@@ -515,7 +502,7 @@ function this_extractAnnotation(
       m.pdfium.wasmExports.free(valBuf);
     }
 
-    // Get field flags
+    // Get field flags (requires a valid form environment pointer)
     const fieldFlags = formEnvPtr ? m.FPDFAnnot_GetFormFieldFlags(formEnvPtr, annotPtr) : 0;
     const isReadOnly = (fieldFlags & 1) !== 0;  // FORMFLAG_READONLY = 1
     const isRequired = (fieldFlags & 2) !== 0;  // FORMFLAG_REQUIRED = 2
@@ -538,15 +525,15 @@ function this_extractAnnotation(
     let widgetRect: PdfiumWidgetRect | null = null;
     if (hasRect) {
       // Standard FS_RECTF: {left, bottom, right, top} — raw MediaBox coordinates
-      const rawLeft   = m.pdfium.getValue(rectBuf,      'float');
-      const rawBottom = m.pdfium.getValue(rectBuf + 4,  'float');
-      const rawRight  = m.pdfium.getValue(rectBuf + 8,  'float');
-      const rawTop    = m.pdfium.getValue(rectBuf + 12, 'float');
+      const rawLeft = m.pdfium.getValue(rectBuf, 'float');
+      const rawBottom = m.pdfium.getValue(rectBuf + 4, 'float');
+      const rawRight = m.pdfium.getValue(rectBuf + 8, 'float');
+      const rawTop = m.pdfium.getValue(rectBuf + 12, 'float');
 
-      const annotLeft   = Math.min(rawLeft, rawRight);
+      const annotLeft = Math.min(rawLeft, rawRight);
       const annotBottom = Math.min(rawBottom, rawTop);
-      const annotRight  = Math.max(rawLeft, rawRight);
-      const annotTop    = Math.max(rawBottom, rawTop);
+      const annotRight = Math.max(rawLeft, rawRight);
+      const annotTop = Math.max(rawBottom, rawTop);
       const pdfW = annotRight - annotLeft;
       const pdfH = annotTop - annotBottom;
 
@@ -1113,15 +1100,15 @@ export async function extractSignatureFieldRects(
         const rectBuf = m.pdfium.wasmExports.malloc(4 * 4);
         const hasRect = m.FPDFAnnot_GetRect(annotPtr, rectBuf);
         if (hasRect) {
-          const rawLeft   = m.pdfium.getValue(rectBuf,      'float');
-          const rawBottom = m.pdfium.getValue(rectBuf + 4,  'float');
-          const rawRight  = m.pdfium.getValue(rectBuf + 8,  'float');
-          const rawTop    = m.pdfium.getValue(rectBuf + 12, 'float');
+          const rawLeft = m.pdfium.getValue(rectBuf, 'float');
+          const rawBottom = m.pdfium.getValue(rectBuf + 4, 'float');
+          const rawRight = m.pdfium.getValue(rectBuf + 8, 'float');
+          const rawTop = m.pdfium.getValue(rectBuf + 12, 'float');
 
-          const aLeft   = Math.min(rawLeft, rawRight);
+          const aLeft = Math.min(rawLeft, rawRight);
           const aBottom = Math.min(rawBottom, rawTop);
-          const aRight  = Math.max(rawLeft, rawRight);
-          const aTop    = Math.max(rawBottom, rawTop);
+          const aRight = Math.max(rawLeft, rawRight);
+          const aTop = Math.max(rawBottom, rawTop);
           const pdfW = aRight - aLeft;
           const pdfH = aTop - aBottom;
 
@@ -1306,7 +1293,7 @@ export async function renderSignatureFieldAppearances(
       // computation. This matches EmbedPDF's pdfPage.size and the overlay
       // coordinate system.
       const pageBox = readEffectivePageBox(m, pagePtr);
-      const cropWidth  = pageBox.right - pageBox.left;
+      const cropWidth = pageBox.right - pageBox.left;
       const cropHeight = pageBox.top - pageBox.bottom;
       const annotCount = m.FPDFPage_GetAnnotCount(pagePtr);
 
@@ -1357,17 +1344,17 @@ export async function renderSignatureFieldAppearances(
         }
 
         // Standard FS_RECTF layout: {left, bottom, right, top}
-        const rawLeft   = m.pdfium.getValue(rectBuf,      'float');
-        const rawBottom = m.pdfium.getValue(rectBuf + 4,  'float');
-        const rawRight  = m.pdfium.getValue(rectBuf + 8,  'float');
-        const rawTop    = m.pdfium.getValue(rectBuf + 12, 'float');
+        const rawLeft = m.pdfium.getValue(rectBuf, 'float');
+        const rawBottom = m.pdfium.getValue(rectBuf + 4, 'float');
+        const rawRight = m.pdfium.getValue(rectBuf + 8, 'float');
+        const rawTop = m.pdfium.getValue(rectBuf + 12, 'float');
         m.pdfium.wasmExports.free(rectBuf);
 
         // Normalise
-        const annotLeft   = Math.min(rawLeft, rawRight);
+        const annotLeft = Math.min(rawLeft, rawRight);
         const annotBottom = Math.min(rawBottom, rawTop);
-        const annotRight  = Math.max(rawLeft, rawRight);
-        const annotTop    = Math.max(rawBottom, rawTop);
+        const annotRight = Math.max(rawLeft, rawRight);
+        const annotTop = Math.max(rawBottom, rawTop);
         const pdfW = annotRight - annotLeft;
         const pdfH = annotTop - annotBottom;
 
@@ -1386,7 +1373,7 @@ export async function renderSignatureFieldAppearances(
           const wDev = Math.max(1, Math.round(pdfW * dpr));
           const hDev = Math.max(1, Math.round(pdfH * dpr));
           const stride = wDev * 4;
-          const bytes  = stride * hDev;
+          const bytes = stride * hDev;
           const pdfiumWasm = m.pdfium as any;
 
           const heapPtr = m.pdfium.wasmExports.malloc(bytes);
@@ -1531,7 +1518,7 @@ export async function renderButtonFieldAppearances(
       if (formEnvPtr) m.FORM_OnAfterLoadPage(pagePtr, formEnvPtr);
 
       const pageBox = readEffectivePageBox(m, pagePtr);
-      const cropWidth  = pageBox.right - pageBox.left;
+      const cropWidth = pageBox.right - pageBox.left;
       const cropHeight = pageBox.top - pageBox.bottom;
       const annotCount = m.FPDFPage_GetAnnotCount(pagePtr);
 
@@ -1565,15 +1552,15 @@ export async function renderButtonFieldAppearances(
           m.pdfium.wasmExports.free(rectBuf); m.FPDFPage_CloseAnnot(annotPtr); continue;
         }
 
-        const rawLeft   = m.pdfium.getValue(rectBuf,      'float');
-        const rawBottom = m.pdfium.getValue(rectBuf + 4,  'float');
-        const rawRight  = m.pdfium.getValue(rectBuf + 8,  'float');
-        const rawTop    = m.pdfium.getValue(rectBuf + 12, 'float');
+        const rawLeft = m.pdfium.getValue(rectBuf, 'float');
+        const rawBottom = m.pdfium.getValue(rectBuf + 4, 'float');
+        const rawRight = m.pdfium.getValue(rectBuf + 8, 'float');
+        const rawTop = m.pdfium.getValue(rectBuf + 12, 'float');
         m.pdfium.wasmExports.free(rectBuf);
 
-        const annotLeft   = Math.min(rawLeft, rawRight);
+        const annotLeft = Math.min(rawLeft, rawRight);
         const annotBottom = Math.min(rawBottom, rawTop);
-        const annotRight  = Math.max(rawLeft, rawRight);
+        const annotRight = Math.max(rawLeft, rawRight);
         const annotTopVal = Math.max(rawBottom, rawTop);
         const pdfW = annotRight - annotLeft;
         const pdfH = annotTopVal - annotBottom;
@@ -1590,7 +1577,7 @@ export async function renderButtonFieldAppearances(
           const wDev = Math.max(1, Math.round(pdfW * dpr));
           const hDev = Math.max(1, Math.round(pdfH * dpr));
           const stride = wDev * 4;
-          const bytes  = stride * hDev;
+          const bytes = stride * hDev;
           const heapPtr = m.pdfium.wasmExports.malloc(bytes);
           const bitmapPtr = m.FPDFBitmap_CreateEx(wDev, hDev, 4, heapPtr, stride);
           m.FPDFBitmap_FillRect(bitmapPtr, 0, 0, wDev, hDev, 0x00000000);
@@ -1672,7 +1659,7 @@ export async function fetchSignatureFieldsWithAppearances(
       options: null,
       displayOptions: null,
       required: false,
-      readOnly: false,
+      readOnly: true,
       multiSelect: false,
       multiline: false,
       tooltip: null,

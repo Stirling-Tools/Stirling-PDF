@@ -132,7 +132,12 @@ export class PDFExportService {
           if (sourcePageIndex >= 0 && sourcePageIndex < srcPageCount) {
             // Import the specific page (1-based page range for FPDF_ImportPages)
             const pageRange = String(sourcePageIndex + 1);
-            await importPages(destDocPtr, srcDocPtr, pageRange, insertIdx);
+            const imported = await importPages(destDocPtr, srcDocPtr, pageRange, insertIdx);
+            if (!imported) {
+              console.warn(
+                `[PDFExport] importPages failed for fileId=${page.originalFileId} pageRange=${pageRange} — page will be missing from output.`,
+              );
+            }
 
             // Apply rotation
             const pdfiumRotation = degreesToPdfiumRotation(page.rotation);
@@ -192,7 +197,12 @@ export class PDFExportService {
 
           if (sourcePageIndex >= 0 && sourcePageIndex < srcPageCount) {
             const pageRange = String(sourcePageIndex + 1);
-            await importPages(destDocPtr, srcDocPtr, pageRange, insertIdx);
+            const imported = await importPages(destDocPtr, srcDocPtr, pageRange, insertIdx);
+            if (!imported) {
+              console.warn(
+                `[PDFExport] importPages failed for page ${page.originalPageNumber} pageRange=${pageRange} — page will be missing from output.`,
+              );
+            }
 
             const pdfiumRotation = degreesToPdfiumRotation(page.rotation);
             if (pdfiumRotation !== 0) {

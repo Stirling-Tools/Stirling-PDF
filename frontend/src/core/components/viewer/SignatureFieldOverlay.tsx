@@ -55,12 +55,21 @@ async function resolveFields(
       extractSignatures(buf),
     ]);
 
-    return appearances.map((f, i) => ({
-      ...f,
-      isSigned: i < signatures.length,
-      reason: signatures[i]?.reason,
-      time: signatures[i]?.time,
-    }));
+    return appearances.map((f, i) => {
+      // Positional correlation is only reliable when both arrays have the same
+      // length — i.e. one signature object per signature field in document order.
+      // When the counts differ we cannot safely attribute reason/time per-field,
+      // so we fall back to a whole-document "is signed" indicator.
+      const exactMatch = appearances.length === signatures.length;
+      const matchedSig = exactMatch ? signatures[i] : undefined;
+      return {
+        ...f,
+        isSigned: exactMatch ? i < signatures.length : signatures.length > 0,
+        reason: matchedSig?.reason,
+        time: matchedSig?.time,
+      };
+    });
+
   })();
 
   _cachedFields = await _cachePromise;

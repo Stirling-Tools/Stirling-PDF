@@ -109,61 +109,66 @@ export async function createLinkAnnotation(
     const pagePtr = m.FPDF_LoadPage(docPtr, pageIndex);
     if (!pagePtr) throw new Error(`Failed to load page ${pageIndex}`);
 
-    const pageHeight = m.FPDF_GetPageHeightF(pagePtr);
+    try {
+      const pageHeight = m.FPDF_GetPageHeightF(pagePtr);
 
-    const annotPtr = m.FPDFPage_CreateAnnot(pagePtr, FPDF_ANNOT_LINK);
-    if (!annotPtr) {
+      const annotPtr = m.FPDFPage_CreateAnnot(pagePtr, FPDF_ANNOT_LINK);
+      if (!annotPtr) {
+        throw new Error('Failed to create link annotation');
+      }
+
+      try {
+        // Set rect (convert from CSS top-left to PDF bottom-left origin)
+        // FS_RECTF layout: { left, top, right, bottom } where top > bottom in PDF coords
+        const pdfLeft = rect.x;
+        const pdfTop = pageHeight - rect.y;                 // CSS y=0 → PDF top
+        const pdfRight = rect.x + rect.width;
+        const pdfBottom = pageHeight - rect.y - rect.height;   // CSS bottom → PDF bottom
+
+        const rectBuf = m.pdfium.wasmExports.malloc(4 * 4);
+        m.pdfium.setValue(rectBuf, pdfLeft, 'float');   // offset 0: left
+        m.pdfium.setValue(rectBuf + 4, pdfTop, 'float');   // offset 4: top  (larger y)
+        m.pdfium.setValue(rectBuf + 8, pdfRight, 'float');   // offset 8: right
+        m.pdfium.setValue(rectBuf + 12, pdfBottom, 'float');   // offset 12: bottom (smaller y)
+        m.FPDFAnnot_SetRect(annotPtr, rectBuf);
+        m.pdfium.wasmExports.free(rectBuf);
+
+        // Set color
+        // FPDFANNOT_COLORTYPE_Color = 0
+        m.FPDFAnnot_SetColor(
+          annotPtr,
+          0,
+          Math.round(color[0] * 255),
+          Math.round(color[1] * 255),
+          Math.round(color[2] * 255),
+          255,
+        );
+
+        // Set border
+        m.FPDFAnnot_SetBorder(annotPtr, 0, 0, borderWidth);
+
+        // Set URI for external links
+        if (url) {
+          const uriPtr = writeUtf16(m, url);
+          m.FPDFAnnot_SetURI(annotPtr, uriPtr);
+          m.pdfium.wasmExports.free(uriPtr);
+        }
+
+        // Set title / contents
+        if (title) {
+          const titlePtr = writeUtf16(m, title);
+          m.FPDFAnnot_SetStringValue(annotPtr, 'Contents', titlePtr);
+          m.pdfium.wasmExports.free(titlePtr);
+        }
+      } finally {
+        m.FPDFPage_CloseAnnot(annotPtr);
+      }
+    } finally {
       m.FPDF_ClosePage(pagePtr);
-      throw new Error('Failed to create link annotation');
     }
-
-    // Set rect (convert from CSS top-left to PDF bottom-left origin)
-    // FS_RECTF layout: { left, top, right, bottom } where top > bottom in PDF coords
-    const pdfLeft   = rect.x;
-    const pdfTop    = pageHeight - rect.y;                 // CSS y=0 → PDF top
-    const pdfRight  = rect.x + rect.width;
-    const pdfBottom = pageHeight - rect.y - rect.height;   // CSS bottom → PDF bottom
-
-    const rectBuf = m.pdfium.wasmExports.malloc(4 * 4);
-    m.pdfium.setValue(rectBuf,      pdfLeft,   'float');   // offset 0: left
-    m.pdfium.setValue(rectBuf + 4,  pdfTop,    'float');   // offset 4: top  (larger y)
-    m.pdfium.setValue(rectBuf + 8,  pdfRight,  'float');   // offset 8: right
-    m.pdfium.setValue(rectBuf + 12, pdfBottom, 'float');   // offset 12: bottom (smaller y)
-    m.FPDFAnnot_SetRect(annotPtr, rectBuf);
-    m.pdfium.wasmExports.free(rectBuf);
-
-    // Set color
-    // FPDFANNOT_COLORTYPE_Color = 0
-    m.FPDFAnnot_SetColor(
-      annotPtr,
-      0,
-      Math.round(color[0] * 255),
-      Math.round(color[1] * 255),
-      Math.round(color[2] * 255),
-      255,
-    );
-
-    // Set border
-    m.FPDFAnnot_SetBorder(annotPtr, 0, 0, borderWidth);
-
-    // Set URI for external links
-    if (url) {
-      const uriPtr = writeUtf16(m, url);
-      m.FPDFAnnot_SetURI(annotPtr, uriPtr);
-      m.pdfium.wasmExports.free(uriPtr);
-    }
-
-    // Set title / contents
-    if (title) {
-      const titlePtr = writeUtf16(m, title);
-      m.FPDFAnnot_SetStringValue(annotPtr, 'Contents', titlePtr);
-      m.pdfium.wasmExports.free(titlePtr);
-    }
-
-    m.FPDFPage_CloseAnnot(annotPtr);
-    m.FPDF_ClosePage(pagePtr);
 
     return await saveRawDocument(docPtr);
+
   } finally {
     closeDocAndFreeBuffer(m, docPtr);
   }
