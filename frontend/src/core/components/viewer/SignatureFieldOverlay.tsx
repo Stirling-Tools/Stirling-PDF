@@ -102,7 +102,7 @@ function SignatureBitmapCanvas({
 function SignatureFieldOverlayInner({
   pageIndex,
   pdfSource,
-  _documentId,
+  documentId: _documentId,
   pageWidth,
   pageHeight,
 }: SignatureFieldOverlayProps) {
