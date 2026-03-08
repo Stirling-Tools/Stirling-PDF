@@ -477,7 +477,7 @@ function this_extractAnnotation(
   pagePtr: number,
   pageIdx: number,
   pageBox: PageBox,
-  cropWidth: number,
+  _cropWidth: number,
   cropHeight: number,
   annotIdx: number,
   fieldMap: Map<string, PdfiumFormField>,

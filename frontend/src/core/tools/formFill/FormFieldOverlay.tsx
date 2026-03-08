@@ -102,7 +102,6 @@ function executePdfJs(
   try {
     // Pass doc, app, event as both `this` AND named parameters so scripts that
     // reference them as free variables (not just via `this`) work correctly.
-    // eslint-disable-next-line no-new-func
     const fn = new Function('app', 'doc', 'event', js);
     fn.call(doc, app, doc, event);
   } catch (err) {

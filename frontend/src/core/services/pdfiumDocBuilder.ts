@@ -9,7 +9,7 @@
  * Used by the signature validation report system.
  */
 import { getPdfiumModule, writeUtf16, saveRawDocument } from '@app/services/pdfiumService';
-import { copyRgbaToBgraHeap, embedBitmapImageOnPage } from '@app/utils/pdfiumBitmapUtils';
+import { embedBitmapImageOnPage } from '@app/utils/pdfiumBitmapUtils';
 import type { WrappedPdfiumModule } from '@embedpdf/pdfium';
 
 // ---------------------------------------------------------------------------
