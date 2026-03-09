@@ -1,20 +1,46 @@
-import React, { useEffect } from 'react';
-import { Container, Button, Group, useMantineColorScheme, ActionIcon, Tooltip } from '@mantine/core';
+import React from 'react';
+import { useMantineColorScheme, Tooltip } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { useTranslation } from 'react-i18next';
 import { useFileHandler } from '@app/hooks/useFileHandler';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
-import { useLogoPath } from '@app/hooks/useLogoPath';
-import { useLogoAssets } from '@app/hooks/useLogoAssets';
-import { useLogoVariant } from '@app/hooks/useLogoVariant';
-import { useFileManager } from '@app/hooks/useFileManager';
 import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
 import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 import MobileUploadModal from '@app/components/shared/MobileUploadModal';
 import { openFilesFromDisk } from '@app/services/openFilesFromDisk';
+import LandingDocumentStack from '@app/components/shared/LandingDocumentStack';
+
+const BTN_BG = 'linear-gradient(180deg, #5B9BF7 0%, #4C8BF5 50%, #3A7BE8 100%)';
+const BTN_BG_HOVER = 'linear-gradient(180deg, #6BA6F8 0%, #5B9BF7 50%, #4C8BF5 100%)';
+const BTN_SHADOW = '0 1px 2px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.1)';
+
+const btnBase: React.CSSProperties = {
+  background: BTN_BG,
+  boxShadow: BTN_SHADOW,
+  border: 'none',
+  color: 'white',
+  cursor: 'pointer',
+  fontWeight: 600,
+  fontSize: 14,
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 8,
+  padding: '10px 20px',
+  borderRadius: 12,
+  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+};
+
+function hoverIn(ev: React.MouseEvent<HTMLButtonElement>) {
+  ev.currentTarget.style.background = BTN_BG_HOVER;
+  ev.currentTarget.style.transform = 'translateY(-1px)';
+}
+function hoverOut(ev: React.MouseEvent<HTMLButtonElement>) {
+  ev.currentTarget.style.background = BTN_BG;
+  ev.currentTarget.style.transform = 'translateY(0)';
+}
 
 const LandingPage = () => {
   const { addFiles } = useFileHandler();
@@ -22,304 +48,95 @@ const LandingPage = () => {
   const { colorScheme } = useMantineColorScheme();
   const { t } = useTranslation();
   const { openFilesModal } = useFilesModalContext();
-  const [isUploadHover, setIsUploadHover] = React.useState(false);
-  const logoPath = useLogoPath();
-  const logoVariant = useLogoVariant();
-  const { wordmark } = useLogoAssets();
-  const { loadRecentFiles } = useFileManager();
-  const [hasRecents, setHasRecents] = React.useState<boolean>(false);
   const [mobileUploadModalOpen, setMobileUploadModalOpen] = React.useState(false);
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
+  const isDark = colorScheme === 'dark';
 
-  const handleFileDrop = async (files: File[]) => {
-    await addFiles(files);
-  };
-
-  const handleOpenFilesModal = () => {
-    openFilesModal();
-  };
+  const handleFileDrop = async (files: File[]) => { await addFiles(files); };
 
   const handleNativeUploadClick = async () => {
     const files = await openFilesFromDisk({
       multiple: true,
       onFallbackOpen: () => fileInputRef.current?.click()
     });
-    if (files.length > 0) {
-      await addFiles(files);
-    }
+    if (files.length > 0) await addFiles(files);
   };
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    if (files.length > 0) {
-      await addFiles(files);
-    }
-    // Reset the input so the same file can be selected again
+    if (files.length > 0) await addFiles(files);
     event.target.value = '';
   };
 
-  const handleMobileUploadClick = () => {
-    setMobileUploadModalOpen(true);
-  };
-
-  const handleFilesReceivedFromMobile = async (files: File[]) => {
-    if (files.length > 0) {
-      await addFiles(files);
-    }
-  };
-
-  // Determine if the user has any recent files (same source as File Manager)
-  useEffect(() => {
-    let isMounted = true;
-    (async () => {
-      try {
-        const files = await loadRecentFiles();
-        if (isMounted) {
-          setHasRecents((files?.length || 0) > 0);
-        }
-      } catch (_err) {
-        if (isMounted) setHasRecents(false);
-      }
-    })();
-    return () => { isMounted = false; };
-  }, [loadRecentFiles]);
-
   return (
-    <Container size="70rem" p={0} h="100%" className="flex items-center justify-center" style={{ position: 'relative' }}>
-      {/* White PDF Page Background */}
+    <div style={{ height: '100%', width: '100%', position: 'relative', backgroundColor: isDark ? 'var(--bg-surface)' : '#F8FAFC' }}>
+      {/* Invisible Dropzone for drag-and-drop */}
       <Dropzone
         onDrop={handleFileDrop}
-        multiple={true}
-        className="w-4/5 flex items-center justify-center h-[95%]"
-        style={{
-          position: 'absolute',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          bottom: 0,
-          borderRadius: '0.25rem 0.25rem 0 0',
-          filter: 'var(--drop-shadow-filter)',
-          backgroundColor: 'var(--landing-paper-bg)',
-          transition: 'background-color 0.4s ease',
-        }}
+        multiple
         activateOnClick={false}
-        styles={{
-          root: {
-            '&[dataAccept]': {
-              backgroundColor: 'var(--landing-drop-paper-bg)',
-            },
-          },
-        }}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, border: 'none', backgroundColor: 'transparent', zIndex: 0 }}
       >
-        {logoVariant === 'modern' && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              zIndex: 10,
-            }}
-          >
-            <img
-              src={logoPath}
-              alt="Stirling PDF Logo"
-              style={{
-                height: 'auto',
-                pointerEvents: 'none',
-              }}
-            />
-          </div>
-        )}
-        <div
-          className={`min-h-[45vh] flex flex-col items-center justify-center px-8 py-8 w-full min-w-[30rem] max-w-[calc(100%-2rem)] border transition-all duration-200 dropzone-inner relative`}
-          style={{
-            borderRadius: '0.5rem',
-            backgroundColor: 'var(--landing-inner-paper-bg)',
-            borderColor: 'var(--landing-inner-paper-border)',
-            borderWidth: '1px',
-            borderStyle: 'solid',
-          }}
-        >
-          {/* Logo positioned absolutely in top right corner */}
-
-
-          {/* Centered content container */}
-          <div className="flex flex-col items-center gap-4 flex-none w-full">
-            {/* Stirling PDF Branding */}
-            <Group gap="xs" align="center">
-              <img
-                src={colorScheme === 'dark' ? wordmark.white : wordmark.grey}
-                alt="Stirling PDF"
-                style={{ height: '2.2rem', width: 'auto' }}
-              />
-            </Group>
-
-            {/* Add Files + Native Upload Buttons */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.6rem',
-                width: '80%',
-                marginTop: '0.8rem',
-                marginBottom: '0.8rem'
-              }}
-              onMouseLeave={() => setIsUploadHover(false)}
-            >
-              {/* Show both buttons only when recents exist; otherwise show a single Upload button */}
-              {hasRecents && (
-                <>
-                  <Button
-                    style={{
-                      backgroundColor: 'var(--landing-button-bg)',
-                      color: 'var(--landing-button-color)',
-                      border: '1px solid var(--landing-button-border)',
-                      borderRadius: '2rem',
-                      height: '38px',
-                      paddingLeft: isUploadHover ? 0 : '1rem',
-                      paddingRight: isUploadHover ? 0 : '1rem',
-                      width: isUploadHover ? '58px' : 'calc(100% - 58px - 0.6rem)',
-                      minWidth: isUploadHover ? '58px' : undefined,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: 'width .5s ease, padding .5s ease'
-                    }}
-                    onClick={handleOpenFilesModal}
-                    onMouseEnter={() => setIsUploadHover(false)}
-                  >
-                    <LocalIcon icon="add" width="1.5rem" height="1.5rem" className="text-[var(--accent-interactive)]" />
-                    {!isUploadHover && (
-                      <span>
-                        {t('landing.addFiles', 'Add Files')}
-                      </span>
-                    )}
-                  </Button>
-                  <Button
-                    aria-label="Upload"
-                    style={{
-                      backgroundColor: 'var(--landing-button-bg)',
-                      color: 'var(--landing-button-color)',
-                      border: '1px solid var(--landing-button-border)',
-                      borderRadius: '1rem',
-                      height: '38px',
-                      width: isUploadHover ? 'calc(100% - 50px)' : '58px',
-                      minWidth: '58px',
-                      paddingLeft: isUploadHover ? '1rem' : 0,
-                      paddingRight: isUploadHover ? '1rem' : 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: 'width .5s ease, padding .5s ease'
-                    }}
-                    onClick={handleNativeUploadClick}
-                    onMouseEnter={() => setIsUploadHover(true)}
-                  >
-                    <LocalIcon icon={icons.uploadIconName} width="1.25rem" height="1.25rem" style={{ color: 'var(--accent-interactive)' }} />
-                    {isUploadHover && (
-                      <span style={{ marginLeft: '.5rem' }}>
-                        {terminology.uploadFromComputer}
-                      </span>
-                    )}
-                  </Button>
-                  {config?.enableMobileScanner && !isMobile && (
-                    <Tooltip label={t('landing.mobileUpload', 'Upload from Mobile')} position="bottom">
-                      <ActionIcon
-                        size={38}
-                        variant="subtle"
-                        onClick={handleMobileUploadClick}
-                        style={{
-                          backgroundColor: 'var(--landing-button-bg)',
-                          color: 'var(--accent-interactive)',
-                          border: '1px solid var(--landing-button-border)',
-                          borderRadius: '1rem',
-                          paddingLeft: '0.5rem',
-                          paddingRight: '0.5rem',
-                        }}
-                      >
-                        <LocalIcon icon="qr-code-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--accent-interactive)' }} />
-                      </ActionIcon>
-                    </Tooltip>
-                  )}
-                </>
-              )}
-              {!hasRecents && (
-                <>
-                  <Button
-                    aria-label="Upload"
-                    style={{
-                      backgroundColor: 'var(--landing-button-bg)',
-                      color: 'var(--landing-button-color)',
-                      border: '1px solid var(--landing-button-border)',
-                      borderRadius: '1rem',
-                      height: '38px',
-                      width: 'calc(100% - 38px - 0.6rem)',
-                      minWidth: '58px',
-                      paddingLeft: '1rem',
-                      paddingRight: '1rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                    onClick={handleNativeUploadClick}
-                  >
-                    <LocalIcon icon="upload" width="1.25rem" height="1.25rem" style={{ color: 'var(--accent-interactive)' }} />
-                    <span style={{ marginLeft: '.5rem' }}>
-                      {t('landing.uploadFromComputer', 'Upload from computer')}
-                    </span>
-                  </Button>
-                  {config?.enableMobileScanner && !isMobile && (
-                    <Tooltip label={t('landing.mobileUpload', 'Upload from Mobile')} position="bottom">
-                      <ActionIcon
-                        size={38}
-                        variant="subtle"
-                        onClick={handleMobileUploadClick}
-                        style={{
-                          backgroundColor: 'var(--landing-button-bg)',
-                          color: 'var(--accent-interactive)',
-                          border: '1px solid var(--landing-button-border)',
-                          borderRadius: '1rem',
-                          paddingLeft: '0.5rem',
-                          paddingRight: '0.5rem',
-                        }}
-                      >
-                        <LocalIcon icon="qr-code-rounded" width="1.25rem" height="1.25rem" style={{ color: 'var(--accent-interactive)' }} />
-                      </ActionIcon>
-                    </Tooltip>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Hidden file input for native file picker */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              onChange={handleFileSelect}
-              style={{ display: 'none' }}
-            />
-
-          </div>
-
-          {/* Instruction Text */}
-          <span
-            className="text-[var(--accent-interactive)]"
-            style={{ fontSize: '.8rem' }}
-          >
-            {terminology.dropFilesHere}
-          </span>
-        </div>
+        <div style={{ width: '100%', height: '100%' }} />
       </Dropzone>
+
+      {/* Visual content */}
+      <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 10, pointerEvents: 'none' }}>
+        <div className="landing-fade-in" style={{ textAlign: 'center', maxWidth: 540, paddingBottom: 80 }}>
+
+          <LandingDocumentStack isDark={isDark} />
+
+          <h1 style={{ fontSize: 26, fontWeight: 600, marginBottom: 12, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+            {t('landing.dropAnywhere', 'Drop a PDF anywhere')}
+          </h1>
+
+          <p style={{ fontSize: 15, marginBottom: 32, paddingLeft: 16, paddingRight: 16, color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+            {t('landing.descriptionLine1', 'Drop in a file to edit, use one of our upload options')}
+            <br />
+            {t('landing.descriptionLine2', 'or create a file from scratch with our')}{' '}
+            <span style={{ color: '#4C8BF5', fontWeight: 600 }}>
+              {t('landing.stirlingAgent', 'Stirling agent')}
+            </span>
+          </p>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, pointerEvents: 'auto' }}>
+            <button onClick={() => openFilesModal()} style={btnBase} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+              <LocalIcon icon="add" width="1rem" height="1rem" style={{ color: '#FFFFFF' }} />
+              {t('landing.browseFiles', 'Browse Files')}
+            </button>
+
+            <button onClick={handleNativeUploadClick} style={btnBase} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+              <LocalIcon icon={icons.uploadIconName} width="1rem" height="1rem" style={{ color: '#FFFFFF' }} />
+              {terminology.uploadFromComputer}
+            </button>
+
+            {config?.enableMobileScanner && !isMobile && (
+              <Tooltip label={t('landing.mobileUpload', 'Upload from Mobile')} position="bottom">
+                <button
+                  onClick={() => setMobileUploadModalOpen(true)}
+                  style={{ ...btnBase, padding: 10, width: 44, height: 44, justifyContent: 'center' } as React.CSSProperties}
+                  onMouseEnter={hoverIn}
+                  onMouseLeave={hoverOut}
+                >
+                  <LocalIcon icon="qr-code-rounded" width="1.1rem" height="1.1rem" style={{ color: '#FFFFFF' }} />
+                </button>
+              </Tooltip>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <input ref={fileInputRef} type="file" multiple onChange={handleFileSelect} style={{ display: 'none' }} />
+
       <MobileUploadModal
         opened={mobileUploadModalOpen}
         onClose={() => setMobileUploadModalOpen(false)}
-        onFilesReceived={handleFilesReceivedFromMobile}
+        onFilesReceived={async (files: File[]) => { if (files.length > 0) await addFiles(files); }}
       />
-    </Container>
+    </div>
   );
 };
 
