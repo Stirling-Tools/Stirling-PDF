@@ -1,5 +1,5 @@
 import React from 'react';
-import './LandingDocumentStack.css';
+import '@app/components/shared/LandingDocumentStack.css';
 
 const DOC_BG = '#FFFFFF';
 const DOC_BORDER = '#E5E7EB';
