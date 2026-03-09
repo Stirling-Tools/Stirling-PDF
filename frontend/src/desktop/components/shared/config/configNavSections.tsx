@@ -8,6 +8,8 @@ import { SaaSTeamsSection } from '@app/components/shared/config/configSections/S
 import { connectionModeService } from '@app/services/connectionModeService';
 import { authService } from '@app/services/authService';
 
+export type { ConfigNavSection, ConfigNavItem } from '@core/components/shared/config/configNavSections';
+
 /**
  * Hook version of desktop config nav sections with proper i18n support
  */
