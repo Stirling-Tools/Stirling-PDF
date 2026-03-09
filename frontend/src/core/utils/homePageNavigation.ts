@@ -18,8 +18,11 @@ export function getStartupNavigationAction(
     return null;
   }
 
-  // Already actively viewing in the viewer → update to the latest file
+  // Adding more files while in viewer → switch to fileEditor when 2+ files
   if (previousFileCount > 0 && currentWorkbench === 'viewer' && currentFileCount > previousFileCount) {
+    if (currentFileCount > 1) {
+      return { workbench: 'fileEditor' };
+    }
     return { workbench: 'viewer', activeFileIndex: currentFileCount - 1 };
   }
 

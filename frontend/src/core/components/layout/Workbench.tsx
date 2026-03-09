@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
@@ -11,7 +11,7 @@ import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { FileId } from '@app/types/file';
 import styles from '@app/components/layout/Workbench.module.css';
 
-import TopControls from '@app/components/shared/TopControls';
+import WorkbenchBar from '@app/components/layout/WorkbenchBar';
 import FileEditor from '@app/components/fileEditor/FileEditor';
 import PageEditor from '@app/components/pageEditor/PageEditor';
 import PageEditorControls from '@app/components/pageEditor/PageEditorControls';
@@ -51,6 +51,9 @@ export default function Workbench() {
   const { toolRegistry } = useToolWorkflow();
   const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
   const { addFiles } = useFileHandler();
+
+  // Page editor column count lifted to Workbench so WorkbenchBar can control it
+  const [pageEditorColumns, setPageEditorColumns] = useState(4);
 
   // Get active file index from ViewerContext
   const { activeFileIndex, setActiveFileIndex } = useViewer();
@@ -152,6 +155,7 @@ export default function Workbench() {
           <div style={{ position: 'relative', flex: '1 1 0', height: 0 }}>
             <PageEditor
               onFunctionsReady={setPageEditorFunctions}
+              externalColumns={pageEditorColumns}
             />
             {pageEditorFunctions && (
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 100 }}>
@@ -195,19 +199,16 @@ export default function Workbench() {
           : { backgroundColor: 'var(--bg-background)' }
       }
     >
-      {/* Top Controls */}
+      {/* Workbench Bar */}
       {activeFiles.length > 0 && (
-        <TopControls
+        <WorkbenchBar
           currentView={currentView}
           setCurrentView={setCurrentView}
-          customViews={customWorkbenchViews}
-          activeFiles={activeFiles.map(f => {
-            const stub = selectors.getStirlingFileStub(f.fileId);
-            return { fileId: f.fileId, name: f.name, versionNumber: stub?.versionNumber };
-          })}
-          currentFileIndex={activeFileIndex}
+          activeFiles={activeFiles.map(f => ({ fileId: f.fileId, name: f.name }))}
+          activeFileIndex={activeFileIndex}
           onFileSelect={handleFileSelect}
-          onFileRemove={handleFileRemove}
+          pageEditorColumns={pageEditorColumns}
+          onPageEditorColumnsChange={setPageEditorColumns}
         />
       )}
 

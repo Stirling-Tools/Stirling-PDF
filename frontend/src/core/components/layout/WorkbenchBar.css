@@ -1,0 +1,389 @@
+.workbench-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 3.5rem;
+  padding: 0 0.875rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-toolbar);
+  flex-shrink: 0;
+  gap: 0.75rem;
+  box-sizing: border-box;
+}
+
+/* Left */
+.workbench-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+  flex: 1;
+  overflow: visible;
+}
+
+.workbench-bar-grid-btn {
+  flex-shrink: 0;
+  margin-right: 0.125rem;
+}
+
+.workbench-bar-filename {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 18rem;
+}
+
+.workbench-bar-meta {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* File picker dropdown */
+.workbench-bar-file-picker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.workbench-bar-filename-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: none;
+  border: 1px solid transparent;
+  padding: 0.2rem 0.3rem;
+  border-radius: 5px;
+  cursor: default;
+  min-width: 0;
+  max-width: 28rem;
+  transition: background-color 0.1s ease, border-color 0.1s ease;
+}
+
+.workbench-bar-filename-btn--clickable {
+  cursor: pointer;
+}
+
+.workbench-bar-filename-btn--clickable:hover {
+  background-color: var(--hover-bg);
+  border-color: var(--border-subtle);
+}
+
+.workbench-bar-filename-btn[aria-expanded="true"] {
+  border-color: var(--mantine-color-blue-5);
+  background-color: var(--hover-bg);
+}
+
+.workbench-bar-file-dropdown {
+  position: absolute;
+  top: calc(100% + 0.375rem);
+  left: 0;
+  z-index: 200;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--text-primary) 15%, transparent);
+  min-width: 18rem;
+  max-width: 28rem;
+  overflow: hidden;
+}
+
+.workbench-bar-file-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: background-color 0.1s ease;
+}
+
+.workbench-bar-file-dropdown-item:hover {
+  background-color: var(--hover-bg);
+}
+
+.workbench-bar-file-dropdown-item--active {
+  background-color: var(--mantine-color-blue-7);
+  color: #fff;
+}
+
+.workbench-bar-file-dropdown-item--active:hover {
+  background-color: var(--mantine-color-blue-6);
+}
+
+.workbench-bar-file-dropdown-name {
+  font-size: 0.8125rem;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workbench-bar-file-dropdown-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0.15rem;
+  border-radius: 3px;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.45;
+  transition: opacity 0.1s ease, background-color 0.1s ease;
+  flex-shrink: 0;
+}
+
+.workbench-bar-file-dropdown-remove:hover {
+  opacity: 1;
+  background-color: var(--hover-bg);
+}
+
+.workbench-bar-file-dropdown-item--active .workbench-bar-file-dropdown-remove:hover {
+  background-color: color-mix(in srgb, #fff 15%, transparent);
+}
+
+/* Right */
+.workbench-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-shrink: 0;
+}
+
+.workbench-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.workbench-bar-actions .workbench-bar-icon-btn svg {
+  opacity: 0.7;
+}
+
+/* Page navigation */
+.workbench-bar-page-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.workbench-bar-page-indicator {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  min-width: 2.5rem;
+  text-align: center;
+}
+
+/* Zoom control group */
+.workbench-bar-zoom {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.workbench-bar-zoom-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  min-width: 2.5rem;
+  text-align: right;
+}
+
+/* Icon buttons (delete, download, page nav) */
+.workbench-bar-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: color 0.1s ease, background-color 0.1s ease;
+  line-height: 1;
+}
+
+.workbench-bar-icon-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--hover-bg);
+}
+
+.workbench-bar-icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.workbench-bar-icon-btn--active {
+  color: var(--mantine-color-blue-5);
+  background-color: color-mix(in srgb, var(--mantine-color-blue-5) 12%, transparent);
+}
+
+.workbench-bar-icon-btn--active:hover {
+  color: var(--mantine-color-blue-4);
+  background-color: color-mix(in srgb, var(--mantine-color-blue-5) 20%, transparent);
+}
+
+/* Dynamic context buttons */
+.workbench-bar-dynamic-btns {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  padding-right: 0.375rem;
+  border-right: 1px solid var(--border-subtle);
+}
+
+.workbench-bar-btn-wrap {
+  display: flex;
+  align-items: center;
+}
+
+/* Scale dynamic icons down to match bar weight */
+.workbench-bar-dynamic-btns .workbench-bar-icon-btn img,
+.workbench-bar-dynamic-btns .workbench-bar-btn-wrap img {
+  width: 1.2rem !important;
+  height: 1.2rem !important;
+  opacity: 0.7;
+}
+
+.workbench-bar-dynamic-btns .workbench-bar-icon-btn svg,
+.workbench-bar-dynamic-btns .workbench-bar-btn-wrap svg {
+  font-size: 1.2rem !important;
+  width: 1.2rem !important;
+  height: 1.2rem !important;
+}
+
+/* SVG icons inside plain buttons (not ActionIcon) still need opacity softening */
+.workbench-bar-dynamic-btns .workbench-bar-icon-btn svg {
+  opacity: 0.7;
+}
+
+/* ActionIcon wrappers inside dynamic area — normalize to match plain workbench-bar-icon-btn */
+.workbench-bar-dynamic-btns .mantine-ActionIcon-root {
+  width: 1.625rem;
+  height: 1.625rem;
+  min-width: 1.625rem;
+  min-height: 1.625rem;
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  border-radius: 4px !important;
+  padding: 0.2rem !important;
+  transition: color 0.1s ease, background-color 0.1s ease !important;
+}
+
+.workbench-bar-dynamic-btns .mantine-ActionIcon-root:not([data-disabled]):hover {
+  color: var(--text-primary) !important;
+  background-color: var(--hover-bg) !important;
+}
+
+.workbench-bar-dynamic-btns .mantine-ActionIcon-root[aria-pressed="true"] {
+  color: var(--mantine-color-blue-5) !important;
+  background-color: color-mix(in srgb, var(--mantine-color-blue-5) 12%, transparent) !important;
+}
+
+.workbench-bar-dynamic-btns .mantine-ActionIcon-root[aria-pressed="true"]:not([data-disabled]):hover {
+  color: var(--mantine-color-blue-4) !important;
+  background-color: color-mix(in srgb, var(--mantine-color-blue-5) 20%, transparent) !important;
+}
+
+.workbench-bar-dynamic-btns .mantine-ActionIcon-root[data-disabled] {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  background: transparent !important;
+}
+
+/* Tighten padding on dynamic buttons to match bar density */
+.workbench-bar-dynamic-btns .workbench-bar-icon-btn {
+  padding: 0.2rem;
+}
+
+/* Pill container for zoom slider */
+.workbench-bar-zoom-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  background: var(--hover-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: 99px;
+  padding: 0.1875rem 0.375rem;
+  height: 1.625rem;
+  box-sizing: border-box;
+}
+
+.workbench-bar-zoom-pill-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0.125rem;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: color 0.1s ease, background-color 0.1s ease;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.workbench-bar-zoom-pill-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--hover-bg);
+}
+
+/* Range input inside pill */
+.workbench-bar-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 6rem;
+  height: 3px;
+  background: linear-gradient(
+    to right,
+    var(--mantine-color-blue-5) 0%,
+    var(--mantine-color-blue-5) var(--fill-pct, 50%),
+    color-mix(in srgb, var(--text-secondary) 30%, transparent) var(--fill-pct, 50%),
+    color-mix(in srgb, var(--text-secondary) 30%, transparent) 100%
+  );
+  cursor: pointer;
+  outline: none;
+  border-radius: 99px;
+}
+
+.workbench-bar-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--mantine-color-blue-5);
+  border: 2px solid var(--hover-bg);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--text-primary) 20%, transparent);
+  cursor: grab;
+  transition: transform 0.1s ease;
+}
+
+.workbench-bar-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--mantine-color-blue-5);
+  border: 2px solid var(--hover-bg);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--text-primary) 20%, transparent);
+  cursor: grab;
+}
+
+.workbench-bar-slider:hover::-webkit-slider-thumb,
+.workbench-bar-slider:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+
+.workbench-bar-slider:active::-webkit-slider-thumb {
+  cursor: grabbing;
+}

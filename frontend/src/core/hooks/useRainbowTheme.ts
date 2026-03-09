@@ -22,13 +22,20 @@ export function useRainbowTheme(): RainbowThemeHook {
   const lastToggleTime = useRef(Date.now());
   const isToggleDisabled = useRef(false);
 
-  // Apply rainbow class to body whenever theme changes
+  // Apply rainbow class and data-theme attribute whenever theme changes
   useEffect(() => {
     if (themeMode === 'rainbow') {
       document.body.classList.add('rainbow-mode-active');
       showRainbowNotification();
     } else {
       document.body.classList.remove('rainbow-mode-active');
+    }
+    if (themeMode === 'midnight') {
+      document.documentElement.setAttribute('data-theme', 'midnight');
+    } else if (themeMode === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
     }
   }, [themeMode]);
 

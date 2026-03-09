@@ -97,9 +97,9 @@ export function useViewerRightRailButtons(
         section: 'top' as const,
         order: 10,
         render: ({ disabled }) => (
-          <Tooltip content={searchLabel} position={tooltipPosition} offset={12} arrow portalTarget={document.body}>
+          <Tooltip content={searchLabel} position="bottom" offset={6} arrow portalTarget={document.body}>
             <Popover
-              position={tooltipPosition}
+              position="bottom"
               withArrow
               shadow="md"
               offset={8}
@@ -110,6 +110,7 @@ export function useViewerRightRailButtons(
                 <div style={{ display: 'inline-flex' }}>
                   <ActionIcon
                     variant="subtle"
+                    color="gray"
                     radius="md"
                     className="right-rail-icon"
                     disabled={disabled}
@@ -238,9 +239,10 @@ export function useViewerRightRailButtons(
         order: 58,
         active: isAnnotationsActive,
         render: ({ disabled }) => (
-          <Tooltip content={annotationsLabel} position={tooltipPosition} offset={12} arrow portalTarget={document.body}>
+          <Tooltip content={annotationsLabel} position="bottom" offset={6} arrow portalTarget={document.body}>
             <ActionIcon
-              variant={isAnnotationsActive ? 'filled' : 'subtle'}
+              variant="subtle"
+              color={isAnnotationsActive ? 'blue' : 'gray'}
               radius="md"
               className="right-rail-icon"
               onClick={() => {
@@ -266,7 +268,6 @@ export function useViewerRightRailButtons(
               }}
               disabled={disabled}
               aria-pressed={isAnnotationsActive}
-              color={isAnnotationsActive ? 'blue' : undefined}
             >
               <LocalIcon icon="edit" width="1.5rem" height="1.5rem" />
             </ActionIcon>
@@ -288,9 +289,10 @@ export function useViewerRightRailButtons(
         section: 'top' as const,
         order: 62,
         render: ({ disabled }) => (
-          <Tooltip content={formFillLabel} position={tooltipPosition} offset={12} arrow portalTarget={document.body}>
+          <Tooltip content={formFillLabel} position="bottom" offset={6} arrow portalTarget={document.body}>
             <ActionIcon
-              variant={isFormFillActive ? 'filled' : 'subtle'}
+              variant="subtle"
+              color={isFormFillActive ? 'blue' : 'gray'}
               radius="md"
               className="right-rail-icon"
               onClick={() => {
@@ -303,7 +305,6 @@ export function useViewerRightRailButtons(
               }}
               disabled={disabled}
               aria-pressed={isFormFillActive}
-              color={isFormFillActive ? 'blue' : undefined}
             >
               <TextFieldsIcon sx={{ fontSize: '1.5rem' }} />
             </ActionIcon>

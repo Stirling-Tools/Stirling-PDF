@@ -19,7 +19,9 @@ import { useTranslation } from "react-i18next";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import type { ToolPanelMode } from "@app/constants/toolPanel";
+import type { ThemeMode } from "@app/constants/theme";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import LanguageSelector from "@app/components/shared/LanguageSelector";
 import { updateService, UpdateSummary } from "@app/services/updateService";
 import UpdateModal from "@app/components/shared/UpdateModal";
 import { getVersion } from "@tauri-apps/api/app";
@@ -319,6 +321,36 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
 
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <Text fw={500} size="sm">
+                {t("settings.general.language", "Language")}
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t("settings.general.languageDescription", "Choose your preferred display language")}
+              </Text>
+            </div>
+            <LanguageSelector position="bottom-end" offset={4} />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <Text fw={500} size="sm">
+                {t("settings.general.theme", "Theme")}
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t("settings.general.themeDescription", "Choose your preferred color theme")}
+              </Text>
+            </div>
+            <SegmentedControl
+              value={preferences.theme === 'rainbow' ? 'dark' : preferences.theme}
+              onChange={(val: string) => updatePreference("theme", val as ThemeMode)}
+              data={[
+                { label: t("settings.general.theme.light", "Light"), value: "light" },
+                { label: t("settings.general.theme.dark", "Dark"), value: "dark" },
+                { label: t("settings.general.theme.midnight", "Midnight"), value: "midnight" },
+              ]}
+            />
+          </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
               <Text fw={500} size="sm">

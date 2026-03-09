@@ -404,54 +404,30 @@ const DragDropGrid = <T extends DragDropItem>({
     };
   }, [activeId]);
 
-  // Responsive grid configuration
-  const [itemsPerRow, setItemsPerRow] = useState(4);
   const OVERSCAN = visibleItems.length > 1000 ? GRID_CONSTANTS.OVERSCAN_LARGE : GRID_CONSTANTS.OVERSCAN_SMALL;
 
-  // Calculate items per row based on container width
-  const calculateItemsPerRow = useCallback(() => {
-    if (!containerRef.current) return 4; // Default fallback
+  // Track container width so itemsPerRow updates synchronously (no jitter on zoom change)
+  const [containerWidth, setContainerWidth] = useState(0);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    setContainerWidth(el.offsetWidth);
+    const ro = new ResizeObserver(entries => {
+      setContainerWidth(entries[0].contentRect.width);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
-    const containerWidth = containerRef.current.offsetWidth;
-    if (containerWidth === 0) return 4; // Container not measured yet
-
-    // Convert rem to pixels for calculation
+  const itemsPerRow = useMemo(() => {
+    if (containerWidth === 0) return 4;
     const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
     const ITEM_WIDTH = parseFloat(GRID_CONSTANTS.ITEM_WIDTH) * remToPx * zoomLevel;
     const ITEM_GAP = parseFloat(GRID_CONSTANTS.ITEM_GAP) * remToPx * zoomLevel;
-
-    // Calculate how many items fit: (width - gap) / (itemWidth + gap)
-    const availableWidth = containerWidth - ITEM_GAP; // Account for first gap
+    const availableWidth = containerWidth - ITEM_GAP;
     const itemWithGap = ITEM_WIDTH + ITEM_GAP;
-    const calculated = Math.floor(availableWidth / itemWithGap);
-
-    return Math.max(1, calculated); // At least 1 item per row
-  }, [zoomLevel]);
-
-  // Update items per row when container resizes or zoom changes
-  useEffect(() => {
-    const updateLayout = () => {
-      const newItemsPerRow = calculateItemsPerRow();
-      setItemsPerRow(newItemsPerRow);
-    };
-
-    // Initial calculation
-    updateLayout();
-
-    // Listen for window resize
-    window.addEventListener('resize', updateLayout);
-
-    // Use ResizeObserver for container size changes
-    const resizeObserver = new ResizeObserver(updateLayout);
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
-    }
-
-    return () => {
-      window.removeEventListener('resize', updateLayout);
-      resizeObserver.disconnect();
-    };
-  }, [calculateItemsPerRow, zoomLevel]);
+    return Math.max(1, Math.floor(availableWidth / itemWithGap));
+  }, [containerWidth, zoomLevel]);
 
   // Virtualization with react-virtual library
   const rowVirtualizer = useVirtualizer({

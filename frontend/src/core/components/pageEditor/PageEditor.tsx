@@ -28,10 +28,13 @@ import { convertSplitPageIdsToIndexes } from '@app/components/pageEditor/utils/s
 
 export interface PageEditorProps {
   onFunctionsReady?: (functions: PageEditorFunctions) => void;
+  /** Force exactly N columns regardless of container width. Overrides externalZoomLevel. */
+  externalColumns?: number;
 }
 
 const PageEditor = ({
   onFunctionsReady,
+  externalColumns,
 }: PageEditorProps) => {
 
   // Use split contexts to prevent re-renders
@@ -67,8 +70,31 @@ const PageEditor = ({
   }, []);
 
   // Zoom state management
-  const [zoomLevel, setZoomLevel] = useState(1.0);
+  const [internalZoomLevel, setZoomLevel] = useState(1.0);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Track container width to compute zoom from column count
+  const [containerWidth, setContainerWidth] = useState(0);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    setContainerWidth(el.offsetWidth);
+    const ro = new ResizeObserver(entries => setContainerWidth(entries[0].contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Compute zoom so exactly N columns fit: zoom = (W-1) / (remToPx * (N*(itemW+gap) + gap))
+  const zoomFromColumns = useMemo(() => {
+    if (!externalColumns || containerWidth === 0) return null;
+    const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const itemWidthRem = parseFloat(GRID_CONSTANTS.ITEM_WIDTH);  // 20
+    const itemGapRem = parseFloat(GRID_CONSTANTS.ITEM_GAP);      // 1.5
+    const denom = remToPx * (externalColumns * (itemWidthRem + itemGapRem) + itemGapRem);
+    return (containerWidth - 1) / denom;
+  }, [externalColumns, containerWidth]);
+
+  const zoomLevel = zoomFromColumns ?? internalZoomLevel;
   const [isContainerHovered, setIsContainerHovered] = useState(false);
   const rootFontSize = useMemo(() => {
     if (typeof window === 'undefined') {

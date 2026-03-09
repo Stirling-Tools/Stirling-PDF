@@ -2,22 +2,30 @@
   /* Compare highlight colors (same in light/dark) */
   --spdf-compare-removed-bg: rgba(255, 107, 107, 0.45); /* #ff6b6b @ 0.45 */
   --spdf-compare-added-bg: rgba(81, 207, 102, 0.35);  /* #51cf66 @ 0.35 */
-
   /* Badge colors for dropdowns */
   --spdf-compare-removed-badge-bg: rgba(255, 59, 48, 0.15);
   --spdf-compare-removed-badge-fg: #b91c1c;
   --spdf-compare-added-badge-bg: rgba(52, 199, 89, 0.18);
   --spdf-compare-added-badge-fg: #1b5e20;
-
   /* Inline highlights in summary */
   --spdf-compare-inline-removed-bg: rgba(255, 59, 48, 0.25);
   --spdf-compare-inline-added-bg: rgba(52, 199, 89, 0.25);
-
   /* File Manager active file colors */
   --file-active-bg: rgba(59, 130, 246, 0.1); /* Transparent blue for active file background */
   --file-active-badge-bg: rgba(34, 197, 94, 0.15); /* Transparent green for active badge */
   --file-active-badge-fg: #15803d; /* Green text for active badge */
   --file-active-badge-border: rgba(34, 197, 94, 0.3); /* Green border for active badge */
+
+  /* Sidebar (SaaS) */
+  --spdf-sidebar-action-hover-bg: rgba(17, 24, 39, 0.06);
+  --spdf-sidebar-file-hover-bg: rgba(17, 24, 39, 0.06);
+  --spdf-sidebar-file-active-bg: rgba(59, 130, 246, 0.14);
+  --spdf-sidebar-file-active-unselected-bg: #f3f4f6; /* light grey for unselected workbench files */
+  --spdf-sidebar-file-text-color: #374151;
+  --spdf-sidebar-file-text-active-color: #1E40AF;
+  --spdf-sidebar-file-icon-color: #2563EB;
+  --spdf-sidebar-file-icon-active-color: #1D4ED8;
+  --spdf-sidebar-count-bg: rgba(17, 24, 39, 0.08);
 }
 
 /* CSS variables for Tailwind + Mantine integration */
@@ -103,6 +111,25 @@
   --color-yellow-800: #854d0e;
   --color-yellow-900: #713f12;
 
+  /* Orange scale (used for warning toasts) */
+  --color-orange-50: #FFF4ED;
+  --color-orange-100: #FFE1CC;
+  --color-orange-200: #FFB089;
+  --color-orange-300: #FF7A45;
+  --color-orange-400: #D84A1B;
+
+  /* Amber scale (trial/warning emphasis) */
+  --color-amber-50: #fffbeb;
+  --color-amber-100: #fef3c7;
+  --color-amber-200: #fde68a;
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e;
+  --color-amber-900: #78350f;
+
   --color-red-50: #fef2f2;
   --color-red-100: #fee2e2;
   --color-red-200: #fecaca;
@@ -164,21 +191,39 @@
   --text-primary: #111827;
   --text-secondary: #4b5563;
   --text-muted: #6b7280;
+  --chat-chevron-color: rgba(55, 65, 81, 0.40);
+  --chat-tool-section-bg: var(--bg-raised);
+  --chat-tool-section-border: var(--border-default);
+  --chat-tool-row-bg: var(--bg-surface);
+  --chat-tool-row-border: var(--border-subtle);
+  --chat-tool-table-border: var(--border-default);
   /* Always-dark text (for use on light backgrounds like alerts) - does not change in dark mode */
   --text-always-dark: #1f2937;
   --text-always-dark-muted: #6b7280;
   --border-subtle: #e5e7eb;
   --border-default: #E2E8F0;
   --border-strong: #9ca3af;
+  --outline-box-border: #e5e7eb;
+  --outline-thumbnail-border: #9ca3af;
   --hover-bg: #f9fafb;
   --active-bg: #f3f4f6;
   --automation-entry-hover-bg: var(--color-gray-100);
+
+  /* Viewer overlay pills (e.g. Back to active files) */
+  --viewer-overlay-pill-bg: rgba(255, 255, 255, 0.75);
+  --viewer-overlay-pill-bg-hover: rgba(255, 255, 255, 0.9);
+  --viewer-overlay-pill-border: rgba(255, 255, 255, 0.3);
+  --viewer-overlay-pill-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 
   /* Icon colors for light mode */
   --icon-user-bg: #9CA3AF;
   --icon-user-color: #FFFFFF;
   --icon-notifications-bg: #9CA3AF;
   --icon-notifications-color: #FFFFFF;
+  --icon-create-bg: linear-gradient(225deg, #7fe6ff 0%, #1b7bff 100%);
+  --icon-create-color: #FFFFFF;
+  --icon-edit-bg: linear-gradient(225deg, #fca5a5 0%, #ef4444 100%);
+  --icon-edit-color: #FFFFFF;
   --icon-tools-bg: #1E88E5;
   --icon-tools-color: #FFFFFF;
   --icon-read-bg: #4CAF50;
@@ -225,15 +270,42 @@
   /* Subcategory title styling (light mode) */
   --tool-subcategory-text-color: #9CA3AF; /* lighter text */
   --tool-subcategory-rule-color: #E5E7EB; /* doubly lighter rule line */
+  --tool-subcategory-text-color-light: #9CA3AF;
+  --tool-subcategory-rule-color-light: #E5E7EB;
+  --text-divider-rule-color: var(--color-gray-200);
+  --text-divider-label-color: var(--color-gray-400);
+  --text-divider-rule-color-light: var(--color-gray-200);
+  --text-divider-label-color-light: var(--color-gray-400);
   --accent-interactive: #4A90E2;
   --text-instruction: #4A90E2;
   --text-brand: var(--color-gray-700);
   --text-brand-accent: #DC2626;
 
+  --auth-input-bg: #f9fafb;         /* gray-50 */
+  --auth-input-border: #e5e7eb;     /* gray-200 */
+  --auth-input-text: #1f2937;       /* gray-800 */
+  --auth-label-text: #2B3230;       /* custom brand-ish dark */
+  --auth-button-bg: #AF3434;        /* brand accent for auth */
+  --auth-button-text: #ffffff;      /* white */
+  --auth-magic-button-bg: #8b5cf6;  /* secondary accent for magic link */
+  --auth-magic-button-text: #ffffff;
 
-  /* PDF text selection colors */
-  --pdf-selection-bg: rgba(59, 130, 246, 0.2);
-  --pdf-selection-ring: rgba(59, 130, 246, 0.18);
+  /* Light-only auth colors (no dark mode equivalents) used for login/signup */
+  --auth-input-bg-light-only: #f9fafb;         /* gray-50 */
+  --auth-input-border-light-only: #e5e7eb;     /* gray-200 */
+  --auth-input-text-light-only: #1f2937;       /* gray-800 */
+  --auth-label-text-light-only: #2B3230;       /* custom brand-ish dark */
+  --auth-button-bg-light-only: #AF3434;        /* brand accent for auth */
+  --auth-button-text-light-only: #ffffff;      /* white */
+  --auth-magic-button-bg-light-only: #8b5cf6;  /* secondary accent for magic link */
+  --auth-magic-button-text-light-only: #ffffff;
+  --auth-bg-color-light-only: #ffffff;
+  --auth-card-bg-light-only: #ffffff;
+  --auth-text-primary-light-only: #2B3230;
+  --auth-text-secondary-light-only: #1f2937;
+  --auth-border-color-light-only: #e5e7eb;
+  --auth-border-focus-light-only: #cbd5e1;
+  --auth-focus-ring-light-only: rgba(59, 130, 246, 0.15);
 
   /* Placeholder text colors */
   --search-text-and-icon-color: #6B7382;
@@ -241,6 +313,30 @@
   /* Tool panel search bar background colors */
   --tool-panel-search-bg: #EFF1F4;
   --tool-panel-search-border-bottom: #EFF1F4;
+
+  /* App Config Modal colors (light mode) */
+  --modal-nav-bg: #F5F6F8;
+  --modal-nav-section-title: #6B7280;
+  --modal-nav-item: #374151;
+  --modal-nav-item-active: #0A8BFF;
+  --modal-nav-item-active-bg: rgba(10, 139, 255, 0.08);
+  --modal-content-bg: #ffffff;
+  --modal-header-border: rgba(0, 0, 0, 0.06);
+
+  /* API usage progress bar colors (light mode) */
+  --usage-weekly-active: #3B82F6;  /* blue-500 */
+  --usage-bought-active: #14B8A6;  /* teal-500 */
+  --usage-total-used: #3B82F6;     /* same as weekly active */
+  --usage-inactive: #E5E7EB;       /* gray-200 */
+
+  /* API Keys section colors (light mode) */
+  --api-keys-card-bg: #ffffff;
+  --api-keys-card-border: #e0e0e0;
+  --api-keys-card-shadow: rgba(0, 0, 0, 0.06);
+  --api-keys-input-bg: #f8f8f8;
+  --api-keys-input-border: #e0e0e0;
+  --api-keys-button-bg: #f5f5f5;
+  --api-keys-button-color: #333333;
 
   /* container */
   --landing-paper-bg: var(--bg-surface);
@@ -302,6 +398,31 @@
   --api-keys-button-bg: #f5f5f5;
   --api-keys-button-color: #333333;
 
+  /* Auth page colors (light mode only - auth pages force light mode) */
+  --auth-bg-color-light-only: #f3f4f6;
+  --auth-card-bg: #ffffff;
+  --auth-card-bg-light-only: #ffffff;
+  --auth-label-text-light-only: #374151;
+  --auth-input-border-light-only: #d1d5db;
+  --auth-input-bg-light-only: #ffffff;
+  --auth-input-text-light-only: #111827;
+  --auth-border-focus-light-only: #3b82f6;
+  --auth-focus-ring-light-only: rgba(59, 130, 246, 0.1);
+  --auth-button-bg-light-only: #AF3434;
+  --auth-button-text-light-only: #ffffff;
+  --auth-magic-button-bg-light-only: #e5e7eb;
+  --auth-magic-button-text-light-only: #374151;
+  --auth-text-primary-light-only: #111827;
+  --auth-text-secondary-light-only: #6b7280;
+  --text-divider-rule-rgb-light: 229, 231, 235;
+  --text-divider-label-rgb-light: 156, 163, 175;
+  --tool-subcategory-rule-color-light: #e5e7eb;
+  --tool-subcategory-text-color-light: #9ca3af;
+
+  /* PDF text selection colors */
+  --pdf-selection-bg: rgba(59, 130, 246, 0.2);
+  --pdf-selection-ring: rgba(59, 130, 246, 0.18);
+
   /* PDF Report Colors (always light) */
   --pdf-light-header-bg: 239 246 255;
   --pdf-light-accent: 59 130 246;
@@ -356,22 +477,22 @@
 }
 
 [data-mantine-color-scheme="dark"] {
-  /* Dark theme gray scale (inverted) */
-  --gray-50: 17 24 39;
-  --gray-100: 31 35 41;
-  --gray-200: 42 47 54;
-  --gray-300: 55 65 81;
-  --gray-400: 75 85 99;
+  /* Dark theme gray scale (pitch black base) */
+  --gray-50: 0 0 0;
+  --gray-100: 10 10 10;
+  --gray-200: 17 17 17;
+  --gray-300: 26 26 26;
+  --gray-400: 38 38 38;
   --gray-500: 107 114 128;
   --gray-600: 156 163 175;
   --gray-700: 209 213 219;
   --gray-800: 229 231 235;
   --gray-900: 243 244 246;
 
-  /* Dark semantic colors for Tailwind */
-  --surface: 31 35 41;
-  --background: 42 47 54;
-  --border: 55 65 81;
+  /* Dark semantic colors for Tailwind (black) */
+  --surface: 10 10 10;
+  --background: 0 0 0;
+  --border: 38 38 38;
 
   /* Dark theme Mantine colors */
   --color-red-50: #2d1b1b;
@@ -385,11 +506,11 @@
   --color-red-800: #991b1b;
   --color-red-900: #7f1d1d;
 
-  --color-gray-50: #111827;
-  --color-gray-100: #1F2329;
-  --color-gray-200: #2A2F36;
-  --color-gray-300: #374151;
-  --color-gray-400: #4b5563;
+  --color-gray-50: #000000;
+  --color-gray-100: #0a0a0a;
+  --color-gray-200: #111111;
+  --color-gray-300: #1a1a1a;
+  --color-gray-400: #262626;
   --color-gray-500: #6b7280;
   --color-gray-600: #9ca3af;
   --color-gray-700: #d1d5db;
@@ -411,6 +532,18 @@
   /* Special section colors - same as light mode for consistency */
   --special-color-favorites: #FFC107;      /* Yellow/gold for favorites */
   --special-color-recommended: #1BB1D4;    /* Cyan for recommended */
+
+  /* Compare highlight colors (dark mode) */
+  --spdf-compare-removed-bg: rgba(255, 107, 107, 0.45);
+  --spdf-compare-added-bg: rgba(81, 207, 102, 0.35);
+  --spdf-compare-removed-badge-bg: rgba(255, 59, 48, 0.15);
+  --spdf-compare-removed-badge-fg: var(--color-red-500);
+  --spdf-compare-added-badge-bg: rgba(52, 199, 89, 0.18);
+  --spdf-compare-added-badge-fg: var(--color-green-500);
+  --spdf-compare-inline-removed-bg: rgba(255, 59, 48, 0.25);
+  --spdf-compare-inline-added-bg: rgba(52, 199, 89, 0.25);
+  --compare-page-label-bg: #111111;
+  --compare-page-label-fg: #D0D6DC;
 
   /* Success (green) - dark */
   --color-green-50: #052e16;
@@ -436,33 +569,61 @@
   --color-yellow-800: #fef08a;
   --color-yellow-900: #fef9c3;
 
-  /* Dark theme semantic colors */
-  --bg-surface: #2A2F36;
-  --bg-raised: #1F2329;
-  --bg-muted: #1F2329;
-  --bg-background: #2A2F36;
-  --bg-toolbar: #1F2329;
-  --bg-file-manager: #1F2329;
-  --bg-file-list: #2A2F36;
+  /* Orange scale (dark mode mirrors light values to match UI) */
+  --color-orange-50: #FFF4ED;
+  --color-orange-100: #FFE1CC;
+  --color-orange-200: #FFB089;
+  --color-orange-300: #FF7A45;
+  --color-orange-400: #D84A1B;
+
+  /* Dark theme semantic colors (pitch black) */
+  --bg-surface: #111111;
+  --bg-raised: #0a0a0a;
+  --bg-muted: #0a0a0a;
+  --bg-background: #0f0f0f;
+  --bg-toolbar: #111111;
+  --bg-file-manager: #0a0a0a;
+  --bg-file-list: #111111;
   --btn-open-file: #0A8BFF;
   --text-primary: #f9fafb;
   --text-secondary: #d1d5db;
   --text-muted: #9ca3af;
+  --chat-chevron-color: rgba(156, 163, 175, 0.55);
+  --chat-tool-section-bg: rgba(255, 255, 255, 0.03);
+  --chat-tool-section-border: rgba(255, 255, 255, 0.08);
+  --chat-tool-row-bg: rgba(255, 255, 255, 0.02);
+  --chat-tool-row-border: rgba(255, 255, 255, 0.10);
+  --chat-tool-table-border: rgba(255, 255, 255, 0.10);
+  --chat-input-border: rgba(59, 130, 246, 0.35);
+  --chat-input-focus-border: #3b82f6;
+  --chat-input-focus-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
   /* Always-dark text (for use on light backgrounds like alerts) - does not change in dark mode */
   --text-always-dark: #1f2937;
   --text-always-dark-muted: #6b7280;
-  --border-subtle: #2A2F36;
-  --border-default: #3A4047;
-  --border-strong: #4b5563;
-  --hover-bg: #374151;
-  --active-bg: #4b5563;
+  --border-subtle: #171717;
+  --border-default: #262626;
+  --border-strong: #383838;
+  --outline-box-border: rgba(255, 255, 255, 0.12);
+  --outline-thumbnail-border: rgba(255, 255, 255, 0.4);
+  --hover-bg: #1a1a1a;
+  --active-bg: #262626;
   --automation-entry-hover-bg: var(--color-gray-200);
 
+  /* Viewer overlay pills (e.g. Back to active files) */
+  --viewer-overlay-pill-bg: rgba(0, 0, 0, 0.9);
+  --viewer-overlay-pill-bg-hover: rgba(17, 17, 17, 0.95);
+  --viewer-overlay-pill-border: rgba(255, 255, 255, 0.10);
+  --viewer-overlay-pill-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+
   /* Icon colors for dark mode */
-  --icon-user-bg: #2A2F36;
+  --icon-user-bg: #111111;
   --icon-user-color: #6E7581;
-  --icon-notifications-bg: #2A2F36;
+  --icon-notifications-bg: #111111;
   --icon-notifications-color: #6E7581;
+  --icon-create-bg: linear-gradient(225deg, #66ddff 0%, #1665e6 100%);
+  --icon-create-color: #EAEAEA;
+  --icon-edit-bg: linear-gradient(225deg, #f87171 0%, #b91c1c 100%);
+  --icon-edit-color: #EAEAEA;
   --icon-tools-bg: #4B525A;
   --icon-tools-color: #EAEAEA;
   --icon-read-bg: #4B525A;
@@ -479,12 +640,12 @@
   --icon-config-color: #EAEAEA;
 
   /* Inactive icon colors for dark mode */
-  --icon-inactive-bg: #2A2F36;
+  --icon-inactive-bg: #111111;
   --icon-inactive-color: #6E7581;
 
   /* RightRail (dark) */
-  --right-rail-bg: #1F2329;           /* dark background */
-  --right-rail-foreground: #2A2F36;   /* panel behind custom tool icons */
+  --right-rail-bg: #0a0a0a;           /* dark background */
+  --right-rail-foreground: #111111;   /* panel behind custom tool icons */
   --right-rail-icon: #BCBEBF;         /* icon color */
   --right-rail-icon-disabled: #43464B;/* disabled icon */
   --right-rail-pan-active-bg: #EAEAEA;
@@ -500,30 +661,29 @@
   --text-instruction: #ffffff;
   --text-brand: var(--color-gray-800);
   --text-brand-accent: #EF4444;
-
   /* Compare badge text colors (dark mode): lighter for readability */
   --spdf-compare-removed-badge-fg: var(--color-red-500);
   --spdf-compare-added-badge-fg: var(--color-green-500);
 
   /* container */
-  --landing-paper-bg: #171A1F;
+  --landing-paper-bg: #000000;
   --landing-inner-paper-bg: var(--bg-raised);
-  --landing-inner-paper-border: #2D3237;
-  --landing-button-bg: #2B3037;
+  --landing-inner-paper-border: #262626;
+  --landing-button-bg: #171717;
   --landing-button-color: #ffffff;
-  --landing-button-border: #2D3237;
-  --landing-button-hover-bg: #4c525b;
+  --landing-button-border: #262626;
+  --landing-button-hover-bg: #262626;
 
   /* drop state */
-  --landing-drop-paper-bg: #1A2332;
-  --landing-drop-inner-paper-bg: #2A3441;
-  --landing-drop-inner-paper-border: #3A4451;
+  --landing-drop-paper-bg: #0a0a0a;
+  --landing-drop-inner-paper-bg: #111111;
+  --landing-drop-inner-paper-border: #262626;
 
   /* selected file header colors for dark */
   --header-selected-bg: #1E88E5;
   --header-selected-fg: #FFFFFF;
   /* file card background (dark) */
-  --file-card-bg: #1F2329;
+  --file-card-bg: #0a0a0a;
   --accordion-item-bg: #373D45;  /* accordion item background - more distinguishable */
 
   /* shadows */
@@ -541,29 +701,25 @@
   --tools-text-and-icon-color: #D0D6DC;
 
   /* Tool picker sticky header variables (dark mode) */
-  --tool-header-bg: #2A2F36;
-  --tool-header-border: #3A4047;
+  --tool-header-bg: #111111;
+  --tool-header-border: #262626;
   --tool-header-text: #D0D6DC;
-  --tool-header-badge-bg: #4B525A;
+  --tool-header-badge-bg: #262626;
   --tool-header-badge-text: #FFFFFF;
 
   /* Subcategory title styling (dark mode) */
   --tool-subcategory-text-color: #9CA3AF; /* lighter text in dark mode as well */
-  --tool-subcategory-rule-color: #3A4047; /* doubly lighter (relative) line in dark */
+  --tool-subcategory-rule-color: #262626; /* doubly lighter (relative) line in dark */
 
-
-  /* PDF text selection colors (dark mode) */
-  --pdf-selection-bg: rgba(96, 165, 250, 0.25);
-  --pdf-selection-ring: rgba(96, 165, 250, 0.28);
 
   /* Placeholder text colors (dark mode) */
   --search-text-and-icon-color: #FFFFFF !important;
 
   /* Tool panel search bar background colors (dark mode) */
-  --tool-panel-search-bg: #1F2329;
-  --tool-panel-search-border-bottom: #4B525A;
+  --tool-panel-search-bg: #0a0a0a;
+  --tool-panel-search-border-bottom: #262626;
 
-  --information-text-bg: #292e34;
+  --information-text-bg: #111111;
   --information-text-color: #ececec;
 
   /* Bulk selection panel specific colors (dark mode) */
@@ -571,16 +727,16 @@
   --bulk-card-bg: var(--bg-raised); /* dark background for cards */
   --bulk-card-border: var(--border-default); /* default border for cards and buttons */
   --bulk-card-hover-border: var(--border-strong); /* stronger border on hover */
-  --unsupported-bar-bg: #1F2329;
-  --unsupported-bar-border: #4B525A;
+  --unsupported-bar-bg: #0a0a0a;
+  --unsupported-bar-border: #262626;
 
   /* Config Modal colors (dark mode) */
-  --modal-nav-bg: #1F2329;
+  --modal-nav-bg: #0a0a0a;
   --modal-nav-section-title: #9CA3AF;
   --modal-nav-item: #D0D6DC;
   --modal-nav-item-active: #0A8BFF;
   --modal-nav-item-active-bg: rgba(10, 139, 255, 0.15);
-  --modal-content-bg: #2A2F36;
+  --modal-content-bg: #111111;
   --modal-header-border: rgba(255, 255, 255, 0.08);
 
   /* Onboarding (dark mode) */
@@ -593,14 +749,24 @@
   --onboarding-secondary-button-border: #3A4047;
   --onboarding-step-active: #E5E7EB;
   --onboarding-step-inactive: #4B5563;
+
+  /* API usage progress bar colors (dark mode) */
+  --usage-weekly-active: #60A5FA;  /* blue-400 for better contrast */
+  --usage-bought-active: #34D399;  /* emerald-400 for better contrast */
+  --usage-total-used: #FFFFFF;     /* white active */
+  --usage-inactive: #43464B;       /* neutral gray for remaining */
+
   /* API Keys section colors (dark mode) */
-  --api-keys-card-bg: #2A2F36;
-  --api-keys-card-border: #3A4047;
+  --api-keys-card-bg: #111111;
+  --api-keys-card-border: #262626;
   --api-keys-card-shadow: none;
-  --api-keys-input-bg: #1F2329;
-  --api-keys-input-border: #3A4047;
-  --api-keys-button-bg: #3A4047;
+  --api-keys-input-bg: #0a0a0a;
+  --api-keys-input-border: #262626;
+  --api-keys-button-bg: #262626;
   --api-keys-button-color: #D0D6DC;
+
+  --text-divider-rule-color: var(--tool-subcategory-rule-color);
+  --text-divider-label-color: var(--text-muted);
 
   /* Code token colors (dark mode - Cursor-like) */
   --code-kw-color: #C792EA;   /* purple */
@@ -608,15 +774,26 @@
   --code-num-color: #F78C6C;  /* orange */
   --code-com-color: #697098;  /* muted gray-blue */
   /* Compare tool specific colors (dark mode) - only for colors that don't have existing theme pairs */
-  --compare-upload-dropzone-bg: rgba(31, 35, 41, 0.45);
-  --compare-upload-dropzone-border: rgba(75, 85, 99, 0.6);
-  --compare-upload-icon-bg: rgba(75, 85, 99, 0.2);
+  --compare-upload-dropzone-bg: rgba(0, 0, 0, 0.5);
+  --compare-upload-dropzone-border: rgba(38, 38, 38, 0.8);
+  --compare-upload-icon-bg: rgba(38, 38, 38, 0.5);
   --compare-upload-icon-color: rgba(243, 244, 246, 0.75);
-  --compare-upload-divider: rgba(75, 85, 99, 0.5);
+  --compare-upload-divider: rgba(38, 38, 38, 0.8);
 
   /* Compare page label chip (dark mode): slightly darker than surrounding rows */
-  --compare-page-label-bg: #1F2329;
+  --compare-page-label-bg: #0a0a0a;
   --compare-page-label-fg: var(--text-secondary);
+
+  /* Sidebar (SaaS) */
+  --spdf-sidebar-action-hover-bg: rgba(255, 255, 255, 0.06);
+  --spdf-sidebar-file-hover-bg: rgba(255, 255, 255, 0.06);
+  --spdf-sidebar-file-active-bg: rgba(59, 130, 246, 0.22);
+  --spdf-sidebar-file-active-unselected-bg: #111111; /* dark for unselected workbench files in dark mode */
+  --spdf-sidebar-file-text-color: var(--text-secondary);
+  --spdf-sidebar-file-text-active-color: #DBEAFE;
+  --spdf-sidebar-file-icon-color: #60A5FA;
+  --spdf-sidebar-file-icon-active-color: #93C5FD;
+  --spdf-sidebar-count-bg: rgba(255, 255, 255, 0.1);
 }
 
 /* Dropzone drop state styling */
@@ -691,19 +868,105 @@
     0 0 0 0.5px rgba(255, 255, 255, 0.05);
 }
 
-[data-mantine-color-scheme="dark"] {
-  --link-hover-bg: rgba(10, 139, 255, 0.06);
-  --link-hover-border: rgba(59, 170, 255, 0.2);
-  --link-hover-shadow:
-    0 0 0 0.5px rgba(59, 170, 255, 0.1),
-    0 1px 3px rgba(10, 139, 255, 0.08);
-  --link-focus-ring: rgba(59, 170, 255, 0.3);
-  --link-toolbar-bg: rgba(15, 23, 42, 0.92);
-  --link-toolbar-border: rgba(255, 255, 255, 0.08);
-  --link-toolbar-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.35),
-    0 4px 12px rgba(0, 0, 0, 0.25),
-    0 0 0 0.5px rgba(255, 255, 255, 0.04);
+/* Midnight theme: blue-tinted dark (lighter workbench than dark mode, cohesive blue palette) */
+[data-theme="midnight"] {
+  --gray-50: 21 26 38;
+  --gray-100: 30 36 52;
+  --gray-200: 45 50 72;
+  --gray-300: 58 65 90;
+  --gray-400: 75 85 99;
+  --surface: 30 36 52;
+  --background: 21 26 38;
+  --border: 58 65 90;
+
+  --color-gray-50: #151a24;
+  --color-gray-100: #1a2030;
+  --color-gray-200: #1e2435;
+  --color-gray-300: #252836;
+  --color-gray-400: #2d3340;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #9ca3af;
+  --color-gray-700: #d1d5db;
+  --color-gray-800: #e5e7eb;
+  --color-gray-900: #f3f4f6;
+
+  --bg-surface: #1e2435;
+  --bg-raised: #1a2030;
+  --bg-muted: #1a2030;
+  --bg-background: #151a24;
+  --bg-toolbar: #1e2435;
+  --bg-file-manager: #1a2030;
+  --bg-file-list: #1e2435;
+  --btn-open-file: #4B77E6;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-subtle: #2d3340;
+  --border-default: #3a4152;
+  --border-strong: #4a5568;
+  --outline-box-border: rgba(255, 255, 255, 0.1);
+  --outline-thumbnail-border: rgba(255, 255, 255, 0.35);
+  --hover-bg: #252836;
+  --active-bg: #2d3340;
+  --automation-entry-hover-bg: var(--color-gray-200);
+
+  --viewer-overlay-pill-bg: rgba(21, 26, 36, 0.92);
+  --viewer-overlay-pill-bg-hover: rgba(30, 36, 53, 0.95);
+  --viewer-overlay-pill-border: rgba(255, 255, 255, 0.1);
+  --viewer-overlay-pill-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+
+  --icon-user-bg: #1e2435;
+  --icon-notifications-bg: #1e2435;
+  --icon-inactive-bg: #1e2435;
+
+  --right-rail-bg: #1a2030;
+  --right-rail-foreground: #1e2435;
+
+  --landing-paper-bg: #151a24;
+  --landing-inner-paper-border: #3a4152;
+  --landing-button-bg: #252836;
+  --landing-button-border: #3a4152;
+  --landing-button-hover-bg: #2d3340;
+  --landing-drop-paper-bg: #1a2030;
+  --landing-drop-inner-paper-bg: #1e2435;
+  --landing-drop-inner-paper-border: #3a4152;
+
+  --header-selected-bg: #4B77E6;
+  --file-card-bg: #1a2030;
+
+  --tool-header-bg: #1e2435;
+  --tool-header-border: #3a4152;
+  --tool-header-badge-bg: #252836;
+  --tool-subcategory-rule-color: #3a4152;
+
+  --tool-panel-search-bg: #1a2030;
+  --tool-panel-search-border-bottom: #3a4152;
+  --information-text-bg: #1e2435;
+
+  --bulk-panel-bg: var(--bg-raised);
+  --bulk-card-bg: var(--bg-raised);
+  --unsupported-bar-bg: #1a2030;
+  --unsupported-bar-border: #3a4152;
+
+  --modal-nav-bg: #1a2030;
+  --modal-nav-item-active: #4B77E6;
+  --modal-nav-item-active-bg: rgba(75, 119, 230, 0.18);
+  --modal-content-bg: #1e2435;
+  --modal-header-border: rgba(255, 255, 255, 0.08);
+
+  --api-keys-card-bg: #1e2435;
+  --api-keys-card-border: #3a4152;
+  --api-keys-input-bg: #1a2030;
+  --api-keys-input-border: #3a4152;
+  --api-keys-button-bg: #252836;
+  --dropdown-btn-bg: #252836;
+  --dropdown-btn-border: #3a4152;
+
+  --compare-page-label-bg: #1a2030;
+  --spdf-sidebar-file-active-bg: rgba(75, 119, 230, 0.2);
+  --spdf-sidebar-file-active-unselected-bg: #1e2435;
+
+  --category-color-general: #4B77E6;
 }
 
 /* ── Link hit-area ── */

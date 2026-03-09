@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { Group, useMantineColorScheme } from "@mantine/core";
-import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { useBaseUrl } from "@app/hooks/useBaseUrl";
 import { useIsMobile } from "@app/hooks/useIsMobile";
@@ -14,10 +13,9 @@ import { useNavigationState, useNavigationActions } from "@app/contexts/Navigati
 import { useViewer } from "@app/contexts/ViewerContext";
 import AppsIcon from '@mui/icons-material/AppsRounded';
 
-import ToolPanel from "@app/components/tools/ToolPanel";
 import Workbench from "@app/components/layout/Workbench";
-import QuickAccessBar from "@app/components/shared/QuickAccessBar";
-import RightRail from "@app/components/shared/RightRail";
+import LeftSidebar from "@app/components/leftSidebar/LeftSidebar";
+import RightPanel from "@app/components/rightPanel/RightPanel";
 import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
@@ -30,12 +28,6 @@ type MobileView = "tools" | "workbench";
 
 export default function HomePage() {
   const { t } = useTranslation();
-  const {
-    sidebarRefs,
-  } = useSidebarContext();
-
-  const { quickAccessRef } = sidebarRefs;
-
   const {
     selectedTool,
     selectedToolKey,
@@ -54,6 +46,7 @@ export default function HomePage() {
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
 
   const { activeFiles } = useFileContext();
   const navigationState = useNavigationState();
@@ -240,14 +233,13 @@ export default function HomePage() {
           <div ref={sliderRef} className="mobile-slider">
             <div className="mobile-slide" aria-label={t('home.mobile.toolsSlide', 'Tool selection panel')}>
               <div className="mobile-slide-content">
-                <ToolPanel />
+                <LeftSidebar />
               </div>
             </div>
             <div className="mobile-slide" aria-label={t('home.mobile.workbenchSlide', 'Workspace panel')}>
               <div className="mobile-slide-content">
                 <div className="flex-1 min-h-0 flex">
                   <Workbench />
-                  <RightRail />
                 </div>
               </div>
             </div>
@@ -311,10 +303,12 @@ export default function HomePage() {
           h="100%"
           className="flex-nowrap flex"
         >
-          <QuickAccessBar ref={quickAccessRef} />
-          <ToolPanel />
+          <LeftSidebar
+            collapsed={leftSidebarCollapsed}
+            onToggleCollapse={() => setLeftSidebarCollapsed((p) => !p)}
+          />
           <Workbench />
-          <RightRail />
+          <RightPanel />
           <FileManager selectedTool={selectedTool as any /* FIX ME */} />
         </Group>
       )}

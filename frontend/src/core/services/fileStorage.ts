@@ -30,6 +30,17 @@ export interface StorageStats {
 class FileStorageService {
   private readonly dbConfig = DATABASE_CONFIGS.FILES;
   private readonly storeName = 'files';
+  private changeListeners: Set<() => void> = new Set();
+
+  /** Subscribe to any file storage change (add, delete, clear). Returns unsubscribe fn. */
+  onStorageChange(listener: () => void): () => void {
+    this.changeListeners.add(listener);
+    return () => this.changeListeners.delete(listener);
+  }
+
+  private notifyChange(): void {
+    this.changeListeners.forEach((fn) => fn());
+  }
 
   /**
    * Get database connection using centralized manager
@@ -81,6 +92,7 @@ class FileStorageService {
           reject(request.error);
         };
         request.onsuccess = () => {
+          this.notifyChange();
           resolve();
         };
       } catch (error) {
@@ -270,7 +282,10 @@ class FileStorageService {
       const request = store.delete(id);
 
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
+      request.onsuccess = () => {
+        this.notifyChange();
+        resolve();
+      };
     });
   }
 
@@ -327,7 +342,10 @@ class FileStorageService {
       const request = store.clear();
 
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
+      request.onsuccess = () => {
+        this.notifyChange();
+        resolve();
+      };
     });
   }
 

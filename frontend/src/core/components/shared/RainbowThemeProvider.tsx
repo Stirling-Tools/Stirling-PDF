@@ -34,8 +34,11 @@ interface RainbowThemeProviderProps {
 export function RainbowThemeProvider({ children }: RainbowThemeProviderProps) {
   const rainbowTheme = useRainbowTheme();
 
-  // Determine the Mantine color scheme
-  const mantineColorScheme = rainbowTheme.themeMode === 'rainbow' ? 'dark' : rainbowTheme.themeMode;
+  // Determine the Mantine color scheme (midnight and rainbow both use dark Mantine styles)
+  const mantineColorScheme =
+    rainbowTheme.themeMode === 'rainbow' || rainbowTheme.themeMode === 'midnight'
+      ? 'dark'
+      : rainbowTheme.themeMode;
 
   return (
     <RainbowThemeContext.Provider value={rainbowTheme}>

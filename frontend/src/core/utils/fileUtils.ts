@@ -76,6 +76,39 @@ export function getFilenameWithoutExtension(
 }
 
 /**
+ * Formats a timestamp as a human-readable relative time string.
+ * - Same day: time (e.g. "2:30 pm")
+ * - Yesterday: "Yesterday"
+ * - Within 7 days: weekday name (e.g. "Monday")
+ * - Older: short date (e.g. "Jan 5")
+ */
+export function getRelativeTime(lastModified: number | undefined): string {
+  if (!lastModified) return '';
+  const now = Date.now();
+  const diff = now - lastModified;
+  const date = new Date(lastModified);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  const isSameDay = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+
+  if (isSameDay(date, today)) {
+    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+  }
+  if (isSameDay(date, yesterday)) {
+    return 'Yesterday';
+  }
+  if (diff < 7 * 24 * 60 * 60 * 1000) {
+    return date.toLocaleDateString([], { weekday: 'long' });
+  }
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+/**
  * Checks if a file is a PDF based on extension and MIME type
  * @param file - File or file-like object with name and type properties
  * @returns true if the file appears to be a PDF

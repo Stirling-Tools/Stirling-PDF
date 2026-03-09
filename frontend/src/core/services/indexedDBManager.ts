@@ -291,7 +291,7 @@ class IndexedDBManager {
 export const DATABASE_CONFIGS = {
   FILES: {
     name: 'stirling-pdf-files',
-    version: 3,
+    version: 8,
     stores: [{
       name: 'files',
       keyPath: 'id',
