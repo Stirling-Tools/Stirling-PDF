@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { Modal, Text, ActionIcon, Tooltip, Group } from '@mantine/core';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -10,6 +10,7 @@ import { useIsMobile } from '@app/hooks/useIsMobile';
 import { Z_INDEX_CONFIG_MODAL, Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { useLicenseAlert } from '@app/hooks/useLicenseAlert';
 import { UnsavedChangesProvider, useUnsavedChanges } from '@app/contexts/UnsavedChangesContext';
+import { SettingsSearchBar } from '@app/components/shared/config/SettingsSearchBar';
 
 interface AppConfigModalProps {
   opened: boolean;
@@ -24,6 +25,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
   const { config } = useAppConfig();
   const licenseAlert = useLicenseAlert();
   const { confirmIfDirty } = useUnsavedChanges();
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   // Extract section from URL path (e.g., /settings/people -> people)
   const getSectionFromPath = (pathname: string): NavKey | null => {
@@ -45,6 +47,13 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
       navigate('/settings/general', { replace: true });
     }
   }, [location.pathname, opened, navigate]);
+
+  useEffect(() => {
+    if (opened) {
+      // Keep search closed initially by moving autofocus away from the searchable Select input.
+      closeButtonRef.current?.focus();
+    }
+  }, [opened]);
 
   // Handle custom events for backwards compatibility
   useEffect(() => {
@@ -108,7 +117,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
   const handleNavigation = useCallback(async (key: NavKey) => {
     const canProceed = await confirmIfDirty();
     if (!canProceed) return;
-    
+
     setActive(key);
     navigate(`/settings/${key}`);
   }, [confirmIfDirty, navigate]);
@@ -118,7 +127,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
       opened={opened}
       onClose={handleClose}
       title={null}
-      size={isMobile ? "100%" : 980}
+      size={isMobile ? "100%" : 1100}
       centered
       radius="lg"
       withCloseButton={false}
@@ -158,12 +167,16 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
                     const navItemContent = (
                       <div
                         key={item.key}
-                        onClick={() => handleNavigation(item.key)}
+                        onClick={() => {
+                          if (!isDisabled) {
+                            handleNavigation(item.key);
+                          }
+                        }}
                         className={`modal-nav-item ${isMobile ? 'mobile' : ''}`}
                         style={{
                           background: isActive ? colors.navItemActiveBg : 'transparent',
                           opacity: isDisabled ? 0.6 : 1,
-                          cursor: 'pointer',
+                          cursor: isDisabled ? 'not-allowed' : 'pointer',
                         }}
                         data-tour={`admin-${item.key}-nav`}
                       >
@@ -218,9 +231,22 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
               }}
             >
               <Text fw={700} size="lg">{activeLabel}</Text>
-              <ActionIcon variant="subtle" onClick={handleClose} aria-label="Close">
-                <LocalIcon icon="close-rounded" width={18} height={18} />
-              </ActionIcon>
+              <Group gap="xs" wrap="nowrap">
+                <SettingsSearchBar
+                  configNavSections={configNavSections}
+                  onNavigate={handleNavigation}
+                  isMobile={isMobile}
+                />
+                <ActionIcon
+                  ref={closeButtonRef}
+                  variant="subtle"
+                  onClick={handleClose}
+                  aria-label="Close"
+                  data-autofocus
+                >
+                  <LocalIcon icon="close-rounded" width={18} height={18} />
+                </ActionIcon>
+              </Group>
             </div>
             <div className="modal-body">
               {activeComponent}

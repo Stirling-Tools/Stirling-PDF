@@ -96,6 +96,8 @@ pin = "Datei anheften (nach Tool-Ausführung aktiv halten)"
 poweredBy = "Bereitgestellt von"
 pro = "Pro"
 processTimeWarning = "Achtung: Abhängig von der Dateigröße kann dieser Prozess bis zu einer Minute dauern"
+processingComplete = "Ihre Datei ist bereit."
+processingCompleteMultiple = "{{count}} Dateien sind bereit."
 property = "Eigenschaft"
 quickPosition = "Schnellposition"
 red = "Rot"
@@ -105,6 +107,7 @@ save = "Speichern"
 saveToBrowser = "Im Browser speichern"
 saveUnavailable = "Speichern für dieses Element ist nicht verfügbar"
 seeDockerHub = "Docker Hub ansehen"
+editSecret = "Diesen Wert bearbeiten"
 selectFillter = "-- Auswählen --"
 size = "Größe"
 sponsor = "Sponsor"
@@ -651,6 +654,7 @@ description = "Externe Authentifizierungsanbieter wie OAuth2 und SAML konfigurie
 disconnect = "Trennen"
 disconnected = "Anbieter erfolgreich getrennt"
 disconnectError = "Anbieter konnte nicht getrennt werden"
+documentation = "Dokumentation anzeigen"
 imageResolutionFull = "Voll (Originalgröße)"
 imageResolutionReduced = "Reduziert (Max 1200px)"
 linkedServices = "Verknüpfte Dienste"
@@ -964,6 +968,18 @@ label = "Standardgebietsschema"
 description = "Maximale Dateiupload-Größe (z. B. 100MB, 1GB)"
 label = "Upload-Limit für Dateien"
 
+[admin.settings.general.hideDisabledTools]
+description = "Deaktivierte Tools in der Oberfläche ausblenden"
+label = "Deaktivierte Tools ausblenden"
+
+[admin.settings.general.hideDisabledTools.googleDrive]
+description = "Google Drive-Schaltfläche ausblenden, wenn nicht aktiviert"
+label = "Google Drive ausblenden"
+
+[admin.settings.general.hideDisabledTools.mobileScanner]
+description = "QR-Scanner-Schaltfläche auf Mobilgeräten ausblenden, wenn nicht aktiviert"
+label = "Mobilen Scanner ausblenden"
+
 [admin.settings.general.frontendUrl]
 description = "Basis-URL für Frontend (z.B. https://pdf.example.com). Wird für E-Mail-Einladungslinks und mobile QR-Code-Uploads verwendet. Leer lassen, um Backend-URL zu verwenden."
 label = "Frontend URL"
@@ -1148,6 +1164,8 @@ title = "Sicherheit"
 
 [admin.settings.security.audit]
 label = "Audit-Protokollierung"
+showDetails = "Details zur Audit-Stufe anzeigen"
+hideDetails = "Details zur Audit-Stufe ausblenden"
 
 [admin.settings.security.audit.enabled]
 description = "Benutzeraktionen und Systemereignisse für Compliance und Sicherheitsüberwachung nachverfolgen"
@@ -1157,9 +1175,31 @@ label = "Audit-Protokollierung aktivieren"
 description = "0=AUS, 1=EINFACH, 2=STANDARD, 3=AUSFÜHRLICH"
 label = "Audit-Level"
 
+[admin.settings.security.audit.levelDetails]
+off = "Keine Audit-Protokollierung (außer kritische Sicherheitsereignisse)"
+basic = "PDF-Dateioperationen (komprimieren, teilen, zusammenführen usw.) und Einstellungsänderungen. Erfasst: Operationsstatus (Erfolg/Fehlschlag), Methodenparameter, Zeitmessung. Minimales Protokollvolumen."
+standard = "BASIC-Ereignisse plus: Benutzer-Login/Logout, Kontenänderungen, allgemeine GET-Requests. Schließt kontinuierliche Polling-Aufrufe (/auth/me, /app-config, /health usw.) aus, um Protokollrauschen zu reduzieren. Ideal für die meisten Deployments."
+verbose = "STANDARD-Ereignisse plus: kontinuierliche Polling-Aufrufe, alle GET-Requests, detaillierte Zeitmessung. Warnung: hohes Protokollvolumen und Leistungseinfluss."
+
 [admin.settings.security.audit.retentionDays]
 description = "Anzahl der Tage, die Audit-Logs aufbewahrt werden"
 label = "Aufbewahrung Audit (Tage)"
+
+[admin.settings.security.audit.advancedOptions]
+title = "Erweiterte Optionen"
+description = "Die folgenden Optionen erhöhen die Verarbeitungszeit und den Speicherverbrauch. Nur aktivieren, wenn wirklich benötigt."
+
+[admin.settings.security.audit.captureFileHash]
+description = "SHA-256-Hash hochgeladener PDF-Dateien zur Integritätsprüfung extrahieren. Unabhängig von der Audit-Stufe."
+label = "Datei-Hash erfassen (SHA-256)"
+
+[admin.settings.security.audit.capturePdfAuthor]
+description = "Autorenfeld aus PDF-Dokumenten während der Verarbeitung extrahieren. Erfordert PDF-Parsing, erhöht die Latenz. Unabhängig von der Audit-Stufe."
+label = "PDF-Autor-Metadaten erfassen"
+
+[admin.settings.security.audit.captureOperationResults]
+description = "Rückgabewerte von Methoden erfassen. Nicht empfohlen: erhöht Protokollvolumen und Speicherbedarf erheblich."
+label = "Operationsergebnisse erfassen"
 
 [admin.settings.security.csrfDisabled]
 description = "Cross-Site Request Forgery-Schutz deaktivieren (nicht empfohlen)"
@@ -1536,43 +1576,18 @@ tags = "einbetten, anhängen, datei, anhang, anhänge"
 title = "Anhänge hinzufügen"
 
 [audit]
+configureAudit = "Audit-Protokollierung konfigurieren"
+configureAuditMessage = "Audit-Protokollstufe, Aufbewahrungszeitraum und weitere Einstellungen im Bereich Sicherheit & Authentifizierung anpassen."
 disabled = "Audit-Protokollierung ist deaktiviert"
 disabledMessage = "Aktivieren Sie die Audit-Protokollierung in Ihrer Anwendungskonfiguration, um Systemereignisse nachzuverfolgen."
 enterpriseRequired = "Enterprise-Lizenz erforderlich"
 enterpriseRequiredMessage = "Das Audit-Protokollierungssystem ist eine Enterprise-Funktion. Bitte upgraden Sie auf eine Enterprise-Lizenz, um Audit-Logs und Analysen zu nutzen."
+goToSettings = "Zu den Audit-Einstellungen"
 notAvailable = "Audit-System nicht verfügbar"
 notAvailableMessage = "Das Audit-System ist nicht konfiguriert oder nicht verfügbar."
 
-[audit.charts]
-byType = "Ereignisse nach Typ"
-byUser = "Ereignisse nach Benutzer"
-day = "Tag"
-error = "Fehler beim Laden der Diagramme"
-month = "Monat"
-overTime = "Ereignisse über die Zeit"
-title = "Audit-Dashboard"
-week = "Woche"
-
 [audit.error]
 title = "Fehler beim Laden des Audit-Systems"
-
-[audit.events]
-actions = "Aktionen"
-clearFilters = "Zurücksetzen"
-details = "Details"
-endDate = "Enddatum"
-error = "Fehler beim Laden der Ereignisse"
-eventDetails = "Ereignisdetails"
-filterByType = "Nach Typ filtern"
-filterByUser = "Nach Benutzer filtern"
-ipAddress = "IP-Adresse"
-noEvents = "Keine Ereignisse gefunden"
-startDate = "Startdatum"
-timestamp = "Zeitstempel"
-title = "Audit-Ereignisse"
-type = "Typ"
-user = "Benutzer"
-viewDetails = "Details anzeigen"
 
 [audit.export]
 clearFilters = "Zurücksetzen"
@@ -1580,27 +1595,132 @@ description = "Exportieren Sie Audit-Ereignisse in CSV- oder JSON-Format. Verwen
 endDate = "Enddatum"
 error = "Daten konnten nicht exportiert werden"
 exportButton = "Daten exportieren"
+fieldAuthor = "Autor (aus PDF)"
+fieldDate = "Datum"
+fieldDocumentName = "Dokumentname"
+fieldFileHash = "Datei-Hash (SHA-256)"
+fieldIpAddress = "IP-Adresse"
+fieldOperationResults = "Operationsergebnisse"
+fieldOutcome = "Ergebnis (Erfolg/Fehlschlag)"
+fieldTool = "Tool"
+fieldUsername = "Benutzername"
 filterByType = "Nach Typ filtern"
 filterByUser = "Nach Benutzer filtern"
 filters = "Filter (optional)"
 format = "Exportformat"
+selectFields = "Einzuschließende Felder auswählen"
 startDate = "Startdatum"
 title = "Audit-Daten exportieren"
+verboseRequired = "Erfordert Audit-Stufe VERBOSE"
 
 [audit.systemStatus]
+autoRefresh = "Automatisch aktualisieren"
+autoRefreshLabel = "Alle 30 s automatisch aktualisieren"
+captureBySettings = "In den Einstellungen aktivieren"
+capturedFields = "Erfasste Felder"
+date = "Datum"
 days = "Tage"
 disabled = "Deaktiviert"
+documentName = "Dokumentname"
 enabled = "Aktiviert"
+fileHash = "Datei-Hash"
 level = "Audit-Level"
+pdfAuthor = "PDF-Autor"
 retention = "Aufbewahrungszeitraum"
 status = "Audit-Protokollierung"
 title = "Systemstatus"
+tool = "Tool"
 totalEvents = "Ereignisse insgesamt"
+username = "Benutzername"
+verboseOnly = "Nur VERBOSE"
+
+[audit.stats]
+activeUsers = "Aktive Benutzer"
+attention = "Aufmerksamkeit erforderlich"
+avgLatency = "Durchschnittliche Latenz"
+error = "Fehler beim Laden der Statistiken"
+errorLoadingStats = "Statistiken konnten nicht geladen werden"
+excellent = "Ausgezeichnet"
+good = "Gut"
+noData = "k. A."
+successRate = "Erfolgsrate"
+title = "Übersicht"
+totalEvents = "Ereignisse gesamt"
+vsLastPeriod = "ggü. letztem Zeitraum"
+
+[audit.charts]
+byTool = "Meistgenutzte Tools"
+byType = "Ereignisse nach Typ"
+byUser = "Ereignisse nach Benutzer"
+day = "Tag"
+error = "Fehler beim Laden der Diagramme"
+hourlyActivity = "Stündliche Aktivität"
+month = "Monat"
+noData = "Keine Daten für diesen Zeitraum"
+overTime = "Ereignisse über die Zeit"
+title = "Audit-Dashboard"
+week = "Woche"
+
+[audit.events]
+actions = "Aktionen"
+author = "Autor"
+clearFilters = "Zurücksetzen"
+details = "Details"
+documentName = "Dokument"
+endDate = "Enddatum"
+error = "Fehler beim Laden der Ereignisse"
+eventDetails = "Ereignisdetails"
+failure = "Fehlschlag"
+fileHash = "Datei-Hash"
+filterByType = "Nach Typ filtern"
+filterByUser = "Nach Benutzer filtern"
+ipAddress = "IP-Adresse"
+noEvents = "Keine Ereignisse gefunden"
+outcome = "Status"
+sortAsc = "Aufsteigend sortieren"
+sortDesc = "Absteigend sortieren"
+startDate = "Startdatum"
+success = "Erfolg"
+timestamp = "Zeitstempel"
+title = "Audit-Ereignisse"
+type = "Typ"
+user = "Benutzer"
+viewDetails = "Details anzeigen"
+
+[audit.filters]
+allOutcomes = "Alle"
+failureOnly = "Nur Fehlschläge"
+last7Days = "Letzte 7 Tage"
+last30Days = "Letzte 30 Tage"
+outcomeFilter = "Ergebnis"
+quickPresets = "Schnellfilter"
+successOnly = "Nur Erfolge"
+thisMonth = "Diesen Monat"
+today = "Heute"
 
 [audit.tabs]
+clearData = "Daten löschen"
 dashboard = "Dashboard"
 events = "Audit-Ereignisse"
 export = "Export"
+
+[audit.clearData]
+cancel = "Abbrechen"
+codeDoesNotMatch = "Code stimmt nicht überein"
+codePlaceholder = "Code hier eingeben"
+confirmationCode = "Bestätigungscode"
+confirmationRequired = "Alle Audit-Daten löschen"
+confirmMessage = "Dadurch werden alle Audit-Protokolle dauerhaft entfernt. Geben Sie unten den Bestätigungscode ein, um fortzufahren."
+confirmTitle = "Bitte bestätigen Sie, dass Sie löschen möchten"
+deleteButton = "Löschen"
+enterCode = "Bestätigungscode"
+enterCodeBelow = "Geben Sie den Code exakt wie oben angezeigt ein (Groß-/Kleinschreibung beachten)"
+initiateDelete = "Alle Daten löschen"
+irreversible = "IRREVERSIBEL"
+success = "Erfolg"
+successMessage = "Alle Audit-Daten wurden erfolgreich gelöscht"
+warning1 = "Diese Aktion kann nicht rückgängig gemacht werden"
+warning2 = "Durch das Löschen von Audit-Daten werden alle historischen Audit-Protokolle dauerhaft aus der Datenbank entfernt, einschließlich Sicherheitsereignissen, Benutzeraktivitäten und Dateioperationen."
 
 [auth]
 accessDenied = "Zugriff verweigert"
@@ -2254,9 +2374,11 @@ copy = "Kopieren"
 done = "Fertig"
 error = "Fehler"
 expand = "Ausklappen"
+learnMore = "Mehr erfahren"
 lines = "Zeilen"
 loading = "Laden..."
 next = "Weiter"
+operation = "diesen Vorgang"
 preview = "Vorschau"
 previous = "Zurück"
 refresh = "Aktualisieren"
@@ -2920,6 +3042,7 @@ copyStack = "Stack-Trace kopieren"
 discordSubmit = "Discord - Unterstützungsbeitrag einreichen"
 dismissAllErrors = "Alle Fehler ausblenden"
 encryptedPdfMustRemovePassword = "Diese PDF ist verschlüsselt oder passwortgeschützt. Bitte entsperren Sie sie, bevor Sie in PDF/A konvertieren."
+generic = "Es ist ein Fehler aufgetreten"
 github = "Ein Ticket auf GitHub einreichen"
 githubSubmit = "GitHub - Ein Ticket einreichen"
 incorrectPasswordProvided = "Das PDF-Passwort ist falsch oder wurde nicht angegeben."
@@ -4456,6 +4579,10 @@ upgradeCompleteMessage = "Ihr Abo wurde erfolgreich upgegradet. Ihr vorhandener 
 upgradeSuccess = "Zahlung erfolgreich! Ihr Abo wurde upgegradet. Die Lizenz wurde auf Ihrem Server aktualisiert. Sie erhalten in Kürze eine Bestätigungs-E-Mail."
 upgradeTitle = "Upgrade auf {{planName}}"
 yearly = "Jährlich"
+checkoutOpened = "Checkout im Browser geöffnet"
+checkoutInstructions = "Schließen Sie den Kauf im soeben geöffneten Browserfenster ab. Nach Abschluss der Zahlung kehren Sie hierher zurück und klicken unten auf die Schaltfläche, um Ihre Abrechnungsinformationen zu aktualisieren."
+refreshBilling = "Zahlung abgeschlossen – Abrechnung aktualisieren"
+closeLater = "Später erledigen"
 
 [payment.emailStage]
 continue = "Weiter"
@@ -4679,6 +4806,13 @@ prompt = "Seite mit der zu extrahierenden Tabelle wählen"
 submit = "Extrahieren"
 title = "PDF zu CSV"
 
+[PDFToXLSX]
+header = "PDF zu Excel"
+prompt = "Wählen Sie Seiten zum Extrahieren von Tabellen"
+submit = "Konvertieren"
+title = "PDF zu Excel (XLSX)"
+tags = "tabellenkalkulation,excel,xlsx,tabelle,extrahieren,konvertieren"
+
 [PDFToHTML]
 credit = "Dieser Dienst verwendet pdftohtml für die Dateikonvertierung."
 header = "PDF zu HTML"
@@ -4835,6 +4969,7 @@ customPricing = "Individuell"
 featureComparison = "Funktionsvergleich"
 from = "Ab"
 hideComparison = "Funktionsvergleich ausblenden"
+included = "Enthalten"
 includedInCurrent = "In Ihrem Plan enthalten"
 licensedSeats = "Lizenziert: {{count}} Plätze"
 manage = "Verwalten"
@@ -4852,9 +4987,11 @@ title = "Aktiver Plan"
 
 [plan.availablePlans]
 subtitle = "Wählen Sie den Plan, der Ihren Anforderungen entspricht"
+loadError = "Tarifpreise konnten nicht geladen werden. Es werden Standardwerte verwendet."
 title = "Verfügbare Pläne"
 
 [plan.enterprise]
+siteLicense = "Site License"
 highlight1 = "Individuelle Preisgestaltung"
 highlight2 = "Dedizierter Support"
 highlight3 = "Neueste Funktionen"
@@ -4927,6 +5064,81 @@ instructions = "Schließen Sie den Kauf im Stripe-Tab ab. Nach Abschluss der Zah
 keyDescription = "Fügen Sie den Lizenzschlüssel aus Ihrer E-Mail ein"
 success = "Lizenz aktiviert!"
 successMessage = "Ihre Lizenz wurde erfolgreich aktiviert. Sie können dieses Fenster nun schließen."
+
+[plan.team]
+name = "Team"
+siteLicense = "Site License"
+
+[credits]
+enableOverageBilling = "Mehrverbrauchsabrechnung aktivieren"
+maybeLater = "Vielleicht später"
+upgrade = "Upgrade"
+
+[credits.modal]
+advancedMonitoring = "Erweitertes Monitoring"
+allInOneWorkspace = "All-in-one PDF-Arbeitsbereich (Viewer, Tools & Agent)"
+apiSandbox = "API-Sandbox"
+contactSales = "Vertrieb kontaktieren"
+creditsRemaining = "{{current}} von {{total}} verbleibend"
+creditsThisMonth = "Monatliche Credits"
+current = "Aktueller Tarif"
+customPricing = "Individuell"
+customSmartFolders = "Benutzerdefinierte Smart Folders"
+dedicatedSupportSlas = "Dedizierter Support & SLAs"
+enterpriseSubscription = "Enterprise"
+everythingInCredits = "Alles in Credits, plus:"
+everythingInFree = "Alles in Free, plus:"
+fasterThroughput = "10x schnellerer Durchsatz"
+forRegularWork = "Für regelmäßige PDF-Arbeit:"
+freeTier = "Free Tier"
+fullyPrivateFiles = "Vollständig private Dateien"
+largeFileProcessing = "Verarbeitung großer Dateien"
+managedMemberMessage = "Sie haben über Ihr Team unbegrenzten Zugriff auf Credits. Wenn Sie Hilfe benötigen, wenden Sie sich bitte an Ihren Teamleiter."
+managedMemberTitle = "Unbegrenzte Credits"
+meteringBillingNote = "Mehrverbrauchs-Credits werden monatlich zusammen mit Ihrem Team-Abonnement abgerechnet. Verfolgen Sie Ihre Nutzung jederzeit in Ihren Kontoeinstellungen."
+meteringExplanation = "Ihr Team-Tarif umfasst {{credits}} Credits pro Monat. Wenn diese aufgebraucht sind, stellt die Mehrverbrauchsabrechnung automatisch zusätzliche Credits bereit, damit Sie nie aufhören müssen zu arbeiten."
+meteringIncluded = "{{credits}} Credits/Monat im Team enthalten"
+meteringNoCommitment = "Keine Bindung, jederzeit kündbar"
+meteringNeverRunOut = "Ihnen gehen nie die Credits aus"
+meteringPayAsYouGo = "Sie zahlen nur, was Sie nutzen"
+meteringPrice = "Zusätzliche Credits zu {{price}}/Credit"
+meteringTitle = "Nutzungsbasierte Mehrverbrauchsabrechnung"
+monthlyCredits = "monatliche Credits"
+orgWideAccess = "Organisationsweite Zugriffskontrollen"
+overage = "Mehrverbrauch"
+perMonth = "/Monat"
+popular = "Beliebt"
+premiumAiModels = "Premium-KI-Modelle"
+prioritySupport = "Priorisierter Support"
+privateDocCloud = "Private Dokumenten-Cloud"
+ragFineTuning = "RAG + Fine-Tuning"
+secureApiAccess = "Sicherer API-Zugriff"
+selfHostLink = "Dokumentation und Pläne ansehen"
+selfHostPrompt = "Selbst hosten?"
+standardThroughput = "Standard-Durchsatz"
+subtitle = "Auf Team upgraden für 10x so viele Credits und schnellere Verarbeitung."
+subtitlePro = "Automatische Mehrverbrauchsabrechnung aktivieren, damit Ihnen nie die Credits ausgehen."
+teamLeaderOnly = "Nur Teamleiter können die Mehrverbrauchsabrechnung aktivieren"
+teamSubscription = "Team"
+titleExhausted = "Sie haben Ihre kostenlosen Credits verbraucht"
+titleExhaustedPro = "Ihnen sind die Credits ausgegangen"
+unlimitedApiAccess = "Unbegrenzter API-Zugriff"
+unlimitedMonthlyCredits = "Site License"
+unlimitedSeats = "Unbegrenzte Plätze"
+
+[credits.modal.features]
+everythingInCredits = "Alles in Credits, plus:"
+everythingInFree = "Alles in Free, plus:"
+forRegularWork = "Für regelmäßige PDF-Arbeit:"
+
+[credits.insufficient]
+brief = "Nicht genügend Credits. Sie benötigen {{required}} Credits, haben aber {{current}}."
+freeTier = "Auf Team upgraden für 10x mehr Credits und unbegrenzte Mehrverbrauchsabrechnung."
+managedMember = "Bitte wenden Sie sich für Unterstützung an Ihren Teamleiter."
+message = "Sie haben nicht genug Credits, um {{tool}} auszuführen. Sie haben derzeit {{current}} Credits."
+messageWithAmount = "Sie benötigen {{required}} Credits, um {{tool}} auszuführen, haben aber nur {{current}}."
+teamMember = "Aktivieren Sie die Mehrverbrauchsabrechnung, damit Ihnen nie die Credits ausgehen."
+title = "Nicht genügend Credits"
 
 [printFile]
 header = "Datei an Drucker senden"
@@ -5565,6 +5777,70 @@ user = "Angemeldet als"
 saas = "Stirling Cloud"
 selfhosted = "Selbst gehostet"
 
+[settings.planBilling]
+currentPlan = "Aktueller Tarif"
+loading = "Abrechnungsinformationen werden geladen..."
+notAvailable = "Tarif & Abrechnung ist nur verfügbar, wenn Sie mit Stirling Cloud verbunden sind (SaaS-Modus)."
+title = "Tarif & Abrechnung"
+
+[settings.planBilling.billing]
+manageBilling = "Abrechnung verwalten"
+nextBillingDate = "Nächster Abrechnungstermin"
+overageCost = "Aktuelle Mehrverbrauchskosten: {{amount}} ({{credits}} Credits)"
+
+[settings.planBilling.credits]
+estimatedCost = "Geschätzte Kosten: {{amount}}"
+freeTierInfo = "Der Free-Tarif umfasst {{freeCredits}} Credits pro Monat. Upgraden Sie auf Team für {{teamCredits}} Credits/Monat und nutzungsbasierte Mehrverbrauchsabrechnung."
+included = "{{count}} Credits/Monat (inklusive)"
+noOverage = "Keine Mehrverbrauchskosten in diesem Monat. Sie nutzen Ihre enthaltenen {{count}} Credits."
+overage = "+ {{count}} Mehrverbrauch"
+overageInfo = "Mehrverbrauchs-Credits werden mit {{price}} pro Credit abgerechnet. Sie zahlen nur für die Nutzung über Ihr monatliches Kontingent hinaus."
+title = "Credit-Nutzung"
+
+[settings.planBilling.errors]
+fetchFailed = "Abrechnungsdaten konnten nicht abgerufen werden"
+retry = "Erneut versuchen"
+
+[settings.planBilling.status]
+active = "Aktiv"
+canceled = "Gekündigt"
+pastDue = "Überfällig"
+trial = "Testphase"
+
+[settings.planBilling.tier]
+enterprise = "Enterprise"
+enterpriseDescription = "Individuelle Enterprise-Funktionen und Support"
+free = "Free"
+freeDescription = "50 Credits pro Monat"
+team = "Team"
+teamBadge = "Team"
+teamDescription = "500 Credits/Monat inklusive, automatische Mehrverbrauchsabrechnung für unterbrechungsfreien Service"
+teamTooltipCredits = "Der Team-Tarif umfasst {{credits}} Credits/Monat."
+teamTooltipFineprint = "Sie zahlen nur für die Nutzung über die enthaltenen Credits hinaus."
+teamTooltipOverage = "Automatische Mehrverbrauchsabrechnung zu {{price}}/Credit gewährleistet einen unterbrechungsfreien Betrieb."
+
+[settings.planBilling.team]
+managedByTeam = "Vom Team verwaltet"
+memberCount = "{{count}} Teammitglieder"
+
+[settings.planBilling.trial]
+daysRemaining = "Noch {{days}} Tage"
+daysRemainingFull = "Ihre Testphase endet in {{days}} Tagen"
+endDate = "Ablaufdatum: {{date}}"
+endsOn = "Testphase endet"
+title = "Kostenlose Testphase aktiv"
+
+[settings.planBilling.upgrade]
+cta = "Auf Team upgraden"
+featureApi = "API-Zugriff für Automatisierung"
+featureCredits = "{{teamCredits}} Credits pro Monat (vs {{freeCredits}} bei Free)"
+featureMembers = "Unbegrenzte Teammitglieder"
+featureSupport = "Priorisierter Support"
+featureThroughput = "Schnellerer Verarbeitungsdurchsatz"
+opensInBrowser = "Wird im Browser geöffnet, um das Upgrade abzuschließen"
+subtitle = "Auf Team upgraden für:"
+title = "Tarif upgraden"
+
 [settings.developer]
 apiKeys = "API-Schlüssel"
 title = "Entwickler"
@@ -5688,6 +5964,9 @@ requiresEnterprise = "Erfordert Enterprise-Lizenz"
 people = "Personen"
 teams = "Teams"
 title = "Arbeitsbereich"
+
+[settings.team]
+title = "Team"
 
 [setup]
 description = "Wählen Sie, wie Sie Stirling PDF verwenden möchten, um zu starten"
@@ -6011,6 +6290,11 @@ desc = "Automatisch mit Trennblättern aufteilen"
 name = "Seitenteiler"
 tooltip = "Verwenden Sie QR-Code-Trennblätter zwischen Dokumenten beim Scannen"
 
+[split.methods.byPoster]
+name = "Druckbare Abschnitte"
+desc = "Große Seiten in druckbare Größen aufteilen"
+tooltip = "Übergroße Seiten in kleinere Abschnitte teilen, die für den Druck auf Standardpapier (A4, Letter usw.) geeignet sind"
+
 [split.methods.byPages]
 desc = "Spezifische Seiten extrahieren (1,3,5-10)"
 name = "Seitenzahlen"
@@ -6029,6 +6313,7 @@ tooltip = "Maximale Dateigröße angeben (z.B. 10MB, 500KB)"
 [split.methods.prefix]
 splitAt = "Aufteilen bei"
 splitBy = "Aufteilen nach"
+splitInto = "Aufteilen in"
 
 [split.methodSelection.tooltip]
 bullet1 = "Klicken Sie auf eine Methodenkarte, um sie auszuwählen"
@@ -6047,6 +6332,21 @@ selectMethodFirst = "Bitte wählen Sie zuerst eine Aufteilungsmethode"
 [split.steps]
 chooseMethod = "Methode wählen"
 settings = "Einstellungen"
+
+[split.poster]
+rightToLeft = "Rechts-nach-links aufteilen"
+
+[split.poster.pageSize]
+label = "Zielseitengröße"
+description = "Größe der Ausgabeseiten für den Druck"
+
+[split.poster.xFactor]
+label = "Horizontale Unterteilungen"
+description = "Anzahl der Spalten, in die jede Seite unterteilt wird"
+
+[split.poster.yFactor]
+label = "Vertikale Unterteilungen"
+description = "Anzahl der Zeilen, in die jede Seite unterteilt wird"
 
 [split.tooltip.byChapters]
 bullet1 = "Lesezeichen-Ebene: Auf welcher Ebene geteilt wird (1=oberste Ebene)"
@@ -6084,6 +6384,14 @@ bullet4 = "Hochladen – Trennseiten werden automatisch erkannt und entfernt"
 bullet5 = "Duplexmodus aktivieren, wenn beide Seiten der Trennblätter gescannt werden"
 text = "Gescannte Dokumente automatisch mithilfe physischer Trennblätter mit QR-Codes teilen. Perfekt für die Verarbeitung mehrerer zusammen gescannter Dokumente."
 title = "Mit Seiten-Trennblättern teilen"
+
+[split.tooltip.byPoster]
+bullet1 = "Zielseitengröße: Ausgabe-Papiergröße wählen (A4, Letter usw.)"
+bullet2 = "Horizontale/Vertikale Unterteilungen: Rastergröße zum Aufteilen"
+bullet3 = "Rechts-nach-Links: Spaltenreihenfolge für RTL-Layouts umkehren"
+bullet4 = "Drucken und die Teile zusammensetzen, um Ihr Poster zu erstellen"
+text = "Große PDF-Seiten in kleinere, druckbare Abschnitte aufteilen, geeignet für Standardpapiergrößen. Perfekt, um aus übergroßen Seiten Poster zu erstellen."
+title = "Für Posterdruck aufteilen"
 
 [split.tooltip.byPages]
 bullet1 = "Einzelne Teilungspunkte: 3,7 (teilt nach Seite 3 und 7)"
@@ -6364,9 +6672,13 @@ tags = "webaufnahme,seite speichern,web-zu-dokument,archiv"
 title = "URL zu PDF"
 
 [usage]
+aboutUsageAnalytics = "Info zu Nutzungsanalysen"
+configureSettings = "Analyse-Einstellungen konfigurieren"
 error = "Fehler beim Laden der Nutzungsstatistiken"
 noData = "Keine Daten verfügbar"
 noDataMessage = "Derzeit sind keine Nutzungsstatistiken verfügbar."
+usageAnalyticsExplanation = "Nutzungsanalysen erfassen Endpoint-Anfragen und Tool-Nutzungsmuster. In Kombination mit dem Audit-Logging-Dashboard erhalten Sie volle Transparenz über Systemaktivitäten, Leistung und Sicherheitsereignisse."
+viewAuditLogs = "Audit-Protokolle anzeigen"
 
 [usage.chart]
 title = "Endpunkt-Nutzungsdiagramm"
@@ -6947,3 +7259,278 @@ cancel = "Abbrechen"
 confirm = "Extrahieren"
 message = "Dieses ZIP enthält {{count}} Dateien. Trotzdem extrahieren?"
 title = "Große ZIP-Datei"
+
+[cloudBadge]
+tooltip = "Dieser Vorgang verwendet Ihre Cloud-Credits"
+
+[team]
+cancelInviteError = "Einladung konnte nicht storniert werden"
+confirmCancelInvite = "Sind Sie sicher, dass Sie diese Einladung stornieren möchten?"
+confirmLeave = "Sind Sie sicher, dass Sie dieses Team verlassen möchten?"
+confirmLeaveLeader = "Als Teamleiter werden Sie beim Verlassen aus dem Team entfernt. Sind Sie sicher?"
+confirmRemove = "Sind Sie sicher, dass Sie dieses Mitglied entfernen möchten?"
+editName = "Teamnamen bearbeiten"
+inviteCancelled = "Einladung storniert"
+inviteError = "Einladung konnte nicht gesendet werden"
+inviteSent = "Einladung erfolgreich gesendet"
+leader = "Teamleiter"
+leaveButton = "Team verlassen"
+leaveError = "Team konnte nicht verlassen werden"
+leaveSuccess = "Erfolgreich aus dem Team ausgetreten"
+loading = "Teaminformationen werden geladen..."
+memberCount = "{{count}} Mitglieder"
+memberRemoved = "Mitglied erfolgreich entfernt"
+namePlaceholder = "Teamnamen eingeben"
+personal = "Persönlich"
+removeError = "Mitglied konnte nicht entfernt werden"
+renameError = "Team konnte nicht umbenannt werden"
+renameSuccess = "Team erfolgreich umbenannt"
+
+[team.invitationBanner]
+message = "hat Sie eingeladen, beizutreten"
+acceptButton = "Annehmen"
+rejectButton = "Ablehnen"
+
+[team.features]
+badge = "Teamfunktionen"
+subtitle = "Mit Ihrem Team zusammenarbeiten"
+title = "Team-Zusammenarbeit"
+viewPlans = "Pläne anzeigen"
+
+[team.features.billing]
+description = "Abrechnung und Abonnements verwalten"
+title = "Abrechnungsverwaltung"
+
+[team.features.credits]
+description = "Gemeinsamer Credit-Pool für alle Mitglieder"
+title = "Gemeinsame Credits"
+
+[team.features.dashboard]
+description = "Teamaktivitäten und -nutzung anzeigen"
+title = "Team-Dashboard"
+
+[team.features.invite]
+description = "Mitglieder zu Ihrem Team hinzufügen"
+title = "Mitglieder einladen"
+
+[team.invite]
+cancelLabel = "Abbrechen"
+invalidEmail = "Ungültige E-Mail-Adresse"
+placeholder = "E-Mail-Adresse eingeben"
+sendButton = "Einladung senden"
+title = "Teammitglied einladen"
+
+[team.members]
+emailColumn = "E-Mail"
+empty = "Noch keine Teammitglieder"
+nameColumn = "Name"
+pending = "Ausstehend"
+remove = "Entfernen"
+roleColumn = "Rolle"
+title = "Teammitglieder"
+
+[team.upgrade]
+button = "Auf Team upgraden"
+description = "Team-Kollaborationsfunktionen freischalten"
+title = "Auf Team-Tarif upgraden"
+
+[provider.oauth2.google]
+scope = "Anmeldeauthentifizierung"
+
+[provider.oauth2.google.clientId]
+label = "Client ID"
+description = "Die OAuth2 Client ID aus der Google Cloud Console"
+
+[provider.oauth2.google.clientSecret]
+label = "Client Secret"
+description = "Das OAuth2 Client Secret aus der Google Cloud Console"
+
+[provider.oauth2.google.scopes]
+label = "Scopes"
+description = "Kommagetrennte OAuth2-Scopes"
+
+[provider.oauth2.google.useAsUsername]
+label = "Als Benutzername verwenden"
+description = "Feld, das als Benutzername verwendet wird (email, name, given_name, family_name)"
+
+[provider.oauth2.github]
+scope = "Anmeldeauthentifizierung"
+
+[provider.oauth2.github.clientId]
+label = "Client ID"
+description = "Die OAuth2 Client ID aus den GitHub Developer Settings"
+
+[provider.oauth2.github.clientSecret]
+label = "Client Secret"
+description = "Das OAuth2 Client Secret aus den GitHub Developer Settings"
+
+[provider.oauth2.github.scopes]
+label = "Scopes"
+description = "Kommagetrennte OAuth2-Scopes"
+
+[provider.oauth2.github.useAsUsername]
+label = "Als Benutzername verwenden"
+description = "Feld, das als Benutzername verwendet wird (email, login, name)"
+
+[provider.oauth2.keycloak]
+scope = "SSO"
+
+[provider.oauth2.keycloak.issuer]
+label = "Issuer-URL"
+description = "URL des OpenID Connect Discovery-Endpunkts des Keycloak-Realm"
+
+[provider.oauth2.keycloak.clientId]
+label = "Client ID"
+description = "Die OAuth2 Client ID aus Keycloak"
+
+[provider.oauth2.keycloak.clientSecret]
+label = "Client Secret"
+description = "Das OAuth2 Client Secret aus Keycloak"
+
+[provider.oauth2.keycloak.scopes]
+label = "Scopes"
+description = "Kommagetrennte OAuth2-Scopes"
+
+[provider.oauth2.keycloak.useAsUsername]
+label = "Als Benutzername verwenden"
+description = "Feld, das als Benutzername verwendet wird (email, name, given_name, family_name, preferred_username)"
+
+[provider.oauth2.generic]
+name = "Generisches OAuth2"
+scope = "SSO"
+
+[provider.oauth2.generic.enabled]
+label = "Generisches OAuth2 aktivieren"
+description = "Authentifizierung mit einem benutzerdefinierten OAuth2-Anbieter aktivieren"
+
+[provider.oauth2.generic.provider]
+label = "Anbietername"
+description = "Der Name Ihres OAuth2-Anbieters (z. B. Azure AD, Okta)"
+
+[provider.oauth2.generic.issuer]
+label = "Issuer-URL"
+description = "Anbieter, der OpenID Connect Discovery unterstützt (/.well-known/openid-configuration)"
+
+[provider.oauth2.generic.clientId]
+label = "Client ID"
+description = "Die OAuth2 Client ID Ihres Anbieters"
+
+[provider.oauth2.generic.clientSecret]
+label = "Client Secret"
+description = "Das OAuth2 Client Secret Ihres Anbieters"
+
+[provider.oauth2.generic.scopes]
+label = "Scopes"
+description = "Kommagetrennte OAuth2-Scopes"
+
+[provider.oauth2.generic.useAsUsername]
+label = "Als Benutzername verwenden"
+description = "Feld, das als Benutzername verwendet wird"
+
+[provider.oauth2.generic.autoCreateUser]
+label = "Benutzer automatisch erstellen"
+description = "Benutzerkonten beim ersten OAuth2-Login automatisch erstellen"
+
+[provider.oauth2.generic.blockRegistration]
+label = "Registrierung blockieren"
+description = "Neue Benutzerregistrierung via OAuth2 verhindern"
+
+[provider.smtp]
+name = "SMTP-Mail"
+scope = "E-Mail-Benachrichtigungen"
+
+[provider.smtp.enabled]
+label = "E-Mail aktivieren"
+description = "E-Mail-Benachrichtigungen und SMTP-Funktionalität aktivieren"
+
+[provider.smtp.host]
+label = "SMTP-Host"
+description = "Der Hostname oder die IP-Adresse Ihres SMTP-Servers"
+
+[provider.smtp.port]
+label = "SMTP-Port"
+description = "Die Portnummer für die SMTP-Verbindung (typisch 25, 465 oder 587)"
+
+[provider.smtp.username]
+label = "SMTP-Benutzername"
+description = "Benutzername für die SMTP-Authentifizierung"
+
+[provider.smtp.password]
+label = "SMTP-Passwort"
+description = "Passwort für die SMTP-Authentifizierung"
+
+[provider.smtp.from]
+label = "Absenderadresse"
+description = "Die E-Mail-Adresse, die als Absender verwendet werden soll"
+
+[provider.saml2]
+name = "SAML2"
+scope = "SSO (SAML)"
+
+[provider.saml2.enabled]
+label = "SAML2 aktivieren"
+description = "SAML2-Authentifizierung aktivieren (nur Enterprise)"
+
+[provider.saml2.provider]
+label = "Anbietername"
+description = "Der Name Ihres SAML2-Anbieters"
+
+[provider.saml2.registrationId]
+label = "Registrierungs-ID"
+description = "Der Name Ihrer Service Provider (SP)-App"
+
+[provider.saml2.idpMetadataUri]
+label = "IDP-Metadaten-URI"
+description = "Die URI für die Metadaten Ihres Anbieters"
+
+[provider.saml2.idpSingleLoginUrl]
+label = "IDP Single Login-URL"
+description = "Die URL zum Initiieren von SSO"
+
+[provider.saml2.idpSingleLogoutUrl]
+label = "IDP Single Logout-URL"
+description = "Die URL zum Initiieren von SLO"
+
+[provider.saml2.idpIssuer]
+label = "IDP-Issuer"
+description = "Die ID Ihres Anbieters"
+
+[provider.saml2.idpCert]
+label = "IDP-Zertifikat"
+description = "Zertifikatspfad (z. B. classpath:okta.cert)"
+
+[provider.saml2.privateKey]
+label = "Privater Schlüssel"
+description = "Pfad zu Ihrem privaten Schlüssel"
+
+[provider.saml2.spCert]
+label = "SP-Zertifikat"
+description = "Pfad zu Ihrem Signaturzertifikat"
+
+[provider.saml2.autoCreateUser]
+label = "Benutzer automatisch erstellen"
+description = "Benutzerkonten beim ersten SAML2-Login automatisch erstellen"
+
+[provider.saml2.blockRegistration]
+label = "Registrierung blockieren"
+description = "Neue Benutzerregistrierung via SAML2 verhindern"
+
+[provider.googledrive]
+name = "Google Drive"
+scope = "Dateiimport"
+
+[provider.googledrive.enabled]
+label = "Google Drive-Dateiauswahl aktivieren"
+description = "Benutzern erlauben, Dateien direkt aus Google Drive zu importieren"
+
+[provider.googledrive.clientId]
+label = "Client ID"
+description = "Google OAuth 2.0 Client ID aus der Google Cloud Console"
+
+[provider.googledrive.apiKey]
+label = "API Key"
+description = "Google API Key für die Google Picker API aus der Google Cloud Console"
+
+[provider.googledrive.appId]
+label = "App-ID"
+description = "Google Drive App-ID aus der Google Cloud Console"
