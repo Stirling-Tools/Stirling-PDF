@@ -14,11 +14,20 @@ interface OutputFileRecord {
   storedAt: number;
 }
 
+interface InputFileRecord {
+  fileId: string;
+  folderId: string;
+  name: string;
+  blob: Blob;
+  storedAt: number;
+}
+
 class FolderStorage {
   private dbName = 'stirling-pdf-folder-files';
-  private dbVersion = 1;
+  private dbVersion = 2;
   private recordsStore = 'folderRecords';
   private outputStore = 'folderOutputFiles';
+  private inputStore = 'folderInputFiles';
   private db: IDBDatabase | null = null;
 
   async init(): Promise<void> {
@@ -42,6 +51,10 @@ class FolderStorage {
         if (!db.objectStoreNames.contains(this.outputStore)) {
           const outputStore = db.createObjectStore(this.outputStore, { keyPath: 'fileId' });
           outputStore.createIndex('folderId', 'folderId', { unique: false });
+        }
+        if (!db.objectStoreNames.contains(this.inputStore)) {
+          const inputStore = db.createObjectStore(this.inputStore, { keyPath: 'fileId' });
+          inputStore.createIndex('folderId', 'folderId', { unique: false });
         }
       };
     });
@@ -140,11 +153,54 @@ class FolderStorage {
     });
   }
 
+  async storeInputFile(folderId: string, fileId: string, blob: Blob, name: string): Promise<void> {
+    const db = await this.ensureDB();
+    const record: InputFileRecord = { fileId, folderId, name, blob, storedAt: Date.now() };
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.inputStore], 'readwrite');
+      const store = transaction.objectStore(this.inputStore);
+      const request = store.put(record);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(new Error('Failed to store input file'));
+    });
+  }
+
+  async getInputFile(fileId: string): Promise<InputFileRecord | null> {
+    const db = await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.inputStore], 'readonly');
+      const store = transaction.objectStore(this.inputStore);
+      const request = store.get(fileId);
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(new Error('Failed to get input file'));
+    });
+  }
+
+  async getInputFilesByFolder(folderId: string): Promise<InputFileRecord[]> {
+    const db = await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.inputStore], 'readonly');
+      const store = transaction.objectStore(this.inputStore);
+      const index = store.index('folderId');
+      const request = index.getAll(folderId);
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(new Error('Failed to get input files by folder'));
+    });
+  }
+
   async clearFolder(folderId: string): Promise<void> {
     const db = await this.ensureDB();
-    // Delete output files for this folder
+    // Delete output and input files for this folder
     const outputFileIds = await this.getOutputFileIdsByFolder(folderId);
     await Promise.all(outputFileIds.map(id => this.deleteOutputFile(db, id)));
+    const inputFiles = await this.getInputFilesByFolder(folderId);
+    await Promise.all(inputFiles.map(f => new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction([this.inputStore], 'readwrite');
+      const store = transaction.objectStore(this.inputStore);
+      const request = store.delete(f.fileId);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(new Error('Failed to delete input file'));
+    })));
     // Delete folder record
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.recordsStore], 'readwrite');
@@ -250,4 +306,4 @@ class FolderStorage {
 }
 
 export const folderStorage = new FolderStorage();
-export type { OutputFileRecord };
+export type { OutputFileRecord, InputFileRecord };

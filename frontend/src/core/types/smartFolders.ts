@@ -22,6 +22,7 @@ export interface FolderFileMetadata {
   displayFileId?: string; // output file id
   inputFileId?: string;
   errorMessage?: string;
+  name?: string; // original filename
 }
 
 export interface FolderRecord {
