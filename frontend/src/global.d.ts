@@ -26,16 +26,4 @@ declare module 'axios' {
   }
 }
 
-declare module 'posthog-js/react' {
-  import { ReactNode } from 'react';
-  import posthogJs, { PostHogConfig } from 'posthog-js';
-
-  export const PostHogProvider: React.FC<{
-    client?: typeof posthogJs;
-    options?: Partial<PostHogConfig>;
-    apiKey?: string;
-    children?: ReactNode;
-  }>;
-}
-
 export { };
