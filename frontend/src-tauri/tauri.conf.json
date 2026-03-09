@@ -50,7 +50,6 @@
                     "pdf"
                 ],
                 "name": "PDF Document",
-                "description": "Open PDF files with Stirling-PDF",
                 "role": "Editor",
                 "mimeType": "application/pdf"
             }
