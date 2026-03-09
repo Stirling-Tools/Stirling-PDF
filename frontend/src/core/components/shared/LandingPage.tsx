@@ -84,7 +84,7 @@ const LandingPage = () => {
       </Dropzone>
 
       {/* Visual content */}
-      <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 10, pointerEvents: 'none' }}>
+      <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 10 }}>
         <div className="landing-fade-in" style={{ textAlign: 'center', maxWidth: 540, paddingBottom: 80 }}>
 
           <LandingDocumentStack isDark={isDark} />
@@ -94,15 +94,15 @@ const LandingPage = () => {
           </h1>
 
           <p style={{ fontSize: 15, marginBottom: 32, paddingLeft: 16, paddingRight: 16, color: 'var(--text-secondary)', lineHeight: 1.8 }}>
-            {t('landing.descriptionLine1', 'Drop in a file to edit, use one of our upload options')}
+            {t('landing.descriptionLine', 'Drop in a file to get started, or create a file from scratch with our')}
             <br />
-            {t('landing.descriptionLine2', 'or create a file from scratch with our')}{' '}
+            {t('landing.descriptionLine2', '')}{' '}
             <span style={{ color: '#4C8BF5', fontWeight: 600 }}>
               {t('landing.stirlingAgent', 'Stirling agent')}
             </span>
           </p>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, pointerEvents: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
             <button onClick={() => openFilesModal()} style={btnBase} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
               <LocalIcon icon="add" width="1rem" height="1rem" style={{ color: '#FFFFFF' }} />
               {t('landing.browseFiles', 'Browse Files')}

@@ -3855,6 +3855,9 @@ addFiles = "Add Files"
 mobileUpload = "Upload from Mobile"
 openFromComputer = "Open from computer"
 uploadFromComputer = "Upload from computer"
+descriptionLine1 = "Drop in a file to get started, or create a file from scratch with our"
+descriptionLine2 = ""
+stirlingAgent = "Stirling agent"
 
 [language]
 direction = "ltr"

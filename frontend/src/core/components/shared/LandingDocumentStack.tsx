@@ -1,4 +1,5 @@
 import React from 'react';
+import './LandingDocumentStack.css';
 
 const DOC_BG = '#FFFFFF';
 const DOC_BORDER = '#E5E7EB';
@@ -67,23 +68,7 @@ export default function LandingDocumentStack({ isDark }: Props) {
   const lineDark = isDark ? DARK_DOC_LINE_DARK : DOC_LINE_DARK;
 
   return (
-    <>
-      <style>{`
-        @keyframes docLeftIn {
-          from { opacity: 0; transform: rotate(0deg) translateX(20px) scale(0.9); }
-          to { opacity: 1; transform: rotate(-8deg); }
-        }
-        @keyframes docCenterIn {
-          from { opacity: 0; transform: translateX(-50%) translateY(20px) scale(0.9); }
-          to { opacity: 1; transform: translateX(-50%); }
-        }
-        @keyframes docRightIn {
-          from { opacity: 0; transform: rotate(0deg) translateX(-20px) scale(0.9); }
-          to { opacity: 1; transform: rotate(8deg); }
-        }
-      `}</style>
-
-      <div style={{ width: 224, height: 176, position: 'relative', margin: '0 auto 48px', pointerEvents: 'auto' }}>
+    <div style={{ width: 224, height: 176, position: 'relative', margin: '0 auto 48px' }}>
         {/* Ambient glow */}
         <div
           style={{
@@ -98,6 +83,7 @@ export default function LandingDocumentStack({ isDark }: Props) {
 
         {/* Left page */}
         <div
+          className="landing-doc-left"
           style={{
             position: 'absolute',
             left: 8,
@@ -105,13 +91,11 @@ export default function LandingDocumentStack({ isDark }: Props) {
             width: 128,
             height: 160,
             borderRadius: 12,
-            transform: 'rotate(-8deg)',
             transformOrigin: 'bottom center',
             backgroundColor: bg,
             border: `1px solid ${border}`,
             boxShadow: sideShadow,
             overflow: 'hidden',
-            animation: 'docLeftIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.1s both',
           }}
         >
           <SidePageLines line={line} lineDark={lineDark} />
@@ -119,11 +103,11 @@ export default function LandingDocumentStack({ isDark }: Props) {
 
         {/* Center page */}
         <div
+          className="landing-doc-center"
           style={{
             position: 'absolute',
             left: '50%',
             top: 0,
-            transform: 'translateX(-50%)',
             width: 144,
             height: 176,
             borderRadius: 12,
@@ -131,7 +115,6 @@ export default function LandingDocumentStack({ isDark }: Props) {
             backgroundColor: bg,
             boxShadow: centerShadow,
             overflow: 'hidden',
-            animation: 'docCenterIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0s both',
           }}
         >
           {/* Blue header bar */}
@@ -155,6 +138,7 @@ export default function LandingDocumentStack({ isDark }: Props) {
 
         {/* Right page */}
         <div
+          className="landing-doc-right"
           style={{
             position: 'absolute',
             right: 8,
@@ -162,18 +146,15 @@ export default function LandingDocumentStack({ isDark }: Props) {
             width: 128,
             height: 160,
             borderRadius: 12,
-            transform: 'rotate(8deg)',
             transformOrigin: 'bottom center',
             backgroundColor: bg,
             border: `1px solid ${border}`,
             boxShadow: sideShadow,
             overflow: 'hidden',
-            animation: 'docRightIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.2s both',
           }}
         >
           <RightPageLines line={line} lineDark={lineDark} />
         </div>
       </div>
-    </>
   );
 }
