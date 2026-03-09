@@ -84,13 +84,11 @@ class LanguageServiceTest {
 
         // Verify
         assertEquals(
-                allowedLanguages, supportedLanguages, "Should return only whitelisted languages");
-        assertFalse(
-                supportedLanguages.contains("en_GB"),
-                "en_GB should NOT be included when not in whitelist");
-        assertFalse(
-                supportedLanguages.contains("de_DE"),
-                "de_DE should NOT be included when not in whitelist");
+                allowedLanguages,
+                supportedLanguages,
+                "Should return only whitelisted languages");
+        assertFalse(supportedLanguages.contains("en_GB"), "en_GB should NOT be included when not in whitelist");
+        assertFalse(supportedLanguages.contains("de_DE"), "de_DE should NOT be included when not in whitelist");
     }
 
     @Test
