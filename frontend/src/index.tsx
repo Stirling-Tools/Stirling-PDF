@@ -9,7 +9,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from '@app/App';
 import '@app/i18n'; // Initialize i18next
 import posthog from 'posthog-js';
-import { PostHogProvider } from 'posthog-js/react';
+import { PostHogProvider } from '@posthog/react';
 import { BASE_PATH } from '@app/constants/app';
 
 posthog.init('phc_VOdeYnlevc2T63m3myFGjeBlRcIusRgmhfx6XL5a1iz', {
