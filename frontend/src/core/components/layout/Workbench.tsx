@@ -3,12 +3,11 @@ import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useFileHandler } from '@app/hooks/useFileHandler';
-import { useFileState, useFileActions } from '@app/contexts/FileContext';
+import { useFileState } from '@app/contexts/FileContext';
 import { useNavigationState, useNavigationActions, useNavigationGuard } from '@app/contexts/NavigationContext';
 import { isBaseWorkbench } from '@app/types/workbench';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
-import { FileId } from '@app/types/file';
 import styles from '@app/components/layout/Workbench.module.css';
 
 import WorkbenchBar from '@app/components/layout/WorkbenchBar';
@@ -27,7 +26,6 @@ export default function Workbench() {
 
   // Use context-based hooks to eliminate all prop drilling
   const { selectors } = useFileState();
-  const { actions: fileActions } = useFileActions();
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
@@ -72,10 +70,6 @@ export default function Workbench() {
       setActiveFileIndex(index);
     });
   }, [activeFileIndex, requestNavigation, setActiveFileIndex]);
-
-  const handleFileRemove = useCallback(async (fileId: FileId) => {
-    await fileActions.removeFiles([fileId], false); // false = don't delete from IndexedDB, just remove from context
-  }, [fileActions]);
 
   const handlePreviewClose = () => {
     setPreviewFile(null);

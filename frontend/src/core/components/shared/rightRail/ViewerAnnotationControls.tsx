@@ -8,9 +8,7 @@ import { useSignature } from '@app/contexts/SignatureContext';
 import { useFileState, useFileContext } from '@app/contexts/FileContext';
 import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
 import { useNavigationState, useNavigationGuard, useNavigationActions } from '@app/contexts/NavigationContext';
-import { useSidebarContext } from '@app/contexts/SidebarContext';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import { useRightRailTooltipSide } from '@app/hooks/useRightRailTooltipSide';
 import { useRedactionMode, useRedaction } from '@app/contexts/RedactionContext';
 import { defaultParameters, RedactParameters } from '@app/hooks/tools/redact/useRedactParameters';
 import { RedactionMode } from '@embedpdf/plugin-redaction';
@@ -22,9 +20,7 @@ interface ViewerAnnotationControlsProps {
 
 export default function ViewerAnnotationControls({ currentView, disabled = false }: ViewerAnnotationControlsProps) {
   const { t } = useTranslation();
-  const { sidebarRefs } = useSidebarContext();
   const { setLeftPanelView, setSidebarsVisible } = useToolWorkflow();
-  const { position: tooltipPosition, offset: tooltipOffset } = useRightRailTooltipSide(sidebarRefs);
 
   // Viewer context for PDF controls - safely handle when not available
   const viewerContext = React.useContext(ViewerContext);

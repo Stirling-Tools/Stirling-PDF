@@ -1549,6 +1549,44 @@ width = "Width"
 [app]
 description = "The Free Adobe Acrobat alternative (10M+ Downloads)"
 
+[workbenchBar]
+activeFiles = "Active files"
+delete = "Remove from workbench"
+download = "Download"
+file = "file"
+files = "files"
+nextPage = "Next page"
+pages = "pages"
+prevPage = "Previous page"
+removeFile = "Remove file"
+viewZoomSlider = "View and zoom control"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[leftSidebar]
+backToFiles = "Back to files"
+dropbox = "Dropbox"
+files = "Files"
+googleDrive = "Google Drive"
+menu = "Menu"
+mobileUpload = "Mobile Upload"
+noFiles = "No recent files"
+oneDrive = "OneDrive"
+openFromComputer = "Open from computer"
+search = "Search"
+viewAllFiles = "View all {{count}} files →"
+watchFolders = "Watch Folders"
+workInFolder = "Work in a folder"
+
+[rightPanel]
+agents = "Agents"
+allTools = "All Tools"
+back = "Back"
+searchTools = "Search tools..."
+tools = "Tools"
+viewAllAgents = "View All Agents →"
+viewAllTools = "View All Tools →"
+
 [attachments]
 add = "Add Attachment"
 convertToPdfA3b = "Convert to PDF/A-3b"
@@ -5817,6 +5855,13 @@ apiKeys = "API Keys"
 title = "Developer"
 
 [settings.general]
+language = "Language"
+languageDescription = "Choose your preferred display language"
+theme = "Theme"
+themeDark = "Dark"
+themeDescription = "Choose your preferred color theme"
+themeLight = "Light"
+themeMidnight = "Midnight"
 autoUnzip = "Auto-unzip API responses"
 autoUnzipDescription = "Automatically extract files from ZIP responses"
 autoUnzipFileLimit = "Auto-unzip file limit"

@@ -345,9 +345,9 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
               value={preferences.theme === 'rainbow' ? 'dark' : preferences.theme}
               onChange={(val: string) => updatePreference("theme", val as ThemeMode)}
               data={[
-                { label: t("settings.general.theme.light", "Light"), value: "light" },
-                { label: t("settings.general.theme.dark", "Dark"), value: "dark" },
-                { label: t("settings.general.theme.midnight", "Midnight"), value: "midnight" },
+                { label: t("settings.general.themeLight", "Light"), value: "light" },
+                { label: t("settings.general.themeDark", "Dark"), value: "dark" },
+                { label: t("settings.general.themeMidnight", "Midnight"), value: "midnight" },
               ]}
             />
           </div>

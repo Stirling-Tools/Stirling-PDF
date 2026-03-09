@@ -30,14 +30,12 @@ describe('getStartupNavigationAction', () => {
     expect(getStartupNavigationAction(3, 1, null, 'fileEditor' as WorkbenchType)).toBeNull();
   });
 
-  it('navigates to last file when already in viewer and files are added', () => {
+  it('navigates to fileEditor when already in viewer and files are added (2+)', () => {
     expect(getStartupNavigationAction(1, 2, null, 'viewer' as WorkbenchType)).toEqual({
-      workbench: 'viewer',
-      activeFileIndex: 1,
+      workbench: 'fileEditor',
     });
     expect(getStartupNavigationAction(3, 5, null, 'viewer' as WorkbenchType)).toEqual({
-      workbench: 'viewer',
-      activeFileIndex: 4,
+      workbench: 'fileEditor',
     });
   });
 
