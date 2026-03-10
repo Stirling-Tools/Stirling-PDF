@@ -8,6 +8,7 @@ import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
 import { SMART_FOLDER_VIEW_ID, SMART_FOLDER_WORKBENCH_ID } from '@app/components/smartFolders/SmartFoldersRegistration';
+import FolderSpecialRoundedIcon from '@mui/icons-material/FolderSpecialRounded';
 import { useSidebarNavigation } from '@app/hooks/useSidebarNavigation';
 import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
 import { ButtonConfig } from '@app/types/sidebar';
@@ -16,7 +17,6 @@ import { Tooltip } from '@app/components/shared/Tooltip';
 import AllToolsNavButton from '@app/components/shared/AllToolsNavButton';
 import ActiveToolButton from "@app/components/shared/quickAccessBar/ActiveToolButton";
 import AppConfigModal from '@app/components/shared/AppConfigModal';
-import FolderSpecialRoundedIcon from '@mui/icons-material/FolderSpecialRounded';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
 import { requestStartTour } from '@app/constants/events';
@@ -164,18 +164,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     return availability?.available !== false;
   }), [t, setActiveButton, handleReaderToggle, selectedToolKey, resetTool, handleToolSelect, toolAvailability]);
 
-  const isWatchFoldersActive = workbench === SMART_FOLDER_WORKBENCH_ID;
-
   const middleButtons: ButtonConfig[] = [
-    {
-      id: 'files',
-      name: t("quickAccess.files", "Files"),
-      icon: <LocalIcon icon="folder-rounded" width="1.25rem" height="1.25rem" />,
-      isRound: true,
-      size: 'md',
-      type: 'modal',
-      onClick: handleFilesButtonClick
-    },
     {
       id: 'watchFolders',
       name: t("quickAccess.watchFolders", "Watch Folders"),
@@ -188,6 +177,15 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId: null });
         navigationActions.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
       }
+    },
+    {
+      id: 'files',
+      name: t("quickAccess.files", "Files"),
+      icon: <LocalIcon icon="folder-rounded" width="1.25rem" height="1.25rem" />,
+      isRound: true,
+      size: 'md',
+      type: 'modal',
+      onClick: handleFilesButtonClick
     },
   ];
   //TODO: Activity

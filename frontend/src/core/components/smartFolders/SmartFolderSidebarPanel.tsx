@@ -46,7 +46,7 @@ export function SmartFolderSidebarPanel() {
     <Box style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <Box px="sm" pt="xs" pb="xs" style={{ flexShrink: 0, borderBottom: '1px solid var(--border-subtle)' }}>
         <Text size="xs" fw={600} tt="uppercase" c="dimmed">
-          {t('smartFolders.sidebarFiles', 'Your Files')}
+          {t('smartFolders.sidebarFiles', 'My Files')}
         </Text>
       </Box>
       <FileManagerProvider

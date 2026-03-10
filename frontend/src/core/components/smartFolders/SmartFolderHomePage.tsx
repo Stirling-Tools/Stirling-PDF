@@ -2,13 +2,13 @@ import { useState, useCallback, useEffect } from 'react';
 import { Box, Text, Stack, Group, ActionIcon, Button, Loader, ScrollArea } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import AddIcon from '@mui/icons-material/Add';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import EditIcon from '@mui/icons-material/Edit';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import FolderPlusIcon from '@mui/icons-material/CreateNewFolder';
+import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import { useSmartFolders } from '@app/hooks/useSmartFolders';
 import { useFolderRunStatuses } from '@app/hooks/useFolderRunStatuses';
 import { SmartFolder, SmartFolderRunEntry } from '@app/types/smartFolders';
@@ -51,6 +51,7 @@ interface FolderCardProps {
   onDelete: (folder: SmartFolder) => void;
   onOpen: (folderId: string) => void;
   onDropFiles: (folder: SmartFolder, files: File[]) => void;
+  onTogglePause: (folder: SmartFolder) => void;
 }
 
 function FolderCard({
@@ -61,33 +62,40 @@ function FolderCard({
   onDelete,
   onOpen,
   onDropFiles,
+  onTogglePause,
 }: FolderCardProps) {
   const { t } = useTranslation();
   const [automation, setAutomation] = useState<AutomationConfig | null>(null);
   const [fileCount, setFileCount] = useState(0);
+  const [lastAdded, setLastAdded] = useState<Date | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     automationStorage.getAutomation(folder.automationId).then(setAutomation);
 
-    const loadCount = () =>
+    const loadData = () =>
       folderStorage.getFolderData(folder.id).then((record) => {
-        setFileCount(record ? Object.keys(record.files).length : 0);
+        if (!record) { setFileCount(0); setLastAdded(null); return; }
+        const files = Object.values(record.files);
+        setFileCount(files.length);
+        const dates = files.map(f => new Date(f.addedAt)).filter(d => !isNaN(d.getTime()));
+        setLastAdded(dates.length ? new Date(Math.max(...dates.map(d => d.getTime()))) : null);
       });
-    loadCount();
+    loadData();
 
     const unsub = folderStorage.onFolderChange((changedId) => {
-      if (changedId === folder.id) loadCount();
+      if (changedId === folder.id) loadData();
     });
     return unsub;
   }, [folder.id, folder.automationId]);
 
   const FolderIcon = iconMap[folder.icon as keyof typeof iconMap] ?? iconMap.FolderIcon;
-  const isActive = isProcessing || status === 'processing';
-  const isDone = status === 'done' && !isActive;
+  const isPaused = folder.isPaused ?? false;
+  const isActive = !isPaused && (isProcessing || status === 'processing');
+  const isDone = !isPaused && status === 'done' && !isActive;
 
-  const statusDotColor = isActive ? '#3b82f6' : isDone ? '#22c55e' : '#6b7280';
+  const statusDotColor = isPaused ? 'var(--mantine-color-dimmed)' : isActive ? '#3b82f6' : isDone ? '#22c55e' : '#6b7280';
   const statusDotPulse = isActive;
 
   const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragOver(true); };
@@ -102,15 +110,13 @@ function FolderCard({
 
   const ops = automation?.operations ?? [];
 
-  const cardBorderColor = isDragOver
+  const cardBorderColor = isDragOver || isHovered
     ? folder.accentColor
-    : isHovered
-    ? folder.accentColor
-    : 'var(--border-subtle)';
+    : 'var(--mantine-color-default-border)';
 
   const cardBoxShadow = isDragOver || isHovered
-    ? `0 0.25rem 0.75rem ${folder.accentColor}15`
-    : 'none';
+    ? `0 0.25rem 0.75rem ${folder.accentColor}25`
+    : '0 0.0625rem 0.25rem rgba(0,0,0,0.08)';
 
   return (
     <Box
@@ -119,7 +125,7 @@ function FolderCard({
         border: `0.0625rem solid ${cardBorderColor}`,
         backgroundColor: isDragOver
           ? `${folder.accentColor}08`
-          : 'var(--bg-surface, var(--mantine-color-default))',
+          : 'var(--bg-toolbar)',
         transition: 'border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease',
         boxShadow: cardBoxShadow,
         cursor: 'pointer',
@@ -196,74 +202,85 @@ function FolderCard({
                     borderRadius: '1rem',
                     fontSize: '0.6875rem',
                     fontWeight: 500,
-                    backgroundColor: isActive
+                    backgroundColor: isPaused
+                      ? 'var(--mantine-color-default-hover)'
+                      : isActive
                       ? 'rgba(59, 130, 246, 0.12)'
-                      : isDone
-                      ? 'rgba(34, 197, 94, 0.12)'
-                      : 'var(--mantine-color-dimmed-alpha, rgba(120,120,120,0.1))',
-                    color: isActive ? '#3b82f6' : isDone ? '#22c55e' : 'var(--mantine-color-dimmed)',
+                      : 'rgba(34, 197, 94, 0.12)',
+                    color: isPaused ? 'var(--mantine-color-dimmed)' : isActive ? '#3b82f6' : '#22c55e',
                     whiteSpace: 'nowrap',
                     flexShrink: 0,
                   }}
                 >
-                  {isActive
+                  {isPaused
+                    ? t('smartFolders.status.paused', 'Paused')
+                    : isActive
                     ? t('smartFolders.status.processing', 'Processing')
-                    : isDone
-                    ? t('smartFolders.status.done', 'Done')
-                    : t('smartFolders.status.idle', 'Idle')}
+                    : t('smartFolders.status.active', 'Active')}
                 </Box>
               </Group>
 
               {/* Right: file count + hover actions */}
-              <Group gap="xs" wrap="nowrap" style={{ flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
-                <Box style={{ textAlign: 'right' }}>
-                  <Text
-                    fw={700}
-                    size="sm"
-                    style={{ color: folder.accentColor, lineHeight: 1.2 }}
-                  >
-                    {fileCount}
-                  </Text>
-                  <Text size="xs" c="dimmed" style={{ fontSize: '0.625rem', lineHeight: 1 }}>
-                    {fileCount === 1
+              <Group gap="sm" wrap="nowrap" align="center" style={{ flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+                <Box style={{ textAlign: 'right', marginRight: '0.25rem' }}>
+                  <Text fw={700} size="sm" style={{ color: '#fff', lineHeight: 1.2 }}>
+                    {fileCount} {fileCount === 1
                       ? t('smartFolders.home.file', 'file')
                       : t('smartFolders.home.files', 'files')}
                   </Text>
+                  {lastAdded && (
+                    <Text size="xs" c="dimmed" style={{ fontSize: '0.625rem', lineHeight: 1.3 }}>
+                      {(() => {
+                        const now = new Date();
+                        const isToday = lastAdded.toDateString() === now.toDateString();
+                        if (isToday) {
+                          const hrs = Math.floor((now.getTime() - lastAdded.getTime()) / 3600000);
+                          return hrs < 1 ? 'just now' : `${hrs}hr${hrs === 1 ? '' : 's'} ago`;
+                        }
+                        const days = Math.floor((now.getTime() - lastAdded.getTime()) / 86400000);
+                        return days === 1 ? '1 day ago' : `${days} days ago`;
+                      })()}
+                    </Text>
+                  )}
                 </Box>
 
                 <Group
-                  gap={2}
+                  gap="xs"
                   wrap="nowrap"
+                  align="center"
                   style={{
                     opacity: isHovered ? 1 : 0,
                     transition: 'opacity 0.15s ease',
+                    marginLeft: '0.75rem',
                   }}
                 >
                   <ActionIcon
-                    size="sm"
+                    size="md"
+                    variant="subtle"
+                    onClick={() => onTogglePause(folder)}
+                    aria-label={isPaused ? t('smartFolders.home.resume', 'Resume') : t('smartFolders.home.pause', 'Pause')}
+                    title={isPaused ? t('smartFolders.home.resume', 'Resume') : t('smartFolders.home.pause', 'Pause')}
+                  >
+                    {isPaused
+                      ? <PlayCircleOutlineIcon style={{ fontSize: '1.125rem' }} />
+                      : <PauseCircleOutlineIcon style={{ fontSize: '1.125rem' }} />}
+                  </ActionIcon>
+                  <ActionIcon
+                    size="md"
                     variant="subtle"
                     onClick={() => onEdit(folder)}
                     aria-label={t('smartFolders.home.editFolder', 'Edit folder')}
                   >
-                    <EditIcon style={{ fontSize: '0.9375rem' }} />
+                    <EditIcon style={{ fontSize: '1.125rem' }} />
                   </ActionIcon>
                   <ActionIcon
-                    size="sm"
+                    size="md"
                     variant="subtle"
                     color="red"
                     onClick={() => onDelete(folder)}
                     aria-label={t('smartFolders.home.deleteFolder', 'Delete folder')}
                   >
-                    <DeleteOutlineIcon style={{ fontSize: '0.9375rem' }} />
-                  </ActionIcon>
-                  <ActionIcon
-                    size="sm"
-                    variant="subtle"
-                    style={{ color: folder.accentColor }}
-                    onClick={() => onOpen(folder.id)}
-                    aria-label={t('smartFolders.home.openFolder', 'Open folder')}
-                  >
-                    <OpenInNewIcon style={{ fontSize: '0.9375rem' }} />
+                    <DeleteOutlineIcon style={{ fontSize: '1.125rem' }} />
                   </ActionIcon>
                 </Group>
               </Group>
@@ -301,28 +318,11 @@ function FolderCard({
               </Text>
             )}
 
-            {/* Drop hint / description row */}
-            <Group gap="xs" align="center">
-              <UploadFileIcon
-                style={{
-                  fontSize: '0.75rem',
-                  color: isDragOver ? folder.accentColor : 'var(--mantine-color-dimmed)',
-                  flexShrink: 0,
-                }}
-              />
-              <Text
-                size="xs"
-                style={{
-                  color: isDragOver ? folder.accentColor : 'var(--mantine-color-dimmed)',
-                  fontWeight: isDragOver ? 600 : 400,
-                  fontSize: '0.6875rem',
-                }}
-              >
-                {isDragOver
-                  ? t('smartFolders.home.dropHere', 'Drop to process')
-                  : folder.description || t('smartFolders.home.dragHint', 'Drop PDFs to process')}
+            {isDragOver && (
+              <Text size="xs" fw={600} style={{ color: folder.accentColor, fontSize: '0.6875rem' }}>
+                {t('smartFolders.home.dropHere', 'Drop to process')}
               </Text>
-            </Group>
+            )}
           </Box>
         </Group>
       </Box>
@@ -461,7 +461,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
 
 export function SmartFolderHomePage() {
   const { t } = useTranslation();
-  const { folders, loading, deleteFolder, refreshFolders } = useSmartFolders();
+  const { folders, loading, deleteFolder, updateFolder, refreshFolders } = useSmartFolders();
   const statuses = useFolderRunStatuses(folders);
   const { toolRegistry, setCustomWorkbenchViewData } = useToolWorkflow();
   const { actions } = useNavigationActions();
@@ -479,6 +479,11 @@ export function SmartFolderHomePage() {
     },
     [setCustomWorkbenchViewData, actions]
   );
+
+  const handleTogglePause = useCallback(async (folder: SmartFolder) => {
+    await updateFolder({ ...folder, isPaused: !folder.isPaused });
+    refreshFolders();
+  }, [updateFolder, refreshFolders]);
 
   const handleEdit = useCallback(async (folder: SmartFolder) => {
     setEditFolder(folder);
@@ -610,6 +615,7 @@ export function SmartFolderHomePage() {
                     onDelete={setDeleteTarget}
                     onOpen={navigateToFolder}
                     onDropFiles={processFiles}
+                    onTogglePause={handleTogglePause}
                   />
                 );
               })}

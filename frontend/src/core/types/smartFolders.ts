@@ -13,6 +13,7 @@ export interface SmartFolder {
   updatedAt: string;
   order?: number;
   isDefault?: boolean;
+  isPaused?: boolean;
 }
 
 export interface FolderFileMetadata {
