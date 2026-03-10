@@ -57,24 +57,24 @@ function ensureEnvFile(envFile: string, exampleFile: string): boolean {
 }
 
 let failed = false;
-failed = ensureEnvFile('.env', '.env.example') || failed;
+failed = ensureEnvFile('.env', 'config/.env.example') || failed;
 
 if (isDesktop) {
-  failed = ensureEnvFile('.env.desktop', '.env.desktop.example') || failed;
+  failed = ensureEnvFile('.env.desktop', 'config/.env.desktop.example') || failed;
 }
 
 // Warn about any VITE_ vars set in the environment that aren't listed in any example file.
 const allExampleKeys = new Set([
-  ...getExampleKeys('.env.example'),
-  ...getExampleKeys('.env.desktop.example'),
+  ...getExampleKeys('config/.env.example'),
+  ...getExampleKeys('config/.env.desktop.example'),
 ]);
 const unknownViteVars = Object.keys(process.env)
   .filter(k => k.startsWith('VITE_') && !allExampleKeys.has(k));
 if (unknownViteVars.length > 0) {
   console.warn(
-    'setup-env: the following VITE_ vars are set but not listed in any .env.example file:\n' +
+    'setup-env: the following VITE_ vars are set but not listed in any example file:\n' +
     unknownViteVars.map(k => `  ${k}`).join('\n') +
-    '\n  Add them to .env.example or .env.desktop.example if they are required.'
+    '\n  Add them to config/.env.example or config/.env.desktop.example if they are required.'
   );
 }
 
