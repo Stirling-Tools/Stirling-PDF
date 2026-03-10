@@ -4276,7 +4276,7 @@ fileUpload = "Folosiți butonul <strong>Fișiere</strong> pentru a încărca sau
 leftPanel = "Panoul din stânga <strong>Instrumente</strong> listează tot ce puteți face. Navigați prin categorii sau căutați pentru a găsi rapid un instrument."
 pageEditorView = "Comutați la Editorul de pagini pentru a reordona, roti sau șterge pagini."
 quickAccess = "Începeți din bara <strong>Acces rapid</strong> pentru a comuta între Reader, Automate, fișierele dvs. și toate tururile."
-rightRail = "Bara <strong>din dreapta</strong> conține acțiuni rapide pentru a selecta fișiere, a schimba tema sau limba și a descărca rezultatele."
+workbenchBar = "Bara <strong>din dreapta</strong> conține acțiuni rapide pentru a selecta fișiere, a schimba tema sau limba și a descărca rezultatele."
 topBar = "Bara de sus vă permite să comutați între <strong>Vizualizator</strong>, <strong>Editor de pagini</strong> și <strong>Fișiere active</strong>."
 wrapUp = "Acestea sunt noutățile din V2. Deschideți oricând meniul <strong>Tururi</strong> pentru a relua acesta, turul Instrumente sau turul Admin."
 
@@ -4401,7 +4401,7 @@ dismiss = "Închide"
 apply = "Aplică modificările"
 download = "Descarcă PDF"
 
-[rightRail]
+[workbenchBar]
 closeSelected = "Închideți fișierele selectate"
 selectAll = "Selectați tot"
 deselectAll = "Deselectați tot"

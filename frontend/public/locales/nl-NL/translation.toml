@@ -4276,7 +4276,7 @@ fileUpload = "Gebruik de knop <strong>Bestanden</strong> om een PDF te uploaden 
 leftPanel = "Het linkerpaneel <strong>Hulpmiddelen</strong> toont alles wat u kunt doen. Blader door categorieën of zoek om snel een hulpmiddel te vinden."
 pageEditorView = "Schakel over naar de Pagina-editor om pagina's te herschikken, te roteren of te verwijderen."
 quickAccess = "Begin met de balk <strong>Snelle toegang</strong> om te schakelen tussen Reader, Automate, uw bestanden en alle rondleidingen."
-rightRail = "De <strong>Rechterbalk</strong> bevat snelle acties om bestanden te selecteren, het thema of de taal te wijzigen en resultaten te downloaden."
+workbenchBar = "De <strong>Rechterbalk</strong> bevat snelle acties om bestanden te selecteren, het thema of de taal te wijzigen en resultaten te downloaden."
 topBar = "De bovenste balk laat u schakelen tussen <strong>Viewer</strong>, <strong>Pagina Editor</strong> en <strong>Actieve bestanden</strong>."
 wrapUp = "Dit zijn de nieuwtjes in V2. Open het menu <strong>Tours</strong> wanneer u maar wilt om dit, de Tools-tour of de Admin-tour opnieuw te bekijken."
 
@@ -4401,7 +4401,7 @@ dismiss = "Sluiten"
 apply = "Wijzigingen toepassen"
 download = "PDF downloaden"
 
-[rightRail]
+[workbenchBar]
 closeSelected = "Geselecteerde bestanden sluiten"
 selectAll = "Alles selecteren"
 deselectAll = "Alles deselecteren"

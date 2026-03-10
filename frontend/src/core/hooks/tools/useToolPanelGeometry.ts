@@ -11,14 +11,14 @@ interface UseToolPanelGeometryOptions {
   enabled: boolean;
   toolPanelRef: RefObject<HTMLDivElement | null>;
   quickAccessRef: RefObject<HTMLDivElement | null>;
-  rightRailRef?: RefObject<HTMLDivElement | null>;
+  workbenchBarRef?: RefObject<HTMLDivElement | null>;
 }
 
 export function useToolPanelGeometry({
   enabled,
   toolPanelRef,
   quickAccessRef,
-  rightRailRef,
+  workbenchBarRef,
 }: UseToolPanelGeometryOptions) {
   const [geometry, setGeometry] = useState<ToolPanelGeometry | null>(null);
   const scheduleUpdateRef = useRef<() => void>(() => {});
@@ -35,13 +35,13 @@ export function useToolPanelGeometry({
       return;
     }
 
-    const rightRailEl = () => (rightRailRef?.current ?? null);
+    const workbenchBarEl = () => (workbenchBarRef?.current ?? null);
 
     let rafId: number | null = null;
 
     const computeAndSetGeometry = () => {
       const rect = panelEl.getBoundingClientRect();
-      const rail = rightRailEl();
+      const rail = workbenchBarEl();
       const isRTL = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
       const railRect = rail?.getBoundingClientRect();
       const railIsOnRight = railRect ? railRect.right > window.innerWidth / 2 : false;
@@ -89,7 +89,7 @@ export function useToolPanelGeometry({
       if (quickAccessRef.current) {
         resizeObserver.observe(quickAccessRef.current);
       }
-      const rail = rightRailEl();
+      const rail = workbenchBarEl();
       if (rail) {
         resizeObserver.observe(rail);
       }
@@ -114,21 +114,21 @@ export function useToolPanelGeometry({
       scheduleUpdateRef.current = () => {};
       resizeObserver?.disconnect();
     };
-  }, [enabled, quickAccessRef, toolPanelRef, rightRailRef]);
+  }, [enabled, quickAccessRef, toolPanelRef, workbenchBarRef]);
 
   // Secondary effect: (re)attach observers when refs' .current become available later
   useLayoutEffect(() => {
     if (!enabled) return;
     if (typeof ResizeObserver === 'undefined') return;
     const qa = quickAccessRef.current;
-    const rail = rightRailRef?.current ?? null;
+    const rail = workbenchBarRef?.current ?? null;
     if (!qa && !rail) return;
 
     const ro = new ResizeObserver(() => scheduleUpdateRef.current());
     if (qa) ro.observe(qa);
     if (rail) ro.observe(rail);
     return () => ro.disconnect();
-  }, [enabled, quickAccessRef.current, rightRailRef?.current]);
+  }, [enabled, quickAccessRef.current, workbenchBarRef?.current]);
 
   return geometry;
 }

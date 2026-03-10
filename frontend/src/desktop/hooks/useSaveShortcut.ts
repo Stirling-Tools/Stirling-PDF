@@ -5,7 +5,7 @@ import { downloadFile } from '@app/services/downloadService';
 /**
  * Desktop-only keyboard shortcut: Ctrl/Cmd+S to save selected files
  * Only saves files that have a localFilePath (came from disk)
- * Matches Right Rail button behavior: saves selected files if any, otherwise all files
+ * Matches Workbench Bar button behavior: saves selected files if any, otherwise all files
  */
 export function useSaveShortcut() {
   const { selectors, state } = useFileState();

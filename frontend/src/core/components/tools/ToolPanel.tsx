@@ -15,7 +15,7 @@ import DoubleArrowIcon from '@mui/icons-material/DoubleArrow';
 import { useTranslation } from 'react-i18next';
 import FullscreenToolSurface from '@app/components/tools/FullscreenToolSurface';
 import { useToolPanelGeometry } from '@app/hooks/tools/useToolPanelGeometry';
-import { useRightRail } from '@app/contexts/RightRailContext';
+import { useWorkbenchBar } from '@app/contexts/WorkbenchBarContext';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import '@app/components/tools/ToolPanel.css';
 
@@ -25,7 +25,7 @@ export default function ToolPanel() {
   const { t } = useTranslation();
   const { isRainbowMode } = useRainbowThemeContext();
   const { sidebarRefs } = useSidebarContext();
-  const { toolPanelRef, quickAccessRef, rightRailRef } = sidebarRefs;
+  const { toolPanelRef, quickAccessRef, workbenchBarRef } = sidebarRefs;
   const isMobile = useIsMobile();
 
   const {
@@ -44,7 +44,7 @@ export default function ToolPanel() {
     readerMode,
   } = useToolWorkflow();
 
-  const { setAllRightRailButtonsDisabled } = useRightRail();
+  const { setAllWorkbenchBarButtonsDisabled } = useWorkbenchBar();
   const { preferences, updatePreference } = usePreferences();
 
   const isFullscreenMode = toolPanelMode === 'fullscreen';
@@ -53,16 +53,16 @@ export default function ToolPanel() {
   const isRTL = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
 
 
-  // Disable right rail buttons when fullscreen mode is active
+  // Disable Workbench Bar buttons when fullscreen mode is active
   useEffect(() => {
-    setAllRightRailButtonsDisabled(fullscreenExpanded);
-  }, [fullscreenExpanded, setAllRightRailButtonsDisabled]);
+    setAllWorkbenchBarButtonsDisabled(fullscreenExpanded);
+  }, [fullscreenExpanded, setAllWorkbenchBarButtonsDisabled]);
 
   const fullscreenGeometry = useToolPanelGeometry({
     enabled: fullscreenExpanded,
     toolPanelRef,
     quickAccessRef,
-    rightRailRef,
+    workbenchBarRef,
   });
 
   const toggleLabel = isFullscreenMode
@@ -146,7 +146,7 @@ export default function ToolPanel() {
                 <ActionIcon
                   variant="subtle"
                   radius="xl"
-                  style={{ color: 'var(--right-rail-icon)' }}
+                  style={{ color: 'var(--workbench-bar-icon)' }}
                   onClick={handleModeToggle}
                   aria-label={toggleLabel}
                   className="tool-panel__mode-toggle"

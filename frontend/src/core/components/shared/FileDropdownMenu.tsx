@@ -57,7 +57,7 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
         </div>
       </Menu.Target>
       <Menu.Dropdown style={{
-        backgroundColor: 'var(--right-rail-bg)',
+        backgroundColor: 'var(--workbench-bar-bg)',
         border: '1px solid var(--border-subtle)',
         borderRadius: '8px',
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',

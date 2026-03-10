@@ -15,8 +15,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <>
       <style>{`
-        .h-screen,
-        .right-rail {
+        .h-screen {
           height: 100% !important;
         }
       `}</style>

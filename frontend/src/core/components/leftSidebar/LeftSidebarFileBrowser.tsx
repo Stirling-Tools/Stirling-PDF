@@ -38,7 +38,6 @@ function HiddenFileInput({
       ref={inputRef}
       type="file"
       multiple
-      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.gif,.webp,.tiff,.bmp,.csv"
       style={{ display: 'none' }}
       onChange={(e) => {
         const files = Array.from(e.target.files || []);

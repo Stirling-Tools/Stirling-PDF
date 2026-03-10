@@ -1,19 +1,19 @@
 import React from 'react';
 
-export type RightRailSection = 'top' | 'middle' | 'bottom';
+export type WorkbenchBarSection = 'top' | 'middle' | 'bottom';
 
-export type RightRailAction = () => void;
+export type WorkbenchBarAction = () => void;
 
-export interface RightRailRenderContext {
+export interface WorkbenchBarRenderContext {
 	id: string;
 	disabled: boolean;
 	allButtonsDisabled: boolean;
-	action?: RightRailAction;
+	action?: WorkbenchBarAction;
 	triggerAction: () => void;
 	active: boolean;
 }
 
-export interface RightRailButtonConfig {
+export interface WorkbenchBarButtonConfig {
 	/** Unique id for the button, also used to bind action callbacks */
 	id: string;
 	/** Icon element to render when using default renderer */
@@ -25,7 +25,7 @@ export interface RightRailButtonConfig {
 	/** Optional i18n key carried by config */
 	templateKey?: string;
 	/** Visual grouping lane */
-	section?: RightRailSection;
+	section?: WorkbenchBarSection;
 	/** Sorting within a section (lower first); ties broken by id */
 	order?: number;
 	/** Initial disabled state */
@@ -33,7 +33,7 @@ export interface RightRailButtonConfig {
 	/** Initial visibility */
 	visible?: boolean;
 	/** Optional custom renderer for advanced layouts */
-	render?: (ctx: RightRailRenderContext) => React.ReactNode;
+	render?: (ctx: WorkbenchBarRenderContext) => React.ReactNode;
 	/** Optional className applied to wrapper when using default renderer */
 	className?: string;
 	/** Optional active state to highlight the control */

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Box, Center, Text, ActionIcon } from '@mantine/core';
-import CloseIcon from '@mui/icons-material/Close';
+import { useTranslation } from 'react-i18next';
+import { Box, Center, Text } from '@mantine/core';
+import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 
 import { useFileState, useFileActions } from "@app/contexts/FileContext";
 import { useFileWithUrl } from "@app/hooks/useFileWithUrl";
@@ -17,7 +18,7 @@ import type { RedactionPendingTrackerAPI } from '@app/components/viewer/Redactio
 import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
 import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 import { isStirlingFile, getFormFillFileId } from '@app/types/fileContext';
-import { useViewerRightRailButtons } from '@app/components/viewer/useViewerRightRailButtons';
+import { useViewerWorkbenchBarButtons } from '@app/components/viewer/useViewerWorkbenchBarButtons';
 import { StampPlacementOverlay } from '@app/components/viewer/StampPlacementOverlay';
 import { RulerOverlay, type PageMeasureScales, type PageScaleInfo, type ViewportScale } from '@app/components/viewer/RulerOverlay';
 import { useWheelZoom } from '@app/hooks/useWheelZoom';
@@ -117,6 +118,7 @@ const EmbedPdfViewerContent = ({
   activeFileIndex: externalActiveFileIndex,
   setActiveFileIndex: externalSetActiveFileIndex,
 }: EmbedPdfViewerProps) => {
+  const { t } = useTranslation();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
@@ -886,7 +888,7 @@ const EmbedPdfViewerContent = ({
   }, [effectiveFile]);
 
   // Register viewer right-rail buttons
-  useViewerRightRailButtons(isRulerActive, setIsRulerActive);
+  useViewerWorkbenchBarButtons(isRulerActive, setIsRulerActive);
 
   // Auto-fetch form fields when a PDF is loaded in the viewer.
   // In normal viewer mode, this uses pdf-lib (frontend-only).
@@ -938,17 +940,44 @@ const EmbedPdfViewerContent = ({
         overflow: 'hidden',
         contain: 'layout style paint'
       }}>
-      {/* Close Button - Only show in preview mode */}
-      {onClose && previewFile && (
-        <ActionIcon
-          variant="filled"
-          color="gray"
-          size="lg"
-          style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 1000, borderRadius: '50%' }}
+      {/* Back to files button */}
+      {onClose && (
+        <Box
           onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '1rem',
+            left: '1rem',
+            zIndex: 1000,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.5rem 0.75rem',
+            borderRadius: '999px',
+            backgroundColor: 'var(--viewer-overlay-pill-bg)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            border: '1px solid var(--viewer-overlay-pill-border)',
+            boxShadow: 'var(--viewer-overlay-pill-shadow)',
+            color: 'var(--text-primary)',
+            transition: 'all 0.2s ease',
+            cursor: 'pointer',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--viewer-overlay-pill-bg-hover)';
+            e.currentTarget.style.transform = 'scale(1.05)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--viewer-overlay-pill-bg)';
+            e.currentTarget.style.transform = 'scale(1)';
+          }}
+          aria-label={t('viewer.backToActiveFiles', 'Back to active files')}
         >
-          <CloseIcon />
-        </ActionIcon>
+          <ArrowBackIosIcon fontSize="small" />
+          <Text size="sm" fw={500} style={{ whiteSpace: 'nowrap' }}>
+            {t('viewer.backToActiveFiles', 'Back to active files')}
+          </Text>
+        </Box>
       )}
 
       {!effectiveFile ? (

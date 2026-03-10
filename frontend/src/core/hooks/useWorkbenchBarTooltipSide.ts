@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { SidebarRefs } from '@app/types/sidebar';
 
-export function useRightRailTooltipSide(
+export function useWorkbenchBarTooltipSide(
   sidebarRefs?: SidebarRefs,
   defaultOffset: number = 16
 ): { position: 'left' | 'right'; offset: number } {
@@ -9,7 +9,7 @@ export function useRightRailTooltipSide(
 
   useEffect(() => {
     const computePosition = () => {
-      const rail = sidebarRefs?.rightRailRef?.current;
+      const rail = sidebarRefs?.workbenchBarRef?.current;
       const isRTL = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
 
       // Fallback to left if we can't measure

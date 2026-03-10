@@ -4276,7 +4276,7 @@ fileUpload = "Använd knappen <strong>Filer</strong> för att ladda upp eller v�
 leftPanel = "Den vänstra panelen <strong>Verktyg</strong> listar allt du kan göra. Bläddra i kategorier eller sök för att snabbt hitta ett verktyg."
 pageEditorView = "Byt till Sidredigerare för att ordna om, rotera eller ta bort sidor."
 quickAccess = "Börja i panelen <strong>Snabbåtkomst</strong> för att hoppa mellan Reader, Automate, dina filer och alla guider."
-rightRail = "Den <strong>Högra panelen</strong> innehåller snabba åtgärder för att välja filer, byta tema eller språk och ladda ned resultat."
+workbenchBar = "Den <strong>Högra panelen</strong> innehåller snabba åtgärder för att välja filer, byta tema eller språk och ladda ned resultat."
 topBar = "I översta listen kan du växla mellan <strong>Visare</strong>, <strong>Sidredigerare</strong> och <strong>Aktiva filer</strong>."
 wrapUp = "Detta är nytt i V2. Öppna menyn <strong>Guider</strong> när som helst för att spela upp detta, verktygsturen eller administratörsturen igen."
 
@@ -4401,7 +4401,7 @@ dismiss = "Avfärda"
 apply = "Verkställ ändringar"
 download = "Ladda ned PDF"
 
-[rightRail]
+[workbenchBar]
 closeSelected = "Stäng markerade filer"
 selectAll = "Välj allt"
 deselectAll = "Avmarkera alla"

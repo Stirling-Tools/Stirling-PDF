@@ -21,11 +21,6 @@
   overflow: visible;
 }
 
-.workbench-bar-grid-btn {
-  flex-shrink: 0;
-  margin-right: 0.125rem;
-}
-
 .workbench-bar-filename {
   font-size: 0.8125rem;
   font-weight: 500;
@@ -261,9 +256,24 @@
   height: 1.2rem !important;
 }
 
-/* SVG icons inside plain buttons (not ActionIcon) still need opacity softening */
-.workbench-bar-dynamic-btns .workbench-bar-icon-btn svg {
+/* Unify icon color: all dynamic icons use the same lighter grey (inherited from bar) */
+.workbench-bar-dynamic-btns .workbench-bar-icon-btn svg,
+.workbench-bar-dynamic-btns .workbench-bar-btn-wrap svg,
+.workbench-bar-dynamic-btns .mantine-ActionIcon-root svg {
   opacity: 0.7;
+  color: inherit;
+}
+.workbench-bar-dynamic-btns .workbench-bar-icon-btn svg path,
+.workbench-bar-dynamic-btns .workbench-bar-icon-btn svg circle,
+.workbench-bar-dynamic-btns .workbench-bar-icon-btn svg rect,
+.workbench-bar-dynamic-btns .workbench-bar-btn-wrap svg path,
+.workbench-bar-dynamic-btns .workbench-bar-btn-wrap svg circle,
+.workbench-bar-dynamic-btns .workbench-bar-btn-wrap svg rect,
+.workbench-bar-dynamic-btns .mantine-ActionIcon-root svg path,
+.workbench-bar-dynamic-btns .mantine-ActionIcon-root svg circle,
+.workbench-bar-dynamic-btns .mantine-ActionIcon-root svg rect {
+  fill: currentColor;
+  stroke: currentColor;
 }
 
 /* ActionIcon wrappers inside dynamic area — normalize to match plain workbench-bar-icon-btn */

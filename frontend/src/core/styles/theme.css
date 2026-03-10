@@ -239,12 +239,12 @@
   --icon-config-bg: #9CA3AF;
   --icon-config-color: #FFFFFF;
 
-  /* RightRail (light) */
-  --right-rail-bg: #F5F6F8;           /* light background */
-  --right-rail-foreground: #E3E4E5;   /* panel behind custom tool icons */
-  --right-rail-icon: #4B5563;         /* icon color */
-  --right-rail-icon-disabled: #CECECE;/* disabled icon */
-  --right-rail-pan-active-bg: #EAEAEA;
+  /* WorkbenchBar (light) */
+  --workbench-bar-bg: #F5F6F8;           /* light background */
+  --workbench-bar-foreground: #E3E4E5;   /* panel behind custom tool icons */
+  --workbench-bar-icon: #4B5563;         /* icon color */
+  --workbench-bar-icon-disabled: #CECECE;/* disabled icon */
+  --workbench-bar-pan-active-bg: #EAEAEA;
 
   /* Colors for tooltips */
   --tooltip-title-bg: #DBEFFF;
@@ -643,12 +643,12 @@
   --icon-inactive-bg: #111111;
   --icon-inactive-color: #6E7581;
 
-  /* RightRail (dark) */
-  --right-rail-bg: #0a0a0a;           /* dark background */
-  --right-rail-foreground: #111111;   /* panel behind custom tool icons */
-  --right-rail-icon: #BCBEBF;         /* icon color */
-  --right-rail-icon-disabled: #43464B;/* disabled icon */
-  --right-rail-pan-active-bg: #EAEAEA;
+  /* WorkbenchBar (dark) */
+  --workbench-bar-bg: #0a0a0a;           /* dark background */
+  --workbench-bar-foreground: #111111;   /* panel behind custom tool icons */
+  --workbench-bar-icon: #BCBEBF;         /* icon color */
+  --workbench-bar-icon-disabled: #43464B;/* disabled icon */
+  --workbench-bar-pan-active-bg: #EAEAEA;
 
   /* Dark mode tooltip colors */
   --tooltip-title-bg: #4B525A;
@@ -968,8 +968,8 @@
   --icon-notifications-bg: #1e2435;
   --icon-inactive-bg: #1e2435;
 
-  --right-rail-bg: #1a2030;
-  --right-rail-foreground: #1e2435;
+  --workbench-bar-bg: #1a2030;
+  --workbench-bar-foreground: #1e2435;
 
   --landing-paper-bg: #151a24;
   --landing-inner-paper-border: #3a4152;

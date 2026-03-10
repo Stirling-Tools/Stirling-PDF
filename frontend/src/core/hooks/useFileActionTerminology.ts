@@ -14,7 +14,7 @@ export function useFileActionTerminology() {
     dropFilesHere: t('fileUpload.dropFilesHere', 'Drop files here or click the upload button'),
     uploadFromComputer: t('landing.uploadFromComputer', 'Upload from computer'),
     download: t('download', 'Download'),
-    downloadAll: t('rightRail.downloadAll', 'Download All'),
+    downloadAll: t('workbenchBar.downloadAll', 'Download All'),
     downloadSelected: t('fileManager.downloadSelected', 'Download Selected'),
     downloadUnavailable: t('downloadUnavailable', 'Download unavailable for this item'),
     noFilesInStorage: t('fileUpload.noFilesInStorage', 'No files available in storage. Upload some files first.'),

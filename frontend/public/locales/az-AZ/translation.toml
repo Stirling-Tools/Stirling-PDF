@@ -4276,7 +4276,7 @@ fileUpload = "<strong>Fayllar</strong> düyməsindən PDF yükləyin və ya son 
 leftPanel = "Sol <strong>Alətlər</strong> paneli edə biləcəyiniz hər şeyi siyahıya alır. Kateqoriyalara baxın və ya tez alət tapmaq üçün axtarın."
 pageEditorView = "Səhifələri yenidən sıralamaq, çevirmək və ya silmək üçün Səhifə Redaktoruna keçin."
 quickAccess = "Reader, Automate, fayllarınız və bütün turlar arasında keçmək üçün <strong>Tez Giriş</strong> panelindən başlayın."
-rightRail = "<strong>Sağ Panel</strong> fayl seçimi, mövzu və dili dəyişmək və nəticələri endirmək üçün sürətli hərəkətləri saxlayır."
+workbenchBar = "<strong>Sağ Panel</strong> fayl seçimi, mövzu və dili dəyişmək və nəticələri endirmək üçün sürətli hərəkətləri saxlayır."
 topBar = "Yuxarı panel <strong>Görüntüləyici</strong>, <strong>Səhifə Redaktoru</strong> və <strong>Aktiv Fayllar</strong> arasında keçməyə imkan verir."
 wrapUp = "V2-də yeniliklər bunlardır. <strong>Turlar</strong> menyusunu istənilən vaxt açaraq bunu, Alətlər turunu və ya Admin turunu yenidən izləyə bilərsiniz."
 
@@ -4401,7 +4401,7 @@ dismiss = "Bağla"
 apply = "Dəyişiklikləri tətbiq et"
 download = "PDF-i endir"
 
-[rightRail]
+[workbenchBar]
 closeSelected = "Seçilmiş faylları bağla"
 selectAll = "Hamısını Seç"
 deselectAll = "Hamısını Seçməni Ləğv Et"

@@ -4276,7 +4276,7 @@ fileUpload = "Utilitza el botó <strong>Fitxers</strong> per pujar o triar un PD
 leftPanel = "El panell esquerre de <strong>Eines</strong> llista tot el que pots fer. Navega per categories o cerca per trobar una eina ràpidament."
 pageEditorView = "Canvia a l'Editor de pàgines per reordenar, girar o suprimir pàgines."
 quickAccess = "Comença a la barra de <strong>Accés ràpid</strong> per saltar entre el Lector, Automatitza, els teus fitxers i totes les visites guiades."
-rightRail = "La <strong>barra dreta</strong> conté accions ràpides per seleccionar fitxers, canviar el tema o l’idioma i baixar els resultats."
+workbenchBar = "La <strong>barra dreta</strong> conté accions ràpides per seleccionar fitxers, canviar el tema o l’idioma i baixar els resultats."
 topBar = "La barra superior et permet canviar entre el <strong>Visor</strong>, l’<strong>Editor de pàgines</strong> i els <strong>Fitxers actius</strong>."
 wrapUp = "Això és el que hi ha de nou a la V2. Obre el menú de <strong>Visites guiades</strong> en qualsevol moment per tornar a veure aquesta, la visita d’Eines o la d’Administració."
 
@@ -4401,7 +4401,7 @@ dismiss = "Descarta"
 apply = "Aplica els canvis"
 download = "Descarrega el PDF"
 
-[rightRail]
+[workbenchBar]
 closeSelected = "Tanca els fitxers seleccionats"
 selectAll = "Selecciona-ho tot"
 deselectAll = "Desselecciona-ho tot"

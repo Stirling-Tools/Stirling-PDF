@@ -1,0 +1,149 @@
+.card {
+  /* Hard-lock dimensions so text lines up across rows regardless of thumbnail aspect */
+  width: 220px;
+  max-width: 220px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px 12px;
+  position: relative;
+  /* Reserve a fixed, absolute-positioned text slot below the thumbnail */
+  --file-text-height: 56px;
+  --file-text-bottom: 12px;
+  --thumb-text-gap: 10px;
+  padding-bottom: calc(var(--file-text-bottom) + var(--file-text-height) + var(--thumb-text-gap));
+  user-select: none;
+}
+
+.thumbWrap {
+  width: 100%;
+  position: relative;
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumbContainer {
+  aspect-ratio: var(--thumb-aspect, 8.5 / 11);
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  position: relative;
+  background: var(--bg-surface);
+  transition: box-shadow 0.15s ease, transform 0.2s ease;
+}
+
+.thumbContainer[data-supported="false"] {
+  filter: grayscale(80%);
+  opacity: 0.65;
+}
+
+.thumbContainer:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.thumbImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 12px;
+  background: var(--bg-surface);
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+/* Selection overlay */
+.selectionOverlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--mantine-color-blue-6) 18%, transparent);
+  border: 2px solid var(--mantine-color-blue-5);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.selectionCheck {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--mantine-color-blue-6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Absolute text block pinned below thumbnail */
+.fileText {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: var(--file-text-bottom);
+  height: var(--file-text-height);
+  text-align: center;
+  pointer-events: none;
+  --file-name-line-height: 18px;
+  --file-name-lines: 2;
+  --file-meta-line-height: 14px;
+  --file-meta-gap: 4px;
+}
+
+.fileName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: var(--file-name-line-height);
+  height: calc(var(--file-name-lines) * var(--file-name-line-height));
+  margin: 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--file-meta-line-height) + var(--file-meta-gap));
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.fileMeta {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: var(--file-meta-line-height);
+  height: var(--file-meta-line-height);
+  overflow: hidden;
+  margin: 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* CSS-hover driven menu visibility */
+.card [data-hover-action-menu-mode="cssHover"][data-force-visible="false"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.card:hover [data-hover-action-menu-mode="cssHover"][data-force-visible="false"],
+.card:focus-within [data-hover-action-menu-mode="cssHover"][data-force-visible="false"] {
+  opacity: 1;
+  pointer-events: auto;
+}

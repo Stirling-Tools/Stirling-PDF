@@ -28,7 +28,7 @@ interface PageEditorControlsProps {
   onPageBreak: () => void;
   onPageBreakAll: () => void;
 
-  // Export functions (moved to right rail)
+  // Export functions (moved to Workbench Bar)
   onExportAll: () => void;
   exportLoading: boolean;
 
@@ -132,12 +132,12 @@ const PageEditorControls = ({
 
         {/* Undo/Redo */}
         <Tooltip label="Undo">
-          <ActionIcon onClick={onUndo} disabled={!canUndo} variant="subtle" style={{ color: canUndo ? 'var(--right-rail-icon)' : 'var(--right-rail-icon-disabled)' }} radius="md" size="lg">
+          <ActionIcon onClick={onUndo} disabled={!canUndo} variant="subtle" style={{ color: canUndo ? 'var(--workbench-bar-icon)' : 'var(--workbench-bar-icon-disabled)' }} radius="md" size="lg">
             <UndoIcon />
           </ActionIcon>
         </Tooltip>
         <Tooltip label="Redo">
-          <ActionIcon onClick={onRedo} disabled={!canRedo} variant="subtle" style={{ color: canRedo ? 'var(--right-rail-icon)' : 'var(--right-rail-icon-disabled)' }} radius="md" size="lg">
+          <ActionIcon onClick={onRedo} disabled={!canRedo} variant="subtle" style={{ color: canRedo ? 'var(--workbench-bar-icon)' : 'var(--workbench-bar-icon-disabled)' }} radius="md" size="lg">
             <RedoIcon />
           </ActionIcon>
         </Tooltip>
@@ -150,7 +150,7 @@ const PageEditorControls = ({
             onClick={() => onRotate('left')}
             disabled={selectedPageIds.length === 0}
             variant="subtle"
-            style={{ color: selectedPageIds.length > 0 ? 'var(--right-rail-icon)' : 'var(--right-rail-icon-disabled)' }}
+            style={{ color: selectedPageIds.length > 0 ? 'var(--workbench-bar-icon)' : 'var(--workbench-bar-icon-disabled)' }}
             radius="md"
             size="lg"
           >
@@ -162,7 +162,7 @@ const PageEditorControls = ({
             onClick={() => onRotate('right')}
             disabled={selectedPageIds.length === 0}
             variant="subtle"
-            style={{ color: selectedPageIds.length > 0 ? 'var(--right-rail-icon)' : 'var(--right-rail-icon-disabled)' }}
+            style={{ color: selectedPageIds.length > 0 ? 'var(--workbench-bar-icon)' : 'var(--workbench-bar-icon-disabled)' }}
             radius="md"
             size="lg"
           >
@@ -174,7 +174,7 @@ const PageEditorControls = ({
             onClick={onDelete}
             disabled={selectedPageIds.length === 0}
             variant="subtle"
-            style={{ color: selectedPageIds.length > 0 ? 'var(--right-rail-icon)' : 'var(--right-rail-icon-disabled)' }}
+            style={{ color: selectedPageIds.length > 0 ? 'var(--workbench-bar-icon)' : 'var(--workbench-bar-icon-disabled)' }}
             radius="md"
             size="lg"
           >
@@ -186,7 +186,7 @@ const PageEditorControls = ({
             onClick={onSplit}
             disabled={selectedPageIds.length === 0}
             variant="subtle"
-            style={{ color: selectedPageIds.length > 0 ? 'var(--right-rail-icon)' : 'var(--right-rail-icon-disabled)' }}
+            style={{ color: selectedPageIds.length > 0 ? 'var(--workbench-bar-icon)' : 'var(--workbench-bar-icon-disabled)' }}
             radius="md"
             size="lg"
           >
@@ -198,7 +198,7 @@ const PageEditorControls = ({
             onClick={onPageBreak}
             disabled={selectedPageIds.length === 0}
             variant="subtle"
-            style={{ color: selectedPageIds.length > 0 ? 'var(--right-rail-icon)' : 'var(--right-rail-icon-disabled)' }}
+            style={{ color: selectedPageIds.length > 0 ? 'var(--workbench-bar-icon)' : 'var(--workbench-bar-icon-disabled)' }}
             radius="md"
             size="lg"
           >

@@ -4276,7 +4276,7 @@ fileUpload = "Usa il pulsante <strong>File</strong> per caricare o scegliere un 
 leftPanel = "Il pannello <strong>Strumenti</strong> a sinistra elenca tutto ciò che puoi fare. Sfoglia le categorie o cerca per trovare rapidamente uno strumento."
 pageEditorView = "Passa all'Editor pagine per riordinare, ruotare o eliminare pagine."
 quickAccess = "Inizia dalla barra <strong>Accesso rapido</strong> per passare tra Reader, Automate, i tuoi file e tutti i tour."
-rightRail = "La <strong>barra destra</strong> contiene azioni rapide per selezionare i file, cambiare tema o lingua e scaricare i risultati."
+workbenchBar = "La <strong>barra destra</strong> contiene azioni rapide per selezionare i file, cambiare tema o lingua e scaricare i risultati."
 topBar = "La barra superiore consente di passare tra <strong>Visualizzatore</strong>, <strong>Editor pagine</strong> e <strong>File attivi</strong>."
 wrapUp = "Queste sono le novità della V2. Apri il menu <strong>Tour</strong> in qualsiasi momento per rivedere questo, il Tour strumenti o il Tour amministratore."
 
@@ -4401,7 +4401,7 @@ dismiss = "Nascondi"
 apply = "Applica le modifiche"
 download = "Scarica PDF"
 
-[rightRail]
+[workbenchBar]
 closeSelected = "Chiudi file selezionati"
 selectAll = "Seleziona tutto"
 deselectAll = "Deseleziona tutto"

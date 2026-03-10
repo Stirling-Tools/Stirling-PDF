@@ -4212,7 +4212,7 @@ pinButton = "Anda dapat menggunakan tombol <strong>Pin</strong> jika Anda ingin 
 previous = "Sebelumnya"
 results = "Setelah alat selesai dijalankan, langkah <strong>Review</strong> akan menampilkan pratinjau hasil di panel ini, dan memungkinkan Anda membatalkan operasi atau mengunduh file. "
 runButton = "Setelah alat dikonfigurasi, tombol ini memungkinkan Anda menjalankan alat pada semua PDF yang dipilih."
-selectControls = "<strong>Right Rail</strong> berisi tombol untuk dengan cepat memilih/membatalkan pilihan semua PDF aktif Anda, bersama dengan tombol untuk mengubah tema atau bahasa aplikasi."
+selectControls = "<strong>Workbench Bar</strong> berisi tombol untuk dengan cepat memilih/membatalkan pilihan semua PDF aktif Anda, bersama dengan tombol untuk mengubah tema atau bahasa aplikasi."
 selectCropTool = "Mari pilih alat <strong>Crop</strong> untuk mendemonstrasikan cara menggunakan salah satu alat."
 startTour = "Mulai Tur"
 startTourDescription = "Ikuti tur terpandu tentang fitur utama Stirling PDF"
@@ -4276,7 +4276,7 @@ fileUpload = "Gunakan tombol <strong>Files</strong> untuk mengunggah atau memili
 leftPanel = "Panel <strong>Alat</strong> di kiri menampilkan semua yang bisa Anda lakukan. Jelajahi kategori atau cari untuk menemukan alat dengan cepat."
 pageEditorView = "Beralih ke Editor Halaman untuk mengurutkan ulang, memutar, atau menghapus halaman."
 quickAccess = "Mulai dari panel <strong>Akses Cepat</strong> untuk beralih antara Penampil, Automate, file Anda, dan semua tur."
-rightRail = "<strong>Panel Kanan</strong> berisi tindakan cepat untuk memilih file, mengubah tema atau bahasa, dan mengunduh hasil."
+workbenchBar = "<strong>Panel Kanan</strong> berisi tindakan cepat untuk memilih file, mengubah tema atau bahasa, dan mengunduh hasil."
 topBar = "Bilah atas memungkinkan Anda beralih antara <strong>Penampil</strong>, <strong>Editor Halaman</strong>, dan <strong>File Aktif</strong>."
 wrapUp = "Itulah yang baru di V2. Buka menu <strong>Tur</strong> kapan saja untuk memutar ulang ini, tur Alat, atau tur Admin."
 
@@ -4401,7 +4401,7 @@ dismiss = "Abaikan"
 apply = "Terapkan Perubahan"
 download = "Unduh PDF"
 
-[rightRail]
+[workbenchBar]
 closeSelected = "Tutup File Terpilih"
 selectAll = "Pilih Semua"
 deselectAll = "Batalkan Semua Pilihan"

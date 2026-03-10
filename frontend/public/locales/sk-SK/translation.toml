@@ -4276,7 +4276,7 @@ fileUpload = "Použite tlačidlo <strong>Súbory</strong> na nahratie alebo výb
 leftPanel = "Ľavý panel <strong>Nástroje</strong> obsahuje všetko, čo môžete robiť. Prezrite si kategórie alebo hľadajte nástroj rýchlo."
 pageEditorView = "Prepnite do Editora strán na zmenu poradia, otáčanie alebo odstránenie strán."
 quickAccess = "Začnite na lište <strong>Rýchly prístup</strong> a prepnite sa medzi Prehliadačom, Automatizáciou, vašimi súbormi a všetkými prehliadkami."
-rightRail = "<strong>Pravý panel</strong> obsahuje rýchle akcie na výber súborov, zmenu témy alebo jazyka a stiahnutie výsledkov."
+workbenchBar = "<strong>Pravý panel</strong> obsahuje rýchle akcie na výber súborov, zmenu témy alebo jazyka a stiahnutie výsledkov."
 topBar = "Horná lišta umožňuje prepínať medzi <strong>Prehliadač</strong>, <strong>Editor strán</strong> a <strong>Aktívne súbory</strong>."
 wrapUp = "To je všetko nové vo V2. Otvorte menu <strong>Prehliadky</strong> kedykoľvek a prehrajte si znova toto, prehliadku Nástrojov alebo Administrátorskú prehliadku."
 
@@ -4401,7 +4401,7 @@ dismiss = "Zavrieť"
 apply = "Použiť zmeny"
 download = "Stiahnuť PDF"
 
-[rightRail]
+[workbenchBar]
 closeSelected = "Zavrieť vybrané súbory"
 selectAll = "Vybrať všetko"
 deselectAll = "Zrušiť výber"

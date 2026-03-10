@@ -4276,7 +4276,7 @@ fileUpload = "<strong>ファイル</strong> ボタンでアップロードする
 leftPanel = "左側の <strong>ツール</strong> パネルにできることが一覧表示されています。カテゴリを閲覧するか、検索してツールを素早く見つけましょう。"
 pageEditorView = "ページエディターに切り替えて、ページの並べ替え、回転、削除を行います。"
 quickAccess = "最初は <strong>Quick Access</strong> レールから始め、Reader、Automate、ファイル、各ツアーへ素早く移動できます。"
-rightRail = "<strong>右レール</strong>では、ファイル選択、テーマや言語の変更、結果のダウンロードなどのクイックアクションができます。"
+workbenchBar = "<strong>右レール</strong>では、ファイル選択、テーマや言語の変更、結果のダウンロードなどのクイックアクションができます。"
 topBar = "上部バーで <strong>ビューアー</strong>、<strong>ページエディター</strong>、<strong>アクティブファイル</strong> を切り替えられます。"
 wrapUp = "V2 の新機能は以上です。いつでも <strong>ツアー</strong> メニューを開いて、これやツールのツアー、管理者ツアーを再生できます。"
 
@@ -4401,7 +4401,7 @@ dismiss = "閉じる"
 apply = "変更を適用"
 download = "PDF をダウンロード"
 
-[rightRail]
+[workbenchBar]
 closeSelected = "選択したファイルを閉じる"
 selectAll = "すべて選択"
 deselectAll = "選択を解除"

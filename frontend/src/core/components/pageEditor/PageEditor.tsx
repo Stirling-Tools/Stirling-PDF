@@ -15,7 +15,7 @@ import { GRID_CONSTANTS } from '@app/components/pageEditor/constants';
 import { useInitialPageDocument } from '@app/components/pageEditor/hooks/useInitialPageDocument';
 import { usePageDocument } from '@app/components/pageEditor/hooks/usePageDocument';
 import { usePageEditorState } from '@app/components/pageEditor/hooks/usePageEditorState';
-import { usePageEditorRightRailButtons } from "@app/components/pageEditor/pageEditorRightRailButtons";
+import { usePageEditorWorkbenchBarButtons } from "@app/components/pageEditor/pageEditorWorkbenchBarButtons";
 import { useFileColorMap } from "@app/components/pageEditor/hooks/useFileColorMap";
 import { useWheelZoom } from "@app/hooks/useWheelZoom";
 import { useEditedDocumentState } from "@app/components/pageEditor/hooks/useEditedDocumentState";
@@ -419,11 +419,11 @@ const PageEditor = ({
     updateCurrentPages,
   });
 
-  // Derived values for right rail and usePageEditorRightRailButtons (must be after displayDocument)
+  // Derived values for Workbench Bar and usePageEditorWorkbenchBarButtons (must be after displayDocument)
   const selectedPageCount = selectedPageIds.length;
   const activeFileIds = selectedFileIds;
 
-  usePageEditorRightRailButtons({
+  usePageEditorWorkbenchBarButtons({
     totalPages,
     selectedPageCount,
     csvInput,

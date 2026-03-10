@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
-import GridViewRoundedIcon from '@mui/icons-material/GridViewRounded';
 import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
@@ -14,8 +13,8 @@ import { WorkbenchType } from '@app/types/workbench';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { FileId } from '@app/types/file';
 import { useFileActions } from '@app/contexts/FileContext';
-import { useRightRail } from '@app/contexts/RightRailContext';
-import type { RightRailRenderContext } from '@app/types/rightRail';
+import { useWorkbenchBar } from '@app/contexts/WorkbenchBarContext';
+import type { WorkbenchBarRenderContext } from '@app/types/workbenchBar';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import '@app/components/layout/WorkbenchBar.css';
 
@@ -157,8 +156,8 @@ export default function WorkbenchBar({
     }
   };
 
-  // --- Dynamic right-rail buttons (moved from RightRail) ---
-  const { buttons: railButtons, actions: railActions, allButtonsDisabled } = useRightRail();
+  // --- Dynamic workbench-bar buttons (moved from WorkbenchBar) ---
+  const { buttons: railButtons, actions: railActions, allButtonsDisabled } = useWorkbenchBar();
   const topButtons = railButtons.filter(btn => (btn.section ?? 'top') === 'top' && (btn.visible ?? true));
 
   const renderDynamicButton = (btn: typeof railButtons[number]) => {
@@ -168,7 +167,7 @@ export default function WorkbenchBar({
     const triggerAction = () => { if (!disabled) action?.(); };
 
     if (btn.render) {
-      const ctx: RightRailRenderContext = { id: btn.id, disabled, allButtonsDisabled, action, triggerAction, active: isActive };
+      const ctx: WorkbenchBarRenderContext = { id: btn.id, disabled, allButtonsDisabled, action, triggerAction, active: isActive };
       const rendered = btn.render(ctx);
       return rendered ? <div key={btn.id} className="workbench-bar-btn-wrap">{rendered}</div> : null;
     }
@@ -337,20 +336,12 @@ export default function WorkbenchBar({
     <div className="workbench-bar">
       {/* Left section */}
       <div className="workbench-bar-left">
-        <button
-          className="workbench-bar-icon-btn workbench-bar-grid-btn"
-          onClick={() => setCurrentView('fileEditor')}
-          title={t('workbenchBar.activeFiles', 'Active files')}
-          aria-label={t('workbenchBar.activeFiles', 'Active files')}
-        >
-          <GridViewRoundedIcon sx={{ fontSize: '0.9rem' }} />
-        </button>
         {renderLeftInfo()}
       </div>
 
       {/* Right section */}
       <div className="workbench-bar-right">
-        {/* Dynamic context buttons (from RightRail) */}
+        {/* Dynamic context buttons (from WorkbenchBar) */}
         {topButtons.length > 0 && (
           <div className="workbench-bar-dynamic-btns">
             {topButtons.map(btn => renderDynamicButton(btn))}

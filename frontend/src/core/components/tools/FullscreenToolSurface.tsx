@@ -112,7 +112,7 @@ const FullscreenToolSurface = ({
                 size="md"
                 onClick={handleExit}
                 aria-label={toggleLabel}
-                style={{ color: 'var(--right-rail-icon)' }}
+                style={{ color: 'var(--workbench-bar-icon)' }}
               >
                 <DoubleArrowIcon
                   fontSize="small"

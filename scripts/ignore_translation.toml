@@ -129,7 +129,7 @@ ignore = [
     'quickAccess.reader',
     'redact.manual.zoom',
     'removeBlanks.whitePercent.unit',
-    'rightRail.annotations',
+    'workbenchBar.annotations',
     'settings.connection.mode.saas',
     'settings.connection.server',
     'settings.licensingAnalytics.audit',

@@ -62,26 +62,26 @@ Use this pattern for desktop-specific or proprietary-specific features WITHOUT r
 **Example - Desktop-specific footer:**
 
 ```typescript
-// core/components/rightRail/RightRailFooterExtensions.tsx (stub)
-interface RightRailFooterExtensionsProps {
+// core/components/workbenchBar/WorkbenchBarFooterExtensions.tsx (stub)
+interface WorkbenchBarFooterExtensionsProps {
   className?: string;
 }
 
-export function RightRailFooterExtensions(_props: RightRailFooterExtensionsProps) {
+export function WorkbenchBarFooterExtensions(_props: WorkbenchBarFooterExtensionsProps) {
   return null; // Stub - does nothing in web builds
 }
 ```
 
 ```typescript
-// desktop/components/rightRail/RightRailFooterExtensions.tsx (real implementation)
+// desktop/components/workbenchBar/WorkbenchBarFooterExtensions.tsx (real implementation)
 import { Box } from '@mantine/core';
 import { BackendHealthIndicator } from '@app/components/BackendHealthIndicator';
 
-interface RightRailFooterExtensionsProps {
+interface WorkbenchBarFooterExtensionsProps {
   className?: string;
 }
 
-export function RightRailFooterExtensions({ className }: RightRailFooterExtensionsProps) {
+export function WorkbenchBarFooterExtensions({ className }: WorkbenchBarFooterExtensionsProps) {
   return (
     <Box className={className}>
       <BackendHealthIndicator />
@@ -91,15 +91,15 @@ export function RightRailFooterExtensions({ className }: RightRailFooterExtensio
 ```
 
 ```typescript
-// core/components/shared/RightRail.tsx (usage - works in ALL builds)
-import { RightRailFooterExtensions } from '@app/components/rightRail/RightRailFooterExtensions';
+// core/components/shared/WorkbenchBar.tsx (usage - works in ALL builds)
+import { WorkbenchBarFooterExtensions } from '@app/components/workbenchBar/WorkbenchBarFooterExtensions';
 
-export function RightRail() {
+export function WorkbenchBar() {
   return (
     <div>
       {/* In web builds: renders nothing (stub returns null) */}
       {/* In desktop builds: renders BackendHealthIndicator */}
-      <RightRailFooterExtensions className="right-rail-footer" />
+      <WorkbenchBarFooterExtensions className="workbench-bar-footer" />
     </div>
   );
 }

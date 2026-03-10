@@ -4276,7 +4276,7 @@ fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent P
 leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
 pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
 quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
-rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
+workbenchBar = "The <strong>Workbench Bar</strong> holds quick actions to select files, change theme or language, and download results."
 topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
 wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
@@ -4401,7 +4401,7 @@ dismiss = "Skrýt"
 apply = "Použít změny"
 download = "Stáhnout PDF"
 
-[rightRail]
+[workbenchBar]
 closeSelected = "Zavřít vybrané soubory"
 selectAll = "Vybrat vše"
 deselectAll = "Zrušit výběr všeho"

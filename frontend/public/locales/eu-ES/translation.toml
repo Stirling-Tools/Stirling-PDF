@@ -4276,7 +4276,7 @@ fileUpload = "Erabili <strong>Fitxategiak</strong> botoia PDF bat kargatzeko edo
 leftPanel = "Ezkerreko <strong>Tresnak</strong> panelean egin ditzakezun guztiak zerrendatzen dira. Arakatu kategoriak edo bilatu tresna bat azkar aurkitzeko."
 pageEditorView = "Aldatu Orrialde-editorera orriak berrantolatzeko, biratzeko edo ezabatzeko."
 quickAccess = "Hasi <strong>Sarbide azkarraren</strong> errailean Irakurlearen, Automatizazioaren, zure fitxategien eta ibilbide guztien artean jauzi egiteko."
-rightRail = "<strong>Eskuineko errailak</strong> fitxategiak hautatzeko, gaia edo hizkuntza aldatzeko eta emaitzak deskargatzeko ekintza azkarrak ditu."
+workbenchBar = "<strong>Eskuineko errailak</strong> fitxategiak hautatzeko, gaia edo hizkuntza aldatzeko eta emaitzak deskargatzeko ekintza azkarrak ditu."
 topBar = "Goiko barrak <strong>Ikustaile</strong>, <strong>Orrialde-editorea</strong> eta <strong>Fitxategi aktiboak</strong> artean aldatzeko aukera ematen du."
 wrapUp = "Hori da V2ko berritasuna. Ireki <strong>Ibilbideak</strong> menua edozein unetan hau, Tresnen ibilbidea edo Administratzailearen ibilbidea berriro ikusteko."
 
@@ -4401,7 +4401,7 @@ dismiss = "Baztertu"
 apply = "Aplikatu aldaketak"
 download = "Deskargatu PDF"
 
-[rightRail]
+[workbenchBar]
 closeSelected = "Itxi hautatutako fitxategiak"
 selectAll = "Hautatu dena"
 deselectAll = "Deshautatu dena"

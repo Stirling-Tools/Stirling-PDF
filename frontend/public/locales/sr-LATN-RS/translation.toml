@@ -4212,7 +4212,7 @@ pinButton = "Možete koristiti dugme <strong>Pin</strong> ako želite da vaši f
 previous = "Prethodno"
 results = "Nakon što alat završi, korak <strong>Review</strong> će prikazati pregled rezultata u ovom panelu i omogućiti vam da poništite operaciju ili preuzmete fajl. "
 runButton = "Kada je alat podešen, ovo dugme omogućava pokretanje alata na svim izabranim PDF-ovima."
-selectControls = "<strong>Right Rail</strong> sadrži dugmad za brzo označavanje/poništavanje svih aktivnih PDF-ova, kao i dugmad za promenu teme ili jezika aplikacije."
+selectControls = "<strong>Workbench Bar</strong> sadrži dugmad za brzo označavanje/poništavanje svih aktivnih PDF-ova, kao i dugmad za promenu teme ili jezika aplikacije."
 selectCropTool = "Hajde da izaberemo alat <strong>Crop</strong> da pokažemo kako se koristi jedan od alata."
 startTour = "Započni turu"
 startTourDescription = "Krenite u vođenu turu kroz ključne funkcije Stirling PDF-a"
@@ -4276,7 +4276,7 @@ fileUpload = "Koristite dugme <strong>Fajlovi</strong> da otpremite ili izaberet
 leftPanel = "Levi panel <strong>Alati</strong> sadrži sve što možete da uradite. Pregledajte kategorije ili pretražite da brzo nađete alat."
 pageEditorView = "Prebacite se na Uređivač stranica da biste preuredili, rotirali ili obrisali stranice."
 quickAccess = "Počnite na traci za <strong>Brzi pristup</strong> da biste prelazili između Čitača, Automatizacije, svojih fajlova i svih obilazaka."
-rightRail = "<strong>Desna traka</strong> sadrži brze radnje za izbor fajlova, promenu teme ili jezika i preuzimanje rezultata."
+workbenchBar = "<strong>Desna traka</strong> sadrži brze radnje za izbor fajlova, promenu teme ili jezika i preuzimanje rezultata."
 topBar = "Gornja traka vam omogućava da prebacujete između <strong>Pregledača</strong>, <strong>Uređivača stranica</strong> i <strong>Aktivnih fajlova</strong>."
 wrapUp = "To je ono što je novo u V2. Otvorite meni <strong>Obilasci</strong> bilo kada da ponovo pokrenete ovo, obilazak Alata ili Admin obilazak."
 
@@ -4401,7 +4401,7 @@ dismiss = "Zatvori"
 apply = "Primeni promene"
 download = "Preuzmi PDF"
 
-[rightRail]
+[workbenchBar]
 closeSelected = "Zatvori izabrane fajlove"
 selectAll = "Izaberi sve"
 deselectAll = "Poništi sve"

@@ -4276,7 +4276,7 @@ fileUpload = "Brug <strong>Filer</strong>-knappen til at uploade eller vælge en
 leftPanel = "Det venstre <strong>Værktøjer</strong>-panel viser alt, du kan gøre. Gennemse kategorier eller søg for hurtigt at finde et værktøj."
 pageEditorView = "Skift til Sideeditor for at omarrangere, rotere eller slette sider."
 quickAccess = "Start i <strong>Hurtig adgang</strong>-panelet for at hoppe mellem Reader, Automate, dine filer og alle rundvisningerne."
-rightRail = "Det <strong>højre sidepanel</strong> rummer hurtige handlinger til at vælge filer, ændre tema eller sprog og downloade resultater."
+workbenchBar = "Det <strong>højre sidepanel</strong> rummer hurtige handlinger til at vælge filer, ændre tema eller sprog og downloade resultater."
 topBar = "Topbjælken lader dig skifte mellem <strong>Fremviser</strong>, <strong>Sideeditor</strong> og <strong>Aktive filer</strong>."
 wrapUp = "Det var det nye i V2. Åbn menuen <strong>Rundvisninger</strong> når som helst for at afspille dette, værktøjsrundvisningen eller admin-rundvisningen."
 
@@ -4401,7 +4401,7 @@ dismiss = "Afvis"
 apply = "Anvend ændringer"
 download = "Download PDF"
 
-[rightRail]
+[workbenchBar]
 closeSelected = "Luk valgte filer"
 selectAll = "Vælg alle"
 deselectAll = "Fravælg alle"

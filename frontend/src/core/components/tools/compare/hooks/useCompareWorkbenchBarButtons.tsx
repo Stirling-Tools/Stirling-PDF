@@ -4,12 +4,12 @@ import { useTranslation } from 'react-i18next';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { alert } from '@app/components/toast';
 import type { ToastLocation } from '@app/components/toast/types';
-import type { RightRailButtonWithAction } from '@app/hooks/useRightRailButtons';
+import type { WorkbenchBarButtonWithAction } from '@app/hooks/useWorkbenchBarButtons';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 
 type Pane = 'base' | 'comparison';
 
-export interface UseCompareRightRailButtonsOptions {
+export interface UseCompareWorkbenchBarButtonsOptions {
   layout: 'side-by-side' | 'stacked';
   toggleLayout: () => void;
   isPanMode: boolean;
@@ -30,7 +30,7 @@ export interface UseCompareRightRailButtonsOptions {
   comparisonScrollRef?: React.RefObject<HTMLDivElement | null>;
 }
 
-export const useCompareRightRailButtons = ({
+export const useCompareWorkbenchBarButtons = ({
   layout,
   toggleLayout,
   isPanMode,
@@ -49,11 +49,11 @@ export const useCompareRightRailButtons = ({
   zoomLimits,
   baseScrollRef,
   comparisonScrollRef,
-}: UseCompareRightRailButtonsOptions): RightRailButtonWithAction[] => {
+}: UseCompareWorkbenchBarButtonsOptions): WorkbenchBarButtonWithAction[] => {
   const { t, i18n } = useTranslation();
   const isMobile = useIsMobile();
 
-  return useMemo<RightRailButtonWithAction[]>(() => [
+  return useMemo<WorkbenchBarButtonWithAction[]>(() => [
     {
       id: 'compare-toggle-layout',
       icon: (
@@ -189,4 +189,4 @@ export const useCompareRightRailButtons = ({
   ]);
 };
 
-export type UseCompareRightRailButtonsReturn = ReturnType<typeof useCompareRightRailButtons>;
+export type UseCompareWorkbenchBarButtonsReturn = ReturnType<typeof useCompareWorkbenchBarButtons>;

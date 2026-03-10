@@ -4276,7 +4276,7 @@ fileUpload = "Uporabite gumb <strong>Datoteke</strong> za nalaganje ali izbiro n
 leftPanel = "Levi panel <strong>Orodja</strong> navaja vse, kar lahko storite. Brskajte po kategorijah ali poiščite orodje."
 pageEditorView = "Preklopite na Urejevalnik strani za preurejanje, vrtenje ali brisanje strani."
 quickAccess = "Začnite na stranskem traku <strong>Hiter dostop</strong> za preklapljanje med Bralnikom, Avtomatizacijo, vašimi datotekami in vsemi ogledi."
-rightRail = "<strong>Desni trak</strong> vsebuje hitra dejanja za izbiro datotek, spremembo teme ali jezika ter prenos rezultatov."
+workbenchBar = "<strong>Desni trak</strong> vsebuje hitra dejanja za izbiro datotek, spremembo teme ali jezika ter prenos rezultatov."
 topBar = "Zgornja vrstica omogoča preklapljanje med <strong>Pregledovalnik</strong>, <strong>Urejevalnik strani</strong> in <strong>Aktivne datoteke</strong>."
 wrapUp = "To je novo v V2. Kadar koli odprite meni <strong>Ogledi</strong> za ponoven ogled tega, ogleda orodij ali skrbniškega ogleda."
 
@@ -4401,7 +4401,7 @@ dismiss = "Zapri"
 apply = "Uveljavi spremembe"
 download = "Prenesi PDF"
 
-[rightRail]
+[workbenchBar]
 closeSelected = "Zapri izbrane datoteke"
 selectAll = "Izberi vse"
 deselectAll = "Prekliči izbor vseh"

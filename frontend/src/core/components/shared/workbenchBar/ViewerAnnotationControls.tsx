@@ -136,12 +136,12 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
   return (
     <>
       {/* Redaction Mode Toggle */}
-      <Tooltip content={isRedactMode ? t('rightRail.exitRedaction', 'Exit Redaction Mode') : t('rightRail.redact', 'Redact')} position="bottom" offset={6} arrow portalTarget={document.body}>
+      <Tooltip content={isRedactMode ? t('workbenchBar.exitRedaction', 'Exit Redaction Mode') : t('workbenchBar.redact', 'Redact')} position="bottom" offset={6} arrow portalTarget={document.body}>
         <ActionIcon
           variant="subtle"
           color={isRedactMode ? 'blue' : 'gray'}
           radius="md"
-          className="right-rail-icon"
+          className="workbench-bar-icon"
           onClick={handleRedactionToggle}
           disabled={disabled || currentView !== 'viewer'}
           aria-pressed={isRedactMode}
@@ -155,12 +155,12 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
       </Tooltip>
 
       {/* Annotation Visibility Toggle */}
-      <Tooltip content={t('rightRail.toggleAnnotations', 'Toggle Annotations Visibility')} position="bottom" offset={6} arrow portalTarget={document.body}>
+      <Tooltip content={t('workbenchBar.toggleAnnotations', 'Toggle Annotations Visibility')} position="bottom" offset={6} arrow portalTarget={document.body}>
         <ActionIcon
           variant="subtle"
           color={annotationsHidden ? "blue" : "gray"}
           radius="md"
-          className="right-rail-icon"
+          className="workbench-bar-icon"
           onClick={() => {
             viewerContext?.toggleAnnotationsVisibility();
           }}

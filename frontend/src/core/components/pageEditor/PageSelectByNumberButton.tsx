@@ -26,7 +26,7 @@ export default function PageSelectByNumberButton({
 }: PageSelectByNumberButtonProps) {
   return (
     <Tooltip content={label} position="bottom" offset={6} arrow portalTarget={document.body}>
-      <div className={`right-rail-fade enter`}>
+      <div className={`workbench-bar-fade enter`}>
         <Popover position="bottom" withArrow shadow="md" offset={8}>
           <Popover.Target>
             <div style={{ display: 'inline-flex' }}>
@@ -34,7 +34,7 @@ export default function PageSelectByNumberButton({
                 variant="subtle"
                 color="gray"
                 radius="md"
-                className="right-rail-icon"
+                className="workbench-bar-icon"
                 disabled={disabled || totalPages === 0}
                 aria-label={label}
               >

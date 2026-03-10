@@ -4276,7 +4276,7 @@ fileUpload = "Utilisez le bouton <strong>Fichiers</strong> pour téléverser ou 
 leftPanel = "Le panneau <strong>Outils</strong> à gauche liste tout ce que vous pouvez faire. Parcourez les catégories ou recherchez pour trouver un outil rapidement."
 pageEditorView = "Passez à l’Éditeur de pages pour réorganiser, pivoter ou supprimer des pages."
 quickAccess = "Commencez par le <strong>rail Accès rapide</strong> pour passer entre Lecteur, Automatiser, vos fichiers et toutes les visites."
-rightRail = "Le <strong>rail de droite</strong> contient des actions rapides pour sélectionner des fichiers, changer le thème ou la langue, et télécharger les résultats."
+workbenchBar = "Le <strong>rail de droite</strong> contient des actions rapides pour sélectionner des fichiers, changer le thème ou la langue, et télécharger les résultats."
 topBar = "La barre supérieure permet de basculer entre la <strong>Visionneuse</strong>, <strong>l’Éditeur de pages</strong> et <strong>les fichiers actifs</strong>."
 wrapUp = "Voilà les nouveautés de la V2. Ouvrez le menu <strong>Visites guidées</strong> à tout moment pour rejouer ceci, le parcours des outils ou le parcours Admin."
 
@@ -4401,7 +4401,7 @@ dismiss = "Fermer"
 apply = "Appliquer les modifications"
 download = "Télécharger le PDF"
 
-[rightRail]
+[workbenchBar]
 closeSelected = "Fermer les fichiers sélectionnés"
 selectAll = "Tout sélectionner"
 deselectAll = "Tout déselectionner"

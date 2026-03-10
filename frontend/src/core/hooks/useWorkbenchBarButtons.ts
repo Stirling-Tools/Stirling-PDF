@@ -1,21 +1,21 @@
 import { useEffect, useMemo } from 'react';
-import { useRightRail } from '@app/contexts/RightRailContext';
-import { RightRailAction, RightRailButtonConfig } from '@app/types/rightRail';
+import { useWorkbenchBar } from '@app/contexts/WorkbenchBarContext';
+import { WorkbenchBarAction, WorkbenchBarButtonConfig } from '@app/types/workbenchBar';
 
-export interface RightRailButtonWithAction extends RightRailButtonConfig {
-  onClick?: RightRailAction;
+export interface WorkbenchBarButtonWithAction extends WorkbenchBarButtonConfig {
+  onClick?: WorkbenchBarAction;
 }
 
 /**
- * Registers one or more RightRail buttons and their actions.
+ * Registers one or more WorkbenchBar buttons and their actions.
  * - Automatically registers on mount and unregisters on unmount
  * - Updates registration when the input array reference changes
  */
-export function useRightRailButtons(buttons: readonly RightRailButtonWithAction[]) {
-  const { registerButtons, unregisterButtons, setAction } = useRightRail();
+export function useWorkbenchBarButtons(buttons: readonly WorkbenchBarButtonWithAction[]) {
+  const { registerButtons, unregisterButtons, setAction } = useWorkbenchBar();
 
   // Memoize configs and ids to reduce churn
-  const configs: RightRailButtonConfig[] = useMemo(
+  const configs: WorkbenchBarButtonConfig[] = useMemo(
     () => buttons.map(({ onClick, ...cfg }) => cfg),
     [buttons]
   );
@@ -28,8 +28,8 @@ export function useRightRailButtons(buttons: readonly RightRailButtonWithAction[
     if (process.env.NODE_ENV === 'development') {
       const idSet = new Set<string>();
       buttons.forEach(b => {
-        if (!b.onClick && !b.render) console.warn('[RightRail] Missing onClick/render for id:', b.id);
-        if (idSet.has(b.id)) console.warn('[RightRail] Duplicate id in buttons array:', b.id);
+        if (!b.onClick && !b.render) console.warn('[WorkbenchBar] Missing onClick/render for id:', b.id);
+        if (idSet.has(b.id)) console.warn('[WorkbenchBar] Duplicate id in buttons array:', b.id);
         idSet.add(b.id);
       });
     }

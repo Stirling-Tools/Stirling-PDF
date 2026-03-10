@@ -16,14 +16,14 @@ import {
   CompareWorkbenchData,
 } from '@app/types/compare';
 import { useFileContext } from '@app/contexts/file/fileHooks';
-import { useRightRailButtons } from '@app/hooks/useRightRailButtons';
+import { useWorkbenchBarButtons } from '@app/hooks/useWorkbenchBarButtons';
 import CompareDocumentPane from '@app/components/tools/compare/CompareDocumentPane';
 import { useComparePagePreviews } from '@app/components/tools/compare/hooks/useComparePagePreviews';
 import { useComparePanZoom } from '@app/components/tools/compare/hooks/useComparePanZoom';
 import { useCompareHighlights } from '@app/components/tools/compare/hooks/useCompareHighlights';
 import { useCompareChangeNavigation } from '@app/components/tools/compare/hooks/useCompareChangeNavigation';
 import '@app/components/tools/compare/compareView.css';
-import { useCompareRightRailButtons } from '@app/components/tools/compare/hooks/useCompareRightRailButtons';
+import { useCompareWorkbenchBarButtons } from '@app/components/tools/compare/hooks/useCompareWorkbenchBarButtons';
 import { alert, updateToast, updateToastProgress, dismissToast } from '@app/components/toast';
 import type { ToastLocation } from '@app/components/toast/types';
 
@@ -140,7 +140,7 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     ? (<span className="inline-flex flex-row items-center gap-1">{t('compare.dropdown.additionsLabel', 'Additions')} <Loader size="xs" color="currentColor" /></span>)
     : t('compare.dropdown.additions', 'Additions ({{count}})', { count: comparisonWordChanges.length });
 
-  const rightRailButtons = useCompareRightRailButtons({
+  const workbenchBarButtons = useCompareWorkbenchBarButtons({
     layout,
     toggleLayout,
     isPanMode,
@@ -161,7 +161,7 @@ const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
     comparisonScrollRef,
   });
 
-  useRightRailButtons(rightRailButtons);
+  useWorkbenchBarButtons(workbenchBarButtons);
 
   // Rendering progress toast for very large PDFs
   const LARGE_PAGE_THRESHOLD = 400; // show banner when one or both exceed threshold

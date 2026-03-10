@@ -4276,7 +4276,7 @@ fileUpload = "Koristite gumb <strong>Datoteke</strong> za otpremu ili odabir ned
 leftPanel = "Lijevi panel <strong>Alati</strong> navodi sve što možete učiniti. Pregledajte kategorije ili pretražite kako biste brzo našli alat."
 pageEditorView = "Prebacite se na Uređivač stranica za promjenu redoslijeda, rotiranje ili brisanje stranica."
 quickAccess = "Započnite na traci <strong>Brzi pristup</strong> kako biste skakali između Čitača, Automatizacije, svojih datoteka i svih obilazaka."
-rightRail = "<strong>Desna traka</strong> sadrži brze radnje za odabir datoteka, promjenu teme ili jezika i preuzimanje rezultata."
+workbenchBar = "<strong>Desna traka</strong> sadrži brze radnje za odabir datoteka, promjenu teme ili jezika i preuzimanje rezultata."
 topBar = "Gornja traka omogućuje prebacivanje između <strong>Preglednika</strong>, <strong>Uređivača stranica</strong> i <strong>Aktivnih datoteka</strong>."
 wrapUp = "To je ono što je novo u V2. Otvorite izbornik <strong>Obilasci</strong> bilo kada za reprizu ovoga, obilaska Alata ili Administratorskog obilaska."
 
@@ -4401,7 +4401,7 @@ dismiss = "Odbaci"
 apply = "Primijeni promjene"
 download = "Preuzmi PDF"
 
-[rightRail]
+[workbenchBar]
 closeSelected = "Zatvori odabrane datoteke"
 selectAll = "Odaberi sve"
 deselectAll = "Poništi sav odabir"

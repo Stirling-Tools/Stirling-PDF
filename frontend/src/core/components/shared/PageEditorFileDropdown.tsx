@@ -178,7 +178,7 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
         </div>
       </Menu.Target>
       <Menu.Dropdown className="ph-no-capture" style={{
-        backgroundColor: 'var(--right-rail-bg)',
+        backgroundColor: 'var(--workbench-bar-bg)',
         border: '1px solid var(--border-subtle)',
         borderRadius: '8px',
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',

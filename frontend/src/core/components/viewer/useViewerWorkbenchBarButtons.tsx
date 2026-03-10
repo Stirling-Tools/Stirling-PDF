@@ -2,13 +2,13 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import { ActionIcon, Popover } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useViewer } from '@app/contexts/ViewerContext';
-import { useRightRailButtons, RightRailButtonWithAction } from '@app/hooks/useRightRailButtons';
+import { useWorkbenchBarButtons, WorkbenchBarButtonWithAction } from '@app/hooks/useWorkbenchBarButtons';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import { SearchInterface } from '@app/components/viewer/SearchInterface';
-import ViewerAnnotationControls from '@app/components/shared/rightRail/ViewerAnnotationControls';
+import ViewerAnnotationControls from '@app/components/shared/workbenchBar/ViewerAnnotationControls';
 import { useSidebarContext } from '@app/contexts/SidebarContext';
-import { useRightRailTooltipSide } from '@app/hooks/useRightRailTooltipSide';
+import { useWorkbenchBarTooltipSide } from '@app/hooks/useWorkbenchBarTooltipSide';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useNavigationState, useNavigationGuard } from '@app/contexts/NavigationContext';
 import { BASE_PATH, withBasePath } from '@app/constants/app';
@@ -16,7 +16,7 @@ import { useRedaction, useRedactionMode } from '@app/contexts/RedactionContext';
 import TextFieldsIcon from '@mui/icons-material/TextFields';
 import StraightenIcon from '@mui/icons-material/Straighten';
 
-export function useViewerRightRailButtons(
+export function useViewerWorkbenchBarButtons(
   isRulerActive?: boolean,
   setIsRulerActive?: (v: boolean) => void,
 ) {
@@ -25,7 +25,7 @@ export function useViewerRightRailButtons(
   const { isThumbnailSidebarVisible, isBookmarkSidebarVisible, isAttachmentSidebarVisible, isSearchInterfaceVisible, registerImmediatePanUpdate } = viewer;
   const [isPanning, setIsPanning] = useState<boolean>(() => viewer.getPanState()?.isPanning ?? false);
   const { sidebarRefs } = useSidebarContext();
-  const { position: tooltipPosition } = useRightRailTooltipSide(sidebarRefs, 12);
+  const { position: tooltipPosition } = useWorkbenchBarTooltipSide(sidebarRefs, 12);
   const { handleToolSelect, handleBackToTools } = useToolWorkflow();
   const { selectedTool } = useNavigationState();
   const { requestNavigation } = useNavigationGuard();
@@ -72,24 +72,24 @@ export function useViewerRightRailButtons(
   }, [isAnnotationsPath]);
 
   // Lift i18n labels out of memo for clarity
-  const searchLabel = t('rightRail.search', 'Search PDF');
-  const panLabel = t('rightRail.panMode', 'Pan Mode');
-  const applyRedactionsLabel = t('rightRail.applyRedactionsFirst', 'Apply redactions first');
-  const rotateLeftLabel = t('rightRail.rotateLeft', 'Rotate Left');
-  const rotateRightLabel = t('rightRail.rotateRight', 'Rotate Right');
-  const sidebarLabel = t('rightRail.toggleSidebar', 'Toggle Sidebar');
-  const bookmarkLabel = t('rightRail.toggleBookmarks', 'Toggle Bookmarks');
-  const attachmentLabel = t('rightRail.toggleAttachments', 'Toggle Attachments');
-  const printLabel = t('rightRail.print', 'Print PDF');
-  const annotationsLabel = t('rightRail.annotations', 'Annotations');
-  const formFillLabel = t('rightRail.formFill', 'Fill Form');
+  const searchLabel = t('workbenchBar.search', 'Search PDF');
+  const panLabel = t('workbenchBar.panMode', 'Pan Mode');
+  const applyRedactionsLabel = t('workbenchBar.applyRedactionsFirst', 'Apply redactions first');
+  const rotateLeftLabel = t('workbenchBar.rotateLeft', 'Rotate Left');
+  const rotateRightLabel = t('workbenchBar.rotateRight', 'Rotate Right');
+  const sidebarLabel = t('workbenchBar.toggleSidebar', 'Toggle Sidebar');
+  const bookmarkLabel = t('workbenchBar.toggleBookmarks', 'Toggle Bookmarks');
+  const attachmentLabel = t('workbenchBar.toggleAttachments', 'Toggle Attachments');
+  const printLabel = t('workbenchBar.print', 'Print PDF');
+  const annotationsLabel = t('workbenchBar.annotations', 'Annotations');
+  const formFillLabel = t('workbenchBar.formFill', 'Fill Form');
 
   const isFormFillActive = (selectedTool as string) === 'formFill';
 
-  const rulerLabel = t('rightRail.ruler', 'Ruler / Measure');
+  const rulerLabel = t('workbenchBar.ruler', 'Ruler / Measure');
 
-  const viewerButtons = useMemo<RightRailButtonWithAction[]>(() => {
-    const buttons: RightRailButtonWithAction[] = [
+  const viewerButtons = useMemo<WorkbenchBarButtonWithAction[]>(() => {
+    const buttons: WorkbenchBarButtonWithAction[] = [
       {
         id: 'viewer-search',
         tooltip: searchLabel,
@@ -112,7 +112,7 @@ export function useViewerRightRailButtons(
                     variant="subtle"
                     color="gray"
                     radius="md"
-                    className="right-rail-icon"
+                    className="workbench-bar-icon"
                     disabled={disabled}
                     aria-label={searchLabel}
                     onClick={viewer.searchInterfaceActions.toggle}
@@ -244,7 +244,7 @@ export function useViewerRightRailButtons(
               variant="subtle"
               color={isAnnotationsActive ? 'blue' : 'gray'}
               radius="md"
-              className="right-rail-icon"
+              className="workbench-bar-icon"
               onClick={() => {
                 if (disabled || isAnnotationsActive) return;
 
@@ -294,7 +294,7 @@ export function useViewerRightRailButtons(
               variant="subtle"
               color={isFormFillActive ? 'blue' : 'gray'}
               radius="md"
-              className="right-rail-icon"
+              className="workbench-bar-icon"
               onClick={() => {
                 if (disabled) return;
                 if (isFormFillActive) {
@@ -347,5 +347,5 @@ export function useViewerRightRailButtons(
     setIsRulerActive,
   ]);
 
-  useRightRailButtons(viewerButtons);
+  useWorkbenchBarButtons(viewerButtons);
 }

@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useRightRailButtons, RightRailButtonWithAction } from '@app/hooks/useRightRailButtons';
+import { useWorkbenchBarButtons, WorkbenchBarButtonWithAction } from '@app/hooks/useWorkbenchBarButtons';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import PageSelectByNumberButton from '@app/components/pageEditor/PageSelectByNumberButton';
 
-interface PageEditorRightRailButtonsParams {
+interface PageEditorWorkbenchBarButtonsParams {
   totalPages: number;
   selectedPageCount: number;
   csvInput: string;
@@ -22,7 +22,7 @@ interface PageEditorRightRailButtonsParams {
   closePdf: () => void;
 }
 
-export function usePageEditorRightRailButtons(params: PageEditorRightRailButtonsParams) {
+export function usePageEditorWorkbenchBarButtons(params: PageEditorWorkbenchBarButtonsParams) {
   const {
     totalPages,
     selectedPageCount,
@@ -44,15 +44,15 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
   const { t, i18n } = useTranslation();
 
   // Lift i18n labels out of memo for clarity
-  const selectAllLabel = t('rightRail.selectAll', 'Select All');
-  const deselectAllLabel = t('rightRail.deselectAll', 'Deselect All');
-  const selectByNumberLabel = t('rightRail.selectByNumber', 'Select by Page Numbers');
-  const deleteSelectedLabel = t('rightRail.deleteSelected', 'Delete Selected Pages');
-  const exportSelectedLabel = t('rightRail.exportSelected', 'Export Selected Pages');
-  const saveChangesLabel = t('rightRail.saveChanges', 'Save Changes');
-  const closePdfLabel = t('rightRail.closePdf', 'Close PDF');
+  const selectAllLabel = t('workbenchBar.selectAll', 'Select All');
+  const deselectAllLabel = t('workbenchBar.deselectAll', 'Deselect All');
+  const selectByNumberLabel = t('workbenchBar.selectByNumber', 'Select by Page Numbers');
+  const deleteSelectedLabel = t('workbenchBar.deleteSelected', 'Delete Selected Pages');
+  const exportSelectedLabel = t('workbenchBar.exportSelected', 'Export Selected Pages');
+  const saveChangesLabel = t('workbenchBar.saveChanges', 'Save Changes');
+  const closePdfLabel = t('workbenchBar.closePdf', 'Close PDF');
 
-  const buttons = useMemo<RightRailButtonWithAction[]>(() => {
+  const buttons = useMemo<WorkbenchBarButtonWithAction[]>(() => {
     return [
       {
         id: 'page-select-all',
@@ -169,5 +169,5 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
     closePdf,
   ]);
 
-  useRightRailButtons(buttons);
+  useWorkbenchBarButtons(buttons);
 }
