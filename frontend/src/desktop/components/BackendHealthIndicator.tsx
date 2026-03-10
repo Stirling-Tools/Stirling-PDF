@@ -13,29 +13,29 @@ export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({
   const { t } = useTranslation();
   const theme = useMantineTheme();
   const colorScheme = useComputedColorScheme('light');
-  const { status, isHealthy, checkHealth } = useBackendHealth();
+  const { status, isOnline, checkHealth } = useBackendHealth();
 
   const label = useMemo(() => {
     if (status === 'starting') {
       return t('backendHealth.checking', 'Checking backend status...');
     }
 
-    if (isHealthy) {
+    if (isOnline) {
       return t('backendHealth.online', 'Backend Online');
     }
 
     return t('backendHealth.offline', 'Backend Offline');
-  }, [status, isHealthy, t]);
+  }, [status, isOnline, t]);
 
   const dotColor = useMemo(() => {
     if (status === 'starting') {
       return theme.colors.yellow?.[5] ?? '#fcc419';
     }
-    if (isHealthy) {
+    if (isOnline) {
       return theme.colors.green?.[5] ?? '#37b24d';
     }
     return theme.colors.red?.[6] ?? '#e03131';
-  }, [status, isHealthy, theme.colors.green, theme.colors.red, theme.colors.yellow]);
+  }, [status, isOnline, theme.colors.green, theme.colors.red, theme.colors.yellow]);
 
   const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLSpanElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {

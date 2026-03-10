@@ -9,6 +9,7 @@ import { useBackendInitializer } from '@app/hooks/useBackendInitializer';
 import { DESKTOP_DEFAULT_APP_CONFIG } from '@app/config/defaultAppConfig';
 import { connectionModeService } from '@app/services/connectionModeService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
+import { selfHostedServerMonitor } from '@app/services/selfHostedServerMonitor';
 import { authService } from '@app/services/authService';
 import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
 import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -64,7 +65,17 @@ export function AppProviders({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (setupComplete && !isFirstLaunch && connectionMode === 'selfhosted') {
       void tauriBackendService.initializeExternalBackend();
+      // Also start the self-hosted server monitor so the operation router and UI
+      // can detect when the remote server goes offline and fall back to local backend.
+      connectionModeService.getServerConfig().then(cfg => {
+        if (cfg?.url) {
+          selfHostedServerMonitor.start(cfg.url);
+        }
+      });
     }
+    return () => {
+      selfHostedServerMonitor.stop();
+    };
   }, [setupComplete, isFirstLaunch, connectionMode]);
 
   // Initialize monitoring for bundled backend (already started in Rust)
@@ -72,38 +83,31 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const shouldMonitorBackend = setupComplete && !isFirstLaunch && connectionMode === 'saas';
   useBackendInitializer(shouldMonitorBackend);
 
-  // Preload endpoint availability after backend is healthy
+  // Preload endpoint availability for the local bundled backend.
+  // SaaS mode: triggers when the bundled backend reports healthy.
+  // Self-hosted mode: triggers when the local bundled backend port is discovered
+  //   (so useSelfHostedToolAvailability can use the cache instead of making
+  //   individual requests per-tool when the remote server goes offline).
+  const shouldPreloadLocalEndpoints =
+    (setupComplete && !isFirstLaunch && connectionMode === 'saas') ||
+    (setupComplete && !isFirstLaunch && connectionMode === 'selfhosted');
   useEffect(() => {
-    if (!shouldMonitorBackend) {
-      return; // Only preload in SaaS mode with bundled backend
-    }
+    if (!shouldPreloadLocalEndpoints) return;
 
-    const preloadEndpoints = async () => {
-      const backendHealthy = tauriBackendService.isBackendHealthy();
-      if (backendHealthy) {
-        console.debug('[AppProviders] Preloading common tool endpoints');
-        await endpointAvailabilityService.preloadEndpoints(
-          COMMON_TOOL_ENDPOINTS,
-          tauriBackendService.getBackendUrl()
-        );
-        console.debug('[AppProviders] Endpoint preloading complete');
-      }
+    const tryPreload = () => {
+      const backendUrl = tauriBackendService.getBackendUrl();
+      if (!backendUrl) return;
+      // tauriBackendService.isOnline now always reflects the local backend.
+      // Wait for it to be healthy before preloading in both modes.
+      if (!tauriBackendService.isOnline) return;
+      console.debug('[AppProviders] Preloading common tool endpoints for local backend');
+      void endpointAvailabilityService.preloadEndpoints(COMMON_TOOL_ENDPOINTS, backendUrl);
     };
 
-    // Subscribe to backend status changes
-    const unsubscribe = tauriBackendService.subscribeToStatus((status) => {
-      if (status === 'healthy') {
-        preloadEndpoints();
-      }
-    });
-
-    // Also check immediately in case backend is already healthy
-    if (tauriBackendService.isBackendHealthy()) {
-      preloadEndpoints();
-    }
-
+    const unsubscribe = tauriBackendService.subscribeToStatus(() => tryPreload());
+    tryPreload();
     return unsubscribe;
-  }, [shouldMonitorBackend]);
+  }, [shouldPreloadLocalEndpoints, connectionMode]);
 
   useEffect(() => {
     if (!authChecked) {

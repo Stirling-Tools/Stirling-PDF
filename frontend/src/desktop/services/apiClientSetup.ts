@@ -96,7 +96,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
       // Backend readiness check (for local backend)
       const isSaaS = await operationRouter.isSaaSMode();
-      const backendHealthy = tauriBackendService.isBackendHealthy();
+      const backendHealthy = tauriBackendService.isOnline;
       const backendStatus = tauriBackendService.getBackendStatus();
       const backendPort = tauriBackendService.getBackendPort();
 

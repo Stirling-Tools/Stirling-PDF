@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
-import { Stack, Text, NumberInput, Select, Divider, Checkbox, Slider, SegmentedControl } from "@mantine/core";
+import { Stack, Text, NumberInput, Select, Divider, Checkbox, Slider, SegmentedControl, Tooltip, Box } from "@mantine/core";
 import SliderWithInput from '@app/components/shared/sliderWithInput/SliderWithInput';
 import { useTranslation } from "react-i18next";
 import { CompressParameters } from "@app/hooks/tools/compress/useCompressParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
-import apiClient from "@app/services/apiClient";
+import { useGroupEnabled } from "@app/hooks/useGroupEnabled";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface CompressSettingsProps {
@@ -15,20 +14,7 @@ interface CompressSettingsProps {
 
 const CompressSettings = ({ parameters, onParameterChange, disabled = false }: CompressSettingsProps) => {
   const { t } = useTranslation();
-  const [imageMagickAvailable, setImageMagickAvailable] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const checkImageMagick = async () => {
-      try {
-        const response = await apiClient.get<boolean>('/api/v1/config/group-enabled?group=ImageMagick');
-        setImageMagickAvailable(response.data);
-      } catch (error) {
-        console.error('Failed to check ImageMagick availability:', error);
-        setImageMagickAvailable(true); // Optimistic fallback
-      }
-    };
-    checkImageMagick();
-  }, []);
+  const { enabled: imageMagickAvailable, unavailableReason: imageMagickReason } = useGroupEnabled('ImageMagick');
 
   return (
     <Stack gap="md">
@@ -122,17 +108,27 @@ const CompressSettings = ({ parameters, onParameterChange, disabled = false }: C
           />
         </Stack>
 
-        <Checkbox
-          checked={parameters.lineArt}
-          onChange={(event) => onParameterChange('lineArt', event.currentTarget.checked)}
-          disabled={disabled || imageMagickAvailable === false}
-          label={t("compress.lineArt.label", "Convert images to line art (bilevel)")}
-          description={
-            imageMagickAvailable === false
-              ? t("compress.lineArt.unavailable", "ImageMagick is not installed or enabled on this server")
-              : t("compress.lineArt.description", "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction.")
-          }
-        />
+        <Tooltip
+          label={imageMagickReason ?? t("compress.lineArt.unavailable", "ImageMagick is not installed or enabled on this server")}
+          disabled={imageMagickAvailable !== false}
+          multiline
+          maw={280}
+        >
+          <Box style={{ cursor: imageMagickAvailable === false ? 'not-allowed' : undefined }}>
+            <Checkbox
+              checked={parameters.lineArt}
+              onChange={(event) => onParameterChange('lineArt', event.currentTarget.checked)}
+              disabled={disabled || imageMagickAvailable === false}
+              label={t("compress.lineArt.label", "Convert images to line art (bilevel)")}
+              description={
+                imageMagickAvailable !== false
+                  ? t("compress.lineArt.description", "Uses ImageMagick to reduce pages to high-contrast black and white for maximum size reduction.")
+                  : undefined
+              }
+              style={{ pointerEvents: imageMagickAvailable === false ? 'none' : undefined }}
+            />
+          </Box>
+        </Tooltip>
         {parameters.lineArt && (
           <Stack gap="xs" style={{ opacity: (disabled || imageMagickAvailable === false) ? 0.6 : 1 }}>
             <Text size="sm" fw={600}>{t('compress.lineArt.detailLevel', 'Detail level')}</Text>
