@@ -26,6 +26,7 @@ import { useFormFill } from '@app/tools/formFill/FormFillContext';
 import { FormSaveBar } from '@app/tools/formFill/FormSaveBar';
 
 import type { PDFDict, PDFNumber } from '@cantoo/pdf-lib';
+import '@app/components/viewer/EmbedPdfViewer.css';
 
 // ─── Measure dictionary extraction ────────────────────────────────────────────
 
@@ -944,37 +945,11 @@ const EmbedPdfViewerContent = ({
       {onClose && (
         <Box
           onClick={onClose}
-          style={{
-            position: 'absolute',
-            top: '1rem',
-            left: '1rem',
-            zIndex: 1000,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.5rem 0.75rem',
-            borderRadius: '999px',
-            backgroundColor: 'var(--viewer-overlay-pill-bg)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            border: '1px solid var(--viewer-overlay-pill-border)',
-            boxShadow: 'var(--viewer-overlay-pill-shadow)',
-            color: 'var(--text-primary)',
-            transition: 'all 0.2s ease',
-            cursor: 'pointer',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--viewer-overlay-pill-bg-hover)';
-            e.currentTarget.style.transform = 'scale(1.05)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--viewer-overlay-pill-bg)';
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
+          className="embed-pdf-viewer-back-pill"
           aria-label={t('viewer.backToActiveFiles', 'Back to active files')}
         >
           <ArrowBackIosIcon fontSize="small" />
-          <Text size="sm" fw={500} style={{ whiteSpace: 'nowrap' }}>
+          <Text size="sm" fw={500} className="embed-pdf-viewer-back-pill__label">
             {t('viewer.backToActiveFiles', 'Back to active files')}
           </Text>
         </Box>

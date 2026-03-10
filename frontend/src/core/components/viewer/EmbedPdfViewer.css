@@ -1,0 +1,29 @@
+/* Back-to-files overlay pill (e.g. when viewer is opened from tool preview) */
+.embed-pdf-viewer-back-pill {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  background-color: var(--viewer-overlay-pill-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--viewer-overlay-pill-border);
+  box-shadow: var(--viewer-overlay-pill-shadow);
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.embed-pdf-viewer-back-pill:hover {
+  background-color: var(--viewer-overlay-pill-bg-hover);
+  transform: scale(1.05);
+}
+
+.embed-pdf-viewer-back-pill__label {
+  white-space: nowrap;
+}

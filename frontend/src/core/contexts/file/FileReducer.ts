@@ -103,8 +103,11 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
         delete newById[id];
       });
 
-      // Clear selections that reference removed files
+      // Clear selections that reference removed files; if selection becomes empty but files remain, select all remaining
       const validSelectedFileIds = state.ui.selectedFileIds.filter(id => !fileIds.includes(id));
+      const finalSelectedFileIds = validSelectedFileIds.length === 0 && remainingIds.length > 0
+        ? remainingIds
+        : validSelectedFileIds;
 
       return {
         ...state,
@@ -114,7 +117,7 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
         },
         ui: {
           ...state.ui,
-          selectedFileIds: validSelectedFileIds
+          selectedFileIds: finalSelectedFileIds
         }
       };
     }

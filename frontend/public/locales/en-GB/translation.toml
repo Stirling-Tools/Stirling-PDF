@@ -54,6 +54,7 @@ fontSizeTooltip = "Size of the page number text in points. Larger numbers create
 fontTypeTooltip = "Font family for the page numbers. Choose based on your document style."
 genericSubmit = "Submit"
 goHomepage = "Go to Homepage"
+toolFlow.tooManyFiles = "This tool only takes a max of {{max}} files"
 goToPage = "Go"
 green = "Green"
 help = "Help"

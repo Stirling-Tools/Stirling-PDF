@@ -1,3 +1,116 @@
+/* Document stack colors and shadows */
+.landing-doc-stack {
+  --landing-doc-bg: #FFFFFF;
+  --landing-doc-border: #E5E7EB;
+  --landing-doc-line: #E5E7EB;
+  --landing-doc-line-dark: #D1D5DB;
+  --landing-doc-side-shadow: 0 4px 20px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
+  --landing-doc-center-shadow: 0 8px 30px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.02);
+}
+
+.landing-doc-stack--dark {
+  --landing-doc-side-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2);
+  --landing-doc-center-shadow: 0 8px 30px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.landing-doc-stack__container {
+  width: 224px;
+  height: 176px;
+  position: relative;
+  margin: 0 auto 48px;
+}
+
+.landing-doc-stack__glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.6;
+}
+
+.landing-doc-stack__glow--light {
+  background: radial-gradient(circle, rgba(76,139,245,0.12) 0%, transparent 70%);
+}
+
+.landing-doc-stack__glow--dark {
+  background: radial-gradient(circle, rgba(74,144,226,0.15) 0%, transparent 70%);
+}
+
+.landing-doc-stack__line {
+  border-radius: 9999px;
+  background-color: var(--landing-doc-line);
+}
+
+.landing-doc-stack__line--dark {
+  background-color: var(--landing-doc-line-dark);
+}
+
+.landing-doc-stack__lines-inner {
+  padding: 16px;
+}
+
+.landing-doc-stack__header-bar {
+  height: 40px;
+  border-radius: 12px 12px 0 0;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 8px;
+  background: linear-gradient(135deg, #4C8BF5 0%, #3A7BE8 100%);
+}
+
+.landing-doc-stack__header-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: rgba(255,255,255,0.35);
+}
+
+.landing-doc-stack__header-dot:nth-child(2) {
+  background-color: rgba(255,255,255,0.25);
+}
+
+.landing-doc-stack__header-dot:nth-child(3) {
+  background-color: rgba(255,255,255,0.15);
+}
+
+/* Page panels - base (position/size set in TSX or below) */
+.landing-doc-left,
+.landing-doc-right {
+  position: absolute;
+  width: 128px;
+  height: 160px;
+  border-radius: 12px;
+  transform-origin: bottom center;
+  background-color: var(--landing-doc-bg);
+  border: 1px solid var(--landing-doc-border);
+  box-shadow: var(--landing-doc-side-shadow);
+  overflow: hidden;
+}
+
+.landing-doc-left {
+  left: 8px;
+  top: 12px;
+}
+
+.landing-doc-right {
+  right: 8px;
+  top: 12px;
+}
+
+.landing-doc-center {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 144px;
+  height: 176px;
+  border-radius: 12px;
+  z-index: 10;
+  background-color: var(--landing-doc-bg);
+  box-shadow: var(--landing-doc-center-shadow);
+  overflow: hidden;
+}
+
 @keyframes docLeftIn {
   from { opacity: 0; transform: rotate(0deg) translateX(20px) scale(0.9); }
   to { opacity: 1; transform: rotate(-8deg); }

@@ -1,0 +1,28 @@
+/* Landing page primary action buttons */
+.landing-page-btn {
+  background: linear-gradient(180deg, #5B9BF7 0%, #4C8BF5 50%, #3A7BE8 100%);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.1);
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.landing-page-btn:hover {
+  background: linear-gradient(180deg, #6BA6F8 0%, #5B9BF7 50%, #4C8BF5 100%);
+  transform: translateY(-1px);
+}
+
+.landing-page-btn--icon-only {
+  padding: 10px;
+  width: 44px;
+  height: 44px;
+  justify-content: center;
+}

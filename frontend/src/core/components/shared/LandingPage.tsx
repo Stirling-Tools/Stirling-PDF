@@ -12,35 +12,7 @@ import { useIsMobile } from '@app/hooks/useIsMobile';
 import MobileUploadModal from '@app/components/shared/MobileUploadModal';
 import { openFilesFromDisk } from '@app/services/openFilesFromDisk';
 import LandingDocumentStack from '@app/components/shared/LandingDocumentStack';
-
-const BTN_BG = 'linear-gradient(180deg, #5B9BF7 0%, #4C8BF5 50%, #3A7BE8 100%)';
-const BTN_BG_HOVER = 'linear-gradient(180deg, #6BA6F8 0%, #5B9BF7 50%, #4C8BF5 100%)';
-const BTN_SHADOW = '0 1px 2px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.1)';
-
-const btnBase: React.CSSProperties = {
-  background: BTN_BG,
-  boxShadow: BTN_SHADOW,
-  border: 'none',
-  color: 'white',
-  cursor: 'pointer',
-  fontWeight: 600,
-  fontSize: 14,
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 8,
-  padding: '10px 20px',
-  borderRadius: 12,
-  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-};
-
-function hoverIn(ev: React.MouseEvent<HTMLButtonElement>) {
-  ev.currentTarget.style.background = BTN_BG_HOVER;
-  ev.currentTarget.style.transform = 'translateY(-1px)';
-}
-function hoverOut(ev: React.MouseEvent<HTMLButtonElement>) {
-  ev.currentTarget.style.background = BTN_BG;
-  ev.currentTarget.style.transform = 'translateY(0)';
-}
+import '@app/components/shared/LandingPage.css';
 
 const LandingPage = () => {
   const { addFiles } = useFileHandler();
@@ -103,12 +75,12 @@ const LandingPage = () => {
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-            <button onClick={() => openFilesModal()} style={btnBase} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+            <button type="button" onClick={() => openFilesModal()} className="landing-page-btn">
               <LocalIcon icon="add" width="1rem" height="1rem" style={{ color: '#FFFFFF' }} />
               {t('landing.browseFiles', 'Browse Files')}
             </button>
 
-            <button onClick={handleNativeUploadClick} style={btnBase} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
+            <button type="button" onClick={handleNativeUploadClick} className="landing-page-btn">
               <LocalIcon icon={icons.uploadIconName} width="1rem" height="1rem" style={{ color: '#FFFFFF' }} />
               {terminology.uploadFromComputer}
             </button>
@@ -116,10 +88,9 @@ const LandingPage = () => {
             {config?.enableMobileScanner && !isMobile && (
               <Tooltip label={t('landing.mobileUpload', 'Upload from Mobile')} position="bottom">
                 <button
+                  type="button"
                   onClick={() => setMobileUploadModalOpen(true)}
-                  style={{ ...btnBase, padding: 10, width: 44, height: 44, justifyContent: 'center' } as React.CSSProperties}
-                  onMouseEnter={hoverIn}
-                  onMouseLeave={hoverOut}
+                  className="landing-page-btn landing-page-btn--icon-only"
                 >
                   <LocalIcon icon="qr-code-rounded" width="1.1rem" height="1.1rem" style={{ color: '#FFFFFF' }} />
                 </button>
