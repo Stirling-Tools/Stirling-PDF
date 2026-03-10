@@ -1,0 +1,602 @@
+name: Multi-OS Tauri Releases
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: "Run in test mode (skip release step)"
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      platform:
+        description: "Platform to build (windows, macos, linux, or all)"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - windows
+          - macos
+          - linux
+  release:
+    types: [created]
+
+permissions:
+  contents: read
+
+jobs:
+  determine-matrix:
+    if: ${{ vars.CI_PROFILE != 'lite' }}
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      version: ${{ steps.versionNumber.outputs.versionNumber }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: "25"
+          distribution: "temurin"
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+        with:
+          gradle-version: 8.14
+
+      - name: Get version number
+        id: versionNumber
+        run: |
+          echo "Running gradlew printVersion..."
+          ./gradlew printVersion --quiet
+          VERSION=$(./gradlew printVersion --quiet | tail -1)
+          echo "Extracted version: $VERSION"
+          echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+
+      - name: Determine build matrix
+        id: set-matrix
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            case "${{ github.event.inputs.platform }}" in
+              "windows")
+                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"}]}' >> $GITHUB_OUTPUT
+                ;;
+              "macos")
+                echo 'matrix={"include":[{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"}]}' >> $GITHUB_OUTPUT
+                ;;
+              "linux")
+                echo 'matrix={"include":[{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+                ;;
+              *)
+                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+                ;;
+            esac
+          else
+            # For push/release events, build all platforms
+            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"},{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"},{"platform":"macos-15-intel","args":"--target x86_64-apple-darwin","name":"macos-x86_64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64"}]}' >> $GITHUB_OUTPUT
+          fi
+
+  build-jars:
+    needs: determine-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        variant:
+          - name: "default"
+            disable_security: true
+            build_frontend: true
+            file_suffix: ""
+          - name: "with-login"
+            disable_security: false
+            build_frontend: true
+            file_suffix: "-with-login"
+          - name: "server-only"
+            disable_security: true
+            build_frontend: false
+            file_suffix: "-server"
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: "25"
+          distribution: "temurin"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+        with:
+          gradle-version: 8.14
+
+      - name: Setup Node.js
+        if: matrix.variant.build_frontend == true
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build JAR
+        run: ./gradlew build ${{ matrix.variant.build_frontend && '-PbuildWithFrontend=true' || '' }} -x spotlessApply -x spotlessCheck -x test -x sonarqube
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+          DISABLE_ADDITIONAL_FEATURES: ${{ matrix.variant.disable_security }}
+          STIRLING_PDF_DESKTOP_UI: false
+
+      - name: Rename JAR
+        run: |
+          echo "Version from determine-matrix: ${{ needs.determine-matrix.outputs.version }}"
+          echo "Looking for: app/core/build/libs/stirling-pdf-${{ needs.determine-matrix.outputs.version }}.jar"
+          ls -la app/core/build/libs/
+          mkdir -p ./jar-dist
+          cp app/core/build/libs/stirling-pdf-${{ needs.determine-matrix.outputs.version }}.jar ./jar-dist/Stirling-PDF${{ matrix.variant.file_suffix }}.jar
+
+      - name: Upload JAR artifacts
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: jar${{ matrix.variant.file_suffix }}
+          path: ./jar-dist/*.jar
+          retention-days: 1
+
+  build:
+    needs: determine-matrix
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.determine-matrix.outputs.matrix) }}
+    runs-on: ${{ matrix.platform }}
+    env:
+      SM_API_KEY: ${{ secrets.SM_API_KEY }}
+      WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libjavascriptcoregtk-4.0-dev libsoup2.4-dev libjavascriptcoregtk-4.1-dev libsoup-3.0-dev
+
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
+        with:
+          toolchain: stable
+          targets: ${{ (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: "25"
+          distribution: "temurin"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+        with:
+          gradle-version: 8.14
+
+      - name: Build Java backend with JLink
+        working-directory: ./
+        shell: bash
+        run: |
+          chmod +x ./gradlew
+          echo "🔧 Building Stirling-PDF JAR..."
+          ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube
+
+          # Find the built JAR
+          STIRLING_JAR=$(ls app/core/build/libs/stirling-pdf-*.jar | head -n 1)
+          echo "✅ Built JAR: $STIRLING_JAR"
+
+          # Create Tauri directories
+          mkdir -p ./frontend/src-tauri/libs
+          mkdir -p ./frontend/src-tauri/runtime
+
+          # Copy JAR to Tauri libs
+          cp "$STIRLING_JAR" ./frontend/src-tauri/libs/
+          echo "✅ JAR copied to Tauri libs"
+
+          # Analyze JAR dependencies for jlink modules
+          echo "🔍 Analyzing JAR dependencies..."
+          if command -v jdeps &> /dev/null; then
+            DETECTED_MODULES=$(jdeps --print-module-deps --ignore-missing-deps "$STIRLING_JAR" 2>/dev/null || echo "")
+            if [ -n "$DETECTED_MODULES" ]; then
+              echo "📋 jdeps detected modules: $DETECTED_MODULES"
+              MODULES="$DETECTED_MODULES,java.compiler,java.instrument,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
+            else
+              echo "⚠️ jdeps analysis failed, using predefined modules"
+              MODULES="java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
+            fi
+          else
+            echo "⚠️ jdeps not available, using predefined modules"
+            MODULES="java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
+          fi
+
+          # Create custom JRE with jlink
+          echo "🔧 Creating custom JRE with jlink..."
+          echo "📋 Using modules: $MODULES"
+
+          # Remove any existing JRE
+          rm -rf ./frontend/src-tauri/runtime/jre
+
+          # Create the custom JRE
+          jlink \
+            --add-modules "$MODULES" \
+            --strip-debug \
+            --compress=2 \
+            --no-header-files \
+            --no-man-pages \
+            --output ./frontend/src-tauri/runtime/jre
+
+          if [ ! -d "./frontend/src-tauri/runtime/jre" ]; then
+            echo "❌ Failed to create JLink runtime"
+            exit 1
+          fi
+
+          # Test the bundled runtime
+          if [ -f "./frontend/src-tauri/runtime/jre/bin/java" ]; then
+            RUNTIME_VERSION=$(./frontend/src-tauri/runtime/jre/bin/java --version 2>&1 | head -n 1)
+            echo "✅ Custom JRE created successfully: $RUNTIME_VERSION"
+          else
+            echo "❌ Custom JRE executable not found"
+            exit 1
+          fi
+
+          # Calculate runtime size
+          RUNTIME_SIZE=$(du -sh ./frontend/src-tauri/runtime/jre | cut -f1)
+          echo "📊 Custom JRE size: $RUNTIME_SIZE"
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+          DISABLE_ADDITIONAL_FEATURES: true
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      # DigiCert KeyLocker Setup (Cloud HSM)
+      - name: Setup DigiCert KeyLocker
+        id: digicert-setup
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') }}
+        uses: digicert/ssm-code-signing@1d820463733701cf1484c7eb5d7d24a15ca2c454 # v1.2.1
+        env:
+          SM_API_KEY: ${{ secrets.SM_API_KEY }}
+          SM_CLIENT_CERT_FILE_B64: ${{ secrets.SM_CLIENT_CERT_FILE_B64 }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+          SM_KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
+          SM_HOST: ${{ secrets.SM_HOST }}
+
+      - name: Setup DigiCert KeyLocker Certificate
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') }}
+        shell: pwsh
+        run: |
+          Write-Host "Setting up DigiCert KeyLocker environment..."
+
+          # Decode client certificate
+          $certBytes = [Convert]::FromBase64String("${{ secrets.SM_CLIENT_CERT_FILE_B64 }}")
+          $certPath = "D:\Certificate_pkcs12.p12"
+          [IO.File]::WriteAllBytes($certPath, $certBytes)
+
+          # Set environment variables
+          echo "SM_CLIENT_CERT_FILE=D:\Certificate_pkcs12.p12" >> $env:GITHUB_ENV
+          echo "SM_HOST=${{ secrets.SM_HOST }}" >> $env:GITHUB_ENV
+          echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> $env:GITHUB_ENV
+          echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> $env:GITHUB_ENV
+          echo "SM_KEYPAIR_ALIAS=${{ secrets.SM_KEYPAIR_ALIAS }}" >> $env:GITHUB_ENV
+
+          # Get PKCS11 config path from DigiCert action
+          $pkcs11Config = $env:PKCS11_CONFIG
+          if ($pkcs11Config) {
+            Write-Host "Found PKCS11_CONFIG: $pkcs11Config"
+            echo "PKCS11_CONFIG=$pkcs11Config" >> $env:GITHUB_ENV
+          } else {
+            Write-Host "PKCS11_CONFIG not set by DigiCert action, using default path"
+            $defaultPath = "C:\Users\RUNNER~1\AppData\Local\Temp\smtools-windows-x64\pkcs11properties.cfg"
+            if (Test-Path $defaultPath) {
+              Write-Host "Found config at default path: $defaultPath"
+              echo "PKCS11_CONFIG=$defaultPath" >> $env:GITHUB_ENV
+            } else {
+              Write-Host "Warning: Could not find PKCS11 config file"
+            }
+          }
+
+      # Traditional PFX Certificate Import (fallback if KeyLocker not configured)
+      - name: Import Windows Code Signing Certificate
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY == '' && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') }}
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        shell: powershell
+        run: |
+          if ($env:WINDOWS_CERTIFICATE) {
+            Write-Host "Importing Windows Code Signing Certificate..."
+
+            # Decode base64 certificate and save to file
+            $certBytes = [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE)
+            $certPath = Join-Path $env:RUNNER_TEMP "certificate.pfx"
+            [IO.File]::WriteAllBytes($certPath, $certBytes)
+
+            # Import certificate to CurrentUser\My store
+            $cert = Import-PfxCertificate -FilePath $certPath -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString -String $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force)
+
+            # Extract and set thumbprint as environment variable
+            $thumbprint = $cert.Thumbprint
+            Write-Host "Certificate imported with thumbprint: $thumbprint"
+            echo "WINDOWS_CERTIFICATE_THUMBPRINT=$thumbprint" >> $env:GITHUB_ENV
+
+            # Clean up certificate file
+            Remove-Item $certPath
+
+            Write-Host "Windows certificate import completed."
+          } else {
+            Write-Host "⚠️ WINDOWS_CERTIFICATE secret not set - building unsigned binary"
+          }
+
+      - name: Import Apple Developer Certificate
+        if: (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master')
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          echo "Importing Apple Developer Certificate..."
+          echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
+          # Create temporary keychain
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          # Import certificate
+          security import certificate.p12 -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          # Clean up
+          rm certificate.p12
+
+      - name: Verify Certificate
+        if: (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master')
+        run: |
+          echo "Verifying Apple Developer Certificate..."
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          CERT_INFO=$(security find-identity -v -p codesigning $KEYCHAIN_PATH | grep "Developer ID Application")
+          echo "Certificate Info: $CERT_INFO"
+          CERT_ID=$(echo "$CERT_INFO" | awk -F'"' '{print $2}')
+          echo "Certificate ID: $CERT_ID"
+          echo "APPLE_SIGNING_IDENTITY=$CERT_ID" >> $GITHUB_ENV
+          echo "Certificate imported successfully."
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@51a9f1156b33df106d827c3a78f8f894946c5faa # v0.5.25
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ env.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.APPIMAGETOOL_SIGN_PASSPHRASE }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || 'sb_publishable_UHz2SVRF5mvdrPHWkRteyA_yNlZTkYb' }}
+          VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL || 'https://app.stirlingpdf.com' }}
+          VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
+          # Only enable Windows signing in Tauri when on release or V2-master
+          SIGN: ${{ (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') && (env.SM_API_KEY == '' && env.WINDOWS_CERTIFICATE != '') && '1' || '0' }}
+          CI: true
+        with:
+          projectPath: ./frontend
+          tauriScript: npx tauri
+          args: ${{ matrix.args }}
+
+      # Sign with DigiCert KeyLocker (post-build)
+      - name: Sign Windows binaries with DigiCert KeyLocker
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') }}
+        shell: pwsh
+        run: |
+          Write-Host "=== DigiCert KeyLocker Signing ==="
+
+          # Test smctl connectivity first
+          Write-Host "Testing smctl connection..."
+          $healthCheck = & smctl healthcheck 2>&1
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "[SUCCESS] Connected to DigiCert KeyLocker"
+          } else {
+            Write-Host "[ERROR] Failed to connect to DigiCert KeyLocker"
+            Write-Host $healthCheck
+            exit 1
+          }
+          Write-Host ""
+
+          # Sync certificates to Windows certificate store
+          Write-Host "Syncing certificates to Windows certificate store..."
+          $syncOutput = & smctl windows certsync 2>&1
+          Write-Host "Cert sync result: $syncOutput"
+          Write-Host ""
+
+          # Find only the files we need to sign
+          $filesToSign = @()
+
+          # Main application executable
+          $mainExe = Get-ChildItem -Path "./frontend/src-tauri/target/x86_64-pc-windows-msvc/release" -Filter "stirling-pdf.exe" -File -ErrorAction SilentlyContinue
+          if ($mainExe) { $filesToSign += $mainExe }
+
+          # MSI installer
+          $msiFiles = Get-ChildItem -Path "./frontend/src-tauri/target" -Filter "*.msi" -Recurse -File
+          $filesToSign += $msiFiles
+
+          if ($filesToSign.Count -eq 0) {
+            Write-Host "[ERROR] No files found to sign"
+            exit 1
+          }
+
+          Write-Host "Found $($filesToSign.Count) files to sign:"
+          foreach ($f in $filesToSign) { Write-Host "  - $($f.Name)" }
+          Write-Host ""
+
+          $signedCount = 0
+          foreach ($file in $filesToSign) {
+            Write-Host "Signing: $($file.Name)"
+
+            # Get PKCS11 config file path
+            $pkcs11Config = $env:PKCS11_CONFIG
+            if (-not $pkcs11Config) {
+              Write-Host "[ERROR] PKCS11_CONFIG environment variable not set"
+              exit 1
+            }
+
+            Write-Host "Using PKCS11 config: $pkcs11Config"
+
+            # Try signing with certificate fingerprint first (if available)
+            $fingerprint = "${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}"
+            if ($fingerprint -and $fingerprint -ne "") {
+              Write-Host "Attempting to sign with certificate fingerprint..."
+              $output = & smctl sign --fingerprint "$fingerprint" --input "$($file.FullName)" --config-file "$pkcs11Config" --verbose 2>&1
+              $exitCode = $LASTEXITCODE
+            } else {
+              Write-Host "No fingerprint provided, using keypair alias..."
+              $output = & smctl sign --keypair-alias "${{ secrets.SM_KEYPAIR_ALIAS }}" --input "$($file.FullName)" --config-file "$pkcs11Config" --verbose 2>&1
+              $exitCode = $LASTEXITCODE
+            }
+
+            Write-Host "Exit code: $exitCode"
+            Write-Host "Output: $output"
+
+            if ($output -match "FAILED" -or $output -match "error" -or $output -match "Error") {
+              Write-Host "[ERROR] Signing failed for $($file.Name)"
+              exit 1
+            }
+
+            if ($exitCode -ne 0) {
+              Write-Host "[ERROR] Failed to sign $($file.Name)"
+              Write-Host "Full error output:"
+              Write-Host $output
+              exit 1
+            }
+
+            $signedCount++
+            Write-Host "[SUCCESS] Signed: $($file.Name)"
+            Write-Host ""
+          }
+
+          Write-Host "=== Summary ==="
+          Write-Host "[SUCCESS] Signed $signedCount/$($filesToSign.Count) files successfully"
+
+      - name: Rename artifacts
+        shell: bash
+        run: |
+          mkdir -p ./dist
+          cd ./frontend/src-tauri/target
+
+          # Find and rename artifacts based on platform
+          if [ "${{ matrix.platform }}" = "windows-latest" ]; then
+            find . -name "*.exe" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.exe" \;
+            find . -name "*.msi" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.msi" \;
+          elif [ "${{ matrix.platform }}" = "macos-15" ] || [ "${{ matrix.platform }}" = "macos-15-intel" ]; then
+            find . -name "*.dmg" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.dmg" \;
+            find . -name "*.app" -exec cp -r {} "../../../dist/Stirling-PDF-${{ matrix.name }}.app" \;
+          else
+            find . -name "*.deb" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
+            find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: Stirling-PDF-${{ matrix.name }}
+          path: ./dist/*
+          retention-days: 1
+
+  create-release:
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode != 'true') || github.event_name == 'release' || github.ref == 'refs/heads/V2-master'
+    needs: [determine-matrix, build, build-jars]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          egress-policy: audit
+
+      - name: Download all Tauri artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          pattern: Stirling-PDF-*
+          path: ./artifacts/tauri
+
+      - name: Download JAR artifact (default)
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: jar
+          path: ./artifacts/jars
+
+      - name: Download JAR artifact (with login)
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: jar-with-login
+          path: ./artifacts/jars
+
+      - name: Download JAR artifact (server only)
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: jar-server
+          path: ./artifacts/jars
+
+      - name: Display structure of downloaded files
+        run: ls -R ./artifacts
+
+      - name: Upload binaries to Release
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
+        with:
+          tag_name: v${{ needs.determine-matrix.outputs.version }}
+          generate_release_notes: true
+          files: |
+            ./artifacts/**/*.jar
+            ./artifacts/**/*.msi
+            ./artifacts/**/*.dmg
+            ./artifacts/**/*.deb
+            ./artifacts/**/*.AppImage
+          draft: false
+          prerelease: false
