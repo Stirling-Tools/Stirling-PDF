@@ -72,21 +72,21 @@ export function useViewerWorkbenchBarButtons(
   }, [isAnnotationsPath]);
 
   // Lift i18n labels out of memo for clarity
-  const searchLabel = t('workbenchBar.search', 'Search PDF');
-  const panLabel = t('workbenchBar.panMode', 'Pan Mode');
-  const applyRedactionsLabel = t('workbenchBar.applyRedactionsFirst', 'Apply redactions first');
-  const rotateLeftLabel = t('workbenchBar.rotateLeft', 'Rotate Left');
-  const rotateRightLabel = t('workbenchBar.rotateRight', 'Rotate Right');
-  const sidebarLabel = t('workbenchBar.toggleSidebar', 'Toggle Sidebar');
-  const bookmarkLabel = t('workbenchBar.toggleBookmarks', 'Toggle Bookmarks');
-  const attachmentLabel = t('workbenchBar.toggleAttachments', 'Toggle Attachments');
-  const printLabel = t('workbenchBar.print', 'Print PDF');
-  const annotationsLabel = t('workbenchBar.annotations', 'Annotations');
-  const formFillLabel = t('workbenchBar.formFill', 'Fill Form');
+  const searchLabel = t('rightRail.search', 'Search PDF');
+  const panLabel = t('rightRail.panMode', 'Pan Mode');
+  const applyRedactionsLabel = t('rightRail.applyRedactionsFirst', 'Apply redactions first');
+  const rotateLeftLabel = t('rightRail.rotateLeft', 'Rotate Left');
+  const rotateRightLabel = t('rightRail.rotateRight', 'Rotate Right');
+  const sidebarLabel = t('rightRail.toggleSidebar', 'Toggle Sidebar');
+  const bookmarkLabel = t('rightRail.toggleBookmarks', 'Toggle Bookmarks');
+  const attachmentLabel = t('rightRail.toggleAttachments', 'Toggle Attachments');
+  const printLabel = t('rightRail.print', 'Print PDF');
+  const annotationsLabel = t('rightRail.annotations', 'Annotations');
+  const formFillLabel = t('rightRail.formFill', 'Fill Form');
 
   const isFormFillActive = (selectedTool as string) === 'formFill';
 
-  const rulerLabel = t('workbenchBar.ruler', 'Ruler / Measure');
+  const rulerLabel = t('rightRail.ruler', 'Ruler / Measure');
 
   const viewerButtons = useMemo<WorkbenchBarButtonWithAction[]>(() => {
     const buttons: WorkbenchBarButtonWithAction[] = [

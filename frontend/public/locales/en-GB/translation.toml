@@ -1549,7 +1549,7 @@ width = "Width"
 [app]
 description = "The Free Adobe Acrobat alternative (10M+ Downloads)"
 
-[workbenchBar]
+[rightRail]
 activeFiles = "Active files"
 delete = "Remove from workbench"
 download = "Download"
@@ -4307,7 +4307,7 @@ fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent P
 leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
 pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
 quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
-workbenchBar = "The <strong>Workbench Bar</strong> holds quick actions to select files, change theme or language, and download results."
+rightRail = "The <strong>Workbench Bar</strong> holds quick actions to select files, change theme or language, and download results."
 topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
 wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
@@ -4415,7 +4415,7 @@ unknownFile = "Unknown file"
 zoomIn = "Zoom In"
 zoomOut = "Zoom Out"
 
-[workbenchBar]
+[rightRail]
 closeSelected = "Close Selected Files"
 selectAll = "Select All"
 deselectAll = "Deselect All"

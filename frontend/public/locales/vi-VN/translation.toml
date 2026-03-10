@@ -4276,7 +4276,7 @@ fileUpload = "Dùng nút <strong>Tệp</strong> để tải lên hoặc chọn m
 leftPanel = "Bảng <strong>Công cụ</strong> bên trái liệt kê mọi việc bạn có thể làm. Duyệt theo danh mục hoặc tìm kiếm để nhanh chóng tìm công cụ."
 pageEditorView = "Chuyển sang Trình chỉnh sửa trang để sắp xếp lại, xoay hoặc xóa trang."
 quickAccess = "Bắt đầu tại thanh <strong>Truy cập nhanh</strong> để chuyển giữa Reader, Automate, tệp của bạn và tất cả các hướng dẫn."
-workbenchBar = "<strong>Thanh bên phải</strong> có các thao tác nhanh để chọn tệp, đổi chủ đề hoặc ngôn ngữ, và tải kết quả."
+rightRail = "<strong>Thanh bên phải</strong> có các thao tác nhanh để chọn tệp, đổi chủ đề hoặc ngôn ngữ, và tải kết quả."
 topBar = "Thanh trên cho phép bạn chuyển giữa <strong>Trình xem</strong>, <strong>Trình chỉnh sửa trang</strong> và <strong>Tệp đang hoạt động</strong>."
 wrapUp = "Đó là những điểm mới trong V2. Mở menu <strong>Hướng dẫn</strong> bất cứ lúc nào để xem lại nội dung này, tour Công cụ hoặc tour Quản trị."
 
@@ -4401,7 +4401,7 @@ dismiss = "Bỏ qua"
 apply = "Áp dụng thay đổi"
 download = "Tải xuống PDF"
 
-[workbenchBar]
+[rightRail]
 closeSelected = "Đóng các tệp đã chọn"
 selectAll = "Chọn tất cả"
 deselectAll = "Bỏ chọn tất cả"

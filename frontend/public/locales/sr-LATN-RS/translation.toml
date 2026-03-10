@@ -4276,7 +4276,7 @@ fileUpload = "Koristite dugme <strong>Fajlovi</strong> da otpremite ili izaberet
 leftPanel = "Levi panel <strong>Alati</strong> sadrži sve što možete da uradite. Pregledajte kategorije ili pretražite da brzo nađete alat."
 pageEditorView = "Prebacite se na Uređivač stranica da biste preuredili, rotirali ili obrisali stranice."
 quickAccess = "Počnite na traci za <strong>Brzi pristup</strong> da biste prelazili između Čitača, Automatizacije, svojih fajlova i svih obilazaka."
-workbenchBar = "<strong>Desna traka</strong> sadrži brze radnje za izbor fajlova, promenu teme ili jezika i preuzimanje rezultata."
+rightRail = "<strong>Desna traka</strong> sadrži brze radnje za izbor fajlova, promenu teme ili jezika i preuzimanje rezultata."
 topBar = "Gornja traka vam omogućava da prebacujete između <strong>Pregledača</strong>, <strong>Uređivača stranica</strong> i <strong>Aktivnih fajlova</strong>."
 wrapUp = "To je ono što je novo u V2. Otvorite meni <strong>Obilasci</strong> bilo kada da ponovo pokrenete ovo, obilazak Alata ili Admin obilazak."
 
@@ -4401,7 +4401,7 @@ dismiss = "Zatvori"
 apply = "Primeni promene"
 download = "Preuzmi PDF"
 
-[workbenchBar]
+[rightRail]
 closeSelected = "Zatvori izabrane fajlove"
 selectAll = "Izaberi sve"
 deselectAll = "Poništi sve"

@@ -4276,7 +4276,7 @@ fileUpload = "Gunakan tombol <strong>Files</strong> untuk mengunggah atau memili
 leftPanel = "Panel <strong>Alat</strong> di kiri menampilkan semua yang bisa Anda lakukan. Jelajahi kategori atau cari untuk menemukan alat dengan cepat."
 pageEditorView = "Beralih ke Editor Halaman untuk mengurutkan ulang, memutar, atau menghapus halaman."
 quickAccess = "Mulai dari panel <strong>Akses Cepat</strong> untuk beralih antara Penampil, Automate, file Anda, dan semua tur."
-workbenchBar = "<strong>Panel Kanan</strong> berisi tindakan cepat untuk memilih file, mengubah tema atau bahasa, dan mengunduh hasil."
+rightRail = "<strong>Panel Kanan</strong> berisi tindakan cepat untuk memilih file, mengubah tema atau bahasa, dan mengunduh hasil."
 topBar = "Bilah atas memungkinkan Anda beralih antara <strong>Penampil</strong>, <strong>Editor Halaman</strong>, dan <strong>File Aktif</strong>."
 wrapUp = "Itulah yang baru di V2. Buka menu <strong>Tur</strong> kapan saja untuk memutar ulang ini, tur Alat, atau tur Admin."
 
@@ -4401,7 +4401,7 @@ dismiss = "Abaikan"
 apply = "Terapkan Perubahan"
 download = "Unduh PDF"
 
-[workbenchBar]
+[rightRail]
 closeSelected = "Tutup File Terpilih"
 selectAll = "Pilih Semua"
 deselectAll = "Batalkan Semua Pilihan"

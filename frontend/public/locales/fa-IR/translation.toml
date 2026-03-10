@@ -4276,7 +4276,7 @@ fileUpload = "از دکمه <strong>Files</strong> برای آپلود یا ان
 leftPanel = "پنل <strong>Tools</strong> در سمت چپ همه کارهایی که می‌توانید انجام دهید را فهرست می‌کند. برای یافتن سریع ابزار، دسته‌ها را مرور کنید یا جستجو نمایید."
 pageEditorView = "به ویرایشگر صفحات بروید تا صفحات را مرتب، بچرخانید یا حذف کنید."
 quickAccess = "از نوار <strong>Quick Access</strong> شروع کنید تا بین Reader، Automate، فایل‌ها و همه تورها جابه‌جا شوید."
-workbenchBar = "<strong>نوار کناری راست</strong> شامل اقدامات سریع برای انتخاب فایل‌ها، تغییر پوسته یا زبان، و دانلود نتایج است."
+rightRail = "<strong>نوار کناری راست</strong> شامل اقدامات سریع برای انتخاب فایل‌ها، تغییر پوسته یا زبان، و دانلود نتایج است."
 topBar = "نوار بالا به شما اجازه می‌دهد بین <strong>Viewer</strong>، <strong>Page Editor</strong> و <strong>Active Files</strong> جابه‌جا شوید."
 wrapUp = "این‌ها موارد جدید در V2 هستند. هر زمان منوی <strong>Tours</strong> را باز کنید تا این تور، تور ابزارها یا تور مدیریت را دوباره پخش کنید."
 
@@ -4401,7 +4401,7 @@ dismiss = "بستن"
 apply = "اعمال تغییرات"
 download = "دانلود PDF"
 
-[workbenchBar]
+[rightRail]
 closeSelected = "بستن فایل‌های انتخاب‌شده"
 selectAll = "انتخاب همه"
 deselectAll = "لغو انتخاب همه"

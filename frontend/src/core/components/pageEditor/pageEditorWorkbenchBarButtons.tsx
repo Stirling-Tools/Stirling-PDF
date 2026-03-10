@@ -44,13 +44,13 @@ export function usePageEditorWorkbenchBarButtons(params: PageEditorWorkbenchBarB
   const { t, i18n } = useTranslation();
 
   // Lift i18n labels out of memo for clarity
-  const selectAllLabel = t('workbenchBar.selectAll', 'Select All');
-  const deselectAllLabel = t('workbenchBar.deselectAll', 'Deselect All');
-  const selectByNumberLabel = t('workbenchBar.selectByNumber', 'Select by Page Numbers');
-  const deleteSelectedLabel = t('workbenchBar.deleteSelected', 'Delete Selected Pages');
-  const exportSelectedLabel = t('workbenchBar.exportSelected', 'Export Selected Pages');
-  const saveChangesLabel = t('workbenchBar.saveChanges', 'Save Changes');
-  const closePdfLabel = t('workbenchBar.closePdf', 'Close PDF');
+  const selectAllLabel = t('rightRail.selectAll', 'Select All');
+  const deselectAllLabel = t('rightRail.deselectAll', 'Deselect All');
+  const selectByNumberLabel = t('rightRail.selectByNumber', 'Select by Page Numbers');
+  const deleteSelectedLabel = t('rightRail.deleteSelected', 'Delete Selected Pages');
+  const exportSelectedLabel = t('rightRail.exportSelected', 'Export Selected Pages');
+  const saveChangesLabel = t('rightRail.saveChanges', 'Save Changes');
+  const closePdfLabel = t('rightRail.closePdf', 'Close PDF');
 
   const buttons = useMemo<WorkbenchBarButtonWithAction[]>(() => {
     return [

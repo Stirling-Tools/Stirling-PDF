@@ -4276,7 +4276,7 @@ fileUpload = "<strong>Dosyalar</strong> düğmesini kullanarak bir PDF yükleyin
 leftPanel = "Soldaki <strong>Araçlar</strong> paneli yapabileceklerinizin tümünü listeler. Kategorilere göz atın veya hızlıca bir araç bulmak için arayın."
 pageEditorView = "Sayfaları yeniden sıralamak, döndürmek veya silmek için Sayfa Düzenleyiciye geçin."
 quickAccess = "Okuyucu, Otomasyon, dosyalarınız ve tüm turlar arasında geçiş yapmak için <strong>Hızlı Erişim</strong> panelinden başlayın."
-workbenchBar = "<strong>Sağ Panel</strong>, dosya seçme, tema veya dil değiştirme ve sonuçları indirme için hızlı işlemler barındırır."
+rightRail = "<strong>Sağ Panel</strong>, dosya seçme, tema veya dil değiştirme ve sonuçları indirme için hızlı işlemler barındırır."
 topBar = "Üst çubuk, <strong>Görüntüleyici</strong>, <strong>Sayfa Düzenleyici</strong> ve <strong>Aktif Dosyalar</strong> arasında geçiş yapmanızı sağlar."
 wrapUp = "V2'deki yenilikler bunlar. Bunu, Araçlar turunu veya Yönetici turunu yeniden izlemek için <strong>Turlar</strong> menüsünü istediğiniz zaman açın."
 
@@ -4401,7 +4401,7 @@ dismiss = "Kapat"
 apply = "Değişiklikleri Uygula"
 download = "PDF'yi İndir"
 
-[workbenchBar]
+[rightRail]
 closeSelected = "Seçilen Dosyaları Kapat"
 selectAll = "Tümünü Seç"
 deselectAll = "Seçimi Kaldır"

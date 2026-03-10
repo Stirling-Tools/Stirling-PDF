@@ -4276,7 +4276,7 @@ fileUpload = "使用<strong>文件</strong>按钮上传或选择最近的 PDF。
 leftPanel = "左侧的<strong>工具</strong>面板列出所有可用功能。按类别浏览或搜索快速找到工具。"
 pageEditorView = "切换到页面编辑器以重新排序、旋转或删除页面。"
 quickAccess = "从<strong>快速访问</strong>栏开始，在阅读器、自动化、您的文件和所有导览之间快速切换。"
-workbenchBar = "<strong>右侧栏</strong>用于快速操作：选择文件、更改主题或语言、下载结果。"
+rightRail = "<strong>右侧栏</strong>用于快速操作：选择文件、更改主题或语言、下载结果。"
 topBar = "顶部栏可在<strong>查看器</strong>、<strong>页面编辑器</strong>和<strong>活动文件</strong>之间切换。"
 wrapUp = "以上是 V2 的新变化。随时打开<strong>导览</strong>菜单重看本导览、工具导览或管理员导览。"
 
@@ -4401,7 +4401,7 @@ dismiss = "关闭"
 apply = "应用更改"
 download = "下载 PDF"
 
-[workbenchBar]
+[rightRail]
 closeSelected = "关闭所选文件"
 selectAll = "选择所有"
 deselectAll = "取消选择所有"

@@ -4276,7 +4276,7 @@ fileUpload = "Verwenden Sie die Schaltfläche <strong>Dateien</strong>, um eine 
 leftPanel = "Die linke <strong>Tools</strong>-Leiste zeigt alles, was Sie tun können. Durchsuchen Sie Kategorien oder suchen Sie, um schnell ein Tool zu finden."
 pageEditorView = "Wechseln Sie zum Seiteneditor, um Seiten neu anzuordnen, zu drehen oder zu löschen."
 quickAccess = "Starten Sie im Bereich <strong>Schnellzugriff</strong>, um zwischen Reader, Automate, Ihren Dateien und allen Touren zu wechseln."
-workbenchBar = "Die <strong>rechte Leiste</strong> enthält Schnellaktionen zum Auswählen von Dateien, Ändern des Designs oder der Sprache und zum Herunterladen von Ergebnissen."
+rightRail = "Die <strong>rechte Leiste</strong> enthält Schnellaktionen zum Auswählen von Dateien, Ändern des Designs oder der Sprache und zum Herunterladen von Ergebnissen."
 topBar = "Die obere Leiste ermöglicht den Wechsel zwischen <strong>Viewer</strong>, <strong>Seiteneditor</strong> und <strong>Aktive Dateien</strong>."
 wrapUp = "Das ist neu in V2. Öffnen Sie jederzeit das Menü <strong>Touren</strong>, um diese, die Tools-Tour oder die Admin-Tour erneut abzuspielen."
 
@@ -4401,7 +4401,7 @@ dismiss = "Dismiss"
 apply = "Apply Changes"
 download = "Download PDF"
 
-[workbenchBar]
+[rightRail]
 closeSelected = "Ausgewählte Dateien schließen"
 selectAll = "Alle auswählen"
 deselectAll = "Auswahl aufheben"

@@ -4276,7 +4276,7 @@ fileUpload = "Użyj przycisku <strong>Pliki</strong>, aby przesłać lub wybrać
 leftPanel = "Lewy panel <strong>Narzędzia</strong> zawiera wszystko, co możesz zrobić. Przeglądaj kategorie lub wyszukaj, aby szybko znaleźć narzędzie."
 pageEditorView = "Przełącz na Edytor stron, aby zmieniać kolejność, obracać lub usuwać strony."
 quickAccess = "Zacznij od panelu <strong>Szybki dostęp</strong>, aby przełączać się między Czytnikiem, Automatyzacją, plikami i wszystkimi przewodnikami."
-workbenchBar = "<strong>Prawy panel</strong> zawiera szybkie akcje do wybierania plików, zmiany motywu lub języka oraz pobierania wyników."
+rightRail = "<strong>Prawy panel</strong> zawiera szybkie akcje do wybierania plików, zmiany motywu lub języka oraz pobierania wyników."
 topBar = "Górny pasek pozwala przełączać się między <strong>Przeglądarką</strong>, <strong>Edytorem stron</strong> i <strong>Aktywnymi plikami</strong>."
 wrapUp = "To wszystko, co nowe w V2. Otwórz menu <strong>Przewodniki</strong> w dowolnym momencie, aby odtworzyć ten, przegląd narzędzi lub przewodnik administratora."
 
@@ -4401,7 +4401,7 @@ dismiss = "Zamknij"
 apply = "Zastosuj zmiany"
 download = "Pobierz PDF"
 
-[workbenchBar]
+[rightRail]
 closeSelected = "Zamknij wybrane pliki"
 selectAll = "Zaznacz wszystko"
 deselectAll = "Odznacz wszystko"

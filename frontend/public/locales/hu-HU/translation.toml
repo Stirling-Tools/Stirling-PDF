@@ -4276,7 +4276,7 @@ fileUpload = "A <strong>Fájlok</strong> gombbal töltsön fel vagy válasszon e
 leftPanel = "A bal oldali <strong>Eszközök</strong> panelen minden elérhető funkciót megtalál. Böngésszen kategóriák szerint vagy keressen gyors eszközválasztáshoz."
 pageEditorView = "Váltson az Oldalszerkesztőre az oldalak átrendezéséhez, forgatásához vagy törléséhez."
 quickAccess = "Kezdje a <strong>Gyors elérés</strong> sávval, hogy a Megjelenítő, az Automatizálás, a fájlok és az összes bemutató között váltson."
-workbenchBar = "A <strong>jobb oldali sáv</strong> gyors műveleteket tartalmaz a fájlválasztáshoz, a téma vagy nyelv módosításához és az eredmények letöltéséhez."
+rightRail = "A <strong>jobb oldali sáv</strong> gyors műveleteket tartalmaz a fájlválasztáshoz, a téma vagy nyelv módosításához és az eredmények letöltéséhez."
 topBar = "A felső sávban válthat a <strong>Megjelenítő</strong>, az <strong>Oldalszerkesztő</strong> és az <strong>Aktív fájlok</strong> között."
 wrapUp = "Ez az, ami újdonság a V2-ben. Nyissa meg bármikor a <strong>Bemutatók</strong> menüt ennek, az Eszköztúrának vagy az Admin túrának az újra lejátszásához."
 
@@ -4401,7 +4401,7 @@ dismiss = "Bezárás"
 apply = "Módosítások alkalmazása"
 download = "PDF letöltése"
 
-[workbenchBar]
+[rightRail]
 closeSelected = "Kijelölt fájlok bezárása"
 selectAll = "Összes kijelölése"
 deselectAll = "Kijelölés megszüntetése"

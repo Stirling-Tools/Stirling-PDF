@@ -4276,7 +4276,7 @@ fileUpload = "ใช้ปุ่ม <strong>Files</strong> เพื่ออั
 leftPanel = "แผง <strong>Tools</strong> ทางซ้ายแสดงทุกสิ่งที่คุณทำได้ เรียกดูหมวดหมู่หรือค้นหาเพื่อหาเครื่องมืออย่างรวดเร็ว"
 pageEditorView = "สลับไปที่ Page Editor เพื่อจัดเรียง หมุน หรือ ลบหน้า"
 quickAccess = "เริ่มที่ราง <strong>Quick Access</strong> เพื่อสลับระหว่าง Reader, Automate, ไฟล์ของคุณ และทุกทัวร์"
-workbenchBar = "ส่วน <strong>Workbench Bar</strong> มีการกระทำด่วนสำหรับเลือกไฟล์ เปลี่ยนธีมหรือภาษา และดาวน์โหลดผลลัพธ์"
+rightRail = "ส่วน <strong>Workbench Bar</strong> มีการกระทำด่วนสำหรับเลือกไฟล์ เปลี่ยนธีมหรือภาษา และดาวน์โหลดผลลัพธ์"
 topBar = "แถบด้านบนช่วยให้คุณสลับระหว่าง <strong>Viewer</strong>, <strong>Page Editor</strong> และ <strong>Active Files</strong>"
 wrapUp = "นี่คือสิ่งใหม่ใน V2 เปิดเมนู <strong>Tours</strong> ได้ทุกเวลาเพื่อดูสิ่งนี้อีกครั้ง ทัวร์ Tools หรือทัวร์ Admin"
 
@@ -4401,7 +4401,7 @@ dismiss = "ปิด"
 apply = "ใช้การเปลี่ยนแปลง"
 download = "ดาวน์โหลด PDF"
 
-[workbenchBar]
+[rightRail]
 closeSelected = "ปิดไฟล์ที่เลือก"
 selectAll = "เลือกทั้งหมด"
 deselectAll = "ยกเลิกการเลือกทั้งหมด"

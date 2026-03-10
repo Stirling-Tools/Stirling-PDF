@@ -251,7 +251,7 @@ export default function WorkbenchBar({
             <span className="workbench-bar-filename">{fileName}</span>
             {totalPages > 0 && (
               <span className="workbench-bar-meta">
-                &nbsp;·&nbsp;{totalPages}&nbsp;{t('workbenchBar.pages', 'pages')}&nbsp;·
+                &nbsp;·&nbsp;{totalPages}&nbsp;{t('rightRail.pages', 'pages')}&nbsp;·
               </span>
             )}
             {hasMultipleFiles && (
@@ -282,7 +282,7 @@ export default function WorkbenchBar({
                   <button
                     className="workbench-bar-file-dropdown-remove"
                     onClick={(e) => handleFilePickerRemove(e, file.fileId)}
-                    aria-label={t('workbenchBar.removeFile', 'Remove file')}
+                    aria-label={t('rightRail.removeFile', 'Remove file')}
                   >
                     <CloseRoundedIcon sx={{ fontSize: '0.75rem' }} />
                   </button>
@@ -298,7 +298,7 @@ export default function WorkbenchBar({
         <>
           <InsertDriveFileRoundedIcon sx={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }} />
           <span className="workbench-bar-meta">
-            {fileCount}&nbsp;{t('workbenchBar.files', 'files')}
+            {fileCount}&nbsp;{t('rightRail.files', 'files')}
           </span>
         </>
       );
@@ -308,7 +308,7 @@ export default function WorkbenchBar({
       <>
         <InsertDriveFileRoundedIcon sx={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }} />
         <span className="workbench-bar-meta">
-          {fileCount}&nbsp;{fileCount === 1 ? t('workbenchBar.file', 'file') : t('workbenchBar.files', 'files')}
+          {fileCount}&nbsp;{fileCount === 1 ? t('rightRail.file', 'file') : t('rightRail.files', 'files')}
         </span>
       </>
     );
@@ -322,7 +322,7 @@ export default function WorkbenchBar({
     if (currentView === 'pageEditor') {
       return columnsToPageEditorStep(pageEditorColumns).label;
     }
-    return t('workbenchBar.files', 'Files');
+    return t('rightRail.files', 'Files');
   };
 
   // --- Delete active file ---
@@ -352,8 +352,8 @@ export default function WorkbenchBar({
         <div className="workbench-bar-actions">
           <button
             className="workbench-bar-icon-btn"
-            title={t('workbenchBar.delete', 'Remove from workbench')}
-            aria-label={t('workbenchBar.delete', 'Remove from workbench')}
+            title={t('rightRail.delete', 'Remove from workbench')}
+            aria-label={t('rightRail.delete', 'Remove from workbench')}
             onClick={handleDelete}
             disabled={!currentFile}
           >
@@ -361,8 +361,8 @@ export default function WorkbenchBar({
           </button>
           <button
             className="workbench-bar-icon-btn"
-            title={t('workbenchBar.download', 'Download')}
-            aria-label={t('workbenchBar.download', 'Download')}
+            title={t('rightRail.download', 'Download')}
+            aria-label={t('rightRail.download', 'Download')}
           >
             <DownloadRoundedIcon sx={{ fontSize: '1.2rem' }} />
           </button>
@@ -374,7 +374,7 @@ export default function WorkbenchBar({
             <button
               className="workbench-bar-icon-btn"
               onClick={() => scrollActions.scrollToPreviousPage()}
-              aria-label={t('workbenchBar.prevPage', 'Previous page')}
+              aria-label={t('rightRail.prevPage', 'Previous page')}
               disabled={currentPage <= 1}
             >
               <ChevronLeftRoundedIcon sx={{ fontSize: '1rem' }} />
@@ -385,7 +385,7 @@ export default function WorkbenchBar({
             <button
               className="workbench-bar-icon-btn"
               onClick={() => scrollActions.scrollToNextPage()}
-              aria-label={t('workbenchBar.nextPage', 'Next page')}
+              aria-label={t('rightRail.nextPage', 'Next page')}
               disabled={currentPage >= totalPages}
             >
               <ChevronRightRoundedIcon sx={{ fontSize: '1rem' }} />
@@ -407,7 +407,7 @@ export default function WorkbenchBar({
                   handleSliderChange(Math.max(0, sliderValue - 2));
                 }
               }}
-              aria-label={t('workbenchBar.zoomOut', 'Zoom out')}
+              aria-label={t('rightRail.zoomOut', 'Zoom out')}
             >
               <ZoomOutRoundedIcon sx={{ fontSize: '0.95rem' }} />
             </button>
@@ -425,7 +425,7 @@ export default function WorkbenchBar({
               onMouseUp={() => { isDragging.current = false; }}
               onTouchStart={() => { isDragging.current = true; }}
               onTouchEnd={() => { isDragging.current = false; }}
-              aria-label={t('workbenchBar.viewZoomSlider', 'View and zoom control')}
+              aria-label={t('rightRail.viewZoomSlider', 'View and zoom control')}
             />
 
             <button
@@ -439,7 +439,7 @@ export default function WorkbenchBar({
                   handleSliderChange(Math.min(100, sliderValue + 2));
                 }
               }}
-              aria-label={t('workbenchBar.zoomIn', 'Zoom in')}
+              aria-label={t('rightRail.zoomIn', 'Zoom in')}
             >
               <ZoomInRoundedIcon sx={{ fontSize: '0.95rem' }} />
             </button>

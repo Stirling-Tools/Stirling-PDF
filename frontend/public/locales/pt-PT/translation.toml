@@ -4276,7 +4276,7 @@ fileUpload = "Use o botão <strong>Ficheiros</strong> para carregar ou escolher 
 leftPanel = "O painel esquerdo de <strong>Ferramentas</strong> lista tudo o que pode fazer. Navegue pelas categorias ou pesquise para encontrar rapidamente uma ferramenta."
 pageEditorView = "Mude para o Editor de Páginas para reordenar, rodar ou eliminar páginas."
 quickAccess = "Comece na barra de <strong>Acesso Rápido</strong> para alternar entre o Leitor, Automatizar, os seus ficheiros e todas as visitas guiadas."
-workbenchBar = "A <strong>barra direita</strong> contém ações rápidas para selecionar ficheiros, alterar o tema ou idioma e transferir resultados."
+rightRail = "A <strong>barra direita</strong> contém ações rápidas para selecionar ficheiros, alterar o tema ou idioma e transferir resultados."
 topBar = "A barra superior permite alternar entre <strong>Visualizador</strong>, <strong>Editor de Páginas</strong> e <strong>Ficheiros Ativos</strong>."
 wrapUp = "Isto é o que há de novo no V2. Abra o menu <strong>Visitas guiadas</strong> a qualquer momento para rever esta, a visita das Ferramentas ou a visita de Administração."
 
@@ -4401,7 +4401,7 @@ dismiss = "Fechar"
 apply = "Aplicar alterações"
 download = "Transferir PDF"
 
-[workbenchBar]
+[rightRail]
 closeSelected = "Fechar ficheiros selecionados"
 selectAll = "Selecionar Tudo"
 deselectAll = "Desselecionar Tudo"

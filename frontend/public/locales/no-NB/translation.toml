@@ -4276,7 +4276,7 @@ fileUpload = "Bruk <strong>Filer</strong>-knappen for å laste opp eller velge e
 leftPanel = "Det venstre <strong>Verktøy</strong>-panelet viser alt du kan gjøre. Bla i kategorier eller søk for å finne et verktøy raskt."
 pageEditorView = "Bytt til sideeditoren for å endre rekkefølge, rotere eller slette sider."
 quickAccess = "Start i <strong>Hurtigtilgang</strong>-panelet for å hoppe mellom Leser, Automatiser, filene dine og alle omvisningene."
-workbenchBar = "I <strong>Høyre panel</strong> finner du hurtighandlinger for å velge filer, endre tema eller språk, og laste ned resultater."
+rightRail = "I <strong>Høyre panel</strong> finner du hurtighandlinger for å velge filer, endre tema eller språk, og laste ned resultater."
 topBar = "Toppfeltet lar deg bytte mellom <strong>Viser</strong>, <strong>Sideeditor</strong> og <strong>Aktive filer</strong>."
 wrapUp = "Det er det som er nytt i V2. Åpne <strong>Omvisninger</strong>-menyen når som helst for å spille av denne, verktøyomvisningen eller admin-omvisningen."
 
@@ -4401,7 +4401,7 @@ dismiss = "Avvis"
 apply = "Bruk endringer"
 download = "Last ned PDF"
 
-[workbenchBar]
+[rightRail]
 closeSelected = "Lukk valgte filer"
 selectAll = "Velg alle"
 deselectAll = "Fjern all markering"

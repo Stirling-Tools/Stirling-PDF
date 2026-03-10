@@ -4276,7 +4276,7 @@ fileUpload = "Úsáid an cnaipe <strong>Comhaid</strong> chun PDF le déanaí a 
 leftPanel = "Liostaítear gach rud is féidir leat a dhéanamh sa phainéal <strong>Uirlisí</strong> ar chlé. Brabhsáil catagóirí nó déan cuardach chun uirlis a aimsiú go tapa."
 pageEditorView = "Téigh go dtí an tEagarthóir Leathanach chun leathanaigh a athordú, a rothlú nó a scriosadh."
 quickAccess = "Tosaigh ag an ráille <strong>Rochtain Thapa</strong> chun léim idir Léitheoir, Uathoibriú, do chuid comhad, agus na turais go léir."
-workbenchBar = "Tá gníomhartha tapa ar an <strong>Ráille Deas</strong> chun comhaid a roghnú, téama nó teanga a athrú, agus torthaí a íoslódáil."
+rightRail = "Tá gníomhartha tapa ar an <strong>Ráille Deas</strong> chun comhaid a roghnú, téama nó teanga a athrú, agus torthaí a íoslódáil."
 topBar = "Ligeann an barra uachtarach duit malartú idir <strong>Amharcóir</strong>, <strong>Eagarthóir Leathanaigh</strong>, agus <strong>Comhaid Ghníomhacha</strong>."
 wrapUp = "Sin atá nua i V2. Oscail an roghchlár <strong>Turais</strong> am ar bith chun é seo, an turas Uirlisí, nó an turas Riarthóra a athsheinm."
 
@@ -4401,7 +4401,7 @@ dismiss = "Neamhaird"
 apply = "Cuir Athruithe i bhFeidhm"
 download = "Íosluchtaigh PDF"
 
-[workbenchBar]
+[rightRail]
 closeSelected = "Dún na Comhaid Roghnaithe"
 selectAll = "Roghnaigh Uile"
 deselectAll = "Díroghnaigh Uile"

@@ -130,7 +130,7 @@ export function createWhatsNewStepsConfig({ t, actions }: CreateWhatsNewStepsCon
       selector: '[data-tour="workbench-bar-controls"]',
       highlightedSelectors: ['[data-tour="workbench-bar-controls"]', '[data-tour="workbench-bar-settings"]'],
       content: t(
-        'onboarding.whatsNew.workbenchBar',
+        'onboarding.whatsNew.rightRail',
         'The <strong>Workbench Bar</strong> holds quick actions to select files, change theme or language, and download results.'
       ),
       position: 'left',
