@@ -125,6 +125,11 @@ npm run tauri-dev
 
 This will run the gradle runboot command and the tauri dev command concurrently, starting the app once both are stable.
 
+> [!NOTE]
+>
+> Desktop builds require additional environment variables. See [Environment Variables](#environment-variables)
+> above - `npm run tauri-dev` will set these up automatically from `config/.env.desktop.example` on first run.
+
 ### Build
 To build a deployment of the Tauri app. Use this command in the `frontend` folder:
 
@@ -133,3 +138,8 @@ npm run tauri-build
 ```
 
 This will bundle the backend and frontend into one executable for each target. Targets can be set within the `tauri.conf.json` file.
+
+> [!NOTE]
+>
+> Desktop builds require additional environment variables. See [Environment Variables](#environment-variables)
+> above - `npm run tauri-build` will set these up automatically from `config/.env.desktop.example` on first run.
