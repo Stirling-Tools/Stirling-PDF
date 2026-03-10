@@ -36,8 +36,8 @@ const OperationButton = ({
   'data-tour': dataTour
 }: OperationButtonProps) => {
   const { t } = useTranslation();
-  const { isHealthy, message: backendMessage } = useBackendHealth();
-  const blockedByBackend = !isHealthy;
+  const { isOnline, message: backendMessage } = useBackendHealth();
+  const blockedByBackend = !isOnline;
   const combinedDisabled = disabled || blockedByBackend;
   const tooltipLabel = blockedByBackend
     ? (backendMessage ?? t('backendHealth.checking', 'Checking backend status...'))

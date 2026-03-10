@@ -5,6 +5,6 @@ export function useBackendHealth(): BackendHealthState {
     status: 'healthy',
     message: null,
     error: null,
-    isHealthy: true,
+    isOnline: true,
   };
 }
