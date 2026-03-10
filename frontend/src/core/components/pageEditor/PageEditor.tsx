@@ -419,7 +419,7 @@ const PageEditor = ({
     updateCurrentPages,
   });
 
-  // Derived values for Workbench Bar and usePageEditorWorkbenchBarButtons (must be after displayDocument)
+  // Derived values for Right Rail and usePageEditorWorkbenchBarButtons (must be after displayDocument)
   const selectedPageCount = selectedPageIds.length;
   const activeFileIds = selectedFileIds;
 

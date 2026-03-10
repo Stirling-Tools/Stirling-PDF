@@ -193,7 +193,7 @@ export default function Workbench() {
           : { backgroundColor: 'var(--bg-background)' }
       }
     >
-      {/* Workbench Bar */}
+      {/* Right Rail */}
       {activeFiles.length > 0 && (
         <WorkbenchBar
           currentView={currentView}

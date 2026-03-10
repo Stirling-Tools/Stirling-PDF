@@ -4243,7 +4243,7 @@ pinButton = "You can use the <strong>Pin</strong> button if you'd rather your fi
 previous = "Previous"
 results = "After the tool has finished running, the <strong>Review</strong> step will show a preview of the results in this panel, and allow you to undo the operation or download the file. "
 runButton = "Once the tool has been configured, this button allows you to run the tool on all the selected PDFs."
-selectControls = "The <strong>Workbench Bar</strong> contains buttons to quickly select/deselect all of your active PDFs, along with buttons to change the app's theme or language."
+selectControls = "The <strong>Right Rail</strong> contains buttons to quickly select/deselect all of your active PDFs, along with buttons to change the app's theme or language."
 selectCropTool = "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools."
 startTour = "Start Tour"
 startTourDescription = "Take a guided tour of Stirling PDF's key features"
@@ -4307,7 +4307,7 @@ fileUpload = "Use the <strong>Files</strong> button to upload or pick a recent P
 leftPanel = "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly."
 pageEditorView = "Switch to the Page Editor to reorder, rotate, or delete pages."
 quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours."
-rightRail = "The <strong>Workbench Bar</strong> holds quick actions to select files, change theme or language, and download results."
+rightRail = "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results."
 topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
 wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 

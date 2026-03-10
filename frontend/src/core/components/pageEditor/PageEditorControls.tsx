@@ -28,7 +28,7 @@ interface PageEditorControlsProps {
   onPageBreak: () => void;
   onPageBreakAll: () => void;
 
-  // Export functions (moved to Workbench Bar)
+  // Export functions (moved to Right Rail)
   onExportAll: () => void;
   exportLoading: boolean;
 

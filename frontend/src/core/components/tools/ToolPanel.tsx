@@ -53,7 +53,7 @@ export default function ToolPanel() {
   const isRTL = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
 
 
-  // Disable Workbench Bar buttons when fullscreen mode is active
+  // Disable Right Rail buttons when fullscreen mode is active
   useEffect(() => {
     setAllWorkbenchBarButtonsDisabled(fullscreenExpanded);
   }, [fullscreenExpanded, setAllWorkbenchBarButtonsDisabled]);
