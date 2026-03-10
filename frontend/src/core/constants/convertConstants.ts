@@ -71,6 +71,31 @@ export const ENDPOINT_NAMES = {
   'text-editor-pdf': 'text-editor-to-pdf'
 } as const;
 
+/** Maps conversion endpoint → [i18n key, English fallback] for display names */
+export const ENDPOINT_I18N: Record<string, [string, string]> = {
+  'img-to-pdf':          ['imageToPDF.header',         'Image → PDF'],
+  'html-to-pdf':         ['HTMLToPDF.header',          'HTML → PDF'],
+  'markdown-to-pdf':     ['MarkdownToPDF.header',      'Markdown → PDF'],
+  'pdf-to-img':          ['pdfToImage.title',          'PDF → Image'],
+  'pdf-to-word':         ['PDFToWord.header',          'PDF → Word'],
+  'pdf-to-presentation': ['PDFToPresentation.header',  'PDF → Presentation'],
+  'pdf-to-text':         ['PDFToText.header',          'PDF → Text'],
+  'pdf-to-csv':          ['PDFToCSV.header',           'PDF → CSV'],
+  'pdf-to-xlsx':         ['PDFToXLSX.header',          'PDF → Excel'],
+  'pdf-to-markdown':     ['PDFToMarkdown.header',      'PDF → Markdown'],
+  'pdf-to-html':         ['PDFToHTML.header',          'PDF → HTML'],
+  'pdf-to-xml':          ['PDFToXML.header',           'PDF → XML'],
+  'pdf-to-pdfa':         ['pdfToPDFA.header',          'PDF → PDF/A'],
+  'file-to-pdf':         ['',                          'Office/Document → PDF'],
+  'cbr-to-pdf':          ['',                          'CBR → PDF'],
+  'cbz-to-pdf':          ['',                          'CBZ → PDF'],
+  'eml-to-pdf':          ['',                          'Email → PDF'],
+  'ebook-to-pdf':        ['',                          'eBook → PDF'],
+  'svg-to-pdf':          ['',                          'SVG → PDF'],
+  'pdf-to-cbr':          ['',                          'PDF → CBR'],
+  'pdf-to-cbz':          ['',                          'PDF → CBZ'],
+  'pdf-to-epub':         ['',                          'PDF → EPUB'],
+};
 
 // Grouped file extensions for dropdowns
 export const FROM_FORMAT_OPTIONS = [
