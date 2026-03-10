@@ -1,19 +1,9 @@
 from __future__ import annotations
 
-import os
-import pathlib
-import sys
-
 from pytest import MonkeyPatch
 
-BACKEND_DIR = pathlib.Path(__file__).resolve().parents[1]
-sys.path.append(str(BACKEND_DIR))
-
-os.environ.setdefault("OPENAI_API_KEY", "test")
-os.environ.setdefault("POSTHOG_API_KEY", "test")
-
-from editing.decisions import answer_conversational_info  # noqa: E402
-from file_processing_agent import ToolCatalogService  # noqa: E402
+from editing.decisions import answer_conversational_info
+from file_processing_agent import ToolCatalogService
 
 
 def test_answer_conversational_info_greeting(monkeypatch: MonkeyPatch):

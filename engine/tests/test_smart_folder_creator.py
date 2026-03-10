@@ -1,18 +1,8 @@
 from __future__ import annotations
 
-import os
-import pathlib
-import sys
-
 from pytest import MonkeyPatch
 
-BACKEND_DIR = pathlib.Path(__file__).resolve().parents[1]
-sys.path.append(str(BACKEND_DIR))
-
-os.environ.setdefault("OPENAI_API_KEY", "test")
-os.environ.setdefault("POSTHOG_API_KEY", "test")
-
-from models import (  # noqa: E402
+from models import (
     AvailableTool,
     SmartFolderAutomation,
     SmartFolderConfig,
@@ -20,7 +10,7 @@ from models import (  # noqa: E402
     SmartFolderCreateResponse,
     SmartFolderOperation,
 )
-from smart_folder_creator import create_smart_folder_config  # noqa: E402
+from smart_folder_creator import create_smart_folder_config
 
 
 def _build_sample_response() -> SmartFolderCreateResponse:

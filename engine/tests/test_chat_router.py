@@ -1,19 +1,9 @@
 from __future__ import annotations
 
-import os
-import pathlib
-import sys
-
 from pytest import MonkeyPatch
 
-BACKEND_DIR = pathlib.Path(__file__).resolve().parents[1]
-sys.path.append(str(BACKEND_DIR))
-
-os.environ.setdefault("OPENAI_API_KEY", "test")
-os.environ.setdefault("POSTHOG_API_KEY", "test")
-
-from chat_router import classify_chat_route  # noqa: E402
-from models import (  # noqa: E402
+from chat_router import classify_chat_route
+from models import (
     ChatRouteRequest,
     ChatRouteResponse,
     CreateIntentHint,
