@@ -52,6 +52,6 @@ describe('env vars', () => {
     const sourceVars = findViteEnvVars(join(frontendRoot, 'src'));
 
     const missing = [...sourceVars].filter(v => !exampleKeys.has(v));
-    expect(missing, `Missing from example env files: ${missing.join(', ')}`).toHaveLength(0);
+    expect(missing, `Missing from 'frontend/config/.env.example' files: ${missing.join(', ')}`).toHaveLength(0);
   });
 });
