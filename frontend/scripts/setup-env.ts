@@ -7,6 +7,7 @@
  * Usage:
  *   tsx scripts/setup-env.ts              # checks .env
  *   tsx scripts/setup-env.ts --desktop    # also checks .env.desktop
+ *   tsx scripts/setup-env.ts --saas       # also checks .env.saas
  */
 
 import { existsSync, copyFileSync, readFileSync } from 'fs';
@@ -17,6 +18,7 @@ import { config, parse } from 'dotenv';
 const root = process.cwd();
 const args = process.argv.slice(2);
 const isDesktop = args.includes('--desktop');
+const isSaas = args.includes('--saas');
 
 console.log('setup-env: see frontend/README.md#environment-variables for documentation');
 
@@ -63,10 +65,15 @@ if (isDesktop) {
   failed = ensureEnvFile('.env.desktop', 'config/.env.desktop.example') || failed;
 }
 
+if (isSaas) {
+  failed = ensureEnvFile('.env.saas', 'config/.env.saas.example') || failed;
+}
+
 // Warn about any VITE_ vars set in the environment that aren't listed in any example file.
 const allExampleKeys = new Set([
   ...getExampleKeys('config/.env.example'),
   ...getExampleKeys('config/.env.desktop.example'),
+  ...getExampleKeys('config/.env.saas.example'),
 ]);
 const unknownViteVars = Object.keys(process.env)
   .filter(k => k.startsWith('VITE_') && !allExampleKeys.has(k));
@@ -74,7 +81,7 @@ if (unknownViteVars.length > 0) {
   console.warn(
     'setup-env: the following VITE_ vars are set but not listed in any example file:\n' +
     unknownViteVars.map(k => `  ${k}`).join('\n') +
-    '\n  Add them to config/.env.example or config/.env.desktop.example if they are required.'
+    '\n  Add them to the appropriate config/.env.*.example file if they are required.'
   );
 }
 

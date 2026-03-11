@@ -15,6 +15,7 @@
 # misc
 .DS_Store
 .env
+.env.saas
 .env.desktop
 .env.local
 .env.development.local
