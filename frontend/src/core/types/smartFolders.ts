@@ -23,6 +23,7 @@ export interface FolderFileMetadata {
   displayFileId?: string; // output file id
   inputFileId?: string;
   errorMessage?: string;
+  failedAttempts?: number;
   name?: string; // original filename
 }
 

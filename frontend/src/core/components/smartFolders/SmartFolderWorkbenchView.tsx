@@ -8,8 +8,11 @@ import {
   ScrollArea,
   Loader,
   ActionIcon,
-  Modal,
 } from '@mantine/core';
+
+import { useCardModalAnimation } from '@app/hooks/useCardModalAnimation';
+import { CardExpansionModal } from '@app/components/smartFolders/CardExpansionModal';
+import { StatCard } from '@app/components/smartFolders/StatCard';
 import { useTranslation } from 'react-i18next';
 import DownloadIcon from '@mui/icons-material/Download';
 import HistoryIcon from '@mui/icons-material/History';
@@ -76,6 +79,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
     processedFileIds,
     addFile,
     updateFileMetadata,
+    getFileMetadata,
   } = useFolderData(folderId);
 
   const { recentRuns, setRecentRuns } = useFolderRunState(folderId);
@@ -85,7 +89,9 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   const [outputFiles, setOutputFiles] = useState<OutputFileRecord[]>([]);
   const [inputFiles, setInputFiles] = useState<InputFileRecord[]>([]);
   const [automation, setAutomation] = useState<AutomationConfig | null>(null);
-  const [storageModal, setStorageModal] = useState<'input' | 'output' | 'failed' | null>(null);
+  const { phase: inputModalPhase, cardRect: inputCardRect, textExpanded: inputTextExpanded, openModal: openInputModal, closeModal: closeInputModal } = useCardModalAnimation();
+  const { phase: outputModalPhase, cardRect: outputCardRect, textExpanded: outputTextExpanded, openModal: openOutputModal, closeModal: closeOutputModal } = useCardModalAnimation();
+  const { phase: failedModalPhase, cardRect: failedCardRect, textExpanded: failedTextExpanded, openModal: openFailedModal, closeModal: closeFailedModal } = useCardModalAnimation();
   const processingRef = useRef<Set<string>>(new Set());
   const handledPendingRef = useRef<string | null>(null);
 
@@ -99,6 +105,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
       automationStorage.getAutomation(folder.automationId).then(setAutomation);
     }
   }, [folder?.automationId]);
+
 
   const runAutomation = useCallback(
     async (inputFile: File, inputFileId: string) => {
@@ -156,12 +163,17 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
         });
         await setRecentRuns(newRuns);
       } catch (error: any) {
-        await updateFileMetadata(inputFileId, { status: 'error', errorMessage: error.message });
+        const prev = getFileMetadata(inputFileId);
+        await updateFileMetadata(inputFileId, {
+          status: 'error',
+          errorMessage: error.message,
+          failedAttempts: (prev?.failedAttempts ?? 0) + 1,
+        });
       } finally {
         processingRef.current.delete(inputFileId);
       }
     },
-    [folder, folderId, recentRuns, setRecentRuns, toolRegistry, updateFileMetadata]
+    [folder, folderId, recentRuns, setRecentRuns, toolRegistry, updateFileMetadata, getFileMetadata]
   );
 
   const handleFiles = useCallback(
@@ -397,129 +409,54 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
               }}
             >
               {/* Inputs */}
-              <Box
-                onClick={() => setStorageModal('input')}
-                style={{
-                  padding: '0.5rem 0.75rem 2rem',
-                  borderRadius: 'var(--mantine-radius-sm)',
-                  border: '0.0625rem solid var(--border-subtle)',
-                  backgroundColor: 'var(--bg-toolbar)',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  transition: 'border-color 0.15s ease',
-                }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--mantine-color-blue-filled)')}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border-subtle)')}
-              >
-                <FolderOpenIcon style={{ fontSize: '1.125rem', color: 'var(--mantine-color-blue-filled)', marginBottom: '0.375rem', display: 'block' }} />
-                <Text fw={800} style={{ fontSize: '1.375rem', lineHeight: 1, marginBottom: '0.25rem' }}>{inputFiles.length}</Text>
-                <Text style={{ fontSize: '0.5625rem', textTransform: 'uppercase', letterSpacing: '0.06em' }} c="dimmed">
-                  {t('smartFolders.workbench.inputs', 'Inputs')}
-                </Text>
-              </Box>
+              <StatCard
+                icon={<FolderOpenIcon style={{ fontSize: '1.125rem', color: 'var(--mantine-color-blue-filled)' }} />}
+                count={inputFiles.length}
+                label={t('smartFolders.workbench.inputs', 'Inputs')}
+                hoverColor="var(--mantine-color-blue-filled)"
+                onClick={openInputModal}
+              />
 
               {/* Outputs */}
-              <Box
-                onClick={() => setStorageModal('output')}
-                style={{
-                  padding: '0.5rem 0.75rem 2rem',
-                  borderRadius: 'var(--mantine-radius-sm)',
-                  border: '0.0625rem solid var(--border-subtle)',
-                  backgroundColor: 'var(--bg-toolbar)',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  transition: 'border-color 0.15s ease',
-                }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = '#22c55e')}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border-subtle)')}
-              >
-                <TaskAltIcon style={{ fontSize: '1.125rem', color: '#22c55e', marginBottom: '0.375rem', display: 'block' }} />
-                <Text fw={800} style={{ fontSize: '1.375rem', lineHeight: 1, marginBottom: '0.25rem' }}>{outputFiles.length}</Text>
-                <Text style={{ fontSize: '0.5625rem', textTransform: 'uppercase', letterSpacing: '0.06em' }} c="dimmed">
-                  {t('smartFolders.workbench.outputs', 'Outputs')}
-                </Text>
-              </Box>
+              <StatCard
+                icon={<TaskAltIcon style={{ fontSize: '1.125rem', color: '#22c55e' }} />}
+                count={outputFiles.length}
+                label={t('smartFolders.workbench.outputs', 'Outputs')}
+                hoverColor="#22c55e"
+                onClick={openOutputModal}
+              />
 
               {/* Processed */}
-              <Box
-                style={{
-                  padding: '0.5rem 0.75rem 2rem',
-                  borderRadius: 'var(--mantine-radius-sm)',
-                  border: '0.0625rem solid var(--border-subtle)',
-                  backgroundColor: 'var(--bg-toolbar)',
-                  textAlign: 'center',
-                }}
-              >
-                <CheckCircleOutlineIcon style={{ fontSize: '1.125rem', color: folder.accentColor, marginBottom: '0.375rem', display: 'block' }} />
-                <Text fw={800} style={{ fontSize: '1.375rem', lineHeight: 1, marginBottom: '0.25rem' }}>{processedFileIds.length}</Text>
-                <Text style={{ fontSize: '0.5625rem', textTransform: 'uppercase', letterSpacing: '0.06em' }} c="dimmed">
-                  {t('smartFolders.workbench.processed', 'Processed')}
-                </Text>
-              </Box>
+              <StatCard
+                icon={<CheckCircleOutlineIcon style={{ fontSize: '1.125rem', color: folder.accentColor }} />}
+                count={processedFileIds.length}
+                label={t('smartFolders.workbench.processed', 'Processed')}
+              />
 
               {/* Failed */}
-              <Box
-                onClick={() => failedFileIds.length > 0 && setStorageModal('failed')}
-                style={{
-                  padding: '0.5rem 0.75rem 2rem',
-                  borderRadius: 'var(--mantine-radius-sm)',
-                  border: '0.0625rem solid var(--border-subtle)',
-                  backgroundColor: 'var(--bg-toolbar)',
-                  textAlign: 'center',
-                  cursor: failedFileIds.length > 0 ? 'pointer' : 'default',
-                  transition: 'border-color 0.15s ease',
-                }}
-                onMouseEnter={e => { if (failedFileIds.length > 0) e.currentTarget.style.borderColor = '#ef4444'; }}
-                onMouseLeave={e => { if (failedFileIds.length > 0) e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
-              >
-                <ErrorOutlineIcon style={{ fontSize: '1.125rem', color: failedFileIds.length > 0 ? '#ef4444' : 'var(--mantine-color-dimmed)', marginBottom: '0.375rem', display: 'block' }} />
-                <Text fw={800} style={{ fontSize: '1.375rem', lineHeight: 1, marginBottom: '0.25rem' }}>
-                  {failedFileIds.length}
-                </Text>
-                <Text style={{ fontSize: '0.5625rem', textTransform: 'uppercase', letterSpacing: '0.06em' }} c="dimmed">
-                  {t('smartFolders.workbench.failed', 'Failed')}
-                </Text>
-              </Box>
+              <StatCard
+                icon={<ErrorOutlineIcon style={{ fontSize: '1.125rem', color: failedFileIds.length > 0 ? '#ef4444' : 'var(--mantine-color-dimmed)' }} />}
+                count={failedFileIds.length}
+                label={t('smartFolders.workbench.failed', 'Failed')}
+                hoverColor="#ef4444"
+                onClick={failedFileIds.length > 0 ? openFailedModal : undefined}
+              />
 
               {/* Data saved — only when compress is in pipeline */}
               {hasCompressStep && (
-                <Box
-                  style={{
-                    padding: '0.5rem 0.75rem 2rem',
-                    borderRadius: 'var(--mantine-radius-sm)',
-                    border: '0.0625rem solid var(--border-subtle)',
-                    backgroundColor: 'var(--bg-toolbar)',
-                  textAlign: 'center',
-                  }}
-                >
-                  <DownloadIcon style={{ fontSize: '1.125rem', color: dataSavedBytes > 0 ? '#22c55e' : 'var(--mantine-color-dimmed)', marginBottom: '0.375rem', display: 'block' }} />
-                  <Text fw={800} style={{ fontSize: '1.375rem', lineHeight: 1, marginBottom: '0.25rem' }}>
-                    {dataSavedBytes > 0 ? formatBytes(dataSavedBytes) : '—'}
-                  </Text>
-                  <Text style={{ fontSize: '0.5625rem', textTransform: 'uppercase', letterSpacing: '0.06em' }} c="dimmed">
-                    {t('smartFolders.workbench.dataSaved', 'Saved')}
-                  </Text>
-                </Box>
+                <StatCard
+                  icon={<DownloadIcon style={{ fontSize: '1.125rem', color: dataSavedBytes > 0 ? '#22c55e' : 'var(--mantine-color-dimmed)' }} />}
+                  count={dataSavedBytes > 0 ? formatBytes(dataSavedBytes) : '—'}
+                  label={t('smartFolders.workbench.dataSaved', 'Saved')}
+                />
               )}
 
               {/* Days running */}
-              <Box
-                style={{
-                  padding: '0.5rem 0.75rem 2rem',
-                  borderRadius: 'var(--mantine-radius-sm)',
-                  border: '0.0625rem solid var(--border-subtle)',
-                  backgroundColor: 'var(--bg-toolbar)',
-                  textAlign: 'center',
-                }}
-              >
-                <HistoryIcon style={{ fontSize: '1.125rem', color: 'var(--mantine-color-dimmed)', marginBottom: '0.375rem', display: 'block' }} />
-                <Text fw={800} style={{ fontSize: '1.375rem', lineHeight: 1, marginBottom: '0.25rem' }}>
-                  {daysRunning !== null && daysRunning > 0 ? `${daysRunning}d` : '—'}
-                </Text>
-                <Text style={{ fontSize: '0.5625rem', textTransform: 'uppercase', letterSpacing: '0.06em' }} c="dimmed">
-                  {t('smartFolders.workbench.running', 'Running')}
-                </Text>
-              </Box>
+              <StatCard
+                icon={<HistoryIcon style={{ fontSize: '1.125rem', color: 'var(--mantine-color-dimmed)' }} />}
+                count={daysRunning !== null && daysRunning > 0 ? `${daysRunning}d` : '—'}
+                label={t('smartFolders.workbench.running', 'Running')}
+              />
             </Box>
 
           </Box>
@@ -606,7 +543,22 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                         {status === 'error' && <ErrorOutlineIcon style={{ fontSize: '0.875rem', color: '#ef4444', flexShrink: 0 }} />}
                         {status === 'pending' && <Box style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', backgroundColor: 'var(--mantine-color-dimmed)', flexShrink: 0 }} />}
                         <Text size="xs" lineClamp={1} style={{ flex: 1, minWidth: 0 }}>{filename}</Text>
-                        {meta?.errorMessage && <Text size="xs" c="red" lineClamp={1} style={{ flexShrink: 0, maxWidth: '40%' }}>{meta.errorMessage}</Text>}
+                        {meta?.errorMessage && <Text size="xs" c="red" lineClamp={1} style={{ flexShrink: 0, maxWidth: '30%' }}>{meta.errorMessage}</Text>}
+                        {status === 'error' && inputFile && (
+                          <ActionIcon
+                            size="sm"
+                            variant="light"
+                            color="blue"
+                            title="Retry"
+                            onClick={async () => {
+                              await updateFileMetadata(fileId, { status: 'pending', errorMessage: undefined });
+                              const file = new File([inputFile.blob], inputFile.name, { type: 'application/pdf' });
+                              runAutomation(file, fileId);
+                            }}
+                          >
+                            <ReplayIcon style={{ fontSize: '1rem' }} />
+                          </ActionIcon>
+                        )}
                         {outputFile && (
                           <ActionIcon size="sm" variant="subtle" onClick={() => handleView(outputFile.blob, outputFile.name)} title="View">
                             <VisibilityIcon style={{ fontSize: '1rem' }} />
@@ -633,145 +585,215 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
 
       </Box>
 
-      {/* Storage file modal */}
-      <Modal
-        opened={storageModal !== null}
-        onClose={() => setStorageModal(null)}
-        title={
-          <Text fw={600} size="sm">
-            {storageModal === 'input'
-              ? t('smartFolders.workbench.inputFiles', 'Input files')
-              : storageModal === 'output'
-              ? t('smartFolders.workbench.outputFiles', 'Output files')
-              : t('smartFolders.workbench.failedFiles', 'Failed files')}
-          </Text>
+      {/* Inputs modal */}
+      <CardExpansionModal
+        phase={inputModalPhase}
+        cardRect={inputCardRect}
+        textExpanded={inputTextExpanded}
+        onClose={closeInputModal}
+        icon={<FolderOpenIcon style={{ fontSize: '1.125rem', color: 'var(--mantine-color-blue-filled)' }} />}
+        count={inputFiles.length}
+        labelSingular={t('smartFolders.workbench.inputFile', 'input file')}
+        labelPlural={t('smartFolders.workbench.inputFiles', 'input files')}
+        footer={
+          <Group justify="flex-end">
+            <Button size="sm" variant="subtle" color="gray"
+              leftSection={<DownloadIcon style={{ fontSize: '1rem' }} />}
+              onClick={async () => { for (const f of inputFiles) await handleDownload(f.blob, f.name); }}
+            >
+              {t('smartFolders.workbench.exportAll', 'Export all')}
+            </Button>
+          </Group>
         }
-        size="md"
       >
-        {storageModal === 'input' && (
-          inputFiles.length === 0 ? (
+        <Stack gap="0.5rem">
+          {inputFiles.length === 0 ? (
             <Text size="sm" c="dimmed" ta="center" py="xl">
               {t('smartFolders.workbench.noInputFiles', 'No input files stored yet')}
             </Text>
-          ) : (
-            <Stack gap="xs">
-              {inputFiles.map((file) => (
-                <Box
-                  key={file.fileId}
-                  style={{
-                    padding: '0.625rem 0.75rem',
-                    borderRadius: 'var(--mantine-radius-sm)',
-                    border: '0.0625rem solid var(--border-subtle)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                  }}
-                >
-                  <FolderOpenIcon style={{ fontSize: '1rem', color: 'var(--mantine-color-blue-filled)', flexShrink: 0 }} />
-                  <Text size="sm" style={{ flex: 1, minWidth: 0 }} lineClamp={1}>{file.name}</Text>
-                  <ActionIcon
-                    variant="light"
-                    size="sm"
-                    onClick={() => handleDownload(file.blob, file.name)}
-                    aria-label={t('smartFolders.workbench.download', 'Download')}
-                  >
-                    <DownloadIcon style={{ fontSize: '0.875rem' }} />
-                  </ActionIcon>
-                </Box>
-              ))}
-            </Stack>
-          )
-        )}
-        {storageModal === 'output' && (
-          outputFiles.length === 0 ? (
+          ) : inputFiles.map((file) => (
+            <Box
+              key={file.fileId}
+              style={{
+                padding: '0.5rem 0.625rem',
+                borderRadius: 'var(--mantine-radius-sm)',
+                border: '0.0625rem solid var(--border-subtle)',
+                backgroundColor: 'var(--bg-toolbar)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.625rem',
+              }}
+            >
+              <FolderOpenIcon style={{ fontSize: '0.875rem', color: 'var(--mantine-color-blue-filled)', flexShrink: 0 }} />
+              <Text size="sm" style={{ flex: 1, minWidth: 0, fontWeight: 500 }} lineClamp={1}>{file.name}</Text>
+              <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleDownload(file.blob, file.name)} title="Download">
+                <DownloadIcon style={{ fontSize: '1.125rem' }} />
+              </ActionIcon>
+            </Box>
+          ))}
+        </Stack>
+      </CardExpansionModal>
+
+      {/* Outputs modal */}
+      <CardExpansionModal
+        phase={outputModalPhase}
+        cardRect={outputCardRect}
+        textExpanded={outputTextExpanded}
+        onClose={closeOutputModal}
+        icon={<TaskAltIcon style={{ fontSize: '1.125rem', color: '#22c55e' }} />}
+        count={outputFiles.length}
+        labelSingular={t('smartFolders.workbench.outputFile', 'output file')}
+        labelPlural={t('smartFolders.workbench.outputFiles', 'output files')}
+        footer={
+          <Group justify="flex-end">
+            <Button size="sm" variant="subtle" color="gray"
+              leftSection={<DownloadIcon style={{ fontSize: '1rem' }} />}
+              onClick={async () => { for (const f of outputFiles) await handleDownload(f.blob, f.name); }}
+            >
+              {t('smartFolders.workbench.exportAll', 'Export all')}
+            </Button>
+          </Group>
+        }
+      >
+        <Stack gap="0.5rem">
+          {outputFiles.length === 0 ? (
             <Text size="sm" c="dimmed" ta="center" py="xl">
               {t('smartFolders.workbench.noOutputFiles', 'No output files stored yet')}
             </Text>
-          ) : (
-            <Stack gap="xs">
-              {outputFiles.map((file) => (
-                <Box
-                  key={file.fileId}
-                  style={{
-                    padding: '0.625rem 0.75rem',
-                    borderRadius: 'var(--mantine-radius-sm)',
-                    border: '0.0625rem solid var(--border-subtle)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                  }}
-                >
-                  <TaskAltIcon style={{ fontSize: '1rem', color: '#22c55e', flexShrink: 0 }} />
-                  <Text size="sm" style={{ flex: 1, minWidth: 0 }} lineClamp={1}>{file.name}</Text>
-                  <ActionIcon
-                    variant="light"
-                    size="sm"
-                    onClick={() => handleDownload(file.blob, file.name)}
-                    aria-label={t('smartFolders.workbench.download', 'Download')}
-                  >
-                    <DownloadIcon style={{ fontSize: '0.875rem' }} />
-                  </ActionIcon>
-                </Box>
-              ))}
-            </Stack>
-          )
-        )}
-        {storageModal === 'failed' && (
-          failedFileIds.length === 0 ? (
-            <Text size="sm" c="dimmed" ta="center" py="xl">
-              {t('smartFolders.workbench.noFailedFiles', 'No failed files')}
-            </Text>
-          ) : (
-            <Stack gap="xs">
-              {failedFileIds.map((fileId) => {
-                const meta = folderRecord?.files[fileId];
-                const inputFile = inputFiles.find(f => f.fileId === fileId);
-                const filename = meta?.name ?? inputFile?.name ?? fileId;
-                return (
-                  <Box
-                    key={fileId}
-                    style={{
-                      borderRadius: 'var(--mantine-radius-sm)',
-                      border: '0.0625rem solid #ef444440',
-                      backgroundColor: 'rgba(239,68,68,0.04)',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <Group gap="xs" style={{ padding: '0.625rem 0.75rem', borderBottom: '0.0625rem solid #ef444420' }}>
-                      <ErrorOutlineIcon style={{ fontSize: '1rem', color: '#ef4444', flexShrink: 0 }} />
-                      <Text size="sm" style={{ flex: 1, minWidth: 0 }} lineClamp={1}>{filename}</Text>
-                      {inputFile && (
-                        <ActionIcon size="sm" variant="subtle" onClick={() => handleDownload(inputFile.blob, inputFile.name)}>
-                          <DownloadIcon style={{ fontSize: '0.875rem' }} />
-                        </ActionIcon>
-                      )}
-                      {inputFile && (
-                        <ActionIcon
-                          size="sm"
-                          variant="light"
-                          color="blue"
-                          onClick={async () => {
-                            await updateFileMetadata(fileId, { status: 'pending', errorMessage: undefined });
-                            const file = new File([inputFile.blob], inputFile.name, { type: 'application/pdf' });
-                            runAutomation(file, fileId);
-                            setStorageModal(null);
-                          }}
-                          title="Retry"
-                        >
-                          <ReplayIcon style={{ fontSize: '0.875rem' }} />
-                        </ActionIcon>
-                      )}
-                    </Group>
-                    {meta?.errorMessage && (
-                      <Text size="xs" c="red" style={{ padding: '0.5rem 0.75rem' }}>{meta.errorMessage}</Text>
+          ) : outputFiles.map((file) => (
+            <Box
+              key={file.fileId}
+              style={{
+                padding: '0.5rem 0.625rem',
+                borderRadius: 'var(--mantine-radius-sm)',
+                border: '0.0625rem solid var(--border-subtle)',
+                backgroundColor: 'var(--bg-toolbar)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.625rem',
+              }}
+            >
+              <TaskAltIcon style={{ fontSize: '0.875rem', color: '#22c55e', flexShrink: 0 }} />
+              <Text size="sm" style={{ flex: 1, minWidth: 0, fontWeight: 500 }} lineClamp={1}>{file.name}</Text>
+              <Group gap="0.25rem" wrap="nowrap">
+                <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleView(file.blob, file.name)} title="View">
+                  <VisibilityIcon style={{ fontSize: '1.125rem' }} />
+                </ActionIcon>
+                <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleDownload(file.blob, file.name)} title="Download">
+                  <DownloadIcon style={{ fontSize: '1.125rem' }} />
+                </ActionIcon>
+              </Group>
+            </Box>
+          ))}
+        </Stack>
+      </CardExpansionModal>
+
+      <CardExpansionModal
+        phase={failedModalPhase}
+        cardRect={failedCardRect}
+        textExpanded={failedTextExpanded}
+        onClose={closeFailedModal}
+        icon={<ErrorOutlineIcon style={{ fontSize: '1.125rem', color: '#ef4444' }} />}
+        count={failedFileIds.length}
+        labelSingular={t('smartFolders.workbench.fileFailedToProcess', 'file failed to process')}
+        labelPlural={t('smartFolders.workbench.filesFailedToProcess', 'files failed to process')}
+        footer={
+          <Group justify="flex-end">
+            <Button size="sm" color="red"
+              leftSection={<ReplayIcon style={{ fontSize: '1rem' }} />}
+              onClick={async () => {
+                for (const fid of failedFileIds) {
+                  const f = inputFiles.find(x => x.fileId === fid);
+                  if (!f) continue;
+                  await updateFileMetadata(fid, { status: 'pending', errorMessage: undefined });
+                  const file = new File([f.blob], f.name, { type: 'application/pdf' });
+                  runAutomation(file, fid);
+                }
+                closeFailedModal();
+              }}
+            >
+              {t('smartFolders.workbench.retryAll', 'Retry all')}
+            </Button>
+            <Button size="sm" variant="subtle" color="gray"
+              leftSection={<DownloadIcon style={{ fontSize: '1rem' }} />}
+              onClick={async () => {
+                for (const fid of failedFileIds) {
+                  const f = inputFiles.find(x => x.fileId === fid);
+                  if (f) await handleDownload(f.blob, f.name);
+                }
+              }}
+            >
+              {t('smartFolders.workbench.exportAll', 'Export all')}
+            </Button>
+          </Group>
+        }
+      >
+        <Stack gap="0.5rem">
+          {failedFileIds.map((fileId) => {
+            const meta = folderRecord?.files[fileId];
+            const inputFile = inputFiles.find(f => f.fileId === fileId);
+            const filename = meta?.name ?? inputFile?.name ?? fileId;
+            const attempts = meta?.failedAttempts ?? 0;
+            return (
+              <Box
+                key={fileId}
+                style={{
+                  borderRadius: 'var(--mantine-radius-sm)',
+                  border: '0.0625rem solid rgba(239,68,68,0.2)',
+                  backgroundColor: 'var(--bg-toolbar)',
+                  overflow: 'hidden',
+                }}
+              >
+                <Group gap="0.625rem" style={{ padding: '0.5rem 0.625rem' }} wrap="nowrap">
+                  <ErrorOutlineIcon style={{ fontSize: '0.875rem', color: '#ef4444', flexShrink: 0 }} />
+                  <Text size="sm" style={{ flex: 1, minWidth: 0, fontWeight: 500 }} lineClamp={1}>{filename}</Text>
+                  {attempts > 0 && (
+                    <Box style={{
+                      padding: '0.125rem 0.375rem',
+                      borderRadius: '0.25rem',
+                      backgroundColor: 'rgba(239,68,68,0.12)',
+                      border: '0.0625rem solid rgba(239,68,68,0.25)',
+                      flexShrink: 0,
+                    }}>
+                      <Text style={{ fontSize: '0.625rem', fontWeight: 700, color: '#ef4444', letterSpacing: '0.03em' }}>{attempts}×</Text>
+                    </Box>
+                  )}
+                  <Group gap="0.25rem" wrap="nowrap" style={{ flexShrink: 0 }}>
+                    {inputFile && (
+                      <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleDownload(inputFile.blob, inputFile.name)} title="Download input">
+                        <DownloadIcon style={{ fontSize: '1.125rem' }} />
+                      </ActionIcon>
                     )}
+                    {inputFile && (
+                      <ActionIcon size="md" variant="light" color="blue" title="Retry"
+                        onClick={async () => {
+                          await updateFileMetadata(fileId, { status: 'pending', errorMessage: undefined });
+                          const file = new File([inputFile.blob], inputFile.name, { type: 'application/pdf' });
+                          runAutomation(file, fileId);
+                          closeFailedModal();
+                        }}
+                      >
+                        <ReplayIcon style={{ fontSize: '1.125rem' }} />
+                      </ActionIcon>
+                    )}
+                  </Group>
+                </Group>
+                {meta?.errorMessage && (
+                  <Box style={{
+                    padding: '0.375rem 0.625rem',
+                    borderTop: '0.0625rem solid rgba(239,68,68,0.12)',
+                    backgroundColor: 'rgba(239,68,68,0.04)',
+                  }}>
+                    <Text size="xs" style={{ color: '#ef4444', fontFamily: 'monospace', fontSize: '0.6875rem', opacity: 0.85 }}>
+                      {meta.errorMessage}
+                    </Text>
                   </Box>
-                );
-              })}
-            </Stack>
-          )
-        )}
-      </Modal>
+                )}
+              </Box>
+            );
+          })}
+        </Stack>
+      </CardExpansionModal>
     </Box>
   );
 }
