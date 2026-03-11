@@ -184,7 +184,6 @@ const Annotate = (_props: BaseToolProps) => {
       setPlacementMode(false);
       viewerContextRef.current?.setAnnotationMode(false);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -357,7 +356,6 @@ const Annotate = (_props: BaseToolProps) => {
     return () => {
       if (typeof unsubscribe === 'function') unsubscribe();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [annotationApiRef?.current]);
 
   // Clipboard ref for copy/paste — no re-render needed
