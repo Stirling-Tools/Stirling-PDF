@@ -375,8 +375,23 @@ const Annotate = (_props: BaseToolProps) => {
     const handler = (e: KeyboardEvent) => {
       if (isInputFocused()) return;
 
-      // Backspace / Delete: delete selected annotation
+      // Backspace / Delete: delete selected annotation(s)
       if (e.key === 'Backspace' || e.key === 'Delete') {
+        const multiSelected = annotationApiRef?.current?.getSelectedAnnotations?.() as any[] | undefined;
+        if (multiSelected && multiSelected.length > 0) {
+          e.preventDefault();
+          const toDelete = multiSelected.map((s: any) => {
+            const ann = s.object ?? s;
+            return {
+              pageIndex: ann.pageIndex ?? 0,
+              id: ann.id ?? ann.uid ?? '',
+            };
+          }).filter((a: { id: string }) => a.id);
+          if (toDelete.length > 0) {
+            annotationApiRef?.current?.deleteAnnotations?.(toDelete);
+          }
+          return;
+        }
         const selected = annotationApiRef?.current?.getSelectedAnnotation?.() as any;
         if (!selected) return;
         e.preventDefault();

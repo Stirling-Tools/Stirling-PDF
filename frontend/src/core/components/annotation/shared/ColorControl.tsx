@@ -2,6 +2,8 @@ import { ActionIcon, Tooltip, Popover, Stack, ColorSwatch, ColorPicker as Mantin
 import { useState, useCallback } from 'react';
 import ColorizeIcon from '@mui/icons-material/Colorize';
 
+// safari and firefox do not support the eye dropper API, only edge, chrome and opera do. 
+// the button is hidden in the UI if the API is not supported.
 const supportsEyeDropper = typeof window !== 'undefined' && 'EyeDropper' in window;
 
 interface ColorControlProps {
