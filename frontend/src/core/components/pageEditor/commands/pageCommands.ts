@@ -9,44 +9,62 @@ export abstract class DOMCommand {
 }
 
 export class RotatePageCommand extends DOMCommand {
+  private originalRotation: number | null = null;
+
   constructor(
     private pageId: string,
-    private degrees: number
+    private degrees: number,
+    private getCurrentDocument: () => PDFDocument | null,
+    private setDocument: (doc: PDFDocument) => void
   ) {
     super();
   }
 
   execute(): void {
+    const currentDoc = this.getCurrentDocument();
+    if (!currentDoc) return;
+
+    const page = currentDoc.pages.find(p => p.id === this.pageId);
+    if (!page) return;
+
+    if (this.originalRotation === null) {
+      this.originalRotation = page.rotation;
+    }
+
+    const newRotation = ((page.rotation + this.degrees) % 360 + 360) % 360;
+
+    this.setDocument({
+      ...currentDoc,
+      pages: currentDoc.pages.map(p =>
+        p.id === this.pageId ? { ...p, rotation: newRotation } : p
+      ),
+    });
+
+    // Also update DOM immediately for CSS animation on currently-mounted pages
     const pageElement = document.querySelector(`[data-page-id="${this.pageId}"]`);
     if (pageElement) {
       const img = pageElement.querySelector('img');
-      if (img) {
-        const currentTransform = img.style.transform || '';
-        const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
-        const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
-        let newRotation = currentRotation + this.degrees;
-
-        newRotation = ((newRotation % 360) + 360) % 360;
-
-        img.style.transform = `rotate(${newRotation}deg)`;
-      }
+      if (img) img.style.transform = `rotate(${newRotation}deg)`;
     }
   }
 
   undo(): void {
+    if (this.originalRotation === null) return;
+
+    const currentDoc = this.getCurrentDocument();
+    if (!currentDoc) return;
+
+    this.setDocument({
+      ...currentDoc,
+      pages: currentDoc.pages.map(p =>
+        p.id === this.pageId ? { ...p, rotation: this.originalRotation! } : p
+      ),
+    });
+
     const pageElement = document.querySelector(`[data-page-id="${this.pageId}"]`);
     if (pageElement) {
       const img = pageElement.querySelector('img');
-      if (img) {
-        const currentTransform = img.style.transform || '';
-        const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
-        const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
-        let previousRotation = currentRotation - this.degrees;
-
-        previousRotation = ((previousRotation % 360) + 360) % 360;
-
-        img.style.transform = `rotate(${previousRotation}deg)`;
-      }
+      if (img) img.style.transform = `rotate(${this.originalRotation}deg)`;
     }
   }
 
@@ -311,37 +329,66 @@ export class BulkRotateCommand extends DOMCommand {
 
   constructor(
     private pageIds: string[],
-    private degrees: number
+    private degrees: number,
+    private getCurrentDocument: () => PDFDocument | null,
+    private setDocument: (doc: PDFDocument) => void
   ) {
     super();
   }
 
   execute(): void {
+    const currentDoc = this.getCurrentDocument();
+    if (!currentDoc) return;
+
+    // Store original rotations from state for reliable undo (only on first execution)
+    if (this.originalRotations.size === 0) {
+      this.pageIds.forEach(pageId => {
+        const page = currentDoc.pages.find(p => p.id === pageId);
+        if (page) {
+          this.originalRotations.set(pageId, page.rotation);
+        }
+      });
+    }
+
+    // Update state so rotation survives virtualizer unmount/remount
+    const updatedPages = currentDoc.pages.map(page => {
+      if (this.pageIds.includes(page.id)) {
+        const newRotation = ((page.rotation + this.degrees) % 360 + 360) % 360;
+        return { ...page, rotation: newRotation };
+      }
+      return page;
+    });
+
+    this.setDocument({ ...currentDoc, pages: updatedPages });
+
+    // Also update DOM immediately for CSS animation on currently-mounted pages
     this.pageIds.forEach(pageId => {
       const pageElement = document.querySelector(`[data-page-id="${pageId}"]`);
       if (pageElement) {
         const img = pageElement.querySelector('img');
-        if (img) {
-          // Store original rotation for undo (only on first execution)
-          if (!this.originalRotations.has(pageId)) {
-            const currentTransform = img.style.transform || '';
-            const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
-            const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
-            this.originalRotations.set(pageId, currentRotation);
-          }
-
-          // Apply rotation using transform to trigger CSS animation
-          const currentTransform = img.style.transform || '';
-          const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
-          const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
-          const newRotation = currentRotation + this.degrees;
-          img.style.transform = `rotate(${newRotation}deg)`;
+        const updatedPage = updatedPages.find(p => p.id === pageId);
+        if (img && updatedPage) {
+          img.style.transform = `rotate(${updatedPage.rotation}deg)`;
         }
       }
     });
   }
 
   undo(): void {
+    const currentDoc = this.getCurrentDocument();
+    if (!currentDoc) return;
+
+    // Restore original rotations in state
+    const updatedPages = currentDoc.pages.map(page => {
+      if (this.originalRotations.has(page.id)) {
+        return { ...page, rotation: this.originalRotations.get(page.id)! };
+      }
+      return page;
+    });
+
+    this.setDocument({ ...currentDoc, pages: updatedPages });
+
+    // Also update DOM immediately for CSS animation on currently-mounted pages
     this.pageIds.forEach(pageId => {
       const pageElement = document.querySelector(`[data-page-id="${pageId}"]`);
       if (pageElement) {
