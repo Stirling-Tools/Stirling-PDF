@@ -456,6 +456,7 @@ function AnnotationSelectionMenuInner({
 
   const menuContent = menuPosition ? (
     <div
+      data-annotation-selection-menu
       style={{
         position: 'fixed',
         top: `${menuPosition.top}px`,
