@@ -126,6 +126,7 @@ const EmbedPdfViewerContent = ({
     toggleThumbnailSidebar,
     isBookmarkSidebarVisible,
     isAttachmentSidebarVisible,
+    isCommentsSidebarVisible,
     isSearchInterfaceVisible,
     searchInterfaceActions,
     zoomActions,
@@ -923,7 +924,8 @@ const EmbedPdfViewerContent = ({
   const totalRightMargin =
     (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
     (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
-    (isAttachmentSidebarVisible ? sidebarWidthRem : 0);
+    (isAttachmentSidebarVisible ? sidebarWidthRem : 0) +
+    (isCommentsSidebarVisible ? sidebarWidthRem : 0);
 
   return (
     <Box
@@ -988,6 +990,8 @@ const EmbedPdfViewerContent = ({
               historyApiRef={historyApiRef as React.RefObject<any>}
               redactionTrackerRef={redactionTrackerRef as React.RefObject<RedactionPendingTrackerAPI>}
               fileId={currentFileId}
+              isCommentsSidebarVisible={isCommentsSidebarVisible}
+              commentsSidebarRightOffset={`${(isThumbnailSidebarVisible ? sidebarWidthRem : 0) + (isBookmarkSidebarVisible ? sidebarWidthRem : 0) + (isAttachmentSidebarVisible ? sidebarWidthRem : 0)}rem`}
               onSignatureAdded={() => {
                 // Handle signature added - for debugging, enable console logs as needed
                 // Future: Handle signature completion

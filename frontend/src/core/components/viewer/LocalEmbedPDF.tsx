@@ -61,6 +61,9 @@ import { DocumentReadyWrapper } from '@app/components/viewer/DocumentReadyWrappe
 import { ActiveDocumentProvider } from '@app/components/viewer/ActiveDocumentContext';
 import { absoluteWithBasePath } from '@app/constants/app';
 import { FormFieldOverlay } from '@app/tools/formFill/FormFieldOverlay';
+import { CommentsSidebar } from '@app/components/viewer/CommentsSidebar';
+import { CommentAuthorProvider } from '@app/contexts/CommentAuthorContext';
+import { accountService } from '@app/services/accountService';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -78,12 +81,22 @@ interface LocalEmbedPDFProps {
   redactionTrackerRef?: React.RefObject<RedactionPendingTrackerAPI>;
   /** File identity passed through to FormFieldOverlay for stale-field guards */
   fileId?: string | null;
+  /** Comments sidebar visibility and offset (from EmbedPdfViewer) */
+  isCommentsSidebarVisible?: boolean;
+  commentsSidebarRightOffset?: string;
 }
 
-export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, enableRedaction = false, enableFormFill = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef, fileId }: LocalEmbedPDFProps) {
+export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, enableRedaction = false, enableFormFill = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef, fileId, isCommentsSidebarVisible = false, commentsSidebarRightOffset = '0rem' }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: Rect}>>([]);
+  const [commentAuthorName, setCommentAuthorName] = useState<string>('Guest');
+
+  useEffect(() => {
+    accountService.getAccountData().then((data) => {
+      if (data?.username) setCommentAuthorName(data.username);
+    }).catch(() => {/* not logged in or security disabled */});
+  }, []);
 
   // Convert File to URL if needed
   useEffect(() => {
@@ -695,6 +708,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
           }
         >
           {(documentId) => (
+            <>
             <GlobalPointerProvider documentId={documentId}>
               <Viewport
                 documentId={documentId}
@@ -789,6 +803,16 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
               />
               </Viewport>
             </GlobalPointerProvider>
+            {enableAnnotations && (
+              <CommentAuthorProvider displayName={commentAuthorName}>
+                <CommentsSidebar
+                  documentId={documentId}
+                  visible={isCommentsSidebarVisible}
+                  rightOffset={commentsSidebarRightOffset}
+                />
+              </CommentAuthorProvider>
+            )}
+            </>
           )}
         </DocumentReadyWrapper>
         </ActiveDocumentProvider>
