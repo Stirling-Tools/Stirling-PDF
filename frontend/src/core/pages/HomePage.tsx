@@ -23,6 +23,7 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import AppConfigModal from "@app/components/shared/AppConfigModal";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
+import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 
 import "@app/pages/HomePage.css";
 
@@ -204,6 +205,7 @@ export default function HomePage() {
 
   return (
     <div className="h-screen overflow-hidden">
+      <HomePageExtensions />
       {isMobile ? (
         <div className="mobile-layout">
           <div className="mobile-toggle">
