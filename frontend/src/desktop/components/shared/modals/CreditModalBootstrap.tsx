@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSaaSBilling } from '@app/contexts/SaasBillingContext';
+import { BILLING_CONFIG } from '@app/config/billing';
 import { CreditExhaustedModal } from '@app/components/shared/modals/CreditExhaustedModal';
 import { InsufficientCreditsModal } from '@app/components/shared/modals/InsufficientCreditsModal';
 import { useCreditEvents } from '@app/hooks/useCreditEvents';
@@ -18,7 +19,16 @@ export function CreditModalBootstrap() {
     requiredCredits?: number;
   }>({});
 
-  const { creditBalance, isManagedTeamMember } = useSaaSBilling();
+  const { creditBalance, isManagedTeamMember, lastFetchTime, plansLastFetchTime, refreshPlans } = useSaaSBilling();
+
+  // Preload plan pricing when billing confirms credits are low.
+  // Fires once: only when billing has loaded (lastFetchTime set) and plans haven't been
+  // fetched yet (plansLastFetchTime null). This way the modal shows real prices instantly.
+  useEffect(() => {
+    if (lastFetchTime !== null && plansLastFetchTime === null && creditBalance < BILLING_CONFIG.PLAN_PRICING_PRELOAD_THRESHOLD && !isManagedTeamMember) {
+      refreshPlans();
+    }
+  }, [lastFetchTime, plansLastFetchTime, creditBalance, isManagedTeamMember, refreshPlans]);
 
   // Monitor credit balance and dispatch events
   useCreditEvents();

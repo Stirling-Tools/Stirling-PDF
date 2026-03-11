@@ -42,7 +42,7 @@ export function SaasPlanSection() {
   const { currentTeam, isTeamLeader, isPersonalTeam } = useSaaSTeam();
 
   // Plans data
-  const { plans, loading: plansLoading, error: plansError } = useSaaSPlans('usd');
+  const { plans, loading: plansLoading, error: plansError } = useSaaSPlans();
 
   // Check connection mode on mount
   useEffect(() => {

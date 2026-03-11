@@ -13,8 +13,12 @@ export const BILLING_CONFIG = {
   // Overage pricing (per credit) - also fetched dynamically from Stripe
   OVERAGE_PRICE_PER_CREDIT: 0.05,
 
-  // Credit warning threshold
+  // Credit warning threshold (shows low-balance indicator)
   LOW_CREDIT_THRESHOLD: 10,
+
+  // Threshold at which plan pricing is preloaded (higher than LOW_CREDIT_THRESHOLD
+  // so prices are ready before the warning UI appears)
+  PLAN_PRICING_PRELOAD_THRESHOLD: 20,
 
   // Stripe lookup keys
   PRO_PLAN_LOOKUP_KEY: 'plan:pro',

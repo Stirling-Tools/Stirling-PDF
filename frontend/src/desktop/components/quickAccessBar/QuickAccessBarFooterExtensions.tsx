@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Box, Text, Stack } from '@mantine/core';
 import { useSaaSBilling } from '@app/contexts/SaasBillingContext';
+import { BILLING_CONFIG } from '@app/config/billing';
 import { connectionModeService } from '@app/services/connectionModeService';
 import { authService } from '@app/services/authService';
 import { CREDIT_EVENTS } from '@app/constants/creditEvents';
@@ -49,7 +50,7 @@ export function QuickAccessBarFooterExtensions({ className }: QuickAccessBarFoot
   // - Still loading billing data
   // - User is a managed team member (unlimited credits)
   // - Credits >= 20 (only show when low)
-  if (!isSaasMode || !isAuthenticated || loading || isManagedTeamMember || creditBalance >= 20) {
+  if (!isSaasMode || !isAuthenticated || loading || isManagedTeamMember || creditBalance >= BILLING_CONFIG.PLAN_PRICING_PRELOAD_THRESHOLD) {
     return null;
   }
 
