@@ -71,6 +71,9 @@ export type AnnotationToolId =
   | 'inkHighlighter'
   | 'text'
   | 'note'
+  | 'textComment'
+  | 'insertText'
+  | 'replaceText'
   | 'square'
   | 'circle'
   | 'line'
@@ -106,4 +109,5 @@ export interface AnnotationToolOptions {
   icon?: 'Comment' | 'Key' | 'Note' | 'Help' | 'NewParagraph' | 'Paragraph' | 'Insert';
   contents?: string;
   customData?: Record<string, unknown>;
+  flags?: ('invisible' | 'hidden' | 'print' | 'noZoom' | 'noRotate' | 'noView' | 'readOnly' | 'locked' | 'toggleNoView')[];
 }

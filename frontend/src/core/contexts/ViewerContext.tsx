@@ -85,6 +85,19 @@ interface ViewerContextType {
   toggleBookmarkSidebar: () => void;
   isAttachmentSidebarVisible: boolean;
   toggleAttachmentSidebar: () => void;
+  isCommentsSidebarVisible: boolean;
+  setCommentsSidebarVisible: (visible: boolean) => void;
+  toggleCommentsSidebar: () => void;
+
+  /** Request focus or highlight of a comment card in the sidebar (opens sidebar, then scrolls + flashes or focuses input). */
+  highlightCommentRequest: {
+    documentId: string;
+    pageIndex: number;
+    annotationId: string;
+    action: 'focus' | 'highlight';
+  } | null;
+  requestCommentFocus: (documentId: string, pageIndex: number, annotationId: string, hasContent: boolean) => void;
+  clearHighlightCommentRequest: () => void;
 
   // Search interface visibility
   isSearchInterfaceVisible: boolean;
@@ -170,6 +183,13 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const [isThumbnailSidebarVisible, setIsThumbnailSidebarVisible] = useState(false);
   const [isBookmarkSidebarVisible, setIsBookmarkSidebarVisible] = useState(false);
   const [isAttachmentSidebarVisible, setIsAttachmentSidebarVisible] = useState(false);
+  const [isCommentsSidebarVisible, setIsCommentsSidebarVisible] = useState(false);
+  const [highlightCommentRequest, setHighlightCommentRequest] = useState<{
+    documentId: string;
+    pageIndex: number;
+    annotationId: string;
+    action: 'focus' | 'highlight';
+  } | null>(null);
   const [isSearchInterfaceVisible, setSearchInterfaceVisible] = useState(false);
   const [isAnnotationsVisible, setIsAnnotationsVisible] = useState(true);
   const [isAnnotationMode, setIsAnnotationModeState] = useState(false);
@@ -260,6 +280,31 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const toggleAttachmentSidebar = () => {
     setIsAttachmentSidebarVisible(prev => !prev);
   };
+
+  const setCommentsSidebarVisible = (visible: boolean) => {
+    setIsCommentsSidebarVisible(visible);
+  };
+
+  const toggleCommentsSidebar = () => {
+    setIsCommentsSidebarVisible(prev => !prev);
+  };
+
+  const requestCommentFocus = useCallback(
+    (documentId: string, pageIndex: number, annotationId: string, hasContent: boolean) => {
+      setIsCommentsSidebarVisible(true);
+      setHighlightCommentRequest({
+        documentId,
+        pageIndex,
+        annotationId,
+        action: hasContent ? 'highlight' : 'focus',
+      });
+    },
+    []
+  );
+
+  const clearHighlightCommentRequest = useCallback(() => {
+    setHighlightCommentRequest(null);
+  }, []);
 
   const searchInterfaceActions = {
     open: () => setSearchInterfaceVisible(true),
@@ -392,6 +437,12 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     toggleBookmarkSidebar,
     isAttachmentSidebarVisible,
     toggleAttachmentSidebar,
+    isCommentsSidebarVisible,
+    setCommentsSidebarVisible,
+    toggleCommentsSidebar,
+    highlightCommentRequest,
+    requestCommentFocus,
+    clearHighlightCommentRequest,
 
     // Search interface
     isSearchInterfaceVisible,
