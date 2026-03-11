@@ -113,6 +113,7 @@ FAST_MODEL_REASONING_EFFORT = os.environ.get("FAST_MODEL_REASONING_EFFORT") or "
 SMART_MODEL_TEXT_VERBOSITY = os.environ.get("SMART_MODEL_TEXT_VERBOSITY") or "medium"
 FAST_MODEL_TEXT_VERBOSITY = os.environ.get("FAST_MODEL_TEXT_VERBOSITY") or "low"
 
+FLASK_DEBUG = os.environ.get("FLASK_DEBUG", "0") == "1"
 STREAMING_ENABLED = os.environ.get("AI_STREAMING", "true").lower() not in {"0", "false", "no"}
 if OPENAI_BASE_URL and "ollama" in OPENAI_BASE_URL and "AI_STREAMING" not in os.environ:
     STREAMING_ENABLED = False
@@ -250,6 +251,7 @@ __all__ = [
     "FAST_MODEL_REASONING_EFFORT",
     "SMART_MODEL_TEXT_VERBOSITY",
     "FAST_MODEL_TEXT_VERBOSITY",
+    "FLASK_DEBUG",
     "STREAMING_ENABLED",
     "PREVIEW_MAX_INFLIGHT",
     "AI_REQUEST_TIMEOUT_SECONDS",

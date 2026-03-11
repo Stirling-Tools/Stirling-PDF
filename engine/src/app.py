@@ -8,9 +8,11 @@ import urllib.request
 import uuid
 from typing import Literal
 
-from flask import Flask, Response, jsonify, request, send_file, stream_with_context
+from flask import Flask, Response, jsonify, request, send_file, send_from_directory, stream_with_context
 from flask_cors import CORS
 from pydantic import BaseModel
+from werkzeug.exceptions import NotFound
+from werkzeug.security import safe_join
 
 import analytics
 import models
@@ -20,6 +22,7 @@ from chat_router import classify_chat_route
 from config import (
     ASSETS_DIR,
     FAST_MODEL,
+    FLASK_DEBUG,
     JAVA_BACKEND_API_KEY,
     JAVA_REQUEST_TIMEOUT_SECONDS,
     OUTPUT_DIR,
@@ -278,8 +281,8 @@ def pdf_answer():
         response = models.PdfAnswerResponse(error="Invalid pdf file")
         return jsonify(response.model_dump(by_alias=True, exclude_none=True)), 400
 
-    pdf_path = os.path.join(OUTPUT_DIR, filename)
-    if not os.path.exists(pdf_path):
+    pdf_path = safe_join(OUTPUT_DIR, filename)
+    if pdf_path is None or not os.path.exists(pdf_path):
         response = models.PdfAnswerResponse(error="PDF not found")
         return jsonify(response.model_dump(by_alias=True, exclude_none=True)), 404
 
@@ -696,18 +699,17 @@ def generate_all_sections():
 @app.route("/output/<path:filename>", methods=["GET"])
 def serve_output_file(filename: str):
     """Serve generated PDF files and stored assets."""
-    file_path = os.path.join(OUTPUT_DIR, filename)
-    if os.path.exists(file_path):
-        file_size = os.path.getsize(file_path)
-        mime_type, _ = mimetypes.guess_type(file_path)
-        logger.info("[SERVE] Serving file=%s size=%d bytes mime=%s", filename, file_size, mime_type)
-        response = send_file(file_path, mimetype=mime_type or "application/pdf")
-        # Add CORS headers to ensure PDF can be loaded
+    mime_type, _ = mimetypes.guess_type(filename)
+    try:
+        response = send_from_directory(OUTPUT_DIR, filename, mimetype=mime_type or "application/pdf")
+        file_size = response.headers.get("Content-Length", "unknown")
+        logger.info("[SERVE] Serving file=%s size=%s bytes mime=%s", filename, file_size, mime_type)
         response.headers["Access-Control-Allow-Origin"] = "*"
         response.headers["Access-Control-Allow-Methods"] = "GET"
         return response
-    logger.warning("[SERVE] File not found: %s", file_path)
-    return jsonify({"error": "File not found"}), 404
+    except NotFound:
+        logger.warning("[SERVE] File not found: %s", filename)
+        return jsonify({"error": "File not found"}), 404
 
 
 @app.route("/api/versions/<user_id>", methods=["GET"])
@@ -814,4 +816,4 @@ def health():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    app.run(host="0.0.0.0", port=5001, debug=FLASK_DEBUG)

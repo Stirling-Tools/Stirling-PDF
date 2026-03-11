@@ -8,6 +8,7 @@ from pathlib import Path
 from flask import jsonify
 from flask.typing import ResponseReturnValue
 from werkzeug.datastructures import FileStorage
+from werkzeug.security import safe_join
 
 import analytics
 import models
@@ -178,8 +179,10 @@ class EditService:
         extension = Path(original_name).suffix or ""
         attachment_id = uuid.uuid4().hex
         stored_name = f"{session_id}-attachment-{attachment_id}{extension}"
-        file_path = os.path.join(self.edit_upload_dir, stored_name)
         os.makedirs(self.edit_upload_dir, exist_ok=True)
+        file_path = safe_join(self.edit_upload_dir, stored_name)
+        if file_path is None:
+            return jsonify({"error": "Invalid file path"}), 400
         file.save(file_path)
 
         session.attachments[name] = EditSessionFile(

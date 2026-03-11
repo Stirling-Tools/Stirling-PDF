@@ -4,6 +4,7 @@ import subprocess
 import uuid
 
 from flask import Blueprint, jsonify, request
+from werkzeug.security import safe_join
 
 from config import OUTPUT_DIR
 from file_processing_agent import ToolCatalogService
@@ -40,9 +41,9 @@ def edit_session_message(session_id: str):
     try:
         return _edit_service.handle_message(session_id, payload)
     except AIProviderOverloadedError as exc:
-        logger.warning("[EDIT] AI provider overloaded session_id=%s", session_id)
+        logger.warning("[EDIT] AI provider overloaded session_id=%s (exc=%s)", session_id, exc)
         response = {
-            "assistantMessage": str(exc),
+            "assistantMessage": "The AI service is temporarily unavailable. Please try again later.",
             "needsMoreInfo": True,
         }
         return jsonify(response), 503
@@ -68,8 +69,8 @@ def pdf_editor_document():
     if not filename.lower().endswith(".pdf"):
         return jsonify({"error": "Invalid pdf file"}), 400
 
-    pdf_path = os.path.join(OUTPUT_DIR, filename)
-    if not os.path.exists(pdf_path):
+    pdf_path = safe_join(OUTPUT_DIR, filename)
+    if pdf_path is None or not os.path.exists(pdf_path):
         return jsonify({"error": "PDF not found"}), 404
 
     try:
