@@ -1,5 +1,8 @@
-import { ActionIcon, Tooltip, Popover, Stack, ColorSwatch, ColorPicker as MantineColorPicker } from '@mantine/core';
-import { useState } from 'react';
+import { ActionIcon, Tooltip, Popover, Stack, ColorSwatch, ColorPicker as MantineColorPicker, Group } from '@mantine/core';
+import { useState, useCallback } from 'react';
+import ColorizeIcon from '@mui/icons-material/Colorize';
+
+const supportsEyeDropper = typeof window !== 'undefined' && 'EyeDropper' in window;
 
 interface ColorControlProps {
   value: string;
@@ -10,6 +13,17 @@ interface ColorControlProps {
 
 export function ColorControl({ value, onChange, label, disabled = false }: ColorControlProps) {
   const [opened, setOpened] = useState(false);
+
+  const handleEyeDropper = useCallback(async () => {
+    if (!supportsEyeDropper) return;
+    try {
+      const eyeDropper = new (window as any).EyeDropper();
+      const result = await eyeDropper.open();
+      onChange(result.sRGBHex);
+    } catch {
+      // User cancelled or browser error — no-op
+    }
+  }, [onChange]);
 
   return (
     <Popover opened={opened} onChange={setOpened} position="bottom" withArrow withinPortal>
@@ -52,6 +66,15 @@ export function ColorControl({ value, onChange, label, disabled = false }: Color
             swatchesPerRow={5}
             size="sm"
           />
+          {supportsEyeDropper && (
+            <Group justify="flex-end">
+              <Tooltip label="Pick colour from screen">
+                <ActionIcon variant="subtle" color="gray" size="sm" onClick={handleEyeDropper}>
+                  <ColorizeIcon style={{ fontSize: 16 }} />
+                </ActionIcon>
+              </Tooltip>
+            </Group>
+          )}
         </Stack>
       </Popover.Dropdown>
     </Popover>

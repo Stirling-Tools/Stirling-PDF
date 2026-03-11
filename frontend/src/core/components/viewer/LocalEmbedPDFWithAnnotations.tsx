@@ -295,7 +295,7 @@ export function LocalEmbedPDFWithAnnotations({
                           <AnnotationLayer
                             documentId={documentId}
                             pageIndex={pageIndex}
-                            selectionOutlineColor="#007ACC"
+                            selectionOutline={{ color: "#007ACC" }}
                           />
                         </div>
                       </PagePointerProvider>

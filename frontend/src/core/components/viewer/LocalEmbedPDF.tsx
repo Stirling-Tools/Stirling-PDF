@@ -125,7 +125,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
       createPluginRegistration(ScrollPluginPackage),
       createPluginRegistration(RenderPluginPackage, {
         withForms: !enableFormFill,
-        withAnnotations: showBakedAnnotations && !enableAnnotations, // Show baked annotations only when: visibility is ON and annotation layer is OFF
+        withAnnotations: !enableAnnotations, // Show baked annotations only when annotation layer is OFF; live layer visibility is controlled via CSS
       }),
 
       // Register interaction manager (required for zoom and selection features)
@@ -203,7 +203,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
       // Register print plugin for printing PDFs
       createPluginRegistration(PrintPluginPackage),
     ];
-  }, [pdfUrl, enableAnnotations, showBakedAnnotations, fileName, file, url]);
+  }, [pdfUrl, enableAnnotations, fileName, file, url]);
 
   // Initialize the engine with the React hook - use local WASM for offline support
   const { engine, isLoading, error } = usePdfiumEngine({
@@ -560,7 +560,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
                 contents: 'Text',
               },
               behavior: {
-                deactivateToolAfterCreate: false,
+                deactivateToolAfterCreate: true,
                 selectAfterCreate: true,
               },
             });
@@ -584,7 +584,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
                 defaultSize: { width: 160, height: 100 },
               },
               behavior: {
-                deactivateToolAfterCreate: false,
+                deactivateToolAfterCreate: true,
                 selectAfterCreate: true,
               },
             });
@@ -750,8 +750,9 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
                             <AnnotationLayer
                               documentId={documentId}
                               pageIndex={pageIndex}
-                              selectionOutlineColor="#007ACC"
+                              selectionOutline={{ color: "#007ACC" }}
                               selectionMenu={(props) => <AnnotationSelectionMenu {...props} />}
+                              style={!showBakedAnnotations ? { opacity: 0, pointerEvents: 'none' } : undefined}
                             />
                           )}
 

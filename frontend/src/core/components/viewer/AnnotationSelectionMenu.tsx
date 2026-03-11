@@ -493,9 +493,6 @@ function AnnotationSelectionMenuInner({
       }
 
       const wrapperRect = wrapper.getBoundingClientRect();
-      // Position menu below the wrapper, centered
-      // Use getBoundingClientRect which gives viewport-relative coordinates
-      // Since we're using fixed positioning in the portal, we don't need to add scroll offsets
       setMenuPosition({
         top: wrapperRect.bottom + 8,
         left: wrapperRect.left + wrapperRect.width / 2,
@@ -504,11 +501,15 @@ function AnnotationSelectionMenuInner({
 
     updatePosition();
 
-    // Update position on scroll/resize
+    // MutationObserver catches EmbedPDF updating the wrapper's inline style during drag
+    const observer = new MutationObserver(updatePosition);
+    observer.observe(wrapperRef.current, { attributes: true, attributeFilter: ['style'] });
+
     window.addEventListener('scroll', updatePosition, true);
     window.addEventListener('resize', updatePosition);
 
     return () => {
+      observer.disconnect();
       window.removeEventListener('scroll', updatePosition, true);
       window.removeEventListener('resize', updatePosition);
     };
@@ -593,20 +594,17 @@ function AnnotationSelectionMenuInner({
     </div>
   ) : null;
 
-  const canClickToEdit = selected && (annotationType === 'text' || annotationType === 'note') && !isTextEditorOpen;
-
   return (
     <>
-      {/* Invisible wrapper that provides positioning - uses EmbedPDF's menuWrapperProps */}
+      {/* Invisible wrapper that provides positioning - uses EmbedPDF's menuWrapperProps.
+          Must stay pointerEvents:none so EmbedPDF's internal drag handlers receive events.
+          Text editing is available via the pencil button in the selection toolbar below. */}
       <div
         ref={setRef}
-        onClick={canClickToEdit ? handleOpenTextEditor : undefined}
         style={{
-          // Use EmbedPDF's positioning styles
           ...menuWrapperProps?.style,
-          // Keep the wrapper invisible but still occupying space for positioning
           opacity: 0,
-          pointerEvents: canClickToEdit ? 'auto' : 'none',
+          pointerEvents: 'none',
         }}
       />
       {typeof document !== 'undefined' && menuContent

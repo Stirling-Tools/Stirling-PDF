@@ -214,15 +214,18 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
 
   const activeColor = useMemo(() => colorPickerTarget ? getActiveColor(colorPickerTarget as AnnotationToolId) : '#000000', [colorPickerTarget, getActiveColor]);
 
+  const annotationsVisible = viewerContext?.isAnnotationsVisible ?? true;
+
   const renderToolButtons = (tools: { id: AnnotationToolId; label: string; icon: string }[]) => (
     <Group gap="xs">
       {tools.map((tool) => (
         <MantineTooltip key={tool.id} label={tool.label} withArrow>
           <ActionIcon
-            variant={activeTool === tool.id ? 'filled' : 'subtle'}
-            color={activeTool === tool.id ? 'blue' : undefined}
+            variant={activeTool === tool.id && annotationsVisible ? 'filled' : 'subtle'}
+            color={activeTool === tool.id && annotationsVisible ? 'blue' : undefined}
             radius="md"
             onClick={() => activateAnnotationTool(tool.id)}
+            disabled={!annotationsVisible}
             aria-label={tool.label}
           >
             <LocalIcon icon={tool.icon} width="1.25rem" height="1.25rem" />
@@ -726,8 +729,9 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
       <Group gap="xs" wrap="nowrap" align="center">
         <Tooltip label={t('annotation.selectAndMove', 'Select and edit annotations')}>
           <ActionIcon
-            variant={activeTool === 'select' ? 'filled' : 'default'}
+            variant={activeTool === 'select' && annotationsVisible ? 'filled' : 'default'}
             size="lg"
+            disabled={!annotationsVisible}
             onClick={() => {
               activateAnnotationTool('select');
             }}

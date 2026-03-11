@@ -28,6 +28,10 @@ export interface AnnotationAPI {
   getSelectedAnnotation: () => AnnotationSelection | null;
   deselectAnnotation: () => void;
   updateAnnotation: (pageIndex: number, annotationId: string, patch: AnnotationPatch) => void;
+  deleteAnnotation?: (pageIndex: number, annotationId: string) => void;
+  deleteAnnotations?: (annotations: Array<{ pageIndex: number; id: string }>) => void;
+  createAnnotation?: (pageIndex: number, annotation: Record<string, unknown>) => void;
+  getSelectedAnnotations?: () => any[];
   deactivateTools: () => void;
   onAnnotationEvent?: (listener: (event: AnnotationEvent) => void) => void | (() => void);
   getActiveTool?: () => { id: AnnotationToolId } | null;
