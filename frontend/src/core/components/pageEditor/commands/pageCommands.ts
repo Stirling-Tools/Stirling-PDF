@@ -340,20 +340,24 @@ export class BulkRotateCommand extends DOMCommand {
     const currentDoc = this.getCurrentDocument();
     if (!currentDoc) return;
 
+    const pageIdSet = new Set(this.pageIds);
+
     // Store original rotations from state for reliable undo (only on first execution)
     if (this.originalRotations.size === 0) {
-      this.pageIds.forEach(pageId => {
-        const page = currentDoc.pages.find(p => p.id === pageId);
-        if (page) {
-          this.originalRotations.set(pageId, page.rotation);
+      for (const page of currentDoc.pages) {
+        if (pageIdSet.has(page.id)) {
+          this.originalRotations.set(page.id, page.rotation);
         }
-      });
+      }
     }
 
     // Update state so rotation survives virtualizer unmount/remount
+    // Build a map of id → new rotation for O(1) DOM lookups below
+    const newRotationById = new Map<string, number>();
     const updatedPages = currentDoc.pages.map(page => {
-      if (this.pageIds.includes(page.id)) {
+      if (pageIdSet.has(page.id)) {
         const newRotation = ((page.rotation + this.degrees) % 360 + 360) % 360;
+        newRotationById.set(page.id, newRotation);
         return { ...page, rotation: newRotation };
       }
       return page;
@@ -361,17 +365,14 @@ export class BulkRotateCommand extends DOMCommand {
 
     this.setDocument({ ...currentDoc, pages: updatedPages });
 
-    // Also update DOM immediately for CSS animation on currently-mounted pages
-    this.pageIds.forEach(pageId => {
+    // Mirror to DOM immediately for CSS animation on currently-mounted pages
+    for (const pageId of this.pageIds) {
       const pageElement = document.querySelector(`[data-page-id="${pageId}"]`);
       if (pageElement) {
         const img = pageElement.querySelector('img');
-        const updatedPage = updatedPages.find(p => p.id === pageId);
-        if (img && updatedPage) {
-          img.style.transform = `rotate(${updatedPage.rotation}deg)`;
-        }
+        if (img) img.style.transform = `rotate(${newRotationById.get(pageId)}deg)`;
       }
-    });
+    }
   }
 
   undo(): void {
@@ -379,17 +380,16 @@ export class BulkRotateCommand extends DOMCommand {
     if (!currentDoc) return;
 
     // Restore original rotations in state
-    const updatedPages = currentDoc.pages.map(page => {
-      if (this.originalRotations.has(page.id)) {
-        return { ...page, rotation: this.originalRotations.get(page.id)! };
-      }
-      return page;
-    });
+    const updatedPages = currentDoc.pages.map(page =>
+      this.originalRotations.has(page.id)
+        ? { ...page, rotation: this.originalRotations.get(page.id)! }
+        : page
+    );
 
     this.setDocument({ ...currentDoc, pages: updatedPages });
 
-    // Also update DOM immediately for CSS animation on currently-mounted pages
-    this.pageIds.forEach(pageId => {
+    // Mirror to DOM immediately for CSS animation on currently-mounted pages
+    for (const pageId of this.pageIds) {
       const pageElement = document.querySelector(`[data-page-id="${pageId}"]`);
       if (pageElement) {
         const img = pageElement.querySelector('img');
@@ -397,7 +397,7 @@ export class BulkRotateCommand extends DOMCommand {
           img.style.transform = `rotate(${this.originalRotations.get(pageId)}deg)`;
         }
       }
-    });
+    }
   }
 
   get description(): string {
