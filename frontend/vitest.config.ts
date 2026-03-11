@@ -20,6 +20,8 @@ export default defineConfig({
       exclude: [
         'node_modules/',
         'src/core/setupTests.ts',
+        'src/proprietary/setupTests.ts',
+        'src/saas/setupTests.ts',
         '**/*.d.ts',
         'src/tests/test-fixtures/**',
         'src/**/*.spec.ts'
@@ -74,6 +76,24 @@ export default defineConfig({
           react(),
           tsconfigPaths({
             projects: ['./tsconfig.desktop.vite.json'],
+          }),
+        ],
+        esbuild: {
+          target: 'es2020'
+        }
+      },
+      {
+        test: {
+          name: 'saas',
+          include: ['src/saas/**/*.test.{ts,tsx}'],
+          environment: 'jsdom',
+          globals: true,
+          setupFiles: ['./src/saas/setupTests.ts'],
+        },
+        plugins: [
+          react(),
+          tsconfigPaths({
+            projects: ['./tsconfig.saas.vite.json'],
           }),
         ],
         esbuild: {
