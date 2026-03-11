@@ -96,6 +96,8 @@ pin = "تثبيت الملف (إبقاؤه نشطًا بعد تشغيل الأد
 poweredBy = "مدعوم بواسطة"
 pro = "محترف"
 processTimeWarning = "تحذير: يمكن أن تستغرق هذه العملية ما يصل إلى دقيقة حسب حجم الملف"
+processingComplete = "ملفك جاهز."
+processingCompleteMultiple = "تم تجهيز {{count}} ملفًا."
 property = "الخاصية"
 quickPosition = "موضع سريع"
 red = "أحمر"
@@ -105,6 +107,7 @@ save = "حفظ"
 saveToBrowser = "حفظ في المتصفح"
 saveUnavailable = "الحفظ غير متاح لهذا العنصر"
 seeDockerHub = "انظر Docker Hub"
+editSecret = "تحرير هذه القيمة"
 selectFillter = "- حدد -"
 size = "الحجم"
 sponsor = "راعٍ"
@@ -651,6 +654,7 @@ description = "تهيئة موفري المصادقة الخارجيين مثل 
 disconnect = "قطع الاتصال"
 disconnected = "تم قطع اتصال المزوّد بنجاح"
 disconnectError = "فشل قطع اتصال المزوّد"
+documentation = "عرض التوثيق"
 imageResolutionFull = "كاملة (الحجم الأصلي)"
 imageResolutionReduced = "مخفَّضة (حتى 1200px)"
 linkedServices = "خدمات مرتبطة"
@@ -964,6 +968,18 @@ label = "اللغة الافتراضية"
 description = "الحد الأقصى لحجم رفع الملف (مثل: 100MB، 1GB)"
 label = "حد رفع الملفات"
 
+[admin.settings.general.hideDisabledTools]
+description = "إخفاء الأدوات المعطّلة من الواجهة"
+label = "إخفاء الأدوات المعطّلة"
+
+[admin.settings.general.hideDisabledTools.googleDrive]
+description = "إخفاء زر Google Drive عند عدم تمكينه"
+label = "إخفاء Google Drive"
+
+[admin.settings.general.hideDisabledTools.mobileScanner]
+description = "إخفاء زر ماسح QR على الهاتف المحمول عند عدم تمكينه"
+label = "إخفاء الماسح المحمول"
+
 [admin.settings.general.frontendUrl]
 description = "عنوان URL الأساسي للواجهة الأمامية (مثل https://pdf.example.com). يُستخدم لروابط دعوات البريد الإلكتروني وعمليات الرفع عبر رمز QR على الهاتف المحمول. اتركه فارغًا لاستخدام عنوان URL للواجهة الخلفية."
 label = "عنوان URL للواجهة الأمامية"
@@ -1148,6 +1164,8 @@ title = "الأمان"
 
 [admin.settings.security.audit]
 label = "سجل التدقيق"
+showDetails = "إظهار تفاصيل مستوى التدقيق"
+hideDetails = "إخفاء تفاصيل مستوى التدقيق"
 
 [admin.settings.security.audit.enabled]
 description = "تتبع إجراءات المستخدمين وأحداث النظام للامتثال ومراقبة الأمان"
@@ -1157,9 +1175,31 @@ label = "تمكين سجل التدقيق"
 description = "0=إيقاف، 1=أساسي، 2=قياسي، 3=مفصل"
 label = "مستوى التدقيق"
 
+[admin.settings.security.audit.levelDetails]
+off = "بدون تسجيل تدقيق (باستثناء أحداث الأمان الحرجة)"
+basic = "عمليات ملفات PDF (ضغط، تقسيم، دمج، إلخ) وتغييرات الإعدادات. يلتقط: حالة العملية (نجاح/فشل)، معاملات الطريقة، التوقيت. حجم سجلات منخفض."
+standard = "أحداث BASIC بالإضافة إلى: تسجيل دخول/خروج المستخدم، تغييرات الحساب، طلبات GET العامة. يستثني مكالمات الاستطلاع المستمرة (/auth/me، /app-config، /health، إلخ) لتقليل ضوضاء السجلات. مثالي لمعظم عمليات النشر."
+verbose = "أحداث STANDARD بالإضافة إلى: مكالمات الاستطلاع المستمرة، جميع طلبات GET، تفاصيل التوقيت. تحذير: حجم سجلات عالٍ وتأثير على الأداء."
+
 [admin.settings.security.audit.retentionDays]
 description = "عدد الأيام للاحتفاظ بسجلات التدقيق"
 label = "الاحتفاظ بسجلات التدقيق (أيام)"
+
+[admin.settings.security.audit.advancedOptions]
+title = "خيارات متقدمة"
+description = "الخيارات التالية تزيد وقت المعالجة واستخدام الذاكرة. فعّلها فقط عند الحاجة فعلًا."
+
+[admin.settings.security.audit.captureFileHash]
+description = "استخراج بصمة SHA-256 لملفات PDF المرفوعة للتحقق من السلامة. مستقل عن مستوى التدقيق."
+label = "التقاط بصمة الملف (SHA-256)"
+
+[admin.settings.security.audit.capturePdfAuthor]
+description = "استخراج حقل المؤلف من مستندات PDF أثناء المعالجة. يتطلب تحليل PDF ويزيد زمن الاستجابة. مستقل عن مستوى التدقيق."
+label = "التقاط بيانات مؤلف PDF"
+
+[admin.settings.security.audit.captureOperationResults]
+description = "التقاط قيم إرجاع الطريقة. غير مُوصى به: يزيد بشكل ملحوظ من حجم السجلات واستخدام القرص."
+label = "التقاط نتائج العملية"
 
 [admin.settings.security.csrfDisabled]
 description = "تعطيل حماية تزوير طلبات المواقع (غير مستحسن)"
@@ -1536,43 +1576,18 @@ tags = "embed,attach,file,attachment,attachments"
 title = "Add attachments"
 
 [audit]
+configureAudit = "تهيئة تسجيل التدقيق"
+configureAuditMessage = "اضبط مستوى تسجيل التدقيق، وفترة الاحتفاظ، وإعدادات أخرى في قسم الأمان والمصادقة."
 disabled = "تم تعطيل تسجيل التدقيق"
 disabledMessage = "قم بتمكين تسجيل التدقيق في إعدادات التطبيق لتتبع أحداث النظام."
 enterpriseRequired = "يتطلب ترخيص Enterprise"
 enterpriseRequiredMessage = "نظام سجلات التدقيق ميزة ضمن فئة Enterprise. يرجى الترقية إلى ترخيص Enterprise للوصول إلى سجلات التدقيق والتحليلات."
+goToSettings = "الانتقال إلى إعدادات التدقيق"
 notAvailable = "نظام التدقيق غير متاح"
 notAvailableMessage = "لم يتم تهيئة نظام التدقيق أو أنه غير متاح."
 
-[audit.charts]
-byType = "الأحداث حسب النوع"
-byUser = "الأحداث حسب المستخدم"
-day = "اليوم"
-error = "خطأ في تحميل الرسوم البيانية"
-month = "الشهر"
-overTime = "الأحداث مع مرور الوقت"
-title = "لوحة معلومات التدقيق"
-week = "الأسبوع"
-
 [audit.error]
 title = "خطأ في تحميل نظام التدقيق"
-
-[audit.events]
-actions = "إجراءات"
-clearFilters = "مسح"
-details = "تفاصيل"
-endDate = "تاريخ الانتهاء"
-error = "خطأ في تحميل الأحداث"
-eventDetails = "تفاصيل الحدث"
-filterByType = "تصفية حسب النوع"
-filterByUser = "تصفية حسب المستخدم"
-ipAddress = "عنوان IP"
-noEvents = "لم يتم العثور على أحداث"
-startDate = "تاريخ البدء"
-timestamp = "الطابع الزمني"
-title = "أحداث التدقيق"
-type = "النوع"
-user = "المستخدم"
-viewDetails = "عرض التفاصيل"
 
 [audit.export]
 clearFilters = "مسح"
@@ -1580,27 +1595,132 @@ description = "تصدير أحداث التدقيق إلى تنسيق CSV أو J
 endDate = "تاريخ الانتهاء"
 error = "فشل تصدير البيانات"
 exportButton = "تصدير البيانات"
+fieldAuthor = "المؤلف (من PDF)"
+fieldDate = "التاريخ"
+fieldDocumentName = "اسم المستند"
+fieldFileHash = "بصمة الملف (SHA-256)"
+fieldIpAddress = "عنوان IP"
+fieldOperationResults = "نتائج العملية"
+fieldOutcome = "النتيجة (نجاح/فشل)"
+fieldTool = "الأداة"
+fieldUsername = "اسم المستخدم"
 filterByType = "تصفية حسب النوع"
 filterByUser = "تصفية حسب المستخدم"
 filters = "عوامل التصفية (اختياري)"
 format = "صيغة التصدير"
+selectFields = "حدد الحقول المطلوب تضمينها"
 startDate = "تاريخ البدء"
 title = "تصدير بيانات التدقيق"
+verboseRequired = "يتطلب مستوى تدقيق VERBOSE"
 
 [audit.systemStatus]
+autoRefresh = "تحديث تلقائي"
+autoRefreshLabel = "تحديث تلقائي كل 30 ثانية"
+captureBySettings = "فعِّل من الإعدادات"
+capturedFields = "الحقول الملتقطة"
+date = "التاريخ"
 days = "أيام"
 disabled = "معطّل"
+documentName = "اسم المستند"
 enabled = "مُمكّن"
+fileHash = "بصمة الملف"
 level = "مستوى التدقيق"
+pdfAuthor = "مؤلف PDF"
 retention = "فترة الاحتفاظ"
 status = "تسجيل التدقيق"
 title = "حالة النظام"
+tool = "الأداة"
 totalEvents = "إجمالي الأحداث"
+username = "اسم المستخدم"
+verboseOnly = "VERBOSE فقط"
+
+[audit.stats]
+activeUsers = "المستخدمون النشطون"
+attention = "بحاجة إلى انتباه"
+avgLatency = "متوسط زمن الاستجابة"
+error = "خطأ في تحميل الإحصائيات"
+errorLoadingStats = "فشل تحميل الإحصائيات"
+excellent = "ممتاز"
+good = "جيد"
+noData = "غير متاح"
+successRate = "معدل النجاح"
+title = "الملخّص"
+totalEvents = "إجمالي الأحداث"
+vsLastPeriod = "مقارنة بالفترة السابقة"
+
+[audit.charts]
+byTool = "أكثر الأدوات استخدامًا"
+byType = "الأحداث حسب النوع"
+byUser = "الأحداث حسب المستخدم"
+day = "اليوم"
+error = "خطأ في تحميل الرسوم البيانية"
+hourlyActivity = "النشاط حسب الساعة"
+month = "الشهر"
+noData = "لا توجد بيانات لهذه الفترة"
+overTime = "الأحداث مع مرور الوقت"
+title = "لوحة معلومات التدقيق"
+week = "الأسبوع"
+
+[audit.events]
+actions = "إجراءات"
+author = "المؤلف"
+clearFilters = "مسح"
+details = "تفاصيل"
+documentName = "المستند"
+endDate = "تاريخ الانتهاء"
+error = "خطأ في تحميل الأحداث"
+eventDetails = "تفاصيل الحدث"
+failure = "فشل"
+fileHash = "بصمة الملف"
+filterByType = "تصفية حسب النوع"
+filterByUser = "تصفية حسب المستخدم"
+ipAddress = "عنوان IP"
+noEvents = "لم يتم العثور على أحداث"
+outcome = "الحالة"
+sortAsc = "فرز تصاعدي"
+sortDesc = "فرز تنازلي"
+startDate = "تاريخ البدء"
+success = "نجاح"
+timestamp = "الطابع الزمني"
+title = "أحداث التدقيق"
+type = "النوع"
+user = "المستخدم"
+viewDetails = "عرض التفاصيل"
+
+[audit.filters]
+allOutcomes = "الكل"
+failureOnly = "الفشل فقط"
+last7Days = "آخر 7 أيام"
+last30Days = "آخر 30 يومًا"
+outcomeFilter = "النتيجة"
+quickPresets = "عوامل تصفية سريعة"
+successOnly = "النجاح فقط"
+thisMonth = "هذا الشهر"
+today = "اليوم"
 
 [audit.tabs]
+clearData = "مسح البيانات"
 dashboard = "لوحة المعلومات"
 events = "أحداث التدقيق"
 export = "تصدير"
+
+[audit.clearData]
+cancel = "إلغاء"
+codeDoesNotMatch = "الرمز غير متطابق"
+codePlaceholder = "اكتب الرمز هنا"
+confirmationCode = "رمز التأكيد"
+confirmationRequired = "حذف كل بيانات التدقيق"
+confirmMessage = "سيؤدي هذا إلى إزالة جميع سجلات التدقيق نهائيًا. أدخل رمز التأكيد أدناه للمتابعة."
+confirmTitle = "يرجى تأكيد رغبتك في الحذف"
+deleteButton = "حذف"
+enterCode = "رمز التأكيد"
+enterCodeBelow = "أدخل الرمز تمامًا كما هو موضح أعلاه (مع مراعاة حالة الأحرف)"
+initiateDelete = "حذف جميع البيانات"
+irreversible = "غير قابل للتراجع"
+success = "تم بنجاح"
+successMessage = "تم مسح جميع بيانات التدقيق بنجاح"
+warning1 = "لا يمكن التراجع عن هذا الإجراء"
+warning2 = "سيؤدي حذف بيانات التدقيق إلى إزالة جميع سجلات التدقيق التاريخية نهائيًا، بما في ذلك أحداث الأمان، وأنشطة المستخدمين، وعمليات الملفات من قاعدة البيانات."
 
 [auth]
 accessDenied = "تم رفض الوصول"
@@ -2254,9 +2374,11 @@ copy = "نسخ"
 done = "تم"
 error = "خطأ"
 expand = "توسيع"
+learnMore = "معرفة المزيد"
 lines = "أسطر"
 loading = "جارٍ التحميل..."
 next = "التالي"
+operation = "هذه العملية"
 preview = "معاينة"
 previous = "السابق"
 refresh = "تحديث"
@@ -2920,6 +3042,7 @@ copyStack = "نسخ تتبع المكدس"
 discordSubmit = "Discord - إرسال منشور دعم"
 dismissAllErrors = "تجاهل كل الأخطاء"
 encryptedPdfMustRemovePassword = "هذا PDF مشفّر أو محمي بكلمة مرور. يرجى فتحه قبل التحويل إلى PDF/A."
+generic = "حدث خطأ"
 github = "إرسال تذكرة على GitHub"
 githubSubmit = "GitHub - إرسال تذكرة"
 incorrectPasswordProvided = "كلمة مرور PDF غير صحيحة أو غير مذكورة."
@@ -4456,6 +4579,10 @@ upgradeCompleteMessage = "تمت ترقية اشتراكك بنجاح. تم تح
 upgradeSuccess = "تم الدفع بنجاح! تم ترقية اشتراكك. تم تحديث الترخيص على خادمك. ستتلقى رسالة تأكيد عبر البريد الإلكتروني قريباً."
 upgradeTitle = "الترقية إلى {{planName}}"
 yearly = "سنوي"
+checkoutOpened = "تم فتح صفحة الدفع في المتصفح"
+checkoutInstructions = "أكمل عملية الشراء في نافذة المتصفح التي فُتحت للتو. بعد اكتمال الدفع، عُد إلى هنا وانقر الزر أدناه لتحديث معلومات الفوترة."
+refreshBilling = "أتممتُ الدفع - تحديث الفوترة"
+closeLater = "سأفعل ذلك لاحقًا"
 
 [payment.emailStage]
 continue = "متابعة"
@@ -4679,6 +4806,13 @@ prompt = "اختر الصفحة لاستخراج الجدول"
 submit = "تحويل"
 title = "PDF إلى CSV"
 
+[PDFToXLSX]
+header = "PDF إلى Excel"
+prompt = "اختر الصفحات لاستخراج الجداول"
+submit = "تحويل"
+title = "PDF إلى Excel (XLSX)"
+tags = "جدول بيانات,excel,xlsx,جدول,استخراج,تحويل"
+
 [PDFToHTML]
 credit = "تستخدم هذه الخدمة pdftohtml لتحويل الملفات."
 header = "PDF إلى HTML"
@@ -4835,6 +4969,7 @@ customPricing = "مخصص"
 featureComparison = "مقارنة الميزات"
 from = "من"
 hideComparison = "إخفاء مقارنة الميزات"
+included = "مشمول"
 includedInCurrent = "مشمولة في خطتك"
 licensedSeats = "المرخَّصة: {{count}} مقعداً"
 manage = "إدارة"
@@ -4852,9 +4987,11 @@ title = "الخطة النشطة"
 
 [plan.availablePlans]
 subtitle = "اختر الخطة التي تناسب احتياجاتك"
+loadError = "تعذّر تحميل أسعار الخطط. سيتم استخدام القيم الافتراضية."
 title = "الخطط المتاحة"
 
 [plan.enterprise]
+siteLicense = "ترخيص موقع"
 highlight1 = "تسعير مخصص"
 highlight2 = "دعم مخصص"
 highlight3 = "أحدث الميزات"
@@ -4927,6 +5064,81 @@ instructions = "أكمل عملية الشراء في تبويب Stripe. عند 
 keyDescription = "الصق مفتاح الترخيص من بريدك الإلكتروني"
 success = "تم تفعيل الترخيص!"
 successMessage = "تم تفعيل ترخيصك بنجاح. يمكنك الآن إغلاق هذه النافذة."
+
+[plan.team]
+name = "الفريق"
+siteLicense = "ترخيص موقع"
+
+[credits]
+enableOverageBilling = "تمكين فوترة التجاوز"
+maybeLater = "ربما لاحقًا"
+upgrade = "ترقية"
+
+[credits.modal]
+advancedMonitoring = "مراقبة متقدمة"
+allInOneWorkspace = "مساحة عمل PDF شاملة (عارض، أدوات ووكيل)"
+apiSandbox = "بيئة Sandbox لـ API"
+contactSales = "تواصل مع المبيعات"
+creditsRemaining = "متبقٍ {{current}} من {{total}}"
+creditsThisMonth = "أرصدة شهرية"
+current = "الخطة الحالية"
+customPricing = "مُخصص"
+customSmartFolders = "مجلدات ذكية مخصصة"
+dedicatedSupportSlas = "دعم مخصص واتفاقيات مستوى الخدمة (SLA)"
+enterpriseSubscription = "المؤسسات"
+everythingInCredits = "كل ما في الأرصدة، بالإضافة إلى:"
+everythingInFree = "كل ما في المجاني، بالإضافة إلى:"
+fasterThroughput = "إنتاجية أسرع 10 مرات"
+forRegularWork = "لأعمال PDF الاعتيادية:"
+freeTier = "المستوى المجاني"
+fullyPrivateFiles = "ملفات خاصة بالكامل"
+largeFileProcessing = "معالجة الملفات الكبيرة"
+managedMemberMessage = "لديك وصول غير محدود إلى الأرصدة عبر فريقك. إذا كنت بحاجة إلى مساعدة، يرجى التواصل مع قائد فريقك."
+managedMemberTitle = "أرصدة غير محدودة"
+meteringBillingNote = "تُفوتر أرصدة التجاوز شهريًا مع اشتراك خطة الفريق الخاصة بك. تتبع استخدامك في أي وقت من إعدادات حسابك."
+meteringExplanation = "تتضمن خطة الفريق لديك {{credits}} رصيدًا شهريًا. عند نفادها، توفّر فوترة التجاوز تلقائيًا أرصدة إضافية لكي لا تتوقف عن العمل."
+meteringIncluded = "{{credits}} رصيدًا/شهر مشمول مع خطة الفريق"
+meteringNoCommitment = "بدون التزام، يمكنك الإلغاء في أي وقت"
+meteringNeverRunOut = "لا تنفد الأرصدة مطلقًا"
+meteringPayAsYouGo = "ادفع فقط مقابل ما تستخدمه"
+meteringPrice = "أرصدة إضافية بسعر {{price}}/رصيد"
+meteringTitle = "فوترة التجاوز حسب الاستهلاك"
+monthlyCredits = "أرصدة شهرية"
+orgWideAccess = "ضوابط وصول على مستوى المؤسسة"
+overage = "تجاوز"
+perMonth = "/شهر"
+popular = "شائع"
+premiumAiModels = "نماذج ذكاء اصطناعي متميزة"
+prioritySupport = "دعم أولوية"
+privateDocCloud = "سحابة مستندات خاصة"
+ragFineTuning = "RAG + ضبط دقيق"
+secureApiAccess = "وصول API آمن"
+selfHostLink = "راجع المستندات والخطط"
+selfHostPrompt = "هل تريد الاستضافة الذاتية؟"
+standardThroughput = "إنتاجية قياسية"
+subtitle = "رقِّ إلى خطة الفريق لتحصل على أرصدة أكثر بـ 10 مرات ومعالجة أسرع."
+subtitlePro = "فعِّل الفوترة التلقائية عند التجاوز كي لا تنفد أرصدتك أبدًا."
+teamLeaderOnly = "فقط قادة الفريق يمكنهم تمكين فوترة التجاوز"
+teamSubscription = "الفريق"
+titleExhausted = "لقد استخدمت أرصدتك المجانية"
+titleExhaustedPro = "لقد نفدت أرصدتك"
+unlimitedApiAccess = "وصول API غير محدود"
+unlimitedMonthlyCredits = "ترخيص موقع"
+unlimitedSeats = "مقاعد غير محدودة"
+
+[credits.modal.features]
+everythingInCredits = "كل ما في الأرصدة، بالإضافة إلى:"
+everythingInFree = "كل ما في المجاني، بالإضافة إلى:"
+forRegularWork = "لأعمال PDF الاعتيادية:"
+
+[credits.insufficient]
+brief = "أرصدة غير كافية. تحتاج إلى {{required}} رصيدًا ولكن لديك {{current}}."
+freeTier = "رقِّ إلى خطة الفريق لتحصل على أرصدة أكثر بـ 10 مرات وفوترة تجاوز غير محدودة."
+managedMember = "يرجى التواصل مع قائد فريقك للمساعدة."
+message = "ليس لديك ما يكفي من الأرصدة لتشغيل {{tool}}. لديك حاليًا {{current}} رصيدًا."
+messageWithAmount = "تحتاج إلى {{required}} رصيدًا لتشغيل {{tool}}، ولكن لديك فقط {{current}}."
+teamMember = "فعِّل فوترة التجاوز كي لا تنفد الأرصدة."
+title = "أرصدة غير كافية"
 
 [printFile]
 header = "طباعة ملف بالطابعة"
@@ -5565,6 +5777,70 @@ user = "تم تسجيل الدخول باسم"
 saas = "Stirling Cloud"
 selfhosted = "مستضاف ذاتياً"
 
+[settings.planBilling]
+currentPlan = "الخطة الحالية"
+loading = "جارٍ تحميل معلومات الفوترة..."
+notAvailable = "الخطة والفوترة متاحتان فقط عند الاتصال بـ Stirling Cloud (وضع SaaS)."
+title = "الخطة والفوترة"
+
+[settings.planBilling.billing]
+manageBilling = "إدارة الفوترة"
+nextBillingDate = "تاريخ الفوترة التالي"
+overageCost = "تكلفة التجاوز الحالية: {{amount}} ({{credits}} رصيدًا)"
+
+[settings.planBilling.credits]
+estimatedCost = "التكلفة التقديرية: {{amount}}"
+freeTierInfo = "تتضمن الخطة المجانية {{freeCredits}} رصيدًا شهريًا. رقِّ إلى خطة الفريق لتحصل على {{teamCredits}} رصيدًا/شهر وفوترة تجاوز حسب الاستهلاك."
+included = "{{count}} رصيدًا/شهر (مشمول)"
+noOverage = "لا توجد رسوم تجاوز هذا الشهر. أنت تستخدم أرصدتك المشمولة البالغة {{count}}."
+overage = "+ {{count}} تجاوز"
+overageInfo = "تتم فوترة أرصدة التجاوز بسعر {{price}} لكل رصيد. ستدفع فقط مقابل ما يتجاوز مخصصك الشهري."
+title = "استخدام الأرصدة"
+
+[settings.planBilling.errors]
+fetchFailed = "تعذّر جلب بيانات الفوترة"
+retry = "إعادة المحاولة"
+
+[settings.planBilling.status]
+active = "مفعّل"
+canceled = "ملغاة"
+pastDue = "متأخر السداد"
+trial = "تجريبي"
+
+[settings.planBilling.tier]
+enterprise = "المؤسسات"
+enterpriseDescription = "ميزات ودعم مؤسسي مخصص"
+free = "مجاني"
+freeDescription = "50 رصيدًا شهريًا"
+team = "الفريق"
+teamBadge = "الفريق"
+teamDescription = "500 رصيد/شهر مشمول، فوترة تجاوز تلقائية لخدمة دون انقطاع"
+teamTooltipCredits = "تتضمن خطة الفريق {{credits}} رصيدًا/شهر."
+teamTooltipFineprint = "لا تدفع إلا مقابل ما تستخدمه بعد الأرصدة المشمولة."
+teamTooltipOverage = "فوترة تجاوز تلقائية بسعر {{price}}/رصيد تضمن خدمة دون انقطاع."
+
+[settings.planBilling.team]
+managedByTeam = "يُدار بواسطة الفريق"
+memberCount = "{{count}} عضوًا في الفريق"
+
+[settings.planBilling.trial]
+daysRemaining = "{{days}} يومًا متبقيًا"
+daysRemainingFull = "تنتهي تجربتك خلال {{days}} يومًا"
+endDate = "ينتهي: {{date}}"
+endsOn = "تنتهي التجربة"
+title = "تجربة مجانية مفعّلة"
+
+[settings.planBilling.upgrade]
+cta = "الترقية إلى خطة الفريق"
+featureApi = "وصول API للأتمتة"
+featureCredits = "{{teamCredits}} رصيدًا شهريًا (مقابل {{freeCredits}} في المجاني)"
+featureMembers = "أعضاء فريق غير محدودين"
+featureSupport = "دعم أولوية"
+featureThroughput = "إنتاجية معالجة أسرع"
+opensInBrowser = "يفتح في المتصفح لإكمال الترقية"
+subtitle = "رقِّ إلى خطة الفريق لتحصل على:"
+title = "رقِّ خطتك"
+
 [settings.developer]
 apiKeys = "مفاتيح API"
 title = "المطور"
@@ -5688,6 +5964,9 @@ requiresEnterprise = "يتطلّب ترخيص Enterprise"
 people = "الأشخاص"
 teams = "الفرق"
 title = "مساحة العمل"
+
+[settings.team]
+title = "الفريق"
 
 [setup]
 description = "ابدأ باختيار كيفية استخدام Stirling PDF"
@@ -6011,6 +6290,11 @@ desc = "تقسيم تلقائي باستخدام أوراق فاصلة"
 name = "فاصل الصفحات"
 tooltip = "استخدم أوراق فواصل برمز QR بين المستندات عند المسح"
 
+[split.methods.byPoster]
+name = "أجزاء قابلة للطباعة"
+desc = "قسّم الصفحات الكبيرة إلى أحجام قابلة للطباعة"
+tooltip = "قسّم الصفحات كبيرة الحجم إلى أجزاء أصغر مناسبة للطباعة على ورق قياسي (A4، Letter، إلخ)"
+
 [split.methods.byPages]
 desc = "استخراج صفحات محددة (1,3,5-10)"
 name = "أرقام الصفحات"
@@ -6029,6 +6313,7 @@ tooltip = "حدّد أقصى حجم للملف (مثل 10MB، 500KB)"
 [split.methods.prefix]
 splitAt = "تقسيم عند"
 splitBy = "تقسيم حسب"
+splitInto = "قسّم إلى"
 
 [split.methodSelection.tooltip]
 bullet1 = "انقر بطاقة الطريقة لاختيارها"
@@ -6047,6 +6332,21 @@ selectMethodFirst = "يرجى اختيار طريقة التقسيم أولًا"
 [split.steps]
 chooseMethod = "اختر الطريقة"
 settings = "إعدادات"
+
+[split.poster]
+rightToLeft = "قسّم من اليمين إلى اليسار"
+
+[split.poster.pageSize]
+label = "حجم الصفحة المستهدف"
+description = "حجم صفحات الإخراج للطباعة"
+
+[split.poster.xFactor]
+label = "تقسيمات أفقية"
+description = "عدد الأعمدة التي تُقسَّم إليها كل صفحة"
+
+[split.poster.yFactor]
+label = "تقسيمات عمودية"
+description = "عدد الصفوف التي تُقسَّم إليها كل صفحة"
 
 [split.tooltip.byChapters]
 bullet1 = "مستوى الإشارة المرجعية: المستوى الذي سيتم التقسيم عنده (1 = المستوى الأعلى)"
@@ -6084,6 +6384,14 @@ bullet4 = "ارفع الملف - ستُكتشف صفحات الفواصل وتُ
 bullet5 = "فعّل Duplex Mode إذا كنت تمسح وجهي أوراق الفواصل"
 text = "قسّم المستندات الممسوحة تلقائيًا باستخدام أوراق فواصل فيزيائية مع رموز QR. مثالي لمعالجة عدة مستندات ممسوحة معًا."
 title = "تقسيم بواسطة صفحة فاصل"
+
+[split.tooltip.byPoster]
+bullet1 = "حجم الصفحة المستهدف: اختر حجم ورق الإخراج (A4، Letter، إلخ)"
+bullet2 = "التقسيمات الأفقية/العمودية: حجم الشبكة للتقسيم"
+bullet3 = "من اليمين إلى اليسار: عكس ترتيب الأعمدة للتخطيطات RTL"
+bullet4 = "اطبع واسمِ القطع معًا لإنشاء ملصقك"
+text = "قسّم صفحات PDF الكبيرة إلى أجزاء صغيرة قابلة للطباعة مناسبة لأحجام الورق القياسية. مثالي لإنشاء مطبوعات ملصقات من الصفحات كبيرة الحجم."
+title = "تقسيم للطباعة كملصق"
 
 [split.tooltip.byPages]
 bullet1 = "نقاط تقسيم مفردة: 3,7 (يقسم بعد الصفحتين 3 و7)"
@@ -6364,9 +6672,13 @@ tags = "التقاط الويب,حفظ الصفحة,تحويل الويب إلى
 title = "URL إلى PDF"
 
 [usage]
+aboutUsageAnalytics = "حول تحليلات الاستخدام"
+configureSettings = "تهيئة إعدادات التحليلات"
 error = "خطأ في تحميل إحصائيات الاستخدام"
 noData = "لا توجد بيانات متاحة"
 noDataMessage = "لا توجد إحصائيات استخدام متاحة حاليًا."
+usageAnalyticsExplanation = "تتبع تحليلات الاستخدام طلبات نقاط النهاية وأنماط استخدام الأدوات. وبالاقتران مع لوحة تسجيل التدقيق، ستحصل على رؤية كاملة لنشاط النظام والأداء وأحداث الأمان."
+viewAuditLogs = "عرض سجلات التدقيق"
 
 [usage.chart]
 title = "مخطط استخدام نقاط النهاية"
@@ -6947,3 +7259,278 @@ cancel = "إلغاء"
 confirm = "استخراج"
 message = "هذا الملف ZIP يحتوي على {{count}} ملفات. هل تريد الاستخراج على أي حال؟"
 title = "ملف ZIP كبير"
+
+[cloudBadge]
+tooltip = "ستستخدم هذه العملية أرصدة السحابة الخاصة بك"
+
+[team]
+cancelInviteError = "تعذّر إلغاء الدعوة"
+confirmCancelInvite = "هل أنت متأكد أنك تريد إلغاء هذه الدعوة؟"
+confirmLeave = "هل أنت متأكد أنك تريد مغادرة هذا الفريق؟"
+confirmLeaveLeader = "بصفتك قائد فريق، ستتم إزالتك من الفريق عند المغادرة. هل أنت متأكد؟"
+confirmRemove = "هل أنت متأكد أنك تريد إزالة هذا العضو؟"
+editName = "تحرير اسم الفريق"
+inviteCancelled = "تم إلغاء الدعوة"
+inviteError = "تعذّر إرسال الدعوة"
+inviteSent = "تم إرسال الدعوة بنجاح"
+leader = "القائد"
+leaveButton = "مغادرة الفريق"
+leaveError = "تعذّرت مغادرة الفريق"
+leaveSuccess = "تمت مغادرة الفريق بنجاح"
+loading = "جارٍ تحميل معلومات الفريق..."
+memberCount = "{{count}} عضوًا"
+memberRemoved = "تمت إزالة العضو بنجاح"
+namePlaceholder = "أدخل اسم الفريق"
+personal = "شخصي"
+removeError = "تعذّرت إزالة العضو"
+renameError = "تعذّرت إعادة تسمية الفريق"
+renameSuccess = "تمت إعادة تسمية الفريق بنجاح"
+
+[team.invitationBanner]
+message = "قد دعاك للانضمام"
+acceptButton = "قبول"
+rejectButton = "رفض"
+
+[team.features]
+badge = "ميزات الفريق"
+subtitle = "تعاون مع فريقك"
+title = "التعاون داخل الفريق"
+viewPlans = "عرض الخطط"
+
+[team.features.billing]
+description = "إدارة الفوترة والاشتراكات"
+title = "إدارة الفوترة"
+
+[team.features.credits]
+description = "مجموعة أرصدة مشتركة لكل الأعضاء"
+title = "أرصدة مشتركة"
+
+[team.features.dashboard]
+description = "عرض نشاط الفريق والاستخدام"
+title = "لوحة تحكم الفريق"
+
+[team.features.invite]
+description = "أضف أعضاءً إلى فريقك"
+title = "دعوة الأعضاء"
+
+[team.invite]
+cancelLabel = "إلغاء"
+invalidEmail = "عنوان بريد إلكتروني غير صالح"
+placeholder = "أدخل عنوان البريد الإلكتروني"
+sendButton = "إرسال الدعوة"
+title = "دعوة عضو فريق"
+
+[team.members]
+emailColumn = "البريد الإلكتروني"
+empty = "لا يوجد أعضاء فريق بعد"
+nameColumn = "الاسم"
+pending = "قيد الانتظار"
+remove = "إزالة"
+roleColumn = "الدور"
+title = "أعضاء الفريق"
+
+[team.upgrade]
+button = "الترقية إلى خطة الفريق"
+description = "فعّل ميزات التعاون داخل الفريق"
+title = "الترقية إلى خطة الفريق"
+
+[provider.oauth2.google]
+scope = "مصادقة تسجيل الدخول"
+
+[provider.oauth2.google.clientId]
+label = "Client ID"
+description = "OAuth2 Client ID من Google Cloud Console"
+
+[provider.oauth2.google.clientSecret]
+label = "Client Secret"
+description = "OAuth2 Client Secret من Google Cloud Console"
+
+[provider.oauth2.google.scopes]
+label = "النطاقات"
+description = "نطاقات OAuth2 مفصولة بفواصل"
+
+[provider.oauth2.google.useAsUsername]
+label = "استخدام كاسم مستخدم"
+description = "الحقل المستخدم كاسم مستخدم (email، name، given_name، family_name)"
+
+[provider.oauth2.github]
+scope = "مصادقة تسجيل الدخول"
+
+[provider.oauth2.github.clientId]
+label = "Client ID"
+description = "OAuth2 Client ID من إعدادات مطوري GitHub"
+
+[provider.oauth2.github.clientSecret]
+label = "Client Secret"
+description = "OAuth2 Client Secret من إعدادات مطوري GitHub"
+
+[provider.oauth2.github.scopes]
+label = "النطاقات"
+description = "نطاقات OAuth2 مفصولة بفواصل"
+
+[provider.oauth2.github.useAsUsername]
+label = "استخدام كاسم مستخدم"
+description = "الحقل المستخدم كاسم مستخدم (email، login، name)"
+
+[provider.oauth2.keycloak]
+scope = "SSO"
+
+[provider.oauth2.keycloak.issuer]
+label = "Issuer URL"
+description = "عنوان URL لنقطة اكتشاف OpenID Connect الخاصة بـ realm في Keycloak"
+
+[provider.oauth2.keycloak.clientId]
+label = "Client ID"
+description = "OAuth2 Client ID من Keycloak"
+
+[provider.oauth2.keycloak.clientSecret]
+label = "Client Secret"
+description = "OAuth2 Client Secret من Keycloak"
+
+[provider.oauth2.keycloak.scopes]
+label = "النطاقات"
+description = "نطاقات OAuth2 مفصولة بفواصل"
+
+[provider.oauth2.keycloak.useAsUsername]
+label = "استخدام كاسم مستخدم"
+description = "الحقل المستخدم كاسم مستخدم (email، name، given_name، family_name، preferred_username)"
+
+[provider.oauth2.generic]
+name = "OAuth2 عام"
+scope = "SSO"
+
+[provider.oauth2.generic.enabled]
+label = "تمكين OAuth2 عام"
+description = "تمكين المصادقة باستخدام مزوّد OAuth2 مخصص"
+
+[provider.oauth2.generic.provider]
+label = "اسم المزوّد"
+description = "اسم مزوّد OAuth2 لديك (مثل Azure AD، Okta)"
+
+[provider.oauth2.generic.issuer]
+label = "Issuer URL"
+description = "مزوّد يدعم OpenID Connect Discovery (/.well-known/openid-configuration)"
+
+[provider.oauth2.generic.clientId]
+label = "Client ID"
+description = "OAuth2 Client ID من مزوّدك"
+
+[provider.oauth2.generic.clientSecret]
+label = "Client Secret"
+description = "OAuth2 Client Secret من مزوّدك"
+
+[provider.oauth2.generic.scopes]
+label = "النطاقات"
+description = "نطاقات OAuth2 مفصولة بفواصل"
+
+[provider.oauth2.generic.useAsUsername]
+label = "استخدام كاسم مستخدم"
+description = "الحقل المستخدم كاسم مستخدم"
+
+[provider.oauth2.generic.autoCreateUser]
+label = "إنشاء المستخدمين تلقائيًا"
+description = "إنشاء حسابات المستخدمين تلقائيًا عند أول تسجيل دخول عبر OAuth2"
+
+[provider.oauth2.generic.blockRegistration]
+label = "حظر التسجيل"
+description = "منع تسجيل المستخدمين الجدد عبر OAuth2"
+
+[provider.smtp]
+name = "بريد SMTP"
+scope = "إشعارات البريد الإلكتروني"
+
+[provider.smtp.enabled]
+label = "تمكين البريد"
+description = "تمكين إشعارات البريد الإلكتروني ووظائف SMTP"
+
+[provider.smtp.host]
+label = "مضيف SMTP"
+description = "اسم المضيف أو عنوان IP لخادم SMTP الخاص بك"
+
+[provider.smtp.port]
+label = "منفذ SMTP"
+description = "رقم المنفذ لاتصال SMTP (عادة 25 أو 465 أو 587)"
+
+[provider.smtp.username]
+label = "اسم مستخدم SMTP"
+description = "اسم المستخدم لمصادقة SMTP"
+
+[provider.smtp.password]
+label = "كلمة مرور SMTP"
+description = "كلمة المرور لمصادقة SMTP"
+
+[provider.smtp.from]
+label = "عنوان المرسِل"
+description = "عنوان البريد الإلكتروني المستخدم كمرسِل"
+
+[provider.saml2]
+name = "SAML2"
+scope = "SSO (SAML)"
+
+[provider.saml2.enabled]
+label = "تمكين SAML2"
+description = "تمكين مصادقة SAML2 (للمؤسسات فقط)"
+
+[provider.saml2.provider]
+label = "اسم المزوّد"
+description = "اسم مزوّد SAML2 الخاص بك"
+
+[provider.saml2.registrationId]
+label = "معرّف التسجيل"
+description = "اسم تطبيق موفر الخدمة (SP) لديك"
+
+[provider.saml2.idpMetadataUri]
+label = "IDP Metadata URI"
+description = "URI لبيانات التعريف الخاصة بمزوّدك"
+
+[provider.saml2.idpSingleLoginUrl]
+label = "IDP Single Login URL"
+description = "عنوان URL لبدء SSO"
+
+[provider.saml2.idpSingleLogoutUrl]
+label = "IDP Single Logout URL"
+description = "عنوان URL لبدء SLO"
+
+[provider.saml2.idpIssuer]
+label = "مُصدِر IDP"
+description = "معرّف مزوّدك"
+
+[provider.saml2.idpCert]
+label = "شهادة IDP"
+description = "مسار الشهادة (مثل: classpath:okta.cert)"
+
+[provider.saml2.privateKey]
+label = "المفتاح الخاص"
+description = "مسار مفتاحك الخاص"
+
+[provider.saml2.spCert]
+label = "شهادة SP"
+description = "مسار شهادة التوقيع الخاصة بك"
+
+[provider.saml2.autoCreateUser]
+label = "إنشاء المستخدمين تلقائيًا"
+description = "إنشاء حسابات المستخدمين تلقائيًا عند أول تسجيل دخول عبر SAML2"
+
+[provider.saml2.blockRegistration]
+label = "حظر التسجيل"
+description = "منع تسجيل المستخدمين الجدد عبر SAML2"
+
+[provider.googledrive]
+name = "Google Drive"
+scope = "استيراد ملفات"
+
+[provider.googledrive.enabled]
+label = "تمكين منتقي ملفات Google Drive"
+description = "السماح للمستخدمين باستيراد الملفات مباشرةً من Google Drive"
+
+[provider.googledrive.clientId]
+label = "Client ID"
+description = "Google OAuth 2.0 Client ID من Google Cloud Console"
+
+[provider.googledrive.apiKey]
+label = "API Key"
+description = "Google API Key لواجهة Google Picker API من Google Cloud Console"
+
+[provider.googledrive.appId]
+label = "App ID"
+description = "Google Drive App ID من Google Cloud Console"

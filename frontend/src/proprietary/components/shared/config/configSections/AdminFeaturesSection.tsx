@@ -1,12 +1,14 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Badge } from '@mantine/core';
+import { TextInput, NumberInput, Switch, Stack, Paper, Text, Loader, Group, Badge } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
+import { useSettingsDirty } from '@app/hooks/useSettingsDirty';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
+import { SettingsStickyFooter } from '@app/components/shared/config/SettingsStickyFooter';
 import apiClient from '@app/services/apiClient';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
@@ -36,11 +38,11 @@ export default function AdminFeaturesSection() {
     isFieldPending,
   } = useAdminSettings<FeaturesSettingsData>({
     sectionName: 'features',
-    fetchTransformer: async () => {
+    fetchTransformer: async (): Promise<FeaturesSettingsData & { _pending?: Record<string, any> }> => {
       const systemResponse = await apiClient.get('/api/v1/admin/settings/section/system');
       const systemData = systemResponse.data || {};
 
-      const result: any = {
+      const result: FeaturesSettingsData & { _pending?: Record<string, any> } = {
         serverCertificate: systemData.serverCertificate || {
           enabled: true,
           organizationName: 'Stirling-PDF',
@@ -56,7 +58,7 @@ export default function AdminFeaturesSection() {
 
       return result;
     },
-    saveTransformer: (settings) => {
+    saveTransformer: (settings: FeaturesSettingsData) => {
       const deltaSettings: Record<string, any> = {};
 
       if (settings.serverCertificate) {
@@ -79,11 +81,14 @@ export default function AdminFeaturesSection() {
     }
   }, [loginEnabled]);
 
+  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(settings, loading);
+
   const handleSave = async () => {
     if (!validateLoginEnabled()) {
       return;
     }
     try {
+      markSaved();
       await saveSettings();
       showRestartModal();
     } catch (_error) {
@@ -94,6 +99,11 @@ export default function AdminFeaturesSection() {
       });
     }
   };
+
+  const handleDiscard = useCallback(() => {
+    const original = resetToSnapshot();
+    setSettings(original);
+  }, [resetToSnapshot, setSettings]);
 
   const actualLoading = loginEnabled ? loading : false;
 
@@ -106,8 +116,9 @@ export default function AdminFeaturesSection() {
   }
 
   return (
-    <Stack gap="lg">
-      <LoginRequiredBanner show={!loginEnabled} />
+    <div className="settings-section-container">
+      <Stack gap="lg" className="settings-section-content">
+        <LoginRequiredBanner show={!loginEnabled} />
       <div>
         <Text fw={600} size="lg">{t('admin.settings.features.title', 'Features')}</Text>
         <Text size="sm" c="dimmed">
@@ -223,13 +234,15 @@ export default function AdminFeaturesSection() {
           </div>
         </Stack>
       </Paper>
+      </Stack>
 
-      {/* Save Button */}
-      <Group justify="flex-end">
-        <Button onClick={handleSave} loading={saving} size="sm" disabled={!loginEnabled}>
-          {t('admin.settings.save', 'Save Changes')}
-        </Button>
-      </Group>
+      <SettingsStickyFooter
+        isDirty={isDirty}
+        saving={saving}
+        loginEnabled={loginEnabled}
+        onSave={handleSave}
+        onDiscard={handleDiscard}
+      />
 
       {/* Restart Confirmation Modal */}
       <RestartConfirmationModal
@@ -237,6 +250,6 @@ export default function AdminFeaturesSection() {
         onClose={closeRestartModal}
         onRestart={restartServer}
       />
-    </Stack>
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 {
-  "extends": "./tsconfig.proprietary.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "baseUrl": "../../",
     "paths": {
       "@app/*": [
         "src/desktop/*",
@@ -12,18 +13,15 @@
       ],
       "@core/*": [
         "src/core/*"
-      ],
-      "posthog-js/react": [
-        "node_modules/posthog-js/react/dist/types/index.d.ts"
       ]
     }
   },
   "include": [
-    "src/global.d.ts",
-    "src/*.js",
-    "src/*.ts",
-    "src/*.tsx",
-    "src/core/setupTests.ts",
-    "src/desktop"
+    "../global.d.ts",
+    "../*.js",
+    "../*.ts",
+    "../*.tsx",
+    "../core/setupTests.ts",
+    "."
   ]
 }

@@ -54,6 +54,12 @@
     "dialog:allow-open",
     "dialog:allow-save",
     "opener:default",
-    "shell:allow-open"
+    "shell:allow-open",
+    "notification:allow-notify",
+    "notification:allow-request-permission",
+    "notification:allow-is-permission-granted",
+    "window-state:allow-filename",
+    "window-state:allow-restore-state",
+    "window-state:allow-save-window-state"
   ]
 }

@@ -1,12 +1,14 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TextInput, Button, Stack, Paper, Text, Loader, Group, Alert } from '@mantine/core';
+import { TextInput, Stack, Paper, Text, Loader, Group, Alert } from '@mantine/core';
 import WarningIcon from '@mui/icons-material/Warning';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
+import { useSettingsDirty } from '@app/hooks/useSettingsDirty';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
+import { SettingsStickyFooter } from '@app/components/shared/config/SettingsStickyFooter';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
 
@@ -41,11 +43,14 @@ export default function AdminLegalSection() {
     }
   }, [loginEnabled]);
 
+
+  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(settings, loading);
   const handleSave = async () => {
     if (!validateLoginEnabled()) {
       return;
     }
     try {
+      markSaved();
       await saveSettings();
       showRestartModal();
     } catch (_error) {
@@ -56,6 +61,11 @@ export default function AdminLegalSection() {
       });
     }
   };
+
+  const handleDiscard = useCallback(() => {
+    const original = resetToSnapshot();
+    setSettings(original);
+  }, [resetToSnapshot, setSettings]);
 
   const actualLoading = loginEnabled ? loading : false;
 
@@ -68,7 +78,8 @@ export default function AdminLegalSection() {
   }
 
   return (
-    <Stack gap="lg">
+    <div className="settings-section-container">
+      <Stack gap="lg" className="settings-section-content">
       <LoginRequiredBanner show={!loginEnabled} />
       <div>
         <Text fw={600} size="lg">{t('admin.settings.legal.title', 'Legal Documents')}</Text>
@@ -175,12 +186,15 @@ export default function AdminLegalSection() {
           </div>
         </Stack>
       </Paper>
+      </Stack>
 
-      <Group justify="flex-end">
-        <Button onClick={handleSave} loading={saving} size="sm" disabled={!loginEnabled}>
-          {t('admin.settings.save', 'Save Changes')}
-        </Button>
-      </Group>
+      <SettingsStickyFooter
+        isDirty={isDirty}
+        saving={saving}
+        loginEnabled={loginEnabled}
+        onSave={handleSave}
+        onDiscard={handleDiscard}
+      />
 
       {/* Restart Confirmation Modal */}
       <RestartConfirmationModal
@@ -188,6 +202,6 @@ export default function AdminLegalSection() {
         onClose={closeRestartModal}
         onRestart={restartServer}
       />
-    </Stack>
+    </div>
   );
 }

@@ -40,6 +40,7 @@ import {
 } from '@app/components/shared/quickAccessBar/QuickAccessBar';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 import { QuickAccessBarFooterExtensions } from '@app/components/quickAccessBar/QuickAccessBarFooterExtensions';
+import { useConfigButtonIcon } from '@app/hooks/useConfigButtonIcon';
 
 const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { t } = useTranslation();
@@ -86,6 +87,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   // Sign button state
   const [signMenuOpen, setSignMenuOpen] = useState(false);
   const signButtonRef = useRef<HTMLDivElement>(null);
+  const configButtonIcon = useConfigButtonIcon();
 
   const {
     tooltipOpen,
@@ -568,7 +570,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     ...(shouldHideSettingsButton ? [] : [{
       id: 'config',
       name: t("quickAccess.settings", "Settings"),
-      icon: <LocalIcon icon="settings-rounded" width="1.25rem" height="1.25rem" />,
+      icon: configButtonIcon ?? <LocalIcon icon="settings-rounded" width="1.25rem" height="1.25rem" />,
       size: 'md' as const,
       type: 'modal' as const,
       onClick: () => {

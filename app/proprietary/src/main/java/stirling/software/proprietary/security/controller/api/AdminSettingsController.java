@@ -172,7 +172,7 @@ public class AdminSettingsController {
                         .body(Map.of("error", "No settings provided to update"));
             }
 
-            int updatedCount = 0;
+            // Validate all settings first before applying any changes
             for (Map.Entry<String, Object> entry : settings.entrySet()) {
                 String key = entry.getKey();
                 Object value = entry.getValue();
@@ -192,15 +192,18 @@ public class AdminSettingsController {
                     return ResponseEntity.badRequest()
                             .body(Map.of("error", HtmlUtils.htmlEscape(validationError)));
                 }
+            }
 
+            // Apply all updates in a single transaction (load once, update all, save once)
+            // This ensures nested settings like oauth2.client.* don't lose sibling values
+            GeneralUtils.updateSettingsTransactional(settings);
+
+            // Track all as pending changes
+            for (Map.Entry<String, Object> entry : settings.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
                 log.info("Admin updating setting: {} = {}", key, value);
-                GeneralUtils.saveKeyToSettings(key, value);
-
-                // Track this as a pending change (convert null to empty string for
-                // ConcurrentHashMap)
                 pendingChanges.put(key, value != null ? value : "");
-
-                updatedCount++;
             }
 
             return ResponseEntity.ok(
@@ -209,7 +212,7 @@ public class AdminSettingsController {
                             String.format(
                                     "Successfully updated %d setting(s). Changes will take effect on"
                                             + " application restart.",
-                                    updatedCount)));
+                                    settings.size())));
 
         } catch (IOException e) {
             log.error("Failed to save settings to file: {}", e.getMessage(), e);

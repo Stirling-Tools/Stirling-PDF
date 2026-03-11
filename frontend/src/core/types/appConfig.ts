@@ -48,6 +48,12 @@ export interface AppConfig {
   storageSharingEnabled?: boolean;
   storageShareLinksEnabled?: boolean;
   storageGroupSigningEnabled?: boolean;
+  hideDisabledToolsGoogleDrive?: boolean;
+  hideDisabledToolsMobileQRScanner?: boolean;
+  googleDriveEnabled?: boolean;
+  googleDriveClientId?: string;
+  googleDriveApiKey?: string;
+  googleDriveAppId?: string;
 }
 
 export type AppConfigBootstrapMode = 'blocking' | 'non-blocking';

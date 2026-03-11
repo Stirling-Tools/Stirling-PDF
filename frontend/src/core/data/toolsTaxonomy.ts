@@ -1,6 +1,6 @@
 import { type TFunction } from 'i18next';
 import React from 'react';
-import { ToolOperationConfig } from '@app/hooks/tools/shared/useToolOperation';
+import { ToolOperationConfig } from '@app/hooks/tools/shared/toolOperationTypes';
 import { BaseToolProps } from '@app/types/tool';
 import { WorkbenchType } from '@app/types/workbench';
 import { LinkToolId, RegularToolId, SuperToolId, ToolId, ToolKind } from '@app/types/toolId';
