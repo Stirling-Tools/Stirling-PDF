@@ -592,11 +592,12 @@ public class ApplicationProperties {
 
     @Data
     public static class Storage {
-        private boolean enabled = true;
+        private boolean enabled = false;
         private String provider = "local";
         private Local local = new Local();
         private Quotas quotas = new Quotas();
         private Sharing sharing = new Sharing();
+        private Signing signing = new Signing();
 
         @Data
         public static class Local {
@@ -616,6 +617,11 @@ public class ApplicationProperties {
             private long maxStorageMbPerUser = -1;
             private long maxStorageMbTotal = -1;
             private long maxFileMb = -1;
+        }
+
+        @Data
+        public static class Signing {
+            private boolean enabled = false;
         }
     }
 

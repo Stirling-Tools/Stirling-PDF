@@ -47,6 +47,7 @@ export interface AppConfig {
   storageEnabled?: boolean;
   storageSharingEnabled?: boolean;
   storageShareLinksEnabled?: boolean;
+  storageGroupSigningEnabled?: boolean;
 }
 
 export type AppConfigBootstrapMode = 'blocking' | 'non-blocking';

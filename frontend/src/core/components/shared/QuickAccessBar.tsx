@@ -77,6 +77,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const [accessPopoverPosition, setAccessPopoverPosition] = useState({ top: 160, left: 84 });
   const sharingEnabled = config?.storageSharingEnabled === true;
   const shareLinksEnabled = config?.storageShareLinksEnabled === true;
+  const groupSigningEnabled = config?.storageGroupSigningEnabled === true;
   const [inviteRows, setInviteRows] = useState<Array<{ id: number; email: string; role: 'editor' | 'commenter' | 'viewer'; error?: string }>>([
     { id: Date.now(), email: '', role: 'editor' },
   ]);
@@ -639,16 +640,18 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                     />
                   </div>
                 )}
-                <div ref={signButtonRef}>
-                  <QuickAccessButton
-                    icon={<LocalIcon icon="edit-square-rounded" width="1.15rem" height="1.15rem" />}
-                    label={t('quickAccess.sign', 'Sign')}
-                    isActive={signMenuOpen}
-                    onClick={() => setSignMenuOpen((prev) => !prev)}
-                    ariaLabel={t('quickAccess.sign', 'Sign')}
-                    dataTestId="sign-button"
-                  />
-                </div>
+                {groupSigningEnabled && (
+                  <div ref={signButtonRef}>
+                    <QuickAccessButton
+                      icon={<LocalIcon icon="edit-square-rounded" width="1.15rem" height="1.15rem" />}
+                      label={t('quickAccess.sign', 'Sign')}
+                      isActive={signMenuOpen}
+                      onClick={() => setSignMenuOpen((prev) => !prev)}
+                      ariaLabel={t('quickAccess.sign', 'Sign')}
+                      dataTestId="sign-button"
+                    />
+                  </div>
+                )}
               </Stack>
             </>
           )}
@@ -1020,12 +1023,14 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       )}
 
       {/* Sign Popover */}
-      <SignPopout
-        isOpen={signMenuOpen}
-        onClose={() => setSignMenuOpen(false)}
-        buttonRef={signButtonRef}
-        isRTL={isRTL}
-      />
+      {groupSigningEnabled && (
+        <SignPopout
+          isOpen={signMenuOpen}
+          onClose={() => setSignMenuOpen(false)}
+          buttonRef={signButtonRef}
+          isRTL={isRTL}
+        />
+      )}
     </div>
   );
 });

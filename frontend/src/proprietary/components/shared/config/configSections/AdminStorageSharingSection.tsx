@@ -18,6 +18,9 @@ interface StorageSharingSettingsData {
     linkEnabled?: boolean;
     emailEnabled?: boolean;
   };
+  signing?: {
+    enabled?: boolean;
+  };
   system?: {
     frontendUrl?: string;
   };
@@ -66,6 +69,9 @@ export default function AdminStorageSharingSection() {
           enabled: currentSettings.sharing?.enabled,
           linkEnabled: currentSettings.sharing?.linkEnabled,
           emailEnabled: currentSettings.sharing?.emailEnabled,
+        },
+        signing: {
+          enabled: currentSettings.signing?.enabled,
         },
       },
     }),
@@ -230,6 +236,29 @@ export default function AdminStorageSharingSection() {
               })
             }
             disabled={!loginEnabled || !sharingEnabled || !mailEnabled}
+            styles={getDisabledStyles()}
+          />
+        </Stack>
+      </Paper>
+
+      <Paper withBorder p="md" radius="md">
+        <Stack gap="md">
+          <Group justify="space-between" align="center">
+            <Text fw={600} size="sm">{t('admin.settings.storage.signing.enabled.label', 'Enable Group Signing (Alpha)')}</Text>
+            {isFieldPending('signing.enabled') && <PendingBadge show={true} />}
+          </Group>
+          <Text size="xs" c="dimmed">
+            {t('admin.settings.storage.signing.enabled.description', 'Allow users to create multi-participant document signing sessions. Requires server file storage to be enabled.')}
+          </Text>
+          <Switch
+            checked={settings.signing?.enabled ?? false}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                signing: { ...settings.signing, enabled: e.currentTarget.checked },
+              })
+            }
+            disabled={!loginEnabled || !storageEnabled}
             styles={getDisabledStyles()}
           />
         </Stack>

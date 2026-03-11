@@ -198,10 +198,13 @@ public class ConfigController {
                     sharingEnabled
                             && applicationProperties.getStorage().getSharing().isEmailEnabled()
                             && applicationProperties.getMail().isEnabled();
+            boolean groupSigningEnabled =
+                    storageEnabled && applicationProperties.getStorage().getSigning().isEnabled();
             configData.put("storageEnabled", storageEnabled);
             configData.put("storageSharingEnabled", sharingEnabled);
             configData.put("storageShareLinksEnabled", shareLinksEnabled);
             configData.put("storageShareEmailEnabled", shareEmailEnabled);
+            configData.put("storageGroupSigningEnabled", groupSigningEnabled);
 
             // Check if user is admin using UserServiceInterface
             boolean isAdmin = false;
