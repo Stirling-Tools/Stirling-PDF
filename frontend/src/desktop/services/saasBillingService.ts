@@ -24,8 +24,6 @@ export interface BillingStatus {
   tier: TierLevel;
   isTrialing: boolean;
   trialDaysRemaining?: number;
-  price?: number; // Monthly price (in dollars)
-  currency?: string; // Currency symbol (e.g., '$', '£')
   creditBalance?: number; // Real-time remaining credits
 }
 
@@ -70,51 +68,6 @@ export class SaasBillingService {
     } catch (error) {
       console.error('[Desktop Billing] Failed to check billing availability:', error);
       return false;
-    }
-  }
-
-  /**
-   * Fetch Pro plan price from Stripe
-   * Calls stripe-price-lookup edge function to get current pricing
-   */
-  private async fetchPlanPrice(
-    token: string,
-    currencyCode: string = 'usd'
-  ): Promise<{ price: number; currency: string }> {
-    try {
-      const { data, error } = await supabase.functions.invoke<{
-        prices: Record<string, { unit_amount: number; currency: string }>;
-        missing: string[];
-      }>('stripe-price-lookup', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: {
-          lookup_keys: ['plan:pro'],
-          currency: currencyCode,
-        },
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Failed to fetch plan price');
-      }
-
-      if (!data || !data.prices) {
-        throw new Error('No pricing data returned');
-      }
-
-      const proPrice = data.prices['plan:pro'];
-      if (proPrice) {
-        const price = proPrice.unit_amount / 100; // Convert cents to dollars
-        const currency = getCurrencySymbol(proPrice.currency);
-        return { price, currency };
-      }
-
-      // Fallback if price not found
-      throw new Error('Pro plan price not found');
-    } catch (error) {
-      console.error('[Desktop Billing] Error fetching plan price:', error);
-      throw error;
     }
   }
 
@@ -173,8 +126,6 @@ export class SaasBillingService {
       let meterUsage: BillingStatus['meterUsage'] = null;
       let isTrialing = false;
       let trialDaysRemaining: number | undefined;
-      let price: number | undefined;
-      let currency: string | undefined;
 
       if (isPro) {
         // Fetch usage details
@@ -204,17 +155,6 @@ export class SaasBillingService {
           console.warn('[Desktop Billing] Failed to fetch usage data:', usageError);
         }
 
-        // Fetch the current Pro plan price from Stripe
-        try {
-          const priceData = await this.fetchPlanPrice(token, 'usd');
-          price = priceData.price;
-          currency = priceData.currency;
-        } catch (error) {
-          console.warn('[Desktop Billing] Failed to fetch plan price, using default:', error);
-          // Fallback to default pricing
-          price = 10;
-          currency = '$';
-        }
       }
 
       // Fetch credit balance for all authenticated users (both Pro and Free)
@@ -250,8 +190,6 @@ export class SaasBillingService {
         tier,
         isTrialing,
         trialDaysRemaining,
-        price,
-        currency,
         creditBalance,
       };
 
