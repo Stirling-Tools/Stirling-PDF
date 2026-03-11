@@ -121,13 +121,11 @@ export const useToolOperation = <TParams>(
         ? config.endpoint(params)
         : config.endpoint;
 
-    // Credit check for cloud operations (desktop SaaS mode only, no-op in web builds)
-    if (willUseCloud && endpoint) {
-      const creditError = await checkCredits();
-      if (creditError !== null) {
-        actions.setError(creditError);
-        return;
-      }
+    // Credit check — no-op in core builds, real check in desktop/SaaS versions
+    const creditError = await checkCredits();
+    if (creditError !== null) {
+      actions.setError(creditError);
+      return;
     }
 
     // Backend readiness check (will skip for SaaS-routed endpoints)
