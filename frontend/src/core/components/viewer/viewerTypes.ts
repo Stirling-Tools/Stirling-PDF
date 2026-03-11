@@ -87,7 +87,6 @@ export type AnnotationToolId =
 // Import for internal use within this file, and re-export for external consumers
 import type { AnnotationEvent } from '@embedpdf/plugin-annotation';
 export type { AnnotationEvent } from '@embedpdf/plugin-annotation';
-export type { PdfAnnotationObject } from '@embedpdf/models';
 
 export type AnnotationPatch = Record<string, unknown>;
 
