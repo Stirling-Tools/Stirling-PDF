@@ -361,6 +361,40 @@ const Annotate = (_props: BaseToolProps) => {
   // Clipboard ref for copy/paste — no re-render needed
   const clipboardRef = useRef<{ pageIndex: number; annotation: Record<string, unknown> } | null>(null);
 
+  // Click-outside to blur FreeText/note inline editing so user can then drag the annotation.
+  // EmbedPDF only clears editing when the page's pointer handler receives a click with target === currentTarget;
+  // clicks on the page content land on a child, so we blur and dispatch a synthetic pointerdown on the page container.
+  useEffect(() => {
+    const handleCapture = (e: MouseEvent) => {
+      const active = document.activeElement as HTMLElement | null;
+      if (!active?.isContentEditable) return;
+
+      const pageEl = active.closest('[data-page-index]') as HTMLElement | null;
+      if (!pageEl) return;
+
+      const editingWrapper = active.parentElement;
+      const target = e.target as Node;
+      if (editingWrapper?.contains(target)) return;
+
+      active.blur();
+
+      const pageParent = pageEl.parentElement;
+      if (!pageParent) return;
+      const synthetic = new PointerEvent('pointerdown', {
+        bubbles: true,
+        cancelable: true,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        pointerId: 1,
+        pointerType: 'mouse',
+      });
+      pageParent.dispatchEvent(synthetic);
+    };
+
+    document.addEventListener('mousedown', handleCapture, true);
+    return () => document.removeEventListener('mousedown', handleCapture, true);
+  }, []);
+
   // Keyboard shortcuts: Escape (cancel drawing), Backspace/Delete (delete selected), Ctrl+C/V (copy/paste)
   useEffect(() => {
     const isInputFocused = () => {

@@ -548,7 +548,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
             ensureTool({
               id: 'text',
               name: 'Text',
-              interaction: { exclusive: true, cursor: 'text' },
+              interaction: { exclusive: true, cursor: 'text', isRotatable: false },
               matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.FREETEXT ? 10 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.FREETEXT,
@@ -568,7 +568,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
             ensureTool({
               id: 'note',
               name: 'Note',
-              interaction: { exclusive: true, cursor: 'pointer' },
+              interaction: { exclusive: true, cursor: 'pointer', isRotatable: false },
               matchScore: (annotation: any) => (annotation.type === PdfAnnotationSubtype.FREETEXT ? 8 : 0),
               defaults: {
                 type: PdfAnnotationSubtype.FREETEXT,
