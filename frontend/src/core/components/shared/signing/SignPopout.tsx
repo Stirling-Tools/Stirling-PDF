@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { Badge } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import ActiveSessionsPanel from '@app/components/shared/signing/ActiveSessionsPanel';
 import CompletedSessionsPanel from '@app/components/shared/signing/CompletedSessionsPanel';
@@ -13,12 +12,9 @@ import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useNavigationActions, useNavigationState } from '@app/contexts/NavigationContext';
 import { useFileSelection } from '@app/contexts/file/fileHooks';
 import { fileStorage } from '@app/services/fileStorage';
-import { uploadHistoryChain } from '@app/services/serverStorageUpload';
 import { useFileActions } from '@app/contexts/FileContext';
 import SignRequestWorkbenchView from '@app/components/tools/certSign/SignRequestWorkbenchView';
 import SessionDetailWorkbenchView from '@app/components/tools/certSign/SessionDetailWorkbenchView';
-import type { StirlingFileStub } from '@app/types/fileContext';
-import type { FileId } from '@app/types/file';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 
 interface SignPopoutProps {
@@ -230,43 +226,6 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       .filter(s => s.finalized)
       .map(s => ({ ...s, itemType: 'mySession' as const })),
   ];
-
-  // Helper to ensure file is stored
-  const _ensureStoredFile = useCallback(async (fileStub: StirlingFileStub): Promise<number> => {
-    const localUpdatedAt = fileStub.createdAt ?? fileStub.lastModified ?? 0;
-    const isUpToDate =
-      Boolean(fileStub.remoteStorageId) &&
-      Boolean(fileStub.remoteStorageUpdatedAt) &&
-      (fileStub.remoteStorageUpdatedAt as number) >= localUpdatedAt;
-
-    if (isUpToDate && fileStub.remoteStorageId) {
-      return fileStub.remoteStorageId as number;
-    }
-
-    const originalFileId = (fileStub.originalFileId || fileStub.id) as FileId;
-    const remoteId = fileStub.remoteStorageId as number | undefined;
-    const { remoteId: storedId, updatedAt, chain } = await uploadHistoryChain(
-      originalFileId,
-      remoteId
-    );
-
-    for (const stub of chain) {
-      fileActions.updateStirlingFileStub(stub.id, {
-        remoteStorageId: storedId,
-        remoteStorageUpdatedAt: updatedAt,
-        remoteOwnedByCurrentUser: true,
-        remoteSharedViaLink: false,
-      });
-      await fileStorage.updateFileMetadata(stub.id, {
-        remoteStorageId: storedId,
-        remoteStorageUpdatedAt: updatedAt,
-        remoteOwnedByCurrentUser: true,
-        remoteSharedViaLink: false,
-      });
-    }
-
-    return storedId;
-  }, [fileActions]);
 
   // Create session handler
   const handleCreateSession = useCallback(async () => {
@@ -663,32 +622,36 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
           </div>
         )}
 
-        {/* Tab Navigation */}
+        {/* Signature Requests section label + Tab Navigation */}
         {!showCreatePanel && groupSigningEnabled && (
-          <div className="quick-access-popout__tab-nav">
-            <button
-              className={`quick-access-popout__tab-button ${activeTab === 'active' ? 'active' : ''}`}
-              onClick={() => setActiveTab('active')}
-            >
-              {t('quickAccess.activeTab', 'Active')}
-              {activeSessions.length > 0 && (
-                <Badge size="xs" circle ml={4}>
-                  {activeSessions.length}
-                </Badge>
-              )}
-            </button>
-            <button
-              className={`quick-access-popout__tab-button ${activeTab === 'completed' ? 'active' : ''}`}
-              onClick={() => setActiveTab('completed')}
-            >
-              {t('quickAccess.completedTab', 'Completed')}
-              {completedSessions.length > 0 && (
-                <Badge size="xs" circle ml={4}>
-                  {completedSessions.length}
-                </Badge>
-              )}
-            </button>
-          </div>
+          <>
+            <div className="quick-access-popout__section-label quick-access-popout__section-label--padded quick-access-popout__section-label--row">
+              <span>{t('quickAccess.signatureRequests', 'Signature Requests')}</span>
+              <button
+                type="button"
+                className="quick-access-popout__section-action"
+                onClick={() => setShowCreatePanel(true)}
+                aria-label={t('quickAccess.newRequest', 'New request')}
+                title={t('quickAccess.newRequest', 'New request')}
+              >
+                <LocalIcon icon="add-rounded" width="1rem" height="1rem" />
+              </button>
+            </div>
+            <div className="quick-access-popout__tab-nav">
+              <button
+                className={`quick-access-popout__tab-button ${activeTab === 'active' ? 'active' : ''}`}
+                onClick={() => setActiveTab('active')}
+              >
+                {t('quickAccess.activeTab', 'Active')}
+              </button>
+              <button
+                className={`quick-access-popout__tab-button ${activeTab === 'completed' ? 'active' : ''}`}
+                onClick={() => setActiveTab('completed')}
+              >
+                {t('quickAccess.completedTab', 'Completed')}
+              </button>
+            </div>
+          </>
         )}
 
         {/* Body */}
@@ -716,7 +679,6 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
                     handleSessionClick(item as SessionSummary);
                   }
                 }}
-                onCreateNew={() => setShowCreatePanel(true)}
               />
             ) : (
               <CompletedSessionsPanel

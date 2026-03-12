@@ -777,10 +777,45 @@
 }
 
 /* Sign popover height constraints */
+.quick-access-sign-popout {
+  width: 26rem;
+}
+
 .quick-access-sign-popout .quick-access-popout__card {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.quick-access-popout__section-label--padded {
+  padding: 0.5rem 1rem 0;
+}
+
+.quick-access-popout__section-label--row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.quick-access-popout__section-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  background: color-mix(in srgb, var(--accent-interactive, var(--mantine-color-blue-6, #228be6)) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-interactive, var(--mantine-color-blue-6, #228be6)) 40%, transparent);
+  border-radius: 5px;
+  color: var(--accent-interactive, var(--mantine-color-blue-6, #228be6));
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms, color 120ms;
+  flex-shrink: 0;
+}
+
+.quick-access-popout__section-action:hover {
+  background: color-mix(in srgb, var(--accent-interactive, var(--mantine-color-blue-6, #228be6)) 28%, transparent);
+  border-color: var(--accent-interactive, var(--mantine-color-blue-6, #228be6));
 }
 
 .quick-access-sign-popout .quick-access-popout__header {

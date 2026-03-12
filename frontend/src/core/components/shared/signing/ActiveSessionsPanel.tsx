@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import { Loader, Center, Text, Badge } from '@mantine/core';
-import LocalIcon from '@app/components/shared/LocalIcon';
 
 interface SessionItem {
   itemType: 'signRequest' | 'mySession';
@@ -20,14 +19,12 @@ interface ActiveSessionsPanelProps {
   sessions: SessionItem[];
   loading: boolean;
   onSessionClick: (session: SessionItem) => void;
-  onCreateNew: () => void;
 }
 
 const ActiveSessionsPanel = ({
   sessions,
   loading,
   onSessionClick,
-  onCreateNew,
 }: ActiveSessionsPanelProps) => {
   const { t } = useTranslation();
 
@@ -64,7 +61,7 @@ const ActiveSessionsPanel = ({
       }
       // Show progress for all cases (including 0/X)
       if (totalCount > 0) {
-        return t('certSign.signatureProgress', `${signedCount}/${totalCount} signatures`);
+        return t('certSign.signatureProgress', '{{signedCount}}/{{totalCount}} signatures', { signedCount, totalCount });
       }
       return t('certSign.awaitingSignatures', 'Awaiting signatures');
     }
@@ -98,11 +95,6 @@ const ActiveSessionsPanel = ({
             </div>
           ) : (
             <>
-              <div className="quick-access-popout__section" style={{ marginBottom: '0.5rem' }}>
-                <div className="quick-access-popout__label">
-                  {t('quickAccess.allSessions', 'All Sessions')}
-                </div>
-              </div>
               {sessions.map((session) => (
                 <div
                   key={`${session.itemType}-${session.sessionId}`}
@@ -137,17 +129,6 @@ const ActiveSessionsPanel = ({
             </>
           )}
 
-          <div className="quick-access-popout__section" style={{ marginTop: '1rem' }}>
-            <button
-              type="button"
-              className="quick-access-popout__primary"
-              onClick={onCreateNew}
-              style={{ width: '100%' }}
-            >
-              <LocalIcon icon="add-rounded" width="1rem" height="1rem" />
-              {t('quickAccess.createNew', 'Create New Request')}
-            </button>
-          </div>
         </>
       )}
     </div>
