@@ -341,7 +341,8 @@ public class EmlProcessingUtils {
     }
 
     private String getFallbackStyles() {
-        return """
+        return
+        """
             /* Minimal fallback - main CSS resource failed to load */
             body {
                 font-family: var(--font-family, Helvetica, sans-serif);

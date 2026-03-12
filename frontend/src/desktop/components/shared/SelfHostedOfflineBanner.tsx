@@ -8,7 +8,7 @@ import { selfHostedServerMonitor, type SelfHostedServerState } from '@app/servic
 import { connectionModeService, type ConnectionMode } from '@app/services/connectionModeService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
-import { EXTENSION_TO_ENDPOINT } from '@app/constants/convertConstants';
+import { EXTENSION_TO_ENDPOINT, ENDPOINT_I18N } from '@app/constants/convertConstants';
 import { ENDPOINTS as SPLIT_ENDPOINTS } from '@app/constants/splitConstants';
 import type { ToolId } from '@app/types/toolId';
 
@@ -28,14 +28,6 @@ const SPLIT_ENDPOINT_I18N: Record<string, [string, string]> = {
   'split-for-poster-print':   ['split.methods.byPoster.name',      'Printable Chunks'],
 };
 
-/** Conversion endpoint keys that have translations under selfHosted.offline.conversionTypes */
-const KNOWN_CONVERSION_ENDPOINTS = new Set([
-  'file-to-pdf', 'pdf-to-img', 'img-to-pdf', 'svg-to-pdf', 'cbz-to-pdf',
-  'pdf-to-cbz', 'pdf-to-word', 'pdf-to-presentation', 'pdf-to-text', 'pdf-to-csv',
-  'pdf-to-xlsx', 'pdf-to-markdown', 'pdf-to-html', 'pdf-to-xml', 'pdf-to-pdfa',
-  'html-to-pdf', 'markdown-to-pdf', 'eml-to-pdf', 'cbr-to-pdf', 'pdf-to-cbr',
-  'ebook-to-pdf', 'pdf-to-epub',
-]);
 
 
 /**
@@ -136,8 +128,9 @@ export function SelfHostedOfflineBanner() {
     }
     const conversionNames = [...unavailableEndpoints]
       .map(ep => {
-        const suffix = KNOWN_CONVERSION_ENDPOINTS.has(ep)
-          ? t(`selfHosted.offline.conversionTypes.${ep}`, ep)
+        const i18n = ENDPOINT_I18N[ep];
+        const suffix = i18n
+          ? (i18n[0] ? t(i18n[0], i18n[1]) : i18n[1])
           : ep;
         return `${convertPrefix}: ${suffix}`;
       })
