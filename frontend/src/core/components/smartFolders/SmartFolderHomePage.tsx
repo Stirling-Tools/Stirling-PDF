@@ -16,6 +16,7 @@ import { AutomationConfig } from '@app/types/automation';
 import { iconMap } from '@app/components/tools/automate/iconMap';
 import { automationStorage } from '@app/services/automationStorage';
 import { folderStorage } from '@app/services/folderStorage';
+import { fileStorage } from '@app/services/fileStorage';
 import { folderRunStateStorage } from '@app/services/folderRunStateStorage';
 import { executeAutomationSequence } from '@app/utils/automationExecutor';
 import { SmartFolderManagementModal } from '@app/components/smartFolders/SmartFolderManagementModal';
@@ -51,6 +52,7 @@ interface FolderCardProps {
   onDelete: (folder: SmartFolder) => void;
   onOpen: (folderId: string) => void;
   onDropFiles: (folder: SmartFolder, files: File[]) => void;
+  onDropSidebarFile: (folder: SmartFolder, fileIds: string[]) => void;
   onTogglePause: (folder: SmartFolder) => void;
 }
 
@@ -62,6 +64,7 @@ function FolderCard({
   onDelete,
   onOpen,
   onDropFiles,
+  onDropSidebarFile,
   onTogglePause,
 }: FolderCardProps) {
   const { t } = useTranslation();
@@ -105,7 +108,19 @@ function FolderCard({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    onDropFiles(folder, Array.from(e.dataTransfer.files));
+    const multiRaw = e.dataTransfer.getData('watchFolderFileIds');
+    if (multiRaw) {
+      try {
+        const ids: string[] = JSON.parse(multiRaw);
+        if (ids.length > 0) { onDropSidebarFile(folder, ids); return; }
+      } catch { /* fall through */ }
+    }
+    const sidebarFileId = e.dataTransfer.getData('watchFolderFileId');
+    if (sidebarFileId) {
+      onDropSidebarFile(folder, [sidebarFileId]);
+    } else if (e.dataTransfer.files.length > 0) {
+      onDropFiles(folder, Array.from(e.dataTransfer.files));
+    }
   };
 
   const ops = automation?.operations ?? [];
@@ -512,7 +527,14 @@ export function SmartFolderHomePage() {
 
         for (const file of pdfs) {
           const inputFileId = `input-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          await folderStorage.addFileToFolder(folder.id, inputFileId, { status: 'processing' });
+          const originalFileId = (file as any).fileId as string | undefined;
+          await folderStorage.addFileToFolder(folder.id, inputFileId, {
+            status: 'processing',
+            inputFileId,
+            name: file.name,
+            ...(originalFileId ? { originalFileId } : {}),
+          });
+          await folderStorage.storeInputFile(folder.id, inputFileId, file, file.name);
           try {
             const resultFiles = await executeAutomationSequence(automation, [file], toolRegistry);
             const existingRuns = await folderRunStateStorage.getFolderRunState(folder.id);
@@ -540,6 +562,15 @@ export function SmartFolderHomePage() {
       }
     },
     [toolRegistry]
+  );
+
+  const handleDropSidebarFile = useCallback(
+    async (folder: SmartFolder, fileIds: string[]) => {
+      const results = await Promise.all(fileIds.map(id => fileStorage.getStirlingFile(id as any)));
+      const stirlingFiles = results.filter(Boolean) as File[];
+      if (stirlingFiles.length > 0) processFiles(folder, stirlingFiles);
+    },
+    [processFiles]
   );
 
   const handleDeleteConfirm = async () => {
@@ -615,6 +646,7 @@ export function SmartFolderHomePage() {
                     onDelete={setDeleteTarget}
                     onOpen={navigateToFolder}
                     onDropFiles={processFiles}
+                    onDropSidebarFile={handleDropSidebarFile}
                     onTogglePause={handleTogglePause}
                   />
                 );

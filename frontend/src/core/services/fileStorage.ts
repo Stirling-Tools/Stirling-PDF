@@ -81,6 +81,7 @@ class FileStorageService {
           reject(request.error);
         };
         request.onsuccess = () => {
+          window.dispatchEvent(new CustomEvent('stirling:files-changed'));
           resolve();
         };
       } catch (error) {

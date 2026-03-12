@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Stack, Text, ScrollArea } from '@mantine/core';
 import { ToolRegistryEntry, ToolRegistry, getToolSupportsAutomate } from '@app/data/toolsTaxonomy';
@@ -28,7 +29,9 @@ export default function ToolSelector({
   const [opened, setOpened] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [shouldAutoFocus, setShouldAutoFocus] = useState(false);
+  const [dropdownRect, setDropdownRect] = useState<DOMRect | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Filter out excluded tools (like 'automate' itself) and tools that don't support automation
   const baseFilteredTools = useMemo(() => {
@@ -111,10 +114,28 @@ export default function ToolSelector({
     setShouldAutoFocus(true); // Request auto-focus for the input
   };
 
+  // Track container rect for portal positioning
+  useEffect(() => {
+    if (!opened) return;
+    const updateRect = () => {
+      if (containerRef.current) setDropdownRect(containerRef.current.getBoundingClientRect());
+    };
+    updateRect();
+    window.addEventListener('scroll', updateRect, true);
+    window.addEventListener('resize', updateRect);
+    return () => {
+      window.removeEventListener('scroll', updateRect, true);
+      window.removeEventListener('resize', updateRect);
+    };
+  }, [opened]);
+
   // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const inContainer = containerRef.current?.contains(target);
+      const inDropdown = dropdownRef.current?.contains(target);
+      if (!inContainer && !inDropdown) {
         setOpened(false);
         setSearchTerm('');
       }
@@ -181,24 +202,31 @@ export default function ToolSelector({
           />
         )}
 
-      {/* Custom dropdown */}
-      {opened && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
-            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
-            backgroundColor: 'var(--mantine-color-body)',
-            border: '1px solid var(--mantine-color-gray-3)',
-            borderRadius: 'var(--mantine-radius-sm)',
-            boxShadow: 'var(--mantine-shadow-sm)',
-            marginTop: '4px',
-            minWidth: '16rem'
-          }}
-        >
-          <ScrollArea h={350}>
+      {/* Custom dropdown — rendered in a portal so it escapes modal overflow */}
+      {opened && dropdownRect && createPortal(
+        (() => {
+          const spaceBelow = window.innerHeight - dropdownRect.bottom - 8;
+          const spaceAbove = dropdownRect.top - 8;
+          const maxH = Math.max(120, Math.min(350, spaceBelow > 120 ? spaceBelow : spaceAbove));
+          const openUpward = spaceBelow < 120 && spaceAbove > spaceBelow;
+          const top = openUpward ? dropdownRect.top - maxH - 4 : dropdownRect.bottom + 4;
+          return (
+            <div
+              ref={dropdownRef}
+              style={{
+                position: 'fixed',
+                top,
+                left: dropdownRect.left,
+                width: dropdownRect.width,
+                zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+                backgroundColor: 'var(--mantine-color-body)',
+                border: '1px solid var(--mantine-color-gray-3)',
+                borderRadius: 'var(--mantine-radius-sm)',
+                boxShadow: 'var(--mantine-shadow-sm)',
+                minWidth: '16rem',
+              }}
+            >
+          <ScrollArea h={maxH}>
             <Stack gap="sm" p="sm">
               {displayGroups.length === 0 ? (
                 <Text size="sm" c="dimmed" ta="center" p="md">
@@ -212,7 +240,10 @@ export default function ToolSelector({
               )}
             </Stack>
           </ScrollArea>
-        </div>
+            </div>
+          );
+        })(),
+        document.body
       )}
     </div>
   );

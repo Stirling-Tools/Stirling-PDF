@@ -1,20 +1,19 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Box, Text } from '@mantine/core';
+import { Box, Text, ScrollArea } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { FileManagerProvider } from '@app/contexts/FileManagerContext';
-import FileListArea from '@app/components/fileManager/FileListArea';
 import { useFileManager } from '@app/hooks/useFileManager';
-import { useAllFiles } from '@app/contexts/FileContext';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { StirlingFileStub } from '@app/types/fileContext';
-import { SMART_FOLDER_VIEW_ID } from '@app/components/smartFolders/SmartFoldersRegistration';
+import { SMART_FOLDER_VIEW_ID, SMART_FOLDER_WORKBENCH_ID } from '@app/components/smartFolders/SmartFoldersRegistration';
+import { WatchFolderFileList } from '@app/components/smartFolders/WatchFolderFileList';
+import { useNavigationActions } from '@app/contexts/NavigationContext';
 
 export function SmartFolderSidebarPanel() {
   const { t } = useTranslation();
-  const { loadRecentFiles, handleRemoveFile, loading } = useFileManager();
+  const { loadRecentFiles } = useFileManager();
   const [recentFiles, setRecentFiles] = useState<StirlingFileStub[]>([]);
-  const { fileIds: activeFileIds } = useAllFiles();
   const { customWorkbenchViews, setCustomWorkbenchViewData } = useToolWorkflow();
+  const { actions } = useNavigationActions();
 
   const smartFolderView = customWorkbenchViews.find(v => v.id === SMART_FOLDER_VIEW_ID);
   const folderId = smartFolderView?.data?.folderId ?? null;
@@ -26,21 +25,19 @@ export function SmartFolderSidebarPanel() {
 
   useEffect(() => {
     refreshRecentFiles();
+    window.addEventListener('stirling:files-changed', refreshRecentFiles);
+    return () => window.removeEventListener('stirling:files-changed', refreshRecentFiles);
   }, [refreshRecentFiles]);
 
-  const handleRemoveFileByIndex = useCallback(async (index: number) => {
-    await handleRemoveFile(index, recentFiles, setRecentFiles);
-  }, [handleRemoveFile, recentFiles]);
+  const handleSendToFolder = useCallback(async (fileId: string, targetFolderId: string) => {
+    setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId: targetFolderId, pendingFileId: fileId });
+    actions.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
+  }, [setCustomWorkbenchViewData, actions]);
 
-  // Double-clicking a file sends it to the currently open folder (no-op on home page)
-  const handleFilesSelected = useCallback((files: StirlingFileStub[]) => {
-    if (files.length === 0 || !folderId) return;
-    files.forEach((file, i) => {
-      setTimeout(() => {
-        setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId, pendingFileId: file.id });
-      }, i * 50);
-    });
-  }, [folderId, setCustomWorkbenchViewData]);
+  const handleNavigateToFolder = useCallback((targetFolderId: string) => {
+    setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId: targetFolderId });
+    actions.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
+  }, [setCustomWorkbenchViewData, actions]);
 
   return (
     <Box style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
@@ -49,21 +46,14 @@ export function SmartFolderSidebarPanel() {
           {t('smartFolders.sidebarFiles', 'My Files')}
         </Text>
       </Box>
-      <FileManagerProvider
-        recentFiles={recentFiles}
-        onRecentFilesSelected={handleFilesSelected}
-        onNewFilesSelect={() => {}}
-        onClose={() => {}}
-        isFileSupported={(name) => name.toLowerCase().endsWith('.pdf')}
-        isOpen={true}
-        onFileRemove={handleRemoveFileByIndex}
-        modalHeight="100%"
-        refreshRecentFiles={refreshRecentFiles}
-        isLoading={loading}
-        activeFileIds={activeFileIds}
-      >
-        <FileListArea scrollAreaHeight="100%" scrollAreaStyle={{ flex: 1, minHeight: 0 }} />
-      </FileManagerProvider>
+      <ScrollArea style={{ flex: 1, minHeight: 0 }}>
+        <WatchFolderFileList
+          files={recentFiles}
+          folderId={folderId}
+          onSendToFolder={handleSendToFolder}
+          onNavigateToFolder={handleNavigateToFolder}
+        />
+      </ScrollArea>
     </Box>
   );
 }

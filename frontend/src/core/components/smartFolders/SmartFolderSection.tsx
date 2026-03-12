@@ -107,6 +107,11 @@ export function SmartFolderSection() {
               onSelect={() => handleFolderClick(folder.id)}
               onEdit={(e) => handleEditFolder(e, folder)}
               onDelete={(e) => handleDeleteClick(e, folder)}
+              onFileDrop={(fileIds) => {
+                setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId: folder.id, pendingFileIds: fileIds });
+                actions.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
+                setActiveFolderId(folder.id);
+              }}
             />
           ))}
 

@@ -22,6 +22,7 @@ export interface FolderFileMetadata {
   processedAt?: Date;
   displayFileId?: string; // output file id
   inputFileId?: string;
+  originalFileId?: string; // original StirlingFile UUID (when sent from sidebar)
   errorMessage?: string;
   failedAttempts?: number;
   name?: string; // original filename

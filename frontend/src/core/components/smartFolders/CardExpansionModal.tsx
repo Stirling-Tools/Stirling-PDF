@@ -96,7 +96,7 @@ export function CardExpansionModal({
           willChange: 'top, left, width, height, opacity',
           borderRadius: 'var(--mantine-radius-md)',
           overflow: 'hidden',
-          backgroundColor: 'var(--mantine-color-body)',
+          backgroundColor: 'var(--bg-toolbar)',
           display: 'flex',
           flexDirection: 'column',
           boxShadow: '0 1.5rem 3rem rgba(0,0,0,0.3)',
@@ -150,9 +150,9 @@ export function CardExpansionModal({
 
         {/* Body — only mount once open */}
         {showBody && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, backgroundColor: 'var(--bg-toolbar)' }}>
             <ScrollArea style={{ flex: 1, minHeight: 0 }}>
-              <div style={{ padding: '0.75rem 1rem' }}>
+              <div style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--bg-toolbar)' }}>
                 {children}
               </div>
             </ScrollArea>
@@ -160,7 +160,6 @@ export function CardExpansionModal({
               <div style={{
                 padding: '0.75rem 1rem',
                 borderTop: '0.0625rem solid var(--border-subtle)',
-                backgroundColor: 'var(--bg-toolbar)',
                 flexShrink: 0,
               }}>
                 {footer}

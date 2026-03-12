@@ -15,18 +15,49 @@ interface SmartFolderCardProps {
   onSelect: () => void;
   onEdit: (e: React.MouseEvent) => void;
   onDelete: (e: React.MouseEvent) => void;
+  onFileDrop?: (fileIds: string[]) => void;
 }
 
-export function SmartFolderCard({ folder, isActive, status, onSelect, onEdit, onDelete }: SmartFolderCardProps) {
+export function SmartFolderCard({ folder, isActive, status, onSelect, onEdit, onDelete, onFileDrop }: SmartFolderCardProps) {
   const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const IconComponent = iconMap[folder.icon as keyof typeof iconMap] || iconMap.FolderIcon;
+
+  const handleDragOver = (e: React.DragEvent) => {
+    const types = e.dataTransfer.types;
+    if (!types.includes('watchfolderfileid') && !types.includes('watchfolderfileids')) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = () => setIsDragOver(false);
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const multiRaw = e.dataTransfer.getData('watchFolderFileIds');
+    if (multiRaw) {
+      try {
+        const ids: string[] = JSON.parse(multiRaw);
+        if (ids.length > 0 && onFileDrop) onFileDrop(ids);
+        return;
+      } catch { /* fall through */ }
+    }
+    const fileId = e.dataTransfer.getData('watchFolderFileId');
+    if (fileId && onFileDrop) onFileDrop([fileId]);
+  };
 
   return (
     <Box
       className="tool-button-container"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      style={isDragOver ? { backgroundColor: `${folder.accentColor}18`, borderRadius: 'var(--mantine-radius-sm)' } : undefined}
     >
       <Button
         variant={isActive ? 'light' : 'subtle'}

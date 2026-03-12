@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   Modal,
   Button,
@@ -65,6 +65,10 @@ export function SmartFolderManagementModal({
     setNameError('');
     setSaving(false);
   }, [editFolder]);
+
+  useEffect(() => {
+    if (opened) resetState();
+  }, [opened, resetState]);
 
   const handleClose = () => {
     resetState();

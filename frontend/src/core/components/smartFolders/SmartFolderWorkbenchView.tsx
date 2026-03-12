@@ -43,14 +43,18 @@ import { SmartFolderHomePage } from '@app/components/smartFolders/SmartFolderHom
 import { useNavigationActions } from '@app/contexts/NavigationContext';
 
 interface SmartFolderWorkbenchViewProps {
-  data: { folderId: string | null; pendingFileId?: string };
+  data: { folderId: string | null; pendingFileId?: string; pendingFileIds?: string[] };
 }
 
-interface StepProgress {
-  stepIndex: number;
-  operationName: string;
-  status: 'running' | 'completed' | 'error';
-  error?: string;
+function timeAgo(date: Date): string {
+  const secs = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (secs < 60) return 'just now';
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
 }
 
 function humaniseOp(op: string): string {
@@ -85,7 +89,6 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   const { recentRuns, setRecentRuns } = useFolderRunState(folderId);
 
   const [isDragOver, setIsDragOver] = useState(false);
-  const [stepProgresses, setStepProgresses] = useState<StepProgress[]>([]);
   const [outputFiles, setOutputFiles] = useState<OutputFileRecord[]>([]);
   const [inputFiles, setInputFiles] = useState<InputFileRecord[]>([]);
   const [automation, setAutomation] = useState<AutomationConfig | null>(null);
@@ -96,9 +99,15 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   const handledPendingRef = useRef<string | null>(null);
 
   useEffect(() => {
-    folderStorage.getOutputFilesByFolder(folderId).then(setOutputFiles);
-    folderStorage.getInputFilesByFolder(folderId).then(setInputFiles);
-  }, [folderId, recentRuns]);
+    const load = () => {
+      if (!folderId) return;
+      folderStorage.getOutputFilesByFolder(folderId).then(setOutputFiles);
+      folderStorage.getInputFilesByFolder(folderId).then(setInputFiles);
+    };
+    load();
+    const unsub = folderStorage.onFolderChange((id) => { if (id === folderId) load(); });
+    return unsub;
+  }, [folderId]);
 
   useEffect(() => {
     if (folder?.automationId) {
@@ -122,31 +131,13 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
 
         await updateFileMetadata(inputFileId, { status: 'processing' });
 
-        setStepProgresses(prev => [
-          ...prev,
-          { stepIndex: 0, operationName: auto.operations[0]?.operation ?? '', status: 'running' },
-        ]);
-
         const resultFiles = await executeAutomationSequence(
           auto,
           [inputFile],
           toolRegistry,
-          (stepIndex, operationName) => {
-            setStepProgresses(prev => {
-              const updated = prev.filter(p => !(p.stepIndex === stepIndex && p.operationName === operationName));
-              return [...updated, { stepIndex, operationName, status: 'running' }];
-            });
-          },
-          (stepIndex) => {
-            setStepProgresses(prev =>
-              prev.map(p => p.stepIndex === stepIndex ? { ...p, status: 'completed' } : p)
-            );
-          },
-          (stepIndex, error) => {
-            setStepProgresses(prev =>
-              prev.map(p => p.stepIndex === stepIndex ? { ...p, status: 'error', error } : p)
-            );
-          }
+          () => {},
+          () => {},
+          () => {}
         );
 
         const newRuns: SmartFolderRunEntry[] = [...recentRuns];
@@ -177,12 +168,13 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   );
 
   const handleFiles = useCallback(
-    async (files: FileList | File[]) => {
+    async (files: FileList | File[], sourceFileId?: string) => {
       const fileArray = Array.from(files);
       for (const file of fileArray) {
         if (!file.name.toLowerCase().endsWith('.pdf')) continue;
         const inputFileId = `input-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        await addFile(inputFileId, { status: 'pending', inputFileId, name: file.name });
+        const originalFileId = sourceFileId ?? (file as any).fileId as string | undefined;
+        await addFile(inputFileId, { status: 'pending', inputFileId, name: file.name, ...(originalFileId ? { originalFileId } : {}) });
         await folderStorage.storeInputFile(folderId, inputFileId, file, file.name);
         runAutomation(file, inputFileId);
       }
@@ -191,12 +183,30 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   );
 
   useEffect(() => {
-    const { pendingFileId } = data;
+    const { pendingFileId, pendingFileIds } = data;
+
+    // Multi-file pending (from sidebar multi-select drag to sidebar folder card)
+    if (pendingFileIds && pendingFileIds.length > 0) {
+      const key = pendingFileIds.join(',');
+      if (handledPendingRef.current === key) return;
+      handledPendingRef.current = key;
+      setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId });
+      Promise.all(
+        pendingFileIds.map(id => fileStorage.getStirlingFile(id as FileId))
+      ).then(async results => {
+        for (let i = 0; i < results.length; i++) {
+          if (results[i]) await handleFiles([results[i]!], pendingFileIds[i]);
+        }
+      });
+      return;
+    }
+
+    // Single pending file (legacy path)
     if (!pendingFileId || handledPendingRef.current === pendingFileId) return;
     handledPendingRef.current = pendingFileId;
     setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId });
     fileStorage.getStirlingFile(pendingFileId as FileId).then((stirlingFile) => {
-      if (stirlingFile) handleFiles([stirlingFile]);
+      if (stirlingFile) handleFiles([stirlingFile], pendingFileId);
     });
   }, [data, folderId, handleFiles, setCustomWorkbenchViewData]);
 
@@ -204,7 +214,30 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
     (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragOver(false);
-      if (e.dataTransfer.files.length > 0) handleFiles(e.dataTransfer.files);
+
+      // Multi-file sidebar drag
+      const multiRaw = e.dataTransfer.getData('watchFolderFileIds');
+      if (multiRaw) {
+        try {
+          const ids: string[] = JSON.parse(multiRaw);
+          Promise.all(ids.map(id => fileStorage.getStirlingFile(id as FileId))).then(async results => {
+            for (let i = 0; i < results.length; i++) {
+              if (results[i]) await handleFiles([results[i]!], ids[i]);
+            }
+          });
+          return;
+        } catch { /* fall through */ }
+      }
+
+      // Single sidebar drag
+      const sidebarFileId = e.dataTransfer.getData('watchFolderFileId');
+      if (sidebarFileId) {
+        fileStorage.getStirlingFile(sidebarFileId as FileId).then((stirlingFile) => {
+          if (stirlingFile) handleFiles([stirlingFile], sidebarFileId);
+        });
+      } else if (e.dataTransfer.files.length > 0) {
+        handleFiles(e.dataTransfer.files);
+      }
     },
     [handleFiles]
   );
@@ -482,43 +515,13 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
 
           <ScrollArea style={{ flex: 1 }}>
             <Stack gap="xs" px="md" pb="md">
-              {stepProgresses.length === 0 && fileIds.length === 0 ? (
+              {fileIds.length === 0 ? (
                 <Text size="xs" c="dimmed" ta="center" py="lg">
                   {t('smartFolders.workbench.noActivity', 'No activity yet — drop a PDF to start')}
                 </Text>
               ) : (
                 <>
-                  {/* Live step progress */}
-                  {[...stepProgresses].reverse().map((step, i) => (
-                    <Box
-                      key={i}
-                      style={{
-                        padding: '0.625rem 0.75rem',
-                        borderRadius: 'var(--mantine-radius-sm)',
-                        backgroundColor: 'var(--mantine-color-default-hover)',
-                        border: '0.0625rem solid var(--border-subtle)',
-                      }}
-                    >
-                      <Group gap="xs" wrap="nowrap">
-                        {step.status === 'running' && <Loader size="0.625rem" />}
-                        {step.status === 'completed' && (
-                          <CheckCircleOutlineIcon style={{ fontSize: '0.875rem', color: '#22c55e', flexShrink: 0 }} />
-                        )}
-                        {step.status === 'error' && (
-                          <ErrorOutlineIcon style={{ fontSize: '0.875rem', color: '#ef4444', flexShrink: 0 }} />
-                        )}
-                        <Text size="xs" style={{ flex: 1, minWidth: 0 }} lineClamp={1}>
-                          {`Step ${step.stepIndex + 1}: ${humaniseOp(step.operationName)}`}
-                        </Text>
-                      </Group>
-                      {step.error && (
-                        <Text size="xs" c="red" mt={4}>{step.error}</Text>
-                      )}
-                    </Box>
-                  ))}
-
-                  {/* File status list */}
-                  {fileIds.map((fileId) => {
+                  {[...fileIds].reverse().map((fileId) => {
                     const meta = folderRecord?.files[fileId];
                     const status = meta?.status ?? 'pending';
                     const run = recentRuns.find(r => r.inputFileId === fileId);
@@ -569,9 +572,9 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                             <DownloadIcon style={{ fontSize: '1rem' }} />
                           </ActionIcon>
                         )}
-                        <Text size="xs" c="dimmed" style={{ fontSize: '0.625rem', flexShrink: 0 }}>
+                        <Text size="xs" c="dimmed" style={{ fontSize: '0.625rem', flexShrink: 0, width: '3.5rem', textAlign: 'right' }}>
                           {(meta?.processedAt || meta?.addedAt)
-                            ? new Date((meta.processedAt ?? meta.addedAt)!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                            ? timeAgo(new Date((meta.processedAt ?? meta.addedAt)!))
                             : ''}
                         </Text>
                       </Box>
