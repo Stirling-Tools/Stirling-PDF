@@ -401,8 +401,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
 // Default backend URL from environment variables
 const DEFAULT_BACKEND_URL =
   import.meta.env.VITE_DESKTOP_BACKEND_URL
-  || import.meta.env.VITE_API_BASE_URL
-  || '';
+  || import.meta.env.VITE_API_BASE_URL;
 
 /**
  * Desktop override exposing the backend URL based on connection mode.
