@@ -123,14 +123,14 @@ export function useViewerReadAloud() {
     let pdfDoc: Awaited<ReturnType<typeof pdfWorkerManager.createDocument>> | null = null;
 
     try {
-      const rotation = viewer.getRotationState().rotation || 0;
       const zoom = (viewer.getZoomState().zoomPercent || 100) / 100;
 
       pdfDoc = await pdfWorkerManager.createDocument(await currentFile.arrayBuffer());
       const page = await pdfDoc.getPage(pageNumber);
       const textContent = await page.getTextContent();
-      const pageRotation = ((((page.rotate || 0) + rotation) % 360) + 360) % 360;
-      const viewportTransform = page.getViewport({ scale: zoom, rotation: pageRotation }).transform;
+      // The highlight is rendered inside the page element, so we keep geometry in
+      // page-local coordinates and let the viewer's own rotation transform it.
+      const viewportTransform = page.getViewport({ scale: zoom }).transform;
 
       const textItems: TextItemWithGeometry[] = [];
       for (const item of textContent.items) {
