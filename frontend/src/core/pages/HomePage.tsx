@@ -45,6 +45,7 @@ export default function HomePage() {
     readerMode,
     setLeftPanelView,
     toolAvailability,
+    customWorkbenchViews,
   } = useToolWorkflow();
 
   const { openFilesModal } = useFilesModalContext();
@@ -103,6 +104,10 @@ export default function HomePage() {
     selectedToolKey,
     navigationState.workbench,
   ]);
+
+  const hideToolPanel = customWorkbenchViews.find(
+    (v) => v.workbenchId === navigationState.workbench
+  )?.hideToolPanel ?? false;
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
   const brandIconSrc = useLogoPath();
@@ -314,7 +319,7 @@ export default function HomePage() {
           className="flex-nowrap flex"
         >
           <QuickAccessBar ref={quickAccessRef} />
-          <ToolPanel />
+          {!hideToolPanel && <ToolPanel />}
           <Workbench />
           <RightRail />
           <FileManager selectedTool={selectedTool as any /* FIX ME */} />

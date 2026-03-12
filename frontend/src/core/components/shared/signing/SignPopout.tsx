@@ -77,6 +77,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       label: t('certSign.collab.signRequest.workbenchTitle', 'Sign Request'),
       component: SignRequestWorkbenchView,
       hideTopControls: true,
+      hideToolPanel: true,
     });
 
     registerCustomWorkbenchView({
@@ -84,6 +85,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       workbenchId: SESSION_DETAIL_WORKBENCH_TYPE,
       label: t('certSign.collab.sessionDetail.workbenchTitle', 'Session Management'),
       component: SessionDetailWorkbenchView,
+      hideToolPanel: true,
     });
 
     return () => {

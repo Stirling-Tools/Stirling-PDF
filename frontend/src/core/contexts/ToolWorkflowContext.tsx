@@ -33,6 +33,7 @@ export interface CustomWorkbenchViewRegistration {
   icon?: React.ReactNode;
   component: React.ComponentType<{ data: any }>;
   hideTopControls?: boolean;
+  hideToolPanel?: boolean;
 }
 
 export interface CustomWorkbenchViewInstance extends CustomWorkbenchViewRegistration {
