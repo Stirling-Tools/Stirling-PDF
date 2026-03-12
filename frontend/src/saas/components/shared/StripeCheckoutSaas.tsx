@@ -6,7 +6,7 @@ import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe
 import { supabase } from '@app/auth/supabase';
 import { Z_INDEX_OVER_SETTINGS_MODAL } from '@app/styles/zIndex';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_DEFAULT_KEY);
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 export type PurchaseType = 'subscription' | 'credits';
 export type CreditsPack = 'xsmall' | 'small' | 'medium' | 'large' | null;

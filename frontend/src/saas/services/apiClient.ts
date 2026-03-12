@@ -31,7 +31,7 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
 
 // Create axios instance with default config
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/', // Use env var or relative path (proxied by Vite in dev)
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   responseType: 'json',
 });
 

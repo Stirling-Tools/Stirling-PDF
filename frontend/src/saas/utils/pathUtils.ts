@@ -1,6 +1,6 @@
 import { URL_TO_TOOL_MAP } from '@app/utils/urlMapping'
 
-const SUBPATH = (import.meta.env.VITE_RUN_SUBPATH || '').replace(/^\/|\/$/g, '') // "app" or ""
+const SUBPATH = import.meta.env.VITE_RUN_SUBPATH.replace(/^\/|\/$/g, '') // "app" or ""
 
 /**
  * Normalize pathname by stripping subpath prefix and trailing slashes

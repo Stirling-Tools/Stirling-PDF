@@ -202,7 +202,7 @@ jobs:
       - name: Install frontend dependencies
         run: cd frontend && npm ci
       - name: Type-check frontend
-        run: cd frontend && npm run prebuild && npm run typecheck:all
+        run: cd frontend && npm run prep && npm run typecheck:all
       - name: Lint frontend
         run: cd frontend && npm run lint
       - name: Build frontend

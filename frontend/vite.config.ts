@@ -27,23 +27,6 @@ export default defineConfig(({ mode }) => {
     ? (mode as BuildMode)
     : process.env.DISABLE_ADDITIONAL_FEATURES === 'true' ? 'core' : 'proprietary';
 
-  // Validate required environment variables for desktop builds
-  if (effectiveMode === 'desktop') {
-    const requiredEnvVars = [
-      'VITE_SAAS_SERVER_URL',
-      'VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY',
-      'VITE_SAAS_BACKEND_API_URL',
-    ];
-
-    const missingVars = requiredEnvVars.filter(varName => !env[varName]);
-
-    if (missingVars.length > 0) {
-      throw new Error(
-        `Desktop build failed: Missing required environment variables:\n${missingVars.map(v => `  - ${v}`).join('\n')}\n\nPlease set these variables before building the desktop app.`
-      );
-    }
-  }
-
   const tsconfigProject = TSCONFIG_MAP[effectiveMode];
 
   return {
