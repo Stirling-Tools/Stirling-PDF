@@ -9,44 +9,62 @@ export abstract class DOMCommand {
 }
 
 export class RotatePageCommand extends DOMCommand {
+  private originalRotation: number | null = null;
+
   constructor(
     private pageId: string,
-    private degrees: number
+    private degrees: number,
+    private getCurrentDocument: () => PDFDocument | null,
+    private setDocument: (doc: PDFDocument) => void
   ) {
     super();
   }
 
   execute(): void {
+    const currentDoc = this.getCurrentDocument();
+    if (!currentDoc) return;
+
+    const page = currentDoc.pages.find(p => p.id === this.pageId);
+    if (!page) return;
+
+    if (this.originalRotation === null) {
+      this.originalRotation = page.rotation;
+    }
+
+    const newRotation = ((page.rotation + this.degrees) % 360 + 360) % 360;
+
+    this.setDocument({
+      ...currentDoc,
+      pages: currentDoc.pages.map(p =>
+        p.id === this.pageId ? { ...p, rotation: newRotation } : p
+      ),
+    });
+
+    // Also update DOM immediately for CSS animation on currently-mounted pages
     const pageElement = document.querySelector(`[data-page-id="${this.pageId}"]`);
     if (pageElement) {
       const img = pageElement.querySelector('img');
-      if (img) {
-        const currentTransform = img.style.transform || '';
-        const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
-        const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
-        let newRotation = currentRotation + this.degrees;
-
-        newRotation = ((newRotation % 360) + 360) % 360;
-
-        img.style.transform = `rotate(${newRotation}deg)`;
-      }
+      if (img) img.style.transform = `rotate(${newRotation}deg)`;
     }
   }
 
   undo(): void {
+    if (this.originalRotation === null) return;
+
+    const currentDoc = this.getCurrentDocument();
+    if (!currentDoc) return;
+
+    this.setDocument({
+      ...currentDoc,
+      pages: currentDoc.pages.map(p =>
+        p.id === this.pageId ? { ...p, rotation: this.originalRotation! } : p
+      ),
+    });
+
     const pageElement = document.querySelector(`[data-page-id="${this.pageId}"]`);
     if (pageElement) {
       const img = pageElement.querySelector('img');
-      if (img) {
-        const currentTransform = img.style.transform || '';
-        const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
-        const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
-        let previousRotation = currentRotation - this.degrees;
-
-        previousRotation = ((previousRotation % 360) + 360) % 360;
-
-        img.style.transform = `rotate(${previousRotation}deg)`;
-      }
+      if (img) img.style.transform = `rotate(${this.originalRotation}deg)`;
     }
   }
 
@@ -311,38 +329,67 @@ export class BulkRotateCommand extends DOMCommand {
 
   constructor(
     private pageIds: string[],
-    private degrees: number
+    private degrees: number,
+    private getCurrentDocument: () => PDFDocument | null,
+    private setDocument: (doc: PDFDocument) => void
   ) {
     super();
   }
 
   execute(): void {
-    this.pageIds.forEach(pageId => {
+    const currentDoc = this.getCurrentDocument();
+    if (!currentDoc) return;
+
+    const pageIdSet = new Set(this.pageIds);
+
+    // Store original rotations from state for reliable undo (only on first execution)
+    if (this.originalRotations.size === 0) {
+      for (const page of currentDoc.pages) {
+        if (pageIdSet.has(page.id)) {
+          this.originalRotations.set(page.id, page.rotation);
+        }
+      }
+    }
+
+    // Update state so rotation survives virtualizer unmount/remount
+    // Build a map of id → new rotation for O(1) DOM lookups below
+    const newRotationById = new Map<string, number>();
+    const updatedPages = currentDoc.pages.map(page => {
+      if (pageIdSet.has(page.id)) {
+        const newRotation = ((page.rotation + this.degrees) % 360 + 360) % 360;
+        newRotationById.set(page.id, newRotation);
+        return { ...page, rotation: newRotation };
+      }
+      return page;
+    });
+
+    this.setDocument({ ...currentDoc, pages: updatedPages });
+
+    // Mirror to DOM immediately for CSS animation on currently-mounted pages
+    for (const pageId of this.pageIds) {
       const pageElement = document.querySelector(`[data-page-id="${pageId}"]`);
       if (pageElement) {
         const img = pageElement.querySelector('img');
-        if (img) {
-          // Store original rotation for undo (only on first execution)
-          if (!this.originalRotations.has(pageId)) {
-            const currentTransform = img.style.transform || '';
-            const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
-            const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
-            this.originalRotations.set(pageId, currentRotation);
-          }
-
-          // Apply rotation using transform to trigger CSS animation
-          const currentTransform = img.style.transform || '';
-          const rotateMatch = currentTransform.match(/rotate\(([^)]+)\)/);
-          const currentRotation = rotateMatch ? parseInt(rotateMatch[1]) : 0;
-          const newRotation = currentRotation + this.degrees;
-          img.style.transform = `rotate(${newRotation}deg)`;
-        }
+        if (img) img.style.transform = `rotate(${newRotationById.get(pageId)}deg)`;
       }
-    });
+    }
   }
 
   undo(): void {
-    this.pageIds.forEach(pageId => {
+    const currentDoc = this.getCurrentDocument();
+    if (!currentDoc) return;
+
+    // Restore original rotations in state
+    const updatedPages = currentDoc.pages.map(page =>
+      this.originalRotations.has(page.id)
+        ? { ...page, rotation: this.originalRotations.get(page.id)! }
+        : page
+    );
+
+    this.setDocument({ ...currentDoc, pages: updatedPages });
+
+    // Mirror to DOM immediately for CSS animation on currently-mounted pages
+    for (const pageId of this.pageIds) {
       const pageElement = document.querySelector(`[data-page-id="${pageId}"]`);
       if (pageElement) {
         const img = pageElement.querySelector('img');
@@ -350,7 +397,7 @@ export class BulkRotateCommand extends DOMCommand {
           img.style.transform = `rotate(${this.originalRotations.get(pageId)}deg)`;
         }
       }
-    });
+    }
   }
 
   get description(): string {
