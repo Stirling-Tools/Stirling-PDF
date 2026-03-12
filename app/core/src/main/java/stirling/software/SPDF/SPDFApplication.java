@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.context.WebServerInitializedEvent;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -134,7 +134,7 @@ public class SPDFApplication {
         baseUrlStatic = normalizeBackendUrl(backendUrl, serverPort);
         contextPathStatic = contextPath;
         serverPortStatic = serverPort;
-        String url = buildFullUrl(baseUrlStatic, getStaticPort(), contextPathStatic);
+        String url = buildFullUrl(baseUrlStatic, serverPortStatic, contextPathStatic);
 
         // Log Tauri mode information
         if (Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))) {
@@ -176,16 +176,19 @@ public class SPDFApplication {
     }
 
     @EventListener
-    public void onWebServerInitialized(WebServerInitializedEvent event) {
-        int actualPort = event.getWebServer().getPort();
-        serverPortStatic = String.valueOf(actualPort);
+    public void onApplicationReady(ApplicationReadyEvent event) {
+        String port =
+                event.getApplicationContext().getEnvironment().getProperty("local.server.port");
+        if (port != null) {
+            serverPortStatic = port;
+        }
         // Log the actual runtime port for Tauri to parse
-        log.info("Stirling-PDF running on port: {}", actualPort);
+        log.info("Stirling-PDF running on port: {}", serverPortStatic);
     }
 
     private static void printStartupLogs() {
         log.info("Stirling-PDF Started.");
-        String url = buildFullUrl(baseUrlStatic, getStaticPort(), contextPathStatic);
+        String url = buildFullUrl(baseUrlStatic, serverPortStatic, contextPathStatic);
         log.info("Navigate to {}", url);
     }
 

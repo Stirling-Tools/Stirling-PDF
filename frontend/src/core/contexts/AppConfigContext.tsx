@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import apiClient from '@app/services/apiClient';
 import { getSimulatedAppConfig } from '@app/testing/serverExperienceSimulations';
+import type { AppConfig, AppConfigBootstrapMode } from '@app/types/appConfig';
+import { useJwtConfigSync } from '@app/hooks/useJwtConfigSync';
 
 /**
  * Sleep utility for delays
@@ -14,55 +16,7 @@ export interface AppConfigRetryOptions {
   initialDelay?: number;
 }
 
-export interface AppConfig {
-  baseUrl?: string;
-  contextPath?: string;
-  serverPort?: number;
-  frontendUrl?: string;
-  appNameNavbar?: string;
-  languages?: string[];
-  defaultLocale?: string;
-  logoStyle?: 'modern' | 'classic';
-  enableLogin?: boolean;
-  showSettingsWhenNoLogin?: boolean;
-  enableEmailInvites?: boolean;
-  enableOAuth?: boolean;
-  enableSaml?: boolean;
-  isAdmin?: boolean;
-  enableAlphaFunctionality?: boolean;
-  enableAnalytics?: boolean | null;
-  enablePosthog?: boolean | null;
-  enableScarf?: boolean | null;
-  enableDesktopInstallSlide?: boolean;
-  premiumEnabled?: boolean;
-  premiumKey?: string;
-  termsAndConditions?: string;
-  privacyPolicy?: string;
-  cookiePolicy?: string;
-  impressum?: string;
-  accessibilityStatement?: string;
-  runningProOrHigher?: boolean;
-  runningEE?: boolean;
-  license?: string;
-  SSOAutoLogin?: boolean;
-  serverCertificateEnabled?: boolean;
-  enableMobileScanner?: boolean;
-  mobileScannerConvertToPdf?: boolean;
-  mobileScannerImageResolution?: string;
-  mobileScannerPageFormat?: string;
-  mobileScannerStretchToFit?: boolean;
-  appVersion?: string;
-  machineType?: string;
-  activeSecurity?: boolean;
-  dependenciesReady?: boolean;
-  error?: string;
-  isNewServer?: boolean;
-  isNewUser?: boolean;
-  defaultHideUnavailableTools?: boolean;
-  defaultHideUnavailableConversions?: boolean;
-}
-
-export type AppConfigBootstrapMode = 'blocking' | 'non-blocking';
+export type { AppConfig, AppConfigBootstrapMode };
 
 interface AppConfigContextValue {
   config: AppConfig | null;
@@ -88,6 +42,7 @@ export interface AppConfigProviderProps {
   initialConfig?: AppConfig | null;
   bootstrapMode?: AppConfigBootstrapMode;
   autoFetch?: boolean;
+  onConfigLoaded?: (config: AppConfig) => void;
 }
 
 export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
@@ -96,6 +51,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   initialConfig = null,
   bootstrapMode = 'blocking',
   autoFetch = true,
+  onConfigLoaded,
 }) => {
   const isBlockingMode = bootstrapMode === 'blocking';
   const [config, setConfig] = useState<AppConfig | null>(initialConfig);
@@ -104,6 +60,9 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   const fetchCountRef = React.useRef(0);
   const [hasResolvedConfig, setHasResolvedConfig] = useState(Boolean(initialConfig) && !isBlockingMode);
   const [loading, setLoading] = useState(!hasResolvedConfig);
+
+  const onConfigLoadedRef = React.useRef(onConfigLoaded);
+  onConfigLoadedRef.current = onConfigLoaded;
 
   const maxRetries = retryOptions?.maxRetries ?? 0;
   const initialDelay = retryOptions?.initialDelay ?? 1000;
@@ -160,6 +119,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
         setConfig(data);
         setHasResolvedConfig(true);
         setLoading(false);
+        onConfigLoadedRef.current?.(data);
         return; // Success - exit function
       } catch (err: any) {
         const status = err?.response?.status;
@@ -198,42 +158,21 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
     setLoading(false);
   }, [hasResolvedConfig, isBlockingMode, maxRetries, initialDelay]);
 
-  useEffect(() => {
-    // Skip config fetch on auth pages (/login, /signup, /auth/callback, /invite/*)
-    // Config will be fetched after successful authentication via jwt-available event
-    const currentPath = window.location.pathname;
-    const isAuthPage = currentPath.includes('/login') ||
-                       currentPath.includes('/signup') ||
-                       currentPath.includes('/auth/callback') ||
-                       currentPath.includes('/invite/');
+  const { isAuthPage } = useJwtConfigSync(fetchConfig);
 
-    // On auth pages, always skip the config fetch
-    // The config will be fetched after authentication via jwt-available event
+  useEffect(() => {
     if (isAuthPage) {
-      console.debug('[AppConfig] On auth page - using default config, skipping fetch', { path: currentPath });
+      console.debug('[AppConfig] On auth page - using default config, skipping fetch', { path: window.location.pathname });
       setConfig({ enableLogin: true });
       setHasResolvedConfig(true);
       setLoading(false);
       return;
     }
 
-    // On non-auth pages, fetch config (will validate JWT if present)
     if (autoFetch) {
       fetchConfig();
     }
-  }, [autoFetch, fetchConfig]);
-
-  // Listen for JWT availability (triggered on login/signup)
-  useEffect(() => {
-    const handleJwtAvailable = () => {
-      console.debug('[AppConfig] JWT available event - refetching config');
-      // Force refetch with JWT
-      fetchConfig(true);
-    };
-
-    window.addEventListener('jwt-available', handleJwtAvailable);
-    return () => window.removeEventListener('jwt-available', handleJwtAvailable);
-  }, [fetchConfig]);
+  }, [autoFetch, fetchConfig, isAuthPage]);
 
   const refetch = useCallback(() => fetchConfig(true), [fetchConfig]);
 

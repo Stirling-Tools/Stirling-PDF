@@ -3,6 +3,8 @@ import { isAxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
 import apiClient from '@app/services/apiClient';
 import { tauriBackendService } from '@app/services/tauriBackendService';
+import { selfHostedServerMonitor } from '@app/services/selfHostedServerMonitor';
+import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
 import { isBackendNotReadyError } from '@app/constants/backendErrors';
 import type { EndpointAvailabilityDetails } from '@app/types/endpointAvailability';
 import { connectionModeService } from '@app/services/connectionModeService';
@@ -14,6 +16,13 @@ interface EndpointConfig {
 }
 
 const RETRY_DELAY_MS = 2500;
+
+function isSelfHostedOffline(): boolean {
+  return (
+    selfHostedServerMonitor.getSnapshot().status === 'offline' &&
+    !!tauriBackendService.getBackendUrl()
+  );
+}
 
 function getErrorMessage(err: unknown): string {
   if (isAxiosError(err)) {
@@ -35,7 +44,8 @@ async function checkDependenciesReady(): Promise<boolean> {
       suppressErrorToast: true,
     });
     return response.data?.dependenciesReady ?? false;
-  } catch {
+  } catch (error) {
+    console.debug('[useEndpointConfig] Dependencies not ready yet:', error);
     return false;
   }
 }
@@ -50,7 +60,9 @@ export function useEndpointEnabled(endpoint: string): {
   refetch: () => Promise<void>;
 } {
   const { t } = useTranslation();
-  const [enabled, setEnabled] = useState<boolean | null>(null);
+  // DESKTOP: Start optimistically as enabled (most desktop users are in SaaS mode)
+  // This prevents UI from being disabled while backend starts or checks are in progress
+  const [enabled, setEnabled] = useState<boolean | null>(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isMountedRef = useRef(true);
@@ -92,7 +104,20 @@ export function useEndpointEnabled(endpoint: string): {
         suppressErrorToast: true,
       });
 
-      setEnabled(response.data);
+      const locallyEnabled = response.data;
+
+      // DESKTOP ENHANCEMENT: In SaaS mode, assume all endpoints are available
+      // Even if not supported locally, they will route to SaaS backend
+      if (!locallyEnabled) {
+        const mode = await connectionModeService.getCurrentMode();
+        if (mode === 'saas') {
+          console.debug(`[useEndpointEnabled] Endpoint ${endpoint} not supported locally but available via SaaS routing`);
+          setEnabled(true); // Available via SaaS
+          return;
+        }
+      }
+
+      setEnabled(locallyEnabled);
     } catch (err: unknown) {
       const isBackendStarting = isBackendNotReadyError(err);
       const message = getErrorMessage(err);
@@ -106,6 +131,15 @@ export function useEndpointEnabled(endpoint: string): {
           }, RETRY_DELAY_MS);
         }
       } else {
+        // DESKTOP ENHANCEMENT: In SaaS mode, assume available even on check failure
+        const mode = await connectionModeService.getCurrentMode();
+        if (mode === 'saas') {
+          console.debug(`[useEndpointEnabled] Endpoint ${endpoint} check failed but available via SaaS routing`);
+          setEnabled(true); // Available via SaaS
+          setError(null);
+          return;
+        }
+
         setError(message);
         setEnabled(false);
       }
@@ -121,7 +155,21 @@ export function useEndpointEnabled(endpoint: string): {
       return;
     }
 
-    if (tauriBackendService.isBackendHealthy()) {
+    // In self-hosted offline mode, enable optimistically when the local backend is ready.
+    // ConvertSettings already filters unsupported endpoints from the dropdown,
+    // so by the time the user has a valid endpoint selected it is supported locally.
+    if (isSelfHostedOffline()) {
+      setEnabled(true);
+      setLoading(false);
+      // Re-evaluate if the server comes back online
+      return selfHostedServerMonitor.subscribe(() => {
+        if (!isSelfHostedOffline() && tauriBackendService.isOnline) {
+          fetchEndpointStatus();
+        }
+      });
+    }
+
+    if (tauriBackendService.isOnline) {
       fetchEndpointStatus();
     }
 
@@ -182,6 +230,34 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
       return;
     }
 
+    // Self-hosted offline: check each endpoint against the local backend directly.
+    // checkDependenciesReady() would fail here since it hits the offline remote server.
+    const { status: serverStatus } = selfHostedServerMonitor.getSnapshot();
+    const localUrl = tauriBackendService.getBackendUrl();
+    if (serverStatus === 'offline' && localUrl) {
+      const results = await Promise.all(
+        [...new Set(endpoints)].map(async (ep) => {
+          try {
+            const supported = await endpointAvailabilityService.isEndpointSupportedLocally(ep, localUrl);
+            return { ep, supported };
+          } catch {
+            return { ep, supported: false };
+          }
+        })
+      );
+      if (!isMountedRef.current) return;
+      const statusMap: Record<string, boolean> = {};
+      const details: Record<string, EndpointAvailabilityDetails> = {};
+      for (const { ep, supported } of results) {
+        statusMap[ep] = supported;
+        details[ep] = { enabled: supported, reason: supported ? null : 'NOT_SUPPORTED_LOCALLY' };
+      }
+      setEndpointDetails(prev => ({ ...prev, ...details }));
+      setEndpointStatus(prev => ({ ...prev, ...statusMap }));
+      setLoading(false);
+      return;
+    }
+
     const dependenciesReady = await checkDependenciesReady();
     if (!dependenciesReady) {
       return; // Health monitor will trigger retry when truly ready
@@ -190,12 +266,28 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
     try {
       setError(null);
 
-      const response = await apiClient.get<Record<string, EndpointAvailabilityDetails>>(
-        `/api/v1/config/endpoints-availability`,
-        {
-          suppressErrorToast: true,
+      // Try new API first (no params — new servers return all endpoints).
+      // Fall back to the old ?endpoints= form for servers that predate the
+      // "large query reduction" change and still require the parameter.
+      let response: Awaited<ReturnType<typeof apiClient.get<Record<string, EndpointAvailabilityDetails>>>>;
+      try {
+        response = await apiClient.get<Record<string, EndpointAvailabilityDetails>>(
+          `/api/v1/config/endpoints-availability`,
+          { suppressErrorToast: true }
+        );
+      } catch (innerErr) {
+        if (isAxiosError(innerErr) && innerErr.response?.status === 400) {
+          // Old server — requires explicit endpoints query param
+          console.debug('[useMultipleEndpointsEnabled] Server requires endpoints param, retrying with legacy format');
+          const endpointsParam = endpoints.join(',');
+          response = await apiClient.get<Record<string, EndpointAvailabilityDetails>>(
+            `/api/v1/config/endpoints-availability?endpoints=${encodeURIComponent(endpointsParam)}`,
+            { suppressErrorToast: true }
+          );
+        } else {
+          throw innerErr;
         }
-      );
+      }
 
       const details = Object.entries(response.data).reduce((acc, [endpointName, detail]) => {
         acc[endpointName] = {
@@ -209,6 +301,19 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
         acc[key] = details[key].enabled;
         return acc;
       }, {} as Record<string, boolean>);
+
+      // DESKTOP ENHANCEMENT: In SaaS mode, mark all disabled endpoints as available
+      // They will route to SaaS backend
+      const mode = await connectionModeService.getCurrentMode();
+      if (mode === 'saas') {
+        const disabledEndpoints = Object.keys(details).filter(key => !details[key].enabled);
+
+        for (const endpoint of disabledEndpoints) {
+          console.debug(`[useMultipleEndpointsEnabled] Endpoint ${endpoint} not supported locally but available via SaaS routing`);
+          statusMap[endpoint] = true; // Mark as enabled via SaaS
+          details[endpoint] = { enabled: true, reason: null };
+        }
+      }
 
       setEndpointDetails(prev => ({ ...prev, ...details }));
       setEndpointStatus(prev => ({ ...prev, ...statusMap }));
@@ -232,6 +337,17 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
           acc.details[endpointName] = fallbackDetail;
           return acc;
         }, { status: {} as Record<string, boolean>, details: {} as Record<string, EndpointAvailabilityDetails> });
+
+        // DESKTOP ENHANCEMENT: In SaaS mode, mark all endpoints as available
+        const mode = await connectionModeService.getCurrentMode();
+        if (mode === 'saas') {
+          for (const endpoint of endpoints) {
+            console.debug(`[useMultipleEndpointsEnabled] Endpoint ${endpoint} check failed but available via SaaS routing`);
+            fallbackStatus.status[endpoint] = true;
+            fallbackStatus.details[endpoint] = { enabled: true, reason: null };
+          }
+        }
+
         setEndpointStatus(fallbackStatus.status);
         setEndpointDetails(prev => ({ ...prev, ...fallbackStatus.details }));
       }
@@ -248,7 +364,17 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
       return;
     }
 
-    if (tauriBackendService.isBackendHealthy()) {
+    if (isSelfHostedOffline()) {
+      fetchAllEndpointStatuses();
+      const unsubServer = selfHostedServerMonitor.subscribe(() => {
+        if (!isSelfHostedOffline() && tauriBackendService.isOnline) {
+          fetchAllEndpointStatuses();
+        }
+      });
+      return unsubServer;
+    }
+
+    if (tauriBackendService.isOnline) {
       fetchAllEndpointStatuses();
     }
 

@@ -687,7 +687,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
                 message: pollError?.message,
               });
               if (pollError?.response?.status === 404) {
-                throw new Error('Job not found on server');
+                throw new Error('Job not found on server', { cause: pollError });
               }
             }
           }
@@ -1164,7 +1164,9 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           return;
         } catch (incrementalError) {
           if (isLazyMode && cachedJobIdRef.current) {
-            throw new Error('Incremental export failed for cached document. Please reload and retry.');
+            throw new Error('Incremental export failed for cached document. Please reload and retry.', {
+              cause: incrementalError,
+            });
           }
           console.warn(
             '[handleGeneratePdf] Incremental export failed, falling back to full export',
@@ -1340,7 +1342,9 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           pdfBlob = response.data;
         } catch (incrementalError) {
           if (isLazyMode && cachedJobId) {
-            throw new Error('Incremental export failed for cached document. Please reload and retry.');
+            throw new Error('Incremental export failed for cached document. Please reload and retry.', {
+              cause: incrementalError,
+            });
           }
           console.warn(
             '[handleSaveToWorkbench] Incremental export failed, falling back to full export',
@@ -1354,7 +1358,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
 
           const payload = buildPayload();
           if (!payload) {
-            throw new Error('Failed to build payload');
+            throw new Error('Failed to build payload', { cause: incrementalError });
           }
 
           const { document, filename } = payload;

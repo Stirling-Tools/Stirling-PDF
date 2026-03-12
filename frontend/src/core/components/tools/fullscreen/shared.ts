@@ -24,7 +24,7 @@ export const getIconStyle = (): Record<string, string> => {
   return {};
 };
 
-export type ToolDisabledReason = 'comingSoon' | 'disabledByAdmin' | 'missingDependency' | 'unknownUnavailable' | 'requiresPremium' | null;
+export type ToolDisabledReason = 'comingSoon' | 'disabledByAdmin' | 'missingDependency' | 'unknownUnavailable' | 'requiresPremium' | 'selfHostedOffline' | null;
 
 export const getToolDisabledReason = (
   id: string,
@@ -43,6 +43,9 @@ export const getToolDisabledReason = (
 
   const availabilityInfo = toolAvailability?.[id as ToolId];
   if (availabilityInfo && availabilityInfo.available === false) {
+    if (availabilityInfo.reason === 'selfHostedOffline') {
+      return 'selfHostedOffline';
+    }
     if (availabilityInfo.reason === 'missingDependency') {
       return 'missingDependency';
     }
@@ -62,6 +65,12 @@ export const getDisabledLabel = (
     return {
       key: 'toolPanel.premiumFeature',
       fallback: 'Premium feature:'
+    };
+  }
+  if (disabledReason === 'selfHostedOffline') {
+    return {
+      key: 'toolPanel.fullscreen.selfHostedOffline',
+      fallback: 'Requires your Stirling-PDF server (currently offline):'
     };
   }
   if (disabledReason === 'missingDependency') {

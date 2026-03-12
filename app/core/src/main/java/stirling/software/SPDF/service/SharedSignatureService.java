@@ -15,8 +15,6 @@ import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.SignatureFile;
@@ -24,18 +22,20 @@ import stirling.software.SPDF.model.api.signature.SavedSignatureRequest;
 import stirling.software.SPDF.model.api.signature.SavedSignatureResponse;
 import stirling.software.common.configuration.InstallationPathConfig;
 
+import tools.jackson.databind.ObjectMapper;
+
 @Service
 @Slf4j
 public class SharedSignatureService {
 
     private static final Pattern FILENAME_VALIDATION_PATTERN = Pattern.compile("^[a-zA-Z0-9_.-]+$");
     private final String SIGNATURE_BASE_PATH;
-    private final String ALL_USERS_FOLDER = "ALL_USERS";
+    private static final String ALL_USERS_FOLDER = "ALL_USERS";
     private final ObjectMapper objectMapper;
 
-    public SharedSignatureService() {
+    public SharedSignatureService(ObjectMapper objectMapper) {
         SIGNATURE_BASE_PATH = InstallationPathConfig.getSignaturesPath();
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = objectMapper;
     }
 
     public boolean hasAccessToFile(String username, String fileName) throws IOException {
@@ -159,12 +159,12 @@ public class SharedSignatureService {
         String dataUrl = request.getDataUrl();
         if (dataUrl != null && dataUrl.startsWith("data:image/")) {
             // Extract base64 data
-            String base64Data = dataUrl.substring(dataUrl.indexOf(",") + 1);
+            String base64Data = dataUrl.substring(dataUrl.indexOf(',') + 1);
             byte[] imageBytes = Base64.getDecoder().decode(base64Data);
 
             // Determine and validate file extension from data URL
-            String mimeType = dataUrl.substring(dataUrl.indexOf(":") + 1, dataUrl.indexOf(";"));
-            String rawExtension = mimeType.substring(mimeType.indexOf("/") + 1);
+            String mimeType = dataUrl.substring(dataUrl.indexOf(':') + 1, dataUrl.indexOf(';'));
+            String rawExtension = mimeType.substring(mimeType.indexOf('/') + 1);
             String extension = validateAndNormalizeExtension(rawExtension);
 
             // Save image file only

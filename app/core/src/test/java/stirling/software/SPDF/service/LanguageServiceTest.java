@@ -69,15 +69,15 @@ class LanguageServiceTest {
         // Setup
         Set<String> expectedLanguages =
                 new HashSet<>(Arrays.asList("en_US", "fr_FR", "de_DE", "en_GB"));
-        Set<String> allowedLanguages = new HashSet<>(Arrays.asList("en_US", "fr_FR", "en_GB"));
+        Set<String> allowedLanguages = new HashSet<>(Arrays.asList("en_US", "fr_FR"));
 
         // Mock the resource resolver response
         Resource[] mockResources = createMockResources(expectedLanguages);
         ((LanguageServiceForTest) languageService).setMockResources(mockResources);
 
-        // Set language restrictions in properties
+        // Set language restrictions in properties - strict whitelist only
         when(applicationProperties.getUi().getLanguages())
-                .thenReturn(Arrays.asList("en_US", "fr_FR")); // en_GB is always allowed
+                .thenReturn(Arrays.asList("en_US", "fr_FR"));
 
         // Test
         Set<String> supportedLanguages = languageService.getSupportedLanguages();
@@ -86,8 +86,9 @@ class LanguageServiceTest {
         assertEquals(
                 allowedLanguages,
                 supportedLanguages,
-                "Should return only allowed languages, plus en_GB which is always allowed");
-        assertTrue(supportedLanguages.contains("en_GB"), "en_GB should always be included");
+                "Should return only whitelisted languages");
+        assertFalse(supportedLanguages.contains("en_GB"), "en_GB should NOT be included when not in whitelist");
+        assertFalse(supportedLanguages.contains("de_DE"), "de_DE should NOT be included when not in whitelist");
     }
 
     @Test

@@ -2,159 +2,45 @@ import { useCallback, useRef, useEffect } from 'react';
 import apiClient from '@app/services/apiClient';
 import { useTranslation } from 'react-i18next';
 import { useFileContext } from '@app/contexts/FileContext';
-import { useToolState, type ProcessingProgress } from '@app/hooks/tools/shared/useToolState';
+import { useNavigationActions } from '@app/contexts/NavigationContext';
+import { useToolState } from '@app/hooks/tools/shared/useToolState';
 import { useToolApiCalls, type ApiCallsConfig } from '@app/hooks/tools/shared/useToolApiCalls';
 import { useToolResources } from '@app/hooks/tools/shared/useToolResources';
-import { extractErrorMessage } from '@app/utils/toolErrorHandler';
-import { StirlingFile, extractFiles, FileId, StirlingFileStub, createStirlingFile } from '@app/types/fileContext';
+import { extractErrorMessage, handle422Error } from '@app/utils/toolErrorHandler';
+import { StirlingFile, extractFiles, FileId, StirlingFileStub } from '@app/types/fileContext';
 import { FILE_EVENTS } from '@app/services/errorUtils';
 import { getFilenameWithoutExtension } from '@app/utils/fileUtils';
-import { ResponseHandler } from '@app/utils/toolResponseProcessor';
 import { createChildStub, generateProcessedFileMetadata } from '@app/contexts/file/fileActions';
 import { createNewStirlingFileStub } from '@app/types/fileContext';
 import { ToolOperation } from '@app/types/file';
-import { ToolId } from '@app/types/toolId';
 import { ensureBackendReady } from '@app/services/backendReadinessGuard';
+import { useWillUseCloud } from '@app/hooks/useWillUseCloud';
+import { useCreditCheck } from '@app/hooks/useCreditCheck';
+import { notifyPdfProcessingComplete } from '@app/services/desktopNotificationService';
+import { buildInputTracking, buildOutputPairs } from '@app/hooks/tools/shared/toolOperationHelpers';
+import {
+  ToolType,
+  ToolOperationConfig,
+  ToolOperationHook,
+  CustomProcessorResult,
+  SingleFileToolOperationConfig,
+  MultiFileToolOperationConfig,
+  CustomToolOperationConfig,
+  ProcessingProgress,
+  ResponseHandler,
+} from '@app/hooks/tools/shared/toolOperationTypes';
 
-// Re-export for backwards compatibility
-export type { ProcessingProgress, ResponseHandler };
-
-export enum ToolType {
-  singleFile,
-  multiFile,
-  custom,
-}
-
-/**
- * Result from custom processor with optional metadata about input consumption.
- */
-export interface CustomProcessorResult {
-  /** Processed output files */
-  files: File[];
-  /**
-   * When true, marks all input files as successfully consumed regardless of output count.
-   * Use when operation combines N inputs into fewer outputs (e.g., 3 images → 1 PDF).
-   * When false/undefined, uses filename-based mapping to determine which inputs succeeded.
-   */
-  consumedAllInputs?: boolean;
-}
-
-/**
- * Configuration for tool operations defining processing behavior and API integration.
- *
- * Supports three patterns:
- * 1. Single-file tools: multiFileEndpoint: false, processes files individually
- * 2. Multi-file tools: multiFileEndpoint: true, single API call with all files
- * 3. Complex tools: customProcessor handles all processing logic
- */
-interface BaseToolOperationConfig<TParams> {
-  /** Operation identifier for tracking and logging */
-  operationType: ToolId;
-
-  /**
-   * Prefix added to processed filenames (e.g., 'compressed_', 'split_').
-   * Only generally useful for multiFile interfaces.
-   */
-  filePrefix?: string;
-
-  /**
-   * Whether to preserve the filename provided by the backend in response headers.
-   * When true, ignores filePrefix and uses the filename from Content-Disposition header.
-   * Useful for tools like auto-rename where the backend determines the final filename.
-   */
-  preserveBackendFilename?: boolean;
-
-  /** How to handle API responses (e.g., ZIP extraction, single file response) */
-  responseHandler?: ResponseHandler;
-
-  /** Extract user-friendly error messages from API errors */
-  getErrorMessage?: (error: any) => string;
-
-  /** Default parameter values for automation */
-  defaultParameters?: TParams;
-
-  /**
-   * For custom tools: if true, success implies all input files were successfully processed.
-   * Use this for tools like Automate or Merge where Many-to-One relationships exist
-   * and exact input-output mapping is difficult.
-   */
-  consumesAllInputs?: boolean;
-}
-
-export interface SingleFileToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
-  /** This tool processes one file at a time. */
-  toolType: ToolType.singleFile;
-
-  /** Builds FormData for API request. */
-  buildFormData: ((params: TParams, file: File) => FormData);
-
-  /** API endpoint for the operation. Can be static string or function for dynamic routing. */
-  endpoint: string | ((params: TParams) => string);
-
-  customProcessor?: undefined;
-}
-
-export interface MultiFileToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
-  /** This tool processes multiple files at once. */
-  toolType: ToolType.multiFile;
-
-  /** Prefix added to processed filename (e.g., 'merged_', 'split_') */
-  filePrefix: string;
-
-  /** Builds FormData for API request. */
-  buildFormData: ((params: TParams, files: File[]) => FormData);
-
-  /** API endpoint for the operation. Can be static string or function for dynamic routing. */
-  endpoint: string | ((params: TParams) => string);
-
-  customProcessor?: undefined;
-}
-
-export interface CustomToolOperationConfig<TParams> extends BaseToolOperationConfig<TParams> {
-  /** This tool has custom behaviour. */
-  toolType: ToolType.custom;
-
-  buildFormData?: undefined;
-  endpoint?: undefined;
-
-  /**
-   * Custom processing logic that completely bypasses standard file processing.
-   * This tool handles all API calls, response processing, and file creation.
-   * Use for tools with complex routing logic or non-standard processing requirements.
-   *
-   * Returns CustomProcessorResult with:
-   * - files: Processed output files
-   * - consumedAllInputs: true if operation combines N inputs → fewer outputs
-   */
-  customProcessor: (params: TParams, files: File[]) => Promise<CustomProcessorResult>;
-}
-
-export type ToolOperationConfig<TParams = void> = SingleFileToolOperationConfig<TParams> | MultiFileToolOperationConfig<TParams> | CustomToolOperationConfig<TParams>;
-
-/**
- * Complete tool operation interface with execution capability
- */
-export interface ToolOperationHook<TParams = void> {
-  // State
-  files: File[];
-  thumbnails: string[];
-  isGeneratingThumbnails: boolean;
-  downloadUrl: string | null;
-  downloadFilename: string;
-  downloadLocalPath?: string | null;
-  outputFileIds?: string[] | null;
-  isLoading: boolean;
-  status: string;
-  errorMessage: string | null;
-  progress: ProcessingProgress | null;
-
-  // Actions
-  executeOperation: (params: TParams, selectedFiles: StirlingFile[]) => Promise<void>;
-  resetResults: () => void;
-  clearError: () => void;
-  cancelOperation: () => void;
-  undoOperation: () => Promise<void>;
-}
+export { ToolType };
+export type {
+  ToolOperationConfig,
+  ToolOperationHook,
+  CustomProcessorResult,
+  SingleFileToolOperationConfig,
+  MultiFileToolOperationConfig,
+  CustomToolOperationConfig,
+  ProcessingProgress,
+  ResponseHandler,
+};
 
 // Re-export for backwards compatibility
 export { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
@@ -176,12 +62,23 @@ export const useToolOperation = <TParams>(
 ): ToolOperationHook<TParams> => {
   const { t } = useTranslation();
   const { addFiles, consumeFiles, undoConsumeFiles, selectors } = useFileContext();
+  const { actions: navActions } = useNavigationActions();
 
   // Composed hooks
   const { state, actions } = useToolState();
   const { actions: fileActions } = useFileContext();
   const { processFiles, cancelOperation: cancelApiCalls } = useToolApiCalls<TParams>();
   const { generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles } = useToolResources();
+
+  const { checkCredits } = useCreditCheck(config.operationType);
+
+  // Determine endpoint for cloud usage check
+  const endpointString = config.toolType !== ToolType.custom && config.endpoint
+    ? (typeof config.endpoint === 'function'
+        ? (config.defaultParameters ? config.endpoint(config.defaultParameters) : undefined)
+        : config.endpoint)
+    : undefined;
+  const willUseCloud = useWillUseCloud(endpointString);
 
   // Track last operation for undo functionality
   const lastOperationRef = useRef<{
@@ -217,7 +114,22 @@ export const useToolOperation = <TParams>(
       return;
     }
 
-    const backendReady = await ensureBackendReady();
+    // Get endpoint (static or dynamic) for backend readiness check
+    const endpoint = config.customProcessor
+      ? undefined // Custom processors may not have endpoints
+      : typeof config.endpoint === 'function'
+        ? config.endpoint(params)
+        : config.endpoint;
+
+    // Credit check — no-op in core builds, real check in desktop/SaaS versions
+    const creditError = await checkCredits();
+    if (creditError !== null) {
+      actions.setError(creditError);
+      return;
+    }
+
+    // Backend readiness check (will skip for SaaS-routed endpoints)
+    const backendReady = await ensureBackendReady(endpoint);
     if (!backendReady) {
       actions.setError(t('backendHealth.offline', 'Embedded backend is offline. Please try again shortly.'));
       return;
@@ -368,7 +280,6 @@ export const useToolOperation = <TParams>(
       if (processedFiles.length > 0) {
         actions.setFiles(processedFiles);
 
-
         // Generate thumbnails and download URL concurrently
         actions.setGeneratingThumbnails(true);
         const [thumbnails, downloadInfo] = await Promise.all([
@@ -378,124 +289,122 @@ export const useToolOperation = <TParams>(
         actions.setGeneratingThumbnails(false);
 
         actions.setThumbnails(thumbnails);
-        const downloadLocalPath =
-          validFiles.length === 1 && processedFiles.length === 1
-            ? selectors.getStirlingFileStub(validFiles[0].fileId)?.localFilePath ?? null
-            : null;
 
-        // Replace input files with processed files (consumeFiles handles pinning)
-        const inputFileIds: FileId[] = [];
-        const inputStirlingFileStubs: StirlingFileStub[] = [];
+        // Determine whether outputs are new versions of their inputs or independent artifacts.
+        // A version operation produces exactly one output per successful input, all in the same
+        // format (e.g. compress, rotate, redact: 1→1 or N→N same extension).
+        // Everything else — format conversions (ext change), merges (N→1), splits (1→N) —
+        // produces outputs that have no meaningful parent-child relationship with the inputs.
+        const isVersionOp = processedFiles.length > 0
+          && successSourceIds.length === processedFiles.length
+          && successSourceIds.every((id, i) => {
+            const inputFile = validFiles.find(f => f.fileId === id);
+            const inExt = inputFile?.name.split('.').pop()?.toLowerCase();
+            const outExt = processedFiles[i].name.split('.').pop()?.toLowerCase();
+            return inExt != null && inExt === outExt;
+          });
 
-        // Build parallel arrays of IDs and records for undo tracking
-        for (const file of validFiles) {
-          const fileId = file.fileId;
-          const record = selectors.getStirlingFileStub(fileId);
-          if (record) {
-            inputFileIds.push(fileId);
-            inputStirlingFileStubs.push(record);
-          } else {
-            console.warn(`No file stub found for file: ${file.name}`);
-            const fallbackStub = createNewStirlingFileStub(file, fileId);
-            inputFileIds.push(fileId);
-            inputStirlingFileStubs.push(fallbackStub);
-          }
-        }
-
-        // Create new tool operation
-        const newToolOperation: ToolOperation = {
-          toolId: config.operationType,
-          timestamp: Date.now()
-        };
-
-        // Generate fresh processedFileMetadata for all processed files to ensure accuracy
         actions.setStatus('Generating metadata for processed files...');
         const processedFileMetadataArray = await Promise.all(
           processedFiles.map(file => generateProcessedFileMetadata(file))
         );
-        // Always create child stubs linking back to the successful source inputs
-        const successInputStubs = successSourceIds
-          .map((id) => selectors.getStirlingFileStub(id))
-          .filter(Boolean) as StirlingFileStub[];
 
-        if (successInputStubs.length !== processedFiles.length) {
-          console.warn('[useToolOperation] Mismatch successInputStubs vs outputs', {
-            successInputStubs: successInputStubs.length,
-            outputs: processedFiles.length,
-          });
-        }
+        const { inputFileIds, inputStirlingFileStubs } = buildInputTracking(validFiles, selectors);
 
-        const outputStirlingFileStubs = processedFiles.map((resultingFile, index) =>
-          createChildStub(
-            successInputStubs[index] || inputStirlingFileStubs[index] || inputStirlingFileStubs[0],
-            newToolOperation,
-            resultingFile,
-            thumbnails[index],
-            processedFileMetadataArray[index]
-          )
-        );
+        if (isVersionOp) {
+          // Output is a modified version of the input — link it to the input's version chain.
+          // The input is removed from the workbench and replaced in-place by the output.
+          const downloadLocalPath =
+            selectors.getStirlingFileStub(validFiles[0].fileId)?.localFilePath ?? null;
 
-        // Create StirlingFile objects from processed files and child stubs
-        const outputStirlingFiles = processedFiles.map((file, index) => {
-          const childStub = outputStirlingFileStubs[index];
-          return createStirlingFile(file, childStub.id);
-        });
-        // Build consumption arrays aligned to the successful source IDs
-        const toConsumeInputIds = successSourceIds.filter((id) => inputFileIds.includes(id));
-        // Outputs and stubs are already ordered by success sequence
-        console.debug('[useToolOperation] Consuming files', { inputCount: inputFileIds.length, toConsume: toConsumeInputIds.length });
-        const outputFileIds = await consumeFiles(toConsumeInputIds, outputStirlingFiles, outputStirlingFileStubs);
+          const newToolOperation: ToolOperation = {
+            toolId: config.operationType,
+            timestamp: Date.now()
+          };
 
-        if (toConsumeInputIds.length === 1 && outputFileIds.length === 1) {
-          const inputStub = selectors.getStirlingFileStub(toConsumeInputIds[0]);
-          if (inputStub?.localFilePath) {
-            fileActions.updateStirlingFileStub(outputFileIds[0], {
-              localFilePath: inputStub.localFilePath
+          const successInputStubs = successSourceIds
+            .map((id) => selectors.getStirlingFileStub(id))
+            .filter(Boolean) as StirlingFileStub[];
+
+          if (successInputStubs.length !== processedFiles.length) {
+            console.warn('[useToolOperation] Mismatch successInputStubs vs outputs', {
+              successInputStubs: successInputStubs.length,
+              outputs: processedFiles.length,
             });
           }
+
+          const { outputStirlingFileStubs, outputStirlingFiles } = buildOutputPairs(
+            processedFiles, thumbnails, processedFileMetadataArray,
+            (file, thumbnail, metadata, index) => createChildStub(
+              successInputStubs[index] || inputStirlingFileStubs[index] || inputStirlingFileStubs[0],
+              newToolOperation, file, thumbnail, metadata
+            )
+          );
+
+          // Only consume inputs that successfully produced outputs
+          const toConsumeInputIds = successSourceIds.filter((id) => inputFileIds.includes(id));
+          console.debug('[useToolOperation] Consuming files (version)', { inputCount: inputFileIds.length, toConsume: toConsumeInputIds.length });
+          const outputFileIds = await consumeFiles(toConsumeInputIds, outputStirlingFiles, outputStirlingFileStubs);
+
+          // Notify on desktop when processing completes
+          await notifyPdfProcessingComplete(outputFileIds.length);
+
+          // Carry the desktop save path forward so the output can be saved back to the same file
+          if (toConsumeInputIds.length === 1 && outputFileIds.length === 1) {
+            const inputStub = selectors.getStirlingFileStub(toConsumeInputIds[0]);
+            if (inputStub?.localFilePath) {
+              fileActions.updateStirlingFileStub(outputFileIds[0], {
+                localFilePath: inputStub.localFilePath
+              });
+            }
+          }
+
+          actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename, downloadLocalPath, outputFileIds);
+
+          lastOperationRef.current = {
+            inputFiles: extractFiles(validFiles),
+            inputStirlingFileStubs: inputStirlingFileStubs.map(record => ({ ...record })),
+            outputFileIds
+          };
+
+        } else {
+          // Outputs are independent artifacts (format conversion, merge, split).
+          // Create fresh root stubs with no parent chain, then swap out only the inputs
+          // that successfully produced outputs — other workbench files are untouched.
+          const { outputStirlingFileStubs, outputStirlingFiles } = buildOutputPairs(
+            processedFiles, thumbnails, processedFileMetadataArray,
+            (file, thumbnail, metadata) => createNewStirlingFileStub(file, undefined, thumbnail, metadata)
+          );
+
+          const toConsumeInputIds = successSourceIds.filter((id) => inputFileIds.includes(id));
+          console.debug('[useToolOperation] Consuming files (independent)', { inputCount: inputFileIds.length, toConsume: toConsumeInputIds.length });
+          const outputFileIds = await consumeFiles(toConsumeInputIds, outputStirlingFiles, outputStirlingFileStubs);
+
+          // Notify on desktop when processing completes
+          await notifyPdfProcessingComplete(outputFileIds.length);
+
+          actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename, null, outputFileIds);
+
+          // Send the user to the viewer for a single PDF output, otherwise the file editor
+          const isSinglePdf = processedFiles.length === 1
+            && processedFiles[0].type === 'application/pdf';
+          navActions.setWorkbench(isSinglePdf ? 'viewer' : 'fileEditor');
+
+          lastOperationRef.current = {
+            inputFiles: extractFiles(validFiles),
+            inputStirlingFileStubs: inputStirlingFileStubs.map(record => ({ ...record })),
+            outputFileIds
+          };
         }
-
-        // Pass output file IDs to download info for marking clean after save
-        actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename, downloadLocalPath, outputFileIds);
-
-        // Store operation data for undo (only store what we need to avoid memory bloat)
-        lastOperationRef.current = {
-          inputFiles: extractFiles(validFiles), // Convert to File objects for undo
-          inputStirlingFileStubs: inputStirlingFileStubs.map(record => ({ ...record })), // Deep copy to avoid reference issues
-          outputFileIds
-        };
 
       }
 
     } catch (error: any) {
-      // Centralized 422 handler: mark provided IDs in errorFileIds
       try {
-        const status = error?.response?.status;
-        if (typeof status === 'number' && status === 422) {
-          const payload = error?.response?.data;
-          let parsed: unknown = payload;
-          if (typeof payload === 'string') {
-            try { parsed = JSON.parse(payload); } catch { parsed = payload; }
-          } else if (payload && typeof (payload as Blob).text === 'function') {
-            // Blob or Response-like object from axios when responseType='blob'
-            const text = await (payload as Blob).text();
-            try { parsed = JSON.parse(text); } catch { parsed = text; }
-          }
-          let ids: string[] | undefined = Array.isArray((parsed as { errorFileIds?: unknown })?.errorFileIds)
-            ? (parsed as { errorFileIds: string[] }).errorFileIds
-            : undefined;
-          if (!ids && typeof parsed === 'string') {
-            const match = parsed.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/g);
-            if (match && match.length > 0) ids = Array.from(new Set(match));
-          }
-          if (ids && ids.length > 0) {
-            for (const badId of ids) {
-              try { fileActions.markFileError(badId as FileId); } catch (_e) { void _e; }
-            }
-            actions.setStatus('Process failed due to invalid/corrupted file(s)');
-            // Avoid duplicating toast messaging here
-            return;
-          }
+        const handled = await handle422Error(error, (id) => fileActions.markFileError(id as FileId));
+        if (handled) {
+          actions.setStatus('Process failed due to invalid/corrupted file(s)');
+          return;
         }
       } catch (_e) { void _e; }
 
@@ -507,7 +416,7 @@ export const useToolOperation = <TParams>(
       actions.setLoading(false);
       actions.setProgress(null);
     }
-  }, [t, config, actions, addFiles, consumeFiles, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles]);
+  }, [t, config, actions, addFiles, consumeFiles, navActions, processFiles, generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles, willUseCloud, checkCredits]);
 
   const cancelOperation = useCallback(() => {
     cancelApiCalls();
@@ -591,6 +500,7 @@ export const useToolOperation = <TParams>(
     status: state.status,
     errorMessage: state.errorMessage,
     progress: state.progress,
+    willUseCloud,
 
     // Actions
     executeOperation,

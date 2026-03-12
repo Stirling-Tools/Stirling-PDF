@@ -1,5 +1,7 @@
 package stirling.software.proprietary.controller.api;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -7,9 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +18,9 @@ import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.model.security.PersistentAuditEvent;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /** REST API controller for usage analytics data used by React frontend. */
 @Slf4j
@@ -32,34 +34,32 @@ public class UsageRestController {
     private final ObjectMapper objectMapper;
 
     /**
-     * Get endpoint statistics derived from audit events. This endpoint analyzes HTTP_REQUEST audit
-     * events to generate usage statistics.
+     * Get endpoint statistics derived from audit events. This endpoint analyzes audit events
+     * filtered by type to generate usage statistics.
      *
      * @param limit Optional limit on number of endpoints to return
-     * @param dataType Type of data to include: "all" (default), "api" (API endpoints excluding
-     *     auth), or "ui" (non-API endpoints)
+     * @param dataType Type of data to include: "all" (default), "api" (operational endpoints), or
+     *     "ui" (UI data endpoints)
+     * @param days Lookback window in days (default 30, clamped to 1-365)
      * @return Endpoint statistics response
      */
     @GetMapping("/usage-endpoint-statistics")
     public ResponseEntity<EndpointStatisticsResponse> getEndpointStatistics(
             @RequestParam(value = "limit", required = false) Integer limit,
-            @RequestParam(value = "dataType", defaultValue = "all") String dataType) {
+            @RequestParam(value = "dataType", defaultValue = "all") String dataType,
+            @RequestParam(value = "days", defaultValue = "30") Integer days) {
 
-        // Get all HTTP_REQUEST audit events
-        List<PersistentAuditEvent> httpEvents =
-                auditRepository.findByTypeForExport(AuditEventType.HTTP_REQUEST.name());
+        int lookbackDays = Math.max(1, Math.min(days, 365));
+
+        // Get audit events filtered by type
+        List<PersistentAuditEvent> events = getEventsByDataType(dataType, lookbackDays);
 
         // Count visits per endpoint
         Map<String, Long> endpointCounts = new HashMap<>();
 
-        for (PersistentAuditEvent event : httpEvents) {
+        for (PersistentAuditEvent event : events) {
             String endpoint = extractEndpointFromAuditData(event.getData());
             if (endpoint != null) {
-                // Apply data type filter
-                if (!shouldIncludeEndpoint(endpoint, dataType)) {
-                    continue;
-                }
-
                 endpointCounts.merge(endpoint, 1L, Long::sum);
             }
         }
@@ -135,7 +135,7 @@ public class UsageRestController {
                 return normalizeEndpoint(requestUri.toString());
             }
 
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.debug("Failed to parse audit data JSON: {}", dataJson, e);
         }
 
@@ -168,52 +168,28 @@ public class UsageRestController {
     }
 
     /**
-     * Determine if an endpoint should be included based on the data type filter.
+     * Get audit events filtered by data type. UI = UI_DATA events. API = everything except UI_DATA.
      *
-     * @param endpoint The endpoint path to check
-     * @param dataType The filter type: "all", "api", or "ui"
-     * @return true if the endpoint should be included, false otherwise
+     * @param dataType "all", "api" (not UI_DATA), or "ui" (UI_DATA only)
+     * @param days lookback window in days
+     * @return List of audit events matching the data type filter
      */
-    private boolean shouldIncludeEndpoint(String endpoint, String dataType) {
+    private List<PersistentAuditEvent> getEventsByDataType(String dataType, int days) {
+        Instant start = Instant.now().minus(Duration.ofDays(days));
+
         if ("all".equalsIgnoreCase(dataType)) {
-            return true;
-        }
-
-        boolean isApiEndpoint = isApiEndpoint(endpoint);
-
-        if ("api".equalsIgnoreCase(dataType)) {
-            return isApiEndpoint;
+            return auditRepository.findByTimestampAfter(start);
         } else if ("ui".equalsIgnoreCase(dataType)) {
-            return !isApiEndpoint;
+            // UI data endpoints only
+            return auditRepository.findByTypeAndTimestampAfterForExport(
+                    AuditEventType.UI_DATA.name(), start);
+        } else if ("api".equalsIgnoreCase(dataType)) {
+            // API = everything except UI_DATA (queried at DB level, not filtered in-memory)
+            return auditRepository.findAllExceptTypeAndTimestampAfterForExport(
+                    AuditEventType.UI_DATA.name(), start);
         }
 
-        // Default to including all if unrecognized type
-        return true;
-    }
-
-    /**
-     * Check if an endpoint is an API endpoint. API endpoints match /api/v1/* pattern but exclude
-     * /api/v1/auth/* paths.
-     *
-     * @param endpoint The endpoint path to check
-     * @return true if this is an API endpoint (excluding auth endpoints), false otherwise
-     */
-    private boolean isApiEndpoint(String endpoint) {
-        if (endpoint == null) {
-            return false;
-        }
-
-        // Check if it starts with /api/v1/
-        if (!endpoint.startsWith("/api/v1/")) {
-            return false;
-        }
-
-        // Exclude auth endpoints
-        if (endpoint.startsWith("/api/v1/auth/")) {
-            return false;
-        }
-
-        return true;
+        return new ArrayList<>();
     }
 
     // DTOs for response formatting

@@ -1,13 +1,17 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { TextInput, NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, PasswordInput, Anchor } from '@mantine/core';
+import { TextInput, NumberInput, Switch, Stack, Paper, Text, Loader, Group, Anchor } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
+import { useSettingsDirty } from '@app/hooks/useSettingsDirty';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
+import { SettingsStickyFooter } from '@app/components/shared/config/SettingsStickyFooter';
+import EditableSecretField from '@app/components/shared/EditableSecretField';
 import apiClient from '@app/services/apiClient';
+import { useLoginRequired } from '@app/hooks/useLoginRequired';
 
 interface MailSettingsData {
   enabled?: boolean;
@@ -29,6 +33,7 @@ type MailApiResponse = MailSettingsData & ApiResponseWithPending<MailSettingsDat
 export default function AdminMailSection() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { loginEnabled } = useLoginRequired();
   const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
 
   const {
@@ -41,11 +46,11 @@ export default function AdminMailSection() {
     isFieldPending,
   } = useAdminSettings<MailSettingsData>({
     sectionName: 'mail',
-    fetchTransformer: async () => {
+    fetchTransformer: async (): Promise<MailSettingsData & { _pending?: Partial<MailSettingsData> }> => {
       const mailResponse = await apiClient.get<MailApiResponse>('/api/v1/admin/settings/section/mail');
       return mailResponse.data || {};
     },
-    saveTransformer: (settings) => {
+    saveTransformer: (settings: MailSettingsData) => {
       return {
         sectionData: settings,
         deltaSettings: {}
@@ -57,8 +62,11 @@ export default function AdminMailSection() {
     fetchSettings();
   }, []);
 
+  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(settings, loading);
+
   const handleSave = async () => {
     try {
+      markSaved();
       await saveSettings();
       showRestartModal();
     } catch (_error) {
@@ -70,6 +78,11 @@ export default function AdminMailSection() {
     }
   };
 
+  const handleDiscard = useCallback(() => {
+    const original = resetToSnapshot();
+    setSettings(original);
+  }, [resetToSnapshot, setSettings]);
+
   if (loading) {
     return (
       <Stack align="center" justify="center" h={200}>
@@ -79,8 +92,9 @@ export default function AdminMailSection() {
   }
 
   return (
-    <Stack gap="lg">
-      <div>
+    <div className="settings-section-container">
+      <Stack gap="lg" className="settings-section-content">
+        <div>
         <Text fw={600} size="lg">{t('admin.settings.mail.title', 'Mail Configuration')}</Text>
         <Text size="sm" c="dimmed">
           {t('admin.settings.mail.description', 'Configure SMTP settings for email notifications.')}
@@ -174,16 +188,15 @@ export default function AdminMailSection() {
           </div>
 
           <div>
-            <PasswordInput
-              label={
-                <Group gap="xs">
-                  <span>{t('admin.settings.mail.password.label', 'SMTP Password')}</span>
-                  <PendingBadge show={isFieldPending('password')} />
-                </Group>
-              }
+            <Group gap="xs" align="center" mb={4}>
+              <span style={{ fontWeight: 500, fontSize: '0.875rem' }}>{t('admin.settings.mail.password.label', 'SMTP Password')}</span>
+              <PendingBadge show={isFieldPending('password')} />
+            </Group>
+            <EditableSecretField
               description={t('admin.settings.mail.password.description', 'SMTP authentication password')}
               value={settings.password || ''}
-              onChange={(e) => setSettings({ ...settings, password: e.target.value })}
+              onChange={(value) => setSettings({ ...settings, password: value })}
+              placeholder="Enter SMTP password"
             />
           </div>
 
@@ -203,12 +216,15 @@ export default function AdminMailSection() {
           </div>
         </Stack>
       </Paper>
+      </Stack>
 
-      <Group justify="flex-end">
-        <Button onClick={handleSave} loading={saving} size="sm">
-          {t('admin.settings.save', 'Save Changes')}
-        </Button>
-      </Group>
+      <SettingsStickyFooter
+        isDirty={isDirty}
+        saving={saving}
+        loginEnabled={loginEnabled}
+        onSave={handleSave}
+        onDiscard={handleDiscard}
+      />
 
       {/* Restart Confirmation Modal */}
       <RestartConfirmationModal
@@ -216,6 +232,6 @@ export default function AdminMailSection() {
         onClose={closeRestartModal}
         onRestart={restartServer}
       />
-    </Stack>
+    </div>
   );
 }

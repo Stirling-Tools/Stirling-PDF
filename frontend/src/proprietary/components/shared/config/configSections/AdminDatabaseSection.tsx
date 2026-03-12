@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   NumberInput,
@@ -10,7 +10,6 @@ import {
   Loader,
   Group,
   TextInput,
-  PasswordInput,
   Select,
   Badge,
   Table,
@@ -26,9 +25,12 @@ import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
 import { useAdminSettings } from "@app/hooks/useAdminSettings";
+import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
+import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
+import EditableSecretField from "@app/components/shared/EditableSecretField";
 import apiClient from "@app/services/apiClient";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import databaseManagementService, { DatabaseBackupFile } from "@app/services/databaseManagementService";
@@ -66,7 +68,7 @@ export default function AdminDatabaseSection() {
   const { settings, setSettings, loading, saving, fetchSettings, saveSettings, isFieldPending } =
     useAdminSettings<DatabaseSettingsData>({
       sectionName: "database",
-      fetchTransformer: async () => {
+      fetchTransformer: async (): Promise<DatabaseSettingsData & { _pending?: Record<string, any> }> => {
         const response = await apiClient.get("/api/v1/admin/settings/section/system");
         const systemData = response.data || {};
 
@@ -83,14 +85,14 @@ export default function AdminDatabaseSection() {
         };
 
         // Map pending changes from system._pending.datasource to root level
-        const result: any = { ...datasource };
+        const result: DatabaseSettingsData & { _pending?: Record<string, any> } = { ...datasource };
         if (systemData._pending?.datasource) {
           result._pending = systemData._pending.datasource;
         }
 
         return result;
       },
-      saveTransformer: (settings) => {
+      saveTransformer: (settings: DatabaseSettingsData) => {
         // Convert flat settings to dot-notation for delta endpoint
         const deltaSettings: Record<string, any> = {
           "system.datasource.enableCustomDatabase": settings.enableCustomDatabase,
@@ -155,12 +157,15 @@ export default function AdminDatabaseSection() {
     loadBackupData();
   }, [loginEnabled, isEmbeddedH2, isCustomDatabase, datasourceType]);
 
+  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(settings, loading);
+
   const handleSave = async () => {
     if (!validateLoginEnabled()) {
       return;
     }
 
     try {
+      markSaved();
       await saveSettings();
       showRestartModal();
     } catch (_error) {
@@ -171,6 +176,11 @@ export default function AdminDatabaseSection() {
       });
     }
   };
+
+  const handleDiscard = useCallback(() => {
+    const original = resetToSnapshot();
+    setSettings(original);
+  }, [resetToSnapshot, setSettings]);
 
   const handleCreateBackup = async () => {
     if (!validateLoginEnabled()) return;
@@ -340,8 +350,9 @@ export default function AdminDatabaseSection() {
   }
 
   return (
-    <Stack gap="lg">
-      <LoginRequiredBanner show={!loginEnabled} />
+    <div className="settings-section-container">
+      <Stack gap="lg" className="settings-section-content">
+        <LoginRequiredBanner show={!loginEnabled} />
 
       <div>
         <Group justify="space-between" align="center">
@@ -515,17 +526,15 @@ export default function AdminDatabaseSection() {
               </div>
 
               <div>
-                <PasswordInput
-                  label={
-                    <Group gap="xs">
-                      <span>{t("admin.settings.database.password.label", "Password")}</span>
-                      <PendingBadge show={isFieldPending("password")} />
-                    </Group>
-                  }
+                <Group gap="xs" align="center" mb={4}>
+                  <span style={{ fontWeight: 500, fontSize: "0.875rem" }}>{t("admin.settings.database.password.label", "Password")}</span>
+                  <PendingBadge show={isFieldPending("password")} />
+                </Group>
+                <EditableSecretField
                   description={t("admin.settings.database.password.description", "Database authentication password")}
                   value={settings?.password || ""}
-                  onChange={(e) => setSettings({ ...settings, password: e.target.value })}
-                  placeholder="••••••••"
+                  onChange={(value) => setSettings({ ...settings, password: value })}
+                  placeholder="Enter database password"
                   disabled={!loginEnabled}
                 />
               </div>
@@ -534,13 +543,17 @@ export default function AdminDatabaseSection() {
         </Stack>
       </Paper>
 
-      {/* Save Button */}
-      <Group justify="flex-end">
-        <Button onClick={handleSave} loading={saving} size="sm" disabled={!loginEnabled}>
-          {t("admin.settings.save", "Save Changes")}
-        </Button>
-      </Group>
+      </Stack>
 
+      <SettingsStickyFooter
+        isDirty={isDirty}
+        saving={saving}
+        loginEnabled={loginEnabled}
+        onSave={handleSave}
+        onDiscard={handleDiscard}
+      />
+
+      <Stack gap="lg" className="settings-section-content" style={{ marginTop: 0 }}>
       <Divider my="md" />
 
       <Stack gap="md">
@@ -797,6 +810,7 @@ export default function AdminDatabaseSection() {
           </Group>
         </Stack>
       </Modal>
-    </Stack>
+      </Stack>
+    </div>
   );
 }

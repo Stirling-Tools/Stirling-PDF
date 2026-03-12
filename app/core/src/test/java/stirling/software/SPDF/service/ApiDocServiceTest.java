@@ -12,13 +12,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import jakarta.servlet.ServletContext;
 
 import stirling.software.SPDF.model.ApiEndpoint;
 import stirling.software.common.service.UserServiceInterface;
+
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 @ExtendWith(MockitoExtension.class)
 class ApiDocServiceTest {
@@ -27,11 +28,11 @@ class ApiDocServiceTest {
     @Mock UserServiceInterface userService;
 
     ApiDocService apiDocService;
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = JsonMapper.builder().build();
 
     @BeforeEach
     void setUp() {
-        apiDocService = new ApiDocService(servletContext, userService);
+        apiDocService = new ApiDocService(mapper, servletContext, userService);
     }
 
     private void setApiDocumentation(Map<String, ApiEndpoint> docs) throws Exception {
@@ -73,15 +74,37 @@ class ApiDocServiceTest {
     @Test
     void isValidOperationChecksRequiredParameters() throws Exception {
         String json =
-                "{\"description\": \"desc\", \"parameters\": [{\"name\":\"param1\"}, {\"name\":\"param2\"}]}";
+                "{\"description\": \"desc\", \"parameters\": [{\"name\":\"param1\", \"required\": true}, {\"name\":\"param2\", \"required\": true}]}";
         JsonNode postNode = mapper.readTree(json);
         ApiEndpoint endpoint = new ApiEndpoint("/op", postNode);
 
         setApiDocumentation(Map.of("/op", endpoint));
         setApiDocsJsonRootNode();
 
+        // All required params provided - valid
         assertTrue(apiDocService.isValidOperation("/op", Map.of("param1", "a", "param2", "b")));
+        // Missing required param2 - invalid
         assertFalse(apiDocService.isValidOperation("/op", Map.of("param1", "a")));
+        // Missing required param1 - invalid
+        assertFalse(apiDocService.isValidOperation("/op", Map.of("param2", "b")));
+    }
+
+    @Test
+    void isValidOperationAllowsOptionalParameters() throws Exception {
+        String json =
+                "{\"description\": \"desc\", \"parameters\": [{\"name\":\"param1\", \"required\": false}, {\"name\":\"param2\", \"required\": false}]}";
+        JsonNode postNode = mapper.readTree(json);
+        ApiEndpoint endpoint = new ApiEndpoint("/op", postNode);
+
+        setApiDocumentation(Map.of("/op", endpoint));
+        setApiDocsJsonRootNode();
+
+        // All optional params provided - valid
+        assertTrue(apiDocService.isValidOperation("/op", Map.of("param1", "a", "param2", "b")));
+        // Only one optional param provided - valid
+        assertTrue(apiDocService.isValidOperation("/op", Map.of("param1", "a")));
+        // No optional params provided - valid
+        assertTrue(apiDocService.isValidOperation("/op", Map.of()));
     }
 
     @Test

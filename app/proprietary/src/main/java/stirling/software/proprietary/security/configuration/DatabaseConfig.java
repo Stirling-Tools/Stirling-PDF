@@ -6,9 +6,9 @@ import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.jdbc.DatabaseDriver;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -75,10 +75,18 @@ public class DatabaseConfig {
     }
 
     private DataSource useDefaultDataSource(DataSourceBuilder<?> dataSourceBuilder) {
+        // Support AOT training: override URL via system property to avoid H2 file lock
+        // conflicts when the AOT RECORD phase starts a second Spring context
+        String overrideUrl = System.getProperty("stirling.datasource.url");
+        String url =
+                (overrideUrl != null && !overrideUrl.isBlank())
+                        ? overrideUrl
+                        : DATASOURCE_DEFAULT_URL;
+
         log.info("Using default H2 database");
 
         dataSourceBuilder
-                .url(DATASOURCE_DEFAULT_URL)
+                .url(url)
                 .driverClassName(DatabaseDriver.H2.getDriverClassName())
                 .username(DEFAULT_USERNAME);
 

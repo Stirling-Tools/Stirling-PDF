@@ -133,7 +133,7 @@ const validateParameters = (params: ConvertParameters): boolean => {
   if (!fromExtension || !toExtension) return false;
 
   // Handle dynamic format identifiers (file-<extension>)
-  let supportedToExtensions: string[] = [];
+  let supportedToExtensions: string[];
   if (fromExtension.startsWith('file-')) {
     // Dynamic format - use 'any' conversion options
     supportedToExtensions = CONVERSION_MATRIX['any'] || [];

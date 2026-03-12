@@ -19,7 +19,7 @@ export interface ZoomActions {
   zoomIn: () => void;
   zoomOut: () => void;
   toggleMarqueeZoom: () => void;
-  requestZoom: (level: number) => void;
+  requestZoom: (level: any, center?: any) => void;
 }
 
 export interface PanActions {
@@ -56,7 +56,6 @@ export interface SearchActions {
 }
 
 export interface ExportActions {
-  download: () => void;
   saveAsCopy: () => Promise<ArrayBuffer | null>;
 }
 
@@ -200,10 +199,10 @@ export function createViewerActions({
         api.toggleMarqueeZoom();
       }
     },
-    requestZoom: (level: number) => {
+    requestZoom: (level: any, center?: any) => {
       const api = registry.current.zoom?.api;
       if (api?.requestZoom) {
-        api.requestZoom(level);
+        api.requestZoom(level, center);
       }
     },
   };
@@ -336,12 +335,6 @@ export function createViewerActions({
   };
 
   const exportActions: ExportActions = {
-    download: () => {
-      const api = registry.current.export?.api;
-      if (api?.download) {
-        api.download();
-      }
-    },
     saveAsCopy: async () => {
       const api = registry.current.export?.api;
       if (api?.saveAsCopy) {

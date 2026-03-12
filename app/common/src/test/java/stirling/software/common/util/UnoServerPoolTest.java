@@ -121,17 +121,19 @@ public class UnoServerPoolTest {
 
         // Try to acquire a third endpoint in separate thread (should block)
         Thread blockingThread =
-                new Thread(
-                        () -> {
-                            try {
-                                acquireLatch.countDown(); // Signal we're about to block
-                                UnoServerPool.UnoServerLease lease3 = pool.acquireEndpoint();
-                                acquired.incrementAndGet();
-                                lease3.close();
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                            }
-                        });
+                Thread.ofVirtual()
+                        .unstarted(
+                                () -> {
+                                    try {
+                                        acquireLatch.countDown(); // Signal we're about to block
+                                        UnoServerPool.UnoServerLease lease3 =
+                                                pool.acquireEndpoint();
+                                        acquired.incrementAndGet();
+                                        lease3.close();
+                                    } catch (InterruptedException e) {
+                                        Thread.currentThread().interrupt();
+                                    }
+                                });
 
         blockingThread.start();
         acquireLatch.await(); // Wait for thread to start

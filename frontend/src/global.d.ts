@@ -26,4 +26,4 @@ declare module 'axios' {
   }
 }
 
-export {};
+export { };

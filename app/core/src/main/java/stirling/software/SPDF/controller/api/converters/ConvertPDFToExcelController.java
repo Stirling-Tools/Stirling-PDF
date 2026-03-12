@@ -70,10 +70,7 @@ public class ConvertPDFToExcelController {
                             tables.size() == 1
                                     ? String.format(Locale.ROOT, "Page %d", pageNum)
                                     : String.format(
-                                            Locale.ROOT,
-                                            "Page %d Table %d",
-                                            pageNum,
-                                            tableIdx + 1);
+                                            Locale.ROOT, "Page %d Table %d", pageNum, tableIdx + 1);
 
                     sheetName = getUniqueSheetName(workbook, sheetName);
                     Sheet sheet = workbook.createSheet(sheetName);

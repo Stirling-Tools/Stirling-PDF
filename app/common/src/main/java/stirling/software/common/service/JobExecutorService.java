@@ -35,7 +35,7 @@ public class JobExecutorService {
     private final HttpServletRequest request;
     private final ResourceMonitor resourceMonitor;
     private final JobQueue jobQueue;
-    private final ExecutorService executor = ExecutorFactory.newVirtualOrCachedThreadExecutor();
+    private final ExecutorService executor = ExecutorFactory.newVirtualThreadExecutor();
     private final long effectiveTimeoutMs;
 
     @Autowired(required = false)
@@ -316,7 +316,7 @@ public class JobExecutorService {
                             filename =
                                     disposition.substring(
                                             disposition.indexOf("filename=") + 9,
-                                            disposition.lastIndexOf("\""));
+                                            disposition.lastIndexOf('"'));
                         }
                     }
 

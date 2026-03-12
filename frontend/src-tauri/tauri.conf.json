@@ -1,7 +1,7 @@
 {
     "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
     "productName": "Stirling-PDF",
-    "version": "2.5.2",
+    "version": "2.6.0",
     "identifier": "stirling.pdf.dev",
     "build": {
         "frontendDist": "../dist",
@@ -50,7 +50,6 @@
                     "pdf"
                 ],
                 "name": "PDF Document",
-                "description": "Open PDF files with Stirling-PDF",
                 "role": "Editor",
                 "mimeType": "application/pdf"
             }

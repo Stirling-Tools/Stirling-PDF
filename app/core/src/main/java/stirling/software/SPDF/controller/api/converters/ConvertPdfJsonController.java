@@ -39,6 +39,8 @@ import stirling.software.common.util.WebResponseUtils;
 public class ConvertPdfJsonController {
 
     private static final Pattern FILE_EXTENSION_PATTERN = Pattern.compile("[.][^.]+$");
+    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("[\\r\\n\\t]+");
+    private static final Pattern NON_PRINTABLE_PATTERN = Pattern.compile("[^\\x20-\\x7E]");
     private final PdfJsonConversionService pdfJsonConversionService;
 
     @Autowired(required = false)
@@ -259,7 +261,10 @@ public class ConvertPdfJsonController {
             if (length > 0) {
                 int start = Math.max(0, length - 64);
                 tail = new String(jsonBytes, start, length - start, StandardCharsets.UTF_8);
-                tail = tail.replaceAll("[\\r\\n\\t]+", " ").replaceAll("[^\\x20-\\x7E]", "?");
+                tail =
+                        NON_PRINTABLE_PATTERN
+                                .matcher(WHITESPACE_PATTERN.matcher(tail).replaceAll(" "))
+                                .replaceAll("?");
             }
             log.debug(
                     "Returning {} JSON response ({} bytes, endsWithJson={}, tail='{}')",
@@ -421,9 +426,9 @@ public class ConvertPdfJsonController {
     private String truncateForLog(String value) {
         int max = 64;
         if (value.length() <= max) {
-            return value.replaceAll("[\\r\\n\\t]+", " ");
+            return WHITESPACE_PATTERN.matcher(value).replaceAll(" ");
         }
-        return value.substring(0, max).replaceAll("[\\r\\n\\t]+", " ") + "...";
+        return WHITESPACE_PATTERN.matcher(value.substring(0, max)).replaceAll(" ") + "...";
     }
 
     /**

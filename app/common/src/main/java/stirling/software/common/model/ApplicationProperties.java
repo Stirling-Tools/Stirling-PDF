@@ -365,11 +365,11 @@ public class ApplicationProperties {
             }
 
             public boolean isSettingsValid() {
-                return !ValidationUtils.isStringEmpty(this.getIssuer())
-                        && !ValidationUtils.isStringEmpty(this.getClientId())
-                        && !ValidationUtils.isStringEmpty(this.getClientSecret())
-                        && !ValidationUtils.isCollectionEmpty(this.getScopes())
-                        && !ValidationUtils.isStringEmpty(this.getUseAsUsername());
+                return !ValidationUtils.isStringEmpty(this.issuer)
+                        && !ValidationUtils.isStringEmpty(this.clientId)
+                        && !ValidationUtils.isStringEmpty(this.clientSecret)
+                        && !ValidationUtils.isCollectionEmpty(this.scopes)
+                        && !ValidationUtils.isStringEmpty(this.useAsUsername);
             }
 
             @Data
@@ -575,19 +575,17 @@ public class ApplicationProperties {
         }
 
         public boolean isAnalyticsEnabled() {
-            return this.getEnableAnalytics() != null && this.getEnableAnalytics();
+            return this.enableAnalytics != null && this.enableAnalytics;
         }
 
         public boolean isPosthogEnabled() {
             // Treat null as enabled when analytics is enabled
-            return this.isAnalyticsEnabled()
-                    && (this.getEnablePosthog() == null || this.getEnablePosthog());
+            return this.isAnalyticsEnabled() && (this.enablePosthog == null || this.enablePosthog);
         }
 
         public boolean isScarfEnabled() {
             // Treat null as enabled when analytics is enabled
-            return this.isAnalyticsEnabled()
-                    && (this.getEnableScarf() == null || this.getEnableScarf());
+            return this.isAnalyticsEnabled() && (this.enableScarf == null || this.enableScarf);
         }
     }
 
@@ -698,7 +696,8 @@ public class ApplicationProperties {
 
         @Override
         public String toString() {
-            return """
+            return
+                    """
             Driver {
               driverName='%s'
             }
@@ -714,6 +713,7 @@ public class ApplicationProperties {
         private String logoStyle = "classic"; // Options: "classic" (default) or "modern"
         private boolean defaultHideUnavailableTools = false;
         private boolean defaultHideUnavailableConversions = false;
+        private HideDisabledTools hideDisabledTools = new HideDisabledTools();
 
         public String getAppNameNavbar() {
             return appNameNavbar != null && !appNameNavbar.trim().isEmpty() ? appNameNavbar : null;
@@ -725,6 +725,12 @@ public class ApplicationProperties {
                 return "modern";
             }
             return "classic"; // default
+        }
+
+        @Data
+        public static class HideDisabledTools {
+            private boolean googleDrive = false;
+            private boolean mobileQRScanner = false;
         }
     }
 
@@ -913,6 +919,15 @@ public class ApplicationProperties {
             private boolean ssoAutoLogin;
             private boolean database;
             private CustomMetadata customMetadata = new CustomMetadata();
+            private GoogleDrive googleDrive = new GoogleDrive();
+
+            @Data
+            public static class GoogleDrive {
+                private boolean enabled = false;
+                private String clientId = "";
+                private String apiKey = "";
+                private String appId = "";
+            }
 
             @Data
             public static class CustomMetadata {
@@ -962,6 +977,12 @@ public class ApplicationProperties {
                 private boolean enabled = true;
                 private int level = 2; // 0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE
                 private int retentionDays = 90;
+                private boolean captureFileHash =
+                        false; // Capture SHA-256 hash of files (increases processing time)
+                private boolean capturePdfAuthor =
+                        false; // Capture PDF author metadata (increases processing time)
+                private boolean captureOperationResults =
+                        false; // Capture operation return values (not recommended, high volume)
             }
 
             @Data

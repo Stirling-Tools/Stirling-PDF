@@ -16,8 +16,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
@@ -34,6 +32,9 @@ import stirling.software.proprietary.security.service.DatabaseService;
 import stirling.software.proprietary.security.service.MfaService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
+
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 @ExtendWith(MockitoExtension.class)
 class ProprietaryUIDataControllerTest {
@@ -63,7 +64,7 @@ class ProprietaryUIDataControllerTest {
         applicationProperties.getSecurity().getSaml2().setEnabled(false);
 
         auditConfig = new AuditConfigurationProperties(applicationProperties);
-        objectMapper = new ObjectMapper();
+        objectMapper = JsonMapper.builder().build();
 
         controller =
                 new ProprietaryUIDataController(

@@ -9,6 +9,7 @@ import { useFileSelection } from "@app/contexts/FileContext";
 import { useFileState } from "@app/contexts/FileContext";
 import { detectFileExtension } from "@app/utils/fileUtils";
 import { usePreferences } from "@app/contexts/PreferencesContext";
+import { useConversionCloudStatus } from "@app/hooks/useConversionCloudStatus";
 import GroupedFormatDropdown from "@app/components/tools/convert/GroupedFormatDropdown";
 import ConvertToImageSettings from "@app/components/tools/convert/ConvertToImageSettings";
 import ConvertFromImageSettings from "@app/components/tools/convert/ConvertFromImageSettings";
@@ -63,12 +64,27 @@ const ConvertSettings = ({
 
   const { endpointStatus } = useMultipleEndpointsEnabled(allEndpoints);
 
+  // Get comprehensive conversion status (availability + cloud routing)
+  const conversionStatus = useConversionCloudStatus();
+
   const isConversionAvailable = (fromExt: string, toExt: string): boolean => {
+    const conversionKey = `${fromExt}-${toExt}`;
+
+    // In desktop SaaS mode, check combined availability (local OR SaaS)
+    if (conversionStatus.availability[conversionKey] !== undefined) {
+      return conversionStatus.availability[conversionKey];
+    }
+
+    // Fallback to local-only check (web mode or desktop non-SaaS mode)
     const endpointKey = EXTENSION_TO_ENDPOINT[fromExt]?.[toExt];
     if (!endpointKey) return false;
 
     const isAvailable = endpointStatus[endpointKey] === true;
     return isAvailable;
+  };
+
+  const doesConversionUseCloud = (fromExt: string, toExt: string): boolean => {
+    return conversionStatus.cloudStatus[`${fromExt}-${toExt}`] || false;
   };
 
   // Enhanced FROM options with endpoint availability
@@ -107,18 +123,20 @@ const ConvertSettings = ({
     }
 
     return filteredOptions;
-  }, [parameters.fromExtension, endpointStatus, preferences.hideUnavailableConversions]);
+  }, [parameters.fromExtension, endpointStatus, preferences.hideUnavailableConversions, conversionStatus]);
 
-  // Enhanced TO options with endpoint availability
+  // Enhanced TO options with endpoint availability and cloud status
   const enhancedToOptions = useMemo(() => {
     if (!parameters.fromExtension) return [];
 
     const availableOptions = getAvailableToExtensions(parameters.fromExtension) || [];
     const enhanced = availableOptions.map(option => {
       const enabled = isConversionAvailable(parameters.fromExtension, option.value);
+      const usesCloud = doesConversionUseCloud(parameters.fromExtension, option.value);
       return {
         ...option,
-        enabled
+        enabled,
+        usesCloud
       };
     });
 
@@ -128,7 +146,7 @@ const ConvertSettings = ({
     }
 
     return enhanced;
-  }, [parameters.fromExtension, endpointStatus, preferences.hideUnavailableConversions]);
+  }, [parameters.fromExtension, endpointStatus, preferences.hideUnavailableConversions, conversionStatus]);
 
   const resetParametersToDefaults = () => {
     onParameterChange('imageOptions', {

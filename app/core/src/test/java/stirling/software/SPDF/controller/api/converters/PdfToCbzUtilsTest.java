@@ -13,10 +13,12 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.PdfToCbzUtils;
+import stirling.software.common.util.TempFileManager;
 
 public class PdfToCbzUtilsTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private TempFileManager tempFileManager;
 
     @BeforeEach
     public void setUp() {
@@ -42,7 +44,9 @@ public class PdfToCbzUtilsTest {
         IllegalArgumentException exception =
                 Assertions.assertThrows(
                         IllegalArgumentException.class,
-                        () -> PdfToCbzUtils.convertPdfToCbz(null, 300, pdfDocumentFactory));
+                        () ->
+                                PdfToCbzUtils.convertPdfToCbz(
+                                        null, 300, pdfDocumentFactory, tempFileManager));
         Assertions.assertEquals("File cannot be null or empty", exception.getMessage());
     }
 
@@ -54,7 +58,9 @@ public class PdfToCbzUtilsTest {
         IllegalArgumentException exception =
                 Assertions.assertThrows(
                         IllegalArgumentException.class,
-                        () -> PdfToCbzUtils.convertPdfToCbz(emptyFile, 300, pdfDocumentFactory));
+                        () ->
+                                PdfToCbzUtils.convertPdfToCbz(
+                                        emptyFile, 300, pdfDocumentFactory, tempFileManager));
         Assertions.assertEquals("File cannot be null or empty", exception.getMessage());
     }
 
@@ -66,7 +72,9 @@ public class PdfToCbzUtilsTest {
         IllegalArgumentException exception =
                 Assertions.assertThrows(
                         IllegalArgumentException.class,
-                        () -> PdfToCbzUtils.convertPdfToCbz(nonPdfFile, 300, pdfDocumentFactory));
+                        () ->
+                                PdfToCbzUtils.convertPdfToCbz(
+                                        nonPdfFile, 300, pdfDocumentFactory, tempFileManager));
         Assertions.assertEquals("File must be in PDF format", exception.getMessage());
     }
 
@@ -84,7 +92,9 @@ public class PdfToCbzUtilsTest {
         // structure
         Assertions.assertThrows(
                 Exception.class,
-                () -> PdfToCbzUtils.convertPdfToCbz(pdfFile, 300, pdfDocumentFactory));
+                () ->
+                        PdfToCbzUtils.convertPdfToCbz(
+                                pdfFile, 300, pdfDocumentFactory, tempFileManager));
 
         // Verify that load was called
         Mockito.verify(pdfDocumentFactory).load(pdfFile);

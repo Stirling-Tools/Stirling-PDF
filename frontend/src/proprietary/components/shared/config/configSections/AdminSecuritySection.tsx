@@ -1,12 +1,14 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Select, Alert, Badge, Accordion, Textarea } from '@mantine/core';
+import { NumberInput, Switch, Stack, Paper, Text, Loader, Group, Select, Alert, Badge, Accordion, Textarea } from '@mantine/core';
 import { alert } from '@app/components/toast';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
 import { useRestartServer } from '@app/components/shared/config/useRestartServer';
 import { useAdminSettings } from '@app/hooks/useAdminSettings';
+import { useSettingsDirty } from '@app/hooks/useSettingsDirty';
 import PendingBadge from '@app/components/shared/config/PendingBadge';
+import { SettingsStickyFooter } from '@app/components/shared/config/SettingsStickyFooter';
 import apiClient from '@app/services/apiClient';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
@@ -31,6 +33,9 @@ interface SecuritySettingsData {
     enabled?: boolean;
     level?: number;
     retentionDays?: number;
+    captureFileHash?: boolean;
+    capturePdfAuthor?: boolean;
+    captureOperationResults?: boolean;
   };
   html?: {
     urlSecurity?: {
@@ -62,7 +67,7 @@ export default function AdminSecuritySection() {
     isFieldPending,
   } = useAdminSettings<SecuritySettingsData>({
     sectionName: 'security',
-    fetchTransformer: async () => {
+    fetchTransformer: async (): Promise<SecuritySettingsData & { _pending?: Record<string, any> }> => {
       const [securityResponse, premiumResponse, systemResponse] = await Promise.all([
         apiClient.get('/api/v1/admin/settings/section/security'),
         apiClient.get('/api/v1/admin/settings/section/premium'),
@@ -88,7 +93,7 @@ export default function AdminSecuritySection() {
         systemPending: JSON.parse(JSON.stringify(systemPending || {}))
       });
 
-      const combined: any = {
+      const combined: SecuritySettingsData & { _pending?: Record<string, any> } = {
         ...securityActive
       };
 
@@ -103,7 +108,7 @@ export default function AdminSecuritySection() {
       }
 
       // Merge all _pending blocks
-      const mergedPending: any = {};
+      const mergedPending: Record<string, any> = {};
       if (securityPending) {
         Object.assign(mergedPending, securityPending);
       }
@@ -120,7 +125,7 @@ export default function AdminSecuritySection() {
 
       return combined;
     },
-    saveTransformer: (settings) => {
+    saveTransformer: (settings: SecuritySettingsData) => {
       const { audit, html, ...securitySettings } = settings;
 
       const deltaSettings: Record<string, any> = {
@@ -142,7 +147,10 @@ export default function AdminSecuritySection() {
         // Premium audit settings
         'premium.enterpriseFeatures.audit.enabled': audit?.enabled,
         'premium.enterpriseFeatures.audit.level': audit?.level,
-        'premium.enterpriseFeatures.audit.retentionDays': audit?.retentionDays
+        'premium.enterpriseFeatures.audit.retentionDays': audit?.retentionDays,
+        'premium.enterpriseFeatures.audit.captureFileHash': audit?.captureFileHash,
+        'premium.enterpriseFeatures.audit.capturePdfAuthor': audit?.capturePdfAuthor,
+        'premium.enterpriseFeatures.audit.captureOperationResults': audit?.captureOperationResults
       };
 
       // System HTML settings
@@ -165,6 +173,8 @@ export default function AdminSecuritySection() {
     }
   });
 
+  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(settings, loading);
+
   useEffect(() => {
     if (loginEnabled) {
       fetchSettings();
@@ -181,6 +191,7 @@ export default function AdminSecuritySection() {
     }
 
     try {
+      markSaved();
       await saveSettings();
       showRestartModal();
     } catch (_error) {
@@ -192,6 +203,11 @@ export default function AdminSecuritySection() {
     }
   };
 
+  const handleDiscard = useCallback(() => {
+    const original = resetToSnapshot();
+    setSettings(original);
+  }, [resetToSnapshot, setSettings]);
+
   if (actualLoading) {
     return (
       <Stack align="center" justify="center" h={200}>
@@ -201,8 +217,9 @@ export default function AdminSecuritySection() {
   }
 
   return (
-    <Stack gap="lg">
-      <LoginRequiredBanner show={!loginEnabled} />
+    <div className="settings-section-container">
+      <Stack gap="lg" className="settings-section-content">
+        <LoginRequiredBanner show={!loginEnabled} />
 
       <div>
         <Text fw={600} size="lg">{t('admin.settings.security.title', 'Security')}</Text>
@@ -542,6 +559,64 @@ export default function AdminSecuritySection() {
               disabled={!loginEnabled}
             />
           </div>
+
+          <Alert color="yellow" icon={<LocalIcon icon="info" />} title={t('admin.settings.security.audit.advancedOptions.title', 'Advanced Options')}>
+            {t('admin.settings.security.audit.advancedOptions.description', 'The following options increase processing time and memory usage. Enable only if truly needed.')}
+          </Alert>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <Text fw={500} size="sm">{t('admin.settings.security.audit.captureFileHash.label', 'Capture File Hash')}</Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t('admin.settings.security.audit.captureFileHash.description', 'Store MD5 hash of processed files for audit trail verification')}
+              </Text>
+            </div>
+            <Group gap="xs">
+              <Switch
+                name="audit_captureFileHash"
+                checked={settings?.audit?.captureFileHash || false}
+                onChange={(e) => setSettings({ ...settings, audit: { ...settings?.audit, captureFileHash: e.target.checked } })}
+                disabled={!loginEnabled}
+              />
+              <PendingBadge show={isFieldPending('audit.captureFileHash')} />
+            </Group>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <Text fw={500} size="sm">{t('admin.settings.security.audit.capturePdfAuthor.label', 'Capture PDF Author')}</Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t('admin.settings.security.audit.capturePdfAuthor.description', 'Extract author field from PDF documents during processing')}
+              </Text>
+            </div>
+            <Group gap="xs">
+              <Switch
+                name="audit_capturePdfAuthor"
+                checked={settings?.audit?.capturePdfAuthor || false}
+                onChange={(e) => setSettings({ ...settings, audit: { ...settings?.audit, capturePdfAuthor: e.target.checked } })}
+                disabled={!loginEnabled}
+              />
+              <PendingBadge show={isFieldPending('audit.capturePdfAuthor')} />
+            </Group>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <Text fw={500} size="sm">{t('admin.settings.security.audit.captureOperationResults.label', 'Capture Operation Results')}</Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t('admin.settings.security.audit.captureOperationResults.description', 'Store output file information and processing results in audit logs')}
+              </Text>
+            </div>
+            <Group gap="xs">
+              <Switch
+                name="audit_captureOperationResults"
+                checked={settings?.audit?.captureOperationResults || false}
+                onChange={(e) => setSettings({ ...settings, audit: { ...settings?.audit, captureOperationResults: e.target.checked } })}
+                disabled={!loginEnabled}
+              />
+              <PendingBadge show={isFieldPending('audit.captureOperationResults')} />
+            </Group>
+          </div>
         </Stack>
       </Paper>
 
@@ -803,13 +878,15 @@ export default function AdminSecuritySection() {
           </Accordion>
         </Stack>
       </Paper>
+      </Stack>
 
-      {/* Save Button */}
-      <Group justify="flex-end">
-        <Button onClick={handleSave} loading={saving} size="sm" disabled={!loginEnabled}>
-          {t('admin.settings.save', 'Save Changes')}
-        </Button>
-      </Group>
+      <SettingsStickyFooter
+        isDirty={isDirty}
+        saving={saving}
+        loginEnabled={loginEnabled}
+        onSave={handleSave}
+        onDiscard={handleDiscard}
+      />
 
       {/* Restart Confirmation Modal */}
       <RestartConfirmationModal
@@ -817,6 +894,6 @@ export default function AdminSecuritySection() {
         onClose={closeRestartModal}
         onRestart={restartServer}
       />
-    </Stack>
+    </div>
   );
 }
