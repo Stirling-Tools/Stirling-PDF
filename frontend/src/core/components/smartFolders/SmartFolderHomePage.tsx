@@ -536,7 +536,7 @@ export function SmartFolderHomePage() {
           });
           await folderStorage.storeInputFile(folder.id, inputFileId, file, file.name);
           try {
-            const resultFiles = await executeAutomationSequence(automation, [file], toolRegistry);
+            const resultFiles = await executeAutomationSequence(automation, [file], toolRegistry as any);
             const existingRuns = await folderRunStateStorage.getFolderRunState(folder.id);
             const newRuns: SmartFolderRunEntry[] = [...existingRuns];
             for (const resultFile of resultFiles) {

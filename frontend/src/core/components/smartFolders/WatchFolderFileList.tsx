@@ -113,11 +113,6 @@ function FileRow({
     .map(id => folders.find(f => f.id === id))
     .filter(Boolean) as typeof folders;
 
-  // Accent colour from first membership for the left border
-  const accentColor = memberFolderIds.length > 0
-    ? folders.find(f => f.id === memberFolderIds[0])?.accentColor
-    : undefined;
-
   const hasTags = isInCurrentFolder || otherFolders.length > 0;
   const hasBottomRow = !!file.size || hasTags;
 

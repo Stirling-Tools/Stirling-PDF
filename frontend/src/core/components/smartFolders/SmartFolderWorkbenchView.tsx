@@ -33,7 +33,7 @@ import { SMART_FOLDER_VIEW_ID, SMART_FOLDER_WORKBENCH_ID } from '@app/components
 import { automationStorage } from '@app/services/automationStorage';
 import { folderStorage } from '@app/services/folderStorage';
 import { executeAutomationSequence } from '@app/utils/automationExecutor';
-import { SmartFolderRunEntry, SmartFolder } from '@app/types/smartFolders';
+import { SmartFolderRunEntry } from '@app/types/smartFolders';
 import { AutomationConfig } from '@app/types/automation';
 import { iconMap } from '@app/components/tools/automate/iconMap';
 import { fileStorage } from '@app/services/fileStorage';
@@ -78,15 +78,14 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   const {
     folderRecord,
     fileIds,
-    pendingFileIds,
     processingFileIds,
     processedFileIds,
     addFile,
     updateFileMetadata,
     getFileMetadata,
-  } = useFolderData(folderId);
+  } = useFolderData(folderId ?? '');
 
-  const { recentRuns, setRecentRuns } = useFolderRunState(folderId);
+  const { recentRuns, setRecentRuns } = useFolderRunState(folderId ?? '');
 
   const [isDragOver, setIsDragOver] = useState(false);
   const [outputFiles, setOutputFiles] = useState<OutputFileRecord[]>([]);
@@ -134,7 +133,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
         const resultFiles = await executeAutomationSequence(
           auto,
           [inputFile],
-          toolRegistry,
+          toolRegistry as any,
           () => {},
           () => {},
           () => {}
@@ -143,7 +142,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
         const newRuns: SmartFolderRunEntry[] = [...recentRuns];
         for (const resultFile of resultFiles) {
           const outputId = `output-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          await folderStorage.storeOutputFile(folderId, outputId, resultFile, resultFile.name);
+          await folderStorage.storeOutputFile(folderId!, outputId, resultFile, resultFile.name);
           newRuns.push({ inputFileId, displayFileId: outputId, status: 'processed' });
         }
 
@@ -175,7 +174,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
         const inputFileId = `input-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         const originalFileId = sourceFileId ?? (file as any).fileId as string | undefined;
         await addFile(inputFileId, { status: 'pending', inputFileId, name: file.name, ...(originalFileId ? { originalFileId } : {}) });
-        await folderStorage.storeInputFile(folderId, inputFileId, file, file.name);
+        await folderStorage.storeInputFile(folderId!, inputFileId, file, file.name);
         runAutomation(file, inputFileId);
       }
     },
