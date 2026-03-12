@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Box, Text, ScrollArea } from '@mantine/core';
+import { Box, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useFileManager } from '@app/hooks/useFileManager';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
@@ -30,9 +30,14 @@ export function SmartFolderSidebarPanel() {
   }, [refreshRecentFiles]);
 
   const handleSendToFolder = useCallback(async (fileId: string, targetFolderId: string) => {
-    setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId: targetFolderId, pendingFileId: fileId });
-    actions.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
-  }, [setCustomWorkbenchViewData, actions]);
+    if (folderId === targetFolderId) {
+      // Already viewing this folder — just queue the file, no navigation
+      setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId: targetFolderId, pendingFileId: fileId });
+    } else {
+      setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId: targetFolderId, pendingFileId: fileId });
+      actions.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
+    }
+  }, [folderId, setCustomWorkbenchViewData, actions]);
 
   const handleNavigateToFolder = useCallback((targetFolderId: string) => {
     setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId: targetFolderId });
@@ -46,14 +51,12 @@ export function SmartFolderSidebarPanel() {
           {t('smartFolders.sidebarFiles', 'My Files')}
         </Text>
       </Box>
-      <ScrollArea style={{ flex: 1, minHeight: 0 }}>
-        <WatchFolderFileList
-          files={recentFiles}
-          folderId={folderId}
-          onSendToFolder={handleSendToFolder}
-          onNavigateToFolder={handleNavigateToFolder}
-        />
-      </ScrollArea>
+      <WatchFolderFileList
+        files={recentFiles}
+        folderId={folderId}
+        onSendToFolder={handleSendToFolder}
+        onNavigateToFolder={handleNavigateToFolder}
+      />
     </Box>
   );
 }
