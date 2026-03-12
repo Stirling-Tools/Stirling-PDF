@@ -30,6 +30,16 @@ Set `DOCKER_ENABLE_SECURITY=true` environment variable to enable security featur
   - **Web Server**: `npm run build` then serve dist/ folder
   - **Development**: `npm run tauri-dev` for desktop dev mode
 
+#### Environment Variables
+- All `VITE_*` variables must be declared in the appropriate example file:
+  - `frontend/config/.env.example` — core, proprietary, and shared vars
+  - `frontend/config/.env.saas.example` — SaaS-only vars
+  - `frontend/config/.env.desktop.example` — desktop (Tauri)-only vars
+- Never use `|| 'hardcoded-fallback'` inline — put defaults in the example files
+- `npm run prep` / `prep:saas` / `prep:desktop` auto-create the env files from examples on first run, and error if any required keys are missing
+- These prep scripts run automatically at the start of all `dev*`, `build*`, and `tauri*` commands
+- See `frontend/README.md#environment-variables` for full documentation
+
 #### Import Paths - CRITICAL
 **ALWAYS use `@app/*` for imports.** Do not use `@core/*` or `@proprietary/*` unless explicitly wrapping/extending a lower layer implementation.
 
