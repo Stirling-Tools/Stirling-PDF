@@ -197,6 +197,7 @@ public class OAuth2Configuration {
         }
 
         String name = oauth.getProvider();
+        String registrationId = oauth.getEffectiveRegistrationId();
         String firstChar = String.valueOf(name.charAt(0));
         String clientName = name.replaceFirst(firstChar, firstChar.toUpperCase(Locale.ROOT));
 
@@ -219,9 +220,9 @@ public class OAuth2Configuration {
         if (isValid) {
             log.info(
                     "Initialised OIDC OAuth2 provider: registrationId='{}', issuer='{}', redirectUri='{}'",
-                    name,
+                    registrationId,
                     oauth.getIssuer(),
-                    REDIRECT_URI_PATH + name);
+                    REDIRECT_URI_PATH + registrationId);
         } else {
             log.warn("OIDC OAuth2 provider validation failed - provider will not be registered");
         }
@@ -229,13 +230,13 @@ public class OAuth2Configuration {
         return isValid
                 ? Optional.of(
                         ClientRegistrations.fromIssuerLocation(oauth.getIssuer())
-                                .registrationId(name)
+                                .registrationId(registrationId)
                                 .clientId(oidcProvider.getClientId())
                                 .clientSecret(oidcProvider.getClientSecret())
                                 .scope(oidcProvider.getScopes())
                                 .userNameAttributeName(oidcProvider.getUseAsUsername().getName())
                                 .clientName(clientName)
-                                .redirectUri(REDIRECT_URI_PATH + name)
+                                .redirectUri(REDIRECT_URI_PATH + registrationId)
                                 .authorizationGrantType(AUTHORIZATION_CODE)
                                 .build())
                 : Optional.empty();
