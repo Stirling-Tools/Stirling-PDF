@@ -178,7 +178,8 @@ public class ReactRoutingController {
         String escapedBaseUrlJs = JavaScriptUtils.javaScriptEscape(baseUrl);
 
         String serverUrl = "(window.location.origin + '" + escapedBaseUrlJs + "')";
-        return """
+        return
+                """
                 <!doctype html>
                 <html>
                   <head>
@@ -237,7 +238,8 @@ public class ReactRoutingController {
         String escapedBaseUrlJs = JavaScriptUtils.javaScriptEscape(baseUrl);
 
         String serverUrl = "(window.location.origin + '" + escapedBaseUrlJs + "')";
-        return """
+        return
+                """
                 <!doctype html>
                 <html>
                   <head>
