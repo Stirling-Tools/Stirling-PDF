@@ -20,7 +20,6 @@ export interface PlacedSignature {
 }
 
 interface AddSignaturesStepProps {
-  signatureCount: number;
   onRequestPlacement: (signature: string, type: SignatureType) => void;
   onCancelPlacement?: () => void;
   placementMode: boolean;
@@ -28,7 +27,6 @@ interface AddSignaturesStepProps {
 }
 
 export const AddSignaturesStep: React.FC<AddSignaturesStepProps> = ({
-  _signatureCount,
   onRequestPlacement,
   onCancelPlacement,
   placementMode,

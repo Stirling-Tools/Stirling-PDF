@@ -64,6 +64,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
     unregisterCustomWorkbenchView,
     setCustomWorkbenchViewData,
     clearCustomWorkbenchViewData,
+    handleToolSelect,
   } = useToolWorkflow();
 
   // Workbench IDs
@@ -641,9 +642,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
                 className="quick-access-popout__quick-sign-btn"
                 onClick={() => {
                   onClose();
-                  requestAnimationFrame(() => {
-                    navigationActions.setToolAndWorkbench('sign', 'viewer');
-                  });
+                  handleToolSelect('sign');
                 }}
               >
                 <LocalIcon icon="signature-rounded" width="1rem" height="1rem" />
@@ -654,9 +653,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
                 className="quick-access-popout__quick-sign-btn"
                 onClick={() => {
                   onClose();
-                  requestAnimationFrame(() => {
-                    navigationActions.setToolAndWorkbench('certSign', 'viewer');
-                  });
+                  handleToolSelect('certSign');
                 }}
               >
                 <LocalIcon icon="workspace-premium-rounded" width="1rem" height="1rem" />
