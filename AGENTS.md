@@ -29,6 +29,7 @@ Development for the AI engine happens in the `engine/` folder. It's built with L
   - From `engine/`: `make check` to lint, type-check, test, etc. and `make fix` to fix easily fixable linting & formatting issues.
 - The project structure is defined in `engine/pyproject.toml`. Any new dependencies should be listed appropriately there, followed by running `make install`.
 - Prefer using classes to nesting functions, and make other similar architectural decisions to improve testability. Do not nest classes or functions unless specifically required to for the code construct (like a decorator).
+- All environment variables used within the code must begin with the `STIRLING_` prefix in order to keep them unique and easier to find.
 
 ### Frontend Development
 - **Frontend dev server**: `cd frontend && npm run dev` (requires backend on localhost:8080)

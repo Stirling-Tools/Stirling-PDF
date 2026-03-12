@@ -240,7 +240,7 @@ def _detect_table_region(text_elements: list[models.TextElt], page_width: float)
         y_min=y_min,
         y_max=y_max,
     )
-    if os.getenv("PDF_EDITOR_TABLE_DEBUG"):
+    if os.environ["STIRLING_PDF_EDITOR_TABLE_DEBUG"]:
         logger.debug(
             "[PDF-EDITOR] table detected anchors=%s boundaries=%s y=(%.2f, %.2f) span=(%.2f, %.2f)",
             anchors,

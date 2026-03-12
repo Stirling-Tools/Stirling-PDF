@@ -1,4 +1,4 @@
-.PHONY: help install check fix lint lint-fix lint-fix-unsafe format format-check typecheck test run run-dev clean tool-models docker-build docker-run
+.PHONY: help install prep check fix lint lint-fix lint-fix-unsafe format format-check typecheck test run run-dev clean tool-models docker-build docker-run
 
 REPO_ROOT_DIR = ..
 ROOT_DIR = .
@@ -21,6 +21,7 @@ $(NODE_DEPS_STAMP): package-lock.json
 help:
 	@echo "Engine commands:"
 	@echo "  make install      - Install production dependencies"
+	@echo "  make prep         - Set up .env file from .env.example"
 	@echo "  make lint         - Run linting checks"
 	@echo "  make format       - Format code"
 	@echo "  make format-check - Show whether code is correctly formatted"
@@ -34,6 +35,9 @@ help:
 	@echo "  make docker-run   - Run Docker container"
 
 install: $(DEPS_STAMP) $(NODE_DEPS_STAMP)
+
+prep: install
+	uv run scripts/setup_env.py
 
 check: typecheck lint format-check test
 
@@ -57,13 +61,13 @@ format-check: install
 typecheck: install
 	uv run pyright . --warnings
 
-test: install
+test: prep
 	uv run pytest tests
 
-run: install
+run: prep
 	cd src && PYTHONUNBUFFERED=1 uv run gunicorn --bind 0.0.0.0:5001 --workers 4 --timeout 120 --worker-class gthread --threads 4 app:app
 
-run-dev: install
+run-dev: prep
 	cd src && PYTHONUNBUFFERED=1 uv run python app.py
 
 frontend-deps:

@@ -16,11 +16,11 @@ load_dotenv()
 
 def _get_log_path() -> Path:
     # Allow explicit override
-    if "PYTHON_LOG_PATH" in os.environ:
-        return Path(os.environ["PYTHON_LOG_PATH"])
+    if os.environ["STIRLING_LOG_PATH"]:
+        return Path(os.environ["STIRLING_LOG_PATH"])
 
     # Check if running in Tauri desktop mode
-    is_tauri = os.environ.get("STIRLING_PDF_TAURI_MODE", "false").lower() == "true"
+    is_tauri = os.environ["STIRLING_PDF_TAURI_MODE"].lower() == "true"
 
     if is_tauri:
         # Use OS-native log directory via platformdirs
@@ -81,21 +81,19 @@ os.makedirs(ASSETS_DIR, exist_ok=True)
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(TEMPLATE_DIR, exist_ok=True)
 
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL")
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
-JAVA_BACKEND_URL = os.environ.get("JAVA_BACKEND_URL", "http://localhost:8080")
-JAVA_BACKEND_API_KEY = os.environ.get("JAVA_BACKEND_API_KEY") or os.environ.get("SECURITY_CUSTOMGLOBALAPIKEY")
-JAVA_REQUEST_TIMEOUT_SECONDS = float(os.environ.get("JAVA_REQUEST_TIMEOUT_SECONDS", "30"))
+OPENAI_API_KEY = os.environ["STIRLING_OPENAI_API_KEY"]
+OPENAI_BASE_URL = os.environ["STIRLING_OPENAI_BASE_URL"]
+ANTHROPIC_API_KEY = os.environ["STIRLING_ANTHROPIC_API_KEY"]
+JAVA_BACKEND_URL = os.environ["STIRLING_JAVA_BACKEND_URL"]
+JAVA_BACKEND_API_KEY = os.environ["STIRLING_JAVA_BACKEND_API_KEY"]
+JAVA_REQUEST_TIMEOUT_SECONDS = float(os.environ["STIRLING_JAVA_REQUEST_TIMEOUT_SECONDS"])
 
 if not OPENAI_API_KEY and not ANTHROPIC_API_KEY:
-    raise RuntimeError("Either OPENAI_API_KEY or ANTHROPIC_API_KEY is required to start the AI backend.")
-# Default to GPT-5 for full document generation (smart model).
-# Allow override via SMART_MODEL.
-SMART_MODEL = os.environ.get("SMART_MODEL") or "gpt-5"
-# Default to GPT-5 for intent/pre checks (fast model).
-# Allow override via FAST_MODEL.
-FAST_MODEL = os.environ.get("FAST_MODEL") or "gpt-5"
+    raise RuntimeError(
+        "Either STIRLING_OPENAI_API_KEY or STIRLING_ANTHROPIC_API_KEY is required to start the AI backend."
+    )
+SMART_MODEL = os.environ["STIRLING_SMART_MODEL"]
+FAST_MODEL = os.environ["STIRLING_FAST_MODEL"]
 
 # GPT-5 reasoning effort configuration
 # Supported values: minimal, low, medium, high, xhigh
@@ -104,64 +102,51 @@ FAST_MODEL = os.environ.get("FAST_MODEL") or "gpt-5"
 # - medium: Default balance
 # - high: Quality focused
 # - xhigh: Maximum quality (GPT-5.2 Pro/Thinking only)
-SMART_MODEL_REASONING_EFFORT = os.environ.get("SMART_MODEL_REASONING_EFFORT") or "medium"
-FAST_MODEL_REASONING_EFFORT = os.environ.get("FAST_MODEL_REASONING_EFFORT") or "minimal"
+SMART_MODEL_REASONING_EFFORT = os.environ["STIRLING_SMART_MODEL_REASONING_EFFORT"]
+FAST_MODEL_REASONING_EFFORT = os.environ["STIRLING_FAST_MODEL_REASONING_EFFORT"]
 
 # GPT-5 text verbosity configuration
 # Supported values: minimal, low, medium, high
 # Controls output length and detail level
-SMART_MODEL_TEXT_VERBOSITY = os.environ.get("SMART_MODEL_TEXT_VERBOSITY") or "medium"
-FAST_MODEL_TEXT_VERBOSITY = os.environ.get("FAST_MODEL_TEXT_VERBOSITY") or "low"
+SMART_MODEL_TEXT_VERBOSITY = os.environ["STIRLING_SMART_MODEL_TEXT_VERBOSITY"]
+FAST_MODEL_TEXT_VERBOSITY = os.environ["STIRLING_FAST_MODEL_TEXT_VERBOSITY"]
 
-FLASK_DEBUG = os.environ.get("FLASK_DEBUG", "0") == "1"
-STREAMING_ENABLED = os.environ.get("AI_STREAMING", "true").lower() not in {"0", "false", "no"}
-if OPENAI_BASE_URL and "ollama" in OPENAI_BASE_URL and "AI_STREAMING" not in os.environ:
+FLASK_DEBUG = os.environ["STIRLING_FLASK_DEBUG"] == "1"
+STREAMING_ENABLED = os.environ["STIRLING_AI_STREAMING"].lower() not in {"0", "false", "no"}
+if OPENAI_BASE_URL and "ollama" in OPENAI_BASE_URL and not os.environ["STIRLING_AI_STREAMING"]:
     STREAMING_ENABLED = False
-PREVIEW_MAX_INFLIGHT = int(os.environ.get("AI_PREVIEW_MAX_INFLIGHT", "3"))
-AI_REQUEST_TIMEOUT_SECONDS = float(os.environ.get("AI_REQUEST_TIMEOUT", "70"))
-AI_RAW_DEBUG = os.environ.get("AI_RAW_DEBUG", "").lower() not in {"", "0", "false", "no"}
+PREVIEW_MAX_INFLIGHT = int(os.environ["STIRLING_AI_PREVIEW_MAX_INFLIGHT"])
+AI_REQUEST_TIMEOUT_SECONDS = float(os.environ["STIRLING_AI_REQUEST_TIMEOUT"])
+AI_RAW_DEBUG = os.environ["STIRLING_AI_RAW_DEBUG"].lower() not in {"", "0", "false", "no"}
 AI_MESSAGES_LOG_PATH = LOG_PATH / "ai_messages"
 AI_MESSAGES_LOG_PATH.mkdir(parents=True, exist_ok=True)
 
 
-def _env_int(name: str) -> int | None:
-    raw = os.environ.get(name)
-    if raw is None or raw.strip() == "":
-        return None
-    try:
-        return int(raw)
-    except ValueError:
-        raise ValueError(f"{name} must be an int, got: {raw!r}") from None
-
-
-def model_max_tokens(model_name: str) -> int | None:
+def model_max_tokens(model_name: str) -> int:
     """
     Output token limit for a given model.
 
     This is used by a few routes to avoid provider defaults that are too small for
     structured outputs. All values can be overridden via env vars.
     """
-    # Global override (highest priority)
-    global_override = _env_int("AI_MAX_TOKENS")
-    if global_override is not None:
-        return global_override
+    if os.environ["STIRLING_AI_MAX_TOKENS"]:
+        return int(os.environ["STIRLING_AI_MAX_TOKENS"])
 
-    # Per-model defaults (can be overridden)
     if model_name == SMART_MODEL:
-        return _env_int("SMART_MODEL_MAX_TOKENS") or 8192
+        return int(os.environ["STIRLING_SMART_MODEL_MAX_TOKENS"])
     if model_name == FAST_MODEL:
-        return _env_int("FAST_MODEL_MAX_TOKENS") or 2048
+        return int(os.environ["STIRLING_FAST_MODEL_MAX_TOKENS"])
     if model_name.startswith("claude"):
-        return _env_int("CLAUDE_MAX_TOKENS") or 4096
+        return int(os.environ["STIRLING_CLAUDE_MAX_TOKENS"])
 
-    return _env_int("DEFAULT_MODEL_MAX_TOKENS") or 4096
+    return int(os.environ["STIRLING_DEFAULT_MODEL_MAX_TOKENS"])
 
 
 # PostHog Analytics Configuration
-POSTHOG_API_KEY = os.environ.get("POSTHOG_API_KEY")
+POSTHOG_API_KEY = os.environ["STIRLING_POSTHOG_API_KEY"]
 if not POSTHOG_API_KEY:
-    raise RuntimeError("POSTHOG_API_KEY is required to start the AI backend.")
-POSTHOG_HOST = os.environ.get("POSTHOG_HOST", "https://eu.i.posthog.com")
+    raise RuntimeError("STIRLING_POSTHOG_API_KEY is required to start the AI backend.")
+POSTHOG_HOST = os.environ["STIRLING_POSTHOG_HOST"]
 
 # Initialize PostHog client
 POSTHOG_CLIENT = Posthog(
