@@ -26,13 +26,14 @@ interface SignPopoutProps {
   onClose: () => void;
   buttonRef: React.RefObject<HTMLDivElement | null>;
   isRTL: boolean;
+  groupSigningEnabled: boolean;
 }
 
 type SessionItem = (SignRequestSummary | SessionSummary) & {
   itemType: 'signRequest' | 'mySession';
 };
 
-const SignPopout = ({ isOpen, onClose, buttonRef, isRTL }: SignPopoutProps) => {
+const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: SignPopoutProps) => {
   const { t } = useTranslation();
   const popoverRef = useRef<HTMLDivElement>(null);
   const [popoverPosition, setPopoverPosition] = useState({ top: 160, left: 84 });
@@ -178,7 +179,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL }: SignPopoutProps) => {
       console.error('Failed to fetch signing data:', error);
       alert({
         alertType: 'warning',
-        title: t('error'),
+        title: t('common.error'),
         body: t('certSign.fetchFailed', 'Failed to load signing data'),
         expandable: false,
         durationMs: 2500,
@@ -188,16 +189,16 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL }: SignPopoutProps) => {
     }
   }, [t]);
 
-  // Fetch data when opened
+  // Fetch data when opened (only needed for group signing sessions)
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && groupSigningEnabled) {
       fetchData();
     }
-  }, [isOpen, fetchData]);
+  }, [isOpen, groupSigningEnabled, fetchData]);
 
   // Auto-refresh Active tab every 15 seconds to show updated signature status
   useEffect(() => {
-    if (isOpen && activeTab === 'active' && !showCreatePanel) {
+    if (isOpen && groupSigningEnabled && activeTab === 'active' && !showCreatePanel) {
       const interval = setInterval(() => {
         fetchData();
       }, 15000); // Refresh every 15 seconds
@@ -315,7 +316,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL }: SignPopoutProps) => {
       console.error('Failed to create session:', error);
       alert({
         alertType: 'error',
-        title: t('error'),
+        title: t('common.error'),
         body: t('signSession.createFailed', 'Failed to create signing request'),
         expandable: false,
         durationMs: 3000,
@@ -364,7 +365,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL }: SignPopoutProps) => {
       console.error('Failed to load sign request:', error);
       alert({
         alertType: 'error',
-        title: t('error'),
+        title: t('common.error'),
         body: t('signRequest.fetchFailed', 'Failed to load sign request'),
         expandable: false,
         durationMs: 3000,
@@ -444,7 +445,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL }: SignPopoutProps) => {
       console.error('Failed to load session:', error);
       alert({
         alertType: 'error',
-        title: t('error'),
+        title: t('common.error'),
         body: t('certSign.sessions.fetchFailed', 'Failed to load session details'),
         expandable: false,
         durationMs: 3000,
@@ -598,9 +599,11 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL }: SignPopoutProps) => {
           <div className="quick-access-popout__title">
             {showCreatePanel
               ? t('quickAccess.createSession', 'Create Signing Request')
-              : activeTab === 'active'
+              : groupSigningEnabled && activeTab === 'active'
               ? t('quickAccess.activeSessions', 'Active Sessions')
-              : t('quickAccess.completedSessions', 'Completed Sessions')}
+              : groupSigningEnabled
+              ? t('quickAccess.completedSessions', 'Completed Sessions')
+              : t('quickAccess.sign', 'Sign')}
           </div>
           <div className="quick-access-popout__header-actions">
             {!showCreatePanel && (
@@ -626,8 +629,45 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL }: SignPopoutProps) => {
           </div>
         </div>
 
-        {/* Tab Navigation */}
+        {/* Quick sign tools */}
         {!showCreatePanel && (
+          <div className="quick-access-popout__quick-sign">
+            <div className="quick-access-popout__section-label">
+              {t('quickAccess.signYourself', 'Sign Yourself')}
+            </div>
+            <div className="quick-access-popout__quick-sign-actions">
+              <button
+                type="button"
+                className="quick-access-popout__quick-sign-btn"
+                onClick={() => {
+                  onClose();
+                  requestAnimationFrame(() => {
+                    navigationActions.setToolAndWorkbench('sign', 'viewer');
+                  });
+                }}
+              >
+                <LocalIcon icon="signature-rounded" width="1rem" height="1rem" />
+                {t('quickAccess.wetSign', 'Add Signature')}
+              </button>
+              <button
+                type="button"
+                className="quick-access-popout__quick-sign-btn"
+                onClick={() => {
+                  onClose();
+                  requestAnimationFrame(() => {
+                    navigationActions.setToolAndWorkbench('certSign', 'viewer');
+                  });
+                }}
+              >
+                <LocalIcon icon="workspace-premium-rounded" width="1rem" height="1rem" />
+                {t('quickAccess.certSign', 'Certificate Sign')}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Tab Navigation */}
+        {!showCreatePanel && groupSigningEnabled && (
           <div className="quick-access-popout__tab-nav">
             <button
               className={`quick-access-popout__tab-button ${activeTab === 'active' ? 'active' : ''}`}
@@ -655,48 +695,50 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL }: SignPopoutProps) => {
         )}
 
         {/* Body */}
-        <div className="quick-access-popout__body">
-          {showCreatePanel ? (
-            <CreateSessionPanel
-              selectedFiles={selectedFiles}
-              selectedUserIds={selectedUserIds}
-              onSelectedUserIdsChange={setSelectedUserIds}
-              dueDate={dueDate}
-              onDueDateChange={setDueDate}
-              creating={creating}
-              includeSummaryPage={includeSummaryPage}
-              onIncludeSummaryPageChange={setIncludeSummaryPage}
-            />
-          ) : activeTab === 'active' ? (
-            <ActiveSessionsPanel
-              sessions={activeSessions}
-              loading={loading}
-              onSessionClick={(item) => {
-                if (item.itemType === 'signRequest') {
-                  handleSignRequestClick(item as SignRequestSummary);
-                } else {
-                  handleSessionClick(item as SessionSummary);
-                }
-              }}
-              onCreateNew={() => setShowCreatePanel(true)}
-            />
-          ) : (
-            <CompletedSessionsPanel
-              sessions={completedSessions}
-              loading={loading}
-              onSessionClick={(item) => {
-                if (item.itemType === 'signRequest') {
-                  handleSignRequestClick(item as SignRequestSummary);
-                } else {
-                  handleSessionClick(item as SessionSummary);
-                }
-              }}
-            />
-          )}
-        </div>
+        {groupSigningEnabled && (
+          <div className="quick-access-popout__body">
+            {showCreatePanel ? (
+              <CreateSessionPanel
+                selectedFiles={selectedFiles}
+                selectedUserIds={selectedUserIds}
+                onSelectedUserIdsChange={setSelectedUserIds}
+                dueDate={dueDate}
+                onDueDateChange={setDueDate}
+                creating={creating}
+                includeSummaryPage={includeSummaryPage}
+                onIncludeSummaryPageChange={setIncludeSummaryPage}
+              />
+            ) : activeTab === 'active' ? (
+              <ActiveSessionsPanel
+                sessions={activeSessions}
+                loading={loading}
+                onSessionClick={(item) => {
+                  if (item.itemType === 'signRequest') {
+                    handleSignRequestClick(item as SignRequestSummary);
+                  } else {
+                    handleSessionClick(item as SessionSummary);
+                  }
+                }}
+                onCreateNew={() => setShowCreatePanel(true)}
+              />
+            ) : (
+              <CompletedSessionsPanel
+                sessions={completedSessions}
+                loading={loading}
+                onSessionClick={(item) => {
+                  if (item.itemType === 'signRequest') {
+                    handleSignRequestClick(item as SignRequestSummary);
+                  } else {
+                    handleSessionClick(item as SessionSummary);
+                  }
+                }}
+              />
+            )}
+          </div>
+        )}
 
         {/* Footer */}
-        {showCreatePanel && (
+        {groupSigningEnabled && showCreatePanel && (
           <div className="quick-access-popout__footer">
             <button
               type="button"

@@ -674,6 +674,50 @@
   cursor: pointer;
 }
 
+/* Quick sign shortcuts */
+.quick-access-popout__quick-sign {
+  padding: 0.75rem 1rem 0;
+  flex-shrink: 0;
+}
+
+.quick-access-popout__section-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  margin-bottom: 0.5rem;
+}
+
+.quick-access-popout__quick-sign-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.quick-access-popout__quick-sign-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--bg-muted);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  transition: background 120ms, border-color 120ms;
+  white-space: nowrap;
+}
+
+.quick-access-popout__quick-sign-btn:hover {
+  background: color-mix(in srgb, var(--btn-open-file) 12%, var(--bg-muted));
+  border-color: color-mix(in srgb, var(--btn-open-file) 40%, var(--border-default));
+}
+
 /* Tab navigation */
 .quick-access-popout__tab-nav {
   display: flex;
@@ -745,6 +789,16 @@
 
 .quick-access-sign-popout .quick-access-popout__tab-nav {
   flex-shrink: 0;
+}
+
+.quick-access-sign-popout .quick-access-popout__quick-sign {
+  border-bottom: 1px solid var(--border-default);
+  padding-bottom: 0.75rem;
+  margin-bottom: 0;
+}
+
+.quick-access-sign-popout .quick-access-popout__quick-sign-actions {
+  margin-bottom: 0;
 }
 
 .quick-access-sign-popout .quick-access-popout__footer {

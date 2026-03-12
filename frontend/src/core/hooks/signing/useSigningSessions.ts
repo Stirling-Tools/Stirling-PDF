@@ -53,7 +53,7 @@ export const useSigningSessions = (
 
       alert({
         alertType: 'warning',
-        title: t('error'),
+        title: t('common.error'),
         body: t('certSign.fetchFailed', 'Failed to load signing data'),
         expandable: false,
         durationMs: 2500,

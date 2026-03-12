@@ -86,7 +86,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
     if (previewCount === 0) {
       alert({
         alertType: 'error',
-        title: t('error'),
+        title: t('common.error'),
         body: t('certSign.collab.signRequest.noSignatures', 'Please place at least one signature on the PDF'),
       });
       return;
@@ -107,7 +107,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
         if (!p12File) {
           alert({
             alertType: 'error',
-            title: t('error'),
+            title: t('common.error'),
             body: t('certSign.collab.signRequest.noCertificate', 'Please select a certificate file'),
           });
           setSigning(false);

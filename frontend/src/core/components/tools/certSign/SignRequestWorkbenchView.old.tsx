@@ -97,7 +97,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
         if (!p12File) {
           alert({
             alertType: 'error',
-            title: t('error'),
+            title: t('common.error'),
             body: t('certSign.collab.signRequest.noCertificate', 'Please select a certificate file'),
           });
           setSigning(false);

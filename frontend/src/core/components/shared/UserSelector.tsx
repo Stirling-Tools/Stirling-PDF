@@ -63,7 +63,7 @@ const UserSelector = ({ value, onChange, placeholder, size = 'sm', disabled = fa
         console.error('Failed to load users:', error);
         alert({
           alertType: 'error',
-          title: t('error'),
+          title: t('common.error'),
           body: t('certSign.collab.userSelector.loadError', 'Failed to load users'),
         });
       } finally {

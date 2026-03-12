@@ -642,18 +642,16 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                     />
                   </div>
                 )}
-                {groupSigningEnabled && (
-                  <div ref={signButtonRef}>
-                    <QuickAccessButton
-                      icon={<LocalIcon icon="edit-square-rounded" width="1.15rem" height="1.15rem" />}
-                      label={t('quickAccess.sign', 'Sign')}
-                      isActive={signMenuOpen}
-                      onClick={() => setSignMenuOpen((prev) => !prev)}
-                      ariaLabel={t('quickAccess.sign', 'Sign')}
-                      dataTestId="sign-button"
-                    />
-                  </div>
-                )}
+                <div ref={signButtonRef}>
+                  <QuickAccessButton
+                    icon={<LocalIcon icon="edit-square-rounded" width="1.15rem" height="1.15rem" />}
+                    label={t('quickAccess.sign', 'Sign')}
+                    isActive={signMenuOpen}
+                    onClick={() => setSignMenuOpen((prev) => !prev)}
+                    ariaLabel={t('quickAccess.sign', 'Sign')}
+                    dataTestId="sign-button"
+                  />
+                </div>
               </Stack>
             </>
           )}
@@ -1025,14 +1023,13 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       )}
 
       {/* Sign Popover */}
-      {groupSigningEnabled && (
-        <SignPopout
-          isOpen={signMenuOpen}
-          onClose={() => setSignMenuOpen(false)}
-          buttonRef={signButtonRef}
-          isRTL={isRTL}
-        />
-      )}
+      <SignPopout
+        isOpen={signMenuOpen}
+        onClose={() => setSignMenuOpen(false)}
+        buttonRef={signButtonRef}
+        isRTL={isRTL}
+        groupSigningEnabled={groupSigningEnabled}
+      />
     </div>
   );
 });

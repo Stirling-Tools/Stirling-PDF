@@ -85,7 +85,7 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
     } catch (_error) {
       alert({
         alertType: 'error',
-        title: t('error'),
+        title: t('common.error'),
         body: t('certSign.collab.sessionDetail.addParticipantsError', 'Failed to add participants'),
       });
     } finally {
@@ -104,7 +104,7 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
     } catch (_error) {
       alert({
         alertType: 'error',
-        title: t('error'),
+        title: t('common.error'),
         body: t('certSign.collab.sessionDetail.removeParticipantError', 'Failed to remove participant'),
       });
     }
@@ -117,7 +117,7 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
     } catch (_error) {
       alert({
         alertType: 'error',
-        title: t('error'),
+        title: t('common.error'),
         body: t('certSign.collab.sessionDetail.finalizeError', 'Failed to finalize session'),
       });
     } finally {
@@ -138,7 +138,7 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
     } catch (_error) {
       alert({
         alertType: 'error',
-        title: t('error'),
+        title: t('common.error'),
         body: t('certSign.collab.sessionDetail.deleteError', 'Failed to delete session'),
       });
       setDeleting(false);
@@ -152,7 +152,7 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
     } catch (_error) {
       alert({
         alertType: 'error',
-        title: t('error'),
+        title: t('common.error'),
         body: t('certSign.collab.sessionDetail.loadPdfError', 'Failed to load signed PDF'),
       });
     } finally {
