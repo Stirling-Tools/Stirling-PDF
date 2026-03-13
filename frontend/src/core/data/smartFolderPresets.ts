@@ -8,6 +8,7 @@ import { automationStorage } from '@app/services/automationStorage';
 import { smartFolderStorage } from '@app/services/smartFolderStorage';
 
 const SEEDED_FLAG = 'smart_folders_seeded';
+let seedingInProgress = false;
 
 interface PresetDefinition {
   folder: Omit<SmartFolder, 'id' | 'automationId' | 'createdAt' | 'updatedAt'>;
@@ -94,9 +95,8 @@ const PRESETS: PresetDefinition[] = [
 ];
 
 export async function seedDefaultFolders(): Promise<void> {
-  if (localStorage.getItem(SEEDED_FLAG)) {
-    return;
-  }
+  if (localStorage.getItem(SEEDED_FLAG) || seedingInProgress) return;
+  seedingInProgress = true;
 
   try {
     for (const preset of PRESETS) {
@@ -109,5 +109,7 @@ export async function seedDefaultFolders(): Promise<void> {
     localStorage.setItem(SEEDED_FLAG, 'true');
   } catch (error) {
     console.error('Failed to seed default smart folders:', error);
+  } finally {
+    seedingInProgress = false;
   }
 }

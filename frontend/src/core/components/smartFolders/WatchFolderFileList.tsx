@@ -10,6 +10,8 @@ import { StirlingFileStub } from '@app/types/fileContext';
 import { useFolderMembership } from '@app/hooks/useFolderMembership';
 import { useAllSmartFolders } from '@app/hooks/useAllSmartFolders';
 import { iconMap } from '@app/components/tools/automate/iconMap';
+import { useFileHandler } from '@app/hooks/useFileHandler';
+import { openFilesFromDisk } from '@app/services/openFilesFromDisk';
 
 interface WatchFolderFileListProps {
   files: StirlingFileStub[];
@@ -351,6 +353,23 @@ export function WatchFolderFileList({ files, folderId, onSendToFolder, onNavigat
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const lastSelectedIdxRef = useRef<number | null>(null);
   const ghostRef = useRef<HTMLDivElement | null>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
+
+  const { addFiles } = useFileHandler();
+
+  const handleUploadClick = useCallback(async () => {
+    const pickedFiles = await openFilesFromDisk({
+      multiple: true,
+      onFallbackOpen: () => uploadInputRef.current?.click(),
+    });
+    if (pickedFiles.length > 0) await addFiles(pickedFiles);
+  }, [addFiles]);
+
+  const handleInputChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = Array.from(e.target.files ?? []);
+    if (picked.length > 0) await addFiles(picked);
+    e.target.value = '';
+  }, [addFiles]);
 
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('date-desc');
@@ -487,7 +506,7 @@ export function WatchFolderFileList({ files, folderId, onSendToFolder, onNavigat
 
       {/* ── Sticky toolbar ── */}
       <Box style={{ flexShrink: 0, padding: '0.375rem 0.5rem 0.25rem', borderBottom: '0.0625rem solid var(--border-subtle)' }}>
-        <Group gap="0.375rem" wrap="nowrap">
+        <Group gap="0.375rem" wrap="nowrap" align="center">
           <TextInput
             size="xs"
             placeholder={t('smartFolders.fileList.search', 'Search…')}
@@ -502,6 +521,11 @@ export function WatchFolderFileList({ files, folderId, onSendToFolder, onNavigat
             styles={{ input: { fontSize: '0.75rem' } }}
             style={{ flex: 1, minWidth: 0 }}
           />
+          <Tooltip label={t('smartFolders.fileList.uploadFiles', 'Upload PDFs')} withArrow>
+            <ActionIcon size="sm" variant="default" onClick={handleUploadClick} aria-label="Upload files">
+              <AddIcon style={{ fontSize: '0.875rem' }} />
+            </ActionIcon>
+          </Tooltip>
           <Popover
             opened={filterPopoverOpen}
             onChange={setFilterPopoverOpen}
@@ -511,11 +535,11 @@ export function WatchFolderFileList({ files, folderId, onSendToFolder, onNavigat
             width={180}
           >
             <Popover.Target>
-              <Indicator disabled={!hasActiveFilters} size={6} color="blue" offset={3}>
+              <Indicator disabled={!hasActiveFilters} size={6} color="blue" offset={3} style={{ display: 'flex' }}>
                 <ActionIcon
                   size="sm"
-                  variant={hasActiveFilters ? 'light' : 'subtle'}
-                  color={hasActiveFilters ? 'blue' : 'gray'}
+                  variant={hasActiveFilters ? 'light' : 'default'}
+                  color={hasActiveFilters ? 'blue' : undefined}
                   onClick={() => setFilterPopoverOpen(o => !o)}
                   aria-label="Sort and filter"
                 >
@@ -620,7 +644,7 @@ export function WatchFolderFileList({ files, folderId, onSendToFolder, onNavigat
         <Box style={{ padding: '0.25rem 0' }}>
           {files.length === 0 ? (
             <Text size="xs" c="dimmed" ta="center" py="xl" px="sm">
-              {t('smartFolders.fileList.empty', 'No files yet — upload a PDF to get started')}
+              {t('smartFolders.fileList.empty', 'No files yet')}
             </Text>
           ) : processedFiles.length === 0 ? (
             <Text size="xs" c="dimmed" ta="center" py="md" px="sm">
@@ -687,6 +711,14 @@ export function WatchFolderFileList({ files, folderId, onSendToFolder, onNavigat
           )}
         </Box>
       </ScrollArea>
+      <input
+        ref={uploadInputRef}
+        type="file"
+        multiple
+        accept=".pdf"
+        style={{ display: 'none' }}
+        onChange={handleInputChange}
+      />
     </Box>
   );
 }
