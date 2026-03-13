@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSaaSBilling } from '@app/contexts/SaasBillingContext';
+import { useSaaSMode } from '@app/hooks/useSaaSMode';
 import { getToolCreditCost } from '@app/utils/creditCosts';
 import { CREDIT_EVENTS } from '@app/constants/creditEvents';
 import type { ToolId } from '@app/types/toolId';
@@ -16,9 +17,11 @@ import type { ToolId } from '@app/types/toolId';
  */
 export function useCreditCheck(operationType?: string) {
   const billing = useSaaSBilling();
+  const isSaaSMode = useSaaSMode();
   const { t } = useTranslation();
 
   const checkCredits = useCallback(async (): Promise<string | null> => {
+    if (!isSaaSMode) return null; // Credits only apply in SaaS mode, not self-hosted
     if (!billing) return null;
 
     const { creditBalance, loading } = billing;
@@ -41,7 +44,7 @@ export function useCreditCheck(operationType?: string) {
     }
 
     return null;
-  }, [billing, operationType, t]);
+  }, [billing, isSaaSMode, operationType, t]);
 
   return { checkCredits };
 }
