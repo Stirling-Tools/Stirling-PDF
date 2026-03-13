@@ -11,6 +11,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -840,9 +841,26 @@ public class FileStorageService {
         return null;
     }
 
+    private static final Set<String> BLOCKED_CONTENT_TYPES =
+            Set.of(
+                    "application/x-msdownload",
+                    "application/x-executable",
+                    "application/x-sh",
+                    "application/x-bat",
+                    "application/x-msdos-program",
+                    "application/x-msi",
+                    "application/x-java-archive",
+                    "application/java-archive");
+
     private void validateMainUpload(MultipartFile file) {
         if (!isValidUpload(file)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is required");
+        }
+        String contentType = file.getContentType();
+        if (contentType != null
+                && BLOCKED_CONTENT_TYPES.contains(contentType.toLowerCase(Locale.ROOT))) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "File type not permitted: " + contentType);
         }
     }
 

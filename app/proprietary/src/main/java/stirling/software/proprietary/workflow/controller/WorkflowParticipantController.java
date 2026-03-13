@@ -1,9 +1,12 @@
 package stirling.software.proprietary.workflow.controller;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +22,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -179,7 +183,7 @@ public class WorkflowParticipantController {
     @PostMapping(value = "/decline", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ParticipantResponse> declineParticipation(
             @RequestParam("token") @NotBlank String token,
-            @RequestParam(value = "reason", required = false) String reason) {
+            @RequestParam(value = "reason", required = false) @Size(max = 500) String reason) {
 
         workflowSessionService.ensureSigningEnabled();
 
@@ -246,8 +250,11 @@ public class WorkflowParticipantController {
 
             return ResponseEntity.ok()
                     .header(
-                            "Content-Disposition",
-                            "attachment; filename=\"" + session.getDocumentName() + "\"")
+                            HttpHeaders.CONTENT_DISPOSITION,
+                            ContentDisposition.attachment()
+                                    .filename(session.getDocumentName(), StandardCharsets.UTF_8)
+                                    .build()
+                                    .toString())
                     .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
                     .body(pdf);
 
@@ -270,6 +277,8 @@ public class WorkflowParticipantController {
         if (request.getCertType() != null) {
             Map<String, Object> certSubmission = new HashMap<>();
             certSubmission.put("certType", request.getCertType());
+            // SECURITY: password is stored unencrypted in participant_metadata until finalization
+            // cleanup. Field-level encryption should be added here before production.
             certSubmission.put("password", request.getPassword());
             certSubmission.put("showSignature", request.getShowSignature());
             certSubmission.put("pageNumber", request.getPageNumber());
@@ -296,11 +305,19 @@ public class WorkflowParticipantController {
 
         // Add wet signatures data if provided - parse once and store as List directly
         if (request.getWetSignaturesData() != null && !request.getWetSignaturesData().isBlank()) {
+            if (request.getWetSignaturesData().length() > 5 * 1024 * 1024) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Wet signatures data exceeds maximum allowed size");
+            }
             @SuppressWarnings("unchecked")
             java.util.List<Map<String, Object>> wetSigs =
                     objectMapper.readValue(
                             request.getWetSignaturesData(),
                             new TypeReference<java.util.List<Map<String, Object>>>() {});
+            if (wetSigs.size() > 50) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Too many wet signatures submitted");
+            }
             metadata.put("wetSignatures", wetSigs);
         }
 
