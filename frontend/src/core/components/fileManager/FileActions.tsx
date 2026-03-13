@@ -146,32 +146,32 @@ const FileActions: React.FC = () => {
       {/* Right: Delete and Download */}
       <Group gap="xs">
         {uploadEnabled && (
-          <>
-            <Tooltip label={t("fileManager.uploadSelected", "Upload Selected")}>
-              <ActionIcon
-                variant="light"
-                size="sm"
-                color="dimmed"
-                onClick={() => setShowBulkUploadModal(true)}
-                disabled={!canBulkUpload}
-                radius="sm"
-              >
-                <CloudUploadIcon style={{ fontSize: "1rem" }} />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip label={t("fileManager.shareSelected", "Share Selected")}>
-              <ActionIcon
-                variant="light"
-                size="sm"
-                color="dimmed"
-                onClick={() => setShowBulkShareModal(true)}
-                disabled={!canBulkShare}
-                radius="sm"
-              >
-                <LinkIcon style={{ fontSize: "1rem" }} />
-              </ActionIcon>
-            </Tooltip>
-          </>
+          <Tooltip label={t("fileManager.uploadSelected", "Upload Selected")}>
+            <ActionIcon
+              variant="light"
+              size="sm"
+              color="dimmed"
+              onClick={() => setShowBulkUploadModal(true)}
+              disabled={!canBulkUpload}
+              radius="sm"
+            >
+              <CloudUploadIcon style={{ fontSize: "1rem" }} />
+            </ActionIcon>
+          </Tooltip>
+        )}
+        {shareLinksEnabled && (
+          <Tooltip label={t("fileManager.shareSelected", "Share Selected")}>
+            <ActionIcon
+              variant="light"
+              size="sm"
+              color="dimmed"
+              onClick={() => setShowBulkShareModal(true)}
+              disabled={!canBulkShare}
+              radius="sm"
+            >
+              <LinkIcon style={{ fontSize: "1rem" }} />
+            </ActionIcon>
+          </Tooltip>
         )}
         <Tooltip label={t("fileManager.deleteSelected", "Delete Selected")}>
           <ActionIcon
@@ -201,20 +201,20 @@ const FileActions: React.FC = () => {
       </Group>
 
       {uploadEnabled && (
-        <>
-          <BulkUploadToServerModal
-            opened={showBulkUploadModal}
-            onClose={() => setShowBulkUploadModal(false)}
-            files={selectedFiles}
-            onUploaded={refreshRecentFiles}
-          />
-          <BulkShareModal
-            opened={showBulkShareModal}
-            onClose={() => setShowBulkShareModal(false)}
-            files={selectedFiles}
-            onShared={refreshRecentFiles}
-          />
-        </>
+        <BulkUploadToServerModal
+          opened={showBulkUploadModal}
+          onClose={() => setShowBulkUploadModal(false)}
+          files={selectedFiles}
+          onUploaded={refreshRecentFiles}
+        />
+      )}
+      {shareLinksEnabled && (
+        <BulkShareModal
+          opened={showBulkShareModal}
+          onClose={() => setShowBulkShareModal(false)}
+          files={selectedFiles}
+          onShared={refreshRecentFiles}
+        />
       )}
     </div>
   );

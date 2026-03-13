@@ -69,8 +69,10 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
   const SESSION_DETAIL_WORKBENCH_ID = 'sessionDetailWorkbench';
   const SESSION_DETAIL_WORKBENCH_TYPE = 'custom:sessionDetailWorkbench' as const;
 
-  // Register workbenches
+  // Register workbenches only when group signing is enabled
   useEffect(() => {
+    if (!groupSigningEnabled) return;
+
     registerCustomWorkbenchView({
       id: SIGN_REQUEST_WORKBENCH_ID,
       workbenchId: SIGN_REQUEST_WORKBENCH_TYPE,
@@ -92,7 +94,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       unregisterCustomWorkbenchView(SIGN_REQUEST_WORKBENCH_ID);
       unregisterCustomWorkbenchView(SESSION_DETAIL_WORKBENCH_ID);
     };
-  }, []);
+  }, [groupSigningEnabled]);
 
   // Clear sign request workbench data when the user navigates away from it
   useEffect(() => {

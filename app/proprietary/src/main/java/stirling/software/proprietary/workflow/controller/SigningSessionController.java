@@ -54,6 +54,7 @@ public class SigningSessionController {
     @Transactional(readOnly = true)
     @GetMapping(value = "/cert-sign/sessions")
     public ResponseEntity<?> listSessions(Principal principal) {
+        workflowSessionService.ensureSigningEnabled();
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
         }
@@ -90,6 +91,7 @@ public class SigningSessionController {
             @ModelAttribute WorkflowCreationRequest request,
             Principal principal)
             throws Exception {
+        workflowSessionService.ensureSigningEnabled();
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
         }
@@ -110,6 +112,7 @@ public class SigningSessionController {
     @GetMapping(value = "/cert-sign/sessions/{sessionId}")
     public ResponseEntity<?> getSession(
             @PathVariable("sessionId") @NotBlank String sessionId, Principal principal) {
+        workflowSessionService.ensureSigningEnabled();
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
         }
@@ -131,6 +134,7 @@ public class SigningSessionController {
     @DeleteMapping(value = "/cert-sign/sessions/{sessionId}")
     public ResponseEntity<?> deleteSession(
             @PathVariable("sessionId") @NotBlank String sessionId, Principal principal) {
+        workflowSessionService.ensureSigningEnabled();
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
         }
@@ -151,6 +155,7 @@ public class SigningSessionController {
             @PathVariable("sessionId") @NotBlank String sessionId,
             @RequestBody List<ParticipantRequest> participants,
             Principal principal) {
+        workflowSessionService.ensureSigningEnabled();
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
         }
@@ -173,6 +178,7 @@ public class SigningSessionController {
             @PathVariable("sessionId") @NotBlank String sessionId,
             @PathVariable("participantId") Long participantId,
             Principal principal) {
+        workflowSessionService.ensureSigningEnabled();
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
         }
@@ -191,6 +197,7 @@ public class SigningSessionController {
     @GetMapping(value = "/cert-sign/sessions/{sessionId}/pdf")
     public ResponseEntity<byte[]> getSessionPdf(
             @PathVariable("sessionId") @NotBlank String sessionId, Principal principal) {
+        workflowSessionService.ensureSigningEnabled();
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -213,6 +220,7 @@ public class SigningSessionController {
     public ResponseEntity<byte[]> finalizeSession(
             @PathVariable("sessionId") @NotBlank String sessionId, Principal principal)
             throws Exception {
+        workflowSessionService.ensureSigningEnabled();
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -252,6 +260,7 @@ public class SigningSessionController {
     @StandardPdfResponse
     public ResponseEntity<byte[]> getSignedPdf(
             @PathVariable("sessionId") @NotBlank String sessionId, Principal principal) {
+        workflowSessionService.ensureSigningEnabled();
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -278,6 +287,7 @@ public class SigningSessionController {
     @Transactional(readOnly = true)
     @GetMapping(value = "/cert-sign/sign-requests")
     public ResponseEntity<?> listSignRequests(Principal principal) {
+        workflowSessionService.ensureSigningEnabled();
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
         }
@@ -296,6 +306,7 @@ public class SigningSessionController {
     @GetMapping(value = "/cert-sign/sign-requests/{sessionId}")
     public ResponseEntity<?> getSignRequestDetail(
             @PathVariable("sessionId") @NotBlank String sessionId, Principal principal) {
+        workflowSessionService.ensureSigningEnabled();
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
         }
@@ -313,6 +324,7 @@ public class SigningSessionController {
     @GetMapping(value = "/cert-sign/sign-requests/{sessionId}/document")
     public ResponseEntity<byte[]> getSignRequestDocument(
             @PathVariable("sessionId") @NotBlank String sessionId, Principal principal) {
+        workflowSessionService.ensureSigningEnabled();
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -337,6 +349,7 @@ public class SigningSessionController {
             @PathVariable("sessionId") @NotBlank String sessionId,
             @ModelAttribute stirling.software.proprietary.workflow.dto.SignDocumentRequest request,
             Principal principal) {
+        workflowSessionService.ensureSigningEnabled();
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
         }
@@ -358,6 +371,7 @@ public class SigningSessionController {
     @PostMapping(value = "/cert-sign/sign-requests/{sessionId}/decline")
     public ResponseEntity<?> declineSignRequest(
             @PathVariable("sessionId") @NotBlank String sessionId, Principal principal) {
+        workflowSessionService.ensureSigningEnabled();
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
         }

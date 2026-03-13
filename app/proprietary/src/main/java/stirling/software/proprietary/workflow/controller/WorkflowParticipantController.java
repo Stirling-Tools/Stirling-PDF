@@ -60,6 +60,8 @@ public class WorkflowParticipantController {
     public ResponseEntity<WorkflowSessionResponse> getSessionByToken(
             @RequestParam("token") @NotBlank String token) {
 
+        workflowSessionService.ensureSigningEnabled();
+
         WorkflowParticipant participant =
                 participantRepository
                         .findByShareToken(token)
@@ -92,6 +94,8 @@ public class WorkflowParticipantController {
     public ResponseEntity<ParticipantResponse> getParticipantDetails(
             @RequestParam("token") @NotBlank String token) {
 
+        workflowSessionService.ensureSigningEnabled();
+
         WorkflowParticipant participant =
                 participantRepository
                         .findByShareToken(token)
@@ -114,6 +118,8 @@ public class WorkflowParticipantController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ParticipantResponse> submitSignature(
             @ModelAttribute SignatureSubmissionRequest request) {
+
+        workflowSessionService.ensureSigningEnabled();
 
         if (request.getParticipantToken() == null || request.getParticipantToken().isBlank()) {
             throw new ResponseStatusException(
@@ -175,6 +181,8 @@ public class WorkflowParticipantController {
             @RequestParam("token") @NotBlank String token,
             @RequestParam(value = "reason", required = false) String reason) {
 
+        workflowSessionService.ensureSigningEnabled();
+
         WorkflowParticipant participant =
                 participantRepository
                         .findByShareToken(token)
@@ -216,6 +224,8 @@ public class WorkflowParticipantController {
             description = "Participant downloads the original document")
     @GetMapping(value = "/document", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> getDocument(@RequestParam("token") @NotBlank String token) {
+
+        workflowSessionService.ensureSigningEnabled();
 
         WorkflowParticipant participant =
                 participantRepository

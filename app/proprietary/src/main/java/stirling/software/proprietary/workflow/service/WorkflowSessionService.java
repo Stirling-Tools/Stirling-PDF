@@ -19,6 +19,7 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.FilePurpose;
@@ -61,6 +62,14 @@ public class WorkflowSessionService {
     private final StorageProvider storageProvider;
     private final ObjectMapper objectMapper;
     private final EntityManager entityManager;
+    private final ApplicationProperties applicationProperties;
+
+    public void ensureSigningEnabled() {
+        if (!applicationProperties.getStorage().isEnabled()
+                || !applicationProperties.getStorage().getSigning().isEnabled()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Group signing is disabled");
+        }
+    }
 
     /**
      * Creates a new workflow session with participants. Stores the original file using

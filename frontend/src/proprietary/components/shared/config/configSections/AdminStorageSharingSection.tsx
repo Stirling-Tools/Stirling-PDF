@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Anchor, Button, Group, Loader, Paper, Stack, Switch, Text } from '@mantine/core';
+import { Anchor, Loader, Paper, Stack, Switch, Text } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
@@ -10,6 +10,8 @@ import PendingBadge from '@app/components/shared/config/PendingBadge';
 import apiClient from '@app/services/apiClient';
 import { useLoginRequired } from '@app/hooks/useLoginRequired';
 import LoginRequiredBanner from '@app/components/shared/config/LoginRequiredBanner';
+import { SettingsStickyFooter } from '@app/components/shared/config/SettingsStickyFooter';
+import { useSettingsDirty } from '@app/hooks/useSettingsDirty';
 
 interface StorageSharingSettingsData {
   enabled?: boolean;
@@ -88,11 +90,18 @@ export default function AdminStorageSharingSection() {
   const frontendUrlConfigured = Boolean(settings.system?.frontendUrl?.trim());
   const mailEnabled = Boolean(settings.mail?.enabled);
 
+  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(settings, loading);
+
+  const handleDiscard = useCallback(() => {
+    setSettings(resetToSnapshot());
+  }, [resetToSnapshot, setSettings]);
+
   const handleSave = async () => {
     if (!validateLoginEnabled()) {
       return;
     }
     try {
+      markSaved();
       await saveSettings();
       showRestartModal();
     } catch (_error) {
@@ -113,6 +122,8 @@ export default function AdminStorageSharingSection() {
   }
 
   return (
+    <div className="settings-section-container">
+    <div className="settings-section-content">
     <Stack gap="lg">
       <LoginRequiredBanner show={!loginEnabled} />
       <div>
@@ -264,17 +275,20 @@ export default function AdminStorageSharingSection() {
         </Stack>
       </Paper>
 
-      <Group justify="flex-end">
-        <Button onClick={handleSave} loading={saving} disabled={!loginEnabled}>
-          {t('admin.settings.save', 'Save Changes')}
-        </Button>
-      </Group>
-
       <RestartConfirmationModal
         opened={restartModalOpened}
         onClose={closeRestartModal}
         onRestart={restartServer}
       />
     </Stack>
+    </div>
+    <SettingsStickyFooter
+      isDirty={isDirty}
+      saving={saving}
+      loginEnabled={loginEnabled}
+      onSave={handleSave}
+      onDiscard={handleDiscard}
+    />
+    </div>
   );
 }
