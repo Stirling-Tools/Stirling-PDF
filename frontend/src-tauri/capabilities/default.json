@@ -3,13 +3,11 @@
   "identifier": "default",
   "description": "enables the default permissions",
   "windows": [
-    "main",
-    "desktop-pdf-print"
+    "main"
   ],
   "permissions": [
     "core:default",
     "core:webview:allow-print",
-    "core:webview:allow-create-webview-window",
     "core:window:allow-destroy",
     "http:default",
     {

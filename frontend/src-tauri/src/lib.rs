@@ -27,6 +27,7 @@ use commands::{
     save_user_info,
     set_connection_mode,
     set_as_default_pdf_handler,
+    print_pdf_file_native,
     start_backend,
     start_oauth_login,
 };
@@ -163,6 +164,7 @@ pub fn run() {
       get_user_info,
       clear_user_info,
       start_oauth_login,
+      print_pdf_file_native,
     ])
     .build(tauri::generate_context!())
     .expect("error while building tauri application")
