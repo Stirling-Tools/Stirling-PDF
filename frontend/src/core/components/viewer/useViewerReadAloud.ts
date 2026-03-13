@@ -186,13 +186,60 @@ export function useViewerReadAloud() {
         return xA - xB; // Left to right
       });
 
-      // Use sorted items for both highlighting and caching
+      // Merge adjacent text items on same line, using PDF spaces as word boundaries
+      // This fixes PDFs where characters/syllables are individual text items
+      const mergedItems: TextItemWithGeometry[] = [];
+      const CHAR_MERGE_THRESHOLD = 5; // px - merge adjacent chars/syllables closer than this
+      const DEBUG_READ_ALOUD = true; // Set to false to disable logs
+
+      if (DEBUG_READ_ALOUD) {
+        console.log(`[ReadAloud] Page ${pageNumber}: ${sortedItems.length} raw text items`);
+        console.log('Raw items:', sortedItems.slice(0, 10).map(i => ({ str: i.str, x: i.transform[4], y: i.transform[5], width: i.width })));
+      }
+
+      for (const item of sortedItems) {
+        const itemText = item.str;
+        const isSpace = itemText.trim() === '';
+
+        // Spaces mark word boundaries - always push them separately
+        if (isSpace) {
+          mergedItems.push(item);
+          continue;
+        }
+
+        const lastItem = mergedItems[mergedItems.length - 1];
+
+        // Only merge if last item exists, is not a space, and items are on same line
+        if (lastItem && lastItem.str.trim()) {
+          const yDiff = Math.abs((lastItem.transform[5] ?? 0) - (item.transform[5] ?? 0));
+          const xGap = (item.transform[4] ?? 0) - ((lastItem.transform[4] ?? 0) + (lastItem.width ?? 0));
+
+          // Same line and very close horizontally?
+          if (yDiff < 5 && xGap < CHAR_MERGE_THRESHOLD) {
+            if (DEBUG_READ_ALOUD) {
+              console.log(`[ReadAloud] Merged "${lastItem.str}" + "${itemText}" (xGap: ${xGap.toFixed(1)}px)`);
+            }
+            lastItem.str += itemText;
+            // Update width: add the new item's width plus any gap between them
+            lastItem.width = (lastItem.width ?? 0) + Math.max(0, xGap) + (item.width ?? 0);
+            continue;
+          }
+        }
+        mergedItems.push({ ...item, str: itemText });
+      }
+
+      if (DEBUG_READ_ALOUD) {
+        console.log(`[ReadAloud] Page ${pageNumber}: ${mergedItems.length} merged items`);
+        console.log('Merged items:', mergedItems.slice(0, 10).map(i => i.str));
+      }
+
+      // Use merged items for both highlighting and caching
       // This ensures word counting in highlightWord matches the spoken text order
-      textItemsRef.current = sortedItems;
-      cachedTextItemsRef.current = sortedItems;
+      textItemsRef.current = mergedItems;
+      cachedTextItemsRef.current = mergedItems;
       cachedPageNumberRef.current = pageNumber;
 
-      const spokenText = sortedItems
+      const spokenText = mergedItems
         .map((item) => item.str)
         .join(' ')
         .replace(/\s+/g, ' ')
@@ -203,6 +250,11 @@ export function useViewerReadAloud() {
       }
 
       const words = spokenText.split(/\s+/).filter(Boolean);
+
+      if (DEBUG_READ_ALOUD) {
+        console.log(`[ReadAloud] Page ${pageNumber}: "${spokenText.substring(0, 100)}..."`);
+        console.log(`[ReadAloud] Words (${words.length}):`, words.slice(0, 20));
+      }
       if (!options?.preserveSpeechState) {
         speechTextRef.current = spokenText;
         speechWordsRef.current = words;
