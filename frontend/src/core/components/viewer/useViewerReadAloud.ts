@@ -73,9 +73,24 @@ export function useViewerReadAloud() {
   const currentFileRef = useRef<any>(null);
   const totalPagesRef = useRef(0);
 
+  // Cache parsed PDF document and page text items to avoid reparsing on every zoom/scroll
+  const cachedPdfDocRef = useRef<Awaited<ReturnType<typeof pdfWorkerManager.createDocument>> | null>(null);
+  const cachedPageNumberRef = useRef<number | null>(null);
+  const cachedTextItemsRef = useRef<TextItemWithGeometry[] | null>(null);
+
   const clearHighlights = useCallback(() => {
     highlightedElementsRef.current.forEach((el) => el.remove());
     highlightedElementsRef.current = [];
+  }, []);
+
+  const cleanupReadingSession = useCallback(() => {
+    // Destroy the cached PDF document to free memory
+    if (cachedPdfDocRef.current) {
+      pdfWorkerManager.destroyDocument(cachedPdfDocRef.current);
+      cachedPdfDocRef.current = null;
+      cachedPageNumberRef.current = null;
+      cachedTextItemsRef.current = null;
+    }
   }, []);
 
   const highlightWord = useCallback((wordIndex: number, words: string[], pageNumber: number) => {
@@ -125,7 +140,14 @@ export function useViewerReadAloud() {
     try {
       const zoom = (viewer.getZoomState().zoomPercent || 100) / 100;
 
-      pdfDoc = await pdfWorkerManager.createDocument(await currentFile.arrayBuffer());
+      // If we have a cached document for the same file, reuse it instead of recreating
+      if (cachedPdfDocRef.current) {
+        pdfDoc = cachedPdfDocRef.current;
+      } else {
+        pdfDoc = await pdfWorkerManager.createDocument(await currentFile.arrayBuffer());
+        cachedPdfDocRef.current = pdfDoc;
+      }
+
       const page = await pdfDoc.getPage(pageNumber);
       const textContent = await page.getTextContent();
       // The highlight is rendered inside the page element, so we keep geometry in
@@ -141,9 +163,28 @@ export function useViewerReadAloud() {
         });
       }
       textItemsRef.current = textItems;
+      cachedTextItemsRef.current = textItems;
+      cachedPageNumberRef.current = pageNumber;
 
-      const spokenText = textContent.items
-        .map((item) => (isTextItem(item) ? item.str : ''))
+      // Sort text items by visual position (top-to-bottom, then left-to-right)
+      // to preserve reading order instead of PDF internal order
+      const sortedItems = [...textItems].sort((a, b) => {
+        // transform array is [a, b, c, d, e, f] where e=x, f=y (translation components)
+        const yA = a.transform[5] ?? 0;  // y position
+        const yB = b.transform[5] ?? 0;
+        const xA = a.transform[4] ?? 0;  // x position
+        const xB = b.transform[4] ?? 0;
+
+        // Sort top-to-bottom (higher y first in PDF coordinates), then left-to-right
+        // 5px threshold for "same line" to group text on same horizontal line
+        if (Math.abs(yA - yB) > 5) {
+          return yB - yA; // Top to bottom
+        }
+        return xA - xB; // Left to right
+      });
+
+      const spokenText = sortedItems
+        .map((item) => item.str)
         .join(' ')
         .replace(/\s+/g, ' ')
         .trim();
@@ -163,10 +204,12 @@ export function useViewerReadAloud() {
       const highlightIndex = Math.max(0, Math.min(options?.highlightWordIndex ?? 0, Math.max(words.length - 1, 0)));
       highlightWord(highlightIndex, words, pageNumber);
       return { spokenText, words };
-    } finally {
-      if (pdfDoc) {
-        pdfWorkerManager.destroyDocument(pdfDoc);
+    } catch (error) {
+      // Clear cache on error to avoid stale state
+      if (pdfDoc && pdfDoc === cachedPdfDocRef.current) {
+        cachedPdfDocRef.current = null;
       }
+      throw error;
     }
   }, [highlightWord, viewer]);
 
@@ -192,6 +235,7 @@ export function useViewerReadAloud() {
       currentFileRef.current = null;
       currentWordIndexRef.current = 0;
       utteranceRef.current = null;
+      cleanupReadingSession();
       return;
     }
 
@@ -219,6 +263,7 @@ export function useViewerReadAloud() {
             if (!nextPageData) {
               currentFileRef.current = null;
               setIsReadingAloud(false);
+              cleanupReadingSession();
               return;
             }
             speakFromCharIndex(nextPageData.spokenText, nextPageData.words, 0, pageNumber + 1, speechRate);
@@ -227,6 +272,7 @@ export function useViewerReadAloud() {
             currentFileRef.current = null;
             clearHighlights();
             setIsReadingAloud(false);
+            cleanupReadingSession();
           }
         }, 250);
         return;
@@ -236,6 +282,7 @@ export function useViewerReadAloud() {
       speechCharIndexRef.current = spokenText.length;
       currentFileRef.current = null;
       currentWordIndexRef.current = 0;
+      cleanupReadingSession();
     };
     utterance.onerror = () => {
       utteranceRef.current = null;
@@ -247,6 +294,7 @@ export function useViewerReadAloud() {
       currentWordIndexRef.current = 0;
       clearHighlights();
       setIsReadingAloud(false);
+      cleanupReadingSession();
     };
     utterance.onboundary = (event: SpeechSynthesisEvent) => {
       if (event.name !== 'word') return;
@@ -270,20 +318,21 @@ export function useViewerReadAloud() {
 
     utteranceRef.current = utterance;
     window.speechSynthesis.speak(utterance);
-  }, [clearHighlights, readPage, speechRate, viewer.scrollActions]);
+  }, [clearHighlights, cleanupReadingSession, readPage, speechRate, viewer.scrollActions]);
 
   const refreshActiveHighlight = useCallback(() => {
-    if (!isReadingAloud || !currentFileRef.current) {
+    if (!isReadingAloud || !currentFileRef.current || !cachedTextItemsRef.current) {
       return;
     }
 
-    void readPage(currentFileRef.current, currentPageNumberRef.current, {
-      preserveSpeechState: true,
-      highlightWordIndex: currentWordIndexRef.current,
-    }).catch(() => {
-      // Keep playback running even if highlight refresh fails.
-    });
-  }, [isReadingAloud, readPage]);
+    // Use cached text items to refresh highlights without reparsing the PDF document.
+    // This is critical for performance during zoom/scroll updates while audio is playing.
+    const words = speechWordsRef.current;
+    const pageNumber = currentPageNumberRef.current;
+    const wordIndex = currentWordIndexRef.current;
+
+    highlightWord(wordIndex, words, pageNumber);
+  }, [isReadingAloud, highlightWord]);
 
   const handleReadAloud = useCallback(async () => {
     if (typeof window === 'undefined' || !window.speechSynthesis) {
@@ -301,6 +350,7 @@ export function useViewerReadAloud() {
       setIsReadingAloud(false);
       currentFileRef.current = null;
       utteranceRef.current = null;
+      cleanupReadingSession();
       return;
     }
 
@@ -319,6 +369,7 @@ export function useViewerReadAloud() {
         if (!pageData) {
           currentFileRef.current = null;
           setIsReadingAloud(false);
+          cleanupReadingSession();
           return;
         }
 
@@ -332,8 +383,9 @@ export function useViewerReadAloud() {
       currentFileRef.current = null;
       clearHighlights();
       setIsReadingAloud(false);
+      cleanupReadingSession();
     }
-  }, [clearHighlights, highlightWord, isReadingAloud, selectors, speakFromCharIndex, speechRate, viewer]);
+  }, [clearHighlights, cleanupReadingSession, highlightWord, isReadingAloud, selectors, speakFromCharIndex, speechRate, viewer]);
 
   const handleSpeechRateChange = useCallback((nextRate: number) => {
     setSpeechRate(nextRate);
@@ -359,7 +411,7 @@ export function useViewerReadAloud() {
         speechTextRef.current,
         speechWordsRef.current,
         speechCharIndexRef.current,
-        viewer.getScrollState().currentPage || 1,
+        currentPageNumberRef.current,
         nextRate
       );
     }, 80);
@@ -397,8 +449,9 @@ export function useViewerReadAloud() {
       currentFileRef.current = null;
       currentWordIndexRef.current = 0;
       utteranceRef.current = null;
+      cleanupReadingSession();
     };
-  }, [clearHighlights]);
+  }, [clearHighlights, cleanupReadingSession]);
 
   return {
     isReadingAloud,
