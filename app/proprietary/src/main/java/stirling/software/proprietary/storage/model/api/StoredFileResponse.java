@@ -21,4 +21,5 @@ public class StoredFileResponse {
     private final List<String> sharedWithUsers;
     private final List<SharedUserResponse> sharedUsers;
     private final List<ShareLinkResponse> shareLinks;
+    private final String filePurpose;
 }

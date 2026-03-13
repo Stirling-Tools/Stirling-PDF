@@ -452,6 +452,10 @@ public class FileStorageService {
                 .sharedWithUsers(sharedWithUsers)
                 .sharedUsers(sharedUsers)
                 .shareLinks(shareLinks)
+                .filePurpose(
+                        file.getPurpose() != null
+                                ? file.getPurpose().name().toLowerCase(Locale.ROOT)
+                                : null)
                 .build();
     }
 

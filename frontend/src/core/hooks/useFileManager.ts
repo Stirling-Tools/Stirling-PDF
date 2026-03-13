@@ -18,6 +18,7 @@ interface StoredFileResponse {
   accessRole?: string | null;
   shareLinks?: Array<{ token?: string | null }>;
   sharedWithUsers?: string[];
+  filePurpose?: string | null;
 }
 
 interface AccessedShareLinkResponse {
@@ -142,6 +143,19 @@ export const useFileManager = () => {
                 remoteHasShareLinks: undefined,
               };
             }
+            // If this server file is a signing-workflow file, detach it from the file manager
+            if (serverFile.filePurpose && serverFile.filePurpose !== 'generic') {
+              return {
+                ...stub,
+                remoteStorageId: undefined,
+                remoteStorageUpdatedAt: undefined,
+                remoteOwnerUsername: undefined,
+                remoteOwnedByCurrentUser: undefined,
+                remoteAccessRole: undefined,
+                remoteSharedViaLink: false,
+                remoteHasShareLinks: undefined,
+              };
+            }
             const updatedAtMs = serverFile.updatedAt
               ? new Date(serverFile.updatedAt).getTime()
               : serverFile.createdAt
@@ -169,6 +183,10 @@ export const useFileManager = () => {
               continue;
             }
             if (remoteIdSet.has(file.id)) {
+              continue;
+            }
+            // Skip signing-workflow files — only accessible via SignPopout
+            if (file.filePurpose && file.filePurpose !== 'generic') {
               continue;
             }
             const updatedAtMs = file.updatedAt
