@@ -178,7 +178,7 @@ subprojects {
         exclude group: 'org.bouncycastle', module: 'bcutil-jdk15on'
         exclude group: 'org.bouncycastle', module: 'bcmail-jdk15on'
         // Force a compatible Guava version for spotless
-        resolutionStrategy.force 'com.google.guava:guava:33.0.0-jre'
+        resolutionStrategy.force 'com.google.guava:guava:33.5.0-jre'
 
         // Security CVE fixes - hardcoded resolution strategy to ensure safe versions
         // Primary fixes via explicit dependencies in app/core/build.gradle:
