@@ -162,9 +162,6 @@ export function useViewerReadAloud() {
           viewportTransform,
         });
       }
-      textItemsRef.current = textItems;
-      cachedTextItemsRef.current = textItems;
-      cachedPageNumberRef.current = pageNumber;
 
       // Sort text items by visual position (top-to-bottom, then left-to-right)
       // to preserve reading order instead of PDF internal order
@@ -182,6 +179,12 @@ export function useViewerReadAloud() {
         }
         return xA - xB; // Left to right
       });
+
+      // Use sorted items for both highlighting and caching
+      // This ensures word counting in highlightWord matches the spoken text order
+      textItemsRef.current = sortedItems;
+      cachedTextItemsRef.current = sortedItems;
+      cachedPageNumberRef.current = pageNumber;
 
       const spokenText = sortedItems
         .map((item) => item.str)
