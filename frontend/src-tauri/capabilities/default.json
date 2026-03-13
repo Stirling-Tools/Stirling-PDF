@@ -7,7 +7,6 @@
   ],
   "permissions": [
     "core:default",
-    "core:webview:allow-print",
     "core:window:allow-destroy",
     "http:default",
     {
