@@ -19,7 +19,7 @@ export function useWillUseCloud(endpoint?: string): boolean {
 
       // Don't show cloud badges until backend is healthy
       // This prevents showing incorrect cloud status during startup
-      if (!tauriBackendService.isBackendHealthy()) {
+      if (!tauriBackendService.isOnline) {
         setWillUseCloud(false);
         return;
       }
