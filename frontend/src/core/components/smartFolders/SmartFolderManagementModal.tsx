@@ -7,9 +7,7 @@ import {
   TextInput,
   Textarea,
   Divider,
-  ColorSwatch,
-  SimpleGrid,
-  Text,
+  ColorInput,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { SmartFolder } from '@app/types/smartFolders';
@@ -19,7 +17,7 @@ import AutomationCreation from '@app/components/tools/automate/AutomationCreatio
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { smartFolderStorage } from '@app/services/smartFolderStorage';
 
-const ACCENT_COLORS = [
+const ACCENT_SWATCHES = [
   '#3b82f6', '#0ea5e9', '#14b8a6', '#22c55e',
   '#f97316', '#ef4444', '#9333ea', '#ec4899',
   '#6366f1', '#eab308', '#64748b', '#0f172a',
@@ -48,9 +46,9 @@ export function SmartFolderManagementModal({
   const [description, setDescription] = useState(editFolder?.description ?? '');
   const [icon, setIcon] = useState(editFolder?.icon ?? 'FolderIcon');
   const [accentColor, setAccentColor] = useState(editFolder?.accentColor ?? '#3b82f6');
-  const [customColor, setCustomColor] = useState('');
   const [saving, setSaving] = useState(false);
   const [nameError, setNameError] = useState('');
+  const [automationError, setAutomationError] = useState('');
 
   // AutomationCreation exposes its save function via this ref
   const automationSaveTrigger = useRef<(() => void) | null>(null);
@@ -60,8 +58,9 @@ export function SmartFolderManagementModal({
     setDescription(editFolder?.description ?? '');
     setIcon(editFolder?.icon ?? 'FolderIcon');
     setAccentColor(editFolder?.accentColor ?? '#3b82f6');
-    setCustomColor('');
+
     setNameError('');
+    setAutomationError('');
     setSaving(false);
   }, [editFolder]);
 
@@ -116,6 +115,7 @@ export function SmartFolderManagementModal({
       setNameError(t('smartFolders.modal.nameTooLong', 'Folder name must be 50 characters or less'));
       return;
     }
+    setAutomationError('');
     setSaving(true);
     // Trigger automation save; onComplete handles the rest
     automationSaveTrigger.current?.();
@@ -161,34 +161,15 @@ export function SmartFolderManagementModal({
             size="sm"
           />
 
-          <Stack gap="xs">
-            <Text size="sm" fw={600}>{t('smartFolders.modal.color', 'Accent color')}</Text>
-            <Group gap="xs">
-              <SimpleGrid cols={12} spacing={4}>
-                {ACCENT_COLORS.map((color) => (
-                  <ColorSwatch
-                    key={color}
-                    color={color}
-                    size={20}
-                    style={{ cursor: 'pointer', outline: accentColor === color ? `2px solid ${color}` : 'none', outlineOffset: 2 }}
-                    onClick={() => setAccentColor(color)}
-                  />
-                ))}
-              </SimpleGrid>
-              <TextInput
-                placeholder="#hex"
-                value={customColor}
-                onChange={(e) => {
-                  setCustomColor(e.currentTarget.value);
-                  if (/^#[0-9a-fA-F]{6}$/.test(e.currentTarget.value)) {
-                    setAccentColor(e.currentTarget.value);
-                  }
-                }}
-                size="xs"
-                style={{ width: '5.5rem' }}
-              />
-            </Group>
-          </Stack>
+          <ColorInput
+            label={t('smartFolders.modal.color', 'Accent color')}
+            value={accentColor}
+            onChange={setAccentColor}
+            format="hex"
+            swatches={ACCENT_SWATCHES}
+            size="sm"
+            popoverProps={{ withinPortal: true }}
+          />
         </Stack>
 
         <Divider label={t('smartFolders.modal.automation', 'Automation')} labelPosition="left" />
@@ -198,11 +179,15 @@ export function SmartFolderManagementModal({
           existingAutomation={existingAutomation ?? undefined}
           onBack={handleClose}
           onComplete={handleAutomationComplete}
+          onSaveFailed={() => { setSaving(false); setAutomationError(t('smartFolders.modal.automationRequired', 'Add at least one configured step before saving.')); }}
           toolRegistry={toolRegistry}
           hideMetadata
           nameOverride={name.trim() || 'Watch Folder Automation'}
           saveTriggerRef={automationSaveTrigger}
         />
+        {automationError && (
+          <Text size="xs" c="red">{automationError}</Text>
+        )}
 
         <Divider />
 

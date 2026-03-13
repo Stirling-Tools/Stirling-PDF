@@ -6,6 +6,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import CloseIcon from '@mui/icons-material/Close';
 import FolderPlusIcon from '@mui/icons-material/CreateNewFolder';
 import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
@@ -348,6 +349,10 @@ function FolderCard({
 function HowItWorks() {
   const { t } = useTranslation();
 
+  const [dismissed, setDismissed] = useState(() => sessionStorage.getItem('wf_howItWorks_dismissed') === '1');
+
+  if (dismissed) return null;
+
   const steps = [
     {
       n: '1',
@@ -376,11 +381,22 @@ function HowItWorks() {
         backgroundColor: 'var(--bg-toolbar)',
       }}
     >
-      <Group gap="xs" mb="sm">
-        <InfoOutlinedIcon style={{ fontSize: '1rem', color: 'var(--mantine-color-blue-filled)' }} />
-        <Text fw={600} size="xs">
-          {t('smartFolders.howItWorks.title', 'How Watch Folders work')}
-        </Text>
+      <Group gap="xs" mb="sm" justify="space-between">
+        <Group gap="xs">
+          <InfoOutlinedIcon style={{ fontSize: '1rem', color: 'var(--mantine-color-blue-filled)' }} />
+          <Text fw={600} size="xs">
+            {t('smartFolders.howItWorks.title', 'How Watch Folders work')}
+          </Text>
+        </Group>
+        <ActionIcon
+          size="xs"
+          variant="subtle"
+          color="gray"
+          onClick={() => { sessionStorage.setItem('wf_howItWorks_dismissed', '1'); setDismissed(true); }}
+          aria-label="Dismiss"
+        >
+          <CloseIcon style={{ fontSize: '0.75rem', color: 'var(--mantine-color-text)' }} />
+        </ActionIcon>
       </Group>
       <Group gap="xl" wrap="nowrap" align="flex-start">
         {steps.map((step) => (
@@ -632,25 +648,7 @@ export function SmartFolderHomePage() {
             <EmptyState onCreate={() => setCreateModalOpen(true)} />
           ) : (
             <Stack gap="md">
-              {folders.map((folder) => {
-                const status = statuses[folder.id] ?? 'idle';
-                const isProcessing =
-                  processingFolderIds.has(folder.id) || status === 'processing';
-                return (
-                  <FolderCard
-                    key={folder.id}
-                    folder={folder}
-                    status={status}
-                    isProcessing={isProcessing}
-                    onEdit={handleEdit}
-                    onDelete={setDeleteTarget}
-                    onOpen={navigateToFolder}
-                    onDropFiles={processFiles}
-                    onDropSidebarFile={handleDropSidebarFile}
-                    onTogglePause={handleTogglePause}
-                  />
-                );
-              })}
+              <HowItWorks />
 
               {/* Add another prompt */}
               <Box
@@ -688,7 +686,25 @@ export function SmartFolderHomePage() {
                 </Text>
               </Box>
 
-              <HowItWorks />
+              {folders.map((folder) => {
+                const status = statuses[folder.id] ?? 'idle';
+                const isProcessing =
+                  processingFolderIds.has(folder.id) || status === 'processing';
+                return (
+                  <FolderCard
+                    key={folder.id}
+                    folder={folder}
+                    status={status}
+                    isProcessing={isProcessing}
+                    onEdit={handleEdit}
+                    onDelete={setDeleteTarget}
+                    onOpen={navigateToFolder}
+                    onDropFiles={processFiles}
+                    onDropSidebarFile={handleDropSidebarFile}
+                    onTogglePause={handleTogglePause}
+                  />
+                );
+              })}
             </Stack>
           )}
         </Box>

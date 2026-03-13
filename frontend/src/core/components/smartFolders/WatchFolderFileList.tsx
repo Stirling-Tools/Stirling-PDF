@@ -643,9 +643,14 @@ export function WatchFolderFileList({ files, folderId, onSendToFolder, onNavigat
       <ScrollArea style={{ flex: 1, minHeight: 0 }}>
         <Box style={{ padding: '0.25rem 0' }}>
           {files.length === 0 ? (
-            <Text size="xs" c="dimmed" ta="center" py="xl" px="sm">
-              {t('smartFolders.fileList.empty', 'No files yet')}
-            </Text>
+            <Box py="xl" px="sm" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+              <Text size="xs" c="dimmed" ta="center">
+                {t('smartFolders.fileList.empty', 'No files yet')}
+              </Text>
+              <Button size="xs" variant="light" leftSection={<AddIcon style={{ fontSize: '0.875rem' }} />} onClick={handleUploadClick}>
+                {t('smartFolders.fileList.uploadFiles', 'Upload PDFs')}
+              </Button>
+            </Box>
           ) : processedFiles.length === 0 ? (
             <Text size="xs" c="dimmed" ta="center" py="md" px="sm">
               {search ? t('smartFolders.fileList.noResults', 'No files match your search') : t('smartFolders.fileList.noneInFilter', 'No files in this category')}

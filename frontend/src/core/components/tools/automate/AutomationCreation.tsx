@@ -31,9 +31,10 @@ interface AutomationCreationProps {
   hideMetadata?: boolean;
   nameOverride?: string;
   saveTriggerRef?: React.MutableRefObject<(() => void) | null>;
+  onSaveFailed?: () => void;
 }
 
-export default function AutomationCreation({ mode, existingAutomation, onBack, onComplete, toolRegistry, hideMetadata = false, nameOverride, saveTriggerRef }: AutomationCreationProps) {
+export default function AutomationCreation({ mode, existingAutomation, onBack, onComplete, toolRegistry, hideMetadata = false, nameOverride, saveTriggerRef, onSaveFailed }: AutomationCreationProps) {
   const { t } = useTranslation();
 
   const {
@@ -104,7 +105,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
   };
 
   const saveAutomation = async () => {
-    if (!canSave()) return;
+    if (!canSave()) { onSaveFailed?.(); return; }
 
     const automationData = {
       name: effectiveName.trim(),
