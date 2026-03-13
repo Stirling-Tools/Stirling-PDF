@@ -1,16 +1,21 @@
 package stirling.software.proprietary.workflow.service;
 
+import java.awt.Color;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
+import javax.imageio.ImageIO;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -18,7 +23,12 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName;
+import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.bouncycastle.asn1.x500.RDN;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
@@ -277,11 +287,50 @@ public class SigningFinalizationService {
             throws Exception {
         log.info("Appending signature summary page to session {}", session.getSessionId());
 
+        // ---- Color palette — monochrome except badge accents and logo ----
+        // Only signedGreen and declinedRed carry colour; everything else is neutral gray.
+        final Color headerDark = new Color(31, 41, 55); // --gray-800  (#1f2937)
+        final Color signedGreen = new Color(16, 185, 129); // --category-color-signing
+        final Color declinedRed = new Color(239, 68, 68); // --category-color-removal
+        final Color cardBg = new Color(249, 250, 251); // --color-gray-50
+        final Color cardBorder = new Color(229, 231, 235); // --color-gray-200
+        final Color stripBg = new Color(243, 244, 246); // --color-gray-100
+        final Color textDark = new Color(17, 24, 39); // --gray-900
+        final Color textMuted = new Color(107, 114, 128); // --gray-500
+        final Color sectionLabel = new Color(55, 65, 81); // --gray-700
+        final Color columnLabel = new Color(107, 114, 128); // --gray-500
+        final Color headerSubtle = new Color(209, 213, 219); // --gray-300
+
+        // ---- Fonts ----
+        final PDFont fontBold = new PDType1Font(FontName.HELVETICA_BOLD);
+        final PDFont fontReg = new PDType1Font(FontName.HELVETICA);
+
+        // ---- Page geometry ----
+        final float PAGE_W = PDRectangle.A4.getWidth(); // 595.3
+        final float PAGE_H = PDRectangle.A4.getHeight(); // 841.9
+        final float MARGIN = 40f;
+        final float CONTENT_W = PAGE_W - 2 * MARGIN;
+
+        // ---- Section heights ----
+        final float HEADER_H = 72f;
+        final float STRIP_H = 36f;
+
+        // ---- Card geometry ----
+        final float CARD_PADDING = 10f;
+        final float ACCENT_W = 4f;
+        final float INNER_W = CONTENT_W - ACCENT_W - CARD_PADDING * 2;
+        final float COL_W = (INNER_W - CARD_PADDING) / 2f;
+        final float LINE_H = 14f;
+
+        // ---- Date formatters ----
+        java.time.format.DateTimeFormatter tsFormatter =
+                java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm:ss");
+
         try (PDDocument document = pdfDocumentFactory.load(new ByteArrayInputStream(pdfBytes))) {
             PDPage summaryPage = new PDPage(PDRectangle.A4);
             document.addPage(summaryPage);
 
-            PDPageContentStream contentStream =
+            PDPageContentStream cs =
                     new PDPageContentStream(
                             document,
                             summaryPage,
@@ -290,173 +339,427 @@ public class SigningFinalizationService {
                             true);
 
             try {
-                PDRectangle pageSize = summaryPage.getMediaBox();
-                float margin = 50;
-                float yPosition = pageSize.getHeight() - margin;
+                float yPos = PAGE_H;
 
-                // === HEADER ===
+                // ========== 1. HEADER BAR ==========
+                cs.setNonStrokingColor(headerDark);
+                cs.addRect(0, PAGE_H - HEADER_H, PAGE_W, HEADER_H);
+                cs.fill();
 
-                ClassPathResource logoResource =
-                        new ClassPathResource("static/images/signature.png");
-                PDImageXObject logoImage;
-                try (InputStream logoStream = logoResource.getInputStream()) {
-                    File tempLogo = Files.createTempFile("summary-logo", ".png").toFile();
-                    FileUtils.copyInputStreamToFile(logoStream, tempLogo);
-                    logoImage = PDImageXObject.createFromFileByExtension(tempLogo, document);
-                    tempLogo.delete();
+                // Landscape wordmark logo (white text PNG, aspect 118:26)
+                // Rendered at 30pt height → ~136pt wide
+                final float LOGO_H = 30f;
+                final float LOGO_W = LOGO_H * (118f / 26f); // preserve aspect ratio
+                final float logoX = MARGIN;
+                final float logoY = PAGE_H - HEADER_H + (HEADER_H - LOGO_H) / 2f;
+                try {
+                    ClassPathResource logoRes =
+                            new ClassPathResource("static/images/stirling-logo-white.png");
+                    try (InputStream logoIn = logoRes.getInputStream()) {
+                        BufferedImage logoImg = ImageIO.read(logoIn);
+                        if (logoImg != null) {
+                            PDImageXObject pdLogo =
+                                    LosslessFactory.createFromImage(document, logoImg);
+                            cs.drawImage(pdLogo, logoX, logoY, LOGO_W, LOGO_H);
+                        }
+                    }
+                } catch (Exception e) {
+                    // Fallback: just draw the name as text
+                    log.debug(
+                            "Could not load Stirling-PDF logo for summary page: {}",
+                            e.getMessage());
+                    cs.setNonStrokingColor(Color.WHITE);
+                    cs.beginText();
+                    cs.setFont(fontBold, 13);
+                    cs.newLineAtOffset(logoX, PAGE_H - 28);
+                    cs.showText("Stirling PDF");
+                    cs.endText();
                 }
 
-                contentStream.drawImage(logoImage, margin, yPosition - 60, 60, 60);
+                // "Signature Summary" below the wordmark logo
+                cs.setNonStrokingColor(headerSubtle);
+                cs.beginText();
+                cs.setFont(fontReg, 10);
+                cs.newLineAtOffset(MARGIN, PAGE_H - HEADER_H + 10);
+                cs.showText("Signature Summary");
+                cs.endText();
 
-                PDFont titleFont = new PDType1Font(FontName.TIMES_BOLD);
-                contentStream.beginText();
-                contentStream.setFont(titleFont, 20);
-                contentStream.newLineAtOffset(margin + 70, yPosition - 30);
-                contentStream.showText("Signature Summary");
-                contentStream.endText();
+                // Document name (right-aligned, muted)
+                String docName = session.getDocumentName() != null ? session.getDocumentName() : "";
+                float maxDocW = CONTENT_W * 0.45f;
+                while (docName.length() > 4
+                        && fontReg.getStringWidth(docName) / 1000f * 9 > maxDocW) {
+                    docName = docName.substring(0, docName.length() - 4) + "...";
+                }
+                float docNameW = fontReg.getStringWidth(docName) / 1000f * 9;
+                cs.setNonStrokingColor(headerSubtle);
+                cs.beginText();
+                cs.setFont(fontReg, 9);
+                cs.newLineAtOffset(PAGE_W - MARGIN - docNameW, PAGE_H - 26);
+                cs.showText(docName);
+                cs.endText();
 
-                yPosition -= 80;
+                // Finalized timestamp (right-aligned, below doc name)
+                String finalizedStr =
+                        "Finalized: " + java.time.LocalDateTime.now().format(tsFormatter);
+                float finalizedW = fontReg.getStringWidth(finalizedStr) / 1000f * 8;
+                cs.setNonStrokingColor(new Color(156, 163, 175)); // --gray-400
+                cs.beginText();
+                cs.setFont(fontReg, 8);
+                cs.newLineAtOffset(PAGE_W - MARGIN - finalizedW, PAGE_H - 42);
+                cs.showText(finalizedStr);
+                cs.endText();
 
-                // === DOCUMENT INFO ===
+                yPos = PAGE_H - HEADER_H;
 
-                PDFont headerFont = new PDType1Font(FontName.TIMES_BOLD);
-                PDFont bodyFont = new PDType1Font(FontName.TIMES_ROMAN);
+                // ========== 2. INFO STRIP ==========
+                cs.setNonStrokingColor(stripBg);
+                cs.addRect(0, yPos - STRIP_H, PAGE_W, STRIP_H);
+                cs.fill();
 
-                contentStream.beginText();
-                contentStream.setFont(headerFont, 12);
-                contentStream.newLineAtOffset(margin, yPosition);
-                contentStream.showText("Document: " + session.getDocumentName());
-                contentStream.endText();
-                yPosition -= 20;
+                cs.setNonStrokingColor(textDark);
+                cs.beginText();
+                cs.setFont(fontReg, 9);
+                cs.newLineAtOffset(MARGIN, yPos - STRIP_H + 13);
+                cs.showText("Session Owner:  " + session.getOwner().getUsername());
+                cs.endText();
 
-                contentStream.beginText();
-                contentStream.setFont(bodyFont, 10);
-                contentStream.newLineAtOffset(margin, yPosition);
-                contentStream.showText("Session Owner: " + session.getOwner().getUsername());
-                contentStream.endText();
-                yPosition -= 15;
+                long signedCount =
+                        session.getParticipants().stream()
+                                .filter(p -> p.getStatus() == ParticipantStatus.SIGNED)
+                                .count();
+                long totalCount = session.getParticipants().size();
+                String countStr = signedCount + " of " + totalCount + " participant(s) signed";
+                float countW = fontReg.getStringWidth(countStr) / 1000f * 9;
+                cs.setNonStrokingColor(textDark);
+                cs.beginText();
+                cs.setFont(fontReg, 9);
+                cs.newLineAtOffset(PAGE_W - MARGIN - countW, yPos - STRIP_H + 13);
+                cs.showText(countStr);
+                cs.endText();
 
-                contentStream.beginText();
-                contentStream.setFont(bodyFont, 10);
-                contentStream.newLineAtOffset(margin, yPosition);
-                contentStream.showText(
-                        "Finalized: "
-                                + java.time.LocalDateTime.now()
-                                        .format(
-                                                java.time.format.DateTimeFormatter.ofPattern(
-                                                        "yyyy-MM-dd HH:mm:ss")));
-                contentStream.endText();
-                yPosition -= 30;
+                yPos -= STRIP_H + 14;
 
-                // Separator line
-                contentStream.setLineWidth(1f);
-                contentStream.moveTo(margin, yPosition);
-                contentStream.lineTo(pageSize.getWidth() - margin, yPosition);
-                contentStream.stroke();
-                yPosition -= 20;
+                // ========== 3. DIVIDER ==========
+                cs.setStrokingColor(cardBorder);
+                cs.setLineWidth(0.5f);
+                cs.moveTo(MARGIN, yPos);
+                cs.lineTo(PAGE_W - MARGIN, yPos);
+                cs.stroke();
+                yPos -= 16;
 
-                // === SIGNATURES ===
+                // ========== 4. SECTION HEADER ==========
+                cs.setNonStrokingColor(sectionLabel);
+                cs.beginText();
+                cs.setFont(fontBold, 13);
+                cs.newLineAtOffset(MARGIN, yPos);
+                cs.showText("Signatories");
+                cs.endText();
+                yPos -= 20;
 
-                contentStream.beginText();
-                contentStream.setFont(headerFont, 14);
-                contentStream.newLineAtOffset(margin, yPosition);
-                contentStream.showText("Signatures");
-                contentStream.endText();
-                yPosition -= 25;
-
+                // ========== 5. SIGNER CARDS ==========
                 for (WorkflowParticipant participant : session.getParticipants()) {
                     if (participant.getStatus() != ParticipantStatus.SIGNED
                             && participant.getStatus() != ParticipantStatus.DECLINED) {
                         continue;
                     }
 
+                    boolean isSigned = participant.getStatus() == ParticipantStatus.SIGNED;
+                    Color statusColor = isSigned ? signedGreen : declinedRed;
+                    String statusLabel = isSigned ? "SIGNED" : "DECLINED";
+
+                    // Gather data before measuring card height
+                    CertificateSubmission submission =
+                            isSigned ? extractCertificateSubmission(participant) : null;
+                    ParticipantSignatureMetadata meta = null;
+                    CertificateInfo certInfo = null;
+                    if (isSigned && submission != null) {
+                        meta = extractParticipantSignatureMetadata(participant, submission);
+                        certInfo = extractCertificateInfo(submission, participant);
+                    }
+
+                    // Dynamic card height:
+                    //   header row (28) + inner divider (10) + body + top/bottom padding
+                    boolean hasLocation =
+                            meta != null && meta.location != null && !meta.location.isEmpty();
+                    boolean hasReason =
+                            meta != null
+                                    && meta.reason != null
+                                    && !meta.reason.isEmpty()
+                                    && !"Document Signing".equals(meta.reason);
+                    // left col: column label row + data rows
+                    int leftDataRows = 0;
+                    if (isSigned) leftDataRows++; // timestamp
+                    if (hasReason) leftDataRows++;
+                    if (hasLocation) leftDataRows++;
+                    if (submission != null) leftDataRows++; // cert type
+                    // right col: 6 data rows (subjectCN, issuerCN, serial, validFrom, validUntil,
+                    // algorithm)
+                    int rightDataRows = certInfo != null ? 6 : 0;
+                    int bodyRows =
+                            1 + Math.max(leftDataRows, rightDataRows); // +1 for column label row
+                    float cardBodyH = bodyRows * LINE_H + CARD_PADDING;
+                    float cardH = 28 + 10 + cardBodyH + CARD_PADDING;
+
                     // Overflow to new page
-                    if (yPosition < 100) {
-                        contentStream.close();
+                    if (yPos - cardH < 50) {
+                        cs.close();
                         summaryPage = new PDPage(PDRectangle.A4);
                         document.addPage(summaryPage);
-                        contentStream =
+                        cs =
                                 new PDPageContentStream(
                                         document,
                                         summaryPage,
                                         PDPageContentStream.AppendMode.APPEND,
                                         true,
                                         true);
-                        yPosition = pageSize.getHeight() - margin;
+                        yPos = PAGE_H - MARGIN;
                     }
 
-                    contentStream.beginText();
-                    contentStream.setFont(headerFont, 11);
-                    contentStream.newLineAtOffset(margin, yPosition);
-                    contentStream.showText(
-                            participant.getName() + " <" + participant.getEmail() + ">");
-                    contentStream.endText();
-                    yPosition -= 15;
+                    float cardLeft = MARGIN;
+                    float cardTop = yPos;
 
-                    contentStream.beginText();
-                    contentStream.setFont(bodyFont, 9);
-                    contentStream.newLineAtOffset(margin + 10, yPosition);
-                    contentStream.showText("Status: " + participant.getStatus());
-                    contentStream.endText();
-                    yPosition -= 12;
+                    // Card background
+                    cs.setNonStrokingColor(cardBg);
+                    cs.addRect(cardLeft, cardTop - cardH, CONTENT_W, cardH);
+                    cs.fill();
 
-                    if (participant.getStatus() == ParticipantStatus.SIGNED) {
-                        CertificateSubmission submission =
-                                extractCertificateSubmission(participant);
-                        ParticipantSignatureMetadata meta =
-                                submission != null
-                                        ? extractParticipantSignatureMetadata(
-                                                participant, submission)
-                                        : new ParticipantSignatureMetadata("Document Signing", "");
+                    // Card border
+                    cs.setStrokingColor(cardBorder);
+                    cs.setLineWidth(0.5f);
+                    cs.addRect(cardLeft, cardTop - cardH, CONTENT_W, cardH);
+                    cs.stroke();
 
-                        contentStream.beginText();
-                        contentStream.setFont(bodyFont, 9);
-                        contentStream.newLineAtOffset(margin + 10, yPosition);
-                        contentStream.showText(
-                                "Signed: "
-                                        + participant
-                                                .getLastUpdated()
-                                                .format(
-                                                        java.time.format.DateTimeFormatter
-                                                                .ofPattern("yyyy-MM-dd HH:mm:ss")));
-                        contentStream.endText();
-                        yPosition -= 12;
+                    // Left accent bar
+                    cs.setNonStrokingColor(statusColor);
+                    cs.addRect(cardLeft, cardTop - cardH, ACCENT_W, cardH);
+                    cs.fill();
 
-                        if (meta.reason != null
-                                && !meta.reason.isEmpty()
-                                && !"Document Signing".equals(meta.reason)) {
-                            contentStream.beginText();
-                            contentStream.setFont(bodyFont, 9);
-                            contentStream.newLineAtOffset(margin + 10, yPosition);
-                            contentStream.showText("Reason: " + meta.reason);
-                            contentStream.endText();
-                            yPosition -= 12;
-                        }
+                    // Card header: Name
+                    float headerY = cardTop - CARD_PADDING - 14;
+                    String nameStr =
+                            participant.getName() != null ? participant.getName() : "Unknown";
+                    cs.setNonStrokingColor(textDark);
+                    cs.beginText();
+                    cs.setFont(fontBold, 11);
+                    cs.newLineAtOffset(cardLeft + ACCENT_W + CARD_PADDING, headerY);
+                    cs.showText(nameStr);
+                    cs.endText();
 
-                        if (meta.location != null && !meta.location.isEmpty()) {
-                            contentStream.beginText();
-                            contentStream.setFont(bodyFont, 9);
-                            contentStream.newLineAtOffset(margin + 10, yPosition);
-                            contentStream.showText("Location: " + meta.location);
-                            contentStream.endText();
-                            yPosition -= 12;
-                        }
+                    // Email (muted, same line)
+                    float nameW = fontBold.getStringWidth(nameStr) / 1000f * 11;
+                    String emailStr =
+                            participant.getEmail() != null
+                                    ? "<" + participant.getEmail() + ">"
+                                    : "";
+                    cs.setNonStrokingColor(textMuted);
+                    cs.beginText();
+                    cs.setFont(fontReg, 9);
+                    cs.newLineAtOffset(cardLeft + ACCENT_W + CARD_PADDING + nameW + 5, headerY);
+                    cs.showText(emailStr);
+                    cs.endText();
 
-                        if (submission != null) {
-                            contentStream.beginText();
-                            contentStream.setFont(bodyFont, 9);
-                            contentStream.newLineAtOffset(margin + 10, yPosition);
-                            contentStream.showText("Certificate Type: " + submission.getCertType());
-                            contentStream.endText();
-                            yPosition -= 12;
-                        }
+                    // Status badge (filled rect with white text)
+                    float badgeW = fontBold.getStringWidth(statusLabel) / 1000f * 7 + 10;
+                    float badgeX = cardLeft + CONTENT_W - badgeW - CARD_PADDING;
+                    float badgeY = headerY - 3;
+                    cs.setNonStrokingColor(statusColor);
+                    cs.addRect(badgeX, badgeY, badgeW, 13);
+                    cs.fill();
+                    cs.setNonStrokingColor(Color.WHITE);
+                    cs.beginText();
+                    cs.setFont(fontBold, 7);
+                    cs.newLineAtOffset(badgeX + 4, badgeY + 3);
+                    cs.showText(statusLabel);
+                    cs.endText();
+
+                    // Inner card divider
+                    float divY = cardTop - CARD_PADDING - 26;
+                    cs.setStrokingColor(cardBorder);
+                    cs.setLineWidth(0.5f);
+                    cs.moveTo(cardLeft + ACCENT_W + CARD_PADDING, divY);
+                    cs.lineTo(cardLeft + CONTENT_W - CARD_PADDING, divY);
+                    cs.stroke();
+
+                    // Two-column body
+                    float bodyTopY = divY - LINE_H;
+                    float leftColX = cardLeft + ACCENT_W + CARD_PADDING;
+                    float rightColX = leftColX + COL_W + CARD_PADDING;
+                    float rowY = bodyTopY;
+
+                    // Left column label
+                    cs.setNonStrokingColor(columnLabel);
+                    cs.beginText();
+                    cs.setFont(fontBold, 8);
+                    cs.newLineAtOffset(leftColX, rowY);
+                    cs.showText("Signature Details");
+                    cs.endText();
+                    rowY -= LINE_H;
+
+                    if (isSigned && participant.getLastUpdated() != null) {
+                        drawLabelValue(
+                                cs,
+                                fontBold,
+                                fontReg,
+                                leftColX,
+                                rowY,
+                                textDark,
+                                textMuted,
+                                "Signed:",
+                                participant.getLastUpdated().format(tsFormatter));
+                        rowY -= LINE_H;
+                    } else if (!isSigned) {
+                        drawLabelValue(
+                                cs,
+                                fontBold,
+                                fontReg,
+                                leftColX,
+                                rowY,
+                                textDark,
+                                textMuted,
+                                "Status:",
+                                "Declined signing");
+                        rowY -= LINE_H;
                     }
 
-                    yPosition -= 10;
+                    if (hasReason) {
+                        drawLabelValue(
+                                cs,
+                                fontBold,
+                                fontReg,
+                                leftColX,
+                                rowY,
+                                textDark,
+                                textMuted,
+                                "Reason:",
+                                meta.reason);
+                        rowY -= LINE_H;
+                    }
+                    if (hasLocation) {
+                        drawLabelValue(
+                                cs,
+                                fontBold,
+                                fontReg,
+                                leftColX,
+                                rowY,
+                                textDark,
+                                textMuted,
+                                "Location:",
+                                meta.location);
+                        rowY -= LINE_H;
+                    }
+                    if (submission != null && submission.getCertType() != null) {
+                        drawLabelValue(
+                                cs,
+                                fontBold,
+                                fontReg,
+                                leftColX,
+                                rowY,
+                                textDark,
+                                textMuted,
+                                "Cert Type:",
+                                submission.getCertType());
+                    }
+
+                    // Right column: Certificate Details
+                    if (certInfo != null) {
+                        float rRowY = bodyTopY;
+                        cs.setNonStrokingColor(columnLabel);
+                        cs.beginText();
+                        cs.setFont(fontBold, 8);
+                        cs.newLineAtOffset(rightColX, rRowY);
+                        cs.showText("Certificate Details");
+                        cs.endText();
+                        rRowY -= LINE_H;
+
+                        drawLabelValue(
+                                cs,
+                                fontBold,
+                                fontReg,
+                                rightColX,
+                                rRowY,
+                                textDark,
+                                textMuted,
+                                "Subject:",
+                                certInfo.subjectCN);
+                        rRowY -= LINE_H;
+                        drawLabelValue(
+                                cs,
+                                fontBold,
+                                fontReg,
+                                rightColX,
+                                rRowY,
+                                textDark,
+                                textMuted,
+                                "Issuer:",
+                                certInfo.issuerCN);
+                        rRowY -= LINE_H;
+                        drawLabelValue(
+                                cs,
+                                fontBold,
+                                fontReg,
+                                rightColX,
+                                rRowY,
+                                textDark,
+                                textMuted,
+                                "Serial:",
+                                certInfo.serialNumber);
+                        rRowY -= LINE_H;
+                        drawLabelValue(
+                                cs,
+                                fontBold,
+                                fontReg,
+                                rightColX,
+                                rRowY,
+                                textDark,
+                                textMuted,
+                                "Valid From:",
+                                certInfo.validFrom);
+                        rRowY -= LINE_H;
+                        drawLabelValue(
+                                cs,
+                                fontBold,
+                                fontReg,
+                                rightColX,
+                                rRowY,
+                                textDark,
+                                textMuted,
+                                "Valid Until:",
+                                certInfo.validUntil);
+                        rRowY -= LINE_H;
+                        drawLabelValue(
+                                cs,
+                                fontBold,
+                                fontReg,
+                                rightColX,
+                                rRowY,
+                                textDark,
+                                textMuted,
+                                "Algorithm:",
+                                certInfo.algorithm);
+                    }
+
+                    yPos -= cardH + 12;
                 }
 
+                // ========== 6. FOOTER ==========
+                cs.setStrokingColor(cardBorder);
+                cs.setLineWidth(0.5f);
+                cs.moveTo(MARGIN, 44);
+                cs.lineTo(PAGE_W - MARGIN, 44);
+                cs.stroke();
+
+                String footerText = "Generated by Stirling-PDF";
+                float footerTextW = fontReg.getStringWidth(footerText) / 1000f * 9;
+                cs.setNonStrokingColor(textMuted);
+                cs.beginText();
+                cs.setFont(fontReg, 9);
+                cs.newLineAtOffset((PAGE_W - footerTextW) / 2f, 30);
+                cs.showText(footerText);
+                cs.endText();
+
             } finally {
-                contentStream.close();
+                cs.close();
             }
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -710,6 +1013,111 @@ public class SigningFinalizationService {
         return null;
     }
 
+    /**
+     * Extracts X509 certificate fields from a participant's keystore for display on the summary
+     * page. Returns null gracefully if the certificate cannot be loaded (e.g. missing data).
+     */
+    private CertificateInfo extractCertificateInfo(
+            CertificateSubmission submission, WorkflowParticipant participant) {
+        try {
+            KeyStore keystore = buildKeystore(submission, participant);
+            Enumeration<String> aliases = keystore.aliases();
+            if (!aliases.hasMoreElements()) {
+                return null;
+            }
+            String alias = aliases.nextElement();
+            Certificate cert = keystore.getCertificate(alias);
+            if (!(cert instanceof X509Certificate)) {
+                return null;
+            }
+            X509Certificate x509 = (X509Certificate) cert;
+
+            String subjectCN = extractCN(x509.getSubjectX500Principal().getName());
+            String issuerCN = extractCN(x509.getIssuerX500Principal().getName());
+
+            java.time.format.DateTimeFormatter dtf =
+                    java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy");
+            String validFrom =
+                    x509.getNotBefore()
+                            .toInstant()
+                            .atZone(ZoneOffset.UTC)
+                            .toLocalDate()
+                            .format(dtf);
+            String validUntil =
+                    x509.getNotAfter().toInstant().atZone(ZoneOffset.UTC).toLocalDate().format(dtf);
+
+            String serial = x509.getSerialNumber().toString(16).toUpperCase();
+            if (serial.length() > 20) {
+                serial = serial.substring(0, 17) + "...";
+            }
+
+            return new CertificateInfo(
+                    subjectCN, issuerCN, serial, validFrom, validUntil, x509.getSigAlgName());
+
+        } catch (Exception e) {
+            log.debug(
+                    "Could not extract certificate info for {}: {}",
+                    participant.getEmail(),
+                    e.getMessage());
+            return null;
+        }
+    }
+
+    /** Extracts the CN value from an RFC 2253 DN string. Uses BouncyCastle with simple fallback. */
+    private String extractCN(String dnString) {
+        try {
+            X500Name x500Name = new X500Name(dnString);
+            RDN[] cns = x500Name.getRDNs(BCStyle.CN);
+            if (cns.length > 0) {
+                return IETFUtils.valueToString(cns[0].getFirst().getValue());
+            }
+        } catch (Exception ignored) {
+            // fall through to simple parse
+        }
+        for (String part : dnString.split(",")) {
+            String trimmed = part.trim();
+            if (trimmed.startsWith("CN=")) {
+                return trimmed.substring(3);
+            }
+        }
+        return dnString;
+    }
+
+    /**
+     * Draws a bold label followed by a regular-weight value on the same baseline. Clamps value to
+     * 26 characters to prevent overflow into adjacent column.
+     */
+    private void drawLabelValue(
+            PDPageContentStream cs,
+            PDFont labelFont,
+            PDFont valueFont,
+            float x,
+            float y,
+            Color labelColor,
+            Color valueColor,
+            String label,
+            String value)
+            throws java.io.IOException {
+        String safeValue = value != null ? value : "";
+        if (safeValue.length() > 26) {
+            safeValue = safeValue.substring(0, 23) + "...";
+        }
+        cs.setNonStrokingColor(labelColor);
+        cs.beginText();
+        cs.setFont(labelFont, 8);
+        cs.newLineAtOffset(x, y);
+        cs.showText(label);
+        cs.endText();
+
+        float labelW = labelFont.getStringWidth(label) / 1000f * 8;
+        cs.setNonStrokingColor(valueColor);
+        cs.beginText();
+        cs.setFont(valueFont, 8);
+        cs.newLineAtOffset(x + labelW + 3, y);
+        cs.showText(safeValue);
+        cs.endText();
+    }
+
     private List<WetSignatureMetadata> extractAllWetSignatures(WorkflowSession session) {
         List<WetSignatureMetadata> signatures = new ArrayList<>();
 
@@ -824,6 +1232,30 @@ public class SigningFinalizationService {
         ParticipantSignatureMetadata(String reason, String location) {
             this.reason = reason;
             this.location = location;
+        }
+    }
+
+    private static class CertificateInfo {
+        final String subjectCN;
+        final String issuerCN;
+        final String serialNumber;
+        final String validFrom;
+        final String validUntil;
+        final String algorithm;
+
+        CertificateInfo(
+                String subjectCN,
+                String issuerCN,
+                String serialNumber,
+                String validFrom,
+                String validUntil,
+                String algorithm) {
+            this.subjectCN = subjectCN;
+            this.issuerCN = issuerCN;
+            this.serialNumber = serialNumber;
+            this.validFrom = validFrom;
+            this.validUntil = validUntil;
+            this.algorithm = algorithm;
         }
     }
 }
