@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useImperativeHandle, forwardRef, useRef } from 'react';
 import { createPluginRegistration } from '@embedpdf/core';
+import type { PluginRegistry } from '@embedpdf/core';
 import { EmbedPDF } from '@embedpdf/core/react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
 
@@ -18,6 +19,8 @@ import { SearchPluginPackage } from '@embedpdf/plugin-search/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
 import { Rotation, PdfAnnotationSubtype } from '@embedpdf/models';
+import type { PdfAnnotationObject } from '@embedpdf/models';
+import type { AnnotationEvent } from '@embedpdf/plugin-annotation';
 
 // Import annotation plugins
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
@@ -70,7 +73,7 @@ export interface SignaturePreview {
 interface LocalEmbedPDFWithAnnotationsProps {
   file?: File | Blob;
   url?: string | null;
-  onAnnotationChange?: (annotations: any[]) => void;
+  onAnnotationChange?: (annotations: PdfAnnotationObject[]) => void;
   placementMode?: boolean;
   signatureData?: string;
   signatureType?: 'canvas' | 'image' | 'text';
@@ -310,7 +313,8 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
         key={pdfUrl}
         engine={engine}
         plugins={plugins}
-        onInitialized={async (registry) => {
+        onInitialized={async (registry: PluginRegistry) => {
+          // v2.0: Use registry.getPlugin() to access plugin APIs
           const annotationPlugin = registry.getPlugin('annotation');
           if (!annotationPlugin || !annotationPlugin.provides) return;
 
@@ -359,6 +363,16 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
               resetZoom: () => zoomApi.requestZoom?.(ZoomMode.FitWidth, { vx: 0.5, vy: 0 }),
             };
           }
+
+          // Listen for annotation events to notify parent
+          if (onAnnotationChange) {
+            annotationApi.onAnnotationEvent((event: AnnotationEvent) => {
+              if (event.type !== 'loaded' && event.committed) {
+                onAnnotationChange([event.annotation]);
+              }
+            });
+          }
+
         }}
       >
         <InteractionPauseBridge bridgeRef={interactionPauseRef} />
@@ -452,7 +466,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                           <AnnotationLayer
                             documentId={documentId}
                             pageIndex={pageIndex}
-                            selectionOutlineColor="#007ACC"
+                            selectionOutline={{ color: "#007ACC" }}
                           />
 
                           {/* Signature preview overlays (support multiple) */}
