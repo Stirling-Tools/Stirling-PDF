@@ -3,6 +3,7 @@ pub mod files;
 pub mod connection;
 pub mod auth;
 pub mod default_app;
+pub mod platform;
 pub mod print;
 
 pub use backend::{cleanup_backend, get_backend_port, start_backend};
@@ -27,4 +28,5 @@ pub use auth::{
     start_oauth_login,
 };
 pub use default_app::{is_default_pdf_handler, set_as_default_pdf_handler};
+pub use platform::get_desktop_os;
 pub use print::print_pdf_file_native;
