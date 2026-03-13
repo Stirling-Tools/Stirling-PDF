@@ -246,12 +246,16 @@ public class SigningFinalizationService {
             PDImageXObject image =
                     PDImageXObject.createFromByteArray(document, imageBytes, "signature");
 
-            // Convert Y from UI top-left origin to PDF bottom-left origin
-            float x = wetSig.getX().floatValue();
-            float y = wetSig.getY().floatValue();
-            float width = wetSig.getWidth().floatValue();
-            float height = wetSig.getHeight().floatValue();
-            float pdfY = page.getMediaBox().getHeight() - y - height;
+            // Coordinates are stored as fractions (0–1) of the page dimensions.
+            // Multiply by page size to get absolute PDF points, then convert Y from
+            // UI top-left origin to PDF bottom-left origin.
+            float pageWidth = page.getMediaBox().getWidth();
+            float pageHeight = page.getMediaBox().getHeight();
+            float x = wetSig.getX().floatValue() * pageWidth;
+            float y = wetSig.getY().floatValue() * pageHeight;
+            float width = wetSig.getWidth().floatValue() * pageWidth;
+            float height = wetSig.getHeight().floatValue() * pageHeight;
+            float pdfY = pageHeight - y - height;
 
             contentStream.drawImage(image, x, pdfY, width, height);
 

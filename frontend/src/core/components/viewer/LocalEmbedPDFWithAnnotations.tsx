@@ -38,23 +38,6 @@ import { DocumentReadyWrapper } from '@app/components/viewer/DocumentReadyWrappe
 
 const DOCUMENT_NAME = 'stirling-pdf-signing-viewer';
 
-/**
- * Fires a zoom reset after the Viewport mounts and the browser has computed layout.
- * Fixes a race condition where the Viewport initializes with size 0 before the browser
- * completes flex layout, causing the PDF to be invisible until the user zooms.
- */
-function ViewportMountTrigger({ zoomApiRef }: { zoomApiRef: { current: any } }) {
-  useEffect(() => {
-    const outer = requestAnimationFrame(() => {
-      const inner = requestAnimationFrame(() => {
-        zoomApiRef.current?.resetZoom();
-      });
-      return () => cancelAnimationFrame(inner);
-    });
-    return () => cancelAnimationFrame(outer);
-  }, [zoomApiRef]);
-  return null;
-}
 
 export interface SignaturePreview {
   id: string;
@@ -108,6 +91,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const annotationApiRef = useRef<any>(null);
   const zoomApiRef = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // State for signature preview overlays (support multiple)
   const [signaturePreviews, setSignaturePreviews] = useState<SignaturePreview[]>(initialSignatures);
@@ -295,7 +279,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
   }
 
   return (
-    <div style={{
+    <div ref={containerRef} style={{
       height: '100%',
       width: '100%',
       position: 'relative',
@@ -308,12 +292,6 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
         engine={engine}
         plugins={plugins}
         onInitialized={async (registry) => {
-          // Store zoom API reference
-          const zoomPlugin = registry.getPlugin('zoom');
-          if (zoomPlugin && zoomPlugin.provides) {
-            zoomApiRef.current = zoomPlugin.provides();
-          }
-
           const annotationPlugin = registry.getPlugin('annotation');
           if (!annotationPlugin || !annotationPlugin.provides) return;
 
@@ -352,6 +330,23 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
             },
           });
 
+          // Wire up zoom API using raw plugin (must NOT use useZoom hook inside Viewport)
+          const zoomPlugin = registry.getPlugin('zoom');
+          if (zoomPlugin?.provides) {
+            const rawZoom = zoomPlugin.provides();
+            if (rawZoom) {
+              const currentZoomRef = { current: 1.4 };
+              rawZoom.onZoomChange?.((e: any) => {
+                if (typeof e?.newZoom === 'number') currentZoomRef.current = e.newZoom;
+              });
+              zoomApiRef.current = {
+                zoomIn:    () => rawZoom.requestZoom?.(Math.min(currentZoomRef.current * 1.25, 3.0), { vx: 0.5, vy: 0.5 }),
+                zoomOut:   () => rawZoom.requestZoom?.(Math.max(currentZoomRef.current / 1.25, 0.2), { vx: 0.5, vy: 0.5 }),
+                resetZoom: () => rawZoom.requestZoom?.(1.4, { vx: 0.5, vy: 0.5 }),
+              };
+            }
+          }
+
           // Annotation events are now tracked via signaturePreviews state
           // and notified to parent via useEffect
         }}
@@ -389,7 +384,6 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                   contain: 'strict',
                 }}
               >
-                <ViewportMountTrigger zoomApiRef={zoomApiRef} />
                 <Scroller
                   documentId={documentId}
                   renderPage={({ width, height, pageIndex }) => (
