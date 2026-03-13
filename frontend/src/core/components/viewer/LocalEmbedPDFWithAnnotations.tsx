@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPluginRegistration } from '@embedpdf/core';
+import type { PluginRegistry } from '@embedpdf/core';
 import { EmbedPDF } from '@embedpdf/core/react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
 
@@ -18,6 +19,8 @@ import { SearchPluginPackage } from '@embedpdf/plugin-search/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
 import { Rotation, PdfAnnotationSubtype } from '@embedpdf/models';
+import type { PdfAnnotationObject } from '@embedpdf/models';
+import type { AnnotationEvent } from '@embedpdf/plugin-annotation';
 
 // Import annotation plugins
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
@@ -41,7 +44,7 @@ const DOCUMENT_NAME = 'stirling-pdf-signing-viewer';
 interface LocalEmbedPDFWithAnnotationsProps {
   file?: File | Blob;
   url?: string | null;
-  onAnnotationChange?: (annotations: any[]) => void;
+  onAnnotationChange?: (annotations: PdfAnnotationObject[]) => void;
 }
 
 export function LocalEmbedPDFWithAnnotations({
@@ -187,7 +190,7 @@ export function LocalEmbedPDFWithAnnotations({
       <EmbedPDF
         engine={engine}
         plugins={plugins}
-        onInitialized={async (registry: any) => {
+        onInitialized={async (registry: PluginRegistry) => {
           // v2.0: Use registry.getPlugin() to access plugin APIs
           const annotationPlugin = registry.getPlugin('annotation');
           if (!annotationPlugin || !annotationPlugin.provides) return;
@@ -223,10 +226,8 @@ export function LocalEmbedPDFWithAnnotations({
 
           // Listen for annotation events to notify parent
           if (onAnnotationChange) {
-            annotationApi.onAnnotationEvent((event: any) => {
-              if (event.committed) {
-                // Get all annotations and notify parent
-                // This is a simplified approach - in reality you'd need to get all annotations
+            annotationApi.onAnnotationEvent((event: AnnotationEvent) => {
+              if (event.type !== 'loaded' && event.committed) {
                 onAnnotationChange([event.annotation]);
               }
             });
@@ -295,7 +296,7 @@ export function LocalEmbedPDFWithAnnotations({
                           <AnnotationLayer
                             documentId={documentId}
                             pageIndex={pageIndex}
-                            selectionOutlineColor="#007ACC"
+                            selectionOutline={{ color: "#007ACC" }}
                           />
                         </div>
                       </PagePointerProvider>
