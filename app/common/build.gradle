@@ -27,7 +27,7 @@ spotless {
     }
 }
 dependencies {
-    api 'com.google.guava:guava:33.4.8-jre'
+    api 'com.google.guava:guava:33.5.0-jre'
     api 'org.springframework.boot:spring-boot-starter-webmvc'
     api 'org.springframework.boot:spring-boot-starter-aspectj'
     api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260102.1'
