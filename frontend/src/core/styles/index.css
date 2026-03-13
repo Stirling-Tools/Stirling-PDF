@@ -65,5 +65,5 @@ code {
 /* Prevent browser pinch-to-zoom on PDF viewer - let PDF.js handle zoom */
 #viewerContainer,
 .pdfViewer {
-  touch-action: none;
+  touch-action: pan-x pan-y;
 }
