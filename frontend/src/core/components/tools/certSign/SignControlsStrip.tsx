@@ -479,6 +479,7 @@ export default function SignControlsStrip({
                       <Group gap="sm" wrap="nowrap" justify="space-between">
                         {renderSavedSignaturePreview(sig)}
                         <ActionIcon
+                          component="div"
                           size="xs"
                           color="red"
                           variant="subtle"
