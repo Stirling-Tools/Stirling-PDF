@@ -1,7 +1,7 @@
 /**
- * Returns a map of fileId → folderId for all files currently in any smart folder.
- * Used to verify folder-scoped file isolation — a file in this map is owned by a folder
- * and must not appear in the global file context.
+ * Returns a map of fileId → folderId[] for all files currently in any smart folder.
+ * Both input files (keyed by their FileId in stirling-pdf-files) and their output
+ * counterparts (displayFileId) are included so folder tags show on both versions.
  */
 
 import { useState, useEffect } from 'react';
@@ -31,7 +31,8 @@ export function useFolderMembership(): Map<string, string[]> {
           if (record) {
             Object.entries(record.files).forEach(([fileId, meta]) => {
               add(fileId, folder.id);
-              if (meta?.originalFileId) add(meta.originalFileId, folder.id);
+              // Also tag the output file with this folder
+              if (meta?.displayFileId) add(meta.displayFileId, folder.id);
             });
           }
         } catch {

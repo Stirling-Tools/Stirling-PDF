@@ -31,14 +31,20 @@ import { useFolderRunState } from '@app/hooks/useFolderRunState';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { SMART_FOLDER_VIEW_ID, SMART_FOLDER_WORKBENCH_ID } from '@app/components/smartFolders/SmartFoldersRegistration';
 import { automationStorage } from '@app/services/automationStorage';
-import { folderStorage } from '@app/services/folderStorage';
 import { executeAutomationSequence } from '@app/utils/automationExecutor';
 import { SmartFolderRunEntry } from '@app/types/smartFolders';
 import { AutomationConfig } from '@app/types/automation';
 import { iconMap } from '@app/components/tools/automate/iconMap';
 import { fileStorage } from '@app/services/fileStorage';
-import { FileId } from '@app/types/fileContext';
-import { InputFileRecord, OutputFileRecord } from '@app/services/folderStorage';
+import {
+  FileId,
+  StirlingFile,
+  StirlingFileStub,
+  createFileId,
+  createStirlingFile,
+  createQuickKey,
+  isStirlingFile,
+} from '@app/types/fileContext';
 import { SmartFolderHomePage } from '@app/components/smartFolders/SmartFolderHomePage';
 import { useNavigationActions } from '@app/contexts/NavigationContext';
 
@@ -88,8 +94,8 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   const { recentRuns, setRecentRuns } = useFolderRunState(folderId ?? '');
 
   const [isDragOver, setIsDragOver] = useState(false);
-  const [outputFiles, setOutputFiles] = useState<OutputFileRecord[]>([]);
-  const [inputFiles, setInputFiles] = useState<InputFileRecord[]>([]);
+  const [outputFiles, setOutputFiles] = useState<StirlingFile[]>([]);
+  const [inputFiles, setInputFiles] = useState<StirlingFile[]>([]);
   const [automation, setAutomation] = useState<AutomationConfig | null>(null);
   const { phase: inputModalPhase, cardRect: inputCardRect, textExpanded: inputTextExpanded, openModal: openInputModal, closeModal: closeInputModal } = useCardModalAnimation();
   const { phase: outputModalPhase, cardRect: outputCardRect, textExpanded: outputTextExpanded, openModal: openOutputModal, closeModal: closeOutputModal } = useCardModalAnimation();
@@ -97,16 +103,24 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   const processingRef = useRef<Set<string>>(new Set());
   const handledPendingRef = useRef<string | null>(null);
 
+  // Load input/output blobs from the main file store whenever folderRecord changes
   useEffect(() => {
-    const load = () => {
-      if (!folderId) return;
-      folderStorage.getOutputFilesByFolder(folderId).then(setOutputFiles);
-      folderStorage.getInputFilesByFolder(folderId).then(setInputFiles);
-    };
-    load();
-    const unsub = folderStorage.onFolderChange((id) => { if (id === folderId) load(); });
-    return unsub;
-  }, [folderId]);
+    if (!folderRecord) {
+      setInputFiles([]);
+      setOutputFiles([]);
+      return;
+    }
+    const inputIds = Object.keys(folderRecord.files);
+    const outputIds = Object.values(folderRecord.files)
+      .map(m => m.displayFileId)
+      .filter((id): id is string => Boolean(id));
+
+    Promise.all(inputIds.map(id => fileStorage.getStirlingFile(id as FileId)))
+      .then(files => setInputFiles(files.filter(Boolean) as StirlingFile[]));
+
+    Promise.all(outputIds.map(id => fileStorage.getStirlingFile(id as FileId)))
+      .then(files => setOutputFiles(files.filter(Boolean) as StirlingFile[]));
+  }, [folderRecord]);
 
   useEffect(() => {
     if (folder?.automationId) {
@@ -140,16 +154,34 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
         );
 
         const newRuns: SmartFolderRunEntry[] = [...recentRuns];
+        let firstOutputId: string | undefined;
         for (const resultFile of resultFiles) {
-          const outputId = `output-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          await folderStorage.storeOutputFile(folderId!, outputId, resultFile, resultFile.name);
+          const outputId = createFileId();
+          if (!firstOutputId) firstOutputId = outputId;
+          const outputStub: StirlingFileStub = {
+            id: outputId,
+            name: resultFile.name,
+            type: resultFile.type || 'application/pdf',
+            size: resultFile.size,
+            lastModified: resultFile.lastModified,
+            isLeaf: true,
+            originalFileId: inputFileId,
+            versionNumber: 2,
+            parentFileId: inputFileId as FileId,
+            toolHistory: [],
+            quickKey: createQuickKey(resultFile),
+            createdAt: Date.now(),
+          };
+          await fileStorage.storeStirlingFile(createStirlingFile(resultFile, outputId), outputStub);
           newRuns.push({ inputFileId, displayFileId: outputId, status: 'processed' });
         }
+        // Mark input as no longer a leaf (it has been processed into an output)
+        await fileStorage.markFileAsProcessed(inputFileId as FileId);
 
         await updateFileMetadata(inputFileId, {
           status: 'processed',
           processedAt: new Date(),
-          displayFileId: resultFiles[0] ? newRuns[newRuns.length - 1]?.displayFileId : undefined,
+          displayFileId: firstOutputId,
         });
         await setRecentRuns(newRuns);
       } catch (error: any) {
@@ -163,7 +195,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
         processingRef.current.delete(inputFileId);
       }
     },
-    [folder, folderId, recentRuns, setRecentRuns, toolRegistry, updateFileMetadata, getFileMetadata]
+    [folder, recentRuns, setRecentRuns, toolRegistry, updateFileMetadata, getFileMetadata]
   );
 
   const handleFiles = useCallback(
@@ -171,14 +203,38 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
       const fileArray = Array.from(files);
       for (const file of fileArray) {
         if (!file.name.toLowerCase().endsWith('.pdf')) continue;
-        const inputFileId = `input-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        const originalFileId = sourceFileId ?? (file as any).fileId as string | undefined;
-        await addFile(inputFileId, { status: 'pending', inputFileId, name: file.name, ...(originalFileId ? { originalFileId } : {}) });
-        await folderStorage.storeInputFile(folderId!, inputFileId, file, file.name);
+
+        let inputFileId: string;
+        if (sourceFileId) {
+          // File from sidebar — already in stirling-pdf-files
+          inputFileId = sourceFileId;
+        } else if (isStirlingFile(file)) {
+          inputFileId = file.fileId;
+        } else {
+          // Fresh drop from disk — store in main file DB
+          const newFileId = createFileId();
+          const stub: StirlingFileStub = {
+            id: newFileId,
+            name: file.name,
+            type: file.type || 'application/pdf',
+            size: file.size,
+            lastModified: file.lastModified,
+            isLeaf: true,
+            originalFileId: newFileId,
+            versionNumber: 1,
+            toolHistory: [],
+            quickKey: createQuickKey(file),
+            createdAt: Date.now(),
+          };
+          await fileStorage.storeStirlingFile(createStirlingFile(file, newFileId), stub);
+          inputFileId = newFileId;
+        }
+
+        await addFile(inputFileId, { status: 'pending', name: file.name });
         runAutomation(file, inputFileId);
       }
     },
-    [addFile, folderId, runAutomation]
+    [addFile, runAutomation]
   );
 
   useEffect(() => {
@@ -288,8 +344,8 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   const ops = automation?.operations ?? [];
 
   const hasCompressStep = ops.some(op => op.operation === 'compress');
-  const totalInputBytes = inputFiles.reduce((sum, f) => sum + f.blob.size, 0);
-  const totalOutputBytes = outputFiles.reduce((sum, f) => sum + f.blob.size, 0);
+  const totalInputBytes = inputFiles.reduce((sum, f) => sum + f.size, 0);
+  const totalOutputBytes = outputFiles.reduce((sum, f) => sum + f.size, 0);
   const dataSavedBytes = totalInputBytes - totalOutputBytes;
 
   function formatBytes(bytes: number): string {
@@ -554,20 +610,19 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                             title="Retry"
                             onClick={async () => {
                               await updateFileMetadata(fileId, { status: 'pending', errorMessage: undefined });
-                              const file = new File([inputFile.blob], inputFile.name, { type: 'application/pdf' });
-                              runAutomation(file, fileId);
+                              runAutomation(inputFile, fileId);
                             }}
                           >
                             <ReplayIcon style={{ fontSize: '1rem' }} />
                           </ActionIcon>
                         )}
                         {outputFile && (
-                          <ActionIcon size="sm" variant="subtle" onClick={() => handleView(outputFile.blob, outputFile.name)} title="View">
+                          <ActionIcon size="sm" variant="subtle" onClick={() => handleView(outputFile, outputFile.name)} title="View">
                             <VisibilityIcon style={{ fontSize: '1rem' }} />
                           </ActionIcon>
                         )}
                         {outputFile && (
-                          <ActionIcon size="sm" variant="subtle" onClick={() => handleDownload(outputFile.blob, outputFile.name)} title="Download output">
+                          <ActionIcon size="sm" variant="subtle" onClick={() => handleDownload(outputFile, outputFile.name)} title="Download output">
                             <DownloadIcon style={{ fontSize: '1rem' }} />
                           </ActionIcon>
                         )}
@@ -601,7 +656,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
           <Group justify="flex-end">
             <Button size="sm" variant="subtle" color="gray"
               leftSection={<DownloadIcon style={{ fontSize: '1rem' }} />}
-              onClick={async () => { for (const f of inputFiles) await handleDownload(f.blob, f.name); }}
+              onClick={async () => { for (const f of inputFiles) await handleDownload(f, f.name); }}
             >
               {t('smartFolders.workbench.exportAll', 'Export all')}
             </Button>
@@ -628,7 +683,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
             >
               <FolderOpenIcon style={{ fontSize: '0.875rem', color: 'var(--mantine-color-blue-filled)', flexShrink: 0 }} />
               <Text size="sm" style={{ flex: 1, minWidth: 0, fontWeight: 500 }} lineClamp={1}>{file.name}</Text>
-              <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleDownload(file.blob, file.name)} title="Download">
+              <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleDownload(file, file.name)} title="Download">
                 <DownloadIcon style={{ fontSize: '1.125rem' }} />
               </ActionIcon>
             </Box>
@@ -650,7 +705,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
           <Group justify="flex-end">
             <Button size="sm" variant="subtle" color="gray"
               leftSection={<DownloadIcon style={{ fontSize: '1rem' }} />}
-              onClick={async () => { for (const f of outputFiles) await handleDownload(f.blob, f.name); }}
+              onClick={async () => { for (const f of outputFiles) await handleDownload(f, f.name); }}
             >
               {t('smartFolders.workbench.exportAll', 'Export all')}
             </Button>
@@ -678,10 +733,10 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
               <TaskAltIcon style={{ fontSize: '0.875rem', color: '#22c55e', flexShrink: 0 }} />
               <Text size="sm" style={{ flex: 1, minWidth: 0, fontWeight: 500 }} lineClamp={1}>{file.name}</Text>
               <Group gap="0.25rem" wrap="nowrap">
-                <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleView(file.blob, file.name)} title="View">
+                <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleView(file, file.name)} title="View">
                   <VisibilityIcon style={{ fontSize: '1.125rem' }} />
                 </ActionIcon>
-                <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleDownload(file.blob, file.name)} title="Download">
+                <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleDownload(file, file.name)} title="Download">
                   <DownloadIcon style={{ fontSize: '1.125rem' }} />
                 </ActionIcon>
               </Group>
@@ -708,8 +763,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                   const f = inputFiles.find(x => x.fileId === fid);
                   if (!f) continue;
                   await updateFileMetadata(fid, { status: 'pending', errorMessage: undefined });
-                  const file = new File([f.blob], f.name, { type: 'application/pdf' });
-                  runAutomation(file, fid);
+                  runAutomation(f, fid);
                 }
                 closeFailedModal();
               }}
@@ -721,7 +775,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
               onClick={async () => {
                 for (const fid of failedFileIds) {
                   const f = inputFiles.find(x => x.fileId === fid);
-                  if (f) await handleDownload(f.blob, f.name);
+                  if (f) await handleDownload(f, f.name);
                 }
               }}
             >
@@ -762,7 +816,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                   )}
                   <Group gap="0.25rem" wrap="nowrap" style={{ flexShrink: 0 }}>
                     {inputFile && (
-                      <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleDownload(inputFile.blob, inputFile.name)} title="Download input">
+                      <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleDownload(inputFile, inputFile.name)} title="Download input">
                         <DownloadIcon style={{ fontSize: '1.125rem' }} />
                       </ActionIcon>
                     )}
@@ -770,8 +824,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                       <ActionIcon size="md" variant="light" color="blue" title="Retry"
                         onClick={async () => {
                           await updateFileMetadata(fileId, { status: 'pending', errorMessage: undefined });
-                          const file = new File([inputFile.blob], inputFile.name, { type: 'application/pdf' });
-                          runAutomation(file, fileId);
+                          runAutomation(inputFile, fileId);
                           closeFailedModal();
                         }}
                       >

@@ -20,9 +20,8 @@ export interface FolderFileMetadata {
   addedAt: Date;
   status: 'pending' | 'processing' | 'processed' | 'error';
   processedAt?: Date;
-  displayFileId?: string; // output file id
-  inputFileId?: string;
-  originalFileId?: string; // original StirlingFile UUID (when sent from sidebar)
+  /** Output file id — references the main stirling-pdf-files store */
+  displayFileId?: string;
   errorMessage?: string;
   failedAttempts?: number;
   name?: string; // original filename

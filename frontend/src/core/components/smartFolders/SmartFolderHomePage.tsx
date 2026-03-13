@@ -19,6 +19,14 @@ import { automationStorage } from '@app/services/automationStorage';
 import { folderStorage } from '@app/services/folderStorage';
 import { fileStorage } from '@app/services/fileStorage';
 import { folderRunStateStorage } from '@app/services/folderRunStateStorage';
+import {
+  FileId,
+  StirlingFileStub,
+  createFileId,
+  createStirlingFile,
+  createQuickKey,
+  isStirlingFile,
+} from '@app/types/fileContext';
 import { executeAutomationSequence } from '@app/utils/automationExecutor';
 import { SmartFolderManagementModal } from '@app/components/smartFolders/SmartFolderManagementModal';
 import { DeleteFolderConfirmModal } from '@app/components/smartFolders/DeleteFolderConfirmModal';
@@ -542,27 +550,65 @@ export function SmartFolderHomePage() {
         if (!automation) return;
 
         for (const file of pdfs) {
-          const inputFileId = `input-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          const originalFileId = (file as any).fileId as string | undefined;
+          // Resolve input file ID — reuse existing if already in the main store
+          let inputFileId: string;
+          if (isStirlingFile(file)) {
+            inputFileId = file.fileId;
+          } else {
+            const newFileId = createFileId();
+            const stub: StirlingFileStub = {
+              id: newFileId,
+              name: file.name,
+              type: file.type || 'application/pdf',
+              size: file.size,
+              lastModified: file.lastModified,
+              isLeaf: true,
+              originalFileId: newFileId,
+              versionNumber: 1,
+              toolHistory: [],
+              quickKey: createQuickKey(file),
+              createdAt: Date.now(),
+            };
+            await fileStorage.storeStirlingFile(createStirlingFile(file, newFileId), stub);
+            inputFileId = newFileId;
+          }
+
           await folderStorage.addFileToFolder(folder.id, inputFileId, {
             status: 'processing',
-            inputFileId,
             name: file.name,
-            ...(originalFileId ? { originalFileId } : {}),
           });
-          await folderStorage.storeInputFile(folder.id, inputFileId, file, file.name);
+
           try {
             const resultFiles = await executeAutomationSequence(automation, [file], toolRegistry as any);
             const existingRuns = await folderRunStateStorage.getFolderRunState(folder.id);
             const newRuns: SmartFolderRunEntry[] = [...existingRuns];
+            let firstOutputId: string | undefined;
             for (const resultFile of resultFiles) {
-              const outputId = `output-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-              await folderStorage.storeOutputFile(folder.id, outputId, resultFile, resultFile.name);
+              const outputId = createFileId();
+              if (!firstOutputId) firstOutputId = outputId;
+              const outputStub: StirlingFileStub = {
+                id: outputId,
+                name: resultFile.name,
+                type: resultFile.type || 'application/pdf',
+                size: resultFile.size,
+                lastModified: resultFile.lastModified,
+                isLeaf: true,
+                originalFileId: inputFileId,
+                versionNumber: 2,
+                parentFileId: inputFileId as FileId,
+                toolHistory: [],
+                quickKey: createQuickKey(resultFile),
+                createdAt: Date.now(),
+              };
+              await fileStorage.storeStirlingFile(createStirlingFile(resultFile, outputId), outputStub);
               newRuns.push({ inputFileId, displayFileId: outputId, status: 'processed' });
             }
+            // Mark input as no longer a leaf (processed into an output)
+            await fileStorage.markFileAsProcessed(inputFileId as FileId);
             await folderStorage.updateFileMetadata(folder.id, inputFileId, {
               status: 'processed',
               processedAt: new Date(),
+              displayFileId: firstOutputId,
             });
             await folderRunStateStorage.setFolderRunState(folder.id, newRuns);
           } catch {

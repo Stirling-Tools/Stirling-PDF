@@ -7,6 +7,8 @@ import { SmartFolder } from '@app/types/smartFolders';
 import { smartFolderStorage, SMART_FOLDER_STORAGE_CHANGE_EVENT } from '@app/services/smartFolderStorage';
 import { folderStorage } from '@app/services/folderStorage';
 import { folderRunStateStorage } from '@app/services/folderRunStateStorage';
+import { fileStorage } from '@app/services/fileStorage';
+import { FileId } from '@app/types/fileContext';
 
 interface UseSmartFoldersReturn {
   folders: SmartFolder[];
@@ -57,6 +59,14 @@ export function useSmartFolders(): UseSmartFoldersReturn {
   );
 
   const deleteFolder = useCallback(async (id: string): Promise<void> => {
+    // Clean up file blobs from the unified file store before clearing the record
+    const record = await folderStorage.getFolderData(id);
+    if (record) {
+      const allFileIds = Object.entries(record.files).flatMap(([inputId, meta]) =>
+        meta.displayFileId ? [inputId, meta.displayFileId] : [inputId]
+      );
+      await Promise.all(allFileIds.map(fid => fileStorage.deleteStirlingFile(fid as FileId).catch(() => {})));
+    }
     await folderStorage.clearFolder(id);
     await folderRunStateStorage.clearFolderRunState(id);
     await smartFolderStorage.deleteFolder(id);
