@@ -636,6 +636,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                           el.removeEventListener('pointermove', handlePointerMove);
                                           el.removeEventListener('pointerup', handlePointerUp);
                                           el.releasePointerCapture(upEvent.pointerId);
+                                          interactionPauseRef.current?.resume();
                                           window.getSelection()?.removeAllRanges();
                                           setTimeout(() => { isDraggingRef.current = false; }, 10);
                                         };

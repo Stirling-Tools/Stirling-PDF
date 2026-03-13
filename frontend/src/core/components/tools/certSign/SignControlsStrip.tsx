@@ -55,7 +55,7 @@ export default function SignControlsStrip({
   const [canvasColor, setCanvasColor] = useState('#000000');
   const [canvasPenSize, setCanvasPenSize] = useState(2);
   const [canvasPenSizeInput, setCanvasPenSizeInput] = useState('2');
-  const latestCanvasDataRef = useRef<string | undefined>();
+  const latestCanvasDataRef = useRef<string | undefined>(undefined);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [textSignerName, setTextSignerName] = useState(DEFAULT_PARAMETERS.signerName ?? '');
