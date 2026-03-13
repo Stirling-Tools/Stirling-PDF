@@ -20,8 +20,13 @@ export interface FolderFileMetadata {
   addedAt: Date;
   status: 'pending' | 'processing' | 'processed' | 'error';
   processedAt?: Date;
-  /** Output file id — references the main stirling-pdf-files store */
+  /** All output file ids produced by this run — references stirling-pdf-files */
+  displayFileIds?: string[];
+  /** First output file id — kept for backwards compat with existing records */
   displayFileId?: string;
+  /** True when the folder created this file from a disk drop and therefore owns it.
+   *  False / absent when the file came from the shared sidebar store — do NOT delete on folder removal. */
+  ownedByFolder?: boolean;
   errorMessage?: string;
   failedAttempts?: number;
   name?: string; // original filename

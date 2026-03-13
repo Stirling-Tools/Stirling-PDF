@@ -20,6 +20,10 @@ import { useAllSmartFolders } from '@app/hooks/useAllSmartFolders';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useNavigationActions } from '@app/contexts/NavigationContext';
 import { iconMap } from '@app/components/tools/automate/iconMap';
+import {
+  SMART_FOLDER_VIEW_ID,
+  SMART_FOLDER_WORKBENCH_ID,
+} from '@app/components/smartFolders/SmartFoldersRegistration';
 
 interface FileListItemProps {
   file: StirlingFileStub;
@@ -282,8 +286,8 @@ const FileListItem: React.FC<FileListItemProps> = ({
                         leftSection={<FolderItemIcon style={{ fontSize: 16, color: folder.accentColor }} />}
                         onClick={(e) => {
                           e.stopPropagation();
-                          setCustomWorkbenchViewData('smartFolder', { folderId: folder.id, pendingFileId: file.id });
-                          actions.setWorkbench('custom:smartFolder');
+                          setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId: folder.id, pendingFileId: file.id });
+                          actions.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
                         }}
                       >
                         {folder.name}

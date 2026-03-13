@@ -31,8 +31,9 @@ export function useFolderMembership(): Map<string, string[]> {
           if (record) {
             Object.entries(record.files).forEach(([fileId, meta]) => {
               add(fileId, folder.id);
-              // Also tag the output file with this folder
-              if (meta?.displayFileId) add(meta.displayFileId, folder.id);
+              // Tag all output files with this folder
+              const outputIds = meta?.displayFileIds ?? (meta?.displayFileId ? [meta.displayFileId] : []);
+              outputIds.forEach(oid => add(oid, folder.id));
             });
           }
         } catch {

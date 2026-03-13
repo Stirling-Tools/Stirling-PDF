@@ -59,17 +59,23 @@ export function useSmartFolders(): UseSmartFoldersReturn {
   );
 
   const deleteFolder = useCallback(async (id: string): Promise<void> => {
-    // Clean up file blobs from the unified file store before clearing the record
     const record = await folderStorage.getFolderData(id);
     if (record) {
-      const allFileIds = Object.entries(record.files).flatMap(([inputId, meta]) =>
-        meta.displayFileId ? [inputId, meta.displayFileId] : [inputId]
-      );
-      await Promise.all(allFileIds.map(fid => fileStorage.deleteStirlingFile(fid as FileId).catch(() => {})));
+      // Only delete input files the folder created from disk — never touch sidebar-sourced files.
+      const ownedInputIds = Object.entries(record.files)
+        .filter(([, meta]) => meta.ownedByFolder === true)
+        .map(([fid]) => fid);
+      // Always delete every output the folder produced (folder always owns those).
+      const outputIds = Object.values(record.files)
+        .flatMap(meta => meta.displayFileIds ?? (meta.displayFileId ? [meta.displayFileId] : []));
+      const toDelete = [...new Set([...ownedInputIds, ...outputIds])];
+      await Promise.all(toDelete.map(fid => fileStorage.deleteStirlingFile(fid as FileId).catch(() => {})));
     }
     await folderStorage.clearFolder(id);
     await folderRunStateStorage.clearFolderRunState(id);
     await smartFolderStorage.deleteFolder(id);
+    // Notify the sidebar file list that files have been removed.
+    window.dispatchEvent(new CustomEvent('stirling:files-changed'));
   }, []);
 
   return { folders, loading, createFolder, updateFolder, deleteFolder, refreshFolders };

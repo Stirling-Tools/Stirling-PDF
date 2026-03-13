@@ -539,6 +539,8 @@ export function SmartFolderHomePage() {
 
   const processFiles = useCallback(
     async (folder: SmartFolder, files: File[]) => {
+      if (folder.isPaused) return;
+
       const pdfs = files.filter((f) => f.name.toLowerCase().endsWith('.pdf'));
       if (pdfs.length === 0) return;
 
@@ -550,11 +552,14 @@ export function SmartFolderHomePage() {
         if (!automation) return;
 
         for (const file of pdfs) {
-          // Resolve input file ID — reuse existing if already in the main store
+          // Resolve input file ID — reuse existing if already in the main store.
+          // Track whether we created a fresh stub so we know whether to mark it as processed.
           let inputFileId: string;
+          let ownedByFolder = false;
           if (isStirlingFile(file)) {
             inputFileId = file.fileId;
           } else {
+            ownedByFolder = true;
             const newFileId = createFileId();
             const stub: StirlingFileStub = {
               id: newFileId,
@@ -576,16 +581,17 @@ export function SmartFolderHomePage() {
           await folderStorage.addFileToFolder(folder.id, inputFileId, {
             status: 'processing',
             name: file.name,
+            ownedByFolder,
           });
 
           try {
             const resultFiles = await executeAutomationSequence(automation, [file], toolRegistry as any);
             const existingRuns = await folderRunStateStorage.getFolderRunState(folder.id);
             const newRuns: SmartFolderRunEntry[] = [...existingRuns];
-            let firstOutputId: string | undefined;
+            const allOutputIds: string[] = [];
             for (const resultFile of resultFiles) {
               const outputId = createFileId();
-              if (!firstOutputId) firstOutputId = outputId;
+              allOutputIds.push(outputId);
               const outputStub: StirlingFileStub = {
                 id: outputId,
                 name: resultFile.name,
@@ -603,16 +609,26 @@ export function SmartFolderHomePage() {
               await fileStorage.storeStirlingFile(createStirlingFile(resultFile, outputId), outputStub);
               newRuns.push({ inputFileId, displayFileId: outputId, status: 'processed' });
             }
-            // Mark input as no longer a leaf (processed into an output)
-            await fileStorage.markFileAsProcessed(inputFileId as FileId);
+            // Only hide the input from "My Files" if the folder owns it (fresh drop from disk).
+            // Sidebar files belong to the user and must remain visible after processing.
+            if (ownedByFolder) {
+              await fileStorage.markFileAsProcessed(inputFileId as FileId);
+            }
             await folderStorage.updateFileMetadata(folder.id, inputFileId, {
               status: 'processed',
               processedAt: new Date(),
-              displayFileId: firstOutputId,
+              displayFileId: allOutputIds[0],
+              displayFileIds: allOutputIds,
             });
             await folderRunStateStorage.setFolderRunState(folder.id, newRuns);
-          } catch {
-            await folderStorage.updateFileMetadata(folder.id, inputFileId, { status: 'error' });
+          } catch (err: any) {
+            const existing = await folderStorage.getFolderData(folder.id);
+            const prev = existing?.files[inputFileId];
+            await folderStorage.updateFileMetadata(folder.id, inputFileId, {
+              status: 'error',
+              errorMessage: err?.message,
+              failedAttempts: (prev?.failedAttempts ?? 0) + 1,
+            });
           }
         }
       } finally {

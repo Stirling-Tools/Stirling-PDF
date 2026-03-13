@@ -6,6 +6,7 @@ import { useFileHandler } from '@app/hooks/useFileHandler';
 import { useFileState, useFileActions } from '@app/contexts/FileContext';
 import { useNavigationState, useNavigationActions, useNavigationGuard } from '@app/contexts/NavigationContext';
 import { isBaseWorkbench } from '@app/types/workbench';
+import { SMART_FOLDER_WORKBENCH_ID } from '@app/components/smartFolders/SmartFoldersRegistration';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { FileId } from '@app/types/file';
@@ -98,7 +99,7 @@ export default function Workbench() {
       const customView = customWorkbenchViews.find((view) => view.workbenchId === currentView && view.data != null);
       if (customView) {
         // These custom views handle their own empty state (show dropzone when no document)
-        const handlesOwnEmptyState = currentView === 'custom:pdfTextEditor' || currentView === 'custom:smartFolder';
+        const handlesOwnEmptyState = currentView === 'custom:pdfTextEditor' || currentView === SMART_FOLDER_WORKBENCH_ID;
         if (handlesOwnEmptyState || activeFiles.length > 0) {
           const CustomComponent = customView.component;
           return <CustomComponent data={customView.data} />;

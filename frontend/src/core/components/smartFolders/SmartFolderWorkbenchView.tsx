@@ -31,6 +31,7 @@ import { useFolderRunState } from '@app/hooks/useFolderRunState';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { SMART_FOLDER_VIEW_ID, SMART_FOLDER_WORKBENCH_ID } from '@app/components/smartFolders/SmartFoldersRegistration';
 import { automationStorage } from '@app/services/automationStorage';
+import { folderRunStateStorage } from '@app/services/folderRunStateStorage';
 import { executeAutomationSequence } from '@app/utils/automationExecutor';
 import { SmartFolderRunEntry } from '@app/types/smartFolders';
 import { AutomationConfig } from '@app/types/automation';
@@ -112,8 +113,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
     }
     const inputIds = Object.keys(folderRecord.files);
     const outputIds = Object.values(folderRecord.files)
-      .map(m => m.displayFileId)
-      .filter((id): id is string => Boolean(id));
+      .flatMap(m => m.displayFileIds ?? (m.displayFileId ? [m.displayFileId] : []));
 
     Promise.all(inputIds.map(id => fileStorage.getStirlingFile(id as FileId)))
       .then(files => setInputFiles(files.filter(Boolean) as StirlingFile[]));
@@ -130,7 +130,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
 
 
   const runAutomation = useCallback(
-    async (inputFile: File, inputFileId: string) => {
+    async (inputFile: File, inputFileId: string, ownedByFolder = false) => {
       if (processingRef.current.has(inputFileId)) return;
       processingRef.current.add(inputFileId);
 
@@ -153,11 +153,13 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
           () => {}
         );
 
-        const newRuns: SmartFolderRunEntry[] = [...recentRuns];
-        let firstOutputId: string | undefined;
+        // Read fresh run state to avoid stale-closure overwrites under concurrent processing.
+        const currentRuns = await folderRunStateStorage.getFolderRunState(folderId!);
+        const newRuns: SmartFolderRunEntry[] = [...currentRuns];
+        const allOutputIds: string[] = [];
         for (const resultFile of resultFiles) {
           const outputId = createFileId();
-          if (!firstOutputId) firstOutputId = outputId;
+          allOutputIds.push(outputId);
           const outputStub: StirlingFileStub = {
             id: outputId,
             name: resultFile.name,
@@ -175,13 +177,17 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
           await fileStorage.storeStirlingFile(createStirlingFile(resultFile, outputId), outputStub);
           newRuns.push({ inputFileId, displayFileId: outputId, status: 'processed' });
         }
-        // Mark input as no longer a leaf (it has been processed into an output)
-        await fileStorage.markFileAsProcessed(inputFileId as FileId);
+        // Only hide the input from "My Files" when the folder owns the file (fresh drop from disk).
+        // Sidebar files belong to the user and must remain visible after processing.
+        if (ownedByFolder) {
+          await fileStorage.markFileAsProcessed(inputFileId as FileId);
+        }
 
         await updateFileMetadata(inputFileId, {
           status: 'processed',
           processedAt: new Date(),
-          displayFileId: firstOutputId,
+          displayFileId: allOutputIds[0],
+          displayFileIds: allOutputIds,
         });
         await setRecentRuns(newRuns);
       } catch (error: any) {
@@ -195,7 +201,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
         processingRef.current.delete(inputFileId);
       }
     },
-    [folder, recentRuns, setRecentRuns, toolRegistry, updateFileMetadata, getFileMetadata]
+    [folder, folderId, setRecentRuns, toolRegistry, updateFileMetadata, getFileMetadata]
   );
 
   const handleFiles = useCallback(
@@ -205,13 +211,15 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
         if (!file.name.toLowerCase().endsWith('.pdf')) continue;
 
         let inputFileId: string;
+        let ownedByFolder = false;
         if (sourceFileId) {
-          // File from sidebar — already in stirling-pdf-files
+          // File from sidebar — already in stirling-pdf-files; user still owns it
           inputFileId = sourceFileId;
         } else if (isStirlingFile(file)) {
           inputFileId = file.fileId;
         } else {
-          // Fresh drop from disk — store in main file DB
+          // Fresh drop from disk — folder owns this file
+          ownedByFolder = true;
           const newFileId = createFileId();
           const stub: StirlingFileStub = {
             id: newFileId,
@@ -230,8 +238,8 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
           inputFileId = newFileId;
         }
 
-        await addFile(inputFileId, { status: 'pending', name: file.name });
-        runAutomation(file, inputFileId);
+        await addFile(inputFileId, { status: 'pending', name: file.name, ownedByFolder: ownedByFolder || undefined });
+        runAutomation(file, inputFileId, ownedByFolder);
       }
     },
     [addFile, runAutomation]
