@@ -3,10 +3,16 @@ import { usePrintCapability } from '@embedpdf/plugin-print/react';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
 
+interface PrintAPIBridgeProps {
+  file?: File | Blob;
+  url?: string | null;
+  fileName?: string;
+}
+
 /**
  * Connects the PDF print plugin to the shared ViewerContext.
  */
-export function PrintAPIBridge() {
+export function PrintAPIBridge(_props: PrintAPIBridgeProps) {
   const { provides: print } = usePrintCapability();
   const { registerBridge } = useViewer();
   const documentReady = useDocumentReady();
