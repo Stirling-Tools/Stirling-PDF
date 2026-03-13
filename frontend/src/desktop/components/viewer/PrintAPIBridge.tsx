@@ -4,12 +4,7 @@ import { useViewer } from '@app/contexts/ViewerContext';
 import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
 import { printPdfNatively } from '@app/services/nativePrintService';
 import { DesktopOs, getDesktopOs } from '@app/services/platformService';
-
-interface PrintAPIBridgeProps {
-  file?: File | Blob;
-  url?: string | null;
-  fileName?: string;
-}
+import { PrintAPIBridgeProps } from "@core/components/viewer/PrintAPIBridge";
 
 export function PrintAPIBridge({ file, url, fileName }: PrintAPIBridgeProps) {
   const { provides: print } = usePrintCapability();

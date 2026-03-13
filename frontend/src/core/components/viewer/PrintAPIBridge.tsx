@@ -3,7 +3,7 @@ import { usePrintCapability } from '@embedpdf/plugin-print/react';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
 
-interface PrintAPIBridgeProps {
+export interface PrintAPIBridgeProps {
   file?: File | Blob;
   url?: string | null;
   fileName?: string;
