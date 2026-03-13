@@ -72,11 +72,17 @@ export function useViewerReadAloud() {
   const pageAdvanceTimeoutRef = useRef<number | null>(null);
   const currentFileRef = useRef<any>(null);
   const totalPagesRef = useRef(0);
+  const speechRateRef = useRef(1);  // Keep track of current rate without recreating dependent functions
 
   // Cache parsed PDF document and page text items to avoid reparsing on every zoom/scroll
   const cachedPdfDocRef = useRef<Awaited<ReturnType<typeof pdfWorkerManager.createDocument>> | null>(null);
   const cachedPageNumberRef = useRef<number | null>(null);
   const cachedTextItemsRef = useRef<TextItemWithGeometry[] | null>(null);
+
+  // Sync speechRate state to ref so page advance callbacks always have current rate
+  useEffect(() => {
+    speechRateRef.current = speechRate;
+  }, [speechRate]);
 
   const clearHighlights = useCallback(() => {
     highlightedElementsRef.current.forEach((el) => el.remove());
@@ -243,7 +249,7 @@ export function useViewerReadAloud() {
     }
 
     const utterance = new SpeechSynthesisUtterance(remainingText);
-    utterance.rate = rateOverride ?? speechRate;
+    utterance.rate = rateOverride ?? speechRateRef.current;
     utterance.onstart = () => setIsReadingAloud(true);
     utterance.onend = () => {
       utteranceRef.current = null;
@@ -269,7 +275,7 @@ export function useViewerReadAloud() {
               cleanupReadingSession();
               return;
             }
-            speakFromCharIndex(nextPageData.spokenText, nextPageData.words, 0, pageNumber + 1, speechRate);
+            speakFromCharIndex(nextPageData.spokenText, nextPageData.words, 0, pageNumber + 1, speechRateRef.current);
           } catch (error) {
             console.error('Read aloud page advance failed', error);
             currentFileRef.current = null;
@@ -321,7 +327,7 @@ export function useViewerReadAloud() {
 
     utteranceRef.current = utterance;
     window.speechSynthesis.speak(utterance);
-  }, [clearHighlights, cleanupReadingSession, readPage, speechRate, viewer.scrollActions]);
+  }, [clearHighlights, cleanupReadingSession, readPage, viewer.scrollActions]);
 
   const refreshActiveHighlight = useCallback(() => {
     if (!isReadingAloud || !currentFileRef.current || !cachedTextItemsRef.current) {
@@ -377,7 +383,7 @@ export function useViewerReadAloud() {
         }
 
         window.speechSynthesis.cancel();
-        speakFromCharIndex(pageData.spokenText, pageData.words, 0, currentPage, speechRate);
+        speakFromCharIndex(pageData.spokenText, pageData.words, 0, currentPage, speechRateRef.current);
       } finally {
         // readPage handles pdf worker cleanup
       }
@@ -388,7 +394,7 @@ export function useViewerReadAloud() {
       setIsReadingAloud(false);
       cleanupReadingSession();
     }
-  }, [clearHighlights, cleanupReadingSession, highlightWord, isReadingAloud, selectors, speakFromCharIndex, speechRate, viewer]);
+  }, [clearHighlights, cleanupReadingSession, highlightWord, isReadingAloud, selectors, speakFromCharIndex, viewer]);
 
   const handleSpeechRateChange = useCallback((nextRate: number) => {
     setSpeechRate(nextRate);
