@@ -690,7 +690,7 @@ if [ -z "${JAVA_BASE_OPTS:-}" ]; then
     log "Using JVM options: Shenandoah generational GC (ConcGCThreads=${CONC_GC_THREADS})"
   else
     log "JAVA_BASE_OPTS and _JVM_OPTS unset; applying fallback defaults."
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=2000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
   fi
 
   # Strip any hardcoded memory/CDS/AOT flags from the options (managed dynamically)
