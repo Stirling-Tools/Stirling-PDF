@@ -68,7 +68,7 @@ export default function Login() {
       const redirectTo = absoluteWithBasePath('/auth/callback')
       console.log(`[Login] Signing in with ${provider}`)
 
-      const oauthOptions: any = { redirectTo }
+      const oauthOptions: { redirectTo: string; queryParams?: Record<string, string> } = { redirectTo }
       if (provider === 'apple') {
         oauthOptions.queryParams = { scope: 'email name' }
       } else if (provider === 'azure') {
@@ -179,7 +179,7 @@ export default function Login() {
 
       if (error) {
         console.error('[Login] Anonymous sign in error:', error)
-        setError((error as any)?.message || 'Unknown error')
+        setError(error instanceof Error ? error.message : 'Unknown error')
       } else if (data.user) {
         console.log('[Login] Anonymous sign in successful, refreshing session...')
 

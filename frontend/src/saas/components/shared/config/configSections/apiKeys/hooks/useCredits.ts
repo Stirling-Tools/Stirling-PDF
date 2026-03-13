@@ -6,10 +6,10 @@ import { isUserAnonymous } from "@app/auth/supabase";
 
 function coerceNumber(value: unknown, fallback = 0): number {
   const n = typeof value === "string" ? Number(value) : (value as number);
-  return Number.isFinite(n) ? (n as number) : fallback;
+  return Number.isFinite(n) ? n : fallback;
 }
 
-function normalizeCredits(raw: any): ApiCredits {
+function normalizeCredits(raw: Record<string, unknown>): ApiCredits {
   // Accept a variety of possible backend keys to be resilient
   return {
     weeklyCreditsRemaining: coerceNumber(
@@ -46,7 +46,7 @@ export function useCredits() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await apiClient.get("/api/v1/credits");
+      const res = await apiClient.get<Record<string, unknown>>("/api/v1/credits");
       const normalized = normalizeCredits(res.data);
       // If backend returns an "empty" payload, keep data null so the UI stays in loading/skeleton
       const isEmpty = !normalized.weeklyCreditsAllocated &&
@@ -57,8 +57,8 @@ export function useCredits() {
                       !normalized.weeklyResetDate &&
                       !normalized.lastApiUsage;
       setData(isEmpty ? null : normalized);
-    } catch (e: any) {
-      setError(e);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e : new Error(String(e)));
     } finally {
       setIsLoading(false);
       setHasAttempted(true);

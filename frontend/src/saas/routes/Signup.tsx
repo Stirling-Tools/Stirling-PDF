@@ -66,7 +66,7 @@ export default function Signup() {
 
       if (error) {
         console.error('[Signup] Anonymous sign-in error:', error)
-        setError(`Failed to create guest account: ${(error as any)?.message || 'Unknown error'}`)
+        setError(`Failed to create guest account: ${error instanceof Error ? error.message : 'Unknown error'}`)
       } else if (data.user) {
         console.log('[Signup] Anonymous sign-in successful, refreshing session...')
 
