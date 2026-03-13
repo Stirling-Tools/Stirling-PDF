@@ -21,8 +21,7 @@ class ApiEndpointTest {
         return postNodeWithParams(description, true, names);
     }
 
-    private JsonNode postNodeWithParams(
-            String description, boolean required, String... names) {
+    private JsonNode postNodeWithParams(String description, boolean required, String... names) {
         ObjectNode post = mapper.createObjectNode();
         post.put("description", description);
         ArrayNode params = mapper.createArrayNode();

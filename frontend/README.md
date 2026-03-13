@@ -1,6 +1,11 @@
-# Getting Started with Create React App
+# Frontend
+## Environment Variables
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+The frontend requires environment variables to be set before running. `npm run dev` will create a `.env` file for you automatically on first run using the defaults from `config/.env.example` - for most development work this is all you need.
+
+If you need to configure specific services (Google Drive, Supabase, Stripe, PostHog), edit your local `.env` file. The values in `config/.env.example` show what each variable does and provides sensible defaults where applicable.
+
+For desktop (Tauri) development, `npm run tauri-dev` will additionally create a `.env.desktop` file from `config/.env.desktop.example`.
 
 ## Docker Setup
 
@@ -120,6 +125,11 @@ npm run tauri-dev
 
 This will run the gradle runboot command and the tauri dev command concurrently, starting the app once both are stable.
 
+> [!NOTE]
+>
+> Desktop builds require additional environment variables. See [Environment Variables](#environment-variables)
+> above - `npm run tauri-dev` will set these up automatically from `config/.env.desktop.example` on first run.
+
 ### Build
 To build a deployment of the Tauri app. Use this command in the `frontend` folder:
 
@@ -128,3 +138,8 @@ npm run tauri-build
 ```
 
 This will bundle the backend and frontend into one executable for each target. Targets can be set within the `tauri.conf.json` file.
+
+> [!NOTE]
+>
+> Desktop builds require additional environment variables. See [Environment Variables](#environment-variables)
+> above - `npm run tauri-build` will set these up automatically from `config/.env.desktop.example` on first run.
