@@ -389,11 +389,11 @@ detect_container_memory_mb() {
   fi
 }
 
-# Computes dynamic JVM memory flags based on detected container memory and profile.
+# Computes dynamic JVM memory flags based on detected container memory.
+# Uses performance-oriented settings (Shenandoah GC).
 # Sets: DYNAMIC_INITIAL_RAM_PCT, DYNAMIC_MAX_RAM_PCT, DYNAMIC_MAX_METASPACE
 compute_dynamic_memory() {
   local mem_mb=$1
-  local profile=${2:-balanced}
 
   if [ "$mem_mb" -le 0 ] 2>/dev/null; then
     # Cannot detect memory; use safe defaults
@@ -405,7 +405,7 @@ compute_dynamic_memory() {
 
   log "Detected container memory: ${mem_mb}MB"
 
-  # NOTE: MaxRAMPercentage governs HEAP only. Total JVM footprint also includes:
+  # NOTE: MaxRamPercentage governs HEAP only. Total JVM footprint also includes:
   # - Metaspace (MaxMetaspaceSize)
   # - Code cache (~100-200MB)
   # - Thread stacks (~1MB each × virtual threads)
@@ -424,20 +424,14 @@ compute_dynamic_memory() {
     DYNAMIC_MAX_RAM_PCT=65
     DYNAMIC_MAX_METASPACE=192
   elif [ "$mem_mb" -le 4096 ]; then
-    DYNAMIC_INITIAL_RAM_PCT=15
+    DYNAMIC_INITIAL_RAM_PCT=25
     DYNAMIC_MAX_RAM_PCT=70
     DYNAMIC_MAX_METASPACE=256
   else
-    # Large memory: be conservative to leave room for off-heap (LibreOffice, Calibre, etc.)
-    if [ "$profile" = "performance" ]; then
-      DYNAMIC_INITIAL_RAM_PCT=20
-      DYNAMIC_MAX_RAM_PCT=70
-      DYNAMIC_MAX_METASPACE=512
-    else
-      DYNAMIC_INITIAL_RAM_PCT=10
-      DYNAMIC_MAX_RAM_PCT=50
-      DYNAMIC_MAX_METASPACE=256
-    fi
+    # Large memory (>4GB): cap at 70% to leave room for off-heap (LibreOffice, Calibre, etc.)
+    DYNAMIC_INITIAL_RAM_PCT=25
+    DYNAMIC_MAX_RAM_PCT=70
+    DYNAMIC_MAX_METASPACE=256
   fi
 
   log "Dynamic memory: InitialRAM=${DYNAMIC_INITIAL_RAM_PCT}%, MaxRAM=${DYNAMIC_MAX_RAM_PCT}%, MaxMeta=${DYNAMIC_MAX_METASPACE}m"
@@ -654,8 +648,7 @@ save_aot_fingerprint() {
 
 # ---------- Memory Detection ----------
 CONTAINER_MEM_MB=$(detect_container_memory_mb)
-JVM_PROFILE="${STIRLING_JVM_PROFILE:-balanced}"
-compute_dynamic_memory "$CONTAINER_MEM_MB" "$JVM_PROFILE"
+compute_dynamic_memory "$CONTAINER_MEM_MB"
 MEMORY_FLAGS="-XX:InitialRAMPercentage=${DYNAMIC_INITIAL_RAM_PCT} -XX:MaxRAMPercentage=${DYNAMIC_MAX_RAM_PCT} -XX:MaxMetaspaceSize=${DYNAMIC_MAX_METASPACE}m"
 
 # ---------- Compressed Oops Detection ----------
@@ -673,32 +666,34 @@ if [ "$AOT_ENABLED" = "true" ]; then
   fi
 fi
 
-# ---------- JVM Profile Selection ----------
-# Resolve JAVA_BASE_OPTS from profile system or user override.
-# Priority: JAVA_BASE_OPTS (explicit override) > STIRLING_JVM_PROFILE > fallback defaults
-if [ -z "${JAVA_BASE_OPTS:-}" ]; then
-  case "$JVM_PROFILE" in
-    performance)
-      if [ -n "${_JVM_OPTS_PERFORMANCE:-}" ]; then
-        JAVA_BASE_OPTS="${_JVM_OPTS_PERFORMANCE}"
-        log "JVM profile: performance (Shenandoah generational)"
-      else
-        JAVA_BASE_OPTS="${_JVM_OPTS_BALANCED:-}"
-        log "Performance profile not available in this image; falling back to balanced"
-      fi
-      ;;
-    *)
-      if [ -n "${_JVM_OPTS_BALANCED:-}" ]; then
-        JAVA_BASE_OPTS="${_JVM_OPTS_BALANCED}"
-        log "JVM profile: balanced (G1GC)"
-      else
-        log "JAVA_BASE_OPTS and profiles unset; applying fallback defaults."
-        JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true"
-      fi
-      ;;
-  esac
+# ---------- JVM Options ----------
+# Resolve JAVA_BASE_OPTS from _JVM_OPTS or user override.
+# Priority: JAVA_BASE_OPTS (explicit override) > _JVM_OPTS > fallback defaults
+# Memory percentages are computed dynamically by compute_dynamic_memory().
 
-  # Strip any hardcoded memory/CDS/AOT flags from the profile (managed dynamically)
+# Calculate ConcGCThreads dynamically based on available CPUs
+# Shenandoah defaults to ParallelGCThreads/4; we cap it for large hosts
+AVAILABLE_CPUS=$(nproc 2>/dev/null || echo "2")
+if [ "$AVAILABLE_CPUS" -ge 16 ]; then
+  CONC_GC_THREADS=4
+elif [ "$AVAILABLE_CPUS" -ge 8 ]; then
+  CONC_GC_THREADS=3
+elif [ "$AVAILABLE_CPUS" -ge 4 ]; then
+  CONC_GC_THREADS=2
+else
+  CONC_GC_THREADS=1
+fi
+
+if [ -z "${JAVA_BASE_OPTS:-}" ]; then
+  if [ -n "${_JVM_OPTS:-}" ]; then
+    JAVA_BASE_OPTS="${_JVM_OPTS} -XX:ConcGCThreads=${CONC_GC_THREADS}"
+    log "Using JVM options: Shenandoah generational GC (ConcGCThreads=${CONC_GC_THREADS})"
+  else
+    log "JAVA_BASE_OPTS and _JVM_OPTS unset; applying fallback defaults."
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=2000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
+  fi
+
+  # Strip any hardcoded memory/CDS/AOT flags from the options (managed dynamically)
   JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E \
     's/-XX:InitialRAMPercentage=[^ ]*//g;
      s/-XX:MinRAMPercentage=[^ ]*//g;
