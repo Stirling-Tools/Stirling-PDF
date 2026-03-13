@@ -7,7 +7,10 @@ import { ColorPicker, ColorSwatchButton } from '@app/components/annotation/share
 import { ImageUploader } from '@app/components/annotation/shared/ImageUploader';
 import { SuggestedToolsSection } from '@app/components/tools/shared/SuggestedToolsSection';
 import { DrawingControls } from '@app/components/annotation/shared/DrawingControls';
-import type { AnnotationToolId, AnnotationAPI } from '@app/components/viewer/viewerTypes';
+import type { AnnotationToolId, AnnotationAPI, SignatureAPI, AnnotationObject } from '@app/components/viewer/viewerTypes';
+import type { ViewerContextType } from '@app/contexts/ViewerContext';
+import type { SignParameters } from '@app/hooks/tools/sign/useSignParameters';
+import type { BuildToolOptionsExtras } from '@app/tools/annotate/useAnnotationStyleState';
 
 interface StyleState {
   inkColor: string;
@@ -59,7 +62,7 @@ interface StyleActions {
   setShapeThickness: (value: number) => void;
 }
 
-type BuildToolOptionsFn = (toolId: AnnotationToolId, extras?: any) => Record<string, unknown>;
+type BuildToolOptionsFn = (toolId: AnnotationToolId, extras?: BuildToolOptionsExtras) => Record<string, unknown>;
 
 type ColorTarget =
   | 'ink'
@@ -82,17 +85,17 @@ interface AnnotationPanelProps {
   styleActions: StyleActions;
   getActiveColor: (tool: AnnotationToolId) => string;
   buildToolOptions: BuildToolOptionsFn;
-  deriveToolFromAnnotation: (annotation: any) => AnnotationToolId | undefined;
-  selectedAnn: any | null;
+  deriveToolFromAnnotation: (annotation: AnnotationObject | null | undefined) => AnnotationToolId | undefined;
+  selectedAnn: { object: AnnotationObject } | null;
   selectedTextDraft: string;
   setSelectedTextDraft: (text: string) => void;
   selectedFontSize: number;
   setSelectedFontSize: (size: number) => void;
   annotationApiRef: React.RefObject<AnnotationAPI | null>;
-  signatureApiRef: React.RefObject<any>;
-  viewerContext: any;
+  signatureApiRef: React.RefObject<SignatureAPI | null>;
+  viewerContext: ViewerContextType | null;
   setPlacementMode: (value: boolean) => void;
-  setSignatureConfig: (config: any) => void;
+  setSignatureConfig: (config: SignParameters | null) => void;
   computeStampDisplaySize: (natural: { width: number; height: number } | null) => { width: number; height: number };
   stampImageData?: string;
   setStampImageData: (value: string | undefined) => void;
@@ -459,7 +462,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                         if (selectedAnn?.object?.type === 3 && deriveToolFromAnnotation(selectedAnn.object) !== 'note') {
                           annotationApiRef?.current?.updateAnnotation?.(
                             selectedAnn.object?.pageIndex ?? 0,
-                            selectedAnn.object?.id,
+                            selectedAnn.object.id as string,
                             { backgroundColor: 'transparent', fillColor: 'transparent' }
                           );
                         }
@@ -493,7 +496,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                       if (selectedAnn?.object?.type === 3 && deriveToolFromAnnotation(selectedAnn.object) === 'note') {
                         annotationApiRef?.current?.updateAnnotation?.(
                           selectedAnn.object?.pageIndex ?? 0,
-                          selectedAnn.object?.id,
+                          selectedAnn.object.id as string,
                           { backgroundColor: 'transparent', fillColor: 'transparent' }
                         );
                       }
@@ -588,25 +591,25 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
             annotationApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
           }
           if (selectedAnn?.object?.id && (selectedAnn.object?.type === 9 || selectedAnn.object?.type === 15)) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { opacity: opacity / 100 });
+            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, { opacity: opacity / 100 });
           }
         } else if (colorPickerTarget === 'underline') {
           setUnderlineOpacity(opacity);
           annotationApiRef?.current?.setAnnotationStyle?.('underline', buildToolOptions('underline'));
           if (selectedAnn?.object?.id && selectedAnn.object?.type === 10) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { opacity: opacity / 100 });
+            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, { opacity: opacity / 100 });
           }
         } else if (colorPickerTarget === 'strikeout') {
           setStrikeoutOpacity(opacity);
           annotationApiRef?.current?.setAnnotationStyle?.('strikeout', buildToolOptions('strikeout'));
           if (selectedAnn?.object?.id && selectedAnn.object?.type === 12) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { opacity: opacity / 100 });
+            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, { opacity: opacity / 100 });
           }
         } else if (colorPickerTarget === 'squiggly') {
           setSquigglyOpacity(opacity);
           annotationApiRef?.current?.setAnnotationStyle?.('squiggly', buildToolOptions('squiggly'));
           if (selectedAnn?.object?.id && selectedAnn.object?.type === 11) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { opacity: opacity / 100 });
+            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, { opacity: opacity / 100 });
           }
         } else if (colorPickerTarget === 'shapeStroke') {
           setShapeStrokeOpacity(opacity);
@@ -629,7 +632,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
             annotationApiRef?.current?.setAnnotationStyle?.('ink', buildToolOptions('ink'));
           }
           if (selectedAnn?.object?.type === 15) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { color });
+            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, { color });
           }
         } else if (colorPickerTarget === 'highlight') {
           setHighlightColor(color);
@@ -637,25 +640,25 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
             annotationApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
           }
           if (selectedAnn?.object?.type === 9 || selectedAnn?.object?.type === 15) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { color });
+            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, { color });
           }
         } else if (colorPickerTarget === 'underline') {
           setUnderlineColor(color);
           annotationApiRef?.current?.setAnnotationStyle?.('underline', buildToolOptions('underline'));
           if (selectedAnn?.object?.id) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { color });
+            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, { color });
           }
         } else if (colorPickerTarget === 'strikeout') {
           setStrikeoutColor(color);
           annotationApiRef?.current?.setAnnotationStyle?.('strikeout', buildToolOptions('strikeout'));
           if (selectedAnn?.object?.id) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { color });
+            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, { color });
           }
         } else if (colorPickerTarget === 'squiggly') {
           setSquigglyColor(color);
           annotationApiRef?.current?.setAnnotationStyle?.('squiggly', buildToolOptions('squiggly'));
           if (selectedAnn?.object?.id) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, { color });
+            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, { color });
           }
         } else if (colorPickerTarget === 'textBackground') {
           setTextBackgroundColor(color);
@@ -665,7 +668,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
           if (selectedAnn?.object?.type === 3 && deriveToolFromAnnotation(selectedAnn.object) !== 'note') {
             annotationApiRef?.current?.updateAnnotation?.(
               selectedAnn.object?.pageIndex ?? 0,
-              selectedAnn.object?.id,
+              selectedAnn.object.id as string,
               { backgroundColor: color, fillColor: color }
             );
           }
@@ -677,7 +680,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
           if (selectedAnn?.object?.type === 3 && deriveToolFromAnnotation(selectedAnn.object) === 'note') {
             annotationApiRef?.current?.updateAnnotation?.(
               selectedAnn.object?.pageIndex ?? 0,
-              selectedAnn.object?.id,
+              selectedAnn.object.id as string,
               { backgroundColor: color, fillColor: color }
             );
           }
@@ -687,7 +690,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
             annotationApiRef?.current?.setAnnotationStyle?.('text', buildToolOptions('text'));
           }
           if (selectedAnn?.object?.type === 3 || selectedAnn?.object?.type === 1) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, {
+            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, {
               textColor: color,
               color,
             });
@@ -704,7 +707,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
             annotationApiRef?.current?.setAnnotationStyle?.(styleTool, buildToolOptions(styleTool));
           }
           if (selectedAnn?.object?.id) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, {
+            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, {
               strokeColor: color,
               color: selectedAnn.object?.color ?? shapeFillColor,
               borderWidth: shapeThickness,
@@ -718,7 +721,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
             annotationApiRef?.current?.setAnnotationStyle?.(styleTool, buildToolOptions(styleTool));
           }
           if (selectedAnn?.object?.id) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id, {
+            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, {
               color,
               strokeColor: selectedAnn.object?.strokeColor ?? shapeStrokeColor,
               borderWidth: shapeThickness,

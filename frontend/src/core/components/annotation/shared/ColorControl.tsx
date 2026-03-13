@@ -2,9 +2,14 @@ import { ActionIcon, Tooltip, Popover, Stack, ColorSwatch, ColorPicker as Mantin
 import { useState, useCallback } from 'react';
 import ColorizeIcon from '@mui/icons-material/Colorize';
 
-// safari and firefox do not support the eye dropper API, only edge, chrome and opera do. 
+// safari and firefox do not support the eye dropper API, only edge, chrome and opera do.
 // the button is hidden in the UI if the API is not supported.
 const supportsEyeDropper = typeof window !== 'undefined' && 'EyeDropper' in window;
+
+interface EyeDropper {
+  open(): Promise<{ sRGBHex: string }>;
+}
+declare const EyeDropper: { new(): EyeDropper };
 
 interface ColorControlProps {
   value: string;
@@ -19,7 +24,7 @@ export function ColorControl({ value, onChange, label, disabled = false }: Color
   const handleEyeDropper = useCallback(async () => {
     if (!supportsEyeDropper) return;
     try {
-      const eyeDropper = new (window as any).EyeDropper();
+      const eyeDropper = new EyeDropper();
       const result = await eyeDropper.open();
       onChange(result.sRGBHex);
     } catch {

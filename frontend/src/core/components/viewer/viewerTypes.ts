@@ -31,7 +31,7 @@ export interface AnnotationAPI {
   deleteAnnotation?: (pageIndex: number, annotationId: string) => void;
   deleteAnnotations?: (annotations: Array<{ pageIndex: number; id: string }>) => void;
   createAnnotation?: (pageIndex: number, annotation: Record<string, unknown>) => void;
-  getSelectedAnnotations?: () => any[];
+  getSelectedAnnotations?: () => AnnotationSelection[];
   deactivateTools: () => void;
   onAnnotationEvent?: (listener: (event: AnnotationEvent) => void) => void | (() => void);
   getActiveTool?: () => { id: AnnotationToolId } | null;
@@ -84,13 +84,49 @@ export type AnnotationToolId =
   | 'signatureStamp'
   | 'signatureInk';
 
-export interface AnnotationEvent {
-  type: string;
-  [key: string]: unknown;
-}
+// Import for internal use within this file, and re-export for external consumers
+import type { AnnotationEvent } from '@embedpdf/plugin-annotation';
+export type { AnnotationEvent } from '@embedpdf/plugin-annotation';
+export type { PdfAnnotationObject } from '@embedpdf/models';
 
 export type AnnotationPatch = Record<string, unknown>;
-export type AnnotationSelection = unknown;
+
+/** Annotation object as returned by the EmbedPDF annotation API */
+export interface AnnotationObject {
+  id?: string;
+  uid?: string;
+  pageIndex?: number;
+  type?: number;
+  subtype?: number;
+  inkList?: unknown;
+  color?: string;
+  strokeColor?: string;
+  fillColor?: string;
+  backgroundColor?: string;
+  textColor?: string;
+  opacity?: number;
+  strokeWidth?: number;
+  borderWidth?: number;
+  lineWidth?: number;
+  thickness?: number;
+  fontSize?: number;
+  fontFamily?: string;
+  fontColor?: string;
+  interiorColor?: string;
+  textAlign?: number;
+  endStyle?: string;
+  startStyle?: string;
+  lineEndingStyles?: { start?: string; end?: string };
+  customData?: { toolId?: string; annotationToolId?: string };
+  rect?: AnnotationRect;
+  contents?: string;
+}
+
+/**
+ * Selection returned by getSelectedAnnotation — EmbedPDF may wrap the annotation
+ * in an `.object` property or surface fields directly on the selection.
+ */
+export type AnnotationSelection = AnnotationObject & { object?: AnnotationObject };
 
 export interface AnnotationToolOptions {
   color?: string;

@@ -8,6 +8,7 @@ import type {
   AnnotationEvent,
   AnnotationPatch,
   AnnotationRect,
+  AnnotationSelection,
 } from '@app/components/viewer/viewerTypes';
 import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
 
@@ -98,13 +99,13 @@ type AnnotationApiSurface = {
   setActiveTool: (toolId: AnnotationToolId | null) => void;
   getActiveTool?: () => { id: AnnotationToolId } | null;
   setToolDefaults?: (toolId: AnnotationToolId, defaults: AnnotationDefaults) => void;
-  getSelectedAnnotation?: () => unknown | null;
+  getSelectedAnnotation?: () => AnnotationSelection | null;
   deselectAnnotation?: () => void;
   updateAnnotation?: (pageIndex: number, annotationId: string, patch: AnnotationPatch) => void;
   deleteAnnotation?: (pageIndex: number, annotationId: string) => void;
   deleteAnnotations?: (annotations: Array<{ pageIndex: number; id: string }>) => void;
   createAnnotation?: (pageIndex: number, annotation: Record<string, unknown>) => void;
-  getSelectedAnnotations?: () => any[];
+  getSelectedAnnotations?: () => AnnotationSelection[];
   onAnnotationEvent?: (listener: (event: AnnotationEvent) => void) => void | (() => void);
   purgeAnnotation?: (pageIndex: number, annotationId: string) => void;
   /** v2.7.0: move annotation without regenerating its appearance stream */
@@ -431,7 +432,7 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function Annotation
 
       getSelectedAnnotations: () => {
         const api = annotationApi as unknown as AnnotationApiSurface | undefined;
-        return (api as any)?.getSelectedAnnotations?.() ?? [];
+        return api?.getSelectedAnnotations?.() ?? [];
       },
 
       purgeAnnotation: (pageIndex: number, annotationId: string) => {

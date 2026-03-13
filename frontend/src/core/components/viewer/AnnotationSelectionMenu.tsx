@@ -7,7 +7,9 @@ import EditIcon from '@mui/icons-material/Edit';
 import CommentIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
 import OpenInNewIcon from '@mui/icons-material/OpenInNewRounded';
 import { useAnnotation } from '@embedpdf/plugin-annotation/react';
-import { PdfActionType, PdfAnnotationSubtype, PdfAnnotationReplyType } from '@embedpdf/models';
+import { PdfActionType, PdfAnnotationSubtype, PdfAnnotationReplyType, PdfAnnotationObject } from '@embedpdf/models';
+import type { TrackedAnnotation } from '@embedpdf/plugin-annotation';
+import type { AnnotationPatch, AnnotationObject } from '@app/components/viewer/viewerTypes';
 import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { OpacityControl } from '@app/components/annotation/shared/OpacityControl';
@@ -24,7 +26,7 @@ export interface AnnotationSelectionMenuProps {
   documentId?: string;
   context?: {
     type: 'annotation';
-    annotation: any;
+    annotation: TrackedAnnotation<PdfAnnotationObject>;
     pageIndex: number;
   };
   selected: boolean;
@@ -78,10 +80,10 @@ function AnnotationSelectionMenuInner({
   // Type detection - comment-like tools (Comment, Insert Text, Replace Text) get full comment toolbar
   const getAnnotationType = useCallback((): AnnotationType => {
     const type = annotation?.object?.type;
-    const toolId = annotation?.object?.customData?.toolId ?? annotation?.object?.customData?.annotationToolId;
+    const toolId = obj?.customData?.toolId ?? obj?.customData?.annotationToolId;
 
     // Map type numbers to categories
-    if ([9, 10, 11, 12].includes(type)) return 'textMarkup';
+    if (type !== undefined && [9, 10, 11, 12].includes(type)) return 'textMarkup';
     if (type === 15) {
       return toolId === 'inkHighlighter' ? 'inkHighlighter' : 'ink';
     }
@@ -91,8 +93,8 @@ function AnnotationSelectionMenuInner({
       // Legacy or unknown type-3 annotations (e.g. no toolId) treat as comment so they get Add comment + link
       return 'comment';
     }
-    if ([5, 6, 7].includes(type)) return 'shape';
-    if ([4, 8].includes(type)) return 'line';
+    if (type !== undefined && [5, 6, 7].includes(type)) return 'shape';
+    if (type !== undefined && [4, 8].includes(type)) return 'line';
     if (type === 13) return 'stamp';
 
     return 'unknown';
@@ -118,7 +120,7 @@ function AnnotationSelectionMenuInner({
   };
 
   // Get annotation properties
-  const obj = annotation?.object;
+  const obj = annotation?.object as AnnotationObject | undefined;
   const annotationType = getAnnotationType();
   const annotationId = obj?.id;
 
@@ -148,7 +150,7 @@ function AnnotationSelectionMenuInner({
     // Text annotations use textColor
     if (type === 3) return obj.textColor || obj.color || '#000000';
     // Shape annotations use strokeColor
-    if ([4, 5, 6, 7, 8].includes(type)) return obj.strokeColor || obj.color || '#000000';
+    if (type !== undefined && [4, 5, 6, 7, 8].includes(type)) return obj.strokeColor || obj.color || '#000000';
     // Default to color property
     return obj.color || obj.strokeColor || '#000000';
   };
@@ -200,7 +202,7 @@ function AnnotationSelectionMenuInner({
     if (!provides?.updateAnnotation || !annotationId || pageIndex === undefined) return;
 
     const type = obj?.type;
-    const patch: any = {};
+    const patch: AnnotationPatch = {};
 
     if (target === 'stroke') {
       // Shape stroke - preserve fill color
@@ -233,14 +235,14 @@ function AnnotationSelectionMenuInner({
       patch.color = color;
 
       // For text markup annotations (highlight, underline, strikeout, squiggly)
-      if ([9, 10, 11, 12].includes(type)) {
+      if (type !== undefined && [9, 10, 11, 12].includes(type)) {
         patch.strokeColor = color;
         patch.fillColor = color;
         patch.opacity = obj?.opacity ?? 1;
       }
 
       // For line annotations (type 4, 8), include stroke properties
-      if ([4, 8].includes(type)) {
+      if (type !== undefined && [4, 8].includes(type)) {
         patch.strokeColor = color;
         patch.strokeWidth = obj?.strokeWidth ?? obj?.lineWidth ?? 2;
         patch.lineWidth = obj?.lineWidth ?? obj?.strokeWidth ?? 2;

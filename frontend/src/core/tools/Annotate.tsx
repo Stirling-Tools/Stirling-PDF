@@ -7,7 +7,7 @@ import { useFileSelection } from '@app/contexts/FileContext';
 import { BaseToolProps } from '@app/types/tool';
 import { useSignature } from '@app/contexts/SignatureContext';
 import { ViewerContext, useViewer } from '@app/contexts/ViewerContext';
-import type { AnnotationToolId } from '@app/components/viewer/viewerTypes';
+import type { AnnotationToolId, AnnotationEvent, AnnotationSelection, AnnotationRect } from '@app/components/viewer/viewerTypes';
 import { useAnnotationStyleState } from '@app/tools/annotate/useAnnotationStyleState';
 import { useAnnotationSelection } from '@app/tools/annotate/useAnnotationSelection';
 import { AnnotationPanel } from '@app/tools/annotate/AnnotationPanel';
@@ -354,7 +354,7 @@ const Annotate = (_props: BaseToolProps) => {
   // Auto-switch to 'select' after placing a note or text annotation
   // EmbedPDF fires 'create' + committed:true when placement is finalised
   useEffect(() => {
-    const unsubscribe = annotationApiRef?.current?.onAnnotationEvent?.((event: any) => {
+    const unsubscribe = annotationApiRef?.current?.onAnnotationEvent?.((event: AnnotationEvent) => {
       if (event.type === 'create' && event.committed) {
         const toolId = activeToolRef.current;
         if (['text', 'note', 'textComment', 'insertText', 'replaceText'].includes(toolId)) {
@@ -422,10 +422,10 @@ const Annotate = (_props: BaseToolProps) => {
 
       // Backspace / Delete: delete selected annotation(s)
       if (e.key === 'Backspace' || e.key === 'Delete') {
-        const multiSelected = annotationApiRef?.current?.getSelectedAnnotations?.() as any[] | undefined;
+        const multiSelected = annotationApiRef?.current?.getSelectedAnnotations?.();
         if (multiSelected && multiSelected.length > 0) {
           e.preventDefault();
-          const toDelete = multiSelected.map((s: any) => {
+          const toDelete = multiSelected.map((s: AnnotationSelection) => {
             const ann = s.object ?? s;
             return {
               pageIndex: ann.pageIndex ?? 0,
@@ -437,11 +437,11 @@ const Annotate = (_props: BaseToolProps) => {
           }
           return;
         }
-        const selected = annotationApiRef?.current?.getSelectedAnnotation?.() as any;
+        const selected: AnnotationSelection | null = annotationApiRef?.current?.getSelectedAnnotation?.() ?? null;
         if (!selected) return;
         e.preventDefault();
         const pageIndex: number = selected.pageIndex ?? selected.object?.pageIndex ?? 0;
-        const annotationId: string = selected.id ?? selected.object?.id ?? selected.uid ?? selected.object?.uid;
+        const annotationId: string = selected.id ?? selected.object?.id ?? selected.uid ?? selected.object?.uid ?? '';
         if (annotationId != null) {
           annotationApiRef?.current?.deleteAnnotation?.(pageIndex, annotationId);
         }
@@ -450,12 +450,12 @@ const Annotate = (_props: BaseToolProps) => {
 
       // Ctrl+C: copy selected annotation
       if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
-        const selected = annotationApiRef?.current?.getSelectedAnnotation?.() as any;
+        const selected: AnnotationSelection | null = annotationApiRef?.current?.getSelectedAnnotation?.() ?? null;
         if (!selected) return;
         e.preventDefault();
         const ann = selected.object ?? selected;
         const pageIndex: number = ann.pageIndex ?? 0;
-        clipboardRef.current = { pageIndex, annotation: { ...ann } };
+        clipboardRef.current = { pageIndex, annotation: { ...(ann as Record<string, unknown>) } };
         return;
       }
 
@@ -477,11 +477,11 @@ const Annotate = (_props: BaseToolProps) => {
         // Shift the EmbedPDF Rect: { origin: { x, y }, size: { width, height } }
         // PDF coords have y=0 at bottom, so down = smaller y; right = larger x
         if (pasted.rect && typeof pasted.rect === 'object') {
-          const r = pasted.rect as any;
+          const r = pasted.rect as AnnotationRect;
           if (r.origin && typeof r.origin === 'object') {
             pasted.rect = {
               ...r,
-              origin: { x: (r.origin.x ?? 0) + OFFSET, y: (r.origin.y ?? 0) - OFFSET },
+              origin: { x: r.origin.x + OFFSET, y: r.origin.y - OFFSET },
             };
           }
         }
@@ -494,7 +494,7 @@ const Annotate = (_props: BaseToolProps) => {
     return () => window.removeEventListener('keydown', handler);
   }, [buildToolOptions, annotationApiRef]);
 
-  const deriveToolFromAnnotation = useCallback((annotation: any): AnnotationToolId | undefined => {
+  const deriveToolFromAnnotation = useCallback((annotation: AnnotationSelection | null | undefined): AnnotationToolId | undefined => {
     if (!annotation) return undefined;
     const customToolId = annotation.customData?.toolId || annotation.customData?.annotationToolId;
     if (isKnownAnnotationTool(customToolId)) {

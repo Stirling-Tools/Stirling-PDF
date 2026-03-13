@@ -77,7 +77,7 @@ function useImmediateNotifier<Args extends unknown[]>() {
  * - Actions call EmbedPDF APIs directly through bridge references
  * - No circular dependencies - bridges don't call back into this context
  */
-interface ViewerContextType {
+export interface ViewerContextType {
   // UI state managed by this context
   isThumbnailSidebarVisible: boolean;
   toggleThumbnailSidebar: () => void;
