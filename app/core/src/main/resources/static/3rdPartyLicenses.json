@@ -284,13 +284,6 @@
             "moduleLicenseUrl": "https://www.mozilla.org/en-US/MPL/2.0/"
         },
         {
-            "moduleName": "com.martiansoftware:jsap",
-            "moduleUrl": "http://www.martiansoftware.com/jsap/",
-            "moduleVersion": "2.1",
-            "moduleLicense": "LGPL",
-            "moduleLicenseUrl": "http://www.martiansoftware.com/jsap/license.html"
-        },
-        {
             "moduleName": "com.nimbusds:content-type",
             "moduleUrl": "https://connect2id.com",
             "moduleVersion": "2.3",
@@ -664,7 +657,7 @@
         {
             "moduleName": "io.github.pixee:java-security-toolkit",
             "moduleUrl": "https://github.com/pixee/java-security-toolkit",
-            "moduleVersion": "1.2.2",
+            "moduleVersion": "1.2.3",
             "moduleLicense": "MIT License",
             "moduleLicenseUrl": "http://www.opensource.org/licenses/mit-license.php"
         },
