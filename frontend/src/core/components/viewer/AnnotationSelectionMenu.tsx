@@ -5,6 +5,9 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { useAnnotation } from '@embedpdf/plugin-annotation/react';
+import type { TrackedAnnotation } from '@embedpdf/plugin-annotation';
+import type { PdfAnnotationObject } from '@embedpdf/models';
+import type { AnnotationPatch, AnnotationObject } from '@app/components/viewer/viewerTypes';
 import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
 import { OpacityControl } from '@app/components/annotation/shared/OpacityControl';
 import { WidthControl } from '@app/components/annotation/shared/WidthControl';
@@ -19,7 +22,7 @@ export interface AnnotationSelectionMenuProps {
   documentId?: string;
   context?: {
     type: 'annotation';
-    annotation: any;
+    annotation: TrackedAnnotation<PdfAnnotationObject>;
     pageIndex: number;
   };
   selected: boolean;
@@ -58,11 +61,7 @@ function AnnotationSelectionMenuInner({
   const { t } = useTranslation();
   const { provides } = useAnnotation(documentId);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
-  const [isTextEditorOpen, setIsTextEditorOpen] = useState(false);
-  const [textDraft, setTextDraft] = useState('');
-  const [textBoxPosition, setTextBoxPosition] = useState<{ top: number; left: number; width: number; height: number; fontSize: number; fontFamily: string } | null>(null);
 
   // Merge refs - menuWrapperProps.ref is a callback ref
   const setRef = useCallback((node: HTMLDivElement | null) => {
@@ -74,18 +73,18 @@ function AnnotationSelectionMenuInner({
   // Type detection
   const getAnnotationType = useCallback((): AnnotationType => {
     const type = annotation?.object?.type;
-    const toolId = annotation?.object?.customData?.toolId;
+    const toolId = (annotation?.object as AnnotationObject | undefined)?.customData?.toolId;
 
     // Map type numbers to categories
-    if ([9, 10, 11, 12].includes(type)) return 'textMarkup';
+    if (type !== undefined && [9, 10, 11, 12].includes(type)) return 'textMarkup';
     if (type === 15) {
       return toolId === 'inkHighlighter' ? 'inkHighlighter' : 'ink';
     }
     if (type === 3) {
       return toolId === 'note' ? 'note' : 'text';
     }
-    if ([5, 6, 7].includes(type)) return 'shape';
-    if ([4, 8].includes(type)) return 'line';
+    if (type !== undefined && [5, 6, 7].includes(type)) return 'shape';
+    if (type !== undefined && [4, 8].includes(type)) return 'line';
     if (type === 13) return 'stamp';
 
     return 'unknown';
@@ -106,7 +105,7 @@ function AnnotationSelectionMenuInner({
   };
 
   // Get annotation properties
-  const obj = annotation?.object;
+  const obj = annotation?.object as AnnotationObject | undefined;
   const annotationType = getAnnotationType();
   const annotationId = obj?.id;
 
@@ -117,7 +116,7 @@ function AnnotationSelectionMenuInner({
     // Text annotations use textColor
     if (type === 3) return obj.textColor || obj.color || '#000000';
     // Shape annotations use strokeColor
-    if ([4, 5, 6, 7, 8].includes(type)) return obj.strokeColor || obj.color || '#000000';
+    if (type !== undefined && [4, 5, 6, 7, 8].includes(type)) return obj.strokeColor || obj.color || '#000000';
     // Default to color property
     return obj.color || obj.strokeColor || '#000000';
   };
@@ -154,82 +153,22 @@ function AnnotationSelectionMenuInner({
     }
   }, [provides, annotationId, pageIndex]);
 
-  const handleOpenTextEditor = useCallback(() => {
-    if (!annotation) return;
-
-    // Try to find the annotation element in the DOM
-    const annotationElement = document.querySelector(`[data-annotation-id="${annotationId}"]`) as HTMLElement;
-
-    let fontSize = (obj?.fontSize || 14) * 1.33;
-    let fontFamily = 'Helvetica';
-
-    if (annotationElement) {
-      const rect = annotationElement.getBoundingClientRect();
-
-      // Try multiple selectors to find the text element
-      const textElement = annotationElement.querySelector('text, [class*="text"], [class*="content"]') as HTMLElement;
-      if (textElement) {
-        const computedStyle = window.getComputedStyle(textElement);
-        const computedSize = parseFloat(computedStyle.fontSize);
-        if (computedSize && computedSize > 0) {
-          fontSize = computedSize;
-        }
-        fontFamily = computedStyle.fontFamily || fontFamily;
-      }
-
-      setTextBoxPosition({
-        top: rect.top,
-        left: rect.left,
-        width: rect.width,
-        height: rect.height,
-        fontSize: fontSize,
-        fontFamily: fontFamily,
-      });
-    } else if (wrapperRef.current) {
-      // Fallback to wrapper position
-      const rect = wrapperRef.current.getBoundingClientRect();
-      setTextBoxPosition({
-        top: rect.top,
-        left: rect.left,
-        width: Math.max(rect.width, 200),
-        height: Math.max(rect.height, 50),
-        fontSize: fontSize,
-        fontFamily: fontFamily,
-      });
-    } else {
-      return;
-    }
-
-    setTextDraft(obj?.contents || '');
-    setIsTextEditorOpen(true);
-
-    // Focus the textarea after it renders
-    setTimeout(() => {
-      textareaRef.current?.focus();
-      textareaRef.current?.select();
-    }, 0);
-  }, [obj, annotation, annotationId]);
-
-  const handleSaveText = useCallback(() => {
-    if (!provides?.updateAnnotation || !annotationId || pageIndex === undefined) return;
-
-    provides.updateAnnotation(pageIndex, annotationId, {
-      contents: textDraft,
-    });
-    setIsTextEditorOpen(false);
-    setTextBoxPosition(null);
-  }, [provides, annotationId, pageIndex, textDraft]);
-
-  const handleCloseTextEdit = useCallback(() => {
-    setIsTextEditorOpen(false);
-    setTextBoxPosition(null);
+  // Focus inline text input (same as double-clicking the note/text box). Dispatches dblclick on the
+  // annotation hit-area div (EmbedPDF's inner div with onDoubleClick) so built-in FreeText editing is used.
+  const handleFocusTextEdit = useCallback(() => {
+    const root = wrapperRef.current?.closest('[data-no-interaction]');
+    const main = root?.firstElementChild;
+    // EmbedPDF puts onDoubleClick on the content div. For text/note (no rotation) it's the first child.
+    const hitArea = main?.lastElementChild ?? main?.firstElementChild;
+    if (!hitArea) return;
+    hitArea.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true, view: window }));
   }, []);
 
   const handleColorChange = useCallback((color: string, target: 'main' | 'stroke' | 'fill' | 'text' | 'background') => {
     if (!provides?.updateAnnotation || !annotationId || pageIndex === undefined) return;
 
     const type = obj?.type;
-    const patch: any = {};
+    const patch: AnnotationPatch = {};
 
     if (target === 'stroke') {
       // Shape stroke - preserve fill color
@@ -262,14 +201,14 @@ function AnnotationSelectionMenuInner({
       patch.color = color;
 
       // For text markup annotations (highlight, underline, strikeout, squiggly)
-      if ([9, 10, 11, 12].includes(type)) {
+      if (type !== undefined && [9, 10, 11, 12].includes(type)) {
         patch.strokeColor = color;
         patch.fillColor = color;
         patch.opacity = obj?.opacity ?? 1;
       }
 
       // For line annotations (type 4, 8), include stroke properties
-      if ([4, 8].includes(type)) {
+      if (type !== undefined && [4, 8].includes(type)) {
         patch.strokeColor = color;
         patch.strokeWidth = obj?.strokeWidth ?? obj?.lineWidth ?? 2;
         patch.lineWidth = obj?.lineWidth ?? obj?.strokeWidth ?? 2;
@@ -330,7 +269,7 @@ function AnnotationSelectionMenuInner({
           variant="subtle"
           color="gray"
           size="md"
-          onClick={handleOpenTextEditor}
+          onClick={handleFocusTextEdit}
           styles={commonButtonStyles}
         >
           <EditIcon style={{ fontSize: 18 }} />
@@ -493,9 +432,6 @@ function AnnotationSelectionMenuInner({
       }
 
       const wrapperRect = wrapper.getBoundingClientRect();
-      // Position menu below the wrapper, centered
-      // Use getBoundingClientRect which gives viewport-relative coordinates
-      // Since we're using fixed positioning in the portal, we don't need to add scroll offsets
       setMenuPosition({
         top: wrapperRect.bottom + 8,
         left: wrapperRect.left + wrapperRect.width / 2,
@@ -504,11 +440,15 @@ function AnnotationSelectionMenuInner({
 
     updatePosition();
 
-    // Update position on scroll/resize
+    // MutationObserver catches EmbedPDF updating the wrapper's inline style during drag
+    const observer = new MutationObserver(updatePosition);
+    observer.observe(wrapperRef.current, { attributes: true, attributeFilter: ['style'] });
+
     window.addEventListener('scroll', updatePosition, true);
     window.addEventListener('resize', updatePosition);
 
     return () => {
+      observer.disconnect();
       window.removeEventListener('scroll', updatePosition, true);
       window.removeEventListener('resize', updatePosition);
     };
@@ -519,6 +459,7 @@ function AnnotationSelectionMenuInner({
 
   const menuContent = menuPosition ? (
     <div
+      data-annotation-selection-menu
       style={{
         position: 'fixed',
         top: `${menuPosition.top}px`,
@@ -542,78 +483,21 @@ function AnnotationSelectionMenuInner({
     </div>
   ) : null;
 
-  const textEditorOverlay = isTextEditorOpen && textBoxPosition ? (
-    <div
-      style={{
-        position: 'fixed',
-        top: `${textBoxPosition.top}px`,
-        left: `${textBoxPosition.left}px`,
-        width: `${textBoxPosition.width}px`,
-        height: `${textBoxPosition.height}px`,
-        zIndex: 10001,
-        pointerEvents: 'auto',
-      }}
-    >
-      <textarea
-        ref={textareaRef}
-        value={textDraft}
-        onChange={(e) => setTextDraft(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') {
-            handleCloseTextEdit();
-          } else if (e.key === 'Enter' && e.ctrlKey) {
-            handleSaveText();
-          }
-        }}
-        onBlur={handleSaveText}
-        style={{
-          width: '100%',
-          height: '100%',
-          minHeight: '0',
-          minWidth: '0',
-          maxWidth: '100%',
-          maxHeight: '100%',
-          fontSize: `${textBoxPosition.fontSize}px`,
-          fontFamily: textBoxPosition.fontFamily,
-          lineHeight: '1.2',
-          color: '#000000',
-          backgroundColor: '#ffffff',
-          border: '2px solid var(--mantine-color-blue-5)',
-          borderRadius: '0',
-          padding: '0',
-          margin: '0',
-          resize: 'none',
-          boxSizing: 'border-box',
-          outline: 'none',
-          overflow: 'hidden',
-          wordWrap: 'break-word',
-          overflowWrap: 'break-word',
-        }}
-      />
-    </div>
-  ) : null;
-
-  const canClickToEdit = selected && (annotationType === 'text' || annotationType === 'note') && !isTextEditorOpen;
-
   return (
     <>
-      {/* Invisible wrapper that provides positioning - uses EmbedPDF's menuWrapperProps */}
+      {/* Invisible wrapper that provides positioning - uses EmbedPDF's menuWrapperProps.
+          Must stay pointerEvents:none so EmbedPDF's internal drag handlers receive events.
+          Edit Text button dispatches dblclick on this wrapper's parent to use EmbedPDF's built-in inline editing. */}
       <div
         ref={setRef}
-        onClick={canClickToEdit ? handleOpenTextEditor : undefined}
         style={{
-          // Use EmbedPDF's positioning styles
           ...menuWrapperProps?.style,
-          // Keep the wrapper invisible but still occupying space for positioning
           opacity: 0,
-          pointerEvents: canClickToEdit ? 'auto' : 'none',
+          pointerEvents: 'none',
         }}
       />
       {typeof document !== 'undefined' && menuContent
         ? createPortal(menuContent, document.body)
-        : null}
-      {typeof document !== 'undefined' && textEditorOverlay
-        ? createPortal(textEditorOverlay, document.body)
         : null}
     </>
   );
