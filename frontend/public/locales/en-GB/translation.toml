@@ -2338,6 +2338,7 @@ defaultCanvasLabel = "Drawing signature"
 defaultImageLabel = "Uploaded signature"
 defaultLabel = "Signature"
 defaultTextLabel = "Typed signature"
+delete = "Delete signature"
 none = "No saved signatures"
 
 [certSign.collab.signRequest.signatureType]

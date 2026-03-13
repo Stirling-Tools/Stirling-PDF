@@ -376,7 +376,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
             { responseType: 'blob' }
           );
           pdfFile = new File([pdfResponse.data], session.documentName, { type: 'application/pdf' });
-        } catch (error: any) {
+        } catch (_error) {
           // Fallback if PDF not available
           pdfFile = null;
         }
