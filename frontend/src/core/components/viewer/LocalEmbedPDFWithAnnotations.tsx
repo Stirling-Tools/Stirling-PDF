@@ -8,8 +8,8 @@ import { Viewport, ViewportPluginPackage } from '@embedpdf/plugin-viewport/react
 import { Scroller, ScrollPluginPackage } from '@embedpdf/plugin-scroll/react';
 import { DocumentManagerPluginPackage } from '@embedpdf/plugin-document-manager/react';
 import { RenderPluginPackage } from '@embedpdf/plugin-render/react';
-import { ZoomPluginPackage } from '@embedpdf/plugin-zoom/react';
-import { InteractionManagerPluginPackage, PagePointerProvider, GlobalPointerProvider } from '@embedpdf/plugin-interaction-manager/react';
+import { ZoomPluginPackage, ZoomMode } from '@embedpdf/plugin-zoom/react';
+import { InteractionManagerPluginPackage, PagePointerProvider, GlobalPointerProvider, useInteractionManagerCapability } from '@embedpdf/plugin-interaction-manager/react';
 import { SelectionLayer, SelectionPluginPackage } from '@embedpdf/plugin-selection/react';
 import { TilingLayer, TilingPluginPackage } from '@embedpdf/plugin-tiling/react';
 import { PanPluginPackage } from '@embedpdf/plugin-pan/react';
@@ -24,7 +24,6 @@ import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
 import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
 
 import { CustomSearchLayer } from '@app/components/viewer/CustomSearchLayer';
-import { ZoomAPIBridge } from '@app/components/viewer/ZoomAPIBridge';
 import ToolLoadingFallback from '@app/components/tools/ToolLoadingFallback';
 import { Center, Stack, Text } from '@mantine/core';
 import { ScrollAPIBridge } from '@app/components/viewer/ScrollAPIBridge';
@@ -35,9 +34,27 @@ import { SearchAPIBridge } from '@app/components/viewer/SearchAPIBridge';
 import { ThumbnailAPIBridge } from '@app/components/viewer/ThumbnailAPIBridge';
 import { RotateAPIBridge } from '@app/components/viewer/RotateAPIBridge';
 import { DocumentReadyWrapper } from '@app/components/viewer/DocumentReadyWrapper';
+import {
+  Z_INDEX_SIGNATURE_OVERLAY,
+  Z_INDEX_SIGNATURE_OVERLAY_DELETE,
+  Z_INDEX_SIGNATURE_OVERLAY_HANDLE,
+} from '@app/styles/zIndex';
+
+/** Rendered inside EmbedPDF context; exposes interaction manager pause/resume via ref. */
+function InteractionPauseBridge({ bridgeRef }: {
+  bridgeRef: React.MutableRefObject<{ pause: () => void; resume: () => void } | null>;
+}) {
+  const { provides } = useInteractionManagerCapability();
+  useEffect(() => {
+    if (provides) {
+      bridgeRef.current = { pause: () => provides.pause(), resume: () => provides.resume() };
+    }
+    return () => { bridgeRef.current = null; };
+  }, [provides, bridgeRef]);
+  return null;
+}
 
 const DOCUMENT_NAME = 'stirling-pdf-signing-viewer';
-
 
 export interface SignaturePreview {
   id: string;
@@ -98,6 +115,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
 
   // Track if a drag operation just occurred to prevent click from firing
   const isDraggingRef = useRef(false);
+  const interactionPauseRef = useRef<{ pause: () => void; resume: () => void } | null>(null);
 
   // Expose annotation API to parent
   useImperativeHandle(ref, () => ({
@@ -214,7 +232,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
 
       // Register zoom plugin
       createPluginRegistration(ZoomPluginPackage, {
-        defaultZoomLevel: 1.4,
+        defaultZoomLevel: ZoomMode.FitWidth,
         minZoom: 0.2,
         maxZoom: 3.0,
       }),
@@ -289,6 +307,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
       minWidth: 0
     }}>
       <EmbedPDF
+        key={pdfUrl}
         engine={engine}
         plugins={plugins}
         onInitialized={async (registry) => {
@@ -330,28 +349,19 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
             },
           });
 
-          // Wire up zoom API using raw plugin (must NOT use useZoom hook inside Viewport)
+          // Wire zoom API so parent can call zoomIn/zoomOut/resetZoom
           const zoomPlugin = registry.getPlugin('zoom');
           if (zoomPlugin?.provides) {
-            const rawZoom = zoomPlugin.provides();
-            if (rawZoom) {
-              const currentZoomRef = { current: 1.4 };
-              rawZoom.onZoomChange?.((e: any) => {
-                if (typeof e?.newZoom === 'number') currentZoomRef.current = e.newZoom;
-              });
-              zoomApiRef.current = {
-                zoomIn:    () => rawZoom.requestZoom?.(Math.min(currentZoomRef.current * 1.25, 3.0), { vx: 0.5, vy: 0.5 }),
-                zoomOut:   () => rawZoom.requestZoom?.(Math.max(currentZoomRef.current / 1.25, 0.2), { vx: 0.5, vy: 0.5 }),
-                resetZoom: () => rawZoom.requestZoom?.(1.4, { vx: 0.5, vy: 0.5 }),
-              };
-            }
+            const zoomApi = zoomPlugin.provides();
+            zoomApiRef.current = {
+              zoomIn:    () => zoomApi.zoomIn?.(),
+              zoomOut:   () => zoomApi.zoomOut?.(),
+              resetZoom: () => zoomApi.requestZoom?.(ZoomMode.FitWidth, { vx: 0.5, vy: 0 }),
+            };
           }
-
-          // Annotation events are now tracked via signaturePreviews state
-          // and notified to parent via useEffect
         }}
       >
-        <ZoomAPIBridge />
+        <InteractionPauseBridge bridgeRef={interactionPauseRef} />
         <ScrollAPIBridge />
         <SelectionAPIBridge />
         <PanAPIBridge />
@@ -460,7 +470,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                   border: readOnly ? '1px dashed rgba(0, 122, 204, 0.4)' : '2px solid #007ACC',
                                   boxShadow: readOnly ? 'none' : '0 0 10px rgba(0, 122, 204, 0.5)',
                                   cursor: readOnly ? 'default' : 'move',
-                                  zIndex: 1000,
+                                  zIndex: Z_INDEX_SIGNATURE_OVERLAY,
                                   backgroundColor: readOnly ? 'transparent' : 'rgba(255, 255, 255, 0.1)',
                                   pointerEvents: readOnly ? 'none' : 'auto',
                                 }}
@@ -484,7 +494,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                       fontSize: '16px',
                                       fontWeight: 'bold',
                                       border: '2px solid white',
-                                      zIndex: 1002,
+                                      zIndex: Z_INDEX_SIGNATURE_OVERLAY_DELETE,
                                       pointerEvents: 'auto',
                                     }}
                                     onClick={(e) => {
@@ -503,14 +513,19 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                     height: '100%',
                                     pointerEvents: readOnly ? 'none' : 'auto',
                                   }}
-                                  onMouseDown={readOnly ? undefined : (e) => {
+                                  onPointerDown={readOnly ? undefined : (e) => {
                                     e.stopPropagation();
+                                    e.preventDefault();
+                                    const el = e.currentTarget;
+                                    el.setPointerCapture(e.pointerId);
+                                    interactionPauseRef.current?.pause();
+
                                     const startX = e.clientX;
                                     const startY = e.clientY;
                                     const startLeft = preview.x;
                                     const startTop = preview.y;
 
-                                    const handleMouseMove = (moveEvent: MouseEvent) => {
+                                    const handlePointerMove = (moveEvent: PointerEvent) => {
                                       isDraggingRef.current = true;
                                       const deltaX = (moveEvent.clientX - startX) / width;
                                       const deltaY = (moveEvent.clientY - startY) / height;
@@ -521,14 +536,17 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                       ));
                                     };
 
-                                    const handleMouseUp = () => {
-                                      document.removeEventListener('mousemove', handleMouseMove);
-                                      document.removeEventListener('mouseup', handleMouseUp);
+                                    const handlePointerUp = (upEvent: PointerEvent) => {
+                                      el.removeEventListener('pointermove', handlePointerMove);
+                                      el.removeEventListener('pointerup', handlePointerUp);
+                                      el.releasePointerCapture(upEvent.pointerId);
+                                      interactionPauseRef.current?.resume();
+                                      window.getSelection()?.removeAllRanges();
                                       setTimeout(() => { isDraggingRef.current = false; }, 10);
                                     };
 
-                                    document.addEventListener('mousemove', handleMouseMove);
-                                    document.addEventListener('mouseup', handleMouseUp);
+                                    el.addEventListener('pointermove', handlePointerMove);
+                                    el.addEventListener('pointerup', handlePointerUp);
                                   }}
                                 >
                                   <img
@@ -558,14 +576,19 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                         backgroundColor: '#007ACC',
                                         border: '1px solid white',
                                         cursor: handle.cursor,
-                                        zIndex: 1001,
+                                        zIndex: Z_INDEX_SIGNATURE_OVERLAY_HANDLE,
                                         ...(handle.top !== undefined && { top: handle.top }),
                                         ...(handle.bottom !== undefined && { bottom: handle.bottom }),
                                         ...(handle.left !== undefined && { left: handle.left }),
                                         ...(handle.right !== undefined && { right: handle.right }),
                                       }}
-                                      onMouseDown={(e) => {
+                                      onPointerDown={(e) => {
                                         e.stopPropagation();
+                                        e.preventDefault();
+                                        const el = e.currentTarget;
+                                        el.setPointerCapture(e.pointerId);
+                                        interactionPauseRef.current?.pause();
+
                                         const startX = e.clientX;
                                         const startY = e.clientY;
                                         const startWidth = preview.width;
@@ -573,7 +596,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                         const startLeft = preview.x;
                                         const startTop = preview.y;
 
-                                        const handleMouseMove = (moveEvent: MouseEvent) => {
+                                        const handlePointerMove = (moveEvent: PointerEvent) => {
                                           isDraggingRef.current = true;
                                           const deltaX = (moveEvent.clientX - startX) / width;
                                           const deltaY = (moveEvent.clientY - startY) / height;
@@ -609,14 +632,16 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                           ));
                                         };
 
-                                        const handleMouseUp = () => {
-                                          document.removeEventListener('mousemove', handleMouseMove);
-                                          document.removeEventListener('mouseup', handleMouseUp);
+                                        const handlePointerUp = (upEvent: PointerEvent) => {
+                                          el.removeEventListener('pointermove', handlePointerMove);
+                                          el.removeEventListener('pointerup', handlePointerUp);
+                                          el.releasePointerCapture(upEvent.pointerId);
+                                          window.getSelection()?.removeAllRanges();
                                           setTimeout(() => { isDraggingRef.current = false; }, 10);
                                         };
 
-                                        document.addEventListener('mousemove', handleMouseMove);
-                                        document.addEventListener('mouseup', handleMouseUp);
+                                        el.addEventListener('pointermove', handlePointerMove);
+                                        el.addEventListener('pointerup', handlePointerUp);
                                       }}
                                     />
                                   ))}

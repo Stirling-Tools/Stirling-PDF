@@ -1,9 +1,10 @@
-import { Modal, Stack, Button, Text, Group, Box } from '@mantine/core';
+import { Modal, Stack, Button, Text, Group, Box, ActionIcon, UnstyledButton } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useSavedSignatures, SavedSignature } from '@app/hooks/tools/sign/useSavedSignatures';
 import DrawIcon from '@mui/icons-material/Draw';
 import TextFieldsIcon from '@mui/icons-material/TextFields';
 import ImageIcon from '@mui/icons-material/Image';
+import CloseIcon from '@mui/icons-material/Close';
 
 interface SelectSignatureModalProps {
   opened: boolean;
@@ -19,7 +20,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
   onCreateNew,
 }) => {
   const { t } = useTranslation();
-  const { savedSignatures } = useSavedSignatures();
+  const { savedSignatures, removeSignature } = useSavedSignatures();
 
   const sortedSavedSignatures = [...savedSignatures].sort(
     (a, b) => (b.updatedAt ?? b.createdAt) - (a.updatedAt ?? a.createdAt)
@@ -104,31 +105,29 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
             </Text>
             <Stack gap="xs">
               {sortedSavedSignatures.map((sig) => (
-                <Button
+                <Group
                   key={sig.id}
-                  variant="outline"
-                  onClick={() => {
-                    onSignatureSelected(sig);
-                    onClose();
-                  }}
-                  style={{
-                    height: 'auto',
-                    padding: '12px',
-                    justifyContent: 'flex-start',
-                  }}
+                  gap={0}
+                  wrap="nowrap"
+                  style={{ border: '1px solid var(--mantine-color-gray-3)', borderRadius: 8, overflow: 'hidden' }}
                 >
-                  <Group gap="md" wrap="nowrap">
+                  <UnstyledButton
+                    onClick={() => { onSignatureSelected(sig); onClose(); }}
+                    style={{ flex: 1, padding: '12px' }}
+                  >
                     {renderSignaturePreview(sig)}
-                    <div style={{ textAlign: 'left' }}>
-                      <Text size="sm" fw={600}>
-                        {sig.label || t('certSign.collab.signRequest.saved.defaultLabel', 'Signature')}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        {sig.type}
-                      </Text>
-                    </div>
-                  </Group>
-                </Button>
+                  </UnstyledButton>
+                  <ActionIcon
+                    color="red"
+                    variant="subtle"
+                    size="sm"
+                    onClick={() => removeSignature(sig.id)}
+                    aria-label={t('certSign.collab.signRequest.saved.delete', 'Delete signature')}
+                    style={{ margin: '0 6px' }}
+                  >
+                    <CloseIcon sx={{ fontSize: '1rem' }} />
+                  </ActionIcon>
+                </Group>
               ))}
             </Stack>
           </>

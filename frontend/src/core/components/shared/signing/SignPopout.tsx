@@ -302,7 +302,6 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       const pdfFile = new File([pdfResponse.data], detailResponse.data.documentName, {
         type: 'application/pdf',
       });
-
       const canSign =
         detailResponse.data.myStatus === 'PENDING' ||
         detailResponse.data.myStatus === 'NOTIFIED' ||
@@ -379,7 +378,6 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
           pdfFile = new File([pdfResponse.data], session.documentName, { type: 'application/pdf' });
         } catch (error: any) {
           // Fallback if PDF not available
-          console.warn('PDF not available, session can still be managed:', error);
           pdfFile = null;
         }
       }

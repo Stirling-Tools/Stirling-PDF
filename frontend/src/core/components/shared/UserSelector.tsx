@@ -45,9 +45,13 @@ const UserSelector = ({ value, onChange, placeholder, size = 'sm', disabled = fa
             if (!usersByTeam[teamName]) {
               usersByTeam[teamName] = [];
             }
+            const displayName = user.displayName || user.username || 'Unknown';
+            const username = user.username || 'unknown';
+            const label =
+              displayName !== username ? `${displayName} (@${username})` : displayName;
             usersByTeam[teamName].push({
               value: String(user.userId),
-              label: `${user.displayName || user.username || 'Unknown'} (@${user.username || 'unknown'})`,
+              label,
             });
           });
 

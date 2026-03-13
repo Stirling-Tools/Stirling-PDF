@@ -6,12 +6,13 @@ import SecurityIcon from '@mui/icons-material/Security';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
-import { CertificateType } from '@app/components/tools/certSign/CertificateSelector';
+import { CertificateType, UploadFormat } from '@app/components/tools/certSign/CertificateSelector';
 import type { SignRequestDetail } from '@app/types/signingSession';
 
 interface ReviewSignatureStepProps {
   signatureCount: number;
   certType: CertificateType;
+  uploadFormat: UploadFormat;
   p12File: File | null;
   signRequest: SignRequestDetail;
   onBack: () => void;
@@ -23,6 +24,7 @@ interface ReviewSignatureStepProps {
 export const ReviewSignatureStep: React.FC<ReviewSignatureStepProps> = ({
   signatureCount,
   certType,
+  uploadFormat,
   p12File,
   signRequest,
   onBack,
@@ -39,7 +41,7 @@ export const ReviewSignatureStep: React.FC<ReviewSignatureStepProps> = ({
       case 'SERVER':
         return t('certSign.collab.signRequest.useServerCert', 'Organization Certificate');
       case 'UPLOAD':
-        return p12File?.name || t('certSign.collab.signRequest.uploadCert', 'Custom Certificate');
+        return `${uploadFormat} — ${p12File?.name || t('certSign.collab.signRequest.uploadCert', 'Custom Certificate')}`;
       default:
         return '';
     }

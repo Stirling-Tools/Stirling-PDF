@@ -1,8 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Button, Group, Menu, SegmentedControl, Stack, Text } from '@mantine/core';
+import { ActionIcon, Box, Button, Group, Menu, Modal, SegmentedControl, Stack, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import DrawIcon from '@mui/icons-material/Draw';
+import ImageIcon from '@mui/icons-material/Image';
 import OpenWithIcon from '@mui/icons-material/OpenWith';
+import TextFieldsIcon from '@mui/icons-material/TextFields';
+import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import CheckIcon from '@mui/icons-material/Check';
 
@@ -42,6 +45,7 @@ export default function SignControlsStrip({
   const {
     savedSignatures,
     addSignature,
+    removeSignature,
     isAtCapacity,
     byTypeCounts,
   } = useSavedSignatures();
@@ -51,7 +55,7 @@ export default function SignControlsStrip({
   const [canvasColor, setCanvasColor] = useState('#000000');
   const [canvasPenSize, setCanvasPenSize] = useState(2);
   const [canvasPenSizeInput, setCanvasPenSizeInput] = useState('2');
-  const [canvasSignatureData, setCanvasSignatureData] = useState<string | undefined>();
+  const latestCanvasDataRef = useRef<string | undefined>();
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [textSignerName, setTextSignerName] = useState(DEFAULT_PARAMETERS.signerName ?? '');
@@ -130,6 +134,33 @@ export default function SignControlsStrip({
     return [...savedSignatures].sort((a, b) => (b.updatedAt ?? b.createdAt) - (a.updatedAt ?? a.createdAt));
   }, [savedSignatures]);
 
+  const hasAutoSelected = useRef(false);
+  useEffect(() => {
+    if (hasAutoSelected.current) return;
+    if (!sortedSavedSignatures.length) return;
+    if (signatureConfig?.signatureData) return;
+
+    hasAutoSelected.current = true;
+    const lastSig = sortedSavedSignatures[0];
+    if (lastSig.type === 'text') {
+      onSignatureSelected({
+        ...DEFAULT_PARAMETERS,
+        signatureType: 'text',
+        signerName: lastSig.signerName,
+        fontFamily: lastSig.fontFamily,
+        fontSize: lastSig.fontSize,
+        textColor: lastSig.textColor,
+        signatureData: lastSig.dataUrl,
+      });
+    } else {
+      onSignatureSelected({
+        ...DEFAULT_PARAMETERS,
+        signatureType: lastSig.type,
+        signatureData: lastSig.dataUrl,
+      });
+    }
+  }, [sortedSavedSignatures, signatureConfig?.signatureData, onSignatureSelected]);
+
   const beginPlacement = useCallback(
     (config: SignParameters) => {
       const nextConfig: SignParameters = {
@@ -170,12 +201,16 @@ export default function SignControlsStrip({
   }, [onPlacementModeChange]);
 
   const handleCreateSignature = useCallback((type: 'canvas' | 'text' | 'image') => {
+    if (type === 'image') {
+      fileInputRef.current?.click();
+      return;
+    }
     setCreateSignatureType(type);
     if (type === 'canvas') {
       setCanvasColor('#000000');
       setCanvasPenSize(2);
       setCanvasPenSizeInput('2');
-      setCanvasSignatureData(undefined);
+      latestCanvasDataRef.current = undefined;
     } else if (type === 'text') {
       setTextSignerName('');
     }
@@ -288,20 +323,20 @@ export default function SignControlsStrip({
   }, [pausePlacement, onDeleteSelected, signatureConfig, visible]);
 
   const handleCanvasSignatureChange = useCallback(
-    async (dataUrl: string | null) => {
-      if (!dataUrl) return;
-      setCanvasSignatureData(dataUrl);
+    (dataUrl: string | null) => {
+      latestCanvasDataRef.current = dataUrl ?? undefined;
     },
     []
   );
 
-  const handleSaveCanvas = useCallback(async () => {
-    if (!canvasSignatureData) return;
-    await saveCanvasToLibrary(canvasSignatureData);
-    beginPlacement({ signatureType: 'canvas', signatureData: canvasSignatureData });
+  const handleDrawingComplete = useCallback(async () => {
+    const dataUrl = latestCanvasDataRef.current;
+    if (!dataUrl) return;
+    await saveCanvasToLibrary(dataUrl);
+    beginPlacement({ signatureType: 'canvas', signatureData: dataUrl });
     setCreateSignatureType(null);
-    setCanvasSignatureData(undefined);
-  }, [canvasSignatureData, saveCanvasToLibrary, beginPlacement]);
+    latestCanvasDataRef.current = undefined;
+  }, [saveCanvasToLibrary, beginPlacement]);
 
   const handleSaveText = useCallback(async () => {
     const saved = await saveTextToLibrary();
@@ -441,16 +476,17 @@ export default function SignControlsStrip({
                 {sortedSavedSignatures.length ? (
                   sortedSavedSignatures.map((sig) => (
                     <Menu.Item key={sig.id} onClick={() => applySavedSignature(sig)}>
-                      <Group gap="sm" wrap="nowrap">
+                      <Group gap="sm" wrap="nowrap" justify="space-between">
                         {renderSavedSignaturePreview(sig)}
-                        <div style={{ minWidth: 0 }}>
-                          <Text size="sm" fw={600} style={{ lineHeight: 1.1 }}>
-                            {sig.label || t('certSign.collab.signRequest.saved.defaultLabel', 'Signature')}
-                          </Text>
-                          <Text size="xs" c="dimmed" style={{ lineHeight: 1.1 }}>
-                            {sig.type}
-                          </Text>
-                        </div>
+                        <ActionIcon
+                          size="xs"
+                          color="red"
+                          variant="subtle"
+                          onClick={(e) => { e.stopPropagation(); removeSignature(sig.id); }}
+                          aria-label={t('certSign.collab.signRequest.saved.delete', 'Delete signature')}
+                        >
+                          <CloseIcon sx={{ fontSize: '0.9rem' }} />
+                        </ActionIcon>
                       </Group>
                     </Menu.Item>
                   ))
@@ -466,11 +502,13 @@ export default function SignControlsStrip({
                 </Menu.Item>
                 <Menu.Item onClick={() => handleCreateSignature('text')} disabled={isAtCapacity}>
                   <Group gap="xs">
+                    <TextFieldsIcon sx={{ fontSize: '1rem' }} />
                     <span>{t('certSign.collab.signRequest.modeTabs.text', 'Type')}</span>
                   </Group>
                 </Menu.Item>
                 <Menu.Item onClick={() => handleCreateSignature('image')} disabled={isAtCapacity}>
                   <Group gap="xs">
+                    <ImageIcon sx={{ fontSize: '1rem' }} />
                     <span>{t('certSign.collab.signRequest.modeTabs.image', 'Upload')}</span>
                   </Group>
                 </Menu.Item>
@@ -507,108 +545,71 @@ export default function SignControlsStrip({
         </div>
       </div>
 
-      {/* Inline signature creation - Draw Canvas */}
+      {/* Draw Signature — auto-opens its inner canvas modal directly */}
       {createSignatureType === 'canvas' && (
-        <Box p="md" style={{ borderTop: '1px solid var(--mantine-color-gray-3)', backgroundColor: 'var(--mantine-color-gray-0)' }}>
-          <Stack gap="md">
-            <Group justify="space-between">
-              <Text size="sm" fw={600}>
-                {t('certSign.collab.signRequest.modeTabs.draw', 'Draw Signature')}
-              </Text>
-              <Button size="xs" variant="subtle" onClick={handleCancelCreate}>
-                {t('cancel', 'Cancel')}
-              </Button>
-            </Group>
-            <DrawingCanvas
-              selectedColor={canvasColor}
-              penSize={canvasPenSize}
-              penSizeInput={canvasPenSizeInput}
-              onColorSwatchClick={() => setCanvasColorPickerOpen(true)}
-              onPenSizeChange={(size) => {
-                setCanvasPenSize(size);
-                setCanvasPenSizeInput(String(size));
-              }}
-              onPenSizeInputChange={(input) => {
-                setCanvasPenSizeInput(input);
-                const next = Number(input);
-                if (Number.isFinite(next) && next > 0 && next <= 50) {
-                  setCanvasPenSize(next);
-                }
-              }}
-              onSignatureDataChange={handleCanvasSignatureChange}
-              width={600}
-              height={200}
-            />
-            <Group justify="flex-end">
-              <Button onClick={handleSaveCanvas} disabled={!canvasSignatureData}>
-                {t('certSign.collab.signRequest.canvas.continue', 'Continue')}
-              </Button>
-            </Group>
-          </Stack>
-        </Box>
+        <DrawingCanvas
+          autoOpen
+          selectedColor={canvasColor}
+          penSize={canvasPenSize}
+          penSizeInput={canvasPenSizeInput}
+          onColorSwatchClick={() => setCanvasColorPickerOpen(true)}
+          onPenSizeChange={(size) => {
+            setCanvasPenSize(size);
+            setCanvasPenSizeInput(String(size));
+          }}
+          onPenSizeInputChange={(input) => {
+            setCanvasPenSizeInput(input);
+            const next = Number(input);
+            if (Number.isFinite(next) && next > 0 && next <= 50) {
+              setCanvasPenSize(next);
+            }
+          }}
+          onSignatureDataChange={handleCanvasSignatureChange}
+          onDrawingComplete={handleDrawingComplete}
+          onModalClose={handleCancelCreate}
+          width={600}
+          height={200}
+        />
       )}
 
-      {/* Inline signature creation - Text Input */}
-      {createSignatureType === 'text' && (
-        <Box p="md" style={{ borderTop: '1px solid var(--mantine-color-gray-3)', backgroundColor: 'var(--mantine-color-gray-0)' }}>
-          <Stack gap="md">
-            <Group justify="space-between">
-              <Text size="sm" fw={600}>
-                {t('certSign.collab.signRequest.modeTabs.text', 'Type Signature')}
-              </Text>
-              <Button size="xs" variant="subtle" onClick={handleCancelCreate}>
-                {t('cancel', 'Cancel')}
-              </Button>
-            </Group>
-            <Text size="sm" c="dimmed">
-              {t('certSign.collab.signRequest.text.modalHint', 'Enter your name, then click Continue to place it on the PDF.')}
-            </Text>
-            <TextInputWithFont
-              text={textSignerName}
-              onTextChange={setTextSignerName}
-              fontFamily={textFontFamily}
-              onFontFamilyChange={setTextFontFamily}
-              fontSize={textFontSize}
-              onFontSizeChange={setTextFontSize}
-              textColor={textColor}
-              onTextColorChange={setTextColor}
-              label={t('certSign.collab.signRequest.text.label', 'Signature Text')}
-              placeholder={t('certSign.collab.signRequest.text.placeholder', 'Enter your name...')}
-              fontLabel={t('certSign.collab.signRequest.text.fontLabel', 'Font')}
-              fontSizeLabel={t('certSign.collab.signRequest.text.fontSizeLabel', 'Size')}
-              fontSizePlaceholder={t('certSign.collab.signRequest.text.fontSizePlaceholder', '16')}
-              colorLabel={t('certSign.collab.signRequest.text.colorLabel', 'Color')}
-            />
-            <Group justify="flex-end">
-              <Button onClick={handleSaveText} disabled={!textSignerName.trim()}>
-                {t('certSign.collab.signRequest.canvas.continue', 'Continue')}
-              </Button>
-            </Group>
-          </Stack>
-        </Box>
-      )}
-
-      {/* Inline signature creation - Image Upload */}
-      {createSignatureType === 'image' && (
-        <Box p="md" style={{ borderTop: '1px solid var(--mantine-color-gray-3)', backgroundColor: 'var(--mantine-color-gray-0)' }}>
-          <Stack gap="md">
-            <Group justify="space-between">
-              <Text size="sm" fw={600}>
-                {t('certSign.collab.signRequest.modeTabs.image', 'Upload Image')}
-              </Text>
-              <Button size="xs" variant="subtle" onClick={handleCancelCreate}>
-                {t('cancel', 'Cancel')}
-              </Button>
-            </Group>
-            <Text size="sm" c="dimmed">
-              {t('certSign.collab.signRequest.image.hint', 'Upload a PNG or JPG image of your signature')}
-            </Text>
-            <Button onClick={() => fileInputRef.current?.click()}>
-              {t('certSign.collab.signRequest.modeTabs.image', 'Upload Image')}
+      {/* Type Signature Modal */}
+      <Modal
+        opened={createSignatureType === 'text'}
+        onClose={handleCancelCreate}
+        title={t('certSign.collab.signRequest.modeTabs.text', 'Type Signature')}
+        size="md"
+        withinPortal
+      >
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            {t('certSign.collab.signRequest.text.modalHint', 'Enter your name, then click Continue to place it on the PDF.')}
+          </Text>
+          <TextInputWithFont
+            text={textSignerName}
+            onTextChange={setTextSignerName}
+            fontFamily={textFontFamily}
+            onFontFamilyChange={setTextFontFamily}
+            fontSize={textFontSize}
+            onFontSizeChange={setTextFontSize}
+            textColor={textColor}
+            onTextColorChange={setTextColor}
+            label={t('certSign.collab.signRequest.text.label', 'Signature Text')}
+            placeholder={t('certSign.collab.signRequest.text.placeholder', 'Enter your name...')}
+            fontLabel={t('certSign.collab.signRequest.text.fontLabel', 'Font')}
+            fontSizeLabel={t('certSign.collab.signRequest.text.fontSizeLabel', 'Size')}
+            fontSizePlaceholder={t('certSign.collab.signRequest.text.fontSizePlaceholder', '16')}
+            colorLabel={t('certSign.collab.signRequest.text.colorLabel', 'Color')}
+          />
+          <Group justify="flex-end">
+            <Button variant="subtle" onClick={handleCancelCreate}>
+              {t('cancel', 'Cancel')}
             </Button>
-          </Stack>
-        </Box>
-      )}
+            <Button onClick={handleSaveText} disabled={!textSignerName.trim()}>
+              {t('certSign.collab.signRequest.canvas.continue', 'Continue')}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
 
       {canvasColorPickerOpen && (
         <ColorPicker

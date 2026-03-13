@@ -49,9 +49,11 @@ export const ParticipantListPanel: React.FC<ParticipantListPanelProps> = ({
                   <Text size="xs" truncate>
                     {participant.name}
                   </Text>
-                  <Text size="xs" c="dimmed" truncate>
-                    @{participant.email}
-                  </Text>
+                  {participant.email && participant.email !== participant.name && (
+                    <Text size="xs" c="dimmed" truncate>
+                      @{participant.email}
+                    </Text>
+                  )}
                   <Badge size="xs" color={getColor(participant.status)} variant="light">
                     {t(`certSign.collab.status.${participant.status.toLowerCase()}`, participant.status)}
                   </Badge>

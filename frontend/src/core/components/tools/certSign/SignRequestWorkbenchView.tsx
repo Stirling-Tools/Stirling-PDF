@@ -9,10 +9,10 @@ import { LocalIcon } from '@app/components/shared/LocalIcon';
 import { Z_INDEX_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 import { SignRequestDetail } from '@app/types/signingSession';
 import { LocalEmbedPDFWithAnnotations, AnnotationAPI } from '@app/components/viewer/LocalEmbedPDFWithAnnotations';
-import { CertificateType } from '@app/components/tools/certSign/CertificateSelector';
 import { alert } from '@app/components/toast';
 import SignControlsStrip from '@app/components/tools/certSign/SignControlsStrip';
 import { CertificateConfigModal } from '@app/components/tools/certSign/modals/CertificateConfigModal';
+import type { CertificateSubmitData } from '@app/components/tools/certSign/modals/CertificateConfigModal';
 import { SignParameters } from '@app/hooks/tools/sign/useSignParameters';
 import { useFileActions } from '@app/contexts/file/fileHooks';
 
@@ -94,27 +94,62 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
     setCertificateModalOpen(true);
   };
 
-  const handleSign = async (certType: CertificateType, p12File: File | null, password: string, reason?: string, location?: string) => {
+  const handleSign = async (certData: CertificateSubmitData, reason?: string, location?: string) => {
     const previews = annotationApiRef.current?.getSignaturePreviews() || [];
     console.log('handleSign called, previews:', previews.length, 'signatures');
 
     setSigning(true);
     try {
       const formData = new FormData();
-      formData.append('certType', certType);
 
-      if (certType === 'UPLOAD') {
-        if (!p12File) {
-          alert({
-            alertType: 'error',
-            title: t('common.error'),
-            body: t('certSign.collab.signRequest.noCertificate', 'Please select a certificate file'),
-          });
-          setSigning(false);
-          return;
+      if (certData.certType === 'UPLOAD') {
+        const { uploadFormat, p12File, privateKeyFile, certFile, jksFile, password } = certData;
+        formData.append('certType', uploadFormat);
+        switch (uploadFormat) {
+          case 'PKCS12':
+          case 'PFX':
+            if (!p12File) {
+              alert({
+                alertType: 'error',
+                title: t('common.error'),
+                body: t('certSign.collab.signRequest.noCertificate', 'Please select a certificate file'),
+              });
+              setSigning(false);
+              return;
+            }
+            formData.append('p12File', p12File);
+            break;
+          case 'PEM':
+            if (!privateKeyFile || !certFile) {
+              alert({
+                alertType: 'error',
+                title: t('common.error'),
+                body: t('certSign.collab.signRequest.noCertificate', 'Please select a certificate file'),
+              });
+              setSigning(false);
+              return;
+            }
+            formData.append('privateKeyFile', privateKeyFile);
+            formData.append('certFile', certFile);
+            break;
+          case 'JKS':
+            if (!jksFile) {
+              alert({
+                alertType: 'error',
+                title: t('common.error'),
+                body: t('certSign.collab.signRequest.noCertificate', 'Please select a certificate file'),
+              });
+              setSigning(false);
+              return;
+            }
+            formData.append('jksFile', jksFile);
+            break;
         }
-        formData.append('p12File', p12File);
-        formData.append('password', password);
+        if (password) {
+          formData.append('password', password);
+        }
+      } else {
+        formData.append('certType', certData.certType);
       }
 
       // Add signature appearance settings from sign request

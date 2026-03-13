@@ -1,12 +1,22 @@
 import { Modal, Stack, Group, Button, Text, Collapse, TextInput } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
-import { CertificateSelector, CertificateType } from '@app/components/tools/certSign/CertificateSelector';
+import { CertificateSelector, CertificateType, UploadFormat } from '@app/components/tools/certSign/CertificateSelector';
+
+export interface CertificateSubmitData {
+  certType: CertificateType;
+  uploadFormat: UploadFormat;
+  p12File: File | null;
+  privateKeyFile: File | null;
+  certFile: File | null;
+  jksFile: File | null;
+  password: string;
+}
 
 interface CertificateConfigModalProps {
   opened: boolean;
   onClose: () => void;
-  onSign: (certType: CertificateType, p12File: File | null, password: string, reason?: string, location?: string) => Promise<void>;
+  onSign: (certData: CertificateSubmitData, reason?: string, location?: string) => Promise<void>;
   signatureCount: number;
   disabled?: boolean;
   defaultReason?: string;
@@ -25,7 +35,11 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
   const { t } = useTranslation();
 
   const [certType, setCertType] = useState<CertificateType>('USER_CERT');
+  const [uploadFormat, setUploadFormat] = useState<UploadFormat>('PKCS12');
   const [p12File, setP12File] = useState<File | null>(null);
+  const [privateKeyFile, setPrivateKeyFile] = useState<File | null>(null);
+  const [certFile, setCertFile] = useState<File | null>(null);
+  const [jksFile, setJksFile] = useState<File | null>(null);
   const [password, setPassword] = useState('');
   const [signing, setSigning] = useState(false);
 
@@ -34,22 +48,36 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
   const [reason, setReason] = useState(defaultReason);
   const [location, setLocation] = useState(defaultLocation);
 
-  // Validation: if UPLOAD type, need file and password
+  const isUploadValid = () => {
+    if (certType !== 'UPLOAD') return true;
+    switch (uploadFormat) {
+      case 'PKCS12':
+      case 'PFX':
+        return p12File !== null;
+      case 'PEM':
+        return privateKeyFile !== null && certFile !== null;
+      case 'JKS':
+        return jksFile !== null;
+    }
+  };
+
   const isValid =
     certType === 'USER_CERT' ||
     certType === 'SERVER' ||
-    (certType === 'UPLOAD' && p12File && password);
+    isUploadValid();
 
   const handleSign = async () => {
     if (!isValid) return;
 
     setSigning(true);
     try {
-      await onSign(certType, p12File, password, reason, location);
-      // Don't close modal here - parent will handle navigation after successful signing
+      await onSign(
+        { certType, uploadFormat, p12File, privateKeyFile, certFile, jksFile, password },
+        reason,
+        location
+      );
     } catch (error) {
       console.error('Failed to sign document:', error);
-      // Parent component should handle error display
     } finally {
       setSigning(false);
     }
@@ -75,8 +103,16 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
         <CertificateSelector
           certType={certType}
           onCertTypeChange={setCertType}
+          uploadFormat={uploadFormat}
+          onUploadFormatChange={setUploadFormat}
           p12File={p12File}
           onP12FileChange={setP12File}
+          privateKeyFile={privateKeyFile}
+          onPrivateKeyFileChange={setPrivateKeyFile}
+          certFile={certFile}
+          onCertFileChange={setCertFile}
+          jksFile={jksFile}
+          onJksFileChange={setJksFile}
           password={password}
           onPasswordChange={setPassword}
           disabled={disabled || signing}
@@ -115,11 +151,7 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
         </div>
 
         <Group justify="space-between" wrap="wrap" mt="md">
-          <Button
-            variant="default"
-            onClick={onClose}
-            disabled={signing}
-          >
+          <Button variant="default" onClick={onClose} disabled={signing}>
             {t('cancel', 'Cancel')}
           </Button>
           <Button
