@@ -481,7 +481,7 @@ function AnnotationSelectionMenuInner({
       case 'textMarkup':
         return (
           <>
-            <CommentAndLinkButtons />
+            <AddToSidebarButton />
             <ColorControl
               value={getCurrentColor()}
               onChange={(color) => handleColorChange(color, 'main')}
@@ -525,7 +525,7 @@ function AnnotationSelectionMenuInner({
       case 'note':
         return (
           <>
-            <CommentAndLinkButtons />
+            <AddToSidebarButton />
             <ColorControl
               value={getTextColor()}
               onChange={(color) => handleColorChange(color, 'text')}
