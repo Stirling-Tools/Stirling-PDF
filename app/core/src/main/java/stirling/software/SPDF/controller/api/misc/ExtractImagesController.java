@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.misc;
 
-import java.awt.*;
+import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
@@ -59,94 +60,95 @@ public class ExtractImagesController {
     public ResponseEntity<StreamingResponseBody> extractImages(
             @ModelAttribute PDFExtractImagesRequest request) throws IOException {
         MultipartFile file = request.getFileInput();
-        String format = request.getFormat();
+        String imageFormat = request.getFormat();
 
-        String filename = GeneralUtils.removeExtension(file.getOriginalFilename());
-        Set<String> processedImages = new HashSet<>();
+        String baseFilename = GeneralUtils.removeExtension(file.getOriginalFilename());
+        Set<Integer> processedImageHashes = new HashSet<>();
 
-        TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
-        try (ZipOutputStream zos =
-                        new ZipOutputStream(Files.newOutputStream(zipTempFile.getPath()));
-                PDDocument document = pdfDocumentFactory.load(file)) {
+        TempFile zipFile = new TempFile(tempFileManager, ".zip");
+        try (ZipOutputStream zipStream = new ZipOutputStream(Files.newOutputStream(zipFile.getPath()));
+                PDDocument pdfDoc = pdfDocumentFactory.load(file)) {
 
-            // Set compression level
-            zos.setLevel(Deflater.BEST_COMPRESSION);
+            zipStream.setLevel(Deflater.BEST_COMPRESSION);
 
-            // Single-threaded extraction
-            for (int pgNum = 0; pgNum < document.getPages().getCount(); pgNum++) {
-                PDPage page = document.getPage(pgNum);
-                extractImagesFromPage(page, format, filename, pgNum + 1, processedImages, zos);
+            int totalPages = pdfDoc.getNumberOfPages();
+            for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+                PDPage currentPage = pdfDoc.getPage(pageIndex);
+                extractAndAddImagesToZip(
+                        currentPage, imageFormat, baseFilename, pageIndex + 1,
+                        processedImageHashes, zipStream);
             }
-            // document and zos closed by try-with-resources
         } catch (Exception e) {
-            zipTempFile.close();
+            zipFile.close();
             throw e;
         }
 
         return WebResponseUtils.zipFileToWebResponse(
-                zipTempFile, filename + "_extracted-images.zip");
+                zipFile, baseFilename + "_extracted-images.zip");
     }
 
-    private void extractImagesFromPage(
+    private void extractAndAddImagesToZip(
             PDPage page,
-            String format,
-            String filename,
-            int pageNum,
-            Set<String> processedImages,
-            ZipOutputStream zos)
+            String imageFormat,
+            String baseFilename,
+            int pageNumber,
+            Set<Integer> seenImageHashes,
+            ZipOutputStream zipOutput)
             throws IOException {
         if (page.getResources() == null || page.getResources().getXObjectNames() == null) {
             return;
         }
-        int count = 1;
-        for (COSName name : page.getResources().getXObjectNames()) {
+
+        int imageCount = 1;
+        for (COSName resourceName : page.getResources().getXObjectNames()) {
+            if (!page.getResources().isImageXObject(resourceName)) {
+                continue;
+            }
+
             try {
-                if (page.getResources().isImageXObject(name)) {
-                    PDImageXObject image = (PDImageXObject) page.getResources().getXObject(name);
-                    String imageHash = String.valueOf(image.hashCode());
-                    if (processedImages.contains(imageHash)) {
-                        continue; // Skip already processed images
-                    }
-                    processedImages.add(imageHash);
+                PDImageXObject imageObject =
+                        (PDImageXObject) page.getResources().getXObject(resourceName);
+                int imageHashCode = imageObject.hashCode();
 
-                    RenderedImage renderedImage = image.getImage();
-                    BufferedImage bufferedImage = null;
-                    if ("png".equalsIgnoreCase(format)) {
-                        bufferedImage =
-                                new BufferedImage(
-                                        renderedImage.getWidth(),
-                                        renderedImage.getHeight(),
-                                        BufferedImage.TYPE_INT_ARGB);
-                    } else if ("jpeg".equalsIgnoreCase(format) || "jpg".equalsIgnoreCase(format)) {
-                        bufferedImage =
-                                new BufferedImage(
-                                        renderedImage.getWidth(),
-                                        renderedImage.getHeight(),
-                                        BufferedImage.TYPE_INT_RGB);
-                    } else {
-                        bufferedImage =
-                                new BufferedImage(
-                                        renderedImage.getWidth(),
-                                        renderedImage.getHeight(),
-                                        BufferedImage.TYPE_INT_RGB);
-                    }
-                    Graphics2D g = bufferedImage.createGraphics();
-                    g.drawImage((Image) renderedImage, 0, 0, null);
-                    g.dispose();
-
-                    String imageName = filename + "_page_" + pageNum + "_" + count++ + "." + format;
-                    ByteArrayOutputStream imageBaos = new ByteArrayOutputStream();
-                    ImageIO.write(bufferedImage, format, imageBaos);
-                    byte[] imageData = imageBaos.toByteArray();
-
-                    zos.putNextEntry(new ZipEntry(imageName));
-                    zos.write(imageData);
-                    zos.closeEntry();
+                if (seenImageHashes.contains(imageHashCode)) {
+                    continue;
                 }
+                seenImageHashes.add(imageHashCode);
+
+                RenderedImage sourceImage = imageObject.getImage();
+                BufferedImage convertedImage = convertImageToFormat(sourceImage, imageFormat);
+
+                String imagePath =
+                        baseFilename + "_page_" + pageNumber + "_" + imageCount++ + "."
+                                + imageFormat;
+                ByteArrayOutputStream imageBuffer = new ByteArrayOutputStream();
+                ImageIO.write(convertedImage, imageFormat, imageBuffer);
+
+                zipOutput.putNextEntry(new ZipEntry(imagePath));
+                zipOutput.write(imageBuffer.toByteArray());
+                zipOutput.closeEntry();
+
             } catch (IOException e) {
-                ExceptionUtils.logException("image extraction", e);
+                ExceptionUtils.logException("image extraction failed", e);
                 throw ExceptionUtils.handlePdfException(e, "during image extraction");
             }
         }
+    }
+
+    private BufferedImage convertImageToFormat(RenderedImage source, String format) {
+        int width = source.getWidth();
+        int height = source.getHeight();
+
+        int imageType = BufferedImage.TYPE_INT_RGB;
+        if ("png".equalsIgnoreCase(format)) {
+            imageType = BufferedImage.TYPE_INT_ARGB;
+        }
+
+        BufferedImage result = new BufferedImage(width, height, imageType);
+        Graphics2D graphics = result.createGraphics();
+        graphics.drawImage((Image) source, 0, 0, null);
+        graphics.dispose();
+
+        return result;
     }
 }
