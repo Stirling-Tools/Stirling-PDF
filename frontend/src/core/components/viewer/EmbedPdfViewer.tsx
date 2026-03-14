@@ -202,8 +202,9 @@ const EmbedPdfViewerContent = ({
   const isSignatureMode = isInAnnotationTool;
   const isManualRedactMode = selectedTool === 'redact';
 
-  // Enable annotations only when annotation tool is selected
-  const shouldEnableAnnotations = selectedTool === 'annotate' || isSignatureMode;
+  // Enable annotations when annotation tool is selected OR when annotations are visible
+  // (so users can interact with existing comment annotations in reader/viewer mode)
+  const shouldEnableAnnotations = selectedTool === 'annotate' || isSignatureMode || isAnnotationsVisible;
 
   // Enable redaction only when redaction tool is selected
   const shouldEnableRedaction = selectedTool === 'redact';
@@ -921,11 +922,12 @@ const EmbedPdfViewerContent = ({
   }, [isFormFillToolActive, currentFile, currentFileId, fetchFormFields]);
 
   const sidebarWidthRem = 15;
+  const commentsSidebarWidthRem = 18;
   const totalRightMargin =
     (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
     (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
     (isAttachmentSidebarVisible ? sidebarWidthRem : 0) +
-    (isCommentsSidebarVisible ? sidebarWidthRem : 0);
+    (isCommentsSidebarVisible ? commentsSidebarWidthRem : 0);
 
   return (
     <Box
@@ -1057,6 +1059,7 @@ const EmbedPdfViewerContent = ({
       <AttachmentSidebar
         visible={isAttachmentSidebarVisible}
         thumbnailVisible={isThumbnailSidebarVisible}
+        bookmarkVisible={isBookmarkSidebarVisible}
         documentCacheKey={bookmarkCacheKey}
         preloadCacheKeys={allBookmarkCacheKeys}
       />
