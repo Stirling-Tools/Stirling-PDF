@@ -328,7 +328,7 @@ jobs:
 
       # Expose ACTIONS_RUNTIME_TOKEN / ACTIONS_RESULTS_URL for docker buildx type=gha cache backend.
       - name: Expose GitHub runtime for Buildx cache
-        uses: crazy-max/ghaction-github-runtime@3cb05d89e1f492524af3d41a1c98c83bc3025124 # v3.1.0
+        uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # v4.0.0
 
       - name: Install Docker Compose
         run: |
@@ -336,7 +336,7 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
 
       - name: Set up Python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.12"
           cache: "pip" # caching pip dependencies
