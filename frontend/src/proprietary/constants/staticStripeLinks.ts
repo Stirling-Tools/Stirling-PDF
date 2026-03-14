@@ -4,7 +4,6 @@
  * These links are used when Supabase is not configured, allowing users to
  * purchase licenses directly through Stripe hosted checkout pages.
  *
- * NOTE: These are test environment URLs. Replace with production URLs before release.
  */
 
 export interface StaticStripeLinks {
@@ -28,10 +27,10 @@ export const STATIC_STRIPE_LINKS: StaticStripeLinks = {
     monthly: '',
     yearly: '',
   },
-  billingPortal: 'https://billing.stripe.com/p/login/test_aFa5kv1Mz2s10Fr3Cp83C00',
+  billingPortal: 'https://billing.stripe.com/p/login/5kA6pT6Xa7z59HO4gg',
 };
 
-// LINKS FOR TEST SERVER: 
+// LINKS FOR TEST SERVER:
 // export const STATIC_STRIPE_LINKS: StaticStripeLinks = {
 //   server: {
 //     monthly: 'https://buy.stripe.com/test_8x27sD4YL9Ut0Fr3Cp83C02',

@@ -1,7 +1,5 @@
 package stirling.software.SPDF.model.json;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.AllArgsConstructor;
@@ -32,10 +30,10 @@ public class PdfJsonTextElement {
     private Float y;
     private Float width;
     private Float height;
-    private List<Float> textMatrix;
+    private float[] textMatrix;
     private PdfJsonTextColor fillColor;
     private PdfJsonTextColor strokeColor;
     private Integer renderingMode;
     private Boolean fallbackUsed;
-    private List<Integer> charCodes;
+    private int[] charCodes;
 }

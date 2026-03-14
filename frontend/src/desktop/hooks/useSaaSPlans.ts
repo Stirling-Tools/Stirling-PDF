@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { saasBillingService } from '@app/services/saasBillingService';
+import { useSaaSBilling, usePlanPricing } from '@app/contexts/SaasBillingContext';
 import { FREE_PLAN_FEATURES, TEAM_PLAN_FEATURES, ENTERPRISE_PLAN_FEATURES } from '@app/config/planFeatures';
 import type { TierLevel } from '@app/types/billing';
 
@@ -22,34 +22,13 @@ export interface PlanTier {
   overagePrice?: number;
 }
 
-export const useSaaSPlans = (currency: string = 'usd') => {
+export const useSaaSPlans = () => {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [dynamicPrices, setDynamicPrices] = useState<Map<string, { price: number; currency: string; overagePrice?: number }>>(new Map());
+  const { refreshPlans } = useSaaSBilling();
+  const { plans, plansLoading, plansError } = usePlanPricing();
 
-  const fetchPlans = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const priceMap = await saasBillingService.getAvailablePlans(currency);
-      setDynamicPrices(priceMap);
-    } catch (err) {
-      console.error('Error fetching plans:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch plans');
-      // Continue with default prices if fetch fails
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPlans();
-  }, [currency]);
-
-  const plans = useMemo<PlanTier[]>(() => {
-    const teamPlan = dynamicPrices.get('team');
+  const computedPlans = useMemo<PlanTier[]>(() => {
+    const teamPlan = plans.get('team');
 
     return [
       {
@@ -104,12 +83,12 @@ export const useSaaSPlans = (currency: string = 'usd') => {
         ]
       }
     ];
-  }, [t, dynamicPrices]);
+  }, [t, plans]);
 
   return {
-    plans,
-    loading,
-    error,
-    refetch: fetchPlans,
+    plans: computedPlans,
+    loading: plansLoading,
+    error: plansError,
+    refetch: refreshPlans,
   };
 };

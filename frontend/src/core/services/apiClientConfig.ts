@@ -15,5 +15,5 @@ export function getApiBaseUrl(): string {
     return (window as any).STIRLING_PDF_API_BASE_URL;
   }
 
-  return import.meta.env.VITE_API_BASE_URL || '/';
+  return import.meta.env.VITE_API_BASE_URL;
 }

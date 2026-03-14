@@ -81,7 +81,7 @@ dependencies {
     // veraPDF still uses javax.xml.bind, not the new jakarta namespace
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
     implementation 'com.sun.xml.bind:jaxb-impl:2.3.9'
-    implementation 'com.sun.xml.bind:jaxb-core:2.3.0.1'
+    implementation 'com.sun.xml.bind:jaxb-core:4.0.6'
     implementation 'org.apache.poi:poi-ooxml:5.5.1'
 
     // https://mvnrepository.com/artifact/technology.tabula/tabula
@@ -99,6 +99,8 @@ dependencies {
     // Batik only bridge module needed (transitively pulls anim, gvt, util, css, dom, svg-dom)
     // Replaces batik-all which included unused codec, svggen, transcoder, script modules
     implementation 'org.apache.xmlgraphics:batik-bridge:1.19'
+    // Required by TwelveMonkeys imageio-batik SPI (SVGImageReaderSpi) during ImageIO init
+    runtimeOnly 'org.apache.xmlgraphics:batik-transcoder:1.19'
 
     // PDFBox Graphics2D bridge for Batik SVG to PDF conversion
     implementation 'de.rototor.pdfbox:graphics2d:3.0.5'

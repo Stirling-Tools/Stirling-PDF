@@ -66,20 +66,20 @@ export const usePageEditorCommands = ({
 
   const handleRotatePages = useCallback(
     (pageIds: string[], rotation: number) => {
-      const bulkRotateCommand = new BulkRotateCommand(pageIds, rotation);
+      const bulkRotateCommand = new BulkRotateCommand(pageIds, rotation, getEditedDocument, setEditedDocument);
       executeCommandWithTracking(bulkRotateCommand);
     },
-    [executeCommandWithTracking]
+    [executeCommandWithTracking, getEditedDocument, setEditedDocument]
   );
 
   const createRotateCommand = useCallback(
     (pageIds: string[], rotation: number) => ({
       execute: () => {
-        const bulkRotateCommand = new BulkRotateCommand(pageIds, rotation);
+        const bulkRotateCommand = new BulkRotateCommand(pageIds, rotation, getEditedDocument, setEditedDocument);
         executeCommandWithTracking(bulkRotateCommand);
       },
     }),
-    [executeCommandWithTracking]
+    [executeCommandWithTracking, getEditedDocument, setEditedDocument]
   );
 
   const createDeleteCommand = useCallback(
