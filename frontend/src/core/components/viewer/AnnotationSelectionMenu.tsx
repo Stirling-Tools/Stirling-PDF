@@ -5,6 +5,7 @@ import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import CommentIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
+import AddCommentIcon from '@mui/icons-material/AddCommentOutlined';
 import OpenInNewIcon from '@mui/icons-material/OpenInNewRounded';
 import { useAnnotation } from '@embedpdf/plugin-annotation/react';
 import type { TrackedAnnotation } from '@embedpdf/plugin-annotation';
@@ -70,6 +71,37 @@ function AnnotationSelectionMenuInner({
   const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
 
+  // Auto-open the comments sidebar when a comment annotation is selected so the
+  // user doesn't have to manually click the comment button in the selection menu.
+  useEffect(() => {
+    const annObj = annotation?.object as AnnotationObject | undefined;
+    const annId = annObj?.id;
+    if (!selected || !annId || pageIndex === undefined) return;
+    const toolId = annObj?.customData?.toolId;
+    const annType = annObj?.type;
+    // textComment = PdfAnnotationSubtype.TEXT (1), insertText/replaceText = PdfAnnotationSubtype.CARET (14)
+    const isComment =
+      (annType === PdfAnnotationSubtype.TEXT && toolId === 'textComment') ||
+      (annType === PdfAnnotationSubtype.CARET && (toolId === 'insertText' || toolId === 'replaceText'));
+    if (!isComment) return;
+    requestCommentFocus(documentId, pageIndex, annId, (annObj?.contents ?? '').trim().length > 0);
+  }, [selected, annotation?.object]);
+
+  // Click outside both the selection menu and the annotation to deselect
+  useEffect(() => {
+    if (!selected) return;
+    const handlePointerDown = (e: PointerEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-annotation-selection-menu]')) return;
+      if (target.closest('[data-no-interaction]')) return;
+      // Mantine popovers (color picker, link popover, etc.) render in portals outside the menu DOM
+      if (target.closest('.mantine-Popover-dropdown')) return;
+      (provides as unknown as { deselectAnnotation?: () => void }).deselectAnnotation?.();
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [selected, provides]);
+
   // Merge refs - menuWrapperProps.ref is a callback ref
   const setRef = useCallback((node: HTMLDivElement | null) => {
     wrapperRef.current = node;
@@ -87,11 +119,18 @@ function AnnotationSelectionMenuInner({
     if (type === 15) {
       return toolId === 'inkHighlighter' ? 'inkHighlighter' : 'ink';
     }
+    // textComment creates PdfAnnotationSubtype.TEXT (1) annotations
+    if (type === 1) {
+      if (toolId === 'textComment') return 'comment';
+    }
+    // insertText/replaceText create PdfAnnotationSubtype.CARET (14) annotations
+    if (type === 14) {
+      if (toolId === 'insertText' || toolId === 'replaceText') return 'comment';
+    }
     if (type === 3) {
       if (toolId === 'note') return 'note';
-      if (toolId === 'textComment' || toolId === 'insertText' || toolId === 'replaceText') return 'comment';
-      // Legacy or unknown type-3 annotations (e.g. no toolId) treat as comment so they get Add comment + link
-      return 'comment';
+      // Legacy or unknown FREETEXT annotations (e.g. no toolId)
+      return 'note';
     }
     if (type !== undefined && [5, 6, 7].includes(type)) return 'shape';
     if (type !== undefined && [4, 8].includes(type)) return 'line';
@@ -310,6 +349,17 @@ function AnnotationSelectionMenuInner({
   // Shared: has comment content for Add comment vs View comment label
   const hasCommentContent = (obj?.contents ?? '').trim().length > 0;
 
+  const isInSidebar = (obj?.customData as Record<string, unknown> | undefined)?.isComment === true;
+
+  const handleAddToSidebar = useCallback(() => {
+    if (!provides?.updateAnnotation || !annotationId || pageIndex === undefined) return;
+    const existingCustomData = (obj?.customData ?? {}) as Record<string, unknown>;
+    provides.updateAnnotation(pageIndex, annotationId, {
+      customData: { ...existingCustomData, isComment: true },
+    } as AnnotationPatch);
+    requestCommentFocus(documentId, pageIndex, annotationId, false);
+  }, [provides, annotationId, pageIndex, obj, documentId, requestCommentFocus]);
+
   // Render button groups based on annotation type
   const renderButtons = () => {
     const commonButtonStyles = {
@@ -325,6 +375,23 @@ function AnnotationSelectionMenuInner({
         },
       },
     };
+
+    const AddToSidebarButton = () => (
+      <Tooltip label={isInSidebar ? t('viewer.comments.viewComment', 'View comment') : t('viewer.comments.addComment', 'Add comment')}>
+        <ActionIcon
+          variant={isInSidebar ? 'filled' : 'subtle'}
+          color={isInSidebar ? 'blue' : 'gray'}
+          size="md"
+          onClick={isInSidebar
+            ? () => requestCommentFocus(documentId, pageIndex ?? 0, annotationId ?? '', (obj?.contents ?? '').trim().length > 0)
+            : handleAddToSidebar
+          }
+          styles={isInSidebar ? undefined : commonButtonStyles}
+        >
+          <AddCommentIcon style={{ fontSize: 18 }} />
+        </ActionIcon>
+      </Tooltip>
+    );
 
     const CommentAndLinkButtons = () => (
       <>
@@ -428,6 +495,7 @@ function AnnotationSelectionMenuInner({
       case 'ink':
         return (
           <>
+            <AddToSidebarButton />
             <ColorControl
               value={getCurrentColor()}
               onChange={(color) => handleColorChange(color, 'main')}
@@ -441,6 +509,7 @@ function AnnotationSelectionMenuInner({
       case 'inkHighlighter':
         return (
           <>
+            <AddToSidebarButton />
             <ColorControl
               value={getCurrentColor()}
               onChange={(color) => handleColorChange(color, 'main')}
@@ -494,8 +563,11 @@ function AnnotationSelectionMenuInner({
             </Tooltip>
             <EditTextButton />
             <ColorControl
-              value={getTextColor()}
-              onChange={(color) => handleColorChange(color, 'text')}
+              value={obj?.strokeColor || obj?.color || '#ffa000'}
+              onChange={(color) => {
+                if (!provides?.updateAnnotation || !annotationId || pageIndex === undefined) return;
+                provides.updateAnnotation(pageIndex, annotationId, { strokeColor: color, color });
+              }}
               label={t('annotation.annotationStyle', 'Annotation style')}
             />
             {firstLinkTarget ? (
@@ -537,6 +609,7 @@ function AnnotationSelectionMenuInner({
       case 'shape':
         return (
           <>
+            <AddToSidebarButton />
             <ColorControl
               value={getStrokeColor()}
               onChange={(color) => handleColorChange(color, 'stroke')}
@@ -559,6 +632,7 @@ function AnnotationSelectionMenuInner({
       case 'line':
         return (
           <>
+            <AddToSidebarButton />
             <ColorControl
               value={getCurrentColor()}
               onChange={(color) => handleColorChange(color, 'main')}
@@ -570,11 +644,17 @@ function AnnotationSelectionMenuInner({
         );
 
       case 'stamp':
-        return <DeleteButton />;
+        return (
+          <>
+            <AddToSidebarButton />
+            <DeleteButton />
+          </>
+        );
 
       default:
         return (
           <>
+            <AddToSidebarButton />
             <CommentAndLinkButtons />
             <ColorControl
               value={getCurrentColor()}

@@ -668,6 +668,14 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
                   rect: event.annotation.rect
                 }]);
 
+                // Auto-select the annotation after creation so the selection menu appears immediately,
+                // letting users discover the editing options before they click away.
+                const annotationId = event.annotation.id;
+                if (annotationId) {
+                  (annotationApi as unknown as { selectAnnotation?: (pageIndex: number, id: string) => void })
+                    .selectAnnotation?.(event.pageIndex, annotationId);
+                }
+
                 if (onSignatureAdded) {
                   onSignatureAdded(event.annotation);
                 }

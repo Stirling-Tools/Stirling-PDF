@@ -1,11 +1,8 @@
 import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
-import { Box, ScrollArea, Text, Textarea, Stack, ActionIcon, Group, Tooltip, TextInput, Menu } from '@mantine/core';
+import { Box, ScrollArea, Text, Textarea, Stack, ActionIcon, Group, Tooltip, TextInput, Menu, Modal, Button } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import CommentIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
-import InsertTextIcon from '@mui/icons-material/AddCommentOutlined';
-import ReplaceTextIcon from '@mui/icons-material/FindReplace';
 import DeleteIcon from '@mui/icons-material/Delete';
-import SendIcon from '@mui/icons-material/SendRounded';
+import CheckIcon from '@mui/icons-material/CheckRounded';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import EditIcon from '@mui/icons-material/Edit';
 import { useAnnotation } from '@embedpdf/plugin-annotation/react';
@@ -13,6 +10,7 @@ import { getSidebarAnnotationsWithRepliesGroupedByPage } from '@embedpdf/plugin-
 import { PdfAnnotationSubtype, PdfAnnotationReplyType } from '@embedpdf/models';
 import { useCommentAuthor } from '@app/contexts/CommentAuthorContext';
 import { useViewer } from '@app/contexts/ViewerContext';
+import LocalIcon from '@app/components/shared/LocalIcon';
 
 const SIDEBAR_WIDTH = '18rem';
 
@@ -48,28 +46,96 @@ function getAuthorName(obj: any, currentDisplayName: string): string {
   return stored;
 }
 
-function getAnnotationToolType(ann: any): 'textComment' | 'insertText' | 'replaceText' {
-  // Check explicit customData first (manually created annotations)
+// Map toolId → LocalIcon icon name (matches AnnotationPanel icon definitions)
+const TOOL_ICON_MAP: Record<string, string> = {
+  highlight: 'highlight',
+  underline: 'format-underlined',
+  strikeout: 'strikethrough-s',
+  squiggly: 'show-chart',
+  ink: 'edit',
+  inkHighlighter: 'brush',
+  square: 'crop-square',
+  circle: 'radio-button-unchecked',
+  line: 'show-chart',
+  lineArrow: 'show-chart',
+  polyline: 'show-chart',
+  polygon: 'change-history',
+  text: 'text-fields',
+  note: 'sticky-note-2',
+  stamp: 'add-photo-alternate',
+  textComment: 'comment',
+  insertText: 'add-comment',
+  replaceText: 'find-replace',
+};
+
+// Type-based fallback icon when no toolId is present
+function getIconByType(type: number | undefined): string {
+  if (type === 1) return 'comment';
+  if (type === 3) return 'sticky-note-2';
+  if (type === 4 || type === 8) return 'show-chart';
+  if (type === 5) return 'crop-square';
+  if (type === 6) return 'radio-button-unchecked';
+  if (type === 7 || type === 8) return 'change-history';
+  if (type === 9) return 'highlight';
+  if (type === 10) return 'format-underlined';
+  if (type === 11) return 'show-chart';
+  if (type === 12) return 'strikethrough-s';
+  if (type === 13) return 'add-photo-alternate';
+  if (type === 14) return 'add-comment';
+  if (type === 15) return 'edit';
+  return 'comment';
+}
+
+function isCommentAnnotation(ann: any): boolean {
   const toolId = ann?.customData?.toolId ?? ann?.customData?.annotationToolId;
-  if (toolId === 'insertText') return 'insertText';
-  if (toolId === 'replaceText') return 'replaceText';
-  if (toolId === 'textComment') return 'textComment';
-  // Fall back to structural type detection (EmbedPDF internal creation)
-  // CARET type = 14, TEXT type = 1
-  if (ann?.type === 14 || ann?.type === 'CARET') {
-    const intent = ann?.intent;
-    if (intent === 'Replace') return 'replaceText';
-    return 'insertText';
-  }
-  return 'textComment';
+  if (toolId === 'textComment' || toolId === 'insertText' || toolId === 'replaceText') return true;
+  // Any annotation explicitly added to comments via the "Add comment" button
+  if (ann?.customData?.isComment === true) return true;
+  // CARET (type 14) = insertText/replaceText; TEXT (type 1) = textComment
+  if (!toolId && (ann?.type === 14 || ann?.type === 1)) return true;
+  return false;
+}
+
+function getAnnotationToolId(ann: any): string {
+  return ann?.customData?.toolId ?? ann?.customData?.annotationToolId ?? '';
+}
+
+function getAnnotationTypeLabel(ann: any, t: (key: string, fallback: string) => string): string {
+  const toolId = getAnnotationToolId(ann);
+  const labels: Record<string, string> = {
+    highlight: t('annotation.highlight', 'Highlight'),
+    underline: t('annotation.underline', 'Underline'),
+    strikeout: t('annotation.strikeout', 'Strikeout'),
+    squiggly: t('annotation.squiggly', 'Squiggly'),
+    ink: t('annotation.pen', 'Pen'),
+    inkHighlighter: t('annotation.freehandHighlighter', 'Freehand Highlighter'),
+    square: t('annotation.square', 'Square'),
+    circle: t('annotation.circle', 'Circle'),
+    line: t('annotation.line', 'Line'),
+    lineArrow: t('annotation.lineArrow', 'Arrow'),
+    polyline: t('annotation.polyline', 'Polyline'),
+    polygon: t('annotation.polygon', 'Polygon'),
+    text: t('annotation.text', 'Text box'),
+    note: t('annotation.note', 'Note'),
+    stamp: t('annotation.stamp', 'Stamp'),
+    textComment: t('viewer.comments.typeComment', 'Comment'),
+    insertText: t('viewer.comments.typeInsertText', 'Insert Text'),
+    replaceText: t('viewer.comments.typeReplaceText', 'Replace Text'),
+  };
+  return labels[toolId] ?? t('viewer.comments.typeComment', 'Comment');
 }
 
 function AnnotationTypeIcon({ ann }: { ann: any }) {
-  const type = getAnnotationToolType(ann);
-  const sx = { fontSize: '1.25rem', flexShrink: 0, color: 'var(--mantine-color-blue-5)' };
-  if (type === 'insertText') return <InsertTextIcon sx={sx} />;
-  if (type === 'replaceText') return <ReplaceTextIcon sx={sx} />;
-  return <CommentIcon sx={sx} />;
+  const toolId = getAnnotationToolId(ann);
+  const iconName = TOOL_ICON_MAP[toolId] ?? getIconByType(ann?.type);
+  return (
+    <LocalIcon
+      icon={iconName}
+      width="1.25rem"
+      height="1.25rem"
+      style={{ flexShrink: 0, color: 'var(--mantine-color-blue-5)' }}
+    />
+  );
 }
 
 export function CommentsSidebar({ documentId, visible, rightOffset }: CommentsSidebarProps) {
@@ -118,10 +184,35 @@ export function CommentsSidebar({ documentId, visible, rightOffset }: CommentsSi
 
   const byPage = useMemo(() => {
     try {
-      return getSidebarAnnotationsWithRepliesGroupedByPage(state) ?? {};
+      const all = getSidebarAnnotationsWithRepliesGroupedByPage(state) ?? {};
+      const filtered: typeof all = {};
+      for (const [page, entries] of Object.entries(all)) {
+        const commentEntries = (entries as typeof entries).filter(
+          (e) => isCommentAnnotation((e as any).annotation?.object)
+        );
+        if (commentEntries.length > 0) {
+          filtered[Number(page)] = commentEntries;
+        }
+      }
+      return filtered;
     } catch {
       return {};
     }
+  }, [state]);
+
+  // Derive the set of selected annotation IDs from EmbedPDF's selection state.
+  // state is AnnotationDocumentState — selectedUids are keys in byUid, and may equal id.
+  const selectedAnnotationIds = useMemo(() => {
+    const selectedUids: string[] = state?.selectedUids ?? [];
+    const byUid: Record<string, any> = (state as any)?.byUid ?? {};
+    const ids = new Set<string>();
+    for (const uid of selectedUids) {
+      // uid itself may be the annotation id
+      ids.add(uid);
+      const annId = byUid[uid]?.object?.id;
+      if (annId) ids.add(annId);
+    }
+    return ids;
   }, [state]);
 
   const pageNumbers = useMemo(() => Object.keys(byPage).map(Number).sort((a, b) => a - b), [byPage]);
@@ -136,12 +227,46 @@ export function CommentsSidebar({ documentId, visible, rightOffset }: CommentsSi
     [provides]
   );
 
+  const [deleteModal, setDeleteModal] = useState<{ pageIndex: number; id: string; ann: any } | null>(null);
+
+  const isLinkedAnnotation = (ann: any) => {
+    const toolId = ann?.customData?.toolId ?? ann?.customData?.annotationToolId;
+    return ann?.customData?.isComment === true &&
+      toolId !== 'textComment' && toolId !== 'insertText' && toolId !== 'replaceText';
+  };
+
+  const handleDeleteClick = useCallback(
+    (pageIndex: number, annotationId: string, ann: any) => {
+      if (isLinkedAnnotation(ann)) {
+        setDeleteModal({ pageIndex, id: annotationId, ann });
+      } else {
+        provides?.deleteAnnotation?.(pageIndex, annotationId);
+      }
+    },
+    [provides]
+  );
+
   const handleDelete = useCallback(
     (pageIndex: number, annotationId: string) => {
       provides?.deleteAnnotation?.(pageIndex, annotationId);
     },
     [provides]
   );
+
+  const handleRemoveFromSidebar = useCallback(() => {
+    if (!deleteModal || !provides?.updateAnnotation) return;
+    const { pageIndex, id, ann } = deleteModal;
+    const existing = (ann?.customData ?? {}) as Record<string, unknown>;
+    const { isComment: _removed, ...rest } = existing;
+    provides.updateAnnotation(pageIndex, id, { customData: rest } as any);
+    setDeleteModal(null);
+  }, [deleteModal, provides]);
+
+  const handleDeleteAnnotation = useCallback(() => {
+    if (!deleteModal) return;
+    provides?.deleteAnnotation?.(deleteModal.pageIndex, deleteModal.id);
+    setDeleteModal(null);
+  }, [deleteModal, provides]);
 
   const handleSendMainComment = useCallback(
     (pageIndex: number, annotationId: string, value: string) => {
@@ -185,7 +310,7 @@ export function CommentsSidebar({ documentId, visible, rightOffset }: CommentsSi
         top: 0,
         bottom: 0,
         width: SIDEBAR_WIDTH,
-        backgroundColor: 'var(--bg-surface)',
+        backgroundColor: 'var(--right-rail-bg)',
         borderLeft: '1px solid var(--border-subtle)',
         zIndex: 998,
         display: 'flex',
@@ -202,7 +327,7 @@ export function CommentsSidebar({ documentId, visible, rightOffset }: CommentsSi
           gap: '0.5rem',
         }}
       >
-        <CommentIcon sx={{ fontSize: '1.25rem', color: 'var(--mantine-color-dimmed)' }} />
+        <LocalIcon icon="comment" width="1.25rem" height="1.25rem" style={{ color: 'var(--mantine-color-dimmed)', flexShrink: 0 }} />
         <Text fw={600} size="sm" tt="uppercase" lts={0.5}>
           {t('viewer.comments.title', 'Comments')}
         </Text>
@@ -249,13 +374,7 @@ export function CommentsSidebar({ documentId, visible, rightOffset }: CommentsSi
                       const isEditingMain = editingMainKey === key;
 
                       const mainTimestamp = formatCommentDate(ann);
-                      const annToolType = getAnnotationToolType(ann);
-                      const typeLabel =
-                        annToolType === 'insertText'
-                          ? t('viewer.comments.typeInsertText', 'Insert Text')
-                          : annToolType === 'replaceText'
-                          ? t('viewer.comments.typeReplaceText', 'Replace Text')
-                          : t('viewer.comments.typeComment', 'Comment');
+                      const typeLabel = getAnnotationTypeLabel(ann, t);
 
                       return (
                         <Box
@@ -263,7 +382,9 @@ export function CommentsSidebar({ documentId, visible, rightOffset }: CommentsSi
                           data-comment-card={key}
                           p="sm"
                           style={{
-                            border: '1px solid var(--mantine-color-blue-3)',
+                            border: selectedAnnotationIds.has(id)
+                              ? '1px solid var(--mantine-color-blue-3)'
+                              : '1px solid var(--border-subtle)',
                             borderRadius: 8,
                             backgroundColor: 'var(--bg-raised)',
                           }}
@@ -298,7 +419,7 @@ export function CommentsSidebar({ documentId, visible, rightOffset }: CommentsSi
                                 <Menu.Item
                                   leftSection={<DeleteIcon style={{ fontSize: 18 }} />}
                                   color="red"
-                                  onClick={() => handleDelete(pageIndex, id)}
+                                  onClick={() => handleDeleteClick(pageIndex, id, ann)}
                                 >
                                   {t('annotation.delete', 'Delete')}
                                 </Menu.Item>
@@ -324,7 +445,7 @@ export function CommentsSidebar({ documentId, visible, rightOffset }: CommentsSi
                                 mb="xs"
                               />
                               <Group gap={4} wrap="nowrap" justify="flex-end">
-                                <Tooltip label={t('viewer.comments.send', 'Send')}>
+                                <Tooltip label={t('viewer.comments.addComment', 'Add comment')}>
                                   <ActionIcon
                                     variant="filled"
                                     size="sm"
@@ -335,7 +456,7 @@ export function CommentsSidebar({ documentId, visible, rightOffset }: CommentsSi
                                     }}
                                     disabled={!(draft ?? '').trim()}
                                   >
-                                    <SendIcon style={{ fontSize: 18 }} />
+                                    <CheckIcon style={{ fontSize: 18, color: 'white' }} />
                                   </ActionIcon>
                                 </Tooltip>
                               </Group>
@@ -390,7 +511,7 @@ export function CommentsSidebar({ documentId, visible, rightOffset }: CommentsSi
                                     },
                                   }}
                                 />
-                                <Tooltip label={t('viewer.comments.send', 'Send')}>
+                                <Tooltip label={t('viewer.comments.addComment', 'Add comment')}>
                                   <ActionIcon
                                     variant="filled"
                                     size="md"
@@ -399,7 +520,7 @@ export function CommentsSidebar({ documentId, visible, rightOffset }: CommentsSi
                                     onClick={() => handleSendReply(pageIndex, id, ann?.rect)}
                                     disabled={!replyDraft.trim()}
                                   >
-                                    <SendIcon style={{ fontSize: 20 }} />
+                                    <CheckIcon style={{ fontSize: 20, color: 'white' }} />
                                   </ActionIcon>
                                 </Tooltip>
                               </Group>
@@ -415,6 +536,29 @@ export function CommentsSidebar({ documentId, visible, rightOffset }: CommentsSi
           )}
         </Stack>
       </ScrollArea>
+
+      <Modal
+        opened={!!deleteModal}
+        onClose={() => setDeleteModal(null)}
+        title={t('viewer.comments.deleteTitle', 'Remove annotation from comments?')}
+        centered
+        size="sm"
+      >
+        <Text size="sm" c="dimmed" mb="lg">
+          {t(
+            'viewer.comments.deleteDescription',
+            'This annotation has a comment attached. You can remove just the comment from the sidebar while keeping the annotation, or delete everything.'
+          )}
+        </Text>
+        <Group justify="flex-end" gap="sm">
+          <Button variant="default" onClick={handleRemoveFromSidebar}>
+            {t('viewer.comments.removeCommentOnly', 'Remove comment only')}
+          </Button>
+          <Button color="red" onClick={handleDeleteAnnotation}>
+            {t('viewer.comments.deleteAnnotationAndComment', 'Delete annotation & comment')}
+          </Button>
+        </Group>
+      </Modal>
     </Box>
   );
 }

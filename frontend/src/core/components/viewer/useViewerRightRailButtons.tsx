@@ -228,7 +228,6 @@ export function useViewerRightRailButtons(
         section: 'top' as const,
         order: 56.5,
         active: isCommentsSidebarVisible,
-        disabled: !isAnnotationsActive,
         onClick: () => {
           toggleCommentsSidebar();
         }
