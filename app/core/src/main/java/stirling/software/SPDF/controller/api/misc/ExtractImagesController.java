@@ -6,8 +6,6 @@ import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.zip.Deflater;
@@ -38,7 +36,6 @@ import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.ImageProcessingUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -60,8 +57,7 @@ public class ExtractImagesController {
                             + " file. Users can specify the output image format. Input:PDF"
                             + " Output:IMAGE/ZIP Type:SIMO")
     public ResponseEntity<StreamingResponseBody> extractImages(
-            @ModelAttribute PDFExtractImagesRequest request)
-            throws IOException {
+            @ModelAttribute PDFExtractImagesRequest request) throws IOException {
         MultipartFile file = request.getFileInput();
         String format = request.getFormat();
 
@@ -79,13 +75,7 @@ public class ExtractImagesController {
             // Single-threaded extraction
             for (int pgNum = 0; pgNum < document.getPages().getCount(); pgNum++) {
                 PDPage page = document.getPage(pgNum);
-                extractImagesFromPage(
-                        page,
-                        format,
-                        filename,
-                        pgNum + 1,
-                        processedImages,
-                        zos);
+                extractImagesFromPage(page, format, filename, pgNum + 1, processedImages, zos);
             }
             // document and zos closed by try-with-resources
         } catch (Exception e) {
