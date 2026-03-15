@@ -15,6 +15,55 @@ if [ -d /scripts ] && [[ ":${PATH}:" != *":/scripts:"* ]]; then
   export PATH="/scripts:${PATH}"
 fi
 
+# === Shared environment setup ===
+# Lives here so images that call init-without-ocr.sh directly (e.g. ultra-lite)
+# get the same environment as images that go through init.sh first.
+
+_append_env_path() {
+  local target="$1" current="$2"
+  if [ -d "$target" ] && [[ ":${current}:" != *":${target}:"* ]]; then
+    [ -n "$current" ] && printf '%s' "${target}:${current}" || printf '%s' "${target}"
+  else
+    printf '%s' "$current"
+  fi
+}
+
+_python_site_dir() {
+  local venv_dir="$1" python_bin="$1/bin/python" py_tag
+  if [ -x "$python_bin" ]; then
+    if py_tag="$("$python_bin" -c 'import sys; print(f"python{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null)" \
+       && [ -n "$py_tag" ] && [ -d "$venv_dir/lib/$py_tag/site-packages" ]; then
+      printf '%s' "$venv_dir/lib/$py_tag/site-packages"
+    fi
+  fi
+}
+
+# LD_LIBRARY_PATH: arch-specific system libs + LibreOffice
+case "$(uname -m)" in
+  x86_64)  [ -d /usr/lib/x86_64-linux-gnu ] && export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ;;
+  aarch64) [ -d /usr/lib/aarch64-linux-gnu ] && export LD_LIBRARY_PATH="/usr/lib/aarch64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ;;
+esac
+[ -d /usr/lib/libreoffice/program ] && export LD_LIBRARY_PATH="/usr/lib/libreoffice/program${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
+# Python venv PATH + PYTHONPATH
+for _venv_bin in /opt/venv/bin /opt/unoserver-venv/bin; do
+  PATH="$(_append_env_path "$_venv_bin" "$PATH")"
+done
+export PATH
+unset _venv_bin
+
+_py_entries=()
+for _venv in /opt/venv /opt/unoserver-venv; do
+  [ -d "$_venv" ] || continue
+  _site="$(_python_site_dir "$_venv")"
+  [ -n "${_site:-}" ] && _py_entries+=("$_site")
+done
+if [ ${#_py_entries[@]} -gt 0 ]; then
+  PYTHONPATH="$(IFS=:; printf '%s' "${_py_entries[*]}")${PYTHONPATH:+:$PYTHONPATH}"
+  export PYTHONPATH
+fi
+unset _venv _site _py_entries
+
 if [ -x /scripts/stirling-diagnostics.sh ]; then
   mkdir -p /usr/local/bin
   ln -sf /scripts/stirling-diagnostics.sh /usr/local/bin/diagnostics
