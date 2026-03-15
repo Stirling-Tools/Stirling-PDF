@@ -362,11 +362,13 @@ AOT_ENABLED="${STIRLING_AOT_ENABLE:-false}"
 # Detects the container memory limit (in MB) from cgroups v2/v1 or /proc/meminfo.
 detect_container_memory_mb() {
   local mem_bytes=""
+  local no_cgroup_limit=false
   # cgroups v2
   if [ -f /sys/fs/cgroup/memory.max ]; then
     mem_bytes=$(cat /sys/fs/cgroup/memory.max 2>/dev/null)
     if [ "$mem_bytes" = "max" ]; then
       mem_bytes=""
+      no_cgroup_limit=true
     fi
   fi
   # cgroups v1 fallback
@@ -376,11 +378,33 @@ detect_container_memory_mb() {
     # Use string-length heuristic (>=19 digits) to avoid shell integer overflow on Alpine/busybox
     if [ "${#mem_bytes}" -ge 19 ]; then
       mem_bytes=""
+      no_cgroup_limit=true
     fi
   fi
-  # Fallback to system total memory
+  # Fallback when no cgroup memory limit is found.
+  # If running inside a container (/.dockerenv or /run/.containerenv present) with no
+  # limit set, the host's /proc/meminfo would return the full host RAM.  Using that
+  # value causes InitialRAMPercentage to pre-commit gigabytes of heap against the host's
+  # RAM, making idle RSS absurdly large.  Cap the effective size at 2 GB so the JVM
+  # stays proportionate.  Users who need more should set -m / mem_limit in their
+  # docker-compose to get accurate sizing.
   if [ -z "$mem_bytes" ]; then
-    mem_bytes=$(awk '/MemTotal/ {print $2 * 1024}' /proc/meminfo 2>/dev/null)
+    local host_mem_bytes
+    host_mem_bytes=$(awk '/MemTotal/ {print $2 * 1024}' /proc/meminfo 2>/dev/null)
+    if [ "$no_cgroup_limit" = true ] && \
+       { [ -f /.dockerenv ] || [ -f /run/.containerenv ]; }; then
+      local cap_bytes=$(( 2048 * 1048576 ))
+      if [ "${host_mem_bytes:-0}" -gt "$cap_bytes" ] 2>/dev/null; then
+        log "WARNING: No container memory limit set. Host has $(( host_mem_bytes / 1048576 ))MB RAM."
+        log "Capping JVM sizing at 2048MB to avoid over-committing host memory."
+        log "Set mem_limit / -m in docker-compose or docker run to control heap sizing."
+        mem_bytes=$cap_bytes
+      else
+        mem_bytes=$host_mem_bytes
+      fi
+    else
+      mem_bytes=$host_mem_bytes
+    fi
   fi
   if [ -n "$mem_bytes" ] && [ "$mem_bytes" -gt 0 ] 2>/dev/null; then
     echo $(( mem_bytes / 1048576 ))
@@ -690,7 +714,7 @@ if [ -z "${JAVA_BASE_OPTS:-}" ]; then
     log "Using JVM options: Shenandoah generational GC (ConcGCThreads=${CONC_GC_THREADS})"
   else
     log "JAVA_BASE_OPTS and _JVM_OPTS unset; applying fallback defaults."
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedYoungGCInterval=10000 -XX:ShenandoahGuaranteedOldGCInterval=30000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -XX:ReservedCodeCacheSize=96m -Djdk.virtualThreadScheduler.maxPoolSize=4 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
   fi
 
   # Strip any hardcoded memory/CDS/AOT flags from the options (managed dynamically)
@@ -1005,7 +1029,7 @@ if [ "$AOT_GENERATE_BACKGROUND" = true ]; then
         fi
       done
       log "AOT: All attempts failed. App runs normally without cache."
-      log "AOT: To disable, set STIRLING_AOT_ENABLE=false (or omit it, default is off)"
+      log "AOT: To disable, set STIRLING_AOT_ENABLE=false"
     ) &
     AOT_GEN_PID=$!
     log "AOT: Background generation scheduled (PID $AOT_GEN_PID, arch=$(uname -m))"
