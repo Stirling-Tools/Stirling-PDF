@@ -4490,6 +4490,7 @@ pagesPerSheet = "Pages per sheet:"
 submit = "Submit"
 tags = "merge,composite,single-view,organize"
 title = "Multi Page Layout"
+direction = "Layout direction:"
 
 [pageLayout.desc]
 16 = "Place 16 pages on a single sheet (4 × 4 grid)."
@@ -4497,6 +4498,10 @@ title = "Multi Page Layout"
 3 = "Place 3 pages on a single sheet in a single row."
 4 = "Place 4 pages on a single sheet (2 × 2 grid)."
 9 = "Place 9 pages on a single sheet (3 × 3 grid)."
+
+[pageLayout.directions]
+horizontal = "Horizontal"
+vertical = "Vertical"
 
 [pageLayout.error]
 failed = "An error occurred while creating the multi-page layout."
