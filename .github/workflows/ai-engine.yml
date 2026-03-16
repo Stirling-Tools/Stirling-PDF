@@ -1,0 +1,83 @@
+name: AI Engine CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    defaults:
+      run:
+        working-directory: engine
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: make install
+
+      - name: Run fixers
+        # Ignore errors here because we're going to add comments for them in the following steps before actually failing
+        run: make fix || true
+
+      - name: Check for fixer changes
+        id: fixer_changes
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Post fixer suggestions
+        if: steps.fixer_changes.outputs.changed == 'true' && github.event_name == 'pull_request'
+        uses: reviewdog/action-suggester@v1
+        continue-on-error: true
+        with:
+          tool_name: engine-make-fix
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          filter_mode: file
+          fail_level: any
+          level: info
+
+      - name: Comment on fixer suggestions
+        if: steps.fixer_changes.outputs.changed == 'true' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: "The Python code in your PR has formatting/linting issues. Consider running `make fix` locally or setting up your editor's Ruff integration to auto-format and lint your files as you go, or commit the suggested changes on this PR.",
+            });
+
+      - name: Verify fixer changes are committed
+        if: steps.fixer_changes.outputs.changed == 'true'
+        run: |
+          if ! git diff --exit-code; then
+            echo "Fixes are out of date."
+            echo "Apply the reviewdog suggestions or run 'make fix' from engine/ and commit the updated files."
+            git --no-pager diff --stat
+            exit 1
+          fi
+
+      - name: Run linting
+        run: make lint
+
+      - name: Run type checking
+        run: make typecheck
+
+      - name: Run tests
+        run: make test

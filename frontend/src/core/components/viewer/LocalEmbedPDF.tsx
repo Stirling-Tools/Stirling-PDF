@@ -706,7 +706,11 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
         <ExportAPIBridge />
         <BookmarkAPIBridge />
         <AttachmentAPIBridge />
-        <PrintAPIBridge />
+        <PrintAPIBridge
+          file={file}
+          url={pdfUrl}
+          fileName={fileName}
+        />
         <DocumentPermissionsAPIBridge />
         <DocumentReadyWrapper
           fallback={
