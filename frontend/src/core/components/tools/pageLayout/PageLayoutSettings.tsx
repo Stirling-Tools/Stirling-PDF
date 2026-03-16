@@ -21,6 +21,8 @@ export default function PageLayoutSettings({
   const options = getPagesPerSheetOptions(t);
   const selected = options.find((o) => o.value === parameters.pagesPerSheet) || options[0];
 
+  const direction = parameters.pagesPerSheet === 2 || parameters.pagesPerSheet === 3;
+
   return (
     <Stack gap="sm">
       <Select
@@ -31,6 +33,20 @@ export default function PageLayoutSettings({
         disabled={disabled}
         comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
       />
+
+      {direction && (
+        <Select
+          label={t('pageLayout.direction', 'Layout direction:')}
+          data={[
+            { value: 'horizontal', label: t('pageLayout.directions.horizontal', 'Horizontal') },
+            { value: 'vertical', label: t('pageLayout.directions.vertical', 'Vertical') }
+          ]}
+          value={parameters.direction || 'horizontal'}
+          onChange={(v) => onParameterChange('direction', v || 'horizontal')}
+          disabled={disabled}
+          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+        />
+      )}
 
       {selected && (
         <div
@@ -59,5 +75,3 @@ export default function PageLayoutSettings({
     </Stack>
   );
 }
-
-
