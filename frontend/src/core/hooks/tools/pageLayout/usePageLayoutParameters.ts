@@ -4,11 +4,13 @@ import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/u
 export interface PageLayoutParameters extends BaseParameters {
   pagesPerSheet: number;
   addBorder: boolean;
+  direction: string;
 }
 
 export const defaultParameters: PageLayoutParameters = {
   pagesPerSheet: 4,
   addBorder: false,
+  direction: 'horizontal'
 };
 
 export type PageLayoutParametersHook = BaseParametersHook<PageLayoutParameters>;
