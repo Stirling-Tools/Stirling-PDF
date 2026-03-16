@@ -10,12 +10,12 @@ export const getPagesPerSheetOptions = (t: TFunction): PagesPerSheetOption[] => 
   {
     value: 2,
     label: '2',
-    description: t('pageLayout.desc.2', 'Place 2 pages side-by-side on a single sheet.')
+    description: t('pageLayout.desc.2', 'Place 2 pages side-by-side or from top to bottom on a single sheet.')
   },
   {
     value: 3,
     label: '3',
-    description: t('pageLayout.desc.3', 'Place 3 pages on a single sheet in a single row.')
+    description: t('pageLayout.desc.3', 'Place 3 pages on a single sheet in a single row or column.')
   },
   {
     value: 4,
