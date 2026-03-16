@@ -1,5 +1,6 @@
 package stirling.software.proprietary.workflow.dto;
 
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
@@ -19,6 +20,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class WetSignatureMetadata {
+
+    /** Maximum number of wet signatures allowed per participant submission. */
+    public static final int MAX_SIGNATURES_PER_PARTICIPANT = 50;
 
     /** Type of wet signature: "canvas" (drawn), "image" (uploaded), or "text" (typed) */
     @NotNull(message = "Wet signature type is required")
@@ -40,28 +44,32 @@ public class WetSignatureMetadata {
     @PositiveOrZero(message = "Page number must be zero or positive")
     private Integer page;
 
-    /** X coordinate (in PDF points) of the signature rectangle, measured from left edge */
+    /** X position as a fraction (0–1) of page width, measured from left edge */
     @NotNull(message = "X coordinate is required")
     @PositiveOrZero(message = "X coordinate must be zero or positive")
+    @DecimalMax(value = "1.0", message = "X coordinate must not exceed 1.0 (page width)")
     private Double x;
 
     /**
-     * Y coordinate (in PDF points) of the signature rectangle, measured from top edge. Note: This
-     * is UI coordinate system (top-left origin). Will be converted to PDF coordinate system
-     * (bottom-left origin) during overlay.
+     * Y position as a fraction (0–1) of page height, measured from top edge. Note: This is UI
+     * coordinate system (top-left origin). Will be converted to PDF coordinate system (bottom-left
+     * origin) during overlay.
      */
     @NotNull(message = "Y coordinate is required")
     @PositiveOrZero(message = "Y coordinate must be zero or positive")
+    @DecimalMax(value = "1.0", message = "Y coordinate must not exceed 1.0 (page height)")
     private Double y;
 
-    /** Width of the signature rectangle in PDF points */
+    /** Width of the signature rectangle as a fraction (0–1) of page width */
     @NotNull(message = "Width is required")
     @Positive(message = "Width must be positive")
+    @DecimalMax(value = "1.0", message = "Width must not exceed 1.0 (page width)")
     private Double width;
 
-    /** Height of the signature rectangle in PDF points */
+    /** Height of the signature rectangle as a fraction (0–1) of page height */
     @NotNull(message = "Height is required")
     @Positive(message = "Height must be positive")
+    @DecimalMax(value = "1.0", message = "Height must not exceed 1.0 (page height)")
     private Double height;
 
     /**
@@ -77,6 +85,14 @@ public class WetSignatureMetadata {
                 throw new IllegalArgumentException(
                         "Image wet signature data must start with data:image/ prefix");
             }
+        }
+        if (x != null && width != null && x + width > 1.0) {
+            throw new IllegalArgumentException(
+                    "Signature extends beyond the right edge of the page (x + width > 1.0)");
+        }
+        if (y != null && height != null && y + height > 1.0) {
+            throw new IllegalArgumentException(
+                    "Signature extends beyond the bottom edge of the page (y + height > 1.0)");
         }
         return true;
     }

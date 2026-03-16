@@ -689,6 +689,10 @@ public class WorkflowSessionService {
                         objectMapper.readValue(
                                 request.getWetSignaturesData(),
                                 new TypeReference<List<WetSignatureMetadata>>() {});
+                if (wetSigs.size() > WetSignatureMetadata.MAX_SIGNATURES_PER_PARTICIPANT) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST, "Too many wet signatures submitted");
+                }
                 request.setWetSignatures(wetSigs);
                 log.info("Parsed {} wet signatures from wetSignaturesData", wetSigs.size());
             } catch (JacksonException e) {

@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.workflow.dto.ParticipantResponse;
 import stirling.software.proprietary.workflow.dto.SignatureSubmissionRequest;
+import stirling.software.proprietary.workflow.dto.WetSignatureMetadata;
 import stirling.software.proprietary.workflow.dto.WorkflowSessionResponse;
 import stirling.software.proprietary.workflow.model.ParticipantStatus;
 import stirling.software.proprietary.workflow.model.WorkflowParticipant;
@@ -315,7 +316,7 @@ public class WorkflowParticipantController {
                     objectMapper.readValue(
                             request.getWetSignaturesData(),
                             new TypeReference<java.util.List<Map<String, Object>>>() {});
-            if (wetSigs.size() > 50) {
+            if (wetSigs.size() > WetSignatureMetadata.MAX_SIGNATURES_PER_PARTICIPANT) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST, "Too many wet signatures submitted");
             }
