@@ -62,11 +62,26 @@ public class MultiPageLayoutController {
                     "must be 2, 3 or a perfect square");
         }
 
-        int cols =
-                pagesPerSheet == 2 || pagesPerSheet == 3
-                        ? pagesPerSheet
-                        : (int) Math.sqrt(pagesPerSheet);
-        int rows = pagesPerSheet == 2 || pagesPerSheet == 3 ? 1 : (int) Math.sqrt(pagesPerSheet);
+        String direction = request.getDirection();
+        if (direction == null || direction.isEmpty()) {
+            direction = "horizontal";
+        }
+
+        int cols;
+        int rows;
+
+        if (pagesPerSheet == 2 || pagesPerSheet == 3) {
+            if ("vertical".equalsIgnoreCase(direction)) {
+                cols = 1;
+                rows = pagesPerSheet;
+            } else {
+                cols = pagesPerSheet;
+                rows = 1;
+            }
+        } else {
+            cols = (int) Math.sqrt(pagesPerSheet);
+            rows = (int) Math.sqrt(pagesPerSheet);
+        }
 
         try (PDDocument sourceDocument = pdfDocumentFactory.load(file)) {
             try (PDDocument newDocument =
