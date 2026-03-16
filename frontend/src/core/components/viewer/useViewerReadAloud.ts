@@ -62,7 +62,6 @@ export function useViewerReadAloud(defaultLanguage?: string) {
   const [speechRate, setSpeechRate] = useState(1);
   const [speechLanguage, setSpeechLanguage] = useState(defaultLanguage || 'en-US');
   const [speechVoice, setSpeechVoice] = useState<SpeechSynthesisVoice | null>(null);
-  const [voicesLoaded, setVoicesLoaded] = useState(false);
   const [supportedLanguageCodes, setSupportedLanguageCodes] = useState<Set<string>>(new Set());
 
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -151,7 +150,6 @@ export function useViewerReadAloud(defaultLanguage?: string) {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
     const handleVoicesChanged = () => {
-      setVoicesLoaded(true);
       const supportedCodes = getSupportedLanguageCodes();
       setSupportedLanguageCodes(supportedCodes);
       // Once voices are loaded, update the voice for current language
@@ -161,7 +159,6 @@ export function useViewerReadAloud(defaultLanguage?: string) {
 
     // Check if voices are already loaded
     if (window.speechSynthesis.getVoices().length > 0) {
-      setVoicesLoaded(true);
       const supportedCodes = getSupportedLanguageCodes();
       setSupportedLanguageCodes(supportedCodes);
       const voice = findVoiceForLanguage(speechLanguage);
