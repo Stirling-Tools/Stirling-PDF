@@ -23,8 +23,10 @@ import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -167,7 +169,11 @@ public class UserServerCertificateService {
         log.info("Uploading user certificate for user: {}", user.getUsername());
 
         // Validate keystore
-        byte[] keystoreBytes = p12Stream.readAllBytes();
+        byte[] keystoreBytes = p12Stream.readNBytes(10 * 1024 * 1024 + 1); // read at most 10 MB + 1
+        if (keystoreBytes.length > 10 * 1024 * 1024) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Keystore file exceeds maximum allowed size of 10 MB");
+        }
         KeyStore keyStore = KeyStore.getInstance("PKCS12");
         keyStore.load(new ByteArrayInputStream(keystoreBytes), password.toCharArray());
 

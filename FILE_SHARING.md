@@ -339,8 +339,8 @@ storage:
     maxStorageMbTotal: -1        # Total storage cap in MB; -1 = unlimited
     maxFileMb: -1                # Max size per upload (main + history + audit) in MB; -1 = unlimited
   sharing:
-    enabled: true                # Master switch for all sharing
-    linkEnabled: true            # Enable token-based share links (requires system.frontendUrl)
+    enabled: false               # Master switch for all sharing (opt-in)
+    linkEnabled: false           # Enable token-based share links (requires system.frontendUrl)
     emailEnabled: false          # Enable email notifications (requires mail.enabled)
     linkExpirationDays: 3        # Days until share links expire
 ```

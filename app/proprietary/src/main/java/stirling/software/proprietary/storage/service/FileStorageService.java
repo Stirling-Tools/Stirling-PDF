@@ -665,7 +665,8 @@ public class FileStorageService {
                                         new ResponseStatusException(
                                                 HttpStatus.NOT_FOUND, "Share link not found"));
         if (isShareLinkExpired(share)) {
-            throw new ResponseStatusException(HttpStatus.GONE, "Share link has expired");
+            log.debug("Share link access denied: token is expired");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Share link not found");
         }
         return share;
     }

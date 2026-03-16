@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
@@ -21,6 +22,7 @@ import stirling.software.proprietary.storage.repository.StoredFileBlobRepository
 
 @Configuration
 @RequiredArgsConstructor
+@Slf4j
 public class StorageProviderConfig {
 
     private final ApplicationProperties applicationProperties;
@@ -48,6 +50,17 @@ public class StorageProviderConfig {
             basePathValue = InstallationPathConfig.getPath() + "storage";
         }
         Path basePath = Paths.get(basePathValue).toAbsolutePath().normalize();
+        Path installRoot = Paths.get(InstallationPathConfig.getPath()).toAbsolutePath().normalize();
+        if (!basePath.startsWith(installRoot)) {
+            // Warn rather than hard-fail: admins may legitimately point storage at an external
+            // volume, but an unexpected path could indicate a misconfiguration or traversal
+            // attempt.
+            log.warn(
+                    "Storage basePath '{}' is outside the installation directory '{}'. "
+                            + "Verify this is intentional.",
+                    basePath,
+                    installRoot);
+        }
         if (storageEnabled) {
             try {
                 Files.createDirectories(basePath);
