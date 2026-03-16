@@ -64,6 +64,7 @@ public class SigningFinalizationService {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ObjectMapper objectMapper;
     private final PdfSigningService pdfSigningService;
+    private final MetadataEncryptionService metadataEncryptionService;
 
     @Autowired(required = false)
     private final ServerCertificateServiceInterface serverCertificateService;
@@ -988,6 +989,12 @@ public class SigningFinalizationService {
                 CertificateSubmission submission =
                         objectMapper.treeToValue(
                                 node.get("certificateSubmission"), CertificateSubmission.class);
+
+                // Decrypt password (supports both legacy plaintext and encrypted values)
+                if (submission.getPassword() != null) {
+                    submission.setPassword(
+                            metadataEncryptionService.decrypt(submission.getPassword()));
+                }
 
                 // Decode base64 keystore bytes
                 var certNode = node.get("certificateSubmission");

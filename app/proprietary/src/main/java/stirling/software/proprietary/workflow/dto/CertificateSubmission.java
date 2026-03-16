@@ -17,7 +17,10 @@ public class CertificateSubmission {
     /** Certificate type: P12, JKS, SERVER, or USER_CERT */
     private String certType;
 
-    /** Keystore password (plaintext). Cleared from the database after finalization. */
+    /**
+     * Keystore password. Stored encrypted at rest; decrypted by MetadataEncryptionService before
+     * use. Cleared from the database after finalization.
+     */
     private String password;
 
     /** PKCS12 keystore bytes, decoded from the base64 stored in participant metadata. */

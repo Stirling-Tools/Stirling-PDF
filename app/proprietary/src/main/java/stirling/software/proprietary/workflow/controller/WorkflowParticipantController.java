@@ -34,6 +34,7 @@ import stirling.software.proprietary.workflow.model.ParticipantStatus;
 import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
+import stirling.software.proprietary.workflow.service.MetadataEncryptionService;
 import stirling.software.proprietary.workflow.service.WorkflowSessionService;
 import stirling.software.proprietary.workflow.util.WorkflowMapper;
 
@@ -56,6 +57,7 @@ public class WorkflowParticipantController {
     private final WorkflowSessionService workflowSessionService;
     private final WorkflowParticipantRepository participantRepository;
     private final ObjectMapper objectMapper;
+    private final MetadataEncryptionService metadataEncryptionService;
 
     @Operation(
             summary = "Get workflow session details by participant token",
@@ -277,9 +279,8 @@ public class WorkflowParticipantController {
         if (request.getCertType() != null) {
             Map<String, Object> certSubmission = new HashMap<>();
             certSubmission.put("certType", request.getCertType());
-            // SECURITY: password is stored unencrypted in participant_metadata until finalization
-            // cleanup. Field-level encryption should be added here before production.
-            certSubmission.put("password", request.getPassword());
+            certSubmission.put(
+                    "password", metadataEncryptionService.encrypt(request.getPassword()));
             certSubmission.put("showSignature", request.getShowSignature());
             certSubmission.put("pageNumber", request.getPageNumber());
             certSubmission.put("location", request.getLocation());

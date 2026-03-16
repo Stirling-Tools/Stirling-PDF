@@ -63,6 +63,7 @@ public class WorkflowSessionService {
     private final ObjectMapper objectMapper;
     private final EntityManager entityManager;
     private final ApplicationProperties applicationProperties;
+    private final MetadataEncryptionService metadataEncryptionService;
 
     public void ensureSigningEnabled() {
         if (!applicationProperties.getStorage().isEnabled()
@@ -659,7 +660,7 @@ public class WorkflowSessionService {
         // 1. Store certificate submission data
         Map<String, Object> certSubmission = new HashMap<>();
         certSubmission.put("certType", request.getCertType());
-        certSubmission.put("password", request.getPassword()); // TODO: Consider encryption
+        certSubmission.put("password", metadataEncryptionService.encrypt(request.getPassword()));
 
         // Store keystore files as base64 if provided
         if (request.getP12File() != null && !request.getP12File().isEmpty()) {
