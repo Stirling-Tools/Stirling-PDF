@@ -83,7 +83,7 @@ export const signInAnonymously = async () => {
 // Account linking functions
 export const linkEmailIdentity = async (email: string, password?: string) => {
   try {
-    const updateData: any = { email }
+    const updateData: { email: string; password?: string } = { email }
     if (password) {
       updateData.password = password
     }
@@ -143,7 +143,7 @@ export const linkOAuthIdentity = async (provider: 'google' | 'github' | 'apple' 
 }
 
 // Helper function to check if user is anonymous
-export const isUserAnonymous = (user: any) => {
+export const isUserAnonymous = (user: { is_anonymous?: boolean }) => {
   return user?.is_anonymous === true
 }
 

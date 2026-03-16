@@ -31,7 +31,7 @@ export interface AdminSettingsData {
   disabledUsers: number;
   currentUsername?: string;
   roleDetails?: Record<string, string>;
-  teams?: any[];
+  teams?: Array<{ id: number; name: string; [key: string]: unknown }>;
   maxPaidUsers?: number;
   // License information
   maxAllowedUsers: number;
@@ -138,7 +138,7 @@ export const userManagementService = {
     }
     await apiClient.post('/api/v1/user/admin/saveUser', formData, {
       suppressErrorToast: true, // Component will handle error display
-    } as any);
+    });
   },
 
   /**
@@ -153,7 +153,7 @@ export const userManagementService = {
     }
     await apiClient.post('/api/v1/user/admin/changeRole', formData, {
       suppressErrorToast: true,
-    } as any);
+    });
   },
 
   /**
@@ -164,7 +164,7 @@ export const userManagementService = {
     formData.append('enabled', enabled.toString());
     await apiClient.post(`/api/v1/user/admin/changeUserEnabled/${username}`, formData, {
       suppressErrorToast: true,
-    } as any);
+    });
   },
 
   /**
@@ -208,7 +208,7 @@ export const userManagementService = {
       formData,
       {
         suppressErrorToast: true, // Component will handle error display
-      } as any
+      }
     );
 
     return response.data;
@@ -239,7 +239,7 @@ export const userManagementService = {
       formData,
       {
         suppressErrorToast: true,
-      } as any
+      }
     );
 
     return response.data;
@@ -259,7 +259,7 @@ export const userManagementService = {
   async revokeInviteLink(inviteId: number): Promise<void> {
     await apiClient.delete(`/api/v1/invite/revoke/${inviteId}`, {
       suppressErrorToast: true,
-    } as any);
+    });
   },
 
   /**

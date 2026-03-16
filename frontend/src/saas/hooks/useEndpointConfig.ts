@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { isAxiosError } from 'axios';
 import apiClient from '@app/services/apiClient';
 import type { EndpointAvailabilityDetails } from '@app/types/endpointAvailability';
 
@@ -153,9 +154,9 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
       setEndpointStatus(fullStatus.status);
       setEndpointDetails(prev => ({ ...prev, ...fullStatus.details }));
       globalFetchedSets.add(endpointsKey);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // On 401 (auth error), use optimistic fallback instead of disabling
-      if (err.response?.status === 401) {
+      if (isAxiosError(err) && err.response?.status === 401) {
         console.warn('[useEndpointConfig] 401 error - using optimistic fallback');
         const optimisticStatus = endpoints.reduce(
           (acc, endpoint) => {
