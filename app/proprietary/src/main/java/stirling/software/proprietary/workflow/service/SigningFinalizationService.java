@@ -88,15 +88,10 @@ public class SigningFinalizationService {
         byte[] pdf = originalPdf;
 
         // Step 1: Apply wet signatures (visual annotations) FIRST
-        try {
-            pdf = applyWetSignatures(pdf, session);
-        } catch (Exception e) {
-            log.error(
-                    "Failed to apply wet signatures for session {}: {}",
-                    session.getSessionId(),
-                    e.getMessage());
-            // Continue with certificate signing even if wet signatures fail
-        }
+        // This must succeed before digital certificates are applied — continuing after a wet
+        // signature failure would produce a document that appears fully signed but is missing
+        // one or more participant signatures.
+        pdf = applyWetSignatures(pdf, session);
 
         // Extract session-level settings
         SessionSignatureSettings settings = extractSessionSettings(session);
@@ -792,6 +787,7 @@ public class SigningFinalizationService {
                 showLogo);
 
         KeyStore keystore = buildKeystore(submission, participant);
+        validateCertificateNotExpired(keystore, participant.getEmail());
         String password = getKeystorePassword(submission, participant);
 
         byte[] signed =
@@ -879,6 +875,32 @@ public class SigningFinalizationService {
             default:
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST, "Invalid certificate type: " + certType);
+        }
+    }
+
+    private void validateCertificateNotExpired(KeyStore keystore, String participantEmail)
+            throws Exception {
+        Enumeration<String> aliases = keystore.aliases();
+        while (aliases.hasMoreElements()) {
+            String alias = aliases.nextElement();
+            java.security.cert.Certificate cert = keystore.getCertificate(alias);
+            if (cert instanceof java.security.cert.X509Certificate x509) {
+                try {
+                    x509.checkValidity();
+                } catch (java.security.cert.CertificateExpiredException e) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Certificate for participant '"
+                                    + participantEmail
+                                    + "' has expired. Please upload a valid certificate.");
+                } catch (java.security.cert.CertificateNotYetValidException e) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Certificate for participant '"
+                                    + participantEmail
+                                    + "' is not yet valid.");
+                }
+            }
         }
     }
 
