@@ -269,6 +269,15 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     if (toolId !== 'read' && toolId !== 'multiTool' && isExplicitlyDisabled) {
       return;
     }
+
+    // Guard: if there are unsaved changes and we're switching away from the current tool,
+    // show the save modal before proceeding.
+    const hasUnsavedChanges = navigationState.hasUnsavedChanges;
+    if (hasUnsavedChanges && navigationState.selectedTool && navigationState.selectedTool !== toolId) {
+      actions.requestNavigation(() => handleToolSelect(toolId));
+      return;
+    }
+
     // If we're currently on a custom workbench (e.g., Validate Signature report),
     // selecting any tool should take the user back to the default file manager view.
     const wasInCustomWorkbench = !isBaseWorkbench(navigationState.workbench);
@@ -310,7 +319,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setSearchQuery('');
     setLeftPanelView('toolContent');
     setReaderMode(false); // Disable read mode when selecting tools
-  }, [actions, getSelectedTool, navigationState.workbench, setLeftPanelView, setReaderMode, setSearchQuery, toolAvailability]);
+  }, [actions, getSelectedTool, navigationState.workbench, navigationState.hasUnsavedChanges, navigationState.selectedTool, setLeftPanelView, setReaderMode, setSearchQuery, toolAvailability]);
 
   const handleBackToTools = useCallback(() => {
     setLeftPanelView('toolPicker');

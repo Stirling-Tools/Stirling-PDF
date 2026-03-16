@@ -374,7 +374,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", REMOVE_BLANKS);
         addEndpointToGroup("Other", "remove-annotations");
         addEndpointToGroup("Other", "get-info-on-pdf");
-        addEndpointToGroup("Other", "remove-image-pdf");
         addEndpointToGroup("Other", "add-attachments");
         addEndpointToGroup("Other", "replace-invert-pdf");
         addEndpointToGroup("Other", "edit-table-of-contents");
@@ -490,7 +489,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", REMOVE_BLANKS);
         addEndpointToGroup("Java", "remove-annotations");
         addEndpointToGroup("Java", "pdf-to-text");
-        addEndpointToGroup("Java", "remove-image-pdf");
         addEndpointToGroup("Java", "pdf-to-markdown");
         addEndpointToGroup("Java", "add-attachments");
         addEndpointToGroup("Java", "compress-pdf");

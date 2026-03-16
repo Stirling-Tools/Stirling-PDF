@@ -58,9 +58,11 @@ export function useViewerRightRailButtons(
   useEffect(() => {
     if (selectedTool === 'annotate') {
       setIsAnnotationsActive(true);
-    } else if (selectedTool === 'redact') {
+    } else if (selectedTool) {
+      // Any other tool is active — annotate button should not be highlighted
       setIsAnnotationsActive(false);
     } else {
+      // No tool selected — fall back to URL path check
       setIsAnnotationsActive(isAnnotationsPath());
     }
   }, [selectedTool, isAnnotationsPath]);
