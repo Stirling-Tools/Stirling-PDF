@@ -111,7 +111,7 @@ jobs:
 
       - name: Upload Test Reports
         if: always()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: test-reports-jdk-${{ matrix.jdk-version }}-spring-security-${{ matrix.spring-security }}
           path: |
@@ -177,7 +177,7 @@ jobs:
           DISABLE_ADDITIONAL_FEATURES: true
 
       - name: Upload OpenAPI Documentation
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: openapi-docs
           path: ./SwaggerDoc.json
@@ -210,7 +210,7 @@ jobs:
       - name: Run frontend tests
         run: cd frontend && npm run test -- --run
       - name: Upload frontend build artifacts
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: frontend-build
           path: frontend/dist/
@@ -264,7 +264,7 @@ jobs:
 
       - name: FAILED - check the licenses for compatibility
         if: failure()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: dependencies-without-allowed-license.json
           path: build/reports/dependency-license/dependencies-without-allowed-license.json
@@ -360,7 +360,7 @@ jobs:
 
       - name: Upload Cucumber Report
         if: always()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: cucumber-report
           path: testing/cucumber/report.html
@@ -461,7 +461,7 @@ jobs:
 
       - name: Upload Reports
         if: always()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: reports-docker-${{ matrix.artifact-suffix }}
           path: |
