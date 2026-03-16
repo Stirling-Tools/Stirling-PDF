@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { ActionIcon, Slider, Popover } from '@mantine/core';
+import { ActionIcon, Slider, Popover, Select } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
+import { supportedLanguages } from '@app/i18n';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useRightRailButtons, RightRailButtonWithAction } from '@app/hooks/useRightRailButtons';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -34,7 +35,9 @@ export function useViewerRightRailButtons(
   const { requestNavigation } = useNavigationGuard();
   const { redactionsApplied, activeType: redactionActiveType } = useRedaction();
   const { pendingCount } = useRedactionMode();
-  const { isReadingAloud, speechRate, handleReadAloud, handleSpeechRateChange } = useViewerReadAloud();
+  const { isReadingAloud, speechRate, speechLanguage, speechVoice, supportedLanguageCodes, handleReadAloud, handleSpeechRateChange, handleSpeechLanguageChange } = useViewerReadAloud(
+    i18n.language || 'en-US'
+  );
 
   useEffect(() => {
     return registerImmediatePanUpdate((newIsPanning) => {
@@ -88,6 +91,16 @@ export function useViewerRightRailButtons(
   const readAloudSpeedLabel = t('rightRail.readAloudSpeed', 'Speed');
 
   const isFormFillActive = (selectedTool as string) === 'formFill';
+
+  // Filter languages based on available voices
+  const filteredLanguages = Object.entries(supportedLanguages)
+    .filter(([code]) => supportedLanguageCodes.size === 0 || supportedLanguageCodes.has(code) || supportedLanguageCodes.has(code.split('-')[0]))
+    .map(([code, label]) => ({
+      value: code,
+      label: label,
+    }));
+
+  const shouldShowLanguageSelector = supportedLanguageCodes.size === 0 || filteredLanguages.length > 1;
 
   const viewerButtons = useMemo<RightRailButtonWithAction[]>(() => {
     const buttons: RightRailButtonWithAction[] = [
@@ -265,7 +278,7 @@ export function useViewerRightRailButtons(
               </div>
             </Popover.Target>
             <Popover.Dropdown>
-              <div style={{ width: '14rem', padding: '0.25rem 0.25rem 0.5rem' }}>
+              <div style={{ width: '16rem', padding: '0.5rem' }}>
                 <div style={{ fontSize: '0.75rem', marginBottom: '0.5rem', textAlign: 'center' }}>
                   {readAloudSpeedLabel}: {speechRate.toFixed(1)}x
                 </div>
@@ -283,7 +296,24 @@ export function useViewerRightRailButtons(
                   styles={{
                     markLabel: { fontSize: '0.6rem' },
                   }}
+                  mb="md"
                 />
+                {shouldShowLanguageSelector && (
+                  <Select
+                    label={t('rightRail.readAloudLanguage', 'Language')}
+                    placeholder={t('rightRail.selectLanguage', 'Select language')}
+                    value={speechLanguage}
+                    onChange={(value) => {
+                      if (value) {
+                        handleSpeechLanguageChange(value);
+                      }
+                    }}
+                    data={filteredLanguages}
+                    size="xs"
+                    searchable
+                    mb="sm"
+                  />
+                )}
               </div>
             </Popover.Dropdown>
           </Popover>
@@ -404,8 +434,14 @@ export function useViewerRightRailButtons(
     readAloudSpeedLabel,
     isReadingAloud,
     speechRate,
+    speechLanguage,
+    speechVoice,
+    supportedLanguageCodes,
+    filteredLanguages,
+    shouldShowLanguageSelector,
     handleReadAloud,
     handleSpeechRateChange,
+    handleSpeechLanguageChange,
   ]);
 
   useRightRailButtons(viewerButtons);

@@ -3,6 +3,8 @@ import { computeReadAloudHighlightRect } from '@app/components/viewer/readAloudH
 import { useFileState } from '@app/contexts/FileContext';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
+import { StirlingFile } from '@app/types/fileContext';
+import { ZINDEX } from '@app/constants/zIndex';
 
 interface TextItemWithGeometry {
   str: string;
@@ -45,19 +47,23 @@ function createHighlightElement(item: TextItemWithGeometry, pageEl: HTMLElement)
   highlight.style.height = `${highlightRect.height}px`;
   highlight.style.backgroundColor = 'rgba(255, 193, 7, 0.6)';
   highlight.style.pointerEvents = 'none';
-  highlight.style.zIndex = '999';
+  highlight.style.zIndex = String(ZINDEX.VIEWER_HIGHLIGHT);
   highlight.style.borderRadius = '2px';
   pageEl.appendChild(highlight);
 
   return highlight;
 }
 
-export function useViewerReadAloud() {
+export function useViewerReadAloud(defaultLanguage?: string) {
   const viewer = useViewer();
   const { selectors } = useFileState();
 
   const [isReadingAloud, setIsReadingAloud] = useState(false);
   const [speechRate, setSpeechRate] = useState(1);
+  const [speechLanguage, setSpeechLanguage] = useState(defaultLanguage || 'en-US');
+  const [speechVoice, setSpeechVoice] = useState<SpeechSynthesisVoice | null>(null);
+  const [voicesLoaded, setVoicesLoaded] = useState(false);
+  const [supportedLanguageCodes, setSupportedLanguageCodes] = useState<Set<string>>(new Set());
 
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const highlightedElementsRef = useRef<HTMLElement[]>([]);
@@ -70,19 +76,104 @@ export function useViewerReadAloud() {
   const restartingSpeechRef = useRef(false);
   const restartTimeoutRef = useRef<number | null>(null);
   const pageAdvanceTimeoutRef = useRef<number | null>(null);
-  const currentFileRef = useRef<any>(null);
+  const currentFileRef = useRef<StirlingFile | null>(null);
   const totalPagesRef = useRef(0);
   const speechRateRef = useRef(1);  // Keep track of current rate without recreating dependent functions
+  const speechLanguageRef = useRef(defaultLanguage || 'en-US');
 
   // Cache parsed PDF document and page text items to avoid reparsing on every zoom/scroll
   const cachedPdfDocRef = useRef<Awaited<ReturnType<typeof pdfWorkerManager.createDocument>> | null>(null);
   const cachedPageNumberRef = useRef<number | null>(null);
   const cachedTextItemsRef = useRef<TextItemWithGeometry[] | null>(null);
 
+  // Helper to find best voice for language
+  const findVoiceForLanguage = useCallback((languageCode: string): SpeechSynthesisVoice | null => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return null;
+
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices || voices.length === 0) return null;
+
+    // Try exact match first
+    const exactMatch = voices.find(v => v.lang === languageCode);
+    if (exactMatch) return exactMatch;
+
+    // Try matching just the language part (e.g., 'es' from 'es-ES')
+    const baseLang = languageCode.split('-')[0];
+    const baseMatch = voices.find(v => v.lang.startsWith(baseLang));
+    if (baseMatch) {
+      return baseMatch;
+    }
+
+    // Fallback to any English voice if requested language not found
+    const englishMatch = voices.find(v => v.lang.startsWith('en'));
+    if (englishMatch) {
+      return englishMatch;
+    }
+
+    // Last resort: use any available voice
+    return voices[0] || null;
+  }, []);
+
   // Sync speechRate state to ref so page advance callbacks always have current rate
   useEffect(() => {
     speechRateRef.current = speechRate;
   }, [speechRate]);
+
+  // Sync speechLanguage state to ref
+  useEffect(() => {
+    speechLanguageRef.current = speechLanguage;
+  }, [speechLanguage]);
+
+  // Helper to get supported language codes from available voices
+  const getSupportedLanguageCodes = useCallback((): Set<string> => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return new Set();
+
+    const voices = window.speechSynthesis.getVoices();
+    const supportedCodes = new Set<string>();
+
+    // For each voice, add its language code and base language code
+    voices.forEach(voice => {
+      supportedCodes.add(voice.lang);
+      const baseLang = voice.lang.split('-')[0];
+      supportedCodes.add(baseLang);
+    });
+
+    // Also add English as fallback
+    supportedCodes.add('en');
+    supportedCodes.add('en-GB');
+    supportedCodes.add('en-US');
+
+    return supportedCodes;
+  }, []);
+
+  // Wait for voices to load, then check if default language has a voice
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+
+    const handleVoicesChanged = () => {
+      setVoicesLoaded(true);
+      const supportedCodes = getSupportedLanguageCodes();
+      setSupportedLanguageCodes(supportedCodes);
+      // Once voices are loaded, update the voice for current language
+      const voice = findVoiceForLanguage(speechLanguage);
+      setSpeechVoice(voice);
+    };
+
+    // Check if voices are already loaded
+    if (window.speechSynthesis.getVoices().length > 0) {
+      setVoicesLoaded(true);
+      const supportedCodes = getSupportedLanguageCodes();
+      setSupportedLanguageCodes(supportedCodes);
+      const voice = findVoiceForLanguage(speechLanguage);
+      setSpeechVoice(voice);
+    } else {
+      // Voices not loaded yet, listen for voiceschanged event
+      window.speechSynthesis.addEventListener('voiceschanged', handleVoicesChanged);
+      return () => {
+        window.speechSynthesis.removeEventListener('voiceschanged', handleVoicesChanged);
+      };
+    }
+  }, [speechLanguage, findVoiceForLanguage, getSupportedLanguageCodes]);
 
   const clearHighlights = useCallback(() => {
     highlightedElementsRef.current.forEach((el) => el.remove());
@@ -134,7 +225,7 @@ export function useViewerReadAloud() {
   }, [clearHighlights]);
 
   const readPage = useCallback(async (
-    currentFile: any,
+    currentFile: StirlingFile | File,
     pageNumber: number,
     options?: {
       preserveSpeechState?: boolean;
@@ -190,12 +281,6 @@ export function useViewerReadAloud() {
       // This fixes PDFs where characters/syllables are individual text items
       const mergedItems: TextItemWithGeometry[] = [];
       const CHAR_MERGE_THRESHOLD = 5; // px - merge adjacent chars/syllables closer than this
-      const DEBUG_READ_ALOUD = true; // Set to false to disable logs
-
-      if (DEBUG_READ_ALOUD) {
-        console.log(`[ReadAloud] Page ${pageNumber}: ${sortedItems.length} raw text items`);
-        console.log('Raw items:', sortedItems.slice(0, 10).map(i => ({ str: i.str, x: i.transform[4], y: i.transform[5], width: i.width })));
-      }
 
       for (const item of sortedItems) {
         const itemText = item.str;
@@ -216,9 +301,6 @@ export function useViewerReadAloud() {
 
           // Same line and very close horizontally?
           if (yDiff < 5 && xGap < CHAR_MERGE_THRESHOLD) {
-            if (DEBUG_READ_ALOUD) {
-              console.log(`[ReadAloud] Merged "${lastItem.str}" + "${itemText}" (xGap: ${xGap.toFixed(1)}px)`);
-            }
             lastItem.str += itemText;
             // Update width: add the new item's width plus any gap between them
             lastItem.width = (lastItem.width ?? 0) + Math.max(0, xGap) + (item.width ?? 0);
@@ -226,11 +308,6 @@ export function useViewerReadAloud() {
           }
         }
         mergedItems.push({ ...item, str: itemText });
-      }
-
-      if (DEBUG_READ_ALOUD) {
-        console.log(`[ReadAloud] Page ${pageNumber}: ${mergedItems.length} merged items`);
-        console.log('Merged items:', mergedItems.slice(0, 10).map(i => i.str));
       }
 
       // Use merged items for both highlighting and caching
@@ -251,10 +328,6 @@ export function useViewerReadAloud() {
 
       const words = spokenText.split(/\s+/).filter(Boolean);
 
-      if (DEBUG_READ_ALOUD) {
-        console.log(`[ReadAloud] Page ${pageNumber}: "${spokenText.substring(0, 100)}..."`);
-        console.log(`[ReadAloud] Words (${words.length}):`, words.slice(0, 20));
-      }
       if (!options?.preserveSpeechState) {
         speechTextRef.current = spokenText;
         speechWordsRef.current = words;
@@ -280,6 +353,7 @@ export function useViewerReadAloud() {
     startCharIndex: number,
     pageNumber: number,
     rateOverride?: number,
+    languageOverride?: string,
   ) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) {
       return;
@@ -302,6 +376,15 @@ export function useViewerReadAloud() {
 
     const utterance = new SpeechSynthesisUtterance(remainingText);
     utterance.rate = rateOverride ?? speechRateRef.current;
+    const currentLang = languageOverride ?? speechLanguageRef.current;
+    utterance.lang = currentLang;
+
+    // Set specific voice if available
+    const voice = findVoiceForLanguage(currentLang);
+    if (voice) {
+      utterance.voice = voice;
+    }
+
     utterance.onstart = () => setIsReadingAloud(true);
     utterance.onend = () => {
       utteranceRef.current = null;
@@ -320,6 +403,12 @@ export function useViewerReadAloud() {
         pageAdvanceTimeoutRef.current = window.setTimeout(async () => {
           pageAdvanceTimeoutRef.current = null;
           try {
+            if (!currentFileRef.current) {
+              currentFileRef.current = null;
+              setIsReadingAloud(false);
+              cleanupReadingSession();
+              return;
+            }
             const nextPageData = await readPage(currentFileRef.current, pageNumber + 1);
             if (!nextPageData) {
               currentFileRef.current = null;
@@ -327,7 +416,7 @@ export function useViewerReadAloud() {
               cleanupReadingSession();
               return;
             }
-            speakFromCharIndex(nextPageData.spokenText, nextPageData.words, 0, pageNumber + 1, speechRateRef.current);
+            speakFromCharIndex(nextPageData.spokenText, nextPageData.words, 0, pageNumber + 1, speechRateRef.current, speechLanguageRef.current);
           } catch (error) {
             console.error('Read aloud page advance failed', error);
             currentFileRef.current = null;
@@ -435,7 +524,7 @@ export function useViewerReadAloud() {
         }
 
         window.speechSynthesis.cancel();
-        speakFromCharIndex(pageData.spokenText, pageData.words, 0, currentPage, speechRateRef.current);
+        speakFromCharIndex(pageData.spokenText, pageData.words, 0, currentPage, speechRateRef.current, speechLanguageRef.current);
       } finally {
         // readPage handles pdf worker cleanup
       }
@@ -473,7 +562,8 @@ export function useViewerReadAloud() {
         speechWordsRef.current,
         speechCharIndexRef.current,
         currentPageNumberRef.current,
-        nextRate
+        nextRate,
+        speechLanguageRef.current
       );
     }, 80);
   }, [isReadingAloud, speakFromCharIndex, viewer]);
@@ -514,10 +604,48 @@ export function useViewerReadAloud() {
     };
   }, [clearHighlights, cleanupReadingSession]);
 
+  const handleSpeechLanguageChange = useCallback((nextLanguage: string) => {
+    setSpeechLanguage(nextLanguage);
+    speechLanguageRef.current = nextLanguage;
+    const voice = findVoiceForLanguage(nextLanguage);
+    setSpeechVoice(voice);
+
+    if (!isReadingAloud || !utteranceRef.current || !speechTextRef.current || typeof window === 'undefined' || !window.speechSynthesis) {
+      return;
+    }
+
+    restartingSpeechRef.current = true;
+    setIsReadingAloud(true);
+    window.speechSynthesis.cancel();
+    utteranceRef.current = null;
+    if (restartTimeoutRef.current !== null) {
+      window.clearTimeout(restartTimeoutRef.current);
+    }
+    restartTimeoutRef.current = window.setTimeout(() => {
+      restartTimeoutRef.current = null;
+      if (!restartingSpeechRef.current) {
+        return;
+      }
+      restartingSpeechRef.current = false;
+      speakFromCharIndex(
+        speechTextRef.current,
+        speechWordsRef.current,
+        speechCharIndexRef.current,
+        currentPageNumberRef.current,
+        speechRateRef.current,
+        nextLanguage
+      );
+    }, 80);
+  }, [isReadingAloud, speakFromCharIndex]);
+
   return {
     isReadingAloud,
     speechRate,
+    speechLanguage,
+    speechVoice,
+    supportedLanguageCodes,
     handleReadAloud,
     handleSpeechRateChange,
+    handleSpeechLanguageChange,
   };
 }
