@@ -2,6 +2,15 @@
 
 set -e
 
+# Ensure JAVA_HOME is on PATH so java is always resolvable
+# (Alpine's openjdk21-jre may not create /usr/bin/java symlinks in all versions)
+if [ -n "${JAVA_HOME:-}" ] && [ -d "$JAVA_HOME/bin" ]; then
+    export PATH="$JAVA_HOME/bin:$PATH"
+elif [ -d /usr/lib/jvm/java-21-openjdk/bin ]; then
+    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
+    export PATH="$JAVA_HOME/bin:$PATH"
+fi
+
 # Default MODE to BOTH if not set
 MODE=${MODE:-BOTH}
 
