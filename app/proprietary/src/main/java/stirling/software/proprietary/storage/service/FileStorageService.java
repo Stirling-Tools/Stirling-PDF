@@ -684,6 +684,24 @@ public class FileStorageService {
                 || "anonymousUser".equals(authentication.getPrincipal())) {
             return false;
         }
+        // If this is a user-specific share, the authenticated user must be the intended recipient
+        // or the file owner. Without this check any authenticated user who obtains the token can
+        // download the file (IDOR).
+        if (share.getSharedWithUser() != null) {
+            User currentUser = extractAuthenticatedUser(authentication);
+            if (currentUser == null) {
+                return false;
+            }
+            boolean isIntendedRecipient =
+                    share.getSharedWithUser().getId().equals(currentUser.getId());
+            boolean isFileOwner =
+                    share.getFile() != null
+                            && share.getFile().getOwner() != null
+                            && share.getFile().getOwner().getId().equals(currentUser.getId());
+            if (!isIntendedRecipient && !isFileOwner) {
+                return false;
+            }
+        }
         return true;
     }
 

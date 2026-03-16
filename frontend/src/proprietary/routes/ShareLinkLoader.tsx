@@ -49,7 +49,9 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
       return;
     }
     handledTokenRef.current = normalizedToken;
-    let isMounted = true;
+
+    const abortController = new AbortController();
+    const { signal } = abortController;
 
     const loadSharedFile = async () => {
       try {
@@ -57,7 +59,7 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
         try {
           const metadataResponse = await apiClient.get<ShareLinkMetadata>(
             `/api/v1/storage/share-links/${normalizedToken}/metadata`,
-            { suppressErrorToast: true, skipAuthRedirect: true } as any
+            { suppressErrorToast: true, skipAuthRedirect: true, signal } as any
           );
           shareMetadata = metadataResponse.data;
         } catch {
@@ -68,20 +70,9 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
           responseType: 'blob',
           suppressErrorToast: true,
           skipAuthRedirect: true,
+          signal,
         } as any);
-        if (!isMounted) return;
-
-        if (!shareMetadata) {
-          try {
-            const metadataResponse = await apiClient.get<ShareLinkMetadata>(
-              `/api/v1/storage/share-links/${normalizedToken}/metadata`,
-              { suppressErrorToast: true, skipAuthRedirect: true } as any
-            );
-            shareMetadata = metadataResponse.data;
-          } catch {
-            shareMetadata = null;
-          }
-        }
+        if (signal.aborted) return;
 
         const contentType =
           (response.headers && (response.headers['content-type'] || response.headers['Content-Type'])) ||
@@ -104,7 +95,7 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
               skipAutoUnzip: false,
               allowDuplicates: true,
             });
-            if (!isMounted) return;
+            if (signal.aborted) return;
 
             const idMap = new Map<string, FileId>();
             for (let i = 0; i < stirlingFiles.length; i += 1) {
@@ -186,7 +177,7 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
           autoUnzip: false,
           skipAutoUnzip: false,
         });
-        if (!isMounted) return;
+        if (signal.aborted) return;
 
         if (stirlingFiles.length > 0) {
           const ids = stirlingFiles.map((stirlingFile: StirlingFile) => stirlingFile.fileId);
@@ -209,7 +200,7 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
         navActions.setWorkbench('viewer');
         navigate('/', { replace: true });
       } catch (error: any) {
-        if (!isMounted) return;
+        if (signal.aborted) return;
         const status = error?.response?.status;
         if (status === 401 || status === 403) {
           if (!isAuthenticated && !authLoading) {
@@ -257,7 +248,7 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
     loadSharedFile();
 
     return () => {
-      isMounted = false;
+      abortController.abort();
     };
   }, [normalizedToken, actions, navActions, navigate, t, isAuthenticated, authLoading]);
 
