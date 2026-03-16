@@ -19,6 +19,18 @@ This file provides guidance to AI Agents when working with code in this reposito
 ### Security Mode Development
 Set `DOCKER_ENABLE_SECURITY=true` environment variable to enable security features during development. This is required for testing the full version locally.
 
+### Python Development
+Development for the AI engine happens in the `engine/` folder. It's built with Langchain and Pydantic and allows for the creation and editing of PDF documents. The frontend calls the Python via Java as a proxy.
+
+- Python version is 3.13; use modern Python features (type aliases, pattern matching, dataclasses, etc.) where they help clarity.
+- Write fully type-correct code; keep pyright clean and avoid `Any` unless strictly necessary.
+- JSON handling: deserialize into fully typed Pydantic models as early as possible, and serialize back from Pydantic models as late as possible.
+- Use Makefile commands for Python work:
+  - From `engine/`: `make check` to lint, type-check, test, etc. and `make fix` to fix easily fixable linting & formatting issues.
+- The project structure is defined in `engine/pyproject.toml`. Any new dependencies should be listed appropriately there, followed by running `make install`.
+- Prefer using classes to nesting functions, and make other similar architectural decisions to improve testability. Do not nest classes or functions unless specifically required to for the code construct (like a decorator).
+- All environment variables used within the code must begin with the `STIRLING_` prefix in order to keep them unique and easier to find.
+
 ### Frontend Development
 - **Frontend dev server**: `cd frontend && npm run dev` (requires backend on localhost:8080)
 - **Tech Stack**: Vite + React + TypeScript + Mantine UI + TailwindCSS
@@ -82,7 +94,7 @@ export function RightRailFooterExtensions(_props: RightRailFooterExtensionsProps
 }
 ```
 
-```typescript
+```tsx
 // desktop/components/rightRail/RightRailFooterExtensions.tsx (real implementation)
 import { Box } from '@mantine/core';
 import { BackendHealthIndicator } from '@app/components/BackendHealthIndicator';
@@ -100,7 +112,7 @@ export function RightRailFooterExtensions({ className }: RightRailFooterExtensio
 }
 ```
 
-```typescript
+```tsx
 // core/components/shared/RightRail.tsx (usage - works in ALL builds)
 import { RightRailFooterExtensions } from '@app/components/rightRail/RightRailFooterExtensions';
 
