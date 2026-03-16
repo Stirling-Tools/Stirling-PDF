@@ -67,7 +67,7 @@ export default function AdminSecuritySection() {
     isFieldPending,
   } = useAdminSettings<SecuritySettingsData>({
     sectionName: 'security',
-    fetchTransformer: async (): Promise<SecuritySettingsData & { _pending?: Record<string, any> }> => {
+    fetchTransformer: async (): Promise<SecuritySettingsData & { _pending?: Record<string, unknown> }> => {
       const [securityResponse, premiumResponse, systemResponse] = await Promise.all([
         apiClient.get('/api/v1/admin/settings/section/security'),
         apiClient.get('/api/v1/admin/settings/section/premium'),
@@ -93,7 +93,7 @@ export default function AdminSecuritySection() {
         systemPending: JSON.parse(JSON.stringify(systemPending || {}))
       });
 
-      const combined: SecuritySettingsData & { _pending?: Record<string, any> } = {
+      const combined: SecuritySettingsData & { _pending?: Record<string, unknown> } = {
         ...securityActive
       };
 
@@ -108,7 +108,7 @@ export default function AdminSecuritySection() {
       }
 
       // Merge all _pending blocks
-      const mergedPending: Record<string, any> = {};
+      const mergedPending: Record<string, unknown> = {};
       if (securityPending) {
         Object.assign(mergedPending, securityPending);
       }
@@ -128,7 +128,7 @@ export default function AdminSecuritySection() {
     saveTransformer: (settings: SecuritySettingsData) => {
       const { audit, html, ...securitySettings } = settings;
 
-      const deltaSettings: Record<string, any> = {
+      const deltaSettings: Record<string, unknown> = {
         // Security settings
         'security.enableLogin': securitySettings.enableLogin,
         'security.loginMethod': securitySettings.loginMethod,

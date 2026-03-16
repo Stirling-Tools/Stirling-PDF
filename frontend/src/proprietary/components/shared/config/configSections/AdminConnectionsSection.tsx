@@ -55,13 +55,9 @@ interface ConnectionsSettingsData {
     blockRegistration?: boolean;
     useAsUsername?: string;
     scopes?: string;
-    client?: {
-      [key: string]: any;
-    };
+    client?: Record<string, Record<string, unknown>>;
   };
-  saml2?: {
-    [key: string]: any;
-  };
+  saml2?: Record<string, unknown>;
   mail?: {
     enabled?: boolean;
     enableInvites?: boolean;
@@ -93,7 +89,7 @@ export default function AdminConnectionsSection() {
 
   const adminSettings = useAdminSettings<ConnectionsSettingsData>({
     sectionName: 'connections',
-    fetchTransformer: async (): Promise<ConnectionsSettingsData & { _pending?: Record<string, any> }> => {
+    fetchTransformer: async (): Promise<ConnectionsSettingsData & { _pending?: Record<string, unknown> }> => {
       // Fetch security settings (oauth2, saml2)
       const securityResponse = await apiClient.get('/api/v1/admin/settings/section/security');
       const securityData = securityResponse.data || {};
@@ -114,7 +110,7 @@ export default function AdminConnectionsSection() {
       const systemResponse = await apiClient.get('/api/v1/admin/settings/section/system');
       const systemData = systemResponse.data || {};
 
-      const result: ConnectionsSettingsData & { _pending?: Record<string, any> } = {
+      const result: ConnectionsSettingsData & { _pending?: Record<string, unknown> } = {
         oauth2: securityData.oauth2 || {},
         saml2: securityData.saml2 || {},
         mail: mailData || {},
@@ -132,7 +128,7 @@ export default function AdminConnectionsSection() {
       };
 
       // Merge pending blocks from all endpoints
-      const pendingBlock: Record<string, any> = {};
+      const pendingBlock: Record<string, unknown> = {};
       if (securityData._pending?.oauth2) {
         pendingBlock.oauth2 = securityData._pending.oauth2;
       }
@@ -183,13 +179,13 @@ export default function AdminConnectionsSection() {
       return result;
     },
     saveTransformer: (currentSettings: ConnectionsSettingsData) => {
-      const deltaSettings: Record<string, any> = {};
+      const deltaSettings: Record<string, unknown> = {};
 
       // Build delta for oauth2 settings
       if (currentSettings.oauth2) {
         Object.keys(currentSettings.oauth2).forEach((key) => {
           if (key !== 'client') {
-            deltaSettings[`security.oauth2.${key}`] = (currentSettings.oauth2 as Record<string, any>)[key];
+            deltaSettings[`security.oauth2.${key}`] = (currentSettings.oauth2 as Record<string, unknown>)[key];
           }
         });
 
@@ -208,21 +204,21 @@ export default function AdminConnectionsSection() {
       // Build delta for saml2 settings
       if (currentSettings.saml2) {
         Object.keys(currentSettings.saml2).forEach((key) => {
-          deltaSettings[`security.saml2.${key}`] = (currentSettings.saml2 as Record<string, any>)[key];
+          deltaSettings[`security.saml2.${key}`] = (currentSettings.saml2 as Record<string, unknown>)[key];
         });
       }
 
       // Mail settings
       if (currentSettings.mail) {
         Object.keys(currentSettings.mail).forEach((key) => {
-          deltaSettings[`mail.${key}`] = (currentSettings.mail as Record<string, any>)[key];
+          deltaSettings[`mail.${key}`] = (currentSettings.mail as Record<string, unknown>)[key];
         });
       }
 
       // Telegram settings
       if (currentSettings.telegram) {
         Object.keys(currentSettings.telegram).forEach((key) => {
-          deltaSettings[`telegram.${key}`] = (currentSettings.telegram as Record<string, any>)[key];
+          deltaSettings[`telegram.${key}`] = (currentSettings.telegram as Record<string, unknown>)[key];
         });
       }
 
@@ -332,7 +328,7 @@ export default function AdminConnectionsSection() {
     return !!(providerSettings?.clientId);
   };
 
-  const getProviderSettings = (provider: Provider): Record<string, any> => {
+  const getProviderSettings = (provider: Provider): Record<string, unknown> => {
     if (provider.id === 'saml2') {
       return settings?.saml2 || {};
     }
@@ -342,7 +338,7 @@ export default function AdminConnectionsSection() {
     }
 
     if (provider.id === 'telegram') {
-      return settings?.telegram || {};
+      return (settings?.telegram || {}) as Record<string, unknown>;
     }
 
     if (provider.id === 'googledrive') {
@@ -386,23 +382,23 @@ export default function AdminConnectionsSection() {
   const linkedProviders = allProviders.filter((p) => isProviderConfigured(p));
   const availableProviders = allProviders.filter((p) => !isProviderConfigured(p));
 
-  const updateProviderSettings = (provider: Provider, updatedSettings: Record<string, any>) => {
+  const updateProviderSettings = (provider: Provider, updatedSettings: Record<string, unknown>) => {
     if (provider.id === 'smtp') {
       setSettings({ ...settings, mail: updatedSettings });
     } else if (provider.id === 'telegram') {
-      setSettings({ ...settings, telegram: updatedSettings });
+      setSettings({ ...settings, telegram: updatedSettings as TelegramSettingsData });
     } else if (provider.id === 'googledrive') {
       setSettings({
         ...settings,
-        googleDriveEnabled: updatedSettings.enabled,
-        googleDriveClientId: updatedSettings.clientId,
-        googleDriveApiKey: updatedSettings.apiKey,
-        googleDriveAppId: updatedSettings.appId,
+        googleDriveEnabled: updatedSettings.enabled as boolean | undefined,
+        googleDriveClientId: updatedSettings.clientId as string | undefined,
+        googleDriveApiKey: updatedSettings.apiKey as string | undefined,
+        googleDriveAppId: updatedSettings.appId as string | undefined,
       });
     } else if (provider.id === 'saml2') {
       setSettings({ ...settings, saml2: updatedSettings });
     } else if (provider.id === 'oauth2-generic') {
-      setSettings({ ...settings, oauth2: updatedSettings });
+      setSettings({ ...settings, oauth2: updatedSettings as typeof settings.oauth2 });
     } else {
       // Specific OAuth2 provider
       setSettings({
