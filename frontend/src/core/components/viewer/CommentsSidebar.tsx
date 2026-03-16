@@ -246,13 +246,6 @@ export function CommentsSidebar({ documentId, visible, rightOffset }: CommentsSi
     [provides]
   );
 
-  const handleDelete = useCallback(
-    (pageIndex: number, annotationId: string) => {
-      provides?.deleteAnnotation?.(pageIndex, annotationId);
-    },
-    [provides]
-  );
-
   const handleRemoveFromSidebar = useCallback(() => {
     if (!deleteModal || !provides?.updateAnnotation) return;
     const { pageIndex, id, ann } = deleteModal;
