@@ -183,7 +183,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 
 # Build the Java application and frontend.
-FROM gradle:9.3.1-jdk25 AS app-build
+FROM gradle:9.4.0-jdk25 AS app-build
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update \
