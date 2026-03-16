@@ -247,6 +247,11 @@ public class SigningFinalizationService {
         try {
             // Use WetSignatureMetadata.extractBase64Data() to strip data URL prefix
             String base64Data = wetSig.extractBase64Data();
+            if (base64Data == null || base64Data.isBlank()) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Wet signature image data is missing or empty for participant");
+            }
             byte[] imageBytes = java.util.Base64.getDecoder().decode(base64Data);
 
             PDImageXObject image =
@@ -821,22 +826,34 @@ public class SigningFinalizationService {
                     throw new ResponseStatusException(
                             HttpStatus.BAD_REQUEST, "P12 keystore data is required");
                 }
-                KeyStore p12Store = KeyStore.getInstance("PKCS12");
-                p12Store.load(
-                        new ByteArrayInputStream(submission.getP12Keystore()),
-                        password != null ? password.toCharArray() : new char[0]);
-                return p12Store;
+                try {
+                    KeyStore p12Store = KeyStore.getInstance("PKCS12");
+                    p12Store.load(
+                            new ByteArrayInputStream(submission.getP12Keystore()),
+                            password != null ? password.toCharArray() : new char[0]);
+                    return p12Store;
+                } catch (Exception e) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Failed to open P12 keystore — check that the file is valid and the password is correct");
+                }
 
             case "JKS":
                 if (submission.getJksKeystore() == null) {
                     throw new ResponseStatusException(
                             HttpStatus.BAD_REQUEST, "JKS keystore data is required");
                 }
-                KeyStore jksStore = KeyStore.getInstance("JKS");
-                jksStore.load(
-                        new ByteArrayInputStream(submission.getJksKeystore()),
-                        password != null ? password.toCharArray() : new char[0]);
-                return jksStore;
+                try {
+                    KeyStore jksStore = KeyStore.getInstance("JKS");
+                    jksStore.load(
+                            new ByteArrayInputStream(submission.getJksKeystore()),
+                            password != null ? password.toCharArray() : new char[0]);
+                    return jksStore;
+                } catch (Exception e) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Failed to open JKS keystore — check that the file is valid and the password is correct");
+                }
 
             case "SERVER":
                 if (serverCertificateService == null

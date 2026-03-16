@@ -241,11 +241,19 @@ public class SigningSessionController {
             try {
                 signingFinalizationService.clearSensitiveMetadata(session);
             } catch (Exception e) {
+                // Signing succeeded but sensitive data (keystore bytes / passwords) may remain
+                // in participant_metadata. Log at ERROR so this is visible in monitoring.
+                // A background cleanup job should be implemented to retry failed cleanups.
                 log.error(
-                        "Failed to clear sensitive metadata for session {}: {}",
+                        "SECURITY: Failed to clear sensitive metadata for session {} "
+                                + "(participants: {}). Keystore credentials may remain in the "
+                                + "database until manual cleanup. Error: {}",
                         sessionId,
-                        e.getMessage());
-                // Don't fail the finalization if cleanup fails
+                        session.getParticipants() != null
+                                ? session.getParticipants().stream().map(p -> p.getEmail()).toList()
+                                : "unknown",
+                        e.getMessage(),
+                        e);
             }
 
             return WebResponseUtils.bytesToWebResponse(pdf, filename);
