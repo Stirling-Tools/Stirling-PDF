@@ -47,6 +47,7 @@ export interface AppConfig {
   storageEnabled?: boolean;
   storageSharingEnabled?: boolean;
   storageShareLinksEnabled?: boolean;
+  storageShareEmailEnabled?: boolean;
   storageGroupSigningEnabled?: boolean;
   hideDisabledToolsGoogleDrive?: boolean;
   hideDisabledToolsMobileQRScanner?: boolean;
