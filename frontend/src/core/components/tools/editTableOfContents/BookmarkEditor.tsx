@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActionIcon,
@@ -115,9 +115,19 @@ const addSiblingInTree = (
 export default function BookmarkEditor({ bookmarks, onChange, disabled }: BookmarkEditorProps) {
   const { t } = useTranslation();
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [currentTitleInput, setCurrentTitleInput] = useState<string>('');
+
+  const getLatestTree = () => {
+    if (editingId) {
+      return updateTree(bookmarks, editingId, bookmark => ({ ...bookmark, title: currentTitleInput }));
+    }
+    return bookmarks;
+  };
+
   const handleAddTopLevel = () => {
     const newBookmark = createBookmarkNode({ title: t('editTableOfContents.editor.defaultTitle', 'New bookmark') });
-    onChange([...bookmarks, newBookmark]);
+    onChange([...getLatestTree(), newBookmark]);
   };
 
   const handleTitleChange = (id: string, value: string) => {
@@ -126,11 +136,11 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
 
   const handlePageChange = (id: string, value: number | string) => {
     const page = typeof value === 'number' ? value : parseInt(value, 10);
-    onChange(updateTree(bookmarks, id, bookmark => ({ ...bookmark, pageNumber: Number.isFinite(page) && page > 0 ? page : 1 })));
+    onChange(updateTree(getLatestTree(), id, bookmark => ({ ...bookmark, pageNumber: Number.isFinite(page) && page > 0 ? page : 1 })));
   };
 
   const handleToggle = (id: string) => {
-    onChange(updateTree(bookmarks, id, bookmark => ({ ...bookmark, expanded: !bookmark.expanded })));
+    onChange(updateTree(getLatestTree(), id, bookmark => ({ ...bookmark, expanded: !bookmark.expanded })));
   };
 
   const handleRemove = (id: string) => {
@@ -139,20 +149,20 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
       'Remove this bookmark and all of its children?'
     );
     if (window.confirm(confirmation)) {
-      onChange(removeFromTree(bookmarks, id));
+      onChange(removeFromTree(getLatestTree(), id));
     }
   };
 
   const handleAddChild = (parentId: string) => {
     const child = createBookmarkNode({ title: t('editTableOfContents.editor.defaultChildTitle', 'Child bookmark') });
-    const { nodes, added } = addChildToTree(bookmarks, parentId, child);
-    onChange(added ? nodes : [...bookmarks, child]);
+    const { nodes, added } = addChildToTree(getLatestTree(), parentId, child);
+    onChange(added ? nodes : [...getLatestTree(), child]);
   };
 
   const handleAddSibling = (targetId: string) => {
     const sibling = createBookmarkNode({ title: t('editTableOfContents.editor.defaultSiblingTitle', 'New bookmark') });
-    const { nodes, added } = addSiblingInTree(bookmarks, targetId, sibling);
-    onChange(added ? nodes : [...bookmarks, sibling]);
+    const { nodes, added } = addSiblingInTree(getLatestTree(), targetId, sibling);
+    onChange(added ? nodes : [...getLatestTree(), sibling]);
   };
 
   const renderBookmark = (bookmark: BookmarkNode, level = 0) => {
@@ -176,7 +186,10 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
               <ActionIcon
                 variant="subtle"
                 color="gray"
-                onClick={() => hasChildren && handleToggle(bookmark.id)}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  if (hasChildren) handleToggle(bookmark.id);
+                }}
                 disabled={disabled || !hasChildren}
                 aria-label={t('editTableOfContents.editor.actions.toggle', 'Toggle children')}
                 style={{ marginTop: 4 }}
@@ -202,7 +215,10 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
                 <ActionIcon
                   variant="subtle"
                   color="green"
-                  onClick={() => handleAddChild(bookmark.id)}
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    handleAddChild(bookmark.id)
+                  }}
                   disabled={disabled}
                 >
                   <LocalIcon icon="subdirectory-arrow-right-rounded" />
@@ -212,7 +228,10 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
                 <ActionIcon
                   variant="subtle"
                   color="blue"
-                  onClick={() => handleAddSibling(bookmark.id)}
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    handleAddSibling(bookmark.id)
+                  }}
                   disabled={disabled}
                 >
                   <LocalIcon icon="add-rounded" />
@@ -222,7 +241,10 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
                 <ActionIcon
                   variant="subtle"
                   color="red"
-                  onClick={() => handleRemove(bookmark.id)}
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    handleRemove(bookmark.id)
+                  }}
                   disabled={disabled}
                 >
                   <LocalIcon icon="delete-rounded" />
@@ -236,8 +258,18 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
               <TextInput
                 size="sm"
                 label={t('editTableOfContents.editor.field.title', 'Bookmark title')}
-                value={bookmark.title}
-                onChange={event => handleTitleChange(bookmark.id, event.currentTarget.value)}
+                value={editingId === bookmark.id ? currentTitleInput : bookmark.title}
+                onFocus={() => {
+                  setEditingId(bookmark.id);
+                  setCurrentTitleInput(bookmark.title);
+                }}
+                onBlur={() => {
+                  if (editingId === bookmark.id && currentTitleInput !== bookmark.title) {
+                    handleTitleChange(bookmark.id, currentTitleInput);
+                  }
+                  setEditingId(null);
+                }}
+                onChange={event => setCurrentTitleInput(event.currentTarget.value)}
                 disabled={disabled}
               />
               <NumberInput
@@ -277,7 +309,10 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
           variant="default"
           color="blue"
           leftSection={<LocalIcon icon="bookmark-add-rounded" />}
-          onClick={handleAddTopLevel}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            handleAddTopLevel();
+          }}
           disabled={disabled}
         >
           {t('editTableOfContents.editor.addTopLevel', 'Add top-level bookmark')}
@@ -296,7 +331,10 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
               variant="subtle"
               color="blue"
               leftSection={<LocalIcon icon="add-rounded" />}
-              onClick={handleAddTopLevel}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleAddTopLevel();
+              }}
               disabled={disabled}
             >
               {t('editTableOfContents.editor.empty.action', 'Add first bookmark')}
