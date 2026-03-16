@@ -35,12 +35,12 @@ const ExtractImagesSettings = ({
         comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
       />
 
-      <Checkbox
+      {/* <Checkbox
         label={t('extractImages.allowDuplicates', 'Allow Duplicate Images')}
         checked={parameters.allowDuplicates}
         onChange={(event) => onParameterChange('allowDuplicates', event.currentTarget.checked)}
         disabled={disabled}
-      />
+      /> */}
     </Stack>
   );
 };
