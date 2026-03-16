@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { NavKey, VALID_NAV_KEYS } from '@app/components/shared/config/types';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
-import type { ConfigNavSection, ConfigNavItem } from '@core/components/shared/config/configNavSections';
+import type { ConfigNavSection, ConfigNavItem } from '@app/components/shared/config/configNavSections';
 
 interface SettingsSearchBarProps {
   configNavSections: ConfigNavSection[];

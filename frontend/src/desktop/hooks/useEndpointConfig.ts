@@ -3,6 +3,8 @@ import { isAxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
 import apiClient from '@app/services/apiClient';
 import { tauriBackendService } from '@app/services/tauriBackendService';
+import { selfHostedServerMonitor } from '@app/services/selfHostedServerMonitor';
+import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
 import { isBackendNotReadyError } from '@app/constants/backendErrors';
 import type { EndpointAvailabilityDetails } from '@app/types/endpointAvailability';
 import { connectionModeService } from '@app/services/connectionModeService';
@@ -14,6 +16,13 @@ interface EndpointConfig {
 }
 
 const RETRY_DELAY_MS = 2500;
+
+function isSelfHostedOffline(): boolean {
+  return (
+    selfHostedServerMonitor.getSnapshot().status === 'offline' &&
+    !!tauriBackendService.getBackendUrl()
+  );
+}
 
 function getErrorMessage(err: unknown): string {
   if (isAxiosError(err)) {
@@ -146,7 +155,21 @@ export function useEndpointEnabled(endpoint: string): {
       return;
     }
 
-    if (tauriBackendService.isBackendHealthy()) {
+    // In self-hosted offline mode, enable optimistically when the local backend is ready.
+    // ConvertSettings already filters unsupported endpoints from the dropdown,
+    // so by the time the user has a valid endpoint selected it is supported locally.
+    if (isSelfHostedOffline()) {
+      setEnabled(true);
+      setLoading(false);
+      // Re-evaluate if the server comes back online
+      return selfHostedServerMonitor.subscribe(() => {
+        if (!isSelfHostedOffline() && tauriBackendService.isOnline) {
+          fetchEndpointStatus();
+        }
+      });
+    }
+
+    if (tauriBackendService.isOnline) {
       fetchEndpointStatus();
     }
 
@@ -203,6 +226,34 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
 
     if (!endpoints || endpoints.length === 0) {
       setEndpointStatus({});
+      setLoading(false);
+      return;
+    }
+
+    // Self-hosted offline: check each endpoint against the local backend directly.
+    // checkDependenciesReady() would fail here since it hits the offline remote server.
+    const { status: serverStatus } = selfHostedServerMonitor.getSnapshot();
+    const localUrl = tauriBackendService.getBackendUrl();
+    if (serverStatus === 'offline' && localUrl) {
+      const results = await Promise.all(
+        [...new Set(endpoints)].map(async (ep) => {
+          try {
+            const supported = await endpointAvailabilityService.isEndpointSupportedLocally(ep, localUrl);
+            return { ep, supported };
+          } catch {
+            return { ep, supported: false };
+          }
+        })
+      );
+      if (!isMountedRef.current) return;
+      const statusMap: Record<string, boolean> = {};
+      const details: Record<string, EndpointAvailabilityDetails> = {};
+      for (const { ep, supported } of results) {
+        statusMap[ep] = supported;
+        details[ep] = { enabled: supported, reason: supported ? null : 'NOT_SUPPORTED_LOCALLY' };
+      }
+      setEndpointDetails(prev => ({ ...prev, ...details }));
+      setEndpointStatus(prev => ({ ...prev, ...statusMap }));
       setLoading(false);
       return;
     }
@@ -313,7 +364,17 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
       return;
     }
 
-    if (tauriBackendService.isBackendHealthy()) {
+    if (isSelfHostedOffline()) {
+      fetchAllEndpointStatuses();
+      const unsubServer = selfHostedServerMonitor.subscribe(() => {
+        if (!isSelfHostedOffline() && tauriBackendService.isOnline) {
+          fetchAllEndpointStatuses();
+        }
+      });
+      return unsubServer;
+    }
+
+    if (tauriBackendService.isOnline) {
       fetchAllEndpointStatuses();
     }
 
@@ -340,8 +401,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
 // Default backend URL from environment variables
 const DEFAULT_BACKEND_URL =
   import.meta.env.VITE_DESKTOP_BACKEND_URL
-  || import.meta.env.VITE_API_BASE_URL
-  || '';
+  || import.meta.env.VITE_API_BASE_URL;
 
 /**
  * Desktop override exposing the backend URL based on connection mode.
