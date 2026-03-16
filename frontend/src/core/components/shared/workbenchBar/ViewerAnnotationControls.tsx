@@ -41,7 +41,7 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
 
   // Get redaction pending state and navigation guard
   const { isRedacting: _isRedacting } = useRedactionMode();
-  const { requestNavigation, setHasUnsavedChanges } = useNavigationGuard();
+  const { requestNavigation, setHasUnsavedChanges, hasUnsavedChanges } = useNavigationGuard();
   const { setRedactionMode, activateRedact, setRedactionConfig, setRedactionsApplied, redactionApiRef, setActiveType } = useRedaction();
 
 
@@ -127,6 +127,15 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
     }
   };
 
+  const handleToggleAnnotationsVisibility = useCallback(() => {
+    // When going from visible → hidden with unsaved changes, prompt to save first
+    if (!annotationsHidden && hasUnsavedChanges) {
+      requestNavigation(() => viewerContext?.toggleAnnotationsVisibility());
+    } else {
+      viewerContext?.toggleAnnotationsVisibility();
+    }
+  }, [annotationsHidden, hasUnsavedChanges, requestNavigation, viewerContext]);
+
   // Don't show any annotation controls in sign mode
   // NOTE: This early return is placed AFTER all hooks to satisfy React's rules of hooks
   if (isSignMode) {
@@ -160,10 +169,8 @@ export default function ViewerAnnotationControls({ currentView, disabled = false
           variant="subtle"
           color={annotationsHidden ? "blue" : "gray"}
           radius="md"
-          className="workbench-bar-icon"
-          onClick={() => {
-            viewerContext?.toggleAnnotationsVisibility();
-          }}
+          className="right-rail-icon"
+          onClick={handleToggleAnnotationsVisibility}
           disabled={disabled || currentView !== 'viewer' || (isInAnnotationTool && !isAnnotateActive) || isPlacementMode}
           data-active={annotationsHidden ? 'true' : undefined}
           aria-pressed={annotationsHidden}

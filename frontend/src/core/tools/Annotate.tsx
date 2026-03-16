@@ -7,7 +7,7 @@ import { useFileSelection } from '@app/contexts/FileContext';
 import { BaseToolProps } from '@app/types/tool';
 import { useSignature } from '@app/contexts/SignatureContext';
 import { ViewerContext, useViewer } from '@app/contexts/ViewerContext';
-import type { AnnotationToolId } from '@app/components/viewer/viewerTypes';
+import type { AnnotationToolId, AnnotationEvent, AnnotationSelection, AnnotationRect } from '@app/components/viewer/viewerTypes';
 import { useAnnotationStyleState } from '@app/tools/annotate/useAnnotationStyleState';
 import { useAnnotationSelection } from '@app/tools/annotate/useAnnotationSelection';
 import { AnnotationPanel } from '@app/tools/annotate/AnnotationPanel';
@@ -73,6 +73,8 @@ const Annotate = (_props: BaseToolProps) => {
     setPlacementPreviewSize,
   } = useSignature();
   const viewerContext = useContext(ViewerContext);
+  const viewerContextRef = useRef(viewerContext);
+  useEffect(() => { viewerContextRef.current = viewerContext; }, [viewerContext]);
   const { getZoomState, registerImmediateZoomUpdate, applyChanges, activeFileIndex, panActions } = useViewer();
 
   const [activeTool, setActiveTool] = useState<AnnotationToolId>('select');
@@ -173,19 +175,34 @@ const Annotate = (_props: BaseToolProps) => {
     }
   }, [applyChanges]);
 
+  // Deactivate all annotation tools when the Annotate component unmounts (e.g. switching to Sign tool).
+  // The dep-change effect below only fires while mounted, so unmount needs its own cleanup.
+  useEffect(() => {
+    return () => {
+      annotationApiRef?.current?.deactivateTools?.();
+      signatureApiRef?.current?.deactivateTools?.();
+      setPlacementMode(false);
+      viewerContextRef.current?.setAnnotationMode(false);
+    };
+  }, []);
+
   useEffect(() => {
     const isAnnotateActive = workbench === 'viewer' && selectedTool === 'annotate';
     if (wasAnnotateActiveRef.current && !isAnnotateActive) {
       annotationApiRef?.current?.deactivateTools?.();
       signatureApiRef?.current?.deactivateTools?.();
       setPlacementMode(false);
+      viewerContext?.setAnnotationMode(false);
     } else if (!wasAnnotateActiveRef.current && isAnnotateActive) {
       // When entering annotate mode, activate the select tool by default
+      // Also reset React state to match — EmbedPDF always starts at 'select' here
+      setActiveTool('select');
+      activeToolRef.current = 'select';
       const toolOptions = buildToolOptions('select');
       annotationApiRef?.current?.activateAnnotationTool?.('select', toolOptions);
     }
     wasAnnotateActiveRef.current = isAnnotateActive;
-  }, [workbench, selectedTool, annotationApiRef, signatureApiRef, setPlacementMode, buildToolOptions]);
+  }, [workbench, selectedTool, annotationApiRef, signatureApiRef, setPlacementMode, buildToolOptions, viewerContext]);
 
   // Monitor history state for undo/redo availability
   useEffect(() => {
@@ -323,23 +340,150 @@ const Annotate = (_props: BaseToolProps) => {
     }
   }, [placementPreviewSize, activeTool, stampImageData, signatureApiRef, stampImageSize, cssToPdfSize, buildToolOptions]);
 
-  // Allow exiting multi-point tools with Escape (e.g., polyline)
+  // Auto-switch to 'select' after placing a note or text annotation
+  // EmbedPDF fires 'create' + committed:true when placement is finalised
   useEffect(() => {
+    const unsubscribe = annotationApiRef?.current?.onAnnotationEvent?.((event: AnnotationEvent) => {
+      if (event.type === 'create' && event.committed) {
+        const toolId = activeToolRef.current;
+        if (toolId === 'text' || toolId === 'note') {
+          setActiveTool('select');
+          activeToolRef.current = 'select';
+          annotationApiRef?.current?.activateAnnotationTool?.('select');
+        }
+      }
+    });
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, [annotationApiRef?.current]);
+
+  // Clipboard ref for copy/paste — no re-render needed
+  const clipboardRef = useRef<{ pageIndex: number; annotation: Record<string, unknown> } | null>(null);
+
+  // Click-outside to blur FreeText/note inline editing so user can then drag the annotation.
+  // When clicking the selection menu (e.g. Properties), only blur — do not deselect so the menu/popover can respond.
+  useEffect(() => {
+    const handleCapture = (e: MouseEvent) => {
+      const active = document.activeElement as HTMLElement | null;
+      if (!active?.isContentEditable) return;
+
+      const pageEl = active.closest('[data-page-index]') as HTMLElement | null;
+      if (!pageEl) return;
+
+      const editingWrapper = active.parentElement;
+      const target = e.target as Node;
+      if (editingWrapper?.contains(target)) return;
+
+      active.blur();
+
+      const onSelectionMenu = (target as HTMLElement).closest?.('[data-annotation-selection-menu]');
+      if (onSelectionMenu) return;
+
+      const pageParent = pageEl.parentElement;
+      if (!pageParent) return;
+      const synthetic = new PointerEvent('pointerdown', {
+        bubbles: true,
+        cancelable: true,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        pointerId: 1,
+        pointerType: 'mouse',
+      });
+      pageParent.dispatchEvent(synthetic);
+    };
+
+    document.addEventListener('mousedown', handleCapture, true);
+    return () => document.removeEventListener('mousedown', handleCapture, true);
+  }, []);
+
+  // Keyboard shortcuts: Escape (cancel drawing), Backspace/Delete (delete selected), Ctrl+C/V (copy/paste)
+  useEffect(() => {
+    const isInputFocused = () => {
+      const el = document.activeElement;
+      if (!el) return false;
+      const tag = (el as HTMLElement).tagName;
+      return tag === 'INPUT' || tag === 'TEXTAREA' || (el as HTMLElement).isContentEditable;
+    };
+
     const handler = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      if (['polyline', 'polygon'].includes(activeTool)) {
-        annotationApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
-        annotationApiRef?.current?.activateAnnotationTool?.(null as any);
-        setTimeout(() => {
-          annotationApiRef?.current?.activateAnnotationTool?.(activeTool, buildToolOptions(activeTool));
-        }, 50);
+      if (isInputFocused()) return;
+
+      // Backspace / Delete: delete selected annotation(s)
+      if (e.key === 'Backspace' || e.key === 'Delete') {
+        const multiSelected = annotationApiRef?.current?.getSelectedAnnotations?.();
+        if (multiSelected && multiSelected.length > 0) {
+          e.preventDefault();
+          const toDelete = multiSelected.map((s: AnnotationSelection) => {
+            const ann = s.object ?? s;
+            return {
+              pageIndex: ann.pageIndex ?? 0,
+              id: ann.id ?? ann.uid ?? '',
+            };
+          }).filter((a: { id: string }) => a.id);
+          if (toDelete.length > 0) {
+            annotationApiRef?.current?.deleteAnnotations?.(toDelete);
+          }
+          return;
+        }
+        const selected: AnnotationSelection | null = annotationApiRef?.current?.getSelectedAnnotation?.() ?? null;
+        if (!selected) return;
+        e.preventDefault();
+        const pageIndex: number = selected.pageIndex ?? selected.object?.pageIndex ?? 0;
+        const annotationId: string = selected.id ?? selected.object?.id ?? selected.uid ?? selected.object?.uid ?? '';
+        if (annotationId != null) {
+          annotationApiRef?.current?.deleteAnnotation?.(pageIndex, annotationId);
+        }
+        return;
+      }
+
+      // Ctrl+C: copy selected annotation
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        const selected: AnnotationSelection | null = annotationApiRef?.current?.getSelectedAnnotation?.() ?? null;
+        if (!selected) return;
+        e.preventDefault();
+        const ann = selected.object ?? selected;
+        const pageIndex: number = ann.pageIndex ?? 0;
+        clipboardRef.current = { pageIndex, annotation: { ...(ann as Record<string, unknown>) } };
+        return;
+      }
+
+      // Ctrl+V: paste copied annotation (offset by ~20 PDF pts)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        const clip = clipboardRef.current;
+        if (!clip) return;
+        e.preventDefault();
+        const { pageIndex, annotation } = clip;
+        const OFFSET = 20;
+        const pasted: Record<string, unknown> = { ...annotation };
+        // Assign a new id so EmbedPDF tracks the copy and delete works on it
+        pasted.id = typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `paste-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        delete pasted.uid;
+        // Remove appearance stream reference — the copy needs its own rendering
+        delete pasted.appearanceModes;
+        // Shift the EmbedPDF Rect: { origin: { x, y }, size: { width, height } }
+        // PDF coords have y=0 at bottom, so down = smaller y; right = larger x
+        if (pasted.rect && typeof pasted.rect === 'object') {
+          const r = pasted.rect as AnnotationRect;
+          if (r.origin && typeof r.origin === 'object') {
+            pasted.rect = {
+              ...r,
+              origin: { x: r.origin.x + OFFSET, y: r.origin.y - OFFSET },
+            };
+          }
+        }
+        annotationApiRef?.current?.createAnnotation?.(pageIndex, pasted);
+        return;
       }
     };
+
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [activeTool, buildToolOptions, signatureApiRef]);
+  }, [buildToolOptions, annotationApiRef]);
 
-  const deriveToolFromAnnotation = useCallback((annotation: any): AnnotationToolId | undefined => {
+  const deriveToolFromAnnotation = useCallback((annotation: AnnotationSelection | null | undefined): AnnotationToolId | undefined => {
     if (!annotation) return undefined;
     const customToolId = annotation.customData?.toolId || annotation.customData?.annotationToolId;
     if (isKnownAnnotationTool(customToolId)) {

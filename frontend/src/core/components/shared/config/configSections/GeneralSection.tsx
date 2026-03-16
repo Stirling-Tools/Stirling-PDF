@@ -32,9 +32,11 @@ const BANNER_DISMISSED_KEY = "stirlingpdf_features_banner_dismissed";
 
 interface GeneralSectionProps {
   hideTitle?: boolean;
+  hideUpdateSection?: boolean;
+  hideAdminBanner?: boolean;
 }
 
-const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) => {
+const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hideUpdateSection = false, hideAdminBanner = false }) => {
   const { t } = useTranslation();
   const { preferences, updatePreference } = usePreferences();
   const { config } = useAppConfig();
@@ -158,7 +160,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
         </div>
       )}
 
-      {loginDisabled && !bannerDismissed && (
+      {!hideAdminBanner && loginDisabled && !bannerDismissed && (
         <Paper withBorder p="md" radius="md" style={{ background: "var(--mantine-color-blue-0)", position: "relative" }}>
           <ActionIcon
             variant="subtle"
@@ -217,7 +219,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false }) =>
       )}
 
       {/* Update Check Section */}
-      {config?.appVersion && (
+      {!hideUpdateSection && config?.appVersion && (
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">
             <div>

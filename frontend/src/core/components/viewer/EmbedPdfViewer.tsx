@@ -1070,6 +1070,8 @@ const EmbedPdfViewerContent = ({
           onDiscardAndContinue={async () => {
             // Save applied redactions (if any) while discarding pending ones
             await discardAndSaveApplied();
+            // Reset annotation changes ref so future show/hide doesn't re-prompt
+            hasAnnotationChangesRef.current = false;
           }}
         />
       )}
