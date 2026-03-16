@@ -8,6 +8,7 @@ export const buildPageLayoutFormData = (parameters: PageLayoutParameters, file: 
   formData.append('fileInput', file);
   formData.append('pagesPerSheet', String(parameters.pagesPerSheet));
   formData.append('addBorder', String(parameters.addBorder));
+  formData.append('direction', parameters.direction);
   return formData;
 };
 
