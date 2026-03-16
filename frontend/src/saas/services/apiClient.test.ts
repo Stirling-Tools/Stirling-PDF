@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Session } from '@supabase/supabase-js';
+import type { Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@app/auth/supabase';
 
 // Mock supabase
@@ -197,15 +197,14 @@ describe('apiClient', () => {
     // Mock refresh to fail
     vi.mocked(supabase.auth.refreshSession).mockResolvedValue({
       data: { user: null, session: null },
-      error: { name: 'AuthError', message: 'Refresh failed', status: 400, code: 'auth_error', __isAuthError: true as const },
+      error: { name: 'AuthError', message: 'Refresh failed', status: 400, code: 'auth_error' } as unknown as AuthError,
     });
 
     // Import apiClient after mocking
     const { default: apiClient } = await import('@app/services/apiClient');
 
     // Mock window.location for redirect test
-    delete window.location;
-    window.location = { href: '' } as Location;
+    Object.defineProperty(window, 'location', { writable: true, value: { href: '' } });
 
     const mockAdapter = vi.fn((config) => {
       // Always return 401 to trigger refresh

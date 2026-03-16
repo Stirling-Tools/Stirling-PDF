@@ -28,9 +28,9 @@ function normalizeCredits(raw: Record<string, unknown>): ApiCredits {
       raw?.totalAvailableCredits ?? raw?.totalRemaining ?? raw?.available_total
     ),
     weeklyResetDate:
-      (raw?.weeklyResetDate ?? raw?.weeklyReset ?? raw?.reset_date) || "",
+      String(raw?.weeklyResetDate ?? raw?.weeklyReset ?? raw?.reset_date ?? ""),
     lastApiUsage:
-      (raw?.lastApiUsage ?? raw?.lastApiUse ?? raw?.last_used_at) || "",
+      String(raw?.lastApiUsage ?? raw?.lastApiUse ?? raw?.last_used_at ?? ""),
   };
 }
 

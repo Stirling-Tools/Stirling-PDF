@@ -175,12 +175,9 @@ export default function Login() {
       setError(null)
       console.log('[Login] Signing in anonymously')
 
-      const { data, error } = await signInAnonymously()
+      const { data } = await signInAnonymously()
 
-      if (error) {
-        console.error('[Login] Anonymous sign in error:', error)
-        setError(error instanceof Error ? error.message : 'Unknown error')
-      } else if (data.user) {
+      if (data.user) {
         console.log('[Login] Anonymous sign in successful, refreshing session...')
 
         // Refresh session to ensure backend endpoints are properly synchronized
