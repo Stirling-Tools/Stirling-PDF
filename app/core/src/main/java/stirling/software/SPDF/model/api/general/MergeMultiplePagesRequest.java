@@ -20,4 +20,12 @@ public class MergeMultiplePagesRequest extends PDFFile {
 
     @Schema(description = "Boolean for if you wish to add border around the pages")
     private Boolean addBorder;
+
+    @Schema(
+            description =
+                    "The layout direction for multiple pages when using 2 or 3 pages per sheet.",
+            type = "string",
+            allowableValues = {"horizontal", "vertical"},
+            defaultValue = "horizontal")
+    private String direction = "horizontal";
 }
