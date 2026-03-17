@@ -7,8 +7,7 @@ ARG BASE_IMAGE=ghcr.io/stirling-tools/stirling-pdf-base:latest
 # Stage 1: Build the Java application and frontend
 FROM gradle:9.3.1-jdk25 AS app-build
 
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    apt-get update \
+RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates \
     && update-ca-certificates \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
@@ -31,16 +30,11 @@ COPY app/common/build.gradle                app/common/
 COPY app/proprietary/build.gradle           app/proprietary/
 
 # Use system gradle instead of gradlew to avoid SSL issues downloading gradle distribution on emulated arm64
-RUN --mount=type=cache,target=/home/gradle/.gradle/caches \
-    --mount=type=cache,target=/home/gradle/.gradle/wrapper \
-    gradle dependencies --no-daemon || true
+RUN gradle dependencies --no-daemon || true
 
 COPY . .
 
-RUN --mount=type=cache,target=/home/gradle/.gradle/caches \
-    --mount=type=cache,target=/home/gradle/.gradle/wrapper \
-    --mount=type=cache,target=/root/.npm,sharing=locked \
-    DISABLE_ADDITIONAL_FEATURES=false \
+RUN DISABLE_ADDITIONAL_FEATURES=false \
     gradle clean build \
       -PbuildWithFrontend=true \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
