@@ -128,33 +128,28 @@ public class WorkflowSessionService {
         storedFileRepository.save(originalFile);
 
         // Add participants
-        if (request.getParticipants() != null && !request.getParticipants().isEmpty()) {
-            addParticipantsToSession(session, request.getParticipants());
-        } else {
-            // Legacy support: create participants from user IDs and emails
-            List<ParticipantRequest> participants = new ArrayList<>();
+        List<ParticipantRequest> participants = new ArrayList<>();
 
-            if (request.getParticipantUserIds() != null) {
-                for (Long userId : request.getParticipantUserIds()) {
-                    ParticipantRequest pr = new ParticipantRequest();
-                    pr.setUserId(userId);
-                    pr.setAccessRole(ShareAccessRole.EDITOR);
-                    participants.add(pr);
-                }
+        if (request.getParticipantUserIds() != null) {
+            for (Long userId : request.getParticipantUserIds()) {
+                ParticipantRequest pr = new ParticipantRequest();
+                pr.setUserId(userId);
+                pr.setAccessRole(ShareAccessRole.EDITOR);
+                participants.add(pr);
             }
+        }
 
-            if (request.getParticipantEmails() != null) {
-                for (String email : request.getParticipantEmails()) {
-                    ParticipantRequest pr = new ParticipantRequest();
-                    pr.setEmail(email);
-                    pr.setAccessRole(ShareAccessRole.EDITOR);
-                    participants.add(pr);
-                }
+        if (request.getParticipantEmails() != null) {
+            for (String email : request.getParticipantEmails()) {
+                ParticipantRequest pr = new ParticipantRequest();
+                pr.setEmail(email);
+                pr.setAccessRole(ShareAccessRole.EDITOR);
+                participants.add(pr);
             }
+        }
 
-            if (!participants.isEmpty()) {
-                addParticipantsToSession(session, participants);
-            }
+        if (!participants.isEmpty()) {
+            addParticipantsToSession(session, participants);
         }
 
         log.info(

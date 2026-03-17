@@ -24,17 +24,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import stirling.software.proprietary.security.model.User;
-import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 
-/**
- * Represents a file sharing relationship between a file and a user or token.
- *
- * <p>Two types of shares: 1. Regular shares: workflowParticipant is NULL - appears in file manager
- * 2. Workflow shares: workflowParticipant is NOT NULL - hidden from file manager, accessible only
- * via workflow endpoints
- *
- * <p>Use isWorkflowShare() to distinguish between the two types.
- */
+/** Represents a file sharing relationship between a file and a user or token. */
 @Entity
 @Table(
         name = "file_shares",
@@ -48,8 +39,7 @@ import stirling.software.proprietary.workflow.model.WorkflowParticipant;
         },
         indexes = {
             @Index(name = "idx_file_shares_file_id", columnList = "stored_file_id"),
-            @Index(name = "idx_file_shares_share_token", columnList = "share_token"),
-            @Index(name = "idx_file_shares_participant", columnList = "workflow_participant_id")
+            @Index(name = "idx_file_shares_share_token", columnList = "share_token")
         })
 @NoArgsConstructor
 @Getter
@@ -81,27 +71,7 @@ public class FileShare implements Serializable {
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
 
-    /**
-     * @deprecated No new records are created with this field set. Workflow participants access
-     *     documents directly via {@code WorkflowParticipant.shareToken}. Existing records are still
-     *     read for backward compatibility.
-     */
-    @Deprecated
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "workflow_participant_id")
-    private WorkflowParticipant workflowParticipant;
-
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
-    // Helper methods
-
-    /**
-     * @deprecated Use {@code WorkflowParticipant.shareToken} to identify participant access.
-     */
-    @Deprecated
-    public boolean isWorkflowShare() {
-        return workflowParticipant != null;
-    }
 }

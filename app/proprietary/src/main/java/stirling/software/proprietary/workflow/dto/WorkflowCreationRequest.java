@@ -38,9 +38,6 @@ public class WorkflowCreationRequest {
     /** List of participant email addresses (for external/unregistered users) */
     private List<String> participantEmails;
 
-    /** List of detailed participant configurations */
-    private List<ParticipantRequest> participants;
-
     /** Workflow-specific metadata (JSON string) */
     private String workflowMetadata;
 }

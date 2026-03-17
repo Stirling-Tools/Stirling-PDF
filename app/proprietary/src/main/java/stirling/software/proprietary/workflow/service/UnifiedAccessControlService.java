@@ -44,14 +44,7 @@ public class UnifiedAccessControlService {
         // First try as file share token
         Optional<FileShare> fileShareOpt = fileShareRepository.findByShareTokenWithFile(token);
         if (fileShareOpt.isPresent()) {
-            FileShare share = fileShareOpt.get();
-
-            // Check if it's a workflow share
-            if (share.isWorkflowShare()) {
-                return validateWorkflowShare(share, user);
-            } else {
-                return validateGenericShare(share, user);
-            }
+            return validateGenericShare(fileShareOpt.get(), user);
         }
 
         // Try as workflow participant token
@@ -83,30 +76,6 @@ public class UnifiedAccessControlService {
         }
 
         return AccessValidationResult.allowed(share.getFile(), share.getAccessRole(), null, false);
-    }
-
-    /** Validates a workflow share (FileShare linked to WorkflowParticipant) */
-    private AccessValidationResult validateWorkflowShare(FileShare share, User user) {
-        WorkflowParticipant participant = share.getWorkflowParticipant();
-
-        // Check expiration
-        if (participant.isExpired()) {
-            log.warn("Workflow participant access expired: {}", participant.getShareToken());
-            return AccessValidationResult.denied("Workflow access has expired");
-        }
-
-        // Check if workflow is still active
-        if (!participant.getWorkflowSession().isActive()) {
-            log.info(
-                    "Workflow session no longer active: {}",
-                    participant.getWorkflowSession().getSessionId());
-            return AccessValidationResult.denied("Workflow session is no longer active");
-        }
-
-        // Get effective role based on participant status
-        ShareAccessRole effectiveRole = getEffectiveRole(participant);
-
-        return AccessValidationResult.allowed(share.getFile(), effectiveRole, participant, true);
     }
 
     /** Validates a workflow participant by token */
