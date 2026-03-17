@@ -93,12 +93,15 @@ export function useViewerRightRailButtons(
   const isFormFillActive = (selectedTool as string) === 'formFill';
 
   // Filter languages based on available voices
-  const filteredLanguages = Object.entries(supportedLanguages)
-    .filter(([code]) => supportedLanguageCodes.size === 0 || supportedLanguageCodes.has(code) || supportedLanguageCodes.has(code.split('-')[0]))
-    .map(([code, label]) => ({
-      value: code,
-      label: label,
-    }));
+  const filteredLanguages = useMemo(() =>
+    Object.entries(supportedLanguages)
+      .filter(([code]) => supportedLanguageCodes.size === 0 || supportedLanguageCodes.has(code) || supportedLanguageCodes.has(code.split('-')[0]))
+      .map(([code, label]) => ({
+        value: code,
+        label: label,
+      })),
+    [supportedLanguageCodes]
+  );
 
   const shouldShowLanguageSelector = supportedLanguageCodes.size === 0 || filteredLanguages.length > 1;
 
