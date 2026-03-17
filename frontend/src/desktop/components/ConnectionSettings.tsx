@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { connectionModeService, ConnectionConfig } from '@app/services/connectionModeService';
 import { authService, UserInfo } from '@app/services/authService';
 import { STIRLING_SAAS_URL } from '@app/constants/connection';
+import { OPEN_SIGN_IN_EVENT } from '@app/components/SignInModal';
 
 export const ConnectionSettings: React.FC = () => {
   const { t } = useTranslation();
@@ -24,6 +25,9 @@ export const ConnectionSettings: React.FC = () => {
     };
 
     loadConfig();
+
+    const unsubscribe = connectionModeService.subscribeToModeChanges(loadConfig);
+    return unsubscribe;
   }, []);
 
   const handleLogout = async () => {
@@ -32,11 +36,8 @@ export const ConnectionSettings: React.FC = () => {
       await authService.logout();
 
       if (!config?.lock_connection_mode) {
-        // Switch to SaaS mode
-        await connectionModeService.switchToSaaS(STIRLING_SAAS_URL);
-
-        // Reset setup completion to force login screen on reload
-        await connectionModeService.resetSetupCompletion();
+        // Switch to local mode so the app runs on the bundled backend after logout
+        await connectionModeService.switchToLocal();
       }
 
       // Reload config
@@ -56,6 +57,10 @@ export const ConnectionSettings: React.FC = () => {
     }
   };
 
+  const handleSignIn = () => {
+    window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT));
+  };
+
   if (!config) {
     return <Text>{t('common.loading', 'Loading...')}</Text>;
   }
@@ -66,12 +71,26 @@ export const ConnectionSettings: React.FC = () => {
         <Stack gap="md">
           <Group justify="space-between">
             <Text fw={600}>{t('settings.connection.title', 'Connection Mode')}</Text>
-            <Badge color={config.mode === 'saas' ? 'blue' : 'green'} variant="light">
+            <Badge
+              color={config.mode === 'saas' ? 'blue' : config.mode === 'local' ? 'gray' : 'green'}
+              variant="light"
+            >
               {config.mode === 'saas'
                 ? t('settings.connection.mode.saas', 'Stirling Cloud')
-                : t('settings.connection.mode.selfhosted', 'Self-Hosted')}
+                : config.mode === 'local'
+                  ? t('settings.connection.mode.local', 'Local Only')
+                  : t('settings.connection.mode.selfhosted', 'Self-Hosted')}
             </Badge>
           </Group>
+
+          {config.mode === 'local' && (
+            <Text size="sm" c="dimmed">
+              {t(
+                'settings.connection.localDescription',
+                'You are using the local backend without an account. Some tools requiring cloud processing or a self-hosted server are unavailable.'
+              )}
+            </Text>
+          )}
 
           {(config.mode === 'saas' || config.mode === 'selfhosted') && config.server_config && (
             <>
@@ -99,9 +118,15 @@ export const ConnectionSettings: React.FC = () => {
           )}
 
           <Group mt="md">
-            <Button onClick={handleLogout} color="red" variant="light" disabled={loading}>
-              {t('settings.connection.logout', 'Log Out')}
-            </Button>
+            {config.mode === 'local' ? (
+              <Button onClick={handleSignIn} color="blue" variant="light">
+                {t('settings.connection.signIn', 'Sign In')}
+              </Button>
+            ) : (
+              <Button onClick={handleLogout} color="red" variant="light" disabled={loading}>
+                {t('settings.connection.logout', 'Log Out')}
+              </Button>
+            )}
           </Group>
         </Stack>
       </Card>

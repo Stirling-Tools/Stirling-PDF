@@ -3,7 +3,8 @@ import { AppProviders as ProprietaryAppProviders } from "@proprietary/components
 import { DesktopConfigSync } from '@app/components/DesktopConfigSync';
 import { DesktopBannerInitializer } from '@app/components/DesktopBannerInitializer';
 import { SaveShortcutListener } from '@app/components/SaveShortcutListener';
-import { SetupWizard } from '@app/components/SetupWizard';
+import { DesktopOnboardingModal } from '@app/components/DesktopOnboardingModal';
+import { SignInModal } from '@app/components/SignInModal';
 import { useFirstLaunchCheck } from '@app/hooks/useFirstLaunchCheck';
 import { useBackendInitializer } from '@app/hooks/useBackendInitializer';
 import { DESKTOP_DEFAULT_APP_CONFIG } from '@app/config/defaultAppConfig';
@@ -41,7 +42,7 @@ const COMMON_TOOL_ENDPOINTS = [
  */
 export function AppProviders({ children }: { children: ReactNode }) {
   const { isFirstLaunch, setupComplete } = useFirstLaunchCheck();
-  const [connectionMode, setConnectionMode] = useState<'saas' | 'selfhosted' | null>(null);
+  const [connectionMode, setConnectionMode] = useState<'saas' | 'selfhosted' | 'local' | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   // Load connection mode on mount
@@ -50,16 +51,47 @@ export function AppProviders({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // Wait until connection mode is loaded before checking auth
+    if (connectionMode === null) return;
+
     if (!isFirstLaunch && setupComplete) {
-      authService.isAuthenticated()
-        .then(setIsAuthenticated)
-        .catch(() => setIsAuthenticated(false))
-        .finally(() => setAuthChecked(true));
+      if (connectionMode === 'local') {
+        // Local-only mode: no sign-in required
+        setIsAuthenticated(true);
+        setAuthChecked(true);
+      } else {
+        authService.isAuthenticated()
+          .then(async (isAuth) => {
+            if (!isAuth) {
+              // Not authenticated — fall back to local mode instead of showing fullscreen login.
+              // Sign-in is handled via DesktopOnboardingModal and LocalModeBanner.
+              await connectionModeService.switchToLocal().catch(console.error);
+              setConnectionMode('local');
+            }
+            setIsAuthenticated(true);
+          })
+          .catch(async () => {
+            await connectionModeService.switchToLocal().catch(console.error);
+            setConnectionMode('local');
+            setIsAuthenticated(true);
+          })
+          .finally(() => setAuthChecked(true));
+      }
     } else if (isFirstLaunch && !setupComplete) {
-      setAuthChecked(true);
-      setIsAuthenticated(false);
+      // Auto-enter local mode on first launch — skip the setup wizard entirely.
+      // The onboarding carousel + sign-in toast will be shown inside the main app.
+      // Start the backend explicitly here because shouldMonitorBackend relies on
+      // setupComplete (still false from the hook), so useBackendInitializer won't fire.
+      connectionModeService.switchToLocal()
+        .then(() => tauriBackendService.startBackend())
+        .catch(console.error)
+        .finally(() => {
+          setConnectionMode('local');
+          setIsAuthenticated(true);
+          setAuthChecked(true);
+        });
     }
-  }, [isFirstLaunch, setupComplete]);
+  }, [isFirstLaunch, setupComplete, connectionMode]);
 
   // Initialize backend health monitoring for self-hosted mode
   useEffect(() => {
@@ -80,7 +112,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   // Initialize monitoring for bundled backend (already started in Rust)
   // This sets up port detection and health checks
-  const shouldMonitorBackend = setupComplete && !isFirstLaunch && connectionMode === 'saas';
+  const shouldMonitorBackend = setupComplete && !isFirstLaunch && (connectionMode === 'saas' || connectionMode === 'local');
   useBackendInitializer(shouldMonitorBackend);
 
   // Preload endpoint availability for the local bundled backend.
@@ -90,6 +122,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
   //   individual requests per-tool when the remote server goes offline).
   const shouldPreloadLocalEndpoints =
     (setupComplete && !isFirstLaunch && connectionMode === 'saas') ||
+    (setupComplete && !isFirstLaunch && connectionMode === 'local') ||
     (setupComplete && !isFirstLaunch && connectionMode === 'selfhosted');
   useEffect(() => {
     if (!shouldPreloadLocalEndpoints) return;
@@ -145,58 +178,12 @@ export function AppProviders({ children }: { children: ReactNode }) {
     );
   }
 
-  // Show setup wizard on first launch
-  if (isFirstLaunch && !setupComplete) {
-    return (
-      <ProprietaryAppProviders
-        appConfigRetryOptions={{
-          maxRetries: 5,
-          initialDelay: 1000,
-        }}
-        appConfigProviderProps={{
-          initialConfig: DESKTOP_DEFAULT_APP_CONFIG,
-          bootstrapMode: 'non-blocking',
-          autoFetch: false,
-        }}
-      >
-        <SetupWizard
-          onComplete={() => {
-            window.location.reload();
-          }}
-        />
-      </ProprietaryAppProviders>
-    );
-  }
-
-  // Show setup wizard when not authenticated (desktop login flow).
-  if (authChecked && !isAuthenticated) {
-    return (
-      <ProprietaryAppProviders
-        appConfigRetryOptions={{
-          maxRetries: 5,
-          initialDelay: 1000,
-        }}
-        appConfigProviderProps={{
-          initialConfig: DESKTOP_DEFAULT_APP_CONFIG,
-          bootstrapMode: 'non-blocking',
-          autoFetch: false,
-        }}
-      >
-        <SetupWizard
-          onComplete={() => {
-            window.location.reload();
-          }}
-        />
-      </ProprietaryAppProviders>
-    );
-  }
-
   // Normal app flow
   return (
     <ProprietaryAppProviders
       appConfigRetryOptions={{
         maxRetries: 5,
-        initialDelay: 1000, // 1 second, with exponential backoff
+        initialDelay: 1000,
       }}
       appConfigProviderProps={{
         initialConfig: DESKTOP_DEFAULT_APP_CONFIG,
@@ -212,6 +199,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
             <SaveShortcutListener />
             <CreditModalBootstrap />
             {children}
+            {/* Desktop onboarding modal: welcome slide → sign-in slide, shown once on first launch */}
+            <DesktopOnboardingModal />
+            {/* Global sign-in modal, opened via stirling:open-sign-in event */}
+            <SignInModal />
           </SaaSCheckoutProvider>
         </SaasBillingProvider>
       </SaaSTeamProvider>

@@ -27,9 +27,7 @@ export class OperationRouter {
     const mode = await connectionModeService.getCurrentMode();
 
     // Current implementation: simple mode-based routing
-    if (mode === 'saas') {
-      // SaaS mode: For now, all operations run locally
-      // Future enhancement: complex operations will be sent to SaaS server
+    if (mode === 'saas' || mode === 'local') {
       return 'local';
     }
 
@@ -132,6 +130,35 @@ export class OperationRouter {
    */
   async getBaseUrl(operation?: string): Promise<string> {
     const mode = await connectionModeService.getCurrentMode();
+
+    // Local-only mode: route everything to local backend; open settings if tool unavailable
+    if (mode === 'local') {
+      if (operation && this.isToolEndpoint(operation)) {
+        const endpointName = this.extractEndpointName(operation);
+        const backendUrl = tauriBackendService.getBackendUrl();
+        if (backendUrl) {
+          const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(
+            endpointName,
+            backendUrl
+          );
+          if (!supportedLocally) {
+            // Open the connection settings so the user can sign in
+            window.dispatchEvent(new CustomEvent('appConfig:navigate', { detail: { key: 'connectionMode' } }));
+            throw new Error(
+              i18n.t(
+                'localMode.toolUnavailable',
+                'This tool requires an account. Sign in to Stirling Cloud or connect to a self-hosted server to use it.'
+              )
+            );
+          }
+        }
+      }
+      const backendUrl = tauriBackendService.getBackendUrl();
+      if (!backendUrl) {
+        throw new Error('Backend URL not available - backend may still be starting');
+      }
+      return backendUrl.replace(/\/$/, '');
+    }
 
     // Always route team endpoints to SaaS backend (existing logic)
     if (mode === 'saas' && this.isSaaSBackendEndpoint(operation)) {

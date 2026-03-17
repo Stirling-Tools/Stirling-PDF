@@ -2,7 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { fetch } from '@tauri-apps/plugin-http';
 import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
 
-export type ConnectionMode = 'saas' | 'selfhosted';
+export type ConnectionMode = 'saas' | 'selfhosted' | 'local';
 
 export interface SSOProviderConfig {
   id: string;
@@ -35,6 +35,8 @@ export interface ConnectionTestResult {
   errorCode?: string;
   diagnostics?: DiagnosticResult[];
 }
+
+const LOCAL_MODE_STORAGE_KEY = 'stirling-local-mode';
 
 export class ConnectionModeService {
   private static instance: ConnectionModeService;
@@ -82,6 +84,10 @@ export class ConnectionModeService {
   private async loadConfig(): Promise<void> {
     try {
       const config = await invoke<ConnectionConfig>('get_connection_config');
+      // Check if user previously chose local-only mode (stored in localStorage to avoid Rust changes)
+      if (config.mode === 'saas' && localStorage.getItem(LOCAL_MODE_STORAGE_KEY) === 'true') {
+        config.mode = 'local';
+      }
       this.currentConfig = config;
       this.configLoadedOnce = true;
     } catch (error) {
@@ -96,6 +102,9 @@ export class ConnectionModeService {
     if (this.currentConfig?.lock_connection_mode) {
       throw new Error('Connection mode is locked by provisioning');
     }
+
+    // Clear local-only flag if switching to a real account
+    localStorage.removeItem(LOCAL_MODE_STORAGE_KEY);
 
     console.log('Switching to SaaS mode');
 
@@ -117,7 +126,34 @@ export class ConnectionModeService {
     console.log('Switched to SaaS mode successfully');
   }
 
+  async switchToLocal(): Promise<void> {
+    console.log('Switching to local-only mode');
+
+    // Persist local mode preference via localStorage so no Rust enum change is needed.
+    // The Rust store records this as 'saas' (same bundled-backend behaviour); we overlay
+    // the 'local' distinction purely on the TypeScript side.
+    localStorage.setItem(LOCAL_MODE_STORAGE_KEY, 'true');
+
+    await invoke('set_connection_mode', {
+      mode: 'saas',
+      serverConfig: null,
+    });
+
+    this.currentConfig = { mode: 'local', server_config: null, lock_connection_mode: this.currentConfig?.lock_connection_mode ?? false };
+
+    // Clear endpoint availability cache when mode changes
+    endpointAvailabilityService.clearCache();
+    console.log('Cleared endpoint availability cache due to connection mode change');
+
+    this.notifyListeners();
+
+    console.log('Switched to local-only mode successfully');
+  }
+
   async switchToSelfHosted(serverConfig: ServerConfig): Promise<void> {
+    // Clear local-only flag if switching to a real account
+    localStorage.removeItem(LOCAL_MODE_STORAGE_KEY);
+
     console.log('Switching to self-hosted mode:', serverConfig);
 
     await invoke('set_connection_mode', {

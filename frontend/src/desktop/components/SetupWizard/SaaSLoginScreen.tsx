@@ -15,6 +15,7 @@ interface SaaSLoginScreenProps {
   onOAuthSuccess: (userInfo: UserInfo) => Promise<void>;
   onSelfHostedClick: () => void;
   onSwitchToSignup: () => void;
+  onSkipSignIn?: () => void;
   loading: boolean;
   error: string | null;
 }
@@ -25,6 +26,7 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
   onOAuthSuccess,
   onSelfHostedClick,
   onSwitchToSignup,
+  onSkipSignIn,
   loading,
   error,
 }) => {
@@ -110,6 +112,19 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
       </div>
 
       <SelfHostedLink onClick={onSelfHostedClick} disabled={loading} />
+
+      {onSkipSignIn && (
+        <div className="navigation-link-container" style={{ marginTop: '0.5rem', textAlign: 'center' }}>
+          <button
+            type="button"
+            onClick={onSkipSignIn}
+            className="navigation-link-button"
+            disabled={loading}
+          >
+            {t('setup.login.skipSignIn', 'Continue without signing in')}
+          </button>
+        </div>
+      )}
     </>
   );
 };

@@ -21,9 +21,11 @@ enum SetupStep {
 
 interface SetupWizardProps {
   onComplete: () => void;
+  /** Omit the DesktopAuthLayout wrapper — use when rendering inside a modal */
+  noLayout?: boolean;
 }
 
-export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
+export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete, noLayout = false }) => {
   const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState<SetupStep>(SetupStep.SaaSLogin);
   const [serverConfig, setServerConfig] = useState<ServerConfig | null>({ url: STIRLING_SAAS_URL });
@@ -77,6 +79,20 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     } catch (err) {
       console.error('SaaS OAuth login completion failed:', err);
       setError(err instanceof Error ? err.message : 'Failed to complete SaaS login');
+      setLoading(false);
+    }
+  };
+
+  const handleLocalMode = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      await connectionModeService.switchToLocal();
+      tauriBackendService.startBackend().catch(console.error);
+      onComplete();
+    } catch (err) {
+      console.error('Failed to continue in local mode:', err);
+      setError(err instanceof Error ? err.message : String(err));
       setLoading(false);
     }
   };
@@ -335,8 +351,8 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     void loadConfig();
   }, []);
 
-  return (
-    <DesktopAuthLayout>
+  const wizardContent = (
+    <>
       {/* Step Content */}
       {!lockConnectionMode && activeStep === SetupStep.SaaSLogin && (
         <SaaSLoginScreen
@@ -345,6 +361,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
           onOAuthSuccess={handleSaaSLoginOAuth}
           onSelfHostedClick={handleSelfHostedClick}
           onSwitchToSignup={handleSwitchToSignup}
+          onSkipSignIn={handleLocalMode}
           loading={loading}
           error={error}
         />
@@ -394,6 +411,16 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
           </button>
         </div>
       )}
+    </>
+  );
+
+  if (noLayout) {
+    return <div style={{ padding: '2rem' }}>{wizardContent}</div>;
+  }
+
+  return (
+    <DesktopAuthLayout>
+      {wizardContent}
     </DesktopAuthLayout>
   );
 };

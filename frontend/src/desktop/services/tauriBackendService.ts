@@ -11,6 +11,10 @@ export class TauriBackendService {
   private healthMonitor: Promise<void> | null = null;
   private startPromise: Promise<void> | null = null;
   private statusListeners = new Set<(status: BackendStatus) => void>();
+  /** True when we own the backend process (startBackend called, not initializeExternalBackend) */
+  private isLocalBackend = false;
+  private recoveryTimer: ReturnType<typeof setTimeout> | null = null;
+  private isRecovering = false;
 
   static getInstance(): TauriBackendService {
     if (!TauriBackendService.instance) {
@@ -52,6 +56,41 @@ export class TauriBackendService {
     }
     this.backendStatus = status;
     this.statusListeners.forEach(listener => listener(status));
+
+    // Auto-recovery: when our own backend goes unhealthy, try restarting it
+    // before reporting as permanently offline.
+    if (status === 'unhealthy' && this.isLocalBackend && !this.isRecovering) {
+      this.scheduleRecovery();
+    }
+  }
+
+  private scheduleRecovery() {
+    if (this.recoveryTimer) return;
+    // Give it a 2s grace period — transient failures (e.g. during logout/reload)
+    // should resolve on their own before we attempt a full restart.
+    this.recoveryTimer = setTimeout(() => {
+      this.recoveryTimer = null;
+      if (this.backendStatus !== 'unhealthy') return; // Recovered on its own
+      void this.attemptRestart();
+    }, 2000);
+  }
+
+  async attemptRestart(): Promise<void> {
+    if (this.isRecovering) return;
+    console.log('[TauriBackendService] Backend unhealthy, attempting restart...');
+    this.isRecovering = true;
+    // Reset started flag so startBackend() will run again
+    this.backendStarted = false;
+    this.startPromise = null;
+    this.setStatus('starting');
+    try {
+      await this.startBackend();
+      this.isRecovering = false;
+    } catch (err) {
+      console.error('[TauriBackendService] Restart failed:', err);
+      this.isRecovering = false;
+      this.setStatus('unhealthy');
+    }
   }
 
   /**
@@ -76,6 +115,8 @@ export class TauriBackendService {
   }
 
   async startBackend(backendUrl?: string): Promise<void> {
+    this.isLocalBackend = true; // We own this backend process
+
     if (this.backendStarted) {
       return;
     }
@@ -190,6 +231,12 @@ export class TauriBackendService {
   reset(): void {
     this.backendStarted = false;
     this.backendPort = null;
+    this.isLocalBackend = false;
+    this.isRecovering = false;
+    if (this.recoveryTimer) {
+      clearTimeout(this.recoveryTimer);
+      this.recoveryTimer = null;
+    }
     this.setStatus('stopped');
     this.healthMonitor = null;
     this.startPromise = null;
