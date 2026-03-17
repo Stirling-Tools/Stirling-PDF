@@ -5,15 +5,15 @@ import { PlanTier } from '@app/hooks/usePlans';
 
 interface PlanCardProps {
   plan?: PlanTier;
-  planGroup?: any;  // For proprietary PlanTierGroup compatibility
+  planGroup?: { monthly?: PlanTier; yearly?: PlanTier };  // For proprietary PlanTierGroup compatibility
   isCurrentPlan?: boolean;
   isCurrentTier?: boolean;
   isDowngrade?: boolean;
   isUserProOrAbove?: boolean;
-  currentLicenseInfo?: any;
+  currentLicenseInfo?: unknown;
   currentTier?: string | null;  // Accept null for proprietary compatibility
-  onUpgradeClick?: (plan: any) => void;  // Accept PlanTierGroup or PlanTier
-  onManageClick?: (plan: any) => void;
+  onUpgradeClick?: (plan: PlanTier) => void;
+  onManageClick?: (plan: PlanTier) => void;
   loginEnabled?: boolean;
 }
 
@@ -31,7 +31,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
   loginEnabled: _loginEnabled
 }) => {
   // Use plan from props, or extract from planGroup if proprietary is using it
-  const plan = propPlan || (planGroup as any)?.monthly || (planGroup as any)?.yearly;
+  const plan = propPlan || planGroup?.monthly || planGroup?.yearly;
   const { t } = useTranslation();
 
   if (!plan) return null; // Safety check

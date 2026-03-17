@@ -15,7 +15,7 @@ import { ToolId } from "@app/types/toolId";
 import { getToolDisabledReason, getDisabledLabel } from "@app/components/tools/fullscreen/shared";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { CloudBadge } from "@app/components/shared/CloudBadge";
-import { useToolCloudStatus } from "@app/hooks/useToolCloudStatus";
+import { useWillUseCloud } from "@app/hooks/useWillUseCloud";
 
 interface ToolButtonProps {
   id: ToolId;
@@ -41,8 +41,9 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
   const fav = isFavorite(id as ToolId);
 
   // Check if this tool will route to SaaS backend (desktop only)
-  const endpointName = tool.endpoints?.[0];
-  const usesCloud = useToolCloudStatus(endpointName);
+  const rawEndpoint = tool.operationConfig?.endpoint;
+  const endpointString = typeof rawEndpoint === 'string' ? rawEndpoint : undefined;
+  const usesCloud = useWillUseCloud(endpointString);
 
   const handleClick = (id: ToolId) => {
     if (isUnavailable) return;
