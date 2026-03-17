@@ -1,6 +1,9 @@
 name: Push Docker Base Image
 
 on:
+  push:
+    branches:
+      - baseDockerImage
   workflow_dispatch:
     inputs:
       version:
@@ -25,6 +28,16 @@ jobs:
             echo "Error: Only Frooodle is authorized to run this workflow"
             exit 1
           fi
+
+      - name: Set version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="1.0.0"
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Harden Runner
         uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
@@ -66,7 +79,7 @@ jobs:
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-base
           tags: |
             type=raw,value=latest
-            type=raw,value=${{ github.event.inputs.version }}
+            type=raw,value=${{ steps.version.outputs.version }}
 
       - name: Build and push base image
         id: build-push-base
