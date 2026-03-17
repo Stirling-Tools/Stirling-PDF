@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Anchor, Loader, Paper, Stack, Switch, Text } from '@mantine/core';
+import { Anchor, Group, Loader, Paper, Stack, Switch, Text } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';

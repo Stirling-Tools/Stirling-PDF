@@ -19,8 +19,7 @@ import { SearchPluginPackage } from '@embedpdf/plugin-search/react';
 import { ThumbnailPluginPackage } from '@embedpdf/plugin-thumbnail/react';
 import { RotatePluginPackage, Rotate } from '@embedpdf/plugin-rotate/react';
 import { Rotation, PdfAnnotationSubtype } from '@embedpdf/models';
-import type { PdfAnnotationObject } from '@embedpdf/models';
-import type { AnnotationEvent } from '@embedpdf/plugin-annotation';
+
 
 // Import annotation plugins
 import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
@@ -73,7 +72,7 @@ export interface SignaturePreview {
 interface LocalEmbedPDFWithAnnotationsProps {
   file?: File | Blob;
   url?: string | null;
-  onAnnotationChange?: (annotations: PdfAnnotationObject[]) => void;
+  onAnnotationChange?: (annotations: SignaturePreview[]) => void;
   placementMode?: boolean;
   signatureData?: string;
   signatureType?: 'canvas' | 'image' | 'text';
@@ -364,14 +363,6 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
             };
           }
 
-          // Listen for annotation events to notify parent
-          if (onAnnotationChange) {
-            annotationApi.onAnnotationEvent((event: AnnotationEvent) => {
-              if (event.type !== 'loaded' && event.committed) {
-                onAnnotationChange([event.annotation]);
-              }
-            });
-          }
 
         }}
       >
