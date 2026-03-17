@@ -14,8 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import jakarta.persistence.EntityManager;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,7 +59,6 @@ public class WorkflowSessionService {
     private final UserRepository userRepository;
     private final StorageProvider storageProvider;
     private final ObjectMapper objectMapper;
-    private final EntityManager entityManager;
     private final ApplicationProperties applicationProperties;
     private final MetadataEncryptionService metadataEncryptionService;
 
@@ -742,11 +739,6 @@ public class WorkflowSessionService {
         // 5. Update participant status
         participant.setStatus(ParticipantStatus.SIGNED);
         workflowParticipantRepository.save(participant);
-
-        // 6. Force flush to database and clear persistence context
-        // This ensures metadata is immediately persisted and visible to subsequent queries
-        entityManager.flush();
-        entityManager.clear();
 
         log.info(
                 "User {} signed document in session {} - certificate and signature data stored",
