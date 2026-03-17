@@ -59,7 +59,7 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
         try {
           const metadataResponse = await apiClient.get<ShareLinkMetadata>(
             `/api/v1/storage/share-links/${normalizedToken}/metadata`,
-            { suppressErrorToast: true, skipAuthRedirect: true, signal } as any
+            { suppressErrorToast: true, skipAuthRedirect: true, signal }
           );
           shareMetadata = metadataResponse.data;
         } catch {
@@ -71,7 +71,7 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
           suppressErrorToast: true,
           skipAuthRedirect: true,
           signal,
-        } as any);
+        });
         if (signal.aborted) return;
 
         const contentType =

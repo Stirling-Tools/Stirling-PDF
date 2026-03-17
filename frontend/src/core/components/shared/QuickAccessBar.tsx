@@ -386,7 +386,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       const storedId = await ensureStoredFile(selectedAccessFileStub);
       const response = await apiClient.get<{ shareLinks?: Array<{ token?: string }> }>(
         `/api/v1/storage/files/${storedId}`,
-        { suppressErrorToast: true } as any
+        { suppressErrorToast: true }
       );
       const links = response.data?.shareLinks ?? [];
       let token = links[links.length - 1]?.token;

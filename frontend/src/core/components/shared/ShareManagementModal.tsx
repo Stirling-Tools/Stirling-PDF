@@ -112,7 +112,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
     try {
       const response = await apiClient.get<StoredFileResponse>(
         `/api/v1/storage/files/${file.remoteStorageId}`,
-        { suppressErrorToast: true } as any
+        { suppressErrorToast: true }
       );
       const links = response.data?.shareLinks ?? [];
       const users =
@@ -253,7 +253,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
     try {
       const response = await apiClient.get<ShareLinkAccessResponse[]>(
         `/api/v1/storage/files/${file.remoteStorageId}/shares/links/${token}/accesses`,
-        { suppressErrorToast: true } as any
+        { suppressErrorToast: true }
       );
       setActivityMap((prev) => ({
         ...prev,
