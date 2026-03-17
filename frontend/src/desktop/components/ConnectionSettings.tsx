@@ -45,11 +45,10 @@ export const ConnectionSettings: React.FC = () => {
       setConfig(newConfig);
       setUserInfo(null);
 
-      // Clear URL to home page before reload so we don't return to settings after re-login
+      // Clear URL to home page so we don't return to settings after re-login
       window.history.replaceState({}, '', '/');
-
-      // Reload the page to clear all state and show login screen
-      window.location.reload();
+      // No reload needed — AppProviders remounts the SaaS provider tree via
+      // connectionModeService subscription when mode changes to local.
     } catch (error) {
       console.error('Logout failed:', error);
     } finally {

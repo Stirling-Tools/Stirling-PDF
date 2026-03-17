@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { AppProviders as ProprietaryAppProviders } from "@proprietary/components/AppProviders";
 import { DesktopConfigSync } from '@app/components/DesktopConfigSync';
 import { DesktopBannerInitializer } from '@app/components/DesktopBannerInitializer';
@@ -9,6 +9,7 @@ import { useFirstLaunchCheck } from '@app/hooks/useFirstLaunchCheck';
 import { useBackendInitializer } from '@app/hooks/useBackendInitializer';
 import { DESKTOP_DEFAULT_APP_CONFIG } from '@app/config/defaultAppConfig';
 import { connectionModeService } from '@app/services/connectionModeService';
+import { STIRLING_SAAS_URL } from '@app/constants/connection';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { selfHostedServerMonitor } from '@app/services/selfHostedServerMonitor';
 import { authService } from '@app/services/authService';
@@ -45,9 +46,28 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [connectionMode, setConnectionMode] = useState<'saas' | 'selfhosted' | 'local' | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  // Load connection mode on mount
+  // Prevent first-launch setup from running twice when connectionMode state update re-triggers the effect
+  const firstLaunchInitiated = useRef(false);
+  // Key incremented on every connection mode change after initial load — forces SaaS provider
+  // tree to remount without a full page reload (avoids Windows WebView2 freeze on window.location.reload()).
+  const [appKey, setAppKey] = useState(0);
+  const hasLoadedInitialMode = useRef(false);
+
+  // Load connection mode on mount and subscribe to future changes
   useEffect(() => {
-    void connectionModeService.getCurrentMode().then(setConnectionMode);
+    void connectionModeService.getCurrentMode().then((mode) => {
+      setConnectionMode(mode);
+      hasLoadedInitialMode.current = true;
+    });
+
+    const unsub = connectionModeService.subscribeToModeChanges((config) => {
+      setConnectionMode(config.mode);
+      // Only increment after initial mode is known to avoid spurious remounts on startup
+      if (hasLoadedInitialMode.current) {
+        setAppKey(k => k + 1);
+      }
+    });
+    return unsub;
   }, []);
 
   useEffect(() => {
@@ -56,9 +76,20 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
     if (!isFirstLaunch && setupComplete) {
       if (connectionMode === 'local') {
-        // Local-only mode: no sign-in required
-        setIsAuthenticated(true);
-        setAuthChecked(true);
+        // Even in local mode, check for a valid JWT — on Windows, the OAuth callback
+        // can complete without switchToSaaS() being called (race condition), leaving
+        // LOCAL_MODE_STORAGE_KEY set while the user has a valid session. Upgrade to
+        // SaaS mode automatically so credits/billing/team features work correctly.
+        authService.isAuthenticated()
+          .then(async (isAuth) => {
+            if (isAuth) {
+              await connectionModeService.switchToSaaS(STIRLING_SAAS_URL).catch(console.error);
+              setConnectionMode('saas');
+            }
+            setIsAuthenticated(true);
+          })
+          .catch(() => setIsAuthenticated(true))
+          .finally(() => setAuthChecked(true));
       } else {
         authService.isAuthenticated()
           .then(async (isAuth) => {
@@ -82,6 +113,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
       // The onboarding carousel + sign-in toast will be shown inside the main app.
       // Start the backend explicitly here because shouldMonitorBackend relies on
       // setupComplete (still false from the hook), so useBackendInitializer won't fire.
+      // Guard against re-running when setConnectionMode('local') below triggers this effect.
+      if (firstLaunchInitiated.current) return;
+      firstLaunchInitiated.current = true;
       connectionModeService.switchToLocal()
         .then(() => tauriBackendService.startBackend())
         .catch(console.error)
@@ -191,7 +225,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         autoFetch: false,
       }}
     >
-      <SaaSTeamProvider>
+      <SaaSTeamProvider key={appKey}>
         <SaasBillingProvider>
           <SaaSCheckoutProvider>
             <DesktopConfigSync />

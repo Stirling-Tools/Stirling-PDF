@@ -15,6 +15,8 @@ export class TauriBackendService {
   private isLocalBackend = false;
   private recoveryTimer: ReturnType<typeof setTimeout> | null = null;
   private isRecovering = false;
+  private restartAttempts = 0;
+  private static readonly MAX_RESTART_ATTEMPTS = 3;
 
   static getInstance(): TauriBackendService {
     if (!TauriBackendService.instance) {
@@ -77,7 +79,12 @@ export class TauriBackendService {
 
   async attemptRestart(): Promise<void> {
     if (this.isRecovering) return;
-    console.log('[TauriBackendService] Backend unhealthy, attempting restart...');
+    if (this.restartAttempts >= TauriBackendService.MAX_RESTART_ATTEMPTS) {
+      console.error(`[TauriBackendService] Backend failed after ${TauriBackendService.MAX_RESTART_ATTEMPTS} restart attempts, giving up.`);
+      return;
+    }
+    this.restartAttempts++;
+    console.log(`[TauriBackendService] Backend unhealthy, attempting restart (${this.restartAttempts}/${TauriBackendService.MAX_RESTART_ATTEMPTS})...`);
     this.isRecovering = true;
     // Reset started flag so startBackend() will run again
     this.backendStarted = false;
@@ -85,11 +92,20 @@ export class TauriBackendService {
     this.setStatus('starting');
     try {
       await this.startBackend();
+      this.restartAttempts = 0; // Reset on successful restart
       this.isRecovering = false;
     } catch (err) {
       console.error('[TauriBackendService] Restart failed:', err);
+      // Set isRecovering = false BEFORE setStatus to prevent re-triggering scheduleRecovery
+      // if the max attempts check above doesn't catch it next time.
       this.isRecovering = false;
-      this.setStatus('unhealthy');
+      if (this.restartAttempts < TauriBackendService.MAX_RESTART_ATTEMPTS) {
+        this.setStatus('unhealthy'); // Will trigger another scheduleRecovery
+      } else {
+        // Don't call setStatus('unhealthy') — the status is already unhealthy and calling it
+        // again would bypass the dedup check and re-trigger scheduleRecovery.
+        console.error('[TauriBackendService] Max restart attempts reached, backend is permanently unhealthy.');
+      }
     }
   }
 
@@ -115,11 +131,11 @@ export class TauriBackendService {
   }
 
   async startBackend(backendUrl?: string): Promise<void> {
-    this.isLocalBackend = true; // We own this backend process
-
     if (this.backendStarted) {
       return;
     }
+
+    this.isLocalBackend = true; // We own this backend process
 
     if (this.startPromise) {
       return this.startPromise;
@@ -233,6 +249,7 @@ export class TauriBackendService {
     this.backendPort = null;
     this.isLocalBackend = false;
     this.isRecovering = false;
+    this.restartAttempts = 0;
     if (this.recoveryTimer) {
       clearTimeout(this.recoveryTimer);
       this.recoveryTimer = null;

@@ -31,7 +31,8 @@ export function SignInModal() {
         onClose={() => setOpened(false)}
         onComplete={() => {
           setOpened(false);
-          window.location.reload();
+          // No reload needed — AppProviders remounts the SaaS provider tree via
+          // connectionModeService subscription when mode changes.
         }}
       />
     </Modal>

@@ -331,7 +331,9 @@ export class OperationRouter {
    */
   async willRouteToSaaS(endpoint: string): Promise<boolean> {
     const mode = await connectionModeService.getCurrentMode();
-    if (mode !== 'saas') return false;
+    // In local mode, show cloud badge for tools not supported locally
+    // (clicking them will prompt sign-in via onUnavailableClick)
+    if (mode !== 'saas' && mode !== 'local') return false;
 
     // Team endpoints always go to SaaS
     if (this.isSaaSBackendEndpoint(endpoint)) return true;

@@ -12,7 +12,7 @@ import styles from '@app/components/onboarding/InitialOnboardingModal/InitialOnb
 
 const ONBOARDING_KEY = 'stirling-desktop-onboarding-seen';
 
-const SIGN_IN_GRADIENT = ['#3B82F6', '#7C3AED'];
+const SIGN_IN_GRADIENT: [string, string] = ['#3B82F6', '#7C3AED'];
 
 /**
  * Desktop-specific onboarding modal.
@@ -41,7 +41,9 @@ export function DesktopOnboardingModal() {
   const handleComplete = () => {
     localStorage.setItem(ONBOARDING_KEY, 'true');
     setVisible(false);
-    window.location.reload();
+    // No reload needed — AppProviders subscribes to connectionModeService and remounts
+    // the SaaS provider tree when mode changes, avoiding the Windows WebView2 freeze
+    // that window.location.reload() causes during a backgrounded OAuth flow.
   };
 
 
@@ -76,7 +78,7 @@ export function DesktopOnboardingModal() {
         {/* Hero section — gradient changes per slide */}
         <div className={styles.heroWrapper} style={{ flexShrink: 0 }}>
           <AnimatedSlideBackground
-            gradientStops={step === 0 ? welcomeSlide.background.gradientStops : SIGN_IN_GRADIENT}
+            gradientStops={(step === 0 ? welcomeSlide.background.gradientStops : SIGN_IN_GRADIENT) as [string, string]}
             circles={welcomeSlide.background.circles}
             isActive
             slideKey={step === 0 ? 'desktop-welcome' : 'desktop-sign-in'}
@@ -124,7 +126,7 @@ export function DesktopOnboardingModal() {
                 <div className={`${styles.bodyCopy} ${styles.bodyCopyInner}`}>
                   {welcomeSlide.body}
                 </div>
-                <style>{`div strong{color: var(--onboarding-title); font-weight: 600;}`}</style>
+                <style>{`.${styles.bodyCopyInner} strong { color: var(--onboarding-title); font-weight: 600; }`}</style>
               </div>
               <OnboardingStepper totalSteps={totalSteps} activeStep={step} />
               <div className={styles.buttonContainer}>
@@ -150,6 +152,7 @@ export function DesktopOnboardingModal() {
               <SetupWizard
                 noLayout
                 onComplete={handleComplete}
+                onClose={dismissFinal}
               />
             </Stack>
           )}
