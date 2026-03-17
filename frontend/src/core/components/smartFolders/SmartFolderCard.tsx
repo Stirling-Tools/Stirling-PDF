@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
 import { SmartFolder } from '@app/types/smartFolders';
 import { FolderRunStatus } from '@app/hooks/useFolderRunStatuses';
 import { iconMap } from '@app/components/tools/automate/iconMap';
@@ -57,7 +58,7 @@ export function SmartFolderCard({ folder, isActive, status, onSelect, onEdit, on
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      style={isDragOver ? { backgroundColor: `${folder.accentColor}18`, borderRadius: 'var(--mantine-radius-sm)' } : undefined}
+      style={isDragOver ? { backgroundColor: 'rgba(59,130,246,0.10)', borderRadius: 'var(--mantine-radius-sm)' } : undefined}
     >
       <Button
         variant={isActive ? 'light' : 'subtle'}
@@ -104,10 +105,12 @@ export function SmartFolderCard({ folder, isActive, status, onSelect, onEdit, on
                 </ActionIcon>
               )}
             </Group>
+          ) : folder.isPaused ? (
+            <PauseCircleOutlineIcon style={{ fontSize: 12, color: 'var(--mantine-color-dimmed)' }} />
           ) : status === 'processing' ? (
             <Loader size={10} color={folder.accentColor} />
           ) : status === 'done' ? (
-            <CheckCircleIcon style={{ fontSize: 12, color: 'var(--mantine-color-teal-6)' }} />
+            <CheckCircleIcon style={{ fontSize: 12, color: '#22c55e' }} />
           ) : null
         }
         onClick={onSelect}

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { SmartFolderWorkbenchView } from '@app/components/smartFolders/SmartFolderWorkbenchView';
 import { seedDefaultFolders } from '@app/data/smartFolderPresets';
@@ -7,6 +8,7 @@ export const SMART_FOLDER_VIEW_ID = 'smartFolder';
 export const SMART_FOLDER_WORKBENCH_ID = 'custom:smartFolder' as const;
 
 export default function SmartFoldersRegistration() {
+  const { t } = useTranslation();
   const { registerCustomWorkbenchView, unregisterCustomWorkbenchView, clearCustomWorkbenchViewData } = useToolWorkflow();
 
   // Keep refs to latest cleanup callbacks so the registration effect doesn't
@@ -25,7 +27,7 @@ export default function SmartFoldersRegistration() {
     registerCustomWorkbenchView({
       id: SMART_FOLDER_VIEW_ID,
       workbenchId: SMART_FOLDER_WORKBENCH_ID,
-      label: 'Watch Folders',
+      label: t('smartFolders.sidebarTitle', 'Watch Folders'),
       component: SmartFolderWorkbenchView,
     });
     return () => {

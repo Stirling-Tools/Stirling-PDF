@@ -12,22 +12,13 @@ import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import { useSmartFolders } from '@app/hooks/useSmartFolders';
 import { useFolderRunStatuses } from '@app/hooks/useFolderRunStatuses';
-import { SmartFolder, SmartFolderRunEntry } from '@app/types/smartFolders';
+import { useFolderAutomation, resolveInputFile } from '@app/hooks/useFolderAutomation';
+import { SmartFolder } from '@app/types/smartFolders';
 import { AutomationConfig } from '@app/types/automation';
 import { iconMap } from '@app/components/tools/automate/iconMap';
 import { automationStorage } from '@app/services/automationStorage';
 import { folderStorage } from '@app/services/folderStorage';
 import { fileStorage } from '@app/services/fileStorage';
-import { folderRunStateStorage } from '@app/services/folderRunStateStorage';
-import {
-  FileId,
-  StirlingFileStub,
-  createFileId,
-  createStirlingFile,
-  createQuickKey,
-  isStirlingFile,
-} from '@app/types/fileContext';
-import { executeAutomationSequence } from '@app/utils/automationExecutor';
 import { SmartFolderManagementModal } from '@app/components/smartFolders/SmartFolderManagementModal';
 import { DeleteFolderConfirmModal } from '@app/components/smartFolders/DeleteFolderConfirmModal';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
@@ -36,6 +27,7 @@ import {
   SMART_FOLDER_VIEW_ID,
   SMART_FOLDER_WORKBENCH_ID,
 } from '@app/components/smartFolders/SmartFoldersRegistration';
+import { timeAgo } from '@app/components/smartFolders/SmartFolderWorkbenchView';
 
 const KEYFRAMES = `
   @keyframes wf-pulse {
@@ -44,7 +36,7 @@ const KEYFRAMES = `
   }
 `;
 
-function humaniseOp(op: string): string {
+export function humaniseOp(op: string): string {
   return op
     .replace(/-pdf$|-pages$|-documents?$/i, '')
     .replace(/[-_]/g, ' ')
@@ -134,12 +126,14 @@ function FolderCard({
 
   const ops = automation?.operations ?? [];
 
-  const cardBorderColor = isDragOver || isHovered
+  const cardBorderColor = isDragOver
+    ? 'rgba(59,130,246,0.7)'
+    : isHovered
     ? folder.accentColor
     : 'var(--mantine-color-default-border)';
 
   const cardBoxShadow = isDragOver || isHovered
-    ? `0 0.25rem 0.75rem ${folder.accentColor}25`
+    ? `0 0.25rem 0.75rem ${folder.accentColor}50`
     : '0 0.0625rem 0.25rem rgba(0,0,0,0.08)';
 
   return (
@@ -148,7 +142,7 @@ function FolderCard({
         borderRadius: 'var(--mantine-radius-md)',
         border: `0.0625rem solid ${cardBorderColor}`,
         backgroundColor: isDragOver
-          ? `${folder.accentColor}08`
+          ? 'rgba(59,130,246,0.10)'
           : 'var(--bg-toolbar)',
         transition: 'border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease',
         boxShadow: cardBoxShadow,
@@ -227,11 +221,12 @@ function FolderCard({
                     fontSize: '0.6875rem',
                     fontWeight: 500,
                     backgroundColor: isPaused
-                      ? 'var(--mantine-color-default-hover)'
+                      ? 'rgba(245,158,11,0.15)'
                       : isActive
                       ? 'rgba(59, 130, 246, 0.12)'
                       : 'rgba(34, 197, 94, 0.12)',
-                    color: isPaused ? 'var(--mantine-color-dimmed)' : isActive ? '#3b82f6' : '#22c55e',
+                    color: isPaused ? 'var(--mantine-color-yellow-6)' : isActive ? '#3b82f6' : '#22c55e',
+                    border: isPaused ? '0.0625rem solid rgba(245,158,11,0.35)' : 'none',
                     whiteSpace: 'nowrap',
                     flexShrink: 0,
                   }}
@@ -254,16 +249,7 @@ function FolderCard({
                   </Text>
                   {lastAdded && (
                     <Text size="xs" c="dimmed" style={{ fontSize: '0.625rem', lineHeight: 1.3 }}>
-                      {(() => {
-                        const now = new Date();
-                        const isToday = lastAdded.toDateString() === now.toDateString();
-                        if (isToday) {
-                          const hrs = Math.floor((now.getTime() - lastAdded.getTime()) / 3600000);
-                          return hrs < 1 ? 'just now' : `${hrs}hr${hrs === 1 ? '' : 's'} ago`;
-                        }
-                        const days = Math.floor((now.getTime() - lastAdded.getTime()) / 86400000);
-                        return days === 1 ? '1 day ago' : `${days} days ago`;
-                      })()}
+                      {timeAgo(lastAdded, t)}
                     </Text>
                   )}
                 </Box>
@@ -317,7 +303,7 @@ function FolderCard({
                   <Group key={i} gap={4} wrap="nowrap" align="center">
                     {i > 0 && (
                       <ChevronRightIcon
-                        style={{ fontSize: '0.75rem', color: 'var(--mantine-color-dimmed)', flexShrink: 0 }}
+                        style={{ fontSize: '0.75rem', color: 'var(--mantine-color-gray-5)', flexShrink: 0 }}
                       />
                     )}
                     <Box
@@ -401,7 +387,7 @@ function HowItWorks() {
           variant="subtle"
           color="gray"
           onClick={() => { sessionStorage.setItem('wf_howItWorks_dismissed', '1'); setDismissed(true); }}
-          aria-label="Dismiss"
+          aria-label={t('smartFolders.actions.dismiss', 'Dismiss')}
         >
           <CloseIcon style={{ fontSize: '0.75rem', color: 'var(--mantine-color-text)' }} />
         </ActionIcon>
@@ -463,7 +449,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
           width: '5rem',
           height: '5rem',
           borderRadius: '1.25rem',
-          background: 'linear-gradient(135deg, rgba(59,130,246,0.15) 0%, transparent 100%)',
+          background: 'linear-gradient(135deg, rgba(59,130,246,0.28) 0%, transparent 100%)',
           border: '0.0625rem solid var(--border-subtle)',
           display: 'flex',
           alignItems: 'center',
@@ -504,6 +490,7 @@ export function SmartFolderHomePage() {
   const statuses = useFolderRunStatuses(folders);
   const { toolRegistry, setCustomWorkbenchViewData } = useToolWorkflow();
   const { actions } = useNavigationActions();
+  const { processBatch } = useFolderAutomation(toolRegistry);
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editFolder, setEditFolder] = useState<SmartFolder | null>(null);
@@ -518,11 +505,6 @@ export function SmartFolderHomePage() {
     },
     [setCustomWorkbenchViewData, actions]
   );
-
-  const handleTogglePause = useCallback(async (folder: SmartFolder) => {
-    await updateFolder({ ...folder, isPaused: !folder.isPaused });
-    refreshFolders();
-  }, [updateFolder, refreshFolders]);
 
   const handleEdit = useCallback(async (folder: SmartFolder) => {
     setEditFolder(folder);
@@ -539,98 +521,37 @@ export function SmartFolderHomePage() {
 
   const processFiles = useCallback(
     async (folder: SmartFolder, files: File[]) => {
-      if (folder.isPaused) return;
-
       const pdfs = files.filter((f) => f.name.toLowerCase().endsWith('.pdf'));
       if (pdfs.length === 0) return;
 
+      // Load existing folder data once to detect re-runs (same sidebar file dropped again)
+      const existingData = await folderStorage.getFolderData(folder.id);
+      // Register files sequentially — addFileToFolder/updateFileMetadata are read-modify-write
+      // without IDB transactions, so concurrent calls on the same folder lose updates.
+      const items: Array<{ file: File; inputFileId: string; ownedByFolder: boolean }> = [];
+      for (const file of pdfs) {
+        const { inputFileId, ownedByFolder } = await resolveInputFile(file);
+        if (existingData?.files[inputFileId]) {
+          // Re-processing: preserve addedAt and ownedByFolder, just reset status
+          await folderStorage.updateFileMetadata(folder.id, inputFileId, { status: 'pending', errorMessage: undefined });
+        } else {
+          await folderStorage.addFileToFolder(folder.id, inputFileId, {
+            status: 'pending',
+            name: file.name,
+            ownedByFolder: ownedByFolder || undefined,
+          });
+        }
+        items.push({ file, inputFileId, ownedByFolder });
+      }
+
+      // Only run the pipeline if not paused; pending files will run when folder is resumed
+      if (folder.isPaused) return;
+
       setProcessingFolderIds((prev) => new Set([...prev, folder.id]));
       try {
-        const automation: AutomationConfig | null = await automationStorage.getAutomation(
-          folder.automationId
-        );
-        if (!automation) return;
-
-        for (const file of pdfs) {
-          // Resolve input file ID — reuse existing if already in the main store.
-          // Track whether we created a fresh stub so we know whether to mark it as processed.
-          let inputFileId: string;
-          let ownedByFolder = false;
-          if (isStirlingFile(file)) {
-            inputFileId = file.fileId;
-          } else {
-            ownedByFolder = true;
-            const newFileId = createFileId();
-            const stub: StirlingFileStub = {
-              id: newFileId,
-              name: file.name,
-              type: file.type || 'application/pdf',
-              size: file.size,
-              lastModified: file.lastModified,
-              isLeaf: true,
-              originalFileId: newFileId,
-              versionNumber: 1,
-              toolHistory: [],
-              quickKey: createQuickKey(file),
-              createdAt: Date.now(),
-            };
-            await fileStorage.storeStirlingFile(createStirlingFile(file, newFileId), stub);
-            inputFileId = newFileId;
-          }
-
-          await folderStorage.addFileToFolder(folder.id, inputFileId, {
-            status: 'processing',
-            name: file.name,
-            ownedByFolder,
-          });
-
-          try {
-            const resultFiles = await executeAutomationSequence(automation, [file], toolRegistry as any);
-            const existingRuns = await folderRunStateStorage.getFolderRunState(folder.id);
-            const newRuns: SmartFolderRunEntry[] = [...existingRuns];
-            const allOutputIds: string[] = [];
-            for (const resultFile of resultFiles) {
-              const outputId = createFileId();
-              allOutputIds.push(outputId);
-              const outputStub: StirlingFileStub = {
-                id: outputId,
-                name: resultFile.name,
-                type: resultFile.type || 'application/pdf',
-                size: resultFile.size,
-                lastModified: resultFile.lastModified,
-                isLeaf: true,
-                originalFileId: inputFileId,
-                versionNumber: 2,
-                parentFileId: inputFileId as FileId,
-                toolHistory: [],
-                quickKey: createQuickKey(resultFile),
-                createdAt: Date.now(),
-              };
-              await fileStorage.storeStirlingFile(createStirlingFile(resultFile, outputId), outputStub);
-              newRuns.push({ inputFileId, displayFileId: outputId, status: 'processed' });
-            }
-            // Only hide the input from "My Files" if the folder owns it (fresh drop from disk).
-            // Sidebar files belong to the user and must remain visible after processing.
-            if (ownedByFolder) {
-              await fileStorage.markFileAsProcessed(inputFileId as FileId);
-            }
-            await folderStorage.updateFileMetadata(folder.id, inputFileId, {
-              status: 'processed',
-              processedAt: new Date(),
-              displayFileId: allOutputIds[0],
-              displayFileIds: allOutputIds,
-            });
-            await folderRunStateStorage.setFolderRunState(folder.id, newRuns);
-          } catch (err: any) {
-            const existing = await folderStorage.getFolderData(folder.id);
-            const prev = existing?.files[inputFileId];
-            await folderStorage.updateFileMetadata(folder.id, inputFileId, {
-              status: 'error',
-              errorMessage: err?.message,
-              failedAttempts: (prev?.failedAttempts ?? 0) + 1,
-            });
-          }
-        }
+        // Run all pipelines concurrently — each targets a different fileId so appendRunEntries
+        // (atomic) handles the run-state; per-file metadata updates are independent keys.
+        await processBatch(folder, items);
       } finally {
         setProcessingFolderIds((prev) => {
           const next = new Set(prev);
@@ -639,8 +560,30 @@ export function SmartFolderHomePage() {
         });
       }
     },
-    [toolRegistry]
+    [processBatch]
   );
+
+  const handleTogglePause = useCallback(async (folder: SmartFolder) => {
+    const resuming = folder.isPaused;
+    const updatedFolder = { ...folder, isPaused: !folder.isPaused };
+    await updateFolder(updatedFolder);
+    refreshFolders();
+
+    if (resuming) {
+      // Process any files that were queued while paused
+      const record = await folderStorage.getFolderData(folder.id);
+      if (record) {
+        const pendingIds = Object.entries(record.files)
+          .filter(([, meta]) => meta.status === 'pending')
+          .map(([id]) => id);
+        if (pendingIds.length > 0) {
+          const stirlingFiles = await Promise.all(pendingIds.map(id => fileStorage.getStirlingFile(id as any)));
+          const validFiles = stirlingFiles.filter(Boolean) as File[];
+          if (validFiles.length > 0) processFiles(updatedFolder, validFiles);
+        }
+      }
+    }
+  }, [updateFolder, refreshFolders, processFiles]);
 
   const handleDropSidebarFile = useCallback(
     async (folder: SmartFolder, fileIds: string[]) => {

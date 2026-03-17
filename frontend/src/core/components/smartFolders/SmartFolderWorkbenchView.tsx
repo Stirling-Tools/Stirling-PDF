@@ -24,53 +24,37 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
-import { useFileContext } from '@app/contexts/FileContext';
 import { useSmartFolders } from '@app/hooks/useSmartFolders';
 import { useFolderData } from '@app/hooks/useFolderData';
 import { useFolderRunState } from '@app/hooks/useFolderRunState';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { SMART_FOLDER_VIEW_ID, SMART_FOLDER_WORKBENCH_ID } from '@app/components/smartFolders/SmartFoldersRegistration';
 import { automationStorage } from '@app/services/automationStorage';
-import { folderRunStateStorage } from '@app/services/folderRunStateStorage';
-import { executeAutomationSequence } from '@app/utils/automationExecutor';
-import { SmartFolderRunEntry } from '@app/types/smartFolders';
+import { useFolderAutomation, resolveInputFile } from '@app/hooks/useFolderAutomation';
 import { AutomationConfig } from '@app/types/automation';
 import { iconMap } from '@app/components/tools/automate/iconMap';
 import { fileStorage } from '@app/services/fileStorage';
 import {
   FileId,
   StirlingFile,
-  StirlingFileStub,
-  createFileId,
-  createStirlingFile,
-  createQuickKey,
-  isStirlingFile,
 } from '@app/types/fileContext';
-import { SmartFolderHomePage } from '@app/components/smartFolders/SmartFolderHomePage';
+import { SmartFolderHomePage, humaniseOp } from '@app/components/smartFolders/SmartFolderHomePage';
 import { useNavigationActions } from '@app/contexts/NavigationContext';
+import { FilePreviewModal } from '@app/components/smartFolders/FilePreviewModal';
 
 interface SmartFolderWorkbenchViewProps {
   data: { folderId: string | null; pendingFileId?: string; pendingFileIds?: string[] };
 }
 
-function timeAgo(date: Date): string {
+export function timeAgo(date: Date, t: (key: string, options?: any) => string): string {
   const secs = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (secs < 60) return 'just now';
+  if (secs < 60) return t('smartFolders.time.justNow', 'just now');
   const mins = Math.floor(secs / 60);
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 60) return t('smartFolders.time.minutesAgo', { count: mins, defaultValue: `${mins}m ago` });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return t('smartFolders.time.hoursAgo', { count: hours, defaultValue: `${hours}h ago` });
   const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
-
-function humaniseOp(op: string): string {
-  return op
-    .replace(/-pdf$|-pages$|-documents?$/i, '')
-    .replace(/[-_]/g, ' ')
-    .replace(/\bocr\b/gi, 'OCR')
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-    .trim();
+  return t('smartFolders.time.daysAgo', { count: days, defaultValue: `${days}d ago` });
 }
 
 export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps) {
@@ -78,9 +62,9 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   const { t } = useTranslation();
   const { toolRegistry, setCustomWorkbenchViewData } = useToolWorkflow();
   const { actions } = useNavigationActions();
-  const { actions: fileActions } = useFileContext();
   const { folders } = useSmartFolders();
   const folder = folders.find(f => f.id === folderId);
+  const { runPipeline } = useFolderAutomation(toolRegistry);
 
   const {
     folderRecord,
@@ -89,19 +73,19 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
     processedFileIds,
     addFile,
     updateFileMetadata,
-    getFileMetadata,
   } = useFolderData(folderId ?? '');
 
-  const { recentRuns, setRecentRuns } = useFolderRunState(folderId ?? '');
+  const { recentRuns } = useFolderRunState(folderId ?? '');
 
   const [isDragOver, setIsDragOver] = useState(false);
   const [outputFiles, setOutputFiles] = useState<StirlingFile[]>([]);
   const [inputFiles, setInputFiles] = useState<StirlingFile[]>([]);
+  const [previewFileId, setPreviewFileId] = useState<FileId | null>(null);
+  const [previewFileName, setPreviewFileName] = useState('');
   const [automation, setAutomation] = useState<AutomationConfig | null>(null);
   const { phase: inputModalPhase, cardRect: inputCardRect, textExpanded: inputTextExpanded, openModal: openInputModal, closeModal: closeInputModal } = useCardModalAnimation();
   const { phase: outputModalPhase, cardRect: outputCardRect, textExpanded: outputTextExpanded, openModal: openOutputModal, closeModal: closeOutputModal } = useCardModalAnimation();
   const { phase: failedModalPhase, cardRect: failedCardRect, textExpanded: failedTextExpanded, openModal: openFailedModal, closeModal: closeFailedModal } = useCardModalAnimation();
-  const processingRef = useRef<Set<string>>(new Set());
   const handledPendingRef = useRef<string | null>(null);
 
   // Load input/output blobs from the main file store whenever folderRecord changes
@@ -129,83 +113,9 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   }, [folder?.automationId]);
 
 
-  const runAutomation = useCallback(
-    async (inputFile: File, inputFileId: string, ownedByFolder = false) => {
-      if (processingRef.current.has(inputFileId)) return;
-      processingRef.current.add(inputFileId);
-
-      try {
-        if (!folder) return;
-        const auto: AutomationConfig | null = await automationStorage.getAutomation(folder.automationId);
-        if (!auto) {
-          await updateFileMetadata(inputFileId, { status: 'error', errorMessage: 'Automation not found' });
-          return;
-        }
-
-        await updateFileMetadata(inputFileId, { status: 'processing' });
-
-        const resultFiles = await executeAutomationSequence(
-          auto,
-          [inputFile],
-          toolRegistry as any,
-          () => {},
-          () => {},
-          () => {}
-        );
-
-        // Read fresh run state to avoid stale-closure overwrites under concurrent processing.
-        const currentRuns = await folderRunStateStorage.getFolderRunState(folderId!);
-        const newRuns: SmartFolderRunEntry[] = [...currentRuns];
-        const allOutputIds: string[] = [];
-        for (const resultFile of resultFiles) {
-          const outputId = createFileId();
-          allOutputIds.push(outputId);
-          const outputStub: StirlingFileStub = {
-            id: outputId,
-            name: resultFile.name,
-            type: resultFile.type || 'application/pdf',
-            size: resultFile.size,
-            lastModified: resultFile.lastModified,
-            isLeaf: true,
-            originalFileId: inputFileId,
-            versionNumber: 2,
-            parentFileId: inputFileId as FileId,
-            toolHistory: [],
-            quickKey: createQuickKey(resultFile),
-            createdAt: Date.now(),
-          };
-          await fileStorage.storeStirlingFile(createStirlingFile(resultFile, outputId), outputStub);
-          newRuns.push({ inputFileId, displayFileId: outputId, status: 'processed' });
-        }
-        // Only hide the input from "My Files" when the folder owns the file (fresh drop from disk).
-        // Sidebar files belong to the user and must remain visible after processing.
-        if (ownedByFolder) {
-          await fileStorage.markFileAsProcessed(inputFileId as FileId);
-        }
-
-        await updateFileMetadata(inputFileId, {
-          status: 'processed',
-          processedAt: new Date(),
-          displayFileId: allOutputIds[0],
-          displayFileIds: allOutputIds,
-        });
-        await setRecentRuns(newRuns);
-      } catch (error: any) {
-        const prev = getFileMetadata(inputFileId);
-        await updateFileMetadata(inputFileId, {
-          status: 'error',
-          errorMessage: error.message,
-          failedAttempts: (prev?.failedAttempts ?? 0) + 1,
-        });
-      } finally {
-        processingRef.current.delete(inputFileId);
-      }
-    },
-    [folder, folderId, setRecentRuns, toolRegistry, updateFileMetadata, getFileMetadata]
-  );
-
   const handleFiles = useCallback(
     async (files: FileList | File[], sourceFileId?: string) => {
+      if (!folder) return;
       const fileArray = Array.from(files);
       for (const file of fileArray) {
         if (!file.name.toLowerCase().endsWith('.pdf')) continue;
@@ -215,34 +125,26 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
         if (sourceFileId) {
           // File from sidebar — already in stirling-pdf-files; user still owns it
           inputFileId = sourceFileId;
-        } else if (isStirlingFile(file)) {
-          inputFileId = file.fileId;
         } else {
-          // Fresh drop from disk — folder owns this file
-          ownedByFolder = true;
-          const newFileId = createFileId();
-          const stub: StirlingFileStub = {
-            id: newFileId,
-            name: file.name,
-            type: file.type || 'application/pdf',
-            size: file.size,
-            lastModified: file.lastModified,
-            isLeaf: true,
-            originalFileId: newFileId,
-            versionNumber: 1,
-            toolHistory: [],
-            quickKey: createQuickKey(file),
-            createdAt: Date.now(),
-          };
-          await fileStorage.storeStirlingFile(createStirlingFile(file, newFileId), stub);
-          inputFileId = newFileId;
+          const resolved = await resolveInputFile(file);
+          inputFileId = resolved.inputFileId;
+          ownedByFolder = resolved.ownedByFolder;
         }
 
-        await addFile(inputFileId, { status: 'pending', name: file.name, ownedByFolder: ownedByFolder || undefined });
-        runAutomation(file, inputFileId, ownedByFolder);
+        if (folderRecord?.files[inputFileId]) {
+          // Re-processing an existing file — reset status without losing addedAt/ownedByFolder
+          await updateFileMetadata(inputFileId, { status: 'pending', errorMessage: undefined });
+        } else {
+          await addFile(inputFileId, { status: 'pending', name: file.name, ownedByFolder: ownedByFolder || undefined });
+        }
+
+        // Only run immediately if not paused; pending files will run when folder is resumed
+        if (!folder.isPaused) {
+          runPipeline(folder, file, inputFileId, ownedByFolder);
+        }
       }
     },
-    [addFile, runAutomation]
+    [folder, addFile, runPipeline]
   );
 
   useEffect(() => {
@@ -313,11 +215,10 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
     [handleFiles]
   );
 
-  const handleView = useCallback(async (blob: Blob, name: string) => {
-    const file = new File([blob], name, { type: 'application/pdf' });
-    await fileActions.addFiles([file]);
-    actions.setWorkbench('viewer');
-  }, [fileActions, actions]);
+  const handleView = useCallback((file: StirlingFile) => {
+    setPreviewFileId(file.fileId as FileId);
+    setPreviewFileName(file.name);
+  }, []);
 
   const handleDownload = useCallback(async (blob: Blob, name: string) => {
     const url = URL.createObjectURL(blob);
@@ -384,7 +285,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
       >
         <Group justify="space-between" align="center">
           <Group gap="md" align="center">
-            <ActionIcon variant="subtle" size="sm" onClick={goHome} aria-label="Back">
+            <ActionIcon variant="subtle" size="sm" onClick={goHome} aria-label={t('smartFolders.actions.back', 'Back')}>
               <ArrowBackIcon style={{ fontSize: '1rem' }} />
             </ActionIcon>
 
@@ -439,7 +340,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                   {ops.map((op, i) => (
                     <Group key={i} gap={4} wrap="nowrap" align="center">
                       {i > 0 && (
-                        <ChevronRightIcon style={{ fontSize: '0.625rem', color: 'var(--mantine-color-dimmed)' }} />
+                        <ChevronRightIcon style={{ fontSize: '0.625rem', color: 'var(--mantine-color-gray-5)' }} />
                       )}
                       <Text size="xs" c="dimmed" style={{ fontSize: '0.6875rem' }}>
                         {humaniseOp(op.operation)}
@@ -485,9 +386,9 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
-            outline: isDragOver ? `0.125rem dashed ${folder.accentColor}` : 'none',
+            outline: isDragOver ? '0.125rem dashed rgba(59,130,246,0.6)' : 'none',
             outlineOffset: '-0.25rem',
-            backgroundColor: isDragOver ? `${folder.accentColor}06` : 'transparent',
+            backgroundColor: isDragOver ? 'rgba(59,130,246,0.10)' : 'transparent',
             transition: 'background-color 0.15s ease',
           }}
           onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
@@ -565,10 +466,13 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
             }}
           >
             <Text
-              size="xs"
               fw={600}
-              c={isDragOver ? folder.accentColor : 'dimmed'}
-              style={{ textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.625rem' }}
+              style={{
+                fontSize: '0.75rem',
+                color: isDragOver ? '#3b82f6' : 'var(--tool-subcategory-text-color)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+              }}
             >
               {isDragOver
                 ? t('smartFolders.workbench.dropToProcess', 'Drop to process')
@@ -597,7 +501,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                         style={{
                           padding: '0.375rem 0.75rem',
                           borderRadius: 'var(--mantine-radius-sm)',
-                          border: `0.0625rem solid ${status === 'error' ? '#ef444440' : 'var(--border-subtle)'}`,
+                          border: `0.0625rem solid ${status === 'error' ? 'rgba(239,68,68,0.45)' : 'var(--border-subtle)'}`,
                           backgroundColor: 'var(--bg-toolbar)',
                           display: 'flex',
                           alignItems: 'center',
@@ -607,7 +511,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                         {status === 'processed' && <CheckCircleOutlineIcon style={{ fontSize: '0.875rem', color: '#22c55e', flexShrink: 0 }} />}
                         {status === 'processing' && <Loader size="0.625rem" />}
                         {status === 'error' && <ErrorOutlineIcon style={{ fontSize: '0.875rem', color: '#ef4444', flexShrink: 0 }} />}
-                        {status === 'pending' && <Box style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', backgroundColor: 'var(--mantine-color-dimmed)', flexShrink: 0 }} />}
+                        {status === 'pending' && <Box style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', backgroundColor: 'var(--mantine-color-yellow-5)', flexShrink: 0 }} />}
                         <Text size="xs" lineClamp={1} style={{ flex: 1, minWidth: 0 }}>{filename}</Text>
                         {meta?.errorMessage && <Text size="xs" c="red" lineClamp={1} style={{ flexShrink: 0, maxWidth: '30%' }}>{meta.errorMessage}</Text>}
                         {status === 'error' && inputFile && (
@@ -615,28 +519,28 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                             size="sm"
                             variant="light"
                             color="blue"
-                            title="Retry"
+                            title={t('smartFolders.actions.retry', 'Retry')}
                             onClick={async () => {
                               await updateFileMetadata(fileId, { status: 'pending', errorMessage: undefined });
-                              runAutomation(inputFile, fileId);
+                              runPipeline(folder!, inputFile, fileId, folderRecord?.files[fileId]?.ownedByFolder ?? false);
                             }}
                           >
                             <ReplayIcon style={{ fontSize: '1rem' }} />
                           </ActionIcon>
                         )}
                         {outputFile && (
-                          <ActionIcon size="sm" variant="subtle" onClick={() => handleView(outputFile, outputFile.name)} title="View">
+                          <ActionIcon size="sm" variant="subtle" onClick={() => handleView(outputFile)} title={t('smartFolders.actions.view', 'View')}>
                             <VisibilityIcon style={{ fontSize: '1rem' }} />
                           </ActionIcon>
                         )}
                         {outputFile && (
-                          <ActionIcon size="sm" variant="subtle" onClick={() => handleDownload(outputFile, outputFile.name)} title="Download output">
+                          <ActionIcon size="sm" variant="subtle" onClick={() => handleDownload(outputFile, outputFile.name)} title={t('smartFolders.actions.downloadOutput', 'Download output')}>
                             <DownloadIcon style={{ fontSize: '1rem' }} />
                           </ActionIcon>
                         )}
-                        <Text size="xs" c="dimmed" style={{ fontSize: '0.625rem', flexShrink: 0, width: '3.5rem', textAlign: 'right' }}>
+                        <Text size="xs" c="dimmed" style={{ fontSize: '0.6875rem', flexShrink: 0, width: '3.5rem', textAlign: 'right' }}>
                           {(meta?.processedAt || meta?.addedAt)
-                            ? timeAgo(new Date((meta.processedAt ?? meta.addedAt)!))
+                            ? timeAgo(new Date((meta.processedAt ?? meta.addedAt)!), t)
                             : ''}
                         </Text>
                       </Box>
@@ -691,7 +595,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
             >
               <FolderOpenIcon style={{ fontSize: '0.875rem', color: 'var(--mantine-color-blue-filled)', flexShrink: 0 }} />
               <Text size="sm" style={{ flex: 1, minWidth: 0, fontWeight: 500 }} lineClamp={1}>{file.name}</Text>
-              <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleDownload(file, file.name)} title="Download">
+              <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleDownload(file, file.name)} title={t('smartFolders.actions.download', 'Download')}>
                 <DownloadIcon style={{ fontSize: '1.125rem' }} />
               </ActionIcon>
             </Box>
@@ -741,10 +645,10 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
               <TaskAltIcon style={{ fontSize: '0.875rem', color: '#22c55e', flexShrink: 0 }} />
               <Text size="sm" style={{ flex: 1, minWidth: 0, fontWeight: 500 }} lineClamp={1}>{file.name}</Text>
               <Group gap="0.25rem" wrap="nowrap">
-                <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleView(file, file.name)} title="View">
+                <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleView(file)} title={t('smartFolders.actions.view', 'View')}>
                   <VisibilityIcon style={{ fontSize: '1.125rem' }} />
                 </ActionIcon>
-                <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleDownload(file, file.name)} title="Download">
+                <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleDownload(file, file.name)} title={t('smartFolders.actions.download', 'Download')}>
                   <DownloadIcon style={{ fontSize: '1.125rem' }} />
                 </ActionIcon>
               </Group>
@@ -771,7 +675,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                   const f = inputFiles.find(x => x.fileId === fid);
                   if (!f) continue;
                   await updateFileMetadata(fid, { status: 'pending', errorMessage: undefined });
-                  runAutomation(f, fid);
+                  runPipeline(folder!, f, fid, folderRecord?.files[fid]?.ownedByFolder ?? false);
                 }
                 closeFailedModal();
               }}
@@ -803,7 +707,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                 key={fileId}
                 style={{
                   borderRadius: 'var(--mantine-radius-sm)',
-                  border: '0.0625rem solid rgba(239,68,68,0.2)',
+                  border: '0.0625rem solid rgba(239,68,68,0.45)',
                   backgroundColor: 'var(--bg-toolbar)',
                   overflow: 'hidden',
                 }}
@@ -815,8 +719,8 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                     <Box style={{
                       padding: '0.125rem 0.375rem',
                       borderRadius: '0.25rem',
-                      backgroundColor: 'rgba(239,68,68,0.12)',
-                      border: '0.0625rem solid rgba(239,68,68,0.25)',
+                      backgroundColor: 'rgba(239,68,68,0.22)',
+                      border: '0.0625rem solid rgba(239,68,68,0.45)',
                       flexShrink: 0,
                     }}>
                       <Text style={{ fontSize: '0.625rem', fontWeight: 700, color: '#ef4444', letterSpacing: '0.03em' }}>{attempts}×</Text>
@@ -824,15 +728,15 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                   )}
                   <Group gap="0.25rem" wrap="nowrap" style={{ flexShrink: 0 }}>
                     {inputFile && (
-                      <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleDownload(inputFile, inputFile.name)} title="Download input">
+                      <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleDownload(inputFile, inputFile.name)} title={t('smartFolders.actions.downloadInput', 'Download input')}>
                         <DownloadIcon style={{ fontSize: '1.125rem' }} />
                       </ActionIcon>
                     )}
                     {inputFile && (
-                      <ActionIcon size="md" variant="light" color="blue" title="Retry"
+                      <ActionIcon size="md" variant="light" color="blue" title={t('smartFolders.actions.retry', 'Retry')}
                         onClick={async () => {
                           await updateFileMetadata(fileId, { status: 'pending', errorMessage: undefined });
-                          runAutomation(inputFile, fileId);
+                          runPipeline(folder!, inputFile, fileId, folderRecord?.files[fileId]?.ownedByFolder ?? false);
                           closeFailedModal();
                         }}
                       >
@@ -844,8 +748,9 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                 {meta?.errorMessage && (
                   <Box style={{
                     padding: '0.375rem 0.625rem',
-                    borderTop: '0.0625rem solid rgba(239,68,68,0.12)',
-                    backgroundColor: 'rgba(239,68,68,0.04)',
+                    borderTop: '0.0625rem solid rgba(239,68,68,0.25)',
+                    borderLeft: '0.1875rem solid rgba(239,68,68,0.7)',
+                    backgroundColor: 'transparent',
                   }}>
                     <Text size="xs" style={{ color: '#ef4444', fontFamily: 'monospace', fontSize: '0.6875rem', opacity: 0.85 }}>
                       {meta.errorMessage}
@@ -857,6 +762,12 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
           })}
         </Stack>
       </CardExpansionModal>
+
+      <FilePreviewModal
+        fileId={previewFileId}
+        fileName={previewFileName}
+        onClose={() => setPreviewFileId(null)}
+      />
     </Box>
   );
 }

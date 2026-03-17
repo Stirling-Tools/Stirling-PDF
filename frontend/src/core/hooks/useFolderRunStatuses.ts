@@ -4,16 +4,25 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { SmartFolder } from '@app/types/smartFolders';
+import { SmartFolder, SmartFolderRunEntry } from '@app/types/smartFolders';
 import { folderRunStateStorage } from '@app/services/folderRunStateStorage';
 
 export type FolderRunStatus = 'idle' | 'processing' | 'done';
 
 const DONE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
+function deriveStatus(runs: SmartFolderRunEntry[]): FolderRunStatus {
+  if (runs.some(r => r.status === 'processing')) return 'processing';
+  // Only treat recent runs (within TTL) as 'done' — avoids permanent green tick on old folders
+  if (runs.some(r => r.status === 'processed' && r.processedAt != null && (Date.now() - r.processedAt.getTime()) < DONE_TTL_MS)) return 'done';
+  return 'idle';
+}
+
 export function useFolderRunStatuses(folders: SmartFolder[]): Record<string, FolderRunStatus> {
   const [statuses, setStatuses] = useState<Record<string, FolderRunStatus>>({});
   const doneTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const foldersRef = useRef(folders);
+  foldersRef.current = folders;
 
   useEffect(() => {
     if (folders.length === 0) return;
@@ -23,9 +32,7 @@ export function useFolderRunStatuses(folders: SmartFolder[]): Record<string, Fol
       for (const folder of folders) {
         try {
           const runs = await folderRunStateStorage.getFolderRunState(folder.id);
-          const hasProcessing = runs.some(r => r.status === 'processing');
-          const hasDone = runs.some(r => r.status === 'processed');
-          newStatuses[folder.id] = hasProcessing ? 'processing' : hasDone ? 'done' : 'idle';
+          newStatuses[folder.id] = deriveStatus(runs);
         } catch {
           newStatuses[folder.id] = 'idle';
         }
@@ -35,6 +42,16 @@ export function useFolderRunStatuses(folders: SmartFolder[]): Record<string, Fol
 
     load();
   }, [folders]);
+
+  // Update individual folder status live when new run entries are appended
+  useEffect(() => {
+    return folderRunStateStorage.onRunStateChange((changedFolderId) => {
+      if (!foldersRef.current.find(f => f.id === changedFolderId)) return;
+      folderRunStateStorage.getFolderRunState(changedFolderId)
+        .then((runs) => { setStatuses(prev => ({ ...prev, [changedFolderId]: deriveStatus(runs) })); })
+        .catch((err) => console.error('Failed to update run status:', err));
+    });
+  }, []);
 
   // When a folder becomes 'done', revert to 'idle' after TTL
   useEffect(() => {

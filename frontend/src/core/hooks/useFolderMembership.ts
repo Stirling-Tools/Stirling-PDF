@@ -45,8 +45,7 @@ export function useFolderMembership(): Map<string, string[]> {
 
     load();
 
-    window.addEventListener('folder-storage-changed', load);
-    return () => window.removeEventListener('folder-storage-changed', load);
+    return folderStorage.onFolderChange(load);
   }, [folders]);
 
   return membership;

@@ -150,29 +150,6 @@ class FolderStorage {
     });
   }
 
-  async getProcessingFileIds(folderId: string): Promise<string[]> {
-    const record = await this.getFolderData(folderId);
-    if (!record) return [];
-    return Object.entries(record.files)
-      .filter(([, meta]) => meta.status === 'processing')
-      .map(([id]) => id);
-  }
-
-  async getProcessedFileIds(folderId: string): Promise<string[]> {
-    const record = await this.getFolderData(folderId);
-    if (!record) return [];
-    return Object.entries(record.files)
-      .filter(([, meta]) => meta.status === 'processed')
-      .map(([id]) => id);
-  }
-
-  async getPendingFileIds(folderId: string): Promise<string[]> {
-    const record = await this.getFolderData(folderId);
-    if (!record) return [];
-    return Object.entries(record.files)
-      .filter(([, meta]) => meta.status === 'pending')
-      .map(([id]) => id);
-  }
 }
 
 export const folderStorage = new FolderStorage();

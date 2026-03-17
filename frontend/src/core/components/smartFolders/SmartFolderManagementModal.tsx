@@ -9,6 +9,8 @@ import {
   Divider,
   ColorInput,
   Text,
+  Alert,
+  Switch,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { SmartFolder } from '@app/types/smartFolders';
@@ -47,9 +49,14 @@ export function SmartFolderManagementModal({
   const [description, setDescription] = useState(editFolder?.description ?? '');
   const [icon, setIcon] = useState(editFolder?.icon ?? 'FolderIcon');
   const [accentColor, setAccentColor] = useState(editFolder?.accentColor ?? '#3b82f6');
+  const [outputMode, setOutputMode] = useState<'new_file' | 'new_version'>(editFolder?.outputMode ?? 'new_file');
+  const [outputName, setOutputName] = useState(editFolder?.outputName ?? editFolder?.name ?? '');
+  const [outputNamePosition, setOutputNamePosition] = useState<'prefix' | 'suffix'>(editFolder?.outputNamePosition ?? 'prefix');
+  const outputNameDirty = useRef(!!editFolder?.outputName);
   const [saving, setSaving] = useState(false);
   const [nameError, setNameError] = useState('');
   const [automationError, setAutomationError] = useState('');
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // AutomationCreation exposes its save function via this ref
   const automationSaveTrigger = useRef<(() => void) | null>(null);
@@ -59,9 +66,14 @@ export function SmartFolderManagementModal({
     setDescription(editFolder?.description ?? '');
     setIcon(editFolder?.icon ?? 'FolderIcon');
     setAccentColor(editFolder?.accentColor ?? '#3b82f6');
+    setOutputMode(editFolder?.outputMode ?? 'new_file');
+    setOutputName(editFolder?.outputName ?? editFolder?.name ?? '');
+    setOutputNamePosition(editFolder?.outputNamePosition ?? 'prefix');
+    outputNameDirty.current = !!editFolder?.outputName;
 
     setNameError('');
     setAutomationError('');
+    setSaveError(null);
     setSaving(false);
   }, [editFolder]);
 
@@ -86,6 +98,9 @@ export function SmartFolderManagementModal({
           icon,
           accentColor,
           automationId: automation.id,
+          outputMode: outputMode === 'new_version' ? 'new_version' : undefined,
+          outputName: outputName.trim() || undefined,
+          outputNamePosition: outputNamePosition === 'suffix' ? 'suffix' : undefined,
         });
       } else {
         await smartFolderStorage.createFolder({
@@ -94,6 +109,9 @@ export function SmartFolderManagementModal({
           icon,
           accentColor,
           automationId: automation.id,
+          outputMode: outputMode === 'new_version' ? 'new_version' : undefined,
+          outputName: outputName.trim() || undefined,
+          outputNamePosition: outputNamePosition === 'suffix' ? 'suffix' : undefined,
         });
       }
       resetState();
@@ -101,10 +119,11 @@ export function SmartFolderManagementModal({
       onClose();
     } catch (error) {
       console.error('Failed to save smart folder:', error);
+      setSaveError(t('smartFolders.modal.saveFailed', 'Failed to save folder. Please try again.'));
     } finally {
       setSaving(false);
     }
-  }, [name, description, icon, accentColor, isEditMode, editFolder, resetState, onSaved, onClose]);
+  }, [name, description, icon, accentColor, outputMode, outputName, outputNamePosition, isEditMode, editFolder, resetState, onSaved, onClose]);
 
   const handleSave = () => {
     const trimmedName = name.trim();
@@ -142,7 +161,12 @@ export function SmartFolderManagementModal({
               label={t('smartFolders.modal.name', 'Folder name')}
               placeholder={t('smartFolders.modal.namePlaceholder', 'My Watch Folder')}
               value={name}
-              onChange={(e) => { setName(e.currentTarget.value); setNameError(''); }}
+              onChange={(e) => {
+                const val = e.currentTarget.value;
+                setName(val);
+                setNameError('');
+                if (!outputNameDirty.current) setOutputName(val);
+              }}
               error={nameError}
               withAsterisk
               maxLength={50}
@@ -173,6 +197,39 @@ export function SmartFolderManagementModal({
           />
         </Stack>
 
+        <Divider label={t('smartFolders.modal.outputLabel', 'Output')} labelPosition="left" />
+
+        <Stack gap="xs">
+          <Switch
+            label={t('smartFolders.modal.outputModeVersion', 'Replace original?')}
+            description={outputMode === 'new_version'
+              ? t('smartFolders.modal.outputModeVersionDesc', 'Output becomes a new version of the input file rather than a separate file')
+              : t('smartFolders.modal.outputModeNewDesc', 'Output is saved as a new separate file')}
+            checked={outputMode === 'new_version'}
+            onChange={(e) => setOutputMode(e.currentTarget.checked ? 'new_version' : 'new_file')}
+            size="sm"
+          />
+          {outputMode !== 'new_version' && (
+            <Group gap="xs" align="flex-end">
+              <TextInput
+                label={t('smartFolders.modal.outputName', outputNamePosition === 'suffix' ? 'Output filename suffix' : 'Output filename prefix')}
+                value={outputName}
+                onChange={(e) => { outputNameDirty.current = true; setOutputName(e.currentTarget.value); }}
+                maxLength={100}
+                size="sm"
+                style={{ flex: 1 }}
+              />
+              <Switch
+                label={t('smartFolders.modal.outputNameSuffix', 'Suffix')}
+                checked={outputNamePosition === 'suffix'}
+                onChange={(e) => setOutputNamePosition(e.currentTarget.checked ? 'suffix' : 'prefix')}
+                size="sm"
+                mb={4}
+              />
+            </Group>
+          )}
+        </Stack>
+
         <Divider label={t('smartFolders.modal.automation', 'Automation')} labelPosition="left" />
 
         <AutomationCreation
@@ -183,7 +240,7 @@ export function SmartFolderManagementModal({
           onSaveFailed={() => { setSaving(false); setAutomationError(t('smartFolders.modal.automationRequired', 'Add at least one configured step before saving.')); }}
           toolRegistry={toolRegistry}
           hideMetadata
-          nameOverride={name.trim() || 'Watch Folder Automation'}
+          nameOverride={name.trim() || t('smartFolders.modal.automationNameFallback', 'Watch Folder Automation')}
           saveTriggerRef={automationSaveTrigger}
         />
         {automationError && (
@@ -191,6 +248,12 @@ export function SmartFolderManagementModal({
         )}
 
         <Divider />
+
+        {saveError && (
+          <Alert color="red" variant="light" onClose={() => setSaveError(null)} withCloseButton>
+            {saveError}
+          </Alert>
+        )}
 
         <Group justify="flex-end" gap="sm">
           <Button variant="outline" size="sm" onClick={handleClose}>

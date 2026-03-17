@@ -14,6 +14,9 @@ export interface SmartFolder {
   order?: number;
   isDefault?: boolean;
   isPaused?: boolean;
+  outputMode?: 'new_file' | 'new_version';       // default: 'new_file' (existing behaviour)
+  outputName?: string;                           // output filename prefix/suffix
+  outputNamePosition?: 'prefix' | 'suffix';      // default: 'prefix'
 }
 
 export interface FolderFileMetadata {
@@ -40,6 +43,11 @@ export interface FolderRecord {
 
 export interface SmartFolderRunEntry {
   inputFileId: string;
+  /** First output file id */
   displayFileId: string;
+  /** All output file ids produced by this run — kept in sync with FolderFileMetadata.displayFileIds */
+  displayFileIds?: string[];
+  /** When this run completed — used for TTL-based "done" status */
+  processedAt?: Date;
   status: 'processing' | 'processed';
 }

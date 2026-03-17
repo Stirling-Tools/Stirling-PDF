@@ -1,12 +1,16 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { Box, Text, ActionIcon, Group, Popover, Stack, Button, Tooltip, TextInput, Select, ScrollArea, Indicator } from '@mantine/core';
+import { Box, Text, ActionIcon, Group, Popover, Stack, Button, Tooltip, TextInput, Select, ScrollArea, Indicator, Collapse } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import TuneIcon from '@mui/icons-material/Tune';
-import { StirlingFileStub } from '@app/types/fileContext';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { FileId, StirlingFileStub } from '@app/types/fileContext';
+import { FilePreviewModal } from '@app/components/smartFolders/FilePreviewModal';
+import { useFolderOutputIds } from '@app/hooks/useFolderOutputIds';
 import { useFolderMembership } from '@app/hooks/useFolderMembership';
 import { useAllSmartFolders } from '@app/hooks/useAllSmartFolders';
 import { iconMap } from '@app/components/tools/automate/iconMap';
@@ -92,6 +96,7 @@ function FileRow({
   onSendToFolder,
   onNavigateToFolder,
   onDragStart,
+  onPreview,
 }: {
   file: StirlingFileStub;
   index: number;
@@ -102,11 +107,14 @@ function FileRow({
   onSendToFolder: (fileId: string, folderId: string) => void;
   onNavigateToFolder: (folderId: string) => void;
   onDragStart: (e: React.DragEvent, file: StirlingFileStub) => void;
+  onPreview: (fileId: FileId, fileName: string) => void;
 }) {
   const { t } = useTranslation();
   const folders = useAllSmartFolders();
   const [hovered, setHovered] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const mouseDownPos = useRef<{ x: number; y: number } | null>(null);
+  const rowRef = useRef<HTMLDivElement>(null);
 
   const isInCurrentFolder = currentFolderId !== null && memberFolderIds.includes(currentFolderId);
   // Folders this file belongs to that aren't the current one
@@ -129,7 +137,22 @@ function FileRow({
 
   return (
     <Box
-      draggable={!isInCurrentFolder}
+      ref={rowRef}
+      draggable={false}
+      onMouseDown={(e) => {
+        if (isInCurrentFolder) return;
+        mouseDownPos.current = { x: e.clientX, y: e.clientY };
+      }}
+      onMouseMove={(e) => {
+        if (!mouseDownPos.current || !rowRef.current || isInCurrentFolder) return;
+        const dx = e.clientX - mouseDownPos.current.x;
+        const dy = e.clientY - mouseDownPos.current.y;
+        if (Math.sqrt(dx * dx + dy * dy) >= 5) rowRef.current.draggable = true;
+      }}
+      onMouseUp={() => {
+        mouseDownPos.current = null;
+        if (rowRef.current) rowRef.current.draggable = false;
+      }}
       onDragStart={isInCurrentFolder ? undefined : (e) => onDragStart(e, file)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -180,6 +203,25 @@ function FileRow({
         >
           {file.name}
         </Text>
+
+        {/* Preview button */}
+        <Tooltip label={t('smartFolders.fileList.preview', 'Preview')} withArrow>
+          <ActionIcon
+            data-no-select
+            size="sm"
+            variant="subtle"
+            color="gray"
+            style={{
+              flexShrink: 0,
+              opacity: hovered ? 1 : 0,
+              transition: 'opacity 0.15s ease',
+              borderRadius: 'var(--mantine-radius-sm)',
+            }}
+            onClick={(e) => { e.stopPropagation(); onPreview(file.id as FileId, file.name); }}
+          >
+            <VisibilityIcon style={{ fontSize: '0.875rem' }} />
+          </ActionIcon>
+        </Tooltip>
 
         {/* Action button */}
         {isInCurrentFolder ? null : currentFolderId !== null ? (
@@ -280,7 +322,7 @@ function FileRow({
           {file.size && (
             <Text
               style={{
-                fontSize: '0.5625rem',
+                fontSize: '0.625rem',
                 color: 'var(--mantine-color-dimmed)',
                 lineHeight: 1,
                 marginRight: '0.125rem',
@@ -317,7 +359,7 @@ function FileRow({
                   flexShrink: 0,
                 }}
               >
-                <Text style={{ fontSize: '0.5625rem', fontWeight: 600, color: 'var(--mantine-color-dimmed)', lineHeight: 1 }}>
+                <Text style={{ fontSize: '0.625rem', fontWeight: 600, color: 'var(--mantine-color-dimmed)', lineHeight: 1 }}>
                   +{overflowFolders.length}
                 </Text>
               </Box>
@@ -330,13 +372,23 @@ function FileRow({
   );
 }
 
-function SectionHeader({ label, count }: { label: string; count: number }) {
+function SectionHeader({ label, count, expanded, onToggle }: { label: string; count: number; expanded: boolean; onToggle: () => void }) {
   return (
-    <Box style={{ padding: '0.5rem 0.5rem 0.25rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-      <Text style={{ fontSize: '0.5625rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--mantine-color-dimmed)' }}>
+    <Box
+      onClick={onToggle}
+      style={{ padding: '0.5rem 0.5rem 0.25rem', display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer', userSelect: 'none' }}
+    >
+      <ChevronRightIcon style={{
+        fontSize: '0.75rem',
+        color: 'var(--tool-subcategory-text-color)',
+        transform: expanded ? 'rotate(90deg)' : 'none',
+        transition: 'transform 0.15s ease',
+        flexShrink: 0,
+      }} />
+      <Text style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--tool-subcategory-text-color)' }}>
         {label}
       </Text>
-      <Text style={{ fontSize: '0.5625rem', color: 'var(--mantine-color-dimmed)' }}>
+      <Text style={{ fontSize: '0.75rem', color: 'var(--tool-subcategory-text-color)' }}>
         {count}
       </Text>
     </Box>
@@ -349,11 +401,18 @@ type FilterMode = 'all' | 'unassigned' | string; // string = folder id
 export function WatchFolderFileList({ files, folderId, onSendToFolder, onNavigateToFolder }: WatchFolderFileListProps) {
   const { t } = useTranslation();
   const membership = useFolderMembership();
+  const outputFileIds = useFolderOutputIds();
   const allFolders = useAllSmartFolders();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const lastSelectedIdxRef = useRef<number | null>(null);
   const ghostRef = useRef<HTMLDivElement | null>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
+  const [previewFileId, setPreviewFileId] = useState<FileId | null>(null);
+  const [previewFileName, setPreviewFileName] = useState('');
+  const [bulkPickerOpen, setBulkPickerOpen] = useState(false);
+  const [unassignedExpanded, setUnassignedExpanded] = useState(true);
+  const [inFoldersExpanded, setInFoldersExpanded] = useState(true);
+  const [outputsExpanded, setOutputsExpanded] = useState(false);
 
   const { addFiles } = useFileHandler();
 
@@ -416,11 +475,12 @@ export function WatchFolderFileList({ files, folderId, onSendToFolder, onNavigat
     return result;
   }, [files, search, sortKey, filterMode, filterNegate, membership]);
 
-  // When filter mode is 'all' keep the unassigned / in-folders section split
-  const unassigned = processedFiles.filter(f => !membership.has(f.id));
-  const inFolders  = processedFiles.filter(f =>  membership.has(f.id));
+  // When filter mode is 'all' keep the unassigned / in-folders / outputs section split
+  const unassigned = processedFiles.filter(f => !membership.has(f.id) && !outputFileIds.has(f.id));
+  const inFolders  = processedFiles.filter(f =>  membership.has(f.id) && !outputFileIds.has(f.id));
+  const outputs    = processedFiles.filter(f => outputFileIds.has(f.id));
   // Flat ordered list used for shift-select indexing
-  const orderedFiles = filterMode === 'all' ? [...unassigned, ...inFolders] : processedFiles;
+  const orderedFiles = filterMode === 'all' ? [...unassigned, ...inFolders, ...outputs] : processedFiles;
 
   const handleToggleSelect = useCallback((idx: number, shiftKey: boolean) => {
     const file = orderedFiles[idx];
@@ -482,6 +542,11 @@ export function WatchFolderFileList({ files, folderId, onSendToFolder, onNavigat
     if (ghostRef.current) { document.body.removeChild(ghostRef.current); ghostRef.current = null; }
     clearSelection();
   }, [clearSelection]);
+
+  const handlePreview = useCallback((fileId: FileId, fileName: string) => {
+    setPreviewFileId(fileId);
+    setPreviewFileName(fileName);
+  }, []);
 
   const sortOptions = [
     { value: 'date-desc', label: t('smartFolders.fileList.sort.newest', 'Newest first') },
@@ -550,7 +615,7 @@ export function WatchFolderFileList({ files, folderId, onSendToFolder, onNavigat
             <Popover.Dropdown p="xs">
               <Stack gap="xs">
                 <Box>
-                  <Text size="xs" fw={600} c="dimmed" tt="uppercase" style={{ fontSize: '0.5625rem', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>
+                  <Text size="xs" fw={600} style={{ fontSize: '0.625rem', color: 'var(--tool-subcategory-text-color)', marginBottom: '0.25rem' }}>
                     {t('smartFolders.fileList.sortLabel', 'Sort')}
                   </Text>
                   <Select
@@ -564,7 +629,7 @@ export function WatchFolderFileList({ files, folderId, onSendToFolder, onNavigat
                   />
                 </Box>
                 <Box>
-                  <Text size="xs" fw={600} c="dimmed" tt="uppercase" style={{ fontSize: '0.5625rem', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>
+                  <Text size="xs" fw={600} style={{ fontSize: '0.625rem', color: 'var(--tool-subcategory-text-color)', marginBottom: '0.25rem' }}>
                     {t('smartFolders.fileList.filterLabel', 'Filter')}
                   </Text>
                   <Select
@@ -579,7 +644,7 @@ export function WatchFolderFileList({ files, folderId, onSendToFolder, onNavigat
                 </Box>
                 {isFolderFilter && (
                   <Box>
-                    <Text size="xs" fw={600} c="dimmed" tt="uppercase" style={{ fontSize: '0.5625rem', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>
+                    <Text size="xs" fw={600} style={{ fontSize: '0.625rem', color: 'var(--tool-subcategory-text-color)', marginBottom: '0.25rem' }}>
                       {t('smartFolders.fileList.matchLabel', 'Match')}
                     </Text>
                     <Group gap="0" style={{ border: '1px solid var(--mantine-color-default-border)', borderRadius: 'var(--mantine-radius-sm)', overflow: 'hidden' }}>
@@ -632,6 +697,66 @@ export function WatchFolderFileList({ files, folderId, onSendToFolder, onNavigat
             <Text size="xs" fw={600} style={{ flex: 1, color: 'var(--mantine-color-blue-filled)', fontSize: '0.6875rem' }}>
               {selectedIds.size} {t('smartFolders.fileList.selected', 'selected')}
             </Text>
+            <Popover
+              opened={bulkPickerOpen}
+              onChange={setBulkPickerOpen}
+              position="bottom-end"
+              withArrow
+              shadow="md"
+              withinPortal
+            >
+              <Popover.Target>
+                <Tooltip label={t('smartFolders.fileList.addToFolder', 'Add to folder')} withArrow>
+                  <ActionIcon
+                    size="xs"
+                    variant="light"
+                    color="blue"
+                    onClick={(e) => { e.stopPropagation(); setBulkPickerOpen(o => !o); }}
+                    style={{ color: 'var(--mantine-color-blue-filled)' }}
+                  >
+                    <AddIcon style={{ fontSize: '0.75rem' }} />
+                  </ActionIcon>
+                </Tooltip>
+              </Popover.Target>
+              <Popover.Dropdown p="xs" style={{ minWidth: '10rem' }}>
+                <Text size="xs" fw={600} style={{ fontSize: '0.5625rem', letterSpacing: '0.05em', color: 'var(--tool-subcategory-text-color)', marginBottom: '0.25rem' }}>
+                  {t('smartFolders.fileList.addToFolder', 'Add to folder')}
+                </Text>
+                <Stack gap={2}>
+                  {allFolders.map(folder => {
+                    const FolderIconComp = iconMap[folder.icon as keyof typeof iconMap] || iconMap.FolderIcon;
+                    return (
+                      <Button
+                        key={folder.id}
+                        variant="subtle"
+                        size="xs"
+                        justify="flex-start"
+                        fullWidth
+                        leftSection={
+                          <Box style={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: `${folder.accentColor}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <FolderIconComp style={{ fontSize: 9, color: folder.accentColor }} />
+                          </Box>
+                        }
+                        onClick={() => {
+                          Array.from(selectedIds).forEach(id => onSendToFolder(id, folder.id));
+                          setBulkPickerOpen(false);
+                          clearSelection();
+                        }}
+                      >
+                        <Text size="xs" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {folder.name}
+                        </Text>
+                      </Button>
+                    );
+                  })}
+                  {allFolders.length === 0 && (
+                    <Text size="xs" c="dimmed" ta="center" py="xs">
+                      {t('smartFolders.noFolders', 'No watch folders yet')}
+                    </Text>
+                  )}
+                </Stack>
+              </Popover.Dropdown>
+            </Popover>
             <ActionIcon size="xs" variant="transparent" onClick={clearSelection} style={{ color: 'var(--mantine-color-blue-filled)' }}>
               <CloseIcon style={{ fontSize: '0.75rem' }} />
             </ActionIcon>
@@ -668,48 +793,90 @@ export function WatchFolderFileList({ files, folderId, onSendToFolder, onNavigat
                 onSendToFolder={onSendToFolder}
                 onNavigateToFolder={onNavigateToFolder}
                 onDragStart={handleDragStart}
+                onPreview={handlePreview}
               />
             ))
           ) : (
             <>
               {unassigned.length > 0 && (
                 <>
-                  {inFolders.length > 0 && (
-                    <SectionHeader label={t('smartFolders.fileList.unassigned', 'Unassigned')} count={unassigned.length} />
-                  )}
-                  {unassigned.map((file, i) => (
-                    <FileRow
-                      key={file.id}
-                      file={file}
-                      index={i}
-                      currentFolderId={folderId}
-                      memberFolderIds={[]}
-                      isSelected={selectedIds.has(file.id)}
-                      onToggleSelect={handleToggleSelect}
-                      onSendToFolder={onSendToFolder}
-                      onNavigateToFolder={onNavigateToFolder}
-                      onDragStart={handleDragStart}
-                    />
-                  ))}
+                  <SectionHeader
+                    label={t('smartFolders.fileList.unassigned', 'Unassigned')}
+                    count={unassigned.length}
+                    expanded={unassignedExpanded}
+                    onToggle={() => setUnassignedExpanded(v => !v)}
+                  />
+                  <Collapse in={unassignedExpanded}>
+                    {unassigned.map((file, i) => (
+                      <FileRow
+                        key={file.id}
+                        file={file}
+                        index={i}
+                        currentFolderId={folderId}
+                        memberFolderIds={[]}
+                        isSelected={selectedIds.has(file.id)}
+                        onToggleSelect={handleToggleSelect}
+                        onSendToFolder={onSendToFolder}
+                        onNavigateToFolder={onNavigateToFolder}
+                        onDragStart={handleDragStart}
+                        onPreview={handlePreview}
+                      />
+                    ))}
+                  </Collapse>
                 </>
               )}
               {inFolders.length > 0 && (
                 <>
-                  <SectionHeader label={t('smartFolders.fileList.inFolders', 'In folders')} count={inFolders.length} />
-                  {inFolders.map((file, i) => (
-                    <FileRow
-                      key={file.id}
-                      file={file}
-                      index={unassigned.length + i}
-                      currentFolderId={folderId}
-                      memberFolderIds={membership.get(file.id) ?? []}
-                      isSelected={selectedIds.has(file.id)}
-                      onToggleSelect={handleToggleSelect}
-                      onSendToFolder={onSendToFolder}
-                      onNavigateToFolder={onNavigateToFolder}
-                      onDragStart={handleDragStart}
-                    />
-                  ))}
+                  <SectionHeader
+                    label={t('smartFolders.fileList.inFolders', 'In folders')}
+                    count={inFolders.length}
+                    expanded={inFoldersExpanded}
+                    onToggle={() => setInFoldersExpanded(v => !v)}
+                  />
+                  <Collapse in={inFoldersExpanded}>
+                    {inFolders.map((file, i) => (
+                      <FileRow
+                        key={file.id}
+                        file={file}
+                        index={unassigned.length + i}
+                        currentFolderId={folderId}
+                        memberFolderIds={membership.get(file.id) ?? []}
+                        isSelected={selectedIds.has(file.id)}
+                        onToggleSelect={handleToggleSelect}
+                        onSendToFolder={onSendToFolder}
+                        onNavigateToFolder={onNavigateToFolder}
+                        onDragStart={handleDragStart}
+                        onPreview={handlePreview}
+                      />
+                    ))}
+                  </Collapse>
+                </>
+              )}
+              {outputs.length > 0 && (
+                <>
+                  <SectionHeader
+                    label={t('smartFolders.fileList.outputs', 'Folder Outputs')}
+                    count={outputs.length}
+                    expanded={outputsExpanded}
+                    onToggle={() => setOutputsExpanded(v => !v)}
+                  />
+                  <Collapse in={outputsExpanded}>
+                    {outputs.map((file, i) => (
+                      <FileRow
+                        key={file.id}
+                        file={file}
+                        index={unassigned.length + inFolders.length + i}
+                        currentFolderId={folderId}
+                        memberFolderIds={membership.get(file.id) ?? []}
+                        isSelected={selectedIds.has(file.id)}
+                        onToggleSelect={handleToggleSelect}
+                        onSendToFolder={onSendToFolder}
+                        onNavigateToFolder={onNavigateToFolder}
+                        onDragStart={handleDragStart}
+                        onPreview={handlePreview}
+                      />
+                    ))}
+                  </Collapse>
                 </>
               )}
             </>
@@ -723,6 +890,11 @@ export function WatchFolderFileList({ files, folderId, onSendToFolder, onNavigat
         accept=".pdf"
         style={{ display: 'none' }}
         onChange={handleInputChange}
+      />
+      <FilePreviewModal
+        fileId={previewFileId}
+        fileName={previewFileName}
+        onClose={() => setPreviewFileId(null)}
       />
     </Box>
   );

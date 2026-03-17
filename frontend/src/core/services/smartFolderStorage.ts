@@ -86,7 +86,7 @@ class SmartFolderStorage {
     const db = await this.ensureDB();
     const timestamp = new Date().toISOString();
     const folder: SmartFolder = {
-      id: `folder-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `folder-${crypto.randomUUID()}`,
       ...data,
       createdAt: timestamp,
       updatedAt: timestamp,

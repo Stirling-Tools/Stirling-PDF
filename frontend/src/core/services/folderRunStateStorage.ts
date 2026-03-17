@@ -1,8 +1,10 @@
 /**
- * Service for managing Smart Folder run state in IndexedDB
+ * Service for managing Watch Folder run state in IndexedDB
  */
 
 import { SmartFolderRunEntry } from '@app/types/smartFolders';
+
+const FOLDER_RUN_STATE_CHANGE_EVENT = 'folder-run-state-changed';
 
 interface RunStateRecord {
   folderId: string;
@@ -64,8 +66,44 @@ class FolderRunStateStorage {
       const transaction = db.transaction([this.storeName], 'readwrite');
       const store = transaction.objectStore(this.storeName);
       const request = store.put(record);
-      request.onsuccess = () => resolve();
+      request.onsuccess = () => {
+        window.dispatchEvent(new CustomEvent(FOLDER_RUN_STATE_CHANGE_EVENT, { detail: { folderId } }));
+        resolve();
+      };
       request.onerror = () => reject(new Error('Failed to set folder run state'));
+    });
+  }
+
+  onRunStateChange(listener: (folderId: string) => void): () => void {
+    const handler = (e: Event) => listener((e as CustomEvent).detail.folderId);
+    window.addEventListener(FOLDER_RUN_STATE_CHANGE_EVENT, handler);
+    return () => window.removeEventListener(FOLDER_RUN_STATE_CHANGE_EVENT, handler);
+  }
+
+  /** Atomically appends entries to a folder's run state within a single readwrite transaction,
+   *  preventing lost-update races when multiple files are processed concurrently. */
+  async appendRunEntries(folderId: string, entries: SmartFolderRunEntry[]): Promise<void> {
+    if (entries.length === 0) return;
+    const db = await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], 'readwrite');
+      const store = transaction.objectStore(this.storeName);
+      const getRequest = store.get(folderId);
+      getRequest.onsuccess = () => {
+        const existing: RunStateRecord | undefined = getRequest.result;
+        const record: RunStateRecord = {
+          folderId,
+          runs: [...(existing?.runs ?? []), ...entries],
+          lastUpdated: Date.now(),
+        };
+        const putRequest = store.put(record);
+        putRequest.onsuccess = () => {
+          window.dispatchEvent(new CustomEvent(FOLDER_RUN_STATE_CHANGE_EVENT, { detail: { folderId } }));
+          resolve();
+        };
+        putRequest.onerror = () => reject(new Error('Failed to append run entries'));
+      };
+      getRequest.onerror = () => reject(new Error('Failed to read run state for append'));
     });
   }
 
