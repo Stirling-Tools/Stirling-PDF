@@ -72,6 +72,8 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
   const [shareRole, setShareRole] = useState<'editor' | 'commenter' | 'viewer'>('editor');
   const [showEmailWarning, setShowEmailWarning] = useState(false);
   const [selectedActivityToken, setSelectedActivityToken] = useState<string | null>(null);
+  const [confirmRevokeToken, setConfirmRevokeToken] = useState<string | null>(null);
+  const [confirmRemoveUser, setConfirmRemoveUser] = useState<string | null>(null);
 
   const normalizedShareUsername = shareUsername.trim();
   const lowerShareUsername = normalizedShareUsername.toLowerCase();
@@ -220,8 +222,11 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
   const handleRevokeLink = useCallback(async (token: string) => {
     if (!file.remoteStorageId) return;
     setIsLoading(true);
+    setConfirmRevokeToken(null);
     try {
       await apiClient.delete(`/api/v1/storage/files/${file.remoteStorageId}/shares/links/${token}`);
+      // Compute before setShareLinks so we don't read stale closure state after the update
+      const nextHasLinks = shareLinks.filter((link) => link.token !== token).length > 0;
       setShareLinks((prev) => prev.filter((link) => link.token !== token));
       setActivityMap((prev) => {
         const updated = { ...prev };
@@ -229,8 +234,6 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
         return updated;
       });
       setSelectedActivityToken((prev) => (prev === token ? null : prev));
-      const nextHasLinks =
-        shareLinks.filter((link) => link.token !== token).length > 0;
       actions.updateStirlingFileStub(file.id, { remoteHasShareLinks: nextHasLinks });
       await fileStorage.updateFileMetadata(file.id, { remoteHasShareLinks: nextHasLinks });
       alert({
@@ -357,6 +360,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
     if (!file.remoteStorageId) return;
     setIsLoading(true);
     setErrorMessage(null);
+    setConfirmRemoveUser(null);
     try {
       await apiClient.delete(
         `/api/v1/storage/files/${file.remoteStorageId}/shares/users/${encodeURIComponent(
@@ -545,15 +549,37 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                             ]}
                             size="xs"
                           />
-                          <Button
-                            variant="light"
-                            size="xs"
-                            color="red"
-                            leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
-                            onClick={() => handleRemoveUser(user.username)}
-                          >
-                            {t('storageShare.removeUser', 'Remove')}
-                          </Button>
+                          {confirmRemoveUser === user.username ? (
+                            <Group gap="xs">
+                              <Button
+                                variant="filled"
+                                size="xs"
+                                color="red"
+                                onClick={() => { void handleRemoveUser(user.username); }}
+                                loading={isLoading}
+                              >
+                                {t('confirm', 'Confirm')}
+                              </Button>
+                              <Button
+                                variant="default"
+                                size="xs"
+                                onClick={() => setConfirmRemoveUser(null)}
+                              >
+                                {t('cancel', 'Cancel')}
+                              </Button>
+                            </Group>
+                          ) : (
+                            <Button
+                              variant="light"
+                              size="xs"
+                              color="red"
+                              leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
+                              onClick={() => setConfirmRemoveUser(user.username)}
+                              disabled={isLoading}
+                            >
+                              {t('storageShare.removeUser', 'Remove')}
+                            </Button>
+                          )}
                         </Group>
                       </Group>
                     ))}
@@ -646,15 +672,37 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                                   ? t('storageShare.hideActivity', 'Hide activity')
                                   : t('storageShare.viewActivity', 'View activity')}
                               </Button>
-                              <Button
-                                variant="light"
-                                size="xs"
-                                color="red"
-                                leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
-                                onClick={() => handleRevokeLink(link.token)}
-                              >
-                                {t('storageShare.removeLink', 'Remove link')}
-                              </Button>
+                              {confirmRevokeToken === link.token ? (
+                                <Group gap="xs">
+                                  <Button
+                                    variant="filled"
+                                    size="xs"
+                                    color="red"
+                                    onClick={() => { void handleRevokeLink(link.token); }}
+                                    loading={isLoading}
+                                  >
+                                    {t('confirm', 'Confirm')}
+                                  </Button>
+                                  <Button
+                                    variant="default"
+                                    size="xs"
+                                    onClick={() => setConfirmRevokeToken(null)}
+                                  >
+                                    {t('cancel', 'Cancel')}
+                                  </Button>
+                                </Group>
+                              ) : (
+                                <Button
+                                  variant="light"
+                                  size="xs"
+                                  color="red"
+                                  leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
+                                  onClick={() => setConfirmRevokeToken(link.token)}
+                                  disabled={isLoading}
+                                >
+                                  {t('storageShare.removeLink', 'Remove link')}
+                                </Button>
+                              )}
                             </Group>
                           </Group>
                         </Stack>
