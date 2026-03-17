@@ -936,7 +936,7 @@ public class SigningFinalizationService {
                 return userServerCertificateService.getUserKeystorePassword(
                         participant.getUser().getId());
             } catch (Exception e) {
-                log.error("Failed to get user certificate password: {}", e.getMessage());
+                log.error("Failed to get user certificate password", e);
                 return null;
             }
         }
@@ -1101,10 +1101,11 @@ public class SigningFinalizationService {
                     subjectCN, issuerCN, serial, validFrom, validUntil, x509.getSigAlgName());
 
         } catch (Exception e) {
-            log.debug(
+            log.warn(
                     "Could not extract certificate info for {}: {}",
                     participant.getEmail(),
-                    e.getMessage());
+                    e.getMessage(),
+                    e);
             return null;
         }
     }
@@ -1246,7 +1247,7 @@ public class SigningFinalizationService {
             wetSig.setHeight(height instanceof Number ? ((Number) height).doubleValue() : null);
             return wetSig;
         } catch (Exception e) {
-            log.error("Failed to map wet signature entry {}: {}", sigMap, e.getMessage());
+            log.error("Failed to map wet signature entry {}", sigMap, e);
             return null;
         }
     }
