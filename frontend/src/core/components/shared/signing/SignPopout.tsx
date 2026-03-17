@@ -177,7 +177,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       setSignRequests(requestsResponse.data);
       setMySessions(sessionsResponse.data);
     } catch (error) {
-      console.error('Failed to fetch signing data:', error);
+      console.error('Failed to fetch signing data:', error instanceof Error ? error.message : error);
       alert({
         alertType: 'warning',
         title: t('common.error'),
@@ -277,7 +277,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       setShowCreatePanel(false);
       await fetchData();
     } catch (error) {
-      console.error('Failed to create session:', error);
+      console.error('Failed to create session:', error instanceof Error ? error.message : error);
       alert({
         alertType: 'error',
         title: t('common.error'),
@@ -325,7 +325,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
         navigationActions.setWorkbench(SIGN_REQUEST_WORKBENCH_TYPE);
       });
     } catch (error) {
-      console.error('Failed to load sign request:', error);
+      console.error('Failed to load sign request:', error instanceof Error ? error.message : error);
       alert({
         alertType: 'error',
         title: t('common.error'),
@@ -404,7 +404,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
         navigationActions.setWorkbench(SESSION_DETAIL_WORKBENCH_TYPE);
       });
     } catch (error) {
-      console.error('Failed to load session:', error);
+      console.error('Failed to load session:', error instanceof Error ? error.message : error);
       alert({
         alertType: 'error',
         title: t('common.error'),

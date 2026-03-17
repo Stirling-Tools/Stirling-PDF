@@ -58,10 +58,10 @@ public class ParticipantRateLimitInterceptor implements HandlerInterceptor {
     }
 
     private String getClientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
+        // Do not trust X-Forwarded-For: it is user-controlled and trivially spoofed,
+        // which would allow an attacker to bypass this rate limiter by rotating fake IPs.
+        // Operators who deploy behind a trusted reverse proxy should configure Spring's
+        // RemoteIpFilter / ForwardedHeaderFilter at the framework level instead.
         return request.getRemoteAddr();
     }
 

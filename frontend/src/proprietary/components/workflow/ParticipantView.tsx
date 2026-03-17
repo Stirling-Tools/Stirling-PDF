@@ -35,14 +35,16 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [declineReason, _setDeclineReason] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const handleSubmitSignature = async () => {
     if (!certFile && certType !== 'SERVER') {
-      alert('Please select a certificate file');
+      setNotification({ type: 'error', message: 'Please select a certificate file' });
       return;
     }
 
     setIsSubmitting(true);
+    setNotification(null);
     try {
       await submitSignature({
         participantToken: token,
@@ -56,9 +58,9 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
         reason,
         showLogo: true,
       });
-      alert('Signature submitted successfully!');
+      setNotification({ type: 'success', message: 'Signature submitted successfully!' });
     } catch (err: any) {
-      alert('Failed to submit signature: ' + err.message);
+      setNotification({ type: 'error', message: `Failed to submit signature: ${err.message}` });
     } finally {
       setIsSubmitting(false);
     }
@@ -66,11 +68,12 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
 
   const handleDecline = async () => {
     if (window.confirm('Are you sure you want to decline signing this document?')) {
+      setNotification(null);
       try {
         await decline(token, declineReason || 'Declined by participant');
-        alert('You have declined this signing request.');
+        setNotification({ type: 'success', message: 'You have declined this signing request.' });
       } catch (err: any) {
-        alert('Failed to decline: ' + err.message);
+        setNotification({ type: 'error', message: `Failed to decline: ${err.message}` });
       }
     }
   };
@@ -121,6 +124,16 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
 
   return (
     <Stack gap="md">
+      {notification && (
+        <Alert
+          icon={notification.type === 'success' ? <CheckCircleIcon fontSize="small" /> : <InfoIcon fontSize="small" />}
+          color={notification.type === 'success' ? 'green' : 'red'}
+          withCloseButton
+          onClose={() => setNotification(null)}
+        >
+          {notification.message}
+        </Alert>
+      )}
       <Card shadow="sm" padding="md" radius="md" withBorder>
         <Stack gap="sm">
           <Group justify="space-between">

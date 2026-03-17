@@ -202,6 +202,8 @@ public class SigningSessionController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         try {
+            User owner = getCurrentUser(principal);
+            workflowSessionService.getSessionForOwner(sessionId, owner);
             byte[] pdfBytes = workflowSessionService.getOriginalFile(sessionId);
             return WebResponseUtils.bytesToWebResponse(pdfBytes, "document.pdf");
         } catch (Exception e) {
@@ -241,19 +243,19 @@ public class SigningSessionController {
             try {
                 signingFinalizationService.clearSensitiveMetadata(session);
             } catch (Exception e) {
-                // Signing succeeded but sensitive data (keystore bytes / passwords) may remain
-                // in participant_metadata. Log at ERROR so this is visible in monitoring.
-                // A background cleanup job should be implemented to retry failed cleanups.
                 log.error(
                         "SECURITY: Failed to clear sensitive metadata for session {} "
                                 + "(participants: {}). Keystore credentials may remain in the "
-                                + "database until manual cleanup. Error: {}",
+                                + "database until manual cleanup.",
                         sessionId,
                         session.getParticipants() != null
                                 ? session.getParticipants().stream().map(p -> p.getEmail()).toList()
                                 : "unknown",
-                        e.getMessage(),
                         e);
+                throw new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Document signed successfully but post-signing cleanup failed. "
+                                + "Contact your administrator to complete the cleanup.");
             }
 
             return WebResponseUtils.bytesToWebResponse(pdf, filename);
@@ -400,9 +402,6 @@ public class SigningSessionController {
         return userService
                 .findByUsernameIgnoreCase(principal.getName())
                 .orElseThrow(
-                        () ->
-                                new ResponseStatusException(
-                                        HttpStatus.UNAUTHORIZED,
-                                        "User not found: " + principal.getName()));
+                        () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized"));
     }
 }

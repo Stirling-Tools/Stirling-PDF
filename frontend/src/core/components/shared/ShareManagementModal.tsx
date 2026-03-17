@@ -196,7 +196,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
         setIsLoading(false);
       }
     },
-    [file.remoteStorageId, shareRole, t]
+    [actions, file.id, file.remoteStorageId, shareRole, t]
   );
 
   const handleCopyLink = useCallback(async (token: string) => {

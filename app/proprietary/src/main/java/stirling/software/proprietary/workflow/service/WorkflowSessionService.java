@@ -115,8 +115,9 @@ public class WorkflowSessionService {
                         objectMapper.readValue(request.getWorkflowMetadata(), Map.class);
                 session.setWorkflowMetadata(metadataMap);
             } catch (JacksonException e) {
-                log.warn("Failed to parse workflow metadata, using empty map", e);
-                session.setWorkflowMetadata(new HashMap<>());
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Invalid workflowMetadata: must be a valid JSON object");
             }
         }
 

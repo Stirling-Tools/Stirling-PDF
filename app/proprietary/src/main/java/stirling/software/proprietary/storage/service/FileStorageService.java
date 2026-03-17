@@ -57,7 +57,9 @@ import stirling.software.proprietary.storage.repository.StoredFileRepository;
 @Slf4j
 public class FileStorageService {
 
-    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+    // Requires at least 2-character TLD; rejects obvious non-addresses like a@b.c
+    private static final Pattern EMAIL_PATTERN =
+            Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$");
 
     private final StoredFileRepository storedFileRepository;
     private final FileShareRepository fileShareRepository;

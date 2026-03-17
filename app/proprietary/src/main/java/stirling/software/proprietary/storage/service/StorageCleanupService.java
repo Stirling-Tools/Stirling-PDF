@@ -21,6 +21,8 @@ import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepos
 @Slf4j
 public class StorageCleanupService {
 
+    private static final int MAX_CLEANUP_ATTEMPTS = 10;
+
     private final StorageProvider storageProvider;
     private final StorageCleanupEntryRepository cleanupEntryRepository;
     private final FileShareRepository fileShareRepository;
@@ -36,13 +38,25 @@ public class StorageCleanupService {
                 storageProvider.delete(entry.getStorageKey());
                 cleanupEntryRepository.delete(entry);
             } catch (IOException ex) {
-                entry.setAttemptCount(entry.getAttemptCount() + 1);
-                cleanupEntryRepository.save(entry);
-                log.warn(
-                        "Failed to cleanup storage key {} (attempt {})",
-                        entry.getStorageKey(),
-                        entry.getAttemptCount(),
-                        ex);
+                int attempts = entry.getAttemptCount() + 1;
+                if (attempts >= MAX_CLEANUP_ATTEMPTS) {
+                    log.error(
+                            "Abandoning cleanup for storage key {} after {} failed attempts."
+                                    + " The blob may be orphaned and require manual removal.",
+                            entry.getStorageKey(),
+                            attempts,
+                            ex);
+                    cleanupEntryRepository.delete(entry);
+                } else {
+                    entry.setAttemptCount(attempts);
+                    cleanupEntryRepository.save(entry);
+                    log.warn(
+                            "Failed to cleanup storage key {} (attempt {}/{})",
+                            entry.getStorageKey(),
+                            attempts,
+                            MAX_CLEANUP_ATTEMPTS,
+                            ex);
+                }
             }
         }
     }
