@@ -5,11 +5,11 @@ import { getToolCreditCost } from '@app/utils/creditCosts';
 import { openPlanSettings } from '@app/utils/appSettings';
 import type { ToolId } from '@app/types/toolId';
 
-export function useCreditCheck(operationType?: string) {
+export function useCreditCheck(operationType?: string, _endpoint?: string) {
   const { hasSufficientCredits, isPro, creditBalance, refreshCredits } = useCredits();
   const { t } = useTranslation();
 
-  const checkCredits = useCallback(async (): Promise<string | null> => {
+  const checkCredits = useCallback(async (_runtimeEndpoint?: string): Promise<string | null> => {
     const requiredCredits = getToolCreditCost(operationType as ToolId);
     const creditCheck = hasSufficientCredits(requiredCredits);
 
