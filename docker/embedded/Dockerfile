@@ -1,7 +1,8 @@
 # Stirling-PDF - Full version (embedded frontend)
 # Uses pre-built base image for fast builds
 
-ARG BASE_IMAGE=ghcr.io/stirling-tools/stirling-pdf-base:latest
+ARG BASE_VERSION=2025.03.17
+ARG BASE_IMAGE=ghcr.io/stirling-tools/stirling-pdf-base:${BASE_VERSION}
 
 # Stage 1: Build the Java application and frontend
 FROM gradle:9.3.1-jdk25 AS app-build
@@ -89,7 +90,8 @@ ENV VERSION_TAG=$VERSION_TAG \
     STIRLING_JVM_PROFILE="balanced" \
     _JVM_OPTS_BALANCED="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
     _JVM_OPTS_PERFORMANCE="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+AlwaysPreTouch -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
-    JAVA_CUSTOM_OPTS=""
+    JAVA_CUSTOM_OPTS="" \
+    SAL_TMP=/tmp/stirling-pdf/libre
 
 # Metadata labels
 LABEL org.opencontainers.image.title="Stirling-PDF" \

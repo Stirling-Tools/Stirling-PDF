@@ -2,7 +2,8 @@
 # Extra fonts for air-gapped environments
 # Uses pre-built base image for fast builds
 
-ARG BASE_IMAGE=ghcr.io/stirling-tools/stirling-pdf-base:latest
+ARG BASE_VERSION=2025.03.17
+ARG BASE_IMAGE=ghcr.io/stirling-tools/stirling-pdf-base:${BASE_VERSION}
 
 # Stage 1: Build the Java application and frontend
 FROM gradle:9.3.1-jdk25 AS app-build
@@ -91,7 +92,8 @@ ENV VERSION_TAG=$VERSION_TAG \
     _JVM_OPTS_PERFORMANCE="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+AlwaysPreTouch -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \
     FAT_DOCKER=true \
-    INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
+    INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false \
+    SAL_TMP=/tmp/stirling-pdf/libre
 
 # Metadata labels
 LABEL org.opencontainers.image.title="Stirling-PDF Fat" \

@@ -26,9 +26,15 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       *)       echo "Unsupported arch: $(uname -m)"; exit 1 ;; \
     esac; \
     \
-    curl -fsSL \
-      "https://download.calibre-ebook.com/${CALIBRE_VERSION}/calibre-${CALIBRE_VERSION}-${CALIBRE_ARCH}.txz" \
-      -o /tmp/calibre.txz; \
+    for attempt in 1 2 3; do \
+      echo "Downloading Calibre (attempt $attempt/3)..."; \
+      if curl -fsSL --max-time 300 --retry 3 --retry-delay 5 --retry-max-time 900 \
+        "https://download.calibre-ebook.com/${CALIBRE_VERSION}/calibre-${CALIBRE_VERSION}-${CALIBRE_ARCH}.txz" \
+        -o /tmp/calibre.txz; then \
+        break; \
+      fi; \
+      if [ $attempt -lt 3 ]; then sleep 10; fi; \
+    done; \
     mkdir -p /opt/calibre; \
     tar xJf /tmp/calibre.txz -C /opt/calibre; \
     rm /tmp/calibre.txz; \
@@ -275,7 +281,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     GS_TAG="gs$(printf '%s' "${GS_VERSION}" | tr -d '.')" && \
     cd /tmp/gs-build && \
     rm -rf ghostscript-* && \
-    (test -d "ghostscript-${GS_VERSION}" || curl -fsSL "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/${GS_TAG}/ghostscript-${GS_VERSION}.tar.gz" | tar xz) && \
+    (test -d "ghostscript-${GS_VERSION}" || curl -fsSL --max-time 300 --retry 3 --retry-delay 5 "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/${GS_TAG}/ghostscript-${GS_VERSION}.tar.gz" | tar xz) && \
     cd "ghostscript-${GS_VERSION}" && \
     ./configure \
       --prefix=/usr/local \
@@ -302,14 +308,14 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     cd /tmp/pdf-tools-build && \
     rm -rf qpdf-* ImageMagick-* && \
     # Build QPDF
-    (test -d "qpdf-${QPDF_VERSION}" || curl -fsSL "https://github.com/qpdf/qpdf/releases/download/v${QPDF_VERSION}/qpdf-${QPDF_VERSION}.tar.gz" | tar xz) && \
+    (test -d "qpdf-${QPDF_VERSION}" || curl -fsSL --max-time 300 --retry 3 --retry-delay 5 "https://github.com/qpdf/qpdf/releases/download/v${QPDF_VERSION}/qpdf-${QPDF_VERSION}.tar.gz" | tar xz) && \
     cd "qpdf-${QPDF_VERSION}" && \
     cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DALLOW_CRYPTO_OPENSSL=ON -DDEFAULT_CRYPTO=openssl && \
     cmake --build build --parallel "$(nproc)" && \
     cmake --install build --strip && \
     cd .. && \
     # Build ImageMagick 7
-    (test -d "ImageMagick-${IM_VERSION}" || curl -fsSL "https://github.com/ImageMagick/ImageMagick/archive/refs/tags/${IM_VERSION}.tar.gz" | tar xz) && \
+    (test -d "ImageMagick-${IM_VERSION}" || curl -fsSL --max-time 300 --retry 3 --retry-delay 5 "https://github.com/ImageMagick/ImageMagick/archive/refs/tags/${IM_VERSION}.tar.gz" | tar xz) && \
     cd "ImageMagick-${IM_VERSION}" && \
     ./configure --prefix=/usr/local --with-modules --with-perl=no --with-magick-plus-plus=no --with-quantum-depth=16 --disable-static --enable-shared && \
     make -j"$(nproc)" && \

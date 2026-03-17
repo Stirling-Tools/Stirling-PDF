@@ -2,25 +2,30 @@ name: Push Docker Base Image
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - master
-      - main
-      - V2-master
-    paths:
-      - 'docker/base/Dockerfile'
+    inputs:
+      version:
+        description: 'Base image version (e.g., 1.0.0, 1.0.1)'
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 jobs:
   push-base:
-    if: ${{ vars.CI_PROFILE != 'lite' }}
+    if: ${{ vars.CI_PROFILE != 'lite' && github.actor == 'Frooodle' }}
     runs-on: ubuntu-24.04-8core
     permissions:
       packages: write
       id-token: write
     steps:
+      - name: Verify authorized user
+        run: |
+          if [ "${{ github.actor }}" != "Frooodle" ]; then
+            echo "Error: Only Frooodle is authorized to run this workflow"
+            exit 1
+          fi
+
       - name: Harden Runner
         uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
         with:
@@ -52,10 +57,6 @@ jobs:
         id: repoowner
         run: echo "lowercase=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
 
-      - name: Generate date tag (YYYY.MM)
-        id: date-tag
-        run: echo "tag=$(date +%Y.%m)" >> $GITHUB_OUTPUT
-
       - name: Generate tags for base image
         id: meta
         uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
@@ -65,7 +66,7 @@ jobs:
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-base
           tags: |
             type=raw,value=latest
-            type=raw,value=${{ steps.date-tag.outputs.tag }}
+            type=raw,value=${{ github.event.inputs.version }}
 
       - name: Build and push base image
         id: build-push-base
@@ -90,15 +91,18 @@ jobs:
           cosign-release: "v2.4.1"
 
       - name: Sign base images
-        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/V2-master'
         env:
           DIGEST: ${{ steps.build-push-base.outputs.digest }}
           TAGS: ${{ steps.meta.outputs.tags }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         run: |
-          echo "$TAGS" | tr ',' '\n' | while read -r tag; do
-            cosign sign --yes \
-              --key env://COSIGN_PRIVATE_KEY \
-              "${tag}@${DIGEST}"
-          done
+          if [ -n "$COSIGN_PRIVATE_KEY" ]; then
+            echo "$TAGS" | tr ',' '\n' | while read -r tag; do
+              cosign sign --yes \
+                --key env://COSIGN_PRIVATE_KEY \
+                "${tag}@${DIGEST}"
+            done
+          else
+            echo "Warning: COSIGN_PRIVATE_KEY not set, skipping image signing"
+          fi

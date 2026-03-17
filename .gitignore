@@ -29,6 +29,9 @@ clientWebUI/
 exampleYmlFiles/stirling/
 /stirling/
 /testing/file_snapshots
+/testing/cucumber/junit/
+/testing/cucumber/report.html
+/testing/.failed_tests
 SwaggerDoc.json
 
 # Frontend build artifacts copied to backend static resources
