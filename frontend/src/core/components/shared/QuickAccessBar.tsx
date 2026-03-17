@@ -173,10 +173,15 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const shareBaseUrl = useMemo(() => {
     const frontendUrl = (config?.frontendUrl || '').trim();
     if (frontendUrl) {
-      const normalized = frontendUrl.endsWith('/')
-        ? frontendUrl.slice(0, -1)
-        : frontendUrl;
-      return `${normalized}/share/`;
+      try {
+        const parsed = new URL(frontendUrl);
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+          const normalized = frontendUrl.endsWith('/') ? frontendUrl.slice(0, -1) : frontendUrl;
+          return `${normalized}/share/`;
+        }
+      } catch {
+        // invalid URL — fall through to default
+      }
     }
     return absoluteWithBasePath('/share/');
   }, [config?.frontendUrl]);
