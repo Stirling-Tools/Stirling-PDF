@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security.configuration;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -28,6 +29,8 @@ import org.springframework.security.saml2.provider.service.web.authentication.Op
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.web.firewall.HttpFirewall;
+import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
@@ -134,6 +137,34 @@ public class SecurityConfiguration {
     @Bean
     public static PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * Configures HttpFirewall to allow non-ASCII characters in header values. This fixes issues
+     * with reverse proxies (like Authelia) that may set headers with non-ASCII characters (e.g.,
+     * "Remote-User: Dvořák").
+     *
+     * <p>By default, StrictHttpFirewall rejects header values containing non-ASCII characters. This
+     * configuration allows valid UTF-8 encoded characters while maintaining security.
+     *
+     * @return Configured HttpFirewall that allows non-ASCII characters in headers
+     */
+    @Bean
+    public HttpFirewall httpFirewall() {
+        StrictHttpFirewall firewall = new StrictHttpFirewall();
+        // Allow non-ASCII characters but continue to reject control characters such as newlines.
+        // Pattern adapted from Spring Security's StrictHttpFirewall documentation.
+        Pattern allowedChars = Pattern.compile("[\\p{IsAssigned}&&[^\\p{IsControl}]]*");
+
+        firewall.setAllowedHeaderValues(
+                headerValue ->
+                        headerValue != null && allowedChars.matcher(headerValue).matches());
+
+        // Apply the same rules to parameter values for consistency.
+        firewall.setAllowedParameterValues(
+                parameterValue ->
+                        parameterValue != null && allowedChars.matcher(parameterValue).matches());
+        return firewall;
     }
 
     @Bean
