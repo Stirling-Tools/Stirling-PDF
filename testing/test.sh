@@ -31,8 +31,17 @@ find_root() {
 
 PROJECT_ROOT=$(find_root)
 
-# Base image version - keep in sync with Dockerfiles
-BASE_VERSION="${BASE_VERSION:-2025.03.17}"
+# Base image version - must be provided or read from environment
+# This is a testing-specific version; production should pass explicit BASE_VERSION
+if [ -z "$BASE_VERSION" ]; then
+    # For CI/automation: use a unique test identifier
+    if [ -n "${GITHUB_RUN_ID}" ]; then
+        BASE_VERSION="test-${GITHUB_RUN_ID}"
+    else
+        # For local testing: generate unique identifier
+        BASE_VERSION="test-local-$(date +%s)"
+    fi
+fi
 BASE_IMAGE="ghcr.io/stirling-tools/stirling-pdf-base:${BASE_VERSION}"
 
 # Function to ensure base image exists (build if missing)

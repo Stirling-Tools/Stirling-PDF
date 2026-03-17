@@ -5,9 +5,6 @@ services:
     build:
       context: ../../..
       dockerfile: docker/embedded/Dockerfile.fat
-      args:
-        BASE_VERSION: ${BASE_VERSION:-2025.03.17}
-        BASE_IMAGE: ${BASE_IMAGE:-ghcr.io/stirling-tools/stirling-pdf-base:${BASE_VERSION:-2025.03.17}}
     image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat
     deploy:
       resources:
