@@ -45,7 +45,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const { isFirstLaunch, setupComplete } = useFirstLaunchCheck();
   const [connectionMode, setConnectionMode] = useState<'saas' | 'selfhosted' | 'local' | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   // Prevent first-launch setup from running twice when connectionMode state update re-triggers the effect
   const firstLaunchInitiated = useRef(false);
   // Key incremented on every connection mode change after initial load — forces SaaS provider
@@ -86,9 +85,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
               await connectionModeService.switchToSaaS(STIRLING_SAAS_URL).catch(console.error);
               setConnectionMode('saas');
             }
-            setIsAuthenticated(true);
           })
-          .catch(() => setIsAuthenticated(true))
           .finally(() => setAuthChecked(true));
       } else {
         authService.isAuthenticated()
@@ -99,12 +96,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
               await connectionModeService.switchToLocal().catch(console.error);
               setConnectionMode('local');
             }
-            setIsAuthenticated(true);
           })
           .catch(async () => {
             await connectionModeService.switchToLocal().catch(console.error);
             setConnectionMode('local');
-            setIsAuthenticated(true);
           })
           .finally(() => setAuthChecked(true));
       }
@@ -121,7 +116,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
         .catch(console.error)
         .finally(() => {
           setConnectionMode('local');
-          setIsAuthenticated(true);
           setAuthChecked(true);
         });
     }
