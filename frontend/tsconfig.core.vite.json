@@ -10,6 +10,7 @@
   "exclude": [
     "src/proprietary",
     "src/desktop",
+    "src/saas",
     "node_modules"
   ]
 }
