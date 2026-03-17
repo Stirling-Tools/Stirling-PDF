@@ -5,6 +5,6 @@
  */
 export function useCreditCheck(_operationType?: string, _endpoint?: string) {
   return {
-    checkCredits: async (): Promise<string | null> => null, // null = allowed
+    checkCredits: async (_runtimeEndpoint?: string): Promise<string | null> => null, // null = allowed
   };
 }

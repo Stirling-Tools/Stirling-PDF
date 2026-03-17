@@ -21,14 +21,16 @@ export function useCreditCheck(operationType?: string, endpoint?: string) {
   const isSaaSMode = useSaaSMode();
   const { t } = useTranslation();
 
-  const checkCredits = useCallback(async (): Promise<string | null> => {
+  const checkCredits = useCallback(async (runtimeEndpoint?: string): Promise<string | null> => {
     if (!isSaaSMode) return null; // Credits only apply in SaaS mode, not self-hosted
     if (!billing) return null;
 
     // If the operation routes to the local backend, no credits are consumed — skip check.
-    if (endpoint) {
+    // runtimeEndpoint (from params at execution time) takes priority over hook-level endpoint.
+    const ep = runtimeEndpoint ?? endpoint;
+    if (ep) {
       try {
-        const willUseSaaS = await operationRouter.willRouteToSaaS(endpoint);
+        const willUseSaaS = await operationRouter.willRouteToSaaS(ep);
         if (!willUseSaaS) return null;
       } catch {
         // If routing check fails, fall through to credit check as a safe default.
