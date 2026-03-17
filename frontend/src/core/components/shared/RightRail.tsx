@@ -210,6 +210,29 @@ export default function RightRail() {
     return terminology.downloadAll;
   }, [currentView, selectedCount, t, terminology]);
 
+  // Save As: explicitly export to a new location without updating the file's tracked path.
+  // The button is only rendered when icons.saveAsIconName is defined (desktop builds only).
+  // On desktop, downloadFile() without a localPath opens a native save dialog.
+  const handleSaveAs = useCallback(async () => {
+    if (currentView !== 'viewer') return;
+
+    const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
+    if (!buffer) return;
+
+    const fileToExport = selectedFiles.length > 0 ? selectedFiles[0] : activeFiles[0];
+    if (!fileToExport) return;
+
+    try {
+      await downloadFile({
+        data: new Blob([buffer], { type: 'application/pdf' }),
+        filename: fileToExport.name,
+        // Intentionally no localPath — forces a "Save As" dialog on desktop.
+      });
+    } catch (error) {
+      console.error('[RightRail] Failed to save-as viewer file:', error);
+    }
+  }, [currentView, selectedFiles, activeFiles, viewerContext]);
+
   return (
     <div ref={sidebarRefs.rightRailRef} className="right-rail" data-sidebar="right-rail">
       <div className="right-rail-inner">
@@ -276,6 +299,21 @@ export default function RightRail() {
             tooltipPosition,
             tooltipOffset
           )}
+          {icons.saveAsIconName &&
+            renderWithTooltip(
+              <ActionIcon
+                variant="subtle"
+                radius="md"
+                className="right-rail-icon"
+                onClick={handleSaveAs}
+                disabled={disableForFullscreen || currentView !== 'viewer'}
+              >
+                <LocalIcon icon={icons.saveAsIconName} width="1.5rem" height="1.5rem" />
+              </ActionIcon>,
+              t('rightRail.saveAs', 'Save As'),
+              tooltipPosition,
+              tooltipOffset
+            )}
         </div>
 
         <div className="right-rail-spacer" />
