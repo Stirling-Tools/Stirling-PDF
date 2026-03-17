@@ -4,6 +4,7 @@ import { useSaaSBilling } from '@app/contexts/SaasBillingContext';
 import { useSaaSMode } from '@app/hooks/useSaaSMode';
 import { getToolCreditCost } from '@app/utils/creditCosts';
 import { CREDIT_EVENTS } from '@app/constants/creditEvents';
+import { operationRouter } from '@app/services/operationRouter';
 import type { ToolId } from '@app/types/toolId';
 
 /**
@@ -15,7 +16,7 @@ import type { ToolId } from '@app/types/toolId';
  * Returns null when the operation is allowed, or an error message string
  * when it should be blocked.
  */
-export function useCreditCheck(operationType?: string) {
+export function useCreditCheck(operationType?: string, endpoint?: string) {
   const billing = useSaaSBilling();
   const isSaaSMode = useSaaSMode();
   const { t } = useTranslation();
@@ -23,6 +24,16 @@ export function useCreditCheck(operationType?: string) {
   const checkCredits = useCallback(async (): Promise<string | null> => {
     if (!isSaaSMode) return null; // Credits only apply in SaaS mode, not self-hosted
     if (!billing) return null;
+
+    // If the operation routes to the local backend, no credits are consumed — skip check.
+    if (endpoint) {
+      try {
+        const willUseSaaS = await operationRouter.willRouteToSaaS(endpoint);
+        if (!willUseSaaS) return null;
+      } catch {
+        // If routing check fails, fall through to credit check as a safe default.
+      }
+    }
 
     const { creditBalance, loading } = billing;
     const requiredCredits = getToolCreditCost(operationType as ToolId);
@@ -44,7 +55,7 @@ export function useCreditCheck(operationType?: string) {
     }
 
     return null;
-  }, [billing, isSaaSMode, operationType, t]);
+  }, [billing, isSaaSMode, operationType, endpoint, t]);
 
   return { checkCredits };
 }

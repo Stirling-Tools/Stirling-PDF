@@ -70,14 +70,14 @@ export const useToolOperation = <TParams>(
   const { processFiles, cancelOperation: cancelApiCalls } = useToolApiCalls<TParams>();
   const { generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles } = useToolResources();
 
-  const { checkCredits } = useCreditCheck(config.operationType);
-
-  // Determine endpoint for cloud usage check
+  // Determine endpoint for cloud usage check and credit routing
   const endpointString = config.toolType !== ToolType.custom && config.endpoint
     ? (typeof config.endpoint === 'function'
         ? (config.defaultParameters ? config.endpoint(config.defaultParameters) : undefined)
         : config.endpoint)
     : undefined;
+
+  const { checkCredits } = useCreditCheck(config.operationType, endpointString);
   const willUseCloud = useWillUseCloud(endpointString);
 
   // Track last operation for undo functionality
