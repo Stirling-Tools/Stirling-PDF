@@ -1,7 +1,7 @@
 # Stirling-PDF - Full version (embedded frontend)
 # Uses pre-built base image for fast builds
 
-ARG BASE_VERSION=2025.03.17
+ARG BASE_VERSION=1.0.0
 ARG BASE_IMAGE=ghcr.io/stirling-tools/stirling-pdf-base:${BASE_VERSION}
 
 # Stage 1: Build the Java application and frontend

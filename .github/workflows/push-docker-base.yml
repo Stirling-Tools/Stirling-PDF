@@ -78,7 +78,6 @@ jobs:
             ${{ secrets.DOCKER_HUB_ORG_USERNAME }}/stirling-pdf-base
             ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-base
           tags: |
-            type=raw,value=latest
             type=raw,value=${{ steps.version.outputs.version }}
 
       - name: Build and push base image
