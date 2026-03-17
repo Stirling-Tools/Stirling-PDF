@@ -30,8 +30,6 @@ ENV JDK_JAVA_OPTIONS="--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNN
   --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED \
   --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
 
-ARG BASE_IMAGE=ghcr.io/stirling-tools/stirling-pdf-base:latest
-
 RUN --mount=type=cache,target=/home/gradle/.gradle/caches \
     ./gradlew dependencies --no-daemon || true
 

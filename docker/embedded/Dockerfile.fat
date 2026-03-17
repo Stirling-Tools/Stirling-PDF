@@ -115,8 +115,8 @@ LABEL org.opencontainers.image.title="Stirling-PDF Fat" \
 EXPOSE 8080/tcp
 STOPSIGNAL SIGTERM
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:8080/api/v1/info/status || exit 1
+HEALTHCHECK --interval=30s --timeout=15s --start-period=120s --retries=5 \
+  CMD curl -fs --max-time 10 http://localhost:8080/api/v1/info/status || exit 1
 
 ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
 CMD []
