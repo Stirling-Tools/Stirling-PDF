@@ -114,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSubscription(subscriptionInfo)
 
       console.debug('[Auth Debug] Credits fetched successfully:', credits)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.debug('[Auth Debug] Failed to fetch credits:', error)
       // Don't set error state for credit fetching failures to avoid disrupting auth flow
       // Credits might not be available in all deployments
@@ -149,7 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsPro(isProUser)
         console.debug('[Auth Debug] Pro status fetched:', isProUser)
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.debug('[Auth Debug] Failed to fetch pro status:', error)
       setIsPro(false) // Default to false if there's an error
     }
@@ -206,7 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setTrialStatus(null)
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.debug('[Auth Debug] Failed to fetch trial status:', error)
       setTrialStatus(null)
     }
@@ -243,7 +243,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfilePictureUrl(data.signedUrl)
         console.debug('[Auth Debug] Profile picture URL fetched successfully')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.debug('[Auth Debug] Failed to fetch profile picture:', error)
       setProfilePictureUrl(null)
     }
@@ -267,7 +267,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const metadata = await getProfilePictureMetadata(currentSession.user.id)
       setProfilePictureMetadata(metadata)
       console.debug('[Auth Debug] Profile picture metadata fetched:', metadata)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.debug('[Auth Debug] Failed to fetch profile picture metadata:', error)
       setProfilePictureMetadata(null)
     }
