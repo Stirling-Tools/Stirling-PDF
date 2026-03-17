@@ -72,7 +72,7 @@ export const ConnectionSettings: React.FC = () => {
           <Group justify="space-between">
             <Text fw={600}>{t('settings.connection.title', 'Connection Mode')}</Text>
             <Badge
-              color={config.mode === 'saas' ? 'blue' : config.mode === 'local' ? 'gray' : 'green'}
+              color={config.mode === 'saas' ? 'blue' : config.mode === 'local' ? 'white' : 'green'}
               variant="light"
             >
               {config.mode === 'saas'

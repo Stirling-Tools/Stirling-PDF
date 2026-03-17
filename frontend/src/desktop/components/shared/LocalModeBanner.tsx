@@ -5,10 +5,10 @@ import LocalIcon from '@app/components/shared/LocalIcon';
 import { connectionModeService, type ConnectionMode } from '@app/services/connectionModeService';
 import { OPEN_SIGN_IN_EVENT } from '@app/components/SignInModal';
 
-const BANNER_BG = 'var(--mantine-color-gray-1)';
-const BANNER_BORDER = 'var(--mantine-color-gray-3)';
-const BANNER_TEXT = 'var(--mantine-color-gray-7)';
-const BANNER_ICON = 'var(--mantine-color-gray-5)';
+const BANNER_BG = 'var(--bg-raised)';
+const BANNER_BORDER = 'var(--border-default)';
+const BANNER_TEXT = 'var(--text-primary)';
+const BANNER_ICON = 'var(--text-secondary)';
 
 /**
  * Desktop-only banner shown when the user is in local-only mode.
@@ -47,14 +47,14 @@ export function LocalModeBanner() {
           <Text size="xs" fw={600} style={{ color: BANNER_TEXT, flexShrink: 0 }}>
             {t('localMode.banner.title', 'Running locally')}
           </Text>
-          <Text size="xs" style={{ color: BANNER_TEXT, opacity: 0.8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <Text size="xs" style={{ color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {t('localMode.banner.message', 'Sign in to unlock all tools.')}
           </Text>
         </Group>
         <Button
           size="compact-xs"
           variant="light"
-          color="gray"
+          color="blue"
           onClick={() => window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT))}
           style={{ flexShrink: 0 }}
         >

@@ -21,13 +21,14 @@ export function SignInModal() {
       onClose={() => setOpened(false)}
       size={520}
       centered
-      withCloseButton
+      withCloseButton={false}
       padding={0}
       radius="lg"
       zIndex={9000}
     >
       <SetupWizard
         noLayout
+        onClose={() => setOpened(false)}
         onComplete={() => {
           setOpened(false);
           window.location.reload();

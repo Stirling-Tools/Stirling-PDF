@@ -118,7 +118,7 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const response = await apiClient.get<Team[]>('/api/v1/team/my');
+      const response = await apiClient.get<Team[]>('/api/v1/team/my', { suppressErrorToast: true } as any);
       setTeams(response.data);
 
       const activeTeam = response.data[0];
@@ -144,7 +144,7 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const response = await apiClient.get<TeamMember[]>(`/api/v1/team/${teamId}/members`);
+      const response = await apiClient.get<TeamMember[]>(`/api/v1/team/${teamId}/members`, { suppressErrorToast: true } as any);
       setTeamMembers(response.data);
     } catch (error) {
       console.error('[SaaSTeamContext] Failed to fetch team members:', error);
@@ -158,7 +158,7 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const response = await apiClient.get<TeamInvitation[]>(`/api/v1/team/${teamId}/invitations`);
+      const response = await apiClient.get<TeamInvitation[]>(`/api/v1/team/${teamId}/invitations`, { suppressErrorToast: true } as any);
       setTeamInvitations(response.data);
     } catch (error) {
       console.error('[SaaSTeamContext] Failed to fetch team invitations:', error);
@@ -174,7 +174,7 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
     console.log('[SaaSTeamContext] Fetching received team invitations');
 
     try {
-      const response = await apiClient.get<TeamInvitation[]>('/api/v1/team/invitations/pending');
+      const response = await apiClient.get<TeamInvitation[]>('/api/v1/team/invitations/pending', { suppressErrorToast: true } as any);
       console.log('[SaaSTeamContext] Received invitations response:', response.data);
       setReceivedInvitations(response.data);
     } catch (error) {

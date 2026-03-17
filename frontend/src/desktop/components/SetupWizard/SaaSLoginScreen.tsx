@@ -16,6 +16,7 @@ interface SaaSLoginScreenProps {
   onSelfHostedClick: () => void;
   onSwitchToSignup: () => void;
   onSkipSignIn?: () => void;
+  onClose?: () => void;
   loading: boolean;
   error: string | null;
 }
@@ -27,6 +28,7 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
   onSelfHostedClick,
   onSwitchToSignup,
   onSkipSignIn,
+  onClose,
   loading,
   error,
 }) => {
@@ -59,7 +61,7 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
 
   return (
     <>
-      <LoginHeader title={t('setup.saas.title', 'Sign in to Stirling Cloud')} />
+      <LoginHeader title={t('setup.saas.title', 'Sign in to Stirling Cloud')} onClose={onClose} />
 
       <ErrorMessage error={displayError} />
 

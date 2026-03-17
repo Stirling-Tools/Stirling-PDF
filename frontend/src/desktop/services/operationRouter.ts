@@ -175,9 +175,22 @@ export class OperationRouter {
       const endpointToCheck = this.extractEndpointName(operation);
       console.debug(`[operationRouter] Checking capability for ${operation} -> endpoint name: ${endpointToCheck}`);
 
+      const backendUrl = tauriBackendService.getBackendUrl();
+      const backendHealthy = tauriBackendService.isOnline;
+
+      // If the local backend isn't ready (no URL yet, or not yet healthy), we can't
+      // reliably check local capability: the HTTP call to endpoints-availability will
+      // fail or be absent, causing the router to incorrectly route to SaaS.
+      // Fall through to local routing — the backend-readiness check in the Axios
+      // interceptor will block non-GET requests until the backend is healthy.
+      if (!backendUrl || !backendHealthy) {
+        console.debug(`[operationRouter] Backend not ready (url=${backendUrl}, healthy=${backendHealthy}), deferring SaaS routing check for ${endpointToCheck}`);
+        // Fall through to local routing below
+      } else {
+
       const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(
         endpointToCheck,
-        tauriBackendService.getBackendUrl()
+        backendUrl
       );
       console.debug(`[operationRouter] Endpoint ${endpointToCheck} supported locally: ${supportedLocally}`);
 
@@ -208,6 +221,7 @@ export class OperationRouter {
 
       // Supported locally - continue with local backend
       console.debug(`[operationRouter] Routing ${operation} to local backend (supported locally)`);
+      } // end else (backend URL available)
     }
 
     // Self-hosted fallback: when the remote server is offline, route tool endpoints
@@ -295,11 +309,13 @@ export class OperationRouter {
     // NEW: Skip if endpoint will be routed to SaaS due to local unavailability
     const mode = await connectionModeService.getCurrentMode();
     if (mode === 'saas' && endpoint && this.isToolEndpoint(endpoint)) {
-      // For UI data endpoints, extract the endpoint name
+      const backendUrl = tauriBackendService.getBackendUrl();
+      // Backend not ready — don't skip the readiness check; let it gate the request.
+      if (!backendUrl || !tauriBackendService.isOnline) return false;
       const endpointToCheck = this.extractEndpointName(endpoint);
       const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(
         endpointToCheck,
-        tauriBackendService.getBackendUrl()
+        backendUrl
       );
       return !supportedLocally; // Skip check if not supported locally
     }

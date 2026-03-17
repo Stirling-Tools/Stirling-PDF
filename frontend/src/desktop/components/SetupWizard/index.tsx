@@ -23,9 +23,11 @@ interface SetupWizardProps {
   onComplete: () => void;
   /** Omit the DesktopAuthLayout wrapper — use when rendering inside a modal */
   noLayout?: boolean;
+  /** Called when the user dismisses the wizard (modal close button) */
+  onClose?: () => void;
 }
 
-export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete, noLayout = false }) => {
+export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete, noLayout = false, onClose }) => {
   const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState<SetupStep>(SetupStep.SaaSLogin);
   const [serverConfig, setServerConfig] = useState<ServerConfig | null>({ url: STIRLING_SAAS_URL });
@@ -362,6 +364,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete, noLayout =
           onSelfHostedClick={handleSelfHostedClick}
           onSwitchToSignup={handleSwitchToSignup}
           onSkipSignIn={handleLocalMode}
+          onClose={onClose}
           loading={loading}
           error={error}
         />
