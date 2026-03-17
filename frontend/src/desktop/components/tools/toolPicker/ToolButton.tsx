@@ -3,7 +3,6 @@ import { OPEN_SIGN_IN_EVENT } from '@app/components/SignInModal';
 import { getToolDisabledReason } from '@app/components/tools/fullscreen/shared';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
-import { ToolId } from '@app/types/toolId';
 import { ToolRegistryEntry } from '@app/data/toolsTaxonomy';
 
 type CoreToolButtonProps = React.ComponentProps<typeof CoreToolButton>;
