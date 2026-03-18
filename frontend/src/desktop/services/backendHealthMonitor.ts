@@ -11,7 +11,7 @@ class BackendHealthMonitor {
   private state: BackendHealthState = {
     status: tauriBackendService.getBackendStatus(),
     error: null,
-    isHealthy: tauriBackendService.getBackendStatus() === 'healthy',
+    isOnline: tauriBackendService.getBackendStatus() === 'healthy',
   };
 
   constructor(pollingInterval = 5000) {
@@ -35,7 +35,7 @@ class BackendHealthMonitor {
       ...this.state,
       ...partial,
       status: nextStatus,
-      isHealthy: nextStatus === 'healthy',
+      isOnline: nextStatus === 'healthy',
     };
 
     // Only notify listeners if meaningful state changed
