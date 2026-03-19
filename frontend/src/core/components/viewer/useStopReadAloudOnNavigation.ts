@@ -37,4 +37,16 @@ export function useStopReadAloudOnNavigation(
     previousStateRef.current.workbench = workbench;
     previousStateRef.current.activeFileIndex = viewer.activeFileIndex;
   }, [workbench, viewer.activeFileIndex, isReadingAloud, onStop]);
+
+  // Stop on page unload (F5, navigation, close)
+  useEffect(() => {
+    if (!isReadingAloud) return;
+
+    const handleBeforeUnload = () => {
+      onStop();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isReadingAloud, onStop]);
 }
