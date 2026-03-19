@@ -3,12 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import { useBackendHealth } from '@app/hooks/useBackendHealth';
 import { CloudBadge } from '@app/components/shared/CloudBadge';
+import type { ExecuteDisabledReason } from '@app/hooks/tools/shared/toolOperationTypes';
 
 export interface OperationButtonProps {
   onClick?: () => void;
   isLoading?: boolean;
   disabled?: boolean;
-  disabledTooltip?: string;
+  disabledReason?: ExecuteDisabledReason;
   loadingText?: string;
   submitText?: string;
   variant?: 'filled' | 'outline' | 'subtle';
@@ -25,7 +26,7 @@ const OperationButton = ({
   onClick,
   isLoading = false,
   disabled = false,
-  disabledTooltip,
+  disabledReason,
   loadingText,
   submitText,
   variant = 'filled',
@@ -40,19 +41,28 @@ const OperationButton = ({
   const { t } = useTranslation();
   const { isOnline, message: backendMessage } = useBackendHealth();
   const blockedByBackend = !isOnline;
-  const combinedDisabled = disabled || blockedByBackend;
+
+  const effectiveDisabled = disabled || disabledReason !== null && disabledReason !== undefined;
+  const combinedDisabled = effectiveDisabled || blockedByBackend;
+
+  const reasonTooltip: Record<NonNullable<ExecuteDisabledReason>, string> = {
+    endpointUnavailable: t('tool.endpointUnavailable', 'This tool is unavailable on your server.'),
+    noFiles: t('tool.noFiles', 'Add a file to get started.'),
+    invalidParams: t('tool.invalidParams', 'Fill in the required settings.'),
+  };
+
   const tooltipLabel = blockedByBackend
     ? (backendMessage ?? t('backendHealth.checking', 'Checking backend status...'))
-    : (disabled && disabledTooltip ? disabledTooltip : null);
+    : (disabledReason ? (reasonTooltip[disabledReason] ?? null) : null);
 
   const button = (
     <Button
       type={type}
       onClick={onClick}
-      fullWidth={fullWidth}
-      mr='md'
-      ml='md'
-      mt={mt}
+      fullWidth={fullWidth || !!tooltipLabel}
+      mr={tooltipLabel ? 0 : 'md'}
+      ml={tooltipLabel ? 0 : 'md'}
+      mt={tooltipLabel ? 0 : mt}
       loading={isLoading}
       disabled={combinedDisabled}
       variant={variant}
@@ -74,9 +84,13 @@ const OperationButton = ({
   );
 
   if (tooltipLabel) {
+    // Disabled buttons suppress pointer events at the browser level, so the Tooltip's
+    // cloneElement handlers would never fire. Wrap in a Box to capture them instead.
     return (
       <Tooltip content={tooltipLabel} position="top" arrow>
-        {button}
+        <Box mr="md" ml="md" mt={mt} style={{ display: 'block' }}>
+          {button}
+        </Box>
       </Tooltip>
     );
   }

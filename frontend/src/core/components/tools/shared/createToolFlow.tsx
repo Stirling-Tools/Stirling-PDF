@@ -6,6 +6,7 @@ import { ToolOperationHook } from '@app/hooks/tools/shared/useToolOperation';
 import { ToolWorkflowTitle, ToolWorkflowTitleProps } from '@app/components/tools/shared/ToolWorkflowTitle';
 import { StirlingFile } from '@app/types/fileContext';
 import type { TooltipTip } from '@app/types/tips';
+import type { ExecuteDisabledReason } from '@app/hooks/tools/shared/toolOperationTypes';
 
 export interface FilesStepConfig {
   selectedFiles: StirlingFile[];
@@ -36,8 +37,10 @@ export interface ExecuteButtonConfig {
   loadingText: string;
   onClick: () => Promise<void>;
   isVisible?: boolean;
+  /** Structured reason the button is disabled — auto-resolves to a translated tooltip. */
+  disabledReason?: ExecuteDisabledReason;
+  /** Raw override for tools with custom disable logic not covered by disabledReason. */
   disabled?: boolean;
-  disabledTooltip?: string;
   testId?: string;
   showCloudBadge?: boolean;
 }
@@ -105,7 +108,7 @@ export function createToolFlow<TParams = unknown>(config: ToolFlowConfig<TParams
             onClick={config.executeButton.onClick}
             isLoading={config.review.operation.isLoading}
             disabled={config.executeButton.disabled}
-            disabledTooltip={config.executeButton.disabledTooltip}
+            disabledReason={config.executeButton.disabledReason}
             loadingText={config.executeButton.loadingText}
             submitText={config.executeButton.text}
             showCloudBadge={config.executeButton.showCloudBadge ?? config.review.operation.willUseCloud ?? false}

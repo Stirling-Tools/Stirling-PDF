@@ -5,6 +5,7 @@ import { BaseToolProps } from '@app/types/tool';
 import { ToolOperationHook } from '@app/hooks/tools/shared/useToolOperation';
 import { BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
 import { StirlingFile } from '@app/types/fileContext';
+import type { ExecuteDisabledReason } from '@app/hooks/tools/shared/toolOperationTypes';
 
 interface BaseToolReturn<TParams, TParamsHook extends BaseParametersHook<TParams>> {
   // File management
@@ -17,6 +18,7 @@ interface BaseToolReturn<TParams, TParamsHook extends BaseParametersHook<TParams
   // Endpoint validation
   endpointEnabled: boolean | null;
   endpointLoading: boolean;
+  executeDisabledReason: ExecuteDisabledReason;
 
   // Standard handlers
   handleExecute: () => Promise<void>;
@@ -62,6 +64,13 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
   const hasFiles = selectedFiles.length >= minFiles;
   const hasResults = operation.files.length > 0 || operation.downloadUrl !== null;
   const settingsCollapsed = !hasFiles || hasResults;
+
+  // Priority: endpointUnavailable > noFiles > invalidParams
+  const executeDisabledReason: ExecuteDisabledReason =
+    endpointEnabled === false ? 'endpointUnavailable'
+    : !hasFiles ? 'noFiles'
+    : !params.validateParameters() ? 'invalidParams'
+    : null;
 
   // Reset results when parameters change
   useEffect(() => {
@@ -152,6 +161,7 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
     // Endpoint validation
     endpointEnabled,
     endpointLoading,
+    executeDisabledReason,
 
     // Handlers
     handleExecute,
