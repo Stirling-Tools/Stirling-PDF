@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { computeReadAloudHighlightRect } from '@app/components/viewer/readAloudHighlight';
 import { useFileState } from '@app/contexts/FileContext';
 import { useViewer } from '@app/contexts/ViewerContext';
+import { useStopReadAloudOnNavigation } from '@app/components/viewer/useStopReadAloudOnNavigation';
 import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
 import { StirlingFile } from '@app/types/fileContext';
 import { ZINDEX } from '@app/constants/zIndex';
@@ -186,6 +187,24 @@ export function useViewerReadAloud(defaultLanguage?: string) {
       cachedTextItemsRef.current = null;
     }
   }, []);
+
+  const stopReadingAloud = useCallback(() => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    if (pageAdvanceTimeoutRef.current !== null) {
+      window.clearTimeout(pageAdvanceTimeoutRef.current);
+      pageAdvanceTimeoutRef.current = null;
+    }
+    clearHighlights();
+    setIsReadingAloud(false);
+    currentFileRef.current = null;
+    utteranceRef.current = null;
+    cleanupReadingSession();
+  }, [clearHighlights, cleanupReadingSession]);
+
+  // Stop reading when navigating away (workbench, file, or window change)
+  useStopReadAloudOnNavigation(isReadingAloud, stopReadingAloud);
 
   const highlightWord = useCallback((wordIndex: number, words: string[], pageNumber: number) => {
     clearHighlights();
