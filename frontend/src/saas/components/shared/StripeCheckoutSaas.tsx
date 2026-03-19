@@ -24,7 +24,7 @@ interface StripeCheckoutProps {
   currency?: string;
   isTrialConversion?: boolean;
   // Proprietary-specific props (for compatibility)
-  planGroup?: any;
+  planGroup?: unknown;
   minimumSeats?: number;
   onLicenseActivated?: (licenseInfo: {licenseType: string; enabled: boolean; maxUsers: number; hasKey: boolean}) => void;
   hostedCheckoutSuccess?: {

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meeting Minutes</title>
+  <style>
+    :root {
+      --theme-primary: #1e3a5f;
+      --theme-accent: #2563eb;
+      --theme-secondary: #475569;
+      --theme-bg: #ffffff;
+      --theme-surface: #f8fafc;
+      --theme-border: #e2e8f0;
+      --theme-text: #1a1a1a;
+      --theme-text-muted: #6b7280;
+      --theme-heading: #111827;
+      --theme-font: 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    @page { size: A4; margin: 20mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--theme-font); font-size: 10pt; color: var(--theme-text); background: var(--theme-bg); line-height: 1.4; }
+    .document { max-width: 170mm; margin: 0 auto; }
+    .top-bar { height: 3pt; background: var(--theme-accent); margin-bottom: 10pt; }
+    .doc-header { display: flex; align-items: center; gap: 12pt; margin-bottom: 8pt; }
+    .doc-header-text { flex: 1; text-align: center; }
+    .doc-title { font-size: 16pt; font-weight: 700; color: var(--theme-primary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3pt; }
+    .doc-subtitle { font-size: 9pt; color: var(--theme-text-muted); }
+    hr { border: none; border-top: 0.5pt solid var(--theme-border); margin: 6pt 0; }
+    .meta-grid { display: grid; grid-template-columns: 110pt auto; row-gap: 2pt; margin-bottom: 8pt; }
+    .meta-label { font-weight: 600; color: var(--theme-text-muted); font-size: 8.5pt; }
+    .meta-value { font-size: 8.5pt; color: var(--theme-text); }
+    .section-heading { font-size: 10pt; font-weight: 700; color: var(--theme-primary); border-bottom: 1pt solid var(--theme-accent); padding-bottom: 2pt; margin: 10pt 0 6pt; text-transform: uppercase; letter-spacing: 0.5px; }
+    .attendees-table { width: 100%; border-collapse: collapse; margin-bottom: 6pt; font-size: 8.5pt; }
+    .attendees-table thead tr { background: var(--theme-surface); }
+    .attendees-table thead th { padding: 4pt 6pt; text-align: left; font-weight: 700; color: var(--theme-primary); border-bottom: 1pt solid var(--theme-border); font-size: 8pt; text-transform: uppercase; letter-spacing: 0.3px; }
+    .attendees-table tbody td { padding: 3pt 6pt; border-bottom: 0.3pt solid var(--theme-border); }
+    .discussion-item { margin-bottom: 8pt; padding-left: 8pt; border-left: 2pt solid var(--theme-accent); page-break-inside: avoid; }
+    .discussion-heading { font-size: 9.5pt; font-weight: 700; color: var(--theme-heading); margin-bottom: 3pt; }
+    .discussion-body { font-size: 9pt; line-height: 1.6; color: var(--theme-text); }
+    .action-table { width: 100%; border-collapse: collapse; margin-bottom: 8pt; font-size: 8.5pt; }
+    .action-table thead tr { background: var(--theme-primary); color: #fff; }
+    .action-table thead th { padding: 5pt 6pt; text-align: left; font-weight: 600; }
+    .action-table tbody tr:nth-child(even) { background: var(--theme-surface); }
+    .action-table tbody td { padding: 4pt 6pt; border-bottom: 0.3pt solid var(--theme-border); vertical-align: top; }
+    .status-open { color: #b45309; font-weight: 600; }
+    .status-done { color: #15803d; font-weight: 600; }
+    .signoff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20pt; margin-top: 14pt; }
+    .signoff-col { font-size: 8.5pt; }
+    .signoff-label { font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--theme-accent); margin-bottom: 18pt; }
+    .sig-line { border-bottom: 0.75pt solid var(--theme-text); margin-bottom: 3pt; height: 14pt; }
+    .sig-field-label { font-size: 7.5pt; color: var(--theme-text-muted); margin-bottom: 10pt; }
+    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .discussion-item { page-break-inside: avoid; } }
+  </style>
+</head>
+<body>
+  <div class="document">
+    <div class="top-bar"></div>
+    <div class="doc-header">
+      <div class="doc-header-text">
+        <div class="doc-title">Meeting Minutes</div>
+        <div class="doc-subtitle">Stirling Technologies Ltd</div>
+      </div>
+    </div>
+    <hr>
+    <div class="meta-grid">
+      <span class="meta-label">Date:</span>       <span class="meta-value">18 February 2026</span>
+      <span class="meta-label">Time:</span>       <span class="meta-value">10:00 – 11:45</span>
+      <span class="meta-label">Location:</span>   <span class="meta-value">Conference Room B, London HQ</span>
+      <span class="meta-label">Chairperson:</span><span class="meta-value">James Whitfield</span>
+      <span class="meta-label">Minutes By:</span> <span class="meta-value">Amelia Frost</span>
+    </div>
+    <hr>
+    <div class="section-heading">Attendees</div>
+    <table class="attendees-table">
+      <thead>
+        <tr>
+          <th style="width:35%">Name</th>
+          <th style="width:30%">Title / Role</th>
+          <th style="width:20%">Department</th>
+          <th style="width:15%">Present</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>James Whitfield</td><td>Chief Technology Officer</td><td>Engineering</td><td>Yes</td></tr>
+        <tr><td>Amelia Frost</td><td>Product Manager</td><td>Product</td><td>Yes</td></tr>
+        <tr><td>Rajan Mehta</td><td>Lead Engineer</td><td>Engineering</td><td>Yes</td></tr>
+        <tr><td>Sophie Langton</td><td>UX Designer</td><td>Design</td><td>Yes</td></tr>
+        <tr><td>Oliver Drummond</td><td>Head of Sales</td><td>Commercial</td><td>Yes</td></tr>
+        <tr><td>Niamh O'Brien</td><td>Data Analyst</td><td>Analytics</td><td>No (apologies sent)</td></tr>
+      </tbody>
+    </table>
+    <div class="section-heading">Discussion</div>
+    <div class="discussion-item">
+      <div class="discussion-heading">1. Q1 Roadmap Review</div>
+      <div class="discussion-body">James opened with an overview of Q4 2025 delivery performance. Eight of nine planned features shipped on schedule; the smart-folder batch processing feature slipped by two weeks due to third-party API instability. The team agreed to carry this forward as a priority for Q1. Oliver noted positive customer feedback on the PDF merge redesign and requested it be highlighted in upcoming marketing materials.</div>
+    </div>
+    <div class="discussion-item">
+      <div class="discussion-heading">2. New Feature Prioritisation</div>
+      <div class="discussion-body">Amelia presented the backlog ranked by customer impact score. The top three items approved for Q1 development are: (1) AI-assisted document generation templates, (2) bulk processing queue with progress tracking, and (3) white-label branding options for enterprise clients. Sophie noted the design system update must be completed before white-label work begins and estimated a two-week lead time.</div>
+    </div>
+    <div class="discussion-item">
+      <div class="discussion-heading">3. Infrastructure and Performance</div>
+      <div class="discussion-body">Rajan presented benchmark results showing 23% improvement in PDF rendering speed following the January infrastructure upgrade. He proposed migrating the job queue to a dedicated worker cluster to support bulk processing. Estimated cost is £1,200/month; James approved provisionally pending finance sign-off. Target completion date: 14 March 2026.</div>
+    </div>
+    <div class="discussion-item">
+      <div class="discussion-heading">4. Q2 Planning Preview</div>
+      <div class="discussion-body">Brief discussion of Q2 themes: mobile application development and enhanced analytics dashboard. Oliver emphasised that the sales team urgently requires improved usage reporting for enterprise renewal conversations. Amelia to circulate a draft Q2 roadmap for async review by 25 February 2026.</div>
+    </div>
+    <div class="section-heading">Action Items</div>
+    <table class="action-table">
+      <thead>
+        <tr>
+          <th style="width:42%">Action Item</th>
+          <th style="width:20%">Owner</th>
+          <th style="width:20%">Due Date</th>
+          <th style="width:18%">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Finalise smart-folder batch processing spec and begin sprint</td><td>Rajan Mehta</td><td>25 Feb 2026</td><td class="status-open">Open</td></tr>
+        <tr><td>Complete design system update to unblock white-label work</td><td>Sophie Langton</td><td>4 Mar 2026</td><td class="status-open">Open</td></tr>
+        <tr><td>Submit infrastructure upgrade cost for finance approval</td><td>James Whitfield</td><td>21 Feb 2026</td><td class="status-open">Open</td></tr>
+        <tr><td>Circulate draft Q2 roadmap for team review</td><td>Amelia Frost</td><td>25 Feb 2026</td><td class="status-open">Open</td></tr>
+        <tr><td>Prepare PDF merge feature highlights for marketing</td><td>Oliver Drummond</td><td>28 Feb 2026</td><td class="status-open">Open</td></tr>
+      </tbody>
+    </table>
+    <div class="section-heading">Next Meeting</div>
+    <div class="meta-grid">
+      <span class="meta-label">Date &amp; Time:</span>  <span class="meta-value">18 March 2026, 10:00</span>
+      <span class="meta-label">Location:</span>         <span class="meta-value">Conference Room B, London HQ</span>
+    </div>
+    <div class="section-heading">Approval</div>
+    <div class="signoff-grid">
+      <div class="signoff-col">
+        <div class="signoff-label">Prepared By</div>
+        <div class="sig-line"></div>
+        <div class="sig-field-label">Amelia Frost</div>
+      </div>
+      <div class="signoff-col">
+        <div class="signoff-label">Approved By</div>
+        <div class="sig-line"></div>
+        <div class="sig-field-label">James Whitfield</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
