@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { ActionIcon, Popover } from '@mantine/core';
+import { ActionIcon, Slider, Popover, Select } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
+import { supportedLanguages } from '@app/i18n';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useRightRailButtons, RightRailButtonWithAction } from '@app/hooks/useRightRailButtons';
 import LocalIcon from '@app/components/shared/LocalIcon';
@@ -15,6 +16,9 @@ import { BASE_PATH, withBasePath } from '@app/constants/app';
 import { useRedaction, useRedactionMode } from '@app/contexts/RedactionContext';
 import TextFieldsIcon from '@mui/icons-material/TextFields';
 import StraightenIcon from '@mui/icons-material/Straighten';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import StopIcon from '@mui/icons-material/Stop';
+import { useViewerReadAloud } from '@app/components/viewer/useViewerReadAloud';
 
 export function useViewerRightRailButtons(
   isRulerActive?: boolean,
@@ -31,9 +35,10 @@ export function useViewerRightRailButtons(
   const { requestNavigation } = useNavigationGuard();
   const { redactionsApplied, activeType: redactionActiveType } = useRedaction();
   const { pendingCount } = useRedactionMode();
+  const { isReadingAloud, speechRate, speechLanguage, speechVoice, supportedLanguageCodes, handleReadAloud, handleSpeechRateChange, handleSpeechLanguageChange } = useViewerReadAloud(
+    i18n.language || 'en-US'
+  );
 
-  // Subscribe to immediate pan updates so button state stays in sync with actual pan state
-  // This handles cases where annotation/redaction tools disable pan mode
   useEffect(() => {
     return registerImmediatePanUpdate((newIsPanning) => {
       setIsPanning(newIsPanning);
@@ -54,7 +59,6 @@ export function useViewerRightRailButtons(
 
   const [isAnnotationsActive, setIsAnnotationsActive] = useState<boolean>(() => isAnnotationsPath());
 
-  // Update isAnnotationsActive based on selected tool
   useEffect(() => {
     if (selectedTool === 'annotate') {
       setIsAnnotationsActive(true);
@@ -73,7 +77,6 @@ export function useViewerRightRailButtons(
     return () => window.removeEventListener('popstate', handlePopState);
   }, [isAnnotationsPath]);
 
-  // Lift i18n labels out of memo for clarity
   const searchLabel = t('rightRail.search', 'Search PDF');
   const panLabel = t('rightRail.panMode', 'Pan Mode');
   const applyRedactionsLabel = t('rightRail.applyRedactionsFirst', 'Apply redactions first');
@@ -85,10 +88,24 @@ export function useViewerRightRailButtons(
   const printLabel = t('rightRail.print', 'Print PDF');
   const annotationsLabel = t('rightRail.annotations', 'Annotations');
   const formFillLabel = t('rightRail.formFill', 'Fill Form');
+  const rulerLabel = t('rightRail.ruler', 'Ruler / Measure');
+  const readAloudLabel = t('rightRail.readAloud', 'Read Aloud');
+  const readAloudSpeedLabel = t('rightRail.readAloudSpeed', 'Speed');
 
   const isFormFillActive = (selectedTool as string) === 'formFill';
 
-  const rulerLabel = t('rightRail.ruler', 'Ruler / Measure');
+  // Filter languages based on available voices
+  const filteredLanguages = useMemo(() =>
+    Object.entries(supportedLanguages)
+      .filter(([code]) => supportedLanguageCodes.size === 0 || supportedLanguageCodes.has(code) || supportedLanguageCodes.has(code.split('-')[0]))
+      .map(([code, label]) => ({
+        value: code,
+        label: label,
+      })),
+    [supportedLanguageCodes]
+  );
+
+  const shouldShowLanguageSelector = supportedLanguageCodes.size === 0 || filteredLanguages.length > 1;
 
   const viewerButtons = useMemo<RightRailButtonWithAction[]>(() => {
     const buttons: RightRailButtonWithAction[] = [
@@ -156,7 +173,6 @@ export function useViewerRightRailButtons(
         onClick: () => {
           const next = !isRulerActive;
           setIsRulerActive?.(next);
-          // Disable pan when activating ruler — they conflict
           if (next && viewer.getPanState()?.isPanning) {
             viewer.panActions.togglePan();
             setIsPanning(false);
@@ -233,6 +249,82 @@ export function useViewerRightRailButtons(
         }
       },
       {
+        id: 'viewer-read-aloud',
+        tooltip: readAloudLabel,
+        ariaLabel: readAloudLabel,
+        section: 'top' as const,
+        order: 57,
+        active: isReadingAloud,
+        render: ({ disabled }) => (
+          <Popover
+            position={tooltipPosition}
+            withArrow
+            shadow="md"
+            offset={8}
+            opened={isReadingAloud}
+            onClose={() => {}}
+            withinPortal
+          >
+            <Popover.Target>
+              <div style={{ display: 'inline-flex' }}>
+                <Tooltip content={readAloudLabel} position={tooltipPosition} offset={12} arrow portalTarget={document.body}>
+                  <ActionIcon
+                    variant={isReadingAloud ? 'filled' : 'subtle'}
+                    radius="md"
+                    className="right-rail-icon"
+                    disabled={disabled || typeof window === 'undefined' || !window.speechSynthesis}
+                    aria-label={readAloudLabel}
+                    onClick={handleReadAloud}
+                    color={isReadingAloud ? 'blue' : undefined}
+                  >
+                    {isReadingAloud ? <StopIcon sx={{ fontSize: '1.5rem' }} /> : <VolumeUpIcon sx={{ fontSize: '1.5rem' }} />}
+                  </ActionIcon>
+                </Tooltip>
+              </div>
+            </Popover.Target>
+            <Popover.Dropdown>
+              <div style={{ width: '16rem', padding: '0.5rem' }}>
+                <div style={{ fontSize: '0.75rem', marginBottom: '0.5rem', textAlign: 'center' }}>
+                  {readAloudSpeedLabel}: {speechRate.toFixed(1)}x
+                </div>
+                <Slider
+                  value={speechRate}
+                  onChange={handleSpeechRateChange}
+                  min={0.5}
+                  max={2}
+                  step={0.1}
+                  marks={[
+                    { value: 0.5, label: '0.5x' },
+                    { value: 1, label: '1x' },
+                    { value: 2, label: '2x' },
+                  ]}
+                  styles={{
+                    markLabel: { fontSize: '0.6rem' },
+                  }}
+                  mb="md"
+                />
+                {shouldShowLanguageSelector && (
+                  <Select
+                    label={t('rightRail.readAloudLanguage', 'Language')}
+                    placeholder={t('rightRail.selectLanguage', 'Select language')}
+                    value={speechLanguage}
+                    onChange={(value) => {
+                      if (value) {
+                        handleSpeechLanguageChange(value);
+                      }
+                    }}
+                    data={filteredLanguages}
+                    size="xs"
+                    searchable
+                    mb="sm"
+                  />
+                )}
+              </div>
+            </Popover.Dropdown>
+          </Popover>
+        )
+      },
+      {
         id: 'viewer-annotations',
         tooltip: annotationsLabel,
         ariaLabel: annotationsLabel,
@@ -248,7 +340,6 @@ export function useViewerRightRailButtons(
               onClick={() => {
                 if (disabled || isAnnotationsActive) return;
 
-                // Check for unsaved redaction changes (pending or applied)
                 const hasRedactionChanges = pendingCount > 0 || redactionsApplied;
 
                 const switchToAnnotations = () => {
@@ -314,8 +405,6 @@ export function useViewerRightRailButtons(
       },
     ];
 
-    // Optional: Save button for annotations (always registered when this hook is used
-    // with a save handler; uses a ref to avoid infinite re-registration loops).
     return buttons;
   }, [
     t,
@@ -346,6 +435,18 @@ export function useViewerRightRailButtons(
     rulerLabel,
     isRulerActive,
     setIsRulerActive,
+    readAloudLabel,
+    readAloudSpeedLabel,
+    isReadingAloud,
+    speechRate,
+    speechLanguage,
+    speechVoice,
+    supportedLanguageCodes,
+    filteredLanguages,
+    shouldShowLanguageSelector,
+    handleReadAloud,
+    handleSpeechRateChange,
+    handleSpeechLanguageChange,
   ]);
 
   useRightRailButtons(viewerButtons);
