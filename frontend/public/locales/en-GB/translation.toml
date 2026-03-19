@@ -2675,6 +2675,14 @@ integration = "Integration Configuration"
 security = "Security Configuration"
 system = "System Configuration"
 
+[connectionMode.status]
+localOffline = "Offline mode running"
+localOnline = "Offline mode running"
+saas = "Connected to Stirling Cloud"
+selfhostedChecking = "Connected to self-hosted server (checking...)"
+selfhostedOffline = "Self-hosted server unreachable"
+selfhostedOnline = "Connected to self-hosted server"
+
 [convert]
 autoRotate = "Auto Rotate"
 autoRotateDescription = "Automatically rotate images to better fit the PDF page"
@@ -6062,6 +6070,10 @@ message = "Sign in to unlock all tools."
 signIn = "Sign In"
 title = "Running locally"
 
+[localMode.toolPicker]
+message = "Sign in to unlock all tools."
+signIn = "Sign In"
+
 [setup]
 description = "Get started by choosing how you want to use Stirling PDF"
 welcome = "Welcome to Stirling PDF"
@@ -6117,7 +6129,14 @@ title = "Sign in to Stirling"
 [setup.selfhosted]
 link = "or connect to a self-hosted account"
 subtitle = "Enter your server credentials"
+switchToLocal = "Use local tools instead"
 title = "Sign in to Server"
+
+[setup.selfhosted.unreachable]
+continueOffline = "Use local tools instead"
+message = "Could not reach {{url}}. Check that the server is running and accessible."
+retry = "Retry"
+title = "Cannot connect to server"
 
 [setup.server]
 subtitle = "Enter your self-hosted server URL"
@@ -6698,6 +6717,11 @@ pageFormatting = "Page Formatting"
 removal = "Removal"
 signing = "Signing"
 verification = "Verification"
+
+[tool]
+endpointUnavailable = "This tool is unavailable on your server."
+invalidParams = "Fill in the required settings."
+noFiles = "Add a file to get started."
 
 [tools]
 noSearchResults = "No tools found"
