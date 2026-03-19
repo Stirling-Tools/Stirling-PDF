@@ -134,68 +134,71 @@ export default function RightRail() {
     [actions, allButtonsDisabled, disableForFullscreen, tooltipPosition, tooltipOffset]
   );
 
-  const handleExportAll = useCallback(async () => {
-    if (currentView === 'viewer') {
-      const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
-      if (!buffer) return;
-      const fileToExport = selectedFiles.length > 0 ? selectedFiles[0] : activeFiles[0];
-      if (!fileToExport) return;
-      const stub = isStirlingFile(fileToExport) ? selectors.getStirlingFileStub(fileToExport.fileId) : undefined;
-      try {
-        const result = await downloadFile({
-          data: new Blob([buffer], { type: 'application/pdf' }),
-          filename: fileToExport.name,
-          localPath: stub?.localFilePath,
-        });
-        if (!result.cancelled && stub && result.savedPath) {
-          fileActions.updateStirlingFileStub(stub.id, {
-            localFilePath: stub.localFilePath ?? result.savedPath,
-            isDirty: false,
-          });
-        }
-      } catch (error) {
-        console.error('[RightRail] Failed to export viewer file:', error);
-      }
-      return;
-    }
-
-    if (currentView === 'pageEditor') {
-      pageEditorFunctions?.onExportAll?.();
-      return;
-    }
-
-    const filesToExport = selectedFiles.length > 0 ? selectedFiles : activeFiles;
-
-    if (filesToExport.length > 0) {
-      for (const file of filesToExport) {
-        const stub = isStirlingFile(file) ? selectors.getStirlingFileStub(file.fileId) : undefined;
+  const handleExportAll = useCallback(
+    async (forceNewFile = false) => {
+      if (currentView === 'viewer') {
+        const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
+        if (!buffer) return;
+        const fileToExport = selectedFiles.length > 0 ? selectedFiles[0] : activeFiles[0];
+        if (!fileToExport) return;
+        const stub = isStirlingFile(fileToExport) ? selectors.getStirlingFileStub(fileToExport.fileId) : undefined;
         try {
           const result = await downloadFile({
-            data: file,
-            filename: file.name,
-            localPath: stub?.localFilePath
+            data: new Blob([buffer], { type: 'application/pdf' }),
+            filename: fileToExport.name,
+            localPath: forceNewFile ? undefined : stub?.localFilePath,
           });
-          if (result.cancelled) continue;
-          if (stub && result.savedPath) {
+          if (!forceNewFile && !result.cancelled && stub && result.savedPath) {
             fileActions.updateStirlingFileStub(stub.id, {
               localFilePath: stub.localFilePath ?? result.savedPath,
-              isDirty: false
+              isDirty: false,
             });
           }
         } catch (error) {
-          console.error('[RightRail] Failed to export file:', file.name, error);
+          console.error('[RightRail] Failed to export viewer file:', error);
+        }
+        return;
+      }
+
+      if (currentView === 'pageEditor') {
+        pageEditorFunctions?.onExportAll?.();
+        return;
+      }
+
+      const filesToExport = selectedFiles.length > 0 ? selectedFiles : activeFiles;
+
+      if (filesToExport.length > 0) {
+        for (const file of filesToExport) {
+          const stub = isStirlingFile(file) ? selectors.getStirlingFileStub(file.fileId) : undefined;
+          try {
+            const result = await downloadFile({
+              data: file,
+              filename: file.name,
+              localPath: forceNewFile ? undefined : stub?.localFilePath,
+            });
+            if (result.cancelled) continue;
+            if (!forceNewFile && stub && result.savedPath) {
+              fileActions.updateStirlingFileStub(stub.id, {
+                localFilePath: stub.localFilePath ?? result.savedPath,
+                isDirty: false,
+              });
+            }
+          } catch (error) {
+            console.error('[RightRail] Failed to export file:', file.name, error);
+          }
         }
       }
-    }
-  }, [
-    currentView,
-    selectedFiles,
-    activeFiles,
-    pageEditorFunctions,
-    viewerContext,
-    selectors,
-    fileActions,
-  ]);
+    },
+    [
+      currentView,
+      selectedFiles,
+      activeFiles,
+      pageEditorFunctions,
+      viewerContext,
+      selectors,
+      fileActions,
+    ]
+  );
 
   const downloadTooltip = useMemo(() => {
     if (currentView === 'pageEditor') {
@@ -209,29 +212,6 @@ export default function RightRail() {
     }
     return terminology.downloadAll;
   }, [currentView, selectedCount, t, terminology]);
-
-  // Save As: explicitly export to a new location without updating the file's tracked path.
-  // The button is only rendered when icons.saveAsIconName is defined (desktop builds only).
-  // On desktop, downloadFile() without a localPath opens a native save dialog.
-  const handleSaveAs = useCallback(async () => {
-    if (currentView !== 'viewer') return;
-
-    const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
-    if (!buffer) return;
-
-    const fileToExport = selectedFiles.length > 0 ? selectedFiles[0] : activeFiles[0];
-    if (!fileToExport) return;
-
-    try {
-      await downloadFile({
-        data: new Blob([buffer], { type: 'application/pdf' }),
-        filename: fileToExport.name,
-        // Intentionally no localPath — forces a "Save As" dialog on desktop.
-      });
-    } catch (error) {
-      console.error('[RightRail] Failed to save-as viewer file:', error);
-    }
-  }, [currentView, selectedFiles, activeFiles, viewerContext]);
 
   return (
     <div ref={sidebarRefs.rightRailRef} className="right-rail" data-sidebar="right-rail">
@@ -287,7 +267,7 @@ export default function RightRail() {
               variant="subtle"
               radius="md"
               className="right-rail-icon"
-              onClick={handleExportAll}
+              onClick={() => handleExportAll()}
               disabled={
                 disableForFullscreen ||
                 (currentView !== 'viewer' && (totalItems === 0 || allButtonsDisabled))
@@ -305,8 +285,11 @@ export default function RightRail() {
                 variant="subtle"
                 radius="md"
                 className="right-rail-icon"
-                onClick={handleSaveAs}
-                disabled={disableForFullscreen || currentView !== 'viewer'}
+                onClick={() => handleExportAll(true)}
+                disabled={
+                  disableForFullscreen ||
+                  (currentView !== 'viewer' && (totalItems === 0 || allButtonsDisabled))
+                }
               >
                 <LocalIcon icon={icons.saveAsIconName} width="1.5rem" height="1.5rem" />
               </ActionIcon>,
