@@ -26,6 +26,7 @@ import stirling.software.proprietary.security.service.EmailService;
 import stirling.software.proprietary.security.service.SaveUserRequest;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 @InviteApi
 @Slf4j
@@ -37,6 +38,7 @@ public class InviteLinkController {
     private final UserService userService;
     private final ApplicationProperties applicationProperties;
     private final Optional<EmailService> emailService;
+    private final UserLicenseSettingsService userLicenseSettingsService;
 
     /**
      * Generate a new invite link (admin only)
@@ -114,7 +116,7 @@ public class InviteLinkController {
             if (applicationProperties.getPremium().isEnabled()) {
                 long currentUserCount = userService.getTotalUsersCount();
                 long activeInvites = inviteTokenRepository.countActiveInvites(LocalDateTime.now());
-                int maxUsers = applicationProperties.getPremium().getMaxUsers();
+                int maxUsers = userLicenseSettingsService.calculateMaxAllowedUsers();
 
                 if (currentUserCount + activeInvites >= maxUsers) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
