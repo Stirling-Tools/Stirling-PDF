@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Stack, Select, Checkbox } from '@mantine/core';
+import { Stack, Select } from '@mantine/core';
 import { ExtractImagesParameters } from '@app/hooks/tools/extractImages/useExtractImagesParameters';
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
@@ -35,12 +35,12 @@ const ExtractImagesSettings = ({
         comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
       />
 
-      <Checkbox
+      {/* <Checkbox
         label={t('extractImages.allowDuplicates', 'Allow Duplicate Images')}
         checked={parameters.allowDuplicates}
         onChange={(event) => onParameterChange('allowDuplicates', event.currentTarget.checked)}
         disabled={disabled}
-      />
+      /> */}
     </Stack>
   );
 };

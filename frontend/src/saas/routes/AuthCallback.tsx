@@ -7,7 +7,7 @@ import { withBasePath } from '@app/constants/app'
 interface CallbackState {
   status: 'processing' | 'success' | 'error'
   message: string
-  details?: Record<string, any>
+  details?: Record<string, unknown>
 }
 
 export default function AuthCallback() {

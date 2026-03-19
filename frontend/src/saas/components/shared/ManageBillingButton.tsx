@@ -38,16 +38,16 @@ export function ManageBillingButton({
     setLoading(true);
     setErr(null);
     try {
-      const { data, error } = await supabase.functions.invoke('manage-billing', {
+      const { data, error } = await supabase.functions.invoke<{ url: string; error?: string }>('manage-billing', {
         body: {
         name: 'Functions',
         return_url: returnUrl},
       })
       if (error) throw error;
-      if (!data || 'error' in data) throw new Error((data as any)?.error ?? 'No portal URL');
-      window.location.href = (data as any).url;
-    } catch (e: any) {
-      setErr(e.message ?? 'Could not open billing portal');
+      if (!data || 'error' in data) throw new Error(data?.error ?? 'No portal URL');
+      window.location.href = data.url;
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : 'Could not open billing portal');
     } finally {
       setLoading(false);
     }

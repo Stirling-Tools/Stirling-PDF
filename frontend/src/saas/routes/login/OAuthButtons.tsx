@@ -32,7 +32,7 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
             position="top"
           >
             <button
-              onClick={() => onProviderClick(p.id as any)}
+              onClick={() => onProviderClick(p.id as 'github' | 'google')}
               disabled={isSubmitting || p.isDisabled}
               className="oauth-button-icon"
               aria-label={`${t('login.signInWith', 'Sign in with')} ${p.label}`}
@@ -55,7 +55,7 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
             position="top"
           >
             <button
-              onClick={() => onProviderClick(p.id as any)}
+              onClick={() => onProviderClick(p.id as 'github' | 'google')}
               disabled={isSubmitting || p.isDisabled}
               className="oauth-button-grid"
               aria-label={`${t('login.signInWith', 'Sign in with')} ${p.label}`}
@@ -74,7 +74,7 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
         {oauthProviders.map((p) => (
           <button
             key={p.id}
-            onClick={() => onProviderClick(p.id as any)}
+            onClick={() => onProviderClick(p.id as 'github' | 'google')}
             disabled={isSubmitting || p.isDisabled}
             className="oauth-button-fullwidth"
             title={p.label}
@@ -92,7 +92,7 @@ export default function OAuthButtons({ onProviderClick, isSubmitting, layout = '
       {oauthProviders.map((p) => (
         <button
           key={p.id}
-          onClick={() => onProviderClick(p.id as any)}
+          onClick={() => onProviderClick(p.id as 'github' | 'google')}
           disabled={isSubmitting || p.isDisabled}
           className="oauth-button-vertical"
           title={p.label}
