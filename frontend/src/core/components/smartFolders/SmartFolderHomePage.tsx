@@ -573,13 +573,17 @@ export function SmartFolderHomePage() {
       // Process any files that were queued while paused
       const record = await folderStorage.getFolderData(folder.id);
       if (record) {
-        const pendingIds = Object.entries(record.files)
-          .filter(([, meta]) => meta.status === 'pending')
-          .map(([id]) => id);
-        if (pendingIds.length > 0) {
-          const stirlingFiles = await Promise.all(pendingIds.map(id => fileStorage.getStirlingFile(id as any)));
-          const validFiles = stirlingFiles.filter(Boolean) as File[];
-          if (validFiles.length > 0) processFiles(updatedFolder, validFiles);
+        const pendingEntries = Object.entries(record.files)
+          .filter(([, meta]) => meta.status === 'pending');
+        if (pendingEntries.length > 0) {
+          const items: Array<{ file: File; inputFileId: string; ownedByFolder: boolean }> = [];
+          for (const [id, meta] of pendingEntries) {
+            const stirlingFile = await fileStorage.getStirlingFile(id as any);
+            if (stirlingFile) {
+              items.push({ file: stirlingFile, inputFileId: id, ownedByFolder: meta.ownedByFolder ?? false });
+            }
+          }
+          if (items.length > 0) processBatch(updatedFolder, items);
         }
       }
     }

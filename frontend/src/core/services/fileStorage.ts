@@ -271,7 +271,10 @@ class FileStorageService {
       const request = store.delete(id);
 
       request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
+      request.onsuccess = () => {
+        window.dispatchEvent(new CustomEvent('stirling:files-changed'));
+        resolve();
+      };
     });
   }
 

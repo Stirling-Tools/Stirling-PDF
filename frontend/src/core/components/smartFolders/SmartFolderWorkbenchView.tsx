@@ -24,6 +24,8 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import PauseIcon from '@mui/icons-material/Pause';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useSmartFolders } from '@app/hooks/useSmartFolders';
 import { useFolderData } from '@app/hooks/useFolderData';
 import { useFolderRunState } from '@app/hooks/useFolderRunState';
@@ -62,7 +64,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   const { t } = useTranslation();
   const { toolRegistry, setCustomWorkbenchViewData } = useToolWorkflow();
   const { actions } = useNavigationActions();
-  const { folders } = useSmartFolders();
+  const { folders, updateFolder } = useSmartFolders();
   const folder = folders.find(f => f.id === folderId);
   const { runPipeline } = useFolderAutomation(toolRegistry);
 
@@ -234,6 +236,27 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
     actions.setWorkbench(SMART_FOLDER_WORKBENCH_ID);
   }, [setCustomWorkbenchViewData, actions]);
 
+  const handlePauseResume = useCallback(async () => {
+    if (!folder) return;
+    const nowPaused = !folder.isPaused;
+    await updateFolder({ ...folder, isPaused: nowPaused });
+    // When resuming, run all files that were queued while paused
+    if (!nowPaused) {
+      const pendingIds = fileIds.filter(id => folderRecord?.files[id]?.status === 'pending');
+      for (const fileId of pendingIds) {
+        const file = inputFiles.find(f => f.fileId === fileId);
+        if (file) {
+          runPipeline(
+            { ...folder, isPaused: false },
+            file,
+            fileId,
+            folderRecord?.files[fileId]?.ownedByFolder ?? false
+          );
+        }
+      }
+    }
+  }, [folder, updateFolder, fileIds, folderRecord, inputFiles, runPipeline]);
+
   if (!folderId) return <SmartFolderHomePage />;
 
   const FolderIcon = folder
@@ -324,7 +347,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                     width: '0.4375rem',
                     height: '0.4375rem',
                     borderRadius: '50%',
-                    backgroundColor: isProcessingAny ? '#3b82f6' : '#22c55e',
+                    backgroundColor: folder.isPaused ? '#f59e0b' : isProcessingAny ? '#3b82f6' : '#22c55e',
                   }}
                 />
               </Box>
@@ -355,8 +378,21 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
             </Stack>
           </Group>
 
-          {/* Add files */}
-          <Group gap="lg" align="center">
+          {/* Add files + pause/resume */}
+          <Group gap="sm" align="center">
+            <Button
+              size="xs"
+              variant={folder.isPaused ? 'filled' : 'light'}
+              color={folder.isPaused ? 'green' : 'gray'}
+              leftSection={folder.isPaused
+                ? <PlayArrowIcon style={{ fontSize: '0.875rem' }} />
+                : <PauseIcon style={{ fontSize: '0.875rem' }} />}
+              onClick={handlePauseResume}
+            >
+              {folder.isPaused
+                ? t('smartFolders.workbench.resume', 'Resume')
+                : t('smartFolders.workbench.pause', 'Pause')}
+            </Button>
             <Button
               size="xs"
               variant="light"

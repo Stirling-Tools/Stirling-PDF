@@ -79,60 +79,62 @@ class FolderStorage {
 
   async addFileToFolder(folderId: string, fileId: string, metadata?: Partial<FolderFileMetadata>): Promise<void> {
     const db = await this.ensureDB();
-    const existing = await this.getFolderData(folderId);
     const now = new Date();
-    const record: FolderRecord = existing || { folderId, files: {}, lastUpdated: Date.now() };
-    record.files[fileId] = {
-      addedAt: now,
-      status: 'pending',
-      ...metadata,
-    };
-    record.lastUpdated = Date.now();
     return new Promise((resolve, reject) => {
+      // Single readwrite transaction for both read and write — prevents lost-update
+      // races when multiple files are added to the same folder concurrently.
       const transaction = db.transaction([this.recordsStore], 'readwrite');
       const store = transaction.objectStore(this.recordsStore);
-      const request = store.put(record);
-      request.onsuccess = () => {
-        this.dispatchChange(folderId);
-        resolve();
+      const getRequest = store.get(folderId);
+      getRequest.onsuccess = () => {
+        const record: FolderRecord = getRequest.result || { folderId, files: {}, lastUpdated: Date.now() };
+        record.files[fileId] = { addedAt: now, status: 'pending', ...metadata };
+        record.lastUpdated = Date.now();
+        const putRequest = store.put(record);
+        putRequest.onsuccess = () => { this.dispatchChange(folderId); resolve(); };
+        putRequest.onerror = () => reject(new Error('Failed to add file to folder'));
       };
-      request.onerror = () => reject(new Error('Failed to add file to folder'));
+      getRequest.onerror = () => reject(new Error('Failed to read folder for add'));
     });
   }
 
   async updateFileMetadata(folderId: string, fileId: string, updates: Partial<FolderFileMetadata>): Promise<void> {
     const db = await this.ensureDB();
-    const existing = await this.getFolderData(folderId);
-    if (!existing) return;
-    existing.files[fileId] = { ...existing.files[fileId], ...updates };
-    existing.lastUpdated = Date.now();
     return new Promise((resolve, reject) => {
+      // Single readwrite transaction — prevents lost-update races during concurrent
+      // pipeline runs where multiple files update their status simultaneously.
       const transaction = db.transaction([this.recordsStore], 'readwrite');
       const store = transaction.objectStore(this.recordsStore);
-      const request = store.put(existing);
-      request.onsuccess = () => {
-        this.dispatchChange(folderId);
-        resolve();
+      const getRequest = store.get(folderId);
+      getRequest.onsuccess = () => {
+        const existing: FolderRecord | undefined = getRequest.result;
+        if (!existing) { resolve(); return; }
+        existing.files[fileId] = { ...existing.files[fileId], ...updates };
+        existing.lastUpdated = Date.now();
+        const putRequest = store.put(existing);
+        putRequest.onsuccess = () => { this.dispatchChange(folderId); resolve(); };
+        putRequest.onerror = () => reject(new Error('Failed to update file metadata'));
       };
-      request.onerror = () => reject(new Error('Failed to update file metadata'));
+      getRequest.onerror = () => reject(new Error('Failed to read folder for update'));
     });
   }
 
   async removeFileFromFolder(folderId: string, fileId: string): Promise<void> {
     const db = await this.ensureDB();
-    const existing = await this.getFolderData(folderId);
-    if (!existing) return;
-    delete existing.files[fileId];
-    existing.lastUpdated = Date.now();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.recordsStore], 'readwrite');
       const store = transaction.objectStore(this.recordsStore);
-      const request = store.put(existing);
-      request.onsuccess = () => {
-        this.dispatchChange(folderId);
-        resolve();
+      const getRequest = store.get(folderId);
+      getRequest.onsuccess = () => {
+        const existing: FolderRecord | undefined = getRequest.result;
+        if (!existing) { resolve(); return; }
+        delete existing.files[fileId];
+        existing.lastUpdated = Date.now();
+        const putRequest = store.put(existing);
+        putRequest.onsuccess = () => { this.dispatchChange(folderId); resolve(); };
+        putRequest.onerror = () => reject(new Error('Failed to remove file from folder'));
       };
-      request.onerror = () => reject(new Error('Failed to remove file from folder'));
+      getRequest.onerror = () => reject(new Error('Failed to read folder for remove'));
     });
   }
 
