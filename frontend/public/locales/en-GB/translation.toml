@@ -6122,7 +6122,8 @@ title = "Connect to Server"
 useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
-configFetch = "Failed to fetch server configuration. Please check the URL and try again."
+configFetch = "Failed to fetch server configuration (status {{status}})"
+configFetchError = "Failed to fetch server configuration: {{error}}"
 emptyUrl = "Please enter a server URL"
 invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
 testFailed = "Connection test failed"

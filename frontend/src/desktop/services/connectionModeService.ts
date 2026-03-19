@@ -134,6 +134,12 @@ export class ConnectionModeService {
     // the 'local' distinction purely on the TypeScript side.
     localStorage.setItem(LOCAL_MODE_STORAGE_KEY, 'true');
 
+    // When a locked provisioned deployment falls back to local, preserve the server URL
+    // so the SetupWizard can pre-fill it if the user tries to sign in again.
+    if (this.currentConfig?.lock_connection_mode && this.currentConfig.server_config?.url) {
+      localStorage.setItem('stirling-provisioned-server-url', this.currentConfig.server_config.url);
+    }
+
     await invoke('set_connection_mode', {
       mode: 'saas',
       serverConfig: null,
@@ -143,11 +149,8 @@ export class ConnectionModeService {
 
     // Clear endpoint availability cache when mode changes
     endpointAvailabilityService.clearCache();
-    console.log('Cleared endpoint availability cache due to connection mode change');
 
     this.notifyListeners();
-
-    console.log('Switched to local-only mode successfully');
   }
 
   async switchToSelfHosted(serverConfig: ServerConfig): Promise<void> {

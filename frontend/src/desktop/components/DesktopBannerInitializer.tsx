@@ -4,7 +4,6 @@ import { DefaultAppBanner } from '@app/components/shared/DefaultAppBanner';
 import UpgradeBanner from '@app/components/shared/UpgradeBanner';
 import { TeamInvitationBanner } from '@app/components/shared/TeamInvitationBanner';
 import { SelfHostedOfflineBanner } from '@app/components/shared/SelfHostedOfflineBanner';
-import { LocalModeBanner } from '@app/components/shared/LocalModeBanner';
 
 export function DesktopBannerInitializer() {
   const { setBanner } = useBanner();
@@ -12,7 +11,6 @@ export function DesktopBannerInitializer() {
   useEffect(() => {
     setBanner(
       <>
-        <LocalModeBanner />
         <SelfHostedOfflineBanner />
         <TeamInvitationBanner />
         <UpgradeBanner />

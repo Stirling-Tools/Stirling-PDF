@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Modal, Stack, Group, Button, ActionIcon } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import CloseIcon from '@mui/icons-material/Close';
@@ -9,6 +9,7 @@ import { SetupWizard } from '@app/components/SetupWizard';
 import WelcomeSlide from '@app/components/onboarding/slides/WelcomeSlide';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 import styles from '@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css';
+import { connectionModeService } from '@app/services/connectionModeService';
 
 const ONBOARDING_KEY = 'stirling-desktop-onboarding-seen';
 
@@ -23,6 +24,16 @@ export function DesktopOnboardingModal() {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(() => !localStorage.getItem(ONBOARDING_KEY));
   const [step, setStep] = useState(0);
+  // null = still checking, true = locked (suppress modal), false = not locked (show modal)
+  const [isLocked, setIsLocked] = useState<boolean | null>(null);
+
+  // Provisioned (locked) deployments skip the onboarding entirely — the non-dismissible
+  // SignInModal handles authentication and shows the correct self-hosted login flow.
+  useEffect(() => {
+    connectionModeService.getCurrentConfig().then((cfg) => {
+      setIsLocked(cfg.lock_connection_mode && !!cfg.server_config?.url);
+    });
+  }, []);
 
   const dismissFinal = () => {
     localStorage.setItem(ONBOARDING_KEY, 'true');
@@ -47,10 +58,12 @@ export function DesktopOnboardingModal() {
   };
 
 
-  if (!visible) return null;
-
-  const welcomeSlide = WelcomeSlide();
+  // Call WelcomeSlide as a data factory (not a component render) — memoised so it
+  // isn't reconstructed on every render while the modal is open.
+  const welcomeSlide = useMemo(() => WelcomeSlide(), []);
   const totalSteps = 2;
+
+  if (!visible || isLocked === null || isLocked) return null;
 
   return (
     <Modal

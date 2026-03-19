@@ -37,6 +37,7 @@ export interface ExecuteButtonConfig {
   onClick: () => Promise<void>;
   isVisible?: boolean;
   disabled?: boolean;
+  disabledTooltip?: string;
   testId?: string;
   showCloudBadge?: boolean;
 }
@@ -104,6 +105,7 @@ export function createToolFlow<TParams = unknown>(config: ToolFlowConfig<TParams
             onClick={config.executeButton.onClick}
             isLoading={config.review.operation.isLoading}
             disabled={config.executeButton.disabled}
+            disabledTooltip={config.executeButton.disabledTooltip}
             loadingText={config.executeButton.loadingText}
             submitText={config.executeButton.text}
             showCloudBadge={config.executeButton.showCloudBadge ?? config.review.operation.willUseCloud ?? false}

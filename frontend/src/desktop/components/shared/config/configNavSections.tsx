@@ -106,12 +106,18 @@ export const useConfigNavSections = (
   }
 
   // Append remaining proprietary sections, skipping self-hosted admin sections in SaaS mode
+  // and hiding the Account section when not authenticated (avoids 500s on local/offline mode).
   for (const section of sections.slice(1)) {
     const firstItemKey = section.items[0]?.key;
     if (isSaasMode && firstItemKey && SELF_HOSTED_SECTION_FIRST_KEYS.has(firstItemKey)) {
       continue;
     }
-    result.push(section);
+    // Strip account item when not authenticated — account API calls fail in local mode
+    const filteredItems = isAuthenticated
+      ? section.items
+      : section.items.filter(item => item.key !== 'account');
+    if (filteredItems.length === 0) continue;
+    result.push({ ...section, items: filteredItems });
   }
 
   return result;

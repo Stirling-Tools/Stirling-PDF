@@ -44,6 +44,9 @@ const ScannerImageSplit = (props: BaseToolProps) => {
       loadingText: t("loading"),
       onClick: base.handleExecute,
       disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+      disabledTooltip: !base.endpointEnabled
+        ? t("scannerImageSplit.endpointDisabled", "This tool is unavailable on your self-hosted server.")
+        : undefined,
     },
     review: {
       isVisible: base.hasResults,

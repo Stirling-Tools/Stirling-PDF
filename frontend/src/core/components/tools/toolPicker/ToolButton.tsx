@@ -39,7 +39,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
   const isUnavailable = disabledReason !== null;
   // If onUnavailableClick is provided for a non-comingSoon tool, render as "cloud-available":
   // full opacity, cloud badge, normal tooltip — clicking still fires onUnavailableClick (e.g. sign-in).
-  const showAsCloudAvailable = isUnavailable && !!onUnavailableClick && disabledReason !== 'comingSoon';
+  const showAsCloudAvailable = isUnavailable && !!onUnavailableClick && disabledReason !== 'comingSoon' && disabledReason !== 'selfHostedOffline';
   const visuallyUnavailable = isUnavailable && !showAsCloudAvailable;
   const { hotkeys } = useHotkeys();
   const binding = hotkeys[id];

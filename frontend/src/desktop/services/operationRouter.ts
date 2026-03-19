@@ -178,50 +178,44 @@ export class OperationRouter {
       const backendUrl = tauriBackendService.getBackendUrl();
       const backendHealthy = tauriBackendService.isOnline;
 
-      // If the local backend isn't ready (no URL yet, or not yet healthy), we can't
-      // reliably check local capability: the HTTP call to endpoints-availability will
-      // fail or be absent, causing the router to incorrectly route to SaaS.
-      // Fall through to local routing — the backend-readiness check in the Axios
-      // interceptor will block non-GET requests until the backend is healthy.
-      if (!backendUrl || !backendHealthy) {
-        console.debug(`[operationRouter] Backend not ready (url=${backendUrl}, healthy=${backendHealthy}), deferring SaaS routing check for ${endpointToCheck}`);
-        // Fall through to local routing below
-      } else {
+      // If the local backend isn't ready (no URL yet, or not yet healthy), skip the
+      // capability check and fall through to local routing — the backend-readiness check
+      // in the Axios interceptor will block non-GET requests until the backend is healthy.
+      if (backendUrl && backendHealthy) {
+        const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(
+          endpointToCheck,
+          backendUrl
+        );
+        console.debug(`[operationRouter] Endpoint ${endpointToCheck} supported locally: ${supportedLocally}`);
 
-      const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(
-        endpointToCheck,
-        backendUrl
-      );
-      console.debug(`[operationRouter] Endpoint ${endpointToCheck} supported locally: ${supportedLocally}`);
+        if (!supportedLocally) {
+          // Local backend doesn't support this - check if SaaS supports it
+          const supportedOnSaaS = await endpointAvailabilityService.isEndpointSupportedOnSaaS(endpointToCheck);
+          console.debug(`[operationRouter] Endpoint ${endpointToCheck} supported on SaaS: ${supportedOnSaaS}`);
 
-      if (!supportedLocally) {
-        // Local backend doesn't support this - check if SaaS supports it
-        const supportedOnSaaS = await endpointAvailabilityService.isEndpointSupportedOnSaaS(endpointToCheck);
-        console.debug(`[operationRouter] Endpoint ${endpointToCheck} supported on SaaS: ${supportedOnSaaS}`);
+          if (!supportedOnSaaS) {
+            // Neither local nor SaaS support this - throw error
+            console.error(`[operationRouter] Endpoint ${endpointToCheck} not supported on local or SaaS backend`);
+            throw new Error(
+              `This operation (${endpointToCheck}) is not available. It may require a self-hosted instance with additional features enabled.`
+            );
+          }
 
-        if (!supportedOnSaaS) {
-          // Neither local nor SaaS support this - throw error
-          console.error(`[operationRouter] Endpoint ${endpointToCheck} not supported on local or SaaS backend`);
-          throw new Error(
-            `This operation (${endpointToCheck}) is not available. It may require a self-hosted instance with additional features enabled.`
-          );
+          // SaaS supports it - route to SaaS backend
+          if (!STIRLING_SAAS_BACKEND_API_URL) {
+            console.error('[operationRouter] VITE_SAAS_BACKEND_API_URL not configured');
+            throw new Error(
+              'Cloud processing is required for this tool but VITE_SAAS_BACKEND_API_URL is not configured. ' +
+              'Please check your environment configuration.'
+            );
+          }
+          console.debug(`[operationRouter] Routing ${operation} to SaaS backend (not supported locally, but supported on SaaS)`);
+          return STIRLING_SAAS_BACKEND_API_URL.replace(/\/$/, '');
         }
 
-        // SaaS supports it - route to SaaS backend
-        if (!STIRLING_SAAS_BACKEND_API_URL) {
-          console.error('[operationRouter] VITE_SAAS_BACKEND_API_URL not configured');
-          throw new Error(
-            'Cloud processing is required for this tool but VITE_SAAS_BACKEND_API_URL is not configured. ' +
-            'Please check your environment configuration.'
-          );
-        }
-        console.debug(`[operationRouter] Routing ${operation} to SaaS backend (not supported locally, but supported on SaaS)`);
-        return STIRLING_SAAS_BACKEND_API_URL.replace(/\/$/, '');
+        // Supported locally - continue with local backend
+        console.debug(`[operationRouter] Routing ${operation} to local backend (supported locally)`);
       }
-
-      // Supported locally - continue with local backend
-      console.debug(`[operationRouter] Routing ${operation} to local backend (supported locally)`);
-      } // end else (backend URL available)
     }
 
     // Self-hosted fallback: when the remote server is offline, route tool endpoints

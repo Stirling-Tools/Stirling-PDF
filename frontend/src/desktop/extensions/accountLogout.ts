@@ -16,10 +16,12 @@ export function useAccountLogout() {
       await signOut();
 
       const currentConfig = await connectionModeService.getCurrentConfig();
-      if (!currentConfig.lock_connection_mode) {
-        // Switch to local mode so the app stays usable after logout without requiring login
-        await connectionModeService.switchToLocal();
+      // Save server URL before clearing so user can easily reconnect (self-hosted only)
+      if (currentConfig.mode === 'selfhosted' && currentConfig.server_config?.url) {
+        localStorage.setItem('server_url', currentConfig.server_config.url);
       }
+      // Always switch to local after logout so the app remains usable
+      await connectionModeService.switchToLocal();
 
       window.history.replaceState({}, '', '/');
       // No reload needed — AppProviders remounts the SaaS provider tree via

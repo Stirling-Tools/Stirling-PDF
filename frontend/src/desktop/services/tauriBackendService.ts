@@ -59,6 +59,11 @@ export class TauriBackendService {
     this.backendStatus = status;
     this.statusListeners.forEach(listener => listener(status));
 
+    if (status === 'healthy') {
+      // Reset restart counter on successful recovery so future failures get a full retry budget.
+      this.restartAttempts = 0;
+    }
+
     // Auto-recovery: when our own backend goes unhealthy, try restarting it
     // before reporting as permanently offline.
     if (status === 'unhealthy' && this.isLocalBackend && !this.isRecovering) {

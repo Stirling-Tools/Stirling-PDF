@@ -4,7 +4,7 @@ import { DesktopConfigSync } from '@app/components/DesktopConfigSync';
 import { DesktopBannerInitializer } from '@app/components/DesktopBannerInitializer';
 import { SaveShortcutListener } from '@app/components/SaveShortcutListener';
 import { DesktopOnboardingModal } from '@app/components/DesktopOnboardingModal';
-import { SignInModal } from '@app/components/SignInModal';
+import { SignInModal, OPEN_SIGN_IN_EVENT } from '@app/components/SignInModal';
 import { useFirstLaunchCheck } from '@app/hooks/useFirstLaunchCheck';
 import { useBackendInitializer } from '@app/hooks/useBackendInitializer';
 import { DESKTOP_DEFAULT_APP_CONFIG } from '@app/config/defaultAppConfig';
@@ -61,8 +61,14 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
     const unsub = connectionModeService.subscribeToModeChanges((config) => {
       setConnectionMode(config.mode);
-      // Only increment after initial mode is known to avoid spurious remounts on startup
-      if (hasLoadedInitialMode.current) {
+      // Remount the SaaS provider tree when transitioning between saas/local modes so
+      // Supabase client state is reset without a full page reload (avoids the Windows
+      // WebView2 freeze that window.location.reload() causes during an OAuth flow).
+      // Switching TO selfhosted skips the remount — self-hosted mode doesn't use the
+      // SaaS providers and remounting mid-wizard resets authChecked, navigating away.
+      // Switching FROM selfhosted TO saas DOES trigger a remount (mode !== 'selfhosted')
+      // which is intentional — the SaaS provider tree needs fresh state after login.
+      if (hasLoadedInitialMode.current && config.mode !== 'selfhosted') {
         setAppKey(k => k + 1);
       }
     });
@@ -91,15 +97,29 @@ export function AppProviders({ children }: { children: ReactNode }) {
         authService.isAuthenticated()
           .then(async (isAuth) => {
             if (!isAuth) {
-              // Not authenticated — fall back to local mode instead of showing fullscreen login.
-              // Sign-in is handled via DesktopOnboardingModal and LocalModeBanner.
-              await connectionModeService.switchToLocal().catch(console.error);
-              setConnectionMode('local');
+              const cfg = await connectionModeService.getCurrentConfig().catch(() => null);
+              if (cfg?.lock_connection_mode) {
+                // Provisioned deployment — stay in the configured mode and prompt for credentials.
+                // Don't fall back to local; the admin has locked the connection mode.
+                window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: { locked: true } }));
+              } else {
+                // Not authenticated — fall back to local mode instead of showing fullscreen login.
+                // Sign-in is handled via DesktopOnboardingModal and LocalModeBanner.
+                await connectionModeService.switchToLocal().catch(console.error);
+                setConnectionMode('local');
+              }
             }
           })
           .catch(async () => {
-            await connectionModeService.switchToLocal().catch(console.error);
-            setConnectionMode('local');
+            const cfg = await connectionModeService.getCurrentConfig().catch(() => null);
+            if (cfg?.lock_connection_mode) {
+              // Auth check threw (e.g. network error) but mode is locked — still prompt for
+              // credentials so the user can sign in when connectivity is restored.
+              window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: { locked: true } }));
+            } else {
+              await connectionModeService.switchToLocal().catch(console.error);
+              setConnectionMode('local');
+            }
           })
           .finally(() => setAuthChecked(true));
       }

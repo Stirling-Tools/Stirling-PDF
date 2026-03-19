@@ -32,12 +32,13 @@ export const ConnectionSettings: React.FC = () => {
   const handleLogout = async () => {
     try {
       setLoading(true);
-      await authService.logout();
-
-      if (!config?.lock_connection_mode) {
-        // Switch to local mode so the app runs on the bundled backend after logout
-        await connectionModeService.switchToLocal();
+      // Save server URL before clearing so user can easily reconnect (self-hosted only)
+      if (config?.mode === 'selfhosted' && config?.server_config?.url) {
+        localStorage.setItem('server_url', config.server_config.url);
       }
+      await authService.logout();
+      // Always switch to local after logout so the app remains usable
+      await connectionModeService.switchToLocal();
 
       // Reload config
       const newConfig = await connectionModeService.getCurrentConfig();

@@ -8,6 +8,7 @@ export interface OperationButtonProps {
   onClick?: () => void;
   isLoading?: boolean;
   disabled?: boolean;
+  disabledTooltip?: string;
   loadingText?: string;
   submitText?: string;
   variant?: 'filled' | 'outline' | 'subtle';
@@ -24,6 +25,7 @@ const OperationButton = ({
   onClick,
   isLoading = false,
   disabled = false,
+  disabledTooltip,
   loadingText,
   submitText,
   variant = 'filled',
@@ -41,7 +43,7 @@ const OperationButton = ({
   const combinedDisabled = disabled || blockedByBackend;
   const tooltipLabel = blockedByBackend
     ? (backendMessage ?? t('backendHealth.checking', 'Checking backend status...'))
-    : null;
+    : (disabled && disabledTooltip ? disabledTooltip : null);
 
   const button = (
     <Button
