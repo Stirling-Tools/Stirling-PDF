@@ -670,9 +670,22 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
                   rect: event.annotation.rect
                 }]);
 
+                // If the annotation doesn't have customData.toolId, patch it from the active tool.
+                // EmbedPDF doesn't always persist customData from setToolDefaults into created annotations.
+                const annotationId = event.annotation.id;
+                const existingCustomData = (event.annotation as unknown as { customData?: Record<string, unknown> }).customData;
+                if (annotationId && !existingCustomData?.toolId) {
+                  const activeTool = (annotationApi as unknown as { getActiveTool?: () => { id: string } | null }).getActiveTool?.();
+                  if (activeTool?.id && activeTool.id !== 'select') {
+                    (annotationApi as unknown as { updateAnnotation?: (page: number, id: string, patch: Record<string, unknown>) => void })
+                      .updateAnnotation?.(event.pageIndex, annotationId, {
+                        customData: { ...(existingCustomData ?? {}), toolId: activeTool.id },
+                      });
+                  }
+                }
+
                 // Auto-select the annotation after creation so the selection menu appears immediately,
                 // letting users discover the editing options before they click away.
-                const annotationId = event.annotation.id;
                 if (annotationId) {
                   (annotationApi as unknown as { selectAnnotation?: (pageIndex: number, id: string) => void })
                     .selectAnnotation?.(event.pageIndex, annotationId);

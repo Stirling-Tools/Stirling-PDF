@@ -1,10 +1,11 @@
 import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
-import { Box, ScrollArea, Text, Textarea, Stack, ActionIcon, Group, Tooltip, TextInput, Menu, Modal, Button } from '@mantine/core';
+import { Box, ScrollArea, Text, Textarea, Stack, ActionIcon, Group, Tooltip, TextInput, Menu, Modal, Button, UnstyledButton } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckIcon from '@mui/icons-material/CheckRounded';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import EditIcon from '@mui/icons-material/Edit';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useAnnotation } from '@embedpdf/plugin-annotation/react';
 import { getSidebarAnnotationsWithRepliesGroupedByPage } from '@embedpdf/plugin-annotation';
 import { PdfAnnotationSubtype, PdfAnnotationReplyType } from '@embedpdf/models';
@@ -44,6 +45,15 @@ function getAuthorName(obj: any, currentDisplayName: string): string {
   const stored = (obj?.author ?? 'Guest').trim() || 'Guest';
   if (PLACEHOLDER_AUTHORS.has(stored)) return currentDisplayName || 'Guest';
   return stored;
+}
+
+/** Replies store an explicit author; only allow edit when it matches the current comment author name. */
+function isReplyAuthoredByCurrentUser(obj: any, currentDisplayName: string): boolean {
+  const mine = (currentDisplayName ?? '').trim();
+  if (!mine) return false;
+  const stored = (obj?.author ?? '').trim() || 'Guest';
+  if (PLACEHOLDER_AUTHORS.has(stored)) return false;
+  return stored === mine;
 }
 
 // Map toolId → LocalIcon icon name (matches AnnotationPanel icon definitions)
@@ -122,7 +132,12 @@ function getAnnotationTypeLabel(ann: any, t: (key: string, fallback: string) => 
     insertText: t('viewer.comments.typeInsertText', 'Insert Text'),
     replaceText: t('viewer.comments.typeReplaceText', 'Replace Text'),
   };
-  return labels[toolId] ?? t('viewer.comments.typeComment', 'Comment');
+  if (labels[toolId]) return labels[toolId];
+  // Type-based fallback (mirrors getIconByType) for annotations without customData.toolId
+  const type = ann?.type;
+  if (type === 14) return t('viewer.comments.typeInsertText', 'Insert Text');
+  if (type === 1) return t('viewer.comments.typeComment', 'Comment');
+  return t('viewer.comments.typeComment', 'Comment');
 }
 
 function AnnotationTypeIcon({ ann }: { ann: any }) {
@@ -141,13 +156,17 @@ function AnnotationTypeIcon({ ann }: { ann: any }) {
 export function CommentsSidebar({ documentId, visible, rightOffset }: CommentsSidebarProps) {
   const { t } = useTranslation();
   const { displayName } = useCommentAuthor();
-  const { highlightCommentRequest, clearHighlightCommentRequest } = useViewer() ?? {};
+  const { highlightCommentRequest, clearHighlightCommentRequest, scrollActions, getZoomState } = useViewer() ?? {};
   const scrollViewportRef = useRef<HTMLDivElement | null>(null);
   const { state, provides } = useAnnotation(documentId);
   const [draftContents, setDraftContents] = useState<Record<string, string>>({});
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  /** Draft text while editing an existing reply (`${pageIndex}_${parentId}_${replyId}`). */
+  const [replyEditDrafts, setReplyEditDrafts] = useState<Record<string, string>>({});
   /** When set, this card's main comment is in edit mode (show textarea for main comment). */
   const [editingMainKey, setEditingMainKey] = useState<string | null>(null);
+  /** Which reply is in edit mode (same key shape as replyEditDrafts). */
+  const [editingReplyKey, setEditingReplyKey] = useState<string | null>(null);
 
   // React to request to focus or highlight a comment card (e.g. from "Add comment" / "View comment" in selection menu)
   useEffect(() => {
@@ -181,6 +200,44 @@ export function CommentsSidebar({ documentId, visible, rightOffset }: CommentsSi
     }
     clearHighlightCommentRequest?.();
   }, [visible, highlightCommentRequest, documentId, clearHighlightCommentRequest]);
+
+  const handleLocateAnnotation = useCallback((pageIndex: number, ann: any) => {
+    scrollActions?.scrollToPage(pageIndex + 1, 'smooth');
+    setTimeout(() => {
+      const pageEl = document.querySelector<HTMLElement>(`[data-page-index="${pageIndex}"]`);
+      if (!pageEl || !ann?.rect) return;
+      const zoom = getZoomState?.()?.currentZoom ?? 1;
+      const { origin, size } = ann.rect as { origin: { x: number; y: number }; size: { width: number; height: number } };
+      const flashEl = document.createElement('div');
+      // Append to page element so it scrolls with the page (position: absolute relative to page)
+      flashEl.style.cssText = `
+        position: absolute;
+        left: ${origin.x * zoom}px;
+        top: ${origin.y * zoom}px;
+        width: ${size.width * zoom}px;
+        height: ${size.height * zoom}px;
+        background: rgba(255, 213, 0, 0.55);
+        border: 2px solid rgba(255, 170, 0, 0.8);
+        border-radius: 3px;
+        pointer-events: none;
+        z-index: 9998;
+        animation: annotation-locate-flash 1.6s ease-out forwards;
+      `;
+      if (!document.getElementById('annotation-locate-flash-style')) {
+        const style = document.createElement('style');
+        style.id = 'annotation-locate-flash-style';
+        style.textContent = `@keyframes annotation-locate-flash {
+          0%   { opacity: 0; transform: scale(1.08); }
+          15%  { opacity: 1; transform: scale(1); }
+          70%  { opacity: 1; }
+          100% { opacity: 0; }
+        }`;
+        document.head.appendChild(style);
+      }
+      pageEl.appendChild(flashEl);
+      setTimeout(() => flashEl.remove(), 1700);
+    }, 550);
+  }, [scrollActions, getZoomState]);
 
   const byPage = useMemo(() => {
     try {
@@ -292,6 +349,21 @@ export function CommentsSidebar({ documentId, visible, rightOffset }: CommentsSi
     [provides, replyDrafts, displayName]
   );
 
+  const handleSaveReplyEdit = useCallback(
+    (editKey: string, pageIndex: number, replyId: string, value: string) => {
+      const trimmed = value.trim();
+      if (!trimmed || !provides?.updateAnnotation) return;
+      provides.updateAnnotation(pageIndex, replyId, { contents: trimmed, author: displayName });
+      setReplyEditDrafts((prev) => {
+        const next = { ...prev };
+        delete next[editKey];
+        return next;
+      });
+      setEditingReplyKey(null);
+    },
+    [provides, displayName]
+  );
+
   if (!visible) return null;
 
   return (
@@ -394,7 +466,18 @@ export function CommentsSidebar({ documentId, visible, rightOffset }: CommentsSi
                                 </Text>
                               </Box>
                             </Group>
-                            <Menu position="bottom-end" withArrow>
+                            <Group gap={2} wrap="nowrap" style={{ flexShrink: 0 }}>
+                              <Tooltip label={t('viewer.comments.locateAnnotation', 'Locate in document')}>
+                                <ActionIcon
+                                  variant="subtle"
+                                  size="sm"
+                                  color="gray"
+                                  onClick={() => handleLocateAnnotation(pageIndex, ann)}
+                                >
+                                  <VisibilityIcon style={{ fontSize: 16 }} />
+                                </ActionIcon>
+                              </Tooltip>
+                              <Menu position="bottom-end" withArrow>
                               <Menu.Target>
                                 <Tooltip label={t('viewer.comments.moreActions', 'More actions')}>
                                   <ActionIcon variant="subtle" size="sm" color="gray">
@@ -417,7 +500,8 @@ export function CommentsSidebar({ documentId, visible, rightOffset }: CommentsSi
                                   {t('annotation.delete', 'Delete')}
                                 </Menu.Item>
                               </Menu.Dropdown>
-                            </Menu>
+                              </Menu>
+                            </Group>
                           </Group>
 
                           {!hasMainContent || isEditingMain ? (
@@ -465,22 +549,80 @@ export function CommentsSidebar({ documentId, visible, rightOffset }: CommentsSi
                                   {entry.replies.map((r) => {
                                     const rObj = r?.object;
                                     const rId = rObj?.id;
+                                    if (!rId) return null;
                                     const rAuthor = getAuthorName(rObj, displayName);
                                     const rTimestamp = formatCommentDate(rObj);
+                                    const replyEditKey = `${pageIndex}_${id}_${rId}`;
+                                    const isEditingReply = editingReplyKey === replyEditKey;
+                                    const canEditReply = isReplyAuthoredByCurrentUser(rObj, displayName);
+                                    const replyBody =
+                                      replyEditDrafts[replyEditKey] !== undefined
+                                        ? replyEditDrafts[replyEditKey]
+                                        : (rObj?.contents ?? '');
                                     return (
                                       <Box key={rId} pl="xs" style={{ borderLeft: '2px solid var(--mantine-color-blue-3)' }}>
                                         <Box style={{ minWidth: 0 }}>
-                                          <Group wrap="nowrap" justify="space-between" gap={4} mb={2}>
+                                          <Group wrap="nowrap" justify="space-between" align="flex-start" gap={4} mb={2}>
                                             <Text size="sm" fw={600}>
                                               {rAuthor}
                                             </Text>
-                                            {rTimestamp ? (
-                                              <Text size="xs" c="dimmed">
-                                                {rTimestamp}
-                                              </Text>
-                                            ) : null}
+                                            <Group wrap="nowrap" gap="xs" align="center">
+                                              {canEditReply && !isEditingReply ? (
+                                                <UnstyledButton
+                                                  type="button"
+                                                  onClick={() => {
+                                                    setEditingReplyKey(replyEditKey);
+                                                    setReplyEditDrafts(() => ({
+                                                      [replyEditKey]: String(rObj?.contents ?? ''),
+                                                    }));
+                                                  }}
+                                                >
+                                                  <Text size="xs" c="blue">
+                                                    {t('annotation.editText', 'Edit')}
+                                                  </Text>
+                                                </UnstyledButton>
+                                              ) : null}
+                                              {rTimestamp ? (
+                                                <Text size="xs" c="dimmed">
+                                                  {rTimestamp}
+                                                </Text>
+                                              ) : null}
+                                            </Group>
                                           </Group>
-                                          <Text size="sm">{rObj?.contents ?? ''}</Text>
+                                          {isEditingReply ? (
+                                            <>
+                                              <Textarea
+                                                minRows={2}
+                                                autosize
+                                                value={replyBody}
+                                                onChange={(e) => {
+                                                  const v = (e?.currentTarget ?? e?.target)?.value ?? '';
+                                                  setReplyEditDrafts((p) => ({ ...p, [replyEditKey]: v }));
+                                                }}
+                                                styles={{ root: { width: '100%' } }}
+                                                mb="xs"
+                                              />
+                                              <Group gap={4} wrap="nowrap" justify="flex-end">
+                                                <Tooltip label={t('viewer.comments.saveReply', 'Save reply')}>
+                                                  <ActionIcon
+                                                    variant="filled"
+                                                    size="sm"
+                                                    color="blue"
+                                                    onClick={() =>
+                                                      handleSaveReplyEdit(replyEditKey, pageIndex, rId, replyBody)
+                                                    }
+                                                    disabled={!replyBody.trim()}
+                                                  >
+                                                    <CheckIcon style={{ fontSize: 18, color: 'white' }} />
+                                                  </ActionIcon>
+                                                </Tooltip>
+                                              </Group>
+                                            </>
+                                          ) : (
+                                            <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
+                                              {rObj?.contents ?? ''}
+                                            </Text>
+                                          )}
                                         </Box>
                                       </Box>
                                     );

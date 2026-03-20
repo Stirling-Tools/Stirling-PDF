@@ -156,21 +156,13 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
     };
   }, [getZoomState, registerImmediateZoomUpdate]);
 
-  // Block the general ink/pen annotation tool when in sign mode.
-  // Only signatureInk (the signature draw tool) should be usable in sign context.
+  // When entering sign mode, deactivate any active annotation tool immediately.
+  // Only signature-specific tools (signatureInk, stamp) should be usable.
   useEffect(() => {
-    if (!isSignMode || !annotationApi) return;
-
-    const unsubscribe = (annotationApi as any).onActiveToolChange?.((event: { tool: { id: string } | null }) => {
-      if (event?.tool?.id === 'ink') {
-        annotationApi.setActiveTool(null);
-      }
-    });
-
-    return () => {
-      unsubscribe?.();
-    };
-  }, [isSignMode, annotationApi]);
+    if (isSignMode && annotationApi && documentReady) {
+      annotationApi.setActiveTool(null);
+    }
+  }, [isSignMode, annotationApi, documentReady]);
 
   const cssToPdfSize = useCallback(
     (size: { width: number; height: number }) => {
