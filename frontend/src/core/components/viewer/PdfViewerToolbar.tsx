@@ -261,6 +261,7 @@ export function PdfViewerToolbar({
           >
             +
           </Button>
+
         </Group>
       </Paper>
   );
