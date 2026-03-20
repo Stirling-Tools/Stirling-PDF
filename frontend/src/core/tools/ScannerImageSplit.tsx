@@ -43,7 +43,8 @@ const ScannerImageSplit = (props: BaseToolProps) => {
       isVisible: !base.hasResults,
       loadingText: t("loading"),
       onClick: base.handleExecute,
-      disabledReason: base.executeDisabledReason,
+      endpointEnabled: base.endpointEnabled,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,

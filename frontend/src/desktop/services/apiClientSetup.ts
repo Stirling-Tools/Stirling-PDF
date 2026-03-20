@@ -161,6 +161,12 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         if (originalRequest.skipAuthRedirect) {
           return Promise.reject(error);
         }
+        // If no Authorization header was sent, the user was never authenticated —
+        // the 401 is expected (e.g. endpoint availability checks when not signed in).
+        // Don't attempt a refresh or open the sign-in modal in that case.
+        if (!originalRequest.headers.Authorization) {
+          return Promise.reject(error);
+        }
         originalRequest._retry = true;
 
         console.debug(`[apiClientSetup] 401 error, attempting token refresh for: ${originalRequest.url}`);

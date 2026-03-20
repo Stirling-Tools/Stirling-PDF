@@ -6,6 +6,7 @@ import { SaveShortcutListener } from '@app/components/SaveShortcutListener';
 import { DesktopOnboardingModal } from '@app/components/DesktopOnboardingModal';
 import { SignInModal } from '@app/components/SignInModal';
 import { OPEN_SIGN_IN_EVENT } from '@app/constants/signInEvents';
+import { ToolActionsContext } from '@app/contexts/ToolActionsContext';
 import { useFirstLaunchCheck } from '@app/hooks/useFirstLaunchCheck';
 import { useBackendInitializer } from '@app/hooks/useBackendInitializer';
 import { DESKTOP_DEFAULT_APP_CONFIG } from '@app/config/defaultAppConfig';
@@ -262,21 +263,25 @@ export function AppProviders({ children }: { children: ReactNode }) {
         autoFetch: false,
       }}
     >
-      <SaaSTeamProvider key={appKey}>
-        <SaasBillingProvider>
-          <SaaSCheckoutProvider>
-            <DesktopConfigSync />
-            <DesktopBannerInitializer />
-            <SaveShortcutListener />
-            <CreditModalBootstrap />
-            {children}
-            {/* Desktop onboarding modal: welcome slide → sign-in slide, shown once on first launch */}
-            <DesktopOnboardingModal />
-            {/* Global sign-in modal, opened via stirling:open-sign-in event */}
-            <SignInModal />
-          </SaaSCheckoutProvider>
-        </SaasBillingProvider>
-      </SaaSTeamProvider>
+      <ToolActionsContext.Provider value={{
+        onEndpointUnavailableClick: () => window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT)),
+      }}>
+        <SaaSTeamProvider key={appKey}>
+          <SaasBillingProvider>
+            <SaaSCheckoutProvider>
+              <DesktopConfigSync />
+              <DesktopBannerInitializer />
+              <SaveShortcutListener />
+              <CreditModalBootstrap />
+              {children}
+              {/* Desktop onboarding modal: welcome slide → sign-in slide, shown once on first launch */}
+              <DesktopOnboardingModal />
+              {/* Global sign-in modal, opened via stirling:open-sign-in event */}
+              <SignInModal />
+            </SaaSCheckoutProvider>
+          </SaasBillingProvider>
+        </SaaSTeamProvider>
+      </ToolActionsContext.Provider>
     </ProprietaryAppProviders>
   );
 }

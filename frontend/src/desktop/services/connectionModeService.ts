@@ -36,7 +36,7 @@ export interface ConnectionTestResult {
   diagnostics?: DiagnosticResult[];
 }
 
-const LOCAL_MODE_STORAGE_KEY = 'stirling-local-mode';
+export const LOCAL_MODE_STORAGE_KEY = 'stirling-local-mode';
 
 export class ConnectionModeService {
   private static instance: ConnectionModeService;
@@ -84,16 +84,36 @@ export class ConnectionModeService {
   private async loadConfig(): Promise<void> {
     try {
       const config = await invoke<ConnectionConfig>('get_connection_config');
-      // Check if user previously chose local-only mode (stored in localStorage to avoid Rust changes)
-      if (config.mode === 'saas' && localStorage.getItem(LOCAL_MODE_STORAGE_KEY) === 'true') {
+
+      const localFlag = localStorage.getItem(LOCAL_MODE_STORAGE_KEY);
+
+      if (config.mode === 'saas' && localFlag === 'true') {
+        // User previously chose local-only mode.
         config.mode = 'local';
+      } else if (
+        config.mode === 'saas' &&
+        config.server_config === null &&
+        !config.lock_connection_mode &&
+        localFlag === null
+      ) {
+        // Fresh install: Rust has never been given a server URL, the connection
+        // mode has never been explicitly set (no localStorage flag either direction),
+        // and there is no provisioning lock. Default to local so the user sees
+        // the bundled backend instead of a broken SaaS-mode UI.
+        // MSI installs with STIRLING_SERVER_URL are excluded because they have a
+        // non-null server_config; locked provisioned installs are excluded by the
+        // lock_connection_mode guard.
+        config.mode = 'local';
+        localStorage.setItem(LOCAL_MODE_STORAGE_KEY, 'true');
       }
+
       this.currentConfig = config;
       this.configLoadedOnce = true;
     } catch (error) {
       console.error('Failed to load connection config:', error);
-      // Default to SaaS mode on error
-      this.currentConfig = { mode: 'saas', server_config: null, lock_connection_mode: false };
+      // Default to local mode on error — safer than showing SaaS UI for a
+      // desktop app whose bundled backend is always available.
+      this.currentConfig = { mode: 'local', server_config: null, lock_connection_mode: false };
       this.configLoadedOnce = true;
     }
   }

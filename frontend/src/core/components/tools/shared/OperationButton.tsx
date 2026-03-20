@@ -4,6 +4,7 @@ import { Tooltip } from '@app/components/shared/Tooltip';
 import { useBackendHealth } from '@app/hooks/useBackendHealth';
 import { CloudBadge } from '@app/components/shared/CloudBadge';
 import type { ExecuteDisabledReason } from '@app/hooks/tools/shared/toolOperationTypes';
+import { useToolActions } from '@app/contexts/ToolActionsContext';
 
 export interface OperationButtonProps {
   onClick?: () => void;
@@ -40,13 +41,16 @@ const OperationButton = ({
 }: OperationButtonProps) => {
   const { t } = useTranslation();
   const { isOnline, message: backendMessage } = useBackendHealth();
+  const { onEndpointUnavailableClick } = useToolActions();
   const blockedByBackend = !isOnline;
 
   const effectiveDisabled = disabled || disabledReason !== null && disabledReason !== undefined;
   const combinedDisabled = effectiveDisabled || blockedByBackend;
 
   const reasonTooltip: Record<NonNullable<ExecuteDisabledReason>, string> = {
-    endpointUnavailable: t('tool.endpointUnavailable', 'This tool is unavailable on your server.'),
+    endpointUnavailable: onEndpointUnavailableClick
+      ? t('tool.endpointUnavailableClickable', "Not available in this mode. Click to sign in.")
+      : t('tool.endpointUnavailable', 'This tool is unavailable on your server.'),
     noFiles: t('tool.noFiles', 'Add a file to get started.'),
     invalidParams: t('tool.invalidParams', 'Fill in the required settings.'),
   };
@@ -86,9 +90,18 @@ const OperationButton = ({
   if (tooltipLabel) {
     // Disabled buttons suppress pointer events at the browser level, so the Tooltip's
     // cloneElement handlers would never fire. Wrap in a Box to capture them instead.
+    // When endpointUnavailable and a click handler is provided (desktop), the Box
+    // also acts as the click target to open the sign-in / connect modal.
+    const boxClickHandler = disabledReason === 'endpointUnavailable' ? onEndpointUnavailableClick : undefined;
     return (
       <Tooltip content={tooltipLabel} position="top" arrow>
-        <Box mr="md" ml="md" mt={mt} style={{ display: 'block' }}>
+        <Box
+          mr="md"
+          ml="md"
+          mt={mt}
+          style={{ display: 'block', cursor: boxClickHandler ? 'pointer' : undefined }}
+          onClick={boxClickHandler}
+        >
           {button}
         </Box>
       </Tooltip>
