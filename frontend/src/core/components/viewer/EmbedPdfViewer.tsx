@@ -983,6 +983,7 @@ const EmbedPdfViewerContent = ({
                 (effectiveFile?.file instanceof File ? effectiveFile.file.name : undefined))
               }
               enableAnnotations={shouldEnableAnnotations}
+              isSignMode={selectedTool === 'sign'}
               showBakedAnnotations={isAnnotationsVisible}
               enableRedaction={shouldEnableRedaction}
               enableFormFill={shouldEnableFormFill}

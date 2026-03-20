@@ -84,9 +84,11 @@ interface LocalEmbedPDFProps {
   /** Comments sidebar visibility and offset (from EmbedPdfViewer) */
   isCommentsSidebarVisible?: boolean;
   commentsSidebarRightOffset?: string;
+  /** When true, blocks the general ink/pen annotation tool (sign tool context). */
+  isSignMode?: boolean;
 }
 
-export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, enableRedaction = false, enableFormFill = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef, fileId, isCommentsSidebarVisible = false, commentsSidebarRightOffset = '0rem' }: LocalEmbedPDFProps) {
+export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, enableRedaction = false, enableFormFill = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef, fileId, isCommentsSidebarVisible = false, commentsSidebarRightOffset = '0rem', isSignMode = false }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: Rect}>>([]);
@@ -699,7 +701,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
         {/* Always render RedactionAPIBridge when in manual redaction mode so buttons can switch from annotation mode */}
         {(enableRedaction || isManualRedactionMode) && <RedactionAPIBridge />}
         {/* Always render SignatureAPIBridge so annotation tools (draw) can be activated even when starting in redaction mode */}
-        {(enableAnnotations || enableRedaction || isManualRedactionMode) && <SignatureAPIBridge ref={signatureApiRef} />}
+        {(enableAnnotations || enableRedaction || isManualRedactionMode) && <SignatureAPIBridge ref={signatureApiRef} isSignMode={isSignMode} />}
         {(enableRedaction || isManualRedactionMode) && <RedactionPendingTracker ref={redactionTrackerRef} />}
         {enableAnnotations && <AnnotationAPIBridge ref={annotationApiRef} />}
 
