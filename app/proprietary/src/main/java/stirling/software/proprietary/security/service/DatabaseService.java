@@ -488,13 +488,13 @@ public class DatabaseService implements DatabaseServiceInterface {
     private void executeDatabaseScript(Path scriptPath) {
         if (isH2Database()) {
 
+            // Validate SQL content BEFORE execution to prevent injection attacks
+            validateSqlContent(scriptPath);
+
             if (!verifyBackup(scriptPath)) {
                 log.error("Backup verification failed for: {}", scriptPath);
                 throw new IllegalArgumentException("Backup verification failed for: " + scriptPath);
             }
-
-            // Validate SQL content before execution to prevent injection attacks
-            validateSqlContent(scriptPath);
 
             String query = "RUNSCRIPT from ?;";
 

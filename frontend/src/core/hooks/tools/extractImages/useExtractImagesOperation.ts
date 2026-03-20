@@ -10,7 +10,7 @@ export const buildExtractImagesFormData = (parameters: ExtractImagesParameters, 
   const formData = new FormData();
   formData.append("fileInput", file);
   formData.append("format", parameters.format);
-  formData.append("allowDuplicates", parameters.allowDuplicates.toString());
+  // formData.append("allowDuplicates", parameters.allowDuplicates.toString());
   return formData;
 };
 
