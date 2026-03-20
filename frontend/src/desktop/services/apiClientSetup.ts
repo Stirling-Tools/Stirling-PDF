@@ -7,6 +7,7 @@ import { operationRouter } from '@app/services/operationRouter';
 import { authService } from '@app/services/authService';
 import { connectionModeService } from '@app/services/connectionModeService';
 import { STIRLING_SAAS_URL, STIRLING_SAAS_BACKEND_API_URL } from '@app/constants/connection';
+import { OPEN_SIGN_IN_EVENT } from '@app/components/SignInModal';
 import i18n from '@app/i18n';
 
 const BACKEND_TOAST_COOLDOWN_MS = 4000;
@@ -192,13 +193,8 @@ export function setupApiInterceptors(client: AxiosInstance): void {
           return client.request(originalRequest);
         }
 
-        // Refresh failed - user needs to login again
-        alert({
-          alertType: 'error',
-          title: i18n.t('auth.sessionExpired', 'Session Expired'),
-          body: i18n.t('auth.pleaseLoginAgain', 'Please login again.'),
-          isPersistentPopup: false,
-        });
+        // Refresh failed - prompt for re-authentication via the sign-in modal.
+        window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: { locked: false } }));
       }
 
       // Handle 403 Forbidden - unauthorized access

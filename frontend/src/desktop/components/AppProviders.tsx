@@ -45,6 +45,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const { isFirstLaunch, setupComplete } = useFirstLaunchCheck();
   const [connectionMode, setConnectionMode] = useState<'saas' | 'selfhosted' | 'local' | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
+  // When auth check finds no valid session, record the sign-in detail here so the
+  // dispatch useEffect below can fire it only after SignInModal has mounted.
+  const [pendingSignIn, setPendingSignIn] = useState<{ locked: boolean } | null>(null);
   // Prevent first-launch setup from running twice when connectionMode state update re-triggers the effect
   const firstLaunchInitiated = useRef(false);
   // Key incremented on every connection mode change after initial load — forces SaaS provider
@@ -94,6 +97,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
           })
           .finally(() => setAuthChecked(true));
       } else {
+        let pendingDetail: { locked: boolean } | null = null;
         authService.isAuthenticated()
           .then(async (isAuth) => {
             if (!isAuth) {
@@ -101,12 +105,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
               if (cfg?.lock_connection_mode) {
                 // Provisioned deployment — stay in the configured mode and prompt for credentials.
                 // Don't fall back to local; the admin has locked the connection mode.
-                window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: { locked: true } }));
+                pendingDetail = { locked: true };
               } else {
-                // Not authenticated — fall back to local mode instead of showing fullscreen login.
-                // Sign-in is handled via DesktopOnboardingModal and LocalModeBanner.
+                // JWT expired — fall back to local so local tools still work, then prompt
+                // for re-authentication via the sign-in modal.
                 await connectionModeService.switchToLocal().catch(console.error);
                 setConnectionMode('local');
+                pendingDetail = { locked: false };
               }
             }
           })
@@ -115,13 +120,21 @@ export function AppProviders({ children }: { children: ReactNode }) {
             if (cfg?.lock_connection_mode) {
               // Auth check threw (e.g. network error) but mode is locked — still prompt for
               // credentials so the user can sign in when connectivity is restored.
-              window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: { locked: true } }));
+              pendingDetail = { locked: true };
             } else {
               await connectionModeService.switchToLocal().catch(console.error);
               setConnectionMode('local');
+              pendingDetail = { locked: false };
             }
           })
-          .finally(() => setAuthChecked(true));
+          .finally(() => {
+            setAuthChecked(true);
+            // Schedule sign-in via state so the dispatch useEffect fires AFTER
+            // SignInModal mounts (children effects run before parent effects).
+            if (pendingDetail) {
+              setPendingSignIn(pendingDetail);
+            }
+          });
       }
     } else if (isFirstLaunch && !setupComplete) {
       // Auto-enter local mode on first launch — skip the setup wizard entirely.
@@ -189,6 +202,15 @@ export function AppProviders({ children }: { children: ReactNode }) {
     tryPreload();
     return unsubscribe;
   }, [shouldPreloadLocalEndpoints, connectionMode]);
+
+  // Dispatch sign-in event only after authChecked=true so SignInModal is mounted.
+  // Using useEffect (not setTimeout) guarantees child effects (SignInModal's listener
+  // registration) run before this parent effect fires the event.
+  useEffect(() => {
+    if (!authChecked || !pendingSignIn) return;
+    window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: pendingSignIn }));
+    setPendingSignIn(null);
+  }, [authChecked, pendingSignIn]);
 
   useEffect(() => {
     if (!authChecked) {
