@@ -7,9 +7,9 @@ import PlanCard from '@app/components/shared/config/configSections/plan/PlanCard
 interface AvailablePlansSectionProps {
   plans: PlanTier[];
   currentPlan?: PlanTier;
-  currentLicenseInfo?: any;
-  onUpgradeClick: (plan: PlanTier | any) => void;  // Accept PlanTierGroup for compatibility
-  onManageClick?: (plan: PlanTier | any) => void;  // Accept PlanTierGroup for compatibility
+  currentLicenseInfo?: unknown;
+  onUpgradeClick: (plan: PlanTier) => void;
+  onManageClick?: (plan: PlanTier) => void;
   currency?: string;
   onCurrencyChange?: (currency: string) => void;
   currencyOptions?: Array<{ value: string; label: string }>;

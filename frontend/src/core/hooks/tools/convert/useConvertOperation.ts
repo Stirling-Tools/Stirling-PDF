@@ -194,6 +194,11 @@ export const convertOperationConfig = {
   customProcessor: convertProcessor, // Can't use callback version here
   operationType: 'convert',
   defaultParameters,
+  endpoint: (params: ConvertParameters): string | undefined => {
+    if (!params.fromExtension || !params.toExtension) return undefined;
+    const actualToExtension = params.toExtension === 'pdfx' ? 'pdfa' : params.toExtension;
+    return getEndpointUrl(params.fromExtension, actualToExtension) ?? undefined;
+  },
 } as const;
 
 export const useConvertOperation = (parameters?: ConvertParameters) => {

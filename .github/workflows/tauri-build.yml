@@ -126,7 +126,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
         with:
-          gradle-version: 8.14
+          gradle-version: 9.3.1
 
       - name: Build Java backend with JLink
         working-directory: ./
@@ -606,7 +606,7 @@ jobs:
           }
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: Stirling-PDF-${{ matrix.name }}
           path: ./dist/*

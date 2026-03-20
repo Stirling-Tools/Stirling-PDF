@@ -70,14 +70,15 @@ export const useToolOperation = <TParams>(
   const { processFiles, cancelOperation: cancelApiCalls } = useToolApiCalls<TParams>();
   const { generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles } = useToolResources();
 
-  const { checkCredits } = useCreditCheck(config.operationType);
-
-  // Determine endpoint for cloud usage check
-  const endpointString = config.toolType !== ToolType.custom && config.endpoint
+  // Determine endpoint for cloud usage check and credit routing.
+  // For function endpoints, use defaultParameters to get a representative static value.
+  const endpointString = config.endpoint
     ? (typeof config.endpoint === 'function'
-        ? (config.defaultParameters ? config.endpoint(config.defaultParameters) : undefined)
+        ? (config.defaultParameters ? (config.endpoint(config.defaultParameters) ?? undefined) : undefined)
         : config.endpoint)
     : undefined;
+
+  const { checkCredits } = useCreditCheck(config.operationType, endpointString);
   const willUseCloud = useWillUseCloud(endpointString);
 
   // Track last operation for undo functionality
@@ -114,22 +115,24 @@ export const useToolOperation = <TParams>(
       return;
     }
 
-    // Get endpoint (static or dynamic) for backend readiness check
-    const endpoint = config.customProcessor
-      ? undefined // Custom processors may not have endpoints
-      : typeof config.endpoint === 'function'
-        ? config.endpoint(params)
-        : config.endpoint;
+    // Resolve the runtime endpoint from params (static string or function result).
+    // Custom processors may omit endpoint entirely — result is undefined in that case.
+    const runtimeEndpoint: string | undefined = config.endpoint
+      ? (typeof config.endpoint === 'function' ? (config.endpoint(params) ?? undefined) : config.endpoint)
+      : undefined;
 
-    // Credit check — no-op in core builds, real check in desktop/SaaS versions
-    const creditError = await checkCredits();
+    // Credit check — no-op in core builds, real check in desktop/SaaS versions.
+    // Pass runtime endpoint so the check can determine if this routes locally (no credits needed).
+    const creditError = await checkCredits(runtimeEndpoint);
     if (creditError !== null) {
       actions.setError(creditError);
       return;
     }
 
-    // Backend readiness check (will skip for SaaS-routed endpoints)
-    const backendReady = await ensureBackendReady(endpoint);
+    // Backend readiness check (will skip for SaaS-routed endpoints).
+    // Custom processors without an endpoint skip this — they manage their own backend calls.
+    const endpointForReadyCheck = config.toolType !== ToolType.custom ? runtimeEndpoint : undefined;
+    const backendReady = await ensureBackendReady(endpointForReadyCheck);
     if (!backendReady) {
       actions.setError(t('backendHealth.offline', 'Embedded backend is offline. Please try again shortly.'));
       return;
