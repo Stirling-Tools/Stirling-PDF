@@ -3,7 +3,7 @@ import { Stack, Card, Badge, Button, Text, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { connectionModeService, ConnectionConfig } from '@app/services/connectionModeService';
 import { authService, UserInfo } from '@app/services/authService';
-import { OPEN_SIGN_IN_EVENT } from '@app/components/SignInModal';
+import { OPEN_SIGN_IN_EVENT } from '@app/constants/signInEvents';
 
 export const ConnectionSettings: React.FC = () => {
   const { t } = useTranslation();

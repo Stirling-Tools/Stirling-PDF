@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Group, Text, Button } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { connectionModeService, type ConnectionMode } from '@app/services/connectionModeService';
-import { OPEN_SIGN_IN_EVENT } from '@app/components/SignInModal';
+import { OPEN_SIGN_IN_EVENT } from '@app/constants/signInEvents';
 
 /**
  * Desktop-only footer shown at the bottom of the tool list.

@@ -7,7 +7,7 @@ import { operationRouter } from '@app/services/operationRouter';
 import { authService } from '@app/services/authService';
 import { connectionModeService } from '@app/services/connectionModeService';
 import { STIRLING_SAAS_URL, STIRLING_SAAS_BACKEND_API_URL } from '@app/constants/connection';
-import { OPEN_SIGN_IN_EVENT } from '@app/components/SignInModal';
+import { OPEN_SIGN_IN_EVENT } from '@app/constants/signInEvents';
 import i18n from '@app/i18n';
 
 const BACKEND_TOAST_COOLDOWN_MS = 4000;

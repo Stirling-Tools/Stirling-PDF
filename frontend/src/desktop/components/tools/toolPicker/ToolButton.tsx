@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import CoreToolButton from '@core/components/tools/toolPicker/ToolButton';
-import { OPEN_SIGN_IN_EVENT } from '@app/components/SignInModal';
+import { OPEN_SIGN_IN_EVENT } from '@app/constants/signInEvents';
 import { getToolDisabledReason } from '@app/components/tools/fullscreen/shared';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';

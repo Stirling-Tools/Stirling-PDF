@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { connectionModeService, type ConnectionMode } from '@app/services/connectionModeService';
 import { selfHostedServerMonitor, type SelfHostedServerState } from '@app/services/selfHostedServerMonitor';
 import { useBackendHealth } from '@app/hooks/useBackendHealth';
-import { OPEN_SIGN_IN_EVENT } from '@app/components/SignInModal';
+import { OPEN_SIGN_IN_EVENT } from '@app/constants/signInEvents';
 
 interface RightRailFooterExtensionsProps {
   className?: string;
