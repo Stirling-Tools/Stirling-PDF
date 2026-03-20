@@ -81,7 +81,8 @@ public class ConvertEmlToPDF {
 
             if (request.isDownloadHtml()) {
                 try {
-                    String htmlContent = EmlToPdf.convertEmlToHtml(fileBytes, request);
+                    String htmlContent =
+                            EmlToPdf.convertEmlToHtml(fileBytes, request, customHtmlSanitizer);
                     log.info("Successfully converted email to HTML: {}", originalFilename);
                     return WebResponseUtils.bytesToWebResponse(
                             htmlContent.getBytes(StandardCharsets.UTF_8),

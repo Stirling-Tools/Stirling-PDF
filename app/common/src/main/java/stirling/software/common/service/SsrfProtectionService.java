@@ -226,10 +226,11 @@ public class SsrfProtectionService {
     }
 
     private boolean isPrivateIPv4Range(String ip) {
-        // Includes RFC1918, loopback, link-local, and unspecified addresses
+        // Includes RFC1918, RFC6598, loopback, link-local, and unspecified addresses
         return ip.startsWith("10.")
                 || ip.startsWith("192.168.")
                 || (ip.startsWith("172.") && isInRange172(ip))
+                || (ip.startsWith("100.") && isInRange100(ip))
                 || ip.startsWith("169.254.")
                 || ip.startsWith("127.")
                 || "0.0.0.0".equals(ip);
@@ -241,6 +242,18 @@ public class SsrfProtectionService {
             try {
                 int secondOctet = Integer.parseInt(parts[1]);
                 return secondOctet >= 16 && secondOctet <= 31;
+            } catch (NumberFormatException e) {
+            }
+        }
+        return false;
+    }
+
+    private boolean isInRange100(String ip) {
+        String[] parts = ip.split("\\.");
+        if (parts.length >= 2) {
+            try {
+                int secondOctet = Integer.parseInt(parts[1]);
+                return secondOctet >= 64 && secondOctet <= 127;
             } catch (NumberFormatException e) {
             }
         }
