@@ -4483,6 +4483,7 @@ exitRedaction = "Exit Redaction Mode"
 save = "Save"
 downloadAll = "Download All"
 saveAll = "Save All"
+saveAs = "Save As"
 
 [textAlign]
 left = "Left"
