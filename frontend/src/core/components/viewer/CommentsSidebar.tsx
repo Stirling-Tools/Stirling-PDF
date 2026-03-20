@@ -49,11 +49,16 @@ function getAuthorName(obj: any, currentDisplayName: string): string {
 
 /** Replies store an explicit author; only allow edit when it matches the current comment author name. */
 function isReplyAuthoredByCurrentUser(obj: any, currentDisplayName: string): boolean {
-  const mine = (currentDisplayName ?? '').trim();
-  if (!mine) return false;
   const stored = (obj?.author ?? '').trim() || 'Guest';
-  if (PLACEHOLDER_AUTHORS.has(stored)) return false;
-  return stored === mine;
+  // Resolve current user the same way getAuthorName does
+  const resolvedMine = PLACEHOLDER_AUTHORS.has((currentDisplayName ?? '').trim())
+    ? 'Guest'
+    : (currentDisplayName ?? '').trim();
+  const resolvedStored = PLACEHOLDER_AUTHORS.has(stored) ? 'Guest' : stored;
+  // Both are guest/anonymous → same unauthenticated user, allow editing
+  if (resolvedStored === 'Guest' && resolvedMine === 'Guest') return true;
+  if (!resolvedMine) return false;
+  return resolvedStored === resolvedMine;
 }
 
 // Map toolId → LocalIcon icon name (matches AnnotationPanel icon definitions)
