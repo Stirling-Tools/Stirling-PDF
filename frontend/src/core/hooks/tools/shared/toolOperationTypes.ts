@@ -101,7 +101,13 @@ export interface CustomToolOperationConfig<TParams> extends BaseToolOperationCon
   toolType: ToolType.custom;
 
   buildFormData?: undefined;
-  endpoint?: undefined;
+
+  /**
+   * Optional endpoint for routing decisions (credit check, cloud detection).
+   * Not used for the API call itself — customProcessor handles that directly.
+   * Provide a function when the endpoint depends on runtime parameters.
+   */
+  endpoint?: string | ((params: TParams) => string | undefined);
 
   /**
    * Custom processing logic that completely bypasses standard file processing.

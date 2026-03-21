@@ -149,8 +149,8 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(null), 3000);
-    } catch (error: any) {
-      setProfileError(error.message || 'Failed to switch to custom picture');
+    } catch (error: unknown) {
+      setProfileError(error instanceof Error ? error.message : 'Failed to switch to custom picture');
     } finally {
       setProfileUploading(false);
     }
@@ -181,8 +181,8 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
       setSuccess('Account upgraded successfully! You can now sign in with your email.');
       setEmail('');
       setPassword('');
-    } catch (err: any) {
-      setUpgradeError(err?.message || 'Failed to upgrade account');
+    } catch (err: unknown) {
+      setUpgradeError(err instanceof Error ? err.message : 'Failed to upgrade account');
     } finally {
       setIsLoading(false);
     }
@@ -404,7 +404,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
                           style={{ width: 16, height: 16 }}
                         />
                       }
-                      onClick={() => handleOAuthUpgrade(provider.id as any)}
+                      onClick={() => handleOAuthUpgrade(provider.id as 'github' | 'google' | 'apple' | 'azure')}
                       disabled={isLoading}
                     >
                       {provider.label}
