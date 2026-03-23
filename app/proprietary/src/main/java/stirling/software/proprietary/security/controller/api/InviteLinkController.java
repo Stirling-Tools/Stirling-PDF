@@ -203,7 +203,7 @@ public class InviteLinkController {
                                         ? ":" + request.getServerPort()
                                         : "");
             }
-            String inviteUrl = baseUrl + "/invite?token=" + token;
+            String inviteUrl = baseUrl + "/invite/" + token;
 
             log.info("Generated invite link for {} by {}", email, principal.getName());
 
