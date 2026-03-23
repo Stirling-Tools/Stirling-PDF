@@ -40,6 +40,7 @@ export interface AdminSettingsData {
   premiumEnabled: boolean;
   mailEnabled: boolean;
   userSettings?: Record<string, any>;
+  lockedUsers?: string[];
 }
 
 export interface CreateUserRequest {
@@ -295,6 +296,15 @@ export const userManagementService = {
 
     await apiClient.post('/api/v1/user/admin/changePasswordForUser', formData, {
       suppressErrorToast: true, // Component will handle error display
+    } as any);
+  },
+
+  /**
+   * Unlock a locked user account (admin only)
+   */
+  async unlockUser(username: string): Promise<void> {
+    await apiClient.post(`/api/v1/user/admin/unlockUser/${username}`, null, {
+      suppressErrorToast: true,
     } as any);
   },
 

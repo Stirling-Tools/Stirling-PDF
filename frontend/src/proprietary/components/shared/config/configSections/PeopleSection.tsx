@@ -51,6 +51,7 @@ export default function PeopleSection() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [processing, setProcessing] = useState(false);
   const [mailEnabled, setMailEnabled] = useState(false);
+  const [lockedUsers, setLockedUsers] = useState<string[]>([]);
 
   // License information
   const [licenseInfo, setLicenseInfo] = useState<{
@@ -80,6 +81,7 @@ export default function PeopleSection() {
       : null;
 
   const isCurrentUser = (user: User) => currentUser?.username === user.username;
+  const isLockedUser = (user: User) => lockedUsers.includes(user.username);
 
   // Form state for edit user modal
   const [editForm, setEditForm] = useState({
@@ -128,6 +130,7 @@ export default function PeopleSection() {
           totalUsers: adminData.totalUsers,
         });
         setMailEnabled(adminData.mailEnabled);
+        setLockedUsers(adminData.lockedUsers || []);
       } else {
         // Provide example data when login is disabled
         const exampleUsers: User[] = [
@@ -189,6 +192,7 @@ export default function PeopleSection() {
         setUsers(exampleUsers);
         setTeams(exampleTeams);
         setMailEnabled(false);
+        setLockedUsers([]);
 
         // Example license information
         setLicenseInfo({
@@ -264,6 +268,26 @@ export default function PeopleSection() {
                           error.response?.data?.error ||
                           error.message ||
                           t('workspace.people.deleteUserError', 'Failed to delete user');
+      alert({ alertType: 'error', title: errorMessage });
+    }
+  };
+
+  const handleUnlockUser = async (user: User) => {
+    const confirmMessage = t('workspace.people.confirmUnlock', 'Are you sure you want to unlock this user account?');
+    if (!window.confirm(`${confirmMessage}\n\nUser: ${user.username}`)) {
+      return;
+    }
+
+    try {
+      await userManagementService.unlockUser(user.username);
+      alert({ alertType: 'success', title: t('workspace.people.unlockUserSuccess', 'User account unlocked successfully') });
+      fetchData();
+    } catch (error: any) {
+      console.error('[PeopleSection] Failed to unlock user:', error);
+      const errorMessage = error.response?.data?.message ||
+                          error.response?.data?.error ||
+                          error.message ||
+                          t('workspace.people.unlockUserError', 'Failed to unlock user account');
       alert({ alertType: 'error', title: errorMessage });
     }
   };
@@ -389,6 +413,12 @@ export default function PeopleSection() {
             </Text>
           )}
 
+          {lockedUsers.length > 0 && (
+            <Badge color="orange" variant="light" size="sm">
+              {lockedUsers.length} {t('workspace.people.locked', 'locked')}
+            </Badge>
+          )}
+
           {licenseInfo.premiumEnabled && licenseInfo.licenseMaxUsers > 0 && (
             <Badge color="blue" variant="light" size="sm">
               +{licenseInfo.licenseMaxUsers} {t('workspace.people.license.fromLicense', 'from license')}
@@ -497,22 +527,29 @@ export default function PeopleSection() {
                       </Avatar>
                     </Tooltip>
                     <Box style={{ minWidth: 0, flex: 1 }}>
-                      <Tooltip label={user.username} disabled={user.username.length <= 20} zIndex={Z_INDEX_OVER_CONFIG_MODAL}>
-                        <Text
-                          size="sm"
-                          fw={500}
-                          maw={200}
-                          style={{
-                            lineHeight: 1.3,
-                            opacity: user.enabled ? 1 : 0.6,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {user.username}
-                        </Text>
-                      </Tooltip>
+                      <Group gap={6} wrap="nowrap" align="center">
+                        <Tooltip label={user.username} disabled={user.username.length <= 20} zIndex={Z_INDEX_OVER_CONFIG_MODAL}>
+                          <Text
+                            size="sm"
+                            fw={500}
+                            maw={200}
+                            style={{
+                              lineHeight: 1.3,
+                              opacity: user.enabled ? 1 : 0.6,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {user.username}
+                          </Text>
+                        </Tooltip>
+                        {isLockedUser(user) && (
+                          <Badge color="orange" variant="light" size="xs">
+                            {t('workspace.people.lockedBadge', 'Locked')}
+                          </Badge>
+                        )}
+                      </Group>
                       {user.email && (
                         <Text size="xs" c="dimmed" truncate style={{ lineHeight: 1.3 }}>
                           {user.email}
@@ -610,6 +647,15 @@ export default function PeopleSection() {
                               disabled={!loginEnabled}
                             >
                               {user.enabled ? t('workspace.people.disable') : t('workspace.people.enable')}
+                            </Menu.Item>
+                          )}
+                          {!isCurrentUser(user) && isLockedUser(user) && (
+                            <Menu.Item
+                              leftSection={<LocalIcon icon="lock-open" width="1rem" height="1rem" />}
+                              onClick={() => handleUnlockUser(user)}
+                              disabled={!loginEnabled}
+                            >
+                              {t('workspace.people.unlockAccount', 'Unlock Account')}
                             </Menu.Item>
                           )}
                           {!isCurrentUser(user) && user.mfaEnabled && (
