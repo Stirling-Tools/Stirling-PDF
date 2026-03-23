@@ -162,7 +162,8 @@ public class SigningSessionController {
         try {
             User owner = getCurrentUser(principal);
             workflowSessionService.addParticipants(sessionId, participants, owner);
-            WorkflowSession session = workflowSessionService.getSessionForOwner(sessionId, owner);
+            WorkflowSession session =
+                    workflowSessionService.getSessionWithParticipantsForOwner(sessionId, owner);
             return ResponseEntity.ok(
                     stirling.software.proprietary.workflow.util.WorkflowMapper.toResponse(session));
         } catch (Exception e) {

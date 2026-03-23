@@ -9,7 +9,7 @@ import type { ParticipantInfo } from '@app/types/signingSession';
 interface ParticipantListPanelProps {
   participants: ParticipantInfo[];
   finalized: boolean;
-  onRemove: (userId: number) => void;
+  onRemove: (participantId: number) => void;
 }
 
 export const ParticipantListPanel: React.FC<ParticipantListPanelProps> = ({
@@ -43,7 +43,7 @@ export const ParticipantListPanel: React.FC<ParticipantListPanelProps> = ({
           const isDeclined = participant.status === 'DECLINED';
 
           return (
-            <List.Item key={participant.userId} icon={getIcon(participant.status)}>
+            <List.Item key={participant.id} icon={getIcon(participant.status)}>
               <Group justify="space-between" wrap="nowrap" gap={4}>
                 <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
                   <Text size="xs" truncate>
@@ -63,7 +63,7 @@ export const ParticipantListPanel: React.FC<ParticipantListPanelProps> = ({
                     size="sm"
                     variant="subtle"
                     color="red"
-                    onClick={() => onRemove(participant.userId)}
+                    onClick={() => onRemove(participant.id)}
                     title={t('certSign.collab.sessionDetail.removeParticipant', 'Remove')}
                   >
                     <DeleteIcon sx={{ fontSize: '1rem' }} />

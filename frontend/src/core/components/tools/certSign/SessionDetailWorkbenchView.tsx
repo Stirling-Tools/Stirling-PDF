@@ -9,7 +9,6 @@ import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
 import { Z_INDEX_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 import { SessionDetail } from '@app/types/signingSession';
-import { SignatureSettings } from '@app/components/tools/certSign/SignatureSettingsInput';
 import { LocalEmbedPDFWithAnnotations, SignaturePreview, AnnotationAPI } from '@app/components/viewer/LocalEmbedPDFWithAnnotations';
 import { ParticipantListPanel } from '@app/components/tools/certSign/panels/ParticipantListPanel';
 import { SessionActionsPanel } from '@app/components/tools/certSign/panels/SessionActionsPanel';
@@ -20,8 +19,8 @@ export interface SessionDetailWorkbenchData {
   pdfFile: File | null;
   onFinalize: () => Promise<void>;
   onLoadSignedPdf: () => Promise<void>;
-  onAddParticipants: (userIds: number[], settings: SignatureSettings) => Promise<void>;
-  onRemoveParticipant: (userId: number) => Promise<void>;
+  onAddParticipants: (userIds: number[], defaultReason?: string) => Promise<void>;
+  onRemoveParticipant: (participantId: number) => Promise<void>;
   onDelete: () => Promise<void>;
   onBack: () => void;
   onRefresh: () => Promise<void>;
@@ -64,9 +63,9 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
     }
   }, [session.finalized, onRefresh]);
 
-  const handleAddParticipants = async (userIds: number[], settings: SignatureSettings) => {
+  const handleAddParticipants = async (userIds: number[], defaultReason?: string) => {
     try {
-      await onAddParticipants(userIds, settings);
+      await onAddParticipants(userIds, defaultReason);
       alert({
         alertType: 'success',
         title: t('success'),
@@ -82,9 +81,9 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
     }
   };
 
-  const handleRemoveParticipant = async (userId: number) => {
+  const handleRemoveParticipant = async (participantId: number) => {
     try {
-      await onRemoveParticipant(userId);
+      await onRemoveParticipant(participantId);
       alert({
         alertType: 'success',
         title: t('success'),

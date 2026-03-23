@@ -309,6 +309,7 @@ public class WorkflowSessionService {
     }
 
     /** Adds additional participants to an existing session. */
+    @Transactional
     public void addParticipants(
             String sessionId, List<ParticipantRequest> participants, User owner) {
         WorkflowSession session = getSessionForOwner(sessionId, owner);
@@ -323,6 +324,7 @@ public class WorkflowSessionService {
     }
 
     /** Removes a participant from a workflow session. */
+    @Transactional
     public void removeParticipant(String sessionId, Long participantId, User owner) {
         WorkflowSession session = getSessionForOwner(sessionId, owner);
 

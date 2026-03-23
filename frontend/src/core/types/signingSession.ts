@@ -30,6 +30,7 @@ export interface SessionDetail {
 }
 
 export interface ParticipantInfo {
+  id: number;
   userId: number;
   email: string;
   name: string;

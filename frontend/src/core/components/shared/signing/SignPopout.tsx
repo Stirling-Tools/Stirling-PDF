@@ -389,9 +389,9 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
         pdfFile,
         onFinalize: () => handleFinalize(session.sessionId, session.documentName),
         onLoadSignedPdf: () => handleLoadSignedPdf(session.sessionId, session.documentName),
-        onAddParticipants: (userIds: number[], settings: any) =>
-          handleAddParticipants(session.sessionId, userIds, settings),
-        onRemoveParticipant: (userId: number) => handleRemoveParticipant(session.sessionId, userId),
+        onAddParticipants: (userIds: number[], defaultReason?: string) =>
+          handleAddParticipants(session.sessionId, userIds, defaultReason),
+        onRemoveParticipant: (participantId: number) => handleRemoveParticipant(session.sessionId, participantId),
         onDelete: () => handleDeleteSession(session.sessionId),
         onBack: () => {
           clearCustomWorkbenchViewData(SESSION_DETAIL_WORKBENCH_ID);
@@ -490,21 +490,18 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
     navigationActions.setWorkbench('viewer');
   };
 
-  const handleAddParticipants = async (sessionId: string, userIds: number[], settings: any) => {
-    await apiClient.post(`/api/v1/security/cert-sign/sessions/${sessionId}/participants`, {
-      participantUserIds: userIds,
-      showSignature: settings.showSignature,
-      pageNumber: settings.pageNumber,
-      reason: settings.reason,
-      location: settings.location,
-      showLogo: settings.showLogo,
-      includeSummaryPage: settings.includeSummaryPage || false,
-    });
+  const handleAddParticipants = async (sessionId: string, userIds: number[], defaultReason?: string) => {
+    const requests = userIds.map(userId => ({
+      userId,
+      defaultReason: defaultReason || undefined,
+      sendNotification: true,
+    }));
+    await apiClient.post(`/api/v1/security/cert-sign/sessions/${sessionId}/participants`, requests);
     await handleRefreshSession(sessionId);
   };
 
-  const handleRemoveParticipant = async (sessionId: string, userId: number) => {
-    await apiClient.delete(`/api/v1/security/cert-sign/sessions/${sessionId}/participants/${userId}`);
+  const handleRemoveParticipant = async (sessionId: string, participantId: number) => {
+    await apiClient.delete(`/api/v1/security/cert-sign/sessions/${sessionId}/participants/${participantId}`);
     await handleRefreshSession(sessionId);
   };
 
