@@ -98,10 +98,6 @@ public class InviteLinkController {
                                                     + " address"));
                 }
 
-                // If sendEmail is requested but no email provided, reject
-                if (sendEmail) {
-                    // Email will be sent
-                }
             } else {
                 // No email provided - this is a general invite link
                 email = null; // Ensure it's null, not empty string
@@ -183,7 +179,8 @@ public class InviteLinkController {
 
             inviteTokenRepository.save(inviteToken);
 
-            // Build invite URL: system.frontendUrl → caller's frontendBaseUrl → system.backendUrl → request URL
+            // Build invite URL: system.frontendUrl → caller's frontendBaseUrl → system.backendUrl →
+            // request URL
             String baseUrl;
             String configuredFrontendUrl = applicationProperties.getSystem().getFrontendUrl();
             String configuredBackendUrl = applicationProperties.getSystem().getBackendUrl();

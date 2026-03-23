@@ -144,7 +144,7 @@ class InviteLinkControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(
                         jsonPath("$.inviteUrl")
-                                .value(startsWith("https://frontend.example.com/invite?token=")))
+                                .value(startsWith("https://frontend.example.com/invite/")))
                 .andExpect(jsonPath("$.email").value("new@example.com"));
 
         verify(inviteTokenRepository).save(any());
