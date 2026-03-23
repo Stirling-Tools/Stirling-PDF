@@ -1,23 +1,14 @@
-import { ActionIcon, Tooltip, Group, Popover, TextInput, Button, Stack } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
+import { Group } from '@mantine/core';
 import { createPortal } from 'react-dom';
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import CommentIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
-import AddCommentIcon from '@mui/icons-material/AddCommentOutlined';
-import OpenInNewIcon from '@mui/icons-material/OpenInNewRounded';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useAnnotation } from '@embedpdf/plugin-annotation/react';
 import type { TrackedAnnotation } from '@embedpdf/plugin-annotation';
-import { PdfActionType, PdfAnnotationReplyType, PdfAnnotationSubtype, type PdfAnnotationObject } from '@embedpdf/models';
-import type { AnnotationPatch, AnnotationObject } from '@app/components/viewer/viewerTypes';
+import { PdfAnnotationSubtype, type PdfAnnotationObject } from '@embedpdf/models';
+import type { AnnotationObject } from '@app/components/viewer/viewerTypes';
 import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
 import { useViewer } from '@app/contexts/ViewerContext';
-import { OpacityControl } from '@app/components/annotation/shared/OpacityControl';
-import { WidthControl } from '@app/components/annotation/shared/WidthControl';
-import { PropertiesPopover } from '@app/components/annotation/shared/PropertiesPopover';
-import { ColorControl } from '@app/components/annotation/shared/ColorControl';
-import LocalIcon from '@app/components/shared/LocalIcon';
+import { useAnnotationMenuHandlers } from '@app/components/viewer/useAnnotationMenuHandlers';
+import { AnnotationTypeButtons } from '@app/components/viewer/AnnotationTypeButtons';
 
 /**
  * Props interface matching EmbedPDF's annotation selection menu pattern
@@ -39,21 +30,9 @@ export interface AnnotationSelectionMenuProps {
 
 export function AnnotationSelectionMenu(props: AnnotationSelectionMenuProps) {
   const activeDocumentId = useActiveDocumentId();
-
-  // Don't render until we have a valid document ID
-  if (!activeDocumentId) {
-    return null;
-  }
-
-  return (
-    <AnnotationSelectionMenuInner
-      documentId={activeDocumentId}
-      {...props}
-    />
-  );
+  if (!activeDocumentId) return null;
+  return <AnnotationSelectionMenuInner documentId={activeDocumentId} {...props} />;
 }
-
-type AnnotationType = 'textMarkup' | 'ink' | 'inkHighlighter' | 'text' | 'note' | 'comment' | 'shape' | 'line' | 'stamp' | 'unknown';
 
 function AnnotationSelectionMenuInner({
   documentId,
@@ -63,23 +42,28 @@ function AnnotationSelectionMenuInner({
 }: AnnotationSelectionMenuProps & { documentId: string }) {
   const annotation = context?.annotation;
   const pageIndex = context?.pageIndex;
-  const { t } = useTranslation();
   const { provides } = useAnnotation(documentId);
   const { scrollActions, requestCommentFocus } = useViewer();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
-  const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
-  const [linkUrl, setLinkUrl] = useState('');
 
-  // Auto-open the comments sidebar when a comment annotation is selected so the
-  // user doesn't have to manually click the comment button in the selection menu.
+  const handlers = useAnnotationMenuHandlers({
+    annotation,
+    pageIndex,
+    documentId,
+    provides,
+    scrollActions,
+    requestCommentFocus,
+    wrapperRef,
+  });
+
+  // Auto-open the comments sidebar when a comment annotation is selected
   useEffect(() => {
     const annObj = annotation?.object as AnnotationObject | undefined;
     const annId = annObj?.id;
     if (!selected || !annId || pageIndex === undefined) return;
     const toolId = annObj?.customData?.toolId;
     const annType = annObj?.type;
-    // textComment = PdfAnnotationSubtype.TEXT (1), insertText/replaceText = PdfAnnotationSubtype.CARET (14)
     const isComment =
       (annType === PdfAnnotationSubtype.TEXT && toolId === 'textComment') ||
       (annType === PdfAnnotationSubtype.CARET && (toolId === 'insertText' || toolId === 'replaceText'));
@@ -87,590 +71,27 @@ function AnnotationSelectionMenuInner({
     requestCommentFocus(documentId, pageIndex, annId, (annObj?.contents ?? '').trim().length > 0);
   }, [selected, annotation?.object]);
 
-  // Click outside both the selection menu and the annotation to deselect
+  // Click outside to deselect
   useEffect(() => {
     if (!selected) return;
     const handlePointerDown = (e: PointerEvent) => {
       const target = e.target as HTMLElement;
       if (target.closest('[data-annotation-selection-menu]')) return;
       if (target.closest('[data-no-interaction]')) return;
-      // Mantine popovers (color picker, link popover, etc.) render in portals outside the menu DOM
       if (target.closest('.mantine-Popover-dropdown')) return;
-      (provides as unknown as { deselectAnnotation?: () => void }).deselectAnnotation?.();
+      provides?.deselectAnnotation?.();
     };
     document.addEventListener('pointerdown', handlePointerDown);
     return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, [selected, provides]);
 
-  // Merge refs - menuWrapperProps.ref is a callback ref
+  // Merge refs — menuWrapperProps.ref is a callback ref from EmbedPDF
   const setRef = useCallback((node: HTMLDivElement | null) => {
     wrapperRef.current = node;
-    // Call the EmbedPDF ref callback
     menuWrapperProps?.ref?.(node);
   }, [menuWrapperProps]);
 
-  // Type detection - comment-like tools (Comment, Insert Text, Replace Text) get full comment toolbar
-  const getAnnotationType = useCallback((): AnnotationType => {
-    const type = annotation?.object?.type;
-    const toolId = (annotation?.object as AnnotationObject | undefined)?.customData?.toolId;
-
-    // Map type numbers to categories
-    if (type !== undefined && [9, 10, 11, 12].includes(type)) return 'textMarkup';
-    if (type === 15) {
-      return toolId === 'inkHighlighter' ? 'inkHighlighter' : 'ink';
-    }
-    // textComment creates PdfAnnotationSubtype.TEXT (1) annotations
-    if (type === 1) {
-      if (toolId === 'textComment') return 'comment';
-    }
-    // insertText/replaceText create PdfAnnotationSubtype.CARET (14) annotations
-    if (type === 14) {
-      if (toolId === 'insertText' || toolId === 'replaceText') return 'comment';
-    }
-    if (type === 3) {
-      if (toolId === 'note') return 'note';
-      // Legacy or unknown FREETEXT annotations (e.g. no toolId)
-      return 'note';
-    }
-    if (type !== undefined && [5, 6, 7].includes(type)) return 'shape';
-    if (type !== undefined && [4, 8].includes(type)) return 'line';
-    if (type === 13) return 'stamp';
-
-    return 'unknown';
-  }, [annotation]);
-
-  // Calculate menu width based on annotation type (comment/link buttons add width)
-  const calculateWidth = (annotationType: AnnotationType): number => {
-    switch (annotationType) {
-      case 'stamp':
-        return 80;
-      case 'inkHighlighter':
-        return 280;
-      case 'shape':
-        return 200;
-      case 'comment':
-      case 'textMarkup':
-      case 'text':
-      case 'note':
-        return 280;
-      default:
-        return 260;
-    }
-  };
-
-  // Get annotation properties
-  const obj = annotation?.object as AnnotationObject | undefined;
-  const annotationType = getAnnotationType();
-  const annotationId = obj?.id;
-
-  const attachedLinks = useMemo(() => {
-    if (!annotationId || !provides?.getAttachedLinks) return [];
-    try {
-      return provides.getAttachedLinks(annotationId) ?? [];
-    } catch {
-      return [];
-    }
-  }, [annotationId, provides]);
-
-  const firstLinkTarget = useMemo(() => {
-    const linkObj = attachedLinks[0]?.object as { target?: { type: string; action?: { type: number; uri?: string; destination?: { pageIndex: number } } } } | undefined;
-    if (!linkObj?.target || linkObj.target.type !== 'action') return null;
-    const act = linkObj.target.action;
-    if (act && act.type === PdfActionType.URI && act.uri) return { type: 'uri' as const, uri: act.uri };
-    if (act && (act.type === PdfActionType.Goto || act.type === PdfActionType.RemoteGoto) && act.destination)
-      return { type: 'goto' as const, pageIndex: act.destination.pageIndex };
-    return null;
-  }, [attachedLinks]);
-
-  // Get current colors
-  const getCurrentColor = (): string => {
-    if (!obj) return '#000000';
-    const type = obj.type;
-    // Text annotations use textColor
-    if (type === 3) return obj.textColor || obj.color || '#000000';
-    // Shape annotations use strokeColor
-    if (type !== undefined && [4, 5, 6, 7, 8].includes(type)) return obj.strokeColor || obj.color || '#000000';
-    // Default to color property
-    return obj.color || obj.strokeColor || '#000000';
-  };
-
-  const getStrokeColor = (): string => {
-    return obj?.strokeColor || obj?.color || '#000000';
-  };
-
-  const getFillColor = (): string => {
-    return obj?.color || obj?.fillColor || '#0000ff';
-  };
-
-  const getBackgroundColor = (): string => {
-    // Check multiple possible properties for background color
-    return obj?.backgroundColor || obj?.fillColor || obj?.color || '#ffffff';
-  };
-
-  const getTextColor = (): string => {
-    return obj?.textColor || obj?.color || '#000000';
-  };
-
-  const getOpacity = (): number => {
-    return Math.round((obj?.opacity ?? 1) * 100);
-  };
-
-  const getWidth = (): number => {
-    return obj?.strokeWidth ?? obj?.borderWidth ?? obj?.lineWidth ?? obj?.thickness ?? 2;
-  };
-
-  // Handlers
-  const handleDelete = useCallback(() => {
-    if (provides?.deleteAnnotation && annotationId && pageIndex !== undefined) {
-      provides.deleteAnnotation(pageIndex, annotationId);
-    }
-  }, [provides, annotationId, pageIndex]);
-
-  // Focus inline text input (same as double-clicking the note/text box). Dispatches dblclick on the
-  // annotation hit-area div (EmbedPDF's inner div with onDoubleClick) so built-in FreeText editing is used.
-  const handleFocusTextEdit = useCallback(() => {
-    const root = wrapperRef.current?.closest('[data-no-interaction]');
-    const main = root?.firstElementChild;
-    // EmbedPDF puts onDoubleClick on the content div. For text/note (no rotation) it's the first child.
-    const hitArea = main?.lastElementChild ?? main?.firstElementChild;
-    if (!hitArea) return;
-    hitArea.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true, view: window }));
-  }, []);
-
-  const handleColorChange = useCallback((color: string, target: 'main' | 'stroke' | 'fill' | 'text' | 'background') => {
-    if (!provides?.updateAnnotation || !annotationId || pageIndex === undefined) return;
-
-    const type = obj?.type;
-    const patch: AnnotationPatch = {};
-
-    if (target === 'stroke') {
-      // Shape stroke - preserve fill color
-      patch.strokeColor = color;
-      patch.color = obj?.color || '#0000ff'; // Preserve fill
-      patch.strokeWidth = getWidth();
-    } else if (target === 'fill') {
-      // Shape fill - preserve stroke color
-      patch.color = color;
-      patch.strokeColor = obj?.strokeColor || '#000000'; // Preserve stroke
-      patch.strokeWidth = getWidth();
-    } else if (target === 'background') {
-      // Background color for text/note - set multiple properties for compatibility
-      patch.backgroundColor = color;
-      patch.fillColor = color;
-      patch.color = color;
-    } else if (target === 'text') {
-      // Text color for text/note - TRY PROPERTY COMBINATIONS
-      patch.textColor = color;
-      patch.fontColor = color;  // EmbedPDF might expect this instead
-
-      // Include font metadata (EmbedPDF might require these together)
-      patch.fontSize = obj?.fontSize ?? 14;
-      patch.fontFamily = obj?.fontFamily ?? 'Helvetica';
-
-      // Re-submit text content
-      patch.contents = obj?.contents ?? '';
-    } else {
-      // Main color - for highlights, ink, etc.
-      patch.color = color;
-
-      // For text markup annotations (highlight, underline, strikeout, squiggly)
-      if (type !== undefined && [9, 10, 11, 12].includes(type)) {
-        patch.strokeColor = color;
-        patch.fillColor = color;
-        patch.opacity = obj?.opacity ?? 1;
-      }
-
-      // For line annotations (type 4, 8), include stroke properties
-      if (type !== undefined && [4, 8].includes(type)) {
-        patch.strokeColor = color;
-        patch.strokeWidth = obj?.strokeWidth ?? obj?.lineWidth ?? 2;
-        patch.lineWidth = obj?.lineWidth ?? obj?.strokeWidth ?? 2;
-      }
-
-      // For ink annotations (type 15), include all stroke-related properties
-      if (type === 15) {
-        patch.strokeColor = color;
-        patch.strokeWidth = obj?.strokeWidth ?? obj?.thickness ?? 2;
-        patch.opacity = obj?.opacity ?? 1;
-      }
-    }
-
-    provides.updateAnnotation(pageIndex, annotationId, patch);
-  }, [provides, annotationId, pageIndex, obj]);
-
-  const handleOpacityChange = useCallback((opacity: number) => {
-    if (!provides?.updateAnnotation || !annotationId || pageIndex === undefined) return;
-
-    provides.updateAnnotation(pageIndex, annotationId, {
-      opacity: opacity / 100,
-    });
-  }, [provides, annotationId, pageIndex]);
-
-  const handleWidthChange = useCallback((width: number) => {
-    if (!provides?.updateAnnotation || !annotationId || pageIndex === undefined) return;
-
-    provides.updateAnnotation(pageIndex, annotationId, {
-      strokeWidth: width,
-    });
-  }, [provides, annotationId, pageIndex]);
-
-  const handlePropertiesUpdate = useCallback((patch: Record<string, any>) => {
-    if (!provides?.updateAnnotation || !annotationId || pageIndex === undefined) return;
-
-    provides.updateAnnotation(pageIndex, annotationId, patch);
-  }, [provides, annotationId, pageIndex]);
-
-  const handleGoToLink = useCallback(() => {
-    if (!firstLinkTarget) return;
-    if (firstLinkTarget.type === 'uri') {
-      window.open(firstLinkTarget.uri, '_blank', 'noopener,noreferrer');
-    } else if (firstLinkTarget.type === 'goto') {
-      scrollActions.scrollToPage(firstLinkTarget.pageIndex + 1);
-    }
-  }, [firstLinkTarget, scrollActions]);
-
-  const handleAddLinkSubmit = useCallback(() => {
-    const uri = linkUrl.trim();
-    if (!uri || !provides?.createAnnotation || pageIndex === undefined || !annotationId || !obj?.rect) return;
-    const rect = obj.rect;
-    provides.createAnnotation(pageIndex, {
-      type: PdfAnnotationSubtype.LINK,
-      id: `link-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-      pageIndex,
-      rect,
-      target: { type: 'action', action: { type: PdfActionType.URI, uri } },
-      inReplyToId: annotationId,
-      replyType: PdfAnnotationReplyType.Group,
-    });
-    setLinkUrl('');
-    setLinkPopoverOpen(false);
-  }, [linkUrl, provides, pageIndex, annotationId, obj?.rect]);
-
-  // Shared: has comment content for Add comment vs View comment label
-  const hasCommentContent = (obj?.contents ?? '').trim().length > 0;
-
-  const isInSidebar = (obj?.customData as Record<string, unknown> | undefined)?.isComment === true;
-
-  const handleAddToSidebar = useCallback(() => {
-    if (!provides?.updateAnnotation || !annotationId || pageIndex === undefined) return;
-    const existingCustomData = (obj?.customData ?? {}) as Record<string, unknown>;
-    provides.updateAnnotation(pageIndex, annotationId, {
-      customData: { ...existingCustomData, isComment: true },
-    } as AnnotationPatch);
-    requestCommentFocus(documentId, pageIndex, annotationId, false);
-  }, [provides, annotationId, pageIndex, obj, documentId, requestCommentFocus]);
-
-  // Render button groups based on annotation type
-  const renderButtons = () => {
-    const commonButtonStyles = {
-      root: {
-        flexShrink: 0,
-        backgroundColor: 'var(--bg-raised)',
-        border: '1px solid var(--border-default)',
-        color: 'var(--text-secondary)',
-        '&:hover': {
-          backgroundColor: 'var(--hover-bg)',
-          borderColor: 'var(--border-strong)',
-          color: 'var(--text-primary)',
-        },
-      },
-    };
-
-    const AddToSidebarButton = () => (
-      <Tooltip label={isInSidebar ? t('viewer.comments.viewComment', 'View comment') : t('viewer.comments.addComment', 'Add comment')}>
-        <ActionIcon
-          variant={isInSidebar ? 'filled' : 'subtle'}
-          color={isInSidebar ? 'blue' : 'gray'}
-          size="md"
-          onClick={isInSidebar
-            ? () => requestCommentFocus(documentId, pageIndex ?? 0, annotationId ?? '', (obj?.contents ?? '').trim().length > 0)
-            : handleAddToSidebar
-          }
-          styles={isInSidebar ? undefined : commonButtonStyles}
-        >
-          <AddCommentIcon style={{ fontSize: 18 }} />
-        </ActionIcon>
-      </Tooltip>
-    );
-
-    const CommentAndLinkButtons = () => (
-      <>
-        <Tooltip label={hasCommentContent ? t('viewer.comments.viewComment', 'View comment') : t('viewer.comments.addComment', 'Add comment')}>
-          <ActionIcon
-            variant="subtle"
-            color="gray"
-            size="md"
-            onClick={() => requestCommentFocus(documentId, pageIndex ?? 0, annotationId ?? '', hasCommentContent)}
-            styles={commonButtonStyles}
-          >
-            <CommentIcon style={{ fontSize: 18 }} />
-          </ActionIcon>
-        </Tooltip>
-        {firstLinkTarget ? (
-          <Tooltip label={t('viewer.comments.goToLink', 'Go to link')}>
-            <ActionIcon variant="subtle" color="gray" size="md" onClick={handleGoToLink} styles={commonButtonStyles}>
-              <OpenInNewIcon style={{ fontSize: 18 }} />
-            </ActionIcon>
-          </Tooltip>
-        ) : (
-          <Popover opened={linkPopoverOpen} onClose={() => setLinkPopoverOpen(false)} position="top">
-            <Popover.Target>
-              <Tooltip label={t('viewer.comments.addLink', 'Add link')}>
-                <ActionIcon variant="subtle" color="gray" size="md" onClick={() => setLinkPopoverOpen((o) => !o)} styles={commonButtonStyles}>
-                  <LocalIcon icon="link" width="1.25rem" height="1.25rem" />
-                </ActionIcon>
-              </Tooltip>
-            </Popover.Target>
-            <Popover.Dropdown>
-              <Stack gap="xs">
-                <TextInput
-                  placeholder="https://..."
-                  value={linkUrl}
-                  onChange={(e) => setLinkUrl(e.currentTarget.value)}
-                  size="sm"
-                  style={{ minWidth: 220 }}
-                />
-                <Button size="xs" onClick={handleAddLinkSubmit} disabled={!linkUrl.trim()}>
-                  {t('viewer.comments.addLink', 'Add link')}
-                </Button>
-              </Stack>
-            </Popover.Dropdown>
-          </Popover>
-        )}
-      </>
-    );
-
-    const EditTextButton = () => (
-      <Tooltip label={t('annotation.editText', 'Edit Text')}>
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          size="md"
-          onClick={handleFocusTextEdit}
-          styles={commonButtonStyles}
-        >
-          <EditIcon style={{ fontSize: 18 }} />
-        </ActionIcon>
-      </Tooltip>
-    );
-
-    const DeleteButton = () => (
-      <Tooltip label={t('annotation.delete', 'Delete')}>
-        <ActionIcon
-          variant="subtle"
-          color="red"
-          size="md"
-          onClick={handleDelete}
-          styles={{
-            root: {
-              ...commonButtonStyles.root,
-              '&:hover': {
-                backgroundColor: 'var(--mantine-color-red-1)',
-                borderColor: 'var(--mantine-color-red-4)',
-                color: 'var(--mantine-color-red-7)',
-              },
-            },
-          }}
-        >
-          <DeleteIcon style={{ fontSize: 18 }} />
-        </ActionIcon>
-      </Tooltip>
-    );
-
-    switch (annotationType) {
-      case 'textMarkup':
-        return (
-          <>
-            <AddToSidebarButton />
-            <ColorControl
-              value={getCurrentColor()}
-              onChange={(color) => handleColorChange(color, 'main')}
-              label={t('annotation.changeColor', 'Change Colour')}
-            />
-            <OpacityControl value={getOpacity()} onChange={handleOpacityChange} />
-            <DeleteButton />
-          </>
-        );
-
-      case 'ink':
-        return (
-          <>
-            <AddToSidebarButton />
-            <ColorControl
-              value={getCurrentColor()}
-              onChange={(color) => handleColorChange(color, 'main')}
-              label={t('annotation.changeColor', 'Change Colour')}
-            />
-            <WidthControl value={getWidth()} onChange={handleWidthChange} min={1} max={12} />
-            <DeleteButton />
-          </>
-        );
-
-      case 'inkHighlighter':
-        return (
-          <>
-            <AddToSidebarButton />
-            <ColorControl
-              value={getCurrentColor()}
-              onChange={(color) => handleColorChange(color, 'main')}
-              label={t('annotation.changeColor', 'Change Colour')}
-            />
-            <WidthControl value={getWidth()} onChange={handleWidthChange} min={1} max={20} />
-            <OpacityControl value={getOpacity()} onChange={handleOpacityChange} />
-            <DeleteButton />
-          </>
-        );
-
-      case 'text':
-      case 'note':
-        return (
-          <>
-            <AddToSidebarButton />
-            <ColorControl
-              value={getTextColor()}
-              onChange={(color) => handleColorChange(color, 'text')}
-              label={t('annotation.color', 'Color')}
-            />
-            <ColorControl
-              value={getBackgroundColor()}
-              onChange={(color) => handleColorChange(color, 'background')}
-              label={t('annotation.backgroundColor', 'Background color')}
-            />
-            <EditTextButton />
-            <PropertiesPopover
-              annotationType={annotationType}
-              annotation={annotation}
-              onUpdate={handlePropertiesUpdate}
-            />
-            <DeleteButton />
-          </>
-        );
-
-      case 'comment': {
-        const hasCommentContent = (obj?.contents ?? '').trim().length > 0;
-        return (
-          <>
-            <Tooltip label={hasCommentContent ? t('viewer.comments.viewComment', 'View comment') : t('viewer.comments.addComment', 'Add comment')}>
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                size="md"
-                onClick={() => requestCommentFocus(documentId, pageIndex ?? 0, annotationId ?? '', hasCommentContent)}
-                styles={commonButtonStyles}
-              >
-                <CommentIcon style={{ fontSize: 18 }} />
-              </ActionIcon>
-            </Tooltip>
-            <EditTextButton />
-            <ColorControl
-              value={obj?.strokeColor || obj?.color || '#ffa000'}
-              onChange={(color) => {
-                if (!provides?.updateAnnotation || !annotationId || pageIndex === undefined) return;
-                provides.updateAnnotation(pageIndex, annotationId, { strokeColor: color, color });
-              }}
-              label={t('annotation.annotationStyle', 'Annotation style')}
-            />
-            {firstLinkTarget ? (
-              <Tooltip label={t('viewer.comments.goToLink', 'Go to link')}>
-                <ActionIcon variant="subtle" color="gray" size="md" onClick={handleGoToLink} styles={commonButtonStyles}>
-                  <OpenInNewIcon style={{ fontSize: 18 }} />
-                </ActionIcon>
-              </Tooltip>
-            ) : (
-              <Popover opened={linkPopoverOpen} onClose={() => setLinkPopoverOpen(false)} position="top">
-                <Popover.Target>
-                  <Tooltip label={t('viewer.comments.addLink', 'Add link')}>
-                    <ActionIcon variant="subtle" color="gray" size="md" onClick={() => setLinkPopoverOpen((o) => !o)} styles={commonButtonStyles}>
-                      <LocalIcon icon="link" width="1.25rem" height="1.25rem" />
-                    </ActionIcon>
-                  </Tooltip>
-                </Popover.Target>
-                <Popover.Dropdown>
-                  <Stack gap="xs">
-                    <TextInput
-                      placeholder="https://..."
-                      value={linkUrl}
-                      onChange={(e) => setLinkUrl(e.currentTarget.value)}
-                      size="sm"
-                      style={{ minWidth: 220 }}
-                    />
-                    <Button size="xs" onClick={handleAddLinkSubmit} disabled={!linkUrl.trim()}>
-                      {t('viewer.comments.addLink', 'Add link')}
-                    </Button>
-                  </Stack>
-                </Popover.Dropdown>
-              </Popover>
-            )}
-            <DeleteButton />
-          </>
-        );
-      }
-
-      case 'shape':
-        return (
-          <>
-            <AddToSidebarButton />
-            <ColorControl
-              value={getStrokeColor()}
-              onChange={(color) => handleColorChange(color, 'stroke')}
-              label={t('annotation.strokeColor', 'Stroke Colour')}
-            />
-            <ColorControl
-              value={getFillColor()}
-              onChange={(color) => handleColorChange(color, 'fill')}
-              label={t('annotation.fillColor', 'Fill Colour')}
-            />
-            <PropertiesPopover
-              annotationType="shape"
-              annotation={annotation}
-              onUpdate={handlePropertiesUpdate}
-            />
-            <DeleteButton />
-          </>
-        );
-
-      case 'line':
-        return (
-          <>
-            <AddToSidebarButton />
-            <ColorControl
-              value={getCurrentColor()}
-              onChange={(color) => handleColorChange(color, 'main')}
-              label={t('annotation.changeColor', 'Change Colour')}
-            />
-            <WidthControl value={getWidth()} onChange={handleWidthChange} min={1} max={12} />
-            <DeleteButton />
-          </>
-        );
-
-      case 'stamp':
-        return (
-          <>
-            <AddToSidebarButton />
-            <DeleteButton />
-          </>
-        );
-
-      default:
-        return (
-          <>
-            <AddToSidebarButton />
-            <CommentAndLinkButtons />
-            <ColorControl
-              value={getCurrentColor()}
-              onChange={(color) => handleColorChange(color, 'main')}
-              label={t('annotation.changeColor', 'Change Colour')}
-            />
-            <DeleteButton />
-          </>
-        );
-    }
-  };
-
-  // Calculate position for portal based on wrapper element.
-  // Only depend on [selected] so we don't re-run when annotation reference changes during drag
-  // (plugin can hand a new object each render, causing infinite setState loop). Position updates
-  // during drag are handled by MutationObserver and scroll/resize listeners.
+  // Track menu position via MutationObserver (handles drag repositioning)
   useEffect(() => {
     if (!selected || !annotation || !wrapperRef.current) {
       setMenuPosition(null);
@@ -679,24 +100,15 @@ function AnnotationSelectionMenuInner({
 
     const updatePosition = () => {
       const wrapper = wrapperRef.current;
-      if (!wrapper) {
-        setMenuPosition(null);
-        return;
-      }
-
-      const wrapperRect = wrapper.getBoundingClientRect();
-      setMenuPosition({
-        top: wrapperRect.bottom + 8,
-        left: wrapperRect.left + wrapperRect.width / 2,
-      });
+      if (!wrapper) { setMenuPosition(null); return; }
+      const rect = wrapper.getBoundingClientRect();
+      setMenuPosition({ top: rect.bottom + 8, left: rect.left + rect.width / 2 });
     };
 
     updatePosition();
 
-    // MutationObserver catches EmbedPDF updating the wrapper's inline style during drag
     const observer = new MutationObserver(updatePosition);
     observer.observe(wrapperRef.current, { attributes: true, attributeFilter: ['style'] });
-
     window.addEventListener('scroll', updatePosition, true);
     window.addEventListener('resize', updatePosition);
 
@@ -707,7 +119,6 @@ function AnnotationSelectionMenuInner({
     };
   }, [selected]);
 
-  // Early return AFTER all hooks have been called
   if (!selected || !annotation) return null;
 
   const menuContent = menuPosition ? (
@@ -719,39 +130,34 @@ function AnnotationSelectionMenuInner({
         left: `${menuPosition.left}px`,
         transform: 'translateX(-50%)',
         pointerEvents: 'auto',
-        zIndex: 10000, // Very high z-index to appear above everything
+        zIndex: 10000,
         backgroundColor: 'var(--mantine-color-body)',
         borderRadius: 8,
         padding: '8px 12px',
         boxShadow: '0 2px 12px rgba(0, 0, 0, 0.25)',
         border: '1px solid var(--mantine-color-default-border)',
         fontSize: '14px',
-        minWidth: `${calculateWidth(annotationType)}px`,
+        minWidth: `${handlers.menuWidth}px`,
         transition: 'min-width 0.2s ease',
       }}
     >
       <Group gap="sm" wrap="nowrap" justify="center">
-        {renderButtons()}
+        <AnnotationTypeButtons
+          {...handlers}
+          annotation={annotation}
+          documentId={documentId}
+          pageIndex={pageIndex}
+          annotationId={handlers.annotationId}
+        />
       </Group>
     </div>
   ) : null;
 
   return (
     <>
-      {/* Invisible wrapper that provides positioning - uses EmbedPDF's menuWrapperProps.
-          Must stay pointerEvents:none so EmbedPDF's internal drag handlers receive events.
-          Edit Text button dispatches dblclick on this wrapper's parent to use EmbedPDF's built-in inline editing. */}
-      <div
-        ref={setRef}
-        style={{
-          ...menuWrapperProps?.style,
-          opacity: 0,
-          pointerEvents: 'none',
-        }}
-      />
-      {typeof document !== 'undefined' && menuContent
-        ? createPortal(menuContent, document.body)
-        : null}
+      {/* Invisible wrapper for EmbedPDF positioning — pointer-events:none so drag still works */}
+      <div ref={setRef} style={{ ...menuWrapperProps?.style, opacity: 0, pointerEvents: 'none' }} />
+      {typeof document !== 'undefined' && menuContent ? createPortal(menuContent, document.body) : null}
     </>
   );
 }
