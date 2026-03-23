@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { fetch } from '@tauri-apps/plugin-http';
+import { alert } from '@app/components/toast';
 
 export type BackendStatus = 'stopped' | 'starting' | 'healthy' | 'unhealthy';
 
@@ -86,10 +87,22 @@ export class TauriBackendService {
     if (this.isRecovering) return;
     if (this.restartAttempts >= TauriBackendService.MAX_RESTART_ATTEMPTS) {
       console.error(`[TauriBackendService] Backend failed after ${TauriBackendService.MAX_RESTART_ATTEMPTS} restart attempts, giving up.`);
+      alert({
+        alertType: 'error',
+        title: 'Backend failed to restart',
+        body: 'The local backend could not be recovered. Please restart the app.',
+        isPersistentPopup: true,
+      });
       return;
     }
     this.restartAttempts++;
     console.log(`[TauriBackendService] Backend unhealthy, attempting restart (${this.restartAttempts}/${TauriBackendService.MAX_RESTART_ATTEMPTS})...`);
+    alert({
+      alertType: 'warning',
+      title: 'Backend stopped unexpectedly',
+      body: `Attempting to restart... (${this.restartAttempts}/${TauriBackendService.MAX_RESTART_ATTEMPTS})`,
+      durationMs: 5000,
+    });
     this.isRecovering = true;
     // Reset started flag so startBackend() will run again
     this.backendStarted = false;
@@ -99,6 +112,13 @@ export class TauriBackendService {
       await this.startBackend();
       this.restartAttempts = 0; // Reset on successful restart
       this.isRecovering = false;
+      console.log('[TauriBackendService] Backend restarted successfully.');
+      alert({
+        alertType: 'success',
+        title: 'Backend restarted',
+        body: 'The local backend is back online.',
+        durationMs: 4000,
+      });
     } catch (err) {
       console.error('[TauriBackendService] Restart failed:', err);
       // Set isRecovering = false BEFORE setStatus to prevent re-triggering scheduleRecovery
