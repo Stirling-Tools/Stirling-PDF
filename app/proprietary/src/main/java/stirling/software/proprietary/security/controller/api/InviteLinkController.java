@@ -60,6 +60,7 @@ public class InviteLinkController {
             @RequestParam(name = "teamId", required = false) Long teamId,
             @RequestParam(name = "expiryHours", required = false) Integer expiryHours,
             @RequestParam(name = "sendEmail", defaultValue = "false") boolean sendEmail,
+            @RequestParam(name = "frontendBaseUrl", required = false) String frontendBaseUrl,
             Principal principal,
             HttpServletRequest request) {
 
@@ -182,19 +183,17 @@ public class InviteLinkController {
 
             inviteTokenRepository.save(inviteToken);
 
-            // Build invite URL
-            // Use configured frontend URL if available, otherwise fall back to backend URL
+            // Build invite URL: system.frontendUrl → caller's frontendBaseUrl → system.backendUrl → request URL
             String baseUrl;
             String configuredFrontendUrl = applicationProperties.getSystem().getFrontendUrl();
+            String configuredBackendUrl = applicationProperties.getSystem().getBackendUrl();
             if (configuredFrontendUrl != null && !configuredFrontendUrl.trim().isEmpty()) {
-                // Use configured frontend URL (remove trailing slash if present)
-                baseUrl =
-                        configuredFrontendUrl.endsWith("/")
-                                ? configuredFrontendUrl.substring(
-                                        0, configuredFrontendUrl.length() - 1)
-                                : configuredFrontendUrl;
+                baseUrl = configuredFrontendUrl.trim();
+            } else if (frontendBaseUrl != null && !frontendBaseUrl.trim().isEmpty()) {
+                baseUrl = frontendBaseUrl.trim();
+            } else if (configuredBackendUrl != null && !configuredBackendUrl.trim().isEmpty()) {
+                baseUrl = configuredBackendUrl.trim();
             } else {
-                // Fall back to backend URL from request
                 baseUrl =
                         request.getScheme()
                                 + "://"
@@ -202,6 +201,9 @@ public class InviteLinkController {
                                 + (request.getServerPort() != 80 && request.getServerPort() != 443
                                         ? ":" + request.getServerPort()
                                         : "");
+            }
+            if (baseUrl.endsWith("/")) {
+                baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
             }
             String inviteUrl = baseUrl + "/invite/" + token;
 

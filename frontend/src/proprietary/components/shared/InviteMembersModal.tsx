@@ -231,6 +231,7 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
         teamId: inviteLinkForm.teamId,
         expiryHours: inviteLinkForm.expiryHours,
         sendEmail: inviteLinkForm.sendEmail,
+        frontendBaseUrl: config?.frontendUrl || window.location.origin,
       });
       setGeneratedInviteLink(response.inviteUrl);
       if (inviteLinkForm.sendEmail && inviteLinkForm.email) {
