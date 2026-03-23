@@ -1561,6 +1561,13 @@ underline = "Souligner"
 undo = "Annuler"
 unsupportedType = "Ce type d’annotation n’est pas entièrement pris en charge pour l’édition."
 width = "Largeur"
+annotationStyle = "Annotation style"
+comment = "Comment"
+comments = "Comments"
+insertText = "Insert Text"
+lineArrow = "Arrow"
+polyline = "Polyline"
+replaceText = "Replace Text"
 
 [app]
 description = "L’alternative gratuite à Adobe Acrobat (10M+ téléchargements)"
@@ -4474,6 +4481,31 @@ dismiss = "Fermer"
 apply = "Appliquer les modifications"
 download = "Télécharger le PDF"
 
+[viewer.comments]
+addComment = "Add comment"
+addCommentPlaceholder = "Add comment..."
+addLink = "Add link"
+addReplyPlaceholder = "Add reply..."
+deleteAnnotationAndComment = "Delete annotation & comment"
+deleteDescription = "This annotation has a comment attached. You can remove just the comment from the sidebar while keeping the annotation, or delete everything."
+deleteTitle = "Remove annotation from comments?"
+goToLink = "Go to link"
+hint = "Place comments with the Comment, Insert Text, or Replace Text tools. They will appear here by page."
+locateAnnotation = "Locate in document"
+moreActions = "More actions"
+nComments = "{{count}} comments"
+oneComment = "1 comment"
+pageLabel = "Page {{page}}"
+placeholder = "Type your comment..."
+removeCommentOnly = "Remove comment only"
+saveReply = "Save reply"
+send = "Send"
+title = "Comments"
+typeComment = "Comment"
+typeInsertText = "Insert Text"
+typeReplaceText = "Replace Text"
+viewComment = "View comment"
+
 [rightRail]
 closeSelected = "Fermer les fichiers sélectionnés"
 selectAll = "Tout sélectionner"
@@ -4506,6 +4538,12 @@ exitRedaction = "Quitter le mode de caviardage"
 save = "Enregistrer"
 downloadAll = "Tout télécharger"
 saveAll = "Tout enregistrer"
+readAloud = "Read Aloud"
+readAloudLanguage = "Language"
+readAloudSpeed = "Speed"
+saveAs = "Save As"
+selectLanguage = "Select language"
+toggleComments = "Comments"
 
 [textAlign]
 left = "Gauche"
@@ -5898,10 +5936,13 @@ logout = "Se déconnecter"
 server = "Serveur"
 title = "Mode de connexion"
 user = "Connecté en tant que"
+localDescription = "You are using the local backend without an account. Some tools requiring cloud processing or a self-hosted server are unavailable."
+signIn = "Sign In"
 
 [settings.connection.mode]
 saas = "Stirling Cloud"
 selfhosted = "Auto-hébergé"
+local = "Local Only"
 
 [settings.planBilling]
 currentPlan = "Offre actuelle"
@@ -6117,6 +6158,7 @@ sso = "Authentification unique"
 submit = "Se connecter"
 subtitle = "Saisissez vos identifiants pour continuer"
 title = "Se connecter"
+skipSignIn = "Continue without signing in"
 
 [setup.login.email]
 label = "Email"
@@ -6152,6 +6194,13 @@ title = "Se connecter à Stirling"
 link = "ou connectez-vous à un compte auto-hébergé"
 subtitle = "Saisissez les identifiants du serveur"
 title = "Se connecter au serveur"
+switchToLocal = "Use local tools instead"
+
+[setup.selfhosted.unreachable]
+continueOffline = "Use local tools instead"
+message = "Could not reach {{url}}. Check that the server is running and accessible."
+retry = "Retry"
+title = "Cannot connect to server"
 
 [setup.server]
 subtitle = "Saisissez l’URL de votre serveur auto‑hébergé"
@@ -6165,6 +6214,7 @@ emptyUrl = "Veuillez saisir une URL de serveur"
 invalidUrl = "Format d’URL invalide. Veuillez saisir une URL valide comme https://your-server.com"
 testFailed = "Échec du test de connexion"
 unreachable = "Connexion au serveur impossible"
+configFetchError = "Failed to fetch server configuration: {{error}}"
 
 [setup.server.error.securityDisabled]
 body = "La connexion n'est pas activée sur ce serveur. Pour vous y connecter, vous devez activer l'authentification :"
@@ -7672,3 +7722,29 @@ messageWithFallback = "Some tools require a server connection."
 showTools = "View unavailable tools ▾"
 title = "Your Stirling-PDF server is unreachable"
 toolNotAvailableLocally = "Your Stirling-PDF server is offline and \"{{endpoint}}\" is not available on the local backend."
+
+[connectionMode.status]
+localOffline = "Offline mode running"
+localOnline = "Offline mode running"
+saas = "Connected to Stirling Cloud"
+selfhostedChecking = "Connected to self-hosted server (checking...)"
+selfhostedOffline = "Self-hosted server unreachable"
+selfhostedOnline = "Connected to self-hosted server"
+
+[localMode]
+toolUnavailable = "This tool requires an account. Sign in to Stirling Cloud or connect to a self-hosted server to use it."
+
+[localMode.banner]
+message = "Sign in to unlock all tools."
+signIn = "Sign In"
+title = "Running locally"
+
+[localMode.toolPicker]
+message = "Sign in to unlock all tools."
+signIn = "Sign In"
+
+[tool]
+endpointUnavailable = "This tool is unavailable on your server."
+endpointUnavailableClickable = "Not available in this mode. Click to sign in."
+invalidParams = "Fill in the required settings."
+noFiles = "Add a file to get started."
