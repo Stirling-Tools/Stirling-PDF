@@ -3,11 +3,13 @@ package stirling.software.proprietary.storage.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +34,7 @@ import stirling.software.proprietary.storage.repository.FileShareAccessRepositor
 import stirling.software.proprietary.storage.repository.FileShareRepository;
 import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepository;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
+import stirling.software.proprietary.workflow.model.WorkflowSession;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -520,5 +523,51 @@ class FileStorageServiceTest {
 
         verify(storedFileRepository, never()).sumStorageBytesByOwner(any());
         verify(storedFileRepository, never()).sumStorageBytesTotal();
+    }
+
+    // -------------------------------------------------------------------------
+    // deleteFile — workflow guard
+    // -------------------------------------------------------------------------
+
+    @Test
+    void deleteFile_fileInActiveWorkflow_throwsBadRequest() {
+        User owner = user(1L);
+        StoredFile f = ownedFile(owner);
+        WorkflowSession session = mock(WorkflowSession.class);
+        when(session.isActive()).thenReturn(true);
+        f.setWorkflowSession(session);
+
+        assertThatThrownBy(() -> service.deleteFile(owner, f))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isEqualTo(400);
+
+        verify(storedFileRepository, never()).delete(any());
+    }
+
+    @Test
+    void deleteFile_fileNotInAnyWorkflow_deletesSuccessfully() {
+        User owner = user(1L);
+        StoredFile f = ownedFile(owner);
+        // no workflow session set
+        when(fileShareRepository.findShareLinks(f)).thenReturn(List.of());
+
+        service.deleteFile(owner, f);
+
+        verify(storedFileRepository).delete(f);
+    }
+
+    @Test
+    void deleteFile_fileInCompletedWorkflow_deletesSuccessfully() {
+        User owner = user(1L);
+        StoredFile f = ownedFile(owner);
+        WorkflowSession session = mock(WorkflowSession.class);
+        when(session.isActive()).thenReturn(false);
+        f.setWorkflowSession(session);
+        when(fileShareRepository.findShareLinks(f)).thenReturn(List.of());
+
+        service.deleteFile(owner, f);
+
+        verify(storedFileRepository).delete(f);
     }
 }

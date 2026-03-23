@@ -48,6 +48,7 @@ public class UserServerCertificateService {
 
     private final UserServerCertificateRepository certificateRepository;
     private final UserRepository userRepository;
+    private final MetadataEncryptionService metadataEncryptionService;
 
     static {
         Security.addProvider(new BouncyCastleProvider());
@@ -150,7 +151,7 @@ public class UserServerCertificateService {
         UserServerCertificateEntity entity = new UserServerCertificateEntity();
         entity.setUser(user);
         entity.setKeystoreData(keystoreBytes);
-        entity.setKeystorePassword(password);
+        entity.setKeystorePassword(metadataEncryptionService.encrypt(password));
         entity.setCertificateType(CertificateType.AUTO_GENERATED);
         entity.setSubjectDn(cert.getSubjectX500Principal().getName());
         entity.setIssuerDn(cert.getIssuerX500Principal().getName());
@@ -193,7 +194,7 @@ public class UserServerCertificateService {
 
         entity.setUser(user);
         entity.setKeystoreData(keystoreBytes);
-        entity.setKeystorePassword(password);
+        entity.setKeystorePassword(metadataEncryptionService.encrypt(password));
         entity.setCertificateType(CertificateType.USER_UPLOADED);
         entity.setSubjectDn(cert.getSubjectX500Principal().getName());
         entity.setIssuerDn(cert.getIssuerX500Principal().getName());
@@ -217,7 +218,7 @@ public class UserServerCertificateService {
         KeyStore keyStore = KeyStore.getInstance("PKCS12");
         keyStore.load(
                 new ByteArrayInputStream(cert.getKeystoreData()),
-                cert.getKeystorePassword().toCharArray());
+                metadataEncryptionService.decrypt(cert.getKeystorePassword()).toCharArray());
         return keyStore;
     }
 
@@ -229,7 +230,7 @@ public class UserServerCertificateService {
                         .findByUserId(userId)
                         .orElseThrow(
                                 () -> new IllegalArgumentException("User certificate not found"));
-        return cert.getKeystorePassword();
+        return metadataEncryptionService.decrypt(cert.getKeystorePassword());
     }
 
     /** Delete user certificate */

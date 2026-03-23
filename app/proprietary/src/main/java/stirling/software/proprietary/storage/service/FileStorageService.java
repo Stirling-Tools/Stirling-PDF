@@ -508,6 +508,7 @@ public class FileStorageService {
         if (!isOwner(file, owner)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the owner can delete");
         }
+        validateWorkflowDeletion(file, owner);
         List<String> storageKeys = collectStorageKeys(file);
         List<FileShare> shareLinks = fileShareRepository.findShareLinks(file);
         for (FileShare share : shareLinks) {
