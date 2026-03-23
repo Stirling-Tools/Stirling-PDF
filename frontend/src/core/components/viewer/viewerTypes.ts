@@ -71,6 +71,9 @@ export type AnnotationToolId =
   | 'inkHighlighter'
   | 'text'
   | 'note'
+  | 'textComment'
+  | 'insertText'
+  | 'replaceText'
   | 'square'
   | 'circle'
   | 'line'
@@ -84,7 +87,6 @@ export type AnnotationToolId =
 // Import for internal use within this file, and re-export for external consumers
 import type { AnnotationEvent } from '@embedpdf/plugin-annotation';
 export type { AnnotationEvent } from '@embedpdf/plugin-annotation';
-export type { PdfAnnotationObject } from '@embedpdf/models';
 
 export type AnnotationPatch = Record<string, unknown>;
 
@@ -142,4 +144,5 @@ export interface AnnotationToolOptions {
   icon?: 'Comment' | 'Key' | 'Note' | 'Help' | 'NewParagraph' | 'Paragraph' | 'Insert';
   contents?: string;
   customData?: Record<string, unknown>;
+  flags?: ('invisible' | 'hidden' | 'print' | 'noZoom' | 'noRotate' | 'noView' | 'readOnly' | 'locked' | 'toggleNoView')[];
 }

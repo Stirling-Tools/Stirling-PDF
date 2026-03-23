@@ -11,6 +11,7 @@ import '@app/components/viewer/AttachmentSidebar.css';
 interface AttachmentSidebarProps {
   visible: boolean;
   thumbnailVisible: boolean;
+  bookmarkVisible: boolean;
   documentCacheKey?: string;
   preloadCacheKeys?: string[];
 }
@@ -32,7 +33,7 @@ const createEntry = (overrides: Partial<AttachmentCacheEntry> = {}): AttachmentC
   ...overrides,
 });
 
-export const AttachmentSidebar = ({ visible, thumbnailVisible, documentCacheKey, preloadCacheKeys = [] }: AttachmentSidebarProps) => {
+export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, documentCacheKey, preloadCacheKeys = [] }: AttachmentSidebarProps) => {
   const { t } = useTranslation();
   const { attachmentActions, hasAttachmentSupport } = useViewer();
   const [searchTerm, setSearchTerm] = useState('');
@@ -286,7 +287,7 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, documentCacheKey,
       className="attachment-sidebar"
       style={{
         position: 'fixed',
-        right: thumbnailVisible ? SIDEBAR_WIDTH : 0,
+        right: `${(thumbnailVisible ? 15 : 0) + (bookmarkVisible ? 15 : 0)}rem`,
         top: 0,
         bottom: 0,
         width: SIDEBAR_WIDTH,
