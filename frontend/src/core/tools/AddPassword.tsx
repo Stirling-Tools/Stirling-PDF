@@ -106,7 +106,8 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       isVisible: !hasResults,
       loadingText: t("loading"),
       onClick: handleAddPassword,
-      disabled: !addPasswordParams.validateParameters() || !hasFiles || !endpointEnabled,
+      endpointEnabled: endpointEnabled,
+      paramsValid: addPasswordParams.validateParameters(),
     },
     review: {
       isVisible: hasResults,

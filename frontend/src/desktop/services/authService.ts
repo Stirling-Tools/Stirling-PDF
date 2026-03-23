@@ -192,6 +192,22 @@ export class AuthService {
     this.notifyListeners();
   }
 
+  /**
+   * Dev-only: treat any stored JWT as expired so cold start and auth checks mimic
+   * "access token dead" (local fallback + sign-in nudge) without editing storage by hand.
+   * Enable with VITE_DEV_SIMULATE_EXPIRED_JWT=true in .env.desktop — only works in dev builds.
+   */
+  private shouldSimulateExpiredJwt(): boolean {
+    // Stop simulating once the user has freshly authenticated in this session
+    // (e.g. after completing re-auth via the sign-in modal). This prevents the
+    // simulation from looping: expired → modal → re-auth → expired → modal…
+    if (this.authStatus === 'authenticated') return false;
+    return (
+      import.meta.env.DEV &&
+      String(import.meta.env.VITE_DEV_SIMULATE_EXPIRED_JWT ?? '').toLowerCase() === 'true'
+    );
+  }
+
   async completeSupabaseSession(accessToken: string, serverUrl: string): Promise<UserInfo> {
     if (!accessToken || !accessToken.trim()) {
       throw new Error('Invalid access token');
@@ -455,6 +471,12 @@ export class AuthService {
 
       // Cache token if found (backend will validate expiry)
       if (token && token.trim().length > 0) {
+        if (this.shouldSimulateExpiredJwt()) {
+          console.warn(
+            '[Desktop AuthService] DEV: VITE_DEV_SIMULATE_EXPIRED_JWT — ignoring stored access token (simulates expiry)'
+          );
+          return null;
+        }
         this.cachedToken = token;
         console.log('[Desktop AuthService] ✅ Token cached in memory after retrieval');
         return token;
@@ -507,6 +529,12 @@ export class AuthService {
   }
 
   isTokenExpiringSoon(token: string, leewaySeconds = 30): boolean {
+    if (this.shouldSimulateExpiredJwt()) {
+      console.warn(
+        '[Desktop AuthService] DEV: VITE_DEV_SIMULATE_EXPIRED_JWT — treating token as expired (isTokenExpiringSoon)'
+      );
+      return true;
+    }
     try {
       const parts = token.split('.');
       if (parts.length < 2) {
@@ -718,8 +746,11 @@ export class AuthService {
       this.setAuthStatus('unauthenticated', null);
       console.log('[Desktop AuthService] Auth state initialized as unauthenticated');
 
-      // Defensive: ensure any partial tokens are purged to prevent auto-login loops
-      await this.clearTokenEverywhere().catch(() => {});
+      // Defensive: ensure any partial tokens are purged to prevent auto-login loops.
+      // Skip when simulating expiry — the token is real and must not be destroyed.
+      if (!this.shouldSimulateExpiredJwt()) {
+        await this.clearTokenEverywhere().catch(() => {});
+      }
     }
   }
 

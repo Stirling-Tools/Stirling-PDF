@@ -35,8 +35,6 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
       url = `https://${url}`;
       setCustomUrl(url); // Update the input field
     }
-    localStorage.setItem('server_url', url);
-
     // Validate URL format
     try {
       const urlObj = new URL(url);
@@ -150,7 +148,7 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
         console.error('[ServerSelection] Configuration fetch error details:', errorMessage);
 
         setTestError(
-          t('setup.server.error.configFetch', 'Failed to fetch server configuration: {{error}}', {
+          t('setup.server.error.configFetchError', 'Failed to fetch server configuration: {{error}}', {
             error: errorMessage
           })
         );
@@ -158,7 +156,8 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({ onSelect, load
         return;
       }
 
-      // Connection successful - pass URL, OAuth providers, and login method
+      // Connection successful — persist URL so it pre-fills on next sign-in
+      localStorage.setItem('server_url', url);
       console.log('[ServerSelection] ✅ Server selection complete, proceeding to login');
       onSelect({
         url,
