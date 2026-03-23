@@ -104,7 +104,6 @@ export class ConnectionModeService {
         // non-null server_config; locked provisioned installs are excluded by the
         // lock_connection_mode guard.
         config.mode = 'local';
-        localStorage.setItem(LOCAL_MODE_STORAGE_KEY, 'true');
       }
 
       this.currentConfig = config;
