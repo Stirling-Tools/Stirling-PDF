@@ -45,7 +45,8 @@ const ExtractPages = (props: BaseToolProps) => {
       loadingText: t("loading"),
       onClick: base.handleExecute,
       isVisible: !base.hasResults,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+      endpointEnabled: base.endpointEnabled,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,

@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Stack, Text, Button, Alert, Loader, Center } from '@mantine/core';
 import { DesktopAuthLayout } from '@app/components/SetupWizard/DesktopAuthLayout';
 import { SaaSLoginScreen } from '@app/components/SetupWizard/SaaSLoginScreen';
 import { SaaSSignupScreen } from '@app/components/SetupWizard/SaaSSignupScreen';
 import { ServerSelectionScreen } from '@app/components/SetupWizard/ServerSelectionScreen';
 import { SelfHostedLoginScreen } from '@app/components/SetupWizard/SelfHostedLoginScreen';
-import { ServerConfig, connectionModeService } from '@app/services/connectionModeService';
+import { ServerConfig, SSOProviderConfig, connectionModeService } from '@app/services/connectionModeService';
 import { AuthServiceError, authService, UserInfo } from '@app/services/authService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { STIRLING_SAAS_URL } from '@app/constants/connection';
@@ -21,9 +22,13 @@ enum SetupStep {
 
 interface SetupWizardProps {
   onComplete: () => void;
+  /** Omit the DesktopAuthLayout wrapper — use when rendering inside a modal */
+  noLayout?: boolean;
+  /** Called when the user dismisses the wizard (modal close button) */
+  onClose?: () => void;
 }
 
-export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
+export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete, noLayout = false, onClose }) => {
   const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState<SetupStep>(SetupStep.SaaSLogin);
   const [serverConfig, setServerConfig] = useState<ServerConfig | null>({ url: STIRLING_SAAS_URL });
@@ -32,6 +37,8 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const [selfHostedMfaCode, setSelfHostedMfaCode] = useState('');
   const [selfHostedMfaRequired, setSelfHostedMfaRequired] = useState(false);
   const [lockConnectionMode, setLockConnectionMode] = useState(false);
+  const [lockedServerUnreachable, setLockedServerUnreachable] = useState(false);
+  const [lockedServerChecking, setLockedServerChecking] = useState(false);
 
   const handleSaaSLogin = async (username: string, password: string) => {
     if (!serverConfig) {
@@ -77,6 +84,24 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     } catch (err) {
       console.error('SaaS OAuth login completion failed:', err);
       setError(err instanceof Error ? err.message : 'Failed to complete SaaS login');
+      setLoading(false);
+    }
+  };
+
+  const handleLocalMode = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      // Save the server URL so it pre-fills on reconnect
+      if (serverConfig?.url) {
+        localStorage.setItem('server_url', serverConfig.url);
+      }
+      await connectionModeService.switchToLocal();
+      tauriBackendService.startBackend().catch(console.error);
+      onComplete();
+    } catch (err) {
+      console.error('Failed to continue in local mode:', err);
+      setError(err instanceof Error ? err.message : String(err));
       setLoading(false);
     }
   };
@@ -285,58 +310,73 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     }
   };
 
-  useEffect(() => {
-    const loadConfig = async () => {
-      const currentConfig = await connectionModeService.getCurrentConfig();
-      if (currentConfig.lock_connection_mode && currentConfig.server_config?.url) {
-        setLockConnectionMode(true);
+  const loadLockedConfig = useCallback(async () => {
+    const currentConfig = await connectionModeService.getCurrentConfig();
+    if (!currentConfig.lock_connection_mode) return;
+    // server_config may be null when the user switched to local mode from a locked deployment.
+    // Fall back to the URL saved by switchToLocal() so the wizard still shows locked login.
+    const serverUrl = currentConfig.server_config?.url
+      || localStorage.getItem('stirling-provisioned-server-url');
+    if (!serverUrl) return;
 
-        // Re-fetch OAuth providers for the saved server URL
-        const savedUrl = currentConfig.server_config.url.replace(/\/+$/, ''); // Remove trailing slashes
-        let updatedConfig = { ...currentConfig.server_config };
+    setLockConnectionMode(true);
+    setLockedServerUnreachable(false);
+    setLockedServerChecking(true);
 
-        try {
-          console.log('[SetupWizard] Re-fetching OAuth providers for saved server:', savedUrl);
-          const response = await fetch(`${savedUrl}/api/v1/proprietary/ui-data/login`);
+    const savedUrl = serverUrl.replace(/\/+$/, '');
+    let updatedConfig: ServerConfig = { ...(currentConfig.server_config ?? { url: savedUrl }) };
 
-          if (response.ok) {
-            const data = await response.json();
-            const enabledProviders: any[] = [];
-            const providerEntries = Object.entries(data.providerList || {});
+    try {
+      const response = await fetch(`${savedUrl}/api/v1/proprietary/ui-data/login`);
 
-            providerEntries.forEach(([path, label]) => {
-              const id = path.split('/').pop();
-              if (id) {
-                enabledProviders.push({
-                  id,
-                  path,
-                  label: typeof label === 'string' ? label : undefined,
-                });
-              }
+      if (response.ok) {
+        const data = await response.json();
+        const enabledProviders: SSOProviderConfig[] = [];
+        const providerEntries = Object.entries(data.providerList || {});
+
+        providerEntries.forEach(([path, label]) => {
+          const id = path.split('/').pop();
+          if (id) {
+            enabledProviders.push({
+              id,
+              path,
+              label: typeof label === 'string' ? label : undefined,
             });
-
-            updatedConfig = {
-              ...updatedConfig,
-              enabledOAuthProviders: enabledProviders.length > 0 ? enabledProviders : undefined,
-              loginMethod: data.loginMethod || 'all',
-            };
-
-            console.log('[SetupWizard] Updated config with OAuth providers:', updatedConfig);
           }
-        } catch (err) {
-          console.error('[SetupWizard] Failed to re-fetch OAuth providers:', err);
-        }
+        });
+
+        updatedConfig = {
+          ...updatedConfig,
+          enabledOAuthProviders: enabledProviders.length > 0 ? enabledProviders : undefined,
+          loginMethod: data.loginMethod || 'all',
+        };
 
         setServerConfig(updatedConfig);
+        setLockedServerChecking(false);
+        setActiveStep(SetupStep.SelfHostedLogin);
+      } else {
+        // Server responded but with an error — still show login form
+        updatedConfig = { ...updatedConfig, loginMethod: 'all' };
+        setServerConfig(updatedConfig);
+        setLockedServerChecking(false);
         setActiveStep(SetupStep.SelfHostedLogin);
       }
-    };
-
-    void loadConfig();
+    } catch (err) {
+      // Network error — server is unreachable
+      console.error('[SetupWizard] Server unreachable:', err);
+      setServerConfig(updatedConfig);
+      setLockedServerChecking(false);
+      setLockedServerUnreachable(true);
+      setActiveStep(SetupStep.SelfHostedLogin);
+    }
   }, []);
 
-  return (
-    <DesktopAuthLayout>
+  useEffect(() => {
+    void loadLockedConfig();
+  }, [loadLockedConfig]);
+
+  const wizardContent = (
+    <>
       {/* Step Content */}
       {!lockConnectionMode && activeStep === SetupStep.SaaSLogin && (
         <SaaSLoginScreen
@@ -345,6 +385,8 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
           onOAuthSuccess={handleSaaSLoginOAuth}
           onSelfHostedClick={handleSelfHostedClick}
           onSwitchToSignup={handleSwitchToSignup}
+          onSkipSignIn={handleLocalMode}
+          onClose={onClose}
           loading={loading}
           error={error}
         />
@@ -367,19 +409,68 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
         />
       )}
 
-      {activeStep === SetupStep.SelfHostedLogin && (
-        <SelfHostedLoginScreen
-          serverUrl={serverConfig?.url || ''}
-          enabledOAuthProviders={serverConfig?.enabledOAuthProviders}
-          loginMethod={serverConfig?.loginMethod}
-          onLogin={handleSelfHostedLogin}
-          onOAuthSuccess={handleSelfHostedOAuthSuccess}
-          mfaCode={selfHostedMfaCode}
-          setMfaCode={setSelfHostedMfaCode}
-          requiresMfa={selfHostedMfaRequired}
-          loading={loading}
-          error={error}
-        />
+      {lockConnectionMode && lockedServerChecking && (
+        <Center py="xl">
+          <Loader size="md" />
+        </Center>
+      )}
+
+      {activeStep === SetupStep.SelfHostedLogin && lockedServerUnreachable && !lockedServerChecking && (
+        <Stack gap="md" style={{ padding: '0.5rem 0' }}>
+          <Alert color="orange" title={t('setup.selfhosted.unreachable.title', 'Cannot connect to server')}>
+            <Text size="sm">
+              {t('setup.selfhosted.unreachable.message', 'Could not reach {{url}}. Check that the server is running and accessible.', {
+                url: serverConfig?.url,
+              })}
+            </Text>
+          </Alert>
+          <Button
+            variant="filled"
+            color="blue"
+            fullWidth
+            loading={loading}
+            onClick={() => void loadLockedConfig()}
+          >
+            {t('setup.selfhosted.unreachable.retry', 'Retry')}
+          </Button>
+          <Button
+            variant="subtle"
+            color="white"
+            fullWidth
+            onClick={handleLocalMode}
+          >
+            {t('setup.selfhosted.unreachable.continueOffline', 'Use local tools instead')}
+          </Button>
+        </Stack>
+      )}
+
+      {activeStep === SetupStep.SelfHostedLogin && !lockedServerUnreachable && !lockedServerChecking && (
+        <>
+          <SelfHostedLoginScreen
+            serverUrl={serverConfig?.url || ''}
+            enabledOAuthProviders={serverConfig?.enabledOAuthProviders}
+            loginMethod={serverConfig?.loginMethod}
+            onLogin={handleSelfHostedLogin}
+            onOAuthSuccess={handleSelfHostedOAuthSuccess}
+            mfaCode={selfHostedMfaCode}
+            setMfaCode={setSelfHostedMfaCode}
+            requiresMfa={selfHostedMfaRequired}
+            loading={loading}
+            error={error}
+          />
+          {lockConnectionMode && (
+            <div className="navigation-link-container" style={{ marginTop: '1.5rem' }}>
+              <button
+                type="button"
+                onClick={handleLocalMode}
+                className="navigation-link-button"
+                disabled={loading}
+              >
+                {t('setup.selfhosted.switchToLocal', 'Use local tools instead')}
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {/* Back Button */}
@@ -394,6 +485,16 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
           </button>
         </div>
       )}
+    </>
+  );
+
+  if (noLayout) {
+    return <div style={{ padding: '2rem' }}>{wizardContent}</div>;
+  }
+
+  return (
+    <DesktopAuthLayout>
+      {wizardContent}
     </DesktopAuthLayout>
   );
 };

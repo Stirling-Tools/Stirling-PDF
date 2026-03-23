@@ -398,6 +398,9 @@ pub async fn start_backend(
         ConnectionMode::SelfHosted => {
             add_log("🌐 Running in Self-Hosted mode - starting local backend (for hybrid execution support)".to_string());
         }
+        ConnectionMode::Local => {
+            add_log("💻 Running in Local-only mode - starting local backend".to_string());
+        }
     }
 
     // Check if backend is already running or starting

@@ -2,7 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { fetch } from '@tauri-apps/plugin-http';
 import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
 
-export type ConnectionMode = 'saas' | 'selfhosted';
+export type ConnectionMode = 'saas' | 'selfhosted' | 'local';
 
 export interface SSOProviderConfig {
   id: string;
@@ -35,6 +35,8 @@ export interface ConnectionTestResult {
   errorCode?: string;
   diagnostics?: DiagnosticResult[];
 }
+
+export const LOCAL_MODE_STORAGE_KEY = 'stirling-local-mode';
 
 export class ConnectionModeService {
   private static instance: ConnectionModeService;
@@ -82,12 +84,35 @@ export class ConnectionModeService {
   private async loadConfig(): Promise<void> {
     try {
       const config = await invoke<ConnectionConfig>('get_connection_config');
+
+      const localFlag = localStorage.getItem(LOCAL_MODE_STORAGE_KEY);
+
+      if (config.mode === 'saas' && localFlag === 'true') {
+        // User previously chose local-only mode.
+        config.mode = 'local';
+      } else if (
+        config.mode === 'saas' &&
+        config.server_config === null &&
+        !config.lock_connection_mode &&
+        localFlag === null
+      ) {
+        // Fresh install: Rust has never been given a server URL, the connection
+        // mode has never been explicitly set (no localStorage flag either direction),
+        // and there is no provisioning lock. Default to local so the user sees
+        // the bundled backend instead of a broken SaaS-mode UI.
+        // MSI installs with STIRLING_SERVER_URL are excluded because they have a
+        // non-null server_config; locked provisioned installs are excluded by the
+        // lock_connection_mode guard.
+        config.mode = 'local';
+      }
+
       this.currentConfig = config;
       this.configLoadedOnce = true;
     } catch (error) {
       console.error('Failed to load connection config:', error);
-      // Default to SaaS mode on error
-      this.currentConfig = { mode: 'saas', server_config: null, lock_connection_mode: false };
+      // Default to local mode on error — safer than showing SaaS UI for a
+      // desktop app whose bundled backend is always available.
+      this.currentConfig = { mode: 'local', server_config: null, lock_connection_mode: false };
       this.configLoadedOnce = true;
     }
   }
@@ -96,6 +121,9 @@ export class ConnectionModeService {
     if (this.currentConfig?.lock_connection_mode) {
       throw new Error('Connection mode is locked by provisioning');
     }
+
+    // Clear local-only flag if switching to a real account
+    localStorage.removeItem(LOCAL_MODE_STORAGE_KEY);
 
     console.log('Switching to SaaS mode');
 
@@ -117,7 +145,37 @@ export class ConnectionModeService {
     console.log('Switched to SaaS mode successfully');
   }
 
+  async switchToLocal(): Promise<void> {
+    console.log('Switching to local-only mode');
+
+    // Persist local mode preference via localStorage so no Rust enum change is needed.
+    // The Rust store records this as 'saas' (same bundled-backend behaviour); we overlay
+    // the 'local' distinction purely on the TypeScript side.
+    localStorage.setItem(LOCAL_MODE_STORAGE_KEY, 'true');
+
+    // When a locked provisioned deployment falls back to local, preserve the server URL
+    // so the SetupWizard can pre-fill it if the user tries to sign in again.
+    if (this.currentConfig?.lock_connection_mode && this.currentConfig.server_config?.url) {
+      localStorage.setItem('stirling-provisioned-server-url', this.currentConfig.server_config.url);
+    }
+
+    await invoke('set_connection_mode', {
+      mode: 'saas',
+      serverConfig: null,
+    });
+
+    this.currentConfig = { mode: 'local', server_config: null, lock_connection_mode: this.currentConfig?.lock_connection_mode ?? false };
+
+    // Clear endpoint availability cache when mode changes
+    endpointAvailabilityService.clearCache();
+
+    this.notifyListeners();
+  }
+
   async switchToSelfHosted(serverConfig: ServerConfig): Promise<void> {
+    // Clear local-only flag if switching to a real account
+    localStorage.removeItem(LOCAL_MODE_STORAGE_KEY);
+
     console.log('Switching to self-hosted mode:', serverConfig);
 
     await invoke('set_connection_mode', {

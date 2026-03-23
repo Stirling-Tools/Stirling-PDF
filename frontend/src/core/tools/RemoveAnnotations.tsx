@@ -37,7 +37,7 @@ const RemoveAnnotations = (props: BaseToolProps) => {
       isVisible: !base.hasResults,
       loadingText: t("loading", "Processing..."),
       onClick: base.handleExecute,
-      disabled: !base.params.validateParameters() || !base.hasFiles,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,

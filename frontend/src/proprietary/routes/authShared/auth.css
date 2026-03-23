@@ -193,12 +193,12 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.875rem 1.5rem; /* 14px 24px */
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--auth-input-border-light-only);
   border-radius: 999px;
-  background-color: #ffffff;
+  background-color: var(--auth-card-bg-light-only);
   font-size: 1rem; /* 16px */
   font-weight: 600;
-  color: #1f2937;
+  color: var(--auth-text-primary-light-only);
   cursor: pointer;
   gap: 1rem; /* 16px */
   font-family: inherit;
@@ -207,10 +207,10 @@
 }
 
 .oauth-button-vertical:hover:not(:disabled) {
-  background-color: #f9fafb;
+  background-color: var(--hover-bg);
   box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.12);
   transform: translateY(-1px);
-  border-color: #d1d5db;
+  border-color: var(--border-default);
 }
 
 .oauth-button-vertical-tinted {
@@ -367,8 +367,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-muted);
+  border: 1px solid var(--auth-input-border-light-only);
 }
 
 .oauth-button-vertical-tinted .oauth-icon-wrapper {
@@ -407,11 +407,11 @@
 }
 
 .sso-demo-card {
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--auth-input-border-light-only);
   border-radius: 1rem;
   padding: 1rem;
-  background: #ffffff;
-  box-shadow: 0 0.25rem 0.75rem rgba(15, 23, 42, 0.06);
+  background: var(--auth-card-bg-light-only);
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.06);
 }
 
 .sso-demo-title {
@@ -568,13 +568,13 @@
   text-decoration: underline;
   cursor: pointer;
   font-size: 0.875rem; /* 14px */
-  color: #000;
+  color: var(--auth-text-primary-light-only);
 }
 
 .auth-dot-black {
   opacity: 0.5;
   padding: 0 0.5rem;
-  color: #000;
+  color: var(--auth-text-primary-light-only);
 }
 
 /* Email login button - red CTA style matching SaaS version */

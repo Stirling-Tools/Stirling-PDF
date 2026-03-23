@@ -6,6 +6,7 @@ use std::sync::Mutex;
 pub enum ConnectionMode {
     SaaS,
     SelfHosted,
+    Local,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

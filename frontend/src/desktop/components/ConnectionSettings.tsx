@@ -3,7 +3,7 @@ import { Stack, Card, Badge, Button, Text, Group } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { connectionModeService, ConnectionConfig } from '@app/services/connectionModeService';
 import { authService, UserInfo } from '@app/services/authService';
-import { STIRLING_SAAS_URL } from '@app/constants/connection';
+import { OPEN_SIGN_IN_EVENT } from '@app/constants/signInEvents';
 
 export const ConnectionSettings: React.FC = () => {
   const { t } = useTranslation();
@@ -24,36 +24,40 @@ export const ConnectionSettings: React.FC = () => {
     };
 
     loadConfig();
+
+    const unsubscribe = connectionModeService.subscribeToModeChanges(loadConfig);
+    return unsubscribe;
   }, []);
 
   const handleLogout = async () => {
     try {
       setLoading(true);
-      await authService.logout();
-
-      if (!config?.lock_connection_mode) {
-        // Switch to SaaS mode
-        await connectionModeService.switchToSaaS(STIRLING_SAAS_URL);
-
-        // Reset setup completion to force login screen on reload
-        await connectionModeService.resetSetupCompletion();
+      // Save server URL before clearing so user can easily reconnect (self-hosted only)
+      if (config?.mode === 'selfhosted' && config?.server_config?.url) {
+        localStorage.setItem('server_url', config.server_config.url);
       }
+      await authService.logout();
+      // Always switch to local after logout so the app remains usable
+      await connectionModeService.switchToLocal();
 
       // Reload config
       const newConfig = await connectionModeService.getCurrentConfig();
       setConfig(newConfig);
       setUserInfo(null);
 
-      // Clear URL to home page before reload so we don't return to settings after re-login
+      // Clear URL to home page so we don't return to settings after re-login
       window.history.replaceState({}, '', '/');
-
-      // Reload the page to clear all state and show login screen
-      window.location.reload();
+      // No reload needed — AppProviders remounts the SaaS provider tree via
+      // connectionModeService subscription when mode changes to local.
     } catch (error) {
       console.error('Logout failed:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSignIn = () => {
+    window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT));
   };
 
   if (!config) {
@@ -66,12 +70,26 @@ export const ConnectionSettings: React.FC = () => {
         <Stack gap="md">
           <Group justify="space-between">
             <Text fw={600}>{t('settings.connection.title', 'Connection Mode')}</Text>
-            <Badge color={config.mode === 'saas' ? 'blue' : 'green'} variant="light">
+            <Badge
+              color={config.mode === 'saas' ? 'blue' : config.mode === 'local' ? 'white' : 'green'}
+              variant="light"
+            >
               {config.mode === 'saas'
                 ? t('settings.connection.mode.saas', 'Stirling Cloud')
-                : t('settings.connection.mode.selfhosted', 'Self-Hosted')}
+                : config.mode === 'local'
+                  ? t('settings.connection.mode.local', 'Local Only')
+                  : t('settings.connection.mode.selfhosted', 'Self-Hosted')}
             </Badge>
           </Group>
+
+          {config.mode === 'local' && (
+            <Text size="sm" c="dimmed">
+              {t(
+                'settings.connection.localDescription',
+                'You are using the local backend without an account. Some tools requiring cloud processing or a self-hosted server are unavailable.'
+              )}
+            </Text>
+          )}
 
           {(config.mode === 'saas' || config.mode === 'selfhosted') && config.server_config && (
             <>
@@ -99,9 +117,15 @@ export const ConnectionSettings: React.FC = () => {
           )}
 
           <Group mt="md">
-            <Button onClick={handleLogout} color="red" variant="light" disabled={loading}>
-              {t('settings.connection.logout', 'Log Out')}
-            </Button>
+            {config.mode === 'local' ? (
+              <Button onClick={handleSignIn} color="blue" variant="light">
+                {t('settings.connection.signIn', 'Sign In')}
+              </Button>
+            ) : (
+              <Button onClick={handleLogout} color="red" variant="light" disabled={loading}>
+                {t('settings.connection.logout', 'Log Out')}
+              </Button>
+            )}
           </Group>
         </Stack>
       </Card>

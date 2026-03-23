@@ -199,7 +199,8 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
       isVisible: !hasResults,
       loadingText: t("loading"),
       onClick: handleAddWatermark,
-      disabled: !watermarkParams.validateParameters() || !hasFiles || !endpointEnabled,
+      endpointEnabled: endpointEnabled,
+      paramsValid: watermarkParams.validateParameters(),
     },
     review: {
       isVisible: hasResults,

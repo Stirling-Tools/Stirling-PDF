@@ -51,9 +51,10 @@ export function SelfHostedOfflineBanner() {
     () => !!tauriBackendService.getBackendUrl()
   );
 
-  // Load connection mode once on mount
+  // Load connection mode and keep it live via subscription
   useEffect(() => {
     void connectionModeService.getCurrentMode().then(setConnectionMode);
+    return connectionModeService.subscribeToModeChanges(config => setConnectionMode(config.mode));
   }, []);
 
   // Subscribe to self-hosted server status changes

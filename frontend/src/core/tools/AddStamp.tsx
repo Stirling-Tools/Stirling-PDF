@@ -167,7 +167,8 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       isVisible: !hasResults,
       loadingText: t('loading'),
       onClick: handleExecute,
-      disabled: !params.validateParameters() || !hasFiles || !endpointEnabled,
+      endpointEnabled: endpointEnabled,
+      paramsValid: params.validateParameters(),
     },
     review: {
       isVisible: hasResults,

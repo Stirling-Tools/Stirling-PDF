@@ -11,7 +11,7 @@ import { useHotkeys } from "@app/contexts/HotkeyContext";
 import HotkeyDisplay from "@app/components/hotkeys/HotkeyDisplay";
 import FavoriteStar from "@app/components/tools/toolPicker/FavoriteStar";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { ToolId } from "@app/types/toolId";
+import type { ToolId } from "@app/types/toolId";
 import { getToolDisabledReason, getDisabledLabel } from "@app/components/tools/fullscreen/shared";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { CloudBadge } from "@app/components/shared/CloudBadge";
@@ -26,15 +26,21 @@ interface ToolButtonProps {
   disableNavigation?: boolean;
   matchedSynonym?: string;
   hasStars?: boolean;
+  /** Called when an unavailable tool is clicked; if provided, overrides the default no-op */
+  onUnavailableClick?: () => void;
 }
 
-const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect, disableNavigation = false, matchedSynonym, hasStars = false }) => {
+const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect, disableNavigation = false, matchedSynonym, hasStars = false, onUnavailableClick }) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const premiumEnabled = config?.premiumEnabled;
   const { isFavorite, toggleFavorite, toolAvailability } = useToolWorkflow();
   const disabledReason = getToolDisabledReason(id, tool, toolAvailability, premiumEnabled);
   const isUnavailable = disabledReason !== null;
+  // If onUnavailableClick is provided for a non-comingSoon tool, render as "cloud-available":
+  // full opacity, cloud badge, normal tooltip — clicking still fires onUnavailableClick (e.g. sign-in).
+  const showAsCloudAvailable = isUnavailable && !!onUnavailableClick && disabledReason !== 'comingSoon' && disabledReason !== 'selfHostedOffline';
+  const visuallyUnavailable = isUnavailable && !showAsCloudAvailable;
   const { hotkeys } = useHotkeys();
   const binding = hotkeys[id];
   const { getToolNavigation } = useToolNavigation();
@@ -46,7 +52,10 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
   const usesCloud = useWillUseCloud(endpointString);
 
   const handleClick = (id: ToolId) => {
-    if (isUnavailable) return;
+    if (isUnavailable) {
+      onUnavailableClick?.();
+      return;
+    }
     if (tool.link) {
       // Open external link in new tab
       window.open(tool.link, '_blank', 'noopener,noreferrer');
@@ -62,7 +71,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
   const { key: disabledKey, fallback: disabledFallback } = getDisabledLabel(disabledReason);
   const disabledMessage = t(disabledKey, disabledFallback);
 
-  const tooltipContent = isUnavailable
+  const tooltipContent = visuallyUnavailable
     ? (<span><strong>{disabledMessage}</strong> {tool.description}</span>)
     : (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
@@ -84,7 +93,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
     <>
       <ToolIcon
         icon={tool.icon}
-        opacity={isUnavailable ? 0.25 : 1}
+        opacity={visuallyUnavailable ? 0.25 : 1}
       />
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', flex: 1, overflow: 'visible' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
@@ -93,19 +102,19 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
             lines={1}
             minimumFontScale={0.8}
             as="span"
-            style={{ display: 'inline-block', maxWidth: '100%', opacity: isUnavailable ? 0.25 : 1 }}
+            style={{ display: 'inline-block', maxWidth: '100%', opacity: visuallyUnavailable ? 0.25 : 1 }}
           />
           {tool.versionStatus === 'alpha' && (
             <Badge
               size="xs"
               variant="light"
               color="orange"
-              style={{ flexShrink: 0, opacity: isUnavailable ? 0.25 : 1 }}
+              style={{ flexShrink: 0, opacity: visuallyUnavailable ? 0.25 : 1 }}
             >
               {t('toolPanel.alpha', 'Alpha')}
             </Badge>
           )}
-          {usesCloud && !isUnavailable && (
+          {(usesCloud && !visuallyUnavailable) && (
             <CloudBadge />
           )}
         </div>
@@ -113,7 +122,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
           <span style={{
             fontSize: '0.75rem',
             color: 'var(--mantine-color-dimmed)',
-            opacity: isUnavailable ? 0.25 : 1,
+            opacity: visuallyUnavailable ? 0.25 : 1,
             marginTop: '1px',
             overflow: 'visible',
             whiteSpace: 'nowrap'
@@ -195,7 +204,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
         root: {
           borderRadius: 0,
           color: "var(--tools-text-and-icon-color)",
-          cursor: isUnavailable ? 'not-allowed' : undefined,
+          cursor: visuallyUnavailable ? 'not-allowed' : undefined,
           overflow: 'visible'
         },
         label: { overflow: 'visible' }
@@ -205,7 +214,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({ id, tool, isSelected, onSelect,
     </Button>
   );
 
-  const star = hasStars && !isUnavailable ? (
+  const star = hasStars && !visuallyUnavailable ? (
     <FavoriteStar
       isFavorite={fav}
       onToggle={() => toggleFavorite(id as ToolId)}

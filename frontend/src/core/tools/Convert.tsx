@@ -152,7 +152,8 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       loadingText: t("convert.converting", "Converting..."),
       onClick: handleConvert,
       isVisible: !hasResults,
-      disabled: !convertParams.validateParameters() || !hasFiles || !endpointEnabled,
+      endpointEnabled: endpointEnabled,
+      paramsValid: convertParams.validateParameters(),
       testId: "convert-button",
     },
     review: {

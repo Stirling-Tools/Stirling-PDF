@@ -30,6 +30,7 @@ export function useBackendHealth() {
 
   useEffect(() => {
     void connectionModeService.getCurrentMode().then(setConnectionMode);
+    return connectionModeService.subscribeToModeChanges(config => setConnectionMode(config.mode));
   }, []);
 
   useEffect(() => {

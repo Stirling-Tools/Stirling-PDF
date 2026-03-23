@@ -12,6 +12,16 @@ export enum ToolType {
 }
 
 /**
+ * Reason the execute button is disabled. Resolved to a translated tooltip by OperationButton.
+ * null means the button is enabled.
+ */
+export type ExecuteDisabledReason =
+  | 'endpointUnavailable'
+  | 'noFiles'
+  | 'invalidParams'
+  | null;
+
+/**
  * Result from custom processor with optional metadata about input consumption.
  */
 export interface CustomProcessorResult {

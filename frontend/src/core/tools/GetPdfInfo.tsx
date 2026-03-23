@@ -163,11 +163,8 @@ const GetPdfInfo = (props: BaseToolProps) => {
       text: t('getPdfInfo.submit', 'Generate'),
       loadingText: t('loading', 'Loading...'),
       onClick: base.handleExecute,
-      disabled:
-        !base.params.validateParameters() ||
-        !base.hasFiles ||
-        base.operation.isLoading ||
-        !base.endpointEnabled,
+      endpointEnabled: base.endpointEnabled,
+      paramsValid: base.params.validateParameters(),
       isVisible: true,
     },
     review: {
