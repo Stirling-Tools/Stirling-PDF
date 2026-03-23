@@ -12,6 +12,7 @@ import { automationStorage } from '@app/services/automationStorage';
 import { folderStorage } from '@app/services/folderStorage';
 import { fileStorage } from '@app/services/fileStorage';
 import { folderRunStateStorage } from '@app/services/folderRunStateStorage';
+import { folderRetryScheduleStorage } from '@app/services/folderRetryScheduleStorage';
 import { smartFolderStorage } from '@app/services/smartFolderStorage';
 import { executeAutomationSequence } from '@app/utils/automationExecutor';
 import {
@@ -52,6 +53,11 @@ export async function resolveInputFile(
   return { inputFileId: newFileId, ownedByFolder: true };
 }
 
+/** Fire-and-forget: tell the service worker a new retry has been scheduled. */
+function notifySW(message: { type: string }): void {
+  navigator.serviceWorker?.controller?.postMessage(message);
+}
+
 /**
  * Returns a `runPipeline` function that executes a Watch Folder's automation
  * against a single input file, persisting outputs and updating folder metadata.
@@ -59,18 +65,13 @@ export async function resolveInputFile(
  * Assumes the file has already been registered in folderStorage by the caller
  * (so the UI shows it immediately). Internally manages a ref-based guard to
  * prevent the same fileId from being processed concurrently.
+ *
+ * Auto-retry: failed runs are persisted to IndexedDB via folderRetryScheduleStorage.
+ * A service worker schedules a timer and notifies the main thread when due; the main
+ * thread also drains on mount and visibilitychange so retries are never permanently lost.
  */
 export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
   const processingRef = useRef<Set<string>>(new Set());
-  // Tracks scheduled retry timeouts so they can be cancelled on unmount
-  const retryTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-
-  useEffect(() => {
-    return () => {
-      for (const timer of retryTimersRef.current.values()) clearTimeout(timer);
-      retryTimersRef.current.clear();
-    };
-  }, []);
 
   const runPipeline = useCallback(
     async (
@@ -105,7 +106,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
         const resultFiles = await executeAutomationSequence(
           automation,
           [file],
-          toolRegistry,
+          toolRegistry as ToolRegistry,
           noop,
           noop,
           noop
@@ -199,26 +200,17 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
         });
 
         if (willRetry) {
-          // Cancel any existing timer for this file before scheduling a new one
-          const existing = retryTimersRef.current.get(inputFileId);
-          if (existing) clearTimeout(existing);
-
-          const timer = setTimeout(async () => {
-            retryTimersRef.current.delete(inputFileId);
-            // Read fresh folder state — it may have been paused or deleted since scheduling
-            const freshFolder = await smartFolderStorage.getFolder(folder.id);
-            if (!freshFolder || freshFolder.isPaused) return;
-            const freshFile = await fileStorage.getStirlingFile(inputFileId as FileId);
-            if (!freshFile) return;
-            // Reset to pending so the UI reflects "queued again"
-            await folderStorage.updateFileMetadata(folder.id, inputFileId, {
-              status: 'pending',
-              nextRetryAt: undefined,
-            });
-            runPipeline(freshFolder, freshFile, inputFileId, prev?.ownedByFolder ?? ownedByFolder);
-          }, retryDelayMs);
-
-          retryTimersRef.current.set(inputFileId, timer);
+          // Persist the retry schedule in IDB so it survives page close.
+          // The service worker picks this up and notifies the main thread when due;
+          // the main thread also drains on mount and visibilitychange as a fallback.
+          await folderRetryScheduleStorage.schedule(
+            folder.id,
+            inputFileId,
+            Date.now() + retryDelayMs,
+            attempts,
+            prev?.ownedByFolder ?? ownedByFolder
+          );
+          notifySW({ type: 'SCHEDULE_RETRY' });
         }
       } finally {
         processingRef.current.delete(inputFileId);
@@ -226,6 +218,56 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
     },
     [toolRegistry]
   );
+
+  // Drain any due retries from the persistent IDB schedule.
+  // Called on mount (catches retries missed while the tab was closed), on SW
+  // message, and on visibilitychange (fallback when the SW was killed by the browser).
+  useEffect(() => {
+    async function drainDueRetries() {
+      const due = await folderRetryScheduleStorage.claimDue();
+      for (const entry of due) {
+        const freshFolder = await smartFolderStorage.getFolder(entry.folderId);
+        if (!freshFolder || freshFolder.isPaused) continue;
+        const freshFile = await fileStorage.getStirlingFile(entry.fileId as FileId);
+        if (!freshFile) continue;
+        // Reset to pending so the UI reflects "queued again"
+        await folderStorage.updateFileMetadata(entry.folderId, entry.fileId, {
+          status: 'pending',
+          nextRetryAt: undefined,
+        });
+        void runPipeline(freshFolder, freshFile, entry.fileId, entry.ownedByFolder);
+      }
+    }
+
+    // Drain missed retries immediately on mount
+    void drainDueRetries();
+
+    // Register the service worker (no-op if already registered)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/sw-folder-retry.js', { scope: '/' })
+        .catch((err) => console.warn('Watch Folder retry SW registration failed:', err));
+    }
+
+    // Listen for SW notifications that a retry is due
+    function handleSWMessage(event: MessageEvent) {
+      if (event.data?.type === 'PROCESS_DUE_RETRIES') {
+        void drainDueRetries();
+      }
+    }
+    navigator.serviceWorker?.addEventListener('message', handleSWMessage);
+
+    // Drain when the tab becomes visible — covers the case where the SW was terminated
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') void drainDueRetries();
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      navigator.serviceWorker?.removeEventListener('message', handleSWMessage);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [runPipeline]);
 
   /** Run multiple files through the pipeline concurrently. */
   const processBatch = useCallback(
