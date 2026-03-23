@@ -12,6 +12,16 @@ export enum ToolType {
 }
 
 /**
+ * Reason the execute button is disabled. Resolved to a translated tooltip by OperationButton.
+ * null means the button is enabled.
+ */
+export type ExecuteDisabledReason =
+  | 'endpointUnavailable'
+  | 'noFiles'
+  | 'invalidParams'
+  | null;
+
+/**
  * Result from custom processor with optional metadata about input consumption.
  */
 export interface CustomProcessorResult {
@@ -101,7 +111,13 @@ export interface CustomToolOperationConfig<TParams> extends BaseToolOperationCon
   toolType: ToolType.custom;
 
   buildFormData?: undefined;
-  endpoint?: undefined;
+
+  /**
+   * Optional endpoint for routing decisions (credit check, cloud detection).
+   * Not used for the API call itself — customProcessor handles that directly.
+   * Provide a function when the endpoint depends on runtime parameters.
+   */
+  endpoint?: string | ((params: TParams) => string | undefined);
 
   /**
    * Custom processing logic that completely bypasses standard file processing.

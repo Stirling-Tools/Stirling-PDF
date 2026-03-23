@@ -59,6 +59,20 @@ export default defineConfig(
       ],
     },
   },
+  // Folders that have been cleaned up and are now conformant - stricter rules enforced here
+  {
+    files: ['src/saas/**/*.{js,mjs,jsx,ts,tsx}'],
+    languageOptions: {
+      parserOptions: {
+        project: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+    },
+  },
   // Config for browser scripts
   {
     files: srcGlobs,
