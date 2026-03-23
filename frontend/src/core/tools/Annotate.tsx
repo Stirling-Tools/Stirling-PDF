@@ -22,6 +22,9 @@ const DRAWING_TOOLS: AnnotationToolId[] = [
   'inkHighlighter',
   'text',
   'note',
+  'textComment',
+  'insertText',
+  'replaceText',
   'square',
   'circle',
   'line',
@@ -43,6 +46,9 @@ const KNOWN_ANNOTATION_TOOLS: AnnotationToolId[] = [
   'inkHighlighter',
   'text',
   'note',
+  'textComment',
+  'insertText',
+  'replaceText',
   'square',
   'circle',
   'line',
@@ -75,7 +81,7 @@ const Annotate = (_props: BaseToolProps) => {
   const viewerContext = useContext(ViewerContext);
   const viewerContextRef = useRef(viewerContext);
   useEffect(() => { viewerContextRef.current = viewerContext; }, [viewerContext]);
-  const { getZoomState, registerImmediateZoomUpdate, applyChanges, activeFileIndex, panActions } = useViewer();
+  const { getZoomState, registerImmediateZoomUpdate, applyChanges, activeFileIndex, panActions, setCommentsSidebarVisible } = useViewer();
 
   const [activeTool, setActiveTool] = useState<AnnotationToolId>('select');
   
@@ -312,6 +318,11 @@ const Annotate = (_props: BaseToolProps) => {
     annotationApiRef?.current?.setAnnotationStyle?.(toolId, options);
     annotationApiRef?.current?.activateAnnotationTool?.(toolId === 'stamp' ? 'stamp' : toolId, options);
 
+    // Auto-open comments sidebar when a comment tool is selected
+    if (['textComment', 'insertText', 'replaceText'].includes(toolId)) {
+      setCommentsSidebarVisible(true);
+    }
+
     // Reset flag after a short delay
     setTimeout(() => {
       manualToolSwitch.current = false;
@@ -346,7 +357,7 @@ const Annotate = (_props: BaseToolProps) => {
     const unsubscribe = annotationApiRef?.current?.onAnnotationEvent?.((event: AnnotationEvent) => {
       if (event.type === 'create' && event.committed) {
         const toolId = activeToolRef.current;
-        if (toolId === 'text' || toolId === 'note') {
+        if (['text', 'note', 'textComment', 'insertText', 'replaceText'].includes(toolId)) {
           setActiveTool('select');
           activeToolRef.current = 'select';
           annotationApiRef?.current?.activateAnnotationTool?.('select');
