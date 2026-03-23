@@ -142,6 +142,10 @@ welcome = "Bienvenido"
 white = "Blanco"
 WorkInProgess = "Trabajo en curso. Puede no funcionar o tener errores. ¡Por favor, informa de cualquier problema!"
 yes = "Sí"
+insufficientCredits = "Créditos insuficientes. Requeridos: {{requiredCredits}}, Disponibles: {{currentBalance}}, Faltan: {{shortfall}}"
+loadingCredits = "Comprobando créditos..."
+loadingProStatus = "Comprobando estado de suscripción..."
+noticeTopUpOrPlan = "No hay suficientes créditos, por favor recarga o actualiza tu plan"
 
 [account]
 accountSettings = "Configuración de la cuenta"
@@ -227,7 +231,7 @@ title = "Añadir imagen"
 failed = "Se produjo un error al añadir la imagen al PDF."
 
 [addImage.image]
-hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
+hint = "Soporta archivos PNG, JPEG, GIF, BMP, TIFF y SVG. Los archivos SVG se convertirán a PNG para su incrustación."
 label = "Archivo de imagen"
 name = "Imagen"
 placeholder = "Suba una imagen"
@@ -275,8 +279,8 @@ preview = "Selección de posición"
 previewDisclaimer = "La vista previa es aproximada. El resultado final puede variar debido a las métricas de fuentes del PDF."
 submit = "Añadir Números de Página"
 title = "Añadir Números de Página"
-zeroPad = "Zero‑pad Width (Bates Stamping)"
-zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
+zeroPad = "Ancho de relleno de ceros (Sello Bates)"
+zeroPadTooltip = "Número de páginas con relleno de ceros (Sello Bates) para este ancho (ej., 3 ⇒ 001). Establezca 0 para desactivar."
 
 [addPageNumbers.error]
 failed = "La operación de añadir números de página falló"
@@ -345,53 +349,53 @@ title = "Cambiar permisos"
 
 [AddStampRequest]
 alphabet = "Alfabeto"
-clickToExpand = "Click to expand"
+clickToExpand = "Haz clic para expandir"
 customColor = "Personalizar color de texto"
-customDateDesc = "Custom format"
+customDateDesc = "Formato personalizado"
 customMargin = "Personalizar margen"
 customPosition = "Arrastra el sello a la ubicación deseada en la ventana de vista previa."
-dateDesc = "Current date"
-datetimeDesc = "Date and time combined"
-dateTimeVars = "Date & Time"
-dynamicVariables = "Dynamic Variables"
-examples = "Examples"
-filenameDesc = "Filename without extension"
-filenameFullDesc = "Filename with extension"
-fileVars = "File Information"
+dateDesc = "Fecha actual"
+datetimeDesc = "Fecha y hora combinadas"
+dateTimeVars = "Fecha y hora"
+dynamicVariables = "Variables dinámicas"
+examples = "Ejemplos"
+filenameDesc = "Nombre de archivo sin extensión"
+filenameFullDesc = "Nombre de archivo con extensión"
+fileVars = "Información del archivo"
 fontSize = "Tamaño de fuente/imagen"
 header = "Sellar PDF"
 imageSize = "Tamaño de la imagen"
 margin = "Margen"
-metadataDesc = "From PDF document properties"
-metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "Desde las propiedades del documento PDF"
+metadataVars = "Metadatos del documento"
+multiLine = "multilínea"
 noStampSelected = "No se ha seleccionado ningún sello. Vuelva al Paso 1."
 opacity = "Opacidad"
-otherVars = "Other"
+otherVars = "Otros"
 overrideX = "Forzar coordenada X"
 overrideY = "Forzar coordenada Y"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
+pageNumberDesc = "Número de página actual"
+pageVars = "Información de la página"
 position = "Posición"
 positionAndFormatting = "Posición y formato"
-preview = "Preview:"
+preview = "Vista previa:"
 quickPosition = "Selecciona una posición en la página para colocar el sello."
 rotation = "Rotación"
-selectTemplate = "Select a template..."
+selectTemplate = "Seleccione una plantilla..."
 stampImage = "Imagen de sello"
 stampSetup = "Configuración de sello"
 stampText = "Texto del sello"
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+stampTextDescription = "Usa las variables dinámicas a continuación. Usa @@ para el @ literal. Usa \\n para nuevas líneas."
 stampType = "Tipo de sello"
 submit = "Enviar"
 tags = "Sello, Añadir imagen, centrar imagen, Marca de agua, PDF, Incrustar, Personalizar"
-timeDesc = "Current time"
+timeDesc = "Hora actual"
 title = "Sellar PDF"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
-uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+totalPagesDesc = "Número total de páginas"
+useTemplate = "Usar plantilla"
+uuidDesc = "Identificador único corto (8 caracteres)"
+variablesHelp = "Haz clic en cualquier variable para insertarla en el texto de tu sello. Usa @@ para el @ literal."
+yearMonthDayDesc = "Partes de la fecha individuales"
 
 [AddStampRequest.error]
 failed = "Se produjo un error al añadir el sello al PDF."
@@ -400,17 +404,17 @@ failed = "Se produjo un error al añadir el sello al PDF."
 title = "Resultados del sello"
 
 [AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-doc-info = "Document Info"
-draft = "Draft Watermark"
-draftWatermark = "Draft Watermark"
-european-date = "European Date (DD/MM/YYYY)"
-europeanDate = "European Date"
-legal-footer = "Legal Footer"
-page-numbers = "Page Numbers"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
+custom = "Personalizado"
+dateHeader = "Encabezado de fecha"
+doc-info = "Información del documento"
+draft = "Marca de agua de borrador"
+draftWatermark = "Marca de agua de borrador"
+european-date = "Fecha europea (DD/MM/AAAA)"
+europeanDate = "Fecha europea"
+legal-footer = "Pie de página legal"
+page-numbers = "Números de página"
+pageNumberFooter = "Pie de número de página"
+timestamp = "Marca de tiempo"
 
 [addText]
 applySignatures = "Aplicar texto"
@@ -668,7 +672,7 @@ mobileScannerStretchToFit = "Ajustar para encajar"
 mobileScannerStretchToFitDesc = "Estirar las imágenes para llenar toda la página. Si se desactiva, las imágenes se centran preservando la relación de aspecto."
 pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "Mantener (dimensiones originales)"
-pageFormatLetter = "Letter (8.5×11in)"
+pageFormatLetter = "Carta (8.5×11in)"
 title = "Conexiones"
 unlinkedServices = "Servicios no vinculados"
 
@@ -690,7 +694,7 @@ mobileScannerStretchToFitDesc = "Estirar las imágenes para llenar toda la pági
 note = "Nota: Requiere configurar la Frontend URL. "
 pageFormatA4 = "A4 (210×297mm)"
 pageFormatKeep = "Mantener (dimensiones originales)"
-pageFormatLetter = "Letter (8.5×11in)"
+pageFormatLetter = "Carta (8.5×11in)"
 
 [admin.settings.connections.oauth2]
 label = "OAuth2"
@@ -949,16 +953,16 @@ description = "Directorio donde se generan los PDFs procesados (dejar vacío par
 label = "Directorio de carpetas finalizadas"
 
 [admin.settings.general.customPaths.pipeline.pipelineDir]
-description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
-label = "Pipeline Directory"
+description = "Directorio base para los recursos del pipeline (dejar vacío para el valor por defecto: /pipeline)"
+label = "Directorio del Pipeline"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 description = "Directorio donde el pipeline supervisa la llegada de PDFs (dejar vacío para el valor predeterminado: /pipeline/watchedFolders)"
 label = "Directorio de carpetas vigiladas"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
-description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
-label = "Watched Folders Directories"
+description = "Directorios donde el pipeline monitoriza los PDFs entrantes (uno por línea o separados por comas; dejar vacío para el valor por defecto: /pipeline/watchedFolders)"
+label = "Directorios de Carpetas Monitorizadas"
 
 [admin.settings.general.defaultLocale]
 description = "Idioma predeterminado para nuevos usuarios (p. ej., en_US, es_ES)"
@@ -982,7 +986,7 @@ label = "Ocultar escáner móvil"
 
 [admin.settings.general.frontendUrl]
 description = "URL base para el frontend (p. ej., https://pdf.example.com). Se usa para enlaces de invitación por correo y subidas por código QR desde el móvil. Déjalo vacío para usar la URL del backend."
-label = "Frontend URL"
+label = "URL del Frontend"
 
 [admin.settings.general.homeDescription]
 description = "Texto descriptivo mostrado en la página de inicio"
@@ -1321,11 +1325,11 @@ message = "Los proveedores de autenticación OAuth2 y SAML2 se han movido al men
 title = "¿Buscas la configuración de SSO/SAML?"
 
 [admin.settings.security.xFrameOptions]
-deny = "Deny (Prevents all framing)"
-description = "Controls whether the application can be embedded in iframes"
-disabled = "Disabled (No X-Frame-Options header)"
+deny = "Denegar (Impide cualquier enmarcado)"
+description = "Controla si la aplicación puede incrustarse en iframes"
+disabled = "Desactivado (Sin encabezado X-Frame-Options)"
 label = "X-Frame-Options"
-sameorigin = "Same Origin (Allow framing from same domain)"
+sameorigin = "Mismo Origen (Permite enmarcado desde el mismo dominio)"
 
 [admin.settings.telegram]
 description = "Configura la conectividad del bot de Telegram, controles de acceso y comportamiento de retroalimentación."
@@ -1347,7 +1351,7 @@ placeholder = "Añade el ID de usuario y pulsa Enter"
 
 [admin.settings.telegram.botToken]
 description = "Token de API proporcionado por BotFather para tu bot de Telegram."
-label = "Bot Token"
+label = "Token del Bot"
 
 [admin.settings.telegram.botUsername]
 description = "El nombre de usuario público de tu bot de Telegram."
@@ -2441,7 +2445,7 @@ title = "Estos PDF parecen muy diferentes"
 
 [compare.edited]
 label = "PDF editado"
-placeholder = "Select the edited PDF"
+placeholder = "Seleccionar el PDF editado"
 
 [compare.error]
 filesMissing = "No se pueden localizar los archivos seleccionados. Vuelve a seleccionarlos."
@@ -2574,10 +2578,22 @@ title = "Ajuste de Calidad"
 [compressPdfs]
 tags = "aplastar,pequeño,diminuto"
 
+[config]
+plan = "Plan"
+
 [config.account.overview]
 guestDescription = "Ha iniciado sesión como invitado. Considere actualizar su cuenta arriba."
 manageAccountPreferences = "Administre las preferencias de su cuenta"
 title = "Configuración de Cuenta"
+confirmDelete = "Eliminar Mi Cuenta"
+deleteAccount = "Eliminar Cuenta"
+deleteAccountTitle = "Eliminar Cuenta"
+deleteFailed = "Error al eliminar la cuenta."
+deleteFailedTitle = "No se puede eliminar la cuenta"
+deleteWarning = "Esta acción es permanente y no se puede deshacer. Se eliminarán todos tus datos."
+enterEmailConfirm = "Para confirmar la eliminación, introduce tu dirección de correo electrónico ({{email}}) a continuación:"
+label = "Resumen"
+signedInAs = "Sesión iniciada como"
 
 [config.account.upgrade]
 description = "¡Vincule su cuenta para preservar su historial y acceder a más funciones!"
@@ -2591,6 +2607,32 @@ passwordPlaceholder = "Establecer una contraseña"
 socialLogin = "Actualizar con Cuenta Social"
 title = "Actualizar Cuenta de Invitado"
 upgradeButton = "Actualizar Cuenta"
+
+[config.account.profilePicture]
+description = "Sube una imagen para personalizar tu cuenta."
+help = "PNG, JPG, o WebP hasta 2MB."
+remove = "Eliminar"
+sizeError = "Por favor, selecciona una imagen de menos de 2MB."
+switchedToCustom = "Cambiada a foto personalizada. Ahora puedes subir la tuya."
+title = "Foto de perfil"
+upload = "Subir"
+useCustom = "Usar foto personalizada"
+usingProvider = "Usando la foto de perfil de {{provider}}"
+
+[config.account.profilePicture.cropper]
+cropError = "Error al recortar la imagen. Por favor, inténtalo de nuevo."
+invalidImage = "Archivo de imagen inválido. Por favor, selecciona un archivo PNG, JPG o WebP válido."
+processing = "Procesando recorte..."
+save = "Guardar Imagen Recortada"
+sizeErrorAfterCrop = "La imagen recortada es demasiado grande. Por favor, aleja el zoom o recorta un área más pequeña."
+title = "Recortar Foto de Perfil"
+zoom = "Zoom"
+
+[config.account.security]
+changePassword = "Cambiar contraseña"
+description = "Gestiona tu contraseña y los ajustes de seguridad."
+title = "Contraseñas y Seguridad"
+update = "Actualizar contraseña"
 
 [config.apiKeys]
 chartAriaLabel = "Uso de créditos: incluidos {{includedUsed}} de {{includedTotal}}, comprados {{purchasedUsed}} de {{purchasedTotal}}"
@@ -2614,6 +2656,7 @@ refreshAriaLabel = "Actualizar clave API"
 schemaLink = "Referencia del esquema de la API"
 totalCredits = "Créditos Totales"
 usage = "Incluye esta clave en el encabezado X-API-KEY en todas las solicitudes a la API."
+creditsRemaining = "Créditos Restantes"
 
 [config.apiKeys.alert]
 apiKeyErrorTitle = "Error de clave de API"
@@ -2658,8 +2701,8 @@ color = "Color"
 colorType = "Tipo de Color"
 combineImages = "Combinar Imágenes"
 combineImagesDescription = "Combinar todas las imágenes en un PDF, o crear PDFs separados para cada imagen"
-combineSvgs = "Combine SVGs into single PDF"
-combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+combineSvgs = "Combinar SVGs en un único PDF"
+combineSvgsDescription = "Combina todos los archivos SVG en un PDF con múltiples páginas, o crea PDFs separados para cada SVG"
 conversionCompleted = "Conversión completada"
 conversionResults = "Resultados de Conversión"
 convertFiles = "Convertir Archivos"
@@ -2716,10 +2759,10 @@ selectSourceFormatFirst = "Seleccione primero un formato de origen"
 settings = "Configuración"
 single = "Individual"
 sourceFormatPlaceholder = "Formato de origen"
-strictMode = "Strict Mode"
-strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
-svgPdfOptions = "SVG to PDF Options"
-svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
+strictMode = "Modo Estricto"
+strictModeDesc = "Error si la conversión no es perfecta (usa verificación VeraPDF)"
+svgPdfOptions = "Opciones SVG a PDF"
+svgVectorNote = "Los archivos SVG se renderizan como gráficos vectoriales para una salida nítida en cualquier resolución. Las dimensiones del SVG determinan el tamaño de página del PDF."
 targetFormatPlaceholder = "Formato de destino"
 textRtf = "Texto/RTF"
 title = "Convertir"
@@ -2728,6 +2771,15 @@ webOptions = "Opciones de Web a PDF"
 wordDoc = "Documento de Word"
 wordDocExt = "Documento de Word (.docx)"
 zoomLevel = "Nivel de Zoom"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "eBook → PDF"
+emlToPdf = "Correo Electrónico → PDF"
+fileToPdf = "Ofimática/Documento → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "Opciones de eBook a PDF"
@@ -3441,7 +3493,7 @@ title = "Numerar páginas"
 
 [home.addPassword]
 desc = "Cifrar documento PDF con contraseña"
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
+tags = "encriptar,contraseña,bloquear,seguro,proteger,seguridad,encriptación,salvaguardar,confidencial,privado,restringir acceso"
 title = "Proteger con contraseña"
 
 [home.addStamp]
@@ -3505,7 +3557,7 @@ title = "Cambiar metadatos"
 
 [home.changePermissions]
 desc = "Modificar restricciones y permisos del documento"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
+tags = "permisos,restricciones,derechos,control de acceso,permitir,denegar,impresión,copia,edición,modificar permisos,ajustes de seguridad,derechos de usuario"
 title = "Cambiar permisos"
 
 [home.compare]
@@ -3530,7 +3582,7 @@ title = "Recortar PDF"
 
 [home.devAirgapped]
 desc = "Enlace a la guía de configuración aislada"
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
+tags = "air-gapped,offline,aislado,sin internet,desconectado,seguro,aislamiento de red,independiente"
 title = "Configuración Aislada"
 
 [home.devApi]
@@ -3545,7 +3597,7 @@ title = "Escaneo Automatizado de Carpetas"
 
 [home.devSsoGuide]
 desc = "Enlace a la guía de SSO"
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
+tags = "SSO,inicio de sesión único,autenticación,SAML,OAuth,OIDC,inicio de sesión,empresarial,proveedor de identidad,IdP"
 title = "Guía de SSO"
 
 [home.editTableOfContents]
@@ -3605,7 +3657,7 @@ title = "OCR / Limpiar escaneos"
 
 [home.overlay-pdfs]
 desc = "Superponer PDFs encima de otro PDF"
-tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
+tags = "superponer,combinar,fusionar,capa,superposición de PDF,capas de PDF,combinar PDFs,apilar,superponer páginas,fondo,primer plano,compuesto"
 title = "Superponer PDFs"
 
 [home.pageLayout]
@@ -3620,7 +3672,7 @@ title = "Organizador"
 
 [home.pdfTextEditor]
 desc = "Revise y edite exportaciones JSON de Stirling PDF con edición de texto agrupada y regeneración de PDF"
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
+tags = "editar texto,modificar texto,cambiar texto,editar contenido,actualizar texto,reescribir,corregir,modificar,revisar,editor de texto,editor de contenido"
 title = "Editor de texto PDF"
 
 [home.pdfToSinglePage]
@@ -3680,7 +3732,7 @@ title = "Reparar"
 
 [home.replaceColor]
 desc = "Reemplace o invierta colores en documentos PDF"
-tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
+tags = "reemplazar color,invertir color,reemplazo de color,intercambiar colores,cambiar color,invertir,negativo,intercambio de color,buscar y reemplazar color,convertir color,cambio de color"
 title = "Reemplazar e Invertir Color"
 
 [home.rotate]
@@ -3920,6 +3972,13 @@ username = "Nombre de usuario"
 verifyingMfa = "Verificando..."
 verifyMfa = "Verificar código"
 youAreLoggedIn = "¡Ha iniciado sesión!"
+backToSignIn = "Volver a iniciar sesión"
+passwordUpdatedSuccess = "Tu contraseña se ha actualizado correctamente."
+resetHelp = "Introduce tu correo electrónico para recibir un enlace seguro para restablecer tu contraseña. Si el enlace ha caducado, por favor solicita uno nuevo."
+resetYourPassword = "Restablecer tu contraseña"
+sendResetLink = "Enviar enlace de restablecimiento"
+subtitle = "Vuelve a iniciar sesión en Stirling PDF"
+updatePassword = "Actualizar contraseña"
 
 [login.slides.edit]
 alt = "Editar PDFs"
@@ -4199,7 +4258,7 @@ title = "Salida"
 
 [onboarding]
 activeFiles = "La vista de <strong>Archivos activos</strong> muestra todos los PDFs que has cargado en la herramienta y te permite seleccionar cuáles procesar."
-allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
+allTools = "Este es el panel de <strong>Todas las herramientas</strong>, donde puedes buscar y seleccionar entre todas las herramientas PDF disponibles."
 cropSettings = "Ahora que hemos seleccionado el archivo que queremos recortar, podemos configurar la herramienta Recortar para elegir el área a la que queremos recortar el PDF."
 fileCheckbox = "Al hacer clic en uno de los archivos lo seleccionas para procesarlo. Puedes seleccionar varios archivos para operaciones por lotes."
 fileReplacement = "El archivo modificado reemplazará automáticamente al original en el Workbench, lo que te permitirá pasarlo fácilmente por más herramientas."
@@ -4279,6 +4338,15 @@ quickAccess = "Empieza en el panel de <strong>Acceso rápido</strong> para cambi
 rightRail = "El <strong>Panel derecho</strong> contiene acciones rápidas para seleccionar archivos, cambiar el tema o el idioma y descargar resultados."
 topBar = "La barra superior te permite cambiar entre <strong>Visor</strong>, <strong>Editor de páginas</strong> y <strong>Archivos activos</strong>."
 wrapUp = "Eso es lo nuevo en V2. Abre el menú de <strong>Recorridos</strong> en cualquier momento para repetir este, el de Herramientas o el de Administración."
+
+[onboarding.freeTrial]
+afterTrialWithPayment = "Tu suscripción Pro comenzará automáticamente cuando finalice la prueba."
+afterTrialWithoutPayment = "Tras finalizar tu prueba, continuarás en nuestro plan gratuito. Añade un método de pago para mantener el acceso Pro."
+body = "Tienes acceso completo a las funciones de Stirling PDF Pro durante tu prueba. Disfruta de conversiones ilimitadas, tamaños de archivo mayores y procesamiento prioritario."
+daysRemaining = "{{days}} días restantes"
+daysRemainingSingular = "{{days}} día restante"
+title = "Tu Prueba Pro de 30 Días"
+trialEnds = "La prueba finaliza el {{date}}"
 
 [overlay-pdfs]
 desc = "Superponer un PDF encima de otro"
@@ -4433,6 +4501,10 @@ exitRedaction = "Salir del modo de censura"
 save = "Guardar"
 downloadAll = "Descargar Todo"
 saveAll = "Guardar todo"
+readAloud = "Leer en Voz Alta"
+readAloudLanguage = "Idioma"
+readAloudSpeed = "Velocidad"
+selectLanguage = "Seleccionar idioma"
 
 [textAlign]
 left = "Izquierda"
@@ -4588,7 +4660,7 @@ closeLater = "Lo haré más tarde"
 continue = "Continuar"
 description = "Lo usaremos para enviar su clave de licencia y recibos."
 emailLabel = "Dirección de correo electrónico"
-emailPlaceholder = "your@email.com"
+emailPlaceholder = "tu@correo.com"
 modalTitle = "Comenzar - {{planName}}"
 title = "Introduzca su correo electrónico"
 
@@ -4980,6 +5052,9 @@ selectPlan = "Seleccionar plan"
 showComparison = "Comparar todas las funciones"
 upgrade = "Actualizar"
 withServer = "+ Plan de servidor"
+purchase = "Comprar"
+selectCredits = "Seleccionar Cantidad de Créditos"
+totalCost = "Costo Total"
 
 [plan.activePlan]
 subtitle = "Detalles de tu suscripción actual"
@@ -5068,6 +5143,30 @@ successMessage = "Tu licencia se ha activado correctamente. Ya puedes cerrar est
 [plan.team]
 name = "Team"
 siteLicense = "Licencia de sitio"
+
+[plan.api]
+large = "5.000 Créditos"
+medium = "1.000 Créditos"
+small = "500 Créditos"
+xsmall = "100 Créditos"
+
+[plan.apiPackages]
+subtitle = "Compra créditos de API para tus aplicaciones"
+title = "Paquetes de Créditos de API"
+
+[plan.trial]
+badge = "Prueba"
+continueWithFree = "Continuar con Plan Gratuito"
+daysRemaining = "Tu prueba termina en {{days}} días"
+endDate = "Caduca: {{date}}"
+expired = "Tu Prueba ha Finalizado"
+expiredMessage = "Tu prueba Pro de 30 días ha caducado. Suscríbete a Pro para seguir accediendo a funciones premium, o continúa con nuestro plan gratuito."
+freeTierLimitations = "El plan gratuito incluye herramientas básicas de PDF con límites de uso."
+message = ""
+subscribe = "Suscribirse a Pro"
+subscribeToPro = "Suscribirse a Pro"
+subscriptionScheduled = "Suscripción programada - comienza el {{date}}"
+title = "Prueba Gratuita Activa"
 
 [credits]
 enableOverageBilling = "Habilitar facturación por excedente"
@@ -5206,7 +5305,7 @@ failed = "Se produjo un error al censurar el PDF."
 [redact.manual]
 apply = "Aplicar"
 applyChanges = "Aplicar Cambios"
-applyRedactions = "Apply Redactions"
+applyRedactions = "Aplicar Censuras"
 applyWarning = "⚠️ Aplicación permanente, no se puede deshacer y los datos subyacentes se eliminarán"
 boxRedaction = "Censura de dibujo de caja"
 colourPicker = "Selector de Color"
@@ -5810,7 +5909,7 @@ trial = "Prueba"
 [settings.planBilling.tier]
 enterprise = "Enterprise"
 enterpriseDescription = "Funciones y soporte empresariales personalizados"
-free = "Free"
+free = "Gratis"
 freeDescription = "50 créditos al mes"
 team = "Team"
 teamBadge = "Team"
@@ -5884,13 +5983,13 @@ sidebar = "Barra lateral"
 
 [settings.general.updates]
 checkForUpdates = "Buscar actualizaciones"
-currentBackendVersion = "Current Backend Version"
-currentFrontendVersion = "Current Frontend Version"
+currentBackendVersion = "Versión Actual del Backend"
+currentFrontendVersion = "Versión Actual del Frontend"
 description = "Compruebe actualizaciones y vea la información de versión"
 latestVersion = "Última versión"
 serverNeedsUpdate = "El servidor debe ser actualizado por el administrador"
 title = "Actualizaciones de software"
-versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
+versionMismatch = "Advertencia: Se ha detectado una discrepancia entre la versión del cliente y la versión de AppConfig. El uso de diferentes versiones puede provocar problemas de compatibilidad, errores y riesgos de seguridad. Por favor, asegúrese de que el servidor y el cliente utilizan la misma versión."
 viewDetails = "Ver detalles"
 
 [settings.general.versionInfo]
@@ -5966,7 +6065,10 @@ teams = "Equipos"
 title = "Espacio de trabajo"
 
 [settings.team]
-title = "Team"
+title = "Equipo"
+
+[settings.search]
+placeholder = "Buscar en las páginas de ajustes..."
 
 [setup]
 description = "Empiece eligiendo cómo quiere usar Stirling PDF"
@@ -5990,7 +6092,7 @@ subtitle = "Introduzca sus credenciales para continuar"
 title = "Iniciar sesión"
 
 [setup.login.email]
-label = "Email"
+label = "Correo Electrónico"
 placeholder = "Introduzca su email"
 
 [setup.login.error]
@@ -6028,7 +6130,7 @@ title = "Inicie sesión en el servidor"
 subtitle = "Introduzca la URL de su servidor autoalojado"
 testing = "Probando la conexión..."
 title = "Conectar con el servidor"
-useLast = "Last used server: {{serverUrl}}"
+useLast = "Último servidor usado: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "No se pudo obtener la configuración del servidor. Compruebe la URL e inténtelo de nuevo."
@@ -6561,6 +6663,7 @@ showDetails = "Mostrar detalles"
 unavailable = "Desactivado por el administrador del servidor:"
 unavailableDependency = "No disponible - falta la herramienta requerida en el servidor:"
 unfavorite = "Quitar de favoritos"
+selfHostedOffline = "Requiere tu servidor Stirling-PDF (actualmente sin conexión):"
 
 [toolPanel.modePrompt]
 chooseFullscreen = "Usar modo pantalla completa"
@@ -7048,7 +7151,7 @@ team = "Equipo (opcional)"
 teamPlaceholder = "Selecciona un equipo"
 title = "Añadir miembro"
 username = "Nombre de usuario (correo)"
-usernamePlaceholder = "user@example.com"
+usernamePlaceholder = "usuario@ejemplo.com"
 usernameRequired = "Se requieren nombre de usuario y contraseña"
 
 [workspace.people.authType]
@@ -7104,7 +7207,7 @@ title = "Editar miembro"
 allFailed = "No se pudo invitar a los usuarios"
 description = "Escribe o pega correos a continuación, separados por comas. Los usuarios recibirán credenciales de inicio de sesión por correo electrónico."
 emails = "Direcciones de correo electrónico"
-emailsPlaceholder = "user1@example.com, user2@example.com"
+emailsPlaceholder = "usuario1@ejemplo.com, usuario2@ejemplo.com"
 emailsRequired = "Se requiere al menos una dirección de correo electrónico"
 error = "No se pudieron enviar las invitaciones"
 partialFailure = "Algunas invitaciones fallaron"
@@ -7534,3 +7637,11 @@ description = "Clave de API de Google para Google Picker API de Google Cloud Con
 [provider.googledrive.appId]
 label = "ID de aplicación"
 description = "ID de aplicación de Google Drive de Google Cloud Console"
+
+[selfHosted.offline]
+hideTools = "Ocultar herramientas no disponibles ▴"
+messageNoFallback = "Las herramientas no estarán disponibles hasta que tu servidor vuelva a estar en línea."
+messageWithFallback = "Alguna herramientas requieren conexión con el servidor."
+showTools = "Ver herramientas no disponibles ▾"
+title = "Tu servidor de Stirling-PDF está inaccesible"
+toolNotAvailableLocally = "Tu servidor Stirling-PDF está sin conexión y \"{{endpoint}}\" no está disponible en el backend local."

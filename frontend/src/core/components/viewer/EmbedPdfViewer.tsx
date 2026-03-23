@@ -400,16 +400,6 @@ const EmbedPdfViewerContent = ({
               event.preventDefault();
               printActions.print();
               return;
-            case 'r':
-            case 'R':
-              // Ctrl+R: Rotate forward; Ctrl+Shift+R: Rotate backward
-              event.preventDefault();
-              if (event.shiftKey) {
-                rotationActions.rotateBackward();
-              } else {
-                rotationActions.rotateForward();
-              }
-              return;
           }
         }
       }
