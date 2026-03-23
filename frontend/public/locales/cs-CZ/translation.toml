@@ -142,10 +142,6 @@ welcome = "Vítejte"
 white = "Bílá"
 WorkInProgess = "Práce probíhá, nemusí fungovat nebo může obsahovat chyby. Prosím, nahlaste případné problémy!"
 yes = "Ano"
-insufficientCredits = "Insufficient credits. Required: {{requiredCredits}}, Available: {{currentBalance}}, Shortfall: {{shortfall}}"
-loadingCredits = "Checking credits..."
-loadingProStatus = "Checking subscription status..."
-noticeTopUpOrPlan = "Not enough credits, please top up or upgrade to a plan"
 
 [account]
 accountSettings = "Nastavení účtu"
@@ -1515,7 +1511,7 @@ editSelected = "Edit Annotation"
 editSquare = "Edit Square"
 editStampHint = "To change the image, delete this stamp and add a new one."
 editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
-editText = "Edit"
+editText = "Edit Text Box"
 editTextMarkup = "Edit Text Markup"
 ellipse = "Ellipse"
 exit = "Exit annotation mode"
@@ -1561,13 +1557,6 @@ underline = "Underline"
 undo = "Undo"
 unsupportedType = "This annotation type is not fully supported for editing."
 width = "Šířka"
-annotationStyle = "Annotation style"
-comment = "Comment"
-comments = "Comments"
-insertText = "Insert Text"
-lineArrow = "Arrow"
-polyline = "Polyline"
-replaceText = "Replace Text"
 
 [app]
 description = "Bezplatná alternativa k Adobe Acrobat (10+ mil. stažení)"
@@ -2585,22 +2574,10 @@ title = "Úprava kvality"
 [compressPdfs]
 tags = "stlačit,malý,drobný"
 
-[config]
-plan = "Plan"
-
 [config.account.overview]
 guestDescription = "Jste přihlášeni jako host. Zvažte vylepšení účtu výše."
 manageAccountPreferences = "Spravovat předvolby účtu"
 title = "Nastavení účtu"
-confirmDelete = "Delete My Account"
-deleteAccount = "Delete Account"
-deleteAccountTitle = "Delete Account"
-deleteFailed = "Failed to delete account."
-deleteFailedTitle = "Unable to delete account"
-deleteWarning = "This action is permanent and cannot be undone. All your data will be deleted."
-enterEmailConfirm = "To confirm deletion, please type your email address ({{email}}) below:"
-label = "Overview"
-signedInAs = "Signed in as"
 
 [config.account.upgrade]
 description = "Propojte svůj účet, abyste zachovali historii a získali přístup k dalším funkcím!"
@@ -2614,32 +2591,6 @@ passwordPlaceholder = "Nastavit heslo"
 socialLogin = "Vylepšit pomocí sociálního účtu"
 title = "Vylepšit účet hosta"
 upgradeButton = "Vylepšit účet"
-
-[config.account.profilePicture]
-description = "Upload an image to personalize your account."
-help = "PNG, JPG, or WebP up to 2MB."
-remove = "Remove"
-sizeError = "Please select an image smaller than 2MB."
-switchedToCustom = "Switched to custom picture. You can now upload your own."
-title = "Profile picture"
-upload = "Upload"
-useCustom = "Use custom picture"
-usingProvider = "Using {{provider}} profile picture"
-
-[config.account.profilePicture.cropper]
-cropError = "Failed to crop image. Please try again."
-invalidImage = "Invalid image file. Please select a valid PNG, JPG, or WebP file."
-processing = "Processing crop..."
-save = "Save Cropped Image"
-sizeErrorAfterCrop = "Cropped image is too large. Please zoom out or crop a smaller area."
-title = "Crop Profile Picture"
-zoom = "Zoom"
-
-[config.account.security]
-changePassword = "Change password"
-description = "Manage your password and security settings."
-title = "Passwords & Security"
-update = "Update password"
 
 [config.apiKeys]
 chartAriaLabel = "Využití kreditů: zahrnuto {{includedUsed}} z {{includedTotal}}, zakoupeno {{purchasedUsed}} z {{purchasedTotal}}"
@@ -2663,7 +2614,6 @@ refreshAriaLabel = "Obnovit API klíč"
 schemaLink = "Reference schématu API"
 totalCredits = "Celkem kreditů"
 usage = "Zahrňte tento klíč do hlavičky X-API-KEY u všech API požadavků."
-creditsRemaining = "Credits Remaining"
 
 [config.apiKeys.alert]
 apiKeyErrorTitle = "Chyba API klíče"
@@ -2778,15 +2728,6 @@ webOptions = "Možnosti Web → PDF"
 wordDoc = "Dokument Word"
 wordDocExt = "Dokument Word (.docx)"
 zoomLevel = "Úroveň přiblížení"
-cbrToPdf = "CBR → PDF"
-cbzToPdf = "CBZ → PDF"
-ebookToPdf = "eBook → PDF"
-emlToPdf = "Email → PDF"
-fileToPdf = "Office/Document → PDF"
-pdfToCbr = "PDF → CBR"
-pdfToCbz = "PDF → CBZ"
-pdfToEpub = "PDF → EPUB"
-svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "eBook to PDF Options"
@@ -3979,13 +3920,6 @@ username = "Uživatelské jméno"
 verifyingMfa = "Ověřování..."
 verifyMfa = "Ověřit kód"
 youAreLoggedIn = "Jste přihlášeni!"
-backToSignIn = "Back to sign in"
-passwordUpdatedSuccess = "Your password has been updated successfully."
-resetHelp = "Enter your email to receive a secure link to reset your password. If the link has expired, please request a new one."
-resetYourPassword = "Reset your password"
-sendResetLink = "Send reset link"
-subtitle = "Sign back in to Stirling PDF"
-updatePassword = "Update password"
 
 [login.slides.edit]
 alt = "Úprava PDF"
@@ -4346,15 +4280,6 @@ rightRail = "The <strong>Right Rail</strong> holds quick actions to select files
 topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
 wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
-[onboarding.freeTrial]
-afterTrialWithPayment = "Your Pro subscription will start automatically when the trial ends."
-afterTrialWithoutPayment = "After your trial ends, you'll continue with our free tier. Add a payment method to keep Pro access."
-body = "You have full access to Stirling PDF Pro features during your trial. Enjoy unlimited conversions, larger file sizes, and priority processing."
-daysRemaining = "{{days}} days remaining"
-daysRemainingSingular = "{{days}} day remaining"
-title = "Your 30-Day Pro Trial"
-trialEnds = "Trial ends {{date}}"
-
 [overlay-pdfs]
 desc = "Překryjte jedno PDF přes jiné"
 header = "Překrýt PDF soubory"
@@ -4476,31 +4401,6 @@ dismiss = "Skrýt"
 apply = "Použít změny"
 download = "Stáhnout PDF"
 
-[viewer.comments]
-addComment = "Add comment"
-addCommentPlaceholder = "Add comment..."
-addLink = "Add link"
-addReplyPlaceholder = "Add reply..."
-deleteAnnotationAndComment = "Delete annotation & comment"
-deleteDescription = "This annotation has a comment attached. You can remove just the comment from the sidebar while keeping the annotation, or delete everything."
-deleteTitle = "Remove annotation from comments?"
-goToLink = "Go to link"
-hint = "Place comments with the Comment, Insert Text, or Replace Text tools. They will appear here by page."
-locateAnnotation = "Locate in document"
-moreActions = "More actions"
-nComments = "{{count}} comments"
-oneComment = "1 comment"
-pageLabel = "Page {{page}}"
-placeholder = "Type your comment..."
-removeCommentOnly = "Remove comment only"
-saveReply = "Save reply"
-send = "Send"
-title = "Comments"
-typeComment = "Comment"
-typeInsertText = "Insert Text"
-typeReplaceText = "Replace Text"
-viewComment = "View comment"
-
 [rightRail]
 closeSelected = "Zavřít vybrané soubory"
 selectAll = "Vybrat vše"
@@ -4533,11 +4433,6 @@ exitRedaction = "Opustit režim začernění"
 save = "Uložit"
 downloadAll = "Stáhnout vše"
 saveAll = "Uložit vše"
-readAloud = "Read Aloud"
-readAloudLanguage = "Language"
-readAloudSpeed = "Speed"
-selectLanguage = "Select language"
-toggleComments = "Comments"
 
 [textAlign]
 left = "Left"
@@ -5085,9 +4980,6 @@ selectPlan = "Vybrat plán"
 showComparison = "Porovnat všechny funkce"
 upgrade = "Upgradovat"
 withServer = "+ Serverový plán"
-purchase = "Purchase"
-selectCredits = "Select Credit Amount"
-totalCost = "Total Cost"
 
 [plan.activePlan]
 subtitle = "Podrobnosti vašeho aktuálního předplatného"
@@ -5176,30 +5068,6 @@ successMessage = "Your license has been successfully activated. You can now clos
 [plan.team]
 name = "Team"
 siteLicense = "Site License"
-
-[plan.api]
-large = "5,000 Credits"
-medium = "1,000 Credits"
-small = "500 Credits"
-xsmall = "100 Credits"
-
-[plan.apiPackages]
-subtitle = "Purchase API credits for your applications"
-title = "API Credit Packages"
-
-[plan.trial]
-badge = "Trial"
-continueWithFree = "Continue with Free"
-daysRemaining = "Your trial ends in {{days}} days"
-endDate = "Expires: {{date}}"
-expired = "Your Trial Has Ended"
-expiredMessage = "Your 30-day Pro trial has expired. Subscribe to Pro to continue accessing premium features, or continue with our free tier."
-freeTierLimitations = "Free tier includes basic PDF tools with usage limits."
-message = ""
-subscribe = "Subscribe to Pro"
-subscribeToPro = "Subscribe to Pro"
-subscriptionScheduled = "Subscription scheduled - starts {{date}}"
-title = "Free Trial Active"
 
 [credits]
 enableOverageBilling = "Povolit nadlimitní fakturaci"
@@ -6100,9 +5968,6 @@ title = "Pracovní prostor"
 [settings.team]
 title = "Tým"
 
-[settings.search]
-placeholder = "Search settings pages..."
-
 [setup]
 description = "Začněte výběrem způsobu používání Stirling PDF"
 welcome = "Vítejte ve Stirling PDF"
@@ -6696,7 +6561,6 @@ showDetails = "Zobrazit podrobnosti"
 unavailable = "Zakázáno správcem serveru:"
 unavailableDependency = "Nedostupné – na serveru chybí požadovaný nástroj:"
 unfavorite = "Odebrat z oblíbených"
-selfHostedOffline = "Requires your Stirling-PDF server (currently offline):"
 
 [toolPanel.modePrompt]
 chooseFullscreen = "Použít režim na celou obrazovku"
@@ -7670,11 +7534,3 @@ description = "Google API Key pro Google Picker API z Google Cloud Console"
 [provider.googledrive.appId]
 label = "App ID"
 description = "Google Drive App ID z Google Cloud Console"
-
-[selfHosted.offline]
-hideTools = "Hide unavailable tools ▴"
-messageNoFallback = "Tools are unavailable until your server comes back online."
-messageWithFallback = "Some tools require a server connection."
-showTools = "View unavailable tools ▾"
-title = "Your Stirling-PDF server is unreachable"
-toolNotAvailableLocally = "Your Stirling-PDF server is offline and \"{{endpoint}}\" is not available on the local backend."
