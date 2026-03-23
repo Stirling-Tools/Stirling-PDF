@@ -55,6 +55,8 @@ Development for the AI engine happens in the `engine/` folder. It's built with L
 #### Import Paths - CRITICAL
 **ALWAYS use `@app/*` for imports.** Do not use `@core/*` or `@proprietary/*` unless explicitly wrapping/extending a lower layer implementation.
 
+For a broader explanation of the frontend layering and override architecture, see [frontend/DeveloperGuide.md](frontend/DeveloperGuide.md).
+
 ```typescript
 // ✅ CORRECT - Use @app/* for all imports
 import { AppLayout } from "@app/components/AppLayout";
