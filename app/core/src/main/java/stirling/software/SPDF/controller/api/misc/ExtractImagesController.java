@@ -66,7 +66,8 @@ public class ExtractImagesController {
         Set<Integer> processedImageHashes = new HashSet<>();
 
         TempFile zipFile = new TempFile(tempFileManager, ".zip");
-        try (ZipOutputStream zipStream = new ZipOutputStream(Files.newOutputStream(zipFile.getPath()));
+        try (ZipOutputStream zipStream =
+                        new ZipOutputStream(Files.newOutputStream(zipFile.getPath()));
                 PDDocument pdfDoc = pdfDocumentFactory.load(file)) {
 
             zipStream.setLevel(Deflater.BEST_COMPRESSION);
@@ -75,8 +76,12 @@ public class ExtractImagesController {
             for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
                 PDPage currentPage = pdfDoc.getPage(pageIndex);
                 extractAndAddImagesToZip(
-                        currentPage, imageFormat, baseFilename, pageIndex + 1,
-                        processedImageHashes, zipStream);
+                        currentPage,
+                        imageFormat,
+                        baseFilename,
+                        pageIndex + 1,
+                        processedImageHashes,
+                        zipStream);
             }
         } catch (Exception e) {
             zipFile.close();
@@ -119,7 +124,12 @@ public class ExtractImagesController {
                 BufferedImage convertedImage = convertImageToFormat(sourceImage, imageFormat);
 
                 String imagePath =
-                        baseFilename + "_page_" + pageNumber + "_" + imageCount++ + "."
+                        baseFilename
+                                + "_page_"
+                                + pageNumber
+                                + "_"
+                                + imageCount++
+                                + "."
                                 + imageFormat;
                 ByteArrayOutputStream imageBuffer = new ByteArrayOutputStream();
                 ImageIO.write(convertedImage, imageFormat, imageBuffer);
