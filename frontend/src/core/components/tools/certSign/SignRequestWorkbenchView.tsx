@@ -50,7 +50,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
       : null
   );
   const [previewCount, setPreviewCount] = useState(0);
-  const [placementMode, setPlacementMode] = useState(false);
+  const [placementMode, setPlacementMode] = useState(true);
   const [hasSelectedAnnotation, setHasSelectedAnnotation] = useState(false);
 
   // Certificate modal state
