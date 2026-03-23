@@ -14,7 +14,7 @@ import { fileStorage } from '@app/services/fileStorage';
 import { folderRunStateStorage } from '@app/services/folderRunStateStorage';
 import { folderRetryScheduleStorage } from '@app/services/folderRetryScheduleStorage';
 import { smartFolderStorage } from '@app/services/smartFolderStorage';
-import { executeAutomationSequence } from '@app/utils/automationExecutor';
+import { executeBackendPipeline } from '@app/utils/automationExecutor';
 import {
   FileId,
   StirlingFileStub,
@@ -101,16 +101,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
 
         await folderStorage.updateFileMetadata(folder.id, inputFileId, { status: 'processing' });
 
-        // Step-level callbacks not needed for background folder processing
-        const noop = () => {};
-        const resultFiles = await executeAutomationSequence(
-          automation,
-          [file],
-          toolRegistry as ToolRegistry,
-          noop,
-          noop,
-          noop
-        );
+        const resultFiles = await executeBackendPipeline(automation, [file], toolRegistry as ToolRegistry);
 
         // Load input stub for version chain info and name fallback
         const inputStub = await fileStorage.getStirlingFileStub(inputFileId as FileId);
@@ -197,6 +188,7 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
           errorMessage: err instanceof Error ? err.message : 'Unknown error',
           failedAttempts: attempts,
           nextRetryAt,
+          lastFailedAt: new Date(),
         });
 
         if (willRetry) {

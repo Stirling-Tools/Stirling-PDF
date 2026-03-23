@@ -35,6 +35,7 @@ export interface FolderFileMetadata {
   errorMessage?: string;
   failedAttempts?: number;
   nextRetryAt?: number; // ms timestamp — set when an automatic retry is scheduled
+  lastFailedAt?: Date;
   name?: string; // original filename
 }
 

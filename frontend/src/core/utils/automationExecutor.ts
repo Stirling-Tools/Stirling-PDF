@@ -5,6 +5,7 @@ import { AUTOMATION_CONSTANTS } from '@app/constants/automation';
 import { AutomationFileProcessor } from '@app/utils/automationFileProcessor';
 import { ToolType } from '@app/hooks/tools/shared/useToolOperation';
 import { processResponse } from '@app/utils/toolResponseProcessor';
+import { getFilenameFromHeaders } from '@app/utils/fileResponseUtils';
 
 /**
  * Process multi-file tool response (handles ZIP or single PDF responses)
@@ -231,4 +232,86 @@ export const executeAutomationSequence = async (
 
   console.log(`\n🎉 Automation complete: ${currentFiles.length} file(s)`);
   return currentFiles;
+};
+
+/**
+ * Execute an automation pipeline via POST /api/v1/pipeline/handleData.
+ *
+ * Falls back to executeAutomationSequence for automations that contain a step requiring
+ * client-side processing (e.g. Adjust Contrast, Remove Annotations, Extract Pages).
+ */
+export const executeBackendPipeline = async (
+  automation: any,
+  initialFiles: File[],
+  toolRegistry: ToolRegistry
+): Promise<File[]> => {
+  if (!automation?.operations || automation.operations.length === 0) {
+    throw new Error('No operations in automation');
+  }
+
+  // Fall back to frontend execution if any step needs client-side processing
+  const needsFrontendFallback = automation.operations.some((op: any) =>
+    toolRegistry[op.operation as ToolId]?.operationConfig?.customProcessor != null
+  );
+  if (needsFrontendFallback) {
+    return executeAutomationSequence(automation, initialFiles, toolRegistry);
+  }
+
+  // Build PipelineConfig JSON — "pipeline" is the @JsonProperty key the backend expects.
+  const pipeline = automation.operations.map((op: any) => {
+    const toolConfig = toolRegistry[op.operation as ToolId]?.operationConfig;
+    if (!toolConfig) throw new Error(`Tool operation not supported: ${op.operation}`);
+
+    // Apply frontend defaults so the backend receives complete parameters
+    const parameters = { ...toolConfig.defaultParameters, ...(op.parameters ?? {}) };
+
+    // Backend builds URL as getBaseUrl() + operation where getBaseUrl() ends with "/"
+    const rawEndpoint = typeof toolConfig.endpoint === 'function'
+      ? toolConfig.endpoint(parameters)
+      : toolConfig.endpoint;
+    const operation = rawEndpoint.replace(/^\//, '');
+
+    return { operation, parameters };
+  });
+
+  const formData = new FormData();
+  for (const file of initialFiles) {
+    formData.append('fileInput', file);
+  }
+  formData.append('json', JSON.stringify({ name: automation.name, pipeline }));
+
+  const response = await apiClient.post<Blob>('/api/v1/pipeline/handleData', formData, {
+    responseType: 'blob',
+    // Allow per-step timeout headroom proportional to the number of operations
+    timeout: AUTOMATION_CONSTANTS.OPERATION_TIMEOUT * automation.operations.length,
+  });
+
+  const blob: Blob = response.data;
+
+  // Validate the response is an actual PDF or ZIP before storing it.
+  // An empty or XML/HTML error body from the backend would otherwise be
+  // silently stored and render as "unknown length" in the PDF viewer.
+  if (blob.size === 0) {
+    throw new Error('Backend pipeline returned an empty response');
+  }
+  const header = new Uint8Array(await blob.slice(0, 5).arrayBuffer());
+  const isPdf = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46 && header[4] === 0x2D; // %PDF-
+  const isZip = header[0] === 0x50 && header[1] === 0x4B; // PK
+  if (!isPdf && !isZip) {
+    let hint = '';
+    try { hint = ` Response preview: ${await blob.slice(0, 200).text()}`; } catch { /* ignore */ }
+    throw new Error(`Backend pipeline returned unexpected content (not a PDF or ZIP).${hint}`);
+  }
+
+  const contentType: string = response.headers['content-type'] ?? '';
+
+  if (contentType.includes('zip')) {
+    const { files } = await AutomationFileProcessor.extractAutomationZipFiles(blob);
+    return files;
+  }
+
+  const filename =
+    getFilenameFromHeaders(response.headers['content-disposition'] ?? '') ??
+    `${automation.name ?? 'output'}.pdf`;
+  return [new File([blob], filename, { type: blob.type || 'application/pdf', lastModified: Date.now() })];
 };

@@ -569,6 +569,11 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                         {status === 'error' && meta?.nextRetryAt && <ReplayIcon style={{ fontSize: '0.875rem', color: '#f59e0b', flexShrink: 0 }} />}
                         {status === 'pending' && <Box style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', backgroundColor: 'var(--mantine-color-yellow-5)', flexShrink: 0 }} />}
                         <Text size="xs" lineClamp={1} style={{ flex: 1, minWidth: 0 }}>{filename}</Text>
+                        {status === 'error' && (meta?.failedAttempts ?? 0) > 0 && (
+                          <Box style={{ padding: '0.0625rem 0.3rem', borderRadius: '0.25rem', backgroundColor: 'rgba(239,68,68,0.22)', border: '0.0625rem solid rgba(239,68,68,0.45)', flexShrink: 0 }}>
+                            <Text style={{ fontSize: '0.625rem', fontWeight: 700, color: '#ef4444', letterSpacing: '0.03em' }}>{meta!.failedAttempts}×</Text>
+                          </Box>
+                        )}
                         {meta?.nextRetryAt && (
                           <RetryCountdown nextRetryAt={meta.nextRetryAt} t={t} />
                         )}
@@ -635,7 +640,9 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
             <Text size="sm" c="dimmed" ta="center" py="xl">
               {t('smartFolders.workbench.noInputFiles', 'No input files stored yet')}
             </Text>
-          ) : inputFiles.map((file) => (
+          ) : inputFiles.map((file) => {
+            const inputMeta = folderRecord?.files[file.fileId];
+            return (
             <Box
               key={file.fileId}
               style={{
@@ -650,6 +657,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
             >
               <FolderOpenIcon style={{ fontSize: '0.875rem', color: 'var(--mantine-color-blue-filled)', flexShrink: 0 }} />
               <Text size="sm" style={{ flex: 1, minWidth: 0, fontWeight: 500 }} lineClamp={1}>{file.name}</Text>
+              {inputMeta?.addedAt && <Text size="xs" c="dimmed" style={{ fontSize: '0.6875rem', flexShrink: 0 }}>{timeAgo(new Date(inputMeta.addedAt), t)}</Text>}
               <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'nowrap' }}>
                 <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.3rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={() => handleView(file)} title={t('smartFolders.actions.view', 'Preview')}>
                   <VisibilityIcon style={{ fontSize: '1.125rem' }} />
@@ -659,7 +667,8 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                 </button>
               </div>
             </Box>
-          ))}
+            );
+          })}
         </Stack>
       </CardExpansionModal>
 
@@ -689,7 +698,11 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
             <Text size="sm" c="dimmed" ta="center" py="xl">
               {t('smartFolders.workbench.noOutputFiles', 'No output files stored yet')}
             </Text>
-          ) : outputFiles.map((file) => (
+          ) : outputFiles.map((file) => {
+            const processedAt = Object.values(folderRecord?.files ?? {}).find(m =>
+              m.displayFileIds?.includes(file.fileId) || m.displayFileId === file.fileId
+            )?.processedAt;
+            return (
             <Box
               key={file.fileId}
               style={{
@@ -704,6 +717,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
             >
               <TaskAltIcon style={{ fontSize: '0.875rem', color: '#22c55e', flexShrink: 0 }} />
               <Text size="sm" style={{ flex: 1, minWidth: 0, fontWeight: 500 }} lineClamp={1}>{file.name}</Text>
+              {processedAt && <Text size="xs" c="dimmed" style={{ fontSize: '0.6875rem', flexShrink: 0 }}>{timeAgo(new Date(processedAt), t)}</Text>}
               <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'nowrap' }}>
                 <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.3rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={() => handleView(file)} title={t('smartFolders.actions.view', 'View')}>
                   <VisibilityIcon style={{ fontSize: '1.125rem' }} />
@@ -713,7 +727,8 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                 </button>
               </div>
             </Box>
-          ))}
+            );
+          })}
         </Stack>
       </CardExpansionModal>
 
@@ -775,6 +790,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                 <Group gap="0.625rem" style={{ padding: '0.5rem 0.625rem' }} wrap="nowrap">
                   <ErrorOutlineIcon style={{ fontSize: '0.875rem', color: '#ef4444', flexShrink: 0 }} />
                   <Text size="sm" style={{ flex: 1, minWidth: 0, fontWeight: 500 }} lineClamp={1}>{filename}</Text>
+                  {meta?.lastFailedAt && <Text size="xs" c="dimmed" style={{ fontSize: '0.6875rem', flexShrink: 0 }}>{timeAgo(new Date(meta.lastFailedAt), t)}</Text>}
                   {attempts > 0 && (
                     <Box style={{
                       padding: '0.125rem 0.375rem',

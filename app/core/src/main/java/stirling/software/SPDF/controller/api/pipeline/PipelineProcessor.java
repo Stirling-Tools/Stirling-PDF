@@ -105,24 +105,37 @@ public class PipelineProcessor {
         boolean filtersApplied = false;
         for (PipelineOperation pipelineOperation : config.getOperations()) {
             String operation = pipelineOperation.getOperation();
-            boolean isMultiInputOperation = apiDocService.isMultiInput(operation);
+            // Normalize to OpenAPI path format (leading "/") for apiDocService lookups.
+            // The frontend may omit the leading slash when building pipeline JSON.
+            String normalizedOperation = operation.startsWith("/") ? operation : "/" + operation;
+            boolean isMultiInputOperation = apiDocService.isMultiInput(normalizedOperation);
             log.info(
                     "Running operation: {} isMultiInputOperation {}",
-                    operation,
+                    normalizedOperation,
                     isMultiInputOperation);
             Map<String, Object> parameters = pipelineOperation.getParameters();
-            List<String> inputFileTypes = apiDocService.getExtensionTypes(false, operation);
+            List<String> inputFileTypes =
+                    apiDocService.getExtensionTypes(false, normalizedOperation);
             if (inputFileTypes == null) {
                 inputFileTypes = new ArrayList<>(List.of("ALL"));
             }
 
-            if (!apiDocService.isValidOperation(operation, parameters)) {
-                log.error("Invalid operation or parameters: o:{} p:{}", operation, parameters);
+            if (!apiDocService.isValidOperation(normalizedOperation, parameters)) {
+                log.error(
+                        "Invalid operation or parameters: o:{} p:{}",
+                        normalizedOperation,
+                        parameters);
                 throw new IllegalArgumentException(
-                        "Invalid operation: " + operation + " with parameters: " + parameters);
+                        "Invalid operation: "
+                                + normalizedOperation
+                                + " with parameters: "
+                                + parameters);
             }
 
-            String url = getBaseUrl() + operation;
+            // getBaseUrl() ends with "/"; strip leading "/" from normalizedOperation to avoid
+            // double slash
+            String operationPath = normalizedOperation.substring(1);
+            String url = getBaseUrl() + operationPath;
             List<Resource> newOutputFiles = new ArrayList<>();
             if (!isMultiInputOperation) {
                 for (Resource file : outputFiles) {

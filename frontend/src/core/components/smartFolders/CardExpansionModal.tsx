@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Text, ActionIcon, ScrollArea } from '@mantine/core';
 import { CardModalPhase, CARD_MODAL_TIMINGS } from '@app/hooks/useCardModalAnimation';
@@ -40,14 +40,23 @@ export function CardExpansionModal({
   children,
   footer,
 }: CardExpansionModalProps) {
+  const [viewportW, setViewportW] = useState(window.innerWidth);
+  const [viewportH, setViewportH] = useState(window.innerHeight);
+
+  useEffect(() => {
+    const handler = () => { setViewportW(window.innerWidth); setViewportH(window.innerHeight); };
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+
   if (phase === 'closed' || !cardRect) return null;
 
   const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  const modalW = Math.min(MODAL_W_REM * rootFontSize, window.innerWidth * 0.9);
-  const modalH = MODAL_H_REM * rootFontSize;
+  const modalW = Math.min(MODAL_W_REM * rootFontSize, viewportW * 0.9);
+  const modalH = Math.min(MODAL_H_REM * rootFontSize, viewportH * 0.85);
   const headerH = HEADER_H_REM * rootFontSize;
-  const finalLeft = (window.innerWidth - modalW) / 2;
-  const finalTop = window.innerHeight * MODAL_TOP_FRACTION;
+  const finalLeft = (viewportW - modalW) / 2;
+  const finalTop = Math.min(viewportH * MODAL_TOP_FRACTION, viewportH - modalH - 16);
 
   const isAtCard = phase === 'entering' || phase === 'closing-header';
   const isAtHeader = phase === 'header-open';

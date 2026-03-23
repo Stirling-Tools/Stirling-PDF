@@ -8,13 +8,13 @@ import SearchIcon from '@mui/icons-material/Search';
 import TuneIcon from '@mui/icons-material/Tune';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { FileId, StirlingFileStub } from '@app/types/fileContext';
+import { FileId, StirlingFileStub, createFileId, createStirlingFile, createQuickKey } from '@app/types/fileContext';
+import { fileStorage } from '@app/services/fileStorage';
 import { FilePreviewModal } from '@app/components/smartFolders/FilePreviewModal';
 import { useFolderOutputIds } from '@app/hooks/useFolderOutputIds';
 import { useFolderMembership } from '@app/hooks/useFolderMembership';
 import { useAllSmartFolders } from '@app/hooks/useAllSmartFolders';
 import { iconMap } from '@app/components/tools/automate/iconMap';
-import { useFileHandler } from '@app/hooks/useFileHandler';
 import { openFilesFromDisk } from '@app/services/openFilesFromDisk';
 
 interface WatchFolderFileListProps {
@@ -124,7 +124,7 @@ function FileRow({
     .filter(Boolean) as typeof folders;
 
   const hasTags = isInCurrentFolder || otherFolders.length > 0;
-  const hasBottomRow = !!file.size || hasTags;
+  const hasBottomRow = file.size > 0 || otherFolders.length > 0;
 
   const handleRowClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('[data-no-select]')) return;
@@ -319,7 +319,7 @@ function FileRow({
             paddingLeft: '1.125rem',
           }}
         >
-          {file.size && (
+          {file.size > 0 && (
             <Text
               style={{
                 fontSize: '0.625rem',
@@ -414,21 +414,41 @@ export function WatchFolderFileList({ files, folderId, onSendToFolder, onNavigat
   const [inFoldersExpanded, setInFoldersExpanded] = useState(true);
   const [outputsExpanded, setOutputsExpanded] = useState(false);
 
-  const { addFiles } = useFileHandler();
+  // Store files directly to IndexedDB without adding them to the active workbench state.
+  // The sidebar "My Files" list refreshes automatically via the stirling:files-changed event.
+  const storeFilesOnly = useCallback(async (files: File[]) => {
+    for (const file of files) {
+      const fileId = createFileId();
+      const stub: StirlingFileStub = {
+        id: fileId,
+        name: file.name,
+        type: file.type || 'application/pdf',
+        size: file.size,
+        lastModified: file.lastModified,
+        isLeaf: true,
+        originalFileId: fileId,
+        versionNumber: 1,
+        toolHistory: [],
+        quickKey: createQuickKey(file),
+        createdAt: Date.now(),
+      };
+      await fileStorage.storeStirlingFile(createStirlingFile(file, fileId), stub);
+    }
+  }, []);
 
   const handleUploadClick = useCallback(async () => {
     const pickedFiles = await openFilesFromDisk({
       multiple: true,
       onFallbackOpen: () => uploadInputRef.current?.click(),
     });
-    if (pickedFiles.length > 0) await addFiles(pickedFiles);
-  }, [addFiles]);
+    if (pickedFiles.length > 0) await storeFilesOnly(pickedFiles);
+  }, [storeFilesOnly]);
 
   const handleInputChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const picked = Array.from(e.target.files ?? []);
-    if (picked.length > 0) await addFiles(picked);
+    if (picked.length > 0) await storeFilesOnly(picked);
     e.target.value = '';
-  }, [addFiles]);
+  }, [storeFilesOnly]);
 
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('date-desc');
