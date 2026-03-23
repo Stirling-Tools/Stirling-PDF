@@ -209,6 +209,12 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
     { id: 'polygon', label: t('annotation.polygon', 'Polygon'), icon: 'change-history' },
   ];
 
+  const commentTools: { id: AnnotationToolId; label: string; icon: string }[] = [
+    { id: 'textComment', label: t('annotation.comment', 'Comment'), icon: 'comment' },
+    { id: 'insertText', label: t('annotation.insertText', 'Insert Text'), icon: 'add-comment' },
+    { id: 'replaceText', label: t('annotation.replaceText', 'Replace Text'), icon: 'find-replace' },
+  ];
+
   const otherTools: { id: AnnotationToolId; label: string; icon: string }[] = [
     { id: 'text', label: t('annotation.text', 'Text box'), icon: 'text-fields' },
     { id: 'note', label: t('annotation.note', 'Note'), icon: 'sticky-note-2' },
@@ -776,6 +782,11 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
       <Box>
         <Text size="sm" fw={600} mb="xs">{t('annotation.shapes', 'Shapes')}</Text>
         {renderToolButtons(shapeTools)}
+      </Box>
+
+      <Box>
+        <Text size="sm" fw={600} mb="xs">{t('annotation.comments', 'Comments')}</Text>
+        {renderToolButtons(commentTools)}
       </Box>
 
       <Box>
