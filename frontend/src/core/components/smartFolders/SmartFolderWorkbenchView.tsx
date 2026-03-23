@@ -7,7 +7,6 @@ import {
   Button,
   ScrollArea,
   Loader,
-  ActionIcon,
 } from '@mantine/core';
 
 import { useCardModalAnimation } from '@app/hooks/useCardModalAnimation';
@@ -57,6 +56,23 @@ export function timeAgo(date: Date, t: (key: string, options?: any) => string): 
   if (hours < 24) return t('smartFolders.time.hoursAgo', { count: hours, defaultValue: `${hours}h ago` });
   const days = Math.floor(hours / 24);
   return t('smartFolders.time.daysAgo', { count: days, defaultValue: `${days}d ago` });
+}
+
+function RetryCountdown({ nextRetryAt, t }: { nextRetryAt: number; t: (key: string, opts?: any) => string }) {
+  const [remaining, setRemaining] = useState(() => Math.max(0, nextRetryAt - Date.now()));
+  useEffect(() => {
+    const tick = () => setRemaining(Math.max(0, nextRetryAt - Date.now()));
+    const id = setInterval(tick, 10_000);
+    return () => clearInterval(id);
+  }, [nextRetryAt]);
+  const mins = Math.ceil(remaining / 60_000);
+  return (
+    <Text size="xs" c="yellow.6" style={{ flexShrink: 0 }}>
+      {remaining <= 0
+        ? t('smartFolders.workbench.retryingSoon', 'retrying…')
+        : t('smartFolders.workbench.retryIn', { count: mins, defaultValue: `retry in ${mins}m` })}
+    </Text>
+  );
 }
 
 export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps) {
@@ -308,9 +324,9 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
       >
         <Group justify="space-between" align="center">
           <Group gap="md" align="center">
-            <ActionIcon variant="subtle" size="sm" onClick={goHome} aria-label={t('smartFolders.actions.back', 'Back')}>
+            <button onClick={goHome} aria-label={t('smartFolders.actions.back', 'Back')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mantine-color-dimmed)' }}>
               <ArrowBackIcon style={{ fontSize: '1rem' }} />
-            </ActionIcon>
+            </button>
 
             {/* Icon with status dot */}
             <Box style={{ position: 'relative', flexShrink: 0 }}>
@@ -380,19 +396,22 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
 
           {/* Add files + pause/resume */}
           <Group gap="sm" align="center">
-            <Button
-              size="xs"
-              variant={folder.isPaused ? 'filled' : 'light'}
-              color={folder.isPaused ? 'green' : 'gray'}
-              leftSection={folder.isPaused
-                ? <PlayArrowIcon style={{ fontSize: '0.875rem' }} />
-                : <PauseIcon style={{ fontSize: '0.875rem' }} />}
+            <button
               onClick={handlePauseResume}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                fontSize: '0.75rem', padding: '0.25rem 0.625rem', borderRadius: '0.25rem',
+                cursor: 'pointer', border: '0.0625rem solid',
+                ...(folder.isPaused
+                  ? { backgroundColor: '#22c55e', borderColor: '#22c55e', color: '#fff' }
+                  : { backgroundColor: 'transparent', borderColor: 'var(--border-subtle)', color: 'var(--mantine-color-dimmed)' }
+                ),
+              }}
             >
               {folder.isPaused
-                ? t('smartFolders.workbench.resume', 'Resume')
-                : t('smartFolders.workbench.pause', 'Pause')}
-            </Button>
+                ? <><PlayArrowIcon style={{ fontSize: '0.875rem' }} />{t('smartFolders.workbench.resume', 'Resume')}</>
+                : <><PauseIcon style={{ fontSize: '0.875rem' }} />{t('smartFolders.workbench.pause', 'Pause')}</>}
+            </button>
             <Button
               size="xs"
               variant="light"
@@ -546,34 +565,34 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                       >
                         {status === 'processed' && <CheckCircleOutlineIcon style={{ fontSize: '0.875rem', color: '#22c55e', flexShrink: 0 }} />}
                         {status === 'processing' && <Loader size="0.625rem" />}
-                        {status === 'error' && <ErrorOutlineIcon style={{ fontSize: '0.875rem', color: '#ef4444', flexShrink: 0 }} />}
+                        {status === 'error' && !meta?.nextRetryAt && <ErrorOutlineIcon style={{ fontSize: '0.875rem', color: '#ef4444', flexShrink: 0 }} />}
+                        {status === 'error' && meta?.nextRetryAt && <ReplayIcon style={{ fontSize: '0.875rem', color: '#f59e0b', flexShrink: 0 }} />}
                         {status === 'pending' && <Box style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', backgroundColor: 'var(--mantine-color-yellow-5)', flexShrink: 0 }} />}
                         <Text size="xs" lineClamp={1} style={{ flex: 1, minWidth: 0 }}>{filename}</Text>
-                        {meta?.errorMessage && <Text size="xs" c="red" lineClamp={1} style={{ flexShrink: 0, maxWidth: '30%' }}>{meta.errorMessage}</Text>}
+                        {meta?.nextRetryAt && (
+                          <RetryCountdown nextRetryAt={meta.nextRetryAt} t={t} />
+                        )}
+                        {meta?.errorMessage && !meta.nextRetryAt && <Text size="xs" c="red" lineClamp={1} style={{ flexShrink: 0, maxWidth: '30%' }}>{meta.errorMessage}</Text>}
                         {status === 'error' && inputFile && (
-                          <ActionIcon
-                            size="sm"
-                            variant="light"
-                            color="blue"
+                          <button
                             title={t('smartFolders.actions.retry', 'Retry')}
+                            style={{ background: 'rgba(59,130,246,0.12)', border: 'none', cursor: 'pointer', padding: '0.25rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6' }}
                             onClick={async () => {
                               await updateFileMetadata(fileId, { status: 'pending', errorMessage: undefined });
                               runPipeline(folder!, inputFile, fileId, folderRecord?.files[fileId]?.ownedByFolder ?? false);
                             }}
                           >
                             <ReplayIcon style={{ fontSize: '1rem' }} />
-                          </ActionIcon>
+                          </button>
                         )}
-                        {outputFile && (
-                          <ActionIcon size="sm" variant="subtle" onClick={() => handleView(outputFile)} title={t('smartFolders.actions.view', 'View')}>
+                        {(() => { const previewFile = outputFile ?? inputFile; return previewFile && (<>
+                          <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={() => handleView(previewFile)} title={t('smartFolders.actions.view', 'Preview')}>
                             <VisibilityIcon style={{ fontSize: '1rem' }} />
-                          </ActionIcon>
-                        )}
-                        {outputFile && (
-                          <ActionIcon size="sm" variant="subtle" onClick={() => handleDownload(outputFile, outputFile.name)} title={t('smartFolders.actions.downloadOutput', 'Download output')}>
+                          </button>
+                          <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={() => handleDownload(previewFile, previewFile.name)} title={t('smartFolders.actions.download', 'Download')}>
                             <DownloadIcon style={{ fontSize: '1rem' }} />
-                          </ActionIcon>
-                        )}
+                          </button>
+                        </>); })()}
                         <Text size="xs" c="dimmed" style={{ fontSize: '0.6875rem', flexShrink: 0, width: '3.5rem', textAlign: 'right' }}>
                           {(meta?.processedAt || meta?.addedAt)
                             ? timeAgo(new Date((meta.processedAt ?? meta.addedAt)!), t)
@@ -601,14 +620,14 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
         labelSingular={t('smartFolders.workbench.inputFile', 'input file')}
         labelPlural={t('smartFolders.workbench.inputFiles', 'input files')}
         footer={
-          <Group justify="flex-end">
-            <Button size="sm" variant="subtle" color="gray"
-              leftSection={<DownloadIcon style={{ fontSize: '1rem' }} />}
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.375rem 0.625rem', borderRadius: '0.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: 'var(--mantine-color-dimmed)' }}
               onClick={async () => { for (const f of inputFiles) await handleDownload(f, f.name); }}
             >
+              <DownloadIcon style={{ fontSize: '1rem' }} />
               {t('smartFolders.workbench.exportAll', 'Export all')}
-            </Button>
-          </Group>
+            </button>
+          </div>
         }
       >
         <Stack gap="0.5rem">
@@ -631,9 +650,14 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
             >
               <FolderOpenIcon style={{ fontSize: '0.875rem', color: 'var(--mantine-color-blue-filled)', flexShrink: 0 }} />
               <Text size="sm" style={{ flex: 1, minWidth: 0, fontWeight: 500 }} lineClamp={1}>{file.name}</Text>
-              <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleDownload(file, file.name)} title={t('smartFolders.actions.download', 'Download')}>
-                <DownloadIcon style={{ fontSize: '1.125rem' }} />
-              </ActionIcon>
+              <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'nowrap' }}>
+                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.3rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={() => handleView(file)} title={t('smartFolders.actions.view', 'Preview')}>
+                  <VisibilityIcon style={{ fontSize: '1.125rem' }} />
+                </button>
+                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.3rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={() => handleDownload(file, file.name)} title={t('smartFolders.actions.download', 'Download')}>
+                  <DownloadIcon style={{ fontSize: '1.125rem' }} />
+                </button>
+              </div>
             </Box>
           ))}
         </Stack>
@@ -650,14 +674,14 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
         labelSingular={t('smartFolders.workbench.outputFile', 'output file')}
         labelPlural={t('smartFolders.workbench.outputFiles', 'output files')}
         footer={
-          <Group justify="flex-end">
-            <Button size="sm" variant="subtle" color="gray"
-              leftSection={<DownloadIcon style={{ fontSize: '1rem' }} />}
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.375rem 0.625rem', borderRadius: '0.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: 'var(--mantine-color-dimmed)' }}
               onClick={async () => { for (const f of outputFiles) await handleDownload(f, f.name); }}
             >
+              <DownloadIcon style={{ fontSize: '1rem' }} />
               {t('smartFolders.workbench.exportAll', 'Export all')}
-            </Button>
-          </Group>
+            </button>
+          </div>
         }
       >
         <Stack gap="0.5rem">
@@ -680,14 +704,14 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
             >
               <TaskAltIcon style={{ fontSize: '0.875rem', color: '#22c55e', flexShrink: 0 }} />
               <Text size="sm" style={{ flex: 1, minWidth: 0, fontWeight: 500 }} lineClamp={1}>{file.name}</Text>
-              <Group gap="0.25rem" wrap="nowrap">
-                <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleView(file)} title={t('smartFolders.actions.view', 'View')}>
+              <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'nowrap' }}>
+                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.3rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={() => handleView(file)} title={t('smartFolders.actions.view', 'View')}>
                   <VisibilityIcon style={{ fontSize: '1.125rem' }} />
-                </ActionIcon>
-                <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleDownload(file, file.name)} title={t('smartFolders.actions.download', 'Download')}>
+                </button>
+                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.3rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={() => handleDownload(file, file.name)} title={t('smartFolders.actions.download', 'Download')}>
                   <DownloadIcon style={{ fontSize: '1.125rem' }} />
-                </ActionIcon>
-              </Group>
+                </button>
+              </div>
             </Box>
           ))}
         </Stack>
@@ -718,8 +742,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
             >
               {t('smartFolders.workbench.retryAll', 'Retry all')}
             </Button>
-            <Button size="sm" variant="subtle" color="gray"
-              leftSection={<DownloadIcon style={{ fontSize: '1rem' }} />}
+            <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.375rem 0.625rem', borderRadius: '0.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: 'var(--mantine-color-dimmed)' }}
               onClick={async () => {
                 for (const fid of failedFileIds) {
                   const f = inputFiles.find(x => x.fileId === fid);
@@ -727,8 +750,9 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                 }
               }}
             >
+              <DownloadIcon style={{ fontSize: '1rem' }} />
               {t('smartFolders.workbench.exportAll', 'Export all')}
-            </Button>
+            </button>
           </Group>
         }
       >
@@ -762,14 +786,14 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                       <Text style={{ fontSize: '0.625rem', fontWeight: 700, color: '#ef4444', letterSpacing: '0.03em' }}>{attempts}×</Text>
                     </Box>
                   )}
-                  <Group gap="0.25rem" wrap="nowrap" style={{ flexShrink: 0 }}>
+                  <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'nowrap', flexShrink: 0 }}>
                     {inputFile && (
-                      <ActionIcon size="md" variant="subtle" color="gray" onClick={() => handleDownload(inputFile, inputFile.name)} title={t('smartFolders.actions.downloadInput', 'Download input')}>
+                      <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.3rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={() => handleDownload(inputFile, inputFile.name)} title={t('smartFolders.actions.downloadInput', 'Download input')}>
                         <DownloadIcon style={{ fontSize: '1.125rem' }} />
-                      </ActionIcon>
+                      </button>
                     )}
                     {inputFile && (
-                      <ActionIcon size="md" variant="light" color="blue" title={t('smartFolders.actions.retry', 'Retry')}
+                      <button style={{ background: 'rgba(59,130,246,0.12)', border: 'none', cursor: 'pointer', padding: '0.3rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6' }} title={t('smartFolders.actions.retry', 'Retry')}
                         onClick={async () => {
                           await updateFileMetadata(fileId, { status: 'pending', errorMessage: undefined });
                           runPipeline(folder!, inputFile, fileId, folderRecord?.files[fileId]?.ownedByFolder ?? false);
@@ -777,9 +801,9 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                         }}
                       >
                         <ReplayIcon style={{ fontSize: '1.125rem' }} />
-                      </ActionIcon>
+                      </button>
                     )}
-                  </Group>
+                  </div>
                 </Group>
                 {meta?.errorMessage && (
                   <Box style={{

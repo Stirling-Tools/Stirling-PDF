@@ -14,6 +14,8 @@ export interface SmartFolder {
   order?: number;
   isDefault?: boolean;
   isPaused?: boolean;
+  maxRetries?: number;        // 0 = disabled; default 3
+  retryDelayMinutes?: number; // default 5
   outputMode?: 'new_file' | 'new_version';       // default: 'new_file' (existing behaviour)
   outputName?: string;                           // output filename prefix/suffix
   outputNamePosition?: 'prefix' | 'suffix';      // default: 'prefix'
@@ -32,6 +34,7 @@ export interface FolderFileMetadata {
   ownedByFolder?: boolean;
   errorMessage?: string;
   failedAttempts?: number;
+  nextRetryAt?: number; // ms timestamp — set when an automatic retry is scheduled
   name?: string; // original filename
 }
 

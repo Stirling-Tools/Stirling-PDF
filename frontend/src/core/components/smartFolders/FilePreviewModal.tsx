@@ -31,6 +31,7 @@ export function FilePreviewModal({ fileId, fileName, onClose }: FilePreviewModal
       onClose={onClose}
       title={fileName}
       size="90%"
+      zIndex={400}
       styles={{ body: { height: '82vh', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' } }}
     >
       {error ? (

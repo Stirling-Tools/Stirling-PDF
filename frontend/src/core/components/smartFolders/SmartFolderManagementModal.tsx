@@ -8,6 +8,7 @@ import {
   Textarea,
   Divider,
   ColorInput,
+  NumberInput,
   Text,
   Alert,
   Switch,
@@ -49,6 +50,8 @@ export function SmartFolderManagementModal({
   const [description, setDescription] = useState(editFolder?.description ?? '');
   const [icon, setIcon] = useState(editFolder?.icon ?? 'FolderIcon');
   const [accentColor, setAccentColor] = useState(editFolder?.accentColor ?? '#3b82f6');
+  const [maxRetries, setMaxRetries] = useState<number>(editFolder?.maxRetries ?? 3);
+  const [retryDelayMinutes, setRetryDelayMinutes] = useState<number>(editFolder?.retryDelayMinutes ?? 5);
   const [outputMode, setOutputMode] = useState<'new_file' | 'new_version'>(editFolder?.outputMode ?? 'new_file');
   const [outputName, setOutputName] = useState(editFolder?.outputName ?? editFolder?.name ?? '');
   const [outputNamePosition, setOutputNamePosition] = useState<'prefix' | 'suffix'>(editFolder?.outputNamePosition ?? 'prefix');
@@ -66,6 +69,8 @@ export function SmartFolderManagementModal({
     setDescription(editFolder?.description ?? '');
     setIcon(editFolder?.icon ?? 'FolderIcon');
     setAccentColor(editFolder?.accentColor ?? '#3b82f6');
+    setMaxRetries(editFolder?.maxRetries ?? 3);
+    setRetryDelayMinutes(editFolder?.retryDelayMinutes ?? 5);
     setOutputMode(editFolder?.outputMode ?? 'new_file');
     setOutputName(editFolder?.outputName ?? editFolder?.name ?? '');
     setOutputNamePosition(editFolder?.outputNamePosition ?? 'prefix');
@@ -90,6 +95,10 @@ export function SmartFolderManagementModal({
   const handleAutomationComplete = useCallback(async (automation: AutomationConfig) => {
     const trimmedName = name.trim();
     try {
+      const retryFields = {
+        maxRetries,
+        retryDelayMinutes,
+      };
       if (isEditMode && editFolder) {
         await smartFolderStorage.updateFolder({
           ...editFolder,
@@ -98,6 +107,7 @@ export function SmartFolderManagementModal({
           icon,
           accentColor,
           automationId: automation.id,
+          ...retryFields,
           outputMode: outputMode === 'new_version' ? 'new_version' : undefined,
           outputName: outputName.trim() || undefined,
           outputNamePosition: outputNamePosition === 'suffix' ? 'suffix' : undefined,
@@ -109,6 +119,7 @@ export function SmartFolderManagementModal({
           icon,
           accentColor,
           automationId: automation.id,
+          ...retryFields,
           outputMode: outputMode === 'new_version' ? 'new_version' : undefined,
           outputName: outputName.trim() || undefined,
           outputNamePosition: outputNamePosition === 'suffix' ? 'suffix' : undefined,
@@ -229,6 +240,31 @@ export function SmartFolderManagementModal({
             </Group>
           )}
         </Stack>
+
+        <Divider label={t('smartFolders.modal.retryLabel', 'Auto-retry')} labelPosition="left" />
+
+        <Group gap="md" align="flex-end">
+          <NumberInput
+            label={t('smartFolders.modal.maxRetries', 'Max retries')}
+            description={t('smartFolders.modal.maxRetriesDesc', '0 to disable')}
+            value={maxRetries}
+            onChange={(v) => setMaxRetries(typeof v === 'number' ? Math.max(0, Math.min(10, v)) : 0)}
+            min={0}
+            max={10}
+            size="sm"
+            style={{ flex: 1 }}
+          />
+          <NumberInput
+            label={t('smartFolders.modal.retryDelay', 'Delay (minutes)')}
+            value={retryDelayMinutes}
+            onChange={(v) => setRetryDelayMinutes(typeof v === 'number' ? Math.max(1, Math.min(60, v)) : 5)}
+            min={1}
+            max={60}
+            size="sm"
+            disabled={maxRetries === 0}
+            style={{ flex: 1 }}
+          />
+        </Group>
 
         <Divider label={t('smartFolders.modal.automation', 'Automation')} labelPosition="left" />
 

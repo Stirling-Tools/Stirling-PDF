@@ -5,13 +5,14 @@
  * SmartFolderHomePage.processFiles and SmartFolderWorkbenchView.runAutomation.
  */
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { ToolRegistry } from '@app/data/toolsTaxonomy';
 import { SmartFolder, SmartFolderRunEntry } from '@app/types/smartFolders';
 import { automationStorage } from '@app/services/automationStorage';
 import { folderStorage } from '@app/services/folderStorage';
 import { fileStorage } from '@app/services/fileStorage';
 import { folderRunStateStorage } from '@app/services/folderRunStateStorage';
+import { smartFolderStorage } from '@app/services/smartFolderStorage';
 import { executeAutomationSequence } from '@app/utils/automationExecutor';
 import {
   FileId,
@@ -61,6 +62,15 @@ export async function resolveInputFile(
  */
 export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
   const processingRef = useRef<Set<string>>(new Set());
+  // Tracks scheduled retry timeouts so they can be cancelled on unmount
+  const retryTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+  useEffect(() => {
+    return () => {
+      for (const timer of retryTimersRef.current.values()) clearTimeout(timer);
+      retryTimersRef.current.clear();
+    };
+  }, []);
 
   const runPipeline = useCallback(
     async (
@@ -175,11 +185,41 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
       } catch (err: unknown) {
         const existing = await folderStorage.getFolderData(folder.id);
         const prev = existing?.files[inputFileId];
+        const attempts = (prev?.failedAttempts ?? 0) + 1;
+        const maxRetries = folder.maxRetries ?? 3;
+        const retryDelayMs = (folder.retryDelayMinutes ?? 5) * 60_000;
+        const willRetry = maxRetries > 0 && attempts < maxRetries && retryDelayMs > 0;
+        const nextRetryAt = willRetry ? Date.now() + retryDelayMs : undefined;
+
         await folderStorage.updateFileMetadata(folder.id, inputFileId, {
           status: 'error',
           errorMessage: err instanceof Error ? err.message : 'Unknown error',
-          failedAttempts: (prev?.failedAttempts ?? 0) + 1,
+          failedAttempts: attempts,
+          nextRetryAt,
         });
+
+        if (willRetry) {
+          // Cancel any existing timer for this file before scheduling a new one
+          const existing = retryTimersRef.current.get(inputFileId);
+          if (existing) clearTimeout(existing);
+
+          const timer = setTimeout(async () => {
+            retryTimersRef.current.delete(inputFileId);
+            // Read fresh folder state — it may have been paused or deleted since scheduling
+            const freshFolder = await smartFolderStorage.getFolder(folder.id);
+            if (!freshFolder || freshFolder.isPaused) return;
+            const freshFile = await fileStorage.getStirlingFile(inputFileId as FileId);
+            if (!freshFile) return;
+            // Reset to pending so the UI reflects "queued again"
+            await folderStorage.updateFileMetadata(folder.id, inputFileId, {
+              status: 'pending',
+              nextRetryAt: undefined,
+            });
+            runPipeline(freshFolder, freshFile, inputFileId, prev?.ownedByFolder ?? ownedByFolder);
+          }, retryDelayMs);
+
+          retryTimersRef.current.set(inputFileId, timer);
+        }
       } finally {
         processingRef.current.delete(inputFileId);
       }
