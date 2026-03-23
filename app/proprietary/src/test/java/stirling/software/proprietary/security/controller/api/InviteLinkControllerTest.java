@@ -31,6 +31,7 @@ import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.EmailService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 @ExtendWith(MockitoExtension.class)
 class InviteLinkControllerTest {
@@ -39,6 +40,7 @@ class InviteLinkControllerTest {
     @Mock private TeamRepository teamRepository;
     @Mock private UserService userService;
     @Mock private EmailService emailService;
+    @Mock private UserLicenseSettingsService userLicenseSettingsService;
 
     private ApplicationProperties applicationProperties;
     private MockMvc mockMvc;
@@ -59,7 +61,8 @@ class InviteLinkControllerTest {
                         teamRepository,
                         userService,
                         applicationProperties,
-                        Optional.of(emailService));
+                        Optional.of(emailService),
+                        userLicenseSettingsService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -89,9 +92,9 @@ class InviteLinkControllerTest {
     @Test
     void generateInviteLinkBlocksOnLicenseLimit() throws Exception {
         applicationProperties.getPremium().setEnabled(true);
-        applicationProperties.getPremium().setMaxUsers(1);
         when(userService.getTotalUsersCount()).thenReturn(1L);
         when(inviteTokenRepository.countActiveInvites(any(LocalDateTime.class))).thenReturn(0L);
+        when(userLicenseSettingsService.calculateMaxAllowedUsers()).thenReturn(1);
 
         mockMvc.perform(
                         post("/api/v1/invite/generate")
@@ -99,6 +102,29 @@ class InviteLinkControllerTest {
                                 .param("email", "new@ex.com"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value(startsWith("License limit reached")));
+    }
+
+    @Test
+    void generateInviteLinkAllowedOnServerLicense() throws Exception {
+        // SERVER license has raw maxUsers=0, but calculateMaxAllowedUsers() returns
+        // Integer.MAX_VALUE
+        applicationProperties.getPremium().setEnabled(true);
+        when(userService.getTotalUsersCount()).thenReturn(3L);
+        when(inviteTokenRepository.countActiveInvites(any(LocalDateTime.class))).thenReturn(0L);
+        when(userLicenseSettingsService.calculateMaxAllowedUsers()).thenReturn(Integer.MAX_VALUE);
+        when(userService.usernameExistsIgnoreCase("new@ex.com")).thenReturn(false);
+        when(inviteTokenRepository.findByEmail("new@ex.com")).thenReturn(Optional.empty());
+        Team defaultTeam = new Team();
+        defaultTeam.setId(1L);
+        defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);
+        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
+                .thenReturn(Optional.of(defaultTeam));
+
+        mockMvc.perform(
+                        post("/api/v1/invite/generate")
+                                .principal(adminPrincipal)
+                                .param("email", "new@ex.com"))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -118,7 +144,7 @@ class InviteLinkControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(
                         jsonPath("$.inviteUrl")
-                                .value(startsWith("https://frontend.example.com/invite?token=")))
+                                .value(startsWith("https://frontend.example.com/invite/")))
                 .andExpect(jsonPath("$.email").value("new@example.com"));
 
         verify(inviteTokenRepository).save(any());

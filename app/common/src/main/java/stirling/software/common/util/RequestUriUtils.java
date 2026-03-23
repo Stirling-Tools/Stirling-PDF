@@ -86,7 +86,6 @@ public class RequestUriUtils {
         // Blocklist of backend/non-frontend paths that should still go through filters
         String[] backendOnlyPrefixes = {
             "/register",
-            "/invite",
             "/pipeline",
             "/pdfjs",
             "/pdfjs-legacy",

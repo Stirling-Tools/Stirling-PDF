@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Modal,
@@ -38,6 +38,7 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
   const [processing, setProcessing] = useState(false);
   const [inviteMode, setInviteMode] = useState<'email' | 'direct' | 'link'>('direct');
   const [generatedInviteLink, setGeneratedInviteLink] = useState<string | null>(null);
+  const actionTakenRef = useRef(false);
 
   // License information
   const [licenseInfo, setLicenseInfo] = useState<{
@@ -231,9 +232,10 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
         teamId: inviteLinkForm.teamId,
         expiryHours: inviteLinkForm.expiryHours,
         sendEmail: inviteLinkForm.sendEmail,
+        frontendBaseUrl: config?.frontendUrl || window.location.origin,
       });
+      actionTakenRef.current = true;
       setGeneratedInviteLink(response.inviteUrl);
-      onSuccess?.();
       if (inviteLinkForm.sendEmail && inviteLinkForm.email) {
         alert({ alertType: 'success', title: t('workspace.people.inviteLink.emailSent', 'Invite link generated and sent via email') });
       }
@@ -247,6 +249,10 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
   };
 
   const handleClose = () => {
+    if (actionTakenRef.current) {
+      onSuccess?.();
+      actionTakenRef.current = false;
+    }
     setGeneratedInviteLink(null);
     setInviteMode('direct');
     setInviteForm({
