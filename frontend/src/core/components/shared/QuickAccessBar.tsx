@@ -4,7 +4,7 @@ import { Stack, Divider, Menu, Indicator } from "@mantine/core";
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
-import SignPopout from '@app/components/shared/signing/SignPopout';
+import SignPopout, { SIGN_REQUEST_WORKBENCH_TYPE, SESSION_DETAIL_WORKBENCH_TYPE } from '@app/components/shared/signing/SignPopout';
 import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
@@ -62,7 +62,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { selectedFiles, selectedFileIds } = useFileSelection();
   const { state, selectors } = useFileState();
   const { actions } = useFileActions();
-  const { hasUnsavedChanges } = useNavigationState();
+  const { hasUnsavedChanges, workbench: currentWorkbench } = useNavigationState();
   const { actions: navigationActions } = useNavigationActions();
   const { getToolNavigation } = useSidebarNavigation();
   const { config } = useAppConfig();
@@ -80,6 +80,9 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const sharingEnabled = config?.storageSharingEnabled === true;
   const shareLinksEnabled = config?.storageShareLinksEnabled === true;
   const groupSigningEnabled = config?.storageGroupSigningEnabled === true;
+  const isSignWorkbenchActive =
+    currentWorkbench === SIGN_REQUEST_WORKBENCH_TYPE ||
+    currentWorkbench === SESSION_DETAIL_WORKBENCH_TYPE;
   const [inviteRows, setInviteRows] = useState<Array<{ id: number; email: string; role: 'editor' | 'commenter' | 'viewer'; error?: string }>>([
     { id: Date.now(), email: '', role: 'editor' },
   ]);
@@ -481,7 +484,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
 
   // Helper function to render navigation buttons with URL support
   const renderNavButton = (config: ButtonConfig, index: number, shouldGuardNavigation = false) => {
-    const isActive = isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView);
+    const isActive = !isSignWorkbenchActive && isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView);
 
     // Check if this button has URL navigation support
     const navProps = config.type === 'navigation' && (config.id === 'read' || config.id === 'automate')
@@ -504,7 +507,9 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       }
     };
 
-    const buttonStyle = getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView);
+    const buttonStyle = isSignWorkbenchActive
+      ? { backgroundColor: 'var(--icon-inactive-bg)', color: 'var(--icon-inactive-color)', border: 'none', borderRadius: '0.5rem' }
+      : getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView);
 
     // Render navigation button with conditional URL support
     return (
@@ -674,7 +679,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                     <QuickAccessButton
                       icon={<LocalIcon icon="group-rounded" width="1.25rem" height="1.25rem" />}
                       label={t('quickAccess.access', 'Access')}
-                      isActive={accessMenuOpen}
+                      isActive={!isSignWorkbenchActive && accessMenuOpen}
                       onClick={() => {
                         setAccessMenuOpen((prev) => !prev);
                       }}
@@ -697,7 +702,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                         <QuickAccessButton
                           icon={<LocalIcon icon="edit-square-rounded" width="1.15rem" height="1.15rem" />}
                           label={t('quickAccess.sign', 'Sign')}
-                          isActive={signMenuOpen}
+                          isActive={signMenuOpen || isSignWorkbenchActive}
                           onClick={() => setSignMenuOpen((prev) => !prev)}
                           ariaLabel={t('quickAccess.sign', 'Sign')}
                           dataTestId="sign-button"
@@ -707,7 +712,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                       <QuickAccessButton
                         icon={<LocalIcon icon="edit-square-rounded" width="1.15rem" height="1.15rem" />}
                         label={t('quickAccess.sign', 'Sign')}
-                        isActive={signMenuOpen}
+                        isActive={signMenuOpen || isSignWorkbenchActive}
                         onClick={() => setSignMenuOpen((prev) => !prev)}
                         ariaLabel={t('quickAccess.sign', 'Sign')}
                         dataTestId="sign-button"

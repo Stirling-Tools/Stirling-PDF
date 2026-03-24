@@ -17,6 +17,9 @@ import SignRequestWorkbenchView from '@app/components/tools/certSign/SignRequest
 import SessionDetailWorkbenchView from '@app/components/tools/certSign/SessionDetailWorkbenchView';
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 
+export const SIGN_REQUEST_WORKBENCH_TYPE = 'custom:signRequestWorkbench' as const;
+export const SESSION_DETAIL_WORKBENCH_TYPE = 'custom:sessionDetailWorkbench' as const;
+
 interface SignPopoutProps {
   isOpen: boolean;
   onClose: () => void;
@@ -65,9 +68,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
 
   // Workbench IDs
   const SIGN_REQUEST_WORKBENCH_ID = 'signRequestWorkbench';
-  const SIGN_REQUEST_WORKBENCH_TYPE = 'custom:signRequestWorkbench' as const;
   const SESSION_DETAIL_WORKBENCH_ID = 'sessionDetailWorkbench';
-  const SESSION_DETAIL_WORKBENCH_TYPE = 'custom:sessionDetailWorkbench' as const;
 
   // Register workbenches only when group signing is enabled
   useEffect(() => {
@@ -87,6 +88,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       workbenchId: SESSION_DETAIL_WORKBENCH_TYPE,
       label: t('certSign.collab.sessionDetail.workbenchTitle', 'Session Management'),
       component: SessionDetailWorkbenchView,
+      hideTopControls: true,
       hideToolPanel: true,
     });
 
@@ -100,6 +102,13 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
   useEffect(() => {
     if (currentView !== SIGN_REQUEST_WORKBENCH_TYPE) {
       clearCustomWorkbenchViewData(SIGN_REQUEST_WORKBENCH_ID);
+    }
+  }, [currentView]);
+
+  // Clear session detail workbench data when the user navigates away from it
+  useEffect(() => {
+    if (currentView !== SESSION_DETAIL_WORKBENCH_TYPE) {
+      clearCustomWorkbenchViewData(SESSION_DETAIL_WORKBENCH_ID);
     }
   }, [currentView]);
 
