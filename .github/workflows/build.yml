@@ -183,7 +183,7 @@ jobs:
           path: ./SwaggerDoc.json
 
   frontend-validation:
-    if: needs.files-changed.outputs.frontend == 'true'
+    if: needs.files-changed.outputs.frontend == 'true' || needs.files-changed.outputs.openapi == 'true'
     needs: files-changed
     runs-on: ubuntu-latest
     steps:
@@ -201,6 +201,8 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install frontend dependencies
         run: cd frontend && npm ci
+      - name: Check generated OpenAPI TypeScript models
+        run: cd frontend && npm run generate-openapi-types:check
       - name: Type-check frontend
         run: cd frontend && npm run prep && npm run typecheck:all
       - name: Lint frontend

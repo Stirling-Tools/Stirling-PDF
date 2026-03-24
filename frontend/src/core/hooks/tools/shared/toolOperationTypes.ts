@@ -2,6 +2,7 @@ import { StirlingFile } from '@app/types/fileContext';
 import type { ResponseHandler } from '@app/utils/toolResponseProcessor';
 import { ToolId } from '@app/types/toolId';
 import type { ProcessingProgress } from '@app/hooks/tools/shared/useToolState';
+import type { ApiOperationId, ApiOperationRequestById } from '@app/generated/openapi';
 
 export type { ProcessingProgress, ResponseHandler };
 
@@ -24,6 +25,32 @@ export interface CustomProcessorResult {
    */
   consumedAllInputs?: boolean;
 }
+
+export interface BackendToolMapping<
+  TParams,
+  TOperationId extends ApiOperationId = ApiOperationId,
+  TApiParams = unknown,
+> {
+  operationId: TOperationId;
+  toFrontendParameters(apiParams: TApiParams): TParams;
+  toApiParams(params: TParams): TApiParams;
+}
+
+export interface ToolErrorLike {
+  message?: string;
+  name?: string;
+  response?: {
+    data?: unknown;
+  };
+}
+
+export const defineBackendToolMapping = <
+  TParams,
+  TOperationId extends ApiOperationId,
+  TApiParams extends Partial<ApiOperationRequestById[TOperationId]> = Partial<ApiOperationRequestById[TOperationId]>,
+>(
+  mapping: BackendToolMapping<TParams, TOperationId, TApiParams>
+): BackendToolMapping<TParams, TOperationId, TApiParams> => mapping;
 
 /**
  * Configuration for tool operations defining processing behavior and API integration.
@@ -54,10 +81,13 @@ interface BaseToolOperationConfig<TParams> {
   responseHandler?: ResponseHandler;
 
   /** Extract user-friendly error messages from API errors */
-  getErrorMessage?: (error: any) => string;
+  getErrorMessage?: (error: ToolErrorLike) => string;
 
   /** Default parameter values for automation */
   defaultParameters?: TParams;
+
+  /** Mapping between generated backend request models and frontend parameter objects. */
+  backendMapping?: BackendToolMapping<TParams, ApiOperationId, unknown>;
 
   /**
    * For custom tools: if true, success implies all input files were successfully processed.
