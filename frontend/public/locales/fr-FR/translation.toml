@@ -142,6 +142,10 @@ welcome = "Bienvenue"
 white = "Blanc"
 WorkInProgess = "En cours de développement, merci de nous remonter les problèmes que vous pourriez constater!"
 yes = "Oui"
+insufficientCredits = "Insufficient credits. Required: {{requiredCredits}}, Available: {{currentBalance}}, Shortfall: {{shortfall}}"
+loadingCredits = "Checking credits..."
+loadingProStatus = "Checking subscription status..."
+noticeTopUpOrPlan = "Not enough credits, please top up or upgrade to a plan"
 
 [account]
 accountSettings = "Paramètres du compte"
@@ -1557,6 +1561,13 @@ underline = "Souligner"
 undo = "Annuler"
 unsupportedType = "Ce type d’annotation n’est pas entièrement pris en charge pour l’édition."
 width = "Largeur"
+annotationStyle = "Annotation style"
+comment = "Comment"
+comments = "Comments"
+insertText = "Insert Text"
+lineArrow = "Arrow"
+polyline = "Polyline"
+replaceText = "Replace Text"
 
 [app]
 description = "L’alternative gratuite à Adobe Acrobat (10M+ téléchargements)"
@@ -2574,10 +2585,22 @@ title = "Réglage de la qualité"
 [compressPdfs]
 tags = "compresser,réduire,taille,squish,small,tiny"
 
+[config]
+plan = "Plan"
+
 [config.account.overview]
 guestDescription = "Vous êtes connecté en tant qu’invité. Envisagez de mettre à niveau votre compte ci-dessus."
 manageAccountPreferences = "Gérer les préférences de votre compte"
 title = "Paramètres du compte"
+confirmDelete = "Delete My Account"
+deleteAccount = "Delete Account"
+deleteAccountTitle = "Delete Account"
+deleteFailed = "Failed to delete account."
+deleteFailedTitle = "Unable to delete account"
+deleteWarning = "This action is permanent and cannot be undone. All your data will be deleted."
+enterEmailConfirm = "To confirm deletion, please type your email address ({{email}}) below:"
+label = "Overview"
+signedInAs = "Signed in as"
 
 [config.account.upgrade]
 description = "Liez votre compte pour préserver votre historique et accéder à davantage de fonctionnalités !"
@@ -2591,6 +2614,32 @@ passwordPlaceholder = "Définir un mot de passe"
 socialLogin = "Mettre à niveau avec un compte social"
 title = "Mettre à niveau le compte invité"
 upgradeButton = "Mettre à niveau le compte"
+
+[config.account.profilePicture]
+description = "Upload an image to personalize your account."
+help = "PNG, JPG, or WebP up to 2MB."
+remove = "Remove"
+sizeError = "Please select an image smaller than 2MB."
+switchedToCustom = "Switched to custom picture. You can now upload your own."
+title = "Profile picture"
+upload = "Upload"
+useCustom = "Use custom picture"
+usingProvider = "Using {{provider}} profile picture"
+
+[config.account.profilePicture.cropper]
+cropError = "Failed to crop image. Please try again."
+invalidImage = "Invalid image file. Please select a valid PNG, JPG, or WebP file."
+processing = "Processing crop..."
+save = "Save Cropped Image"
+sizeErrorAfterCrop = "Cropped image is too large. Please zoom out or crop a smaller area."
+title = "Crop Profile Picture"
+zoom = "Zoom"
+
+[config.account.security]
+changePassword = "Change password"
+description = "Manage your password and security settings."
+title = "Passwords & Security"
+update = "Update password"
 
 [config.apiKeys]
 chartAriaLabel = "Utilisation des crédits : inclus {{includedUsed}} sur {{includedTotal}}, achetés {{purchasedUsed}} sur {{purchasedTotal}}"
@@ -2614,6 +2663,7 @@ refreshAriaLabel = "Actualiser la clé API"
 schemaLink = "Référence du schéma API"
 totalCredits = "Crédits totaux"
 usage = "Incluez cette clé dans l’en-tête X-API-KEY pour toutes les requêtes API."
+creditsRemaining = "Credits Remaining"
 
 [config.apiKeys.alert]
 apiKeyErrorTitle = "Erreur de clé API"
@@ -2728,6 +2778,15 @@ webOptions = "Options Web vers PDF"
 wordDoc = "Document Word"
 wordDocExt = "Document Word (.docx)"
 zoomLevel = "Niveau de zoom"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "eBook → PDF"
+emlToPdf = "Email → PDF"
+fileToPdf = "Office/Document → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "Options eBook vers PDF"
@@ -3713,6 +3772,11 @@ desc = "Recherche et affiche tout JavaScript injecté dans un PDF."
 tags = "javascript,code,script"
 title = "Afficher le JavaScript"
 
+[home.timestampPdf]
+desc = "Ajoutez un horodatage RFC 3161 pour prouver la date d'existence de votre PDF"
+tags = "horodatage,RFC 3161,TSA,autorité de timestamp,horodatage de document,preuve d'existence,jeton d'horodatage,timestamp de confiance,signer horodatage,notariser"
+title = "Horodater le PDF"
+
 [home.sign]
 desc = "Ajoutez une signature au PDF avec un dessin, du texte ou une image."
 tags = "signature,autographe"
@@ -3920,6 +3984,13 @@ username = "Nom d’utilisateur"
 verifyingMfa = "Vérification..."
 verifyMfa = "Vérifier le code"
 youAreLoggedIn = "Vous êtes connecté !"
+backToSignIn = "Back to sign in"
+passwordUpdatedSuccess = "Your password has been updated successfully."
+resetHelp = "Enter your email to receive a secure link to reset your password. If the link has expired, please request a new one."
+resetYourPassword = "Reset your password"
+sendResetLink = "Send reset link"
+subtitle = "Sign back in to Stirling PDF"
+updatePassword = "Update password"
 
 [login.slides.edit]
 alt = "Modifier des PDF"
@@ -4280,6 +4351,15 @@ rightRail = "Le <strong>rail de droite</strong> contient des actions rapides pou
 topBar = "La barre supérieure permet de basculer entre la <strong>Visionneuse</strong>, <strong>l’Éditeur de pages</strong> et <strong>les fichiers actifs</strong>."
 wrapUp = "Voilà les nouveautés de la V2. Ouvrez le menu <strong>Visites guidées</strong> à tout moment pour rejouer ceci, le parcours des outils ou le parcours Admin."
 
+[onboarding.freeTrial]
+afterTrialWithPayment = "Your Pro subscription will start automatically when the trial ends."
+afterTrialWithoutPayment = "After your trial ends, you'll continue with our free tier. Add a payment method to keep Pro access."
+body = "You have full access to Stirling PDF Pro features during your trial. Enjoy unlimited conversions, larger file sizes, and priority processing."
+daysRemaining = "{{days}} days remaining"
+daysRemainingSingular = "{{days}} day remaining"
+title = "Your 30-Day Pro Trial"
+trialEnds = "Trial ends {{date}}"
+
 [overlay-pdfs]
 desc = "Superposer un PDF sur un autre"
 header = "Incrustation de PDF"
@@ -4401,6 +4481,31 @@ dismiss = "Fermer"
 apply = "Appliquer les modifications"
 download = "Télécharger le PDF"
 
+[viewer.comments]
+addComment = "Add comment"
+addCommentPlaceholder = "Add comment..."
+addLink = "Add link"
+addReplyPlaceholder = "Add reply..."
+deleteAnnotationAndComment = "Delete annotation & comment"
+deleteDescription = "This annotation has a comment attached. You can remove just the comment from the sidebar while keeping the annotation, or delete everything."
+deleteTitle = "Remove annotation from comments?"
+goToLink = "Go to link"
+hint = "Place comments with the Comment, Insert Text, or Replace Text tools. They will appear here by page."
+locateAnnotation = "Locate in document"
+moreActions = "More actions"
+nComments = "{{count}} comments"
+oneComment = "1 comment"
+pageLabel = "Page {{page}}"
+placeholder = "Type your comment..."
+removeCommentOnly = "Remove comment only"
+saveReply = "Save reply"
+send = "Send"
+title = "Comments"
+typeComment = "Comment"
+typeInsertText = "Insert Text"
+typeReplaceText = "Replace Text"
+viewComment = "View comment"
+
 [rightRail]
 closeSelected = "Fermer les fichiers sélectionnés"
 selectAll = "Tout sélectionner"
@@ -4433,6 +4538,12 @@ exitRedaction = "Quitter le mode de caviardage"
 save = "Enregistrer"
 downloadAll = "Tout télécharger"
 saveAll = "Tout enregistrer"
+readAloud = "Read Aloud"
+readAloudLanguage = "Language"
+readAloudSpeed = "Speed"
+saveAs = "Save As"
+selectLanguage = "Select language"
+toggleComments = "Comments"
 
 [textAlign]
 left = "Gauche"
@@ -4980,6 +5091,9 @@ selectPlan = "Choisir un plan"
 showComparison = "Comparer toutes les fonctionnalités"
 upgrade = "Mettre à niveau"
 withServer = "+ Plan Server"
+purchase = "Purchase"
+selectCredits = "Select Credit Amount"
+totalCost = "Total Cost"
 
 [plan.activePlan]
 subtitle = "Détails de votre abonnement actuel"
@@ -5068,6 +5182,30 @@ successMessage = "Votre licence a été activée avec succès. Vous pouvez maint
 [plan.team]
 name = "Team"
 siteLicense = "Licence site"
+
+[plan.api]
+large = "5,000 Credits"
+medium = "1,000 Credits"
+small = "500 Credits"
+xsmall = "100 Credits"
+
+[plan.apiPackages]
+subtitle = "Purchase API credits for your applications"
+title = "API Credit Packages"
+
+[plan.trial]
+badge = "Trial"
+continueWithFree = "Continue with Free"
+daysRemaining = "Your trial ends in {{days}} days"
+endDate = "Expires: {{date}}"
+expired = "Your Trial Has Ended"
+expiredMessage = "Your 30-day Pro trial has expired. Subscribe to Pro to continue accessing premium features, or continue with our free tier."
+freeTierLimitations = "Free tier includes basic PDF tools with usage limits."
+message = ""
+subscribe = "Subscribe to Pro"
+subscribeToPro = "Subscribe to Pro"
+subscriptionScheduled = "Subscription scheduled - starts {{date}}"
+title = "Free Trial Active"
 
 [credits]
 enableOverageBilling = "Activer la facturation de dépassement"
@@ -5631,6 +5769,32 @@ text = "Faites pivoter les pages de votre PDF dans le sens horaire ou antihorair
 [rotate.tooltip.header]
 title = "Aperçu des paramètres de rotation"
 
+[timestampPdf]
+completed = "PDF horodaté avec succès"
+desc = "Ajoutez un horodatage RFC 3161 à votre PDF via un serveur d'autorité d'horodatage (TSA) de confiance."
+filenamePrefix = "horodaté"
+results = "Résultats de l'horodatage"
+submit = "Appliquer l'horodatage"
+title = "Horodater le PDF"
+
+[timestampPdf.error]
+failed = "Une erreur est survenue lors de l'horodatage du PDF."
+generic = "Échec de l'horodatage"
+
+[timestampPdf.files]
+placeholder = "Sélectionnez un fichier PDF dans la vue principale pour commencer"
+
+[timestampPdf.options]
+note = "Seul le hash SHA-256 de votre document est envoyé au serveur TSA ; le fichier PDF lui-même n'est jamais envoyé au serveur TSA."
+title = "Serveur d'horodatage (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Choisissez une autorité d'horodatage de confiance"
+label = "Sélectionner un serveur TSA"
+
+[timestampPdf.steps]
+settings = "Paramètres"
+
 [sanitize]
 completed = "Assainissement effectué avec succès"
 desc = "Supprimer les éléments potentiellement nuisibles des fichiers PDF."
@@ -5772,10 +5936,13 @@ logout = "Se déconnecter"
 server = "Serveur"
 title = "Mode de connexion"
 user = "Connecté en tant que"
+localDescription = "You are using the local backend without an account. Some tools requiring cloud processing or a self-hosted server are unavailable."
+signIn = "Sign In"
 
 [settings.connection.mode]
 saas = "Stirling Cloud"
 selfhosted = "Auto-hébergé"
+local = "Local Only"
 
 [settings.planBilling]
 currentPlan = "Offre actuelle"
@@ -5931,6 +6098,9 @@ title = "Politiques et confidentialité"
 [settings.preferences]
 title = "Préférences"
 
+[settings.search]
+placeholder = "Rechercher dans les paramètres…"
+
 [settings.security]
 description = "Mettez à jour votre mot de passe pour sécuriser votre compte."
 title = "Sécurité"
@@ -5988,6 +6158,7 @@ sso = "Authentification unique"
 submit = "Se connecter"
 subtitle = "Saisissez vos identifiants pour continuer"
 title = "Se connecter"
+skipSignIn = "Continue without signing in"
 
 [setup.login.email]
 label = "Email"
@@ -6023,6 +6194,13 @@ title = "Se connecter à Stirling"
 link = "ou connectez-vous à un compte auto-hébergé"
 subtitle = "Saisissez les identifiants du serveur"
 title = "Se connecter au serveur"
+switchToLocal = "Use local tools instead"
+
+[setup.selfhosted.unreachable]
+continueOffline = "Use local tools instead"
+message = "Could not reach {{url}}. Check that the server is running and accessible."
+retry = "Retry"
+title = "Cannot connect to server"
 
 [setup.server]
 subtitle = "Saisissez l’URL de votre serveur auto‑hébergé"
@@ -6036,6 +6214,7 @@ emptyUrl = "Veuillez saisir une URL de serveur"
 invalidUrl = "Format d’URL invalide. Veuillez saisir une URL valide comme https://your-server.com"
 testFailed = "Échec du test de connexion"
 unreachable = "Connexion au serveur impossible"
+configFetchError = "Failed to fetch server configuration: {{error}}"
 
 [setup.server.error.securityDisabled]
 body = "La connexion n'est pas activée sur ce serveur. Pour vous y connecter, vous devez activer l'authentification :"
@@ -6561,6 +6740,7 @@ showDetails = "Afficher les détails"
 unavailable = "Désactivé par l’administrateur du serveur :"
 unavailableDependency = "Indisponible - outil requis manquant sur le serveur :"
 unfavorite = "Retirer des favoris"
+selfHostedOffline = "Requires your Stirling-PDF server (currently offline):"
 
 [toolPanel.modePrompt]
 chooseFullscreen = "Utiliser le mode plein écran"
@@ -7534,3 +7714,37 @@ description = "Clé API Google pour Google Picker API depuis Google Cloud Consol
 [provider.googledrive.appId]
 label = "App ID"
 description = "App ID Google Drive depuis Google Cloud Console"
+
+[selfHosted.offline]
+hideTools = "Hide unavailable tools ▴"
+messageNoFallback = "Tools are unavailable until your server comes back online."
+messageWithFallback = "Some tools require a server connection."
+showTools = "View unavailable tools ▾"
+title = "Your Stirling-PDF server is unreachable"
+toolNotAvailableLocally = "Your Stirling-PDF server is offline and \"{{endpoint}}\" is not available on the local backend."
+
+[connectionMode.status]
+localOffline = "Offline mode running"
+localOnline = "Offline mode running"
+saas = "Connected to Stirling Cloud"
+selfhostedChecking = "Connected to self-hosted server (checking...)"
+selfhostedOffline = "Self-hosted server unreachable"
+selfhostedOnline = "Connected to self-hosted server"
+
+[localMode]
+toolUnavailable = "This tool requires an account. Sign in to Stirling Cloud or connect to a self-hosted server to use it."
+
+[localMode.banner]
+message = "Sign in to unlock all tools."
+signIn = "Sign In"
+title = "Running locally"
+
+[localMode.toolPicker]
+message = "Sign in to unlock all tools."
+signIn = "Sign In"
+
+[tool]
+endpointUnavailable = "This tool is unavailable on your server."
+endpointUnavailableClickable = "Not available in this mode. Click to sign in."
+invalidParams = "Fill in the required settings."
+noFiles = "Add a file to get started."

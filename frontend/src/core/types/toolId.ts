@@ -52,6 +52,7 @@ export const CORE_REGULAR_TOOL_IDS = [
   'overlayPdfs',
   'getPdfInfo',
   'validateSignature',
+  'timestampPdf',
   'replaceColor',
   'showJS',
   'bookletImposition',
