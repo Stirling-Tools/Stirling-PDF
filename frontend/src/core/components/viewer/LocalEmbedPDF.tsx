@@ -61,6 +61,8 @@ import { DocumentReadyWrapper } from '@app/components/viewer/DocumentReadyWrappe
 import { ActiveDocumentProvider } from '@app/components/viewer/ActiveDocumentContext';
 import { absoluteWithBasePath } from '@app/constants/app';
 import { FormFieldOverlay } from '@app/tools/formFill/FormFieldOverlay';
+import { ButtonAppearanceOverlay } from '@app/tools/formFill/ButtonAppearanceOverlay';
+import SignatureFieldOverlay from '@app/components/viewer/SignatureFieldOverlay';
 import { CommentsSidebar } from '@app/components/viewer/CommentsSidebar';
 import { CommentAuthorProvider } from '@app/contexts/CommentAuthorContext';
 import { accountService } from '@app/services/accountService';
@@ -770,6 +772,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
                             width,
                             height,
                             position: 'relative',
+                            overflow: 'hidden', // clip overlays (buttons, fields) that extend beyond the page rect
                             userSelect: 'none',
                             WebkitUserSelect: 'none',
                             MozUserSelect: 'none',
@@ -790,6 +793,16 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
                           </div>
                           <TextSelectionHandler documentId={documentId} pageIndex={pageIndex} />
 
+                          {/* ButtonAppearanceOverlay — renders PDF-native button visuals as bitmaps */}
+                          {enableFormFill && file && (
+                            <ButtonAppearanceOverlay
+                              pageIndex={pageIndex}
+                              pdfSource={file}
+                              pageWidth={width}
+                              pageHeight={height}
+                            />
+                          )}
+
                           {/* FormFieldOverlay for interactive form filling */}
                           {enableFormFill && (
                             <FormFieldOverlay
@@ -798,6 +811,17 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
                               pageWidth={width}
                               pageHeight={height}
                               fileId={fileId}
+                            />
+                          )}
+
+                          {/* SignatureFieldOverlay — bitmaps of digital-signature appearances */}
+                          {file && (
+                            <SignatureFieldOverlay
+                              documentId={documentId}
+                              pageIndex={pageIndex}
+                              pdfSource={file}
+                              pageWidth={width}
+                              pageHeight={height}
                             />
                           )}
 

@@ -1,4 +1,4 @@
-import { PDFDocument, PDFPage, StandardFonts } from '@cantoo/pdf-lib';
+import { PdfiumDocument, PdfiumPage, StandardFonts } from '@app/services/pdfiumDocBuilder';
 import type { TFunction } from 'i18next';
 import { SignatureValidationReportEntry } from '@app/types/validateSignature';
 import { REPORT_PDF_FILENAME } from '@app/hooks/tools/validateSignature/utils/signatureUtils';
@@ -16,7 +16,7 @@ const MARGIN_Y = 22;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN_X * 2;
 const COLUMN_GAP = 18;
 
-const drawDivider = (page: PDFPage, marginX: number, contentWidth: number, y: number) => {
+const drawDivider = (page: PdfiumPage, marginX: number, contentWidth: number, y: number) => {
   page.drawLine({
     start: { x: marginX, y },
     end: { x: marginX + contentWidth, y },
@@ -29,7 +29,7 @@ export const createReportPdf = async (
   entries: SignatureValidationReportEntry[],
   t: TFunction<'translation'>
 ): Promise<File> => {
-  const doc = await PDFDocument.create();
+  const doc = await PdfiumDocument.create();
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
   const loadThumbnail = createThumbnailLoader(doc);
@@ -101,7 +101,6 @@ export const createReportPdf = async (
     }
 
     for (let i = 0; i < entry.signatures.length; i += 1) {
-      // After the first signature, start a new page per signature
       if (i > 0) {
         ({ page, cursorY } = startReportPage({
           doc,
