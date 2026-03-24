@@ -7,6 +7,7 @@ from .agent_drafts import (
     AgentRevisionResponse,
 )
 from .agent_specs import AgentSpec, AgentSpecStep, AiToolAgentStep, ToolAgentStep
+from .common import ToolOperationStep
 from .execution import (
     AgentExecutionRequest,
     CannotContinueExecutionAction,
@@ -21,7 +22,6 @@ from .orchestrator import OrchestratorRequest, OrchestratorResponse, SupportedCa
 from .pdf_edit import (
     EditCannotDoResponse,
     EditClarificationRequest,
-    EditOperationPlanStep,
     EditPlanResponse,
     PdfEditRequest,
     PdfEditResponse,
@@ -49,7 +49,6 @@ __all__ = [
     "CompletedExecutionAction",
     "EditCannotDoResponse",
     "EditClarificationRequest",
-    "EditOperationPlanStep",
     "EditPlanResponse",
     "ExecutionContext",
     "ExecutionStepResult",
@@ -65,6 +64,7 @@ __all__ = [
     "PdfQuestionRequest",
     "PdfQuestionResponse",
     "SupportedCapability",
+    "ToolOperationStep",
     "ToolAgentStep",
     "ToolCallExecutionAction",
     "UnsupportedCapabilityResponse",

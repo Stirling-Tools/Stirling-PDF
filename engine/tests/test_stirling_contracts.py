@@ -6,11 +6,11 @@ from stirling.config.settings import AppSettings, load_settings
 from stirling.contracts import (
     AgentExecutionRequest,
     AgentSpecStep,
-    EditOperationPlanStep,
     EditPlanResponse,
     ExecutionContext,
     OrchestratorRequest,
     ToolAgentStep,
+    ToolOperationStep,
 )
 from stirling.contracts.agent_specs import AgentSpec
 from stirling.contracts.pdf_questions import PdfQuestionAnswerResponse
@@ -29,8 +29,10 @@ def test_agent_execution_request_uses_typed_agent_spec() -> None:
         ToolAgentStep(
             title="Rotate scans",
             description="Rotate pages into portrait orientation",
-            tool=OperationId.ROTATE,
-            parameters=RotateParams(angle=90),
+            tool_step=ToolOperationStep(
+                tool=OperationId.ROTATE,
+                parameters=RotateParams(angle=90),
+            ),
         )
     ]
     request = AgentExecutionRequest(
@@ -48,7 +50,7 @@ def test_agent_execution_request_uses_typed_agent_spec() -> None:
 
 
 def test_edit_plan_response_has_typed_steps() -> None:
-    steps = [EditOperationPlanStep(tool=OperationId.ROTATE, parameters=RotateParams(angle=90))]
+    steps = [ToolOperationStep(tool=OperationId.ROTATE, parameters=RotateParams(angle=90))]
     response = EditPlanResponse(
         summary="Rotate the input PDF by 90 degrees.",
         steps=steps,

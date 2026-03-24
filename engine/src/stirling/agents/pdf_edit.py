@@ -9,10 +9,10 @@ from pydantic_ai.output import NativeOutput
 from stirling.contracts import (
     EditCannotDoResponse,
     EditClarificationRequest,
-    EditOperationPlanStep,
     EditPlanResponse,
     PdfEditRequest,
     PdfEditResponse,
+    ToolOperationStep,
 )
 from stirling.models.base import ApiModel
 from stirling.models.tool_models import OPERATIONS, OperationId, ParamToolModel
@@ -44,7 +44,7 @@ class PdfEditParameterSelector:
         request: PdfEditRequest,
         operation_plan: list[OperationId],
         operation_index: int,
-        generated_steps: list[EditOperationPlanStep],
+        generated_steps: list[ToolOperationStep],
     ) -> ParamToolModel:
         operation_id = operation_plan[operation_index]
         parameter_model = OPERATIONS[operation_id]
@@ -63,7 +63,7 @@ class PdfEditParameterSelector:
         request: PdfEditRequest,
         operation_plan: list[OperationId],
         operation_index: int,
-        generated_steps: list[EditOperationPlanStep],
+        generated_steps: list[ToolOperationStep],
     ) -> str:
         operation_id = operation_plan[operation_index]
         operation_list = ", ".join(operation.value for operation in operation_plan)
@@ -117,7 +117,7 @@ class PdfEditAgent:
         selection = await self._select_plan(request)
         if isinstance(selection, EditClarificationRequest | EditCannotDoResponse):
             return selection
-        steps: list[EditOperationPlanStep] = []
+        steps: list[ToolOperationStep] = []
         for operation_index, operation_id in enumerate(selection.operations):
             parameters = await self.parameter_selector.select(
                 request,
@@ -126,7 +126,7 @@ class PdfEditAgent:
                 steps,
             )
             steps.append(
-                EditOperationPlanStep(
+                ToolOperationStep(
                     tool=operation_id,
                     parameters=parameters,
                 )

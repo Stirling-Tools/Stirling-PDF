@@ -9,9 +9,9 @@ from stirling.config.settings import AppSettings
 from stirling.contracts import (
     EditCannotDoResponse,
     EditClarificationRequest,
-    EditOperationPlanStep,
     EditPlanResponse,
     PdfEditRequest,
+    ToolOperationStep,
 )
 from stirling.models.tool_models import CompressParams, OperationId, RotateParams
 from stirling.services.runtime import build_runtime
@@ -54,7 +54,7 @@ class ParameterSelectorCall:
     request: PdfEditRequest
     operation_plan: list[OperationId]
     operation_index: int
-    generated_steps: list[EditOperationPlanStep]
+    generated_steps: list[ToolOperationStep]
 
 
 class RecordingParameterSelector:
@@ -66,7 +66,7 @@ class RecordingParameterSelector:
         request: PdfEditRequest,
         operation_plan: list[OperationId],
         operation_index: int,
-        generated_steps: list[EditOperationPlanStep],
+        generated_steps: list[ToolOperationStep],
     ) -> RotateParams | CompressParams:
         self.calls.append(
             ParameterSelectorCall(
@@ -149,7 +149,7 @@ async def test_pdf_edit_agent_passes_previous_steps_to_parameter_selector() -> N
     assert parameter_selector.calls[0].generated_steps == []
     assert parameter_selector.calls[1].operation_index == 1
     assert parameter_selector.calls[1].generated_steps == [
-        EditOperationPlanStep(
+        ToolOperationStep(
             tool=OperationId.ROTATE,
             parameters=RotateParams(angle=90),
         )
