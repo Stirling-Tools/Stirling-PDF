@@ -27,7 +27,8 @@ import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annot
 
 import { CustomSearchLayer } from '@app/components/viewer/CustomSearchLayer';
 import ToolLoadingFallback from '@app/components/tools/ToolLoadingFallback';
-import { Center, Stack, Text } from '@mantine/core';
+import { ActionIcon, Center, Stack, Text } from '@mantine/core';
+import CloseIcon from '@mui/icons-material/Close';
 import { ScrollAPIBridge } from '@app/components/viewer/ScrollAPIBridge';
 import { SelectionAPIBridge } from '@app/components/viewer/SelectionAPIBridge';
 import { PanAPIBridge } from '@app/components/viewer/PanAPIBridge';
@@ -118,6 +119,9 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
   // Track if a drag operation just occurred to prevent click from firing
   const isDraggingRef = useRef(false);
   const interactionPauseRef = useRef<{ pause: () => void; resume: () => void } | null>(null);
+
+  // Track cursor position over a specific page for hover preview
+  const [cursorOnPage, setCursorOnPage] = useState<{ pageIndex: number; x: number; y: number } | null>(null);
 
   // Expose annotation API to parent
   useImperativeHandle(ref, () => ({
@@ -420,6 +424,14 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                           onDragStart={(e) => e.preventDefault()}
                           onDrop={(e) => e.preventDefault()}
                           onDragOver={(e) => e.preventDefault()}
+                          onMouseMove={(e) => {
+                            if (!placementMode || !signatureData) return;
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setCursorOnPage({ pageIndex, x: e.clientX - rect.left, y: e.clientY - rect.top });
+                          }}
+                          onMouseLeave={() => {
+                            setCursorOnPage(prev => prev?.pageIndex === pageIndex ? null : prev);
+                          }}
                           onClick={(e) => {
                             if (isDraggingRef.current) return;
 
@@ -427,10 +439,12 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                               const rect = e.currentTarget.getBoundingClientRect();
                               // Store as fractions (0–1) of the rendered page so overlays
                               // remain correct at any zoom level (scale not in new API)
-                              const x = (e.clientX - rect.left) / width;
-                              const y = (e.clientY - rect.top) / height;
                               const sigWidth = 150 / width;
                               const sigHeight = 75 / height;
+                              const rawX = (e.clientX - rect.left) / width;
+                              const rawY = (e.clientY - rect.top) / height;
+                              const x = Math.max(0, Math.min(rawX - sigWidth / 2, 1 - sigWidth));
+                              const y = Math.max(0, Math.min(rawY - sigHeight / 2, 1 - sigHeight));
 
                               const newPreview = {
                                 id: `sig-preview-${Date.now()}-${Math.random()}`,
@@ -474,7 +488,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                   height: preview.height * height,
                                   border: readOnly ? '1px dashed rgba(0, 122, 204, 0.4)' : '2px solid #007ACC',
                                   boxShadow: readOnly ? 'none' : '0 0 10px rgba(0, 122, 204, 0.5)',
-                                  cursor: readOnly ? 'default' : 'move',
+                                  cursor: 'default',
                                   zIndex: Z_INDEX_SIGNATURE_OVERLAY,
                                   backgroundColor: readOnly ? 'transparent' : 'rgba(255, 255, 255, 0.1)',
                                   pointerEvents: readOnly ? 'none' : 'auto',
@@ -482,34 +496,28 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                               >
                                 {/* Delete button - only show when not read-only */}
                                 {!readOnly && (
-                                  <div
+                                  <ActionIcon
+                                    size="sm"
+                                    radius="xl"
+                                    variant="filled"
+                                    color="red"
                                     style={{
                                       position: 'absolute',
-                                      top: -12,
-                                      right: -12,
-                                      width: 24,
-                                      height: 24,
-                                      borderRadius: '50%',
-                                      backgroundColor: '#DC3545',
-                                      color: 'white',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      cursor: 'pointer',
-                                      fontSize: '16px',
-                                      fontWeight: 'bold',
-                                      border: '2px solid white',
+                                      top: -10,
+                                      right: -10,
                                       zIndex: Z_INDEX_SIGNATURE_OVERLAY_DELETE,
                                       pointerEvents: 'auto',
+                                      boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+                                      border: '2px solid white',
                                     }}
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setSignaturePreviews(prev => prev.filter(p => p.id !== preview.id));
                                     }}
-                                    title="Delete signature"
+                                    aria-label="Delete signature"
                                   >
-                                    ×
-                                  </div>
+                                    <CloseIcon style={{ fontSize: '0.8rem' }} />
+                                  </ActionIcon>
                                 )}
 
                                 <div
@@ -517,41 +525,6 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                     width: '100%',
                                     height: '100%',
                                     pointerEvents: readOnly ? 'none' : 'auto',
-                                  }}
-                                  onPointerDown={readOnly ? undefined : (e) => {
-                                    e.stopPropagation();
-                                    e.preventDefault();
-                                    const el = e.currentTarget;
-                                    el.setPointerCapture(e.pointerId);
-                                    interactionPauseRef.current?.pause();
-
-                                    const startX = e.clientX;
-                                    const startY = e.clientY;
-                                    const startLeft = preview.x;
-                                    const startTop = preview.y;
-
-                                    const handlePointerMove = (moveEvent: PointerEvent) => {
-                                      isDraggingRef.current = true;
-                                      const deltaX = (moveEvent.clientX - startX) / width;
-                                      const deltaY = (moveEvent.clientY - startY) / height;
-                                      setSignaturePreviews(prev => prev.map(p =>
-                                        p.id === preview.id
-                                          ? { ...p, x: startLeft + deltaX, y: startTop + deltaY }
-                                          : p
-                                      ));
-                                    };
-
-                                    const handlePointerUp = (upEvent: PointerEvent) => {
-                                      el.removeEventListener('pointermove', handlePointerMove);
-                                      el.removeEventListener('pointerup', handlePointerUp);
-                                      el.releasePointerCapture(upEvent.pointerId);
-                                      interactionPauseRef.current?.resume();
-                                      window.getSelection()?.removeAllRanges();
-                                      setTimeout(() => { isDraggingRef.current = false; }, 10);
-                                    };
-
-                                    el.addEventListener('pointermove', handlePointerMove);
-                                    el.addEventListener('pointerup', handlePointerUp);
                                   }}
                                 >
                                   <img
@@ -654,6 +627,27 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                 </div>
                               </div>
                             ))}
+
+                          {/* Hover preview: ghost signature following cursor in placement mode */}
+                          {placementMode && signatureData && cursorOnPage?.pageIndex === pageIndex && (
+                            <img
+                              src={signatureData}
+                              alt=""
+                              style={{
+                                position: 'absolute',
+                                left: Math.max(0, Math.min(cursorOnPage.x - 75, width - 150)),
+                                top: Math.max(0, Math.min(cursorOnPage.y - 37.5, height - 75)),
+                                width: 150,
+                                height: 75,
+                                opacity: 0.6,
+                                pointerEvents: 'none',
+                                objectFit: 'contain',
+                                boxShadow: '0 0 0 1px rgba(30, 136, 229, 0.55), 0 6px 18px rgba(30, 136, 229, 0.25)',
+                                borderRadius: '4px',
+                                zIndex: Z_INDEX_SIGNATURE_OVERLAY + 1,
+                              }}
+                            />
+                          )}
                         </div>
                       </PagePointerProvider>
                     </Rotate>
