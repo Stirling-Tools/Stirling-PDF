@@ -503,7 +503,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                   height: preview.height * height,
                                   border: readOnly ? `1px dashed ${colorOpacity(0.4)}` : `2px solid ${color}`,
                                   boxShadow: readOnly ? 'none' : `0 0 10px ${colorOpacity(0.5)}`,
-                                  cursor: 'default',
+                                  cursor: readOnly ? 'default' : 'move',
                                   zIndex: Z_INDEX_SIGNATURE_OVERLAY,
                                   backgroundColor: readOnly ? 'transparent' : 'rgba(255, 255, 255, 0.1)',
                                   pointerEvents: 'auto',
@@ -541,6 +541,42 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                     height: '100%',
                                     pointerEvents: readOnly ? 'none' : 'auto',
                                   }}
+                                  onPointerDown={readOnly ? undefined : (e) => {
+                                    if ((e.target as HTMLElement).dataset.resizeHandle) return;
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    const el = e.currentTarget;
+                                    el.setPointerCapture(e.pointerId);
+                                    interactionPauseRef.current?.pause();
+
+                                    const startX = e.clientX;
+                                    const startY = e.clientY;
+                                    const startLeft = preview.x;
+                                    const startTop = preview.y;
+
+                                    const handlePointerMove = (moveEvent: PointerEvent) => {
+                                      isDraggingRef.current = true;
+                                      const deltaX = (moveEvent.clientX - startX) / width;
+                                      const deltaY = (moveEvent.clientY - startY) / height;
+                                      setSignaturePreviews(prev => prev.map(p =>
+                                        p.id === preview.id
+                                          ? { ...p, x: startLeft + deltaX, y: startTop + deltaY }
+                                          : p
+                                      ));
+                                    };
+
+                                    const handlePointerUp = (upEvent: PointerEvent) => {
+                                      el.removeEventListener('pointermove', handlePointerMove);
+                                      el.removeEventListener('pointerup', handlePointerUp);
+                                      el.releasePointerCapture(upEvent.pointerId);
+                                      interactionPauseRef.current?.resume();
+                                      window.getSelection()?.removeAllRanges();
+                                      setTimeout(() => { isDraggingRef.current = false; }, 10);
+                                    };
+
+                                    el.addEventListener('pointermove', handlePointerMove);
+                                    el.addEventListener('pointerup', handlePointerUp);
+                                  }}
                                 >
                                   <img
                                     src={preview.signatureData}
@@ -562,6 +598,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                   ].map((handle) => (
                                     <div
                                       key={handle.position}
+                                      data-resize-handle="true"
                                       style={{
                                         position: 'absolute',
                                         width: 8,
