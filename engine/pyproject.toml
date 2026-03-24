@@ -6,6 +6,7 @@ requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.116.0",
     "pydantic>=2.0.0",
+    "pydantic-ai>=1.67.0",
     "pydantic-settings>=2.0.0",
     "python-dotenv>=1.2.1",
     "uvicorn>=0.35.0",
@@ -54,7 +55,7 @@ reportImportCycles = "warning"
 reportUnnecessaryCast = "warning"
 reportUnnecessaryTypeIgnoreComment = "warning"
 reportUnusedImport = "warning"
-#reportUnknownParameterType = "warning"
+reportUnknownParameterType = "warning"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -10,7 +10,6 @@ from stirling.contracts import (
     EditPlanResponse,
     ExecutionContext,
     OrchestratorRequest,
-    SupportedCapability,
     ToolAgentStep,
 )
 from stirling.contracts.agent_specs import AgentSpec
@@ -19,10 +18,10 @@ from stirling.models.tool_models import OperationId, RotateParams
 from stirling.services.model_registry import ModelRegistry
 
 
-def test_orchestrator_request_accepts_supported_capability() -> None:
-    request = OrchestratorRequest(capability=SupportedCapability.PDF_EDIT, user_message="Rotate the PDF")
+def test_orchestrator_request_accepts_user_message() -> None:
+    request = OrchestratorRequest(user_message="Rotate the PDF")
 
-    assert request.capability == SupportedCapability.PDF_EDIT
+    assert request.user_message == "Rotate the PDF"
 
 
 def test_agent_execution_request_uses_typed_agent_spec() -> None:

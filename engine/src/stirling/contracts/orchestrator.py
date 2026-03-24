@@ -23,7 +23,6 @@ class SupportedCapability(StrEnum):
 
 
 class OrchestratorRequest(ApiModel):
-    capability: SupportedCapability | None = None
     user_message: str
     conversation_id: str | None = None
 

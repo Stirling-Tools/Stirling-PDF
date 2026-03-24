@@ -62,7 +62,7 @@ class StubSettingsProvider:
 
 class StubOrchestratorAgent:
     async def handle(self, request: OrchestratorRequest) -> UnsupportedCapabilityResponse:
-        return UnsupportedCapabilityResponse(capability=request.capability or "unknown", message=request.user_message)
+        return UnsupportedCapabilityResponse(capability="pdf_edit", message=request.user_message)
 
 
 class StubPdfEditAgent:
@@ -138,7 +138,7 @@ def test_health_route() -> None:
 
 
 def test_orchestrator_route() -> None:
-    response = client.post("/api/v1/orchestrator", json={"capability": "pdf_edit", "userMessage": "route this"})
+    response = client.post("/api/v1/orchestrator", json={"userMessage": "route this"})
 
     assert response.status_code == 200
     assert response.json()["outcome"] == "unsupported_capability"
