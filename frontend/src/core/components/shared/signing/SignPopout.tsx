@@ -22,6 +22,23 @@ import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 export const SIGN_REQUEST_WORKBENCH_TYPE = 'custom:signRequestWorkbench' as const;
 export const SESSION_DETAIL_WORKBENCH_TYPE = 'custom:sessionDetailWorkbench' as const;
 
+type SessionItem = (SignRequestSummary | SessionSummary) & {
+  itemType: 'signRequest' | 'mySession';
+};
+
+function sortSessions(sessions: SessionItem[], tab: 'active' | 'completed'): SessionItem[] {
+  return [...sessions].sort((a, b) => {
+    if (tab === 'active') {
+      const aDue = (a as SignRequestSummary).dueDate;
+      const bDue = (b as SignRequestSummary).dueDate;
+      if (aDue && bDue) return new Date(aDue).getTime() - new Date(bDue).getTime();
+      if (aDue) return -1;
+      if (bDue) return 1;
+    }
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+}
+
 interface SignPopoutProps {
   isOpen: boolean;
   onClose: () => void;
@@ -29,10 +46,6 @@ interface SignPopoutProps {
   isRTL: boolean;
   groupSigningEnabled: boolean;
 }
-
-type SessionItem = (SignRequestSummary | SessionSummary) & {
-  itemType: 'signRequest' | 'mySession';
-};
 
 const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: SignPopoutProps) => {
   const { t } = useTranslation();
@@ -44,6 +57,24 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
   // Tab state
   const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
   const [showCreatePanel, setShowCreatePanel] = useState(false);
+
+  // Search / filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
+
+  const handleTabChange = (tab: 'active' | 'completed') => {
+    setActiveTab(tab);
+    setSearchQuery('');
+    setActiveFilters(new Set());
+  };
+
+  const toggleFilter = (key: string) => {
+    setActiveFilters(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) { next.delete(key); } else { next.add(key); }
+      return next;
+    });
+  };
 
   // Data state
   const [signRequests, setSignRequests] = useState<SignRequestSummary[]>([]);
@@ -246,6 +277,35 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       .filter(s => s.finalized)
       .map(s => ({ ...s, itemType: 'mySession' as const })),
   ];
+
+  // Filter options vary by tab
+  const filterOptions = activeTab === 'active'
+    ? [
+        { key: 'mine',    label: t('quickAccess.filterMine', 'Mine') },
+        { key: 'overdue', label: t('quickAccess.filterOverdue', 'Overdue') },
+      ]
+    : [
+        { key: 'mine',    label: t('quickAccess.filterMine', 'Mine') },
+        { key: 'signed',  label: t('quickAccess.filterSigned', 'Signed') },
+        { key: 'declined',label: t('quickAccess.filterDeclined', 'Declined') },
+      ];
+
+  const applyFiltersAndSearch = (sessions: SessionItem[]): SessionItem[] => {
+    let result = sessions;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(s => s.documentName.toLowerCase().includes(q));
+    }
+    const now = new Date();
+    if (activeFilters.has('mine'))     result = result.filter(s => s.itemType === 'mySession');
+    if (activeFilters.has('overdue'))  result = result.filter(s => (s as SignRequestSummary).dueDate && new Date((s as SignRequestSummary).dueDate) < now);
+    if (activeFilters.has('signed'))   result = result.filter(s => (s as SignRequestSummary).myStatus === 'SIGNED');
+    if (activeFilters.has('declined')) result = result.filter(s => (s as SignRequestSummary).myStatus === 'DECLINED');
+    return result;
+  };
+
+  const displayedActiveSessions = applyFiltersAndSearch(sortSessions(activeSessions, 'active'));
+  const displayedCompletedSessions = applyFiltersAndSearch(sortSessions(completedSessions, 'completed'));
 
   // Create session handler
   const handleCreateSession = useCallback(async () => {
@@ -645,18 +705,43 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
           <div className="quick-access-popout__tab-nav">
             <button
               className={`quick-access-popout__tab-button ${activeTab === 'active' ? 'active' : ''}`}
-              onClick={() => setActiveTab('active')}
+              onClick={() => handleTabChange('active')}
             >
               {t('quickAccess.activeTab', 'Active')}
             </button>
             <button
               className={`quick-access-popout__tab-button ${activeTab === 'completed' ? 'active' : ''}`}
-              onClick={() => setActiveTab('completed')}
+              onClick={() => handleTabChange('completed')}
             >
               {t('quickAccess.completedTab', 'Completed')}
             </button>
           </div>
         </>
+      )}
+
+      {/* Search + filter bar */}
+      {!showCreatePanel && groupSigningEnabled && (
+        <div className="quick-access-popout__search-filter">
+          <input
+            type="search"
+            className="quick-access-popout__search"
+            placeholder={t('quickAccess.searchDocuments', 'Search documents…')}
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          <div className="quick-access-popout__filter-chips">
+            {filterOptions.map(f => (
+              <button
+                key={f.key}
+                type="button"
+                className={`quick-access-popout__filter-chip ${activeFilters.has(f.key) ? 'is-active' : ''}`}
+                onClick={() => toggleFilter(f.key)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Body */}
@@ -675,7 +760,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
             />
           ) : activeTab === 'active' ? (
             <ActiveSessionsPanel
-              sessions={activeSessions}
+              sessions={displayedActiveSessions}
               loading={loading}
               onSessionClick={(item) => {
                 if (item.itemType === 'signRequest') {
@@ -687,7 +772,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
             />
           ) : (
             <CompletedSessionsPanel
-              sessions={completedSessions}
+              sessions={displayedCompletedSessions}
               loading={loading}
               onSessionClick={(item) => {
                 if (item.itemType === 'signRequest') {
