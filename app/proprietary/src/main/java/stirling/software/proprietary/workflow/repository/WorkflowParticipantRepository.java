@@ -4,9 +4,11 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.workflow.model.ParticipantStatus;
@@ -60,4 +62,14 @@ public interface WorkflowParticipantRepository extends JpaRepository<WorkflowPar
             "DELETE FROM WorkflowParticipant p WHERE p.id = :participantId AND p.workflowSession.owner = :owner")
     void deleteByIdAndSessionOwner(
             @Param("participantId") Long participantId, @Param("owner") User owner);
+
+    /**
+     * Null out the user reference for all participants linked to the given user. Used during user
+     * deletion to preserve workflow audit history while removing the personal data link.
+     * Participants in sessions owned by others are retained but de-linked from the deleted account.
+     */
+    @Modifying
+    @Transactional
+    @Query("UPDATE WorkflowParticipant wp SET wp.user = null WHERE wp.user = :user")
+    void clearUserReferences(@Param("user") User user);
 }

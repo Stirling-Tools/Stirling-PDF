@@ -21,6 +21,8 @@ public interface FileShareAccessRepository extends JpaRepository<FileShareAccess
 
     void deleteByFileShare(FileShare fileShare);
 
+    void deleteByUser(User user);
+
     @Query(
             "SELECT a FROM FileShareAccess a "
                     + "JOIN FETCH a.fileShare s "

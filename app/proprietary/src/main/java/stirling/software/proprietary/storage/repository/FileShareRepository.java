@@ -26,6 +26,8 @@ public interface FileShareRepository extends JpaRepository<FileShare, Long> {
     @Query("SELECT s FROM FileShare s WHERE s.file = :file AND s.shareToken IS NOT NULL")
     List<FileShare> findShareLinks(@Param("file") StoredFile file);
 
+    List<FileShare> findBySharedWithUser(User sharedWithUser);
+
     List<FileShare> findByExpiresAtBeforeAndShareTokenNotNull(java.time.LocalDateTime now);
 
     @Query(
