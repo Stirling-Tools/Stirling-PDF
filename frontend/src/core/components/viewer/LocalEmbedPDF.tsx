@@ -63,6 +63,9 @@ import { absoluteWithBasePath } from '@app/constants/app';
 import { FormFieldOverlay } from '@app/tools/formFill/FormFieldOverlay';
 import { ButtonAppearanceOverlay } from '@app/tools/formFill/ButtonAppearanceOverlay';
 import SignatureFieldOverlay from '@app/components/viewer/SignatureFieldOverlay';
+import { CommentsSidebar } from '@app/components/viewer/CommentsSidebar';
+import { CommentAuthorProvider } from '@app/contexts/CommentAuthorContext';
+import { accountService } from '@app/services/accountService';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -80,12 +83,24 @@ interface LocalEmbedPDFProps {
   redactionTrackerRef?: React.RefObject<RedactionPendingTrackerAPI>;
   /** File identity passed through to FormFieldOverlay for stale-field guards */
   fileId?: string | null;
+  /** Comments sidebar visibility and offset (from EmbedPdfViewer) */
+  isCommentsSidebarVisible?: boolean;
+  commentsSidebarRightOffset?: string;
+  /** When true, blocks the general ink/pen annotation tool (sign tool context). */
+  isSignMode?: boolean;
 }
 
-export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, enableRedaction = false, enableFormFill = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef, fileId }: LocalEmbedPDFProps) {
+export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, enableRedaction = false, enableFormFill = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef, fileId, isCommentsSidebarVisible = false, commentsSidebarRightOffset = '0rem', isSignMode = false }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: Rect}>>([]);
+  const [commentAuthorName, setCommentAuthorName] = useState<string>('Guest');
+
+  useEffect(() => {
+    accountService.getAccountData().then((data) => {
+      if (data?.username) setCommentAuthorName(data.username);
+    }).catch(() => {/* not logged in or security disabled */});
+  }, []);
 
   // Convert File to URL if needed
   useEffect(() => {
@@ -137,7 +152,10 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
       createPluginRegistration(InteractionManagerPluginPackage),
 
       // Register selection plugin (depends on InteractionManager)
-      createPluginRegistration(SelectionPluginPackage),
+      createPluginRegistration(SelectionPluginPackage, {
+        marquee: { enabled: false },
+        toleranceFactor: 3,
+      }),
 
       // Register history plugin for undo/redo (recommended for annotations)
       // Always register for reading existing annotations
@@ -657,6 +675,27 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
                   rect: event.annotation.rect
                 }]);
 
+                // If the annotation doesn't have customData.toolId, patch it from the active tool.
+                // EmbedPDF doesn't always persist customData from setToolDefaults into created annotations.
+                const annotationId = event.annotation.id;
+                const existingCustomData = (event.annotation as unknown as { customData?: Record<string, unknown> }).customData;
+                if (annotationId && !existingCustomData?.toolId) {
+                  const activeTool = (annotationApi as unknown as { getActiveTool?: () => { id: string } | null }).getActiveTool?.();
+                  if (activeTool?.id && activeTool.id !== 'select') {
+                    (annotationApi as unknown as { updateAnnotation?: (page: number, id: string, patch: Record<string, unknown>) => void })
+                      .updateAnnotation?.(event.pageIndex, annotationId, {
+                        customData: { ...(existingCustomData ?? {}), toolId: activeTool.id },
+                      });
+                  }
+                }
+
+                // Auto-select the annotation after creation so the selection menu appears immediately,
+                // letting users discover the editing options before they click away.
+                if (annotationId) {
+                  (annotationApi as unknown as { selectAnnotation?: (pageIndex: number, id: string) => void })
+                    .selectAnnotation?.(event.pageIndex, annotationId);
+                }
+
                 if (onSignatureAdded) {
                   onSignatureAdded(event.annotation);
                 }
@@ -680,7 +719,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
         {/* Always render RedactionAPIBridge when in manual redaction mode so buttons can switch from annotation mode */}
         {(enableRedaction || isManualRedactionMode) && <RedactionAPIBridge />}
         {/* Always render SignatureAPIBridge so annotation tools (draw) can be activated even when starting in redaction mode */}
-        {(enableAnnotations || enableRedaction || isManualRedactionMode) && <SignatureAPIBridge ref={signatureApiRef} />}
+        {(enableAnnotations || enableRedaction || isManualRedactionMode) && <SignatureAPIBridge ref={signatureApiRef} isSignMode={isSignMode} />}
         {(enableRedaction || isManualRedactionMode) && <RedactionPendingTracker ref={redactionTrackerRef} />}
         {enableAnnotations && <AnnotationAPIBridge ref={annotationApiRef} />}
 
@@ -701,6 +740,7 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
           }
         >
           {(documentId) => (
+            <>
             <GlobalPointerProvider documentId={documentId}>
               <Viewport
                 documentId={documentId}
@@ -817,6 +857,16 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
               />
               </Viewport>
             </GlobalPointerProvider>
+            {enableAnnotations && (
+              <CommentAuthorProvider displayName={commentAuthorName}>
+                <CommentsSidebar
+                  documentId={documentId}
+                  visible={isCommentsSidebarVisible}
+                  rightOffset={commentsSidebarRightOffset}
+                />
+              </CommentAuthorProvider>
+            )}
+            </>
           )}
         </DocumentReadyWrapper>
         </ActiveDocumentProvider>

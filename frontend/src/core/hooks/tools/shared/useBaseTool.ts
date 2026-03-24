@@ -152,7 +152,6 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
     // Endpoint validation
     endpointEnabled,
     endpointLoading,
-
     // Handlers
     handleExecute,
     handleThumbnailClick,

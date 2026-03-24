@@ -21,7 +21,7 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion
 
 ext {
     springBootVersion = "4.0.3"
-    pdfboxVersion = "3.0.6"
+    pdfboxVersion = "3.0.7"
     imageioVersion = "3.13.1"
     lombokVersion = "1.18.42"
     bouncycastleVersion = "1.83"
@@ -78,7 +78,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '2.7.3'
+    version = '2.8.0'
 
     configurations.configureEach {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"

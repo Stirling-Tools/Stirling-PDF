@@ -106,13 +106,13 @@ export function useEndpointEnabled(endpoint: string): {
 
       const locallyEnabled = response.data;
 
-      // DESKTOP ENHANCEMENT: In SaaS mode, assume all endpoints are available
-      // Even if not supported locally, they will route to SaaS backend
       if (!locallyEnabled) {
         const mode = await connectionModeService.getCurrentMode();
+        // DESKTOP ENHANCEMENT: In SaaS mode, assume all endpoints are available
+        // Even if not supported locally, they will route to SaaS backend
         if (mode === 'saas') {
           console.debug(`[useEndpointEnabled] Endpoint ${endpoint} not supported locally but available via SaaS routing`);
-          setEnabled(true); // Available via SaaS
+          setEnabled(true);
           return;
         }
       }
@@ -302,9 +302,10 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
         return acc;
       }, {} as Record<string, boolean>);
 
+      const mode = await connectionModeService.getCurrentMode();
+
       // DESKTOP ENHANCEMENT: In SaaS mode, mark all disabled endpoints as available
       // They will route to SaaS backend
-      const mode = await connectionModeService.getCurrentMode();
       if (mode === 'saas') {
         const disabledEndpoints = Object.keys(details).filter(key => !details[key].enabled);
 
@@ -314,6 +315,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
           details[endpoint] = { enabled: true, reason: null };
         }
       }
+
 
       setEndpointDetails(prev => ({ ...prev, ...details }));
       setEndpointStatus(prev => ({ ...prev, ...statusMap }));
