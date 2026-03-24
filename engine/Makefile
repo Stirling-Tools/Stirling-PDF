@@ -5,7 +5,7 @@ ROOT_DIR = .
 VENV_DIR = $(ROOT_DIR)/.venv
 DEPS_STAMP := $(VENV_DIR)/.deps-installed
 NODE_DEPS_STAMP := node_modules/.deps-installed
-TOOL_MODELS := $(CURDIR)/src/models/tool_models.py
+TOOL_MODELS := $(CURDIR)/src/stirling/models/tool_models.py
 FRONTEND_DIR := $(REPO_ROOT_DIR)/frontend
 FRONTEND_TSX := $(FRONTEND_DIR)/node_modules/.bin/tsx
 
@@ -27,9 +27,9 @@ help:
 	@echo "  make format-check - Show whether code is correctly formatted"
 	@echo "  make typecheck    - Run type checking"
 	@echo "  make test         - Run tests"
-	@echo "  make run          - Run the Flask backend with gunicorn (production)"
-	@echo "  make run-dev      - Run the Flask backend with dev server (development only)"
-	@echo "  make tool-models  - Generate src/models/tool_models_*.py from frontend TypeScript tool defs"
+	@echo "  make run          - Run the FastAPI backend with uvicorn"
+	@echo "  make run-dev      - Run the FastAPI backend with reload"
+	@echo "  make tool-models  - Generate src/stirling/models/tool_models.py from frontend TypeScript tool defs"
 	@echo "  make clean        - Clean up generated files"
 	@echo "  make docker-build - Build Docker image"
 	@echo "  make docker-run   - Run Docker container"
@@ -65,10 +65,10 @@ test: prep
 	uv run pytest tests
 
 run: prep
-	cd src && PYTHONUNBUFFERED=1 uv run gunicorn --bind 0.0.0.0:5001 --workers 4 --timeout 120 --worker-class gthread --threads 4 app:app
+	cd src && PYTHONUNBUFFERED=1 uv run uvicorn stirling.api.app:app --host 0.0.0.0 --port 5001
 
 run-dev: prep
-	cd src && PYTHONUNBUFFERED=1 uv run python app.py
+	cd src && PYTHONUNBUFFERED=1 uv run uvicorn stirling.api.app:app --host 0.0.0.0 --port 5001 --reload
 
 frontend-deps:
 	if [ ! -x "$(FRONTEND_TSX)" ]; then cd $(FRONTEND_DIR) && npm install; fi

@@ -1,0 +1,44 @@
+from __future__ import annotations
+
+from typing import Literal
+
+from pydantic import Field
+
+from stirling.models.base import ApiModel
+
+from .agent_specs import AgentSpecStep
+from .common import ConversationMessage
+
+
+class AgentDraftStep(ApiModel):
+    kind: Literal["tool", "ai_tool"]
+    title: str
+    description: str
+
+
+class AgentDraft(ApiModel):
+    name: str
+    description: str
+    objective: str
+    steps: list[AgentSpecStep] = Field(default_factory=list)
+
+
+class AgentDraftRequest(ApiModel):
+    user_message: str
+    conversation_history: list[ConversationMessage] = Field(default_factory=list)
+
+
+class AgentDraftResponse(ApiModel):
+    outcome: Literal["draft"] = "draft"
+    draft: AgentDraft
+
+
+class AgentRevisionRequest(ApiModel):
+    user_message: str
+    conversation_history: list[ConversationMessage] = Field(default_factory=list)
+    current_draft: AgentDraft
+
+
+class AgentRevisionResponse(ApiModel):
+    outcome: Literal["draft"] = "draft"
+    draft: AgentDraft

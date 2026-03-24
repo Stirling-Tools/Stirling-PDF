@@ -4,28 +4,19 @@ version = "0.1.0"
 description = "AI Document Engine"
 requires-python = ">=3.13"
 dependencies = [
-    "flask>=3.0.0",
-    "flask-cors>=4.0.0",
-    "gunicorn>=25.0.3",
-    "openai>=2.20.0",
-    "langchain-core>=1.2.11",
-    "langchain-openai>=1.1.9",
-    "langchain-anthropic>=1.1.9",
-    "platformdirs>=4.5.1",
-    "pypdf>=6.7.0",
+    "fastapi>=0.116.0",
     "pydantic>=2.0.0",
-    "posthog>=7.8.6",
+    "pydantic-settings>=2.0.0",
     "python-dotenv>=1.2.1",
-    "beautifulsoup4>=4.12.0",
+    "uvicorn>=0.35.0",
 ]
 
 [dependency-groups]
 dev = [
+    "httpx>=0.28.0",
     "pytest>=8.0.0",
-    "pytest-cov>=4.1.0",
-    "ruff>=0.14.10",
     "pyright>=1.1.408",
-    "datamodel-code-generator[ruff]>=0.27.0",
+    "ruff>=0.14.10",
 ]
 
 [build-system]
