@@ -79,9 +79,9 @@
     "web-vitals": "^5.1.0"
   },
   "scripts": {
-    "prep": "tsx scripts/setup-env.ts && npm run generate-icons",
-    "prep:saas": "tsx scripts/setup-env.ts --saas && npm run generate-icons",
-    "prep:desktop": "tsx scripts/setup-env.ts --desktop && npm run generate-icons",
+    "prep": "npx tsx scripts/setup-env.ts && npm run generate-icons",
+    "prep:saas": "npx tsx scripts/setup-env.ts --saas && npm run generate-icons",
+    "prep:desktop": "npx tsx scripts/setup-env.ts --desktop && npm run generate-icons",
     "prep:desktop-build": "node scripts/build-provisioner.mjs && npm run prep:desktop",
     "dev": "npm run prep && vite",
     "dev:core": "npm run prep && vite --mode core",

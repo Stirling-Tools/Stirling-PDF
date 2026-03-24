@@ -3,7 +3,7 @@
  * Eliminates prop drilling with a single, simple context
  */
 
-import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useToolManagement, type ToolAvailabilityMap } from '@app/hooks/useToolManagement';
 import { PageEditorFunctions } from '@app/types/pageEditor';
 import { ToolRegistryEntry, ToolRegistry } from '@app/data/toolsTaxonomy';
@@ -110,11 +110,21 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const [toolResetFunctions, setToolResetFunctions] = React.useState<Record<string, () => void>>({});
 
   const [customViewRegistry, setCustomViewRegistry] = React.useState<Record<string, CustomWorkbenchViewRegistration>>({});
+  // Ref kept in sync on every registry mutation so unregister can read the current
+  // value synchronously — React state updaters run async so the local variable
+  // assigned inside the updater is always undefined at the point of the check.
+  const customViewRegistryRef = useRef<Record<string, CustomWorkbenchViewRegistration>>({});
   const [customViewData, setCustomViewData] = React.useState<Record<string, any>>({});
 
   // Navigation actions and state are available since we're inside NavigationProvider
   const { actions } = useNavigationActions();
   const navigationState = useNavigationState();
+
+  // Keep a ref to current navigation state so callbacks don't need it as a dependency
+  const navigationStateRef = useRef(navigationState);
+  useEffect(() => {
+    navigationStateRef.current = navigationState;
+  });
 
   // Tool management hook
   const { toolRegistry, getSelectedTool, toolAvailability } = useToolManagement();
@@ -170,36 +180,32 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   }, []);
 
   const registerCustomWorkbenchView = useCallback((view: CustomWorkbenchViewRegistration) => {
-    setCustomViewRegistry(prev => ({ ...prev, [view.id]: view }));
+    customViewRegistryRef.current = { ...customViewRegistryRef.current, [view.id]: view };
+    setCustomViewRegistry(customViewRegistryRef.current);
   }, []);
 
   const unregisterCustomWorkbenchView = useCallback((id: string) => {
-    let removedView: CustomWorkbenchViewRegistration | undefined;
-
-    setCustomViewRegistry(prev => {
-      const existing = prev[id];
-      if (!existing) {
-        return prev;
-      }
-      removedView = existing;
-      const updated = { ...prev };
-      delete updated[id];
-      return updated;
-    });
+    // Read synchronously from the ref — the state updater below runs async so
+    // any variable assigned inside it is undefined by the time we check it.
+    const removedView = customViewRegistryRef.current[id];
+    const updated = { ...customViewRegistryRef.current };
+    delete updated[id];
+    customViewRegistryRef.current = updated;
+    setCustomViewRegistry(updated);
 
     setCustomViewData(prev => {
       if (!(id in prev)) {
         return prev;
       }
-      const updated = { ...prev };
-      delete updated[id];
-      return updated;
+      const next = { ...prev };
+      delete next[id];
+      return next;
     });
 
-    if (removedView && navigationState.workbench === removedView.workbenchId) {
+    if (removedView && navigationStateRef.current.workbench === removedView.workbenchId) {
       actions.setWorkbench(getDefaultWorkbench());
     }
-  }, [actions, navigationState.workbench]);
+  }, [actions]);
 
   const setCustomWorkbenchViewData = useCallback((id: string, data: any) => {
     setCustomViewData(prev => ({ ...prev, [id]: data }));
