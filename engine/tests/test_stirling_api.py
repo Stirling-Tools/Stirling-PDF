@@ -2,32 +2,32 @@ from fastapi.testclient import TestClient
 
 from stirling.api.app import app
 from stirling.api.dependencies import (
-    get_agent_draft_service,
-    get_agent_execution_planning_service,
-    get_orchestrator_service,
-    get_pdf_edit_service,
-    get_pdf_question_service,
+    get_execution_planning_agent,
+    get_orchestrator_agent,
+    get_pdf_edit_agent,
+    get_pdf_question_agent,
+    get_user_spec_agent,
 )
 from stirling.config.settings import AppSettings, load_settings
 from stirling.contracts import (
     AgentDraft,
+    AgentDraftRequest,
     AgentDraftResponse,
+    AgentExecutionRequest,
+    AgentRevisionRequest,
+    AgentRevisionResponse,
     CannotContinueExecutionAction,
     EditCannotDoResponse,
+    OrchestratorRequest,
+    PdfEditRequest,
     PdfQuestionNotFoundResponse,
+    PdfQuestionRequest,
     UnsupportedCapabilityResponse,
 )
 from stirling.models.tool_models import RotateParams
-from stirling.services.capabilities import (
-    AgentDraftService,
-    AgentExecutionPlanningService,
-    OrchestratorService,
-    PdfEditService,
-    PdfQuestionService,
-)
 
 
-class TestSettingsProvider:
+class StubSettingsProvider:
     def __call__(self) -> AppSettings:
         return AppSettings(
             anthropic_api_key="",
@@ -60,23 +60,23 @@ class TestSettingsProvider:
         )
 
 
-class TestOrchestratorService(OrchestratorService):
-    async def handle(self, request):  # type: ignore[override]
+class StubOrchestratorAgent:
+    async def handle(self, request: OrchestratorRequest) -> UnsupportedCapabilityResponse:
         return UnsupportedCapabilityResponse(capability=request.capability or "unknown", message=request.user_message)
 
 
-class TestPdfEditService(PdfEditService):
-    async def handle(self, request):  # type: ignore[override]
+class StubPdfEditAgent:
+    async def handle(self, request: PdfEditRequest) -> EditCannotDoResponse:
         return EditCannotDoResponse(reason=request.user_message)
 
 
-class TestPdfQuestionService(PdfQuestionService):
-    async def handle(self, request):  # type: ignore[override]
+class StubPdfQuestionAgent:
+    async def handle(self, request: PdfQuestionRequest) -> PdfQuestionNotFoundResponse:
         return PdfQuestionNotFoundResponse(reason=request.question)
 
 
-class TestAgentDraftService(AgentDraftService):
-    async def draft(self, request):  # type: ignore[override]
+class StubUserSpecAgent:
+    async def draft(self, request: AgentDraftRequest) -> AgentDraftResponse:
         return AgentDraftResponse(
             draft=AgentDraft(
                 name="Drafted",
@@ -86,45 +86,48 @@ class TestAgentDraftService(AgentDraftService):
             )
         )
 
+    async def revise(self, request: AgentRevisionRequest) -> AgentRevisionResponse:
+        return AgentRevisionResponse(draft=request.current_draft)
 
-class TestExecutionPlanningService(AgentExecutionPlanningService):
-    async def next_action(self, request):  # type: ignore[override]
+
+class StubExecutionPlanningAgent:
+    async def next_action(self, request: AgentExecutionRequest) -> CannotContinueExecutionAction:
         return CannotContinueExecutionAction(reason=str(request.current_step_index))
 
 
-client = TestClient(app)
+client: TestClient = TestClient(app)
 
 
 def override_settings() -> AppSettings:
-    return TestSettingsProvider()()
+    return StubSettingsProvider()()
 
 
-def override_orchestrator_service() -> OrchestratorService:
-    return TestOrchestratorService()
+def override_orchestrator_agent() -> StubOrchestratorAgent:
+    return StubOrchestratorAgent()
 
 
-def override_pdf_edit_service() -> PdfEditService:
-    return TestPdfEditService()
+def override_pdf_edit_agent() -> StubPdfEditAgent:
+    return StubPdfEditAgent()
 
 
-def override_pdf_question_service() -> PdfQuestionService:
-    return TestPdfQuestionService()
+def override_pdf_question_agent() -> StubPdfQuestionAgent:
+    return StubPdfQuestionAgent()
 
 
-def override_agent_draft_service() -> AgentDraftService:
-    return TestAgentDraftService()
+def override_user_spec_agent() -> StubUserSpecAgent:
+    return StubUserSpecAgent()
 
 
-def override_execution_service() -> AgentExecutionPlanningService:
-    return TestExecutionPlanningService()
+def override_execution_agent() -> StubExecutionPlanningAgent:
+    return StubExecutionPlanningAgent()
 
 
 app.dependency_overrides[load_settings] = override_settings
-app.dependency_overrides[get_orchestrator_service] = override_orchestrator_service
-app.dependency_overrides[get_pdf_edit_service] = override_pdf_edit_service
-app.dependency_overrides[get_pdf_question_service] = override_pdf_question_service
-app.dependency_overrides[get_agent_draft_service] = override_agent_draft_service
-app.dependency_overrides[get_agent_execution_planning_service] = override_execution_service
+app.dependency_overrides[get_orchestrator_agent] = override_orchestrator_agent
+app.dependency_overrides[get_pdf_edit_agent] = override_pdf_edit_agent
+app.dependency_overrides[get_pdf_question_agent] = override_pdf_question_agent
+app.dependency_overrides[get_user_spec_agent] = override_user_spec_agent
+app.dependency_overrides[get_execution_planning_agent] = override_execution_agent
 
 
 def test_health_route() -> None:

@@ -4,9 +4,9 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from stirling.api.dependencies import get_orchestrator_service
+from stirling.agents.orchestrator import OrchestratorAgent
+from stirling.api.dependencies import get_orchestrator_agent
 from stirling.contracts import OrchestratorRequest, OrchestratorResponse
-from stirling.services.capabilities import OrchestratorService
 
 router = APIRouter(prefix="/api/v1/orchestrator", tags=["orchestrator"])
 
@@ -14,6 +14,6 @@ router = APIRouter(prefix="/api/v1/orchestrator", tags=["orchestrator"])
 @router.post("", response_model=OrchestratorResponse)
 async def orchestrate(
     request: OrchestratorRequest,
-    service: Annotated[OrchestratorService, Depends(get_orchestrator_service)],
+    agent: Annotated[OrchestratorAgent, Depends(get_orchestrator_agent)],
 ) -> OrchestratorResponse:
-    return await service.handle(request)
+    return await agent.handle(request)

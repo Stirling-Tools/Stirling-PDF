@@ -52,6 +52,7 @@ pythonVersion = "3.13"
 
 reportImportCycles = "warning"
 reportUnnecessaryCast = "warning"
+reportUnnecessaryTypeIgnoreComment = "warning"
 reportUnusedImport = "warning"
 #reportUnknownParameterType = "warning"
 
