@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MultiSelect, Loader } from '@mantine/core';
+import { MultiSelect, Loader, Text, Button, Stack } from '@mantine/core';
+import { useNavigate } from 'react-router-dom';
 import { alert } from '@app/components/toast';
 import { UserSummary } from '@app/types/signingSession';
 import apiClient from '@app/services/apiClient';
@@ -21,6 +22,7 @@ type GroupedData = { group: string; items: SelectItem[] };
 const UserSelector = ({ value, onChange, placeholder, size = 'sm', disabled = false }: UserSelectorProps) => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [selectData, setSelectData] = useState<GroupedData[]>([]);
   const [loading, setLoading] = useState(true);
   const [stringValue, setStringValue] = useState<string[]>([]);
@@ -90,9 +92,18 @@ const UserSelector = ({ value, onChange, placeholder, size = 'sm', disabled = fa
     return <Loader size="sm" />;
   }
 
-  // Don't render if we don't have data ready
+  // No users available — prompt to invite
   if (!selectData || selectData.length === 0) {
-    return <Loader size="sm" />;
+    return (
+      <Stack gap="xs" align="flex-start">
+        <Text size="sm" c="dimmed">
+          {t('certSign.collab.userSelector.noUsers', 'No other users found.')}
+        </Text>
+        <Button size="xs" variant="light" onClick={() => navigate('/settings/people')}>
+          {t('certSign.collab.userSelector.inviteUsers', 'Add Users')}
+        </Button>
+      </Stack>
+    );
   }
 
   return (

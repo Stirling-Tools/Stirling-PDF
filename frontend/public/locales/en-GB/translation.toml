@@ -2400,11 +2400,16 @@ description = "Configure how signatures will appear for all participants"
 title = "Signature Appearance"
 
 [certSign.collab.userSelector]
-inviteUsers = "Invite users in Settings → People"
+inviteUsers = "Add Users"
 loadError = "Failed to load users"
 noTeam = "No Team"
 noUsers = "No other users found."
 placeholder = "Select users..."
+
+[certSign.mobile]
+panelActions = "Actions"
+panelDocument = "Document"
+panelPeople = "People"
 
 [certSign.sessions]
 deleted = "Session deleted"
