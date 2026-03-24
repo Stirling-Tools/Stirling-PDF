@@ -17,7 +17,6 @@ class PdfEditRequest(ApiModel):
 class EditOperationPlanStep(ApiModel):
     tool: OperationId
     parameters: ParamToolModel
-    rationale: str | None = None
 
     @model_validator(mode="after")
     def validate_tool_parameter_pairing(self) -> EditOperationPlanStep:
@@ -32,6 +31,7 @@ class EditOperationPlanStep(ApiModel):
 class EditPlanResponse(ApiModel):
     outcome: Literal["plan"] = "plan"
     summary: str
+    rationale: str | None = None
     steps: list[EditOperationPlanStep]
 
 
