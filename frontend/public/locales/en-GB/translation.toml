@@ -2383,6 +2383,8 @@ add = "Add {{count}} Participant(s)"
 back = "Back"
 configureSignatures = "Configure Signature Settings"
 continue = "Continue to Signature Settings"
+reasonHelp = "Pre-set a signing reason for these participants (optional, they can override when signing)"
+reasonPlaceholder = "e.g. Approval, Review..."
 selectUsers = "Select Users"
 
 [certSign.collab.sessionCreation]
@@ -2398,8 +2400,10 @@ description = "Configure how signatures will appear for all participants"
 title = "Signature Appearance"
 
 [certSign.collab.userSelector]
+inviteUsers = "Invite users in Settings → People"
 loadError = "Failed to load users"
 noTeam = "No Team"
+noUsers = "No other users found."
 placeholder = "Select users..."
 
 [certSign.sessions]

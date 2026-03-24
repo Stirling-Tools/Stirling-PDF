@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Paper, Group, Button, Text, Divider, CloseButton } from '@mantine/core';
+import CancelIcon from '@mui/icons-material/Cancel';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
@@ -271,6 +272,18 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
             >
               {t('certSign.collab.signRequest.addToFiles', 'Add to Active Files')}
             </Button>
+            {signRequest.myStatus !== 'SIGNED' && signRequest.myStatus !== 'DECLINED' && (
+              <Button
+                variant="light"
+                color="red"
+                size="sm"
+                leftSection={<CancelIcon fontSize="small" />}
+                onClick={handleDecline}
+                loading={declining}
+              >
+                {t('certSign.collab.signRequest.decline', 'Decline Request')}
+              </Button>
+            )}
             <Divider orientation="vertical" />
             <Button.Group>
               <Button
@@ -346,21 +359,6 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
         />
       )}
 
-      {/* Decline Button (for view-only users) */}
-      {!canSign && signRequest.myStatus !== 'SIGNED' && (
-        <Paper p="md" shadow="sm" style={{ flexShrink: 0 }}>
-          <Group justify="center">
-            <Button
-              color="red"
-              variant="outline"
-              onClick={handleDecline}
-              loading={declining}
-            >
-              {t('certSign.collab.signRequest.decline', 'Decline Request')}
-            </Button>
-          </Group>
-        </Paper>
-      )}
     </div>
   );
 };
