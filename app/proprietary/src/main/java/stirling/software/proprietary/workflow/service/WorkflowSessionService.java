@@ -445,10 +445,17 @@ public class WorkflowSessionService {
     }
 
     /** Deletes a workflow session and associated files. */
+    @Transactional
     public void deleteSession(String sessionId, User owner) {
         WorkflowSession session = getSessionForOwner(sessionId, owner);
 
-        // Delete files from storage
+        if (session.isFinalized()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Cannot delete a finalized session. The signed PDF remains accessible from your session history.");
+        }
+
+        // Delete physical storage files (non-fatal; may already be absent)
         try {
             if (session.getOriginalFile() != null) {
                 storageProvider.delete(session.getOriginalFile().getStorageKey());
@@ -460,7 +467,32 @@ public class WorkflowSessionService {
             log.error("Error deleting files for session {}", sessionId, e);
         }
 
+        // Clear only the StoredFile → WorkflowSession back-reference before deleting.
+        //
+        // We do NOT null session.originalFile here because that would emit an UPDATE with
+        // original_file_id=NULL, violating the NOT NULL constraint.  There is no need to — a
+        // DELETE statement removes the row entirely, so the NOT NULL constraint never triggers.
+        //
+        // We DO null StoredFile.workflowSession (workflow_session_id IS nullable) so that
+        // Hibernate does not see a persistent StoredFile referencing a "removed" WorkflowSession
+        // during flush, which would throw TransientPropertyValueException.
+        StoredFile originalFile = session.getOriginalFile();
+        StoredFile processedFile = session.getProcessedFile();
+        if (originalFile != null) {
+            originalFile.setWorkflowSession(null);
+            storedFileRepository.save(originalFile);
+        }
+        if (processedFile != null) {
+            processedFile.setWorkflowSession(null);
+            storedFileRepository.save(processedFile);
+        }
+
+        // Delete the session row. Cascades to WorkflowParticipant via orphanRemoval=true.
         workflowSessionRepository.delete(session);
+
+        // StoredFile rows can now be deleted — the workflow_sessions FK is gone.
+        if (originalFile != null) storedFileRepository.delete(originalFile);
+        if (processedFile != null) storedFileRepository.delete(processedFile);
         log.info("Deleted workflow session {}", sessionId);
     }
 

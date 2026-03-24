@@ -15,6 +15,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -430,7 +431,7 @@ class WorkflowSessionServiceTest {
     // -------------------------------------------------------------------------
 
     @Test
-    void deleteSession_ownerAuthorized_deletesSession() throws Exception {
+    void deleteSession_ownerAuthorized_deletesSession() {
         User owner = user("alice");
         owner.setId(1L);
         WorkflowSession session = new WorkflowSession();
@@ -441,6 +442,61 @@ class WorkflowSessionServiceTest {
         service.deleteSession("s3", owner);
 
         verify(workflowSessionRepository).delete(session);
+        // session.save() must NOT be called — that would UPDATE original_file_id to NULL,
+        // violating the NOT NULL constraint; the row is simply deleted instead
+        verify(workflowSessionRepository, never()).save(any());
+    }
+
+    @Test
+    void deleteSession_withBothFiles_nullsBackRefsAndDeletesInOrder() {
+        User owner = user("alice");
+        owner.setId(1L);
+
+        StoredFile originalFile = new StoredFile();
+        originalFile.setStorageKey("key-orig");
+        StoredFile processedFile = new StoredFile();
+        processedFile.setStorageKey("key-proc");
+
+        WorkflowSession session = new WorkflowSession();
+        session.setSessionId("s3b");
+        session.setOwner(owner);
+        session.setOriginalFile(originalFile);
+        session.setProcessedFile(processedFile);
+        when(workflowSessionRepository.findBySessionId("s3b")).thenReturn(Optional.of(session));
+
+        service.deleteSession("s3b", owner);
+
+        // Only the back-reference (StoredFile → session) must be nulled; session.originalFile
+        // is NOT nulled because that would emit UPDATE original_file_id=NULL (NOT NULL violation)
+        assertThat(originalFile.getWorkflowSession()).isNull();
+        assertThat(processedFile.getWorkflowSession()).isNull();
+
+        // Order: save StoredFiles (clear back-refs) → delete session → delete StoredFile rows
+        InOrder inOrder = inOrder(workflowSessionRepository, storedFileRepository);
+        inOrder.verify(storedFileRepository).save(originalFile);
+        inOrder.verify(storedFileRepository).save(processedFile);
+        inOrder.verify(workflowSessionRepository).delete(session);
+        inOrder.verify(storedFileRepository).delete(originalFile);
+        inOrder.verify(storedFileRepository).delete(processedFile);
+    }
+
+    @Test
+    void deleteSession_finalizedSession_throwsBadRequest() {
+        User owner = user("alice");
+        owner.setId(1L);
+
+        WorkflowSession session = new WorkflowSession();
+        session.setSessionId("s3c");
+        session.setOwner(owner);
+        session.setFinalized(true);
+        when(workflowSessionRepository.findBySessionId("s3c")).thenReturn(Optional.of(session));
+
+        assertThatThrownBy(() -> service.deleteSession("s3c", owner))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+
+        verify(workflowSessionRepository, never()).delete(any());
     }
 
     @Test
@@ -462,8 +518,10 @@ class WorkflowSessionServiceTest {
 
         service.deleteSession("s4", owner);
 
-        // Storage failure is non-fatal — session must still be deleted
+        // Storage failure is non-fatal — back-ref is still cleared and DB records still deleted
+        verify(storedFileRepository).save(originalFile); // back-ref cleared
         verify(workflowSessionRepository).delete(session);
+        verify(storedFileRepository).delete(originalFile);
     }
 
     @Test
