@@ -237,6 +237,14 @@ system:
   databaseBackup:
     cron: "0 0 0 * * ?" # Cron expression for automatic database backups "0 0 0 * * ?" daily at midnight
 
+autoPipeline:
+  outputFolder: "" # Output folder for processed pipeline files (leave empty for default)
+  fileReadiness:
+    enabled: true # Set to 'false' to skip all readiness checks and process files immediately (legacy behaviour)
+    settleTimeMillis: 5000 # How long (ms) a file must be unmodified before it is considered fully written and stable. Default: 5000 (5 seconds)
+    sizeCheckDelayMillis: 500 # Pause (ms) between two file-size reads used to detect active writes (Linux/macOS mid-copy detection). Default: 500
+    allowedExtensions: [] # Optional extension allow-list (case-insensitive, without the leading dot). Empty list = accept all extensions. Example: ["pdf", "tiff"]
+
 ui:
   appNameNavbar: "" # name displayed on the navigation bar
   logoStyle: classic # Options: 'classic' (default - classic S icon) or 'modern' (minimalist logo)
