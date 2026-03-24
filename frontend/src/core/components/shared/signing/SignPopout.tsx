@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import { Drawer } from '@mantine/core';
+import { useIsPhone } from '@app/hooks/useIsMobile';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import ActiveSessionsPanel from '@app/components/shared/signing/ActiveSessionsPanel';
 import CompletedSessionsPanel from '@app/components/shared/signing/CompletedSessionsPanel';
@@ -34,6 +36,7 @@ type SessionItem = (SignRequestSummary | SessionSummary) & {
 
 const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: SignPopoutProps) => {
   const { t } = useTranslation();
+  const isPhone = useIsPhone();
   const popoverRef = useRef<HTMLDivElement>(null);
   const [popoverPosition, setPopoverPosition] = useState({ top: 160, left: 84 });
   const [maxHeight, setMaxHeight] = useState<number | undefined>(undefined);
@@ -70,7 +73,9 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
   const SIGN_REQUEST_WORKBENCH_ID = 'signRequestWorkbench';
   const SESSION_DETAIL_WORKBENCH_ID = 'sessionDetailWorkbench';
 
-  // Register workbenches only when group signing is enabled
+  // Register workbenches when group signing is enabled.
+  // No cleanup on unmount — registration must persist when this component unmounts
+  // on mobile (QuickAccessBar is desktop-only). Re-registering on remount is idempotent.
   useEffect(() => {
     if (!groupSigningEnabled) return;
 
@@ -91,12 +96,14 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       hideTopControls: true,
       hideToolPanel: true,
     });
-
-    return () => {
-      unregisterCustomWorkbenchView(SIGN_REQUEST_WORKBENCH_ID);
-      unregisterCustomWorkbenchView(SESSION_DETAIL_WORKBENCH_ID);
-    };
   }, [groupSigningEnabled]);
+
+  // Unregister workbenches only when the feature is explicitly disabled
+  useEffect(() => {
+    if (groupSigningEnabled) return;
+    unregisterCustomWorkbenchView(SIGN_REQUEST_WORKBENCH_ID);
+    unregisterCustomWorkbenchView(SESSION_DETAIL_WORKBENCH_ID);
+  }, [groupSigningEnabled, unregisterCustomWorkbenchView]);
 
   // Clear sign request workbench data when the user navigates away from it
   useEffect(() => {
@@ -112,9 +119,9 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
     }
   }, [currentView]);
 
-  // Position popover
+  // Position popover (desktop/tablet only — phone uses Drawer)
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || isPhone) return;
 
     const updatePosition = () => {
       const anchor = buttonRef.current;
@@ -146,9 +153,9 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
     };
   }, [isOpen, isRTL, buttonRef]);
 
-  // Handle outside clicks
+  // Handle outside clicks (desktop/tablet only — Drawer handles its own backdrop on phone)
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || isPhone) return;
 
     const handleOutside = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -541,6 +548,197 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
 
   if (typeof document === 'undefined') return null;
 
+  // Shared card content — rendered inside either the portal (desktop/tablet) or Drawer (phone)
+  const popoutCard = (
+    <div className="quick-access-popout__card" style={{ maxHeight: !isPhone && maxHeight ? `${maxHeight}px` : undefined }}>
+      {/* Header */}
+      <div className="quick-access-popout__header">
+        <button
+          type="button"
+          className={`quick-access-popout__back ${showCreatePanel ? 'is-visible' : ''}`}
+          onClick={() => setShowCreatePanel(false)}
+          aria-label={t('quickAccess.back', 'Back')}
+        >
+          <LocalIcon icon="arrow-back-rounded" width="1rem" height="1rem" />
+        </button>
+        <div className="quick-access-popout__title">
+          {showCreatePanel
+            ? t('quickAccess.createSession', 'Create Signing Request')
+            : groupSigningEnabled && activeTab === 'active'
+            ? t('quickAccess.activeSessions', 'Active Sessions')
+            : groupSigningEnabled
+            ? t('quickAccess.completedSessions', 'Completed Sessions')
+            : t('quickAccess.sign', 'Sign')}
+        </div>
+        <div className="quick-access-popout__header-actions">
+          {!showCreatePanel && (
+            <button
+              type="button"
+              className="quick-access-popout__header-action"
+              onClick={fetchData}
+              disabled={loading}
+              aria-label={t('quickAccess.refresh', 'Refresh')}
+              style={{ opacity: loading ? 0.5 : 0.7 }}
+            >
+              <LocalIcon icon="refresh-rounded" width="1rem" height="1rem" />
+            </button>
+          )}
+          <button
+            type="button"
+            className="quick-access-popout__header-action"
+            onClick={onClose}
+            aria-label={t('close', 'Close')}
+          >
+            <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
+          </button>
+        </div>
+      </div>
+
+      {/* Quick sign tools */}
+      {!showCreatePanel && (
+        <div className="quick-access-popout__quick-sign">
+          <div className="quick-access-popout__section-label">
+            {t('quickAccess.signYourself', 'Sign Yourself')}
+          </div>
+          <div className="quick-access-popout__quick-sign-actions">
+            <button
+              type="button"
+              className="quick-access-popout__quick-sign-btn"
+              onClick={() => {
+                onClose();
+                handleToolSelect('sign');
+              }}
+            >
+              <LocalIcon icon="signature-rounded" width="1rem" height="1rem" />
+              {t('quickAccess.wetSign', 'Add Signature')}
+            </button>
+            <button
+              type="button"
+              className="quick-access-popout__quick-sign-btn"
+              onClick={() => {
+                onClose();
+                handleToolSelect('certSign');
+              }}
+            >
+              <LocalIcon icon="workspace-premium-rounded" width="1rem" height="1rem" />
+              {t('quickAccess.certSign', 'Certificate Sign')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Signature Requests section label + Tab Navigation */}
+      {!showCreatePanel && groupSigningEnabled && (
+        <>
+          <div className="quick-access-popout__section-label quick-access-popout__section-label--padded quick-access-popout__section-label--row">
+            <span>{t('quickAccess.signatureRequests', 'Signature Requests')}</span>
+            <button
+              type="button"
+              className="quick-access-popout__section-action"
+              onClick={() => setShowCreatePanel(true)}
+              aria-label={t('quickAccess.newRequest', 'New request')}
+              title={t('quickAccess.newRequest', 'New request')}
+            >
+              <LocalIcon icon="add-rounded" width="1rem" height="1rem" />
+            </button>
+          </div>
+          <div className="quick-access-popout__tab-nav">
+            <button
+              className={`quick-access-popout__tab-button ${activeTab === 'active' ? 'active' : ''}`}
+              onClick={() => setActiveTab('active')}
+            >
+              {t('quickAccess.activeTab', 'Active')}
+            </button>
+            <button
+              className={`quick-access-popout__tab-button ${activeTab === 'completed' ? 'active' : ''}`}
+              onClick={() => setActiveTab('completed')}
+            >
+              {t('quickAccess.completedTab', 'Completed')}
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Body */}
+      {groupSigningEnabled && (
+        <div className="quick-access-popout__body">
+          {showCreatePanel ? (
+            <CreateSessionPanel
+              selectedFiles={selectedFiles}
+              selectedUserIds={selectedUserIds}
+              onSelectedUserIdsChange={setSelectedUserIds}
+              dueDate={dueDate}
+              onDueDateChange={setDueDate}
+              creating={creating}
+              includeSummaryPage={includeSummaryPage}
+              onIncludeSummaryPageChange={setIncludeSummaryPage}
+            />
+          ) : activeTab === 'active' ? (
+            <ActiveSessionsPanel
+              sessions={activeSessions}
+              loading={loading}
+              onSessionClick={(item) => {
+                if (item.itemType === 'signRequest') {
+                  handleSignRequestClick(item as SignRequestSummary);
+                } else {
+                  handleSessionClick(item as SessionSummary);
+                }
+              }}
+            />
+          ) : (
+            <CompletedSessionsPanel
+              sessions={completedSessions}
+              loading={loading}
+              onSessionClick={(item) => {
+                if (item.itemType === 'signRequest') {
+                  handleSignRequestClick(item as SignRequestSummary);
+                } else {
+                  handleSessionClick(item as SessionSummary);
+                }
+              }}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Footer */}
+      {groupSigningEnabled && showCreatePanel && (
+        <div className="quick-access-popout__footer">
+          <button
+            type="button"
+            className="quick-access-popout__primary"
+            onClick={handleCreateSession}
+            disabled={selectedFiles.length !== 1 || selectedUserIds.length === 0 || creating}
+          >
+            <LocalIcon icon="send-rounded" width="1rem" height="1rem" />
+            {creating
+              ? t('quickAccess.sendingRequest', 'Sending...')
+              : t('quickAccess.requestSignatures', 'Request Signatures')}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  // Phone: bottom-sheet Drawer (full height)
+  if (isPhone) {
+    return (
+      <Drawer
+        opened={isOpen}
+        onClose={onClose}
+        position="bottom"
+        size="100%"
+        withCloseButton={false}
+        padding={0}
+        className="quick-access-sign-popout"
+        styles={{ body: { padding: 0, height: '100%', display: 'flex', flexDirection: 'column' } }}
+      >
+        {popoutCard}
+      </Drawer>
+    );
+  }
+
+  // Desktop / tablet: fixed-position portal
   return createPortal(
     <div
       ref={popoverRef}
@@ -553,174 +751,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="quick-access-popout__card" style={{ maxHeight: maxHeight ? `${maxHeight}px` : undefined }}>
-        {/* Header */}
-        <div className="quick-access-popout__header">
-          <button
-            type="button"
-            className={`quick-access-popout__back ${showCreatePanel ? 'is-visible' : ''}`}
-            onClick={() => setShowCreatePanel(false)}
-            aria-label={t('quickAccess.back', 'Back')}
-          >
-            <LocalIcon icon="arrow-back-rounded" width="1rem" height="1rem" />
-          </button>
-          <div className="quick-access-popout__title">
-            {showCreatePanel
-              ? t('quickAccess.createSession', 'Create Signing Request')
-              : groupSigningEnabled && activeTab === 'active'
-              ? t('quickAccess.activeSessions', 'Active Sessions')
-              : groupSigningEnabled
-              ? t('quickAccess.completedSessions', 'Completed Sessions')
-              : t('quickAccess.sign', 'Sign')}
-          </div>
-          <div className="quick-access-popout__header-actions">
-            {!showCreatePanel && (
-              <button
-                type="button"
-                className="quick-access-popout__header-action"
-                onClick={fetchData}
-                disabled={loading}
-                aria-label={t('quickAccess.refresh', 'Refresh')}
-                style={{ opacity: loading ? 0.5 : 0.7 }}
-              >
-                <LocalIcon icon="refresh-rounded" width="1rem" height="1rem" />
-              </button>
-            )}
-            <button
-              type="button"
-              className="quick-access-popout__header-action"
-              onClick={onClose}
-              aria-label={t('close', 'Close')}
-            >
-              <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
-            </button>
-          </div>
-        </div>
-
-        {/* Quick sign tools */}
-        {!showCreatePanel && (
-          <div className="quick-access-popout__quick-sign">
-            <div className="quick-access-popout__section-label">
-              {t('quickAccess.signYourself', 'Sign Yourself')}
-            </div>
-            <div className="quick-access-popout__quick-sign-actions">
-              <button
-                type="button"
-                className="quick-access-popout__quick-sign-btn"
-                onClick={() => {
-                  onClose();
-                  handleToolSelect('sign');
-                }}
-              >
-                <LocalIcon icon="signature-rounded" width="1rem" height="1rem" />
-                {t('quickAccess.wetSign', 'Add Signature')}
-              </button>
-              <button
-                type="button"
-                className="quick-access-popout__quick-sign-btn"
-                onClick={() => {
-                  onClose();
-                  handleToolSelect('certSign');
-                }}
-              >
-                <LocalIcon icon="workspace-premium-rounded" width="1rem" height="1rem" />
-                {t('quickAccess.certSign', 'Certificate Sign')}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Signature Requests section label + Tab Navigation */}
-        {!showCreatePanel && groupSigningEnabled && (
-          <>
-            <div className="quick-access-popout__section-label quick-access-popout__section-label--padded quick-access-popout__section-label--row">
-              <span>{t('quickAccess.signatureRequests', 'Signature Requests')}</span>
-              <button
-                type="button"
-                className="quick-access-popout__section-action"
-                onClick={() => setShowCreatePanel(true)}
-                aria-label={t('quickAccess.newRequest', 'New request')}
-                title={t('quickAccess.newRequest', 'New request')}
-              >
-                <LocalIcon icon="add-rounded" width="1rem" height="1rem" />
-              </button>
-            </div>
-            <div className="quick-access-popout__tab-nav">
-              <button
-                className={`quick-access-popout__tab-button ${activeTab === 'active' ? 'active' : ''}`}
-                onClick={() => setActiveTab('active')}
-              >
-                {t('quickAccess.activeTab', 'Active')}
-              </button>
-              <button
-                className={`quick-access-popout__tab-button ${activeTab === 'completed' ? 'active' : ''}`}
-                onClick={() => setActiveTab('completed')}
-              >
-                {t('quickAccess.completedTab', 'Completed')}
-              </button>
-            </div>
-          </>
-        )}
-
-        {/* Body */}
-        {groupSigningEnabled && (
-          <div className="quick-access-popout__body">
-            {showCreatePanel ? (
-              <CreateSessionPanel
-                selectedFiles={selectedFiles}
-                selectedUserIds={selectedUserIds}
-                onSelectedUserIdsChange={setSelectedUserIds}
-                dueDate={dueDate}
-                onDueDateChange={setDueDate}
-                creating={creating}
-                includeSummaryPage={includeSummaryPage}
-                onIncludeSummaryPageChange={setIncludeSummaryPage}
-              />
-            ) : activeTab === 'active' ? (
-              <ActiveSessionsPanel
-                sessions={activeSessions}
-                loading={loading}
-                onSessionClick={(item) => {
-                  if (item.itemType === 'signRequest') {
-                    handleSignRequestClick(item as SignRequestSummary);
-                  } else {
-                    handleSessionClick(item as SessionSummary);
-                  }
-                }}
-              />
-            ) : (
-              <CompletedSessionsPanel
-                sessions={completedSessions}
-                loading={loading}
-                onSessionClick={(item) => {
-                  if (item.itemType === 'signRequest') {
-                    handleSignRequestClick(item as SignRequestSummary);
-                  } else {
-                    handleSessionClick(item as SessionSummary);
-                  }
-                }}
-              />
-            )}
-          </div>
-        )}
-
-        {/* Footer */}
-        {groupSigningEnabled && showCreatePanel && (
-          <div className="quick-access-popout__footer">
-            <button
-              type="button"
-              className="quick-access-popout__primary"
-              onClick={handleCreateSession}
-              disabled={selectedFiles.length !== 1 || selectedUserIds.length === 0 || creating}
-            >
-              <LocalIcon icon="send-rounded" width="1rem" height="1rem" />
-              {creating
-                ? t('quickAccess.sendingRequest', 'Sending...')
-                : t('quickAccess.requestSignatures', 'Request Signatures')}
-            </button>
-          </div>
-        )}
-      </div>
+      {popoutCard}
     </div>,
     document.body
   );

@@ -878,3 +878,22 @@
     width: auto;
   }
 }
+
+/* Phone: Drawer takes over SignPopout entirely.
+   This is a defensive fallback in case the portal branch ever renders on phone. */
+@media (max-width: 768px) {
+  .quick-access-sign-popout {
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    border-radius: 0;
+  }
+
+  .quick-access-sign-popout .quick-access-popout__card {
+    border-radius: 0;
+    max-height: 100vh;
+    height: 100vh;
+  }
+}

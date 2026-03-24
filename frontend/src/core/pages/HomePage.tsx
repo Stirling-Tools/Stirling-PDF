@@ -183,6 +183,14 @@ export default function HomePage() {
     }
   }, [isMobile, readerMode, selectedToolKey]);
 
+  // Automatically switch to workbench slide when a custom workbench (e.g. signing) is active on mobile.
+  // hideToolPanel is true for all custom workbenches that take over the full screen.
+  useEffect(() => {
+    if (isMobile && hideToolPanel) {
+      setActiveMobileView('workbench');
+    }
+  }, [isMobile, hideToolPanel]);
+
   // When navigating back to tools view in mobile with a workbench-only tool, show tool picker
   useEffect(() => {
     if (isMobile && activeMobileView === 'tools' && selectedTool) {
