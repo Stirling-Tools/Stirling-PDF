@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   Box,
   Text,
@@ -7,12 +7,15 @@ import {
   Button,
   ScrollArea,
   Loader,
+  TextInput,
+  Select,
 } from '@mantine/core';
 
 import { useCardModalAnimation } from '@app/hooks/useCardModalAnimation';
 import { CardExpansionModal } from '@app/components/smartFolders/CardExpansionModal';
 import { StatCard } from '@app/components/smartFolders/StatCard';
 import { useTranslation } from 'react-i18next';
+import SearchIcon from '@mui/icons-material/Search';
 import DownloadIcon from '@mui/icons-material/Download';
 import HistoryIcon from '@mui/icons-material/History';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -42,6 +45,59 @@ import {
 import { SmartFolderHomePage, humaniseOp } from '@app/components/smartFolders/SmartFolderHomePage';
 import { useNavigationActions } from '@app/contexts/NavigationContext';
 import { FilePreviewModal } from '@app/components/smartFolders/FilePreviewModal';
+
+const SORT_OPTIONS = [
+  { value: 'newest', label: 'Newest' },
+  { value: 'oldest', label: 'Oldest' },
+  { value: 'name-asc', label: 'A → Z' },
+  { value: 'name-desc', label: 'Z → A' },
+];
+
+const ACTIVITY_STATUS_OPTIONS = [
+  { value: 'all', label: 'All' },
+  { value: 'processed', label: 'Done' },
+  { value: 'processing', label: 'Active' },
+  { value: 'error', label: 'Failed' },
+  { value: 'pending', label: 'Pending' },
+];
+
+function FilterSortBar({
+  search,
+  onSearchChange,
+  sort,
+  onSortChange,
+  extra,
+}: {
+  search: string;
+  onSearchChange: (v: string) => void;
+  sort: string;
+  onSortChange: (v: string) => void;
+  extra?: React.ReactNode;
+}) {
+  return (
+    <Box style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', padding: '0.5rem 0.75rem' }}>
+      <TextInput
+        size="xs"
+        placeholder="Filter…"
+        value={search}
+        onChange={e => onSearchChange(e.currentTarget.value)}
+        leftSection={<SearchIcon style={{ fontSize: '0.875rem' }} />}
+        style={{ flex: 1 }}
+        styles={{ input: { fontSize: '0.75rem' } }}
+      />
+      {extra}
+      <Select
+        size="xs"
+        value={sort}
+        onChange={v => v && onSortChange(v)}
+        data={SORT_OPTIONS}
+        style={{ width: '6.5rem' }}
+        styles={{ input: { fontSize: '0.75rem' } }}
+        comboboxProps={{ withinPortal: true }}
+      />
+    </Box>
+  );
+}
 
 interface SmartFolderWorkbenchViewProps {
   data: { folderId: string | null; pendingFileId?: string; pendingFileIds?: string[] };
@@ -100,6 +156,17 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   const [inputFiles, setInputFiles] = useState<StirlingFile[]>([]);
   const [previewFileId, setPreviewFileId] = useState<FileId | null>(null);
   const [previewFileName, setPreviewFileName] = useState('');
+
+  // Filter / sort state
+  const [activitySearch, setActivitySearch] = useState('');
+  const [activitySort, setActivitySort] = useState('newest');
+  const [activityStatusFilter, setActivityStatusFilter] = useState('all');
+  const [inputSearch, setInputSearch] = useState('');
+  const [inputSort, setInputSort] = useState('newest');
+  const [outputSearch, setOutputSearch] = useState('');
+  const [outputSort, setOutputSort] = useState('newest');
+  const [failedSearch, setFailedSearch] = useState('');
+  const [failedSort, setFailedSort] = useState('newest');
   const [automation, setAutomation] = useState<AutomationConfig | null>(null);
   const { phase: inputModalPhase, cardRect: inputCardRect, textExpanded: inputTextExpanded, openModal: openInputModal, closeModal: closeInputModal } = useCardModalAnimation();
   const { phase: outputModalPhase, cardRect: outputCardRect, textExpanded: outputTextExpanded, openModal: openOutputModal, closeModal: closeOutputModal } = useCardModalAnimation();
@@ -273,6 +340,81 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
     }
   }, [folder, updateFolder, fileIds, folderRecord, inputFiles, runPipeline]);
 
+  // ── Filtered + sorted lists — all before early returns ──
+
+  const filteredActivityIds = useMemo(() => {
+    const q = activitySearch.toLowerCase();
+    let items = fileIds.map(id => {
+      const meta = folderRecord?.files[id];
+      const name = meta?.name ?? inputFiles.find(f => f.fileId === id)?.name ?? id;
+      const status = meta?.status ?? 'pending';
+      const time = meta?.processedAt
+        ? new Date(meta.processedAt).getTime()
+        : meta?.addedAt ? new Date(meta.addedAt).getTime() : 0;
+      return { id, name, status, time };
+    });
+    if (q) items = items.filter(i => i.name.toLowerCase().includes(q));
+    if (activityStatusFilter !== 'all') items = items.filter(i => i.status === activityStatusFilter);
+    if (activitySort === 'newest') items = [...items].reverse();
+    else if (activitySort === 'name-asc') items = [...items].sort((a, b) => a.name.localeCompare(b.name));
+    else if (activitySort === 'name-desc') items = [...items].sort((a, b) => b.name.localeCompare(a.name));
+    // 'oldest' keeps the original order (insertion order = oldest first)
+    return items.map(i => i.id);
+  }, [fileIds, folderRecord, inputFiles, activitySearch, activityStatusFilter, activitySort]);
+
+  const filteredInputFiles = useMemo(() => {
+    const q = inputSearch.toLowerCase();
+    let files = q ? inputFiles.filter(f => f.name.toLowerCase().includes(q)) : [...inputFiles];
+    if (inputSort === 'newest') files.sort((a, b) => {
+      const ta = folderRecord?.files[a.fileId]?.addedAt ? new Date(folderRecord.files[a.fileId].addedAt!).getTime() : a.lastModified;
+      const tb = folderRecord?.files[b.fileId]?.addedAt ? new Date(folderRecord.files[b.fileId].addedAt!).getTime() : b.lastModified;
+      return tb - ta;
+    });
+    else if (inputSort === 'oldest') files.sort((a, b) => {
+      const ta = folderRecord?.files[a.fileId]?.addedAt ? new Date(folderRecord.files[a.fileId].addedAt!).getTime() : a.lastModified;
+      const tb = folderRecord?.files[b.fileId]?.addedAt ? new Date(folderRecord.files[b.fileId].addedAt!).getTime() : b.lastModified;
+      return ta - tb;
+    });
+    else if (inputSort === 'name-asc') files.sort((a, b) => a.name.localeCompare(b.name));
+    else if (inputSort === 'name-desc') files.sort((a, b) => b.name.localeCompare(a.name));
+    return files;
+  }, [inputFiles, inputSearch, inputSort, folderRecord]);
+
+  const filteredOutputFiles = useMemo(() => {
+    const q = outputSearch.toLowerCase();
+    let files = q ? outputFiles.filter(f => f.name.toLowerCase().includes(q)) : [...outputFiles];
+    const getTime = (f: StirlingFile) => {
+      const processedAt = Object.values(folderRecord?.files ?? {}).find(m =>
+        m.displayFileIds?.includes(f.fileId) || m.displayFileId === f.fileId
+      )?.processedAt;
+      return processedAt ? new Date(processedAt).getTime() : f.lastModified;
+    };
+    if (outputSort === 'newest') files.sort((a, b) => getTime(b) - getTime(a));
+    else if (outputSort === 'oldest') files.sort((a, b) => getTime(a) - getTime(b));
+    else if (outputSort === 'name-asc') files.sort((a, b) => a.name.localeCompare(b.name));
+    else if (outputSort === 'name-desc') files.sort((a, b) => b.name.localeCompare(a.name));
+    return files;
+  }, [outputFiles, outputSearch, outputSort, folderRecord]);
+
+  const filteredFailedIds = useMemo(() => {
+    const q = failedSearch.toLowerCase();
+    const allFailedIds = fileIds.filter(id => folderRecord?.files[id]?.status === 'error');
+    let items = allFailedIds.map(id => {
+      const meta = folderRecord?.files[id];
+      const name = meta?.name ?? inputFiles.find(f => f.fileId === id)?.name ?? id;
+      const time = meta?.lastFailedAt ? new Date(meta.lastFailedAt).getTime() : 0;
+      const attempts = meta?.failedAttempts ?? 0;
+      return { id, name, time, attempts };
+    });
+    if (q) items = items.filter(i => i.name.toLowerCase().includes(q));
+    if (failedSort === 'newest') items = [...items].sort((a, b) => b.time - a.time);
+    else if (failedSort === 'oldest') items = [...items].sort((a, b) => a.time - b.time);
+    else if (failedSort === 'name-asc') items = [...items].sort((a, b) => a.name.localeCompare(b.name));
+    else if (failedSort === 'name-desc') items = [...items].sort((a, b) => b.name.localeCompare(a.name));
+    return items.map(i => i.id);
+  }, [fileIds, folderRecord, inputFiles, failedSearch, failedSort]);
+
+  // Early returns — after all hooks
   if (!folderId) return <SmartFolderHomePage />;
 
   const FolderIcon = folder
@@ -535,15 +677,40 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
             </Text>
           </Box>
 
+          {/* Activity filter/sort toolbar */}
+          {fileIds.length > 0 && (
+            <FilterSortBar
+              search={activitySearch}
+              onSearchChange={setActivitySearch}
+              sort={activitySort}
+              onSortChange={setActivitySort}
+              extra={
+                <Select
+                  size="xs"
+                  value={activityStatusFilter}
+                  onChange={v => v && setActivityStatusFilter(v)}
+                  data={ACTIVITY_STATUS_OPTIONS}
+                  style={{ width: '5.5rem' }}
+                  styles={{ input: { fontSize: '0.75rem' } }}
+                  comboboxProps={{ withinPortal: true }}
+                />
+              }
+            />
+          )}
+
           <ScrollArea style={{ flex: 1 }}>
             <Stack gap="xs" px="md" pb="md">
               {fileIds.length === 0 ? (
                 <Text size="xs" c="dimmed" ta="center" py="lg">
                   {t('smartFolders.workbench.noActivity', 'No activity yet — drop a PDF to start')}
                 </Text>
+              ) : filteredActivityIds.length === 0 ? (
+                <Text size="xs" c="dimmed" ta="center" py="lg">
+                  {t('smartFolders.workbench.noActivityMatch', 'No matching activity')}
+                </Text>
               ) : (
                 <>
-                  {[...fileIds].reverse().map((fileId) => {
+                  {filteredActivityIds.map((fileId) => {
                     const meta = folderRecord?.files[fileId];
                     const status = meta?.status ?? 'pending';
                     const run = recentRuns.find(r => r.inputFileId === fileId);
@@ -624,6 +791,14 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
         count={inputFiles.length}
         labelSingular={t('smartFolders.workbench.inputFile', 'input file')}
         labelPlural={t('smartFolders.workbench.inputFiles', 'input files')}
+        toolbar={
+          <FilterSortBar
+            search={inputSearch}
+            onSearchChange={setInputSearch}
+            sort={inputSort}
+            onSortChange={setInputSort}
+          />
+        }
         footer={
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.375rem 0.625rem', borderRadius: '0.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: 'var(--mantine-color-dimmed)' }}
@@ -640,7 +815,11 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
             <Text size="sm" c="dimmed" ta="center" py="xl">
               {t('smartFolders.workbench.noInputFiles', 'No input files stored yet')}
             </Text>
-          ) : inputFiles.map((file) => {
+          ) : filteredInputFiles.length === 0 ? (
+            <Text size="sm" c="dimmed" ta="center" py="xl">
+              {t('smartFolders.workbench.noMatch', 'No matching files')}
+            </Text>
+          ) : filteredInputFiles.map((file) => {
             const inputMeta = folderRecord?.files[file.fileId];
             return (
             <Box
@@ -682,6 +861,14 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
         count={outputFiles.length}
         labelSingular={t('smartFolders.workbench.outputFile', 'output file')}
         labelPlural={t('smartFolders.workbench.outputFiles', 'output files')}
+        toolbar={
+          <FilterSortBar
+            search={outputSearch}
+            onSearchChange={setOutputSearch}
+            sort={outputSort}
+            onSortChange={setOutputSort}
+          />
+        }
         footer={
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.375rem 0.625rem', borderRadius: '0.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: 'var(--mantine-color-dimmed)' }}
@@ -698,7 +885,11 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
             <Text size="sm" c="dimmed" ta="center" py="xl">
               {t('smartFolders.workbench.noOutputFiles', 'No output files stored yet')}
             </Text>
-          ) : outputFiles.map((file) => {
+          ) : filteredOutputFiles.length === 0 ? (
+            <Text size="sm" c="dimmed" ta="center" py="xl">
+              {t('smartFolders.workbench.noMatch', 'No matching files')}
+            </Text>
+          ) : filteredOutputFiles.map((file) => {
             const processedAt = Object.values(folderRecord?.files ?? {}).find(m =>
               m.displayFileIds?.includes(file.fileId) || m.displayFileId === file.fileId
             )?.processedAt;
@@ -741,6 +932,14 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
         count={failedFileIds.length}
         labelSingular={t('smartFolders.workbench.fileFailedToProcess', 'file failed to process')}
         labelPlural={t('smartFolders.workbench.filesFailedToProcess', 'files failed to process')}
+        toolbar={
+          <FilterSortBar
+            search={failedSearch}
+            onSearchChange={setFailedSearch}
+            sort={failedSort}
+            onSortChange={setFailedSort}
+          />
+        }
         footer={
           <Group justify="flex-end">
             <Button size="sm" color="red"
@@ -772,7 +971,11 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
         }
       >
         <Stack gap="0.5rem">
-          {failedFileIds.map((fileId) => {
+          {filteredFailedIds.length === 0 && failedFileIds.length > 0 ? (
+            <Text size="sm" c="dimmed" ta="center" py="xl">
+              {t('smartFolders.workbench.noMatch', 'No matching files')}
+            </Text>
+          ) : filteredFailedIds.map((fileId) => {
             const meta = folderRecord?.files[fileId];
             const inputFile = inputFiles.find(f => f.fileId === fileId);
             const filename = meta?.name ?? inputFile?.name ?? fileId;

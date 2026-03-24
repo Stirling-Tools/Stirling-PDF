@@ -20,6 +20,8 @@ interface CardExpansionModalProps {
   children: React.ReactNode;
   /** Footer content */
   footer?: React.ReactNode;
+  /** Non-scrolling toolbar rendered between the header and the list */
+  toolbar?: React.ReactNode;
 }
 
 const MODAL_W_REM = 56;
@@ -39,6 +41,7 @@ export function CardExpansionModal({
   labelPlural,
   children,
   footer,
+  toolbar,
 }: CardExpansionModalProps) {
   const [viewportW, setViewportW] = useState(window.innerWidth);
   const [viewportH, setViewportH] = useState(window.innerHeight);
@@ -160,6 +163,11 @@ export function CardExpansionModal({
         {/* Body — only mount once open */}
         {showBody && (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, backgroundColor: 'var(--bg-toolbar)' }}>
+            {toolbar && (
+              <div style={{ flexShrink: 0, borderBottom: '0.0625rem solid var(--border-subtle)' }}>
+                {toolbar}
+              </div>
+            )}
             <ScrollArea style={{ flex: 1, minHeight: 0 }}>
               <div style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--bg-toolbar)' }}>
                 {children}

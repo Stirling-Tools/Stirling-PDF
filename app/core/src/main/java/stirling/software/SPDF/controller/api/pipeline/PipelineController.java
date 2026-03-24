@@ -9,6 +9,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -63,7 +64,7 @@ public class PipelineController {
         MultipartFile[] files = request.getFileInput();
         String jsonString = request.getJson();
         if (files == null) {
-            return null;
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
         PipelineConfig config = objectMapper.readValue(jsonString, PipelineConfig.class);
         log.info("Received POST request to /handleData with {} files", files.length);
@@ -80,7 +81,7 @@ public class PipelineController {
         try {
             List<Resource> inputFiles = processor.generateInputFiles(files);
             if (inputFiles == null || inputFiles.isEmpty()) {
-                return null;
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             }
             PipelineResult result = processor.runPipelineAgainstFiles(inputFiles, config);
             List<Resource> outputFiles = result.getOutputFiles();
@@ -102,7 +103,7 @@ public class PipelineController {
                     throw e;
                 }
             } else if (outputFiles == null) {
-                return null;
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             }
             // Multiple files: stream into a zip TempFile
             TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
@@ -137,7 +138,7 @@ public class PipelineController {
             }
         } catch (Exception e) {
             log.error("Error handling data: ", e);
-            return null;
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

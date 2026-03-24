@@ -205,6 +205,19 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
           notifySW({ type: 'SCHEDULE_RETRY' });
         }
       } finally {
+        // Safety net: run BEFORE releasing the lock so no concurrent runPipeline call
+        // can start, set status back to 'processing', and cause a false-positive reset.
+        try {
+          const record = await folderStorage.getFolderData(folder.id);
+          if (record?.files[inputFileId]?.status === 'processing') {
+            await folderStorage.updateFileMetadata(folder.id, inputFileId, {
+              status: 'error',
+              errorMessage: 'Processing failed unexpectedly',
+            });
+          }
+        } catch {
+          // Best-effort — ignore if IDB itself is failing
+        }
         processingRef.current.delete(inputFileId);
       }
     },

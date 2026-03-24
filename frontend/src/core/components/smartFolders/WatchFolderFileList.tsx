@@ -229,7 +229,7 @@ function FileRow({
             <ActionIcon
               data-no-select
               size="sm"
-              variant="light"
+              variant="subtle"
               color="blue"
               style={{
                 flexShrink: 0,
@@ -255,7 +255,7 @@ function FileRow({
               <ActionIcon
                 data-no-select
                 size="sm"
-                variant="light"
+                variant="subtle"
                 color="blue"
                 style={{
                   flexShrink: 0,
