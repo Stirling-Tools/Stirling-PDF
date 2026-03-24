@@ -43,6 +43,7 @@ import FormFill from "@app/tools/formFill/FormFill";
 import RemoveCertificateSign from "@app/tools/RemoveCertificateSign";
 import RemoveImage from "@app/tools/RemoveImage";
 import CertSign from "@app/tools/CertSign";
+import TimestampPdf from "@app/tools/TimestampPdf";
 import BookletImposition from "@app/tools/BookletImposition";
 import Flatten from "@app/tools/Flatten";
 import Rotate from "@app/tools/Rotate";
@@ -69,6 +70,7 @@ import { convertOperationConfig } from "@app/hooks/tools/convert/useConvertOpera
 import { removeCertificateSignOperationConfig } from "@app/hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
 import { changePermissionsOperationConfig } from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
 import { certSignOperationConfig } from "@app/hooks/tools/certSign/useCertSignOperation";
+import { timestampPdfOperationConfig } from "@app/hooks/tools/timestampPdf/useTimestampPdfOperation";
 import { bookletImpositionOperationConfig } from "@app/hooks/tools/bookletImposition/useBookletImpositionOperation";
 import { mergeOperationConfig } from '@app/hooks/tools/merge/useMergeOperation';
 import { editTableOfContentsOperationConfig } from '@app/hooks/tools/editTableOfContents/useEditTableOfContentsOperation';
@@ -212,6 +214,19 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["cert-sign"],
         operationConfig: certSignOperationConfig,
         automationSettings: CertSignAutomationSettings,
+      },
+      timestampPdf: {
+        icon: <LocalIcon icon="schedule-rounded" width="1.5rem" height="1.5rem" />,
+        name: t("home.timestampPdf.title", "Timestamp PDF"),
+        component: TimestampPdf,
+        description: t("home.timestampPdf.desc", "Add an RFC 3161 document timestamp to prove when your PDF existed"),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.SIGNING,
+        maxFiles: -1,
+        endpoints: ["timestamp-pdf"],
+        operationConfig: timestampPdfOperationConfig,
+        automationSettings: null,
+        synonyms: getSynonyms(t, "timestampPdf"),
       },
       sign: {
         icon: <LocalIcon icon="signature-rounded" width="1.5rem" height="1.5rem" />,
