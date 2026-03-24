@@ -24,6 +24,7 @@ import type { PDFDict, PDFNumber } from '@cantoo/pdf-lib';
 import { useWheelZoom } from '@app/hooks/useWheelZoom';
 import { useFormFill } from '@app/tools/formFill/FormFillContext';
 import { FormSaveBar } from '@app/tools/formFill/FormSaveBar';
+import { isTauri } from "@tauri-apps/api/core";
 
 // ─── Measure dictionary extraction ────────────────────────────────────────────
 
@@ -409,6 +410,7 @@ const EmbedPdfViewerContent = ({
 
       // Modifier key shortcuts (Ctrl/Cmd + key)
       if (mod) {
+        const isDesktop = isTauri();
         switch (event.key) {
           case '=':
           case '+':
@@ -437,6 +439,18 @@ const EmbedPdfViewerContent = ({
               window.dispatchEvent(new CustomEvent('refocus-search-input'));
             } else {
               searchInterfaceActions.open();
+            }
+            return;
+          case 'r':
+          case 'R':
+            // Ctrl+R: Rotate Pdf when on desktop (if hovered) or refresh when on web
+            if (isDesktop) {
+              event.preventDefault();
+              if (event.shiftKey) {
+                rotationActions.rotateBackward();
+              } else {
+                rotationActions.rotateForward();
+              }
             }
             return;
           case 's':
