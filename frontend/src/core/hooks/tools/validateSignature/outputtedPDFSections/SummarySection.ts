@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next';
-import { PDFFont, PDFImage, PDFPage } from '@cantoo/pdf-lib';
+import { PdfiumFont, PdfiumImage, PdfiumPage } from '@app/services/pdfiumDocBuilder';
 import { SignatureValidationReportEntry } from '@app/types/validateSignature';
 import { drawFieldBox } from '@app/hooks/tools/validateSignature/outputtedPDFSections/FieldBoxSection';
 import { drawThumbnailImage, drawThumbnailPlaceholder } from '@app/hooks/tools/validateSignature/outputtedPDFSections/ThumbnailSection';
@@ -7,17 +7,17 @@ import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalett
 import { formatFileSize } from '@app/hooks/tools/validateSignature/utils/pdfText';
 
 interface DrawSummarySectionOptions {
-  page: PDFPage;
+  page: PdfiumPage;
   cursorY: number;
   entry: SignatureValidationReportEntry;
-  font: PDFFont;
-  fontBold: PDFFont;
+  font: PdfiumFont;
+  fontBold: PdfiumFont;
   marginX: number;
   contentWidth: number;
   columnGap: number;
   statusText: string;
   statusColor: (typeof colorPalette)['success'];
-  loadThumbnail: (url: string) => Promise<{ image: PDFImage } | null>;
+  loadThumbnail: (url: string) => Promise<{ image: PdfiumImage } | null>;
   t: TFunction<'translation'>;
 }
 

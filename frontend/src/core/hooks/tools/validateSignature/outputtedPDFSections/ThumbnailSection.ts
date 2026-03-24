@@ -1,9 +1,9 @@
-import { PDFFont, PDFPage, PDFImage } from '@cantoo/pdf-lib';
+import { PdfiumFont, PdfiumPage, PdfiumImage } from '@app/services/pdfiumDocBuilder';
 import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalette';
 
 export const drawThumbnailPlaceholder = (
-  page: PDFPage,
-  fontBold: PDFFont,
+  page: PdfiumPage,
+  fontBold: PdfiumFont,
   x: number,
   top: number,
   width: number,
@@ -35,8 +35,8 @@ export const drawThumbnailPlaceholder = (
 };
 
 export const drawThumbnailImage = (
-  page: PDFPage,
-  image: PDFImage,
+  page: PdfiumPage,
+  image: PdfiumImage,
   x: number,
   top: number,
   width: number,

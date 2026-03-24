@@ -30,6 +30,10 @@ export interface FormField {
   multiline: boolean;
   tooltip: string | null;
   widgets: WidgetCoordinates[] | null;
+  /** Visual label for push buttons (from /MK/CA in the PDF appearance dict) */
+  buttonLabel?: string | null;
+  /** Action descriptor for push buttons */
+  buttonAction?: ButtonAction | null;
   /** Pre-rendered appearance image for signed signature fields (data URL). */
   appearanceDataUrl?: string;
 }
@@ -42,6 +46,26 @@ export type FormFieldType =
   | 'radio'
   | 'button'
   | 'signature';
+
+export type ButtonActionType =
+  | 'named'
+  | 'javascript'
+  | 'submitForm'
+  | 'resetForm'
+  | 'uri'
+  | 'none';
+
+export interface ButtonAction {
+  type: ButtonActionType;
+  /** For 'named' actions: the PDF action name (e.g. 'Print', 'NextPage', 'PrevPage') */
+  namedAction?: string;
+  /** For 'javascript' actions: the JavaScript source code */
+  javascript?: string;
+  /** For 'submitForm' / 'uri' actions: the target URL */
+  url?: string;
+  /** For 'submitForm' actions: submit flags bitmask */
+  submitFlags?: number;
+}
 
 export interface FormFillState {
   /** Fields fetched from backend with coordinates */

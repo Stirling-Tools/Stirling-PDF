@@ -1,11 +1,11 @@
-import { PDFDocument, PDFFont, PDFImage } from '@cantoo/pdf-lib';
+import { PdfiumDocument, PdfiumFont, PdfiumImage } from '@app/services/pdfiumDocBuilder';
 import type { TFunction } from 'i18next';
 import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalette';
 
 interface StartPageParams {
-  doc: PDFDocument;
-  font: PDFFont;
-  fontBold: PDFFont;
+  doc: PdfiumDocument;
+  font: PdfiumFont;
+  fontBold: PdfiumFont;
   marginX: number;
   marginY: number;
   contentWidth: number;
@@ -63,8 +63,8 @@ export const startReportPage = ({
   return { page, cursorY };
 };
 
-export const createThumbnailLoader = (doc: PDFDocument) => {
-  const cache = new Map<string, { image: PDFImage } | null>();
+export const createThumbnailLoader = (doc: PdfiumDocument) => {
+  const cache = new Map<string, { image: PdfiumImage } | null>();
 
   return async (url: string) => {
     if (cache.has(url)) {
@@ -75,7 +75,7 @@ export const createThumbnailLoader = (doc: PDFDocument) => {
       const response = await fetch(url);
       const bytes = new Uint8Array(await response.arrayBuffer());
       const contentType = response.headers.get('content-type') || '';
-      let image: PDFImage;
+      let image: PdfiumImage;
 
       if (contentType.includes('png')) {
         image = await doc.embedPng(bytes);

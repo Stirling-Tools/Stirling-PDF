@@ -34,6 +34,7 @@ class PDFWorkerManager {
         'pdfjs-dist/legacy/build/pdf.worker.min.mjs',
         import.meta.url
       ).toString();
+      (GlobalWorkerOptions as any).docBaseUrl = undefined;
       this.isInitialized = true;
     }
   }
@@ -74,13 +75,17 @@ class PDFWorkerManager {
         disableAutoFetch: options.disableAutoFetch ?? true,
         disableStream: options.disableStream ?? true,
         stopAtErrors: options.stopAtErrors ?? false,
-        verbosity: options.verbosity ?? 0
+        verbosity: options.verbosity ?? 0,
+        // Suppress warnings about unimplemented widget types and other non-critical issues
+        isEvalSupported: false,
       } : {
         ...pdfData,
         disableAutoFetch: options.disableAutoFetch ?? true,
         disableStream: options.disableStream ?? true,
         stopAtErrors: options.stopAtErrors ?? false,
-        verbosity: options.verbosity ?? 0
+        verbosity: options.verbosity ?? 0,
+        // Suppress warnings about unimplemented widget types and other non-critical issues
+        isEvalSupported: false,
       }
     );
 

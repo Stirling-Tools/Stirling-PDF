@@ -32,8 +32,9 @@ import React, {
 import { useDebouncedCallback } from '@mantine/hooks';
 import type { FormField, FormFillState, WidgetCoordinates } from '@app/tools/formFill/types';
 import type { IFormDataProvider } from '@app/tools/formFill/providers/types';
-import { PdfLibFormProvider, fetchSignatureFieldsWithAppearances } from '@app/tools/formFill/providers/PdfLibFormProvider';
 import { PdfBoxFormProvider } from '@app/tools/formFill/providers/PdfBoxFormProvider';
+import { PdfiumFormProvider } from '@app/tools/formFill/providers/PdfiumFormProvider';
+import { fetchSignatureFieldsWithAppearances } from '@app/services/pdfiumService';
 
 // ---------------------------------------------------------------------------
 // FormValuesStore — external store for field values (outside React state)
@@ -268,7 +269,7 @@ export function useAllFormValues(): Record<string, string> {
 }
 
 /** Singleton provider instances */
-const pdfLibProvider = new PdfLibFormProvider();
+const pdfiumProvider = new PdfiumFormProvider();
 const pdfBoxProvider = new PdfBoxFormProvider();
 
 export function FormFillProvider({
@@ -283,7 +284,7 @@ export function FormFillProvider({
   const [providerMode, setProviderModeState] = useState<'pdflib' | 'pdfbox'>(initialMode);
   const providerModeRef = useRef(initialMode as 'pdflib' | 'pdfbox');
   providerModeRef.current = providerMode;
-  const provider = providerProp ?? (providerMode === 'pdfbox' ? pdfBoxProvider : pdfLibProvider);
+  const provider = providerProp ?? (providerMode === 'pdfbox' ? pdfBoxProvider : pdfiumProvider);
   const providerRef = useRef(provider);
   providerRef.current = provider;
 
@@ -322,7 +323,7 @@ export function FormFillProvider({
       let fields = await providerRef.current.fetchFields(file);
       // If another fetch or reset happened while we were waiting, discard this result
       if (fetchVersionRef.current !== version) {
-        console.log('[FormFill] Discarding stale fetch result (version mismatch)');
+        console.debug('[FormFill] Discarding stale fetch result (version mismatch)');
         return;
       }
 
@@ -330,7 +331,9 @@ export function FormFillProvider({
       // (they're not fillable). Fetch them via pdflib so their appearances still render.
       if (providerModeRef.current === 'pdfbox') {
         try {
-          const sigFields = await fetchSignatureFieldsWithAppearances(file);
+          // Convert File/Blob to ArrayBuffer for pdfiumService
+          const arrayBuffer = await file.arrayBuffer();
+          const sigFields = await fetchSignatureFieldsWithAppearances(arrayBuffer);
           if (fetchVersionRef.current !== version) return; // stale check after async
           if (sigFields.length > 0) {
             fields = [...fields, ...sigFields];
@@ -420,7 +423,7 @@ export function FormFillProvider({
       if (providerModeRef.current === mode) return;
 
       // provider (pdfbox vs pdflib).
-      const newProvider = mode === 'pdfbox' ? pdfBoxProvider : pdfLibProvider;
+      const newProvider = mode === 'pdfbox' ? pdfBoxProvider : pdfiumProvider;
       providerRef.current = newProvider;
       providerModeRef.current = mode;
 

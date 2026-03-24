@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next';
-import { PDFFont, PDFPage } from '@cantoo/pdf-lib';
+import { PdfiumFont, PdfiumPage } from '@app/services/pdfiumDocBuilder';
 import { SignatureValidationSignature } from '@app/types/validateSignature';
 import { drawFieldBox } from '@app/hooks/tools/validateSignature/outputtedPDFSections/FieldBoxSection';
 import { drawStatusBadge } from '@app/hooks/tools/validateSignature/outputtedPDFSections/StatusBadgeSection';
@@ -8,15 +8,15 @@ import { formatDate } from '@app/hooks/tools/validateSignature/utils/pdfText';
 import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalette';
 
 interface DrawSignatureSectionOptions {
-  page: PDFPage;
+  page: PdfiumPage;
   cursorY: number;
   signature: SignatureValidationSignature;
   index: number;
   marginX: number;
   contentWidth: number;
   columnGap: number;
-  font: PDFFont;
-  fontBold: PDFFont;
+  font: PdfiumFont;
+  fontBold: PdfiumFont;
   t: TFunction<'translation'>;
 }
 
@@ -106,7 +106,7 @@ export const drawSignatureSection = ({
     thickness: 1,
     color: colorPalette.boxBorder,
   });
-  nextY -= 20; 
+  nextY -= 20;
 
   const certificateFields = [
     { label: t('validateSignature.cert.issuer', 'Issuer'), value: signature.issuerDN || '-' },
