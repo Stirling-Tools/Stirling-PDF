@@ -106,7 +106,9 @@ class MultiPageLayoutControllerTest {
                 .thenReturn(target);
 
         MergeMultiplePagesRequest req = new MergeMultiplePagesRequest();
-        req.setPagesPerSheet(3);
+        req.setMode("CUSTOM");
+        req.setCols(3);
+        req.setRows(1);
         req.setAddBorder(Boolean.TRUE);
         req.setFileInput(fileNoExt);
 

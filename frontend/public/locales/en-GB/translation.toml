@@ -4511,21 +4511,132 @@ title = "Extract Pages"
 
 [pageLayout]
 addBorder = "Add Borders"
+borderWidth = "Border Thickness"
+bottom = "Bottom Margin"
+cols = "Columns"
 header = "Multi Page Layout"
+innerMargin = "Inner Margin"
+left = "Left Margin"
 pagesPerSheet = "Pages per sheet:"
+right = "Right Margin"
+rows = "Rows"
 submit = "Submit"
 tags = "merge,composite,single-view,organize"
 title = "Multi Page Layout"
+top = "Top Margin"
+
+[pageLayout.mode]
+default = "Default"
+custom = "Custom"
+label = "Mode:"
+
+[pageLayout.arrangement]
+byColumns = "By Columns"
+byRows = "By Rows"
+label = "Page arrangement:"
 
 [pageLayout.desc]
 16 = "Place 16 pages on a single sheet (4 × 4 grid)."
 2 = "Place 2 pages side-by-side on a single sheet."
-3 = "Place 3 pages on a single sheet in a single row."
 4 = "Place 4 pages on a single sheet (2 × 2 grid)."
 9 = "Place 9 pages on a single sheet (3 × 3 grid)."
 
 [pageLayout.error]
 failed = "An error occurred while creating the multi-page layout."
+outerVerticalMarginsTooLarge = "Top/Bottom margins are too large for this page size."
+outerHorizontalMarginsTooLarge = "Left/Right margins are too large for this page size."
+innerMarginTooLarge = "Inner margin is too large for the selected layout."
+
+[pageLayout.orientation]
+landscape = "Landscape"
+portrait = "Portrait"
+label = "Orientation:"
+
+[pageLayout.readingDirection]
+ltr = "Left to Right"
+rtl = "Right to Left"
+label = "Reading Direction:"
+
+[pageLayout.tooltip.header]
+title = "Page Layout Guide"
+
+[pageLayout.tooltip.overview]
+title = "What is Page Layout?"
+text = "Fit multiple pages onto a single sheet for handouts or to save paper."
+
+[pageLayout.tooltip.mode]
+title = "Mode"
+text = "Choose how the grid is configured:"
+bullet1 = "Default: Pick a preset and the grid is calculated automatically."
+bullet2 = "Custom: Set rows and columns manually."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Pages per Sheet (Default Mode)"
+text = "Choose how many pages per sheet (e.g. 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Rows & Columns (Custom Mode)"
+text = "Set exact grid dimensions. Total pages per sheet = rows × columns."
+
+[pageLayout.tooltip.orientation]
+title = "Orientation"
+text = "Sets the output sheet orientation:"
+bullet1 = "Portrait: Taller than wide."
+bullet2 = "Landscape: Wider than tall."
+
+[pageLayout.tooltip.arrangement]
+title = "Page Arrangement"
+text = "Controls the order pages fill the grid:"
+bullet1 = "By Rows: Fill row by row (left-to-right or right-to-left)."
+bullet2 = "By Columns: Fill top-to-bottom, column by column."
+
+[pageLayout.tooltip.readingDirection]
+title = "Reading Direction"
+text = "Controls the horizontal order of pages:"
+bullet1 = "LTR: Left to right."
+bullet2 = "RTL: Right to left."
+
+[pageLayout.tooltip.addBorder]
+title = "Add Borders"
+text = "Draws border lines around each page cell for cutting guides or visual separation."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Margins and Borders"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Margins"
+text = "Use top, bottom, left, and right margins to control spacing around the full sheet output."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Inner Margin"
+text = "Inner margin adds spacing between cells in the page grid to improve separation and readability."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Add Borders"
+text = "Enable borders to draw lines around each placed page. This can help visual separation or trimming."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Border Thickness"
+text = "Border thickness is only applied when borders are enabled. Higher values produce thicker lines."
+
+[pageLayout.advanced.tooltip.header]
+title = "Advanced Layout Options"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Orientation"
+text = "Choose the final sheet direction. Portrait works better for tall content, while landscape fits wider layouts."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Page Arrangement"
+text = "Controls whether pages fill the grid row-by-row or column-by-column."
+bullet1 = "By Rows: Fill each row first."
+bullet2 = "By Columns: Fill each column first."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Reading Direction"
+text = "Sets horizontal ordering in the grid, useful for left-to-right and right-to-left document conventions."
+bullet1 = "LTR: Left to right order."
+bullet2 = "RTL: Right to left order."
 
 [pageRemover]
 header = "PDF Page remover"
