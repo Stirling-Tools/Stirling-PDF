@@ -27,7 +27,7 @@ import { AnnotationLayer, AnnotationPluginPackage } from '@embedpdf/plugin-annot
 
 import { CustomSearchLayer } from '@app/components/viewer/CustomSearchLayer';
 import ToolLoadingFallback from '@app/components/tools/ToolLoadingFallback';
-import { ActionIcon, Center, Stack, Text } from '@mantine/core';
+import { ActionIcon, Center, Stack, Text, Tooltip } from '@mantine/core';
 import CloseIcon from '@mui/icons-material/Close';
 import { ScrollAPIBridge } from '@app/components/viewer/ScrollAPIBridge';
 import { SelectionAPIBridge } from '@app/components/viewer/SelectionAPIBridge';
@@ -68,6 +68,8 @@ export interface SignaturePreview {
   height: number;
   signatureData: string; // Base64 PNG image
   signatureType: 'canvas' | 'image' | 'text';
+  color?: string; // Per-participant color (rgb(...) string); falls back to default blue
+  participantName?: string; // Shown in tooltip on hover
 }
 
 interface LocalEmbedPDFWithAnnotationsProps {
@@ -477,21 +479,34 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                           {/* Signature preview overlays (support multiple) */}
                           {signaturePreviews
                             .filter(preview => preview.pageIndex === pageIndex)
-                            .map((preview) => preview.signatureData && (
-                              <div
+                            .map((preview) => {
+                              if (!preview.signatureData) return null;
+                              const color = preview.color ?? 'rgb(0, 122, 204)';
+                              const colorOpacity = (opacity: number) =>
+                                color.startsWith('rgb(')
+                                  ? color.replace('rgb(', 'rgba(').replace(')', `, ${opacity})`)
+                                  : color;
+                              return (
+                              <Tooltip
                                 key={preview.id}
+                                label={preview.participantName ?? ''}
+                                position="top"
+                                withArrow
+                                disabled={!preview.participantName}
+                              >
+                              <div
                                 style={{
                                   position: 'absolute',
                                   left: preview.x * width,
                                   top: preview.y * height,
                                   width: preview.width * width,
                                   height: preview.height * height,
-                                  border: readOnly ? '1px dashed rgba(0, 122, 204, 0.4)' : '2px solid #007ACC',
-                                  boxShadow: readOnly ? 'none' : '0 0 10px rgba(0, 122, 204, 0.5)',
+                                  border: readOnly ? `1px dashed ${colorOpacity(0.4)}` : `2px solid ${color}`,
+                                  boxShadow: readOnly ? 'none' : `0 0 10px ${colorOpacity(0.5)}`,
                                   cursor: 'default',
                                   zIndex: Z_INDEX_SIGNATURE_OVERLAY,
                                   backgroundColor: readOnly ? 'transparent' : 'rgba(255, 255, 255, 0.1)',
-                                  pointerEvents: readOnly ? 'none' : 'auto',
+                                  pointerEvents: 'auto',
                                 }}
                               >
                                 {/* Delete button - only show when not read-only */}
@@ -551,7 +566,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                         position: 'absolute',
                                         width: 8,
                                         height: 8,
-                                        backgroundColor: '#007ACC',
+                                        backgroundColor: color,
                                         border: '1px solid white',
                                         cursor: handle.cursor,
                                         zIndex: Z_INDEX_SIGNATURE_OVERLAY_HANDLE,
@@ -626,7 +641,9 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<AnnotationAPI | null, Loc
                                   ))}
                                 </div>
                               </div>
-                            ))}
+                              </Tooltip>
+                              );
+                            })}
 
                           {/* Hover preview: ghost signature following cursor in placement mode */}
                           {placementMode && signatureData && cursorOnPage?.pageIndex === pageIndex && (

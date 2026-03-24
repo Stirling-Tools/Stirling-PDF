@@ -5,6 +5,7 @@ import PendingIcon from '@mui/icons-material/Pending';
 import CancelIcon from '@mui/icons-material/Cancel';
 import DeleteIcon from '@mui/icons-material/Delete';
 import type { ParticipantInfo } from '@app/types/signingSession';
+import { getFileColor } from '@app/components/pageEditor/fileColors';
 
 interface ParticipantListPanelProps {
   participants: ParticipantInfo[];
@@ -38,17 +39,21 @@ export const ParticipantListPanel: React.FC<ParticipantListPanelProps> = ({
       </Text>
 
       <List spacing={8} size="sm">
-        {participants.map((participant) => {
+        {participants.map((participant, participantIndex) => {
           const isSigned = participant.status === 'SIGNED';
           const isDeclined = participant.status === 'DECLINED';
+          const annotationColor = getFileColor(participantIndex);
 
           return (
             <List.Item key={participant.id} icon={getIcon(participant.status)}>
               <Group justify="space-between" wrap="nowrap" gap={4}>
                 <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-                  <Text size="xs" truncate>
-                    {participant.name}
-                  </Text>
+                  <Group gap={6} wrap="nowrap">
+                    <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: annotationColor, flexShrink: 0 }} />
+                    <Text size="xs" truncate>
+                      {participant.name}
+                    </Text>
+                  </Group>
                   {participant.email && participant.email !== participant.name && (
                     <Text size="xs" c="dimmed" truncate>
                       @{participant.email}
