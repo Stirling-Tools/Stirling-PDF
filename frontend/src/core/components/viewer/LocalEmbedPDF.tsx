@@ -150,7 +150,10 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
       createPluginRegistration(InteractionManagerPluginPackage),
 
       // Register selection plugin (depends on InteractionManager)
-      createPluginRegistration(SelectionPluginPackage),
+      createPluginRegistration(SelectionPluginPackage, {
+        marquee: { enabled: false },
+        toleranceFactor: 3,
+      }),
 
       // Register history plugin for undo/redo (recommended for annotations)
       // Always register for reading existing annotations
