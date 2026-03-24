@@ -28,7 +28,7 @@ from .pdf_edit import (
 )
 from .pdf_questions import (
     PdfQuestionAnswerResponse,
-    PdfQuestionNeedOcrResponse,
+    PdfQuestionNeedTextResponse,
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
     PdfQuestionResponse,
@@ -61,7 +61,7 @@ __all__ = [
     "PdfEditResponse",
     "PdfQuestionAnswerResponse",
     "PdfQuestionNotFoundResponse",
-    "PdfQuestionNeedOcrResponse",
+    "PdfQuestionNeedTextResponse",
     "PdfQuestionRequest",
     "PdfQuestionResponse",
     "SupportedCapability",

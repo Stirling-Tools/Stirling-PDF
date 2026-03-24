@@ -20,8 +20,8 @@ class PdfQuestionAnswerResponse(ApiModel):
     evidence: list[str] = Field(default_factory=list)
 
 
-class PdfQuestionNeedOcrResponse(ApiModel):
-    outcome: Literal["need_ocr"] = "need_ocr"
+class PdfQuestionNeedTextResponse(ApiModel):
+    outcome: Literal["need_text"] = "need_text"
     reason: str
 
 
@@ -31,6 +31,6 @@ class PdfQuestionNotFoundResponse(ApiModel):
 
 
 PdfQuestionResponse = Annotated[
-    PdfQuestionAnswerResponse | PdfQuestionNeedOcrResponse | PdfQuestionNotFoundResponse,
+    PdfQuestionAnswerResponse | PdfQuestionNeedTextResponse | PdfQuestionNotFoundResponse,
     Field(discriminator="outcome"),
 ]

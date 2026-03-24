@@ -5,7 +5,7 @@ from pydantic_ai.output import NativeOutput
 
 from stirling.contracts import (
     PdfQuestionAnswerResponse,
-    PdfQuestionNeedOcrResponse,
+    PdfQuestionNeedTextResponse,
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
     PdfQuestionResponse,
@@ -35,7 +35,7 @@ class PdfQuestionAgent:
 
     async def handle(self, request: PdfQuestionRequest) -> PdfQuestionResponse:
         if not request.extracted_text.strip():
-            return PdfQuestionNeedOcrResponse(
+            return PdfQuestionNeedTextResponse(
                 reason="No extracted PDF text was provided, so the question cannot be answered yet."
             )
         return await self._run_answer_agent(request)

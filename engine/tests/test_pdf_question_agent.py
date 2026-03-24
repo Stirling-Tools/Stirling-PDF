@@ -6,7 +6,7 @@ from stirling.agents.pdf_questions import PdfQuestionAgent
 from stirling.config.settings import AppSettings
 from stirling.contracts import (
     PdfQuestionAnswerResponse,
-    PdfQuestionNeedOcrResponse,
+    PdfQuestionNeedTextResponse,
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
 )
@@ -63,7 +63,7 @@ async def test_pdf_question_agent_requires_extracted_text() -> None:
 
     response = await agent.handle(PdfQuestionRequest(question="What is the total?", extracted_text=""))
 
-    assert isinstance(response, PdfQuestionNeedOcrResponse)
+    assert isinstance(response, PdfQuestionNeedTextResponse)
 
 
 @pytest.mark.anyio
