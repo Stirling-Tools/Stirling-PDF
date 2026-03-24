@@ -488,7 +488,7 @@ const SignSettings = ({
   const handleCanvasSignatureChange = useCallback((data: string | null) => {
     const nextValue = data ?? undefined;
     setCanvasSignatureData(prevData => {
-      // Reset pause-rounded state and trigger placement for signature changes
+      // Reset pause state and trigger placement for signature changes
       // (onDrawingComplete handles initial activation)
       if (prevData && prevData !== nextValue && nextValue) {
         setPlacementManuallyPaused(false);
@@ -899,7 +899,7 @@ const SignSettings = ({
         color: isPlacementMode ? 'blue' : 'teal',
         title: isPlacementMode
           ? translate('instructions.title', 'How to add your signature')
-          : translate('instructions.pause-roundedd', 'Placement pause-roundedd'),
+          : translate('instructions.paused', 'Placement paused'),
         message: isPlacementMode
           ? placementInstructions()
           : translate('instructions.resumeHint', 'Resume placement to click and add your signature.'),
@@ -920,7 +920,7 @@ const SignSettings = ({
     onActivateSignaturePlacement?.();
   };
 
-  // Handle Escape key to toggle pause-rounded/resume
+  // Handle Escape key to toggle pause/resume
   useEffect(() => {
     if (!isCurrentTypeReady) return;
 
@@ -943,11 +943,11 @@ const SignSettings = ({
     onActivateSignaturePlacement || onDeactivateSignature
       ? isPlacementMode
         ? (
-            <Tooltip label={translate('mode.pause-rounded', 'Pause placement')}>
+            <Tooltip label={translate('mode.pause', 'Pause placement')}>
               <ActionIcon
                 variant="default"
                 size="lg"
-                aria-label={translate('mode.pause-rounded', 'Pause placement')}
+                aria-label={translate('mode.pause', 'Pause placement')}
                 onClick={handlePausePlacement}
                 disabled={disabled || !onDeactivateSignature}
                 style={{
@@ -960,7 +960,7 @@ const SignSettings = ({
               >
                 <LocalIcon icon="pause-rounded" width={20} height={20} />
                 <Text component="span" size="sm" fw={500}>
-                  {translate('mode.pause-rounded', 'Pause placement')}
+                  {translate('mode.pause', 'Pause placement')}
                 </Text>
               </ActionIcon>
             </Tooltip>
