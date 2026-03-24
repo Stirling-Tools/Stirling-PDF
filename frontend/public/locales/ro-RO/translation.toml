@@ -142,6 +142,10 @@ welcome = "Bun venit"
 white = "Alb"
 WorkInProgess = "Lucru în curs, S-ar putea să nu funcționeze sau să aibă erori, Vă rugăm să raportați orice probleme!"
 yes = "Da"
+insufficientCredits = "Credite insuficiente. Necesare: {{requiredCredits}}, Disponibile: {{currentBalance}}, Deficit: {{shortfall}}"
+loadingCredits = "Se verifică creditele..."
+loadingProStatus = "Se verifică starea abonamentului..."
+noticeTopUpOrPlan = "Credite insuficiente, reîncărcați sau treceți la un plan"
 
 [account]
 accountSettings = "Setări Cont"
@@ -1513,6 +1517,7 @@ editStampHint = "Pentru a schimba imaginea, ștergeți această ștampilă și a
 editSwitchToSelect = "Comutați la „Selectează și editează” pentru a edita această anotare."
 editText = "Editează caseta de text"
 editTextMarkup = "Editează marcajul textului"
+annotationStyle = "Stil adnotare"
 ellipse = "Elipsă"
 exit = "Ieși din modul Anotare"
 fillColor = "Culoare umplere"
@@ -1523,13 +1528,19 @@ highlight = "Evidențiere"
 imagePreview = "Previzualizare"
 inkHighlighter = "Evidențiator liber"
 line = "Linie"
+lineArrow = "Săgeată"
 noBackground = "Fără fundal"
 note = "Notă"
+comment = "Comentariu"
+comments = "Comentarii"
+insertText = "Inserare text"
+replaceText = "Înlocuire text"
 noteIcon = "Pictogramă notă"
 notesStamps = "Note și ștampile"
 opacity = "Opacitate"
 pen = "Stilou"
 polygon = "Poligon"
+polyline = "Polilinie"
 properties = "Proprietăți"
 rectangle = "Dreptunghi"
 redo = "Refă"
@@ -2574,10 +2585,48 @@ title = "Ajustarea calității"
 [compressPdfs]
 tags = "comprimă,mic,minuscul"
 
+[config]
+plan = "Plan"
+
 [config.account.overview]
+confirmDelete = "Șterge contul meu"
+deleteAccount = "Șterge contul"
+deleteAccountTitle = "Șterge contul"
+deleteFailed = "Ștergerea contului a eșuat."
+deleteFailedTitle = "Nu se poate șterge contul"
+deleteWarning = "Această acțiune este permanentă și nu poate fi anulată. Toate datele dvs. vor fi șterse."
+enterEmailConfirm = "Pentru a confirma ștergerea, introduceți mai jos adresa dvs. de email ({{email}}):"
 guestDescription = "Sunteți autentificat ca invitat. Luați în considerare actualizarea contului de mai sus."
+label = "Prezentare generală"
 manageAccountPreferences = "Gestionați preferințele contului"
+signedInAs = "Autentificat ca"
 title = "Setările contului"
+
+[config.account.profilePicture]
+description = "Încărcați o imagine pentru a vă personaliza contul."
+help = "PNG, JPG sau WebP, până la 2MB."
+remove = "Elimină"
+sizeError = "Selectați o imagine mai mică de 2MB."
+switchedToCustom = "S-a trecut la imagine personalizată. Acum puteți încărca propria imagine."
+title = "Poză de profil"
+upload = "Încărcați"
+useCustom = "Utilizați imagine personalizată"
+usingProvider = "Se utilizează poza de profil {{provider}}"
+
+[config.account.profilePicture.cropper]
+cropError = "Decuparea imaginii a eșuat. Încercați din nou."
+invalidImage = "Fișier imagine invalid. Selectați un fișier PNG, JPG sau WebP valid."
+processing = "Se procesează decuparea..."
+save = "Salvați imaginea decupată"
+sizeErrorAfterCrop = "Imaginea decupată este prea mare. Micșorați zoomul sau decupați o zonă mai mică."
+title = "Decupați poza de profil"
+zoom = "Zoom"
+
+[config.account.security]
+changePassword = "Schimbați parola"
+description = "Gestionați parola și setările de securitate."
+title = "Parole și securitate"
+update = "Actualizați parola"
 
 [config.account.upgrade]
 description = "Conectați-vă contul pentru a vă păstra istoricul și a accesa mai multe funcții!"
@@ -2595,6 +2644,7 @@ upgradeButton = "Actualizați contul"
 [config.apiKeys]
 chartAriaLabel = "Utilizare credite: incluse {{includedUsed}} din {{includedTotal}}, achiziționate {{purchasedUsed}} din {{purchasedTotal}}"
 copyKeyAriaLabel = "Copiați cheia API"
+creditsRemaining = "Credite rămase"
 description = "Cheia dvs. API pentru accesarea suitei de instrumente PDF Stirling. Copiați-o în proiectul dvs. sau reîmprospătați pentru a genera una nouă."
 docsDescription = "Aflați mai multe despre integrarea cu Stirling PDF:"
 docsLink = "Documentație API"
@@ -2643,6 +2693,14 @@ basic = "Configurație de bază"
 integration = "Configurație integrare"
 security = "Configurație de securitate"
 system = "Configurație sistem"
+
+[connectionMode.status]
+localOffline = "Mod offline activ"
+localOnline = "Mod offline activ"
+saas = "Conectat la Stirling Cloud"
+selfhostedChecking = "Conectat la server self-hosted (se verifică...)"
+selfhostedOffline = "Serverul self-hosted este inaccesibil"
+selfhostedOnline = "Conectat la serverul self-hosted"
 
 [convert]
 autoRotate = "Rotire automată"
@@ -2728,6 +2786,15 @@ webOptions = "Opțiuni Web la PDF"
 wordDoc = "Document Word"
 wordDocExt = "Document Word (.docx)"
 zoomLevel = "Nivel de zoom"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "eBook → PDF"
+emlToPdf = "Email → PDF"
+fileToPdf = "Office/Document → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "Opțiuni eBook către PDF"
@@ -3718,6 +3785,11 @@ desc = "Adaugă o semnătură la documentul PDF prin desenare, text sau imagine.
 tags = "semnătură,autograf"
 title = "Semnează"
 
+[home.timestampPdf]
+desc = "Adăugați un marcaj temporal de document RFC 3161 pentru a demonstra când a existat PDF-ul dvs."
+tags = "timestamp,RFC 3161,TSA,autoritate de marcare temporală,marcare temporală a documentului,dovadă a existenței,jeton timestamp,timestamp de încredere,semnare cu timestamp,notarizare"
+title = "Marcaj temporal PDF"
+
 [home.split]
 desc = "Desparte fișierele PDF în mai multe documente."
 tags = "împarte,separă,desparte"
@@ -3854,6 +3926,7 @@ version = "Versiune"
 accountCreatedSuccess = "Cont creat cu succes! Acum vă puteți autentifica."
 alreadyLoggedIn = "Sunteți deja autentificat pe"
 alreadyLoggedIn2 = "dispozitive. Vă rugăm să vă deconectați de pe dispozitive și încercați din nou."
+backToSignIn = "Înapoi la autentificare"
 cancel = "Anulează"
 changePasswordWarning = "Vă rugăm să vă schimbați parola după prima autentificare"
 credentialsUpdated = "Datele de autentificare au fost actualizate. Vă rugăm să vă autentificați din nou."
@@ -3895,16 +3968,21 @@ or = "Sau"
 password = "Parolă"
 passwordChangedSuccess = "Parola a fost schimbată cu succes! Autentificați-vă cu noua parolă."
 passwordResetSent = "Linkul de resetare a parolei a fost trimis la {{email}}! Verificați emailul și urmați instrucțiunile."
+passwordUpdatedSuccess = "Parola a fost actualizată cu succes."
 pleaseEnterBoth = "Vă rugăm să introduceți atât emailul, cât și parola"
 pleaseEnterEmail = "Vă rugăm să introduceți adresa de email"
 relyingPartyRegistrationNotFound = "Nu s-a găsit nicio înregistrare a relying party"
 rememberme = "Ține-mă minte"
+resetHelp = "Introduceți emailul pentru a primi un link securizat de resetare a parolei. Dacă linkul a expirat, solicitați unul nou."
+resetYourPassword = "Resetați parola"
 saml2RequiresLicense = "Autentificarea SAML necesită o licență plătită (Server sau Enterprise). Contactați administratorul pentru a vă actualiza planul."
 sending = "Se trimite…"
 sendMagicLink = "Trimite linkul magic"
+sendResetLink = "Trimiteți linkul de resetare"
 sessionExpired = "Sesiunea a expirat. Vă rugăm să vă autentificați din nou."
 signin = "Autentificare"
 signInAnonymously = "Autentificare ca invitat"
+subtitle = "Autentificați-vă din nou în Stirling PDF"
 signingIn = "Se autentifică..."
 signinTitle = "Te rugăm să te autentifici"
 signInWith = "Autentificați-vă cu"
@@ -3913,6 +3991,7 @@ ssoSignIn = "Conectare prin conectare unică"
 title = "Autentificare"
 toManySessions = "Aveți prea multe sesiuni active"
 unexpectedError = "Eroare neașteptată: {{message}}"
+updatePassword = "Actualizați parola"
 useEmailInstead = "Autentificare cu email"
 useMagicLink = "Folosiți link magic în schimb"
 userIsDisabled = "Utilizatorul este dezactivat, conectarea este în prezent blocată cu acest nume de utilizator. Te rugăm să contactezi administratorul."
@@ -4222,6 +4301,15 @@ viewSwitcher = "Folosiți aceste controale pentru a selecta modul în care dori�
 workbench = "Acesta este <strong>Bancul de lucru</strong> - zona principală în care vizualizați și editați PDF-urile."
 wrapUp = "Totul este pregătit! Ați învățat despre zonele principale ale aplicației și cum să le utilizați. Faceți clic pe butonul <strong>Ajutor</strong> oricând doriți pentru a vedea din nou acest tur."
 
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "După încheierea perioadei de probă, veți continua cu nivelul gratuit. Adăugați o metodă de plată pentru a păstra accesul Pro."
+afterTrialWithPayment = "Abonamentul Pro va începe automat când se încheie perioada de probă."
+body = "Aveți acces complet la funcțiile Stirling PDF Pro în timpul perioadei de probă. Bucurați-vă de conversii nelimitate, dimensiuni de fișiere mai mari și procesare prioritară."
+daysRemaining = "{{days}} zile rămase"
+daysRemainingSingular = "{{days}} zi rămasă"
+title = "Perioada de probă Pro de 30 de zile"
+trialEnds = "Perioada de probă se încheie la {{date}}"
+
 [onboarding.buttons]
 back = "Înapoi"
 download = "Descarcă →"
@@ -4392,6 +4480,31 @@ loading = "Se încarcă atașamentele..."
 empty = "Nu există atașamente în acest document"
 noMatch = "Niciun atașament nu corespunde căutării tale"
 
+[viewer.comments]
+title = "Comentarii"
+hint = "Plasați comentarii folosind instrumentele Comentariu, Inserare text sau Înlocuire text. Ele vor apărea aici, pe pagini."
+placeholder = "Introduceți comentariul..."
+pageLabel = "Pagina {{page}}"
+oneComment = "1 comentariu"
+nComments = "{{count}} comentarii"
+addCommentPlaceholder = "Adăugați comentariu..."
+addLink = "Adăugați link"
+goToLink = "Accesați linkul"
+addComment = "Adăugați comentariu"
+viewComment = "Vizualizați comentariul"
+addReplyPlaceholder = "Adăugați răspuns..."
+saveReply = "Salvați răspunsul"
+send = "Trimiteți"
+moreActions = "Mai multe acțiuni"
+typeComment = "Comentariu"
+typeInsertText = "Inserare text"
+typeReplaceText = "Înlocuire text"
+locateAnnotation = "Localizați în document"
+deleteTitle = "Eliminați adnotarea din comentarii?"
+deleteDescription = "Această adnotare are un comentariu atașat. Puteți elimina doar comentariul din bara laterală păstrând adnotarea sau puteți șterge totul."
+removeCommentOnly = "Eliminați doar comentariul"
+deleteAnnotationAndComment = "Ștergeți adnotarea și comentariul"
+
 [viewer.formBar]
 title = "Câmpuri formular"
 unsavedBadge = "Nesalvate"
@@ -4425,14 +4538,20 @@ rotateLeft = "Rotiți la stânga"
 rotateRight = "Rotiți la dreapta"
 toggleSidebar = "Comutați bara laterală"
 toggleBookmarks = "Comută semnele de carte"
+toggleComments = "Comentarii"
 print = "Imprimați PDF"
 ruler = "Riglă / Măsurare"
+readAloud = "Citește cu voce tare"
+readAloudSpeed = "Viteză"
+readAloudLanguage = "Limbă"
+selectLanguage = "Selectați limba"
 draw = "Desenați"
 redact = "Redactează"
 exitRedaction = "Ieși din modul Redactare"
 save = "Salvați"
 downloadAll = "Descărcați tot"
 saveAll = "Salvează tot"
+saveAs = "Salvare ca"
 
 [textAlign]
 left = "Stânga"
@@ -4447,21 +4566,132 @@ title = "Extrage Pagini"
 
 [pageLayout]
 addBorder = "Adaugă Borduri"
+borderWidth = "Grosimea chenarului"
+bottom = "Margine jos"
+cols = "Coloane"
 header = "Aspect Multi-Pagină"
+innerMargin = "Margine interioară"
+left = "Margine stânga"
 pagesPerSheet = "Pagini per foaie:"
+right = "Margine dreapta"
+rows = "Rânduri"
 submit = "Trimite"
 tags = "îmbină,compozit,vizualizare-unică,organizează"
 title = "Aspect Multi-Pagină"
+top = "Margine sus"
+
+[pageLayout.mode]
+default = "Implicit"
+custom = "Personalizat"
+label = "Mod:"
+
+[pageLayout.arrangement]
+byColumns = "Pe coloane"
+byRows = "Pe rânduri"
+label = "Aranjare pagini:"
 
 [pageLayout.desc]
 16 = "Plasează 16 pagini pe o singură coală (grilă 4 × 4)."
 2 = "Plasează 2 pagini alăturate pe o singură coală."
-3 = "Plasează 3 pagini pe o singură coală într-un singur rând."
 4 = "Plasează 4 pagini pe o singură coală (grilă 2 × 2)."
 9 = "Plasează 9 pagini pe o singură coală (grilă 3 × 3)."
 
 [pageLayout.error]
 failed = "A apărut o eroare la crearea configurației multipagină."
+outerVerticalMarginsTooLarge = "Marginile de sus/jos sunt prea mari pentru această dimensiune de pagină."
+outerHorizontalMarginsTooLarge = "Marginile stânga/dreapta sunt prea mari pentru această dimensiune de pagină."
+innerMarginTooLarge = "Marginea interioară este prea mare pentru aspectul selectat."
+
+[pageLayout.orientation]
+landscape = "Peisaj"
+portrait = "Portret"
+label = "Orientare:"
+
+[pageLayout.readingDirection]
+ltr = "Stânga la dreapta"
+rtl = "Dreapta la stânga"
+label = "Direcție de citire:"
+
+[pageLayout.tooltip.header]
+title = "Ghid pentru aspectul paginii"
+
+[pageLayout.tooltip.overview]
+title = "Ce este aspectul paginii?"
+text = "Așezați mai multe pagini pe o singură coală pentru fișe sau pentru a economisi hârtie."
+
+[pageLayout.tooltip.mode]
+title = "Mod"
+text = "Alegeți cum este configurată grila:"
+bullet1 = "Implicit: Alegeți o presetare, iar grila este calculată automat."
+bullet2 = "Personalizat: Setați manual rândurile și coloanele."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Pagini pe coală (Mod implicit)"
+text = "Alegeți câte pagini pe coală (ex. 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Rânduri și coloane (Mod personalizat)"
+text = "Stabiliți dimensiunile exacte ale grilei. Total pagini pe coală = rânduri × coloane."
+
+[pageLayout.tooltip.orientation]
+title = "Orientare"
+text = "Setează orientarea colii de ieșire:"
+bullet1 = "Portret: Mai înaltă decât lată."
+bullet2 = "Peisaj: Mai lată decât înaltă."
+
+[pageLayout.tooltip.arrangement]
+title = "Aranjarea paginilor"
+text = "Controlează ordinea în care paginile umplu grila:"
+bullet1 = "Pe rânduri: Completează rând cu rând (stânga-la-dreapta sau dreapta-la-stânga)."
+bullet2 = "Pe coloane: Completează de sus în jos, coloană cu coloană."
+
+[pageLayout.tooltip.readingDirection]
+title = "Direcția de citire"
+text = "Controlează ordinea orizontală a paginilor:"
+bullet1 = "LTR: Stânga la dreapta."
+bullet2 = "RTL: Dreapta la stânga."
+
+[pageLayout.tooltip.addBorder]
+title = "Adăugați chenare"
+text = "Trasează linii de chenar în jurul fiecărei celule de pagină pentru ghidaje de tăiere sau separare vizuală."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Margini și chenare"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Margini"
+text = "Folosiți marginile de sus, jos, stânga și dreapta pentru a controla spațiul din jurul coalei de ieșire."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Margine interioară"
+text = "Marginea interioară adaugă spațiere între celulele din grila paginii pentru o separare și lizibilitate mai bună."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Adăugați chenare"
+text = "Activați chenarele pentru a trasa linii în jurul fiecărei pagini plasate. Acest lucru poate ajuta la separare vizuală sau la tăiere."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Grosimea chenarului"
+text = "Grosimea chenarului se aplică doar când chenarele sunt activate. Valorile mai mari produc linii mai groase."
+
+[pageLayout.advanced.tooltip.header]
+title = "Opțiuni avansate de aspect"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Orientare"
+text = "Alegeți direcția finală a colii. Portret funcționează mai bine pentru conținut înalt, iar peisaj se potrivește aspectelor mai late."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Aranjarea paginilor"
+text = "Controlează dacă paginile umplu grila pe rânduri sau pe coloane."
+bullet1 = "Pe rânduri: Completează mai întâi fiecare rând."
+bullet2 = "Pe coloane: Completează mai întâi fiecare coloană."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Direcția de citire"
+text = "Setează ordonarea orizontală în grilă, utilă pentru convențiile documentelor stânga-la-dreapta și dreapta-la-stânga."
+bullet1 = "LTR: Ordine stânga la dreapta."
+bullet2 = "RTL: Ordine dreapta la stânga."
 
 [pageRemover]
 header = "Înlăturare pagini din PDF"
@@ -4977,7 +5207,10 @@ perMonth = "/lună"
 perSeat = "/loc"
 popular = "Popular"
 selectPlan = "Selectează planul"
+selectCredits = "Selectați cantitatea de credite"
 showComparison = "Compară toate funcțiile"
+purchase = "Achiziționați"
+totalCost = "Cost total"
 upgrade = "Upgrade"
 withServer = "+ Plan Server"
 
@@ -5068,6 +5301,30 @@ successMessage = "Licența a fost activată cu succes. Puteți închide această
 [plan.team]
 name = "Echipă"
 siteLicense = "Licență de site"
+
+[plan.api]
+large = "5.000 de credite"
+medium = "1.000 de credite"
+small = "500 de credite"
+xsmall = "100 de credite"
+
+[plan.apiPackages]
+subtitle = "Achiziționați credite API pentru aplicațiile dvs."
+title = "Pachete de credite API"
+
+[plan.trial]
+badge = "Probă"
+continueWithFree = "Continuați cu varianta gratuită"
+daysRemaining = "Perioada de probă se încheie în {{days}} zile"
+endDate = "Expiră: {{date}}"
+expired = "Perioada de probă s-a încheiat"
+expiredMessage = "Perioada dvs. de probă Pro de 30 de zile a expirat. Abonați-vă la Pro pentru a continua să accesați funcțiile premium sau continuați cu nivelul nostru gratuit."
+freeTierLimitations = "Nivelul gratuit include instrumente PDF de bază cu limite de utilizare."
+message = ""
+subscribe = "Abonați-vă la Pro"
+subscribeToPro = "Abonați-vă la Pro"
+subscriptionScheduled = "Abonament programat - începe pe {{date}}"
+title = "Probă gratuită activă"
 
 [credits]
 enableOverageBilling = "Activați facturarea pentru depășiri"
@@ -5631,6 +5888,32 @@ text = "Rotiți paginile PDF în sens orar sau antiorar în trepte de 90 de grad
 [rotate.tooltip.header]
 title = "Prezentare setări de rotație"
 
+[timestampPdf]
+completed = "PDF marcat temporal cu succes"
+desc = "Adăugați un marcaj temporal de document RFC 3161 la PDF-ul dvs. utilizând un server Time Stamp Authority (TSA) de încredere."
+filenamePrefix = "marcat-temporal"
+results = "Rezultatele marcajului temporal"
+submit = "Aplică marcajul temporal"
+title = "Marcaj temporal PDF"
+
+[timestampPdf.error]
+failed = "A apărut o eroare la marcarea temporală a PDF-ului."
+generic = "Marcarea temporală a eșuat"
+
+[timestampPdf.files]
+placeholder = "Selectați un fișier PDF în vizualizarea principală pentru a începe"
+
+[timestampPdf.options]
+note = "Doar un hash SHA-256 al documentului dvs. este trimis către serverul TSA; fișierul PDF în sine nu este trimis niciodată către serverul TSA."
+title = "Server de marcaj temporal (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Alegeți o autoritate de marcare temporală de încredere"
+label = "Selectați un server TSA"
+
+[timestampPdf.steps]
+settings = "Setări"
+
 [sanitize]
 completed = "Sanitizare finalizată cu succes"
 desc = "Eliminați elementele potențial dăunătoare din fișierele PDF."
@@ -5755,6 +6038,14 @@ placeholder = "Introduceți termenul de căutare..."
 searching = "Se caută..."
 title = "Căutați în PDF"
 
+[selfHosted.offline]
+hideTools = "Ascunde instrumentele indisponibile ▴"
+messageNoFallback = "Instrumentele sunt indisponibile până când serverul revine online."
+messageWithFallback = "Unele instrumente necesită o conexiune la server."
+showTools = "Afișează instrumentele indisponibile ▾"
+title = "Serverul dvs. Stirling-PDF este inaccesibil"
+toolNotAvailableLocally = "Serverul dvs. Stirling-PDF este offline, iar \"{{endpoint}}\" nu este disponibil pe backendul local."
+
 [session]
 expired = "Sesiunea dvs. a expirat. Reîmprospătați pagina și încercați din nou."
 refreshPage = "Reîmprospătați pagina"
@@ -5768,12 +6059,15 @@ systemSettings = "Setări sistem"
 title = "Configurație"
 
 [settings.connection]
+localDescription = "Folosiți backendul local fără un cont. Unele instrumente care necesită procesare în cloud sau un server self-hosted nu sunt disponibile."
 logout = "Deconectare"
 server = "Server"
+signIn = "Autentificare"
 title = "Mod de conectare"
 user = "Conectat ca"
 
 [settings.connection.mode]
+local = "Doar local"
 saas = "Stirling Cloud"
 selfhosted = "Găzduit local"
 
@@ -5931,6 +6225,9 @@ title = "Politici și confidențialitate"
 [settings.preferences]
 title = "Preferințe"
 
+[settings.search]
+placeholder = "Căutați în paginile de setări..."
+
 [settings.security]
 description = "Actualizați parola pentru a vă menține contul în siguranță."
 title = "Securitate"
@@ -5968,6 +6265,18 @@ title = "Spațiu de lucru"
 [settings.team]
 title = "Echipă"
 
+[localMode]
+toolUnavailable = "Acest instrument necesită un cont. Autentificați-vă în Stirling Cloud sau conectați-vă la un server self-hosted pentru a-l utiliza."
+
+[localMode.banner]
+message = "Autentificați-vă pentru a debloca toate instrumentele."
+signIn = "Autentificare"
+title = "Rulare locală"
+
+[localMode.toolPicker]
+message = "Autentificați-vă pentru a debloca toate instrumentele."
+signIn = "Autentificare"
+
 [setup]
 description = "Începe alegând cum vrei să folosești Stirling PDF"
 welcome = "Bun venit la Stirling PDF"
@@ -5975,6 +6284,7 @@ welcome = "Bun venit la Stirling PDF"
 [setup.login]
 connectingTo = "Conectare la:"
 hideInstructions = "Ascunde instrucțiunile"
+skipSignIn = "Continuați fără autentificare"
 instructions = "Pentru a activa autentificarea pe serverul dvs. Stirling PDF:"
 instructionsEnvVar = "Setați variabila de mediu:"
 instructionsOrYml = "Sau în settings.yml:"
@@ -6022,7 +6332,14 @@ title = "Autentifică-te în Stirling"
 [setup.selfhosted]
 link = "sau conectați-vă la un cont self-hosted"
 subtitle = "Introdu acreditările serverului tău"
+switchToLocal = "Utilizați instrumentele locale în schimb"
 title = "Autentifică-te pe server"
+
+[setup.selfhosted.unreachable]
+continueOffline = "Utilizați instrumentele locale în schimb"
+message = "Nu s-a putut accesa {{url}}. Verificați că serverul rulează și este accesibil."
+retry = "Reîncercați"
+title = "Nu se poate conecta la server"
 
 [setup.server]
 subtitle = "Introdu URL-ul serverului tău self-hosted"
@@ -6032,6 +6349,7 @@ useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "Nu s-a putut prelua configurația serverului. Verificați URL-ul și încercați din nou."
+configFetchError = "Nu s-a putut prelua configurația serverului: {{error}}"
 emptyUrl = "Te rugăm să introduci un URL de server"
 invalidUrl = "Format URL invalid. Introduceți un URL valid, de exemplu https://your-server.com"
 testFailed = "Testul de conexiune a eșuat"
@@ -6557,6 +6875,7 @@ favorites = "Favorite"
 heading = "Toate instrumentele (vizualizare pe tot ecranul)"
 noResults = "Încercați să ajustați căutarea sau comutați descrierile pentru a găsi ce aveți nevoie."
 recommended = "Recomandat"
+selfHostedOffline = "Necesită serverul dvs. Stirling-PDF (în prezent offline):"
 showDetails = "Afișați detalii"
 unavailable = "Dezactivat de administratorul serverului:"
 unavailableDependency = "Indisponibil – lipsește un instrument necesar pe server:"
@@ -6601,6 +6920,12 @@ pageFormatting = "Formatare pagini"
 removal = "Eliminare"
 signing = "Semnare"
 verification = "Verificare"
+
+[tool]
+endpointUnavailable = "Acest instrument nu este disponibil pe serverul dvs."
+endpointUnavailableClickable = "Nu este disponibil în acest mod. Faceți clic pentru a vă autentifica."
+invalidParams = "Completați setările obligatorii."
+noFiles = "Adăugați un fișier pentru a începe."
 
 [tools]
 noSearchResults = "Nu s-au găsit instrumente"

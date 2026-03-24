@@ -44,8 +44,7 @@ public class RemoveImagesController {
             description =
                     "This endpoint removes all embedded images from a PDF file and returns the"
                             + " modified document. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> removeImages(@ModelAttribute PDFFile request)
-            throws IOException {
+    public ResponseEntity<byte[]> removeImages(@ModelAttribute PDFFile request) throws IOException {
 
         MultipartFile inputFile = request.getFileInput();
 
