@@ -157,8 +157,7 @@ public class SecurityConfiguration {
         Pattern allowedChars = Pattern.compile("[\\p{IsAssigned}&&[^\\p{IsControl}]]*");
 
         firewall.setAllowedHeaderValues(
-                headerValue ->
-                        headerValue != null && allowedChars.matcher(headerValue).matches());
+                headerValue -> headerValue != null && allowedChars.matcher(headerValue).matches());
 
         // Apply the same rules to parameter values for consistency.
         firewall.setAllowedParameterValues(
