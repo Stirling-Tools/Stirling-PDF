@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Paper, Group, Button, Text, Divider, CloseButton } from '@mantine/core';
+import { useIsPhone } from '@app/hooks/useIsMobile';
 import CancelIcon from '@mui/icons-material/Cancel';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
@@ -32,6 +33,7 @@ interface SignRequestWorkbenchViewProps {
 
 const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
   const { t } = useTranslation();
+  const isPhone = useIsPhone();
   const { signRequest, pdfFile, onSign, onDecline, onBack, canSign } = data;
   const { actions: fileActions } = useFileActions();
 
@@ -241,24 +243,26 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Top Control Bar */}
       <Paper p="sm" shadow="sm" style={{ flexShrink: 0, zIndex: Z_INDEX_FULLSCREEN_SURFACE, position: 'relative' }}>
-        <Group justify="space-between">
+        <Group justify="space-between" style={{ flexWrap: isPhone ? 'wrap' : 'nowrap' }}>
           <Group gap="md">
             <LocalIcon icon="signature-rounded" width="1.5rem" height="1.5rem" />
             <div>
-              <Text size="sm" fw={600}>
+              <Text size="sm" fw={600} style={{ maxWidth: isPhone ? '180px' : undefined }} truncate={isPhone ? 'end' : undefined}>
                 {signRequest.documentName}
               </Text>
-              <Text size="xs" c="dimmed">
-                {t('certSign.collab.signRequest.from', 'From')}: {signRequest.ownerUsername} •{' '}
-                {new Date(signRequest.createdAt).toLocaleDateString()}
-              </Text>
+              {!isPhone && (
+                <Text size="xs" c="dimmed">
+                  {t('certSign.collab.signRequest.from', 'From')}: {signRequest.ownerUsername} •{' '}
+                  {new Date(signRequest.createdAt).toLocaleDateString()}
+                </Text>
+              )}
             </div>
           </Group>
 
-          <Group gap="xs">
+          <Group gap="xs" style={{ width: isPhone ? '100%' : undefined }} justify={isPhone ? 'flex-end' : undefined}>
             <Button
               variant="light"
               size="sm"
@@ -284,33 +288,37 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
                 {t('certSign.collab.signRequest.decline', 'Decline Request')}
               </Button>
             )}
-            <Divider orientation="vertical" />
-            <Button.Group>
-              <Button
-                variant="subtle"
-                size="sm"
-                onClick={() => annotationApiRef.current?.zoomOut()}
-                title={t('viewer.zoomOut', 'Zoom out')}
-              >
-                <ZoomOutIcon fontSize="small" />
-              </Button>
-              <Button
-                variant="subtle"
-                size="sm"
-                onClick={() => annotationApiRef.current?.resetZoom()}
-                title={t('viewer.resetZoom', 'Reset zoom')}
-              >
-                <ZoomOutMapIcon fontSize="small" />
-              </Button>
-              <Button
-                variant="subtle"
-                size="sm"
-                onClick={() => annotationApiRef.current?.zoomIn()}
-                title={t('viewer.zoomIn', 'Zoom in')}
-              >
-                <ZoomInIcon fontSize="small" />
-              </Button>
-            </Button.Group>
+            {!isPhone && (
+              <>
+                <Divider orientation="vertical" />
+                <Button.Group>
+                  <Button
+                    variant="subtle"
+                    size="sm"
+                    onClick={() => annotationApiRef.current?.zoomOut()}
+                    title={t('viewer.zoomOut', 'Zoom out')}
+                  >
+                    <ZoomOutIcon fontSize="small" />
+                  </Button>
+                  <Button
+                    variant="subtle"
+                    size="sm"
+                    onClick={() => annotationApiRef.current?.resetZoom()}
+                    title={t('viewer.resetZoom', 'Reset zoom')}
+                  >
+                    <ZoomOutMapIcon fontSize="small" />
+                  </Button>
+                  <Button
+                    variant="subtle"
+                    size="sm"
+                    onClick={() => annotationApiRef.current?.zoomIn()}
+                    title={t('viewer.zoomIn', 'Zoom in')}
+                  >
+                    <ZoomInIcon fontSize="small" />
+                  </Button>
+                </Button.Group>
+              </>
+            )}
             <Divider orientation="vertical" />
             <CloseButton size="md" onClick={onBack} title={t('certSign.collab.signRequest.backToList', 'Back to Sign Requests')} />
           </Group>

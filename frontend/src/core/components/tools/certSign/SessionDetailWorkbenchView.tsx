@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Stack, Paper, Text, Group, Badge, Button, Divider, Modal } from '@mantine/core';
+import { Stack, Paper, Text, Group, Badge, Button, Divider, Modal, SegmentedControl } from '@mantine/core';
+import { useIsPhone } from '@app/hooks/useIsMobile';
 import { alert } from '@app/components/toast';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -10,6 +11,7 @@ import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
 import { Z_INDEX_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
 import { SessionDetail } from '@app/types/signingSession';
 import { LocalEmbedPDFWithAnnotations, SignaturePreview, AnnotationAPI } from '@app/components/viewer/LocalEmbedPDFWithAnnotations';
+import { getFileColor } from '@app/components/pageEditor/fileColors';
 import { ParticipantListPanel } from '@app/components/tools/certSign/panels/ParticipantListPanel';
 import { SessionActionsPanel } from '@app/components/tools/certSign/panels/SessionActionsPanel';
 import { AddParticipantsFlow } from '@app/components/tools/certSign/modals/AddParticipantsFlow';
@@ -32,6 +34,8 @@ interface SessionDetailWorkbenchViewProps {
 
 const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) => {
   const { t } = useTranslation();
+  const isPhone = useIsPhone();
+  const [mobilePanel, setMobilePanel] = useState<'participants' | 'pdf' | 'actions'>('pdf');
   const {
     session,
     pdfFile,
@@ -152,8 +156,10 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
   const wetSignaturePreviews = useMemo<SignaturePreview[]>(() => {
     const previews: SignaturePreview[] = [];
 
-    session.participants.forEach((participant, _participantIndex) => {
+    session.participants.forEach((participant, participantIndex) => {
       if (participant.wetSignatures && participant.wetSignatures.length > 0) {
+        const color = getFileColor(participantIndex);
+        const participantName = participant.name || participant.email;
         participant.wetSignatures.forEach((wetSig, sigIndex) => {
           previews.push({
             id: `participant-${participant.userId}-sig-${sigIndex}`,
@@ -164,6 +170,8 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
             height: wetSig.height,
             signatureData: wetSig.data,
             signatureType: 'image' as const,
+            color,
+            participantName,
           });
         });
       }
@@ -173,7 +181,7 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
   }, [session.participants]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Top Control Bar */}
       <Paper p="sm" shadow="sm" style={{ flexShrink: 0, zIndex: Z_INDEX_FULLSCREEN_SURFACE }}>
         <Group justify="space-between">
@@ -184,7 +192,7 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
             <Divider orientation="vertical" />
             <Stack gap={2}>
               <Group gap="sm">
-                <Text size="sm" fw={600}>
+                <Text size="sm" fw={600} style={{ maxWidth: isPhone ? '140px' : undefined }} truncate={isPhone ? 'end' : undefined}>
                   {session.documentName}
                 </Text>
                 <Badge size="sm" color={session.finalized ? 'green' : 'blue'} variant="light">
@@ -193,42 +201,46 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
                     : t('certSign.collab.sessionList.active', 'Active')}
                 </Badge>
               </Group>
-              <Text size="xs" c="dimmed">
-                {session.ownerEmail && `${t('certSign.collab.sessionDetail.owner', 'Owner')}: ${session.ownerEmail}`}
-                {session.ownerEmail && ' • '}
-                {new Date(session.createdAt).toLocaleDateString()}
-              </Text>
+              {!isPhone && (
+                <Text size="xs" c="dimmed">
+                  {session.ownerEmail && `${t('certSign.collab.sessionDetail.owner', 'Owner')}: ${session.ownerEmail}`}
+                  {session.ownerEmail && ' • '}
+                  {new Date(session.createdAt).toLocaleDateString()}
+                </Text>
+              )}
             </Stack>
           </Group>
 
           <Group gap="xs">
-            {/* Zoom Controls */}
-            <Button.Group>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => annotationApiRef.current?.zoomOut()}
-                title={t('viewer.zoomOut', 'Zoom out')}
-              >
-                <ZoomOutIcon fontSize="small" />
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => annotationApiRef.current?.resetZoom()}
-                title={t('viewer.resetZoom', 'Reset zoom')}
-              >
-                <ZoomOutMapIcon fontSize="small" />
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => annotationApiRef.current?.zoomIn()}
-                title={t('viewer.zoomIn', 'Zoom in')}
-              >
-                <ZoomInIcon fontSize="small" />
-              </Button>
-            </Button.Group>
+            {/* Zoom Controls — hidden on phone (pinch-to-zoom available) */}
+            {!isPhone && (
+              <Button.Group>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => annotationApiRef.current?.zoomOut()}
+                  title={t('viewer.zoomOut', 'Zoom out')}
+                >
+                  <ZoomOutIcon fontSize="small" />
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => annotationApiRef.current?.resetZoom()}
+                  title={t('viewer.resetZoom', 'Reset zoom')}
+                >
+                  <ZoomOutMapIcon fontSize="small" />
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => annotationApiRef.current?.zoomIn()}
+                  title={t('viewer.zoomIn', 'Zoom in')}
+                >
+                  <ZoomInIcon fontSize="small" />
+                </Button>
+              </Button.Group>
+            )}
 
             {/* Delete Session Button */}
             {!session.finalized && (
@@ -247,56 +259,132 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
       </Paper>
 
       {/* Main Content Area */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* Left Panel - Participants */}
-        <Paper
-          p="md"
-          shadow="sm"
-          style={{
-            width: '280px',
-            flexShrink: 0,
-            overflowY: 'auto',
-            borderRight: '1px solid var(--mantine-color-gray-3)',
-          }}
-        >
-          <ParticipantListPanel
-            participants={session.participants}
-            finalized={session.finalized}
-            onRemove={handleRemoveParticipant}
-          />
-        </Paper>
+      {isPhone ? (
+        // Phone: single-panel view — all three panels stay mounted (CSS display:none preserves state)
+        <div style={{ position: 'relative', flex: 1, overflow: 'hidden' }}>
+          <Paper
+            p="md"
+            shadow="sm"
+            style={{
+              display: mobilePanel === 'participants' ? 'flex' : 'none',
+              flexDirection: 'column',
+              position: 'absolute',
+              inset: 0,
+              overflowY: 'auto',
+            }}
+          >
+            <ParticipantListPanel
+              participants={session.participants}
+              finalized={session.finalized}
+              onRemove={handleRemoveParticipant}
+            />
+          </Paper>
 
-        {/* Center - PDF Viewer */}
-        <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
-          <LocalEmbedPDFWithAnnotations
-            ref={annotationApiRef}
-            file={pdfFile ?? undefined}
-            initialSignatures={wetSignaturePreviews}
-            readOnly={true}
-          />
+          <div
+            style={{
+              display: mobilePanel === 'pdf' ? 'flex' : 'none',
+              position: 'absolute',
+              inset: 0,
+            }}
+          >
+            <LocalEmbedPDFWithAnnotations
+              ref={annotationApiRef}
+              file={pdfFile ?? undefined}
+              initialSignatures={wetSignaturePreviews}
+              readOnly={true}
+            />
+          </div>
+
+          <Paper
+            p="md"
+            shadow="sm"
+            style={{
+              display: mobilePanel === 'actions' ? 'flex' : 'none',
+              flexDirection: 'column',
+              position: 'absolute',
+              inset: 0,
+              overflowY: 'auto',
+            }}
+          >
+            <SessionActionsPanel
+              session={session}
+              onAddParticipants={() => setAddParticipantsModalOpen(true)}
+              onFinalize={handleFinalize}
+              onLoadSignedPdf={handleLoadSignedPdf}
+              finalizing={finalizing}
+              loadingPdf={loadingPdf}
+            />
+          </Paper>
         </div>
+      ) : (
+        // Desktop/tablet: three-column flex layout
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+          {/* Left Panel - Participants */}
+          <Paper
+            p="md"
+            shadow="sm"
+            style={{
+              width: '280px',
+              flexShrink: 0,
+              overflowY: 'auto',
+              borderRight: '1px solid var(--mantine-color-gray-3)',
+            }}
+          >
+            <ParticipantListPanel
+              participants={session.participants}
+              finalized={session.finalized}
+              onRemove={handleRemoveParticipant}
+            />
+          </Paper>
 
-        {/* Right Panel - Session Actions */}
-        <Paper
-          p="md"
-          shadow="sm"
-          style={{
-            width: '320px',
-            flexShrink: 0,
-            overflowY: 'auto',
-            borderLeft: '1px solid var(--mantine-color-gray-3)',
-          }}
-        >
-          <SessionActionsPanel
-            session={session}
-            onAddParticipants={() => setAddParticipantsModalOpen(true)}
-            onFinalize={handleFinalize}
-            onLoadSignedPdf={handleLoadSignedPdf}
-            finalizing={finalizing}
-            loadingPdf={loadingPdf}
+          {/* Center - PDF Viewer */}
+          <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+            <LocalEmbedPDFWithAnnotations
+              ref={annotationApiRef}
+              file={pdfFile ?? undefined}
+              initialSignatures={wetSignaturePreviews}
+              readOnly={true}
+            />
+          </div>
+
+          {/* Right Panel - Session Actions */}
+          <Paper
+            p="md"
+            shadow="sm"
+            style={{
+              width: '320px',
+              flexShrink: 0,
+              overflowY: 'auto',
+              borderLeft: '1px solid var(--mantine-color-gray-3)',
+            }}
+          >
+            <SessionActionsPanel
+              session={session}
+              onAddParticipants={() => setAddParticipantsModalOpen(true)}
+              onFinalize={handleFinalize}
+              onLoadSignedPdf={handleLoadSignedPdf}
+              finalizing={finalizing}
+              loadingPdf={loadingPdf}
+            />
+          </Paper>
+        </div>
+      )}
+
+      {/* Phone bottom navigation */}
+      {isPhone && (
+        <Paper shadow="sm" style={{ flexShrink: 0, borderTop: '1px solid var(--mantine-color-gray-3)' }}>
+          <SegmentedControl
+            fullWidth
+            value={mobilePanel}
+            onChange={(v) => setMobilePanel(v as typeof mobilePanel)}
+            data={[
+              { value: 'participants', label: t('certSign.mobile.panelPeople', 'People') },
+              { value: 'pdf', label: t('certSign.mobile.panelDocument', 'Document') },
+              { value: 'actions', label: t('certSign.mobile.panelActions', 'Actions') },
+            ]}
           />
         </Paper>
-      </div>
+      )}
 
       {/* Add Participants Modal */}
       <AddParticipantsFlow
