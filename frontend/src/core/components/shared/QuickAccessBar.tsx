@@ -32,6 +32,7 @@ import { fileStorage } from '@app/services/fileStorage';
 import { useFileActions } from '@app/contexts/FileContext';
 import type { FileId } from '@app/types/file';
 import type { StirlingFileStub } from '@app/types/fileContext';
+import type { SignRequestSummary } from '@app/types/signingSession';
 
 import {
   isNavButtonActive,
@@ -87,6 +88,41 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   // Sign button state
   const [signMenuOpen, setSignMenuOpen] = useState(false);
   const signButtonRef = useRef<HTMLDivElement>(null);
+  const [pendingSignCount, setPendingSignCount] = useState(0);
+
+  // Silently fetch pending sign request count for badge (every 60s)
+  useEffect(() => {
+    if (!groupSigningEnabled) return;
+    const fetchCount = async () => {
+      try {
+        const response = await apiClient.get<SignRequestSummary[]>('/api/v1/security/cert-sign/sign-requests');
+        const pending = response.data.filter(
+          r => r.myStatus !== 'SIGNED' && r.myStatus !== 'DECLINED'
+        ).length;
+        setPendingSignCount(pending);
+      } catch { /* silent — avoid noisy background error toasts */ }
+    };
+    fetchCount();
+    const interval = setInterval(fetchCount, 60000);
+    return () => clearInterval(interval);
+  }, [groupSigningEnabled]);
+
+  // Refresh badge count when popout closes (user may have acted on a request)
+  useEffect(() => {
+    if (!signMenuOpen && groupSigningEnabled) {
+      const timeout = setTimeout(async () => {
+        try {
+          const response = await apiClient.get<SignRequestSummary[]>('/api/v1/security/cert-sign/sign-requests');
+          const pending = response.data.filter(
+            r => r.myStatus !== 'SIGNED' && r.myStatus !== 'DECLINED'
+          ).length;
+          setPendingSignCount(pending);
+        } catch { /* silent */ }
+      }, 500);
+      return () => clearTimeout(timeout);
+    }
+  }, [signMenuOpen, groupSigningEnabled]);
+
   const configButtonIcon = useConfigButtonIcon();
 
   const {
@@ -648,15 +684,35 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                   </div>
                 )}
                 {groupSigningEnabled && (
-                  <div ref={signButtonRef}>
-                    <QuickAccessButton
-                      icon={<LocalIcon icon="edit-square-rounded" width="1.15rem" height="1.15rem" />}
-                      label={t('quickAccess.sign', 'Sign')}
-                      isActive={signMenuOpen}
-                      onClick={() => setSignMenuOpen((prev) => !prev)}
-                      ariaLabel={t('quickAccess.sign', 'Sign')}
-                      dataTestId="sign-button"
-                    />
+                  <div ref={signButtonRef} style={{ display: 'flex', justifyContent: 'center' }}>
+                    {pendingSignCount > 0 ? (
+                      <Indicator
+                        inline
+                        label={pendingSignCount}
+                        size={14}
+                        color="red"
+                        position="top-end"
+                        offset={4}
+                      >
+                        <QuickAccessButton
+                          icon={<LocalIcon icon="edit-square-rounded" width="1.15rem" height="1.15rem" />}
+                          label={t('quickAccess.sign', 'Sign')}
+                          isActive={signMenuOpen}
+                          onClick={() => setSignMenuOpen((prev) => !prev)}
+                          ariaLabel={t('quickAccess.sign', 'Sign')}
+                          dataTestId="sign-button"
+                        />
+                      </Indicator>
+                    ) : (
+                      <QuickAccessButton
+                        icon={<LocalIcon icon="edit-square-rounded" width="1.15rem" height="1.15rem" />}
+                        label={t('quickAccess.sign', 'Sign')}
+                        isActive={signMenuOpen}
+                        onClick={() => setSignMenuOpen((prev) => !prev)}
+                        ariaLabel={t('quickAccess.sign', 'Sign')}
+                        dataTestId="sign-button"
+                      />
+                    )}
                   </div>
                 )}
               </Stack>
