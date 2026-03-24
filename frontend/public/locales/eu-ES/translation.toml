@@ -142,6 +142,10 @@ welcome = "Ongi etorria"
 white = "Txuria"
 WorkInProgess = "Lanean ari gara; agian ez dabil edo akatsak ditu. Mesedez, jakinarazi edozein arazo!"
 yes = "Bai"
+insufficientCredits = "Kreditu nahikorik ez. Beharrezkoa: {{requiredCredits}}, Eskuragarri: {{currentBalance}}, Gabezia: {{shortfall}}"
+loadingCredits = "Kredituak egiaztatzen..."
+loadingProStatus = "Harpidetza-egoera egiaztatzen..."
+noticeTopUpOrPlan = "Kreditu nahikorik ez, mesedez kargatu edo eguneratu plan batera"
 
 [account]
 accountSettings = "Kontuaren ezarpenak"
@@ -1513,6 +1517,7 @@ editStampHint = "Irudia aldatzeko, ezabatu zigilu hau eta gehitu beste berri bat
 editSwitchToSelect = "Aldatu 'Hautatu eta editatu' modura oharpen hau editatzeko."
 editText = "Editatu testu-koadroa"
 editTextMarkup = "Editatu testu-markaketa"
+annotationStyle = "Anotazioaren estiloa"
 ellipse = "Elipsea"
 exit = "Irten ohar-modutik"
 fillColor = "Betegarriaren kolorea"
@@ -1523,13 +1528,19 @@ highlight = "Nabarmendu"
 imagePreview = "Aurrebista"
 inkHighlighter = "Eskuzko nabarmentzailea"
 line = "Marra"
+lineArrow = "Gezia"
 noBackground = "Atzeko planorik ez"
 note = "Oharra"
+comment = "Iruzkina"
+comments = "Iruzkinak"
+insertText = "Testua txertatu"
+replaceText = "Testua ordezkatu"
 noteIcon = "Oharraren ikonoa"
 notesStamps = "Oharrak eta zigiluak"
 opacity = "Opakutasuna"
 pen = "Boligrafoa"
 polygon = "Poligonoa"
+polyline = "Polilinea"
 properties = "Propietateak"
 rectangle = "Laukizuzena"
 redo = "Berregin"
@@ -2574,10 +2585,48 @@ title = "Kalitate-doikuntza"
 [compressPdfs]
 tags = "estutu,txiki,oso-txiki"
 
+[config]
+plan = "Plana"
+
 [config.account.overview]
+confirmDelete = "Nire kontua ezabatu"
+deleteAccount = "Kontua ezabatu"
+deleteAccountTitle = "Kontua ezabatu"
+deleteFailed = "Ezin izan da kontua ezabatu."
+deleteFailedTitle = "Ezin izan da kontua ezabatu"
+deleteWarning = "Ekintza hau iraunkorra da eta ezin da desegin. Zure datu guztiak ezabatuko dira."
+enterEmailConfirm = "Ezabaketa berresteko, idatzi behean zure helbide elektronikoa ({{email}}):"
 guestDescription = "Gonbidatu gisa saioa hasita zaude. Kontuan izan zure kontua goian bertsio-berritzea."
+label = "Ikuspegi orokorra"
 manageAccountPreferences = "Kudeatu zure kontuaren hobespenak"
+signedInAs = "Saioa hasita honela"
 title = "Kontuaren ezarpenak"
+
+[config.account.profilePicture]
+description = "Igo irudi bat zure kontua pertsonalizatzeko."
+help = "PNG, JPG edo WebP 2MB arte."
+remove = "Kendu"
+sizeError = "Hautatu 2MB baino txikiagoa den irudia."
+switchedToCustom = "Irudi pertsonalizatura aldatu da. Orain zurea igo dezakezu."
+title = "Profil-argazkia"
+upload = "Igo"
+useCustom = "Erabili irudi pertsonalizatua"
+usingProvider = "{{provider}}-eko profil-argazkia erabiltzen"
+
+[config.account.profilePicture.cropper]
+cropError = "Ezin izan da irudia moztu. Saiatu berriro."
+invalidImage = "Irudi-fitxategi baliogabea. Hautatu baliozko PNG, JPG edo WebP fitxategi bat."
+processing = "Mozketa prozesatzen..."
+save = "Gorde moztutako irudia"
+sizeErrorAfterCrop = "Moztutako irudia handiegia da. Urrundu edo moztu eremu txikiago bat."
+title = "Moztu profil-argazkia"
+zoom = "Zoom"
+
+[config.account.security]
+changePassword = "Pasahitza aldatu"
+description = "Zure pasahitza eta segurtasun-ezarpenak kudeatu."
+title = "Pasahitzak eta segurtasuna"
+update = "Pasahitza eguneratu"
 
 [config.account.upgrade]
 description = "Estekatu zure kontua zure historia gordetzeko eta funtzio gehiago eskuratzeko!"
@@ -2595,6 +2644,7 @@ upgradeButton = "Bertsio-berritu kontua"
 [config.apiKeys]
 chartAriaLabel = "Kredituen erabilera: barne {{includedUsed}}/{{includedTotal}}, erosiak {{purchasedUsed}}/{{purchasedTotal}}"
 copyKeyAriaLabel = "API gakoa kopiatu"
+creditsRemaining = "Geratzen diren kredituak"
 description = "Stirlingen PDF tresna-multzora sartzeko zure API gakoa. Kopiatu zure proiektuara edo berritu berri bat sortzeko."
 docsDescription = "Ikasi gehiago Stirling PDFrekin integrazioari buruz:"
 docsLink = "API dokumentazioa"
@@ -2643,6 +2693,14 @@ basic = "Oinarrizko konfigurazioa"
 integration = "Integrazio-konfigurazioa"
 security = "Segurtasun-konfigurazioa"
 system = "Sistema-konfigurazioa"
+
+[connectionMode.status]
+localOffline = "Lineaz kanpoko modua martxan"
+localOnline = "Lineaz kanpoko modua martxan"
+saas = "Stirling Cloud-arekin konektatuta"
+selfhostedChecking = "Norberak ostatatutako zerbitzarira konektatuta (egiaztatzen...)"
+selfhostedOffline = "Ezin da atzitu norberak ostatatutako zerbitzaria"
+selfhostedOnline = "Norberak ostatatutako zerbitzarira konektatuta"
 
 [convert]
 autoRotate = "Biraketa automatikoa"
@@ -2728,6 +2786,15 @@ webOptions = "Webetik PDFra aukerak"
 wordDoc = "Word dokumentua"
 wordDocExt = "Word dokumentua (.docx)"
 zoomLevel = "Zoom maila"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "eBook → PDF"
+emlToPdf = "E-posta → PDF"
+fileToPdf = "Office/Dokumentu → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "eBooketik PDFra aukerak"
@@ -3718,6 +3785,11 @@ desc = "Gehitu sinadura PDFari marrazki, testu edo irudi bidez"
 tags = "sinadura,autografoa"
 title = "Sinatu"
 
+[home.timestampPdf]
+desc = "Gehitu RFC 3161 dokumentu-denbora-zigilua zure PDFari"
+tags = "timestamp,RFC 3161,TSA,time stamp authority,document timestamp,proof of existence,timestamp token,trusted timestamp,sign timestamp,notarise"
+title = "Denbora-zigilatu PDFa"
+
 [home.split]
 desc = "Zatitu PDFak zenbait dokumentutan"
 tags = "banatu,bereizi,apurtu"
@@ -3854,6 +3926,7 @@ version = "Bertsioa"
 accountCreatedSuccess = "Kontua ongi sortu da! Orain saioa hasi dezakezu."
 alreadyLoggedIn = "Dagoeneko saioa hasita daukazu "
 alreadyLoggedIn2 = "gailutan. Mesedez, amaitu beste gailuetako saioak eta saiatu berriro."
+backToSignIn = "Itzuli saioa hastera"
 cancel = "Utzi"
 changePasswordWarning = "Mesedez, aldatu pasahitza lehen aldiz saioa hasi ondoren"
 credentialsUpdated = "Zure kredentzialak eguneratu dira. Hasi saioa berriro."
@@ -3895,16 +3968,21 @@ or = "Edo"
 password = "Pasahitza"
 passwordChangedSuccess = "Pasahitza ongi aldatu da! Hasi saioa pasahitz berriarekin."
 passwordResetSent = "Pasahitza berrezartzeko esteka bidali zaio {{email}} helbidera! Egiaztatu zure e-posta eta jarraitu jarraibideak."
+passwordUpdatedSuccess = "Zure pasahitza ongi eguneratu da."
 pleaseEnterBoth = "Mesedez, sartu e-posta eta pasahitza biak"
 pleaseEnterEmail = "Mesedez, sartu zure e-posta helbidea"
 relyingPartyRegistrationNotFound = "Ez da aurkitu fidatzen den alderdiaren erregistroa"
 rememberme = "Oroitu nazazu"
+resetHelp = "Sartu zure helbide elektronikoa pasahitza berrezartzeko esteka segurua jasotzeko. Esteka iraungi bada, eskatu beste bat."
+resetYourPassword = "Berrezarri zure pasahitza"
 saml2RequiresLicense = "SAML bidezko saio-hasierak lizentzia ordaindua behar du (Server edo Enterprise). Mesedez, jarri harremanetan administratzailearekin plana eguneratzeko."
 sending = "Bidaltzen…"
 sendMagicLink = "Bidali esteka magikoa"
+sendResetLink = "Bidali berrezartzeko esteka"
 sessionExpired = "Zure saioa iraungi da. Hasi saioa berriro, mesedez."
 signin = "Saioa hasi"
 signInAnonymously = "Sartu gonbidatu gisa"
+subtitle = "Hasi saioa berriro Stirling PDF-n"
 signingIn = "Saioa hasten..."
 signinTitle = "Mesedez, hasi saioa"
 signInWith = "Hasi saioa honekin"
@@ -3913,6 +3991,7 @@ ssoSignIn = "Hasi saioa Saioa hasteko modu bakarraren bidez"
 title = "Saioa hasi"
 toManySessions = "Saio aktibo gehiegi dituzu"
 unexpectedError = "Ustekabeko errorea: {{message}}"
+updatePassword = "Pasahitza eguneratu"
 useEmailInstead = "Hasi saioa e-postarekin"
 useMagicLink = "Erabili esteka magikoa"
 userIsDisabled = "Erabiltzailea desgaituta dago; erabiltzaile-izen honekin saio-hasiera une honetan blokeatuta dago. Jarri harremanetan administratzailearekin."
@@ -4222,6 +4301,15 @@ viewSwitcher = "Erabili kontrol hauek zure PDFak nola ikusi nahi dituzun hautatz
 workbench = "Hau da <strong>Lan-mahaia</strong> - zure PDFak ikusi eta editatzeko eremu nagusia."
 wrapUp = "Dena prest! Aplikazioaren eremu nagusiak eta nola erabili ikasi dituzu. Egin klik <strong>Laguntza</strong> botoian bira hau berriro ikusteko nahi duzunean."
 
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "Proba amaitzean, gure maila doakoarekin jarraituko duzu. Gehitu ordainketa-metodo bat Pro sarbidea mantentzeko."
+afterTrialWithPayment = "Zure Pro harpidetza automatikoki hasiko da proba amaitzean."
+body = "Probaldian Stirling PDF Pro-ren funtzio guztietarako sarbidea duzu. Gozatu bihurketa mugagabeak, fitxategi handiagoak eta lehentasunezko prozesatzea."
+daysRemaining = "{{days}} egun falta"
+daysRemainingSingular = "{{days}} egun falta"
+title = "Zure 30 eguneko Pro proba"
+trialEnds = "Proba amaitzen da: {{date}}"
+
 [onboarding.buttons]
 back = "Atzera"
 download = "Deskargatu →"
@@ -4392,6 +4480,31 @@ loading = "Eranskinak kargatzen..."
 empty = "Ez dago eranskinik dokumentu honetan"
 noMatch = "Ez dago zure bilaketarekin bat datorren eranskinik"
 
+[viewer.comments]
+title = "Iruzkinak"
+hint = "Jarri iruzkinak Iruzkina, Testua txertatu edo Testua ordezkatu tresnekin. Hemen agertuko dira, orrialdeka."
+placeholder = "Idatzi zure iruzkina..."
+pageLabel = "Orrialdea {{page}}"
+oneComment = "Iruzkin 1"
+nComments = "{{count}} iruzkin"
+addCommentPlaceholder = "Gehitu iruzkina..."
+addLink = "Gehitu esteka"
+goToLink = "Joan estekara"
+addComment = "Gehitu iruzkina"
+viewComment = "Ikusi iruzkina"
+addReplyPlaceholder = "Gehitu erantzuna..."
+saveReply = "Gorde erantzuna"
+send = "Bidali"
+moreActions = "Ekintza gehiago"
+typeComment = "Iruzkina"
+typeInsertText = "Testua txertatu"
+typeReplaceText = "Testua ordezkatu"
+locateAnnotation = "Kokatu dokumentuan"
+deleteTitle = "Kendu anotazioa iruzkinenetik?"
+deleteDescription = "Anotazio honek iruzkin bat du erantsita. Alboko barratik iruzkina bakarrik ken dezakezu anotazioa mantenduz, edo dena ezabatu."
+removeCommentOnly = "Kendu iruzkina bakarrik"
+deleteAnnotationAndComment = "Ezabatu anotazioa eta iruzkina"
+
 [viewer.formBar]
 title = "Inprimaki-eremuak"
 unsavedBadge = "Gorde gabe"
@@ -4425,14 +4538,20 @@ rotateLeft = "Biratu ezkerrera"
 rotateRight = "Biratu eskuinera"
 toggleSidebar = "Alboko barra txandakatu"
 toggleBookmarks = "Laster-markak txandakatu"
+toggleComments = "Iruzkinak"
 print = "Inprimatu PDFa"
 ruler = "Erregela / Neurketa"
+readAloud = "Ozen irakurri"
+readAloudSpeed = "Abiadura"
+readAloudLanguage = "Hizkuntza"
+selectLanguage = "Hautatu hizkuntza"
 draw = "Marraztu"
 redact = "Zentsuratu"
 exitRedaction = "Irten zentsura modutik"
 save = "Gorde"
 downloadAll = "Deskargatu dena"
 saveAll = "Gorde dena"
+saveAs = "Gorde honela"
 
 [textAlign]
 left = "Ezkerrera"
@@ -4447,21 +4566,132 @@ title = "Atera orriak"
 
 [pageLayout]
 addBorder = "Gehitu ertzak"
+borderWidth = "Ertzaren lodiera"
+bottom = "Beheko marjina"
+cols = "Zutabeak"
 header = "Hainbat orrialderen diseinua"
+innerMargin = "Barne-marjina"
+left = "Ezkerreko marjina"
 pagesPerSheet = "Orrialdeak orriko:"
+right = "Eskuineko marjina"
+rows = "Errenkadak"
 submit = "Entregatu"
 tags = "batu,konposatu,ikuspegi-bakarra,antolatu"
 title = "Hainbat orrialderen diseinua"
+top = "Goiko marjina"
+
+[pageLayout.mode]
+default = "Lehenetsia"
+custom = "Pertsonalizatua"
+label = "Modua:"
+
+[pageLayout.arrangement]
+byColumns = "Zutabez"
+byRows = "Errenkadaz"
+label = "Orrialdeen antolaketa:"
 
 [pageLayout.desc]
 16 = "Jarri 16 orri orri bakarrean (4 × 4 sarea)."
 2 = "Jarri 2 orri orri bakarrean alboz-albo."
-3 = "Jarri 3 orri orri bakarrean ilara bakarrean."
 4 = "Jarri 4 orri orri bakarrean (2 × 2 sarea)."
 9 = "Jarri 9 orri orri bakarrean (3 × 3 sarea)."
 
 [pageLayout.error]
 failed = "Errore bat gertatu da orri-anitzeko diseinua sortzean."
+outerVerticalMarginsTooLarge = "Goiko/Beheko marjinak handiegiak dira orri-tamaina honetarako."
+outerHorizontalMarginsTooLarge = "Ezkerreko/Eskuineko marjinak handiegiak dira orri-tamaina honetarako."
+innerMarginTooLarge = "Barne-marjina handiegia da hautatutako diseinurako."
+
+[pageLayout.orientation]
+landscape = "Horizontala"
+portrait = "Bertikala"
+label = "Orientazioa:"
+
+[pageLayout.readingDirection]
+ltr = "Ezkerretik eskuinera"
+rtl = "Eskuinetik ezkerrera"
+label = "Irakurketa-norabidea:"
+
+[pageLayout.tooltip.header]
+title = "Orrialde-diseinuaren gida"
+
+[pageLayout.tooltip.overview]
+title = "Zer da Orrialde-diseinua?"
+text = "Doitu orrialde anitz orri bakarrean banatzeko edo paperra aurrezteko."
+
+[pageLayout.tooltip.mode]
+title = "Modua"
+text = "Aukeratu sareta nola konfiguratzen den:"
+bullet1 = "Lehenetsia: Aurrezarpena aukeratu eta sareta automatikoki kalkulatzen da."
+bullet2 = "Pertsonalizatua: Ezarri errenkadak eta zutabeak eskuz."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Orrialdeak orri bakoitzeko (Modu lehenetsia)"
+text = "Aukeratu zenbat orrialde orri bakoitzeko (adib. 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Errenkadak eta zutabeak (Modu pertsonalizatua)"
+text = "Ezarri sare-dimentsio zehatzak. Guztira orrialdeak orri bakoitzeko = errenkadak × zutabeak."
+
+[pageLayout.tooltip.orientation]
+title = "Orientazioa"
+text = "Ezarri irteera-orriaren orientazioa:"
+bullet1 = "Bertikala: Altuagoa zabal baino."
+bullet2 = "Horizontala: Zabalagoa altu baino."
+
+[pageLayout.tooltip.arrangement]
+title = "Orrialdeen antolaketa"
+text = "Kontrolatzen du orrialdeek nola betetzen duten sareta:"
+bullet1 = "Errenkadaz: Bete errenkada bakoitza (ezkerretik eskuinera edo eskuinetik ezkerrera)."
+bullet2 = "Zutabez: Bete goitik behera, zutabez zutabe."
+
+[pageLayout.tooltip.readingDirection]
+title = "Irakurketa-norabidea"
+text = "Kontrolatzen du orrialdeen ordena horizontala:"
+bullet1 = "LTR: Ezkerretik eskuinera."
+bullet2 = "RTL: Eskuinetik ezkerrera."
+
+[pageLayout.tooltip.addBorder]
+title = "Gehitu ertzak"
+text = "Marraztu ertz-lerroak orri-zelula bakoitzaren inguruan mozketa-gida edo bereizketa bisualerako."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Marjinak eta ertzak"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Marjinak"
+text = "Erabili goiko, beheko, ezkerreko eta eskuineko marjinak irteerako orri osoaren inguruko tartea kontrolatzeko."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Barne-marjina"
+text = "Barne-marjinak tartea gehitzen du orri-saretako gelaxken artean bereizketa eta irakurgarritasuna hobetzeko."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Gehitu ertzak"
+text = "Gaitu ertzak kokatutako orri bakoitzaren inguruan lerroak marrazteko. Honek lagun dezake bereizketa bisualean edo mozteko gidetan."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Ertzaren lodiera"
+text = "Ertzaren lodiera ertzak gaituta daudenean baino ez da aplikatzen. Balio handiagoek marra lodiagoak sortzen dituzte."
+
+[pageLayout.advanced.tooltip.header]
+title = "Diseinu aurreratuaren aukerak"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Orientazioa"
+text = "Aukeratu azken orriaren norabidea. Bertikalak hobeto funtzionatzen du eduki altuarentzat; horizontalak, berriz, diseinu zabalagoak egokitzen ditu."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Orrialdeen antolaketa"
+text = "Kontrolatu orrialdeek sareta errenkadaz edo zutabez betetzen duten."
+bullet1 = "Errenkadaz: Bete lehenik errenkada bakoitza."
+bullet2 = "Zutabez: Bete lehenik zutabe bakoitza."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Irakurketa-norabidea"
+text = "Ezarri sareko ordena horizontala, baliagarria ezkerretik-eskuinera eta eskuinetik-ezkerrera ohituretarako."
+bullet1 = "LTR: Ordena ezkerretik eskuinera."
+bullet2 = "RTL: Ordena eskuinetik ezkerrera."
 
 [pageRemover]
 header = "PDF orrialdeen ezabatzailea"
@@ -4977,7 +5207,10 @@ perMonth = "/hilean"
 perSeat = "/eserleku"
 popular = "Ezaguna"
 selectPlan = "Aukeratu plana"
+selectCredits = "Hautatu kreditu kopurua"
 showComparison = "Alderatu ezaugarri guztiak"
+purchase = "Erosi"
+totalCost = "Kostu osoa"
 upgrade = "Bertsio-berritu"
 withServer = "+ Zerbitzari-plana"
 
@@ -5068,6 +5301,30 @@ successMessage = "Zure lizentzia ongi aktibatu da. Orain leiho hau itxi dezakezu
 [plan.team]
 name = "Taldea"
 siteLicense = "Site License"
+
+[plan.api]
+large = "5.000 kreditu"
+medium = "1.000 kreditu"
+small = "500 kreditu"
+xsmall = "100 kreditu"
+
+[plan.apiPackages]
+subtitle = "Erosi API kredituak zure aplikazioetarako"
+title = "API kreditu paketeak"
+
+[plan.trial]
+badge = "Proba"
+continueWithFree = "Jarraitu doakoarekin"
+daysRemaining = "Zure proba {{days}} egunetan amaituko da"
+endDate = "Iraungitzen da: {{date}}"
+expired = "Zure proba amaitu da"
+expiredMessage = "Zure 30 eguneko Pro proba iraungi da. Harpidetu Pro-ra funtzio aurreratuetara sartzen jarraitzeko, edo jarraitu gure maila doakoarekin."
+freeTierLimitations = "Maila doakoak PDF oinarrizko tresnak ditu erabilera-mugekin."
+message = ""
+subscribe = "Harpidetu Pro-ra"
+subscribeToPro = "Harpidetu Pro-ra"
+subscriptionScheduled = "Harpidetza programatuta - {{date}}-n hasten da"
+title = "Doako proba aktibo"
 
 [credits]
 enableOverageBilling = "Gaitu gain-erabileraren fakturazioa"
@@ -5631,6 +5888,32 @@ text = "Biratu zure PDF orrialdeak erlojuaren noranzkoan edo kontrakoan 90 gradu
 [rotate.tooltip.header]
 title = "Biraketa ezarpenen ikuspegi orokorra"
 
+[timestampPdf]
+completed = "PDFa denbora-zigilatuta ongi"
+desc = "Gehitu RFC 3161 dokumentuaren denbora-zigilua zure PDFari Denbora-zigiluen Agintaritza (TSA) fidagarri bat erabiliz."
+filenamePrefix = "denbora-zigilatua"
+results = "Denbora-zigiluaren emaitzak"
+submit = "Aplikatu denbora-zigilua"
+title = "Denbora-zigilatu PDFa"
+
+[timestampPdf.error]
+failed = "Errore bat gertatu da PDFa denbora-zigilatzean."
+generic = "Denbora-zigilatzeak huts egin du"
+
+[timestampPdf.files]
+placeholder = "Hasteko, hautatu PDF fitxategi bat ikuspegi nagusian"
+
+[timestampPdf.options]
+note = "Zure dokumentuaren SHA-256 hash-a bakarrik bidaltzen da TSA zerbitzarira; PDF fitxategia bera ez da inoiz TSA zerbitzarira bidaltzen."
+title = "Denbora-zigiluen zerbitzaria (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Aukeratu Denbora-zigiluen Agintaritza fidagarria"
+label = "Hautatu TSA zerbitzari bat"
+
+[timestampPdf.steps]
+settings = "Ezarpenak"
+
 [sanitize]
 completed = "Saneatzea ongi burutu da"
 desc = "Kaltegarriak izan daitezkeen elementuak kendu PDF fitxategietatik."
@@ -5755,6 +6038,14 @@ placeholder = "Idatzi bilaketa-terminoa..."
 searching = "Bilatzen..."
 title = "Bilatu PDF"
 
+[selfHosted.offline]
+hideTools = "Ezkutatu erabilgarri ez dauden tresnak ▴"
+messageNoFallback = "Tresnak ez daude erabilgarri zure zerbitzaria linean egon arte."
+messageWithFallback = "Zenbait tresnek zerbitzariarekiko konexioa behar dute."
+showTools = "Ikusi erabilgarri ez dauden tresnak ▾"
+title = "Ezin da atzitu zure Stirling-PDF zerbitzaria"
+toolNotAvailableLocally = "Zure Stirling-PDF zerbitzaria lineaz kanpo dago eta \"{{endpoint}}\" ez dago erabilgarri tokiko backend-ean."
+
 [session]
 expired = "Zure saioa iraungi da. Freskatu orria eta saiatu berriro."
 refreshPage = "Freskatu orria"
@@ -5768,12 +6059,15 @@ systemSettings = "Sistemaren ezarpenak"
 title = "Konfigurazioa"
 
 [settings.connection]
+localDescription = "Tokiko backend-a erabiltzen ari zara konturik gabe. Hodei-prozesamendua edo norberak ostatatutako zerbitzaria behar duten tresna batzuk ez daude erabilgarri."
 logout = "Saioa amaitu"
 server = "Zerbitzaria"
+signIn = "Hasi saioa"
 title = "Konexio modua"
 user = "Saioa hasita:"
 
 [settings.connection.mode]
+local = "Tokikoa bakarrik"
 saas = "Stirling Cloud"
 selfhosted = "Auto-ostatua"
 
@@ -5931,6 +6225,9 @@ title = "Politikak eta Pribatutasuna"
 [settings.preferences]
 title = "Hobespenak"
 
+[settings.search]
+placeholder = "Bilatu ezarpen-orrietan..."
+
 [settings.security]
 description = "Eguneratu pasahitza kontua seguru mantentzeko."
 title = "Segurtasuna"
@@ -5968,6 +6265,18 @@ title = "Lan-espazioa"
 [settings.team]
 title = "Taldea"
 
+[localMode]
+toolUnavailable = "Tresna honek kontu bat behar du. Hasi saioa Stirling Cloud-en edo konektatu norberak ostatatutako zerbitzari batera erabiltzeko."
+
+[localMode.banner]
+message = "Hasi saioa tresna guztiak desblokeatzeko."
+signIn = "Hasi saioa"
+title = "Tokian exekutatzen"
+
+[localMode.toolPicker]
+message = "Hasi saioa tresna guztiak desblokeatzeko."
+signIn = "Hasi saioa"
+
 [setup]
 description = "Hasi Stirling PDF nola erabili nahi duzun aukeratuz"
 welcome = "Ongi etorri Stirling PDF-era"
@@ -5975,6 +6284,7 @@ welcome = "Ongi etorri Stirling PDF-era"
 [setup.login]
 connectingTo = "Hona konektatzen:"
 hideInstructions = "Ezkutatu argibideak"
+skipSignIn = "Jarraitu saioa hasi gabe"
 instructions = "Saioa hastea gaitzeko zure Stirling PDF zerbitzarian:"
 instructionsEnvVar = "Ezarri ingurune-aldagaia:"
 instructionsOrYml = "Edo settings.yml fitxategian:"
@@ -6022,7 +6332,14 @@ title = "Hasi saioa Stirlingen"
 [setup.selfhosted]
 link = "edo konektatu autoostatutako kontu batera"
 subtitle = "Sartu zure zerbitzariaren kredentzialak"
+switchToLocal = "Erabili tokiko tresnak"
 title = "Hasi saioa zerbitzarian"
+
+[setup.selfhosted.unreachable]
+continueOffline = "Erabili tokiko tresnak"
+message = "Ezin izan da {{url}} atzitu. Egiaztatu zerbitzaria martxan eta atzigarri dagoela."
+retry = "Saiatu berriro"
+title = "Ezin da zerbitzarira konektatu"
 
 [setup.server]
 subtitle = "Sartu zure auto-ostatuko zerbitzariaren URLa"
@@ -6032,6 +6349,7 @@ useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "Ezin izan da zerbitzariaren konfigurazioa eskuratu. Egiaztatu URLa eta saiatu berriro."
+configFetchError = "Ezin izan da zerbitzariaren konfigurazioa eskuratu: {{error}}"
 emptyUrl = "Sartu zerbitzari baten URLa"
 invalidUrl = "URL formatua baliogabea. Sartu baliozko URL bat, adibidez https://your-server.com"
 testFailed = "Konexio proba huts egin du"
@@ -6557,6 +6875,7 @@ favorites = "Gogokoak"
 heading = "Tresna guztiak (pantaila osoko ikuspegia)"
 noResults = "Saiatu bilaketa moldatzen edo deskribapenak txandakatzen behar duzuna aurkitzeko."
 recommended = "Gomendatua"
+selfHostedOffline = "Zure Stirling-PDF zerbitzaria behar da (unean lineaz kanpo):"
 showDetails = "Erakutsi xehetasunak"
 unavailable = "Zerbitzariaren administratzaileak desgaituta:"
 unavailableDependency = "Ez dago eskuragarri - beharrezko tresna falta da zerbitzarian:"
@@ -6601,6 +6920,12 @@ pageFormatting = "Orri-formatua"
 removal = "Kentzea"
 signing = "Sinatzea"
 verification = "Egiaztapena"
+
+[tool]
+endpointUnavailable = "Tresna hau ez dago erabilgarri zure zerbitzarian."
+endpointUnavailableClickable = "Modu honetan ez dago eskuragarri. Egin klik saioa hasteko."
+invalidParams = "Bete beharrezko ezarpenak."
+noFiles = "Gehitu fitxategi bat hasteko."
 
 [tools]
 noSearchResults = "Ez da tresnarik aurkitu"

@@ -210,11 +210,11 @@ public class MultiPageLayoutController {
                 // Validate that outer margins and grid configuration yield positive cell size
                 if (cellWidth <= 0 || cellHeight <= 0) {
                     throw ExceptionUtils.createIllegalArgumentException(
-                        "error.invalidFormat",
-                        "Invalid {0} format: {1}",
-                        "margin/layout configuration",
-                        "Invalid margin or layout configuration: resulting cell size is non-positive. "
-                                + "Please reduce outer margins or adjust rows/columns.");
+                            "error.invalidFormat",
+                            "Invalid {0} format: {1}",
+                            "margin/layout configuration",
+                            "Invalid margin or layout configuration: resulting cell size is non-positive. "
+                                    + "Please reduce outer margins or adjust rows/columns.");
                 }
 
                 float innerWidth = cellWidth - 2 * innerMargin;

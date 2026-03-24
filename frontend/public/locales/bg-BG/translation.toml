@@ -142,6 +142,10 @@ welcome = "Добре дошли"
 white = "Бяло"
 WorkInProgess = "Работата е в ход, може да не работи или да има грешки, моля, докладвайте за проблеми!"
 yes = "Да"
+insufficientCredits = "Недостатъчен брой кредити. Необходими: {{requiredCredits}}, Налични: {{currentBalance}}, Недостиг: {{shortfall}}"
+loadingCredits = "Проверка на кредитите..."
+loadingProStatus = "Проверка на състоянието на абонамента..."
+noticeTopUpOrPlan = "Недостатъчно кредити. Моля, заредете още или надградете до план"
 
 [account]
 accountSettings = "Настройки на акаунта"
@@ -1513,6 +1517,7 @@ editStampHint = "За да промените изображението, изт
 editSwitchToSelect = "Превключете към „Избор и редактиране“, за да редактирате тази анотация."
 editText = "Редактиране на текстово поле"
 editTextMarkup = "Редактиране на маркиран текст"
+annotationStyle = "Стил на анотацията"
 ellipse = "Елипса"
 exit = "Изход от режим за анотиране"
 fillColor = "Цвят на запълването"
@@ -1523,13 +1528,19 @@ highlight = "Открояване"
 imagePreview = "Преглед"
 inkHighlighter = "Ръчно открояване"
 line = "Линия"
+lineArrow = "Стрелка"
 noBackground = "Без фон"
 note = "Бележка"
+comment = "Коментар"
+comments = "Коментари"
+insertText = "Вмъкване на текст"
+replaceText = "Замяна на текст"
 noteIcon = "Икона на бележка"
 notesStamps = "Бележки и печати"
 opacity = "Непрозрачност"
 pen = "Перо"
 polygon = "Многоъгълник"
+polyline = "Полилиния"
 properties = "Свойства"
 rectangle = "Правоъгълник"
 redo = "Повторение"
@@ -2574,10 +2585,48 @@ title = "Регулиране на качеството"
 [compressPdfs]
 tags = "мачкам,малък,мъничък"
 
+[config]
+plan = "План"
+
 [config.account.overview]
+confirmDelete = "Изтриване на моя акаунт"
+deleteAccount = "Изтриване на акаунт"
+deleteAccountTitle = "Изтриване на акаунт"
+deleteFailed = "Неуспешно изтриване на акаунта."
+deleteFailedTitle = "Акаунтът не може да бъде изтрит"
+deleteWarning = "Това действие е постоянно и не може да бъде отменено. Всички ваши данни ще бъдат изтрити."
+enterEmailConfirm = "За да потвърдите изтриването, въведете имейл адреса си ({{email}}) по-долу:"
 guestDescription = "Влезли сте като гост. Помислете да надградите акаунта си по-горе."
+label = "Преглед"
 manageAccountPreferences = "Управлявайте предпочитанията на акаунта"
+signedInAs = "Влезли сте като"
 title = "Настройки на акаунта"
+
+[config.account.profilePicture]
+description = "Качете изображение, за да персонализирате акаунта си."
+help = "PNG, JPG или WebP до 2 MB."
+remove = "Премахване"
+sizeError = "Моля, изберете изображение по-малко от 2 MB."
+switchedToCustom = "Преминахте към персонална снимка. Сега можете да качите своя."
+title = "Профилна снимка"
+upload = "Качване"
+useCustom = "Използване на персонална снимка"
+usingProvider = "Използвате профилната снимка от {{provider}}"
+
+[config.account.profilePicture.cropper]
+cropError = "Неуспешно изрязване на изображението. Опитайте отново."
+invalidImage = "Невалиден файл с изображение. Изберете валиден PNG, JPG или WebP файл."
+processing = "Обработване на изрязването..."
+save = "Запис на изрязаното изображение"
+sizeErrorAfterCrop = "Изрязаното изображение е твърде голямо. Отдалечете или изрежете по-малка област."
+title = "Изрязване на профилната снимка"
+zoom = "Мащаб"
+
+[config.account.security]
+changePassword = "Промяна на парола"
+description = "Управлявайте паролата и настройките за сигурност."
+title = "Пароли и сигурност"
+update = "Актуализиране на парола"
 
 [config.account.upgrade]
 description = "Свържете акаунта си, за да запазите историята и да получите достъп до повече функции!"
@@ -2595,6 +2644,7 @@ upgradeButton = "Надгради акаунта"
 [config.apiKeys]
 chartAriaLabel = "Използване на кредити: включени {{includedUsed}} от {{includedTotal}}, закупени {{purchasedUsed}} от {{purchasedTotal}}"
 copyKeyAriaLabel = "Копирай API ключ"
+creditsRemaining = "Оставащи кредити"
 description = "Вашият API ключ за достъп до набора от PDF инструменти на Stirling. Копирайте го в проекта си или опреснете, за да генерирате нов."
 docsDescription = "Научете повече за интеграция със Stirling PDF:"
 docsLink = "API документация"
@@ -2643,6 +2693,14 @@ basic = "Базова конфигурация"
 integration = "Конфигурация за интеграции"
 security = "Конфигурация за сигурност"
 system = "Системна конфигурация"
+
+[connectionMode.status]
+localOffline = "Работа в офлайн режим"
+localOnline = "Работа в офлайн режим"
+saas = "Свързано със Stirling Cloud"
+selfhostedChecking = "Свързано към самостоятелно хостван сървър (проверка...)"
+selfhostedOffline = "Самостоятелно хостваният сървър е недостъпен"
+selfhostedOnline = "Свързано към самостоятелно хостван сървър"
 
 [convert]
 autoRotate = "Автоматично завъртане"
@@ -2728,6 +2786,15 @@ webOptions = "Опции за Уеб към PDF"
 wordDoc = "Word документ"
 wordDocExt = "Word документ (.docx)"
 zoomLevel = "Ниво на мащабиране"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "Електронна книга → PDF"
+emlToPdf = "Имейл → PDF"
+fileToPdf = "Офис/Документ → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "Опции за eBook към PDF"
@@ -3718,6 +3785,11 @@ desc = "Добавя подпис към PDF чрез рисунка, текст
 tags = "подпис,автограф"
 title = "Подпишете"
 
+[home.timestampPdf]
+desc = "Добавете времеви печат по RFC 3161 към документа, за да докажете кога вашият PDF е съществувал"
+tags = "времеви печат,RFC 3161,TSA,орган за времеви печати,времеви печат на документ,доказателство за съществуване,токен за времеви печат,доверен времеви печат,подпис с времеви печат,нотариална заверка"
+title = "Времеви печат на PDF"
+
 [home.split]
 desc = "Разделяне на PDF файлове на множество документи"
 tags = "разделяне,отделяне,разбиване"
@@ -3854,6 +3926,7 @@ version = "Версия"
 accountCreatedSuccess = "Акаунтът е създаден успешно! Сега можете да влезете."
 alreadyLoggedIn = "Вече сте влезли в"
 alreadyLoggedIn2 = "устройства. Моля, излезте от устройствата и опитайте отново."
+backToSignIn = "Назад към входа"
 cancel = "Отказ"
 changePasswordWarning = "Моля, сменете паролата си след първото влизане"
 credentialsUpdated = "Данните ви за вход бяха обновени. Моля, влезте отново."
@@ -3895,16 +3968,21 @@ or = "Или"
 password = "Парола"
 passwordChangedSuccess = "Паролата е променена успешно! Моля, влезте с новата парола."
 passwordResetSent = "Връзка за нулиране на парола е изпратена до {{email}}! Проверете пощата си и следвайте указанията."
+passwordUpdatedSuccess = "Паролата ви беше успешно актуализирана."
 pleaseEnterBoth = "Моля, въведете имейл и парола"
 pleaseEnterEmail = "Моля, въведете вашия имейл адрес"
 relyingPartyRegistrationNotFound = "Не е открита регистрация на доверяваща се страна"
 rememberme = "Запомни ме"
+resetHelp = "Въведете имейла си, за да получите защитен линк за нулиране на паролата. Ако линкът е изтекъл, поискайте нов."
+resetYourPassword = "Нулиране на паролата"
 saml2RequiresLicense = "Вход със SAML изисква платен лиценз (Server или Enterprise). Моля, свържете се с администратора, за да надстроите плана си."
 sending = "Изпращане…"
 sendMagicLink = "Изпрати магическа връзка"
+sendResetLink = "Изпращане на линк за нулиране"
 sessionExpired = "Сесията ви е изтекла. Моля, влезте отново."
 signin = "Впишете се"
 signInAnonymously = "Влез като гост"
+subtitle = "Влезте отново в Stirling PDF"
 signingIn = "Влизане..."
 signinTitle = "Моля впишете се"
 signInWith = "Вход с"
@@ -3913,6 +3991,7 @@ ssoSignIn = "Влизане чрез еднократно влизане"
 title = "Вход"
 toManySessions = "Имате твърде много активни сесии"
 unexpectedError = "Неочаквана грешка: {{message}}"
+updatePassword = "Актуализиране на парола"
 useEmailInstead = "Вход с имейл"
 useMagicLink = "Използвай магическа връзка"
 userIsDisabled = "Потребителят е деактивиран, влизането в момента е блокирано с това потребителско име. Моля, свържете се с администратора."
@@ -4222,6 +4301,15 @@ viewSwitcher = "Използвайте тези контроли, за да из
 workbench = "Това е <strong>Работната зона</strong> – основната област, където преглеждате и редактирате вашите PDF файлове."
 wrapUp = "Готови сте! Научихте за основните области на приложението и как да ги използвате. Кликнете бутона <strong>Помощ</strong> по всяко време, за да видите обиколката отново."
 
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "След края на пробния период ще продължите с безплатния ни план. Добавете начин на плащане, за да запазите достъпа до Pro."
+afterTrialWithPayment = "Вашият Pro абонамент ще започне автоматично след края на пробния период."
+body = "По време на пробния период имате пълен достъп до функциите на Stirling PDF Pro. Насладете се на неограничени конверсии, по-големи размери на файлове и приоритетна обработка."
+daysRemaining = "Остават {{days}} дни"
+daysRemainingSingular = "Остава {{days}} ден"
+title = "Вашият 30-дневен Pro пробен период"
+trialEnds = "Пробният период завършва на {{date}}"
+
 [onboarding.buttons]
 back = "Назад"
 download = "Изтегли →"
@@ -4392,6 +4480,31 @@ loading = "Зареждане на прикачени файлове..."
 empty = "В този документ няма прикачени файлове"
 noMatch = "Няма прикачени файлове, отговарящи на търсенето ви"
 
+[viewer.comments]
+title = "Коментари"
+hint = "Добавяйте коментари с инструментите Коментар, Вмъкване на текст или Замяна на текст. Те ще се показват тук по страници."
+placeholder = "Въведете коментара си..."
+pageLabel = "Страница {{page}}"
+oneComment = "1 коментар"
+nComments = "{{count}} коментара"
+addCommentPlaceholder = "Добавяне на коментар..."
+addLink = "Добавяне на връзка"
+goToLink = "Към връзката"
+addComment = "Добавяне на коментар"
+viewComment = "Преглед на коментар"
+addReplyPlaceholder = "Добавяне на отговор..."
+saveReply = "Запис на отговора"
+send = "Изпращане"
+moreActions = "Още действия"
+typeComment = "Коментар"
+typeInsertText = "Вмъкване на текст"
+typeReplaceText = "Замяна на текст"
+locateAnnotation = "Намиране в документа"
+deleteTitle = "Да се премахне ли анотацията от коментарите?"
+deleteDescription = "Тази анотация има прикачен коментар. Можете да премахнете само коментара от страничната лента и да запазите анотацията или да изтриете всичко."
+removeCommentOnly = "Премахване само на коментара"
+deleteAnnotationAndComment = "Изтриване на анотация и коментар"
+
 [viewer.formBar]
 title = "Полета на формуляра"
 unsavedBadge = "Незаписани"
@@ -4425,14 +4538,20 @@ rotateLeft = "Завърти наляво"
 rotateRight = "Завърти надясно"
 toggleSidebar = "Показване/скриване на страничната лента"
 toggleBookmarks = "Превключи отметките"
+toggleComments = "Коментари"
 print = "Печат на PDF"
 ruler = "Линийка / Измерване"
+readAloud = "Четене на глас"
+readAloudSpeed = "Скорост"
+readAloudLanguage = "Език"
+selectLanguage = "Изберете език"
 draw = "Рисуване"
 redact = "Заличаване"
 exitRedaction = "Изход от режим на заличаване"
 save = "Запази"
 downloadAll = "Изтегли всички"
 saveAll = "Запази всички"
+saveAs = "Запазване като"
 
 [textAlign]
 left = "Ляво"
@@ -4447,21 +4566,132 @@ title = "Извличане на страници"
 
 [pageLayout]
 addBorder = "Добавяне на граници"
+borderWidth = "Дебелина на рамката"
+bottom = "Долен отстъп"
+cols = "Колони"
 header = "Оформление на няколко страници"
+innerMargin = "Вътрешен отстъп"
+left = "Ляв отстъп"
 pagesPerSheet = "Страници на лист:"
+right = "Десен отстъп"
+rows = "Редове"
 submit = "Подайте"
 tags = "сливане,комбиниран,единичен изглед,организиране"
 title = "Многостранично оформление"
+top = "Горен отстъп"
+
+[pageLayout.mode]
+default = "По подразбиране"
+custom = "Персонализиран"
+label = "Режим:"
+
+[pageLayout.arrangement]
+byColumns = "По колони"
+byRows = "По редове"
+label = "Подредба на страницата:"
 
 [pageLayout.desc]
 16 = "Поставете 16 страници на един лист (решетка 4 × 4)."
 2 = "Поставете 2 страници една до друга на един лист."
-3 = "Поставете 3 страници на един лист в един ред."
 4 = "Поставете 4 страници на един лист (решетка 2 × 2)."
 9 = "Поставете 9 страници на един лист (решетка 3 × 3)."
 
 [pageLayout.error]
 failed = "Възникна грешка при създаване на многопейджовото разположение."
+outerVerticalMarginsTooLarge = "Горният/долният отстъп са твърде големи за този размер страница."
+outerHorizontalMarginsTooLarge = "Левият/десният отстъп са твърде големи за този размер страница."
+innerMarginTooLarge = "Вътрешният отстъп е твърде голям за избраната подредба."
+
+[pageLayout.orientation]
+landscape = "Хоризонтална"
+portrait = "Вертикална"
+label = "Ориентация:"
+
+[pageLayout.readingDirection]
+ltr = "Отляво надясно"
+rtl = "Отдясно наляво"
+label = "Посока на четене:"
+
+[pageLayout.tooltip.header]
+title = "Ръководство за оформление на страница"
+
+[pageLayout.tooltip.overview]
+title = "Какво е оформление на страница?"
+text = "Поберете няколко страници на един лист за раздаване или за пестене на хартия."
+
+[pageLayout.tooltip.mode]
+title = "Режим"
+text = "Изберете как да бъде конфигурирана мрежата:"
+bullet1 = "По подразбиране: Изберете готова настройка и мрежата се изчислява автоматично."
+bullet2 = "Персонализиран: Задайте редове и колони ръчно."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Страници на лист (режим по подразбиране)"
+text = "Изберете колко страници на лист (напр. 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Редове и колони (персонализиран режим)"
+text = "Задайте точните размери на мрежата. Общо страници на лист = редове × колони."
+
+[pageLayout.tooltip.orientation]
+title = "Ориентация"
+text = "Задава ориентацията на изходния лист:"
+bullet1 = "Вертикална: По-висока от широка."
+bullet2 = "Хоризонтална: По-широка от висока."
+
+[pageLayout.tooltip.arrangement]
+title = "Подредба на страници"
+text = "Контролира реда, по който страниците запълват мрежата:"
+bullet1 = "По редове: Запълване ред по ред (отляво надясно или отдясно наляво)."
+bullet2 = "По колони: Запълване отгоре надолу, колона по колона."
+
+[pageLayout.tooltip.readingDirection]
+title = "Посока на четене"
+text = "Определя хоризонталния ред на страниците:"
+bullet1 = "LTR: Отляво надясно."
+bullet2 = "RTL: Отдясно наляво."
+
+[pageLayout.tooltip.addBorder]
+title = "Добавяне на рамки"
+text = "Чертае линии на рамки около всяка клетка на страницата за ръководство при изрязване или визуално разграничаване."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Отстъпи и рамки"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Отстъпи"
+text = "Използвайте горен, долен, ляв и десен отстъп, за да контролирате отстоянията около целия изходен лист."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Вътрешен отстъп"
+text = "Вътрешният отстъп добавя разстояние между клетките в мрежата на страницата за по-добро разграничаване и четимост."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Добавяне на рамки"
+text = "Активирайте рамки, за да се чертаят линии около всяка поставена страница. Това помага за визуално разделяне или изрязване."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Дебелина на рамката"
+text = "Дебелината на рамката се прилага само когато рамките са активирани. По-високите стойности създават по-дебели линии."
+
+[pageLayout.advanced.tooltip.header]
+title = "Разширени опции за оформление"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Ориентация"
+text = "Изберете ориентацията на крайния лист. Вертикалната е по-подходяща за високо съдържание, а хоризонталната — за по-широки оформления."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Подредба на страници"
+text = "Определя дали страниците запълват мрежата по редове или по колони."
+bullet1 = "По редове: Първо се запълва всеки ред."
+bullet2 = "По колони: Първо се запълва всяка колона."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Посока на четене"
+text = "Задава хоризонталното подреждане в мрежата; полезно за стандарти отляво надясно и отдясно наляво."
+bullet1 = "LTR: Ред отляво надясно."
+bullet2 = "RTL: Ред отдясно наляво."
 
 [pageRemover]
 header = "Премахване на PDF страници"
@@ -4977,7 +5207,10 @@ perMonth = "/месец"
 perSeat = "/място"
 popular = "Популярен"
 selectPlan = "Избери план"
+selectCredits = "Изберете брой кредити"
 showComparison = "Сравни всички функции"
+purchase = "Покупка"
+totalCost = "Обща цена"
 upgrade = "Надгради"
 withServer = "+ Server план"
 
@@ -5068,6 +5301,30 @@ successMessage = "Лицензът ви беше активиран успешн
 [plan.team]
 name = "Team"
 siteLicense = "Лиценз за сайт"
+
+[plan.api]
+large = "5 000 кредита"
+medium = "1 000 кредита"
+small = "500 кредита"
+xsmall = "100 кредита"
+
+[plan.apiPackages]
+subtitle = "Закупете API кредити за вашите приложения"
+title = "Пакети с API кредити"
+
+[plan.trial]
+badge = "Пробен период"
+continueWithFree = "Продължаване с безплатния план"
+daysRemaining = "Пробният период изтича след {{days}} дни"
+endDate = "Изтича на: {{date}}"
+expired = "Пробният ви период приключи"
+expiredMessage = "Вашият 30-дневен Pro пробен период е изтекъл. Абонирайте се за Pro, за да продължите да ползвате премиум функциите, или продължете с безплатния ни план."
+freeTierLimitations = "Безплатният план включва основни PDF инструменти с ограничения за ползване."
+message = ""
+subscribe = "Абонирайте се за Pro"
+subscribeToPro = "Абонирайте се за Pro"
+subscriptionScheduled = "Абонаментът е планиран — започва на {{date}}"
+title = "Активен безплатен пробен период"
 
 [credits]
 enableOverageBilling = "Активирай таксуване за надвишаване"
@@ -5631,6 +5888,32 @@ text = "Завъртете страниците на вашия PDF по или 
 [rotate.tooltip.header]
 title = "Преглед на настройките за завъртане"
 
+[timestampPdf]
+completed = "Времевият печат е приложен успешно към PDF"
+desc = "Добавете времеви печат по RFC 3161 към PDF с помощта на надежден сървър на орган за времеви печати (TSA)."
+filenamePrefix = "timestamped"
+results = "Резултати от времевия печат"
+submit = "Прилагане на времеви печат"
+title = "Времеви печат на PDF"
+
+[timestampPdf.error]
+failed = "Възникна грешка при прилагане на времевия печат към PDF."
+generic = "Неуспешен времеви печат"
+
+[timestampPdf.files]
+placeholder = "Изберете PDF файл в основния изглед, за да започнете"
+
+[timestampPdf.options]
+note = "Към сървъра на TSA се изпраща само SHA-256 хеш на вашия документ; самият PDF файл никога не се изпраща."
+title = "Сървър за времеви печати (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Изберете доверен орган за времеви печати"
+label = "Изберете TSA сървър"
+
+[timestampPdf.steps]
+settings = "Настройки"
+
 [sanitize]
 completed = "Санирането завърши успешно"
 desc = "Премахнете потенциално вредни елементи от PDF файлове."
@@ -5755,6 +6038,14 @@ placeholder = "Въведете търсен термин..."
 searching = "Търсене..."
 title = "Търсене в PDF"
 
+[selfHosted.offline]
+hideTools = "Скриване на недостъпните инструменти ▴"
+messageNoFallback = "Инструментите са недостъпни, докато вашият сървър не се върне онлайн."
+messageWithFallback = "Някои инструменти изискват връзка със сървър."
+showTools = "Показване на недостъпните инструменти ▾"
+title = "Вашият Stirling-PDF сървър е недостъпен"
+toolNotAvailableLocally = "Вашият Stirling-PDF сървър е офлайн и „{{endpoint}}“ не е наличен в локалния бекенд."
+
 [session]
 expired = "Вашата сесия е изтекла. Моля, опреснете страницата и опитайте отново."
 refreshPage = "Презареждане на страницата"
@@ -5768,12 +6059,15 @@ systemSettings = "Системни настройки"
 title = "Конфигурация"
 
 [settings.connection]
+localDescription = "Използвате локалния бекенд без акаунт. Някои инструменти, изискващи облачна обработка или самостоятелно хостван сървър, не са налични."
 logout = "Изход"
 server = "Сървър"
+signIn = "Вход"
 title = "Режим на свързване"
 user = "Влезли сте като"
 
 [settings.connection.mode]
+local = "Само локално"
 saas = "Stirling Cloud"
 selfhosted = "Самостоятелно хостван"
 
@@ -5931,6 +6225,9 @@ title = "Политики и поверителност"
 [settings.preferences]
 title = "Предпочитания"
 
+[settings.search]
+placeholder = "Търсене в страниците с настройки..."
+
 [settings.security]
 description = "Актуализирайте паролата си, за да запазите акаунта си защитен."
 title = "Сигурност"
@@ -5968,6 +6265,18 @@ title = "Работно пространство"
 [settings.team]
 title = "Team"
 
+[localMode]
+toolUnavailable = "Този инструмент изисква акаунт. Влезте в Stirling Cloud или се свържете със самостоятелно хостван сървър, за да го използвате."
+
+[localMode.banner]
+message = "Влезте, за да отключите всички инструменти."
+signIn = "Вход"
+title = "Работа локално"
+
+[localMode.toolPicker]
+message = "Влезте, за да отключите всички инструменти."
+signIn = "Вход"
+
 [setup]
 description = "Започнете, като изберете как искате да използвате Stirling PDF"
 welcome = "Добре дошли в Stirling PDF"
@@ -5975,6 +6284,7 @@ welcome = "Добре дошли в Stirling PDF"
 [setup.login]
 connectingTo = "Свързване към:"
 hideInstructions = "Скрий инструкциите"
+skipSignIn = "Продължаване без влизане"
 instructions = "За да активирате вход на вашия Stirling PDF сървър:"
 instructionsEnvVar = "Задайте променливата на средата:"
 instructionsOrYml = "Или в settings.yml:"
@@ -6022,7 +6332,14 @@ title = "Впишете се в Stirling"
 [setup.selfhosted]
 link = "или се свържете със самостоятелно хостван акаунт"
 subtitle = "Въведете своите данни за сървъра"
+switchToLocal = "Използване на локалните инструменти"
 title = "Впишете се в сървъра"
+
+[setup.selfhosted.unreachable]
+continueOffline = "Използване на локалните инструменти"
+message = "Не може да се осъществи достъп до {{url}}. Проверете дали сървърът работи и е достъпен."
+retry = "Повторен опит"
+title = "Неуспешна връзка със сървъра"
 
 [setup.server]
 subtitle = "Въведете URL на самостоятелно хоствания си сървър"
@@ -6032,6 +6349,7 @@ useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "Неуспешно извличане на конфигурацията на сървъра. Моля, проверете URL адреса и опитайте отново."
+configFetchError = "Грешка при извличане на конфигурацията на сървъра: {{error}}"
 emptyUrl = "Моля, въведете URL на сървър"
 invalidUrl = "Невалиден формат на URL. Въведете валиден URL като https://your-server.com"
 testFailed = "Тестът на връзката е неуспешен"
@@ -6557,6 +6875,7 @@ favorites = "Любими"
 heading = "Всички инструменти (изглед на цял екран)"
 noResults = "Опитайте да коригирате търсенето или превключете описанията, за да намерите нужното."
 recommended = "Препоръчително"
+selfHostedOffline = "Изисква вашия Stirling-PDF сървър (в момента офлайн):"
 showDetails = "Показване на подробности"
 unavailable = "Деактивирано от администратор на сървъра:"
 unavailableDependency = "Недостъпно – липсва необходим инструмент на сървъра:"
@@ -6601,6 +6920,12 @@ pageFormatting = "Форматиране на страници"
 removal = "Премахване"
 signing = "Подписване"
 verification = "Проверка"
+
+[tool]
+endpointUnavailable = "Този инструмент не е наличен на вашия сървър."
+endpointUnavailableClickable = "Недостъпен в този режим. Щракнете, за да влезете."
+invalidParams = "Попълнете необходимите настройки."
+noFiles = "Добавете файл, за да започнете."
 
 [tools]
 noSearchResults = "Няма намерени инструменти"

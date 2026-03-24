@@ -142,6 +142,10 @@ welcome = "Dobrodošli"
 white = "Belo"
 WorkInProgess = "Radovi u toku, možda neće raditi ili će biti grešaka, molimo prijavite sve probleme !"
 yes = "Da"
+insufficientCredits = "Nedovoljno kredita. Potrebno: {{requiredCredits}}, Dostupno: {{currentBalance}}, Manjak: {{shortfall}}"
+loadingCredits = "Provera kredita..."
+loadingProStatus = "Provera statusa pretplate..."
+noticeTopUpOrPlan = "Nedovoljno kredita, dopunite ili pređite na plan"
 
 [account]
 accountSettings = "Podešavanja naloga"
@@ -1513,6 +1517,7 @@ editStampHint = "Da biste promenili sliku, obrišite ovaj pečat i dodajte novi.
 editSwitchToSelect = "Prebacite se na Izaberi i uredi da biste uredili ovu anotaciju."
 editText = "Uredi tekstualni okvir"
 editTextMarkup = "Uredi označavanje teksta"
+annotationStyle = "Stil anotacije"
 ellipse = "Elipsa"
 exit = "Izađi iz režima anotiranja"
 fillColor = "Boja popune"
@@ -1523,13 +1528,19 @@ highlight = "Istakni"
 imagePreview = "Pregled"
 inkHighlighter = "Ručni marker"
 line = "Linija"
+lineArrow = "Strelica"
 noBackground = "Bez pozadine"
 note = "Beleška"
+comment = "Komentar"
+comments = "Komentari"
+insertText = "Umetni tekst"
+replaceText = "Zameni tekst"
 noteIcon = "Ikona beleške"
 notesStamps = "Beleške i pečati"
 opacity = "Neprozirnost"
 pen = "Olovka"
 polygon = "Poligon"
+polyline = "Polilinija"
 properties = "Svojstva"
 rectangle = "Pravougaonik"
 redo = "Ponovi"
@@ -2574,10 +2585,48 @@ title = "Podešavanje kvaliteta"
 [compressPdfs]
 tags = "smanji,mali,minijaturni"
 
+[config]
+plan = "Plan"
+
 [config.account.overview]
+confirmDelete = "Obriši moj nalog"
+deleteAccount = "Obriši nalog"
+deleteAccountTitle = "Obriši nalog"
+deleteFailed = "Brisanje naloga nije uspelo."
+deleteFailedTitle = "Nije moguće obrisati nalog"
+deleteWarning = "Ova radnja je trajna i ne može se poništiti. Svi vaši podaci biće obrisani."
+enterEmailConfirm = "Da biste potvrdili brisanje, unesite svoju adresu e-pošte ({{email}}) ispod:"
 guestDescription = "Prijavljeni ste kao gost. Razmislite o nadogradnji naloga iznad."
+label = "Pregled"
 manageAccountPreferences = "Upravljajte postavkama naloga"
+signedInAs = "Prijavljeni kao"
 title = "Podešavanja naloga"
+
+[config.account.profilePicture]
+description = "Otpremite sliku da personalizujete svoj nalog."
+help = "PNG, JPG ili WebP do 2 MB."
+remove = "Ukloni"
+sizeError = "Izaberite sliku manju od 2 MB."
+switchedToCustom = "Prebačeno na prilagođenu sliku. Sada možete otpremiti svoju."
+title = "Profilna slika"
+upload = "Otpremi"
+useCustom = "Koristi prilagođenu sliku"
+usingProvider = "Koristi se profilna slika sa {{provider}}"
+
+[config.account.profilePicture.cropper]
+cropError = "Isecanje slike nije uspelo. Pokušajte ponovo."
+invalidImage = "Neispravna slikovna datoteka. Izaberite važeću PNG, JPG ili WebP datoteku."
+processing = "Obrada isecanja..."
+save = "Sačuvaj isečenu sliku"
+sizeErrorAfterCrop = "Isečena slika je prevelika. Umanjite ili isecite manju oblast."
+title = "Iseci profilnu sliku"
+zoom = "Zum"
+
+[config.account.security]
+changePassword = "Promeni lozinku"
+description = "Upravljajte lozinkom i bezbednosnim podešavanjima."
+title = "Lozinke i bezbednost"
+update = "Ažuriraj lozinku"
 
 [config.account.upgrade]
 description = "Povežite nalog da sačuvate istoriju i pristupite više funkcija!"
@@ -2595,6 +2644,7 @@ upgradeButton = "Nadogradi nalog"
 [config.apiKeys]
 chartAriaLabel = "Upotreba kredita: uključeno {{includedUsed}} od {{includedTotal}}, kupljeno {{purchasedUsed}} od {{purchasedTotal}}"
 copyKeyAriaLabel = "Kopiraj API ključ"
+creditsRemaining = "Preostali krediti"
 description = "Vaš API ključ za pristup Stirlingovom paketu PDF alata. Kopirajte ga u svoj projekat ili osvežite da generišete novi."
 docsDescription = "Saznajte više o integraciji sa Stirling PDF:"
 docsLink = "API dokumentacija"
@@ -2643,6 +2693,14 @@ basic = "Osnovna konfiguracija"
 integration = "Konfiguracija integracije"
 security = "Bezbednosna konfiguracija"
 system = "Sistemska konfiguracija"
+
+[connectionMode.status]
+localOffline = "Režim van mreže je aktivan"
+localOnline = "Režim van mreže je aktivan"
+saas = "Povezano sa Stirling Cloud"
+selfhostedChecking = "Povezano na samohostovani server (provera...)"
+selfhostedOffline = "Samohostovani server je nedostupan"
+selfhostedOnline = "Povezano na samohostovani server"
 
 [convert]
 autoRotate = "Automatska rotacija"
@@ -2728,6 +2786,15 @@ webOptions = "Veb u PDF opcije"
 wordDoc = "Word dokument"
 wordDocExt = "Word dokument (.docx)"
 zoomLevel = "Nivo zumiranja"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "e-knjiga → PDF"
+emlToPdf = "E-pošta → PDF"
+fileToPdf = "Office/Dokument → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "Opcije za eBook u PDF"
@@ -3718,6 +3785,11 @@ desc = "Dodaje potpis u PDF crtežom, tekstom ili slikom"
 tags = "potpis,autogram"
 title = "Potpis"
 
+[home.timestampPdf]
+desc = "Dodajte vremensku oznaku dokumenta prema RFC 3161 da dokažete kada je vaš PDF postojao"
+tags = "vremenska oznaka,RFC 3161,TSA,autoritet vremenske oznake,vremenska oznaka dokumenta,dokaz postojanja,token vremenske oznake,pouzdana vremenska oznaka,potpis vremenske oznake,notarizacija"
+title = "Vremenska oznaka PDF-a"
+
 [home.split]
 desc = "Razdvojite PDF-ove u više dokumenata"
 tags = "podeli,razdvoji,razbij"
@@ -3854,6 +3926,7 @@ version = "Verzija"
 accountCreatedSuccess = "Nalog je uspešno kreiran! Sada se možete prijaviti."
 alreadyLoggedIn = "Već si prijavljen na"
 alreadyLoggedIn2 = "uređaja. Odjavi se sa uređaja i pokušaj ponovo."
+backToSignIn = "Nazad na prijavu"
 cancel = "Otkaži"
 changePasswordWarning = "Promenite lozinku nakon prve prijave"
 credentialsUpdated = "Vaši prijavni podaci su ažurirani. Prijavite se ponovo."
@@ -3895,16 +3968,21 @@ or = "Ili"
 password = "Lozinka"
 passwordChangedSuccess = "Lozinka je uspešno promenjena! Prijavite se novom lozinkom."
 passwordResetSent = "Link za resetovanje lozinke poslat na {{email}}! Proverite e-mail i sledite uputstva."
+passwordUpdatedSuccess = "Lozinka je uspešno ažurirana."
 pleaseEnterBoth = "Unesite i e-mail i lozinku"
 pleaseEnterEmail = "Unesite svoju e-mail adresu"
 relyingPartyRegistrationNotFound = "Nije pronađena registracija partnerske strane"
 rememberme = "Zapamti me"
+resetHelp = "Unesite svoju e-poštu da biste dobili bezbedan link za resetovanje lozinke. Ako je link istekao, zatražite novi."
+resetYourPassword = "Resetujte lozinku"
 saml2RequiresLicense = "Prijava putem SAML zahteva plaćenu licencu (Server ili Enterprise). Kontaktirajte administratora da unapredi vaš plan."
 sending = "Slanje…"
 sendMagicLink = "Pošalji magični link"
+sendResetLink = "Pošalji link za resetovanje"
 sessionExpired = "Vaša sesija je istekla. Prijavite se ponovo."
 signin = "Prijavite se"
 signInAnonymously = "Prijava kao gost"
+subtitle = "Ponovo se prijavite na Stirling PDF"
 signingIn = "Prijavljivanje..."
 signinTitle = "Molimo vas da se prijavite"
 signInWith = "Prijavite se pomoću"
@@ -3913,6 +3991,7 @@ ssoSignIn = "Prijavite se putem jedinstvene prijave"
 title = "Prijavite se"
 toManySessions = "Imaš previše aktivnih sesija"
 unexpectedError = "Neočekivana greška: {{message}}"
+updatePassword = "Ažuriraj lozinku"
 useEmailInstead = "Prijava pomoću e-maila"
 useMagicLink = "Umesto toga koristite magični link"
 userIsDisabled = "Korisnik deaktiviran, prijava sa ovim korisničkim imenom je trenutno blokirana. Kontaktiraj administratora."
@@ -4222,6 +4301,15 @@ viewSwitcher = "Koristite ove kontrole da izaberete kako želite da pregledate s
 workbench = "Ovo je <strong>Workbench</strong> - glavno područje gde pregledate i uređujete svoje PDF-ove."
 wrapUp = "Spremni ste! Naučili ste o glavnim delovima aplikacije i kako da ih koristite. Kliknite na dugme <strong>Pomoć</strong> kada god želite da ponovo vidite ovu turu."
 
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "Nakon isteka probe, nastavićete sa besplatnim nivoom. Dodajte način plaćanja da biste zadržali Pro pristup."
+afterTrialWithPayment = "Vaša Pro pretplata će automatski početi po završetku probe."
+body = "Tokom probnog perioda imate potpuni pristup Stirling PDF Pro funkcijama. Uživajte u neograničenim konverzijama, većim veličinama datoteka i prioritetnoj obradi."
+daysRemaining = "{{days}} dana preostalo"
+daysRemainingSingular = "{{days}} dan preostao"
+title = "Vaš 30-dnevni Pro probni period"
+trialEnds = "Probni period se završava {{date}}"
+
 [onboarding.buttons]
 back = "Nazad"
 download = "Preuzmi →"
@@ -4392,6 +4480,31 @@ loading = "Učitavanje priloga..."
 empty = "Nema priloga u ovom dokumentu"
 noMatch = "Nijedan prilog ne odgovara vašoj pretrazi"
 
+[viewer.comments]
+title = "Komentari"
+hint = "Postavite komentare pomoću alata Komentar, Umetni tekst ili Zameni tekst. Ovde će se prikazivati po stranici."
+placeholder = "Unesite komentar..."
+pageLabel = "Stranica {{page}}"
+oneComment = "1 komentar"
+nComments = "{{count}} komentara"
+addCommentPlaceholder = "Dodaj komentar..."
+addLink = "Dodaj link"
+goToLink = "Idi na link"
+addComment = "Dodaj komentar"
+viewComment = "Prikaži komentar"
+addReplyPlaceholder = "Dodaj odgovor..."
+saveReply = "Sačuvaj odgovor"
+send = "Pošalji"
+moreActions = "Više radnji"
+typeComment = "Komentar"
+typeInsertText = "Umetni tekst"
+typeReplaceText = "Zameni tekst"
+locateAnnotation = "Pronađi u dokumentu"
+deleteTitle = "Ukloniti anotaciju iz komentara?"
+deleteDescription = "Ovoj anotaciji je pridružen komentar. Možete ukloniti samo komentar iz bočne trake i zadržati anotaciju ili obrisati sve."
+removeCommentOnly = "Ukloni samo komentar"
+deleteAnnotationAndComment = "Obriši anotaciju i komentar"
+
 [viewer.formBar]
 title = "Polja formulara"
 unsavedBadge = "Nesačuvano"
@@ -4425,14 +4538,20 @@ rotateLeft = "Rotiraj ulevo"
 rotateRight = "Rotiraj udesno"
 toggleSidebar = "Uključi/isključi bočnu traku"
 toggleBookmarks = "Prikaži/sakrij obeleživače"
+toggleComments = "Komentari"
 print = "Štampaj PDF"
 ruler = "Lenjir / Merenje"
+readAloud = "Čitanje naglas"
+readAloudSpeed = "Brzina"
+readAloudLanguage = "Jezik"
+selectLanguage = "Izaberite jezik"
 draw = "Crtaj"
 redact = "Zacrni"
 exitRedaction = "Izađi iz režima zacrnjivanja"
 save = "Sačuvaj"
 downloadAll = "Preuzmi sve"
 saveAll = "Sačuvaj sve"
+saveAs = "Sačuvaj kao"
 
 [textAlign]
 left = "Levo"
@@ -4447,21 +4566,132 @@ title = "Izdvajanje stranica"
 
 [pageLayout]
 addBorder = "Dodaj ivice"
+borderWidth = "Debljina okvira"
+bottom = "Donja margina"
+cols = "Kolone"
 header = "Višestruki Raspored Stranica"
+innerMargin = "Unutrašnja margina"
+left = "Leva margina"
 pagesPerSheet = "Stranica po listu:"
+right = "Desna margina"
+rows = "Redovi"
 submit = "Potvrdi"
 tags = "spajanje,kompozit,pojedinačan-prikaz,organizacija"
 title = "Višestruki Raspored Stranica"
+top = "Gornja margina"
+
+[pageLayout.mode]
+default = "Podrazumevano"
+custom = "Prilagođeno"
+label = "Režim:"
+
+[pageLayout.arrangement]
+byColumns = "Po kolonama"
+byRows = "Po redovima"
+label = "Raspored stranica:"
 
 [pageLayout.desc]
 16 = "Postavite 16 stranica na jedan list (mreža 4 × 4)."
 2 = "Postavite 2 stranice jedna pored druge na jedan list."
-3 = "Postavite 3 stranice na jedan list u jednom redu."
 4 = "Postavite 4 stranice na jedan list (mreža 2 × 2)."
 9 = "Postavite 9 stranica na jedan list (mreža 3 × 3)."
 
 [pageLayout.error]
 failed = "Došlo je do greške prilikom kreiranja rasporeda više stranica."
+outerVerticalMarginsTooLarge = "Gornje/donje margine su prevelike za ovu veličinu stranice."
+outerHorizontalMarginsTooLarge = "Leve/desne margine su prevelike za ovu veličinu stranice."
+innerMarginTooLarge = "Unutrašnja margina je prevelika za izabrani raspored."
+
+[pageLayout.orientation]
+landscape = "Pejzaž"
+portrait = "Portret"
+label = "Orijentacija:"
+
+[pageLayout.readingDirection]
+ltr = "S leva na desno"
+rtl = "S desna na levo"
+label = "Smer čitanja:"
+
+[pageLayout.tooltip.header]
+title = "Vodič za raspored stranica"
+
+[pageLayout.tooltip.overview]
+title = "Šta je raspored stranica?"
+text = "Složite više strana na jedan list za materijale ili radi uštede papira."
+
+[pageLayout.tooltip.mode]
+title = "Režim"
+text = "Izaberite kako je mreža podešena:"
+bullet1 = "Podrazumevano: Izaberite unapred podešen raspored i mreža se računa automatski."
+bullet2 = "Prilagođeno: Ručno postavite redove i kolone."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Stranica po listu (podrazumevani režim)"
+text = "Izaberite koliko stranica po listu (npr. 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Redovi i kolone (prilagođeni režim)"
+text = "Postavite tačne dimenzije mreže. Ukupno stranica po listu = redovi × kolone."
+
+[pageLayout.tooltip.orientation]
+title = "Orijentacija"
+text = "Postavlja orijentaciju izlaznog lista:"
+bullet1 = "Portret: Veća visina od širine."
+bullet2 = "Pejzaž: Veća širina od visine."
+
+[pageLayout.tooltip.arrangement]
+title = "Raspored stranica"
+text = "Kontroliše redosled kojim stranice popunjavaju mrežu:"
+bullet1 = "Po redovima: Popunjavaj red po red (s leva na desno ili s desna na levo)."
+bullet2 = "Po kolonama: Popunjavaj od vrha ka dnu, kolonu po kolonu."
+
+[pageLayout.tooltip.readingDirection]
+title = "Smer čitanja"
+text = "Kontroliše horizontalni redosled stranica:"
+bullet1 = "LTR: S leva na desno."
+bullet2 = "RTL: S desna na levo."
+
+[pageLayout.tooltip.addBorder]
+title = "Dodaj okvire"
+text = "Iscrtava linije okvira oko svake ćelije stranice za rezne vodiče ili vizuelno razdvajanje."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Margine i okviri"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Margine"
+text = "Koristite gornju, donju, levu i desnu marginu za razmak oko celog izlaznog lista."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Unutrašnja margina"
+text = "Unutrašnja margina dodaje razmak između ćelija u mreži stranica radi boljeg razdvajanja i čitljivosti."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Dodaj okvire"
+text = "Uključite okvire da biste iscrtali linije oko svake postavljene stranice. Ovo može pomoći vizuelnom razdvajanju ili obrezivanju."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Debljina okvira"
+text = "Debljina okvira se primenjuje samo kada su okviri omogućeni. Veće vrednosti daju deblje linije."
+
+[pageLayout.advanced.tooltip.header]
+title = "Napredne opcije rasporeda"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Orijentacija"
+text = "Izaberite konačnu orijentaciju lista. Portret je bolji za uspravan sadržaj, dok pejzaž odgovara širim rasporedima."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Raspored stranica"
+text = "Kontroliše da li stranice popunjavaju mrežu red-po-red ili kolona-po-kolona."
+bullet1 = "Po redovima: Prvo popunjavaj svaki red."
+bullet2 = "Po kolonama: Prvo popunjavaj svaku kolonu."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Smer čitanja"
+text = "Postavlja horizontalni redosled u mreži, korisno za konvencije čitanja s leva na desno i s desna na levo."
+bullet1 = "LTR: Redosled s leva na desno."
+bullet2 = "RTL: Redosled s desna na levo."
 
 [pageRemover]
 header = "Uklanjanje stranica iz PDF-a"
@@ -4977,7 +5207,10 @@ perMonth = "/mesec"
 perSeat = "/mesto"
 popular = "Popularno"
 selectPlan = "Izaberi plan"
+selectCredits = "Izaberite količinu kredita"
 showComparison = "Uporedi sve funkcije"
+purchase = "Kupi"
+totalCost = "Ukupna cena"
 upgrade = "Nadogradi"
 withServer = "+ Server plan"
 
@@ -5068,6 +5301,30 @@ successMessage = "Vaša licenca je uspešno aktivirana. Sada možete zatvoriti o
 [plan.team]
 name = "Team"
 siteLicense = "Licenca za organizaciju"
+
+[plan.api]
+large = "5.000 kredita"
+medium = "1.000 kredita"
+small = "500 kredita"
+xsmall = "100 kredita"
+
+[plan.apiPackages]
+subtitle = "Kupite API kredite za svoje aplikacije"
+title = "API paketi kredita"
+
+[plan.trial]
+badge = "Proba"
+continueWithFree = "Nastavite sa besplatnim"
+daysRemaining = "Vaš probni period se završava za {{days}} dana"
+endDate = "Ističe: {{date}}"
+expired = "Vaš probni period je istekao"
+expiredMessage = "Vaš 30-dnevni Pro probni period je istekao. Pretplatite se na Pro da biste nastavili da pristupate premijum funkcijama, ili nastavite sa našim besplatnim nivoom."
+freeTierLimitations = "Besplatni nivo uključuje osnovne PDF alate sa ograničenjima upotrebe."
+message = ""
+subscribe = "Pretplatite se na Pro"
+subscribeToPro = "Pretplatite se na Pro"
+subscriptionScheduled = "Pretplata je zakazana – počinje {{date}}"
+title = "Besplatan probni period je aktivan"
 
 [credits]
 enableOverageBilling = "Omogući naplatu prekoračenja"
@@ -5631,6 +5888,32 @@ text = "Rotirajte stranice PDF-a u smeru ili suprotno od kazaljke na satu u kora
 [rotate.tooltip.header]
 title = "Pregled podešavanja rotacije"
 
+[timestampPdf]
+completed = "PDF je uspešno vremenski označen"
+desc = "Dodajte vremensku oznaku dokumenta prema RFC 3161 svom PDF-u koristeći pouzdan TSA server."
+filenamePrefix = "vremenski-oznaceno"
+results = "Rezultati vremenske oznake"
+submit = "Primeni vremensku oznaku"
+title = "Vremenska oznaka PDF-a"
+
+[timestampPdf.error]
+failed = "Došlo je do greške pri dodavanju vremenske oznake PDF-u."
+generic = "Vremenska oznaka nije uspela"
+
+[timestampPdf.files]
+placeholder = "Izaberite PDF u glavnom prikazu da biste započeli"
+
+[timestampPdf.options]
+note = "Samo SHA-256 heš vašeg dokumenta se šalje TSA serveru; sam PDF se nikada ne šalje TSA serveru."
+title = "Server vremenske oznake (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Izaberite pouzdan Autoritet vremenske oznake"
+label = "Izaberite TSA server"
+
+[timestampPdf.steps]
+settings = "Podešavanja"
+
 [sanitize]
 completed = "Sanitizacija uspešno završena"
 desc = "Uklonite potencijalno štetne elemente iz PDF datoteka."
@@ -5755,6 +6038,14 @@ placeholder = "Unesite pojam pretrage..."
 searching = "Pretraga..."
 title = "Pretraži PDF"
 
+[selfHosted.offline]
+hideTools = "Sakrij nedostupne alate ▴"
+messageNoFallback = "Alati nisu dostupni dok se vaš server ne vrati na mrežu."
+messageWithFallback = "Neki alati zahtevaju vezu sa serverom."
+showTools = "Prikaži nedostupne alate ▾"
+title = "Vaš Stirling-PDF server je nedostupan"
+toolNotAvailableLocally = "Vaš Stirling-PDF server je van mreže i \"{{endpoint}}\" nije dostupan na lokalnom pozadinskom servisu."
+
 [session]
 expired = "Istekla ti je sesija. Osveži stranicu i pokušaj ponovo."
 refreshPage = "Osveži stranicu"
@@ -5768,12 +6059,15 @@ systemSettings = "Sistemska podešavanja"
 title = "Konfiguracija"
 
 [settings.connection]
+localDescription = "Koristite lokalni pozadinski servis bez naloga. Neki alati koji zahtevaju obradu u oblaku ili samohostovani server nisu dostupni."
 logout = "Odjava"
 server = "Server"
+signIn = "Prijava"
 title = "Režim povezivanja"
 user = "Prijavljeni kao"
 
 [settings.connection.mode]
+local = "Samo lokalno"
 saas = "Stirling Cloud"
 selfhosted = "Samohostovano"
 
@@ -5931,6 +6225,9 @@ title = "Politike i privatnost"
 [settings.preferences]
 title = "Preferencije"
 
+[settings.search]
+placeholder = "Pretražite stranice podešavanja..."
+
 [settings.security]
 description = "Ažurirajte lozinku da biste svoj nalog održali bezbednim."
 title = "Bezbednost"
@@ -5968,6 +6265,18 @@ title = "Radni prostor"
 [settings.team]
 title = "Tim"
 
+[localMode]
+toolUnavailable = "Ovaj alat zahteva nalog. Prijavite se na Stirling Cloud ili se povežite na samohostovani server da biste ga koristili."
+
+[localMode.banner]
+message = "Prijavite se da otključate sve alate."
+signIn = "Prijava"
+title = "Pokrenuto lokalno"
+
+[localMode.toolPicker]
+message = "Prijavite se da otključate sve alate."
+signIn = "Prijava"
+
 [setup]
 description = "Započnite izborom načina na koji želite da koristite Stirling PDF"
 welcome = "Dobrodošli u Stirling PDF"
@@ -5975,6 +6284,7 @@ welcome = "Dobrodošli u Stirling PDF"
 [setup.login]
 connectingTo = "Povezivanje na:"
 hideInstructions = "Sakrij uputstva"
+skipSignIn = "Nastavite bez prijave"
 instructions = "Da biste omogućili prijavu na svom Stirling PDF serveru:"
 instructionsEnvVar = "Podesite promenljivu okruženja:"
 instructionsOrYml = "Ili u settings.yml:"
@@ -6022,7 +6332,14 @@ title = "Prijavite se u Stirling"
 [setup.selfhosted]
 link = "ili se povežite na samohostovani nalog"
 subtitle = "Unesite kredencijale servera"
+switchToLocal = "Umesto toga koristite lokalne alate"
 title = "Prijava na server"
+
+[setup.selfhosted.unreachable]
+continueOffline = "Umesto toga koristite lokalne alate"
+message = "Nije moguće pristupiti {{url}}. Proverite da li server radi i da li je dostupan."
+retry = "Pokušajte ponovo"
+title = "Nije moguće povezati se sa serverom"
 
 [setup.server]
 subtitle = "Unesite URL svog samohostovanog servera"
@@ -6032,6 +6349,7 @@ useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "Nije uspelo preuzimanje konfiguracije servera. Proverite URL i pokušajte ponovo."
+configFetchError = "Nije uspelo preuzimanje konfiguracije servera: {{error}}"
 emptyUrl = "Unesite URL servera"
 invalidUrl = "Nevažeći format URL-a. Unesite ispravan URL kao https://your-server.com"
 testFailed = "Test veze nije uspeo"
@@ -6557,6 +6875,7 @@ favorites = "Omiljeno"
 heading = "Svi alati (prikaz preko celog ekrana)"
 noResults = "Pokušajte da prilagodite pretragu ili uključite opise da biste našli šta vam treba."
 recommended = "Preporučeno"
+selfHostedOffline = "Zahteva vaš Stirling-PDF server (trenutno van mreže):"
 showDetails = "Prikaži detalje"
 unavailable = "Onemogućio administrator servera:"
 unavailableDependency = "Nedostupno - potreban alat nedostaje na serveru:"
@@ -6601,6 +6920,12 @@ pageFormatting = "Formatiranje stranica"
 removal = "Uklanjanje"
 signing = "Potpisivanje"
 verification = "Verifikacija"
+
+[tool]
+endpointUnavailable = "Ovaj alat nije dostupan na vašem serveru."
+endpointUnavailableClickable = "Nije dostupno u ovom režimu. Kliknite za prijavu."
+invalidParams = "Popunite obavezna podešavanja."
+noFiles = "Dodajte datoteku da biste počeli."
 
 [tools]
 noSearchResults = "Nema pronađenih alata"

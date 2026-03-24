@@ -142,6 +142,10 @@ welcome = "Vitajte"
 white = "Biela"
 WorkInProgess = "Práca prebieha, nemusí fungovať alebo môže byť chybová, prosím nahláste akékoľvek problémy!"
 yes = "Áno"
+insufficientCredits = "Nedostatok kreditov. Potrebné: {{requiredCredits}}, K dispozícii: {{currentBalance}}, Chýba: {{shortfall}}"
+loadingCredits = "Kontrolujú sa kredity..."
+loadingProStatus = "Kontroluje sa stav predplatného..."
+noticeTopUpOrPlan = "Nedostatok kreditov, dobiť alebo prejsť na plán"
 
 [account]
 accountSettings = "Nastavenia účtu"
@@ -1513,6 +1517,7 @@ editStampHint = "Ak chcete zmeniť obrázok, odstráňte túto pečiatku a prida
 editSwitchToSelect = "Prepnite na Vybrať a upraviť, aby ste upravili túto anotáciu."
 editText = "Upraviť textové pole"
 editTextMarkup = "Upraviť značenie textu"
+annotationStyle = "Štýl anotácie"
 ellipse = "Elipsa"
 exit = "Ukončiť režim anotácií"
 fillColor = "Farba výplne"
@@ -1523,13 +1528,19 @@ highlight = "Zvýrazniť"
 imagePreview = "Náhľad"
 inkHighlighter = "Zvýrazňovač voľnou rukou"
 line = "Čiara"
+lineArrow = "Šípka"
 noBackground = "Bez pozadia"
 note = "Poznámka"
+comment = "Komentár"
+comments = "Komentáre"
+insertText = "Vložiť text"
+replaceText = "Nahradiť text"
 noteIcon = "Ikona poznámky"
 notesStamps = "Poznámky a pečiatky"
 opacity = "Nepriehľadnosť"
 pen = "Pero"
 polygon = "Mnohouholník"
+polyline = "Lomená čiara"
 properties = "Vlastnosti"
 rectangle = "Obdĺžnik"
 redo = "Znova"
@@ -2574,10 +2585,48 @@ title = "Nastavenie kvality"
 [compressPdfs]
 tags = "stlačiť,malé,drobné"
 
+[config]
+plan = "Plán"
+
 [config.account.overview]
+confirmDelete = "Odstrániť môj účet"
+deleteAccount = "Odstrániť účet"
+deleteAccountTitle = "Odstrániť účet"
+deleteFailed = "Účet sa nepodarilo odstrániť."
+deleteFailedTitle = "Účet sa nedá odstrániť"
+deleteWarning = "Táto akcia je trvalá a nedá sa vrátiť späť. Všetky vaše údaje budú vymazané."
+enterEmailConfirm = "Ak chcete potvrdiť odstránenie, zadajte nižšie svoju e‑mailovú adresu ({{email}}):"
 guestDescription = "Ste prihlásený ako hosť. Zvážte inovovanie svojho účtu vyššie."
+label = "Prehľad"
 manageAccountPreferences = "Spravujte svoje preferencie účtu"
+signedInAs = "Prihlásený ako"
 title = "Nastavenia účtu"
+
+[config.account.profilePicture]
+description = "Nahrajte obrázok a prispôsobte si účet."
+help = "PNG, JPG alebo WebP do 2MB."
+remove = "Odstrániť"
+sizeError = "Vyberte prosím obrázok menší ako 2MB."
+switchedToCustom = "Prepnuté na vlastný obrázok. Teraz môžete nahrať svoj vlastný."
+title = "Profilová fotografia"
+upload = "Nahrať"
+useCustom = "Použiť vlastný obrázok"
+usingProvider = "Používate profilový obrázok od {{provider}}"
+
+[config.account.profilePicture.cropper]
+cropError = "Obrázok sa nepodarilo orezať. Skúste to znova."
+invalidImage = "Neplatný súbor obrázka. Vyberte platný súbor PNG, JPG alebo WebP."
+processing = "Prebieha orezávanie..."
+save = "Uložiť orezaný obrázok"
+sizeErrorAfterCrop = "Orezaný obrázok je príliš veľký. Priblíženie zmenšite alebo orežte menšiu oblasť."
+title = "Orezať profilovú fotografiu"
+zoom = "Priblíženie"
+
+[config.account.security]
+changePassword = "Zmeniť heslo"
+description = "Spravujte svoje heslo a nastavenia zabezpečenia."
+title = "Heslá a zabezpečenie"
+update = "Aktualizovať heslo"
 
 [config.account.upgrade]
 description = "Prepojte svoj účet, aby ste si zachovali históriu a získali prístup k ďalším funkciám!"
@@ -2595,6 +2644,7 @@ upgradeButton = "Inovovať účet"
 [config.apiKeys]
 chartAriaLabel = "Využitie kreditov: zahrnuté {{includedUsed}} z {{includedTotal}}, zakúpené {{purchasedUsed}} z {{purchasedTotal}}"
 copyKeyAriaLabel = "Kopírovať API kľúč"
+creditsRemaining = "Zostávajúce kredity"
 description = "Váš API kľúč na prístup k sade nástrojov PDF od Stirling. Skopírujte ho do svojho projektu alebo obnovte na vygenerovanie nového."
 docsDescription = "Zistite viac o integrácii so Stirling PDF:"
 docsLink = "Dokumentácia API"
@@ -2643,6 +2693,14 @@ basic = "Základná konfigurácia"
 integration = "Integračná konfigurácia"
 security = "Bezpečnostná konfigurácia"
 system = "Systémová konfigurácia"
+
+[connectionMode.status]
+localOffline = "Beží offline režim"
+localOnline = "Beží offline režim"
+saas = "Pripojené k Stirling Cloud"
+selfhostedChecking = "Pripojené k vlastnému serveru (overuje sa...)"
+selfhostedOffline = "Vlastný server je nedostupný"
+selfhostedOnline = "Pripojené k vlastnému serveru"
 
 [convert]
 autoRotate = "Automaticky otočiť"
@@ -2728,6 +2786,15 @@ webOptions = "Možnosti Web na PDF"
 wordDoc = "Dokument Word"
 wordDocExt = "Dokument Word (.docx)"
 zoomLevel = "Úroveň priblíženia"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "eBook → PDF"
+emlToPdf = "E‑mail → PDF"
+fileToPdf = "Office/Dokument → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "Možnosti eBook na PDF"
@@ -3718,6 +3785,11 @@ desc = "Pridáva podpis do PDF kreslením, textom alebo obrázkom"
 tags = "podpis,podpísať"
 title = "Podpísať"
 
+[home.timestampPdf]
+desc = "Pridajte dokumentu PDF časovú pečiatku RFC 3161, aby ste preukázali, kedy váš súbor PDF existoval"
+tags = "časová pečiatka,RFC 3161,TSA,autorita časovej pečiatky,časová pečiatka dokumentu,dôkaz existencie,token časovej pečiatky,dôveryhodná časová pečiatka,označiť časovou pečiatkou,notársky overiť"
+title = "Časová pečiatka PDF"
+
 [home.split]
 desc = "Rozdeľte PDF súbory na viacero dokumentov"
 tags = "rozdeliť,oddeliť,rozbiť"
@@ -3854,6 +3926,7 @@ version = "Verzia"
 accountCreatedSuccess = "Účet bol úspešne vytvorený! Teraz sa môžete prihlásiť."
 alreadyLoggedIn = "Už ste prihlásení na"
 alreadyLoggedIn2 = "zariadeniach. Odhláste sa z týchto zariadení a skúste to znova."
+backToSignIn = "Späť na prihlásenie"
 cancel = "Zrušiť"
 changePasswordWarning = "Zmeňte si heslo po prvom prihlásení"
 credentialsUpdated = "Vaše prihlasovacie údaje boli aktualizované. Prihláste sa znova."
@@ -3895,16 +3968,21 @@ or = "Alebo"
 password = "Heslo"
 passwordChangedSuccess = "Heslo bolo úspešne zmenené! Prihláste sa novým heslom."
 passwordResetSent = "Odkaz na obnovenie hesla bol odoslaný na {{email}}! Skontrolujte si e-mail a postupujte podľa pokynov."
+passwordUpdatedSuccess = "Vaše heslo bolo úspešne aktualizované."
 pleaseEnterBoth = "Zadajte, prosím, e-mail aj heslo"
 pleaseEnterEmail = "Zadajte, prosím, svoju e-mailovú adresu"
 relyingPartyRegistrationNotFound = "Nenašla sa žiadna registrácia spoliehajúcej sa strany"
 rememberme = "Zapamätať si ma"
+resetHelp = "Zadajte svoj e‑mail, aby sme vám poslali zabezpečený odkaz na obnovenie hesla. Ak odkaz vypršal, požiadajte o nový."
+resetYourPassword = "Obnoviť heslo"
 saml2RequiresLicense = "Prihlásenie cez SAML vyžaduje platenú licenciu (Server alebo Enterprise). Obráťte sa na administrátora, aby aktualizoval váš plán."
 sending = "Odosielanie…"
 sendMagicLink = "Odoslať magický odkaz"
+sendResetLink = "Odoslať odkaz na obnovenie"
 sessionExpired = "Vaša relácia vypršala. Prihláste sa znova."
 signin = "Prihlásiť sa"
 signInAnonymously = "Prihlásiť sa ako hosť"
+subtitle = "Znovu sa prihláste do Stirling PDF"
 signingIn = "Prihlasovanie..."
 signinTitle = "Prosím, prihláste sa"
 signInWith = "Prihlásiť sa pomocou"
@@ -3913,6 +3991,7 @@ ssoSignIn = "Prihlásiť sa cez Single Sign-on"
 title = "Prihlásenie"
 toManySessions = "Máte príliš veľa aktívnych relácií"
 unexpectedError = "Neočakávaná chyba: {{message}}"
+updatePassword = "Aktualizovať heslo"
 useEmailInstead = "Prihlásiť sa pomocou e-mailu"
 useMagicLink = "Namiesto toho použiť magický odkaz"
 userIsDisabled = "Používateľ je deaktivovaný, prihlásenie s týmto používateľským menom je momentálne zablokované. Kontaktujte administrátora."
@@ -4222,6 +4301,15 @@ viewSwitcher = "Pomocou týchto ovládacích prvkov si vyberte, ako chcete zobra
 workbench = "Toto je <strong>Pracovná plocha</strong> - hlavná oblasť, kde si prezeráte a upravujete svoje PDF."
 wrapUp = "Všetko pripravené! Dozvedeli ste sa o hlavných častiach aplikácie a ich použití. Kedykoľvek chcete, kliknite na tlačidlo <strong>Pomoc</strong> a prehliadku si zobrazte znova."
 
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "Po skončení skúšobného obdobia budete pokračovať v bezplatnej úrovni. Ak chcete zachovať prístup Pro, pridajte platobnú metódu."
+afterTrialWithPayment = "Vaše predplatné Pro sa spustí automaticky po skončení skúšobného obdobia."
+body = "Počas skúšobného obdobia máte plný prístup k funkciám Stirling PDF Pro. Využívajte neobmedzené konverzie, väčšie veľkosti súborov a prioritné spracovanie."
+daysRemaining = "Zostáva {{days}} dní"
+daysRemainingSingular = "Zostáva {{days}} deň"
+title = "Vaše 30‑dňové Pro skúšobné obdobie"
+trialEnds = "Skúšobné obdobie končí {{date}}"
+
 [onboarding.buttons]
 back = "Späť"
 download = "Stiahnuť →"
@@ -4392,6 +4480,31 @@ loading = "Načítavajú sa prílohy..."
 empty = "Tento dokument neobsahuje žiadne prílohy"
 noMatch = "Žiadne prílohy nezodpovedajú vášmu vyhľadávaniu"
 
+[viewer.comments]
+title = "Komentáre"
+hint = "Komentáre umiestnite pomocou nástrojov Komentár, Vložiť text alebo Nahradiť text. Zobrazia sa tu podľa strán."
+placeholder = "Napíšte svoj komentár..."
+pageLabel = "Strana {{page}}"
+oneComment = "1 komentár"
+nComments = "{{count}} komentárov"
+addCommentPlaceholder = "Pridať komentár..."
+addLink = "Pridať odkaz"
+goToLink = "Prejsť na odkaz"
+addComment = "Pridať komentár"
+viewComment = "Zobraziť komentár"
+addReplyPlaceholder = "Pridať odpoveď..."
+saveReply = "Uložiť odpoveď"
+send = "Odoslať"
+moreActions = "Ďalšie akcie"
+typeComment = "Komentár"
+typeInsertText = "Vložiť text"
+typeReplaceText = "Nahradiť text"
+locateAnnotation = "Vyhľadať v dokumente"
+deleteTitle = "Odstrániť anotáciu z komentárov?"
+deleteDescription = "Táto anotácia má pripojený komentár. Môžete odstrániť iba komentár z bočného panela a ponechať anotáciu, alebo vymazať všetko."
+removeCommentOnly = "Odstrániť iba komentár"
+deleteAnnotationAndComment = "Odstrániť anotáciu aj komentár"
+
 [viewer.formBar]
 title = "Polia formulára"
 unsavedBadge = "Neuložené"
@@ -4425,14 +4538,20 @@ rotateLeft = "Otočiť doľava"
 rotateRight = "Otočiť doprava"
 toggleSidebar = "Prepnúť bočný panel"
 toggleBookmarks = "Prepnúť záložky"
+toggleComments = "Komentáre"
 print = "Vytlačiť PDF"
 ruler = "Pravítko / meranie"
+readAloud = "Čítanie nahlas"
+readAloudSpeed = "Rýchlosť"
+readAloudLanguage = "Jazyk"
+selectLanguage = "Vyberte jazyk"
 draw = "Kresliť"
 redact = "Začierniť"
 exitRedaction = "Ukončiť režim začiernenia"
 save = "Uložiť"
 downloadAll = "Stiahnuť všetko"
 saveAll = "Uložiť všetko"
+saveAs = "Uložiť ako"
 
 [textAlign]
 left = "Vľavo"
@@ -4447,21 +4566,132 @@ title = "Extrahovať stránky"
 
 [pageLayout]
 addBorder = "Pridať okraje"
+borderWidth = "Hrúbka orámovania"
+bottom = "Spodný okraj"
+cols = "Stĺpce"
 header = "Viacstranové usporiadanie"
+innerMargin = "Vnútorný okraj"
+left = "Ľavý okraj"
 pagesPerSheet = "Stránky na list:"
+right = "Pravý okraj"
+rows = "Riadky"
 submit = "Odoslať"
 tags = "zlúčiť,zjednotiť,jednostranový pohľad,organizovať"
 title = "Viacstranové usporiadanie"
+top = "Horný okraj"
+
+[pageLayout.mode]
+default = "Predvolené"
+custom = "Vlastné"
+label = "Režim:"
+
+[pageLayout.arrangement]
+byColumns = "Podľa stĺpcov"
+byRows = "Podľa riadkov"
+label = "Usporiadanie strán:"
 
 [pageLayout.desc]
 16 = "Umiestni 16 strán na jeden hárok (mriežka 4 × 4)."
 2 = "Umiestni 2 strany vedľa seba na jeden hárok."
-3 = "Umiestni 3 strany na jeden hárok v jednom riadku."
 4 = "Umiestni 4 strany na jeden hárok (mriežka 2 × 2)."
 9 = "Umiestni 9 strán na jeden hárok (mriežka 3 × 3)."
 
 [pageLayout.error]
 failed = "Počas vytvárania viacstranového rozloženia došlo k chybe."
+outerVerticalMarginsTooLarge = "Horné/spodné okraje sú pre túto veľkosť strany príliš veľké."
+outerHorizontalMarginsTooLarge = "Ľavé/pravé okraje sú pre túto veľkosť strany príliš veľké."
+innerMarginTooLarge = "Vnútorný okraj je pre zvolené rozloženie príliš veľký."
+
+[pageLayout.orientation]
+landscape = "Na šírku"
+portrait = "Na výšku"
+label = "Orientácia:"
+
+[pageLayout.readingDirection]
+ltr = "Zľava doprava"
+rtl = "Sprava doľava"
+label = "Smer čítania:"
+
+[pageLayout.tooltip.header]
+title = "Sprievodca rozložením strán"
+
+[pageLayout.tooltip.overview]
+title = "Čo je rozloženie strán?"
+text = "Umiestnite viac strán na jeden list pre podklady alebo na šetrenie papierom."
+
+[pageLayout.tooltip.mode]
+title = "Režim"
+text = "Vyberte, ako sa mriežka nakonfiguruje:"
+bullet1 = "Predvolené: Vyberte predvoľbu a mriežka sa vypočíta automaticky."
+bullet2 = "Vlastné: Nastavte riadky a stĺpce manuálne."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Strán na list (predvolený režim)"
+text = "Vyberte počet strán na list (napr. 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Riadky a stĺpce (vlastný režim)"
+text = "Nastavte presné rozmery mriežky. Celkový počet strán na list = riadky × stĺpce."
+
+[pageLayout.tooltip.orientation]
+title = "Orientácia"
+text = "Nastaví orientáciu výstupného listu:"
+bullet1 = "Na výšku: Vyššie ako široké."
+bullet2 = "Na šírku: Širšie ako vysoké."
+
+[pageLayout.tooltip.arrangement]
+title = "Usporiadanie strán"
+text = "Riadi poradie, v ktorom stránky vypĺňajú mriežku:"
+bullet1 = "Podľa riadkov: Vyplniť po riadkoch (zľava doprava alebo sprava doľava)."
+bullet2 = "Podľa stĺpcov: Vyplniť zhora nadol, po stĺpcoch."
+
+[pageLayout.tooltip.readingDirection]
+title = "Smer čítania"
+text = "Riadi vodorovné poradie strán:"
+bullet1 = "LTR: Zľava doprava."
+bullet2 = "RTL: Sprava doľava."
+
+[pageLayout.tooltip.addBorder]
+title = "Pridať orámovanie"
+text = "Kreslí orámovacie čiary okolo každej bunky stránky na vodiace línie rezu alebo vizuálne oddelenie."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Okraje a orámovanie"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Okraje"
+text = "Použite horný, spodný, ľavý a pravý okraj na ovládanie odsadenia okolo celého výstupného listu."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Vnútorný okraj"
+text = "Vnútorný okraj pridáva medzery medzi bunkami v mriežke strán pre lepšie oddelenie a čitateľnosť."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Pridať orámovanie"
+text = "Zapnite orámovanie na kreslenie čiar okolo každej umiestnenej strany. Pomáha to s vizuálnym oddelením alebo orezávaním."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Hrúbka orámovania"
+text = "Hrúbka orámovania sa uplatní len pri zapnutom orámovaní. Vyššie hodnoty vytvárajú hrubšie línie."
+
+[pageLayout.advanced.tooltip.header]
+title = "Pokročilé možnosti rozloženia"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Orientácia"
+text = "Vyberte výsledný smer listu. Na výšku je lepšie pre vysoký obsah, na šírku sa hodí pre širšie rozloženia."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Usporiadanie strán"
+text = "Určuje, či stránky vypĺňajú mriežku po riadkoch alebo po stĺpcoch."
+bullet1 = "Podľa riadkov: Najprv vyplniť každý riadok."
+bullet2 = "Podľa stĺpcov: Najprv vyplniť každý stĺpec."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Smer čítania"
+text = "Nastaví vodorovné poradie v mriežke, užitočné pre zvyklosti čítania zľava doprava a sprava doľava."
+bullet1 = "LTR: Poradie zľava doprava."
+bullet2 = "RTL: Poradie sprava doľava."
 
 [pageRemover]
 header = "Odstraňovač stránok PDF"
@@ -4977,7 +5207,10 @@ perMonth = "/mesiac"
 perSeat = "/miesto"
 popular = "Populárne"
 selectPlan = "Vybrať plán"
+selectCredits = "Vyberte množstvo kreditov"
 showComparison = "Porovnať všetky funkcie"
+purchase = "Kúpiť"
+totalCost = "Celková cena"
 upgrade = "Inovovať"
 withServer = "+ Server plán"
 
@@ -5068,6 +5301,30 @@ successMessage = "Vaša licencia bola úspešne aktivovaná. Teraz môžete toto
 [plan.team]
 name = "Tím"
 siteLicense = "Licencia pre celú organizáciu"
+
+[plan.api]
+large = "5,000 kreditov"
+medium = "1,000 kreditov"
+small = "500 kreditov"
+xsmall = "100 kreditov"
+
+[plan.apiPackages]
+subtitle = "Nakúpte kredity API pre svoje aplikácie"
+title = "Balíky kreditov API"
+
+[plan.trial]
+badge = "Skúšobná verzia"
+continueWithFree = "Pokračovať s bezplatnou verziou"
+daysRemaining = "Vaše skúšobné obdobie sa skončí o {{days}} dní"
+endDate = "Platnosť do: {{date}}"
+expired = "Skúšobné obdobie sa skončilo"
+expiredMessage = "Vaše 30‑dňové skúšobné obdobie Pro vypršalo. Predplaťte si Pro, aby ste mohli pokračovať v používaní prémiových funkcií, alebo pokračujte s našou bezplatnou úrovňou."
+freeTierLimitations = "Bezplatná úroveň obsahuje základné nástroje pre PDF s obmedzeniami používania."
+message = ""
+subscribe = "Predplatiť si Pro"
+subscribeToPro = "Predplatiť si Pro"
+subscriptionScheduled = "Predplatné naplánované – začína {{date}}"
+title = "Skúšobná verzia je aktívna"
 
 [credits]
 enableOverageBilling = "Povoliť nadlimitné účtovanie"
@@ -5631,6 +5888,32 @@ text = "Otočte svoje strany PDF v smere alebo proti smeru hodinových ručičie
 [rotate.tooltip.header]
 title = "Prehľad nastavení otáčania"
 
+[timestampPdf]
+completed = "Súbor PDF bol úspešne označený časovou pečiatkou"
+desc = "Pridajte do svojho PDF časovú pečiatku podľa RFC 3161 pomocou dôveryhodného servera Time Stamp Authority (TSA)."
+filenamePrefix = "timestamped"
+results = "Výsledky časovej pečiatky"
+submit = "Použiť časovú pečiatku"
+title = "Časová pečiatka PDF"
+
+[timestampPdf.error]
+failed = "Počas označovania PDF časovou pečiatkou došlo k chybe."
+generic = "Zlyhalo pridanie časovej pečiatky"
+
+[timestampPdf.files]
+placeholder = "Vyberte v hlavnom zobrazení súbor PDF, aby ste mohli začať"
+
+[timestampPdf.options]
+note = "Na server TSA sa odosiela iba hash SHA-256 vášho dokumentu; samotný súbor PDF sa na server TSA nikdy neposiela."
+title = "Server časovej pečiatky (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Vyberte dôveryhodnú autoritu časovej pečiatky"
+label = "Vyberte server TSA"
+
+[timestampPdf.steps]
+settings = "Nastavenia"
+
 [sanitize]
 completed = "Očistenie bolo úspešne dokončené"
 desc = "Odstráňte potenciálne škodlivé prvky zo súborov PDF."
@@ -5755,6 +6038,14 @@ placeholder = "Zadajte hľadaný výraz..."
 searching = "Hľadá sa..."
 title = "Hľadať v PDF"
 
+[selfHosted.offline]
+hideTools = "Skryť nedostupné nástroje ▴"
+messageNoFallback = "Nástroje nebudú dostupné, kým sa váš server znovu nepripojí."
+messageWithFallback = "Niektoré nástroje vyžadujú pripojenie k serveru."
+showTools = "Zobraziť nedostupné nástroje ▾"
+title = "Váš server Stirling-PDF je nedostupný"
+toolNotAvailableLocally = "Váš server Stirling-PDF je offline a \"{{endpoint}}\" nie je dostupný na lokálnom backende."
+
 [session]
 expired = "Vaša relácia vypršala. Obnovte stránku a skúste znova."
 refreshPage = "Obnoviť stránku"
@@ -5768,12 +6059,15 @@ systemSettings = "Systémové nastavenia"
 title = "Konfigurácia"
 
 [settings.connection]
+localDescription = "Používate lokálny backend bez účtu. Niektoré nástroje vyžadujúce cloudové spracovanie alebo vlastný server nie sú k dispozícii."
 logout = "Odhlásiť sa"
 server = "Server"
+signIn = "Prihlásiť sa"
 title = "Režim pripojenia"
 user = "Prihlásený ako"
 
 [settings.connection.mode]
+local = "Len lokálne"
 saas = "Stirling Cloud"
 selfhosted = "Self-hostovaný"
 
@@ -5931,6 +6225,9 @@ title = "Zásady a súkromie"
 [settings.preferences]
 title = "Predvoľby"
 
+[settings.search]
+placeholder = "Hľadať na stránkach nastavení..."
+
 [settings.security]
 description = "Aktualizujte svoje heslo, aby bol váš účet v bezpečí."
 title = "Zabezpečenie"
@@ -5968,6 +6265,18 @@ title = "Pracovný priestor"
 [settings.team]
 title = "Tím"
 
+[localMode]
+toolUnavailable = "Tento nástroj vyžaduje účet. Prihláste sa do Stirling Cloud alebo sa pripojte k vlastnému serveru, aby ste ho mohli používať."
+
+[localMode.banner]
+message = "Prihláste sa a odomknite všetky nástroje."
+signIn = "Prihlásiť sa"
+title = "Beží lokálne"
+
+[localMode.toolPicker]
+message = "Prihláste sa a odomknite všetky nástroje."
+signIn = "Prihlásiť sa"
+
 [setup]
 description = "Začnite výberom spôsobu používania Stirling PDF"
 welcome = "Vitajte v Stirling PDF"
@@ -5975,6 +6284,7 @@ welcome = "Vitajte v Stirling PDF"
 [setup.login]
 connectingTo = "Pripája sa k:"
 hideInstructions = "Skryť pokyny"
+skipSignIn = "Pokračovať bez prihlásenia"
 instructions = "Na povolenie prihlásenia na vašom serveri Stirling PDF:"
 instructionsEnvVar = "Nastavte premennú prostredia:"
 instructionsOrYml = "Alebo v súbore settings.yml:"
@@ -6022,7 +6332,14 @@ title = "Prihláste sa do Stirling"
 [setup.selfhosted]
 link = "alebo sa pripojte k self-hosted účtu"
 subtitle = "Zadajte prihlasovacie údaje k serveru"
+switchToLocal = "Namiesto toho použiť lokálne nástroje"
 title = "Prihlásiť sa na server"
+
+[setup.selfhosted.unreachable]
+continueOffline = "Namiesto toho použiť lokálne nástroje"
+message = "Nepodarilo sa dosiahnuť {{url}}. Skontrolujte, či server beží a je prístupný."
+retry = "Skúsiť znova"
+title = "Nedá sa pripojiť k serveru"
 
 [setup.server]
 subtitle = "Zadajte URL svojho self-hostovaného servera"
@@ -6032,6 +6349,7 @@ useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "Nepodarilo sa načítať konfiguráciu servera. Skontrolujte URL a skúste to znova."
+configFetchError = "Nepodarilo sa načítať konfiguráciu servera: {{error}}"
 emptyUrl = "Zadajte URL servera"
 invalidUrl = "Neplatný formát URL. Zadajte platnú URL ako https://your-server.com"
 testFailed = "Test pripojenia zlyhal"
@@ -6557,6 +6875,7 @@ favorites = "Obľúbené"
 heading = "Všetky nástroje (zobrazenie na celú obrazovku)"
 noResults = "Skúste upraviť vyhľadávanie alebo prepnite popisy, aby ste našli, čo potrebujete."
 recommended = "Odporúčané"
+selfHostedOffline = "Vyžaduje váš server Stirling-PDF (aktuálne offline):"
 showDetails = "Zobraziť podrobnosti"
 unavailable = "Zakázané správcom servera:"
 unavailableDependency = "Nedostupné – chýba požadovaný nástroj na serveri:"
@@ -6601,6 +6920,12 @@ pageFormatting = "Formátovanie strán"
 removal = "Odstraňovanie"
 signing = "Podpisovanie"
 verification = "Overovanie"
+
+[tool]
+endpointUnavailable = "Tento nástroj nie je na vašom serveri dostupný."
+endpointUnavailableClickable = "V tomto režime nie je k dispozícii. Kliknite pre prihlásenie."
+invalidParams = "Vyplňte povinné nastavenia."
+noFiles = "Pridajte súbor a začnite."
 
 [tools]
 noSearchResults = "Nenašli sa žiadne nástroje"
