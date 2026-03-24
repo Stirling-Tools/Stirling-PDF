@@ -97,11 +97,13 @@ export function PdfViewerToolbar({
   };
 
   const handlePreviousPage = () => {
-    scrollActions.scrollToPreviousPage();
+    const { currentPage: cur } = getScrollState();
+    if (cur > 1) scrollActions.scrollToPage(cur - 1);
   };
 
   const handleNextPage = () => {
-    scrollActions.scrollToNextPage();
+    const { currentPage: cur, totalPages: tot } = getScrollState();
+    if (cur < tot) scrollActions.scrollToPage(cur + 1);
   };
 
   const handleLastPage = () => {
@@ -259,6 +261,7 @@ export function PdfViewerToolbar({
           >
             +
           </Button>
+
         </Group>
       </Paper>
   );

@@ -151,6 +151,44 @@ public class ApplicationProperties {
     @Data
     public static class AutoPipeline {
         private String outputFolder;
+        private FileReadiness fileReadiness = new FileReadiness();
+
+        /**
+         * Configuration for the {@link stirling.software.common.util.FileReadinessChecker}.
+         * Controls how the pipeline determines whether a file is fully written and stable before
+         * processing begins.
+         */
+        @Data
+        public static class FileReadiness {
+            /**
+             * Master toggle. When {@code false} every readiness check is skipped and all files are
+             * considered immediately ready (preserves legacy behaviour).
+             */
+            private boolean enabled = true;
+
+            /**
+             * How long (in milliseconds) a file must remain unmodified before it is considered
+             * stable. Files modified more recently than this threshold are skipped and retried on
+             * the next scan cycle. Default: 5 000 ms (5 seconds).
+             */
+            private long settleTimeMillis = 5000;
+
+            /**
+             * How long (in milliseconds) to pause between two consecutive file-size reads when
+             * checking whether a file is still being written. If the size differs between the two
+             * reads the file is considered unstable. This catches active copies on Linux/macOS
+             * where advisory locking alone cannot detect a mid-copy file. Default: 500 ms.
+             */
+            private long sizeCheckDelayMillis = 500;
+
+            /**
+             * Optional list of file extensions (without the leading dot, case-insensitive) that are
+             * allowed through the readiness check. An empty list means all extensions are accepted.
+             * Example: {@code ["pdf", "tiff"]} will skip any file whose extension is not {@code
+             * pdf} or {@code tiff}.
+             */
+            private List<String> allowedExtensions = new java.util.ArrayList<>();
+        }
     }
 
     @Data
@@ -732,8 +770,7 @@ public class ApplicationProperties {
 
         @Override
         public String toString() {
-            return
-                    """
+            return """
             Driver {
               driverName='%s'
             }

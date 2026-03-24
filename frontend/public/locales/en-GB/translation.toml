@@ -1534,8 +1534,9 @@ editSelected = "Edit Annotation"
 editSquare = "Edit Square"
 editStampHint = "To change the image, delete this stamp and add a new one."
 editSwitchToSelect = "Switch to Select & Edit to edit this annotation."
-editText = "Edit Text Box"
+editText = "Edit"
 editTextMarkup = "Edit Text Markup"
+annotationStyle = "Annotation style"
 ellipse = "Ellipse"
 exit = "Exit annotation mode"
 fillColor = "Fill Colour"
@@ -1546,13 +1547,19 @@ highlight = "Highlight"
 imagePreview = "Preview"
 inkHighlighter = "Freehand Highlighter"
 line = "Line"
+lineArrow = "Arrow"
 noBackground = "No background"
 note = "Note"
+comment = "Comment"
+comments = "Comments"
+insertText = "Insert Text"
+replaceText = "Replace Text"
 noteIcon = "Note Icon"
 notesStamps = "Notes & Stamps"
 opacity = "Opacity"
 pen = "Pen"
 polygon = "Polygon"
+polyline = "Polyline"
 properties = "Properties"
 rectangle = "Rectangle"
 redo = "Redo"
@@ -2951,6 +2958,14 @@ basic = "Basic Configuration"
 integration = "Integration Configuration"
 security = "Security Configuration"
 system = "System Configuration"
+
+[connectionMode.status]
+localOffline = "Offline mode running"
+localOnline = "Offline mode running"
+saas = "Connected to Stirling Cloud"
+selfhostedChecking = "Connected to self-hosted server (checking...)"
+selfhostedOffline = "Self-hosted server unreachable"
+selfhostedOnline = "Connected to self-hosted server"
 
 [convert]
 autoRotate = "Auto Rotate"
@@ -4852,14 +4867,20 @@ rotateLeft = "Rotate Left"
 rotateRight = "Rotate Right"
 toggleSidebar = "Toggle Sidebar"
 toggleBookmarks = "Toggle Bookmarks"
+toggleComments = "Comments"
 print = "Print PDF"
 ruler = "Ruler / Measure"
+readAloud = "Read Aloud"
+readAloudSpeed = "Speed"
+readAloudLanguage = "Language"
+selectLanguage = "Select language"
 draw = "Draw"
 redact = "Redact"
 exitRedaction = "Exit Redaction Mode"
 save = "Save"
 downloadAll = "Download All"
 saveAll = "Save All"
+saveAs = "Save As"
 
 [textAlign]
 left = "Left"
@@ -6349,12 +6370,15 @@ systemSettings = "System Settings"
 title = "Configuration"
 
 [settings.connection]
+localDescription = "You are using the local backend without an account. Some tools requiring cloud processing or a self-hosted server are unavailable."
 logout = "Log Out"
 server = "Server"
+signIn = "Sign In"
 title = "Connection Mode"
 user = "Logged in as"
 
 [settings.connection.mode]
+local = "Local Only"
 saas = "Stirling Cloud"
 selfhosted = "Self-Hosted"
 
@@ -6552,6 +6576,18 @@ title = "Workspace"
 [settings.team]
 title = "Team"
 
+[localMode]
+toolUnavailable = "This tool requires an account. Sign in to Stirling Cloud or connect to a self-hosted server to use it."
+
+[localMode.banner]
+message = "Sign in to unlock all tools."
+signIn = "Sign In"
+title = "Running locally"
+
+[localMode.toolPicker]
+message = "Sign in to unlock all tools."
+signIn = "Sign In"
+
 [setup]
 description = "Get started by choosing how you want to use Stirling PDF"
 welcome = "Welcome to Stirling PDF"
@@ -6559,6 +6595,7 @@ welcome = "Welcome to Stirling PDF"
 [setup.login]
 connectingTo = "Connecting to:"
 hideInstructions = "Hide instructions"
+skipSignIn = "Continue without signing in"
 instructions = "To enable login on your Stirling PDF server:"
 instructionsEnvVar = "Set the environment variable:"
 instructionsOrYml = "Or in settings.yml:"
@@ -6606,7 +6643,14 @@ title = "Sign in to Stirling"
 [setup.selfhosted]
 link = "or connect to a self-hosted account"
 subtitle = "Enter your server credentials"
+switchToLocal = "Use local tools instead"
 title = "Sign in to Server"
+
+[setup.selfhosted.unreachable]
+continueOffline = "Use local tools instead"
+message = "Could not reach {{url}}. Check that the server is running and accessible."
+retry = "Retry"
+title = "Cannot connect to server"
 
 [setup.server]
 subtitle = "Enter your self-hosted server URL"
@@ -6615,7 +6659,8 @@ title = "Connect to Server"
 useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
-configFetch = "Failed to fetch server configuration. Please check the URL and try again."
+configFetch = "Failed to fetch server configuration (status {{status}})"
+configFetchError = "Failed to fetch server configuration: {{error}}"
 emptyUrl = "Please enter a server URL"
 invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
 testFailed = "Connection test failed"
@@ -7296,6 +7341,12 @@ removal = "Removal"
 signing = "Signing"
 verification = "Verification"
 
+[tool]
+endpointUnavailable = "This tool is unavailable on your server."
+endpointUnavailableClickable = "Not available in this mode. Click to sign in."
+invalidParams = "Fill in the required settings."
+noFiles = "Add a file to get started."
+
 [tools]
 noSearchResults = "No tools found"
 noTools = "No tools available"
@@ -7522,6 +7573,31 @@ noDocument = "Open a PDF to view its attachments."
 loading = "Loading attachments..."
 empty = "No attachments in this document"
 noMatch = "No attachments match your search"
+
+[viewer.comments]
+title = "Comments"
+hint = "Place comments with the Comment, Insert Text, or Replace Text tools. They will appear here by page."
+placeholder = "Type your comment..."
+pageLabel = "Page {{page}}"
+oneComment = "1 comment"
+nComments = "{{count}} comments"
+addCommentPlaceholder = "Add comment..."
+addLink = "Add link"
+goToLink = "Go to link"
+addComment = "Add comment"
+viewComment = "View comment"
+addReplyPlaceholder = "Add reply..."
+saveReply = "Save reply"
+send = "Send"
+moreActions = "More actions"
+typeComment = "Comment"
+typeInsertText = "Insert Text"
+typeReplaceText = "Replace Text"
+locateAnnotation = "Locate in document"
+deleteTitle = "Remove annotation from comments?"
+deleteDescription = "This annotation has a comment attached. You can remove just the comment from the sidebar while keeping the annotation, or delete everything."
+removeCommentOnly = "Remove comment only"
+deleteAnnotationAndComment = "Delete annotation & comment"
 
 [viewer.formBar]
 title = "Form Fields"
