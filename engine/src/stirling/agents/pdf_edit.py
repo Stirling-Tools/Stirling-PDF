@@ -114,8 +114,7 @@ class PdfEditAgent:
         )
 
     async def handle(self, request: PdfEditRequest) -> PdfEditResponse:
-        selection_result = await self.selection_agent.run(self._build_selection_prompt(request))
-        selection = selection_result.output
+        selection = await self._select_plan(request)
         if isinstance(selection, EditClarificationRequest | EditCannotDoResponse):
             return selection
         steps: list[EditOperationPlanStep] = []
@@ -137,6 +136,13 @@ class PdfEditAgent:
             rationale=selection.rationale,
             steps=steps,
         )
+
+    async def _select_plan(
+        self,
+        request: PdfEditRequest,
+    ) -> PdfEditPlanSelection | EditClarificationRequest | EditCannotDoResponse:
+        selection_result = await self.selection_agent.run(self._build_selection_prompt(request))
+        return selection_result.output
 
     def _build_selection_prompt(self, request: PdfEditRequest) -> str:
         file_names = ", ".join(request.file_names) if request.file_names else "No file names were provided."
