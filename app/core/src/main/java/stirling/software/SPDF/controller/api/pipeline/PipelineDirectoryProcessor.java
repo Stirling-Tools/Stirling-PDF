@@ -36,6 +36,7 @@ import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.service.PostHogService;
+import stirling.software.common.util.FileReadinessChecker;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -50,6 +51,7 @@ public class PipelineDirectoryProcessor {
     private final ApiDocService apiDocService;
     private final PipelineProcessor processor;
     private final PostHogService postHogService;
+    private final FileReadinessChecker fileReadinessChecker;
     private final List<String> watchedFoldersDirs;
     private final String finishedFoldersDir;
 
@@ -62,11 +64,13 @@ public class PipelineDirectoryProcessor {
             ApiDocService apiDocService,
             PipelineProcessor processor,
             PostHogService postHogService,
+            FileReadinessChecker fileReadinessChecker,
             RuntimePathConfig runtimePathConfig) {
         this.objectMapper = objectMapper;
         this.apiDocService = apiDocService;
         this.processor = processor;
         this.postHogService = postHogService;
+        this.fileReadinessChecker = fileReadinessChecker;
         this.watchedFoldersDirs = runtimePathConfig.getPipelineWatchedFoldersPaths();
         this.finishedFoldersDir = runtimePathConfig.getPipelineFinishedFoldersPath();
     }
@@ -268,6 +272,18 @@ public class PipelineDirectoryProcessor {
                                                     extension);
                                         }
                                         return isAllowed;
+                                    })
+                            .filter(
+                                    path -> {
+                                        if (!fileReadinessChecker.isReady(path)) {
+                                            log.info(
+                                                    "File '{}' is not yet ready for processing"
+                                                            + " (still being written or locked),"
+                                                            + " will retry on next scan cycle",
+                                                    path.getFileName());
+                                            return false;
+                                        }
+                                        return true;
                                     })
                             .map(Path::toAbsolutePath)
                             .filter(path -> true)

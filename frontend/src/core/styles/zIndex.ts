@@ -28,4 +28,10 @@ export const Z_INDEX_SIGN_IN_MODAL = 9000;
 // Toast notifications and error displays - Always on top (higher than rainbow theme at 10000)
 export const Z_INDEX_TOAST = 10001;
 
+// Signature preview overlays inside the PDF viewer
+export const Z_INDEX_SIGNATURE_DRAG_BLOCKER = 999;
+export const Z_INDEX_SIGNATURE_OVERLAY = 1000;
+export const Z_INDEX_SIGNATURE_OVERLAY_HANDLE = 1001;
+export const Z_INDEX_SIGNATURE_OVERLAY_DELETE = 1002;
+
 

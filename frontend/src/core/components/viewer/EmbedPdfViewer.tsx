@@ -20,11 +20,10 @@ import { isStirlingFile, getFormFillFileId } from '@app/types/fileContext';
 import { useViewerRightRailButtons } from '@app/components/viewer/useViewerRightRailButtons';
 import { StampPlacementOverlay } from '@app/components/viewer/StampPlacementOverlay';
 import { RulerOverlay, type PageMeasureScales, type PageScaleInfo, type ViewportScale } from '@app/components/viewer/RulerOverlay';
+import type { PDFDict, PDFNumber } from '@cantoo/pdf-lib';
 import { useWheelZoom } from '@app/hooks/useWheelZoom';
 import { useFormFill } from '@app/tools/formFill/FormFillContext';
 import { FormSaveBar } from '@app/tools/formFill/FormSaveBar';
-
-import type { PDFDict, PDFNumber } from '@cantoo/pdf-lib';
 
 // ─── Measure dictionary extraction ────────────────────────────────────────────
 
@@ -38,7 +37,7 @@ async function extractPageMeasureScales(file: Blob): Promise<PageMeasureScales |
       if (!(measureObj instanceof PDFDict)) return null;
       const rObj = measureObj.lookup(PDFName.of('R'));
       const ratioLabel = (rObj instanceof PDFString || rObj instanceof PDFHexString)
-        ? rObj.decodeText() : '';
+              ? rObj.decodeText() : '';
       // D = distance array, X = x-axis fallback
       let fmtArray = measureObj.lookup(PDFName.of('D'));
       if (!(fmtArray instanceof PDFArray)) fmtArray = measureObj.lookup(PDFName.of('X'));
@@ -215,7 +214,7 @@ const EmbedPdfViewerContent = ({
   const isFormFillToolActive = (selectedTool as string) === 'formFill';
 
   // Form overlays are shown in BOTH modes:
-  // - Normal viewer: form overlays visible (pdf-lib, frontend-only)
+  // - Normal viewer: form overlays visible (PDFium WASM, frontend-only)
   // - formFill tool: form overlays visible (PDFBox, backend)
   const shouldEnableFormFill = true;
 
@@ -891,7 +890,7 @@ const EmbedPdfViewerContent = ({
   useViewerRightRailButtons(isRulerActive, setIsRulerActive);
 
   // Auto-fetch form fields when a PDF is loaded in the viewer.
-  // In normal viewer mode, this uses pdf-lib (frontend-only).
+  // In normal viewer mode, this uses PDFium WASM (frontend-only).
   // In formFill tool mode, this uses PDFBox (backend).
   const formFillFileIdRef = useRef<string | null>(null);
   const formFillProviderRef = useRef(isFormFillToolActive);
