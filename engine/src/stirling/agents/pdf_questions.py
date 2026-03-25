@@ -30,7 +30,7 @@ class PdfQuestionAgent:
                 "If the answer is not supported by the provided text, return not_found. "
                 "When answering, include a short list of evidence snippets copied from the provided text."
             ),
-            model_settings=runtime.smart_model_settings(),
+            model_settings=runtime.smart_model_settings,
         )
 
     async def handle(self, request: PdfQuestionRequest) -> PdfQuestionResponse:

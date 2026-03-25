@@ -14,7 +14,6 @@ from stirling.api.routes import (
 )
 from stirling.config.settings import AppSettings, load_settings
 from stirling.contracts import HealthResponse
-from stirling.services.model_registry import ModelRegistry
 from stirling.services.runtime import build_runtime
 
 
@@ -44,9 +43,8 @@ app.include_router(execution_router)
 
 @app.get("/health", response_model=HealthResponse)
 async def healthcheck(settings: Annotated[AppSettings, Depends(load_settings)]) -> HealthResponse:
-    model_registry = ModelRegistry.from_settings(settings)
     return HealthResponse(
         status="ok",
-        smart_model=model_registry.smart.name,
-        fast_model=model_registry.fast.name,
+        smart_model=settings.smart_model_name,
+        fast_model=settings.fast_model_name,
     )

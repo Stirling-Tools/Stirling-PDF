@@ -48,7 +48,7 @@ class UserSpecAgent:
                 "Do not change the tool order or invent new steps. "
                 "Keep the workflow grounded and practical."
             ),
-            model_settings=runtime.smart_model_settings(),
+            model_settings=runtime.smart_model_settings,
         )
 
     async def draft(self, request: AgentDraftRequest) -> AgentDraftResponse:

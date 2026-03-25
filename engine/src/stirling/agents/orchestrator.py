@@ -64,7 +64,7 @@ class OrchestratorAgent:
                 "Use delegate_user_spec for requests to create or define an agent spec. "
                 "Use unsupported_capability only when none of the other outputs fit."
             ),
-            model_settings=runtime.fast_model_settings(),
+            model_settings=runtime.fast_model_settings,
         )
 
     async def handle(self, request: OrchestratorRequest) -> OrchestratorResponse:

@@ -36,7 +36,7 @@ class PdfEditParameterSelector:
                 "Use reasonable defaults when the request does not specify optional details. "
                 "Only fill fields that belong to the selected operation's parameter model."
             ),
-            model_settings=runtime.smart_model_settings(),
+            model_settings=runtime.smart_model_settings,
         )
 
     async def select(
@@ -110,7 +110,7 @@ class PdfEditAgent:
                 "Return plan when a reasonable multi-step plan can be created. "
                 "Never return partial plans."
             ),
-            model_settings=runtime.smart_model_settings(),
+            model_settings=runtime.smart_model_settings,
         )
 
     async def handle(self, request: PdfEditRequest) -> PdfEditResponse:
