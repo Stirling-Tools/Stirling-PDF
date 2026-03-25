@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import model_validator
 
 from stirling.models.base import ApiModel
@@ -17,6 +19,7 @@ class PdfTextSelection(ApiModel):
 
 
 class ToolOperationStep(ApiModel):
+    kind: Literal["tool"] = "tool"
     tool: OperationId
     parameters: ParamToolModel
 

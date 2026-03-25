@@ -9,7 +9,8 @@ from stirling.contracts import (
     AgentDraft,
     AgentDraftRequest,
     AgentRevisionRequest,
-    ToolAgentStep,
+    EditClarificationRequest,
+    EditPlanResponse,
     ToolOperationStep,
 )
 from stirling.contracts.common import ConversationMessage
@@ -31,12 +32,35 @@ class StubUserSpecAgent(UserSpecAgent):
         super().__init__(build_runtime(build_test_settings()))
         self.draft_result = draft_result
         self.revision_result = revision_result
+        self.edit_plan = EditPlanResponse(
+            summary="Rotate the document.",
+            steps=[
+                ToolOperationStep(
+                    tool=OperationId.ROTATE,
+                    parameters=RotateParams(angle=90),
+                )
+            ],
+        )
 
-    async def _run_draft_agent(self, request: AgentDraftRequest) -> AgentDraft:
+    async def _build_edit_plan(self, user_message: str) -> EditPlanResponse:
+        return self.edit_plan
+
+    async def _run_draft_agent(self, request: AgentDraftRequest, edit_plan: EditPlanResponse) -> AgentDraft:
         return self.draft_result
 
-    async def _run_revision_agent(self, request: AgentRevisionRequest) -> AgentDraft:
+    async def _run_revision_agent(self, request: AgentRevisionRequest, edit_plan: EditPlanResponse) -> AgentDraft:
         return self.revision_result
+
+
+class ClarifyingUserSpecAgent(UserSpecAgent):
+    def __init__(self) -> None:
+        super().__init__(build_runtime(build_test_settings()))
+
+    async def _build_edit_plan(self, user_message: str) -> EditClarificationRequest:
+        return EditClarificationRequest(
+            question="Which pages should be changed?",
+            reason="The request does not specify the target pages.",
+        )
 
 
 @pytest.mark.anyio
@@ -47,13 +71,9 @@ async def test_user_spec_agent_drafts_agent_spec() -> None:
             description="Prepare invoices for review.",
             objective="Normalize invoices before accounting review.",
             steps=[
-                ToolAgentStep(
-                    title="Rotate scans",
-                    description="Rotate pages into portrait orientation.",
-                    tool_step=ToolOperationStep(
-                        tool=OperationId.ROTATE,
-                        parameters=RotateParams(angle=90),
-                    ),
+                ToolOperationStep(
+                    tool=OperationId.ROTATE,
+                    parameters=RotateParams(angle=90),
                 )
             ],
         ),
@@ -86,13 +106,9 @@ async def test_user_spec_agent_revises_existing_draft() -> None:
         description="Prepare invoices for review.",
         objective="Normalize invoices before accounting review.",
         steps=[
-            ToolAgentStep(
-                title="Rotate scans",
-                description="Rotate pages into portrait orientation.",
-                tool_step=ToolOperationStep(
-                    tool=OperationId.ROTATE,
-                    parameters=RotateParams(angle=90),
-                ),
+            ToolOperationStep(
+                tool=OperationId.ROTATE,
+                parameters=RotateParams(angle=90),
             )
         ],
     )
@@ -103,21 +119,13 @@ async def test_user_spec_agent_revises_existing_draft() -> None:
             description="Prepare invoices for review and reduce file size.",
             objective="Normalize invoices before accounting review.",
             steps=[
-                ToolAgentStep(
-                    title="Rotate scans",
-                    description="Rotate pages into portrait orientation.",
-                    tool_step=ToolOperationStep(
-                        tool=OperationId.ROTATE,
-                        parameters=RotateParams(angle=90),
-                    ),
+                ToolOperationStep(
+                    tool=OperationId.ROTATE,
+                    parameters=RotateParams(angle=90),
                 ),
-                ToolAgentStep(
-                    title="Compress files",
-                    description="Reduce file size before upload.",
-                    tool_step=ToolOperationStep(
-                        tool=OperationId.COMPRESS,
-                        parameters=CompressParams(compression_level=5),
-                    ),
+                ToolOperationStep(
+                    tool=OperationId.COMPRESS,
+                    parameters=CompressParams(compression_level=5),
                 ),
             ],
         ),
@@ -135,13 +143,18 @@ async def test_user_spec_agent_revises_existing_draft() -> None:
     assert response.draft.steps[1].kind == "tool"
 
 
-def test_tool_agent_step_rejects_mismatched_parameters() -> None:
+def test_tool_operation_step_rejects_mismatched_parameters() -> None:
     with pytest.raises(ValidationError):
-        ToolAgentStep(
-            title="Rotate scans",
-            description="Rotate pages into portrait orientation.",
-            tool_step=ToolOperationStep(
-                tool=OperationId.ROTATE,
-                parameters=CompressParams(compression_level=5),
-            ),
+        ToolOperationStep(
+            tool=OperationId.ROTATE,
+            parameters=CompressParams(compression_level=5),
         )
+
+
+@pytest.mark.anyio
+async def test_user_spec_agent_propagates_edit_clarification() -> None:
+    agent = ClarifyingUserSpecAgent()
+
+    response = await agent.draft(AgentDraftRequest(user_message="Build an agent to rotate some pages."))
+
+    assert isinstance(response, EditClarificationRequest)

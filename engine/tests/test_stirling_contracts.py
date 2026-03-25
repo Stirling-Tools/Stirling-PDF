@@ -9,7 +9,6 @@ from stirling.contracts import (
     EditPlanResponse,
     ExecutionContext,
     OrchestratorRequest,
-    ToolAgentStep,
     ToolOperationStep,
 )
 from stirling.contracts.agent_specs import AgentSpec
@@ -25,13 +24,9 @@ def test_orchestrator_request_accepts_user_message() -> None:
 
 def test_agent_execution_request_uses_typed_agent_spec() -> None:
     steps: list[AgentSpecStep] = [
-        ToolAgentStep(
-            title="Rotate scans",
-            description="Rotate pages into portrait orientation",
-            tool_step=ToolOperationStep(
-                tool=OperationId.ROTATE,
-                parameters=RotateParams(angle=90),
-            ),
+        ToolOperationStep(
+            tool=OperationId.ROTATE,
+            parameters=RotateParams(angle=90),
         )
     ]
     request = AgentExecutionRequest(

@@ -6,22 +6,27 @@ from fastapi import APIRouter, Depends
 
 from stirling.agents.user_spec import UserSpecAgent
 from stirling.api.dependencies import get_user_spec_agent
-from stirling.contracts import AgentDraftRequest, AgentDraftResponse, AgentRevisionRequest, AgentRevisionResponse
+from stirling.contracts import (
+    AgentDraftRequest,
+    AgentDraftWorkflowResponse,
+    AgentRevisionRequest,
+    AgentRevisionWorkflowResponse,
+)
 
 router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
 
 
-@router.post("/draft", response_model=AgentDraftResponse)
+@router.post("/draft", response_model=AgentDraftWorkflowResponse)
 async def draft_agent(
     request: AgentDraftRequest,
     agent: Annotated[UserSpecAgent, Depends(get_user_spec_agent)],
-) -> AgentDraftResponse:
+) -> AgentDraftWorkflowResponse:
     return await agent.draft(request)
 
 
-@router.post("/revise", response_model=AgentRevisionResponse)
+@router.post("/revise", response_model=AgentRevisionWorkflowResponse)
 async def revise_agent(
     request: AgentRevisionRequest,
     agent: Annotated[UserSpecAgent, Depends(get_user_spec_agent)],
-) -> AgentRevisionResponse:
+) -> AgentRevisionWorkflowResponse:
     return await agent.revise(request)

@@ -10,13 +10,6 @@ from stirling.models.tool_models import OperationId
 from .common import ToolOperationStep
 
 
-class ToolAgentStep(ApiModel):
-    kind: Literal["tool"] = "tool"
-    title: str
-    description: str
-    tool_step: ToolOperationStep
-
-
 class AiToolAgentStep(ApiModel):
     kind: Literal["ai_tool"] = "ai_tool"
     title: str
@@ -25,7 +18,7 @@ class AiToolAgentStep(ApiModel):
     instruction: str
 
 
-AgentSpecStep = Annotated[ToolAgentStep | AiToolAgentStep, Field(discriminator="kind")]
+AgentSpecStep = Annotated[ToolOperationStep | AiToolAgentStep, Field(discriminator="kind")]
 
 
 class AgentSpec(ApiModel):

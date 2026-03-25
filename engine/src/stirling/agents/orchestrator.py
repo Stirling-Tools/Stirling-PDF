@@ -10,7 +10,7 @@ from stirling.agents.pdf_edit import PdfEditAgent
 from stirling.agents.pdf_questions import PdfQuestionAgent
 from stirling.agents.user_spec import UserSpecAgent
 from stirling.contracts import OrchestratorRequest, OrchestratorResponse, UnsupportedCapabilityResponse
-from stirling.contracts.agent_drafts import AgentDraftRequest, AgentDraftResponse
+from stirling.contracts.agent_drafts import AgentDraftRequest, AgentDraftWorkflowResponse
 from stirling.contracts.pdf_edit import (
     PdfEditRequest,
     PdfEditResponse,
@@ -86,7 +86,7 @@ class OrchestratorAgent:
             PdfQuestionRequest(question=request.user_message, conversation_id=request.conversation_id)
         )
 
-    async def delegate_user_spec(self, ctx: RunContext[OrchestratorDeps]) -> AgentDraftResponse:
+    async def delegate_user_spec(self, ctx: RunContext[OrchestratorDeps]) -> AgentDraftWorkflowResponse:
         request = ctx.deps.request
         return await UserSpecAgent(ctx.deps.runtime).draft(AgentDraftRequest(user_message=request.user_message))
 

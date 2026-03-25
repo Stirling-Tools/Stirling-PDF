@@ -154,12 +154,8 @@ def test_agent_revise_route() -> None:
                 "steps": [
                     {
                         "kind": "tool",
-                        "title": "Rotate scans",
-                        "description": "Rotate pages",
-                        "toolStep": {
-                            "tool": "rotate",
-                            "parameters": RotateParams(angle=90).model_dump(by_alias=True),
-                        },
+                        "tool": "rotate",
+                        "parameters": RotateParams(angle=90).model_dump(by_alias=True),
                     }
                 ],
             },
@@ -181,12 +177,8 @@ def test_next_action_route() -> None:
                 "steps": [
                     {
                         "kind": "tool",
-                        "title": "Rotate scans",
-                        "description": "Rotate pages",
-                        "toolStep": {
-                            "tool": "rotate",
-                            "parameters": RotateParams(angle=90).model_dump(by_alias=True),
-                        },
+                        "tool": "rotate",
+                        "parameters": RotateParams(angle=90).model_dump(by_alias=True),
                     }
                 ],
             },

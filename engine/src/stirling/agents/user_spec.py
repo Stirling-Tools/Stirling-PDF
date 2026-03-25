@@ -8,30 +8,25 @@ from stirling.contracts import (
     AgentDraft,
     AgentDraftRequest,
     AgentDraftResponse,
+    AgentDraftWorkflowResponse,
     AgentRevisionRequest,
     AgentRevisionResponse,
-    AgentSpecStep,
+    AgentRevisionWorkflowResponse,
     AiToolAgentStep,
+    EditCannotDoResponse,
+    EditClarificationRequest,
     EditPlanResponse,
     PdfEditRequest,
-    ToolAgentStep,
-    ToolOperationStep,
 )
 from stirling.contracts.common import ConversationMessage
 from stirling.models.base import ApiModel
 from stirling.services.runtime import AppRuntime
 
 
-class UserSpecToolStepPresentation(ApiModel):
-    title: str
-    description: str
-
-
-class UserSpecDraftPlan(ApiModel):
+class UserSpecMetadata(ApiModel):
     name: str
     description: str
     objective: str
-    steps: list[UserSpecToolStepPresentation]
 
 
 class UserSpecAgent:
@@ -40,48 +35,46 @@ class UserSpecAgent:
         self.pdf_edit_agent = PdfEditAgent(runtime)
         self.agent = Agent(
             model=runtime.smart_model,
-            output_type=NativeOutput(UserSpecDraftPlan),
+            output_type=NativeOutput(UserSpecMetadata),
             system_prompt=(
                 "Create or revise a saved agent draft from the provided request and edit plan. "
                 "Return a concise name, description, and objective. "
-                "Also return exactly one title/description pair for each provided tool step, in the same order. "
-                "Do not change the tool order or invent new steps. "
                 "Keep the workflow grounded and practical."
             ),
             model_settings=runtime.smart_model_settings,
         )
 
-    async def draft(self, request: AgentDraftRequest) -> AgentDraftResponse:
-        return AgentDraftResponse(draft=await self._run_draft_agent(request))
-
-    async def revise(self, request: AgentRevisionRequest) -> AgentRevisionResponse:
-        return AgentRevisionResponse(draft=await self._run_revision_agent(request))
-
-    async def _run_draft_agent(self, request: AgentDraftRequest) -> AgentDraft:
+    async def draft(self, request: AgentDraftRequest) -> AgentDraftWorkflowResponse:
         edit_plan = await self._build_edit_plan(request.user_message)
-        plan_result = await self.agent.run(self._build_draft_prompt(request, edit_plan))
-        plan = plan_result.output
-        tool_steps = self._build_tool_steps(edit_plan, plan)
-        return AgentDraft(
-            name=plan.name,
-            description=plan.description,
-            objective=plan.objective,
-            steps=self._combine_steps(tool_steps, []),
-        )
+        if not isinstance(edit_plan, EditPlanResponse):
+            return edit_plan
+        return AgentDraftResponse(draft=await self._run_draft_agent(request, edit_plan))
 
-    async def _run_revision_agent(self, request: AgentRevisionRequest) -> AgentDraft:
+    async def revise(self, request: AgentRevisionRequest) -> AgentRevisionWorkflowResponse:
         edit_plan = await self._build_edit_plan(
             f"Current objective: {request.current_draft.objective}\nRevision request: {request.user_message}"
         )
-        plan_result = await self.agent.run(self._build_revision_prompt(request, edit_plan))
-        plan = plan_result.output
-        tool_steps = self._build_tool_steps(edit_plan, plan)
+        if not isinstance(edit_plan, EditPlanResponse):
+            return edit_plan
+        return AgentRevisionResponse(draft=await self._run_revision_agent(request, edit_plan))
+
+    async def _run_draft_agent(self, request: AgentDraftRequest, edit_plan: EditPlanResponse) -> AgentDraft:
+        metadata = (await self.agent.run(self._build_draft_prompt(request, edit_plan))).output
+        return AgentDraft(
+            name=metadata.name,
+            description=metadata.description,
+            objective=metadata.objective,
+            steps=[*edit_plan.steps],
+        )
+
+    async def _run_revision_agent(self, request: AgentRevisionRequest, edit_plan: EditPlanResponse) -> AgentDraft:
+        metadata = (await self.agent.run(self._build_revision_prompt(request, edit_plan))).output
         preserved_ai_steps = [step for step in request.current_draft.steps if isinstance(step, AiToolAgentStep)]
         return AgentDraft(
-            name=plan.name,
-            description=plan.description,
-            objective=plan.objective,
-            steps=self._combine_steps(tool_steps, preserved_ai_steps),
+            name=metadata.name,
+            description=metadata.description,
+            objective=metadata.objective,
+            steps=[*edit_plan.steps, *preserved_ai_steps],
         )
 
     def _build_draft_prompt(self, request: AgentDraftRequest, edit_plan: EditPlanResponse) -> str:
@@ -108,39 +101,8 @@ class UserSpecAgent:
             return "None"
         return "\n".join(f"- {message.role}: {message.content}" for message in conversation_history)
 
-    async def _build_edit_plan(self, user_message: str) -> EditPlanResponse:
-        edit_result = await self.pdf_edit_agent.handle(PdfEditRequest(user_message=user_message))
-        if not isinstance(edit_result, EditPlanResponse):
-            return EditPlanResponse(summary="No actionable tool steps.", steps=[])
-        return edit_result
-
-    def _build_tool_steps(
+    async def _build_edit_plan(
         self,
-        edit_plan: EditPlanResponse,
-        plan: UserSpecDraftPlan,
-    ) -> list[ToolAgentStep]:
-        return [
-            ToolAgentStep(
-                title=plan.steps[step_index].title if step_index < len(plan.steps) else "Tool step",
-                description=(
-                    plan.steps[step_index].description
-                    if step_index < len(plan.steps)
-                    else "Execute the planned tool step."
-                ),
-                tool_step=ToolOperationStep(
-                    tool=step.tool,
-                    parameters=step.parameters,
-                ),
-            )
-            for step_index, step in enumerate(edit_plan.steps)
-        ]
-
-    def _combine_steps(
-        self,
-        tool_steps: list[ToolAgentStep],
-        ai_steps: list[AiToolAgentStep],
-    ) -> list[AgentSpecStep]:
-        combined_steps: list[AgentSpecStep] = []
-        combined_steps.extend(tool_steps)
-        combined_steps.extend(ai_steps)
-        return combined_steps
+        user_message: str,
+    ) -> EditPlanResponse | EditClarificationRequest | EditCannotDoResponse:
+        return await self.pdf_edit_agent.handle(PdfEditRequest(user_message=user_message))

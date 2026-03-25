@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import Field
 
@@ -8,6 +8,7 @@ from stirling.models.base import ApiModel
 
 from .agent_specs import AgentSpecStep
 from .common import ConversationMessage
+from .pdf_edit import EditCannotDoResponse, EditClarificationRequest
 
 
 class AgentDraftStep(ApiModel):
@@ -42,3 +43,15 @@ class AgentRevisionRequest(ApiModel):
 class AgentRevisionResponse(ApiModel):
     outcome: Literal["draft"] = "draft"
     draft: AgentDraft
+
+
+AgentDraftWorkflowResponse = Annotated[
+    AgentDraftResponse | EditClarificationRequest | EditCannotDoResponse,
+    Field(discriminator="outcome"),
+]
+
+
+AgentRevisionWorkflowResponse = Annotated[
+    AgentRevisionResponse | EditClarificationRequest | EditCannotDoResponse,
+    Field(discriminator="outcome"),
+]

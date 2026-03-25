@@ -3,10 +3,12 @@ from .agent_drafts import (
     AgentDraftRequest,
     AgentDraftResponse,
     AgentDraftStep,
+    AgentDraftWorkflowResponse,
     AgentRevisionRequest,
     AgentRevisionResponse,
+    AgentRevisionWorkflowResponse,
 )
-from .agent_specs import AgentSpec, AgentSpecStep, AiToolAgentStep, ToolAgentStep
+from .agent_specs import AgentSpec, AgentSpecStep, AiToolAgentStep
 from .common import ToolOperationStep
 from .execution import (
     AgentExecutionRequest,
@@ -39,9 +41,11 @@ __all__ = [
     "AgentDraftRequest",
     "AgentDraftResponse",
     "AgentDraftStep",
+    "AgentDraftWorkflowResponse",
     "AgentExecutionRequest",
     "AgentRevisionRequest",
     "AgentRevisionResponse",
+    "AgentRevisionWorkflowResponse",
     "AgentSpec",
     "AgentSpecStep",
     "AiToolAgentStep",
@@ -65,7 +69,6 @@ __all__ = [
     "PdfQuestionResponse",
     "SupportedCapability",
     "ToolOperationStep",
-    "ToolAgentStep",
     "ToolCallExecutionAction",
     "UnsupportedCapabilityResponse",
 ]
