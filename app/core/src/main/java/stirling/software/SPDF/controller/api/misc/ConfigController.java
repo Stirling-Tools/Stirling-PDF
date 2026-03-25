@@ -204,6 +204,27 @@ public class ConfigController {
             boolean invitesEnabled = applicationProperties.getMail().isEnableInvites();
             configData.put("enableEmailInvites", smtpEnabled && invitesEnabled);
 
+            // Storage settings
+            boolean storageEnabled = enableLogin && applicationProperties.getStorage().isEnabled();
+            boolean sharingEnabled =
+                    storageEnabled && applicationProperties.getStorage().getSharing().isEnabled();
+            boolean frontendUrlConfigured = frontendUrl != null && !frontendUrl.trim().isEmpty();
+            boolean shareLinksEnabled =
+                    sharingEnabled
+                            && applicationProperties.getStorage().getSharing().isLinkEnabled()
+                            && frontendUrlConfigured;
+            boolean shareEmailEnabled =
+                    sharingEnabled
+                            && applicationProperties.getStorage().getSharing().isEmailEnabled()
+                            && applicationProperties.getMail().isEnabled();
+            boolean groupSigningEnabled =
+                    storageEnabled && applicationProperties.getStorage().getSigning().isEnabled();
+            configData.put("storageEnabled", storageEnabled);
+            configData.put("storageSharingEnabled", sharingEnabled);
+            configData.put("storageShareLinksEnabled", shareLinksEnabled);
+            configData.put("storageShareEmailEnabled", shareEmailEnabled);
+            configData.put("storageGroupSigningEnabled", groupSigningEnabled);
+
             // Check if user is admin using UserServiceInterface
             boolean isAdmin = false;
             if (userService != null) {

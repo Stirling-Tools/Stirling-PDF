@@ -182,6 +182,9 @@ jobs:
         uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
         with:
           egress-policy: audit
+          allowed-endpoints: >
+            one.digicert.com:443
+            clientauth.one.digicert.com:443
 
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
