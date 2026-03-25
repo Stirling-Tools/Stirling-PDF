@@ -15,6 +15,55 @@ if [ -d /scripts ] && [[ ":${PATH}:" != *":/scripts:"* ]]; then
   export PATH="/scripts:${PATH}"
 fi
 
+# === Shared environment setup ===
+# Lives here so images that call init-without-ocr.sh directly (e.g. ultra-lite)
+# get the same environment as images that go through init.sh first.
+
+_append_env_path() {
+  local target="$1" current="$2"
+  if [ -d "$target" ] && [[ ":${current}:" != *":${target}:"* ]]; then
+    [ -n "$current" ] && printf '%s' "${target}:${current}" || printf '%s' "${target}"
+  else
+    printf '%s' "$current"
+  fi
+}
+
+_python_site_dir() {
+  local venv_dir="$1" python_bin="$1/bin/python" py_tag
+  if [ -x "$python_bin" ]; then
+    if py_tag="$("$python_bin" -c 'import sys; print(f"python{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null)" \
+       && [ -n "$py_tag" ] && [ -d "$venv_dir/lib/$py_tag/site-packages" ]; then
+      printf '%s' "$venv_dir/lib/$py_tag/site-packages"
+    fi
+  fi
+}
+
+# LD_LIBRARY_PATH: arch-specific system libs + LibreOffice
+case "$(uname -m)" in
+  x86_64)  [ -d /usr/lib/x86_64-linux-gnu ] && export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ;;
+  aarch64) [ -d /usr/lib/aarch64-linux-gnu ] && export LD_LIBRARY_PATH="/usr/lib/aarch64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ;;
+esac
+[ -d /usr/lib/libreoffice/program ] && export LD_LIBRARY_PATH="/usr/lib/libreoffice/program${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
+# Python venv PATH + PYTHONPATH
+for _venv_bin in /opt/venv/bin /opt/unoserver-venv/bin; do
+  PATH="$(_append_env_path "$_venv_bin" "$PATH")"
+done
+export PATH
+unset _venv_bin
+
+_py_entries=()
+for _venv in /opt/venv /opt/unoserver-venv; do
+  [ -d "$_venv" ] || continue
+  _site="$(_python_site_dir "$_venv")"
+  [ -n "${_site:-}" ] && _py_entries+=("$_site")
+done
+if [ ${#_py_entries[@]} -gt 0 ]; then
+  PYTHONPATH="$(IFS=:; printf '%s' "${_py_entries[*]}")${PYTHONPATH:+:$PYTHONPATH}"
+  export PYTHONPATH
+fi
+unset _venv _site _py_entries
+
 if [ -x /scripts/stirling-diagnostics.sh ]; then
   mkdir -p /usr/local/bin
   ln -sf /scripts/stirling-diagnostics.sh /usr/local/bin/diagnostics
@@ -362,11 +411,13 @@ AOT_ENABLED="${STIRLING_AOT_ENABLE:-false}"
 # Detects the container memory limit (in MB) from cgroups v2/v1 or /proc/meminfo.
 detect_container_memory_mb() {
   local mem_bytes=""
+  local no_cgroup_limit=false
   # cgroups v2
   if [ -f /sys/fs/cgroup/memory.max ]; then
     mem_bytes=$(cat /sys/fs/cgroup/memory.max 2>/dev/null)
     if [ "$mem_bytes" = "max" ]; then
       mem_bytes=""
+      no_cgroup_limit=true
     fi
   fi
   # cgroups v1 fallback
@@ -376,11 +427,33 @@ detect_container_memory_mb() {
     # Use string-length heuristic (>=19 digits) to avoid shell integer overflow on Alpine/busybox
     if [ "${#mem_bytes}" -ge 19 ]; then
       mem_bytes=""
+      no_cgroup_limit=true
     fi
   fi
-  # Fallback to system total memory
+  # Fallback when no cgroup memory limit is found.
+  # If running inside a container (/.dockerenv or /run/.containerenv present) with no
+  # limit set, the host's /proc/meminfo would return the full host RAM.  Using that
+  # value causes InitialRAMPercentage to pre-commit gigabytes of heap against the host's
+  # RAM, making idle RSS absurdly large.  Cap the effective size at 2 GB so the JVM
+  # stays proportionate.  Users who need more should set -m / mem_limit in their
+  # docker-compose to get accurate sizing.
   if [ -z "$mem_bytes" ]; then
-    mem_bytes=$(awk '/MemTotal/ {print $2 * 1024}' /proc/meminfo 2>/dev/null)
+    local host_mem_bytes
+    host_mem_bytes=$(awk '/MemTotal/ {print $2 * 1024}' /proc/meminfo 2>/dev/null)
+    if [ "$no_cgroup_limit" = true ] && \
+       { [ -f /.dockerenv ] || [ -f /run/.containerenv ]; }; then
+      local cap_bytes=$(( 2048 * 1048576 ))
+      if [ "${host_mem_bytes:-0}" -gt "$cap_bytes" ] 2>/dev/null; then
+        log "WARNING: No container memory limit set. Host has $(( host_mem_bytes / 1048576 ))MB RAM."
+        log "Capping JVM sizing at 2048MB to avoid over-committing host memory."
+        log "Set mem_limit / -m in docker-compose or docker run to control heap sizing."
+        mem_bytes=$cap_bytes
+      else
+        mem_bytes=$host_mem_bytes
+      fi
+    else
+      mem_bytes=$host_mem_bytes
+    fi
   fi
   if [ -n "$mem_bytes" ] && [ "$mem_bytes" -gt 0 ] 2>/dev/null; then
     echo $(( mem_bytes / 1048576 ))
@@ -389,11 +462,11 @@ detect_container_memory_mb() {
   fi
 }
 
-# Computes dynamic JVM memory flags based on detected container memory and profile.
+# Computes dynamic JVM memory flags based on detected container memory.
+# Uses performance-oriented settings (Shenandoah GC).
 # Sets: DYNAMIC_INITIAL_RAM_PCT, DYNAMIC_MAX_RAM_PCT, DYNAMIC_MAX_METASPACE
 compute_dynamic_memory() {
   local mem_mb=$1
-  local profile=${2:-balanced}
 
   if [ "$mem_mb" -le 0 ] 2>/dev/null; then
     # Cannot detect memory; use safe defaults
@@ -405,7 +478,7 @@ compute_dynamic_memory() {
 
   log "Detected container memory: ${mem_mb}MB"
 
-  # NOTE: MaxRAMPercentage governs HEAP only. Total JVM footprint also includes:
+  # NOTE: MaxRamPercentage governs HEAP only. Total JVM footprint also includes:
   # - Metaspace (MaxMetaspaceSize)
   # - Code cache (~100-200MB)
   # - Thread stacks (~1MB each × virtual threads)
@@ -424,20 +497,14 @@ compute_dynamic_memory() {
     DYNAMIC_MAX_RAM_PCT=65
     DYNAMIC_MAX_METASPACE=192
   elif [ "$mem_mb" -le 4096 ]; then
-    DYNAMIC_INITIAL_RAM_PCT=15
+    DYNAMIC_INITIAL_RAM_PCT=25
     DYNAMIC_MAX_RAM_PCT=70
     DYNAMIC_MAX_METASPACE=256
   else
-    # Large memory: be conservative to leave room for off-heap (LibreOffice, Calibre, etc.)
-    if [ "$profile" = "performance" ]; then
-      DYNAMIC_INITIAL_RAM_PCT=20
-      DYNAMIC_MAX_RAM_PCT=70
-      DYNAMIC_MAX_METASPACE=512
-    else
-      DYNAMIC_INITIAL_RAM_PCT=10
-      DYNAMIC_MAX_RAM_PCT=50
-      DYNAMIC_MAX_METASPACE=256
-    fi
+    # Large memory (>4GB): cap at 70% to leave room for off-heap (LibreOffice, Calibre, etc.)
+    DYNAMIC_INITIAL_RAM_PCT=25
+    DYNAMIC_MAX_RAM_PCT=70
+    DYNAMIC_MAX_METASPACE=256
   fi
 
   log "Dynamic memory: InitialRAM=${DYNAMIC_INITIAL_RAM_PCT}%, MaxRAM=${DYNAMIC_MAX_RAM_PCT}%, MaxMeta=${DYNAMIC_MAX_METASPACE}m"
@@ -654,8 +721,7 @@ save_aot_fingerprint() {
 
 # ---------- Memory Detection ----------
 CONTAINER_MEM_MB=$(detect_container_memory_mb)
-JVM_PROFILE="${STIRLING_JVM_PROFILE:-balanced}"
-compute_dynamic_memory "$CONTAINER_MEM_MB" "$JVM_PROFILE"
+compute_dynamic_memory "$CONTAINER_MEM_MB"
 MEMORY_FLAGS="-XX:InitialRAMPercentage=${DYNAMIC_INITIAL_RAM_PCT} -XX:MaxRAMPercentage=${DYNAMIC_MAX_RAM_PCT} -XX:MaxMetaspaceSize=${DYNAMIC_MAX_METASPACE}m"
 
 # ---------- Compressed Oops Detection ----------
@@ -673,32 +739,34 @@ if [ "$AOT_ENABLED" = "true" ]; then
   fi
 fi
 
-# ---------- JVM Profile Selection ----------
-# Resolve JAVA_BASE_OPTS from profile system or user override.
-# Priority: JAVA_BASE_OPTS (explicit override) > STIRLING_JVM_PROFILE > fallback defaults
-if [ -z "${JAVA_BASE_OPTS:-}" ]; then
-  case "$JVM_PROFILE" in
-    performance)
-      if [ -n "${_JVM_OPTS_PERFORMANCE:-}" ]; then
-        JAVA_BASE_OPTS="${_JVM_OPTS_PERFORMANCE}"
-        log "JVM profile: performance (Shenandoah generational)"
-      else
-        JAVA_BASE_OPTS="${_JVM_OPTS_BALANCED:-}"
-        log "Performance profile not available in this image; falling back to balanced"
-      fi
-      ;;
-    *)
-      if [ -n "${_JVM_OPTS_BALANCED:-}" ]; then
-        JAVA_BASE_OPTS="${_JVM_OPTS_BALANCED}"
-        log "JVM profile: balanced (G1GC)"
-      else
-        log "JAVA_BASE_OPTS and profiles unset; applying fallback defaults."
-        JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m -XX:G1PeriodicGCInterval=60000 -XX:+UseStringDeduplication -XX:+UseCompactObjectHeaders -XX:+ExplicitGCInvokesConcurrent -Dspring.threads.virtual.enabled=true"
-      fi
-      ;;
-  esac
+# ---------- JVM Options ----------
+# Resolve JAVA_BASE_OPTS from _JVM_OPTS or user override.
+# Priority: JAVA_BASE_OPTS (explicit override) > _JVM_OPTS > fallback defaults
+# Memory percentages are computed dynamically by compute_dynamic_memory().
 
-  # Strip any hardcoded memory/CDS/AOT flags from the profile (managed dynamically)
+# Calculate ConcGCThreads dynamically based on available CPUs
+# Shenandoah defaults to ParallelGCThreads/4; we cap it for large hosts
+AVAILABLE_CPUS=$(nproc 2>/dev/null || echo "2")
+if [ "$AVAILABLE_CPUS" -ge 16 ]; then
+  CONC_GC_THREADS=4
+elif [ "$AVAILABLE_CPUS" -ge 8 ]; then
+  CONC_GC_THREADS=3
+elif [ "$AVAILABLE_CPUS" -ge 4 ]; then
+  CONC_GC_THREADS=2
+else
+  CONC_GC_THREADS=1
+fi
+
+if [ -z "${JAVA_BASE_OPTS:-}" ]; then
+  if [ -n "${_JVM_OPTS:-}" ]; then
+    JAVA_BASE_OPTS="${_JVM_OPTS} -XX:ConcGCThreads=${CONC_GC_THREADS}"
+    log "Using JVM options: Shenandoah generational GC (ConcGCThreads=${CONC_GC_THREADS})"
+  else
+    log "JAVA_BASE_OPTS and _JVM_OPTS unset; applying fallback defaults."
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedYoungGCInterval=10000 -XX:ShenandoahGuaranteedOldGCInterval=30000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -XX:ReservedCodeCacheSize=96m -Djdk.virtualThreadScheduler.maxPoolSize=4 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
+  fi
+
+  # Strip any hardcoded memory/CDS/AOT flags from the options (managed dynamically)
   JAVA_BASE_OPTS=$(echo "$JAVA_BASE_OPTS" | sed -E \
     's/-XX:InitialRAMPercentage=[^ ]*//g;
      s/-XX:MinRAMPercentage=[^ ]*//g;
@@ -1010,7 +1078,7 @@ if [ "$AOT_GENERATE_BACKGROUND" = true ]; then
         fi
       done
       log "AOT: All attempts failed. App runs normally without cache."
-      log "AOT: To disable, set STIRLING_AOT_ENABLE=false (or omit it, default is off)"
+      log "AOT: To disable, set STIRLING_AOT_ENABLE=false"
     ) &
     AOT_GEN_PID=$!
     log "AOT: Background generation scheduled (PID $AOT_GEN_PID, arch=$(uname -m))"

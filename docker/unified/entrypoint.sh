@@ -46,11 +46,79 @@ setup_ocr() {
     echo "Using TESSDATA_PREFIX=$TESSDATA_PREFIX"
 }
 
+# Function to download the security-enabled JAR when DOCKER_ENABLE_SECURITY=true
+# or DISABLE_ADDITIONAL_FEATURES=false, mirroring scripts/download-security-jar.sh.
+setup_security() {
+    echo "Running Stirling PDF with DISABLE_ADDITIONAL_FEATURES=${DISABLE_ADDITIONAL_FEATURES:-} and VERSION_TAG=${VERSION_TAG:-}"
+
+    local version="${VERSION_TAG:-}"
+
+    if [ "$version" = "alpha" ] || [ "$version" = "ALPHA" ]; then
+        return
+    fi
+
+    local need_security=false
+    if [ "${DOCKER_ENABLE_SECURITY:-}" = "true" ] || [ "${DOCKER_ENABLE_SECURITY:-}" = "TRUE" ]; then
+        need_security=true
+    fi
+    if [ "${DISABLE_ADDITIONAL_FEATURES:-}" = "false" ] || [ "${DISABLE_ADDITIONAL_FEATURES:-}" = "FALSE" ]; then
+        need_security=true
+    fi
+
+    if [ "$need_security" = false ]; then
+        return
+    fi
+
+    if [ -z "$version" ]; then
+        echo "[WARN] DOCKER_ENABLE_SECURITY requested but VERSION_TAG is unset; skipping security JAR download"
+        return
+    fi
+
+    local security_jar="/app-security.jar"
+    if [ -f "$security_jar" ]; then
+        echo "Security JAR already present: $security_jar"
+        # Ensure /app.jar points to it
+        if [ ! -L /app.jar ] || [ "$(readlink /app.jar)" != "$security_jar" ]; then
+            rm -f /app.jar
+            ln -s "$security_jar" /app.jar
+            chown stirlingpdfuser:stirlingpdfgroup /app.jar 2>/dev/null || true
+        fi
+        return
+    fi
+
+    echo "Downloading security JAR for version ${version}..."
+    local dl_ok=false
+
+    if curl -L -o "$security_jar" "https://files.stirlingpdf.com/v${version}/Stirling-PDF-with-login.jar" 2>/dev/null; then
+        dl_ok=true
+    elif curl -L -o "$security_jar" "https://files.stirlingpdf.com/${version}/Stirling-PDF-with-login.jar" 2>/dev/null; then
+        dl_ok=true
+    fi
+
+    if [ "$dl_ok" = true ]; then
+        rm -f /app.jar
+        ln -s "$security_jar" /app.jar
+        chown stirlingpdfuser:stirlingpdfgroup /app.jar 2>/dev/null || true
+        chmod 755 /app.jar 2>/dev/null || true
+        echo "Security JAR installed: $security_jar"
+    else
+        rm -f "$security_jar"
+        echo "[WARN] Failed to download security JAR; running without security features"
+    fi
+}
+
 # Function to setup user permissions (from init-without-ocr.sh)
 setup_permissions() {
     echo "Setting up user permissions..."
 
-    export JAVA_TOOL_OPTIONS="${JAVA_BASE_OPTS} ${JAVA_CUSTOM_OPTS}"
+    # Build JAVA_TOOL_OPTIONS from JAVA_BASE_OPTS + JAVA_CUSTOM_OPTS.
+    # Prepend headless flag if not already present.
+    local jvm_opts="${JAVA_BASE_OPTS:-} ${JAVA_CUSTOM_OPTS:-}"
+    case "$jvm_opts" in
+        *java.awt.headless*) ;;
+        *) jvm_opts="-Djava.awt.headless=true ${jvm_opts}" ;;
+    esac
+    export JAVA_TOOL_OPTIONS="$jvm_opts"
 
     # Update user and group IDs
     if [ ! -z "$PUID" ] && [ "$PUID" != "$(id -u stirlingpdfuser)" ]; then
@@ -96,7 +164,7 @@ run_as_user() {
         su-exec stirlingpdfuser "$@"
     else
         # Already running as non-root
-        exec "$@"
+        "$@"
     fi
 }
 
@@ -295,9 +363,12 @@ start_unoserver_pool() {
     start_unoserver_watchdog
 }
 
-# Setup OCR and permissions
+# Setup OCR, security, and permissions
 setup_ocr
+setup_security
 setup_permissions
+
+echo "JAVA_TOOL_OPTIONS=${JAVA_TOOL_OPTIONS}"
 
 # Handle different modes
 case "$MODE" in
@@ -309,10 +380,11 @@ case "$MODE" in
 
         # Start backend on internal port
         echo "Starting backend on port ${BACKEND_INTERNAL_PORT:-8081}..."
-        run_as_user sh -c "java -Dfile.encoding=UTF-8 \
+        run_as_user java \
+            -Dfile.encoding=UTF-8 \
             -Djava.io.tmpdir=/tmp/stirling-pdf \
-            -Dserver.port=${BACKEND_INTERNAL_PORT:-8081} \
-            -jar /app.jar" &
+            "-Dserver.port=${BACKEND_INTERNAL_PORT:-8081}" \
+            -jar /app.jar &
         BACKEND_PID=$!
 
         # Start unoserver pool for document conversion
@@ -356,10 +428,11 @@ case "$MODE" in
 
         # Start backend on port 8080
         echo "Starting backend on port 8080..."
-        run_as_user sh -c "java -Dfile.encoding=UTF-8 \
+        run_as_user java \
+            -Dfile.encoding=UTF-8 \
             -Djava.io.tmpdir=/tmp/stirling-pdf \
             -Dserver.port=8080 \
-            -jar /app.jar" &
+            -jar /app.jar &
         BACKEND_PID=$!
         start_unoserver_pool
 
