@@ -30,8 +30,8 @@ from stirling.models.tool_models import RotateParams
 class StubSettingsProvider:
     def __call__(self) -> AppSettings:
         return AppSettings(
-            smart_model_name="claude-sonnet-4-5-20250929",
-            fast_model_name="claude-haiku-4-5-20251001",
+            smart_model_name="test",
+            fast_model_name="test",
             smart_model_max_tokens=8192,
             fast_model_max_tokens=2048,
         )
