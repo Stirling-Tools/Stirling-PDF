@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from stirling.api.app import app
+from stirling.api import app
 from stirling.api.dependencies import (
     get_execution_planning_agent,
     get_orchestrator_agent,
@@ -8,7 +8,7 @@ from stirling.api.dependencies import (
     get_pdf_question_agent,
     get_user_spec_agent,
 )
-from stirling.config.settings import AppSettings, load_settings
+from stirling.config import AppSettings, load_settings
 from stirling.contracts import (
     AgentDraft,
     AgentDraftRequest,

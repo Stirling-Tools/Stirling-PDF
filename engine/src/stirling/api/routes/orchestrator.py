@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from stirling.agents.orchestrator import OrchestratorAgent
+from stirling.agents import OrchestratorAgent
 from stirling.api.dependencies import get_orchestrator_agent
 from stirling.contracts import OrchestratorRequest, OrchestratorResponse
 

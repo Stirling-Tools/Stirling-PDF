@@ -5,11 +5,7 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI
 
-from stirling.agents.execution import ExecutionPlanningAgent
-from stirling.agents.orchestrator import OrchestratorAgent
-from stirling.agents.pdf_edit import PdfEditAgent
-from stirling.agents.pdf_questions import PdfQuestionAgent
-from stirling.agents.user_spec import UserSpecAgent
+from stirling.agents import ExecutionPlanningAgent, OrchestratorAgent, PdfEditAgent, PdfQuestionAgent, UserSpecAgent
 from stirling.api.routes import (
     agent_draft_router,
     execution_router,
@@ -17,9 +13,9 @@ from stirling.api.routes import (
     pdf_edit_router,
     pdf_question_router,
 )
-from stirling.config.settings import AppSettings, load_settings
+from stirling.config import AppSettings, load_settings
 from stirling.contracts import HealthResponse
-from stirling.services.runtime import build_runtime
+from stirling.services import build_runtime
 
 
 def _load_startup_settings(fast_api: FastAPI) -> AppSettings:

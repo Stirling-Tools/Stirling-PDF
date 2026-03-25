@@ -2,14 +2,13 @@ from .agent_drafts import (
     AgentDraft,
     AgentDraftRequest,
     AgentDraftResponse,
-    AgentDraftStep,
     AgentDraftWorkflowResponse,
     AgentRevisionRequest,
     AgentRevisionResponse,
     AgentRevisionWorkflowResponse,
 )
 from .agent_specs import AgentSpec, AgentSpecStep, AiToolAgentStep
-from .common import ToolOperationStep
+from .common import ConversationMessage, PdfTextSelection, ToolOperationStep
 from .execution import (
     AgentExecutionRequest,
     CannotContinueExecutionAction,
@@ -40,7 +39,6 @@ __all__ = [
     "AgentDraft",
     "AgentDraftRequest",
     "AgentDraftResponse",
-    "AgentDraftStep",
     "AgentDraftWorkflowResponse",
     "AgentExecutionRequest",
     "AgentRevisionRequest",
@@ -50,6 +48,7 @@ __all__ = [
     "AgentSpecStep",
     "AiToolAgentStep",
     "CannotContinueExecutionAction",
+    "ConversationMessage",
     "CompletedExecutionAction",
     "EditCannotDoResponse",
     "EditClarificationRequest",
@@ -67,6 +66,7 @@ __all__ = [
     "PdfQuestionNeedTextResponse",
     "PdfQuestionRequest",
     "PdfQuestionResponse",
+    "PdfTextSelection",
     "SupportedCapability",
     "ToolOperationStep",
     "ToolCallExecutionAction",

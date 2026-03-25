@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import pytest
 
-from stirling.agents.pdf_questions import PdfQuestionAgent
-from stirling.config.settings import AppSettings
+from stirling.agents import PdfQuestionAgent
+from stirling.config import AppSettings
 from stirling.contracts import (
     PdfQuestionAnswerResponse,
     PdfQuestionNeedTextResponse,
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
 )
-from stirling.services.runtime import build_runtime
+from stirling.services import build_runtime
 
 
 class StubPdfQuestionAgent(PdfQuestionAgent):

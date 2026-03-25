@@ -2,17 +2,17 @@ from collections.abc import Iterator
 
 import pytest
 
-from stirling.config.settings import AppSettings, load_settings
+from stirling.config import AppSettings, load_settings
 from stirling.contracts import (
     AgentExecutionRequest,
+    AgentSpec,
     AgentSpecStep,
     EditPlanResponse,
     ExecutionContext,
     OrchestratorRequest,
+    PdfQuestionAnswerResponse,
     ToolOperationStep,
 )
-from stirling.contracts.agent_specs import AgentSpec
-from stirling.contracts.pdf_questions import PdfQuestionAnswerResponse
 from stirling.models.tool_models import OperationId, RotateParams
 
 

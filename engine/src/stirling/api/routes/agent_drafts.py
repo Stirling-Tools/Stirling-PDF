@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from stirling.agents.user_spec import UserSpecAgent
+from stirling.agents import UserSpecAgent
 from stirling.api.dependencies import get_user_spec_agent
 from stirling.contracts import (
     AgentDraftRequest,

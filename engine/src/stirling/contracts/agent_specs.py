@@ -4,8 +4,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field
 
-from stirling.models.base import ApiModel
-from stirling.models.tool_models import OperationId
+from stirling.models import ApiModel, OperationId
 
 from .common import ToolOperationStep
 

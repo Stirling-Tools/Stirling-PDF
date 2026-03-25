@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from stirling.models.base import ApiModel
+from stirling.models import ApiModel
 
 
 class HealthResponse(ApiModel):

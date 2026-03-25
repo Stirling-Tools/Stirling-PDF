@@ -4,8 +4,7 @@ from typing import Literal
 
 from pydantic import model_validator
 
-from stirling.models.base import ApiModel
-from stirling.models.tool_models import OPERATIONS, OperationId, ParamToolModel
+from stirling.models import OPERATIONS, ApiModel, OperationId, ParamToolModel
 
 
 class ConversationMessage(ApiModel):

@@ -9,17 +9,18 @@ from pydantic_ai.tools import RunContext
 from stirling.agents.pdf_edit import PdfEditAgent
 from stirling.agents.pdf_questions import PdfQuestionAgent
 from stirling.agents.user_spec import UserSpecAgent
-from stirling.contracts import OrchestratorRequest, OrchestratorResponse, UnsupportedCapabilityResponse
-from stirling.contracts.agent_drafts import AgentDraftRequest, AgentDraftWorkflowResponse
-from stirling.contracts.pdf_edit import (
+from stirling.contracts import (
+    AgentDraftRequest,
+    AgentDraftWorkflowResponse,
+    OrchestratorRequest,
+    OrchestratorResponse,
     PdfEditRequest,
     PdfEditResponse,
-)
-from stirling.contracts.pdf_questions import (
     PdfQuestionRequest,
     PdfQuestionResponse,
+    UnsupportedCapabilityResponse,
 )
-from stirling.services.runtime import AppRuntime
+from stirling.services import AppRuntime
 
 
 @dataclass(frozen=True)

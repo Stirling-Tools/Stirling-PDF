@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from stirling.agents.pdf_questions import PdfQuestionAgent
+from stirling.agents import PdfQuestionAgent
 from stirling.api.dependencies import get_pdf_question_agent
 from stirling.contracts import PdfQuestionRequest, PdfQuestionResponse
 

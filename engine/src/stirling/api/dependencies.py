@@ -2,12 +2,8 @@ from __future__ import annotations
 
 from fastapi import Request
 
-from stirling.agents.execution import ExecutionPlanningAgent
-from stirling.agents.orchestrator import OrchestratorAgent
-from stirling.agents.pdf_edit import PdfEditAgent
-from stirling.agents.pdf_questions import PdfQuestionAgent
-from stirling.agents.user_spec import UserSpecAgent
-from stirling.services.runtime import AppRuntime
+from stirling.agents import ExecutionPlanningAgent, OrchestratorAgent, PdfEditAgent, PdfQuestionAgent, UserSpecAgent
+from stirling.services import AppRuntime
 
 
 def get_runtime(request: Request) -> AppRuntime:

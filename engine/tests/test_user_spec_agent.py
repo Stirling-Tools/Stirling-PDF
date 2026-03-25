@@ -3,19 +3,19 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from stirling.agents.user_spec import UserSpecAgent
-from stirling.config.settings import AppSettings
+from stirling.agents import UserSpecAgent
+from stirling.config import AppSettings
 from stirling.contracts import (
     AgentDraft,
     AgentDraftRequest,
     AgentRevisionRequest,
+    ConversationMessage,
     EditClarificationRequest,
     EditPlanResponse,
     ToolOperationStep,
 )
-from stirling.contracts.common import ConversationMessage
 from stirling.models.tool_models import CompressParams, OperationId, RotateParams
-from stirling.services.runtime import build_runtime
+from stirling.services import build_runtime
 
 
 def build_test_settings() -> AppSettings:

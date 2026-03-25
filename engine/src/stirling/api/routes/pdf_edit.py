@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from stirling.agents.pdf_edit import PdfEditAgent
+from stirling.agents import PdfEditAgent
 from stirling.api.dependencies import get_pdf_edit_agent
 from stirling.contracts import PdfEditRequest, PdfEditResponse
 

@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from stirling.agents.execution import ExecutionPlanningAgent
+from stirling.agents import ExecutionPlanningAgent
 from stirling.api.dependencies import get_execution_planning_agent
 from stirling.contracts import AgentExecutionRequest, NextExecutionAction
 

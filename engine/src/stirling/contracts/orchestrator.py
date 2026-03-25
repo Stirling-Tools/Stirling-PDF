@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field
 
-from stirling.models.base import ApiModel
+from stirling.models import ApiModel
 
 from .agent_drafts import AgentDraftResponse
 from .execution import NextExecutionAction

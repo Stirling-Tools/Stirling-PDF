@@ -10,7 +10,7 @@ from stirling.contracts import (
     PdfQuestionRequest,
     PdfQuestionResponse,
 )
-from stirling.services.runtime import AppRuntime
+from stirling.services import AppRuntime
 
 
 class PdfQuestionAgent:

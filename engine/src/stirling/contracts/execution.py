@@ -4,8 +4,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import Field
 
-from stirling.models.base import ApiModel
-from stirling.models.tool_models import OperationId, ParamToolModel
+from stirling.models import ApiModel, OperationId, ParamToolModel
 
 from .agent_specs import AgentSpec
 

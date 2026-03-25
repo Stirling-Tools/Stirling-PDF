@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from stirling.models.base import ApiModel
-from stirling.models.tool_models import OperationId, ParamToolModel
+from stirling.models import ApiModel, OperationId, ParamToolModel
 
 
 class JavaToolCall(ApiModel):

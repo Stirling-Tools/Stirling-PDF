@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from stirling.contracts import AgentExecutionRequest, CannotContinueExecutionAction, NextExecutionAction
-from stirling.services.runtime import AppRuntime
+from stirling.services import AppRuntime
 
 
 class ExecutionPlanningAgent:

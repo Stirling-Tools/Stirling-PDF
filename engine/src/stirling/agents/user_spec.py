@@ -13,14 +13,14 @@ from stirling.contracts import (
     AgentRevisionResponse,
     AgentRevisionWorkflowResponse,
     AiToolAgentStep,
+    ConversationMessage,
     EditCannotDoResponse,
     EditClarificationRequest,
     EditPlanResponse,
     PdfEditRequest,
 )
-from stirling.contracts.common import ConversationMessage
-from stirling.models.base import ApiModel
-from stirling.services.runtime import AppRuntime
+from stirling.models import ApiModel
+from stirling.services import AppRuntime
 
 
 class UserSpecMetadata(ApiModel):

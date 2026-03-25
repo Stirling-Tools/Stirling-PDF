@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pydantic_ai.models import Model, infer_model
 from pydantic_ai.settings import ModelSettings
 
-from stirling.config.settings import AppSettings
+from stirling.config import AppSettings
 from stirling.services.java_client import JavaClient, UnavailableJavaClient
 
 

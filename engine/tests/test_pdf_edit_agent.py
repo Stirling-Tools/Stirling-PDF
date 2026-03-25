@@ -4,8 +4,8 @@ from dataclasses import dataclass
 
 import pytest
 
-from stirling.agents.pdf_edit import PdfEditAgent, PdfEditParameterSelector, PdfEditPlanSelection
-from stirling.config.settings import AppSettings
+from stirling.agents import PdfEditAgent, PdfEditParameterSelector, PdfEditPlanSelection
+from stirling.config import AppSettings
 from stirling.contracts import (
     EditCannotDoResponse,
     EditClarificationRequest,
@@ -14,7 +14,7 @@ from stirling.contracts import (
     ToolOperationStep,
 )
 from stirling.models.tool_models import CompressParams, OperationId, RotateParams
-from stirling.services.runtime import build_runtime
+from stirling.services import build_runtime
 
 
 def build_test_settings() -> AppSettings:
