@@ -3,6 +3,8 @@ import { type ThemeMode, getSystemTheme } from '@app/constants/theme';
 
 export type LogoVariant = 'modern' | 'classic';
 
+export type PdfRenderMode = 'normal' | 'dark' | 'sepia';
+
 export interface UserPreferences {
   autoUnzip: boolean;
   autoUnzipFileLimit: number;
@@ -17,6 +19,7 @@ export interface UserPreferences {
   hideUnavailableTools: boolean;
   hideUnavailableConversions: boolean;
   logoVariant: LogoVariant | null;
+  pdfRenderMode: PdfRenderMode;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -33,6 +36,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   hideUnavailableTools: false,
   hideUnavailableConversions: false,
   logoVariant: null,
+  pdfRenderMode: 'normal',
 };
 
 const STORAGE_KEY = 'stirlingpdf_preferences';
