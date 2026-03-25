@@ -381,23 +381,38 @@ const EmbedPdfViewerContent = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       const mod = event.ctrlKey || event.metaKey;
 
-      // Ctrl+P (print) and Ctrl+R (rotate) must be intercepted unconditionally
+      // Ctrl+P (print) must be intercepted unconditionally
       // whenever the viewer is mounted, even before the user has hovered over it.
+      // Ctrl+R (rotate) is intercepted only on desktop (Tauri), while on web it still falls through to browser refresh.
       // Without this, the browser falls through to its native "print HTML page"
       // or "reload page" behaviour.
+
       if (mod) {
+        const isDesktop = isTauri();
         const target = event.target as Element;
         const isInTextInput =
           target.tagName === 'INPUT' ||
           target.tagName === 'TEXTAREA' ||
           (target as HTMLElement).isContentEditable;
-
+          
         if (!isInTextInput) {
           switch (event.key) {
             case 'p':
             case 'P':
               event.preventDefault();
               printActions.print();
+              return;
+            // Ctrl+R: Rotate PDF when on desktop or refresh when on web
+            case 'r':
+            case 'R':
+              if (isDesktop) {
+                event.preventDefault();
+                if (event.shiftKey) {
+                  rotationActions.rotateBackward();
+                } else {
+                  rotationActions.rotateForward();
+                }
+              }
               return;
           }
         }
@@ -410,7 +425,6 @@ const EmbedPdfViewerContent = ({
 
       // Modifier key shortcuts (Ctrl/Cmd + key)
       if (mod) {
-        const isDesktop = isTauri();
         switch (event.key) {
           case '=':
           case '+':
@@ -439,18 +453,6 @@ const EmbedPdfViewerContent = ({
               window.dispatchEvent(new CustomEvent('refocus-search-input'));
             } else {
               searchInterfaceActions.open();
-            }
-            return;
-          case 'r':
-          case 'R':
-            // Ctrl+R: Rotate Pdf when on desktop (if hovered) or refresh when on web
-            if (isDesktop) {
-              event.preventDefault();
-              if (event.shiftKey) {
-                rotationActions.rotateBackward();
-              } else {
-                rotationActions.rotateForward();
-              }
             }
             return;
           case 's':
