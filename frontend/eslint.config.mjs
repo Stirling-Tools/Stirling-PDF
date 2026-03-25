@@ -13,6 +13,11 @@ const nodeGlobs = [
   '*.config.{js,ts,mjs}',
 ];
 
+const baseRestrictedImportPatterns = [
+  { regex: '^\\.', message: "Use @app/* imports instead of relative imports." },
+  { regex: '^src/', message: "Use @app/* imports instead of absolute src/ imports." },
+];
+
 export default defineConfig(
   {
     // Everything that contains 3rd party code that we don't want to lint
@@ -30,10 +35,7 @@ export default defineConfig(
       'no-restricted-imports': [
         'error',
         {
-          patterns: [
-            ".*", // Disallow any relative imports (they should be '@app/x/y/z' or similar)
-            "src/*", // Disallow any absolute imports (they should be '@app/x/y/z' or similar)
-          ],
+          patterns: baseRestrictedImportPatterns,
         },
       ],
       '@typescript-eslint/no-empty-object-type': [
@@ -68,11 +70,10 @@ export default defineConfig(
         'error',
         {
           patterns: [
-            { regex: '^\\.', message: "Use @app/* imports instead of relative imports." },
-            { regex: '^src/', message: "Use @app/* imports instead of absolute src/ imports." },
+            ...baseRestrictedImportPatterns,
             {
               regex: '^@tauri-apps/',
-              message: "Tauri APIs are desktop-only. Review frontend/DeveloperGuide.md for how to correctly structure desktop code.",
+              message: "Tauri APIs are desktop-only. Review frontend/DeveloperGuide.md for structure advice.",
             },
           ],
         },
