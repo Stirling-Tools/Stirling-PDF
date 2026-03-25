@@ -31,6 +31,47 @@ find_root() {
 
 PROJECT_ROOT=$(find_root)
 
+# Base image version - must be provided or read from environment
+# This is a testing-specific version; production should pass explicit BASE_VERSION
+if [ -z "$BASE_VERSION" ]; then
+    # For CI/automation: use a unique test identifier
+    if [ -n "${GITHUB_RUN_ID}" ]; then
+        BASE_VERSION="test-${GITHUB_RUN_ID}"
+    else
+        # For local testing: generate unique identifier
+        BASE_VERSION="test-local-$(date +%s)"
+    fi
+fi
+BASE_IMAGE="ghcr.io/stirling-tools/stirling-pdf-base:${BASE_VERSION}"
+
+# Function to ensure base image exists (build if missing)
+ensure_base_image() {
+    echo "Checking for base image: $BASE_IMAGE"
+
+    if docker image inspect "$BASE_IMAGE" >/dev/null 2>&1; then
+        echo "✓ Base image found locally: $BASE_IMAGE"
+        return 0
+    fi
+
+    echo "Base image not found. Attempting to pull from registry..."
+    if docker pull "$BASE_IMAGE" 2>/dev/null; then
+        echo "✓ Pulled base image from registry: $BASE_IMAGE"
+        return 0
+    fi
+
+    echo "Base image not available in registry. Building from source..."
+    if docker build -f "$PROJECT_ROOT/docker/base/Dockerfile" \
+        -t "$BASE_IMAGE" \
+        --build-arg BASE_VERSION="$BASE_VERSION" \
+        "$PROJECT_ROOT/docker/base"; then
+        echo "✓ Built base image: $BASE_IMAGE"
+        return 0
+    else
+        echo "ERROR: Failed to build base image"
+        return 1
+    fi
+}
+
 # Function to check application readiness via HTTP instead of Docker's health status
 check_health() {
     local container_name=$1          # real container name
@@ -101,14 +142,16 @@ capture_file_list() {
         -not -path '/configs/*' \
         -not -path '/logs/*' \
         -not -path '*/home/stirlingpdfuser/.config/libreoffice/*' \
+        -not -path '*/home/stirlingpdfuser/.config/calibre/*' \
+        -not -path '*/home/stirlingpdfuser/.java/fonts/*' \
         -not -path '*/home/stirlingpdfuser/.pdfbox.cache' \
         -not -path '*/tmp/stirling-pdf/PDFBox*' \
         -not -path '*/tmp/stirling-pdf/hsperfdata_stirlingpdfuser/*' \
         -not -path '*/tmp/hsperfdata_stirlingpdfuser/*' \
         -not -path '*/tmp/hsperfdata_root/*' \
         -not -path '*/tmp/stirling-pdf/jetty-*/*' \
-        -not -path '*/tmp/stirling-pdf/lu*' \
-        -not -path '*/tmp/stirling-pdf/tmp*' \
+        -not -path '/tmp/lu*' \
+        -not -path '*/tmp/*/user/registrymodifications.xcu' \
         -not -path '/app/stirling.aot' \
         -not -path '*/tmp/stirling.aotconf' \
         -not -path '*/tmp/aot-*.log' \
@@ -128,14 +171,16 @@ capture_file_list() {
         -not -path '/configs/*' \
             -not -path '/logs/*' \
             -not -path '*/home/stirlingpdfuser/.config/libreoffice/*' \
+            -not -path '*/home/stirlingpdfuser/.config/calibre/*' \
+            -not -path '*/home/stirlingpdfuser/.java/fonts/*' \
             -not -path '*/home/stirlingpdfuser/.pdfbox.cache' \
             -not -path '*/tmp/PDFBox*' \
             -not -path '*/tmp/hsperfdata_stirlingpdfuser/*' \
             -not -path '*/tmp/hsperfdata_root/*' \
             -not -path '*/tmp/stirling-pdf/hsperfdata_stirlingpdfuser/*' \
             -not -path '*/tmp/stirling-pdf/jetty-*/*' \
-            -not -path '*/tmp/lu*' \
-            -not -path '*/tmp/tmp*' \
+            -not -path '/tmp/lu*' \
+            -not -path '/tmp/tmp*' \
             -not -path '/app/stirling.aot' \
             -not -path '*/tmp/stirling.aotconf' \
             -not -path '*/tmp/aot-*.log' \
@@ -373,6 +418,13 @@ run_tests() {
 main() {
     SECONDS=0
     cd "$PROJECT_ROOT"
+
+    # Ensure base image exists before running tests
+    echo "=========================================="
+    echo "Preparing Docker base image..."
+    echo "=========================================="
+    ensure_base_image || exit 1
+    echo ""
 
     # Parse command line arguments
     RERUN_MODE=false
