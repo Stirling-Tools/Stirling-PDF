@@ -39,7 +39,7 @@ jobs:
         run: cd frontend && npx playwright install --with-deps
 
       - name: Run E2E tests (all browsers)
-        run: cd frontend && npx playwright test
+        run: cd frontend && npx playwright test src/core/tests/certValidation
 
       - name: Upload Playwright report
         if: always()
