@@ -451,14 +451,7 @@ const EmbedPdfViewerContent = ({
               }
             }
             return;
-          case 'd':
-          case 'D':
-            // Ctrl+Shift+D: Cycle PDF render mode (normal → dark → sepia)
-            if (event.shiftKey) {
-              event.preventDefault();
-              cyclePdfRenderMode();
-            }
-            return;
+
           case 'z':
           case 'Z':
             // Ctrl+Z: Undo; Ctrl+Shift+Z: Redo
