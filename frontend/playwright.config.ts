@@ -4,7 +4,7 @@ import { defineConfig, devices } from '@playwright/test';
  * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
-  testDir: './src/tests',
+  testDir: './src/core/tests',
   testMatch: '**/*.spec.ts',
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -19,7 +19,8 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://localhost:5173',
+    /* PLAYWRIGHT_BASE_URL is set by prerelease-checks.yml to point at the production preview server */
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -67,9 +68,11 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
+  /* In prerelease CI, PLAYWRIGHT_BASE_URL is set to the preview server URL (port 4173),
+   * so we use `npm run preview` against the already-built dist/ instead of the dev server. */
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
+    command: process.env.PLAYWRIGHT_BASE_URL ? 'npm run preview' : 'npm run dev',
+    url: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
   },
 });
