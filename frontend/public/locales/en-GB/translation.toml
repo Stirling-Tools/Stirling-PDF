@@ -4443,7 +4443,10 @@ zoomOut = "Zoom Out"
 
 [viewer]
 cannotPreviewFile = "Cannot Preview File"
+disableColorFilter = "Disable Colour Filter"
 dualPageView = "Dual Page View"
+enableDarkFilter = "Enable Dark Filter"
+enableSepiaFilter = "Enable Sepia Filter"
 firstPage = "First Page"
 lastPage = "Last Page"
 nextPage = "Next Page"

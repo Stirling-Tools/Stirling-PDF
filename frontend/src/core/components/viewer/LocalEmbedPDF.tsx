@@ -86,9 +86,11 @@ interface LocalEmbedPDFProps {
   commentsSidebarRightOffset?: string;
   /** When true, blocks the general ink/pen annotation tool (sign tool context). */
   isSignMode?: boolean;
+  /** Controls CSS filter applied only to rendered PDF canvas tiles */
+  pdfRenderMode?: 'normal' | 'dark' | 'sepia';
 }
 
-export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, enableRedaction = false, enableFormFill = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef, fileId, isCommentsSidebarVisible = false, commentsSidebarRightOffset = '0rem', isSignMode = false }: LocalEmbedPDFProps) {
+export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, enableRedaction = false, enableFormFill = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef, fileId, isCommentsSidebarVisible = false, commentsSidebarRightOffset = '0rem', isSignMode = false, pdfRenderMode = 'normal' }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: Rect}>>([]);
@@ -778,7 +780,19 @@ export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, 
                           onDrop={(e) => e.preventDefault()}
                           onDragOver={(e) => e.preventDefault()}
                         >
-                          <TilingLayer documentId={documentId} pageIndex={pageIndex} />
+                          <div style={{
+                            position: 'absolute',
+                            inset: 0,
+                            transition: 'filter 0.25s ease',
+                            filter:
+                              pdfRenderMode === 'dark'
+                                ? 'invert(1) hue-rotate(180deg)'
+                                : pdfRenderMode === 'sepia'
+                                  ? 'sepia(0.7) brightness(0.85)'
+                                  : undefined,
+                          }}>
+                            <TilingLayer documentId={documentId} pageIndex={pageIndex} />
+                          </div>
 
                           <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
 
