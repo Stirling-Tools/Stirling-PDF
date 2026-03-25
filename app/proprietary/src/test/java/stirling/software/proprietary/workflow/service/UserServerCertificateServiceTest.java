@@ -167,7 +167,7 @@ class UserServerCertificateServiceTest {
      */
     private static byte[] buildP12(String password) throws Exception {
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA", "BC");
-        kpg.initialize(1024, new SecureRandom());
+        kpg.initialize(2048, new SecureRandom());
         KeyPair kp = kpg.generateKeyPair();
 
         org.bouncycastle.asn1.x500.X500Name subject =
