@@ -373,6 +373,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   }, [folderRecord, inputFiles, outputFiles, statsPeriod]);
 
   const [expandedActivityIds, setExpandedActivityIds] = useState<Set<string>>(new Set());
+  const [chartHover, setChartHover] = useState<{ i: number; relX: number; relY: number } | null>(null);
   const toggleActivityRow = useCallback((id: string) => {
     setExpandedActivityIds(prev => {
       const next = new Set(prev);
@@ -610,7 +611,14 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                 label={t('smartFolders.workbench.inputs', 'Inputs')}
                 hoverColor="var(--mantine-color-blue-filled)"
                 isActive={activityStatusFilter === 'all'}
-                onClick={() => { setActivityStatusFilter('all'); setExpandedActivityIds(new Set(fileIds)); }}
+                onClick={() => {
+                  if (activityStatusFilter === 'all' && expandedActivityIds.size > 0) {
+                    setExpandedActivityIds(new Set());
+                  } else {
+                    setActivityStatusFilter('all');
+                    setExpandedActivityIds(new Set(fileIds));
+                  }
+                }}
               />
 
               {/* Outputs */}
@@ -620,7 +628,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                 label={t('smartFolders.workbench.outputs', 'Outputs')}
                 hoverColor="#22c55e"
                 isActive={activityStatusFilter === 'processed'}
-                onClick={() => setActivityStatusFilter('processed')}
+                onClick={() => { setActivityStatusFilter(activityStatusFilter === 'processed' ? 'all' : 'processed'); setExpandedActivityIds(new Set()); }}
               />
 
               {/* Failed */}
@@ -630,7 +638,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                 label={t('smartFolders.workbench.failed', 'Failed')}
                 hoverColor="#ef4444"
                 isActive={activityStatusFilter === 'error'}
-                onClick={failedFileIds.length > 0 ? () => setActivityStatusFilter('error') : undefined}
+                onClick={failedFileIds.length > 0 ? () => { setActivityStatusFilter(activityStatusFilter === 'error' ? 'all' : 'error'); setExpandedActivityIds(new Set()); } : undefined}
               />
 
               {/* Data saved — only when compress is in pipeline */}
@@ -880,6 +888,22 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
               if (statsPeriod === '7d') return d.toLocaleDateString('en', { weekday: 'short' });
               return `${d.getDate()} ${d.toLocaleDateString('en', { month: 'short' })}`;
             };
+            const bucketTooltipLabel = (i: number, b: { processed: number; failed: number }) => {
+              const ts = nowMs - (count - 1 - i) * bucketMs2;
+              const d = new Date(ts);
+              let dateStr: string;
+              if (isHourly) {
+                const h = d.getHours();
+                const hEnd = (h + 1) % 24;
+                const fmt = (n: number) => n === 0 ? '12am' : n < 12 ? `${n}am` : n === 12 ? '12pm' : `${n - 12}pm`;
+                dateStr = `${fmt(h)} – ${fmt(hEnd)}, ${d.getDate()} ${d.toLocaleDateString('en', { month: 'short' })}`;
+              } else if (statsPeriod === '7d') {
+                dateStr = d.toLocaleDateString('en', { weekday: 'long', day: 'numeric', month: 'short' });
+              } else {
+                dateStr = d.toLocaleDateString('en', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+              }
+              return `${dateStr}\n${b.processed} complete  ${b.failed} failed`;
+            };
             const yMax = Math.max(dashboardStats.maxBucket, 10);
             const yTicks = [yMax, Math.round(yMax * 0.75), Math.round(yMax * 0.5), Math.round(yMax * 0.25), 0];
             const yAxisWidth = `${Math.max(...yTicks.map(v => String(v).length)) * 0.5 + 0.25}rem`;
@@ -898,15 +922,49 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                     {[0, 25, 50, 75].map(pct => (
                       <div key={pct} style={{ position: 'absolute', top: `${pct}%`, left: 0, right: 0, borderTop: '0.0625rem dashed var(--border-subtle)', pointerEvents: 'none' }} />
                     ))}
-                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: '100%' }}>
+                    <div
+                      style={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: '100%' }}
+                      onMouseMove={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const relX = e.clientX - rect.left;
+                        const relY = e.clientY - rect.top;
+                        const i = Math.min(Math.floor((relX / rect.width) * count), count - 1);
+                        setChartHover({ i, relX, relY });
+                      }}
+                      onMouseLeave={() => setChartHover(null)}
+                    >
+                      {chartHover && (() => {
+                        const b = dashboardStats.buckets[chartHover.i];
+                        const label = bucketTooltipLabel(chartHover.i, b);
+                        const flipLeft = chartHover.relX > 200;
+                        return (
+                          <div style={{
+                            position: 'absolute',
+                            left: flipLeft ? undefined : chartHover.relX + 12,
+                            right: flipLeft ? `calc(100% - ${chartHover.relX}px + 12px)` : undefined,
+                            top: Math.max(chartHover.relY - 36, 4),
+                            backgroundColor: 'var(--bg-toolbar)',
+                            border: '0.0625rem solid var(--border-subtle)',
+                            borderRadius: 'var(--mantine-radius-sm)',
+                            padding: '0.3rem 0.5rem',
+                            pointerEvents: 'none',
+                            zIndex: 10,
+                            whiteSpace: 'pre-line',
+                            fontSize: '0.75rem',
+                            lineHeight: 1.5,
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+                          }}>
+                            {label}
+                          </div>
+                        );
+                      })()}
                       {dashboardStats.buckets.map((b, i) => {
                         const total = b.processed + b.failed;
                         const h = total === 0 ? 0 : Math.max((total / yMax) * 100, 2);
                         return (
-                          <div key={i} title={total > 0 ? `${b.processed} done, ${b.failed} failed` : undefined} style={{ flex: 1, height: `${h}%`, display: 'flex', flexDirection: 'column', borderRadius: '2px 2px 0 0', overflow: 'hidden', opacity: total === 0 ? 0.12 : 1 }}>
+                          <div key={i} style={{ flex: 1, height: `${Math.max(h, total > 0 ? 2 : 0)}%`, display: 'flex', flexDirection: 'column', borderRadius: '2px 2px 0 0', overflow: 'hidden', cursor: 'default' }}>
                             {b.failed > 0 && <div style={{ flex: b.failed, backgroundColor: '#ef4444', minHeight: '2px' }} />}
                             {b.processed > 0 && <div style={{ flex: b.processed, backgroundColor: '#22c55e', minHeight: '2px' }} />}
-                            {total === 0 && <div style={{ flex: 1, backgroundColor: 'var(--border-subtle)' }} />}
                           </div>
                         );
                       })}
@@ -924,7 +982,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                   ))}
                 </div>
                 <Group gap="md" mt="0.625rem">
-                  <Group gap="0.3rem"><div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '2px', backgroundColor: '#22c55e' }} /><Text size="xs" c="dimmed">Done</Text></Group>
+                  <Group gap="0.3rem"><div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '2px', backgroundColor: '#22c55e' }} /><Text size="xs" c="dimmed">Complete</Text></Group>
                   <Group gap="0.3rem"><div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '2px', backgroundColor: '#ef4444' }} /><Text size="xs" c="dimmed">Failed</Text></Group>
                 </Group>
               </Box>
