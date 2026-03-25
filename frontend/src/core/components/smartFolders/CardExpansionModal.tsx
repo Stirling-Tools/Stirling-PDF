@@ -22,6 +22,12 @@ interface CardExpansionModalProps {
   footer?: React.ReactNode;
   /** Non-scrolling toolbar rendered between the header and the list */
   toolbar?: React.ReactNode;
+  /** Override default modal width in rem */
+  widthRem?: number;
+  /** Override default modal height in rem */
+  heightRem?: number;
+  /** Replace ScrollArea with a flex-fill container so children can expand to full body height */
+  fillHeight?: boolean;
 }
 
 const MODAL_W_REM = 56;
@@ -42,6 +48,9 @@ export function CardExpansionModal({
   children,
   footer,
   toolbar,
+  widthRem,
+  heightRem,
+  fillHeight,
 }: CardExpansionModalProps) {
   const [viewportW, setViewportW] = useState(window.innerWidth);
   const [viewportH, setViewportH] = useState(window.innerHeight);
@@ -55,8 +64,8 @@ export function CardExpansionModal({
   if (phase === 'closed' || !cardRect) return null;
 
   const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  const modalW = Math.min(MODAL_W_REM * rootFontSize, viewportW * 0.9);
-  const modalH = Math.min(MODAL_H_REM * rootFontSize, viewportH * 0.85);
+  const modalW = Math.min((widthRem ?? MODAL_W_REM) * rootFontSize, viewportW * 0.9);
+  const modalH = Math.min((heightRem ?? MODAL_H_REM) * rootFontSize, viewportH * 0.85);
   const headerH = HEADER_H_REM * rootFontSize;
   const finalLeft = (viewportW - modalW) / 2;
   const finalTop = Math.min(viewportH * MODAL_TOP_FRACTION, viewportH - modalH - 16);
@@ -168,11 +177,17 @@ export function CardExpansionModal({
                 {toolbar}
               </div>
             )}
-            <ScrollArea style={{ flex: 1, minHeight: 0 }}>
-              <div style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--bg-toolbar)' }}>
+            {fillHeight ? (
+              <div style={{ flex: 1, minHeight: 0, padding: '0.75rem 1rem', display: 'flex', flexDirection: 'column' }}>
                 {children}
               </div>
-            </ScrollArea>
+            ) : (
+              <ScrollArea style={{ flex: 1, minHeight: 0 }}>
+                <div style={{ padding: '0.75rem 1rem', backgroundColor: 'var(--bg-toolbar)' }}>
+                  {children}
+                </div>
+              </ScrollArea>
+            )}
             {footer && (
               <div style={{
                 padding: '0.75rem 1rem',

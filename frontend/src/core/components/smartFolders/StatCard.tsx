@@ -8,30 +8,29 @@ interface StatCardProps {
   hoverColor?: string;
   onClick?: (rect: DOMRect) => void;
   disabled?: boolean;
+  isActive?: boolean;
 }
 
-export function StatCard({ icon, count, label, hoverColor, onClick, disabled }: StatCardProps) {
+export function StatCard({ icon, count, label, hoverColor, onClick, disabled, isActive }: StatCardProps) {
   const isClickable = !!onClick && !disabled;
 
   return (
     <div
-      onClick={(e) => {
-        if (isClickable) onClick(e.currentTarget.getBoundingClientRect());
-      }}
+      onClick={(e) => { if (isClickable) onClick!(e.currentTarget.getBoundingClientRect()); }}
       style={{
         padding: '0.5rem 0.75rem 2rem',
         borderRadius: 'var(--mantine-radius-sm)',
-        border: '0.0625rem solid var(--border-subtle)',
-        backgroundColor: 'var(--bg-toolbar)',
+        border: `0.0625rem solid ${isActive && hoverColor ? hoverColor : 'var(--border-subtle)'}`,
+        backgroundColor: isActive && hoverColor ? `${hoverColor}10` : 'var(--bg-toolbar)',
         textAlign: 'center',
         cursor: isClickable ? 'pointer' : 'default',
-        transition: 'border-color 0.15s ease',
+        transition: 'border-color 0.15s ease, background-color 0.15s ease',
       }}
       onMouseEnter={(e) => {
-        if (isClickable && hoverColor) e.currentTarget.style.borderColor = hoverColor;
+        if (isClickable && hoverColor && !isActive) e.currentTarget.style.borderColor = hoverColor;
       }}
       onMouseLeave={(e) => {
-        if (isClickable) e.currentTarget.style.borderColor = 'var(--border-subtle)';
+        if (isClickable && !isActive) e.currentTarget.style.borderColor = 'var(--border-subtle)';
       }}
     >
       <div style={{ display: 'block', marginBottom: '0.375rem' }}>{icon}</div>

@@ -210,7 +210,7 @@ function FileRow({
             data-no-select
             size="sm"
             variant="subtle"
-            color="gray"
+            color="blue"
             style={{
               flexShrink: 0,
               opacity: hovered ? 1 : 0,

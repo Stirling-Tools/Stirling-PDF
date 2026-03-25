@@ -78,7 +78,7 @@ function FilterSortBar({
     <Box style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', padding: '0.5rem 0.75rem' }}>
       <TextInput
         size="xs"
-        placeholder="Filter…"
+        placeholder="Search…"
         value={search}
         onChange={e => onSearchChange(e.currentTarget.value)}
         leftSection={<SearchIcon style={{ fontSize: '0.875rem' }} />}
@@ -93,7 +93,7 @@ function FilterSortBar({
         data={SORT_OPTIONS}
         style={{ width: '6.5rem' }}
         styles={{ input: { fontSize: '0.75rem' } }}
-        comboboxProps={{ withinPortal: true }}
+        comboboxProps={{ withinPortal: true, zIndex: 400 }}
       />
     </Box>
   );
@@ -161,16 +161,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   const [activitySearch, setActivitySearch] = useState('');
   const [activitySort, setActivitySort] = useState('newest');
   const [activityStatusFilter, setActivityStatusFilter] = useState('all');
-  const [inputSearch, setInputSearch] = useState('');
-  const [inputSort, setInputSort] = useState('newest');
-  const [outputSearch, setOutputSearch] = useState('');
-  const [outputSort, setOutputSort] = useState('newest');
-  const [failedSearch, setFailedSearch] = useState('');
-  const [failedSort, setFailedSort] = useState('newest');
   const [automation, setAutomation] = useState<AutomationConfig | null>(null);
-  const { phase: inputModalPhase, cardRect: inputCardRect, textExpanded: inputTextExpanded, openModal: openInputModal, closeModal: closeInputModal } = useCardModalAnimation();
-  const { phase: outputModalPhase, cardRect: outputCardRect, textExpanded: outputTextExpanded, openModal: openOutputModal, closeModal: closeOutputModal } = useCardModalAnimation();
-  const { phase: failedModalPhase, cardRect: failedCardRect, textExpanded: failedTextExpanded, openModal: openFailedModal, closeModal: closeFailedModal } = useCardModalAnimation();
   const handledPendingRef = useRef<string | null>(null);
 
   // Load input/output blobs from the main file store whenever folderRecord changes
@@ -340,6 +331,67 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
     }
   }, [folder, updateFolder, fileIds, folderRecord, inputFiles, runPipeline]);
 
+  const { phase: statsModalPhase, cardRect: statsCardRect, textExpanded: statsTextExpanded, openModal: openStatsModal, closeModal: closeStatsModal } = useCardModalAnimation();
+  const [statsPeriod, setStatsPeriod] = useState<'24h' | '7d' | '30d' | 'all'>('7d');
+
+  const dashboardStats = useMemo(() => {
+    const getTs = (d: Date | string | number | undefined): number =>
+      !d ? 0 : d instanceof Date ? d.getTime() : typeof d === 'number' ? d : new Date(d as string).getTime();
+    const now = Date.now();
+    const cutoff = statsPeriod === '24h' ? now - 86_400_000
+      : statsPeriod === '7d' ? now - 7 * 86_400_000
+      : statsPeriod === '30d' ? now - 30 * 86_400_000
+      : 0;
+    const entries = Object.entries(folderRecord?.files ?? {})
+      .filter(([, m]) => getTs(m.addedAt) >= cutoff);
+    const processed = entries.filter(([, m]) => m.status === 'processed').length;
+    const failed = entries.filter(([, m]) => m.status === 'error').length;
+    const pending = entries.filter(([, m]) => m.status === 'pending' || m.status === 'processing').length;
+    const totalIn = entries.reduce((s, [id]) => s + (inputFiles.find(f => f.fileId === id)?.size ?? 0), 0);
+    const totalOut = entries
+      .filter(([, m]) => m.status === 'processed')
+      .reduce((s, [, m]) => {
+        const ids = m.displayFileIds ?? (m.displayFileId ? [m.displayFileId] : []);
+        return s + ids.reduce((ss, oid) => ss + (outputFiles.find(f => f.fileId === oid)?.size ?? 0), 0);
+      }, 0);
+    const isHourly = statsPeriod === '24h';
+    const bucketMs = isHourly ? 3_600_000 : 86_400_000;
+    const bucketCount = isHourly ? 24 : statsPeriod === '7d' ? 7 : statsPeriod === '30d' ? 30 : 30;
+    const buckets: Array<{ processed: number; failed: number }> = Array.from({ length: bucketCount }, () => ({ processed: 0, failed: 0 }));
+    for (const [, m] of Object.entries(folderRecord?.files ?? {})) {
+      const ts = getTs(m.processedAt ?? m.addedAt);
+      if (!ts) continue;
+      const idx = Math.floor((now - ts) / bucketMs);
+      if (idx >= 0 && idx < bucketCount) {
+        const b = buckets[bucketCount - 1 - idx];
+        if (m.status === 'processed') b.processed++;
+        else if (m.status === 'error') b.failed++;
+      }
+    }
+    const maxBucket = Math.max(...buckets.map(b => b.processed + b.failed), 1);
+    return { processed, failed, pending, totalIn, totalOut, saved: totalIn - totalOut, buckets, maxBucket };
+  }, [folderRecord, inputFiles, outputFiles, statsPeriod]);
+
+  const [expandedActivityIds, setExpandedActivityIds] = useState<Set<string>>(new Set());
+  const toggleActivityRow = useCallback((id: string) => {
+    setExpandedActivityIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  // input fileId → output StirlingFiles produced by that run
+  const activityOutputMap = useMemo(() => {
+    const map = new Map<string, StirlingFile[]>();
+    for (const [id, meta] of Object.entries(folderRecord?.files ?? {})) {
+      const ids = meta.displayFileIds ?? (meta.displayFileId ? [meta.displayFileId] : []);
+      const files = ids.map(oid => outputFiles.find(f => f.fileId === oid)).filter((f): f is StirlingFile => !!f);
+      if (files.length > 0) map.set(id, files);
+    }
+    return map;
+  }, [folderRecord, outputFiles]);
+
   // ── Filtered + sorted lists — all before early returns ──
 
   const filteredActivityIds = useMemo(() => {
@@ -362,57 +414,6 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
     return items.map(i => i.id);
   }, [fileIds, folderRecord, inputFiles, activitySearch, activityStatusFilter, activitySort]);
 
-  const filteredInputFiles = useMemo(() => {
-    const q = inputSearch.toLowerCase();
-    let files = q ? inputFiles.filter(f => f.name.toLowerCase().includes(q)) : [...inputFiles];
-    if (inputSort === 'newest') files.sort((a, b) => {
-      const ta = folderRecord?.files[a.fileId]?.addedAt ? new Date(folderRecord.files[a.fileId].addedAt!).getTime() : a.lastModified;
-      const tb = folderRecord?.files[b.fileId]?.addedAt ? new Date(folderRecord.files[b.fileId].addedAt!).getTime() : b.lastModified;
-      return tb - ta;
-    });
-    else if (inputSort === 'oldest') files.sort((a, b) => {
-      const ta = folderRecord?.files[a.fileId]?.addedAt ? new Date(folderRecord.files[a.fileId].addedAt!).getTime() : a.lastModified;
-      const tb = folderRecord?.files[b.fileId]?.addedAt ? new Date(folderRecord.files[b.fileId].addedAt!).getTime() : b.lastModified;
-      return ta - tb;
-    });
-    else if (inputSort === 'name-asc') files.sort((a, b) => a.name.localeCompare(b.name));
-    else if (inputSort === 'name-desc') files.sort((a, b) => b.name.localeCompare(a.name));
-    return files;
-  }, [inputFiles, inputSearch, inputSort, folderRecord]);
-
-  const filteredOutputFiles = useMemo(() => {
-    const q = outputSearch.toLowerCase();
-    let files = q ? outputFiles.filter(f => f.name.toLowerCase().includes(q)) : [...outputFiles];
-    const getTime = (f: StirlingFile) => {
-      const processedAt = Object.values(folderRecord?.files ?? {}).find(m =>
-        m.displayFileIds?.includes(f.fileId) || m.displayFileId === f.fileId
-      )?.processedAt;
-      return processedAt ? new Date(processedAt).getTime() : f.lastModified;
-    };
-    if (outputSort === 'newest') files.sort((a, b) => getTime(b) - getTime(a));
-    else if (outputSort === 'oldest') files.sort((a, b) => getTime(a) - getTime(b));
-    else if (outputSort === 'name-asc') files.sort((a, b) => a.name.localeCompare(b.name));
-    else if (outputSort === 'name-desc') files.sort((a, b) => b.name.localeCompare(a.name));
-    return files;
-  }, [outputFiles, outputSearch, outputSort, folderRecord]);
-
-  const filteredFailedIds = useMemo(() => {
-    const q = failedSearch.toLowerCase();
-    const allFailedIds = fileIds.filter(id => folderRecord?.files[id]?.status === 'error');
-    let items = allFailedIds.map(id => {
-      const meta = folderRecord?.files[id];
-      const name = meta?.name ?? inputFiles.find(f => f.fileId === id)?.name ?? id;
-      const time = meta?.lastFailedAt ? new Date(meta.lastFailedAt).getTime() : 0;
-      const attempts = meta?.failedAttempts ?? 0;
-      return { id, name, time, attempts };
-    });
-    if (q) items = items.filter(i => i.name.toLowerCase().includes(q));
-    if (failedSort === 'newest') items = [...items].sort((a, b) => b.time - a.time);
-    else if (failedSort === 'oldest') items = [...items].sort((a, b) => a.time - b.time);
-    else if (failedSort === 'name-asc') items = [...items].sort((a, b) => a.name.localeCompare(b.name));
-    else if (failedSort === 'name-desc') items = [...items].sort((a, b) => b.name.localeCompare(a.name));
-    return items.map(i => i.id);
-  }, [fileIds, folderRecord, inputFiles, failedSearch, failedSort]);
 
   // Early returns — after all hooks
   if (!folderId) return <SmartFolderHomePage />;
@@ -608,7 +609,8 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                 count={inputFiles.length}
                 label={t('smartFolders.workbench.inputs', 'Inputs')}
                 hoverColor="var(--mantine-color-blue-filled)"
-                onClick={openInputModal}
+                isActive={activityStatusFilter === 'all'}
+                onClick={() => { setActivityStatusFilter('all'); setExpandedActivityIds(new Set(fileIds)); }}
               />
 
               {/* Outputs */}
@@ -617,14 +619,8 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                 count={outputFiles.length}
                 label={t('smartFolders.workbench.outputs', 'Outputs')}
                 hoverColor="#22c55e"
-                onClick={openOutputModal}
-              />
-
-              {/* Processed */}
-              <StatCard
-                icon={<CheckCircleOutlineIcon style={{ fontSize: '1.125rem', color: folder.accentColor }} />}
-                count={processedFileIds.length}
-                label={t('smartFolders.workbench.processed', 'Processed')}
+                isActive={activityStatusFilter === 'processed'}
+                onClick={() => setActivityStatusFilter('processed')}
               />
 
               {/* Failed */}
@@ -633,7 +629,8 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                 count={failedFileIds.length}
                 label={t('smartFolders.workbench.failed', 'Failed')}
                 hoverColor="#ef4444"
-                onClick={failedFileIds.length > 0 ? openFailedModal : undefined}
+                isActive={activityStatusFilter === 'error'}
+                onClick={failedFileIds.length > 0 ? () => setActivityStatusFilter('error') : undefined}
               />
 
               {/* Data saved — only when compress is in pipeline */}
@@ -650,6 +647,8 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                 icon={<HistoryIcon style={{ fontSize: '1.125rem', color: 'var(--mantine-color-dimmed)' }} />}
                 count={daysRunning !== null && daysRunning > 0 ? `${daysRunning}d` : '—'}
                 label={t('smartFolders.workbench.running', 'Running')}
+                hoverColor="var(--mantine-color-dimmed)"
+                onClick={openStatsModal}
               />
             </Box>
 
@@ -692,7 +691,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                   data={ACTIVITY_STATUS_OPTIONS}
                   style={{ width: '5.5rem' }}
                   styles={{ input: { fontSize: '0.75rem' } }}
-                  comboboxProps={{ withinPortal: true }}
+                  comboboxProps={{ withinPortal: true, zIndex: 400 }}
                 />
               }
             />
@@ -713,63 +712,87 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                   {filteredActivityIds.map((fileId) => {
                     const meta = folderRecord?.files[fileId];
                     const status = meta?.status ?? 'pending';
-                    const run = recentRuns.find(r => r.inputFileId === fileId);
-                    const outputFile = run ? outputFiles.find(f => f.fileId === run.displayFileId) : undefined;
                     const inputFile = inputFiles.find(f => f.fileId === fileId);
-                    const filename = meta?.name ?? inputFile?.name ?? outputFile?.name ?? fileId;
+                    const filename = meta?.name ?? inputFile?.name ?? fileId;
+                    const isExpanded = expandedActivityIds.has(fileId);
+                    const outputs = activityOutputMap.get(fileId) ?? [];
                     return (
                       <Box
                         key={fileId}
                         style={{
-                          padding: '0.375rem 0.75rem',
                           borderRadius: 'var(--mantine-radius-sm)',
                           border: `0.0625rem solid ${status === 'error' ? 'rgba(239,68,68,0.45)' : 'var(--border-subtle)'}`,
                           backgroundColor: 'var(--bg-toolbar)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
+                          overflow: 'hidden',
                         }}
                       >
-                        {status === 'processed' && <CheckCircleOutlineIcon style={{ fontSize: '0.875rem', color: '#22c55e', flexShrink: 0 }} />}
-                        {status === 'processing' && <Loader size="0.625rem" />}
-                        {status === 'error' && !meta?.nextRetryAt && <ErrorOutlineIcon style={{ fontSize: '0.875rem', color: '#ef4444', flexShrink: 0 }} />}
-                        {status === 'error' && meta?.nextRetryAt && <ReplayIcon style={{ fontSize: '0.875rem', color: '#f59e0b', flexShrink: 0 }} />}
-                        {status === 'pending' && <Box style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', backgroundColor: 'var(--mantine-color-yellow-5)', flexShrink: 0 }} />}
-                        <Text size="xs" lineClamp={1} style={{ flex: 1, minWidth: 0 }}>{filename}</Text>
-                        {status === 'error' && (meta?.failedAttempts ?? 0) > 0 && (
-                          <Box style={{ padding: '0.0625rem 0.3rem', borderRadius: '0.25rem', backgroundColor: 'rgba(239,68,68,0.22)', border: '0.0625rem solid rgba(239,68,68,0.45)', flexShrink: 0 }}>
-                            <Text style={{ fontSize: '0.625rem', fontWeight: 700, color: '#ef4444', letterSpacing: '0.03em' }}>{meta!.failedAttempts}×</Text>
+                        {/* Row header */}
+                        <Box
+                          style={{ padding: '0.375rem 0.5rem 0.375rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}
+                          onClick={() => toggleActivityRow(fileId)}
+                        >
+                          <ChevronRightIcon style={{ fontSize: '0.75rem', color: 'var(--mantine-color-dimmed)', flexShrink: 0, transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }} />
+                          {status === 'processed' && <CheckCircleOutlineIcon style={{ fontSize: '0.875rem', color: '#22c55e', flexShrink: 0 }} />}
+                          {status === 'processing' && <Loader size="0.625rem" style={{ flexShrink: 0 }} />}
+                          {status === 'error' && !meta?.nextRetryAt && <ErrorOutlineIcon style={{ fontSize: '0.875rem', color: '#ef4444', flexShrink: 0 }} />}
+                          {status === 'error' && meta?.nextRetryAt && <ReplayIcon style={{ fontSize: '0.875rem', color: '#f59e0b', flexShrink: 0 }} />}
+                          {status === 'pending' && <Box style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', backgroundColor: 'var(--mantine-color-yellow-5)', flexShrink: 0 }} />}
+                          <Text size="xs" lineClamp={1} style={{ flex: 1, minWidth: 0 }}>{filename}</Text>
+                          {status === 'error' && (meta?.failedAttempts ?? 0) > 0 && (
+                            <Box style={{ padding: '0.0625rem 0.3rem', borderRadius: '0.25rem', backgroundColor: 'rgba(239,68,68,0.22)', border: '0.0625rem solid rgba(239,68,68,0.45)', flexShrink: 0 }}>
+                              <Text style={{ fontSize: '0.625rem', fontWeight: 700, color: '#ef4444', letterSpacing: '0.03em' }}>{meta!.failedAttempts}×</Text>
+                            </Box>
+                          )}
+                          {meta?.nextRetryAt && <RetryCountdown nextRetryAt={meta.nextRetryAt} t={t} />}
+                          <Text size="xs" c="dimmed" style={{ fontSize: '0.6875rem', flexShrink: 0 }}>
+                            {(meta?.processedAt || meta?.addedAt) ? timeAgo(new Date((meta.processedAt ?? meta.addedAt)!), t) : ''}
+                          </Text>
+                        </Box>
+                        {/* Expanded panel */}
+                        {isExpanded && (
+                          <Box style={{ borderTop: `0.0625rem solid ${status === 'error' ? 'rgba(239,68,68,0.25)' : 'var(--border-subtle)'}`, padding: '0.375rem 0.625rem 0.375rem 2rem', backgroundColor: 'var(--bg-app)' }}>
+                            {/* Input file row */}
+                            {inputFile && (
+                              <Box style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.2rem 0', marginBottom: outputs.length > 0 || status === 'error' ? '0.25rem' : 0 }}>
+                                <Text style={{ fontSize: '0.625rem', letterSpacing: '0.04em', color: 'var(--mantine-color-dimmed)', textTransform: 'uppercase', flexShrink: 0 }}>in</Text>
+                                <Text size="xs" style={{ flex: 1, minWidth: 0 }} lineClamp={1}>{inputFile.name}</Text>
+                                <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>{formatBytes(inputFile.size)}</Text>
+                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); handleView(inputFile); }} title="Preview input"><VisibilityIcon style={{ fontSize: '0.875rem' }} /></button>
+                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); handleDownload(inputFile, inputFile.name); }} title="Download input"><DownloadIcon style={{ fontSize: '0.875rem' }} /></button>
+                              </Box>
+                            )}
+                            {/* Output files */}
+                            {outputs.map(out => (
+                              <Box key={out.fileId} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.2rem 0' }}>
+                                <Text style={{ fontSize: '0.625rem', letterSpacing: '0.04em', color: '#22c55e', textTransform: 'uppercase', flexShrink: 0 }}>out</Text>
+                                <Text size="xs" style={{ flex: 1, minWidth: 0 }} lineClamp={1}>{out.name}</Text>
+                                <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>{formatBytes(out.size)}</Text>
+                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); handleView(out); }} title="Preview output"><VisibilityIcon style={{ fontSize: '0.875rem' }} /></button>
+                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); handleDownload(out, out.name); }} title="Download output"><DownloadIcon style={{ fontSize: '0.875rem' }} /></button>
+                              </Box>
+                            ))}
+                            {/* Error detail + retry */}
+                            {status === 'error' && (
+                              <Box style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', paddingTop: '0.25rem' }}>
+                                {meta?.errorMessage && <Text size="xs" c="red" style={{ flex: 1, minWidth: 0, wordBreak: 'break-word', opacity: 0.85, fontFamily: 'monospace', fontSize: '0.6875rem' }}>{meta.errorMessage}</Text>}
+                                {inputFile && (
+                                  <button
+                                    style={{ background: 'rgba(59,130,246,0.12)', border: 'none', cursor: 'pointer', padding: '0.2rem 0.4rem', borderRadius: '0.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.6875rem', color: '#3b82f6', flexShrink: 0 }}
+                                    onClick={(e) => { e.stopPropagation(); updateFileMetadata(fileId, { status: 'pending', errorMessage: undefined }); runPipeline(folder!, inputFile, fileId, folderRecord?.files[fileId]?.ownedByFolder ?? false); }}
+                                  >
+                                    <ReplayIcon style={{ fontSize: '0.75rem' }} /> Retry
+                                  </button>
+                                )}
+                              </Box>
+                            )}
+                            {status === 'processing' && (
+                              <Group gap="xs"><Loader size={8} /><Text size="xs" c="dimmed">Processing…</Text></Group>
+                            )}
+                            {status === 'pending' && (
+                              <Text size="xs" c="dimmed">Queued — waiting to run</Text>
+                            )}
                           </Box>
                         )}
-                        {meta?.nextRetryAt && (
-                          <RetryCountdown nextRetryAt={meta.nextRetryAt} t={t} />
-                        )}
-                        {meta?.errorMessage && !meta.nextRetryAt && <Text size="xs" c="red" lineClamp={1} style={{ flexShrink: 0, maxWidth: '30%' }}>{meta.errorMessage}</Text>}
-                        {status === 'error' && inputFile && (
-                          <button
-                            title={t('smartFolders.actions.retry', 'Retry')}
-                            style={{ background: 'rgba(59,130,246,0.12)', border: 'none', cursor: 'pointer', padding: '0.25rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6' }}
-                            onClick={async () => {
-                              await updateFileMetadata(fileId, { status: 'pending', errorMessage: undefined });
-                              runPipeline(folder!, inputFile, fileId, folderRecord?.files[fileId]?.ownedByFolder ?? false);
-                            }}
-                          >
-                            <ReplayIcon style={{ fontSize: '1rem' }} />
-                          </button>
-                        )}
-                        {(() => { const previewFile = outputFile ?? inputFile; return previewFile && (<>
-                          <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={() => handleView(previewFile)} title={t('smartFolders.actions.view', 'Preview')}>
-                            <VisibilityIcon style={{ fontSize: '1rem' }} />
-                          </button>
-                          <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={() => handleDownload(previewFile, previewFile.name)} title={t('smartFolders.actions.download', 'Download')}>
-                            <DownloadIcon style={{ fontSize: '1rem' }} />
-                          </button>
-                        </>); })()}
-                        <Text size="xs" c="dimmed" style={{ fontSize: '0.6875rem', flexShrink: 0, width: '3.5rem', textAlign: 'right' }}>
-                          {(meta?.processedAt || meta?.addedAt)
-                            ? timeAgo(new Date((meta.processedAt ?? meta.addedAt)!), t)
-                            : ''}
-                        </Text>
                       </Box>
                     );
                   })}
@@ -781,264 +804,132 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
 
       </Box>
 
-      {/* Inputs modal */}
+      {/* Stats modal */}
       <CardExpansionModal
-        phase={inputModalPhase}
-        cardRect={inputCardRect}
-        textExpanded={inputTextExpanded}
-        onClose={closeInputModal}
-        icon={<FolderOpenIcon style={{ fontSize: '1.125rem', color: 'var(--mantine-color-blue-filled)' }} />}
-        count={inputFiles.length}
-        labelSingular={t('smartFolders.workbench.inputFile', 'input file')}
-        labelPlural={t('smartFolders.workbench.inputFiles', 'input files')}
+        phase={statsModalPhase}
+        cardRect={statsCardRect}
+        textExpanded={statsTextExpanded}
+        onClose={closeStatsModal}
+        icon={<HistoryIcon style={{ fontSize: '1.125rem', color: 'var(--mantine-color-dimmed)' }} />}
+        count={daysRunning !== null && daysRunning > 0 ? daysRunning : 0}
+        labelSingular={t('smartFolders.workbench.dayRunning', 'day running')}
+        labelPlural={t('smartFolders.workbench.daysRunning', 'days running')}
+        widthRem={72}
+        heightRem={48}
+        fillHeight
         toolbar={
-          <FilterSortBar
-            search={inputSearch}
-            onSearchChange={setInputSearch}
-            sort={inputSort}
-            onSortChange={setInputSort}
-          />
-        }
-        footer={
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.375rem 0.625rem', borderRadius: '0.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: 'var(--mantine-color-dimmed)' }}
-              onClick={async () => { for (const f of inputFiles) await handleDownload(f, f.name); }}
-            >
-              <DownloadIcon style={{ fontSize: '1rem' }} />
-              {t('smartFolders.workbench.exportAll', 'Export all')}
-            </button>
-          </div>
+          <Box style={{ padding: '0.625rem 0.75rem' }}>
+            <Group gap="0.375rem">
+              {(['24h', '7d', '30d', 'all'] as const).map(p => (
+                <button key={p} onClick={() => setStatsPeriod(p)} style={{ padding: '0.125rem 0.5rem', borderRadius: '999px', border: `0.0625rem solid ${statsPeriod === p ? 'var(--mantine-color-blue-filled)' : 'var(--border-subtle)'}`, backgroundColor: statsPeriod === p ? 'var(--mantine-color-blue-light-hover)' : 'transparent', color: statsPeriod === p ? 'var(--mantine-color-blue-filled)' : 'var(--mantine-color-dimmed)', fontSize: '0.6875rem', fontWeight: statsPeriod === p ? 600 : 400, cursor: 'pointer' }}>
+                  {p === 'all' ? 'All time' : p}
+                </button>
+              ))}
+            </Group>
+          </Box>
         }
       >
-        <Stack gap="0.5rem">
-          {inputFiles.length === 0 ? (
-            <Text size="sm" c="dimmed" ta="center" py="xl">
-              {t('smartFolders.workbench.noInputFiles', 'No input files stored yet')}
-            </Text>
-          ) : filteredInputFiles.length === 0 ? (
-            <Text size="sm" c="dimmed" ta="center" py="xl">
-              {t('smartFolders.workbench.noMatch', 'No matching files')}
-            </Text>
-          ) : filteredInputFiles.map((file) => {
-            const inputMeta = folderRecord?.files[file.fileId];
-            return (
-            <Box
-              key={file.fileId}
-              style={{
-                padding: '0.5rem 0.625rem',
-                borderRadius: 'var(--mantine-radius-sm)',
-                border: '0.0625rem solid var(--border-subtle)',
-                backgroundColor: 'var(--bg-toolbar)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.625rem',
-              }}
-            >
-              <FolderOpenIcon style={{ fontSize: '0.875rem', color: 'var(--mantine-color-blue-filled)', flexShrink: 0 }} />
-              <Text size="sm" style={{ flex: 1, minWidth: 0, fontWeight: 500 }} lineClamp={1}>{file.name}</Text>
-              {inputMeta?.addedAt && <Text size="xs" c="dimmed" style={{ fontSize: '0.6875rem', flexShrink: 0 }}>{timeAgo(new Date(inputMeta.addedAt), t)}</Text>}
-              <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'nowrap' }}>
-                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.3rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={() => handleView(file)} title={t('smartFolders.actions.view', 'Preview')}>
-                  <VisibilityIcon style={{ fontSize: '1.125rem' }} />
-                </button>
-                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.3rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={() => handleDownload(file, file.name)} title={t('smartFolders.actions.download', 'Download')}>
-                  <DownloadIcon style={{ fontSize: '1.125rem' }} />
-                </button>
-              </div>
+        <Stack gap="lg" style={{ flex: 1, minHeight: 0 }}>
+          {/* Stat numbers */}
+          <Group gap="xl">
+            <Box>
+              <Text style={{ fontSize: '0.625rem', letterSpacing: '0.05em' }} c="dimmed" tt="uppercase" fw={600}>Done</Text>
+              <Text size="xl" fw={800} c="#22c55e">{dashboardStats.processed}</Text>
             </Box>
-            );
-          })}
-        </Stack>
-      </CardExpansionModal>
-
-      {/* Outputs modal */}
-      <CardExpansionModal
-        phase={outputModalPhase}
-        cardRect={outputCardRect}
-        textExpanded={outputTextExpanded}
-        onClose={closeOutputModal}
-        icon={<TaskAltIcon style={{ fontSize: '1.125rem', color: '#22c55e' }} />}
-        count={outputFiles.length}
-        labelSingular={t('smartFolders.workbench.outputFile', 'output file')}
-        labelPlural={t('smartFolders.workbench.outputFiles', 'output files')}
-        toolbar={
-          <FilterSortBar
-            search={outputSearch}
-            onSearchChange={setOutputSearch}
-            sort={outputSort}
-            onSortChange={setOutputSort}
-          />
-        }
-        footer={
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.375rem 0.625rem', borderRadius: '0.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: 'var(--mantine-color-dimmed)' }}
-              onClick={async () => { for (const f of outputFiles) await handleDownload(f, f.name); }}
-            >
-              <DownloadIcon style={{ fontSize: '1rem' }} />
-              {t('smartFolders.workbench.exportAll', 'Export all')}
-            </button>
-          </div>
-        }
-      >
-        <Stack gap="0.5rem">
-          {outputFiles.length === 0 ? (
-            <Text size="sm" c="dimmed" ta="center" py="xl">
-              {t('smartFolders.workbench.noOutputFiles', 'No output files stored yet')}
-            </Text>
-          ) : filteredOutputFiles.length === 0 ? (
-            <Text size="sm" c="dimmed" ta="center" py="xl">
-              {t('smartFolders.workbench.noMatch', 'No matching files')}
-            </Text>
-          ) : filteredOutputFiles.map((file) => {
-            const processedAt = Object.values(folderRecord?.files ?? {}).find(m =>
-              m.displayFileIds?.includes(file.fileId) || m.displayFileId === file.fileId
-            )?.processedAt;
-            return (
-            <Box
-              key={file.fileId}
-              style={{
-                padding: '0.5rem 0.625rem',
-                borderRadius: 'var(--mantine-radius-sm)',
-                border: '0.0625rem solid var(--border-subtle)',
-                backgroundColor: 'var(--bg-toolbar)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.625rem',
-              }}
-            >
-              <TaskAltIcon style={{ fontSize: '0.875rem', color: '#22c55e', flexShrink: 0 }} />
-              <Text size="sm" style={{ flex: 1, minWidth: 0, fontWeight: 500 }} lineClamp={1}>{file.name}</Text>
-              {processedAt && <Text size="xs" c="dimmed" style={{ fontSize: '0.6875rem', flexShrink: 0 }}>{timeAgo(new Date(processedAt), t)}</Text>}
-              <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'nowrap' }}>
-                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.3rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={() => handleView(file)} title={t('smartFolders.actions.view', 'View')}>
-                  <VisibilityIcon style={{ fontSize: '1.125rem' }} />
-                </button>
-                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.3rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={() => handleDownload(file, file.name)} title={t('smartFolders.actions.download', 'Download')}>
-                  <DownloadIcon style={{ fontSize: '1.125rem' }} />
-                </button>
-              </div>
-            </Box>
-            );
-          })}
-        </Stack>
-      </CardExpansionModal>
-
-      <CardExpansionModal
-        phase={failedModalPhase}
-        cardRect={failedCardRect}
-        textExpanded={failedTextExpanded}
-        onClose={closeFailedModal}
-        icon={<ErrorOutlineIcon style={{ fontSize: '1.125rem', color: '#ef4444' }} />}
-        count={failedFileIds.length}
-        labelSingular={t('smartFolders.workbench.fileFailedToProcess', 'file failed to process')}
-        labelPlural={t('smartFolders.workbench.filesFailedToProcess', 'files failed to process')}
-        toolbar={
-          <FilterSortBar
-            search={failedSearch}
-            onSearchChange={setFailedSearch}
-            sort={failedSort}
-            onSortChange={setFailedSort}
-          />
-        }
-        footer={
-          <Group justify="flex-end">
-            <Button size="sm" color="red"
-              leftSection={<ReplayIcon style={{ fontSize: '1rem' }} />}
-              onClick={async () => {
-                for (const fid of failedFileIds) {
-                  const f = inputFiles.find(x => x.fileId === fid);
-                  if (!f) continue;
-                  await updateFileMetadata(fid, { status: 'pending', errorMessage: undefined });
-                  runPipeline(folder!, f, fid, folderRecord?.files[fid]?.ownedByFolder ?? false);
-                }
-                closeFailedModal();
-              }}
-            >
-              {t('smartFolders.workbench.retryAll', 'Retry all')}
-            </Button>
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.375rem 0.625rem', borderRadius: '0.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: 'var(--mantine-color-dimmed)' }}
-              onClick={async () => {
-                for (const fid of failedFileIds) {
-                  const f = inputFiles.find(x => x.fileId === fid);
-                  if (f) await handleDownload(f, f.name);
-                }
-              }}
-            >
-              <DownloadIcon style={{ fontSize: '1rem' }} />
-              {t('smartFolders.workbench.exportAll', 'Export all')}
-            </button>
+            {dashboardStats.failed > 0 && (
+              <Box>
+                <Text style={{ fontSize: '0.625rem', letterSpacing: '0.05em' }} c="dimmed" tt="uppercase" fw={600}>Failed</Text>
+                <Text size="xl" fw={800} c="red">{dashboardStats.failed}</Text>
+              </Box>
+            )}
+            {dashboardStats.pending > 0 && (
+              <Box>
+                <Text style={{ fontSize: '0.625rem', letterSpacing: '0.05em' }} c="dimmed" tt="uppercase" fw={600}>Queued</Text>
+                <Text size="xl" fw={800}>{dashboardStats.pending}</Text>
+              </Box>
+            )}
+            {dashboardStats.totalIn > 0 && (
+              <Box>
+                <Text style={{ fontSize: '0.625rem', letterSpacing: '0.05em' }} c="dimmed" tt="uppercase" fw={600}>Input size</Text>
+                <Text size="xl" fw={800}>{formatBytes(dashboardStats.totalIn)}</Text>
+              </Box>
+            )}
+            {dashboardStats.saved > 0 && (
+              <Box>
+                <Text style={{ fontSize: '0.625rem', letterSpacing: '0.05em' }} c="dimmed" tt="uppercase" fw={600}>Saved</Text>
+                <Text size="xl" fw={800} c="#22c55e">↓ {formatBytes(dashboardStats.saved)}</Text>
+              </Box>
+            )}
           </Group>
-        }
-      >
-        <Stack gap="0.5rem">
-          {filteredFailedIds.length === 0 && failedFileIds.length > 0 ? (
-            <Text size="sm" c="dimmed" ta="center" py="xl">
-              {t('smartFolders.workbench.noMatch', 'No matching files')}
-            </Text>
-          ) : filteredFailedIds.map((fileId) => {
-            const meta = folderRecord?.files[fileId];
-            const inputFile = inputFiles.find(f => f.fileId === fileId);
-            const filename = meta?.name ?? inputFile?.name ?? fileId;
-            const attempts = meta?.failedAttempts ?? 0;
+
+          {/* Bar chart */}
+          {(() => {
+            const isHourly = statsPeriod === '24h';
+            const bucketMs2 = isHourly ? 3_600_000 : 86_400_000;
+            const count = dashboardStats.buckets.length;
+            const nowMs = Date.now();
+            const stride = isHourly ? 6 : statsPeriod === '7d' ? 1 : 5;
+            const bucketLabel = (i: number) => {
+              const ts = nowMs - (count - 1 - i) * bucketMs2;
+              const d = new Date(ts);
+              if (isHourly) {
+                const h = d.getHours();
+                if (h === 0) return `${d.getDate()} ${d.toLocaleDateString('en', { month: 'short' })}`;
+                return h < 12 ? `${h}am` : h === 12 ? '12pm' : `${h - 12}pm`;
+              }
+              if (statsPeriod === '7d') return d.toLocaleDateString('en', { weekday: 'short' });
+              return `${d.getDate()} ${d.toLocaleDateString('en', { month: 'short' })}`;
+            };
+            const yMax = Math.max(dashboardStats.maxBucket, 10);
+            const yTicks = [yMax, Math.round(yMax * 0.75), Math.round(yMax * 0.5), Math.round(yMax * 0.25), 0];
+            const yAxisWidth = `${Math.max(...yTicks.map(v => String(v).length)) * 0.5 + 0.25}rem`;
             return (
-              <Box
-                key={fileId}
-                style={{
-                  borderRadius: 'var(--mantine-radius-sm)',
-                  border: '0.0625rem solid rgba(239,68,68,0.45)',
-                  backgroundColor: 'var(--bg-toolbar)',
-                  overflow: 'hidden',
-                }}
-              >
-                <Group gap="0.625rem" style={{ padding: '0.5rem 0.625rem' }} wrap="nowrap">
-                  <ErrorOutlineIcon style={{ fontSize: '0.875rem', color: '#ef4444', flexShrink: 0 }} />
-                  <Text size="sm" style={{ flex: 1, minWidth: 0, fontWeight: 500 }} lineClamp={1}>{filename}</Text>
-                  {meta?.lastFailedAt && <Text size="xs" c="dimmed" style={{ fontSize: '0.6875rem', flexShrink: 0 }}>{timeAgo(new Date(meta.lastFailedAt), t)}</Text>}
-                  {attempts > 0 && (
-                    <Box style={{
-                      padding: '0.125rem 0.375rem',
-                      borderRadius: '0.25rem',
-                      backgroundColor: 'rgba(239,68,68,0.22)',
-                      border: '0.0625rem solid rgba(239,68,68,0.45)',
-                      flexShrink: 0,
-                    }}>
-                      <Text style={{ fontSize: '0.625rem', fontWeight: 700, color: '#ef4444', letterSpacing: '0.03em' }}>{attempts}×</Text>
-                    </Box>
-                  )}
-                  <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'nowrap', flexShrink: 0 }}>
-                    {inputFile && (
-                      <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.3rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={() => handleDownload(inputFile, inputFile.name)} title={t('smartFolders.actions.downloadInput', 'Download input')}>
-                        <DownloadIcon style={{ fontSize: '1.125rem' }} />
-                      </button>
-                    )}
-                    {inputFile && (
-                      <button style={{ background: 'rgba(59,130,246,0.12)', border: 'none', cursor: 'pointer', padding: '0.3rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6' }} title={t('smartFolders.actions.retry', 'Retry')}
-                        onClick={async () => {
-                          await updateFileMetadata(fileId, { status: 'pending', errorMessage: undefined });
-                          runPipeline(folder!, inputFile, fileId, folderRecord?.files[fileId]?.ownedByFolder ?? false);
-                          closeFailedModal();
-                        }}
-                      >
-                        <ReplayIcon style={{ fontSize: '1.125rem' }} />
-                      </button>
-                    )}
+              <Box style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                <Text size="xs" c="dimmed" mb="0.5rem">Files processed over time</Text>
+                <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: '0.5rem' }}>
+                  {/* Y-axis labels */}
+                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'flex-end', flexShrink: 0, width: yAxisWidth, paddingBottom: '0.0625rem' }}>
+                    {yTicks.map((v, i) => (
+                      <Text key={i} style={{ fontSize: '0.625rem', lineHeight: 1 }} c="dimmed">{v}</Text>
+                    ))}
                   </div>
+                  {/* Bars + gridlines */}
+                  <div style={{ flex: 1, position: 'relative', borderBottom: '0.0625rem solid var(--border-subtle)' }}>
+                    {[0, 25, 50, 75].map(pct => (
+                      <div key={pct} style={{ position: 'absolute', top: `${pct}%`, left: 0, right: 0, borderTop: '0.0625rem dashed var(--border-subtle)', pointerEvents: 'none' }} />
+                    ))}
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: '100%' }}>
+                      {dashboardStats.buckets.map((b, i) => {
+                        const total = b.processed + b.failed;
+                        const h = total === 0 ? 0 : Math.max((total / yMax) * 100, 2);
+                        return (
+                          <div key={i} title={total > 0 ? `${b.processed} done, ${b.failed} failed` : undefined} style={{ flex: 1, height: `${h}%`, display: 'flex', flexDirection: 'column', borderRadius: '2px 2px 0 0', overflow: 'hidden', opacity: total === 0 ? 0.12 : 1 }}>
+                            {b.failed > 0 && <div style={{ flex: b.failed, backgroundColor: '#ef4444', minHeight: '2px' }} />}
+                            {b.processed > 0 && <div style={{ flex: b.processed, backgroundColor: '#22c55e', minHeight: '2px' }} />}
+                            {total === 0 && <div style={{ flex: 1, backgroundColor: 'var(--border-subtle)' }} />}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+                {/* X-axis labels */}
+                <div style={{ display: 'flex', gap: '2px', marginTop: '0.25rem', paddingLeft: `calc(${yAxisWidth} + 0.5rem)` }}>
+                  {dashboardStats.buckets.map((_, i) => (
+                    <div key={i} style={{ flex: 1, textAlign: 'center', overflow: 'hidden' }}>
+                      {i % stride === 0 && (
+                        <Text style={{ fontSize: '0.6875rem', whiteSpace: 'nowrap' }} c="dimmed">{bucketLabel(i)}</Text>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <Group gap="md" mt="0.625rem">
+                  <Group gap="0.3rem"><div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '2px', backgroundColor: '#22c55e' }} /><Text size="xs" c="dimmed">Done</Text></Group>
+                  <Group gap="0.3rem"><div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '2px', backgroundColor: '#ef4444' }} /><Text size="xs" c="dimmed">Failed</Text></Group>
                 </Group>
-                {meta?.errorMessage && (
-                  <Box style={{
-                    padding: '0.375rem 0.625rem',
-                    borderTop: '0.0625rem solid rgba(239,68,68,0.25)',
-                    borderLeft: '0.1875rem solid rgba(239,68,68,0.7)',
-                    backgroundColor: 'transparent',
-                  }}>
-                    <Text size="xs" style={{ color: '#ef4444', fontFamily: 'monospace', fontSize: '0.6875rem', opacity: 0.85 }}>
-                      {meta.errorMessage}
-                    </Text>
-                  </Box>
-                )}
               </Box>
             );
-          })}
+          })()}
         </Stack>
       </CardExpansionModal>
 
