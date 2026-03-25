@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import Annotated
-
-from fastapi import Depends, Request
+from fastapi import Request
 
 from stirling.agents.execution import ExecutionPlanningAgent
 from stirling.agents.orchestrator import OrchestratorAgent
@@ -16,23 +14,21 @@ def get_runtime(request: Request) -> AppRuntime:
     return request.app.state.runtime
 
 
-def get_orchestrator_agent(runtime: Annotated[AppRuntime, Depends(get_runtime)]) -> OrchestratorAgent:
-    return OrchestratorAgent(runtime)
+def get_orchestrator_agent(request: Request) -> OrchestratorAgent:
+    return request.app.state.orchestrator_agent
 
 
-def get_pdf_edit_agent(runtime: Annotated[AppRuntime, Depends(get_runtime)]) -> PdfEditAgent:
-    return PdfEditAgent(runtime)
+def get_pdf_edit_agent(request: Request) -> PdfEditAgent:
+    return request.app.state.pdf_edit_agent
 
 
-def get_pdf_question_agent(runtime: Annotated[AppRuntime, Depends(get_runtime)]) -> PdfQuestionAgent:
-    return PdfQuestionAgent(runtime)
+def get_pdf_question_agent(request: Request) -> PdfQuestionAgent:
+    return request.app.state.pdf_question_agent
 
 
-def get_user_spec_agent(runtime: Annotated[AppRuntime, Depends(get_runtime)]) -> UserSpecAgent:
-    return UserSpecAgent(runtime)
+def get_user_spec_agent(request: Request) -> UserSpecAgent:
+    return request.app.state.user_spec_agent
 
 
-def get_execution_planning_agent(
-    runtime: Annotated[AppRuntime, Depends(get_runtime)],
-) -> ExecutionPlanningAgent:
-    return ExecutionPlanningAgent(runtime)
+def get_execution_planning_agent(request: Request) -> ExecutionPlanningAgent:
+    return request.app.state.execution_planning_agent

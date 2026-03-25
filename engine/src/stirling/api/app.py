@@ -5,6 +5,11 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI
 
+from stirling.agents.execution import ExecutionPlanningAgent
+from stirling.agents.orchestrator import OrchestratorAgent
+from stirling.agents.pdf_edit import PdfEditAgent
+from stirling.agents.pdf_questions import PdfQuestionAgent
+from stirling.agents.user_spec import UserSpecAgent
 from stirling.api.routes import (
     agent_draft_router,
     execution_router,
@@ -28,8 +33,14 @@ def _load_startup_settings(fast_api: FastAPI) -> AppSettings:
 async def lifespan(fast_api: FastAPI):
     # Load env vars on startup so we can immediately crash if required env vars aren't set
     settings = _load_startup_settings(fast_api)
+    runtime = build_runtime(settings)
     fast_api.state.settings = settings
-    fast_api.state.runtime = build_runtime(settings)
+    fast_api.state.runtime = runtime
+    fast_api.state.orchestrator_agent = OrchestratorAgent(runtime)
+    fast_api.state.pdf_edit_agent = PdfEditAgent(runtime)
+    fast_api.state.pdf_question_agent = PdfQuestionAgent(runtime)
+    fast_api.state.user_spec_agent = UserSpecAgent(runtime)
+    fast_api.state.execution_planning_agent = ExecutionPlanningAgent(runtime)
     yield
 
 
