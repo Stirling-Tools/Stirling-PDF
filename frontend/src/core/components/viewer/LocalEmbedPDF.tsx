@@ -63,7 +63,7 @@ import { absoluteWithBasePath } from '@app/constants/app';
 import { FormFieldOverlay } from '@app/tools/formFill/FormFieldOverlay';
 import { CommentsSidebar } from '@app/components/viewer/CommentsSidebar';
 import { CommentAuthorProvider } from '@app/contexts/CommentAuthorContext';
-import { accountService } from '@app/services/accountService';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -90,15 +90,10 @@ interface LocalEmbedPDFProps {
 
 export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, enableRedaction = false, enableFormFill = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef, fileId, isCommentsSidebarVisible = false, commentsSidebarRightOffset = '0rem', isSignMode = false }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
+  const { config } = useAppConfig();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: Rect}>>([]);
-  const [commentAuthorName, setCommentAuthorName] = useState<string>('Guest');
-
-  useEffect(() => {
-    accountService.getAccountData().then((data) => {
-      if (data?.username) setCommentAuthorName(data.username);
-    }).catch(() => {/* not logged in or security disabled */});
-  }, []);
+  const commentAuthorName = config?.username ?? 'Guest';
 
   // Convert File to URL if needed
   useEffect(() => {

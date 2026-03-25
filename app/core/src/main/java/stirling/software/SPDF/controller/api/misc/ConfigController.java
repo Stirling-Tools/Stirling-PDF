@@ -230,6 +230,16 @@ public class ConfigController {
             }
             configData.put("isNewUser", isNewUser);
 
+            String username = null;
+            if (userService != null) {
+                try {
+                    username = userService.getCurrentUsername();
+                } catch (Exception e) {
+                    // Not authenticated or security disabled
+                }
+            }
+            configData.put("username", username);
+
             // System settings
             configData.put(
                     "enableAlphaFunctionality",

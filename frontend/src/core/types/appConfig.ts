@@ -42,6 +42,7 @@ export interface AppConfig {
   error?: string;
   isNewServer?: boolean;
   isNewUser?: boolean;
+  username?: string | null;
   defaultHideUnavailableTools?: boolean;
   defaultHideUnavailableConversions?: boolean;
   hideDisabledToolsGoogleDrive?: boolean;
