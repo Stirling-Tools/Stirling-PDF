@@ -64,7 +64,8 @@ export default defineConfig(
   // Desktop-only packages must not be imported from core or proprietary code.
   // Use the stub/shadow pattern instead: define a stub in src/core/ and override in src/desktop/.
   {
-    files: ['src/core/**/*.{js,mjs,jsx,ts,tsx}', 'src/proprietary/**/*.{js,mjs,jsx,ts,tsx}'],
+    files: srcGlobs,
+    ignores: ['src/desktop/**'],
     rules: {
       'no-restricted-imports': [
         'error',
