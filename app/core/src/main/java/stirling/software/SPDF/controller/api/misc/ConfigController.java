@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.config.EndpointConfiguration.EndpointAvailability;
 import stirling.software.SPDF.config.InitialSetup;
+import stirling.software.SPDF.controller.api.security.TimestampController;
 import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
@@ -265,6 +266,13 @@ public class ConfigController {
 
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
+
+            // Timestamp TSA settings — single source of truth for presets + admin URLs
+            ApplicationProperties.Security.Timestamp tsConfig =
+                    applicationProperties.getSecurity().getTimestamp();
+            configData.put("timestampDefaultTsaUrl", tsConfig.getDefaultTsaUrl());
+            configData.put("timestampCustomTsaUrls", tsConfig.getCustomTsaUrls());
+            configData.put("timestampTsaPresets", TimestampController.TSA_PRESETS);
 
             // Server certificate settings
             configData.put(

@@ -1517,6 +1517,7 @@ editStampHint = "Para cambiar la imagen, elimina este sello y añade uno nuevo."
 editSwitchToSelect = "Cambia a Seleccionar y Editar para editar esta anotación."
 editText = "Editar cuadro de texto"
 editTextMarkup = "Editar marcado de texto"
+annotationStyle = "Estilo de anotación"
 ellipse = "Elipse"
 exit = "Salir del modo de anotación"
 fillColor = "Color de relleno"
@@ -1527,13 +1528,19 @@ highlight = "Resaltar"
 imagePreview = "Vista previa"
 inkHighlighter = "Resaltador a mano alzada"
 line = "Línea"
+lineArrow = "Flecha"
 noBackground = "Sin fondo"
 note = "Nota"
+comment = "Comentario"
+comments = "Comentarios"
+insertText = "Insertar texto"
+replaceText = "Reemplazar texto"
 noteIcon = "Icono de nota"
 notesStamps = "Notas y sellos"
 opacity = "Opacidad"
 pen = "Lápiz"
 polygon = "Polígono"
+polyline = "Polilínea"
 properties = "Propiedades"
 rectangle = "Rectángulo"
 redo = "Rehacer"
@@ -2582,9 +2589,6 @@ tags = "aplastar,pequeño,diminuto"
 plan = "Plan"
 
 [config.account.overview]
-guestDescription = "Ha iniciado sesión como invitado. Considere actualizar su cuenta arriba."
-manageAccountPreferences = "Administre las preferencias de su cuenta"
-title = "Configuración de Cuenta"
 confirmDelete = "Eliminar Mi Cuenta"
 deleteAccount = "Eliminar Cuenta"
 deleteAccountTitle = "Eliminar Cuenta"
@@ -2592,21 +2596,11 @@ deleteFailed = "Error al eliminar la cuenta."
 deleteFailedTitle = "No se puede eliminar la cuenta"
 deleteWarning = "Esta acción es permanente y no se puede deshacer. Se eliminarán todos tus datos."
 enterEmailConfirm = "Para confirmar la eliminación, introduce tu dirección de correo electrónico ({{email}}) a continuación:"
+guestDescription = "Ha iniciado sesión como invitado. Considere actualizar su cuenta arriba."
 label = "Resumen"
+manageAccountPreferences = "Administre las preferencias de su cuenta"
 signedInAs = "Sesión iniciada como"
-
-[config.account.upgrade]
-description = "¡Vincule su cuenta para preservar su historial y acceder a más funciones!"
-email = "Correo electrónico"
-emailPassword = "o ingrese su correo electrónico y contraseña"
-emailPlaceholder = "Ingrese su correo electrónico"
-linkWith = "Vincular con"
-password = "Contraseña (opcional)"
-passwordNote = "Deje vacío para usar solo verificación por correo electrónico"
-passwordPlaceholder = "Establecer una contraseña"
-socialLogin = "Actualizar con Cuenta Social"
-title = "Actualizar Cuenta de Invitado"
-upgradeButton = "Actualizar Cuenta"
+title = "Configuración de Cuenta"
 
 [config.account.profilePicture]
 description = "Sube una imagen para personalizar tu cuenta."
@@ -2634,9 +2628,23 @@ description = "Gestiona tu contraseña y los ajustes de seguridad."
 title = "Contraseñas y Seguridad"
 update = "Actualizar contraseña"
 
+[config.account.upgrade]
+description = "¡Vincule su cuenta para preservar su historial y acceder a más funciones!"
+email = "Correo electrónico"
+emailPassword = "o ingrese su correo electrónico y contraseña"
+emailPlaceholder = "Ingrese su correo electrónico"
+linkWith = "Vincular con"
+password = "Contraseña (opcional)"
+passwordNote = "Deje vacío para usar solo verificación por correo electrónico"
+passwordPlaceholder = "Establecer una contraseña"
+socialLogin = "Actualizar con Cuenta Social"
+title = "Actualizar Cuenta de Invitado"
+upgradeButton = "Actualizar Cuenta"
+
 [config.apiKeys]
 chartAriaLabel = "Uso de créditos: incluidos {{includedUsed}} de {{includedTotal}}, comprados {{purchasedUsed}} de {{purchasedTotal}}"
 copyKeyAriaLabel = "Copiar clave API"
+creditsRemaining = "Créditos Restantes"
 description = "Su clave API para acceder al conjunto de herramientas PDF de Stirling. Cópiela a su proyecto o actualice para generar una nueva."
 docsDescription = "Más información sobre cómo integrar con Stirling PDF:"
 docsLink = "Documentación de la API"
@@ -2656,7 +2664,6 @@ refreshAriaLabel = "Actualizar clave API"
 schemaLink = "Referencia del esquema de la API"
 totalCredits = "Créditos Totales"
 usage = "Incluye esta clave en el encabezado X-API-KEY en todas las solicitudes a la API."
-creditsRemaining = "Créditos Restantes"
 
 [config.apiKeys.alert]
 apiKeyErrorTitle = "Error de clave de API"
@@ -2686,6 +2693,14 @@ basic = "Configuración básica"
 integration = "Configuración de integración"
 security = "Configuración de seguridad"
 system = "Configuración del sistema"
+
+[connectionMode.status]
+localOffline = "Modo sin conexión activo"
+localOnline = "Modo sin conexión activo"
+saas = "Conectado a Stirling Cloud"
+selfhostedChecking = "Conectado al servidor autoalojado (comprobando...)"
+selfhostedOffline = "No se puede acceder al servidor autoalojado"
+selfhostedOnline = "Conectado al servidor autoalojado"
 
 [convert]
 autoRotate = "Rotación Automática"
@@ -3770,6 +3785,11 @@ desc = "Añadir firma a PDF mediante dibujo, texto o imagen"
 tags = "firma,autógrafo"
 title = "Firmar"
 
+[home.timestampPdf]
+desc = "Añade una marca de tiempo de documento RFC 3161 para demostrar cuándo existía tu PDF"
+tags = "sello de tiempo,RFC 3161,TSA,autoridad de sellado de tiempo,sello de tiempo de documento,prueba de existencia,token de sello de tiempo,sello de tiempo de confianza,firmar sello de tiempo,notarizar"
+title = "Sello de tiempo en PDF"
+
 [home.split]
 desc = "Dividir PDFs en múltiples documentos"
 tags = "dividir,separar,partir"
@@ -3906,6 +3926,7 @@ version = "Versión"
 accountCreatedSuccess = "¡Cuenta creada correctamente! Ya puedes iniciar sesión."
 alreadyLoggedIn = "Ya ha iniciado sesión en"
 alreadyLoggedIn2 = "dispositivos. Cierre sesión en los dispositivos y vuelva a intentarlo."
+backToSignIn = "Volver a iniciar sesión"
 cancel = "Cancelar"
 changePasswordWarning = "Cambie su contraseña tras iniciar sesión por primera vez"
 credentialsUpdated = "Tus credenciales se han actualizado. Vuelve a iniciar sesión."
@@ -3947,16 +3968,21 @@ or = "O"
 password = "Contraseña"
 passwordChangedSuccess = "¡Contraseña cambiada correctamente! Inicia sesión con tu nueva contraseña."
 passwordResetSent = "¡Enlace de restablecimiento de contraseña enviado a {{email}}! Revise su correo electrónico y siga las instrucciones."
+passwordUpdatedSuccess = "Tu contraseña se ha actualizado correctamente."
 pleaseEnterBoth = "Por favor, introduzca tanto el correo electrónico como la contraseña"
 pleaseEnterEmail = "Por favor, introduzca su dirección de correo electrónico"
 relyingPartyRegistrationNotFound = "No hay registro de terceros confiables"
 rememberme = "Recordarme"
+resetHelp = "Introduce tu correo electrónico para recibir un enlace seguro para restablecer tu contraseña. Si el enlace ha caducado, por favor solicita uno nuevo."
+resetYourPassword = "Restablecer tu contraseña"
 saml2RequiresLicense = "El inicio de sesión SAML requiere una licencia de pago (Server o Enterprise). Póngase en contacto con el administrador para actualizar su plan."
 sending = "Enviando…"
 sendMagicLink = "Enviar Enlace Mágico"
+sendResetLink = "Enviar enlace de restablecimiento"
 sessionExpired = "Tu sesión ha expirado. Vuelve a iniciar sesión."
 signin = "Iniciar sesión"
 signInAnonymously = "Registrarse como Invitado"
+subtitle = "Vuelve a iniciar sesión en Stirling PDF"
 signingIn = "Iniciando sesión..."
 signinTitle = "Por favor, inicie sesión"
 signInWith = "Iniciar sesión con"
@@ -3965,6 +3991,7 @@ ssoSignIn = "Iniciar sesión a través del inicio de sesión único"
 title = "Iniciar sesión"
 toManySessions = "Tiene demasiadas sesiones activas"
 unexpectedError = "Error inesperado: {{message}}"
+updatePassword = "Actualizar contraseña"
 useEmailInstead = "Iniciar sesión con correo electrónico"
 useMagicLink = "Usar enlace mágico en su lugar"
 userIsDisabled = "El usuario está desactivado, actualmente el acceso está bloqueado para ese nombre de usuario. Por favor, póngase en contacto con el administrador."
@@ -3972,13 +3999,6 @@ username = "Nombre de usuario"
 verifyingMfa = "Verificando..."
 verifyMfa = "Verificar código"
 youAreLoggedIn = "¡Ha iniciado sesión!"
-backToSignIn = "Volver a iniciar sesión"
-passwordUpdatedSuccess = "Tu contraseña se ha actualizado correctamente."
-resetHelp = "Introduce tu correo electrónico para recibir un enlace seguro para restablecer tu contraseña. Si el enlace ha caducado, por favor solicita uno nuevo."
-resetYourPassword = "Restablecer tu contraseña"
-sendResetLink = "Enviar enlace de restablecimiento"
-subtitle = "Vuelve a iniciar sesión en Stirling PDF"
-updatePassword = "Actualizar contraseña"
 
 [login.slides.edit]
 alt = "Editar PDFs"
@@ -4281,6 +4301,15 @@ viewSwitcher = "Usa estos controles para elegir cómo quieres ver tus PDFs."
 workbench = "Este es el <strong>Workbench</strong> - el área principal donde ves y editas tus PDFs."
 wrapUp = "¡Todo listo! Has aprendido sobre las áreas principales de la aplicación y cómo usarlas. Haz clic en el botón <strong>Ayuda</strong> cuando quieras para ver este recorrido de nuevo."
 
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "Tras finalizar tu prueba, continuarás en nuestro plan gratuito. Añade un método de pago para mantener el acceso Pro."
+afterTrialWithPayment = "Tu suscripción Pro comenzará automáticamente cuando finalice la prueba."
+body = "Tienes acceso completo a las funciones de Stirling PDF Pro durante tu prueba. Disfruta de conversiones ilimitadas, tamaños de archivo mayores y procesamiento prioritario."
+daysRemaining = "{{days}} días restantes"
+daysRemainingSingular = "{{days}} día restante"
+title = "Tu Prueba Pro de 30 Días"
+trialEnds = "La prueba finaliza el {{date}}"
+
 [onboarding.buttons]
 back = "Atrás"
 download = "Descargar →"
@@ -4338,15 +4367,6 @@ quickAccess = "Empieza en el panel de <strong>Acceso rápido</strong> para cambi
 rightRail = "El <strong>Panel derecho</strong> contiene acciones rápidas para seleccionar archivos, cambiar el tema o el idioma y descargar resultados."
 topBar = "La barra superior te permite cambiar entre <strong>Visor</strong>, <strong>Editor de páginas</strong> y <strong>Archivos activos</strong>."
 wrapUp = "Eso es lo nuevo en V2. Abre el menú de <strong>Recorridos</strong> en cualquier momento para repetir este, el de Herramientas o el de Administración."
-
-[onboarding.freeTrial]
-afterTrialWithPayment = "Tu suscripción Pro comenzará automáticamente cuando finalice la prueba."
-afterTrialWithoutPayment = "Tras finalizar tu prueba, continuarás en nuestro plan gratuito. Añade un método de pago para mantener el acceso Pro."
-body = "Tienes acceso completo a las funciones de Stirling PDF Pro durante tu prueba. Disfruta de conversiones ilimitadas, tamaños de archivo mayores y procesamiento prioritario."
-daysRemaining = "{{days}} días restantes"
-daysRemainingSingular = "{{days}} día restante"
-title = "Tu Prueba Pro de 30 Días"
-trialEnds = "La prueba finaliza el {{date}}"
 
 [overlay-pdfs]
 desc = "Superponer un PDF encima de otro"
@@ -4460,6 +4480,31 @@ loading = "Cargando adjuntos..."
 empty = "No hay adjuntos en este documento"
 noMatch = "Ningún adjunto coincide con tu búsqueda"
 
+[viewer.comments]
+title = "Comentarios"
+hint = "Coloca comentarios con las herramientas Comentario, Insertar texto o Reemplazar texto. Aparecerán aquí por página."
+placeholder = "Escribe tu comentario..."
+pageLabel = "Página {{page}}"
+oneComment = "1 comentario"
+nComments = "{{count}} comentarios"
+addCommentPlaceholder = "Añadir comentario..."
+addLink = "Añadir enlace"
+goToLink = "Ir al enlace"
+addComment = "Añadir comentario"
+viewComment = "Ver comentario"
+addReplyPlaceholder = "Añadir respuesta..."
+saveReply = "Guardar respuesta"
+send = "Enviar"
+moreActions = "Más acciones"
+typeComment = "Comentario"
+typeInsertText = "Insertar texto"
+typeReplaceText = "Reemplazar texto"
+locateAnnotation = "Localizar en el documento"
+deleteTitle = "¿Quitar la anotación de los comentarios?"
+deleteDescription = "Esta anotación tiene un comentario adjunto. Puedes quitar solo el comentario de la barra lateral y mantener la anotación, o eliminar todo."
+removeCommentOnly = "Quitar solo el comentario"
+deleteAnnotationAndComment = "Eliminar anotación y comentario"
+
 [viewer.formBar]
 title = "Campos del formulario"
 unsavedBadge = "Sin guardar"
@@ -4493,18 +4538,20 @@ rotateLeft = "Rotar a la Izquierda"
 rotateRight = "Rotar a la Derecha"
 toggleSidebar = "Alternar Barra Lateral"
 toggleBookmarks = "Mostrar/ocultar marcadores"
+toggleComments = "Comentarios"
 print = "Imprimir PDF"
 ruler = "Regla / Medir"
+readAloud = "Leer en Voz Alta"
+readAloudSpeed = "Velocidad"
+readAloudLanguage = "Idioma"
+selectLanguage = "Seleccionar idioma"
 draw = "Dibujar"
 redact = "Censurar"
 exitRedaction = "Salir del modo de censura"
 save = "Guardar"
 downloadAll = "Descargar Todo"
 saveAll = "Guardar todo"
-readAloud = "Leer en Voz Alta"
-readAloudLanguage = "Idioma"
-readAloudSpeed = "Velocidad"
-selectLanguage = "Seleccionar idioma"
+saveAs = "Guardar como"
 
 [textAlign]
 left = "Izquierda"
@@ -4519,21 +4566,132 @@ title = "Extraer Páginas"
 
 [pageLayout]
 addBorder = "Añadir bordes"
+borderWidth = "Grosor del borde"
+bottom = "Margen inferior"
+cols = "Columnas"
 header = "Diseño de varias páginas"
+innerMargin = "Margen interior"
+left = "Margen izquierdo"
 pagesPerSheet = "Páginas por hoja:"
+right = "Margen derecho"
+rows = "Filas"
 submit = "Entregar"
 tags = "unir,compuesto,vista única,organizar"
 title = "Diseño de varias páginas"
+top = "Margen superior"
+
+[pageLayout.mode]
+default = "Predeterminado"
+custom = "Personalizado"
+label = "Modo:"
+
+[pageLayout.arrangement]
+byColumns = "Por columnas"
+byRows = "Por filas"
+label = "Disposición de página:"
 
 [pageLayout.desc]
 16 = "Coloca 16 páginas en una sola hoja (rejilla de 4 × 4)."
 2 = "Coloca 2 páginas en paralelo en una sola hoja."
-3 = "Coloca 3 páginas en una sola hoja en una sola fila."
 4 = "Coloca 4 páginas en una sola hoja (rejilla de 2 × 2)."
 9 = "Coloca 9 páginas en una sola hoja (rejilla de 3 × 3)."
 
 [pageLayout.error]
 failed = "Se produjo un error al crear el diseño multipágina."
+outerVerticalMarginsTooLarge = "Los márgenes superior/inferior son demasiado grandes para este tamaño de página."
+outerHorizontalMarginsTooLarge = "Los márgenes izquierdo/derecho son demasiado grandes para este tamaño de página."
+innerMarginTooLarge = "El margen interior es demasiado grande para la disposición seleccionada."
+
+[pageLayout.orientation]
+landscape = "Horizontal"
+portrait = "Vertical"
+label = "Orientación:"
+
+[pageLayout.readingDirection]
+ltr = "De izquierda a derecha"
+rtl = "De derecha a izquierda"
+label = "Dirección de lectura:"
+
+[pageLayout.tooltip.header]
+title = "Guía de disposición de página"
+
+[pageLayout.tooltip.overview]
+title = "¿Qué es la disposición de página?"
+text = "Ajusta varias páginas en una sola hoja para folletos o para ahorrar papel."
+
+[pageLayout.tooltip.mode]
+title = "Modo"
+text = "Elige cómo se configura la cuadrícula:"
+bullet1 = "Predeterminado: Elige un ajuste preestablecido y la cuadrícula se calcula automáticamente."
+bullet2 = "Personalizado: Define filas y columnas manualmente."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Páginas por hoja (modo predeterminado)"
+text = "Elige cuántas páginas por hoja (p. ej., 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Filas y columnas (modo personalizado)"
+text = "Establece las dimensiones exactas de la cuadrícula. Total de páginas por hoja = filas × columnas."
+
+[pageLayout.tooltip.orientation]
+title = "Orientación"
+text = "Define la orientación de la hoja de salida:"
+bullet1 = "Vertical: Más alta que ancha."
+bullet2 = "Horizontal: Más ancha que alta."
+
+[pageLayout.tooltip.arrangement]
+title = "Disposición de página"
+text = "Controla el orden en que las páginas llenan la cuadrícula:"
+bullet1 = "Por filas: Rellena fila por fila (de izquierda a derecha o de derecha a izquierda)."
+bullet2 = "Por columnas: Rellena de arriba abajo, columna por columna."
+
+[pageLayout.tooltip.readingDirection]
+title = "Dirección de lectura"
+text = "Controla el orden horizontal de las páginas:"
+bullet1 = "LTR: De izquierda a derecha."
+bullet2 = "RTL: De derecha a izquierda."
+
+[pageLayout.tooltip.addBorder]
+title = "Añadir bordes"
+text = "Dibuja líneas de borde alrededor de cada celda de la página como guías de corte o para separación visual."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Márgenes y bordes"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Márgenes"
+text = "Usa los márgenes superior, inferior, izquierdo y derecho para controlar el espaciado alrededor de toda la hoja de salida."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Margen interior"
+text = "El margen interior añade espacio entre las celdas de la cuadrícula para mejorar la separación y la legibilidad."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Añadir bordes"
+text = "Activa los bordes para dibujar líneas alrededor de cada página colocada. Puede ayudar a la separación visual o al recorte."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Grosor del borde"
+text = "El grosor del borde solo se aplica cuando los bordes están activados. Valores mayores producen líneas más gruesas."
+
+[pageLayout.advanced.tooltip.header]
+title = "Opciones avanzadas de disposición"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Orientación"
+text = "Elige la orientación final de la hoja. La vertical funciona mejor para contenido alto, mientras que la horizontal se adapta a diseños más anchos."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Disposición de página"
+text = "Controla si las páginas llenan la cuadrícula fila por fila o columna por columna."
+bullet1 = "Por filas: Rellena cada fila primero."
+bullet2 = "Por columnas: Rellena cada columna primero."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Dirección de lectura"
+text = "Establece el orden horizontal en la cuadrícula, útil para convenciones de documentos de izquierda a derecha y de derecha a izquierda."
+bullet1 = "LTR: Orden de izquierda a derecha."
+bullet2 = "RTL: Orden de derecha a izquierda."
 
 [pageRemover]
 header = "Eliminador de páginas PDF"
@@ -5049,12 +5207,12 @@ perMonth = "/mes"
 perSeat = "/plaza"
 popular = "Popular"
 selectPlan = "Seleccionar plan"
+selectCredits = "Seleccionar Cantidad de Créditos"
 showComparison = "Comparar todas las funciones"
+purchase = "Comprar"
+totalCost = "Costo Total"
 upgrade = "Actualizar"
 withServer = "+ Plan de servidor"
-purchase = "Comprar"
-selectCredits = "Seleccionar Cantidad de Créditos"
-totalCost = "Costo Total"
 
 [plan.activePlan]
 subtitle = "Detalles de tu suscripción actual"
@@ -5730,6 +5888,32 @@ text = "Rote las páginas de su PDF en sentido horario o antihorario en incremen
 [rotate.tooltip.header]
 title = "Resumen de Configuración de Rotación"
 
+[timestampPdf]
+completed = "Sello de tiempo aplicado correctamente al PDF"
+desc = "Añade un sello de tiempo RFC 3161 a tu PDF usando un servidor de Autoridad de Sellado de Tiempo (TSA) de confianza."
+filenamePrefix = "con-sello-de-tiempo"
+results = "Resultados del sello de tiempo"
+submit = "Aplicar sello de tiempo"
+title = "Sello de tiempo en PDF"
+
+[timestampPdf.error]
+failed = "Se produjo un error al aplicar el sello de tiempo al PDF."
+generic = "Error al aplicar el sello de tiempo"
+
+[timestampPdf.files]
+placeholder = "Selecciona un archivo PDF en la vista principal para comenzar"
+
+[timestampPdf.options]
+note = "Solo se envía al servidor TSA el hash SHA-256 de tu documento; el archivo PDF en sí nunca se envía al servidor TSA."
+title = "Servidor de sello de tiempo (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Elige una Autoridad de Sellado de Tiempo de confianza"
+label = "Selecciona un servidor TSA"
+
+[timestampPdf.steps]
+settings = "Ajustes"
+
 [sanitize]
 completed = "Desinfección completada con éxito"
 desc = "Eliminar elementos potencialmente dañinos de archivos PDF."
@@ -5854,6 +6038,14 @@ placeholder = "Ingrese término de búsqueda..."
 searching = "Buscando..."
 title = "Buscar PDF"
 
+[selfHosted.offline]
+hideTools = "Ocultar herramientas no disponibles ▴"
+messageNoFallback = "Las herramientas no estarán disponibles hasta que tu servidor vuelva a estar en línea."
+messageWithFallback = "Alguna herramientas requieren conexión con el servidor."
+showTools = "Ver herramientas no disponibles ▾"
+title = "Tu servidor de Stirling-PDF está inaccesible"
+toolNotAvailableLocally = "Tu servidor Stirling-PDF está sin conexión y \"{{endpoint}}\" no está disponible en el backend local."
+
 [session]
 expired = "Su sesión ha caducado. Actualice la página e inténtelo de nuevo."
 refreshPage = "Refrescar Página"
@@ -5867,12 +6059,15 @@ systemSettings = "Ajustes del sistema"
 title = "Configuración"
 
 [settings.connection]
+localDescription = "Estás usando el backend local sin una cuenta. Algunas herramientas que requieren procesamiento en la nube o un servidor autoalojado no están disponibles."
 logout = "Cerrar sesión"
 server = "Servidor"
+signIn = "Iniciar sesión"
 title = "Modo de conexión"
 user = "Conectado como"
 
 [settings.connection.mode]
+local = "Solo local"
 saas = "Stirling Cloud"
 selfhosted = "Autoalojado"
 
@@ -6030,6 +6225,9 @@ title = "Políticas y privacidad"
 [settings.preferences]
 title = "Preferencias"
 
+[settings.search]
+placeholder = "Buscar en las páginas de ajustes..."
+
 [settings.security]
 description = "Actualiza tu contraseña para mantener tu cuenta segura."
 title = "Seguridad"
@@ -6067,8 +6265,17 @@ title = "Espacio de trabajo"
 [settings.team]
 title = "Equipo"
 
-[settings.search]
-placeholder = "Buscar en las páginas de ajustes..."
+[localMode]
+toolUnavailable = "Esta herramienta requiere una cuenta. Inicia sesión en Stirling Cloud o conéctate a un servidor autoalojado para usarla."
+
+[localMode.banner]
+message = "Inicia sesión para desbloquear todas las herramientas."
+signIn = "Iniciar sesión"
+title = "Ejecutándose localmente"
+
+[localMode.toolPicker]
+message = "Inicia sesión para desbloquear todas las herramientas."
+signIn = "Iniciar sesión"
 
 [setup]
 description = "Empiece eligiendo cómo quiere usar Stirling PDF"
@@ -6077,6 +6284,7 @@ welcome = "Bienvenido a Stirling PDF"
 [setup.login]
 connectingTo = "Conectando a:"
 hideInstructions = "Ocultar instrucciones"
+skipSignIn = "Continuar sin iniciar sesión"
 instructions = "Para habilitar el inicio de sesión en su servidor de Stirling PDF:"
 instructionsEnvVar = "Establezca la variable de entorno:"
 instructionsOrYml = "O en settings.yml:"
@@ -6124,7 +6332,14 @@ title = "Inicie sesión en Stirling"
 [setup.selfhosted]
 link = "o conectarse a una cuenta autoalojada"
 subtitle = "Introduzca las credenciales de su servidor"
+switchToLocal = "Usar herramientas locales en su lugar"
 title = "Inicie sesión en el servidor"
+
+[setup.selfhosted.unreachable]
+continueOffline = "Usar herramientas locales en su lugar"
+message = "No se pudo acceder a {{url}}. Comprueba que el servidor esté en ejecución y sea accesible."
+retry = "Reintentar"
+title = "No se puede conectar al servidor"
 
 [setup.server]
 subtitle = "Introduzca la URL de su servidor autoalojado"
@@ -6134,6 +6349,7 @@ useLast = "Último servidor usado: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "No se pudo obtener la configuración del servidor. Compruebe la URL e inténtelo de nuevo."
+configFetchError = "Error al obtener la configuración del servidor: {{error}}"
 emptyUrl = "Introduzca una URL de servidor"
 invalidUrl = "Formato de URL no válido. Introduce una URL válida como https://your-server.com"
 testFailed = "Falló la prueba de conexión"
@@ -6659,11 +6875,11 @@ favorites = "Favoritos"
 heading = "Todas las herramientas (vista de pantalla completa)"
 noResults = "Intenta ajustar tu búsqueda o activar/desactivar las descripciones para encontrar lo que necesitas."
 recommended = "Recomendado"
+selfHostedOffline = "Requiere tu servidor Stirling-PDF (actualmente sin conexión):"
 showDetails = "Mostrar detalles"
 unavailable = "Desactivado por el administrador del servidor:"
 unavailableDependency = "No disponible - falta la herramienta requerida en el servidor:"
 unfavorite = "Quitar de favoritos"
-selfHostedOffline = "Requiere tu servidor Stirling-PDF (actualmente sin conexión):"
 
 [toolPanel.modePrompt]
 chooseFullscreen = "Usar modo pantalla completa"
@@ -6704,6 +6920,12 @@ pageFormatting = "Formato de Página"
 removal = "Eliminación"
 signing = "Firma"
 verification = "Verificación"
+
+[tool]
+endpointUnavailable = "Esta herramienta no está disponible en tu servidor."
+endpointUnavailableClickable = "No disponible en este modo. Haz clic para iniciar sesión."
+invalidParams = "Rellena los ajustes obligatorios."
+noFiles = "Añade un archivo para comenzar."
 
 [tools]
 noSearchResults = "No se encontraron herramientas"
@@ -7637,11 +7859,3 @@ description = "Clave de API de Google para Google Picker API de Google Cloud Con
 [provider.googledrive.appId]
 label = "ID de aplicación"
 description = "ID de aplicación de Google Drive de Google Cloud Console"
-
-[selfHosted.offline]
-hideTools = "Ocultar herramientas no disponibles ▴"
-messageNoFallback = "Las herramientas no estarán disponibles hasta que tu servidor vuelva a estar en línea."
-messageWithFallback = "Alguna herramientas requieren conexión con el servidor."
-showTools = "Ver herramientas no disponibles ▾"
-title = "Tu servidor de Stirling-PDF está inaccesible"
-toolNotAvailableLocally = "Tu servidor Stirling-PDF está sin conexión y \"{{endpoint}}\" no está disponible en el backend local."
