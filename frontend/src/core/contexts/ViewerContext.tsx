@@ -7,6 +7,7 @@ import React, {
   useCallback,
 } from 'react';
 import { useNavigation } from '@app/contexts/NavigationContext';
+import { preferencesService, type PdfRenderMode } from '@app/services/preferencesService';
 import {
   createViewerActions,
   ScrollActions,
@@ -170,6 +171,10 @@ export interface ViewerContextType {
   // Save changes function - registered by EmbedPdfViewer
   applyChanges: (() => Promise<void>) | null;
   setApplyChanges: (fn: (() => Promise<void>) | null) => void;
+
+  // PDF page color rendering mode (viewer-only, never modifies the PDF)
+  pdfRenderMode: PdfRenderMode;
+  cyclePdfRenderMode: () => void;
 }
 
 export const ViewerContext = createContext<ViewerContextType | null>(null);
@@ -194,6 +199,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const [isAnnotationsVisible, setIsAnnotationsVisible] = useState(true);
   const [isAnnotationMode, setIsAnnotationModeState] = useState(false);
   const [activeFileIndex, setActiveFileIndex] = useState(0);
+  const [pdfRenderMode, setPdfRenderModeState] = useState<PdfRenderMode>(
+    () => preferencesService.getPreference('pdfRenderMode')
+  );
 
   // Get current navigation state to check if we're in sign mode
   useNavigation();
@@ -319,6 +327,15 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const setAnnotationMode = (enabled: boolean) => {
     setIsAnnotationModeState(enabled);
   };
+
+  const cyclePdfRenderMode = useCallback(() => {
+    setPdfRenderModeState(prev => {
+      const next: PdfRenderMode =
+        prev === 'normal' ? 'dark' : prev === 'dark' ? 'sepia' : 'normal';
+      preferencesService.setPreference('pdfRenderMode', next);
+      return next;
+    });
+  }, []);
 
   // State getters - read from bridge refs
   const getScrollState = (): ScrollState => {
@@ -504,6 +521,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     // Apply changes
     applyChanges,
     setApplyChanges,
+
+    // PDF page rendering mode
+    pdfRenderMode,
+    cyclePdfRenderMode,
   };
 
   return (

@@ -140,6 +140,8 @@ const EmbedPdfViewerContent = ({
     printActions,
     setApplyChanges,
     applyChanges: viewerApplyChanges,
+    pdfRenderMode,
+    cyclePdfRenderMode,
   } = useViewer();
 
   const scrollState = getScrollState();
@@ -449,6 +451,7 @@ const EmbedPdfViewerContent = ({
               }
             }
             return;
+
           case 'z':
           case 'Z':
             // Ctrl+Z: Undo; Ctrl+Shift+Z: Redo
@@ -503,7 +506,7 @@ const EmbedPdfViewerContent = ({
   }, [
     isViewerHovered, isSearchInterfaceVisible, zoomActions, searchInterfaceActions,
     scrollActions, printActions, exportActions, rotationActions, historyApiRef,
-    viewerApplyChanges,
+    viewerApplyChanges, cyclePdfRenderMode,
   ]);
 
   // Watch the annotation history API to detect when the document becomes "dirty".
@@ -964,6 +967,7 @@ const EmbedPdfViewerContent = ({
             }}>
             <LocalEmbedPDF
               key={currentFileId || 'no-file'}
+              pdfRenderMode={pdfRenderMode}
               file={effectiveFile.file}
               url={effectiveFile.url}
               fileName={
