@@ -289,6 +289,18 @@ export type FileContextAction =
 export interface FileContextActions {
   // File management - lightweight actions only
   addFiles: (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }) => Promise<StirlingFile[]>;
+  addFilesWithOptions: (
+    files: File[],
+    options?: {
+      insertAfterPageId?: string;
+      selectFiles?: boolean;
+      autoUnzip?: boolean;
+      autoUnzipFileLimit?: number;
+      skipAutoUnzip?: boolean;
+      confirmLargeExtraction?: (fileCount: number, fileName: string) => Promise<boolean>;
+      allowDuplicates?: boolean;
+    }
+  ) => Promise<StirlingFile[]>;
   addStirlingFileStubs: (stirlingFileStubs: StirlingFileStub[], options?: { insertAfterPageId?: string; selectFiles?: boolean }) => Promise<StirlingFile[]>;
   removeFiles: (fileIds: FileId[], deleteFromStorage?: boolean) => Promise<void>;
   updateStirlingFileStub: (id: FileId, updates: Partial<StirlingFileStub>) => void;

@@ -15,7 +15,9 @@ interface DrawingCanvasProps {
   onPenSizeInputChange: (input: string) => void;
   onSignatureDataChange: (data: string | null) => void;
   onDrawingComplete?: () => void;
+  onModalClose?: () => void;
   disabled?: boolean;
+  autoOpen?: boolean;
   width?: number;
   height?: number;
   modalWidth?: number;
@@ -33,7 +35,9 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   onPenSizeInputChange,
   onSignatureDataChange,
   onDrawingComplete,
+  onModalClose,
   disabled = false,
+  autoOpen = false,
   width = 400,
   height = 150,
   initialSignatureData,
@@ -82,6 +86,10 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     }
     setModalOpen(true);
   };
+
+  useEffect(() => {
+    if (autoOpen) openModal();
+  }, [autoOpen]);
 
   const trimCanvas = (canvas: HTMLCanvasElement): string => {
     const ctx = canvas.getContext('2d');
@@ -160,6 +168,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       padRef.current = null;
     }
     setModalOpen(false);
+    onModalClose?.();
   };
 
   const clear = () => {

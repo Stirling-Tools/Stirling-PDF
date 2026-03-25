@@ -98,7 +98,9 @@ export default function Landing() {
   // If login is disabled, show app directly (anonymous mode)
   if (config?.enableLogin === false || backendProbe.loginDisabled) {
     console.debug('[Landing] Login disabled - showing app in anonymous mode');
-    return <HomePage />;
+    return (
+      <HomePage />
+    );
   }
 
   // If backend is not up yet and user is not authenticated, show a branded status screen
@@ -143,7 +145,9 @@ export default function Landing() {
   // If we have a session, show the main app
   // Note: First login password change is now handled by the onboarding flow
   if (session) {
-    return <HomePage />;
+    return (
+      <HomePage />
+    );
   }
 
   // No session - redirect to login page
