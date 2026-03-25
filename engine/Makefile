@@ -4,7 +4,6 @@ REPO_ROOT_DIR = ..
 ROOT_DIR = .
 VENV_DIR = $(ROOT_DIR)/.venv
 DEPS_STAMP := $(VENV_DIR)/.deps-installed
-NODE_DEPS_STAMP := node_modules/.deps-installed
 TOOL_MODELS := $(CURDIR)/src/stirling/models/tool_models.py
 FRONTEND_DIR := $(REPO_ROOT_DIR)/frontend
 FRONTEND_TSX := $(FRONTEND_DIR)/node_modules/.bin/tsx
@@ -13,10 +12,6 @@ $(DEPS_STAMP): $(ROOT_DIR)/uv.lock $(ROOT_DIR)/pyproject.toml
 	uv python install 3.13.8
 	uv sync
 	touch $(DEPS_STAMP)
-
-$(NODE_DEPS_STAMP): package-lock.json
-	npm ci
-	touch $(NODE_DEPS_STAMP)
 
 help:
 	@echo "Engine commands:"
@@ -34,7 +29,7 @@ help:
 	@echo "  make docker-build - Build Docker image"
 	@echo "  make docker-run   - Run Docker container"
 
-install: $(DEPS_STAMP) $(NODE_DEPS_STAMP)
+install: $(DEPS_STAMP)
 
 prep: install
 	uv run scripts/setup_env.py
