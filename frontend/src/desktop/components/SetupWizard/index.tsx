@@ -434,6 +434,19 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete, noLayout =
             {t('setup.selfhosted.unreachable.retry', 'Retry')}
           </Button>
           <Button
+            variant="light"
+            color="blue"
+            fullWidth
+            loading={loading}
+            onClick={() => {
+              setLockConnectionMode(false);
+              setLockedServerUnreachable(false);
+              setActiveStep(SetupStep.ServerSelection);
+            }}
+          >
+            {t('setup.selfhosted.unreachable.changeServer', 'Connect to a different server')}
+          </Button>
+          <Button
             variant="subtle"
             color="white"
             fullWidth
