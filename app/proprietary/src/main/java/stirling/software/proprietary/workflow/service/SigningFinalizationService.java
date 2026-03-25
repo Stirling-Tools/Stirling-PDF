@@ -822,6 +822,8 @@ public class SigningFinalizationService {
 
         switch (certType) {
             case "P12":
+            case "PKCS12":
+            case "PFX":
                 if (submission.getP12Keystore() == null) {
                     throw new ResponseStatusException(
                             HttpStatus.BAD_REQUEST, "P12 keystore data is required");

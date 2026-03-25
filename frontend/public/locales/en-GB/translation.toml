@@ -2317,6 +2317,9 @@ continue = "Continue"
 [certSign.collab.signRequest.certModal]
 description = "You have placed {{count}} signature(s). Choose your certificate to complete signing."
 sign = "Sign Document"
+certValidating = "Validating certificate..."
+certValidUntil = "Certificate valid until {{date}}"
+certInvalid = "Certificate invalid: {{error}}"
 title = "Configure Certificate"
 
 [certSign.collab.signRequest.image]
