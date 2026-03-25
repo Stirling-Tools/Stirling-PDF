@@ -59,6 +59,26 @@ export default defineConfig(
       ],
     },
   },
+  // Desktop-only packages must not be imported from core or proprietary code.
+  // Use the stub/shadow pattern instead: define a stub in src/core/ and override in src/desktop/.
+  {
+    files: ['src/core/**/*.{js,mjs,jsx,ts,tsx}', 'src/proprietary/**/*.{js,mjs,jsx,ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            { regex: '^\\.', message: "Use @app/* imports instead of relative imports." },
+            { regex: '^src/', message: "Use @app/* imports instead of absolute src/ imports." },
+            {
+              regex: '^@tauri-apps/',
+              message: "Tauri APIs are desktop-only. Review frontend/DeveloperGuide.md for how to correctly structure desktop code.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   // Folders that have been cleaned up and are now conformant - stricter rules enforced here
   {
     files: ['src/saas/**/*.{js,mjs,jsx,ts,tsx}'],

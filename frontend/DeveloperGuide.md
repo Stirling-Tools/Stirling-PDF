@@ -45,6 +45,31 @@ export function f2() { /* ... */ } // Custom desktop implementation
 
 Building with this pattern minimises the duplicated code in the system and greatly reduces the chances that changing the core app will break the desktop app.
 
+### Naming extension modules
+
+Extension modules and the functions/hooks they export should be named after **what they do**, not **which build overrides them**.
+Core code must never reference build targets (desktop, saas, etc.) by name — it should simply call a generic extension point and remain unaware of which layer is providing the implementation.
+
+```ts
+// ✅ CORRECT - named after the behaviour, not the build
+// core/useFrontendVersionInfo.ts
+export function useFrontendVersionInfo() { /* stub */ }
+
+// desktop/useFrontendVersionInfo.ts
+export function useFrontendVersionInfo() { /* real Tauri implementation */ }
+```
+
+```ts
+// ❌ WRONG - core code reveals knowledge of the desktop layer
+// core/useDesktopVersionInfo.ts
+export function useDesktopVersionInfo() { /* stub */ }
+```
+
+Similarly, core code should never contain conditionals that check which build is active (e.g. `if (isDesktop)`).
+If behaviour needs to vary, that variation belongs in an extension module — the core simply calls it.
+
+### Import aliases
+
 In general, all imports for app code should come via `@app` because it allows for other builds of the app to override behaviour if necessary.
 The only time that it is beneficial to import via a specific folder (e.g. `@core`) is when you want to reduce duplication **in the file you are overriding**. For example:
 
