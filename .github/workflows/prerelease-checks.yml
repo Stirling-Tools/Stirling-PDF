@@ -1,0 +1,57 @@
+name: Pre-release E2E Checks
+
+on:
+  workflow_dispatch:
+  release:
+    types: [created]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  playwright-production:
+    name: Playwright against production build (all browsers)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+
+      - name: Build production bundle
+        run: cd frontend && npm run build
+
+      - name: Install all Playwright browsers
+        run: cd frontend && npx playwright install --with-deps
+
+      - name: Run E2E tests against production build
+        # PLAYWRIGHT_BASE_URL switches playwright.config.ts to use `npm run preview` (port 4173)
+        # instead of the dev server, so tests run against the exact production artifact.
+        run: cd frontend && npx playwright test
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:4173
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: playwright-prerelease-${{ github.run_id }}
+          path: frontend/playwright-report/
+          retention-days: 30
