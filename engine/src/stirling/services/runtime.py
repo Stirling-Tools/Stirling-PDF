@@ -6,13 +6,11 @@ from pydantic_ai.models import Model, infer_model
 from pydantic_ai.settings import ModelSettings
 
 from stirling.config import AppSettings
-from stirling.services.java_client import JavaClient, UnavailableJavaClient
 
 
 @dataclass(frozen=True)
 class AppRuntime:
     settings: AppSettings
-    java_client: JavaClient
     fast_model: Model
     smart_model: Model
 
@@ -35,7 +33,6 @@ def build_model_settings(max_tokens: int | None) -> ModelSettings:
 def build_runtime(settings: AppSettings) -> AppRuntime:
     return AppRuntime(
         settings=settings,
-        java_client=UnavailableJavaClient(),
         fast_model=infer_model(settings.fast_model_name),
         smart_model=infer_model(settings.smart_model_name),
     )
