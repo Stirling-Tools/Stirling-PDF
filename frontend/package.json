@@ -55,7 +55,7 @@
     "@tauri-apps/plugin-shell": "^2.3.5",
     "@userback/widget": "^0.3.12",
     "autoprefixer": "^10.4.21",
-    "axios": "^1.13.2",
+    "axios": "^1.13.6",
     "d3": "^7.9.0",
     "globals": "^17.1.0",
     "i18next": "^25.5.2",
