@@ -39,7 +39,7 @@ class UserSpecAgent:
         self.runtime = runtime
         self.pdf_edit_agent = PdfEditAgent(runtime)
         self.agent = Agent(
-            model=runtime.settings.smart_model_name,
+            model=runtime.smart_model,
             output_type=NativeOutput(UserSpecDraftPlan),
             system_prompt=(
                 "Create or revise a saved agent draft from the provided request and edit plan. "

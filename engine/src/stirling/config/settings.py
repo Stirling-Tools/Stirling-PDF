@@ -9,6 +9,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from stirling.models.base import ApiModel
 
+ENGINE_ROOT = Path(__file__).resolve().parents[3]
+
 
 class ModelProvider(StrEnum):
     ANTHROPIC = "anthropic"
@@ -31,7 +33,7 @@ class JavaBackendSettings(ApiModel):
 
 
 class AppSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore", populate_by_name=True)
+    model_config = SettingsConfigDict(env_file=ENGINE_ROOT / ".env", extra="ignore", populate_by_name=True)
 
     anthropic_api_key: str = Field(validation_alias="STIRLING_ANTHROPIC_API_KEY")
     openai_api_key: str = Field(validation_alias="STIRLING_OPENAI_API_KEY")

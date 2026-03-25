@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import Depends, FastAPI
@@ -14,8 +15,26 @@ from stirling.api.routes import (
 from stirling.config.settings import AppSettings, load_settings
 from stirling.contracts import HealthResponse
 from stirling.services.model_registry import ModelRegistry
+from stirling.services.runtime import build_runtime
 
-app = FastAPI(title="Stirling AI Engine", version="0.1.0")
+
+def _load_startup_settings(fast_api: FastAPI) -> AppSettings:
+    override = fast_api.dependency_overrides.get(load_settings)
+    if override is not None:
+        return override()
+    return load_settings()
+
+
+@asynccontextmanager
+async def lifespan(fast_api: FastAPI):
+    # Load env vars on startup so we can immediately crash if required env vars aren't set
+    settings = _load_startup_settings(fast_api)
+    fast_api.state.settings = settings
+    fast_api.state.runtime = build_runtime(settings)
+    yield
+
+
+app = FastAPI(title="Stirling AI Engine", lifespan=lifespan, version="0.1.0")
 app.include_router(orchestrator_router)
 app.include_router(pdf_edit_router)
 app.include_router(pdf_question_router)

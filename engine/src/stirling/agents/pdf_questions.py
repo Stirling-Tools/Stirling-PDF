@@ -17,7 +17,7 @@ class PdfQuestionAgent:
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
         self.agent = Agent(
-            model=runtime.settings.smart_model_name,
+            model=runtime.smart_model,
             output_type=NativeOutput(
                 [
                     PdfQuestionAnswerResponse,

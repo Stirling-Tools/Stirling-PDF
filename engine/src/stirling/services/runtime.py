@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from pydantic_ai.models import Model, infer_model
 from pydantic_ai.settings import ModelSettings
 
 from stirling.config.settings import AppSettings
@@ -14,6 +15,8 @@ class AppRuntime:
     settings: AppSettings
     model_registry: ModelRegistry
     java_client: JavaClient
+    fast_model: Model
+    smart_model: Model
 
     def fast_model_settings(self) -> ModelSettings:
         return build_model_settings(self.model_registry.fast)
@@ -35,4 +38,6 @@ def build_runtime(settings: AppSettings) -> AppRuntime:
         settings=settings,
         model_registry=model_registry,
         java_client=UnavailableJavaClient(),
+        fast_model=infer_model(settings.fast_model_name),
+        smart_model=infer_model(settings.smart_model_name),
     )

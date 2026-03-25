@@ -30,7 +30,7 @@ class PdfEditParameterSelector:
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
         self.agent = Agent(
-            model=runtime.settings.smart_model_name,
+            model=runtime.smart_model,
             system_prompt=(
                 "Generate only the parameter object for the selected PDF operation. "
                 "Use reasonable defaults when the request does not specify optional details. "
@@ -92,7 +92,7 @@ class PdfEditAgent:
         self.supported_operations = list(OPERATIONS)
         self.parameter_selector = PdfEditParameterSelector(runtime)
         self.selection_agent = Agent(
-            model=runtime.settings.smart_model_name,
+            model=runtime.smart_model,
             output_type=NativeOutput(
                 [
                     PdfEditPlanSelection,

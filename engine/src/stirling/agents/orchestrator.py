@@ -32,7 +32,7 @@ class OrchestratorAgent:
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
         self.agent = Agent(
-            model=runtime.settings.fast_model_name,
+            model=runtime.fast_model,
             output_type=[
                 ToolOutput(
                     self.delegate_pdf_edit,
