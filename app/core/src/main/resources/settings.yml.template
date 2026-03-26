@@ -327,7 +327,7 @@ processExecutor:
 
 aiEngine:
   enabled: false # Set to 'true' to enable the AI engine integration
-  url: http://localhost:5000 # URL of the Python AI engine
+  url: http://localhost:5001 # URL of the Python AI engine
   timeoutSeconds: 120 # Timeout in seconds for AI engine requests
 
 pdfEditor:

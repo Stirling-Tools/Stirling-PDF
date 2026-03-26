@@ -235,7 +235,7 @@ public class ApplicationProperties {
     @Data
     public static class AiEngine {
         private boolean enabled = false;
-        private String url = "http://localhost:5000";
+        private String url = "http://localhost:5001";
         private int timeoutSeconds = 120;
     }
 
