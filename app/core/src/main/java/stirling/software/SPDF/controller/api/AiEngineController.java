@@ -63,8 +63,7 @@ public class AiEngineController {
     @PostMapping("/pdf/questions")
     @Operation(
             summary = "Answer questions about a PDF",
-            description =
-                    "Sends a question and extracted PDF text to the question-answering agent")
+            description = "Sends a question and extracted PDF text to the question-answering agent")
     public ResponseEntity<String> pdfQuestions(@RequestBody String requestBody)
             throws IOException, InterruptedException {
         String response = aiEngineClient.post("/api/v1/pdf/questions", requestBody);

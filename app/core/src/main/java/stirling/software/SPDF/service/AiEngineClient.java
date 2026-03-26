@@ -53,8 +53,7 @@ public class AiEngineClient {
 
         if (response.statusCode() >= 500) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_GATEWAY,
-                    "AI engine returned error: " + response.statusCode());
+                    HttpStatus.BAD_GATEWAY, "AI engine returned error: " + response.statusCode());
         }
 
         return response.body();
@@ -85,8 +84,7 @@ public class AiEngineClient {
 
         if (response.statusCode() >= 500) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_GATEWAY,
-                    "AI engine returned error: " + response.statusCode());
+                    HttpStatus.BAD_GATEWAY, "AI engine returned error: " + response.statusCode());
         }
 
         return response.body();
