@@ -130,7 +130,9 @@ jobs:
           cache-to: type=gha,mode=max,scope=stirling-pdf-latest
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+          build-args: |
+            VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
+            BASE_VERSION=1.0.0
           platforms: linux/amd64,linux/arm64/v8
           provenance: true
           sbom: true
