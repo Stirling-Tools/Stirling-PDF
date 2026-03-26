@@ -8,6 +8,7 @@ from pydantic import Field
 from stirling.models import ApiModel
 
 from .agent_drafts import AgentDraftResponse
+from .common import PdfTextSelection
 from .execution import NextExecutionAction
 from .pdf_edit import PdfEditResponse
 from .pdf_questions import PdfQuestionResponse
@@ -22,9 +23,19 @@ class SupportedCapability(StrEnum):
     AGENT_NEXT_ACTION = "agent_next_action"
 
 
+class ExtractedTextArtifact(ApiModel):
+    kind: Literal["extracted_text"] = "extracted_text"
+    pages: list[PdfTextSelection] = Field(default_factory=list)
+
+
+WorkflowArtifact = Annotated[ExtractedTextArtifact, Field(discriminator="kind")]
+
+
 class OrchestratorRequest(ApiModel):
     user_message: str
     conversation_id: str | None = None
+    file_name: str | None = None
+    artifacts: list[WorkflowArtifact] = Field(default_factory=list)
 
 
 class UnsupportedCapabilityResponse(ApiModel):

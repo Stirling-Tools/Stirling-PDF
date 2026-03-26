@@ -9,11 +9,15 @@ from stirling.contracts import (
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
     PdfQuestionResponse,
+    PdfTextSelection,
 )
 from stirling.services import AppRuntime
 
 
 class PdfQuestionAgent:
+    DEFAULT_MAX_PAGES = 12
+    DEFAULT_MAX_CHARACTERS = 24_000
+
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
         self.agent = Agent(
@@ -25,18 +29,20 @@ class PdfQuestionAgent:
                 ]
             ),
             system_prompt=(
-                "Answer questions about a PDF using only the extracted text provided in the prompt. "
+                "Answer questions about a PDF using only the extracted page text provided in the prompt. "
                 "Do not guess or use outside knowledge. "
                 "If the answer is not supported by the provided text, return not_found. "
-                "When answering, include a short list of evidence snippets copied from the provided text."
+                "When answering, include a short list of evidence snippets with their page numbers."
             ),
             model_settings=runtime.smart_model_settings,
         )
 
     async def handle(self, request: PdfQuestionRequest) -> PdfQuestionResponse:
-        if not request.extracted_text.strip():
+        if not self._has_page_text(request.page_text):
             return PdfQuestionNeedTextResponse(
-                reason="No extracted PDF text was provided, so the question cannot be answered yet."
+                reason="No extracted PDF page text was provided, so the question cannot be answered yet.",
+                max_pages=self.DEFAULT_MAX_PAGES,
+                max_characters=self.DEFAULT_MAX_CHARACTERS,
             )
         return await self._run_answer_agent(request)
 
@@ -46,4 +52,11 @@ class PdfQuestionAgent:
 
     def _build_prompt(self, request: PdfQuestionRequest) -> str:
         file_name = request.file_name or "Unknown file"
-        return f"File: {file_name}\nQuestion: {request.question}\nExtracted text:\n{request.extracted_text}"
+        pages = "\n\n".join(
+            f"[Page {selection.page_number if selection.page_number is not None else '?'}]\n{selection.text}"
+            for selection in request.page_text
+        )
+        return f"File: {file_name}\nQuestion: {request.question}\nExtracted page text:\n{pages}"
+
+    def _has_page_text(self, page_text: list[PdfTextSelection]) -> bool:
+        return any(selection.text.strip() for selection in page_text)

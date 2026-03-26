@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,7 +17,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.model.api.ai.AiWorkflowRequest;
+import stirling.software.SPDF.model.api.ai.AiWorkflowResponse;
 import stirling.software.SPDF.service.AiEngineClient;
+import stirling.software.SPDF.service.AiWorkflowService;
 
 @Slf4j
 @RestController
@@ -26,6 +30,7 @@ import stirling.software.SPDF.service.AiEngineClient;
 public class AiEngineController {
 
     private final AiEngineClient aiEngineClient;
+    private final AiWorkflowService aiWorkflowService;
 
     @GetMapping("/health")
     @Operation(
@@ -36,19 +41,18 @@ public class AiEngineController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
     }
 
-    @PostMapping("/orchestrate")
+    @PostMapping(value = "/orchestrate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
-            summary = "Orchestrate an AI request",
+            summary = "Run an AI workflow against a PDF",
             description =
-                    "Sends a user message to the orchestrator agent which routes it to the"
-                            + " appropriate specialist agent")
-    public ResponseEntity<String> orchestrate(@RequestBody String requestBody)
+                    "Accepts a PDF upload, asks Python what it needs next, performs Java-side"
+                            + " extraction work, and loops until Python returns a final result")
+    public ResponseEntity<AiWorkflowResponse> orchestrate(@ModelAttribute AiWorkflowRequest request)
             throws IOException, InterruptedException {
-        String response = aiEngineClient.post("/api/v1/orchestrator", requestBody);
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
+        return ResponseEntity.ok(aiWorkflowService.orchestrate(request));
     }
 
-    @PostMapping("/pdf/edit")
+    @PostMapping(value = "/pdf/edit", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Generate a PDF edit plan",
             description =
@@ -60,17 +64,7 @@ public class AiEngineController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
     }
 
-    @PostMapping("/pdf/questions")
-    @Operation(
-            summary = "Answer questions about a PDF",
-            description = "Sends a question and extracted PDF text to the question-answering agent")
-    public ResponseEntity<String> pdfQuestions(@RequestBody String requestBody)
-            throws IOException, InterruptedException {
-        String response = aiEngineClient.post("/api/v1/pdf/questions", requestBody);
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
-    }
-
-    @PostMapping("/agents/draft")
+    @PostMapping(value = "/agents/draft", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Draft an agent specification",
             description =
@@ -82,7 +76,7 @@ public class AiEngineController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
     }
 
-    @PostMapping("/agents/revise")
+    @PostMapping(value = "/agents/revise", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Revise an agent specification",
             description =
@@ -94,7 +88,7 @@ public class AiEngineController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
     }
 
-    @PostMapping("/agents/next-action")
+    @PostMapping(value = "/agents/next-action", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Get next execution action for an agent",
             description =

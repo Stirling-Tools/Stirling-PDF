@@ -9,17 +9,23 @@ from stirling.contracts import (
     AgentSpecStep,
     EditPlanResponse,
     ExecutionContext,
+    ExtractedTextArtifact,
     OrchestratorRequest,
     PdfQuestionAnswerResponse,
+    PdfTextSelection,
     ToolOperationStep,
 )
 from stirling.models.tool_models import OperationId, RotateParams
 
 
 def test_orchestrator_request_accepts_user_message() -> None:
-    request = OrchestratorRequest(user_message="Rotate the PDF")
+    request = OrchestratorRequest(
+        user_message="Rotate the PDF",
+        artifacts=[ExtractedTextArtifact(pages=[PdfTextSelection(page_number=1, text="Hello")])],
+    )
 
     assert request.user_message == "Rotate the PDF"
+    assert len(request.artifacts) == 1
 
 
 def test_agent_execution_request_uses_typed_agent_spec() -> None:

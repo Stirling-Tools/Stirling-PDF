@@ -19,7 +19,14 @@ from .execution import (
     ToolCallExecutionAction,
 )
 from .health import HealthResponse
-from .orchestrator import OrchestratorRequest, OrchestratorResponse, SupportedCapability, UnsupportedCapabilityResponse
+from .orchestrator import (
+    ExtractedTextArtifact,
+    OrchestratorRequest,
+    OrchestratorResponse,
+    SupportedCapability,
+    UnsupportedCapabilityResponse,
+    WorkflowArtifact,
+)
 from .pdf_edit import (
     EditCannotDoResponse,
     EditClarificationRequest,
@@ -57,6 +64,7 @@ __all__ = [
     "ExecutionStepResult",
     "HealthResponse",
     "NextExecutionAction",
+    "ExtractedTextArtifact",
     "OrchestratorRequest",
     "OrchestratorResponse",
     "PdfEditRequest",
@@ -71,4 +79,5 @@ __all__ = [
     "ToolOperationStep",
     "ToolCallExecutionAction",
     "UnsupportedCapabilityResponse",
+    "WorkflowArtifact",
 ]

@@ -12,6 +12,7 @@ from stirling.agents.user_spec import UserSpecAgent
 from stirling.contracts import (
     AgentDraftRequest,
     AgentDraftWorkflowResponse,
+    ExtractedTextArtifact,
     OrchestratorRequest,
     OrchestratorResponse,
     PdfEditRequest,
@@ -61,7 +62,7 @@ class OrchestratorAgent:
                 "You are the top-level orchestrator. "
                 "Choose exactly one output function that best handles the request. "
                 "Use delegate_pdf_edit for requested PDF modifications. "
-                "Use delegate_pdf_question for questions about the contents of a PDF. "
+                "Use delegate_pdf_question for questions about PDF contents. "
                 "Use delegate_user_spec for requests to create or define an agent spec. "
                 "Use unsupported_capability only when none of the other outputs fit."
             ),
@@ -70,7 +71,7 @@ class OrchestratorAgent:
 
     async def handle(self, request: OrchestratorRequest) -> OrchestratorResponse:
         result = await self.agent.run(
-            request.user_message,
+            self._build_prompt(request),
             deps=OrchestratorDeps(runtime=self.runtime, request=request),
         )
         return result.output
@@ -83,8 +84,14 @@ class OrchestratorAgent:
 
     async def delegate_pdf_question(self, ctx: RunContext[OrchestratorDeps]) -> PdfQuestionResponse:
         request = ctx.deps.request
+        extracted_text = self._get_extracted_text_artifact(request)
         return await PdfQuestionAgent(ctx.deps.runtime).handle(
-            PdfQuestionRequest(question=request.user_message, conversation_id=request.conversation_id)
+            PdfQuestionRequest(
+                question=request.user_message,
+                conversation_id=request.conversation_id,
+                file_name=request.file_name,
+                page_text=extracted_text.pages if extracted_text is not None else [],
+            )
         )
 
     async def delegate_user_spec(self, ctx: RunContext[OrchestratorDeps]) -> AgentDraftWorkflowResponse:
@@ -98,3 +105,35 @@ class OrchestratorAgent:
         message: str,
     ) -> UnsupportedCapabilityResponse:
         return UnsupportedCapabilityResponse(capability=capability, message=message)
+
+    def _get_extracted_text_artifact(self, request: OrchestratorRequest) -> ExtractedTextArtifact | None:
+        for artifact in request.artifacts:
+            if isinstance(artifact, ExtractedTextArtifact):
+                return artifact
+        return None
+
+    def _build_prompt(self, request: OrchestratorRequest) -> str:
+        artifact_summary = self._describe_artifacts(request)
+        file_name = request.file_name or "Unknown file"
+        return (
+            f"User message: {request.user_message}\n"
+            f"File: {file_name}\n"
+            f"Conversation ID: {request.conversation_id or 'none'}\n"
+            f"Available artifacts:\n{artifact_summary}"
+        )
+
+    def _describe_artifacts(self, request: OrchestratorRequest) -> str:
+        if not request.artifacts:
+            return "- none"
+
+        descriptions: list[str] = []
+        for artifact in request.artifacts:
+            if isinstance(artifact, ExtractedTextArtifact):
+                page_numbers = [page.page_number for page in artifact.pages if page.page_number is not None]
+                descriptions.append(
+                    f"- extracted_text: {len(artifact.pages)} pages"
+                    + (f" (pages {page_numbers})" if page_numbers else "")
+                )
+                continue
+            descriptions.append("- unknown artifact")
+        return "\n".join(descriptions)
