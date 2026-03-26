@@ -1,59 +1,15 @@
 # syntax=docker/dockerfile:1.5
 FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
 
-# Install system deps: Node.js + Puppeteer/Chromium runtime libraries
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      ca-certificates \
-      poppler-utils \
-      nodejs \
-      npm \
-      # Fonts for correct text rendering in generated PDFs
-      fonts-liberation \
-      fonts-dejavu-core \
-      # Chromium headless runtime deps
-      libnss3 \
-      libatk1.0-0 \
-      libatk-bridge2.0-0 \
-      libcups2 \
-      libxkbcommon0 \
-      libxcomposite1 \
-      libxdamage1 \
-      libxrandr2 \
-      libpango-1.0-0 \
-      libcairo2 \
-      libasound2 \
-      libx11-6 \
-      libxext6 \
-      libxfixes3 \
-    && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
 
-# Install Node dependencies (Puppeteer) first for layer caching
-COPY package.json package-lock.json ./
-RUN npm ci
-
-# Copy only pyproject.toml and uv.lock first for dependency caching
 COPY pyproject.toml uv.lock ./
-
-# Install dependencies including dev extras
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen
 
-# Create output directories
-RUN mkdir -p /app/output /app/data
-
-# Expose port
-EXPOSE 5001
-
-# Set environment for Flask development
-ENV FLASK_ENV=development
-ENV FLASK_DEBUG=1
+ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 
-# Run the Flask app with hot reload
-# Note: src/ will be mounted as a volume at runtime
-WORKDIR /app/src
-CMD ["uv", "run", "python", "app.py"]
+EXPOSE 5001
+
+CMD ["uv", "run", "uvicorn", "stirling.api.app:app", "--host", "0.0.0.0", "--port", "5001", "--reload"]

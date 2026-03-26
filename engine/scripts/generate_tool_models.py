@@ -378,7 +378,7 @@ def write_models_module(out_path: Path, specs: list[ToolModelSpec]) -> None:
         "from __future__ import annotations\n\n",
         "from enum import StrEnum\n",
         "from typing import Any, Literal\n\n",
-        "from models.base import ApiModel\n",
+        "from stirling.models.base import ApiModel\n",
     ]
 
     class_names: dict[str, str] = {spec.tool_id: _to_class_name(spec.tool_id) for spec in specs}
@@ -500,7 +500,7 @@ def main() -> None:
     repo_root = Path(__file__).resolve().parents[3]
     specs = discover_tool_specs(repo_root)
 
-    output_path = Path(args.output) if args.output else (repo_root / "docgen/backend/models/tool_models.py")
+    output_path = Path(args.output) if args.output else (repo_root / "src/stirling/models/tool_models.py")
 
     write_models_module(output_path, specs)
     print(f"Wrote {len(specs)} tool model specs")
