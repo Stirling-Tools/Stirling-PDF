@@ -33,12 +33,14 @@ jobs:
         id: version
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            VERSION="${{ github.event.inputs.version }}"
+            VERSION="${INPUT_VERSION}"
           else
             VERSION="1.0.0"
           fi
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
       - name: Harden Runner
         uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
         with:

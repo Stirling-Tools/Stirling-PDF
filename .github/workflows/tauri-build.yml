@@ -45,6 +45,7 @@ jobs:
         id: set-matrix
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          INPUT_PLATFORM: ${{ github.event.inputs.platform }}
         run: |
           WINDOWS='{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64"}'
           MACOS_ARM='{"platform":"macos-15","args":"--target aarch64-apple-darwin","name":"macos-aarch64"}'
@@ -53,7 +54,7 @@ jobs:
 
           # Resolve requested platform (non-dispatch events always build all)
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            PLATFORM="${{ github.event.inputs.platform }}"
+            PLATFORM="${INPUT_PLATFORM}"
           else
             PLATFORM="all"
           fi
@@ -227,16 +228,16 @@ jobs:
           Write-Host "Setting up DigiCert KeyLocker environment..."
 
           # Decode client certificate
-          $certBytes = [Convert]::FromBase64String("${{ secrets.SM_CLIENT_CERT_FILE_B64 }}")
+          $certBytes = [Convert]::FromBase64String("${SM_CLIENT_CERT_FILE_B64}")
           $certPath = "D:\Certificate_pkcs12.p12"
           [IO.File]::WriteAllBytes($certPath, $certBytes)
 
           # Set environment variables
           echo "SM_CLIENT_CERT_FILE=D:\Certificate_pkcs12.p12" >> $env:GITHUB_ENV
-          echo "SM_HOST=${{ secrets.SM_HOST }}" >> $env:GITHUB_ENV
-          echo "SM_API_KEY=${{ secrets.SM_API_KEY }}" >> $env:GITHUB_ENV
-          echo "SM_CLIENT_CERT_PASSWORD=${{ secrets.SM_CLIENT_CERT_PASSWORD }}" >> $env:GITHUB_ENV
-          echo "SM_KEYPAIR_ALIAS=${{ secrets.SM_KEYPAIR_ALIAS }}" >> $env:GITHUB_ENV
+          echo "SM_HOST=${SM_HOST}" >> $env:GITHUB_ENV
+          echo "SM_API_KEY=${SM_API_KEY}" >> $env:GITHUB_ENV
+          echo "SM_CLIENT_CERT_PASSWORD=${SM_CLIENT_CERT_PASSWORD}" >> $env:GITHUB_ENV
+          echo "SM_KEYPAIR_ALIAS=${SM_KEYPAIR_ALIAS}" >> $env:GITHUB_ENV
 
           # Get PKCS11 config path from DigiCert action
           $pkcs11Config = $env:PKCS11_CONFIG
@@ -254,6 +255,12 @@ jobs:
             }
           }
 
+        env:
+          SM_CLIENT_CERT_FILE_B64: ${{ secrets.SM_CLIENT_CERT_FILE_B64 }}
+          SM_HOST: ${{ secrets.SM_HOST }}
+          SM_API_KEY: ${{ secrets.SM_API_KEY }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+          SM_KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
       # Traditional PFX Certificate Import (fallback if KeyLocker not configured)
       - name: Import Windows Code Signing Certificate
         if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY == '' && github.ref == 'refs/heads/main' }}
@@ -392,7 +399,7 @@ jobs:
           $hasCertificate = $false
 
           foreach ($line in $lines) {
-            if ($line -match "${{ secrets.SM_KEYPAIR_ALIAS }}") {
+            if ($line -match "${SM_KEYPAIR_ALIAS}") {
               $foundKeypair = $true
               Write-Host "[SUCCESS] Found keypair in list"
 
@@ -406,7 +413,7 @@ jobs:
           }
 
           if (-not $foundKeypair) {
-            Write-Host "[ERROR] Keypair not found: ${{ secrets.SM_KEYPAIR_ALIAS }}"
+            Write-Host "[ERROR] Keypair not found: ${SM_KEYPAIR_ALIAS}"
             Write-Host "Available keypairs are listed above"
             Write-Host ""
             Write-Host "Please verify:"
@@ -465,7 +472,7 @@ jobs:
             Write-Host "Using PKCS11 config: $pkcs11Config"
 
             # Try signing with certificate fingerprint first (if available)
-            $fingerprint = "${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}"
+            $fingerprint = "${SM_CODE_SIGNING_CERT_SHA1_HASH}"
             if ($fingerprint -and $fingerprint -ne "") {
               Write-Host "Attempting to sign with certificate fingerprint..."
               $output = & smctl sign --fingerprint "$fingerprint" --input "$($file.FullName)" --config-file "$pkcs11Config" --verbose 2>&1
@@ -473,7 +480,7 @@ jobs:
             } else {
               Write-Host "No fingerprint provided, using keypair alias..."
               # Use smctl to sign with keypair alias
-              $output = & smctl sign --keypair-alias "${{ secrets.SM_KEYPAIR_ALIAS }}" --input "$($file.FullName)" --config-file "$pkcs11Config" --verbose 2>&1
+              $output = & smctl sign --keypair-alias "${SM_KEYPAIR_ALIAS}" --input "$($file.FullName)" --config-file "$pkcs11Config" --verbose 2>&1
               $exitCode = $LASTEXITCODE
             }
 
@@ -513,6 +520,9 @@ jobs:
           Write-Host "=== Summary ==="
           Write-Host "[SUCCESS] Signed $signedCount/$($filesToSign.Count) files successfully"
 
+        env:
+          SM_KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
+          SM_CODE_SIGNING_CERT_SHA1_HASH: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
       - name: Verify notarization (macOS only)
         if: matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel'
         run: |
