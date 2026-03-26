@@ -71,6 +71,56 @@ If behaviour needs to vary, that variation belongs in an extension module - the 
 The same principle applies in reverse: code inside `desktop/` is guaranteed to be running in the Tauri environment, so `isTauri()` checks are never needed there either.
 If you find yourself writing `if (isDesktop())` or `if (isTauri())` anywhere, that is a sign the extension point has not been modelled correctly - the build system is already doing that separation for you.
 
+### List extensions
+
+When a build needs to _add_ behaviour rather than _replace_ it, the extension module can return a list of items and let core manage the rendering.
+Core defines the function to return an empty list; the extension build overrides it to return a populated one.
+
+```ts
+// core/toolbarExtensions.ts
+export interface ToolbarButton {
+  label: string;
+  onClick: () => void;
+}
+
+export function getToolbarButtons(): ToolbarButton[] {
+  return [];
+}
+```
+
+```ts
+// desktop/toolbarExtensions.ts
+import { type ToolbarButton } from '@core/toolbarExtensions';
+export { type ToolbarButton };
+
+export function getToolbarButtons(): ToolbarButton[] {
+  return [
+    { label: 'Open folder', onClick: () => { /* ... */ } },
+  ];
+}
+```
+
+```tsx
+// core/Toolbar.tsx
+import { getToolbarButtons } from '@app/toolbarExtensions';
+
+export function Toolbar() {
+  return (
+    <div>
+      <button onClick={() => { /* ... */ }}>Download</button>
+      <button onClick={() => { /* ... */ }}>Print</button>
+      {getToolbarButtons().map((button) => (
+        <button key={button.label} onClick={button.onClick}>
+          {button.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+```
+
+This pattern works well for things like menu items or toolbar actions - anything where a build contributes additional entries to a well-defined set.
+
 ### Import aliases
 
 In general, all imports for app code should come via `@app` because it allows for other builds of the app to override behaviour if necessary.
