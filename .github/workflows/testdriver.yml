@@ -81,9 +81,11 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
+          echo "${NEW_VPS_SSH_KEY}" > ../private.key
           sudo chmod 600 ../private.key
 
+        env:
+          NEW_VPS_SSH_KEY: ${{ secrets.NEW_VPS_SSH_KEY }}
       - name: Deploy to VPS
         run: |
           cat > docker-compose.yml << EOF
@@ -91,7 +93,7 @@ jobs:
           services:
             stirling-pdf:
               container_name: stirling-pdf-test-${{ github.sha }}
-              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:test-${{ github.sha }}
+              image: ${DOCKER_HUB_USERNAME}/test:test-${{ github.sha }}
               ports:
                 - "1337:8080"
               volumes:
@@ -112,9 +114,9 @@ jobs:
               restart: on-failure:5
           EOF
 
-          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }}:/tmp/docker-compose.yml
+          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${NEW_VPS_USERNAME}@${NEW_VPS_HOST}:/tmp/docker-compose.yml
 
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << EOF
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${NEW_VPS_USERNAME}@${NEW_VPS_HOST} << EOF
             mkdir -p /stirling/test-${{ github.sha }}/{data,config,logs}
             mv /tmp/docker-compose.yml /stirling/test-${{ github.sha }}/docker-compose.yml
             cd /stirling/test-${{ github.sha }}
@@ -122,6 +124,10 @@ jobs:
             docker-compose up -d
           EOF
 
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          NEW_VPS_USERNAME: ${{ secrets.NEW_VPS_USERNAME }}
+          NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
   files-changed:
     if: always()
     name: detect what files changed
@@ -193,16 +199,21 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
+          echo "${NEW_VPS_SSH_KEY}" > ../private.key
           sudo chmod 600 ../private.key
 
+        env:
+          NEW_VPS_SSH_KEY: ${{ secrets.NEW_VPS_SSH_KEY }}
       - name: Cleanup deployment
         if: always()
         run: |
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << EOF
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${NEW_VPS_USERNAME}@${NEW_VPS_HOST} << EOF
             cd /stirling/test-${{ github.sha }}
             docker-compose down
             cd /stirling
             rm -rf test-${{ github.sha }}
           EOF
+        env:
+          NEW_VPS_USERNAME: ${{ secrets.NEW_VPS_USERNAME }}
+          NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
         continue-on-error: true # Ensure cleanup runs even if previous steps fail

@@ -100,14 +100,16 @@ jobs:
         if: steps.remove-label-comment.outputs.present == 'true'
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
+          echo "${NEW_VPS_SSH_KEY}" > ../private.key
           sudo chmod 600 ../private.key
 
+        env:
+          NEW_VPS_SSH_KEY: ${{ secrets.NEW_VPS_SSH_KEY }}
       - name: Cleanup PR deployment
         if: steps.remove-label-comment.outputs.present == 'true'
         id: cleanup
         run: |
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << 'ENDSSH'
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${NEW_VPS_USERNAME}@${NEW_VPS_HOST} << 'ENDSSH'
             if [ -d "/stirling/PR-${{ github.event.pull_request.number }}" ]; then
               echo "Found PR directory, proceeding with cleanup..."
 
@@ -122,7 +124,7 @@ jobs:
               rm -rf /stirling/PR-${{ github.event.pull_request.number }}
 
               # Remove the Docker image
-              docker rmi --no-prune ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ github.event.pull_request.number }} || true
+              docker rmi --no-prune ${DOCKER_HUB_USERNAME}/test:pr-${{ github.event.pull_request.number }} || true
 
               echo "PERFORMED_CLEANUP"
             else
@@ -131,6 +133,10 @@ jobs:
             fi
           ENDSSH
 
+        env:
+          NEW_VPS_USERNAME: ${{ secrets.NEW_VPS_USERNAME }}
+          NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
       - name: Cleanup temporary files
         if: always()
         run: |
