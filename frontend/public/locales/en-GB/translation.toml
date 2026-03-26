@@ -6792,6 +6792,7 @@ switchToLocal = "Use local tools instead"
 title = "Sign in to Server"
 
 [setup.selfhosted.unreachable]
+changeServer = "Connect to a different server"
 continueOffline = "Use local tools instead"
 message = "Could not reach {{url}}. Check that the server is running and accessible."
 retry = "Retry"
