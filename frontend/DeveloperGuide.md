@@ -66,7 +66,10 @@ export function useDesktopVersionInfo() { /* stub */ }
 ```
 
 Similarly, core code should never contain conditionals that check which build is active (e.g. `if (isDesktop)`).
-If behaviour needs to vary, that variation belongs in an extension module — the core simply calls it.
+If behaviour needs to vary, that variation belongs in an extension module - the core simply calls it.
+
+The same principle applies in reverse: code inside `desktop/` is guaranteed to be running in the Tauri environment, so `isTauri()` checks are never needed there either.
+If you find yourself writing `if (isDesktop())` or `if (isTauri())` anywhere, that is a sign the extension point has not been modelled correctly - the build system is already doing that separation for you.
 
 ### Import aliases
 
