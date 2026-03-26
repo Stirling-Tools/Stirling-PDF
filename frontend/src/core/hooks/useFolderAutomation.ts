@@ -15,6 +15,7 @@ import { folderRunStateStorage } from '@app/services/folderRunStateStorage';
 import { folderRetryScheduleStorage } from '@app/services/folderRetryScheduleStorage';
 import { smartFolderStorage } from '@app/services/smartFolderStorage';
 import { executeBackendPipeline } from '@app/utils/automationExecutor';
+import { folderDirectoryHandleStorage } from '@app/services/folderDirectoryHandleStorage';
 import {
   FileId,
   StirlingFileStub,
@@ -120,12 +121,41 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
 
         const outputLabel = folder.outputName?.trim() || folder.name;
 
+        // For auto-number mode: collect ALL existing output names across the folder (including this
+        // file's previous outputs, which are kept — auto-number accumulates rather than replaces).
+        const isAutoNumber = folder.outputNamePosition === 'auto-number' && !isVersionMode;
+        const takenNames = new Set<string>();
+        if (isAutoNumber) {
+          for (const meta of Object.values(prevFolderData?.files ?? {})) {
+            const ids = meta.displayFileIds ?? (meta.displayFileId ? [meta.displayFileId] : []);
+            for (const oid of ids) {
+              const stub = await fileStorage.getStirlingFileStub(oid as FileId);
+              if (stub?.name) takenNames.add(stub.name);
+            }
+          }
+        }
+
         for (const resultFile of resultFiles) {
-          const outputFileName = isVersionMode
-            ? inputName
-            : folder.outputNamePosition === 'suffix'
+          let outputFileName: string;
+          if (isVersionMode) {
+            outputFileName = inputName;
+          } else if (folder.outputNamePosition === 'auto-number') {
+            const lastDot = inputName.lastIndexOf('.');
+            const nameBase = lastDot > 0 ? inputName.slice(0, lastDot) : inputName;
+            const ext = lastDot > 0 ? inputName.slice(lastDot) : '';
+            if (!takenNames.has(inputName)) {
+              outputFileName = inputName;
+            } else {
+              let n = 1;
+              while (takenNames.has(`${nameBase} (${n})${ext}`)) n++;
+              outputFileName = `${nameBase} (${n})${ext}`;
+            }
+            takenNames.add(outputFileName); // claim for next file in the same batch
+          } else {
+            outputFileName = folder.outputNamePosition === 'suffix'
               ? `${inputName}_${outputLabel}`
               : `${outputLabel}_${inputName}`;
+          }
 
           const outputId = createFileId();
           allOutputIds.push(outputId);
@@ -147,11 +177,29 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
             ? new File([resultFile], outputFileName, { type: resultFile.type, lastModified: resultFile.lastModified })
             : resultFile;
           await fileStorage.storeStirlingFile(createStirlingFile(renamedFile, outputId), outputStub);
+
+          // Write to local FS output directory if configured
+          if (folder.hasOutputDirectory) {
+            try {
+              const dirHandle = await folderDirectoryHandleStorage.get(folder.id);
+              if (dirHandle) {
+                const hasPermission = await folderDirectoryHandleStorage.ensurePermission(dirHandle);
+                if (hasPermission) {
+                  await folderDirectoryHandleStorage.writeFile(dirHandle, outputFileName, renamedFile);
+                }
+              }
+            } catch {
+              // Best-effort — FS write failure doesn't block the pipeline
+            }
+          }
         }
 
-        // Delete stale output files from a previous run on the same input (re-run case)
-        for (const oldId of prevOutputIds) {
-          try { await fileStorage.deleteStirlingFile(oldId as FileId); } catch { /* ignore if already gone */ }
+        // Delete stale output files from a previous run on the same input (re-run case).
+        // Skip in auto-number mode — outputs accumulate intentionally.
+        if (!isAutoNumber) {
+          for (const oldId of prevOutputIds) {
+            try { await fileStorage.deleteStirlingFile(oldId as FileId); } catch { /* ignore if already gone */ }
+          }
         }
 
         // In version mode the input is always superseded; otherwise only hide it when the folder owns it.
@@ -160,11 +208,12 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
         }
 
         const processedAt = new Date();
+        const accumulatedIds = isAutoNumber ? [...prevOutputIds, ...allOutputIds] : allOutputIds;
         await folderStorage.updateFileMetadata(folder.id, inputFileId, {
           status: 'processed',
           processedAt,
-          displayFileId: allOutputIds[0],
-          displayFileIds: allOutputIds,
+          displayFileId: accumulatedIds[0],
+          displayFileIds: accumulatedIds,
         });
         // Atomic append — avoids lost-update race when multiple files are processed concurrently.
         await folderRunStateStorage.appendRunEntries(folder.id, [{

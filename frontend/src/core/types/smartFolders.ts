@@ -18,7 +18,8 @@ export interface SmartFolder {
   retryDelayMinutes?: number; // default 5
   outputMode?: 'new_file' | 'new_version';       // default: 'new_file' (existing behaviour)
   outputName?: string;                           // output filename prefix/suffix
-  outputNamePosition?: 'prefix' | 'suffix';      // default: 'prefix'
+  outputNamePosition?: 'prefix' | 'suffix' | 'auto-number'; // default: 'prefix'
+  hasOutputDirectory?: boolean;                  // true when a local FS output folder is configured
 }
 
 export interface FolderFileMetadata {

@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Box,
   Text,
@@ -28,6 +29,8 @@ import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import JSZip from 'jszip';
 import { useSmartFolders } from '@app/hooks/useSmartFolders';
 import { useFolderData } from '@app/hooks/useFolderData';
 import { useFolderRunState } from '@app/hooks/useFolderRunState';
@@ -147,6 +150,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
     processedFileIds,
     addFile,
     updateFileMetadata,
+    removeFile,
   } = useFolderData(folderId ?? '');
 
   const { recentRuns } = useFolderRunState(folderId ?? '');
@@ -373,7 +377,12 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   }, [folderRecord, inputFiles, outputFiles, statsPeriod]);
 
   const [expandedActivityIds, setExpandedActivityIds] = useState<Set<string>>(new Set());
+  const [selectedActivityIds, setSelectedActivityIds] = useState<Set<string>>(new Set());
+  const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
+  const [focusedRowIndex, setFocusedRowIndex] = useState<number | null>(null);
   const [chartHover, setChartHover] = useState<{ i: number; relX: number; relY: number } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ ids: string[] } | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const toggleActivityRow = useCallback((id: string) => {
     setExpandedActivityIds(prev => {
       const next = new Set(prev);
@@ -381,6 +390,32 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
       return next;
     });
   }, []);
+
+  const handleListKeyDown = useCallback((e: React.KeyboardEvent, ids: string[]) => {
+    if (ids.length === 0) return;
+    const cur = focusedRowIndex ?? -1;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setFocusedRowIndex(Math.min(cur + 1, ids.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setFocusedRowIndex(Math.max(cur - 1, 0));
+    } else if (e.key === ' ' && cur >= 0) {
+      e.preventDefault();
+      const id = ids[cur];
+      setSelectedActivityIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    } else if (e.key === 'Enter' && cur >= 0) {
+      e.preventDefault();
+      toggleActivityRow(ids[cur]);
+    } else if (e.key === 'a' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      setSelectedActivityIds(new Set(ids));
+    } else if (e.key === 'Escape') {
+      setSelectedActivityIds(new Set());
+      setFocusedRowIndex(null);
+    }
+  }, [focusedRowIndex, toggleActivityRow]);
 
   // input fileId → output StirlingFiles produced by that run
   const activityOutputMap = useMemo(() => {
@@ -392,6 +427,86 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
     }
     return map;
   }, [folderRecord, outputFiles]);
+
+  const execDelete = useCallback(async (ids: string[], withOutputFiles: boolean) => {
+    await Promise.all(ids.map(async (id) => {
+      if (withOutputFiles) {
+        const meta = folderRecord?.files[id];
+        const outputIds = meta?.displayFileIds ?? (meta?.displayFileId ? [meta.displayFileId] : []);
+        await Promise.all(outputIds.map(oid =>
+          fileStorage.deleteStirlingFile(oid as FileId).catch(() => {})
+        ));
+      }
+      await removeFile(id);
+    }));
+    setSelectedActivityIds(prev => { const n = new Set(prev); ids.forEach(id => n.delete(id)); return n; });
+    setDeleteConfirm(null);
+  }, [folderRecord, removeFile]);
+
+  const handleDeleteOne = useCallback((fileId: string) => {
+    setDeleteConfirm({ ids: [fileId] });
+  }, []);
+
+  const handleBatchDelete = useCallback(() => {
+    setDeleteConfirm({ ids: [...selectedActivityIds] });
+  }, [selectedActivityIds]);
+
+  const doRetryIds = useCallback((ids: Iterable<string>) => {
+    if (!folder) return;
+    for (const id of ids) {
+      const meta = folderRecord?.files[id];
+      if (meta?.status !== 'error') continue;
+      const inputFile = inputFiles.find(f => f.fileId === id);
+      if (!inputFile) continue;
+      updateFileMetadata(id, { status: 'pending', errorMessage: undefined });
+      void runPipeline(folder, inputFile, id, meta?.ownedByFolder ?? false);
+    }
+  }, [folder, folderRecord, inputFiles, updateFileMetadata, runPipeline]);
+
+  const handleBatchRetry = useCallback(() => {
+    const hasMixed = [...selectedActivityIds].some(id => folderRecord?.files[id]?.status !== 'error');
+    if (hasMixed && !window.confirm('Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?')) return;
+    doRetryIds(selectedActivityIds);
+  }, [selectedActivityIds, folderRecord, doRetryIds]);
+
+  const collectExportFiles = useCallback((ids: Iterable<string>): StirlingFile[] => {
+    const files: StirlingFile[] = [];
+    for (const id of ids) {
+      const outputs = activityOutputMap.get(id);
+      const toAdd = outputs && outputs.length > 0 ? outputs : [inputFiles.find(f => f.fileId === id)].filter(Boolean) as StirlingFile[];
+      files.push(...toAdd);
+    }
+    return files;
+  }, [activityOutputMap, inputFiles]);
+
+  const handleBatchDownload = useCallback(async (ids: Iterable<string> = selectedActivityIds) => {
+    const zip = new JSZip();
+    let count = 0;
+    for (const f of collectExportFiles(ids)) {
+      zip.file(f.name, await f.arrayBuffer());
+      count++;
+    }
+    if (count === 0) return;
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${folder?.name ?? 'watch-folder'}-export.zip`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [selectedActivityIds, collectExportFiles, folder]);
+
+  const handleBatchDownloadSeparate = useCallback(async (ids: Iterable<string> = selectedActivityIds) => {
+    for (const f of collectExportFiles(ids)) {
+      const url = URL.createObjectURL(f);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = f.name;
+      a.click();
+      URL.revokeObjectURL(url);
+      await new Promise(res => setTimeout(res, 150));
+    }
+  }, [selectedActivityIds, collectExportFiles]);
 
   // ── Filtered + sorted lists — all before early returns ──
 
@@ -414,6 +529,10 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
     // 'oldest' keeps the original order (insertion order = oldest first)
     return items.map(i => i.id);
   }, [fileIds, folderRecord, inputFiles, activitySearch, activityStatusFilter, activitySort]);
+
+  const handleRetryAllFiltered = useCallback(() => {
+    doRetryIds(filteredActivityIds);
+  }, [filteredActivityIds, doRetryIds]);
 
 
   // Early returns — after all hooks
@@ -662,17 +781,33 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
 
           </Box>
 
+          {/* Queue depth indicator */}
+          {(processingFileIds.length > 0 || fileIds.filter(id => folderRecord?.files[id]?.status === 'pending').length > 0) && (() => {
+            const queuedCount = fileIds.filter(id => folderRecord?.files[id]?.status === 'pending').length;
+            const activeCount = processingFileIds.length;
+            const totalWidth = activeCount + queuedCount;
+            return (
+              <Box style={{ padding: '0 1rem 0.5rem', flexShrink: 0 }}>
+                <Box style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                  {activeCount > 0 && <Text style={{ fontSize: '0.625rem', color: 'var(--mantine-color-blue-filled)' }}>{activeCount} processing</Text>}
+                  {queuedCount > 0 && <Text style={{ fontSize: '0.625rem' }} c="dimmed">{queuedCount} queued</Text>}
+                </Box>
+                <Box style={{ height: '0.1875rem', borderRadius: '999px', backgroundColor: 'var(--border-subtle)', overflow: 'hidden' }}>
+                  <Box style={{ display: 'flex', height: '100%', width: `${(activeCount / totalWidth) * 100}%` }}>
+                    <div style={{ flex: activeCount, backgroundColor: 'var(--mantine-color-blue-filled)', borderRadius: '999px', animation: 'pulse 1.5s ease-in-out infinite' }} />
+                  </Box>
+                </Box>
+              </Box>
+            );
+          })()}
+
           {/* Activity label */}
-          <Box
-            style={{
-              padding: '1rem 1rem 0.5rem',
-              flexShrink: 0,
-            }}
-          >
+          <Box style={{ padding: '1rem 1rem 0.5rem', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Text
               fw={600}
               style={{
                 fontSize: '0.75rem',
+                flex: 1,
                 color: isDragOver ? '#3b82f6' : 'var(--tool-subcategory-text-color)',
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
@@ -682,6 +817,21 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                 ? t('smartFolders.workbench.dropToProcess', 'Drop to process')
                 : t('smartFolders.workbench.activity', 'Activity')}
             </Text>
+            {activityStatusFilter === 'error' && filteredActivityIds.length > 0 && (
+              <button onClick={handleRetryAllFiltered} style={{ background: 'none', border: '0.0625rem solid var(--mantine-color-blue-filled)', borderRadius: '0.25rem', cursor: 'pointer', padding: '0.125rem 0.5rem', fontSize: '0.6875rem', color: 'var(--mantine-color-blue-filled)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <ReplayIcon style={{ fontSize: '0.75rem' }} /> Retry all
+              </button>
+            )}
+            {activityStatusFilter === 'processed' && filteredActivityIds.length > 0 && (
+              <>
+                <button onClick={() => void handleBatchDownload(filteredActivityIds)} style={{ background: 'none', border: '0.0625rem solid var(--mantine-color-blue-filled)', borderRadius: '0.25rem', cursor: 'pointer', padding: '0.125rem 0.5rem', fontSize: '0.6875rem', color: 'var(--mantine-color-blue-filled)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <DownloadIcon style={{ fontSize: '0.75rem' }} /> Export zip
+                </button>
+                <button onClick={() => void handleBatchDownloadSeparate(filteredActivityIds)} style={{ background: 'none', border: '0.0625rem solid var(--mantine-color-blue-filled)', borderRadius: '0.25rem', cursor: 'pointer', padding: '0.125rem 0.5rem', fontSize: '0.6875rem', color: 'var(--mantine-color-blue-filled)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <DownloadIcon style={{ fontSize: '0.75rem' }} /> Export separately
+                </button>
+              </>
+            )}
           </Box>
 
           {/* Activity filter/sort toolbar */}
@@ -705,7 +855,48 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
             />
           )}
 
-          <ScrollArea style={{ flex: 1 }}>
+          {selectedActivityIds.size > 0 && (() => {
+            const hasAnyFailed = [...selectedActivityIds].some(id => folderRecord?.files[id]?.status === 'error' && inputFiles.some(f => f.fileId === id));
+            const hasDownloadable = [...selectedActivityIds].some(id => (activityOutputMap.get(id)?.length ?? 0) > 0 || inputFiles.some(f => f.fileId === id));
+            const showRetry = hasAnyFailed && activityStatusFilter !== 'processed';
+            const showExport = hasDownloadable && activityStatusFilter !== 'error';
+            return (
+              <Box style={{ padding: '0.375rem 0.75rem', borderTop: '0.0625rem solid var(--border-subtle)', borderBottom: '0.0625rem solid var(--border-subtle)', backgroundColor: 'var(--mantine-color-blue-light)', display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                <Text size="xs" fw={600} style={{ color: 'var(--mantine-color-blue-filled)' }}>{selectedActivityIds.size} selected</Text>
+                {selectedActivityIds.size < filteredActivityIds.length && (
+                  <button onClick={() => setSelectedActivityIds(new Set(filteredActivityIds))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.125rem 0.25rem', fontSize: '0.6875rem', color: 'var(--mantine-color-blue-filled)', textDecoration: 'underline' }}>Select all {filteredActivityIds.length}</button>
+                )}
+                <Box style={{ flex: 1 }} />
+                {showRetry && (
+                  <button onClick={handleBatchRetry} style={{ background: 'none', border: '0.0625rem solid var(--mantine-color-blue-filled)', borderRadius: '0.25rem', cursor: 'pointer', padding: '0.125rem 0.5rem', fontSize: '0.6875rem', color: 'var(--mantine-color-blue-filled)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <ReplayIcon style={{ fontSize: '0.75rem' }} /> Retry
+                  </button>
+                )}
+                {showExport && (
+                  <>
+                    <button onClick={() => void handleBatchDownload()} style={{ background: 'none', border: '0.0625rem solid var(--mantine-color-blue-filled)', borderRadius: '0.25rem', cursor: 'pointer', padding: '0.125rem 0.5rem', fontSize: '0.6875rem', color: 'var(--mantine-color-blue-filled)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <DownloadIcon style={{ fontSize: '0.75rem' }} /> Export zip
+                    </button>
+                    <button onClick={() => void handleBatchDownloadSeparate()} style={{ background: 'none', border: '0.0625rem solid var(--mantine-color-blue-filled)', borderRadius: '0.25rem', cursor: 'pointer', padding: '0.125rem 0.5rem', fontSize: '0.6875rem', color: 'var(--mantine-color-blue-filled)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <DownloadIcon style={{ fontSize: '0.75rem' }} /> Export separately
+                    </button>
+                  </>
+                )}
+                <button onClick={() => void handleBatchDelete()} style={{ background: 'none', border: '0.0625rem solid #ef4444', borderRadius: '0.25rem', cursor: 'pointer', padding: '0.125rem 0.5rem', fontSize: '0.6875rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <DeleteOutlineIcon style={{ fontSize: '0.75rem' }} /> Delete
+                </button>
+                <button onClick={() => setSelectedActivityIds(new Set())} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.125rem', fontSize: '0.75rem', color: 'var(--mantine-color-dimmed)', lineHeight: 1 }} title="Clear selection">×</button>
+              </Box>
+            );
+          })()}
+
+          <ScrollArea
+            style={{ flex: 1 }}
+            viewportRef={listRef as any}
+            onKeyDown={(e) => handleListKeyDown(e, filteredActivityIds)}
+            tabIndex={0}
+            styles={{ viewport: { outline: 'none' } }}
+          >
             <Stack gap="xs" px="md" pb="md">
               {fileIds.length === 0 ? (
                 <Text size="xs" c="dimmed" ta="center" py="lg">
@@ -717,29 +908,43 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                 </Text>
               ) : (
                 <>
-                  {filteredActivityIds.map((fileId) => {
+                  {filteredActivityIds.map((fileId, rowIdx) => {
                     const meta = folderRecord?.files[fileId];
                     const status = meta?.status ?? 'pending';
                     const inputFile = inputFiles.find(f => f.fileId === fileId);
                     const filename = meta?.name ?? inputFile?.name ?? fileId;
                     const isExpanded = expandedActivityIds.has(fileId);
+                    const isSelected = selectedActivityIds.has(fileId);
+                    const isHovered = hoveredRowId === fileId;
+                    const isFocused = focusedRowIndex === rowIdx;
                     const outputs = activityOutputMap.get(fileId) ?? [];
+                    const primaryFile = outputs[0] ?? inputFile;
                     return (
                       <Box
                         key={fileId}
                         style={{
                           borderRadius: 'var(--mantine-radius-sm)',
-                          border: `0.0625rem solid ${status === 'error' ? 'rgba(239,68,68,0.45)' : 'var(--border-subtle)'}`,
-                          backgroundColor: 'var(--bg-toolbar)',
+                          border: `0.0625rem solid ${isFocused ? 'var(--mantine-color-blue-4)' : isSelected ? 'var(--mantine-color-blue-filled)' : status === 'error' ? 'rgba(239,68,68,0.45)' : 'var(--border-subtle)'}`,
+                          backgroundColor: isSelected ? 'var(--mantine-color-blue-light)' : 'var(--bg-toolbar)',
                           overflow: 'hidden',
+                          outline: 'none',
                         }}
+                        onMouseEnter={() => setHoveredRowId(fileId)}
+                        onMouseLeave={() => setHoveredRowId(null)}
+                        onMouseDown={() => setFocusedRowIndex(rowIdx)}
                       >
                         {/* Row header */}
                         <Box
-                          style={{ padding: '0.375rem 0.5rem 0.375rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}
-                          onClick={() => toggleActivityRow(fileId)}
+                          style={{ padding: '0.375rem 0.5rem 0.375rem 0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', userSelect: 'none' }}
+                          onClick={() => setSelectedActivityIds(prev => { const n = new Set(prev); n.has(fileId) ? n.delete(fileId) : n.add(fileId); return n; })}
                         >
-                          <ChevronRightIcon style={{ fontSize: '0.75rem', color: 'var(--mantine-color-dimmed)', flexShrink: 0, transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }} />
+                          <button
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)', flexShrink: 0 }}
+                            onClick={(e) => { e.stopPropagation(); toggleActivityRow(fileId); }}
+                            title={isExpanded ? 'Collapse' : 'Expand'}
+                          >
+                            <ChevronRightIcon style={{ fontSize: '0.75rem', transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }} />
+                          </button>
                           {status === 'processed' && <CheckCircleOutlineIcon style={{ fontSize: '0.875rem', color: '#22c55e', flexShrink: 0 }} />}
                           {status === 'processing' && <Loader size="0.625rem" style={{ flexShrink: 0 }} />}
                           {status === 'error' && !meta?.nextRetryAt && <ErrorOutlineIcon style={{ fontSize: '0.875rem', color: '#ef4444', flexShrink: 0 }} />}
@@ -755,6 +960,17 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                           <Text size="xs" c="dimmed" style={{ fontSize: '0.6875rem', flexShrink: 0 }}>
                             {(meta?.processedAt || meta?.addedAt) ? timeAgo(new Date((meta.processedAt ?? meta.addedAt)!), t) : ''}
                           </Text>
+                          {isHovered && (
+                            <Box style={{ display: 'flex', alignItems: 'center', gap: '0.125rem', flexShrink: 0 }}>
+                              {!isExpanded && primaryFile && (
+                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); handleView(primaryFile); }} title="Preview"><VisibilityIcon style={{ fontSize: '0.875rem' }} /></button>
+                              )}
+                              {!isExpanded && primaryFile && (
+                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); void handleDownload(primaryFile, primaryFile.name); }} title="Export"><DownloadIcon style={{ fontSize: '0.875rem' }} /></button>
+                              )}
+                              <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); void handleDeleteOne(fileId); }} title="Delete"><DeleteOutlineIcon style={{ fontSize: '0.875rem' }} /></button>
+                            </Box>
+                          )}
                         </Box>
                         {/* Expanded panel */}
                         {isExpanded && (
@@ -996,6 +1212,29 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
         fileName={previewFileName}
         onClose={() => setPreviewFileId(null)}
       />
+
+      {/* Delete confirmation */}
+      {deleteConfirm && createPortal(
+        <div style={{ position: 'fixed', inset: 0, zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={() => setDeleteConfirm(null)} style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.45)' }} />
+          <div style={{ position: 'relative', backgroundColor: 'var(--bg-toolbar)', border: '0.0625rem solid var(--border-subtle)', borderRadius: 'var(--mantine-radius-md)', padding: '2rem 2.5rem', width: '36rem', boxShadow: '0 1rem 2rem rgba(0,0,0,0.25)' }}>
+            <Text fw={600} mb="0.25rem">Remove {deleteConfirm.ids.length === 1 ? 'entry' : `${deleteConfirm.ids.length} entries`}</Text>
+            <Text size="sm" c="dimmed" mb="1rem">Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched.</Text>
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+              <button onClick={() => setDeleteConfirm(null)} style={{ background: 'none', border: '0.0625rem solid var(--border-subtle)', borderRadius: 'var(--mantine-radius-sm)', cursor: 'pointer', padding: '0.375rem 0.75rem', fontSize: '0.8125rem' }}>
+                Cancel
+              </button>
+              <button onClick={() => void execDelete(deleteConfirm.ids, false)} style={{ background: 'none', border: '0.0625rem solid var(--border-subtle)', borderRadius: 'var(--mantine-radius-sm)', cursor: 'pointer', padding: '0.375rem 0.75rem', fontSize: '0.8125rem' }}>
+                Remove notifications only
+              </button>
+              <button onClick={() => void execDelete(deleteConfirm.ids, true)} style={{ backgroundColor: '#ef4444', border: 'none', borderRadius: 'var(--mantine-radius-sm)', cursor: 'pointer', padding: '0.375rem 0.75rem', fontSize: '0.8125rem', color: '#fff', fontWeight: 600 }}>
+                Delete outputs
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </Box>
   );
 }

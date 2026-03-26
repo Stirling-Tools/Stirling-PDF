@@ -217,7 +217,7 @@ export default function AutomationCreation({ mode, existingAutomation, onBack, o
           />
         )}
 
-        <Divider />
+        {!hideMetadata && <Divider />}
 
         {/* Action Buttons */}
         <Stack gap="sm">

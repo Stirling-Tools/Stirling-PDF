@@ -1,17 +1,17 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
-  Modal,
   Button,
   Stack,
   Group,
   TextInput,
-  Textarea,
-  Divider,
   ColorInput,
   NumberInput,
   Text,
   Alert,
   Switch,
+  Select,
+  Box,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { SmartFolder } from '@app/types/smartFolders';
@@ -20,12 +20,29 @@ import { IconPicker as IconSelector } from '@app/components/smartFolders/IconPic
 import AutomationCreation from '@app/components/tools/automate/AutomationCreation';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { smartFolderStorage } from '@app/services/smartFolderStorage';
+import { folderDirectoryHandleStorage } from '@app/services/folderDirectoryHandleStorage';
+import FolderSpecialIcon from '@mui/icons-material/FolderSpecial';
 
 const ACCENT_SWATCHES = [
   '#3b82f6', '#0ea5e9', '#14b8a6', '#22c55e',
   '#f97316', '#ef4444', '#9333ea', '#ec4899',
   '#6366f1', '#eab308', '#64748b', '#0f172a',
 ];
+
+const EASING = 'cubic-bezier(0.22,1,0.36,1)';
+
+function SectionLabel({ children }: { children: string }) {
+  return (
+    <Text
+      size="xs"
+      fw={600}
+      tt="uppercase"
+      style={{ letterSpacing: '0.06em', color: 'var(--tool-subcategory-text-color)', marginBottom: '0.5rem' }}
+    >
+      {children}
+    </Text>
+  );
+}
 
 interface SmartFolderManagementModalProps {
   opened: boolean;
@@ -46,6 +63,30 @@ export function SmartFolderManagementModal({
   const { toolRegistry } = useToolWorkflow();
   const isEditMode = !!editFolder;
 
+  // Animation state
+  const [isMounted, setIsMounted] = useState(false);
+  const [isIn, setIsIn] = useState(false);
+
+  useEffect(() => {
+    if (opened) {
+      setIsMounted(true);
+      const raf = requestAnimationFrame(() => requestAnimationFrame(() => setIsIn(true)));
+      return () => cancelAnimationFrame(raf);
+    } else {
+      setIsIn(false);
+      const timer = setTimeout(() => setIsMounted(false), 240);
+      return () => clearTimeout(timer);
+    }
+  }, [opened]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!opened) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') handleClose(); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [opened]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const [name, setName] = useState(editFolder?.name ?? '');
   const [description, setDescription] = useState(editFolder?.description ?? '');
   const [icon, setIcon] = useState(editFolder?.icon ?? 'FolderIcon');
@@ -54,14 +95,15 @@ export function SmartFolderManagementModal({
   const [retryDelayMinutes, setRetryDelayMinutes] = useState<number>(editFolder?.retryDelayMinutes ?? 5);
   const [outputMode, setOutputMode] = useState<'new_file' | 'new_version'>(editFolder?.outputMode ?? 'new_file');
   const [outputName, setOutputName] = useState(editFolder?.outputName ?? editFolder?.name ?? '');
-  const [outputNamePosition, setOutputNamePosition] = useState<'prefix' | 'suffix'>(editFolder?.outputNamePosition ?? 'prefix');
+  const [outputNamePosition, setOutputNamePosition] = useState<'prefix' | 'suffix' | 'auto-number'>(editFolder?.outputNamePosition ?? 'prefix');
   const outputNameDirty = useRef(!!editFolder?.outputName);
   const [saving, setSaving] = useState(false);
+  const [outputDirName, setOutputDirName] = useState<string | null>(editFolder?.hasOutputDirectory ? '(loading…)' : null);
+  const pendingDirHandle = useRef<FileSystemDirectoryHandle | null>(null);
   const [nameError, setNameError] = useState('');
   const [automationError, setAutomationError] = useState('');
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  // AutomationCreation exposes its save function via this ref
   const automationSaveTrigger = useRef<(() => void) | null>(null);
 
   const resetState = useCallback(() => {
@@ -73,9 +115,8 @@ export function SmartFolderManagementModal({
     setRetryDelayMinutes(editFolder?.retryDelayMinutes ?? 5);
     setOutputMode(editFolder?.outputMode ?? 'new_file');
     setOutputName(editFolder?.outputName ?? editFolder?.name ?? '');
-    setOutputNamePosition(editFolder?.outputNamePosition ?? 'prefix');
+    setOutputNamePosition((editFolder?.outputNamePosition as 'prefix' | 'suffix' | 'auto-number') ?? 'prefix');
     outputNameDirty.current = !!editFolder?.outputName;
-
     setNameError('');
     setAutomationError('');
     setSaveError(null);
@@ -83,22 +124,24 @@ export function SmartFolderManagementModal({
   }, [editFolder]);
 
   useEffect(() => {
-    if (opened) resetState();
-  }, [opened, resetState]);
+    if (opened) {
+      resetState();
+      pendingDirHandle.current = null;
+      if (editFolder?.hasOutputDirectory && editFolder.id) {
+        folderDirectoryHandleStorage.get(editFolder.id).then(h => setOutputDirName(h?.name ?? null));
+      } else {
+        setOutputDirName(null);
+      }
+    }
+  }, [opened, resetState, editFolder]);
 
-  const handleClose = () => {
-    resetState();
-    onClose();
-  };
+  const handleClose = () => { resetState(); onClose(); };
 
-  // Called by AutomationCreation once it has persisted the automation
   const handleAutomationComplete = useCallback(async (automation: AutomationConfig) => {
     const trimmedName = name.trim();
     try {
-      const retryFields = {
-        maxRetries,
-        retryDelayMinutes,
-      };
+      const retryFields = { maxRetries, retryDelayMinutes };
+      const hasOutputDirectory = outputDirName !== null;
       if (isEditMode && editFolder) {
         await smartFolderStorage.updateFolder({
           ...editFolder,
@@ -111,9 +154,15 @@ export function SmartFolderManagementModal({
           outputMode: outputMode === 'new_version' ? 'new_version' : undefined,
           outputName: outputName.trim() || undefined,
           outputNamePosition: outputNamePosition === 'suffix' ? 'suffix' : undefined,
+          hasOutputDirectory,
         });
+        if (pendingDirHandle.current) {
+          await folderDirectoryHandleStorage.set(editFolder.id, pendingDirHandle.current);
+        } else if (!hasOutputDirectory) {
+          await folderDirectoryHandleStorage.remove(editFolder.id);
+        }
       } else {
-        await smartFolderStorage.createFolder({
+        const newFolder = await smartFolderStorage.createFolder({
           name: trimmedName,
           description: description.trim(),
           icon,
@@ -123,7 +172,11 @@ export function SmartFolderManagementModal({
           outputMode: outputMode === 'new_version' ? 'new_version' : undefined,
           outputName: outputName.trim() || undefined,
           outputNamePosition: outputNamePosition === 'suffix' ? 'suffix' : undefined,
+          hasOutputDirectory,
         });
+        if (pendingDirHandle.current) {
+          await folderDirectoryHandleStorage.set(newFolder.id, pendingDirHandle.current);
+        }
       }
       resetState();
       onSaved();
@@ -134,21 +187,14 @@ export function SmartFolderManagementModal({
     } finally {
       setSaving(false);
     }
-  }, [name, description, icon, accentColor, outputMode, outputName, outputNamePosition, isEditMode, editFolder, resetState, onSaved, onClose]);
+  }, [name, description, icon, accentColor, outputMode, outputName, outputNamePosition, outputDirName, maxRetries, retryDelayMinutes, isEditMode, editFolder, resetState, onSaved, onClose]);
 
   const handleSave = () => {
     const trimmedName = name.trim();
-    if (!trimmedName) {
-      setNameError(t('smartFolders.modal.nameRequired', 'Folder name is required'));
-      return;
-    }
-    if (trimmedName.length > 50) {
-      setNameError(t('smartFolders.modal.nameTooLong', 'Folder name must be 50 characters or less'));
-      return;
-    }
+    if (!trimmedName) { setNameError(t('smartFolders.modal.nameRequired', 'Folder name is required')); return; }
+    if (trimmedName.length > 50) { setNameError(t('smartFolders.modal.nameTooLong', 'Folder name must be 50 characters or less')); return; }
     setAutomationError('');
     setSaving(true);
-    // Trigger automation save; onComplete handles the rest
     automationSaveTrigger.current?.();
   };
 
@@ -156,155 +202,276 @@ export function SmartFolderManagementModal({
     ? t('smartFolders.modal.editTitle', 'Edit Watch Folder')
     : t('smartFolders.modal.createTitle', 'New Watch Folder');
 
-  return (
-    <Modal
-      opened={opened}
-      onClose={handleClose}
-      title={title}
-      size="lg"
-      centered
-    >
-      <Stack gap="md">
-        {/* Folder metadata */}
-        <Stack gap="sm">
-          <Group gap="xs" align="flex-end">
-            <TextInput
-              label={t('smartFolders.modal.name', 'Folder name')}
-              placeholder={t('smartFolders.modal.namePlaceholder', 'My Watch Folder')}
-              value={name}
-              onChange={(e) => {
-                const val = e.currentTarget.value;
-                setName(val);
-                setNameError('');
-                if (!outputNameDirty.current) setOutputName(val);
-              }}
-              error={nameError}
-              withAsterisk
-              maxLength={50}
-              style={{ flex: 1 }}
-              size="sm"
-            />
-            <IconSelector value={icon} onChange={setIcon} size="sm" />
-          </Group>
+  if (!isMounted) return null;
 
-          <Textarea
-            label={t('smartFolders.modal.description', 'Description')}
-            placeholder={t('smartFolders.modal.descriptionPlaceholder', 'What does this folder do?')}
-            value={description}
-            onChange={(e) => setDescription(e.currentTarget.value)}
-            maxLength={200}
-            rows={2}
-            size="sm"
-          />
+  return createPortal(
+    <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {/* Backdrop */}
+      <div
+        onClick={handleClose}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundColor: 'rgba(0,0,0,0.55)',
+          opacity: isIn ? 1 : 0,
+          transition: 'opacity 220ms ease',
+        }}
+      />
 
-          <ColorInput
-            label={t('smartFolders.modal.color', 'Accent color')}
-            value={accentColor}
-            onChange={setAccentColor}
-            format="hex"
-            swatches={ACCENT_SWATCHES}
-            size="sm"
-            popoverProps={{ withinPortal: true }}
-          />
-        </Stack>
-
-        <Divider label={t('smartFolders.modal.outputLabel', 'Output')} labelPosition="left" />
-
-        <Stack gap="xs">
-          <Switch
-            label={t('smartFolders.modal.outputModeVersion', 'Replace original?')}
-            description={outputMode === 'new_version'
-              ? t('smartFolders.modal.outputModeVersionDesc', 'Output becomes a new version of the input file rather than a separate file')
-              : t('smartFolders.modal.outputModeNewDesc', 'Output is saved as a new separate file')}
-            checked={outputMode === 'new_version'}
-            onChange={(e) => setOutputMode(e.currentTarget.checked ? 'new_version' : 'new_file')}
-            size="sm"
-          />
-          {outputMode !== 'new_version' && (
-            <Group gap="xs" align="flex-end">
-              <TextInput
-                label={t('smartFolders.modal.outputName', outputNamePosition === 'suffix' ? 'Output filename suffix' : 'Output filename prefix')}
-                value={outputName}
-                onChange={(e) => { outputNameDirty.current = true; setOutputName(e.currentTarget.value); }}
-                maxLength={100}
-                size="sm"
-                style={{ flex: 1 }}
-              />
-              <Switch
-                label={t('smartFolders.modal.outputNameSuffix', 'Suffix')}
-                checked={outputNamePosition === 'suffix'}
-                onChange={(e) => setOutputNamePosition(e.currentTarget.checked ? 'suffix' : 'prefix')}
-                size="sm"
-                mb={4}
-              />
-            </Group>
-          )}
-        </Stack>
-
-        <Divider label={t('smartFolders.modal.retryLabel', 'Auto-retry')} labelPosition="left" />
-
-        <Group gap="md" align="flex-end">
-          <NumberInput
-            label={t('smartFolders.modal.maxRetries', 'Max retries')}
-            description={t('smartFolders.modal.maxRetriesDesc', '0 to disable')}
-            value={maxRetries}
-            onChange={(v) => setMaxRetries(typeof v === 'number' ? Math.max(0, Math.min(10, v)) : 0)}
-            min={0}
-            max={10}
-            size="sm"
-            style={{ flex: 1 }}
-          />
-          <NumberInput
-            label={t('smartFolders.modal.retryDelay', 'Delay (minutes)')}
-            value={retryDelayMinutes}
-            onChange={(v) => setRetryDelayMinutes(typeof v === 'number' ? Math.max(1, Math.min(60, v)) : 5)}
-            min={1}
-            max={60}
-            size="sm"
-            disabled={maxRetries === 0}
-            style={{ flex: 1 }}
-          />
-        </Group>
-
-        <Divider label={t('smartFolders.modal.automation', 'Automation')} labelPosition="left" />
-
-        <AutomationCreation
-          mode={isEditMode ? AutomationMode.EDIT : AutomationMode.CREATE}
-          existingAutomation={existingAutomation ?? undefined}
-          onBack={handleClose}
-          onComplete={handleAutomationComplete}
-          onSaveFailed={() => { setSaving(false); setAutomationError(t('smartFolders.modal.automationRequired', 'Add at least one configured step before saving.')); }}
-          toolRegistry={toolRegistry}
-          hideMetadata
-          nameOverride={name.trim() || t('smartFolders.modal.automationNameFallback', 'Watch Folder Automation')}
-          saveTriggerRef={automationSaveTrigger}
-        />
-        {automationError && (
-          <Text size="xs" c="red">{automationError}</Text>
-        )}
-
-        <Divider />
-
-        {saveError && (
-          <Alert color="red" variant="light" onClose={() => setSaveError(null)} withCloseButton>
-            {saveError}
-          </Alert>
-        )}
-
-        <Group justify="flex-end" gap="sm">
-          <Button variant="outline" size="sm" onClick={handleClose}>
-            {t('cancel', 'Cancel')}
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleSave}
-            loading={saving}
-            disabled={!name.trim()}
+      {/* Modal panel */}
+      <div
+        style={{
+          position: 'relative',
+          width: 'min(80rem, 95vw)',
+          height: 'min(88vh, 800px)',
+          backgroundColor: 'var(--bg-toolbar)',
+          borderRadius: 'var(--mantine-radius-md)',
+          border: '0.0625rem solid var(--border-subtle)',
+          boxShadow: '0 1.5rem 3rem rgba(0,0,0,0.3)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          opacity: isIn ? 1 : 0,
+          transform: isIn ? 'scale(1) translateY(0)' : 'scale(0.96) translateY(0.75rem)',
+          transition: `opacity 240ms ${EASING}, transform 240ms ${EASING}`,
+        }}
+      >
+        {/* Header */}
+        <div style={{
+          padding: '1rem 1.5rem 0.875rem',
+          borderBottom: '0.0625rem solid var(--border-subtle)',
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+          <Text fw={600} size="sm">{title}</Text>
+          <button
+            onClick={handleClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '0.25rem',
+              borderRadius: 'var(--mantine-radius-sm)',
+              color: 'var(--mantine-color-dimmed)',
+              fontSize: '1.25rem',
+              lineHeight: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '2rem',
+              height: '2rem',
+            }}
+            aria-label="Close"
           >
-            {isEditMode ? t('smartFolders.modal.saveChanges', 'Save Changes') : t('smartFolders.modal.createFolder', 'Create Folder')}
-          </Button>
-        </Group>
-      </Stack>
-    </Modal>
+            ×
+          </button>
+        </div>
+
+        {/* Body: two-column layout */}
+        <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+
+          {/* ── Left panel: folder config ── */}
+          <div style={{
+            width: '30rem',
+            flexShrink: 0,
+            borderRight: '0.0625rem solid var(--border-subtle)',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem 1.5rem' }}>
+              <Stack gap="xl">
+
+                {/* Identity */}
+                <div>
+                  <SectionLabel>Folder</SectionLabel>
+                  <Stack gap="sm">
+                    <Group gap="xs" align="flex-end">
+                      <TextInput
+                        placeholder={t('smartFolders.modal.namePlaceholder', 'My Watch Folder')}
+                        value={name}
+                        onChange={(e) => {
+                          const val = e.currentTarget.value;
+                          setName(val);
+                          setNameError('');
+                          if (!outputNameDirty.current) setOutputName(val);
+                        }}
+                        error={nameError}
+                        withAsterisk
+                        maxLength={50}
+                        style={{ flex: 1 }}
+                        size="sm"
+                      />
+                      <IconSelector value={icon} onChange={setIcon} size="sm" />
+                    </Group>
+                    <ColorInput
+                      label={t('smartFolders.modal.color', 'Accent colour')}
+                      value={accentColor}
+                      onChange={setAccentColor}
+                      format="hex"
+                      swatches={ACCENT_SWATCHES}
+                      size="sm"
+                      popoverProps={{ withinPortal: true, zIndex: 400 }}
+                    />
+                  </Stack>
+                </div>
+
+                {/* Output */}
+                <div>
+                  <SectionLabel>Output</SectionLabel>
+                  <Stack gap="sm">
+                    {/* Local output folder */}
+                    <Box
+                      style={{
+                        padding: '0.625rem 0.75rem',
+                        borderRadius: 'var(--mantine-radius-sm)',
+                        border: `0.0625rem solid ${outputDirName ? 'rgba(34,197,94,0.4)' : 'var(--border-subtle)'}`,
+                        backgroundColor: outputDirName ? 'rgba(34,197,94,0.06)' : 'transparent',
+                      }}
+                    >
+                      <Group gap="xs" align="center" wrap="nowrap">
+                        <FolderSpecialIcon style={{ fontSize: '1rem', color: outputDirName ? '#22c55e' : 'var(--mantine-color-dimmed)', flexShrink: 0 }} />
+                        <Stack gap={1} style={{ flex: 1, minWidth: 0 }}>
+                          <Text size="xs" fw={500}>Local output folder</Text>
+                          <Text size="xs" c="dimmed" lineClamp={1}>{outputDirName ?? 'App storage only'}</Text>
+                        </Stack>
+                        <Button
+                          size="xs"
+                          variant="subtle"
+                          onClick={async () => {
+                            try {
+                              const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+                              pendingDirHandle.current = handle;
+                              setOutputDirName(handle.name);
+                            } catch { /* cancelled */ }
+                          }}
+                        >
+                          {outputDirName ? 'Change' : 'Choose'}
+                        </Button>
+                        {outputDirName && (
+                          <Button size="xs" variant="subtle" color="red" onClick={() => { pendingDirHandle.current = null; setOutputDirName(null); }}>
+                            Clear
+                          </Button>
+                        )}
+                      </Group>
+                    </Box>
+
+                    {!outputDirName && (
+                      <Switch
+                        label={t('smartFolders.modal.outputModeVersion', 'Replace original')}
+                        description={outputMode === 'new_version' ? 'Output replaces the input as a new version' : 'Output saved as a separate new file'}
+                        checked={outputMode === 'new_version'}
+                        onChange={(e) => setOutputMode(e.currentTarget.checked ? 'new_version' : 'new_file')}
+                        size="sm"
+                      />
+                    )}
+
+                    <Box style={{ opacity: outputMode === 'new_version' ? 0.4 : 1, pointerEvents: outputMode === 'new_version' ? 'none' : 'auto' }}>
+                      <Group gap="xs" align="flex-end">
+                        {outputNamePosition === 'auto-number' ? (
+                          <Box style={{ flex: 1 }}>
+                            <Text size="xs" fw={500} mb={4}>Auto-number</Text>
+                            <Text size="xs" c="dimmed">e.g. document.pdf → document (1).pdf</Text>
+                          </Box>
+                        ) : (
+                          <TextInput
+                            label={outputNamePosition === 'suffix' ? 'Filename suffix' : 'Filename prefix'}
+                            value={outputName}
+                            onChange={(e) => { outputNameDirty.current = true; setOutputName(e.currentTarget.value); }}
+                            maxLength={100}
+                            size="sm"
+                            style={{ flex: 1 }}
+                          />
+                        )}
+                        <Select
+                          size="xs"
+                          value={outputNamePosition}
+                          onChange={(v) => v && setOutputNamePosition(v as 'prefix' | 'suffix' | 'auto-number')}
+                          data={[
+                            { value: 'prefix', label: 'Prefix' },
+                            { value: 'suffix', label: 'Suffix' },
+                            { value: 'auto-number', label: 'Auto-number' },
+                          ]}
+                          style={{ width: '8rem', flexShrink: 0 }}
+                          mb={4}
+                          comboboxProps={{ withinPortal: true, zIndex: 400 }}
+                        />
+                      </Group>
+                    </Box>
+                  </Stack>
+                </div>
+
+                {/* Auto-retry */}
+                <div>
+                  <SectionLabel>Auto-retry</SectionLabel>
+                  <Group gap="sm" grow>
+                    <NumberInput
+                      label="Max auto retries"
+                      value={maxRetries}
+                      onChange={(v) => setMaxRetries(typeof v === 'number' ? Math.max(0, Math.min(10, v)) : 0)}
+                      min={0}
+                      max={10}
+                      size="sm"
+                    />
+                    <NumberInput
+                      label="Retry interval (minutes)"
+                      value={retryDelayMinutes}
+                      onChange={(v) => setRetryDelayMinutes(typeof v === 'number' ? Math.max(1, Math.min(60, v)) : 5)}
+                      min={1}
+                      max={60}
+                      size="sm"
+                      disabled={maxRetries === 0}
+                    />
+                  </Group>
+                </div>
+
+              </Stack>
+            </div>
+
+            {/* Footer actions */}
+            <div style={{ padding: '1rem 1.5rem', borderTop: '0.0625rem solid var(--border-subtle)', flexShrink: 0 }}>
+              {saveError && (
+                <Alert color="red" variant="light" onClose={() => setSaveError(null)} withCloseButton mb="sm">
+                  {saveError}
+                </Alert>
+              )}
+              <Group justify="flex-end" gap="sm">
+                <Button variant="subtle" size="sm" color="gray" onClick={handleClose}>
+                  {t('cancel', 'Cancel')}
+                </Button>
+                <Button size="sm" onClick={handleSave} loading={saving} disabled={!name.trim()}>
+                  {isEditMode ? t('smartFolders.modal.saveChanges', 'Save changes') : t('smartFolders.modal.createFolder', 'Create folder')}
+                </Button>
+              </Group>
+            </div>
+          </div>
+
+          {/* ── Right panel: automation / tool steps ── */}
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ padding: '1rem 1.5rem 0.5rem', flexShrink: 0 }}>
+              <SectionLabel>Steps</SectionLabel>
+              {automationError && <Text size="xs" c="red" mt={4}>{automationError}</Text>}
+            </div>
+            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 1.5rem 1.5rem' }}>
+              <AutomationCreation
+                mode={isEditMode ? AutomationMode.EDIT : AutomationMode.CREATE}
+                existingAutomation={existingAutomation ?? undefined}
+                onBack={handleClose}
+                onComplete={handleAutomationComplete}
+                onSaveFailed={() => { setSaving(false); setAutomationError(t('smartFolders.modal.automationRequired', 'Add at least one configured step before saving.')); }}
+                toolRegistry={toolRegistry}
+                hideMetadata
+                nameOverride={name.trim() || t('smartFolders.modal.automationNameFallback', 'Watch Folder Automation')}
+                saveTriggerRef={automationSaveTrigger}
+              />
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }
