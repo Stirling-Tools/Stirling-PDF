@@ -114,12 +114,6 @@ export const NavigationProvider: React.FC<{
   const setWorkbench = useCallback((workbench: WorkbenchType) => {
       // Check for unsaved changes using registered checker or state
       const hasUnsavedChanges = unsavedChangesCheckerRef.current?.() || state.hasUnsavedChanges;
-      console.log('[NavigationContext] setWorkbench:', {
-        from: state.workbench,
-        to: workbench,
-        hasChecker: !!unsavedChangesCheckerRef.current,
-        hasUnsavedChanges
-      });
 
       // If we're leaving pageEditor, viewer, or custom workbench and have unsaved changes, request navigation
       const leavingWorkbenchWithChanges =
@@ -134,16 +128,9 @@ export const NavigationProvider: React.FC<{
         }
         const performWorkbenchChange = () => {
           // When leaving a custom workbench, clear the selected tool
-          console.log('[NavigationContext] performWorkbenchChange executing', {
-            from: state.workbench,
-            to: workbench,
-            isCustom: state.workbench.startsWith('custom:')
-          });
           if (state.workbench.startsWith('custom:')) {
-            console.log('[NavigationContext] Clearing tool and changing workbench to:', workbench);
             dispatch({ type: 'SET_TOOL_AND_WORKBENCH', payload: { toolId: null, workbench } });
           } else {
-            console.log('[NavigationContext] Just changing workbench to:', workbench);
             dispatch({ type: 'SET_WORKBENCH', payload: { workbench } });
           }
         };
@@ -206,19 +193,13 @@ export const NavigationProvider: React.FC<{
     }, [state.hasUnsavedChanges]);
 
     const confirmNavigation = useCallback(() => {
-      console.log('[NavigationContext] confirmNavigation called', {
-        hasPendingNav: !!state.pendingNavigation,
-        currentWorkbench: state.workbench,
-        currentTool: state.selectedTool
-      });
       if (state.pendingNavigation) {
         state.pendingNavigation();
       }
 
       dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn: null } });
       dispatch({ type: 'SHOW_NAVIGATION_WARNING', payload: { show: false } });
-      console.log('[NavigationContext] confirmNavigation completed');
-    }, [state.pendingNavigation, state.workbench, state.selectedTool]);
+    }, [state.pendingNavigation]);
 
     const cancelNavigation = useCallback(() => {
       dispatch({ type: 'SET_PENDING_NAVIGATION', payload: { navigationFn: null } });

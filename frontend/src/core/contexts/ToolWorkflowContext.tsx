@@ -3,7 +3,7 @@
  * Eliminates prop drilling with a single, simple context
  */
 
-import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useToolManagement, type ToolAvailabilityMap } from '@app/hooks/useToolManagement';
 import { PageEditorFunctions } from '@app/types/pageEditor';
 import { ToolRegistryEntry, ToolRegistry } from '@app/data/toolsTaxonomy';
@@ -117,6 +117,12 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   // Navigation actions and state are available since we're inside NavigationProvider
   const { actions } = useNavigationActions();
   const navigationState = useNavigationState();
+  const workbenchRef = useRef(navigationState.workbench);
+  const actionsRef = useRef(actions);
+  useEffect(() => {
+    workbenchRef.current = navigationState.workbench;
+    actionsRef.current = actions;
+  });
 
   // Tool management hook
   const { toolRegistry, getSelectedTool, toolAvailability } = useToolManagement();
@@ -198,10 +204,10 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       return updated;
     });
 
-    if (removedView && navigationState.workbench === removedView.workbenchId) {
-      actions.setWorkbench(getDefaultWorkbench());
+    if (removedView && workbenchRef.current === removedView.workbenchId) {
+      actionsRef.current.setWorkbench(getDefaultWorkbench());
     }
-  }, [actions, navigationState.workbench]);
+  }, []); // stable — uses refs for mutable values
 
   const setCustomWorkbenchViewData = useCallback((id: string, dataOrUpdater: any | ((prev: any) => any)) => {
     setCustomViewData(prev => {
@@ -242,9 +248,9 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
     const currentCustomView = customWorkbenchViews.find(view => view.workbenchId === navigationState.workbench);
     if (!currentCustomView || currentCustomView.data == null) {
-      actions.setWorkbench(getDefaultWorkbench());
+      actionsRef.current.setWorkbench(getDefaultWorkbench());
     }
-  }, [actions, customWorkbenchViews, navigationState.workbench, navigationState.pendingNavigation, navigationState.showNavigationWarning]);
+  }, [customWorkbenchViews, navigationState.workbench, navigationState.pendingNavigation, navigationState.showNavigationWarning]);
 
   // Persisted via PreferencesContext; no direct localStorage writes needed here
 
