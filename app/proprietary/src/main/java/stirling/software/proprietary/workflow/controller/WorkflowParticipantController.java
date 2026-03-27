@@ -2,8 +2,11 @@ package stirling.software.proprietary.workflow.controller;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,6 +27,7 @@ import org.springframework.web.server.ResponseStatusException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -134,7 +138,7 @@ public class WorkflowParticipantController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ParticipantResponse> submitSignature(
-            @ModelAttribute SignatureSubmissionRequest request) {
+            @ModelAttribute SignatureSubmissionRequest request, HttpServletRequest httpRequest) {
 
         workflowSessionService.ensureSigningEnabled();
 
@@ -169,7 +173,8 @@ public class WorkflowParticipantController {
 
         try {
             // Build metadata map with certificate and wet signature data
-            Map<String, Object> metadata = buildSubmissionMetadata(request);
+            Map<String, Object> metadata =
+                    buildSubmissionMetadata(request, participant, httpRequest);
             participant.setParticipantMetadata(metadata);
 
             // Update status to SIGNED
@@ -369,15 +374,27 @@ public class WorkflowParticipantController {
     }
 
     /**
-     * Builds metadata map from signature submission request. Includes certificate submission and
-     * wet signature data.
+     * Builds metadata map from signature submission request. Includes certificate submission, wet
+     * signature data, and an audit trail entry for compliance traceability.
      */
-    private Map<String, Object> buildSubmissionMetadata(SignatureSubmissionRequest request)
+    private Map<String, Object> buildSubmissionMetadata(
+            SignatureSubmissionRequest request,
+            WorkflowParticipant participant,
+            HttpServletRequest httpRequest)
             throws IOException {
         Map<String, Object> metadata = new HashMap<>();
 
-        // Validate certificate before storing — throws 400 if invalid, expired, or wrong password
-        if (request.getCertType() != null && !"SERVER".equalsIgnoreCase(request.getCertType())) {
+        // Default to GUEST_CERT for external (non-registered) participants that did not
+        // supply their own certificate.
+        String effectiveCertType = request.getCertType();
+        if (effectiveCertType == null && participant.getUser() == null) {
+            effectiveCertType = "GUEST_CERT";
+        }
+
+        // Validate uploaded certificate before storing — skip for GUEST_CERT (no upload)
+        if (effectiveCertType != null
+                && !"SERVER".equalsIgnoreCase(effectiveCertType)
+                && !"GUEST_CERT".equalsIgnoreCase(effectiveCertType)) {
             byte[] keystoreBytes = null;
             if (request.getP12File() != null && !request.getP12File().isEmpty()) {
                 keystoreBytes = request.getP12File().getBytes();
@@ -386,16 +403,20 @@ public class WorkflowParticipantController {
             }
             if (keystoreBytes != null) {
                 certificateSubmissionValidator.validateAndExtractInfo(
-                        keystoreBytes, request.getCertType(), request.getPassword());
+                        keystoreBytes, effectiveCertType, request.getPassword());
             }
         }
 
-        // Add certificate submission if provided
-        if (request.getCertType() != null) {
+        // Add certificate submission if provided (or defaulted)
+        if (effectiveCertType != null) {
             Map<String, Object> certSubmission = new HashMap<>();
-            certSubmission.put("certType", request.getCertType());
-            certSubmission.put(
-                    "password", metadataEncryptionService.encrypt(request.getPassword()));
+            certSubmission.put("certType", effectiveCertType);
+            // GUEST_CERT passwords are derived at finalization time; no password to store
+            String encryptedPassword =
+                    "GUEST_CERT".equalsIgnoreCase(effectiveCertType)
+                            ? null
+                            : metadataEncryptionService.encrypt(request.getPassword());
+            certSubmission.put("password", encryptedPassword);
             certSubmission.put("showSignature", request.getShowSignature());
             certSubmission.put("pageNumber", request.getPageNumber());
             certSubmission.put("location", request.getLocation());
@@ -437,6 +458,31 @@ public class WorkflowParticipantController {
             metadata.put("wetSignatures", wetSigs);
         }
 
+        // Audit trail for compliance traceability (IP is hashed, not stored raw)
+        Map<String, Object> auditTrail = new HashMap<>();
+        auditTrail.put("ipHash", hashIp(httpRequest.getRemoteAddr()));
+        String userAgent = httpRequest.getHeader("User-Agent");
+        auditTrail.put(
+                "userAgent",
+                userAgent != null && userAgent.length() > 500
+                        ? userAgent.substring(0, 500)
+                        : userAgent);
+        auditTrail.put("submittedAt", Instant.now().toString());
+        auditTrail.put("email", participant.getEmail());
+        metadata.put("auditTrail", auditTrail);
+
         return metadata;
+    }
+
+    /** Returns a SHA-256 Base64-encoded digest of an IP address for privacy-safe audit logging. */
+    private String hashIp(String ip) {
+        if (ip == null) return null;
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(ip.getBytes(StandardCharsets.UTF_8));
+            return Base64.getEncoder().encodeToString(hash);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

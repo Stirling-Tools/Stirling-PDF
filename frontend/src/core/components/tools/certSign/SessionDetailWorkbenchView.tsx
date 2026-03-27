@@ -21,7 +21,7 @@ export interface SessionDetailWorkbenchData {
   pdfFile: File | null;
   onFinalize: () => Promise<void>;
   onLoadSignedPdf: () => Promise<void>;
-  onAddParticipants: (userIds: number[], defaultReason?: string) => Promise<void>;
+  onAddParticipants: (userIds: number[], emails: string[], defaultReason?: string) => Promise<void>;
   onRemoveParticipant: (participantId: number) => Promise<void>;
   onDelete: () => Promise<void>;
   onBack: () => void;
@@ -67,9 +67,9 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
     }
   }, [session.finalized, onRefresh]);
 
-  const handleAddParticipants = async (userIds: number[], defaultReason?: string) => {
+  const handleAddParticipants = async (userIds: number[], emails: string[], defaultReason?: string) => {
     try {
-      await onAddParticipants(userIds, defaultReason);
+      await onAddParticipants(userIds, emails, defaultReason);
       alert({
         alertType: 'success',
         title: t('success'),

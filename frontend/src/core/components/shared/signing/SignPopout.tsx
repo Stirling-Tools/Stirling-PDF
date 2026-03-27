@@ -82,7 +82,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
   const [loading, setLoading] = useState(false);
 
   // Create form state
-  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const [participants, setParticipants] = useState<import('@app/components/shared/signing/steps/SelectParticipantsStep').Participant[]>([]);
   const [dueDate, setDueDate] = useState('');
   const [creating, setCreating] = useState(false);
   const [includeSummaryPage, setIncludeSummaryPage] = useState(false);
@@ -309,7 +309,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
 
   // Create session handler
   const handleCreateSession = useCallback(async () => {
-    if (selectedUserIds.length === 0 || selectedFiles.length !== 1) return;
+    if (participants.length === 0 || selectedFiles.length !== 1) return;
 
     setCreating(true);
     try {
@@ -321,8 +321,13 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       formData.append('file', stirlingFile, selectedFile.name);
       formData.append('workflowType', 'SIGNING');
       formData.append('documentName', selectedFile.name);
-      selectedUserIds.forEach((userId, index) => {
-        formData.append(`participantUserIds[${index}]`, userId.toString());
+      const registeredIds = participants.filter((p) => p.type === 'registered' && p.userId != null);
+      const externalEmails = participants.filter((p) => p.type === 'external' && p.email != null);
+      registeredIds.forEach((p, index) => {
+        formData.append(`participantUserIds[${index}]`, (p.userId as number).toString());
+      });
+      externalEmails.forEach((p, index) => {
+        formData.append(`participantEmails[${index}]`, p.email as string);
       });
       if (dueDate) formData.append('dueDate', dueDate);
       formData.append('notifyOnCreate', 'true');
@@ -364,7 +369,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
     } finally {
       setCreating(false);
     }
-  }, [selectedUserIds, dueDate, selectedFiles, fetchData, t, includeSummaryPage]);
+  }, [participants, dueDate, selectedFiles, fetchData, t, includeSummaryPage]);
 
   // Handle clicking a sign request
   const handleSignRequestClick = useCallback(async (request: SignRequestSummary) => {
@@ -465,8 +470,8 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
         pdfFile,
         onFinalize: () => handleFinalize(session.sessionId, session.documentName),
         onLoadSignedPdf: () => handleLoadSignedPdf(session.sessionId, session.documentName),
-        onAddParticipants: (userIds: number[], defaultReason?: string) =>
-          handleAddParticipants(session.sessionId, userIds, defaultReason),
+        onAddParticipants: (userIds: number[], emails: string[], defaultReason?: string) =>
+          handleAddParticipants(session.sessionId, userIds, emails, defaultReason),
         onRemoveParticipant: (participantId: number) => handleRemoveParticipant(session.sessionId, participantId),
         onDelete: () => handleDeleteSession(session.sessionId),
         onBack: () => {
@@ -566,12 +571,19 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
     navigationActions.setWorkbench('viewer');
   };
 
-  const handleAddParticipants = async (sessionId: string, userIds: number[], defaultReason?: string) => {
-    const requests = userIds.map(userId => ({
-      userId,
-      defaultReason: defaultReason || undefined,
-      sendNotification: true,
-    }));
+  const handleAddParticipants = async (sessionId: string, userIds: number[], emails: string[], defaultReason?: string) => {
+    const requests = [
+      ...userIds.map(userId => ({
+        userId,
+        defaultReason: defaultReason || undefined,
+        sendNotification: true,
+      })),
+      ...emails.map(email => ({
+        email,
+        defaultReason: defaultReason || undefined,
+        sendNotification: true,
+      })),
+    ];
     await apiClient.post(`/api/v1/security/cert-sign/sessions/${sessionId}/participants`, requests);
     await handleRefreshSession(sessionId);
   };
@@ -750,8 +762,8 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
           {showCreatePanel ? (
             <CreateSessionPanel
               selectedFiles={selectedFiles}
-              selectedUserIds={selectedUserIds}
-              onSelectedUserIdsChange={setSelectedUserIds}
+              participants={participants}
+              onParticipantsChange={setParticipants}
               dueDate={dueDate}
               onDueDateChange={setDueDate}
               creating={creating}
@@ -793,7 +805,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
             type="button"
             className="quick-access-popout__primary"
             onClick={handleCreateSession}
-            disabled={selectedFiles.length !== 1 || selectedUserIds.length === 0 || creating}
+            disabled={selectedFiles.length !== 1 || participants.length === 0 || creating}
           >
             <LocalIcon icon="send-rounded" width="1rem" height="1rem" />
             {creating

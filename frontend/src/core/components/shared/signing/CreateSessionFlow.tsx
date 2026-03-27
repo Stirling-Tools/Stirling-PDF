@@ -3,7 +3,10 @@ import { Stack, Text, Group, Badge } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import CheckIcon from '@mui/icons-material/Check';
 import { SelectDocumentStep } from '@app/components/shared/signing/steps/SelectDocumentStep';
-import { SelectParticipantsStep } from '@app/components/shared/signing/steps/SelectParticipantsStep';
+import {
+  SelectParticipantsStep,
+  type Participant,
+} from '@app/components/shared/signing/steps/SelectParticipantsStep';
 import { ConfigureSignatureDefaultsStep } from '@app/components/shared/signing/steps/ConfigureSignatureDefaultsStep';
 import { ReviewSessionStep } from '@app/components/shared/signing/steps/ReviewSessionStep';
 import { useGroupSigningTips } from '@app/components/tooltips/useGroupSigningTips';
@@ -13,8 +16,8 @@ import type { FileState } from '@app/types/file';
 
 interface CreateSessionFlowProps {
   selectedFiles: FileState[];
-  selectedUserIds: number[];
-  onSelectedUserIdsChange: (userIds: number[]) => void;
+  participants: Participant[];
+  onParticipantsChange: (participants: Participant[]) => void;
   dueDate: string;
   onDueDateChange: (date: string) => void;
   creating: boolean;
@@ -102,8 +105,8 @@ const StepWrapper: React.FC<StepWrapperProps> = ({
 
 export const CreateSessionFlow: React.FC<CreateSessionFlowProps> = ({
   selectedFiles,
-  selectedUserIds,
-  onSelectedUserIdsChange,
+  participants,
+  onParticipantsChange,
   dueDate,
   onDueDateChange,
   creating,
@@ -186,8 +189,8 @@ export const CreateSessionFlow: React.FC<CreateSessionFlowProps> = ({
           isCompleted={currentStep > 2}
         >
           <SelectParticipantsStep
-            selectedUserIds={selectedUserIds}
-            onSelectedUserIdsChange={onSelectedUserIdsChange}
+            participants={participants}
+            onParticipantsChange={onParticipantsChange}
             onBack={() => setCurrentStep(1)}
             onNext={() => setCurrentStep(3)}
             disabled={creating}
@@ -220,7 +223,7 @@ export const CreateSessionFlow: React.FC<CreateSessionFlowProps> = ({
           {selectedFile && (
             <ReviewSessionStep
               selectedFile={selectedFile}
-              participantCount={selectedUserIds.length}
+              participantCount={participants.length}
               signatureSettings={signatureSettings}
               dueDate={dueDate}
               onDueDateChange={onDueDateChange}
