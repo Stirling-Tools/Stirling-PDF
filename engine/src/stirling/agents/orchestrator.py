@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import assert_never
 
 from pydantic_ai import Agent
 from pydantic_ai.output import ToolOutput
@@ -19,6 +20,7 @@ from stirling.contracts import (
     PdfEditResponse,
     PdfQuestionRequest,
     PdfQuestionResponse,
+    SupportedCapability,
     UnsupportedCapabilityResponse,
 )
 from stirling.services import AppRuntime
@@ -70,22 +72,45 @@ class OrchestratorAgent:
         )
 
     async def handle(self, request: OrchestratorRequest) -> OrchestratorResponse:
+        if request.resume_with is not None:
+            return await self._resume(request, request.resume_with)
         result = await self.agent.run(
             self._build_prompt(request),
             deps=OrchestratorDeps(runtime=self.runtime, request=request),
         )
         return result.output
 
+    async def _resume(self, request: OrchestratorRequest, capability: SupportedCapability) -> OrchestratorResponse:
+        match capability:
+            case SupportedCapability.PDF_QUESTION:
+                return await self._run_pdf_question(request)
+            case SupportedCapability.PDF_EDIT:
+                return await self._run_pdf_edit(request)
+            case SupportedCapability.AGENT_DRAFT:
+                return await self._run_agent_draft(request)
+            case (
+                SupportedCapability.ORCHESTRATE
+                | SupportedCapability.AGENT_REVISE
+                | SupportedCapability.AGENT_NEXT_ACTION
+            ):
+                raise ValueError(f"Cannot resume orchestrator with capability: {capability}")
+            case _ as unreachable:
+                assert_never(unreachable)
+
     async def delegate_pdf_edit(self, ctx: RunContext[OrchestratorDeps]) -> PdfEditResponse:
-        request = ctx.deps.request
-        return await PdfEditAgent(ctx.deps.runtime).handle(
+        return await self._run_pdf_edit(ctx.deps.request)
+
+    async def _run_pdf_edit(self, request: OrchestratorRequest) -> PdfEditResponse:
+        return await PdfEditAgent(self.runtime).handle(
             PdfEditRequest(user_message=request.user_message, conversation_id=request.conversation_id)
         )
 
     async def delegate_pdf_question(self, ctx: RunContext[OrchestratorDeps]) -> PdfQuestionResponse:
-        request = ctx.deps.request
+        return await self._run_pdf_question(ctx.deps.request)
+
+    async def _run_pdf_question(self, request: OrchestratorRequest) -> PdfQuestionResponse:
         extracted_text = self._get_extracted_text_artifact(request)
-        return await PdfQuestionAgent(ctx.deps.runtime).handle(
+        return await PdfQuestionAgent(self.runtime).handle(
             PdfQuestionRequest(
                 question=request.user_message,
                 conversation_id=request.conversation_id,
@@ -95,8 +120,10 @@ class OrchestratorAgent:
         )
 
     async def delegate_user_spec(self, ctx: RunContext[OrchestratorDeps]) -> AgentDraftWorkflowResponse:
-        request = ctx.deps.request
-        return await UserSpecAgent(ctx.deps.runtime).draft(AgentDraftRequest(user_message=request.user_message))
+        return await self._run_agent_draft(ctx.deps.request)
+
+    async def _run_agent_draft(self, request: OrchestratorRequest) -> AgentDraftWorkflowResponse:
+        return await UserSpecAgent(self.runtime).draft(AgentDraftRequest(user_message=request.user_message))
 
     async def unsupported_capability(
         self,

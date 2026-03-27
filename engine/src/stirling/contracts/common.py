@@ -1,10 +1,20 @@
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Literal
 
 from pydantic import model_validator
 
 from stirling.models import OPERATIONS, ApiModel, OperationId, ParamToolModel
+
+
+class SupportedCapability(StrEnum):
+    ORCHESTRATE = "orchestrate"
+    PDF_EDIT = "pdf_edit"
+    PDF_QUESTION = "pdf_question"
+    AGENT_DRAFT = "agent_draft"
+    AGENT_REVISE = "agent_revise"
+    AGENT_NEXT_ACTION = "agent_next_action"
 
 
 class ConversationMessage(ApiModel):

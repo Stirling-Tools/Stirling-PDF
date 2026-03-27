@@ -8,7 +8,7 @@ from .agent_drafts import (
     AgentRevisionWorkflowResponse,
 )
 from .agent_specs import AgentSpec, AgentSpecStep, AiToolAgentStep
-from .common import ConversationMessage, PdfTextSelection, ToolOperationStep
+from .common import ConversationMessage, PdfTextSelection, SupportedCapability, ToolOperationStep
 from .execution import (
     AgentExecutionRequest,
     CannotContinueExecutionAction,
@@ -23,7 +23,6 @@ from .orchestrator import (
     ExtractedTextArtifact,
     OrchestratorRequest,
     OrchestratorResponse,
-    SupportedCapability,
     UnsupportedCapabilityResponse,
     WorkflowArtifact,
 )

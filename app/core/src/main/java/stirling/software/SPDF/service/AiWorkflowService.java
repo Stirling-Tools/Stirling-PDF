@@ -52,6 +52,7 @@ public class AiWorkflowService {
 
             List<AiWorkflowTextSelection> extractedPages = extractRequestedText(request, response);
             turnRequest.setArtifacts(List.of(createExtractedTextArtifact(extractedPages)));
+            turnRequest.setResumeWith(response.getResumeWith());
         }
 
         AiWorkflowResponse response = new AiWorkflowResponse();
@@ -206,6 +207,7 @@ public class AiWorkflowService {
         private String conversationId;
         private String fileName;
         private List<ExtractedTextArtifact> artifacts = new ArrayList<>();
+        private String resumeWith;
     }
 
     @Data

@@ -6,7 +6,7 @@ from pydantic import Field
 
 from stirling.models import ApiModel
 
-from .common import PdfTextSelection
+from .common import PdfTextSelection, SupportedCapability
 
 
 class PdfQuestionRequest(ApiModel):
@@ -24,6 +24,7 @@ class PdfQuestionAnswerResponse(ApiModel):
 
 class PdfQuestionNeedTextResponse(ApiModel):
     outcome: Literal["need_text"] = "need_text"
+    resume_with: SupportedCapability = SupportedCapability.PDF_QUESTION
     reason: str
     page_numbers: list[int] = Field(default_factory=list)
     max_pages: int | None = None
