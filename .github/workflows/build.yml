@@ -236,10 +236,12 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install frontend dependencies
         run: cd frontend && npm ci
+      - name: Generate icons
+        run: cd frontend && node scripts/generate-icons.js
       - name: Install Playwright (chromium only)
         run: cd frontend && npx playwright install chromium --with-deps
       - name: Run E2E tests (chromium)
-        run: cd frontend && npx playwright test src/core/tests/certValidation --project=chromium
+        run: cd frontend && npx playwright test --project=chromium
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
