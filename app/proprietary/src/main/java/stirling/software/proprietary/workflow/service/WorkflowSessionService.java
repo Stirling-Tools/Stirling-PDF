@@ -61,6 +61,7 @@ public class WorkflowSessionService {
     private final ObjectMapper objectMapper;
     private final ApplicationProperties applicationProperties;
     private final MetadataEncryptionService metadataEncryptionService;
+    private final CertificateSubmissionValidator certificateSubmissionValidator;
 
     public void ensureSigningEnabled() {
         if (!applicationProperties.getStorage().isEnabled()
@@ -684,7 +685,27 @@ public class WorkflowSessionService {
             metadata = new HashMap<>(existingMetadata);
         }
 
-        // 1. Store certificate submission data
+        // 1. Validate certificate before storing — throws 400 if invalid, expired, or wrong
+        // password
+        if (request.getCertType() != null
+                && !"SERVER".equalsIgnoreCase(request.getCertType())
+                && request.getP12File() != null
+                && !request.getP12File().isEmpty()) {
+            try {
+                certificateSubmissionValidator.validateAndExtractInfo(
+                        request.getP12File().getBytes(),
+                        request.getCertType(),
+                        request.getPassword());
+            } catch (ResponseStatusException e) {
+                throw e;
+            } catch (IOException e) {
+                log.error("Failed to read P12 keystore file for validation", e);
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Failed to process certificate file");
+            }
+        }
+
+        // 2. Store certificate submission data
         Map<String, Object> certSubmission = new HashMap<>();
         certSubmission.put("certType", request.getCertType());
         certSubmission.put("password", metadataEncryptionService.encrypt(request.getPassword()));

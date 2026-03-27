@@ -171,6 +171,9 @@ out/
 *.jks
 *.asc
 
+# Allow test fixture certificates (synthetic, no real credentials)
+!src/test/resources/test-certs/**
+
 # SSH Keys
 *.pub
 *.priv

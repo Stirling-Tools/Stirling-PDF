@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Stack,
   Card,
@@ -23,6 +24,7 @@ interface ParticipantViewProps {
 }
 
 const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
+  const { t } = useTranslation();
   const { session, participant, loading, error, submitSignature, decline, downloadDocument } =
     useParticipantSession(token);
 
@@ -36,6 +38,57 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
   const [declineReason, _setDeclineReason] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  type CertValidationState =
+    | { status: 'idle' }
+    | { status: 'validating' }
+    | { status: 'valid'; notAfter: string | null; subjectName: string | null }
+    | { status: 'error'; message: string };
+
+  const [certValidation, setCertValidation] = useState<CertValidationState>({ status: 'idle' });
+  const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (certType === 'SERVER' || !certFile) {
+      setCertValidation({ status: 'idle' });
+      return;
+    }
+
+    if (validationTimerRef.current) clearTimeout(validationTimerRef.current);
+    setCertValidation({ status: 'validating' });
+
+    validationTimerRef.current = setTimeout(async () => {
+      try {
+        const formData = new FormData();
+        formData.append('participantToken', token);
+        formData.append('certType', certType);
+        formData.append('password', password);
+        if (certType === 'JKS') {
+          formData.append('jksFile', certFile);
+        } else {
+          formData.append('p12File', certFile);
+        }
+
+        const res = await fetch('/api/v1/workflow/participant/validate-certificate', {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await res.json();
+
+        if (data.valid) {
+          setCertValidation({ status: 'valid', notAfter: data.notAfter, subjectName: data.subjectName });
+        } else {
+          setCertValidation({ status: 'error', message: data.error ?? t('certSign.collab.participant.certInvalidFallback', 'Invalid certificate') });
+        }
+      } catch {
+        setCertValidation({ status: 'error', message: t('certSign.collab.participant.certNetworkError', 'Could not validate certificate') });
+      }
+    }, 600);
+
+    return () => {
+      if (validationTimerRef.current) clearTimeout(validationTimerRef.current);
+    };
+  }, [certFile, password, certType, token]);
 
   const handleSubmitSignature = async () => {
     if (!certFile && certType !== 'SERVER') {
@@ -190,6 +243,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
                 { value: 'SERVER', label: 'Server Certificate (if available)' },
               ]}
               size="sm"
+              data-testid="cert-type-select"
             />
 
             {certType !== 'SERVER' && (
@@ -201,6 +255,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
                   onChange={setCertFile}
                   accept=".p12,.pfx,.jks"
                   size="sm"
+                  data-testid="cert-file-input"
                 />
 
                 <TextInput
@@ -209,7 +264,31 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
                   value={password}
                   onChange={(e) => setPassword(e.currentTarget.value)}
                   size="sm"
+                  data-testid="cert-password-input"
                 />
+
+                {/* Certificate validation feedback */}
+                {certValidation.status === 'validating' && (
+                  <Text size="sm" c="dimmed" data-testid="cert-validation-feedback">
+                    {t('certSign.collab.participant.certValidating', 'Validating certificate...')}
+                  </Text>
+                )}
+                {certValidation.status === 'valid' && (
+                  <Text size="sm" c="green" data-testid="cert-validation-feedback">
+                    {t('certSign.collab.participant.certValid', '✓ Certificate valid')}
+                    {certValidation.notAfter
+                      ? t('certSign.collab.participant.certValidUntil', ' until {{date}}', {
+                          date: new Date(certValidation.notAfter).toLocaleDateString(),
+                        })
+                      : ''}
+                    {certValidation.subjectName ? ` · ${certValidation.subjectName}` : ''}
+                  </Text>
+                )}
+                {certValidation.status === 'error' && (
+                  <Text size="sm" c="red" data-testid="cert-validation-feedback">
+                    {t('certSign.collab.participant.certInvalid', '✗ {{error}}', { error: certValidation.message })}
+                  </Text>
+                )}
               </>
             )}
 
@@ -243,7 +322,9 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
                 leftSection={<CheckCircleIcon fontSize="small" />}
                 onClick={handleSubmitSignature}
                 loading={isSubmitting}
+                disabled={isSubmitting || certValidation.status === 'validating'}
                 color="green"
+                data-testid="submit-signature-button"
               >
                 Submit Signature
               </Button>
@@ -253,6 +334,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
                 onClick={handleDecline}
                 color="red"
                 variant="light"
+                data-testid="decline-button"
               >
                 Decline
               </Button>
