@@ -45,9 +45,6 @@ select = [
     "PYI",    # flake8-pyi: flags deprecated typing constructs
     "FA",     # flake8-future-annotations: flags missing future annotations imports
 ]
-ignore = [
-    "E501", # Temporarily disable line length limit until codebase conformat
-]
 
 [tool.pyright]
 pythonVersion = "3.13"
