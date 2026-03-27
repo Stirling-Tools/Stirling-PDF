@@ -17,6 +17,7 @@ dependencies = [
     "posthog>=7.8.6",
     "python-dotenv>=1.2.1",
     "beautifulsoup4>=4.12.0",
+    "pydantic-ai>=0.0.54",
 ]
 
 [dependency-groups]

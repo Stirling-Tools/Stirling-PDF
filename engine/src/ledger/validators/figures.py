@@ -1,0 +1,86 @@
+"""
+FigureTracker — cross-page consistency checker for named figures.
+
+Collects named numeric figures as the auditor encounters them (e.g.
+"Total Revenue: £1,200,000") and surfaces any that appear under the same
+label but with a different value on another page — a classic symptom of
+copy-paste errors or stale data in executive summaries.
+
+The tracker is intentionally simple: normalise labels, compare values
+within tolerance, emit Discrepancy for each conflict.
+"""
+
+from __future__ import annotations
+
+import logging
+import re
+from decimal import Decimal
+
+from ..models import Discrepancy, DiscrepancyKind, FigureRecord, Severity
+
+logger = logging.getLogger(__name__)
+
+# Strip punctuation that varies between contexts ("revenue:" vs "revenue —")
+_LABEL_NOISE = re.compile(r"[:\-—\s]+")
+
+
+def _normalise_label(label: str) -> str:
+    return _LABEL_NOISE.sub(" ", label.lower()).strip()
+
+
+class FigureTracker:
+    """
+    Accumulates named figures during an audit and checks them for consistency.
+
+    Typical usage:
+        tracker = FigureTracker()
+        tracker.record("Net Profit", Decimal("1200.00"), page=3, raw="£1,200.00")
+        tracker.record("Net Profit", Decimal("1250.00"), page=7, raw="£1,250.00")
+        discrepancies = tracker.conflicts()  # returns one Discrepancy
+    """
+
+    def __init__(self, tolerance: Decimal = Decimal("0.01")) -> None:
+        self.tolerance = tolerance
+        self._ledger: dict[str, list[FigureRecord]] = {}
+
+    def record(self, label: str, value: Decimal, page: int, raw: str) -> None:
+        """Register a named figure sighting."""
+        key = _normalise_label(label)
+        self._ledger.setdefault(key, []).append(
+            FigureRecord(label=key, value=value, page=page, raw=raw)
+        )
+
+    def conflicts(self) -> list[Discrepancy]:
+        """
+        Return a Discrepancy for every label that has two or more sightings
+        with values that differ by more than tolerance.
+        Pairs are de-duplicated (A vs B reported once, not twice).
+        """
+        discrepancies: list[Discrepancy] = []
+
+        for label, records in self._ledger.items():
+            # Compare all unique pairs.
+            for i in range(len(records)):
+                for j in range(i + 1, len(records)):
+                    a, b = records[i], records[j]
+                    if abs(a.value - b.value) > self.tolerance:
+                        discrepancies.append(
+                            Discrepancy(
+                                page=b.page,  # flag the later occurrence
+                                kind=DiscrepancyKind.CONSISTENCY,
+                                severity=Severity.WARNING,
+                                description=(
+                                    f'"{label}" stated as {a.raw} on page {a.page + 1} '
+                                    f"but {b.raw} on page {b.page + 1}"
+                                ),
+                                stated=b.raw,
+                                expected=a.raw,
+                                context=f'First seen: page {a.page + 1} | Later: page {b.page + 1}',
+                            )
+                        )
+
+        return discrepancies
+
+    @property
+    def entry_count(self) -> int:
+        return sum(len(v) for v in self._ledger.values())

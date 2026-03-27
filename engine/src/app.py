@@ -33,6 +33,7 @@ from config import (
 from document_types import detect_document_type
 from editing import register_edit_routes
 from editing.decisions import answer_conversational_info
+from ledger import register_ledger_routes
 from file_processing_agent import ToolCatalogService
 from html_pdf_utils import compile_html_to_pdf
 from html_utils import inject_theme
@@ -52,6 +53,7 @@ app = Flask(__name__)
 CORS(app)
 _tool_catalog_service = ToolCatalogService()
 register_edit_routes(app)
+register_ledger_routes(app)
 
 
 @app.before_request

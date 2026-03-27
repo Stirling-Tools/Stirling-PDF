@@ -158,6 +158,21 @@ logger.info(f"PostHog analytics enabled: host={POSTHOG_HOST}")
 POSTHOG_CALLBACK = CallbackHandler(client=POSTHOG_CLIENT)
 
 
+def get_pydantic_ai_model_id(model_name: str) -> str:
+    """
+    Convert a Stirling model name (e.g. "claude-sonnet-4-6", "gpt-4o") to the
+    format pydantic-ai expects (e.g. "anthropic:claude-sonnet-4-6", "openai:gpt-4o").
+
+    pydantic-ai uses "<provider>:<model>" strings to select both the provider
+    SDK and the model in a single identifier.
+    """
+    if model_name.startswith("claude"):
+        if not ANTHROPIC_API_KEY:
+            raise RuntimeError("STIRLING_ANTHROPIC_API_KEY is required for Claude models")
+        return f"anthropic:{model_name}"
+    return f"openai:{model_name}"
+
+
 def get_chat_model(
     model_name: str,
     streaming: bool = False,
@@ -231,6 +246,7 @@ __all__ = [
     "JAVA_REQUEST_TIMEOUT_SECONDS",
     "SMART_MODEL",
     "get_chat_model",
+    "get_pydantic_ai_model_id",
     "FAST_MODEL",
     "SMART_MODEL_REASONING_EFFORT",
     "FAST_MODEL_REASONING_EFFORT",
