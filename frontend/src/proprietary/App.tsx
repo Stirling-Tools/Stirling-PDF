@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useParams } from "react-router-dom";
 import { AppProviders } from "@app/components/AppProviders";
 import { AppLayout } from "@app/components/AppLayout";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
@@ -11,6 +11,7 @@ import Signup from "@app/routes/Signup";
 import AuthCallback from "@app/routes/AuthCallback";
 import InviteAccept from "@app/routes/InviteAccept";
 import ShareLinkPage from "@app/routes/ShareLinkPage";
+import ParticipantView from "@app/components/workflow/ParticipantView";
 import MobileScannerPage from "@app/pages/MobileScannerPage";
 import Onboarding from "@app/components/onboarding/Onboarding";
 
@@ -34,6 +35,13 @@ function MobileScannerProviders({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Participant signing page — token-gated, no login required
+function ParticipantViewPage() {
+  const { token } = useParams<{ token: string }>();
+  if (!token) return null;
+  return <ParticipantView token={token} />;
+}
+
 export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
@@ -48,6 +56,16 @@ export default function App() {
           }
         />
 
+        {/* Participant signing — public, token-gated, no auth required */}
+        <Route
+          path="/workflow/sign/:token"
+          element={
+            <MobileScannerProviders>
+              <ParticipantViewPage />
+            </MobileScannerProviders>
+          }
+        />
+
         {/* All other routes need AppProviders for backend integration */}
         <Route
           path="*"
@@ -55,7 +73,6 @@ export default function App() {
             <AppProviders>
               <AppLayout>
                 <Routes>
-                  {/* Auth routes - no nested providers needed */}
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
