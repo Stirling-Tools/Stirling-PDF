@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Stack,
   Card,
@@ -23,6 +24,7 @@ interface ParticipantViewProps {
 }
 
 const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
+  const { t } = useTranslation();
   const { session, participant, loading, error, submitSignature, decline, downloadDocument } =
     useParticipantSession(token);
 
@@ -76,10 +78,10 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
         if (data.valid) {
           setCertValidation({ status: 'valid', notAfter: data.notAfter, subjectName: data.subjectName });
         } else {
-          setCertValidation({ status: 'error', message: data.error ?? 'Invalid certificate' });
+          setCertValidation({ status: 'error', message: data.error ?? t('certSign.collab.participant.certInvalidFallback', 'Invalid certificate') });
         }
       } catch {
-        setCertValidation({ status: 'error', message: 'Could not validate certificate' });
+        setCertValidation({ status: 'error', message: t('certSign.collab.participant.certNetworkError', 'Could not validate certificate') });
       }
     }, 600);
 
@@ -267,19 +269,25 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
 
                 {/* Certificate validation feedback */}
                 {certValidation.status === 'validating' && (
-                  <Text size="sm" c="dimmed" data-testid="cert-validation-feedback">Validating certificate...</Text>
+                  <Text size="sm" c="dimmed" data-testid="cert-validation-feedback">
+                    {t('certSign.collab.participant.certValidating', 'Validating certificate...')}
+                  </Text>
                 )}
                 {certValidation.status === 'valid' && (
                   <Text size="sm" c="green" data-testid="cert-validation-feedback">
-                    ✓ Certificate valid
+                    {t('certSign.collab.participant.certValid', '✓ Certificate valid')}
                     {certValidation.notAfter
-                      ? ` until ${new Date(certValidation.notAfter).toLocaleDateString()}`
+                      ? t('certSign.collab.participant.certValidUntil', ' until {{date}}', {
+                          date: new Date(certValidation.notAfter).toLocaleDateString(),
+                        })
                       : ''}
                     {certValidation.subjectName ? ` · ${certValidation.subjectName}` : ''}
                   </Text>
                 )}
                 {certValidation.status === 'error' && (
-                  <Text size="sm" c="red" data-testid="cert-validation-feedback">✗ {certValidation.message}</Text>
+                  <Text size="sm" c="red" data-testid="cert-validation-feedback">
+                    {t('certSign.collab.participant.certInvalid', '✗ {{error}}', { error: certValidation.message })}
+                  </Text>
                 )}
               </>
             )}

@@ -2320,7 +2320,17 @@ sign = "Sign Document"
 certValidating = "Validating certificate..."
 certValidUntil = "Certificate valid until {{date}}"
 certInvalid = "Certificate invalid: {{error}}"
+certInvalidFallback = "Invalid certificate"
+certNetworkError = "Could not validate certificate"
 title = "Configure Certificate"
+
+[certSign.collab.participant]
+certValidating = "Validating certificate..."
+certValid = "✓ Certificate valid"
+certValidUntil = " until {{date}}"
+certInvalid = "✗ {{error}}"
+certInvalidFallback = "Invalid certificate"
+certNetworkError = "Could not validate certificate"
 
 [certSign.collab.signRequest.image]
 hint = "Upload a PNG or JPG image of your signature"

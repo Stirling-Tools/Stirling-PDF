@@ -102,10 +102,10 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
             notAfter: response.data.notAfter,
           });
         } else {
-          setCertValidation({ status: 'error', message: response.data.error ?? 'Invalid certificate' });
+          setCertValidation({ status: 'error', message: response.data.error ?? t('certSign.collab.signRequest.certModal.certInvalidFallback', 'Invalid certificate') });
         }
       } catch {
-        setCertValidation({ status: 'error', message: 'Could not validate certificate' });
+        setCertValidation({ status: 'error', message: t('certSign.collab.signRequest.certModal.certNetworkError', 'Could not validate certificate') });
       }
     }, 600);
 
