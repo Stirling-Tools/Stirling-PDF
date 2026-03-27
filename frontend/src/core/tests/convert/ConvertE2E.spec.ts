@@ -94,7 +94,7 @@ async function selectConvertFormats(page: Page, fromValue: string, toValue: stri
 test.describe('Convert Tool', () => {
   test.beforeEach(async ({ page }) => {
     await mockAppApis(page);
-    await page.goto('/');
+    await page.goto('/?bypassOnboarding=true');
     await page.waitForSelector('[data-testid="files-button"]', { timeout: 10000 });
   });
 
