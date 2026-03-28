@@ -162,7 +162,6 @@ export class ConnectionModeService {
     await invoke('set_connection_mode', {
       mode: 'saas',
       serverConfig: null,
-      lockConnectionMode: false,
     });
 
     this.currentConfig = { mode: 'local', server_config: null, lock_connection_mode: this.currentConfig?.lock_connection_mode ?? false };
