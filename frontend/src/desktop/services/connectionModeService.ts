@@ -165,7 +165,7 @@ export class ConnectionModeService {
       lockConnectionMode: false,
     });
 
-    this.currentConfig = { mode: 'local', server_config: null, lock_connection_mode: false };
+    this.currentConfig = { mode: 'local', server_config: null, lock_connection_mode: this.currentConfig?.lock_connection_mode ?? false };
 
     // Clear endpoint availability cache when mode changes
     endpointAvailabilityService.clearCache();
