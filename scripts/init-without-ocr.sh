@@ -294,10 +294,14 @@ start_unoserver_watchdog() {
 
         if [ "$needs_restart" = true ]; then
           log "Restarting unoserver on 127.0.0.1:${port} (uno-port ${uno_port})"
-          # Kill the old process if it exists
+          # Kill the old process and its children (soffice) if it exists.
+          # Kill children first while the parent is still alive so the PPID
+          # relationship is visible in the process table.
           if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+            pkill -TERM -P "$pid" 2>/dev/null || true
             kill -TERM "$pid" 2>/dev/null || true
-            sleep 1
+            sleep 3
+            pkill -KILL -P "$pid" 2>/dev/null || true
             kill -KILL "$pid" 2>/dev/null || true
           fi
           start_unoserver_instance "$port" "$uno_port"
