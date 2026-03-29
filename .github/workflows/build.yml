@@ -389,6 +389,7 @@ jobs:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+          DOCKER_BASE_CHANGED: ${{ needs.files-changed.outputs.docker-base }}
 
       - name: Upload Cucumber Report
         if: always()

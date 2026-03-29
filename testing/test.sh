@@ -220,44 +220,24 @@ generate_gha_summary() {
     echo "GitHub Actions job summary written."
 }
 
-# Base image version - must be provided or read from environment
-# This is a testing-specific version; production should pass explicit BASE_VERSION
-if [ -z "$BASE_VERSION" ]; then
-    # For CI/automation: use a unique test identifier
-    if [ -n "${GITHUB_RUN_ID}" ]; then
-        BASE_VERSION="test-${GITHUB_RUN_ID}"
+prepare_base_image() {
+    if [ "${DOCKER_BASE_CHANGED:-false}" = "true" ]; then
+        echo "Docker base files changed — building base image locally..."
+        gha_group "Build: Base image (local)"
+        if docker build -f "$PROJECT_ROOT/docker/base/Dockerfile" \
+            -t stirling-pdf-base:local \
+            "$PROJECT_ROOT/docker/base"; then
+            echo "✓ Built base image locally: stirling-pdf-base:local"
+            BASE_IMAGE_ARG="--build-arg BASE_IMAGE=stirling-pdf-base:local"
+        else
+            echo "ERROR: Failed to build base image"
+            gha_endgroup
+            return 1
+        fi
+        gha_endgroup
     else
-        # For local testing: generate unique identifier
-        BASE_VERSION="test-local-$(date +%s)"
-    fi
-fi
-BASE_IMAGE="ghcr.io/stirling-tools/stirling-pdf-base:${BASE_VERSION}"
-
-# Function to ensure base image exists (build if missing)
-ensure_base_image() {
-    echo "Checking for base image: $BASE_IMAGE"
-
-    if docker image inspect "$BASE_IMAGE" >/dev/null 2>&1; then
-        echo "✓ Base image found locally: $BASE_IMAGE"
-        return 0
-    fi
-
-    echo "Base image not found. Attempting to pull from registry..."
-    if docker pull "$BASE_IMAGE" 2>/dev/null; then
-        echo "✓ Pulled base image from registry: $BASE_IMAGE"
-        return 0
-    fi
-
-    echo "Base image not available in registry. Building from source..."
-    if docker build -f "$PROJECT_ROOT/docker/base/Dockerfile" \
-        -t "$BASE_IMAGE" \
-        --build-arg BASE_VERSION="$BASE_VERSION" \
-        "$PROJECT_ROOT/docker/base"; then
-        echo "✓ Built base image: $BASE_IMAGE"
-        return 0
-    else
-        echo "ERROR: Failed to build base image"
-        return 1
+        echo "Docker base unchanged — using published base image from Dockerfile defaults"
+        BASE_IMAGE_ARG=""
     fi
 }
 
@@ -634,11 +614,10 @@ main() {
 
     trap finalize_reports EXIT
 
-    # Ensure base image exists before running tests
     echo "=========================================="
     echo "Preparing Docker base image..."
     echo "=========================================="
-    ensure_base_image || exit 1
+    prepare_base_image || exit 1
     echo ""
 
     # Parse command line arguments
@@ -794,6 +773,7 @@ main() {
             DOCKER_CACHE_ARGS_FAT=""
         fi
         if ! docker buildx build --build-arg VERSION_TAG=alpha \
+            ${BASE_IMAGE_ARG} \
             -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat \
             -f ./docker/embedded/Dockerfile.fat \
             --load \
