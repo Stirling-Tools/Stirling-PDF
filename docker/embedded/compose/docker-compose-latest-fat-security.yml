@@ -1,7 +1,13 @@
 services:
   stirling-pdf:
     container_name: Stirling-PDF-Security-Fat
+    build:
+      context: ../../..
+      dockerfile: docker/embedded/Dockerfile.fat
     image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat
+    build:
+      context: ../../../
+      dockerfile: docker/embedded/Dockerfile
     deploy:
       resources:
         limits:
@@ -33,4 +39,5 @@ services:
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
       SHOW_SURVEY: "true"
+      STORAGE_LOCAL_BASEPATH: /configs/storage
     restart: unless-stopped

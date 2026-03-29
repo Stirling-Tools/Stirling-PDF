@@ -133,7 +133,12 @@ const createTextStampImage = (
   };
 };
 
-export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPIBridge(_, ref) {
+interface SignatureAPIBridgeProps {
+  /** When true (sign tool context), the general ink/pen annotation tool is blocked. */
+  isSignMode?: boolean;
+}
+
+export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgeProps>(function SignatureAPIBridge({ isSignMode = false }, ref) {
   const { provides: annotationApi } = useAnnotationCapability();
   const { signatureConfig, storeImageData, isPlacementMode, placementPreviewSize, setSignaturesApplied } = useSignature();
   const { getZoomState, registerImmediateZoomUpdate } = useViewer();
@@ -150,6 +155,14 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
       unregister?.();
     };
   }, [getZoomState, registerImmediateZoomUpdate]);
+
+  // When entering sign mode, deactivate any active annotation tool immediately.
+  // Only signature-specific tools (signatureInk, stamp) should be usable.
+  useEffect(() => {
+    if (isSignMode && annotationApi && documentReady) {
+      annotationApi.setActiveTool(null);
+    }
+  }, [isSignMode, annotationApi, documentReady]);
 
   const cssToPdfSize = useCallback(
     (size: { width: number; height: number }) => {
@@ -302,13 +315,12 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
     activateDrawMode: () => {
       if (!annotationApi) return;
 
-      // Activate the built-in ink tool for drawing
-      annotationApi.setActiveTool('ink');
+      // Use signatureInk (not ink) so the annotation pen tool stays unaffected
+      annotationApi.setActiveTool('signatureInk');
 
-      // Set default ink tool properties (black color, 2px width)
       const activeTool = annotationApi.getActiveTool();
-      if (activeTool && activeTool.id === 'ink') {
-        annotationApi.setToolDefaults('ink', {
+      if (activeTool && activeTool.id === 'signatureInk') {
+        annotationApi.setToolDefaults('signatureInk', {
           color: '#000000',
           thickness: 2,
           lineWidth: 2,
@@ -338,11 +350,16 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI>(function SignatureAPI
         width: size
       });
 
-      // Force reactivate ink tool to ensure new settings take effect
-      annotationApi.setActiveTool(null); // Deactivate first
-      setTimeout(() => {
-        annotationApi.setActiveTool('ink'); // Reactivate with new settings
-      }, 50);
+      // Only reactivate ink if it was already the active tool — never auto-activate it.
+      // This prevents the ink (pen annotation) tool from being activated when
+      // updateDrawSettings is called on sign-tool mount.
+      const currentTool = annotationApi.getActiveTool();
+      if (currentTool?.id === 'ink') {
+        annotationApi.setActiveTool(null);
+        setTimeout(() => {
+          annotationApi.setActiveTool('ink');
+        }, 50);
+      }
     },
 
     activateDeleteMode: () => {

@@ -26,7 +26,7 @@ export function useViewerWorkbenchBarButtons(
 ) {
   const { t, i18n } = useTranslation();
   const viewer = useViewer();
-  const { isThumbnailSidebarVisible, isBookmarkSidebarVisible, isAttachmentSidebarVisible, isSearchInterfaceVisible, registerImmediatePanUpdate } = viewer;
+  const { isThumbnailSidebarVisible, isBookmarkSidebarVisible, isAttachmentSidebarVisible, isCommentsSidebarVisible, toggleCommentsSidebar, isSearchInterfaceVisible, registerImmediatePanUpdate } = viewer;
   const [isPanning, setIsPanning] = useState<boolean>(() => viewer.getPanState()?.isPanning ?? false);
   const { sidebarRefs } = useSidebarContext();
   const { position: tooltipPosition } = useWorkbenchBarTooltipSide(sidebarRefs, 12);
@@ -63,10 +63,8 @@ export function useViewerWorkbenchBarButtons(
     if (selectedTool === 'annotate') {
       setIsAnnotationsActive(true);
     } else if (selectedTool) {
-      // Any other tool is active — annotate button should not be highlighted
       setIsAnnotationsActive(false);
     } else {
-      // No tool selected — fall back to URL path check
       setIsAnnotationsActive(isAnnotationsPath());
     }
   }, [selectedTool, isAnnotationsPath]);
@@ -85,6 +83,7 @@ export function useViewerWorkbenchBarButtons(
   const sidebarLabel = t('rightRail.toggleSidebar', 'Toggle Sidebar');
   const bookmarkLabel = t('rightRail.toggleBookmarks', 'Toggle Bookmarks');
   const attachmentLabel = t('rightRail.toggleAttachments', 'Toggle Attachments');
+  const commentsLabel = t('rightRail.toggleComments', 'Comments');
   const printLabel = t('rightRail.print', 'Print PDF');
   const annotationsLabel = t('rightRail.annotations', 'Annotations');
   const formFillLabel = t('rightRail.formFill', 'Fill Form');
@@ -239,12 +238,24 @@ export function useViewerWorkbenchBarButtons(
         }
       },
       {
+        id: 'viewer-toggle-comments',
+        icon: <LocalIcon icon="comment" width="1.5rem" height="1.5rem" />,
+        tooltip: commentsLabel,
+        ariaLabel: commentsLabel,
+        section: 'top' as const,
+        order: 56.5,
+        active: isCommentsSidebarVisible,
+        onClick: () => {
+          toggleCommentsSidebar();
+        }
+      },
+      {
         id: 'viewer-print',
         icon: <LocalIcon icon="print" width="1.5rem" height="1.5rem" />,
         tooltip: printLabel,
         ariaLabel: printLabel,
         section: 'top' as const,
-        order: 56,
+        order: 57,
         onClick: () => {
           viewer.printActions.print();
         }

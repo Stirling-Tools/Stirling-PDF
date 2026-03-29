@@ -77,6 +77,7 @@ export const TOOL_CREDIT_COSTS: Record<ToolId, number> = {
   convert: CREDIT_COSTS.LARGE,
   ocr: CREDIT_COSTS.LARGE,
   certSign: CREDIT_COSTS.LARGE,
+  timestampPdf: CREDIT_COSTS.LARGE,
 
   // Extra large operations (10 credits)
   automate: CREDIT_COSTS.XLARGE,

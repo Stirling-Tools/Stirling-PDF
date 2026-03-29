@@ -99,6 +99,7 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
                   {onFileRemove && (
                     <Tooltip label="Close file" withArrow>
                       <ActionIcon
+                        component="div"
                         size="xs"
                         variant="subtle"
                         color="red"

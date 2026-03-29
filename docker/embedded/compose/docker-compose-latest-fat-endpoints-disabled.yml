@@ -2,7 +2,13 @@
 services:
   stirling-pdf:
     container_name: Stirling-PDF-Fat-Disable-Endpoints
+    build:
+      context: ../../..
+      dockerfile: docker/embedded/Dockerfile.fat
     image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat
+    build:
+      context: ../../../
+      dockerfile: docker/embedded/Dockerfile.fat
     deploy:
       resources:
         limits:

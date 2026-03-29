@@ -897,6 +897,31 @@
   box-shadow: 0 0 0 0.5px var(--pdf-selection-ring);
 }
 
+/* Flash highlight for comment card (e.g. "View comment" from annotation menu) */
+@keyframes comment-card-flash {
+  0% {
+    background-color: rgba(255, 235, 59, 0);
+    box-shadow: none;
+  }
+  20% {
+    background-color: rgba(255, 235, 59, 0.35);
+    box-shadow: 0 0 20px rgba(255, 235, 59, 0.5);
+  }
+  50% {
+    background-color: rgba(255, 235, 59, 0.25);
+    box-shadow: 0 0 15px rgba(255, 235, 59, 0.4);
+  }
+  100% {
+    background-color: rgba(255, 235, 59, 0);
+    box-shadow: none;
+  }
+}
+
+.comment-card-flash-highlight {
+  animation: comment-card-flash 1.5s ease-out;
+  border-radius: 8px;
+}
+
 /* Smooth transitions for theme switching */
 * {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;

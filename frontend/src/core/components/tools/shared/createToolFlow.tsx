@@ -10,6 +10,7 @@ import type { TooltipTip } from '@app/types/tips';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
 import { useAllFiles } from '@app/contexts/file/fileHooks';
+import type { ExecuteDisabledReason } from '@app/hooks/tools/shared/toolOperationTypes';
 
 export interface FilesStepConfig {
   selectedFiles: StirlingFile[];
@@ -40,6 +41,23 @@ export interface ExecuteButtonConfig {
   loadingText: string;
   onClick: () => Promise<void>;
   isVisible?: boolean;
+  /**
+   * Pass the raw endpoint-enabled flag from useEndpointEnabled / useBaseTool.
+   * createToolFlow derives the correct disabled reason automatically.
+   * Priority: endpointUnavailable > noFiles > invalidParams
+   */
+  endpointEnabled?: boolean | null;
+  /**
+   * Pass the result of params.validateParameters().
+   * createToolFlow uses this to show the 'invalidParams' disabled reason.
+   */
+  paramsValid?: boolean;
+  /**
+   * Explicit disabled reason override — use when the automatic computation
+   * from endpointEnabled + paramsValid is insufficient.
+   */
+  disabledReason?: ExecuteDisabledReason;
+  /** Raw override for tools with fully custom disable logic (e.g. Compare, ShowJS). */
   disabled?: boolean;
   testId?: string;
   showCloudBadge?: boolean;
@@ -125,25 +143,37 @@ function CreateToolFlowInner<TParams = unknown>(props: { config: ToolFlowConfig<
         {!config.review.isVisible && (config.files.selectedFiles?.length ?? 0) > 0 && config.preview}
 
         {/* Execute Button + maxFiles message */}
-        {config.executeButton && config.executeButton.isVisible !== false && (
-          <>
-            {tooManyFiles && (
-              <Text size="sm" c="orange">
-                {t('toolFlow.tooManyFiles', 'This tool only takes a max of {{max}} files', { max: maxFiles })}
-              </Text>
-            )}
-            <OperationButton
-              onClick={config.executeButton.onClick}
-              isLoading={config.review.operation.isLoading}
-              disabled={config.executeButton.disabled || tooManyFiles}
-              loadingText={config.executeButton.loadingText}
-              submitText={config.executeButton.text}
-              showCloudBadge={config.executeButton.showCloudBadge ?? config.review.operation.willUseCloud ?? false}
-              data-testid={config.executeButton.testId}
-              data-tour="run-button"
-            />
-          </>
-        )}
+        {config.executeButton && config.executeButton.isVisible !== false && (() => {
+          const eb = config.executeButton;
+          const hasFiles = (config.files.selectedFiles?.length ?? 0) > 0;
+          // Compute the disabled reason from structured fields; explicit disabledReason wins if set.
+          const effectiveDisabledReason: ExecuteDisabledReason =
+            eb.disabledReason !== undefined ? eb.disabledReason
+            : eb.endpointEnabled === false  ? 'endpointUnavailable'
+            : !hasFiles                     ? 'noFiles'
+            : eb.paramsValid === false       ? 'invalidParams'
+            : null;
+          return (
+            <>
+              {tooManyFiles && (
+                <Text size="sm" c="orange">
+                  {t('toolFlow.tooManyFiles', 'This tool only takes a max of {{max}} files', { max: maxFiles })}
+                </Text>
+              )}
+              <OperationButton
+                onClick={eb.onClick}
+                isLoading={config.review.operation.isLoading}
+                disabled={eb.disabled || tooManyFiles}
+                disabledReason={effectiveDisabledReason}
+                loadingText={eb.loadingText}
+                submitText={eb.text}
+                showCloudBadge={eb.showCloudBadge ?? config.review.operation.willUseCloud ?? false}
+                data-testid={eb.testId}
+                data-tour="run-button"
+              />
+            </>
+          );
+        })()}
 
         {/* Review Step */}
         {steps.createReviewStep({

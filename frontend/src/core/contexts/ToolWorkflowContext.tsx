@@ -32,6 +32,8 @@ export interface CustomWorkbenchViewRegistration {
   label: string;
   icon?: React.ReactNode;
   component: React.ComponentType<{ data: any }>;
+  hideTopControls?: boolean;
+  hideToolPanel?: boolean;
 }
 
 export interface CustomWorkbenchViewInstance extends CustomWorkbenchViewRegistration {
@@ -66,6 +68,10 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
 
   // Workflow Actions (compound actions)
   handleToolSelect: (toolId: ToolId) => void;
+  /** Like handleToolSelect but bypasses the availability guard — use when you want to
+   *  navigate to a tool's UI even if it's marked unavailable (e.g. to show a disabled
+   *  execute button with a sign-in prompt rather than blocking navigation entirely). */
+  handleToolSelectForced: (toolId: ToolId) => void;
   handleBackToTools: () => void;
   handleReaderToggle: () => void;
 
@@ -197,8 +203,14 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     }
   }, [actions, navigationState.workbench]);
 
-  const setCustomWorkbenchViewData = useCallback((id: string, data: any) => {
-    setCustomViewData(prev => ({ ...prev, [id]: data }));
+  const setCustomWorkbenchViewData = useCallback((id: string, dataOrUpdater: any | ((prev: any) => any)) => {
+    setCustomViewData(prev => {
+      const currentData = prev[id];
+      const newData = typeof dataOrUpdater === 'function'
+        ? dataOrUpdater(currentData)
+        : dataOrUpdater;
+      return { ...prev, [id]: newData };
+    });
   }, []);
 
   const clearCustomWorkbenchViewData = useCallback((id: string) => {
@@ -321,6 +333,23 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     setReaderMode(false); // Disable read mode when selecting tools
   }, [actions, getSelectedTool, navigationState.workbench, navigationState.hasUnsavedChanges, navigationState.selectedTool, setLeftPanelView, setReaderMode, setSearchQuery, toolAvailability]);
 
+  const handleToolSelectForced = useCallback((toolId: ToolId) => {
+    const validToolId = isValidToolId(toolId) ? toolId : null;
+    actions.setSelectedTool(validToolId);
+    const tool = getSelectedTool(toolId);
+    const wasInCustomWorkbench = !isBaseWorkbench(navigationState.workbench);
+    if (wasInCustomWorkbench) {
+      actions.setWorkbench(getDefaultWorkbench());
+    } else if (tool && tool.workbench) {
+      actions.setWorkbench(tool.workbench);
+    } else {
+      actions.setWorkbench(getDefaultWorkbench());
+    }
+    setSearchQuery('');
+    setLeftPanelView('toolContent');
+    setReaderMode(false);
+  }, [actions, getSelectedTool, navigationState.workbench, setLeftPanelView, setReaderMode, setSearchQuery]);
+
   const handleBackToTools = useCallback(() => {
     setLeftPanelView('toolPicker');
     setReaderMode(false);
@@ -378,6 +407,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
     // Workflow Actions
     handleToolSelect,
+    handleToolSelectForced,
     handleBackToTools,
     handleReaderToggle,
 

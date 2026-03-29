@@ -1,5 +1,4 @@
 import { connectionModeService } from '@app/services/connectionModeService';
-import { STIRLING_SAAS_URL } from '@app/constants/connection';
 
 type SignOutFn = () => Promise<void>;
 
@@ -17,13 +16,16 @@ export function useAccountLogout() {
       await signOut();
 
       const currentConfig = await connectionModeService.getCurrentConfig();
-      if (!currentConfig.lock_connection_mode) {
-        await connectionModeService.switchToSaaS(STIRLING_SAAS_URL);
-        await connectionModeService.resetSetupCompletion().catch(() => {});
+      // Save server URL before clearing so user can easily reconnect (self-hosted only)
+      if (currentConfig.mode === 'selfhosted' && currentConfig.server_config?.url) {
+        localStorage.setItem('server_url', currentConfig.server_config.url);
       }
+      // Always switch to local after logout so the app remains usable
+      await connectionModeService.switchToLocal();
 
       window.history.replaceState({}, '', '/');
-      window.location.reload();
+      // No reload needed — AppProviders remounts the SaaS provider tree via
+      // connectionModeService subscription when mode changes to local.
       return;
     } catch (err) {
       console.warn('[Desktop AccountLogout] Desktop-specific logout failed, falling back to redirect', err);
