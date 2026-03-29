@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chocolatey package manifest for Stirling PDF Server (headless JAR) -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>stirling-pdf-server</id>
+    <version>2.8.0</version>
+    <packageSourceUrl>https://github.com/Stirling-Tools/Stirling-PDF</packageSourceUrl>
+    <owners>Stirling PDF Inc</owners>
+
+    <title>Stirling PDF Server</title>
+    <authors>Stirling PDF Inc</authors>
+    <projectUrl>https://stirlingpdf.com</projectUrl>
+    <!-- Contact: contact@stirlingpdf.com -->
+    <iconUrl>https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/docs/stirling.png</iconUrl>
+    <licenseUrl>https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LICENSE</licenseUrl>
+    <copyright>Copyright (c) 2025 Stirling PDF Inc</copyright>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/Stirling-Tools/Stirling-PDF</projectSourceUrl>
+    <bugTrackerUrl>https://github.com/Stirling-Tools/Stirling-PDF/issues</bugTrackerUrl>
+    <tags>pdf server headless java spring-boot document convert merge split</tags>
+    <summary>Stirling PDF headless server — runs as a Windows service on port 8080</summary>
+    <description>
+Stirling PDF Server runs the Stirling PDF Spring Boot backend as a Windows
+service, exposing the full web UI and REST API on http://localhost:8080.
+
+All processing happens locally on your machine — no data is sent to any server.
+
+**What is installed:**
+- The Stirling-PDF Spring Boot JAR to `C:\ProgramData\StirlingPDF\`
+- A Windows service (`StirlingPDFServer`) managed via NSSM
+- A bundled Temurin JRE 21 (no separate Java installation required)
+- Log output to `C:\ProgramData\StirlingPDF\logs\`
+
+For the full desktop GUI application use the `stirling-pdf` package instead.
+    </description>
+    <releaseNotes>https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v2.8.0</releaseNotes>
+
+    <dependencies>
+      <dependency id="nssm" version="2.24.101.20180116" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

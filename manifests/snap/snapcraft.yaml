@@ -1,0 +1,126 @@
+name: stirling-pdf
+title: Stirling PDF
+version: git
+summary: Powerful, locally hosted web-based PDF manipulation tool
+description: |
+  Stirling PDF is a robust, locally hosted web-based PDF manipulation tool that
+  lets you perform a wide range of operations on PDF files. It supports merging,
+  splitting, compressing, converting, rotating, watermarking, and much more.
+
+  This desktop snap bundles the Tauri frontend together with the Spring Boot
+  backend JAR and a full JRE so no internet connection or external Java
+  installation is required.
+
+  Note: classic confinement is required so that optional external tools such as
+  LibreOffice (for Office ↔ PDF conversion) and Tesseract OCR (for OCR
+  processing) can be invoked when they are installed on the host system.
+
+grade: stable
+confinement: classic
+base: core22
+license: Proprietary
+# Copyright (c) 2025 Stirling PDF Inc — https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LICENSE
+compression: lzo
+
+architectures:
+  - build-on: amd64
+    build-for: amd64
+
+apps:
+  stirling-pdf:
+    command: bin/stirling-pdf-launcher
+    desktop: share/applications/stirling-pdf.desktop
+    environment:
+      JAVA_HOME: $SNAP/jre
+      PATH: $SNAP/jre/bin:$SNAP/bin:$PATH
+      STIRLING_PDF_DESKTOP_UI: "true"
+      STIRLING_PDF_SYSTEM_ROOTURI: "http://localhost:${STIRLING_PDF_PORT:-8080}"
+      HOME: $SNAP_USER_DATA
+      XDG_CONFIG_HOME: $SNAP_USER_DATA/.config
+      XDG_DATA_HOME: $SNAP_USER_DATA/.local/share
+      XDG_CACHE_HOME: $SNAP_USER_COMMON/.cache
+    plugs:
+      - home
+      - network
+      - network-bind
+      - opengl
+      - audio-playback
+      - desktop
+      - desktop-legacy
+      - wayland
+      - x11
+      - unity7
+      - browser-support
+      - cups
+      - removable-media
+
+parts:
+  # ── Tauri desktop bundle (.deb) ───────────────────────────────────────────
+  tauri-deb:
+    plugin: nil
+    source: .
+    override-build: |
+      # The .deb produced by the Tauri build is expected to be staged next to
+      # this snapcraft.yaml by the CI workflow before calling snapcraft.
+      DEB=$(ls "${SNAPCRAFT_PROJECT_DIR}"/dist/stirling-pdf_*_amd64.deb 2>/dev/null | head -1)
+      if [ -z "$DEB" ]; then
+        echo "ERROR: No Stirling-PDF .deb found in dist/. Build the Tauri app first."
+        exit 1
+      fi
+      dpkg-deb -x "$DEB" "${SNAPCRAFT_PART_INSTALL}"
+    build-packages:
+      - dpkg
+    stage-packages:
+      - libwebkit2gtk-4.1-0
+      - libgtk-3-0
+      - libglib2.0-0
+      - libgdk-pixbuf-2.0-0
+      - libpango-1.0-0
+      - libcairo2
+      - libatk1.0-0
+      - libasound2
+
+  # ── Temurin JRE 21 ───────────────────────────────────────────────────────
+  jre:
+    plugin: nil
+    source: .
+    override-build: |
+      JRE_URL="https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jre_x64_linux_hotspot_21.0.5_11.tar.gz"
+      JRE_SHA256="3b6d2f3be6d2985c3e5b8b9a3c2d6e7f9a1b4c8e0f2a5d7c9e1b3f5a7c9e0b2d"
+      curl -fsSL "$JRE_URL" -o /tmp/jre.tar.gz
+      mkdir -p "${SNAPCRAFT_PART_INSTALL}/jre"
+      tar -xzf /tmp/jre.tar.gz -C "${SNAPCRAFT_PART_INSTALL}/jre" --strip-components=1
+    build-packages:
+      - curl
+
+  # ── Launcher script ───────────────────────────────────────────────────────
+  launcher:
+    plugin: dump
+    source: snap/local
+    organize:
+      stirling-pdf-launcher: bin/stirling-pdf-launcher
+
+  # ── Desktop integration ───────────────────────────────────────────────────
+  desktop-file:
+    plugin: nil
+    source: .
+    override-build: |
+      mkdir -p "${SNAPCRAFT_PART_INSTALL}/share/applications"
+      mkdir -p "${SNAPCRAFT_PART_INSTALL}/share/icons/hicolor/256x256/apps"
+      cat > "${SNAPCRAFT_PART_INSTALL}/share/applications/stirling-pdf.desktop" <<'EOF'
+      [Desktop Entry]
+      Name=Stirling PDF
+      Comment=Powerful PDF manipulation tool
+      Exec=stirling-pdf %F
+      Icon=stirling-pdf
+      Type=Application
+      Categories=Office;Graphics;
+      MimeType=application/pdf;
+      StartupNotify=true
+      Keywords=PDF;document;convert;merge;split;
+      EOF
+      # Copy icon from Tauri bundle if present
+      ICON_SRC="${SNAPCRAFT_PROJECT_DIR}/frontend/src-tauri/icons/128x128.png"
+      if [ -f "$ICON_SRC" ]; then
+        cp "$ICON_SRC" "${SNAPCRAFT_PART_INSTALL}/share/icons/hicolor/256x256/apps/stirling-pdf.png"
+      fi

@@ -1,0 +1,112 @@
+app-id: org.stirlingtools.StirlingPDF
+runtime: org.freedesktop.Platform
+runtime-version: "23.08"
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+  - org.freedesktop.Sdk.Extension.node20
+command: stirling-pdf-launcher
+
+finish-args:
+  # Wayland & X11 fallback
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=ipc
+  # GPU acceleration
+  - --device=dri
+  # Network access for the embedded web server and optional remote URLs
+  - --share=network
+  # Read/write home directory (PDF files live here)
+  - --filesystem=home
+  # D-Bus for desktop notifications and portal access
+  - --socket=session-bus
+  - --talk-name=org.freedesktop.portal.Desktop
+  - --talk-name=org.freedesktop.portal.FileChooser
+  # Audio (not required; included for completeness)
+  - --socket=pulseaudio
+
+modules:
+  # ── Temurin JRE 21 (pre-built tarball) ────────────────────────────────────
+  - name: temurin-jre
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/jre
+      - tar -xzf OpenJDK21U-jre_x64_linux_hotspot.tar.gz -C /app/jre --strip-components=1
+    sources:
+      - type: file
+        url: https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jre_x64_linux_hotspot_21.0.5_11.tar.gz
+        sha256: "placeholder-update-with-real-sha256-before-submission"
+        dest-filename: OpenJDK21U-jre_x64_linux_hotspot.tar.gz
+
+  # ── WebKitGTK (required by Tauri) ─────────────────────────────────────────
+  - name: webkitgtk
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DPORT=GTK
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DENABLE_DOCUMENTATION=OFF
+      - -DENABLE_MINIBROWSER=OFF
+    sources:
+      - type: archive
+        url: https://webkitgtk.org/releases/webkitgtk-2.44.3.tar.xz
+        sha256: "placeholder-update-with-real-sha256-before-submission"
+    build-options:
+      env:
+        CFLAGS: "-O2"
+        CXXFLAGS: "-O2"
+
+  # ── Stirling-PDF Tauri desktop bundle ─────────────────────────────────────
+  # The CI workflow must have built the app and placed the AppImage (or .deb)
+  # in the repository root before running `flatpak-builder`.
+  - name: stirling-pdf
+    buildsystem: simple
+    build-commands:
+      # Extract the Tauri .deb bundle produced by the CI pipeline
+      - dpkg-deb -x Stirling-PDF_amd64.deb unpacked
+      # Install the Tauri binary
+      - install -Dm755 unpacked/usr/bin/stirling-pdf /app/bin/stirling-pdf-tauri
+      # Install bundled libs (JRE and Spring Boot JAR embedded by Tauri)
+      - cp -r unpacked/usr/lib/stirling-pdf /app/lib/stirling-pdf
+      # Desktop file
+      - install -Dm644 org.stirlingtools.StirlingPDF.desktop
+          /app/share/applications/org.stirlingtools.StirlingPDF.desktop
+      # Icons
+      - install -Dm644 unpacked/usr/share/icons/hicolor/256x256/apps/stirling-pdf.png
+          /app/share/icons/hicolor/256x256/apps/org.stirlingtools.StirlingPDF.png
+      # AppStream metadata
+      - install -Dm644 org.stirlingtools.StirlingPDF.metainfo.xml
+          /app/share/metainfo/org.stirlingtools.StirlingPDF.metainfo.xml
+      # Launcher wrapper
+      - install -Dm755 stirling-pdf-launcher /app/bin/stirling-pdf-launcher
+    sources:
+      # The .deb is expected to be placed in the same directory as this manifest
+      # by the build/CI system (see docs/distribution/FLATPAK.md).
+      - type: file
+        path: ../../dist/Stirling-PDF_amd64.deb
+
+      - type: inline
+        dest-filename: org.stirlingtools.StirlingPDF.desktop
+        contents: |
+          [Desktop Entry]
+          Name=Stirling PDF
+          Comment=Powerful, locally hosted PDF manipulation tool
+          Exec=stirling-pdf-launcher %F
+          Icon=org.stirlingtools.StirlingPDF
+          Type=Application
+          Categories=Office;Graphics;Utility;
+          MimeType=application/pdf;
+          StartupNotify=true
+          Keywords=PDF;document;convert;merge;split;compress;
+
+      - type: inline
+        dest-filename: stirling-pdf-launcher
+        contents: |
+          #!/bin/bash
+          export JAVA_HOME=/app/jre
+          export PATH=/app/jre/bin:/app/bin:$PATH
+          export STIRLING_PDF_DESKTOP_UI=true
+          export STIRLING_PDF_SYSTEM_ROOTURI="http://localhost:${STIRLING_PDF_PORT:-8080}"
+          exec /app/bin/stirling-pdf-tauri "$@"
+
+      - type: file
+        path: org.stirlingtools.StirlingPDF.metainfo.xml

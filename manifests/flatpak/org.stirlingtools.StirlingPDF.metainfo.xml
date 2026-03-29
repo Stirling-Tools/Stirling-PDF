@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AppStream / Flathub metainfo for Stirling PDF -->
+<!-- https://www.freedesktop.org/software/appstream/docs/ -->
+<component type="desktop-application">
+  <id>org.stirlingtools.StirlingPDF</id>
+  <name>Stirling PDF</name>
+  <summary>Powerful, locally hosted PDF manipulation tool</summary>
+
+  <!-- metadata_license covers this metainfo file only, which must be freely licensed for Flathub. -->
+  <metadata_license>MIT</metadata_license>
+  <!-- The desktop application itself is proprietary. Flathub accepts proprietary apps
+       in the "non-free" tier — see https://docs.flathub.org/docs/for-app-authors/submission/#proprietary-applications -->
+  <project_license>LicenseRef-OpenCore</project_license>
+  <copyright>Copyright (c) 2025 Stirling PDF Inc</copyright>
+
+  <description>
+    <p>
+      Stirling PDF is a robust, locally hosted web-based PDF manipulation tool
+      that allows you to perform a wide range of operations on PDF files. All
+      processing happens locally on your machine — no data is sent to any server.
+    </p>
+    <p>Features include:</p>
+    <ul>
+      <li>Merge, split, and reorder PDF pages</li>
+      <li>Convert between PDF and images, Office formats, HTML, Markdown, and more</li>
+      <li>Compress, repair, and sanitise PDF files</li>
+      <li>Add watermarks, stamps, and page numbers</li>
+      <li>Password-protect and unlock PDFs</li>
+      <li>Redact sensitive text and images</li>
+      <li>OCR support via Tesseract (when installed on host)</li>
+      <li>Office conversion via LibreOffice (when installed on host)</li>
+      <li>Sign and verify digital signatures</li>
+    </ul>
+    <p>
+      Note: Due to Flatpak sandboxing, optional external tools such as
+      LibreOffice and Tesseract OCR are not available inside the sandbox.
+      Use the native package or Docker image for full functionality.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">org.stirlingtools.StirlingPDF.desktop</launchable>
+
+  <url type="homepage">https://stirlingpdf.com</url>
+  <url type="bugtracker">https://github.com/Stirling-Tools/Stirling-PDF/issues</url>
+  <url type="donation">https://github.com/sponsors/Frooodle</url>
+  <url type="vcs-browser">https://github.com/Stirling-Tools/Stirling-PDF</url>
+  <url type="contact">mailto:contact@stirlingpdf.com</url>
+
+  <developer id="com.stirlingpdf">
+    <name>Stirling PDF Inc</name>
+  </developer>
+
+  <branding>
+    <color type="primary" scheme_preference="light">#4b5563</color>
+    <color type="primary" scheme_preference="dark">#1f2937</color>
+  </branding>
+
+  <categories>
+    <category>Office</category>
+    <category>Graphics</category>
+    <category>Utility</category>
+  </categories>
+
+  <keywords>
+    <keyword>PDF</keyword>
+    <keyword>document</keyword>
+    <keyword>convert</keyword>
+    <keyword>merge</keyword>
+    <keyword>split</keyword>
+    <keyword>compress</keyword>
+    <keyword>OCR</keyword>
+    <keyword>watermark</keyword>
+    <keyword>sign</keyword>
+  </keywords>
+
+  <mimetypes>
+    <mimetype>application/pdf</mimetype>
+  </mimetypes>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Stirling PDF home screen showing available PDF operations</caption>
+      <image>https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/docs/stirling.png</image>
+    </screenshot>
+  </screenshots>
+
+  <releases>
+    <release version="2.7.3" date="2025-01-01">
+      <description>
+        <p>Latest stable release of Stirling PDF.</p>
+      </description>
+    </release>
+  </releases>
+
+  <content_rating type="oars-1.1" />
+
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+
+  <requires>
+    <display_length compare="ge">768</display_length>
+    <internet>offline-only</internet>
+  </requires>
+</component>

@@ -1,0 +1,27 @@
+#!/bin/bash
+# Launcher for the Stirling-PDF server snap daemon.
+
+set -euo pipefail
+
+export JAVA_HOME="${SNAP}/jre"
+export PATH="${JAVA_HOME}/bin:${PATH}"
+
+PORT="${STIRLING_PDF_PORT:-8080}"
+DATA_DIR="${STIRLING_PDF_DATA_DIR:-${SNAP_DATA}}"
+JAR="${SNAP}/app/stirling-pdf.jar"
+
+if [ ! -f "$JAR" ]; then
+  echo "ERROR: ${JAR} not found." >&2
+  exit 1
+fi
+
+mkdir -p "${DATA_DIR}/logs" "${DATA_DIR}/customFiles"
+
+exec java \
+  -server \
+  -XX:+UseContainerSupport \
+  -XX:MaxRAMPercentage=75.0 \
+  -Dserver.port="${PORT}" \
+  -DHOME_DIRECTORY="${DATA_DIR}" \
+  -Dlogging.file.path="${DATA_DIR}/logs" \
+  -jar "${JAR}"

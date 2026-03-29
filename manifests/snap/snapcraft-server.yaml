@@ -1,0 +1,96 @@
+name: stirling-pdf-server
+title: Stirling PDF Server
+version: git
+summary: Headless Stirling PDF server daemon (port 8080)
+description: |
+  Stirling PDF is a robust, locally hosted web-based PDF manipulation tool.
+  This snap runs the Spring Boot backend as a system daemon listening on
+  port 8080. A bundled Temurin JRE 21 means no separate Java installation
+  is needed.
+
+  Access the web UI at http://localhost:8080 once the snap is installed and
+  the service is running.
+
+  Optional host tools (LibreOffice, Tesseract, etc.) are accessed via the
+  classic interface – install them with your system package manager and they
+  will be detected automatically.
+
+grade: stable
+confinement: strict
+base: core22
+license: MIT
+# Copyright (c) 2025 Stirling PDF Inc — https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LICENSE
+compression: lzo
+
+architectures:
+  - build-on: amd64
+    build-for: amd64
+
+apps:
+  stirling-pdf-server:
+    command: bin/server-launcher
+    daemon: simple
+    restart-condition: on-failure
+    restart-delay: 10s
+    stop-timeout: 30s
+    install-mode: enable
+    environment:
+      JAVA_HOME: $SNAP/jre
+      PATH: $SNAP/jre/bin:$SNAP/bin:$PATH
+      HOME: $SNAP_DATA
+      STIRLING_PDF_RUNNING_AS_SNAP: "true"
+      STIRLING_PDF_DATA_DIR: $SNAP_DATA
+    plugs:
+      - network
+      - network-bind
+
+  # Manual CLI control (start / stop / restart)
+  cli:
+    command: bin/server-launcher
+    environment:
+      JAVA_HOME: $SNAP/jre
+      PATH: $SNAP/jre/bin:$SNAP/bin:$PATH
+      HOME: $SNAP_DATA
+    plugs:
+      - network
+      - network-bind
+
+parts:
+  # ── Spring Boot JAR ───────────────────────────────────────────────────────
+  jar:
+    plugin: nil
+    source: .
+    override-build: |
+      # The CI workflow stages the built JAR next to this file before calling
+      # snapcraft. Adjust the glob pattern to match your release artifact name.
+      JAR=$(ls "${SNAPCRAFT_PROJECT_DIR}"/dist/Stirling-PDF*.jar 2>/dev/null | head -1)
+      if [ -z "$JAR" ]; then
+        echo "ERROR: Stirling-PDF JAR not found in dist/. Build the project first."
+        exit 1
+      fi
+      mkdir -p "${SNAPCRAFT_PART_INSTALL}/app"
+      cp "$JAR" "${SNAPCRAFT_PART_INSTALL}/app/stirling-pdf.jar"
+
+  # ── Temurin JRE 21 ───────────────────────────────────────────────────────
+  jre:
+    plugin: nil
+    source: .
+    override-build: |
+      JRE_URL="https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jre_x64_linux_hotspot_21.0.5_11.tar.gz"
+      curl -fsSL "$JRE_URL" -o /tmp/jre.tar.gz
+      mkdir -p "${SNAPCRAFT_PART_INSTALL}/jre"
+      tar -xzf /tmp/jre.tar.gz -C "${SNAPCRAFT_PART_INSTALL}/jre" --strip-components=1
+    build-packages:
+      - curl
+
+  # ── Launcher script ───────────────────────────────────────────────────────
+  launcher:
+    plugin: dump
+    source: snap-server/local
+    organize:
+      server-launcher: bin/server-launcher
+
+parts-ordering:
+  - jre
+  - jar
+  - launcher

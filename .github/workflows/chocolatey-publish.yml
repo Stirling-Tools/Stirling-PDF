@@ -1,0 +1,168 @@
+name: Chocolatey Publish
+
+on:
+  release:
+    types: [released]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to publish (e.g. v1.2.3)'
+        required: true
+      package:
+        description: "Which package to publish"
+        required: true
+        default: "both"
+        type: choice
+        options:
+          - both
+          - desktop
+          - server
+
+permissions:
+  contents: read
+
+jobs:
+  # ── Shared version extraction ─────────────────────────────────────────────
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Extract version from release tag
+        id: ver
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            TAG="${{ github.event.release.tag_name }}"
+          else
+            TAG="${{ inputs.tag }}"
+          fi
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+  # ── Desktop package (MSI) ─────────────────────────────────────────────────
+  chocolatey-desktop:
+    name: Pack & push stirling-pdf (desktop)
+    needs: version
+    if: >
+      github.event_name == 'release' ||
+      (github.event_name == 'workflow_dispatch' &&
+       (github.event.inputs.package == 'desktop' || github.event.inputs.package == 'both'))
+    runs-on: windows-latest
+    environment: chocolatey
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@v4
+
+      - name: Compute MSI checksum
+        id: msi-hash
+        shell: bash
+        run: |
+          VERSION="${{ needs.version.outputs.version }}"
+          MSI_URL="https://github.com/Stirling-Tools/Stirling-PDF/releases/download/v${VERSION}/Stirling-PDF-windows-x86_64.msi"
+          curl -fsSL "$MSI_URL" -o stirling-pdf.msi
+          SHA256=$(sha256sum stirling-pdf.msi | awk '{print $1}')
+          echo "sha256=${SHA256}" >> $GITHUB_OUTPUT
+
+      - name: Update nuspec version and checksum
+        shell: bash
+        run: |
+          VERSION="${{ needs.version.outputs.version }}"
+          SHA256="${{ steps.msi-hash.outputs.sha256 }}"
+          NUSPEC="manifests/chocolatey/stirling-pdf/stirling-pdf.nuspec"
+          INSTALL="manifests/chocolatey/stirling-pdf/tools/chocolateyInstall.ps1"
+          sed -i "s|<version>.*</version>|<version>${VERSION}</version>|" "$NUSPEC"
+          sed -i "s|^\$version\s*=.*|\$version     = '${VERSION}'|" "$INSTALL"
+          sed -i "s|PLACEHOLDER_SHA256_UPDATED_BY_CI|${SHA256}|" "$INSTALL"
+
+      - name: Pack Chocolatey package
+        working-directory: manifests/chocolatey/stirling-pdf
+        run: choco pack stirling-pdf.nuspec
+        shell: cmd
+
+      - name: Push to Chocolatey community feed
+        working-directory: manifests/chocolatey/stirling-pdf
+        run: |
+          choco push stirling-pdf.${{ needs.version.outputs.version }}.nupkg `
+            --source https://push.chocolatey.org/ `
+            --api-key $env:CHOCOLATEY_API_KEY
+        shell: powershell
+        env:
+          CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+
+      - name: Upload nupkg artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chocolatey-desktop-nupkg
+          path: manifests/chocolatey/stirling-pdf/*.nupkg
+          retention-days: 14
+
+  # ── Server package (JAR + NSSM service) ──────────────────────────────────
+  chocolatey-server:
+    name: Pack & push stirling-pdf-server
+    needs: version
+    if: >
+      github.event_name == 'release' ||
+      (github.event_name == 'workflow_dispatch' &&
+       (github.event.inputs.package == 'server' || github.event.inputs.package == 'both'))
+    runs-on: windows-latest
+    environment: chocolatey
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@v4
+
+      - name: Compute JAR checksum
+        id: jar-hash
+        shell: bash
+        run: |
+          VERSION="${{ needs.version.outputs.version }}"
+          JAR_URL="https://github.com/Stirling-Tools/Stirling-PDF/releases/download/v${VERSION}/Stirling-PDF-server.jar"
+          curl -fsSL "$JAR_URL" -o stirling-pdf.jar
+          SHA256=$(sha256sum stirling-pdf.jar | awk '{print $1}')
+          echo "sha256=${SHA256}" >> $GITHUB_OUTPUT
+
+      - name: Update nuspec version and checksum
+        shell: bash
+        run: |
+          VERSION="${{ needs.version.outputs.version }}"
+          SHA256="${{ steps.jar-hash.outputs.sha256 }}"
+          NUSPEC="manifests/chocolatey/stirling-pdf-server/stirling-pdf-server.nuspec"
+          INSTALL="manifests/chocolatey/stirling-pdf-server/tools/chocolateyInstall.ps1"
+          sed -i "s|<version>.*</version>|<version>${VERSION}</version>|" "$NUSPEC"
+          sed -i "s|^\$version\s*=.*|\$version     = '${VERSION}'|" "$INSTALL"
+          sed -i "s|PLACEHOLDER_SHA256_UPDATED_BY_CI|${SHA256}|" "$INSTALL"
+
+      - name: Pack Chocolatey package
+        working-directory: manifests/chocolatey/stirling-pdf-server
+        run: choco pack stirling-pdf-server.nuspec
+        shell: cmd
+
+      - name: Push to Chocolatey community feed
+        working-directory: manifests/chocolatey/stirling-pdf-server
+        run: |
+          choco push stirling-pdf-server.${{ needs.version.outputs.version }}.nupkg `
+            --source https://push.chocolatey.org/ `
+            --api-key $env:CHOCOLATEY_API_KEY
+        shell: powershell
+        env:
+          CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+
+      - name: Upload nupkg artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chocolatey-server-nupkg
+          path: manifests/chocolatey/stirling-pdf-server/*.nupkg
+          retention-days: 14

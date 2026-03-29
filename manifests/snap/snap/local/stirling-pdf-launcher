@@ -1,0 +1,47 @@
+#!/bin/bash
+# Launcher for the Stirling-PDF desktop snap.
+# Starts the embedded Spring Boot backend and then opens the Tauri shell.
+
+set -euo pipefail
+
+export JAVA_HOME="${SNAP}/jre"
+export PATH="${JAVA_HOME}/bin:${SNAP}/bin:${PATH}"
+
+PORT="${STIRLING_PDF_PORT:-8080}"
+JAR=$(ls "${SNAP}"/usr/lib/stirling-pdf/Stirling-PDF*.jar 2>/dev/null | head -1)
+
+if [ -z "$JAR" ]; then
+  echo "ERROR: Stirling-PDF JAR not found inside snap." >&2
+  exit 1
+fi
+
+# Start backend in background, writing PID for cleanup
+java \
+  -Dserver.port="${PORT}" \
+  -DHOME_DIRECTORY="${SNAP_USER_DATA}" \
+  -jar "${JAR}" &
+BACKEND_PID=$!
+
+cleanup() {
+  kill "${BACKEND_PID}" 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
+
+# Wait until the backend is accepting connections (up to 60 s)
+echo "Waiting for Stirling-PDF backend on port ${PORT}…"
+for i in $(seq 1 60); do
+  if curl -sf "http://localhost:${PORT}/api/v1/info/status" >/dev/null 2>&1; then
+    break
+  fi
+  sleep 1
+done
+
+# Launch Tauri shell
+TAURI_BIN=$(ls "${SNAP}"/usr/bin/stirling-pdf 2>/dev/null | head -1)
+if [ -n "$TAURI_BIN" ] && [ -x "$TAURI_BIN" ]; then
+  exec "${TAURI_BIN}" "$@"
+else
+  # Fallback: open in default browser
+  xdg-open "http://localhost:${PORT}" &
+  wait "${BACKEND_PID}"
+fi

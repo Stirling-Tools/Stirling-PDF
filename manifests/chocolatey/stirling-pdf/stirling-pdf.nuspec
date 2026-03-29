@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chocolatey package manifest for Stirling PDF (Desktop) -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>stirling-pdf</id>
+    <version>2.8.0</version>
+    <packageSourceUrl>https://github.com/Stirling-Tools/Stirling-PDF</packageSourceUrl>
+    <owners>Stirling PDF Inc</owners>
+
+    <title>Stirling PDF</title>
+    <authors>Stirling PDF Inc</authors>
+    <projectUrl>https://stirlingpdf.com</projectUrl>
+    <!-- Contact: contact@stirlingpdf.com -->
+    <iconUrl>https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/docs/stirling.png</iconUrl>
+    <!-- License: Open Core — see LICENSE file for full terms -->
+    <licenseUrl>https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LICENSE</licenseUrl>
+    <copyright>Copyright (c) 2025 Stirling PDF Inc</copyright>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/Stirling-Tools/Stirling-PDF</projectSourceUrl>
+    <bugTrackerUrl>https://github.com/Stirling-Tools/Stirling-PDF/issues</bugTrackerUrl>
+    <tags>pdf document convert merge split compress watermark ocr sign encrypt</tags>
+    <summary>Powerful, locally hosted PDF manipulation tool (desktop app)</summary>
+    <description>
+Stirling PDF is a robust, locally hosted web-based PDF manipulation tool that
+allows you to perform a wide range of operations on PDF files.
+
+All processing happens locally on your machine — no data is sent to any server.
+
+**Features:**
+- Merge, split, reorder, and rotate PDF pages
+- Convert PDF to/from images, Word, Excel, PowerPoint, HTML, and Markdown
+- Compress and repair PDFs
+- Add watermarks, stamps, and page numbers
+- Password-protect and unlock PDFs
+- Redact sensitive content
+- OCR support (requires Tesseract)
+- Office conversion (requires LibreOffice)
+- Sign and verify digital signatures
+
+This package installs the **desktop application** (Tauri + Spring Boot). For the
+headless server variant use the `stirling-pdf-server` package instead.
+    </description>
+    <releaseNotes>https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v2.8.0</releaseNotes>
+
+    <dependencies>
+      <!-- Java runtime is bundled; no external JRE dependency needed -->
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>
