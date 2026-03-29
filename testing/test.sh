@@ -37,6 +37,7 @@ mkdir -p "$REPORT_DIR"
 declare -A test_start_times
 declare -A test_durations
 declare -A test_failure_logs
+CURRENT_CONTAINER=""
 
 is_gha() {
     [ -n "${GITHUB_ACTIONS:-}" ]
@@ -120,44 +121,6 @@ capture_build_failure() {
     test_failure_logs["$build_name"]="$log_file"
 }
 
-parse_gradle_test_results() {
-    local xml_dir=$1
-    local build_label=$2
-
-    if [ ! -d "$xml_dir" ]; then return; fi
-
-    for xml_file in "$xml_dir"/TEST-*.xml; do
-        [ -f "$xml_file" ] || continue
-
-        local testsuite_line
-        testsuite_line=$(grep '<testsuite ' "$xml_file" | head -1)
-        [ -z "$testsuite_line" ] && continue
-
-        local suite_name suite_tests suite_failures suite_errors suite_time
-        suite_name=$(echo "$testsuite_line" | sed -n 's/.*name="\([^"]*\)".*/\1/p')
-        suite_tests=$(echo "$testsuite_line" | sed -n 's/.*tests="\([^"]*\)".*/\1/p')
-        suite_failures=$(echo "$testsuite_line" | sed -n 's/.*failures="\([^"]*\)".*/\1/p')
-        suite_errors=$(echo "$testsuite_line" | sed -n 's/.*errors="\([^"]*\)".*/\1/p')
-        suite_time=$(echo "$testsuite_line" | sed -n 's/.*time="\([^"]*\)".*/\1/p')
-
-        suite_failures=${suite_failures:-0}
-        suite_errors=${suite_errors:-0}
-
-        local test_name="${build_label}::${suite_name}"
-        local total_failures=$(( suite_failures + suite_errors ))
-
-        test_durations["$test_name"]="${suite_time%.*}"
-
-        if [ "$total_failures" -gt 0 ]; then
-            failed_tests+=("$test_name")
-            local fail_log="$REPORT_DIR/${test_name//[^a-zA-Z0-9_-]/_}.failure.log"
-            grep -A 10 '<failure\|<error' "$xml_file" | head -60 > "$fail_log" 2>/dev/null || true
-            test_failure_logs["$test_name"]="$fail_log"
-        else
-            passed_tests+=("$test_name")
-        fi
-    done
-}
 
 generate_json_report() {
     local report_file="$REPORT_DIR/test-report.json"
@@ -569,6 +532,7 @@ test_compose() {
         return 1
     fi
 
+    CURRENT_CONTAINER="$container_name"
     echo "Started container: $container_name"
 
     # Wait for the service to become healthy (HTTP-based)
@@ -729,16 +693,9 @@ main() {
             echo "Gradle build failed with security disabled, exiting script."
             failed_tests+=("Build-Ultra-Lite-Gradle")
             capture_build_failure "Build-Ultra-Lite-Gradle"
-            for d in "$PROJECT_ROOT"/app/*/build/test-results/test; do
-                [ -d "$d" ] && parse_gradle_test_results "$d" "ultra-lite"
-            done
             gha_endgroup
             exit 1
         fi
-
-        for d in "$PROJECT_ROOT"/app/*/build/test-results/test; do
-            [ -d "$d" ] && parse_gradle_test_results "$d" "ultra-lite"
-        done
 
         # Get expected version after the build to ensure version.properties is created
         echo "Getting expected version from Gradle..."
@@ -778,6 +735,7 @@ main() {
             passed_tests+=("Webpage-Accessibility-lite")
         else
             failed_tests+=("Webpage-Accessibility-lite")
+            capture_failure_logs "Webpage-Accessibility-lite" "$CURRENT_CONTAINER"
             echo "Webpage accessibility lite tests failed"
         fi
         cd "$PROJECT_ROOT"
@@ -793,6 +751,7 @@ main() {
             echo "Version verification passed for Stirling-PDF-Ultra-Lite"
         else
             failed_tests+=("Stirling-PDF-Ultra-Lite-Version-Check")
+            capture_failure_logs "Stirling-PDF-Ultra-Lite-Version-Check" "$CURRENT_CONTAINER"
             echo "Version verification failed for Stirling-PDF-Ultra-Lite"
         fi
         stop_test_timer "Stirling-PDF-Ultra-Lite-Version-Check"
@@ -819,16 +778,9 @@ main() {
             echo "Gradle build failed with security enabled, exiting script."
             failed_tests+=("Build-Fat-Gradle")
             capture_build_failure "Build-Fat-Gradle"
-            for d in "$PROJECT_ROOT"/app/*/build/test-results/test; do
-                [ -d "$d" ] && parse_gradle_test_results "$d" "fat"
-            done
             gha_endgroup
             exit 1
         fi
-
-        for d in "$PROJECT_ROOT"/app/*/build/test-results/test; do
-            [ -d "$d" ] && parse_gradle_test_results "$d" "fat"
-        done
 
         echo "Getting expected version from Gradle (security enabled)..."
         EXPECTED_VERSION=$(get_expected_version)
@@ -867,6 +819,7 @@ main() {
             passed_tests+=("Webpage-Accessibility-full")
         else
             failed_tests+=("Webpage-Accessibility-full")
+            capture_failure_logs "Webpage-Accessibility-full" "$CURRENT_CONTAINER"
             echo "Webpage accessibility full tests failed"
         fi
         cd "$PROJECT_ROOT"
@@ -882,6 +835,7 @@ main() {
             echo "Version verification passed for Stirling-PDF-Security-Fat"
         else
             failed_tests+=("Stirling-PDF-Security-Fat-Version-Check")
+            capture_failure_logs "Stirling-PDF-Security-Fat-Version-Check" "$CURRENT_CONTAINER"
             echo "Version verification failed for Stirling-PDF-Security-Fat"
         fi
         stop_test_timer "Stirling-PDF-Security-Fat-Version-Check"
@@ -913,12 +867,23 @@ main() {
         mkdir -p "$CUCUMBER_JUNIT_DIR"
         cd "testing/cucumber"
         start_test_timer "Stirling-PDF-Regression"
+
+        # Snapshot docker log line count before behave so we can extract only behave-window logs
+        DOCKER_LOG_BEFORE=$(docker logs "$CONTAINER_NAME" 2>&1 | wc -l)
+
+        export TEST_CONTAINER_NAME="$CONTAINER_NAME"
+        export TEST_REPORT_DIR="$REPORT_DIR"
+
         gha_group "Test: Behave regression tests"
         if python -m behave \
             -f behave_html_formatter:HTMLFormatter -o "$CUCUMBER_REPORT" \
             -f pretty \
             --junit --junit-directory "$CUCUMBER_JUNIT_DIR"; then
             gha_endgroup
+
+            # Save docker logs produced during the behave run
+            docker logs "$CONTAINER_NAME" 2>&1 | tail -n +"$((DOCKER_LOG_BEFORE + 1))" > "$REPORT_DIR/cucumber-docker-context.log" 2>/dev/null || true
+
             echo "Waiting 5 seconds for any file operations to complete..."
             sleep 5
 
@@ -936,9 +901,14 @@ main() {
         else
             gha_endgroup
             failed_tests+=("Stirling-PDF-Regression $CONTAINER_NAME")
-            capture_failure_logs "Stirling-PDF-Regression" "$CONTAINER_NAME"
-            gha_group "Docker logs (regression failure): $CONTAINER_NAME"
-            docker logs "$CONTAINER_NAME"
+
+            # Save docker logs from the behave window to a dedicated file
+            local cucumber_log="$REPORT_DIR/cucumber-docker-context.log"
+            docker logs "$CONTAINER_NAME" 2>&1 | tail -n +"$((DOCKER_LOG_BEFORE + 1))" > "$cucumber_log" 2>/dev/null || true
+            test_failure_logs["Stirling-PDF-Regression"]="$cucumber_log"
+
+            gha_group "Docker logs during behave run: $CONTAINER_NAME"
+            tail -100 "$cucumber_log"
             gha_endgroup
 
             echo "Waiting 10 seconds before capturing file list..."
@@ -965,6 +935,7 @@ main() {
             passed_tests+=("Disabled-Endpoints")
         else
             failed_tests+=("Disabled-Endpoints")
+            capture_failure_logs "Disabled-Endpoints" "$CURRENT_CONTAINER"
             echo "Disabled Endpoints tests failed"
         fi
         gha_endgroup
@@ -979,6 +950,7 @@ main() {
             echo "Version verification passed for Stirling-PDF-Fat-Disable-Endpoints"
         else
             failed_tests+=("Stirling-PDF-Fat-Disable-Endpoints-Version-Check")
+            capture_failure_logs "Stirling-PDF-Fat-Disable-Endpoints-Version-Check" "$CURRENT_CONTAINER"
             echo "Version verification failed for Stirling-PDF-Fat-Disable-Endpoints"
         fi
         stop_test_timer "Stirling-PDF-Fat-Disable-Endpoints-Version-Check"
