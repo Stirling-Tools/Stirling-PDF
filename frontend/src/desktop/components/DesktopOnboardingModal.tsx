@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Modal, Stack, Group, Button, ActionIcon } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import CloseIcon from '@mui/icons-material/Close';
