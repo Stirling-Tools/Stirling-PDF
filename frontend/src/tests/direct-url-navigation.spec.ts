@@ -26,8 +26,9 @@ test.describe('17. Direct URL Navigation', () => {
           window.dispatchEvent(new PopStateEvent('popstate'));
         }, url);
 
-        // Wait for the router to update
-        await expect(page).toHaveURL(new RegExp(url.replace(/\//g, '\\/')), { timeout: 5000 });
+        // Wait for the router to update — use string containment, not a hand-built regex
+        const escapedUrl = url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        await expect(page).toHaveURL(new RegExp(escapedUrl), { timeout: 5000 });
 
         // Verify the page rendered content (not blank/crashed)
         await expect(page.locator('body')).not.toBeEmpty();
