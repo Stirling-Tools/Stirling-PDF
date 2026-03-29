@@ -31,6 +31,232 @@ find_root() {
 
 PROJECT_ROOT=$(find_root)
 
+REPORT_DIR="$PROJECT_ROOT/testing/reports"
+mkdir -p "$REPORT_DIR"
+
+declare -A test_start_times
+declare -A test_durations
+declare -A test_failure_logs
+
+is_gha() {
+    [ -n "${GITHUB_ACTIONS:-}" ]
+}
+
+gha_group() {
+    if is_gha; then echo "::group::$1"; else echo "=== $1 ==="; fi
+}
+gha_endgroup() {
+    if is_gha; then echo "::endgroup::"; fi
+}
+
+start_test_timer() {
+    local test_name=$1
+    test_start_times["$test_name"]=$SECONDS
+}
+
+stop_test_timer() {
+    local test_name=$1
+    local start=${test_start_times["$test_name"]:-$SECONDS}
+    test_durations["$test_name"]=$(( SECONDS - start ))
+}
+
+capture_failure_logs() {
+    local test_name=$1
+    local container_name=$2
+    local log_file="$REPORT_DIR/${test_name//[^a-zA-Z0-9_-]/_}.failure.log"
+
+    if [ -n "$container_name" ]; then
+        {
+            echo "=== Failure logs for: $test_name ==="
+            echo "Container: $container_name"
+            echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "---"
+            docker logs "$container_name" 2>&1 | tail -200
+        } > "$log_file" 2>/dev/null || true
+        test_failure_logs["$test_name"]="$log_file"
+    fi
+}
+
+capture_build_failure() {
+    local build_name=$1
+    local log_file="$REPORT_DIR/${build_name//[^a-zA-Z0-9_-]/_}.failure.log"
+    local gradle_report_dirs=(
+        "$PROJECT_ROOT/app/core/build/reports/tests"
+        "$PROJECT_ROOT/app/common/build/reports/tests"
+        "$PROJECT_ROOT/app/proprietary/build/reports/tests"
+    )
+
+    {
+        echo "=== Build failure: $build_name ==="
+        echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        echo "---"
+
+        for report_dir in "${gradle_report_dirs[@]}"; do
+            if [ -d "$report_dir" ]; then
+                local txt_index="$report_dir/test/index.html"
+                if [ -f "$txt_index" ]; then
+                    echo "--- Gradle test report: $report_dir ---"
+                    sed 's/<[^>]*>//g' "$txt_index" | head -100
+                    echo ""
+                fi
+            fi
+        done
+
+        for xml_file in "$PROJECT_ROOT"/app/*/build/test-results/test/TEST-*.xml; do
+            if [ -f "$xml_file" ]; then
+                local failures
+                failures=$(grep -c 'failures="[^0]' "$xml_file" 2>/dev/null || true)
+                local errors
+                errors=$(grep -c 'errors="[^0]' "$xml_file" 2>/dev/null || true)
+                if [ "$failures" -gt 0 ] || [ "$errors" -gt 0 ]; then
+                    echo "--- Failed: $(basename "$xml_file") ---"
+                    grep -A 5 '<failure\|<error' "$xml_file" | head -50
+                    echo ""
+                fi
+            fi
+        done
+    } > "$log_file" 2>/dev/null || true
+
+    test_failure_logs["$build_name"]="$log_file"
+}
+
+parse_gradle_test_results() {
+    local xml_dir=$1
+    local build_label=$2
+
+    if [ ! -d "$xml_dir" ]; then return; fi
+
+    for xml_file in "$xml_dir"/TEST-*.xml; do
+        [ -f "$xml_file" ] || continue
+
+        local testsuite_line
+        testsuite_line=$(grep '<testsuite ' "$xml_file" | head -1)
+        [ -z "$testsuite_line" ] && continue
+
+        local suite_name suite_tests suite_failures suite_errors suite_time
+        suite_name=$(echo "$testsuite_line" | sed -n 's/.*name="\([^"]*\)".*/\1/p')
+        suite_tests=$(echo "$testsuite_line" | sed -n 's/.*tests="\([^"]*\)".*/\1/p')
+        suite_failures=$(echo "$testsuite_line" | sed -n 's/.*failures="\([^"]*\)".*/\1/p')
+        suite_errors=$(echo "$testsuite_line" | sed -n 's/.*errors="\([^"]*\)".*/\1/p')
+        suite_time=$(echo "$testsuite_line" | sed -n 's/.*time="\([^"]*\)".*/\1/p')
+
+        suite_failures=${suite_failures:-0}
+        suite_errors=${suite_errors:-0}
+
+        local test_name="${build_label}::${suite_name}"
+        local total_failures=$(( suite_failures + suite_errors ))
+
+        test_durations["$test_name"]="${suite_time%.*}"
+
+        if [ "$total_failures" -gt 0 ]; then
+            failed_tests+=("$test_name")
+            local fail_log="$REPORT_DIR/${test_name//[^a-zA-Z0-9_-]/_}.failure.log"
+            grep -A 10 '<failure\|<error' "$xml_file" | head -60 > "$fail_log" 2>/dev/null || true
+            test_failure_logs["$test_name"]="$fail_log"
+        else
+            passed_tests+=("$test_name")
+        fi
+    done
+}
+
+generate_json_report() {
+    local report_file="$REPORT_DIR/test-report.json"
+    local total_duration=$SECONDS
+    local total_tests=$(( ${#passed_tests[@]} + ${#failed_tests[@]} ))
+
+    {
+        echo "{"
+        echo "  \"summary\": {"
+        echo "    \"total\": $total_tests,"
+        echo "    \"passed\": ${#passed_tests[@]},"
+        echo "    \"failed\": ${#failed_tests[@]},"
+        echo "    \"duration_seconds\": $total_duration,"
+        echo "    \"result\": \"$([ ${#failed_tests[@]} -eq 0 ] && echo 'PASS' || echo 'FAIL')\","
+        echo "    \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\""
+        echo "  },"
+        echo "  \"tests\": ["
+
+        local first=true
+        for test in "${passed_tests[@]}"; do
+            if [ "$first" = true ]; then first=false; else echo ","; fi
+            local dur=${test_durations["$test"]:-0}
+            printf "    {\"name\": \"%s\", \"status\": \"PASS\", \"duration_seconds\": %d}" "$test" "$dur"
+        done
+
+        for test in "${failed_tests[@]}"; do
+            if [ "$first" = true ]; then first=false; else echo ","; fi
+            local dur=${test_durations["$test"]:-0}
+            local log_file=${test_failure_logs["$test"]:-""}
+            local failure_snippet=""
+            if [ -n "$log_file" ] && [ -f "$log_file" ]; then
+                # Grab last 20 lines as a failure snippet, escape for JSON
+                failure_snippet=$(tail -20 "$log_file" | sed 's/\\/\\\\/g; s/"/\\"/g; s/\t/\\t/g' | tr '\n' '|' | sed 's/|/\\n/g')
+            fi
+            printf "    {\"name\": \"%s\", \"status\": \"FAIL\", \"duration_seconds\": %d, \"log_file\": \"%s\", \"failure_snippet\": \"%s\"}" \
+                "$test" "$dur" "$log_file" "$failure_snippet"
+        done
+
+        echo ""
+        echo "  ]"
+        echo "}"
+    } > "$report_file"
+
+    echo "JSON test report written to: $report_file"
+}
+
+generate_gha_summary() {
+    if ! is_gha; then return; fi
+    local summary_file="${GITHUB_STEP_SUMMARY}"
+    local total_duration=$SECONDS
+
+    {
+        echo "## Docker Compose Test Results"
+        echo ""
+        if [ ${#failed_tests[@]} -eq 0 ]; then
+            echo "**Result: ALL PASSED** in ${total_duration}s"
+        else
+            echo "**Result: ${#failed_tests[@]} FAILED** out of $(( ${#passed_tests[@]} + ${#failed_tests[@]} )) tests in ${total_duration}s"
+        fi
+        echo ""
+        echo "| Test | Status | Duration |"
+        echo "|------|--------|----------|"
+
+        for test in "${passed_tests[@]}"; do
+            local dur=${test_durations["$test"]:-0}
+            echo "| ${test} | :white_check_mark: PASS | ${dur}s |"
+        done
+
+        for test in "${failed_tests[@]}"; do
+            local dur=${test_durations["$test"]:-0}
+            echo "| ${test} | :x: FAIL | ${dur}s |"
+        done
+
+        # If there are failures, include snippets
+        if [ ${#failed_tests[@]} -ne 0 ]; then
+            echo ""
+            echo "### Failure Details"
+            echo ""
+            for test in "${failed_tests[@]}"; do
+                local log_file=${test_failure_logs["$test"]:-""}
+                echo "<details>"
+                echo "<summary>${test}</summary>"
+                echo ""
+                if [ -n "$log_file" ] && [ -f "$log_file" ]; then
+                    echo '```'
+                    tail -50 "$log_file"
+                    echo '```'
+                else
+                    echo "No failure logs captured. Check the full build log."
+                fi
+                echo "</details>"
+                echo ""
+            done
+        fi
+    } >> "$summary_file"
+
+    echo "GitHub Actions job summary written."
+}
+
 # Base image version - must be provided or read from environment
 # This is a testing-specific version; production should pass explicit BASE_VERSION
 if [ -z "$BASE_VERSION" ]; then
@@ -87,6 +313,7 @@ check_health() {
         echo "Using API key for health check: ${api_key:0:3}***"
     fi
 
+    gha_group "Health check: $container_name"
     echo "Waiting for $container_name to become reachable on http://localhost:8080/api/v1/info/status (timeout ${timeout}s)..."
     while [ $SECONDS -lt $end ]; do
         # Optional: check if container is running at all (nice for debugging)
@@ -104,8 +331,10 @@ check_health() {
         # Treat any 2xx as "ready"
         if [ "$last_code" -ge 200 ] && [ "$last_code" -lt 300 ]; then
             echo "$container_name is reachable over HTTP (status $last_code)."
-            echo "Printing logs for $container_name:"
+            gha_group "Container logs (startup): $container_name"
             docker logs "$container_name" || true
+            gha_endgroup
+            gha_endgroup
             return 0
         fi
 
@@ -120,8 +349,10 @@ check_health() {
     docker_health=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}(no healthcheck){{end}}' "$container_name" 2>/dev/null || echo "inspect failed")
     echo "Docker-reported health status for $container_name: $docker_health"
 
-    echo "Printing logs for $container_name:"
+    gha_group "Container logs (failure): $container_name"
     docker logs "$container_name" || true
+    gha_endgroup
+    gha_endgroup
     return 1
 }
 
@@ -130,6 +361,7 @@ capture_file_list() {
     local container_name=$1
     local output_file=$2
 
+    gha_group "Capture file list: $container_name"
     echo "Capturing file list from $container_name..."
     # Get all files in one command, output directly from Docker to avoid path issues
     # Skip proc, sys, dev, and the specified LibreOffice config directory
@@ -194,6 +426,7 @@ capture_file_list() {
     fi
 
     echo "File list captured to $output_file"
+    gha_endgroup
 }
 
 # Function to compare before and after file lists
@@ -203,6 +436,7 @@ compare_file_lists() {
     local diff_file=$3
     local container_name=$4  # Added container_name parameter
 
+    gha_group "Compare file lists"
     echo "Comparing file lists..."
 
     # Check if files exist and have content
@@ -223,11 +457,13 @@ compare_file_lists() {
                 cat "${diff_file}.tmp"
                 echo "Printing docker logs due to temporary file detection:"
                 docker logs "$container_name"  # Print logs when temp files are found
+                gha_endgroup
                 return 1
             else
                 echo "No temporary files found in the after snapshot."
             fi
         fi
+        gha_endgroup
         return 0
     fi
 
@@ -264,6 +500,7 @@ compare_file_lists() {
     else
         echo "No file changes detected during test."
     fi
+    gha_endgroup
     return 0
 }
 
@@ -313,6 +550,7 @@ test_compose() {
     local test_name=$2
     local status=0
 
+    gha_group "Deploy: $test_name"
     echo "Testing ${compose_file} configuration..."
 
     # Start up the Docker Compose service
@@ -327,6 +565,7 @@ test_compose() {
     if [[ -z "$container_name" ]]; then
         echo "ERROR: No running container found for ${compose_file}"
         docker-compose -f "$compose_file" ps
+        gha_endgroup
         return 1
     fi
 
@@ -337,9 +576,11 @@ test_compose() {
         echo "${test_name} test passed."
     else
         echo "${test_name} test failed."
+        capture_failure_logs "$test_name" "$container_name"
         status=1
     fi
 
+    gha_endgroup
     return $status
 }
 
@@ -407,17 +648,27 @@ run_tests() {
         return 0
     fi
 
+    start_test_timer "$test_name"
     if test_compose "$compose_file" "$test_name"; then
         passed_tests+=("$test_name")
     else
         failed_tests+=("$test_name")
     fi
+    stop_test_timer "$test_name"
+}
+
+finalize_reports() {
+    generate_json_report
+    generate_gha_summary
+    save_failed_tests
 }
 
 # Main testing routine
 main() {
     SECONDS=0
     cd "$PROJECT_ROOT"
+
+    trap finalize_reports EXIT
 
     # Ensure base image exists before running tests
     echo "=========================================="
@@ -472,11 +723,22 @@ main() {
        should_run_test "Webpage-Accessibility-lite" || \
        should_run_test "Stirling-PDF-Ultra-Lite-Version-Check"; then
 
+        gha_group "Build: Ultra-Lite (Gradle + Docker)"
         export DISABLE_ADDITIONAL_FEATURES=true
         if ! ./gradlew clean build -PnoSpotless; then
             echo "Gradle build failed with security disabled, exiting script."
+            failed_tests+=("Build-Ultra-Lite-Gradle")
+            capture_build_failure "Build-Ultra-Lite-Gradle"
+            for d in "$PROJECT_ROOT"/app/*/build/test-results/test; do
+                [ -d "$d" ] && parse_gradle_test_results "$d" "ultra-lite"
+            done
+            gha_endgroup
             exit 1
         fi
+
+        for d in "$PROJECT_ROOT"/app/*/build/test-results/test; do
+            [ -d "$d" ] && parse_gradle_test_results "$d" "ultra-lite"
+        done
 
         # Get expected version after the build to ensure version.properties is created
         echo "Getting expected version from Gradle..."
@@ -490,11 +752,16 @@ main() {
         else
             DOCKER_CACHE_ARGS_ULTRA_LITE=""
         fi
-        docker buildx build --build-arg VERSION_TAG=alpha \
+        if ! docker buildx build --build-arg VERSION_TAG=alpha \
             -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite \
             -f ./docker/embedded/Dockerfile.ultra-lite \
             --load \
-            ${DOCKER_CACHE_ARGS_ULTRA_LITE} .
+            ${DOCKER_CACHE_ARGS_ULTRA_LITE} .; then
+            failed_tests+=("Build-Ultra-Lite-Docker")
+            gha_endgroup
+            exit 1
+        fi
+        gha_endgroup
     else
         echo "Skipping ultra-lite image build - no ultra-lite tests in rerun list"
     fi
@@ -503,6 +770,8 @@ main() {
     run_tests "Stirling-PDF-Ultra-Lite" "./docker/embedded/compose/docker-compose-latest-ultra-lite.yml"
 
     if should_run_test "Webpage-Accessibility-lite"; then
+        start_test_timer "Webpage-Accessibility-lite"
+        gha_group "Test: Webpage-Accessibility-lite"
         echo "Testing webpage accessibility..."
         cd "testing"
         if ./test_webpages.sh -f webpage_urls.txt -b http://localhost:8080; then
@@ -512,9 +781,12 @@ main() {
             echo "Webpage accessibility lite tests failed"
         fi
         cd "$PROJECT_ROOT"
+        gha_endgroup
+        stop_test_timer "Webpage-Accessibility-lite"
     fi
 
     if should_run_test "Stirling-PDF-Ultra-Lite-Version-Check"; then
+        start_test_timer "Stirling-PDF-Ultra-Lite-Version-Check"
         echo "Testing version verification..."
         if verify_app_version "Stirling-PDF-Ultra-Lite" "http://localhost:8080"; then
             passed_tests+=("Stirling-PDF-Ultra-Lite-Version-Check")
@@ -523,6 +795,7 @@ main() {
             failed_tests+=("Stirling-PDF-Ultra-Lite-Version-Check")
             echo "Version verification failed for Stirling-PDF-Ultra-Lite"
         fi
+        stop_test_timer "Stirling-PDF-Ultra-Lite-Version-Check"
     fi
 
     docker-compose -f "./docker/embedded/compose/docker-compose-latest-ultra-lite.yml" down -v
@@ -540,11 +813,22 @@ main() {
        should_run_test "Disabled-Endpoints" || \
        should_run_test "Stirling-PDF-Fat-Disable-Endpoints-Version-Check"; then
 
+        gha_group "Build: Fat + Security (Gradle + Docker)"
         export DISABLE_ADDITIONAL_FEATURES=false
         if ! ./gradlew clean build -PnoSpotless; then
             echo "Gradle build failed with security enabled, exiting script."
+            failed_tests+=("Build-Fat-Gradle")
+            capture_build_failure "Build-Fat-Gradle"
+            for d in "$PROJECT_ROOT"/app/*/build/test-results/test; do
+                [ -d "$d" ] && parse_gradle_test_results "$d" "fat"
+            done
+            gha_endgroup
             exit 1
         fi
+
+        for d in "$PROJECT_ROOT"/app/*/build/test-results/test; do
+            [ -d "$d" ] && parse_gradle_test_results "$d" "fat"
+        done
 
         echo "Getting expected version from Gradle (security enabled)..."
         EXPECTED_VERSION=$(get_expected_version)
@@ -557,11 +841,16 @@ main() {
         else
             DOCKER_CACHE_ARGS_FAT=""
         fi
-        docker buildx build --build-arg VERSION_TAG=alpha \
+        if ! docker buildx build --build-arg VERSION_TAG=alpha \
             -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat \
             -f ./docker/embedded/Dockerfile.fat \
             --load \
-            ${DOCKER_CACHE_ARGS_FAT} .
+            ${DOCKER_CACHE_ARGS_FAT} .; then
+            failed_tests+=("Build-Fat-Docker")
+            gha_endgroup
+            exit 1
+        fi
+        gha_endgroup
     else
         echo "Skipping fat image build - no fat tests in rerun list"
     fi
@@ -570,6 +859,8 @@ main() {
     run_tests "Stirling-PDF-Security-Fat" "./docker/embedded/compose/docker-compose-latest-fat-security.yml"
 
     if should_run_test "Webpage-Accessibility-full"; then
+        start_test_timer "Webpage-Accessibility-full"
+        gha_group "Test: Webpage-Accessibility-full"
         echo "Testing webpage accessibility..."
         cd "testing"
         if ./test_webpages.sh -f webpage_urls_full.txt -b http://localhost:8080; then
@@ -579,9 +870,12 @@ main() {
             echo "Webpage accessibility full tests failed"
         fi
         cd "$PROJECT_ROOT"
+        gha_endgroup
+        stop_test_timer "Webpage-Accessibility-full"
     fi
 
     if should_run_test "Stirling-PDF-Security-Fat-Version-Check"; then
+        start_test_timer "Stirling-PDF-Security-Fat-Version-Check"
         echo "Testing version verification..."
         if verify_app_version "Stirling-PDF-Security-Fat" "http://localhost:8080"; then
             passed_tests+=("Stirling-PDF-Security-Fat-Version-Check")
@@ -590,6 +884,7 @@ main() {
             failed_tests+=("Stirling-PDF-Security-Fat-Version-Check")
             echo "Version verification failed for Stirling-PDF-Security-Fat"
         fi
+        stop_test_timer "Stirling-PDF-Security-Fat-Version-Check"
     fi
 
     docker-compose -f "./docker/embedded/compose/docker-compose-latest-fat-security.yml" down -v
@@ -617,10 +912,13 @@ main() {
         CUCUMBER_JUNIT_DIR="$PROJECT_ROOT/testing/cucumber/junit"
         mkdir -p "$CUCUMBER_JUNIT_DIR"
         cd "testing/cucumber"
+        start_test_timer "Stirling-PDF-Regression"
+        gha_group "Test: Behave regression tests"
         if python -m behave \
             -f behave_html_formatter:HTMLFormatter -o "$CUCUMBER_REPORT" \
             -f pretty \
             --junit --junit-directory "$CUCUMBER_JUNIT_DIR"; then
+            gha_endgroup
             echo "Waiting 5 seconds for any file operations to complete..."
             sleep 5
 
@@ -636,10 +934,12 @@ main() {
             fi
             passed_tests+=("Stirling-PDF-Regression $CONTAINER_NAME")
         else
+            gha_endgroup
             failed_tests+=("Stirling-PDF-Regression $CONTAINER_NAME")
-            echo "Printing docker logs of failed regression"
+            capture_failure_logs "Stirling-PDF-Regression" "$CONTAINER_NAME"
+            gha_group "Docker logs (regression failure): $CONTAINER_NAME"
             docker logs "$CONTAINER_NAME"
-            echo "Printed docker logs of failed regression"
+            gha_endgroup
 
             echo "Waiting 10 seconds before capturing file list..."
             sleep 10
@@ -648,6 +948,7 @@ main() {
             capture_file_list "$CONTAINER_NAME" "$AFTER_FILE"
             compare_file_lists "$BEFORE_FILE" "$AFTER_FILE" "$DIFF_FILE" "$CONTAINER_NAME"
         fi
+        stop_test_timer "Stirling-PDF-Regression"
     fi
     docker-compose -f "./docker/embedded/compose/test_cicd.yml" down -v
 
@@ -657,6 +958,8 @@ main() {
     run_tests "Stirling-PDF-Fat-Disable-Endpoints" "./docker/embedded/compose/docker-compose-latest-fat-endpoints-disabled.yml"
 
     if should_run_test "Disabled-Endpoints"; then
+        start_test_timer "Disabled-Endpoints"
+        gha_group "Test: Disabled-Endpoints"
         echo "Testing disabled endpoints..."
         if ./testing/test_disabledEndpoints.sh -f ./testing/endpoints.txt -b http://localhost:8080; then
             passed_tests+=("Disabled-Endpoints")
@@ -664,9 +967,12 @@ main() {
             failed_tests+=("Disabled-Endpoints")
             echo "Disabled Endpoints tests failed"
         fi
+        gha_endgroup
+        stop_test_timer "Disabled-Endpoints"
     fi
 
     if should_run_test "Stirling-PDF-Fat-Disable-Endpoints-Version-Check"; then
+        start_test_timer "Stirling-PDF-Fat-Disable-Endpoints-Version-Check"
         echo "Testing version verification..."
         if verify_app_version "Stirling-PDF-Fat-Disable-Endpoints" "http://localhost:8080"; then
             passed_tests+=("Stirling-PDF-Fat-Disable-Endpoints-Version-Check")
@@ -675,6 +981,7 @@ main() {
             failed_tests+=("Stirling-PDF-Fat-Disable-Endpoints-Version-Check")
             echo "Version verification failed for Stirling-PDF-Fat-Disable-Endpoints"
         fi
+        stop_test_timer "Stirling-PDF-Fat-Disable-Endpoints-Version-Check"
     fi
 
     docker-compose -f "./docker/embedded/compose/docker-compose-latest-fat-endpoints-disabled.yml" down -v
@@ -682,24 +989,33 @@ main() {
     # ==================================================================
     # Final Report
     # ==================================================================
-    echo "All tests completed in $SECONDS seconds."
+    echo ""
+    echo "=========================================="
+    echo "TEST RESULTS SUMMARY"
+    echo "=========================================="
+    echo "Total duration: ${SECONDS}s"
+    echo "Passed: ${#passed_tests[@]}  Failed: ${#failed_tests[@]}"
+    echo ""
 
     if [ ${#passed_tests[@]} -ne 0 ]; then
         echo "Passed tests:"
         for test in "${passed_tests[@]}"; do
-            echo -e "\e[32m$test\e[0m"
+            local dur=${test_durations["$test"]:-"?"}
+            echo -e "  \e[32m✅ $test\e[0m (${dur}s)"
         done
     fi
 
     if [ ${#failed_tests[@]} -ne 0 ]; then
+        echo ""
         echo "Failed tests:"
         for test in "${failed_tests[@]}"; do
-            echo -e "\e[31m$test\e[0m"
+            local dur=${test_durations["$test"]:-"?"}
+            local log=${test_failure_logs["$test"]:-"no log captured"}
+            echo -e "  \e[31m❌ $test\e[0m (${dur}s) -> $log"
         done
     fi
 
-    # Save failed tests for potential rerun
-    save_failed_tests
+    echo ""
 
     if [ ${#failed_tests[@]} -ne 0 ]; then
         echo "Some tests failed."
