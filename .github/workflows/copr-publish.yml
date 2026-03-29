@@ -1,0 +1,132 @@
+name: Publish to COPR (RPM)
+
+on:
+  release:
+    types: [released]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to publish (e.g. v1.2.3)'
+        required: true
+
+concurrency:
+  group: copr-publish
+  cancel-in-progress: false
+
+jobs:
+  publish-copr:
+    name: Build SRPM and submit to COPR
+    runs-on: ubuntu-latest
+    # Run inside Fedora so rpmbuild, dnf macros, and copr-cli are all native.
+    # pip-installed copr-cli on Ubuntu is unreliable and often lags behind.
+    # Pin to a specific Fedora release — fedora:latest changes every ~6 months
+    # and can silently break package names or tooling.  Update this pin when
+    # you want to track a newer Fedora release.
+    container: fedora:42
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # -----------------------------------------------------------------------
+      # Determine release tag
+      # -----------------------------------------------------------------------
+      - name: Set release tag and version
+        id: tag
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            TAG="${{ github.event.release.tag_name }}"
+          else
+            TAG="${{ inputs.tag }}"
+          fi
+          echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
+          echo "VERSION=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      # -----------------------------------------------------------------------
+      # Install tooling
+      # -----------------------------------------------------------------------
+      - name: Install RPM build tools and copr-cli
+        run: |
+          dnf -y install \
+            @development-tools \
+            @rpm-development-tools \
+            copr-cli \
+            curl
+
+      # -----------------------------------------------------------------------
+      # Configure COPR authentication
+      #
+      # Store the ENTIRE contents of the ~/.config/copr file as the
+      # COPR_API_TOKEN secret.  Download the pre-filled file from:
+      #   https://copr.fedorainfracloud.org/api/
+      #
+      # Expected format:
+      #   [copr-cli]
+      #   login    = <login>
+      #   username = <username>
+      #   token    = <token>
+      #   copr_url = https://copr.fedorainfracloud.org
+      # -----------------------------------------------------------------------
+      - name: Configure COPR credentials
+        env:
+          COPR_CONFIG: ${{ secrets.COPR_API_TOKEN }}
+        run: |
+          mkdir -p "$HOME/.config"
+          printf '%s\n' "$COPR_CONFIG" > "$HOME/.config/copr"
+          chmod 600 "$HOME/.config/copr"
+
+      # -----------------------------------------------------------------------
+      # Build SRPM
+      # -----------------------------------------------------------------------
+      - name: Set up rpmbuild tree and download sources
+        env:
+          VERSION: ${{ steps.tag.outputs.VERSION }}
+        run: |
+          rpmdev-setuptree
+          cp manifests/rpm/stirling-pdf.spec ~/rpmbuild/SPECS/
+
+          # Source0: pre-built JAR from the GitHub release
+          curl -fsSL --retry 3 \
+            "https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Stirling-PDF-${VERSION}.jar" \
+            -o ~/rpmbuild/SOURCES/Stirling-PDF-${VERSION}.jar
+
+          # Source1: systemd service unit (pinned to release tag)
+          curl -fsSL --retry 3 \
+            "https://raw.githubusercontent.com/${{ github.repository }}/v${VERSION}/manifests/systemd/stirling-pdf.service" \
+            -o ~/rpmbuild/SOURCES/stirling-pdf.service
+
+          # Source2: application config (pinned to release tag)
+          curl -fsSL --retry 3 \
+            "https://raw.githubusercontent.com/${{ github.repository }}/v${VERSION}/manifests/systemd/stirling-pdf.conf" \
+            -o ~/rpmbuild/SOURCES/stirling-pdf.conf
+
+      - name: Build SRPM
+        id: srpm
+        env:
+          VERSION: ${{ steps.tag.outputs.VERSION }}
+        run: |
+          rpmbuild -bs \
+            --define "version ${VERSION}" \
+            ~/rpmbuild/SPECS/stirling-pdf.spec
+          SRPM=$(ls ~/rpmbuild/SRPMS/*.src.rpm)
+          echo "path=$SRPM" >> "$GITHUB_OUTPUT"
+
+      # -----------------------------------------------------------------------
+      # Submit SRPM to COPR — COPR builds binary RPMs for all configured chroots
+      # -----------------------------------------------------------------------
+      - name: Submit SRPM to COPR
+        env:
+          COPR_PROJECT: ${{ vars.COPR_PROJECT_NAME || 'stirling-pdf' }}
+        run: |
+          copr build "@stirling-tools/${COPR_PROJECT}" "${{ steps.srpm.outputs.path }}"
+
+      - name: Summary
+        env:
+          SRPM_PATH: ${{ steps.srpm.outputs.path }}
+        run: |
+          echo "### COPR publish complete" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Tag    : ${{ steps.tag.outputs.TAG }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Version: ${{ steps.tag.outputs.VERSION }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- SRPM   : $(basename "$SRPM_PATH")" >> "$GITHUB_STEP_SUMMARY"
+          echo "- COPR   : https://copr.fedorainfracloud.org/coprs/g/stirling-tools/${{ vars.COPR_PROJECT_NAME || 'stirling-pdf' }}/" >> "$GITHUB_STEP_SUMMARY"

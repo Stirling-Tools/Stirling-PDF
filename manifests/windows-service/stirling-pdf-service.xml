@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  WinSW configuration for Stirling-PDF Windows Service
+  Documentation: https://github.com/winsw/winsw/blob/master/doc/xml-config-file.md
+
+  Usage:
+    1. Place this file alongside WinSW.exe (renamed to stirling-pdf-service.exe)
+    2. Run: stirling-pdf-service.exe install
+    3. Start: stirling-pdf-service.exe start   (or via Services panel / sc start)
+-->
+<service>
+  <!-- ===== Identity ===== -->
+  <id>StirlingPDF</id>
+  <name>Stirling-PDF</name>
+  <description>Locally hosted web-based PDF manipulation tool. UI available at http://localhost:8080</description>
+
+  <!-- ===== Executable ===== -->
+  <!--
+    %BASE% expands to the directory containing this XML file.
+    Adjust the path to java.exe if Java is not on PATH.
+  -->
+  <executable>java</executable>
+  <arguments>%JAVA_OPTS% -jar "%BASE%\stirling-pdf.jar"</arguments>
+
+  <!-- ===== Environment ===== -->
+  <env name="JAVA_OPTS" value="-Xms128m -Xmx512m"/>
+
+  <!-- ===== Working directory ===== -->
+  <!--
+    Stirling-PDF writes its config / uploaded-files here.
+    The path below places data inside the service directory;
+    change to a dedicated data folder if preferred.
+  -->
+  <workingdirectory>%BASE%\data</workingdirectory>
+
+  <!-- ===== Logging ===== -->
+  <logmode>rotate</logmode>
+  <logpath>%BASE%\logs</logpath>
+  <!-- Keep up to 10 log files, each up to 10 MB -->
+  <log mode="roll-by-size">
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>10</keepFiles>
+  </log>
+
+  <!-- ===== Restart policy ===== -->
+  <onfailure action="restart" delay="10 sec"/>
+  <onfailure action="restart" delay="20 sec"/>
+  <onfailure action="none"/>
+
+  <!-- ===== Start / Stop timeouts ===== -->
+  <startarguments></startarguments>
+  <stoptimeout>30 sec</stoptimeout>
+
+  <!-- ===== Process priority (optional) ===== -->
+  <!-- <priority>Normal</priority> -->
+</service>

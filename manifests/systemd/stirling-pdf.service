@@ -1,0 +1,50 @@
+[Unit]
+Description=Stirling-PDF — locally hosted web-based PDF manipulation tool
+Documentation=https://github.com/Stirling-Tools/Stirling-PDF
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=stirling-pdf
+Group=stirling-pdf
+
+# Path to the installed JAR — change if you installed to a different location
+EnvironmentFile=-/etc/stirling-pdf/stirling-pdf.conf
+ExecStart=/usr/bin/java \
+    $JAVA_OPTS \
+    -jar /opt/stirling-pdf/stirling-pdf.jar
+
+WorkingDirectory=/var/lib/stirling-pdf
+
+# Process management
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=120
+TimeoutStopSec=30
+
+# Logging — redirect to journald (accessible via `journalctl -u stirling-pdf`)
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=stirling-pdf
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/stirling-pdf /var/log/stirling-pdf
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=no
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RemoveIPC=yes
+
+[Install]
+WantedBy=multi-user.target

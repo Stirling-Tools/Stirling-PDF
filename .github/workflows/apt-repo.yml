@@ -1,0 +1,159 @@
+name: Publish APT Repository
+
+on:
+  release:
+    types: [released]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to publish (e.g. v1.2.3)'
+        required: true
+
+# Serialise runs so two releases don't corrupt the repo index simultaneously.
+concurrency:
+  group: apt-repo
+  cancel-in-progress: false
+
+permissions:
+  contents: write  # needed to push to gh-pages-apt branch
+
+jobs:
+  publish-apt:
+    name: Update APT repository on GitHub Pages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository (source)
+        uses: actions/checkout@v4
+        with:
+          path: source
+
+      # -----------------------------------------------------------------------
+      # Determine release tag and download .deb asset
+      # -----------------------------------------------------------------------
+      - name: Set release tag
+        id: tag
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            echo "TAG=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "TAG=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download .deb from release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.tag.outputs.TAG }}"
+          gh release download "$TAG" \
+            --repo "${{ github.repository }}" \
+            --pattern "*.deb" \
+            --dir ./artifacts
+          DEB=$(ls ./artifacts/*.deb | head -1)
+          echo "DEB_FILE=$DEB" >> "$GITHUB_ENV"
+
+      # -----------------------------------------------------------------------
+      # Checkout (or initialise) the gh-pages-apt branch
+      #
+      # gh-pages-apt is an orphan branch that holds only the APT repo content.
+      # On first run it won't exist; we create it as an orphan in that case.
+      # -----------------------------------------------------------------------
+      - name: Checkout or initialise gh-pages-apt branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REMOTE_URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          if git ls-remote --exit-code --heads "$REMOTE_URL" gh-pages-apt > /dev/null 2>&1; then
+            git clone --branch gh-pages-apt --single-branch --depth 1 \
+              "$REMOTE_URL" apt-repo
+          else
+            mkdir apt-repo
+            cd apt-repo
+            git init
+            git remote add origin "$REMOTE_URL"
+            git checkout --orphan gh-pages-apt
+          fi
+
+      # -----------------------------------------------------------------------
+      # Import GPG signing key
+      #
+      # Secrets required:
+      #   APT_GPG_PRIVATE_KEY  — ASCII-armored private key  (gpg --armor --export-secret-keys)
+      #   APT_GPG_PASSPHRASE   — passphrase protecting the key (may be empty)
+      #
+      # GPG gotcha: GnuPG 2.1+ tries to open a pinentry dialog even with
+      # --batch. `export GPG_TTY=$(tty)` does NOT work in GitHub Actions
+      # (there is no tty). The only reliable fix is allow-loopback-pinentry.
+      # -----------------------------------------------------------------------
+      - name: Configure gpg-agent for headless signing
+        run: |
+          mkdir -p ~/.gnupg
+          chmod 700 ~/.gnupg
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          echo "use-agent"               >> ~/.gnupg/gpg.conf
+          # Reload agent so the new config takes effect immediately
+          gpg-connect-agent reloadagent /bye || true
+
+      - name: Import GPG key
+        env:
+          APT_GPG_PRIVATE_KEY: ${{ secrets.APT_GPG_PRIVATE_KEY }}
+          APT_GPG_PASSPHRASE:  ${{ secrets.APT_GPG_PASSPHRASE }}
+        run: |
+          echo "$APT_GPG_PRIVATE_KEY" | \
+            gpg --batch --no-tty --import
+          GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG \
+            | awk '/^sec/{sub(/.*\//, ""); print $1; exit}')
+          echo "GPG_KEY_ID=$GPG_KEY_ID"       >> "$GITHUB_ENV"
+          echo "GPG_PASSPHRASE=$APT_GPG_PASSPHRASE" >> "$GITHUB_ENV"
+
+      # -----------------------------------------------------------------------
+      # Export public key (armored ASCII) so users can trust the repo.
+      #
+      # Modern apt (Ubuntu 22.04+) requires the key to be referenced via
+      # `signed-by` in the sources.list entry — `apt-key add` is deprecated.
+      # Users should install the key like this:
+      #
+      #   curl -fsSL https://<pages-url>/KEY.gpg \
+      #     | sudo gpg --dearmor -o /usr/share/keyrings/stirling-pdf.gpg
+      #
+      # Then in /etc/apt/sources.list.d/stirling-pdf.list:
+      #   deb [arch=amd64 signed-by=/usr/share/keyrings/stirling-pdf.gpg] \
+      #       https://<pages-url> stable main
+      # -----------------------------------------------------------------------
+      - name: Export public GPG key
+        run: |
+          gpg --armor --export "$GPG_KEY_ID" > apt-repo/KEY.gpg
+
+      # -----------------------------------------------------------------------
+      # Update the repository index
+      # -----------------------------------------------------------------------
+      - name: Install dpkg-dev
+        run: sudo apt-get install -y --no-install-recommends dpkg-dev
+
+      - name: Update APT repo index
+        env:
+          GPG_KEY_ID:      ${{ env.GPG_KEY_ID }}
+          GPG_PASSPHRASE:  ${{ env.GPG_PASSPHRASE }}
+        run: |
+          chmod +x source/manifests/apt/update-repo.sh
+          source/manifests/apt/update-repo.sh "$DEB_FILE" apt-repo
+
+      # -----------------------------------------------------------------------
+      # Commit and push — GitHub Pages serves from this branch
+      # Configure the repository in Settings → Pages → Deploy from branch
+      # (branch: gh-pages-apt, folder: / (root))
+      # -----------------------------------------------------------------------
+      - name: Commit and push to gh-pages-apt
+        working-directory: apt-repo
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Re-set remote URL with token in case of fresh orphan init
+          git remote set-url origin \
+            "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          git add -A
+          git diff --cached --quiet || \
+            git commit -m "chore: update APT repo for ${{ steps.tag.outputs.TAG }}"
+          git push origin gh-pages-apt
