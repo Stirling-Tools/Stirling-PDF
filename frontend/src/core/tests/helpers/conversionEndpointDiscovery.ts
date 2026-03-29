@@ -4,8 +4,6 @@
  * Uses the backend's endpoint configuration API to discover available conversions
  */
 
-import { useMultipleEndpointsEnabled } from '@app/hooks/useEndpointConfig';
-
 export interface ConversionEndpoint {
   endpoint: string;
   fromFormat: string;
@@ -149,9 +147,46 @@ export class ConversionEndpointDiscovery {
   private cache: Map<string, boolean> | null = null;
   private cacheExpiry: number = 0;
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+  private sessionCookie: string | null = null;
 
   constructor(baseUrl: string = process.env.BACKEND_URL || 'http://localhost:8080') {
     this.baseUrl = baseUrl;
+  }
+
+  /**
+   * Authenticate with the backend to get a session cookie.
+   * Uses form login (Spring Security's /perform_login endpoint).
+   */
+  private async authenticate(): Promise<void> {
+    if (this.sessionCookie) return;
+
+    const username = process.env.TEST_USERNAME || 'admin';
+    const password = process.env.TEST_PASSWORD || 'stirling';
+
+    try {
+      const response = await fetch(`${this.baseUrl}/perform_login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
+        redirect: 'manual', // Don't follow redirect — we just need the Set-Cookie
+      });
+
+      // Extract session cookie from response headers
+      const setCookie = response.headers.get('set-cookie');
+      if (setCookie) {
+        // Parse JSESSIONID or similar session cookie
+        const match = setCookie.match(/([A-Z_]+SESSION[A-Z_]*=[^;]+)/i) || setCookie.match(/([^=]+=[^;]+)/);
+        if (match) {
+          this.sessionCookie = match[1];
+        }
+      }
+
+      if (!this.sessionCookie) {
+        console.warn('Authentication succeeded but no session cookie found in response');
+      }
+    } catch (error) {
+      console.error('Failed to authenticate with backend:', error);
+    }
   }
 
   /**
@@ -236,11 +271,23 @@ export class ConversionEndpointDiscovery {
     }
 
     try {
+      // Authenticate first to get a session cookie
+      await this.authenticate();
+
       const endpointNames = ALL_CONVERSION_ENDPOINTS.map(conv => conv.endpoint);
       const endpointsParam = endpointNames.join(',');
 
+      const apiKey = process.env.TEST_API_KEY || '123456789';
+      const headers: Record<string, string> = {
+        'X-API-KEY': apiKey,
+      };
+      if (this.sessionCookie) {
+        headers['Cookie'] = this.sessionCookie;
+      }
+
       const response = await fetch(
-        `${this.baseUrl}/api/v1/config/endpoints-enabled?endpoints=${encodeURIComponent(endpointsParam)}`
+        `${this.baseUrl}/api/v1/config/endpoints-enabled?endpoints=${encodeURIComponent(endpointsParam)}`,
+        { headers }
       );
 
       if (!response.ok) {
@@ -297,29 +344,7 @@ export class ConversionEndpointDiscovery {
 // Export singleton instance for reuse across tests
 export const conversionDiscovery = new ConversionEndpointDiscovery();
 
-/**
- * React hook version for use in components (wraps the class)
- */
-export function useConversionEndpoints() {
-  const endpointNames = ALL_CONVERSION_ENDPOINTS.map(conv => conv.endpoint);
-  const { endpointStatus, loading, error, refetch } = useMultipleEndpointsEnabled(endpointNames);
-
-  const availableConversions = ALL_CONVERSION_ENDPOINTS.filter(
-    conv => endpointStatus[conv.endpoint] === true
-  );
-
-  const unavailableConversions = ALL_CONVERSION_ENDPOINTS.filter(
-    conv => endpointStatus[conv.endpoint] === false
-  );
-
-  return {
-    availableConversions,
-    unavailableConversions,
-    allConversions: ALL_CONVERSION_ENDPOINTS,
-    endpointStatus,
-    loading,
-    error,
-    refetch,
-    isConversionAvailable: (endpoint: string) => endpointStatus[endpoint] === true
-  };
-}
+// NOTE: The React hook `useConversionEndpoints` was removed from this file
+// because it imported Vite app code (useMultipleEndpointsEnabled → apiClient →
+// import.meta.env) which breaks in Playwright's Node runtime.
+// If needed in components, create it in a separate file under src/core/hooks/.

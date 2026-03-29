@@ -8,7 +8,7 @@ import { defineConfig, devices } from '@playwright/test';
  * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
-  testDir: './src/core/tests',
+  testDir: './src',
   testMatch: '**/*.spec.ts',
 
   /* Run tests in files in parallel */
@@ -20,8 +20,8 @@ export default defineConfig({
   /* Retry on CI only — locally tests should pass cleanly */
   retries: process.env.CI ? 2 : 0,
 
-  /* 4 workers locally balances speed vs Vite dev server stability. 1 on CI. */
-  workers: process.env.CI ? 1 : 4,
+  /* Workers: CI uses 1 for stability, locally use 50% of CPU cores */
+  workers: process.env.CI ? 1 : '50%',
 
   /* Reporter to use */
   reporter: [

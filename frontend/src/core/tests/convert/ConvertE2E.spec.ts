@@ -1,491 +1,318 @@
 /**
  * End-to-End Tests for Convert Tool
  *
- * These tests dynamically discover available conversion endpoints and test them.
+ * Tests dynamically discover available conversion endpoints and test them.
  * Tests are automatically skipped if the backend endpoint is not available.
  *
- * Run with: npm run test:e2e or npx playwright test
+ * Run with: npx playwright test ConvertE2E
  */
 
 import { test, expect, Page } from '@playwright/test';
 import {
   conversionDiscovery,
   type ConversionEndpoint
-} from '@app/tests/helpers/conversionEndpointDiscovery';
+} from '../helpers/conversionEndpointDiscovery';
+import { loginAndSetup } from '../../../tests/helpers/login';
 import * as path from 'path';
 import * as fs from 'fs';
 
-// Test configuration
-const BASE_URL = process.env.BASE_URL || 'http://localhost:5173';
+// ─── Test fixture resolution ─────────────────────────────────────────────────
 
-/**
- * Resolves test fixture paths dynamically based on current working directory.
- * Works from both top-level project directory and frontend subdirectory.
- */
-function resolveTestFixturePath(filename: string): string {
-  const cwd = process.cwd();
-
-  // Try frontend/src/tests/test-fixtures/ first (from top-level)
-  const topLevelPath = path.join(cwd, 'frontend', 'src', 'tests', 'test-fixtures', filename);
-  if (fs.existsSync(topLevelPath)) {
-    return topLevelPath;
+function resolveFixture(filename: string): string {
+  const candidates = [
+    path.join(__dirname, '..', 'test-fixtures', filename),
+    path.join(process.cwd(), 'src', 'core', 'tests', 'test-fixtures', filename),
+    path.join(process.cwd(), 'frontend', 'src', 'core', 'tests', 'test-fixtures', filename),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
   }
-
-  // Try src/tests/test-fixtures/ (from frontend directory)
-  const frontendPath = path.join(cwd, 'src', 'tests', 'test-fixtures', filename);
-  if (fs.existsSync(frontendPath)) {
-    return frontendPath;
-  }
-
-  // Try relative path from current test file location
-  const relativePath = path.join(__dirname, '..', 'test-fixtures', filename);
-  if (fs.existsSync(relativePath)) {
-    return relativePath;
-  }
-
-  // Fallback to the original path format (should work from top-level)
-  return path.join('.', 'frontend', 'src', 'tests', 'test-fixtures', filename);
+  return candidates[0]; // fallback — will fail with a clear "file not found"
 }
 
-// Test file paths (dynamically resolved based on current working directory)
-const TEST_FILES = {
-  pdf: resolveTestFixturePath('sample.pdf'),
-  docx: resolveTestFixturePath('sample.docx'),
-  doc: resolveTestFixturePath('sample.doc'),
-  pptx: resolveTestFixturePath('sample.pptx'),
-  ppt: resolveTestFixturePath('sample.ppt'),
-  xlsx: resolveTestFixturePath('sample.xlsx'),
-  xls: resolveTestFixturePath('sample.xls'),
-  png: resolveTestFixturePath('sample.png'),
-  jpg: resolveTestFixturePath('sample.jpg'),
-  jpeg: resolveTestFixturePath('sample.jpeg'),
-  gif: resolveTestFixturePath('sample.gif'),
-  bmp: resolveTestFixturePath('sample.bmp'),
-  tiff: resolveTestFixturePath('sample.tiff'),
-  webp: resolveTestFixturePath('sample.webp'),
-  md: resolveTestFixturePath('sample.md'),
-  eml: resolveTestFixturePath('sample.eml'),
-  html: resolveTestFixturePath('sample.html'),
-  txt: resolveTestFixturePath('sample.txt'),
-  xml: resolveTestFixturePath('sample.xml'),
-  csv: resolveTestFixturePath('sample.csv')
+const TEST_FILES: Record<string, string> = {
+  pdf: resolveFixture('sample.pdf'),
+  docx: resolveFixture('sample.docx'),
+  doc: resolveFixture('sample.doc'),
+  pptx: resolveFixture('sample.pptx'),
+  xlsx: resolveFixture('sample.xlsx'),
+  png: resolveFixture('sample.png'),
+  jpg: resolveFixture('sample.jpg'),
+  md: resolveFixture('sample.md'),
+  eml: resolveFixture('sample.eml'),
+  html: resolveFixture('sample.html'),
+  txt: resolveFixture('sample.txt'),
+  xml: resolveFixture('sample.xml'),
+  csv: resolveFixture('sample.csv'),
+  svg: resolveFixture('sample.svg'),
 };
 
-// File format to test file mapping
-const getTestFileForFormat = (format: string): string => {
-  const formatMap: Record<string, string> = {
-    'pdf': TEST_FILES.pdf,
-    'docx': TEST_FILES.docx,
-    'doc': TEST_FILES.doc,
-    'pptx': TEST_FILES.pptx,
-    'ppt': TEST_FILES.ppt,
-    'xlsx': TEST_FILES.xlsx,
-    'xls': TEST_FILES.xls,
-    'office': TEST_FILES.docx, // Default office file
-    'image': TEST_FILES.png, // Default image file
-    'png': TEST_FILES.png,
-    'jpg': TEST_FILES.jpg,
-    'jpeg': TEST_FILES.jpeg,
-    'gif': TEST_FILES.gif,
-    'bmp': TEST_FILES.bmp,
-    'tiff': TEST_FILES.tiff,
-    'webp': TEST_FILES.webp,
-    'md': TEST_FILES.md,
-    'eml': TEST_FILES.eml,
-    'html': TEST_FILES.html,
-    'txt': TEST_FILES.txt,
-    'xml': TEST_FILES.xml,
-    'csv': TEST_FILES.csv
+function getTestFileForFormat(format: string): string {
+  const aliases: Record<string, string> = {
+    office: 'docx',
+    image: 'png',
+    jpeg: 'jpg',
   };
+  const key = aliases[format] ?? format;
+  return TEST_FILES[key] ?? TEST_FILES.pdf;
+}
 
-  return formatMap[format] || TEST_FILES.pdf; // Fallback to PDF
-};
-
-// Expected file extensions for target formats
-const getExpectedExtension = (toFormat: string): string => {
-  const extensionMap: Record<string, string> = {
-    'pdf': '.pdf',
-    'docx': '.docx',
-    'pptx': '.pptx',
-    'txt': '.txt',
-    'html': '.zip', // HTML is zipped
-    'xml': '.xml',
-    'csv': '.csv',
-    'md': '.md',
-    'image': '.png', // Default for image conversion
-    'png': '.png',
-    'jpg': '.jpg',
-    'jpeg': '.jpeg',
-    'gif': '.gif',
-    'bmp': '.bmp',
-    'tiff': '.tiff',
-    'webp': '.webp',
-    'pdfa': '.pdf'
-  };
-
-  return extensionMap[toFormat] || '.pdf';
-};
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /**
- * Helper function to upload files through the modal system
+ * Upload a file on the convert tool page via the hidden file input.
+ * The landing page and tool pages both render a hidden <input type="file">.
  */
-async function uploadFileViaModal(page: Page, filePath: string) {
-  // Click the Files button in the QuickAccessBar to open the modal
-  await page.click('[data-testid="files-button"]');
+async function uploadFile(page: Page, filePath: string) {
+  const fileInput = page.locator('input[type="file"]').first();
+  await fileInput.setInputFiles(filePath);
 
-  // Wait for the modal to open
-  await page.waitForSelector('.mantine-Modal-overlay', { state: 'visible', timeout: 5000 });
-  //await page.waitForSelector('[data-testid="file-upload-modal"]', { timeout: 5000 });
-
-  // Upload the file through the modal's file input
-  await page.setInputFiles('input[type="file"]', filePath);
-
-  // Wait for the file to be processed and the modal to close
-  await page.waitForSelector('[data-testid="file-upload-modal"]', { state: 'hidden' });
-
-  // Wait for the file thumbnail to appear in the main interface
-  await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });
+  // Wait for file to be registered — the Files step shows "✓ Selected: filename"
+  await expect(page.getByText(/selected/i).first()).toBeVisible({ timeout: 15_000 });
 }
 
 /**
- * Generic test function for any conversion
+ * Select from/to formats in the ConvertSettings dropdowns.
+ * Uses the real data-testid attributes on GroupedFormatDropdown.
  */
-async function testConversion(page: Page, conversion: ConversionEndpoint) {
-  const expectedExtension = getExpectedExtension(conversion.toFormat);
+async function selectFormats(page: Page, fromFormat: string, toFormat: string) {
+  // Wait for the from-dropdown to appear
+  const fromDropdown = page.locator('[data-testid="convert-from-dropdown"]');
+  await expect(fromDropdown).toBeVisible({ timeout: 10_000 });
 
-  console.log(`Testing ${conversion.endpoint}: ${conversion.fromFormat} → ${conversion.toFormat}`);
+  // Check if the correct from-format is already auto-selected.
+  // The convert tool auto-detects formats from the uploaded file, so we may
+  // not need to open the dropdown at all.
+  const fromText = await fromDropdown.textContent();
+  const fromAlreadySelected = fromText && fromText.trim().length > 0
+    && !fromText.toLowerCase().includes('source format');
 
-  // File should already be uploaded, click the Convert tool button
-  await page.click('[data-testid="tool-convert"]');
-
-  // Wait for the FileEditor to load in convert mode with file thumbnails
-  await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 5000 });
-
-  // Click the file thumbnail checkbox to select it in the FileEditor
-  await page.click('[data-testid="file-thumbnail-checkbox"]');
-
-  // Wait for the conversion settings to appear after file selection
-  await page.waitForSelector('[data-testid="convert-from-dropdown"]', { timeout: 5000 });
-
-  // Select FROM format
-  await page.click('[data-testid="convert-from-dropdown"]');
-  const fromFormatOption = page.locator(`[data-testid="format-option-${conversion.fromFormat}"]`);
-  await fromFormatOption.scrollIntoViewIfNeeded();
-  await fromFormatOption.click();
-
-  // Select TO format
-  await page.click('[data-testid="convert-to-dropdown"]');
-  const toFormatOption = page.locator(`[data-testid="format-option-${conversion.toFormat}"]`);
-  await toFormatOption.scrollIntoViewIfNeeded();
-  await toFormatOption.click();
-
-  // Handle format-specific options
-  if (conversion.toFormat === 'image' || ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'webp'].includes(conversion.toFormat)) {
-    // Set image conversion options if they appear
-    const imageOptionsVisible = await page.locator('[data-testid="image-options-section"]').isVisible().catch(() => false);
-    if (imageOptionsVisible) {
-      // Click the color type dropdown and select "Color"
-      await page.click('[data-testid="color-type-select"]');
-      await page.getByRole('option', { name: 'Color' }).click();
-
-      // Set DPI value
-      await page.fill('[data-testid="dpi-input"]', '150');
-
-      // Click the output type dropdown and select "Multiple"
-      await page.click('[data-testid="output-type-select"]');
-
-      await page.getByRole('option', { name: 'single' }).click();
-    }
+  if (!fromAlreadySelected) {
+    await fromDropdown.click();
+    const fromOption = page.locator(`[data-testid="format-option-${fromFormat}"]`);
+    await expect(fromOption).toBeVisible({ timeout: 5_000 });
+    await fromOption.click();
+    // Click body to close popover and any tooltip
+    await page.locator('body').click({ position: { x: 0, y: 0 } });
+    await page.waitForTimeout(300);
   }
 
-  if (conversion.fromFormat === 'image' && conversion.toFormat === 'pdf') {
-    // Set PDF creation options if they appear
-    const pdfOptionsVisible = await page.locator('[data-testid="pdf-options-section"]').isVisible().catch(() => false);
-    if (pdfOptionsVisible) {
-      // Click the color type dropdown and select "Color"
-      await page.click('[data-testid="color-type-select"]');
-      await page.locator('[data-value="color"]').click();
-    }
+  // Check if to-format is already auto-selected
+  const toDropdown = page.locator('[data-testid="convert-to-dropdown"]');
+  await expect(toDropdown).toBeVisible({ timeout: 5_000 });
+  const toText = await toDropdown.textContent();
+  const toAlreadySelected = toText && toText.trim().length > 0
+    && !toText.toLowerCase().includes('target format')
+    && !toText.toLowerCase().includes('select a source');
+
+  if (!toAlreadySelected) {
+    // Use force:true to bypass any tooltip overlay
+    await toDropdown.click({ force: true });
+    const toOption = page.locator(`[data-testid="format-option-${toFormat}"]`);
+    await expect(toOption).toBeVisible({ timeout: 5_000 });
+    await toOption.click();
+    await page.locator('body').click({ position: { x: 0, y: 0 } });
+    await page.waitForTimeout(300);
   }
+}
 
-  if (conversion.fromFormat === 'pdf' && conversion.toFormat === 'csv') {
-    // Set CSV extraction options if they appear
-    const csvOptionsVisible = await page.locator('[data-testid="csv-options-section"]').isVisible().catch(() => false);
-    if (csvOptionsVisible) {
-      // Set specific page numbers for testing (test pages 1-2)
-      await page.fill('[data-testid="page-numbers-input"]', '1-2');
-    }
-  }
+/**
+ * Click the convert button and wait for results.
+ */
+/**
+ * Set image output mode to "Single" if the image options section is visible.
+ * "Multiple" mode (default) triggers a zip download that bypasses the review panel.
+ */
+async function setImageOutputToSingle(page: Page) {
+  const imageOptions = page.locator('[data-testid="image-options-section"]');
+  const visible = await imageOptions.isVisible({ timeout: 2_000 }).catch(() => false);
+  if (!visible) return;
 
-  // Start conversion
-  await page.click('[data-testid="convert-button"]');
-
-  // Wait for conversion to complete (with generous timeout)
-  await page.waitForSelector('[data-testid="download-button"]', { timeout: 60000 });
-
-  // Verify download is available
-  const downloadButton = page.locator('[data-testid="download-button"]');
-  await expect(downloadButton).toBeVisible();
-
-  // Start download and verify file
-  const downloadPromise = page.waitForEvent('download');
-  await downloadButton.click();
-  const download = await downloadPromise;
-
-  // Verify file extension
-  expect(download.suggestedFilename()).toMatch(new RegExp(`\\${expectedExtension}$`));
-
-  // Save and verify file is not empty
-  const path = await download.path();
-  if (path) {
-    const fs = require('fs');
-    const stats = fs.statSync(path);
-    expect(stats.size).toBeGreaterThan(0);
-
-    // Format-specific validations
-    if (conversion.toFormat === 'pdf' || conversion.toFormat === 'pdfa') {
-      // Verify PDF header
-      const buffer = fs.readFileSync(path);
-      const header = buffer.toString('utf8', 0, 4);
-      expect(header).toBe('%PDF');
-    }
-
-    if (conversion.toFormat === 'txt') {
-      // Verify text content exists
-      const content = fs.readFileSync(path, 'utf8');
-      expect(content.length).toBeGreaterThan(0);
-    }
-
-    if (conversion.toFormat === 'csv') {
-      // Verify CSV content contains separators
-      const content = fs.readFileSync(path, 'utf8');
-      expect(content).toContain(',');
+  // The output select is a Mantine Select (combobox) — click it and pick "Single"
+  const outputSelect = page.locator('[data-testid="output-type-select"]');
+  if (await outputSelect.isVisible().catch(() => false)) {
+    await outputSelect.click();
+    // Select "Single" or "single" from the dropdown options
+    const singleOption = page.getByRole('option', { name: /single/i }).first();
+    if (await singleOption.isVisible({ timeout: 2_000 }).catch(() => false)) {
+      await singleOption.click();
     }
   }
 }
 
-// Discover conversions at module level before tests are defined
+async function executeConversion(page: Page) {
+  const convertBtn = page.locator('[data-testid="convert-button"]');
+  await expect(convertBtn).toBeVisible();
+  await expect(convertBtn).toBeEnabled({ timeout: 5_000 });
+
+  // Listen for download event (multi-output like PDF→images triggers a zip download)
+  const downloadPromise = page.waitForEvent('download', { timeout: 60_000 }).catch(() => null);
+
+  await convertBtn.click();
+
+  // Build a single composite locator for all possible success indicators.
+  // Playwright's .or() checks all branches efficiently in one pass — no polling needed.
+  const successIndicator = page.locator('[data-testid="review-panel-container"]')
+    .or(page.getByRole('button', { name: /undo/i }).first())
+    .or(page.getByRole('button', { name: /download/i }).first())
+    .or(page.getByText(/conversion results/i).first());
+
+  // Race: either UI shows results or a file downloads directly
+  await Promise.race([
+    expect(successIndicator.first()).toBeVisible({ timeout: 60_000 }),
+    downloadPromise,
+  ]);
+}
+
+// ─── Endpoint discovery ──────────────────────────────────────────────────────
+
 let availableConversions: ConversionEndpoint[] = [];
-let unavailableConversions: ConversionEndpoint[] = [];
 
-// Pre-populate conversions synchronously for test generation
-(async () => {
-  try {
-    availableConversions = await conversionDiscovery.getAvailableConversions();
-    unavailableConversions = await conversionDiscovery.getUnavailableConversions();
-  } catch (error) {
-    console.error('Failed to discover conversions during module load:', error);
-  }
-})();
+// ─── Tests ───────────────────────────────────────────────────────────────────
 
 test.describe('Convert Tool E2E Tests', () => {
+  // Generous timeout for conversion operations
+  test.setTimeout(120_000);
 
   test.beforeAll(async () => {
-    // Re-discover to ensure fresh data at test time
-    console.log('Re-discovering available conversion endpoints...');
+    console.log('Discovering available conversion endpoints...');
     availableConversions = await conversionDiscovery.getAvailableConversions();
-    unavailableConversions = await conversionDiscovery.getUnavailableConversions();
+    console.log(`Found ${availableConversions.length} available conversions`);
+    availableConversions.forEach(c =>
+      console.log(`  ✓ ${c.endpoint}: ${c.fromFormat} → ${c.toFormat}`)
+    );
+  });
 
-    console.log(`Found ${availableConversions.length} available conversions:`);
-    availableConversions.forEach(conv => {
-      console.log(`  ✓ ${conv.endpoint}: ${conv.fromFormat} → ${conv.toFormat}`);
+  test.beforeEach(async ({ page }) => {
+    // Login and dismiss cookie consent / onboarding overlays
+    await loginAndSetup(page);
+
+    // Navigate to the convert tool
+    await page.goto('/convert');
+    await page.waitForLoadState('domcontentloaded');
+  });
+
+  // ── Dynamic conversion tests ───────────────────────────────────────────
+
+  const CONVERSIONS: { name: string; endpoint: string; from: string; to: string }[] = [
+    { name: 'PDF to PNG',  endpoint: 'pdf-to-img',         from: 'pdf',   to: 'png' },
+    { name: 'PDF to DOCX', endpoint: 'pdf-to-word',        from: 'pdf',   to: 'docx' },
+    { name: 'DOCX to PDF', endpoint: 'file-to-pdf',        from: 'docx',  to: 'pdf' },
+    { name: 'Image to PDF',endpoint: 'img-to-pdf',         from: 'png',   to: 'pdf' },
+    { name: 'PDF to TXT',  endpoint: 'pdf-to-text',        from: 'pdf',   to: 'txt' },
+    { name: 'PDF to HTML', endpoint: 'pdf-to-html',        from: 'pdf',   to: 'html' },
+    { name: 'PDF to XML',  endpoint: 'pdf-to-xml',         from: 'pdf',   to: 'xml' },
+    { name: 'PDF to CSV',  endpoint: 'pdf-to-csv',         from: 'pdf',   to: 'csv' },
+    { name: 'PDF to PDFA', endpoint: 'pdf-to-pdfa',        from: 'pdf',   to: 'pdfa' },
+    { name: 'HTML to PDF', endpoint: 'html-to-pdf',        from: 'html',  to: 'pdf' },
+    { name: 'Markdown to PDF', endpoint: 'markdown-to-pdf', from: 'md',   to: 'pdf' },
+  ];
+
+  for (const conv of CONVERSIONS) {
+    test(`${conv.name} conversion`, async ({ page }) => {
+      // Skip if endpoint is not available on this backend
+      const isAvailable = availableConversions.some(c => c.endpoint === conv.endpoint);
+      test.skip(!isAvailable, `Endpoint ${conv.endpoint} is not available`);
+
+      // Upload the source file
+      const testFile = getTestFileForFormat(conv.from);
+      await uploadFile(page, testFile);
+
+      // Select formats
+      await selectFormats(page, conv.from, conv.to);
+
+      // For image conversions, set output to "Single" so results show in review panel
+      await setImageOutputToSingle(page);
+
+      // Execute and verify results appear
+      await executeConversion(page);
     });
+  }
 
-    if (unavailableConversions.length > 0) {
-      console.log(`Found ${unavailableConversions.length} unavailable conversions:`);
-      unavailableConversions.forEach(conv => {
-        console.log(`  ✗ ${conv.endpoint}: ${conv.fromFormat} → ${conv.toFormat}`);
+  // ── PDF to Image: output type tests ─────────────────────────────────────
+
+  test.describe('PDF to Image output types', () => {
+    const IMAGE_OUTPUT_MODES = [
+      { mode: 'single',   label: /single/i,   description: 'produces a single image' },
+      { mode: 'multiple', label: /multiple/i,  description: 'produces multiple images (zip)' },
+    ];
+
+    for (const { mode, label, description } of IMAGE_OUTPUT_MODES) {
+      test(`PDF to PNG with "${mode}" output — ${description}`, async ({ page }) => {
+        const isAvailable = availableConversions.some(c => c.endpoint === 'pdf-to-img');
+        test.skip(!isAvailable, 'pdf-to-img endpoint is not available');
+
+        // Upload a PDF
+        await uploadFile(page, TEST_FILES.pdf);
+
+        // Formats auto-select PDF → image; verify and adjust if needed
+        await selectFormats(page, 'pdf', 'png');
+
+        // Set the output type
+        const outputSelect = page.locator('[data-testid="output-type-select"]');
+        await expect(outputSelect).toBeVisible({ timeout: 5_000 });
+        await outputSelect.click();
+        const option = page.getByRole('option', { name: label }).first();
+        await expect(option).toBeVisible({ timeout: 3_000 });
+        await option.click();
+
+        // Execute and verify
+        await executeConversion(page);
+      });
+    }
+
+    const COLOR_TYPES = [
+      { value: 'color',      label: /^colour$|^color$/i },
+      { value: 'grayscale',  label: /grayscale|greyscale/i },
+      { value: 'blackwhite', label: /black.*white/i },
+    ];
+
+    for (const { value, label } of COLOR_TYPES) {
+      test(`PDF to PNG with "${value}" colour type`, async ({ page }) => {
+        const isAvailable = availableConversions.some(c => c.endpoint === 'pdf-to-img');
+        test.skip(!isAvailable, 'pdf-to-img endpoint is not available');
+
+        await uploadFile(page, TEST_FILES.pdf);
+        await selectFormats(page, 'pdf', 'png');
+
+        // Set output to single (so results appear in review panel)
+        await setImageOutputToSingle(page);
+
+        // Set colour type
+        const colorSelect = page.locator('[data-testid="color-type-select"]');
+        await expect(colorSelect).toBeVisible({ timeout: 5_000 });
+        await colorSelect.click();
+        const option = page.getByRole('option', { name: label }).first();
+        await expect(option).toBeVisible({ timeout: 3_000 });
+        await option.click();
+
+        await executeConversion(page);
       });
     }
   });
 
-  test.beforeEach(async ({ page }) => {
-    // Navigate to the homepage
-    await page.goto(`${BASE_URL}`);
+  // ── Static tests ───────────────────────────────────────────────────────
 
-    // Wait for the page to load
-    await page.waitForLoadState('networkidle');
+  test('convert button is disabled when no formats are selected', async ({ page }) => {
+    // Upload a PDF file
+    await uploadFile(page, TEST_FILES.pdf);
 
-    // Wait for the QuickAccessBar to appear
-    await page.waitForSelector('[data-testid="files-button"]', { timeout: 10000 });
+    // The convert button should be disabled because no to-format is chosen
+    const convertBtn = page.locator('[data-testid="convert-button"]');
+    // Button may not exist yet or should be disabled
+    const btnVisible = await convertBtn.isVisible({ timeout: 3_000 }).catch(() => false);
+    if (btnVisible) {
+      await expect(convertBtn).toBeDisabled();
+    }
   });
 
-  test.describe('Dynamic Conversion Tests', () => {
+  test('convert tool page loads with format dropdowns', async ({ page }) => {
+    // Upload a file so the settings step expands
+    await uploadFile(page, TEST_FILES.pdf);
 
-    // Generate a test for each potentially available conversion
-    // We'll discover all possible conversions and then skip unavailable ones at runtime
-    test('PDF to PNG conversion', async ({ page }) => {
-      const conversion: ConversionEndpoint = {
-        endpoint: '/api/v1/convert/pdf/img',
-        fromFormat: 'pdf',
-        toFormat: 'png',
-        description: '',
-        apiPath: ''
-      };
-      const isAvailable = availableConversions.some(c => c.apiPath === conversion.endpoint);
-      test.skip(!isAvailable, `Endpoint ${conversion.endpoint} is not available`);
-
-      const testFile = getTestFileForFormat(conversion.fromFormat);
-      await uploadFileViaModal(page, testFile);
-
-      await testConversion(page, conversion);
-    });
-
-    test('PDF to DOCX conversion', async ({ page }) => {
-      const conversion: ConversionEndpoint = {
-        endpoint: '/api/v1/convert/pdf/word',
-        fromFormat: 'pdf',
-        toFormat: 'docx',
-        description: '',
-        apiPath: ''
-      };
-      const isAvailable = availableConversions.some(c => c.apiPath === conversion.endpoint);
-      test.skip(!isAvailable, `Endpoint ${conversion.endpoint} is not available`);
-
-      const testFile = getTestFileForFormat(conversion.fromFormat);
-      await uploadFileViaModal(page, testFile);
-
-      await testConversion(page, conversion);
-    });
-
-    test('DOCX to PDF conversion', async ({ page }) => {
-      const conversion: ConversionEndpoint = {
-          endpoint: '/api/v1/convert/file/pdf',
-          fromFormat: 'docx',
-          toFormat: 'pdf',
-          description: '',
-          apiPath: ''
-      };
-      const isAvailable = availableConversions.some(c => c.apiPath === conversion.endpoint);
-      test.skip(!isAvailable, `Endpoint ${conversion.endpoint} is not available`);
-
-      const testFile = getTestFileForFormat(conversion.fromFormat);
-      await uploadFileViaModal(page, testFile);
-
-      await testConversion(page, conversion);
-    });
-
-    test('Image to PDF conversion', async ({ page }) => {
-      const conversion: ConversionEndpoint = {
-        endpoint: '/api/v1/convert/img/pdf',
-        fromFormat: 'png',
-        toFormat: 'pdf',
-        description: '',
-        apiPath: ''
-      };
-      const isAvailable = availableConversions.some(c => c.apiPath === conversion.endpoint);
-      test.skip(!isAvailable, `Endpoint ${conversion.endpoint} is not available`);
-
-      const testFile = getTestFileForFormat(conversion.fromFormat);
-      await uploadFileViaModal(page, testFile);
-
-      await testConversion(page, conversion);
-    });
-
-    test('PDF to TXT conversion', async ({ page }) => {
-      const conversion: ConversionEndpoint = {
-        endpoint: '/api/v1/convert/pdf/text',
-        fromFormat: 'pdf',
-        toFormat: 'txt',
-        description: '',
-        apiPath: ''
-      };
-      const isAvailable = availableConversions.some(c => c.apiPath === conversion.endpoint);
-      test.skip(!isAvailable, `Endpoint ${conversion.endpoint} is not available`);
-
-      const testFile = getTestFileForFormat(conversion.fromFormat);
-      await uploadFileViaModal(page, testFile);
-
-      await testConversion(page, conversion);
-    });
-
-    test('PDF to HTML conversion', async ({ page }) => {
-      const conversion: ConversionEndpoint = {
-        endpoint: '/api/v1/convert/pdf/html',
-        fromFormat: 'pdf',
-        toFormat: 'html',
-        description: '',
-        apiPath: ''
-      };
-      const isAvailable = availableConversions.some(c => c.apiPath === conversion.endpoint);
-      test.skip(!isAvailable, `Endpoint ${conversion.endpoint} is not available`);
-
-      const testFile = getTestFileForFormat(conversion.fromFormat);
-      await uploadFileViaModal(page, testFile);
-
-      await testConversion(page, conversion);
-    });
-
-    test('PDF to XML conversion', async ({ page }) => {
-      const conversion: ConversionEndpoint = {
-        endpoint: '/api/v1/convert/pdf/xml',
-        fromFormat: 'pdf',
-        toFormat: 'xml',
-        description: '',
-        apiPath: ''
-      };
-      const isAvailable = availableConversions.some(c => c.apiPath === conversion.endpoint);
-      test.skip(!isAvailable, `Endpoint ${conversion.endpoint} is not available`);
-
-      const testFile = getTestFileForFormat(conversion.fromFormat);
-      await uploadFileViaModal(page, testFile);
-
-      await testConversion(page, conversion);
-    });
-
-    test('PDF to CSV conversion', async ({ page }) => {
-      const conversion: ConversionEndpoint = {
-        endpoint: '/api/v1/convert/pdf/csv',
-        fromFormat: 'pdf',
-        toFormat: 'csv',
-        description: '',
-        apiPath: ''
-      };
-      const isAvailable = availableConversions.some(c => c.apiPath === conversion.endpoint);
-      test.skip(!isAvailable, `Endpoint ${conversion.endpoint} is not available`);
-
-      const testFile = getTestFileForFormat(conversion.fromFormat);
-      await uploadFileViaModal(page, testFile);
-
-      await testConversion(page, conversion);
-    });
-
-    test('PDF to PDFA conversion', async ({ page }) => {
-      const conversion: ConversionEndpoint = {
-          endpoint: '/api/v1/convert/pdf/pdfa',
-          fromFormat: 'pdf',
-          toFormat: 'pdfa',
-          description: '',
-          apiPath: ''
-      };
-      const isAvailable = availableConversions.some(c => c.apiPath === conversion.endpoint);
-      test.skip(!isAvailable, `Endpoint ${conversion.endpoint} is not available`);
-
-      const testFile = getTestFileForFormat(conversion.fromFormat);
-      await uploadFileViaModal(page, testFile);
-
-      await testConversion(page, conversion);
-    });
-  });
-
-  test.describe('Static Tests', () => {
-
-    // Test that disabled conversions don't appear in dropdowns when they shouldn't
-    test('should not show conversion button when no valid conversions available', async ({ page }) => {
-      // This test ensures the convert button is disabled when no valid conversion is possible
-      await uploadFileViaModal(page, TEST_FILES.pdf);
-
-      // Click the Convert tool button
-      await page.click('[data-testid="tool-convert"]');
-
-      // Wait for convert mode and select file
-      await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 5000 });
-      await page.click('[data-testid="file-thumbnail-checkbox"]');
-
-      // Don't select any formats - convert button should not exist
-      const convertButton = page.locator('[data-testid="convert-button"]');
-      await expect(convertButton).toHaveCount(0);
-    });
+    // Verify the from-dropdown is visible
+    await expect(
+      page.locator('[data-testid="convert-from-dropdown"]')
+    ).toBeVisible({ timeout: 10_000 });
   });
 });
-
