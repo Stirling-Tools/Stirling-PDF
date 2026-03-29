@@ -64,18 +64,25 @@ stop_test_timer() {
 capture_failure_logs() {
     local test_name=$1
     local container_name=$2
+    local extra_context=$3
     local log_file="$REPORT_DIR/${test_name//[^a-zA-Z0-9_-]/_}.failure.log"
 
-    if [ -n "$container_name" ]; then
-        {
-            echo "=== Failure logs for: $test_name ==="
+    {
+        echo "=== Failure logs for: $test_name ==="
+        echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        if [ -n "$container_name" ]; then
             echo "Container: $container_name"
-            echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             echo "---"
             docker logs "$container_name" 2>&1 | tail -200
-        } > "$log_file" 2>/dev/null || true
-        test_failure_logs["$test_name"]="$log_file"
-    fi
+        elif [ -n "$extra_context" ]; then
+            echo "---"
+            echo "$extra_context"
+        else
+            echo "---"
+            echo "No container was running. Docker-compose may have failed to start."
+        fi
+    } > "$log_file" 2>/dev/null || true
+    test_failure_logs["$test_name"]="$log_file"
 }
 
 capture_build_failure() {
@@ -507,7 +514,11 @@ test_compose() {
 
     if [[ -z "$container_name" ]]; then
         echo "ERROR: No running container found for ${compose_file}"
-        docker-compose -f "$compose_file" ps
+        local compose_output
+        compose_output=$(docker-compose -f "$compose_file" ps 2>&1)
+        echo "$compose_output"
+        capture_failure_logs "$test_name" "" "docker-compose failed for: ${compose_file}
+${compose_output}"
         gha_endgroup
         return 1
     fi
