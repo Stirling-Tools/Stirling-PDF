@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.10.0.schema.json
+
+PackageIdentifier: StirlingTools.StirlingPDF
+PackageVersion: 2.8.0
+InstallerLocale: en-US
+InstallerType: msi
+Scope: machine
+InstallerSwitches:
+  Silent: /quiet /norestart ALLUSERS=1
+  SilentWithProgress: /passive /norestart ALLUSERS=1
+UpgradeBehavior: install
+Protocols:
+  - stirlingpdf
+FileExtensions:
+  - pdf
+ReleaseDate: PLACEHOLDER_RELEASE_DATE
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/Stirling-Tools/Stirling-PDF/releases/download/v2.8.0/Stirling-PDF-windows-x86_64.msi
+    InstallerSha256: PLACEHOLDER_UPDATE_ON_RELEASE
+ManifestType: installer
+ManifestVersion: 1.10.0

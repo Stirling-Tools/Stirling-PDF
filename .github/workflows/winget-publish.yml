@@ -1,0 +1,24 @@
+name: Publish to winget
+
+on:
+  release:
+    types: [released]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Submit to winget
+        uses: vedantmgoyal9/winget-releaser@v2
+        with:
+          identifier: StirlingTools.StirlingPDF
+          installers-regex: 'Stirling-PDF-windows-x86_64\.msi$'
+          token: ${{ secrets.WINGET_TOKEN }}

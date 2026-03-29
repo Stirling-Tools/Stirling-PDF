@@ -541,6 +541,7 @@ jobs:
             find . -name "*.app" -exec cp -r {} "../../../dist/Stirling-PDF-${{ matrix.name }}.app" \;
           else
             find . -name "*.deb" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
+            find . -name "*.rpm" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.rpm" \;
             find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
           fi
 
@@ -600,6 +601,7 @@ jobs:
             ./artifacts/**/*.msi
             ./artifacts/**/*.dmg
             ./artifacts/**/*.deb
+            ./artifacts/**/*.rpm
             ./artifacts/**/*.AppImage
           draft: false
           prerelease: false

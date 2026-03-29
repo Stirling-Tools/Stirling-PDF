@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.10.0.schema.json
+
+PackageIdentifier: StirlingTools.StirlingPDF
+PackageVersion: 2.8.0
+PackageLocale: en-US
+Publisher: Stirling PDF Inc
+PublisherUrl: https://stirlingpdf.com
+PublisherSupportUrl: https://github.com/Stirling-Tools/Stirling-PDF/issues
+PublisherEmail: contact@stirlingpdf.com
+PrivacyUrl: https://stirlingpdf.com/privacy-policy
+Author: Anthony Stirling
+PackageName: Stirling-PDF
+PackageUrl: https://github.com/Stirling-Tools/Stirling-PDF
+License: Open Core
+LicenseUrl: https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LICENSE
+Copyright: Copyright (c) 2025 Stirling PDF Inc
+CopyrightUrl: https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LICENSE
+ShortDescription: Locally hosted, feature-rich PDF manipulation tool
+Description: |-
+  Stirling-PDF is a robust, locally hosted web-based PDF manipulation tool.
+  It enables you to carry out various operations on PDF files, including
+  splitting, merging, converting, reorganizing, adding images, rotating,
+  compressing, and more. The desktop app bundles a full Java backend and
+  runs entirely on your machine — no data ever leaves your device.
+Moniker: stirling-pdf
+Tags:
+  - pdf
+  - converter
+  - editor
+  - merge
+  - split
+  - compress
+  - ocr
+ReleaseNotesUrl: https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v2.8.0
+ManifestType: defaultLocale
+ManifestVersion: 1.10.0
