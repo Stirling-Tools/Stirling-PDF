@@ -3,15 +3,14 @@ import { Box } from '@mantine/core';
 import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { useFileHandler } from '@app/hooks/useFileHandler';
-import { useFileState, useFileActions } from '@app/contexts/FileContext';
+import { useFileState } from '@app/contexts/FileContext';
 import { useNavigationState, useNavigationActions, useNavigationGuard } from '@app/contexts/NavigationContext';
-import { FileId } from '@app/types/file';
 import { isBaseWorkbench } from '@app/types/workbench';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import styles from '@app/components/layout/Workbench.module.css';
 
-import TopControls from '@app/components/shared/TopControls';
+import WorkbenchBar from '@app/components/layout/WorkbenchBar';
 import FileEditor from '@app/components/fileEditor/FileEditor';
 import PageEditor from '@app/components/pageEditor/PageEditor';
 import PageEditorControls from '@app/components/pageEditor/PageEditorControls';
@@ -59,12 +58,6 @@ export default function Workbench() {
   
   // Get navigation guard for unsaved changes check when switching files
   const { requestNavigation } = useNavigationGuard();
-
-  const { actions: fileActions } = useFileActions();
-
-  const handleFileRemove = useCallback(async (fileId: FileId) => {
-    await fileActions.removeFiles([fileId], false);
-  }, [fileActions]);
 
   // Wrap file selection to check for unsaved changes before switching
   // requestNavigation will show the modal if there are unsaved changes, otherwise navigate immediately
@@ -196,19 +189,16 @@ export default function Workbench() {
           : { backgroundColor: 'var(--bg-background)' }
       }
     >
-      {/* Top Controls */}
+      {/* WorkbenchBar */}
       {activeFiles.length > 0 && !customWorkbenchViews.find(v => v.workbenchId === currentView)?.hideTopControls && (
-        <TopControls
+        <WorkbenchBar
           currentView={currentView}
           setCurrentView={setCurrentView}
-          customViews={customWorkbenchViews}
-          activeFiles={activeFiles.map(f => {
-            const stub = selectors.getStirlingFileStub(f.fileId);
-            return { fileId: f.fileId, name: f.name, versionNumber: stub?.versionNumber };
-          })}
-          currentFileIndex={activeFileIndex}
+          activeFiles={activeFiles.map(f => ({ fileId: f.fileId, name: f.name }))}
+          activeFileIndex={activeFileIndex}
           onFileSelect={handleFileSelect}
-          onFileRemove={handleFileRemove}
+          pageEditorColumns={pageEditorColumns}
+          onPageEditorColumnsChange={setPageEditorColumns}
         />
       )}
 

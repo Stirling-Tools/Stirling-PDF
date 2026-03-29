@@ -279,7 +279,7 @@ export function useViewerWorkbenchBarButtons(
           >
             <Popover.Target>
               <div style={{ display: 'inline-flex' }}>
-                <Tooltip content={readAloudLabel} position={tooltipPosition} offset={12} arrow portalTarget={document.body}>
+                <Tooltip content={readAloudLabel} position="bottom" offset={12} arrow portalTarget={document.body}>
                   <ActionIcon
                     variant={isReadingAloud ? 'filled' : 'subtle'}
                     radius="md"
