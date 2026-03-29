@@ -389,6 +389,7 @@ jobs:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+          DOCKER_BASE_CHANGED: ${{ needs.files-changed.outputs.docker-base }}
 
       - name: Upload Cucumber Report
         if: always()
@@ -396,6 +397,15 @@ jobs:
         with:
           name: cucumber-report
           path: testing/cucumber/report.html
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: docker-compose-test-reports
+          path: testing/reports/
           retention-days: 7
           if-no-files-found: warn
 
