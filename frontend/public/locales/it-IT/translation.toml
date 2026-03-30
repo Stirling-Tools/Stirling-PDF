@@ -1612,7 +1612,7 @@ fieldDocumentName = "Nome documento"
 fieldFileHash = "Hash del file (SHA-256)"
 fieldIpAddress = "Indirizzo IP"
 fieldOperationResults = "Risultati dell'operazione"
-fieldOutcome = "Esito (Successo/Fallimento)"
+fieldOutcome = "Esito (Successo/non riuscito)"
 fieldTool = "Strumento"
 fieldUsername = "Nome utente"
 filterByType = "Filtra per tipo"
@@ -5303,10 +5303,10 @@ name = "Team"
 siteLicense = "Licenza sito"
 
 [plan.api]
-large = "5,000 Credits"
-medium = "1,000 Credits"
-small = "500 Credits"
-xsmall = "100 Credits"
+large = "5,000 Crediti"
+medium = "1,000 Crediti"
+small = "500 Crediti"
+xsmall = "100 Crediti"
 
 [plan.apiPackages]
 subtitle = "Acquista crediti API per le tue applicazioni"
