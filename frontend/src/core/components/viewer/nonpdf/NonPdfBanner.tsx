@@ -23,8 +23,7 @@ export function NonPdfBanner({ meta, onConvertToPdf }: NonPdfBannerProps) {
       }}
     >
       <Badge
-        variant="light"
-        color={meta.color}
+        variant="default"
         size="lg"
         leftSection={
           <Box style={{ display: 'flex', alignItems: 'center', fontSize: '0.85rem' }}>
@@ -33,7 +32,7 @@ export function NonPdfBanner({ meta, onConvertToPdf }: NonPdfBannerProps) {
         }
         style={{ fontWeight: 600 }}
       >
-        Viewing a {meta.label} File
+        {meta.label} File
       </Badge>
       {onConvertToPdf && (
         <Button

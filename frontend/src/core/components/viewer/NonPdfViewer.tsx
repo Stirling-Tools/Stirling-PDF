@@ -5,8 +5,8 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 import { useFileState } from '@app/contexts/FileContext';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import { isConversionSupported } from '@app/utils/convertUtils';
 import { detectFileExtension, detectNonPdfFileType } from '@app/utils/fileUtils';
+import { CONVERSION_MATRIX } from '@app/constants/convertConstants';
 
 import { NonPdfBanner } from '@app/components/viewer/nonpdf/NonPdfBanner';
 import { getFileTypeMeta } from '@app/components/viewer/nonpdf/types';
@@ -31,12 +31,16 @@ export interface NonPdfViewerProps extends ViewerProps {
 
 export function NonPdfViewer({ file }: NonPdfViewerProps) {
   const fileType = useMemo(() => detectNonPdfFileType(file), [file]);
-  const meta = useMemo(() => getFileTypeMeta(fileType), [fileType]);
+  const meta = useMemo(() => getFileTypeMeta(fileType, file.name), [fileType, file.name]);
 
   const { handleToolSelect, toolAvailability } = useToolWorkflow();
 
+  const fileExtension = detectFileExtension(file.name);
+  // Only show convert when the extension has an explicit entry in the conversion matrix
+  // (skip the 'any'/'image' wildcard fallbacks that would match everything)
   const isConvertAvailable = toolAvailability['convert']?.available === true
-    && isConversionSupported(detectFileExtension(file.name), 'pdf');
+    && fileExtension !== ''
+    && fileExtension in CONVERSION_MATRIX;
 
   const handleConvertToPdf = useCallback(() => {
     handleToolSelect('convert');
