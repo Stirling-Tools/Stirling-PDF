@@ -28,6 +28,27 @@ interface SetupWizardProps {
   onClose?: () => void;
 }
 
+function LockedButtonWithTooltip({ label, children }: { label: string; children: React.ReactNode }) {
+  const [hovered, setHovered] = React.useState(false);
+  return (
+    <div
+      className="relative w-full"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div className="w-full text-center cursor-not-allowed select-none rounded-[var(--mantine-radius-sm)] text-[var(--mantine-color-dimmed)] text-[1rem] bg-[rgba(51,154,240,0.08)] px-[var(--mantine-spacing-md)] py-[var(--mantine-spacing-xs)]">
+        {children}
+      </div>
+      {hovered && (
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+8px)] text-white whitespace-nowrap pointer-events-none z-[1000] shadow-lg rounded-[var(--mantine-radius-sm)] text-[.8rem] bg-[var(--mantine-color-dark-7)] px-[10px] py-[6px]">
+          {label}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-solid border-[var(--mantine-color-dark-7)] border-x-transparent border-b-transparent" />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete, noLayout = false, onClose }) => {
   const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState<SetupStep>(SetupStep.SaaSLogin);
@@ -430,23 +451,25 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete, noLayout =
           >
             {t('setup.selfhosted.unreachable.retry', 'Retry')}
           </Button>
-          {!lockConnectionMode && (
-            <div
-              style={{ position: 'relative' }}
+          {lockConnectionMode ? (
+            <LockedButtonWithTooltip
+              label={t('setup.selfhosted.changeServerLocked', 'Your organisation has restricted this app to a specific server')}
             >
-              <Button
-                variant="light"
-                color="blue"
-                fullWidth
-                loading={loading}
-                onClick={() => {
-                  setLockedServerUnreachable(false);
-                  setActiveStep(SetupStep.ServerSelection);
-                }}
-              >
-                {t('setup.selfhosted.unreachable.changeServer', 'Connect to a different server')}
-              </Button>
-            </div>
+              {t('setup.selfhosted.unreachable.changeServer', 'Connect to a different server')}
+            </LockedButtonWithTooltip>
+          ) : (
+            <Button
+              variant="light"
+              color="blue"
+              fullWidth
+              loading={loading}
+              onClick={() => {
+                setLockedServerUnreachable(false);
+                setActiveStep(SetupStep.ServerSelection);
+              }}
+            >
+              {t('setup.selfhosted.unreachable.changeServer', 'Connect to a different server')}
+            </Button>
           )}
           <Button
             variant="subtle"
