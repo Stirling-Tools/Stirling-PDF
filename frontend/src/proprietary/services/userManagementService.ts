@@ -309,7 +309,7 @@ export const userManagementService = {
   async unlockUser(username: string): Promise<void> {
     await apiClient.post(`/api/v1/user/admin/unlockUser/${username}`, null, {
       suppressErrorToast: true,
-    } as any);
+    });
   },
 
   /**

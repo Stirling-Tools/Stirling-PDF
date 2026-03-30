@@ -282,12 +282,11 @@ export default function PeopleSection() {
       await userManagementService.unlockUser(user.username);
       alert({ alertType: 'success', title: t('workspace.people.unlockUserSuccess', 'User account unlocked successfully') });
       fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[PeopleSection] Failed to unlock user:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.people.unlockUserError', 'Failed to unlock user account');
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) || t('workspace.people.unlockUserError', 'Failed to unlock user account');
       alert({ alertType: 'error', title: errorMessage });
     }
   };
