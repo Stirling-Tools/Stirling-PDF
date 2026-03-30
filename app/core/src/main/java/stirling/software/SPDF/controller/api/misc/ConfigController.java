@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.config.EndpointConfiguration.EndpointAvailability;
 import stirling.software.SPDF.config.InitialSetup;
+import stirling.software.SPDF.controller.api.security.TimestampController;
 import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.model.ApplicationProperties;
@@ -203,6 +204,27 @@ public class ConfigController {
             boolean invitesEnabled = applicationProperties.getMail().isEnableInvites();
             configData.put("enableEmailInvites", smtpEnabled && invitesEnabled);
 
+            // Storage settings
+            boolean storageEnabled = enableLogin && applicationProperties.getStorage().isEnabled();
+            boolean sharingEnabled =
+                    storageEnabled && applicationProperties.getStorage().getSharing().isEnabled();
+            boolean frontendUrlConfigured = frontendUrl != null && !frontendUrl.trim().isEmpty();
+            boolean shareLinksEnabled =
+                    sharingEnabled
+                            && applicationProperties.getStorage().getSharing().isLinkEnabled()
+                            && frontendUrlConfigured;
+            boolean shareEmailEnabled =
+                    sharingEnabled
+                            && applicationProperties.getStorage().getSharing().isEmailEnabled()
+                            && applicationProperties.getMail().isEnabled();
+            boolean groupSigningEnabled =
+                    storageEnabled && applicationProperties.getStorage().getSigning().isEnabled();
+            configData.put("storageEnabled", storageEnabled);
+            configData.put("storageSharingEnabled", sharingEnabled);
+            configData.put("storageShareLinksEnabled", shareLinksEnabled);
+            configData.put("storageShareEmailEnabled", shareEmailEnabled);
+            configData.put("storageGroupSigningEnabled", groupSigningEnabled);
+
             // Check if user is admin using UserServiceInterface
             boolean isAdmin = false;
             if (userService != null) {
@@ -244,6 +266,13 @@ public class ConfigController {
 
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
+
+            // Timestamp TSA settings — single source of truth for presets + admin URLs
+            ApplicationProperties.Security.Timestamp tsConfig =
+                    applicationProperties.getSecurity().getTimestamp();
+            configData.put("timestampDefaultTsaUrl", tsConfig.getDefaultTsaUrl());
+            configData.put("timestampCustomTsaUrls", tsConfig.getCustomTsaUrls());
+            configData.put("timestampTsaPresets", TimestampController.TSA_PRESETS);
 
             // Server certificate settings
             configData.put(

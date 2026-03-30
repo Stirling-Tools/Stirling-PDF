@@ -18,6 +18,19 @@ code {
     monospace;
 }
 
+/* Suppress font visibility warnings for PDF.js embedded fonts */
+@font-face {
+  font-family: 'Adwaita Mono';
+  src: local('Adwaita Mono');
+  font-display: optional;
+}
+
+@font-face {
+  font-family: 'Nimbus Mono PS';
+  src: local('Nimbus Mono PS');
+  font-display: optional;
+}
+
 /* CSS Variables */
 :root {
   --footer-height: 2rem;

@@ -103,7 +103,7 @@ const AdjustContrast = (props: BaseToolProps) => {
       isVisible: !base.hasResults,
       loadingText: t('loading'),
       onClick: base.handleExecute,
-      disabled: !base.hasFiles,
+      paramsValid: true,
     },
     review: {
       isVisible: base.hasResults,

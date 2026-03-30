@@ -17,6 +17,7 @@ interface QuickAccessButtonProps {
   component?: 'a' | 'button';
   dataTestId?: string;
   dataTour?: string;
+  disabled?: boolean;
 }
 
 const QuickAccessButton: React.FC<QuickAccessButtonProps> = ({
@@ -34,6 +35,7 @@ const QuickAccessButton: React.FC<QuickAccessButtonProps> = ({
   component = 'button',
   dataTestId,
   dataTour,
+  disabled = false,
 }) => {
   const buttonSize = size || (isActive ? 'lg' : 'md');
   const bgColor = backgroundColor || (isActive ? 'var(--icon-tools-bg)' : 'var(--icon-inactive-bg)');
@@ -57,12 +59,15 @@ const QuickAccessButton: React.FC<QuickAccessButtonProps> = ({
         {...actionIconProps}
         size={buttonSize}
         variant="subtle"
+        disabled={disabled}
         style={{
           backgroundColor: bgColor,
           color: textColor,
           border: 'none',
           borderRadius: '8px',
           textDecoration: 'none',
+          opacity: disabled ? 0.5 : 1,
+          cursor: disabled ? 'not-allowed' : 'pointer',
         }}
         className={className || (isActive ? 'activeIconScale' : '')}
         data-testid={dataTestId}

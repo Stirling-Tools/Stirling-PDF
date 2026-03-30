@@ -38,12 +38,14 @@ export async function showSaveDialog(
   try {
     const { save } = await import("@tauri-apps/plugin-dialog");
 
+    // Derive the file type filter from the filename extension so the dialog
+    // doesn't force a .pdf extension when saving non-PDF outputs (e.g. .docx).
+    const ext = defaultFilename.split('.').pop()?.toLowerCase() ?? '';
+    const filters = ext ? [{ name: ext.toUpperCase(), extensions: [ext] }] : [];
+
     const selectedPath = await save({
       defaultPath: defaultDirectory ? `${defaultDirectory}/${defaultFilename}` : defaultFilename,
-      filters: [{
-        name: 'PDF',
-        extensions: ['pdf']
-      }],
+      filters,
       title: 'Save As'
     });
 

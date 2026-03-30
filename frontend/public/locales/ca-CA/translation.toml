@@ -142,6 +142,10 @@ welcome = "Benvingut"
 white = "Blanc"
 WorkInProgess = "En desenvolupament, pot no funcionar o contenir errors. Si us plau, informa de qualsevol problema!"
 yes = "Si"
+insufficientCredits = "Crèdits insuficients. Necessaris: {{requiredCredits}}, Disponibles: {{currentBalance}}, Falten: {{shortfall}}"
+loadingCredits = "Comprovant els crèdits..."
+loadingProStatus = "Comprovant l’estat de la subscripció..."
+noticeTopUpOrPlan = "No tens prou crèdits; recarrega o passa a un pla"
 
 [account]
 accountSettings = "Opcions del compte"
@@ -1513,6 +1517,7 @@ editStampHint = "Per canviar la imatge, suprimeix aquest segell i n'afegeix un d
 editSwitchToSelect = "Canvia a Selecciona i edita per editar aquesta anotació."
 editText = "Edita el quadre de text"
 editTextMarkup = "Edita el marcat de text"
+annotationStyle = "Estil d’anotació"
 ellipse = "El·lipse"
 exit = "Surt del mode d'anotació"
 fillColor = "Color de farciment"
@@ -1523,13 +1528,19 @@ highlight = "Ressaltador"
 imagePreview = "Previsualització"
 inkHighlighter = "Ressaltador a mà alçada"
 line = "Línia"
+lineArrow = "Fletxa"
 noBackground = "Sense fons"
 note = "Nota"
+comment = "Comentari"
+comments = "Comentaris"
+insertText = "Insereix text"
+replaceText = "Substitueix el text"
 noteIcon = "Icona de nota"
 notesStamps = "Notes i segells"
 opacity = "Opacitat"
 pen = "Ploma"
 polygon = "Polígon"
+polyline = "Polilínia"
 properties = "Propietats"
 rectangle = "Rectangle"
 redo = "Refés"
@@ -2574,10 +2585,48 @@ title = "Ajust de qualitat"
 [compressPdfs]
 tags = "estrènyer,petit,minúscul"
 
+[config]
+plan = "Pla"
+
 [config.account.overview]
+confirmDelete = "Suprimeix el meu compte"
+deleteAccount = "Suprimeix el compte"
+deleteAccountTitle = "Suprimeix el compte"
+deleteFailed = "No s’ha pogut suprimir el compte."
+deleteFailedTitle = "No es pot suprimir el compte"
+deleteWarning = "Aquesta acció és permanent i no es pot desfer. S’eliminaran totes les teves dades."
+enterEmailConfirm = "Per confirmar la supressió, escriu a continuació la teva adreça de correu ({{email}}):"
 guestDescription = "Heu iniciat sessió com a convidat. Considereu actualitzar el vostre compte."
+label = "Visió general"
 manageAccountPreferences = "Gestiona les preferències del compte"
+signedInAs = "Has iniciat sessió com a"
 title = "Paràmetres del compte"
+
+[config.account.profilePicture]
+description = "Puja una imatge per personalitzar el teu compte."
+help = "PNG, JPG o WebP fins a 2MB."
+remove = "Elimina"
+sizeError = "Selecciona una imatge de menys de 2MB."
+switchedToCustom = "S’ha canviat a imatge personalitzada. Ara pots pujar la teva."
+title = "Imatge de perfil"
+upload = "Puja"
+useCustom = "Utilitza una imatge personalitzada"
+usingProvider = "S’utilitza la imatge de perfil de {{provider}}"
+
+[config.account.profilePicture.cropper]
+cropError = "No s’ha pogut retallar la imatge. Torna-ho a provar."
+invalidImage = "Fitxer d’imatge no vàlid. Selecciona un fitxer PNG, JPG o WebP vàlid."
+processing = "Processant el retall..."
+save = "Desa la imatge retallada"
+sizeErrorAfterCrop = "La imatge retallada és massa gran. Allunya el zoom o retalla una àrea més petita."
+title = "Retalla la imatge de perfil"
+zoom = "Zoom"
+
+[config.account.security]
+changePassword = "Canvia la contrasenya"
+description = "Gestiona la teva contrasenya i la configuració de seguretat."
+title = "Contrasenyes i seguretat"
+update = "Actualitza la contrasenya"
 
 [config.account.upgrade]
 description = "Enllaceu el vostre compte per preservar l’historial i accedir a més funcions!"
@@ -2595,6 +2644,7 @@ upgradeButton = "Actualitza el compte"
 [config.apiKeys]
 chartAriaLabel = "Ús de crèdits: inclosos {{includedUsed}} de {{includedTotal}}, comprats {{purchasedUsed}} de {{purchasedTotal}}"
 copyKeyAriaLabel = "Copia la clau API"
+creditsRemaining = "Crèdits restants"
 description = "La vostra clau API per accedir al conjunt d’eines PDF de Stirling. Copieu-la al vostre projecte o actualitzeu-la per generar-ne una de nova."
 docsDescription = "Més informació sobre la integració amb Stirling PDF:"
 docsLink = "Documentació de l’API"
@@ -2643,6 +2693,14 @@ basic = "Configuració bàsica"
 integration = "Configuració d'integració"
 security = "Configuració de seguretat"
 system = "Configuració del sistema"
+
+[connectionMode.status]
+localOffline = "Mode fora de línia en execució"
+localOnline = "Mode fora de línia en execució"
+saas = "Connectat a Stirling Cloud"
+selfhostedChecking = "Connectat al servidor autoallotjat (comprovant...)"
+selfhostedOffline = "No es pot accedir al servidor autoallotjat"
+selfhostedOnline = "Connectat al servidor autoallotjat"
 
 [convert]
 autoRotate = "Rotació automàtica"
@@ -2728,6 +2786,15 @@ webOptions = "Opcions de web a PDF"
 wordDoc = "Document de Word"
 wordDocExt = "Document de Word (.docx)"
 zoomLevel = "Nivell de zoom"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "Llibre electrònic → PDF"
+emlToPdf = "Correu electrònic → PDF"
+fileToPdf = "Office/Document → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "Opcions d'eBook a PDF"
@@ -3718,6 +3785,11 @@ desc = "Afegeix signatura al PDF mitjançant dibuix, text o imatge"
 tags = "signatura,autògraf"
 title = "Signa"
 
+[home.timestampPdf]
+desc = "Afegeix una marca de temps RFC 3161 al document per demostrar quan existia el teu PDF"
+tags = "marca de temps,RFC 3161,TSA,autoritat de marques de temps,marca de temps de document,prova d’existència,testimoni de marca de temps,marca de temps de confiança,signar amb marca de temps,notaritzar"
+title = "Marca de temps al PDF"
+
 [home.split]
 desc = "Divideix PDFs en múltiples documents"
 tags = "divideix,separa,trenca"
@@ -3854,6 +3926,7 @@ version = "Versió"
 accountCreatedSuccess = "Compte creat correctament! Ara podeu iniciar sessió."
 alreadyLoggedIn = "Ja has iniciat sessió a"
 alreadyLoggedIn2 = "dispositius. Si us plau, tanca la sessió en els dispositius i torna-ho a intentar."
+backToSignIn = "Torna a iniciar sessió"
 cancel = "Cancel·la"
 changePasswordWarning = "Canvia la contrasenya després d'iniciar sessió per primera vegada"
 credentialsUpdated = "S'han actualitzat les vostres credencials. Torneu a iniciar sessió."
@@ -3895,16 +3968,21 @@ or = "O"
 password = "Contrasenya"
 passwordChangedSuccess = "Contrasenya canviada correctament! Inicieu sessió amb la nova contrasenya."
 passwordResetSent = "Enllaç de restabliment de contrasenya enviat a {{email}}! Reviseu el vostre correu i seguiu les instruccions."
+passwordUpdatedSuccess = "La teva contrasenya s’ha actualitzat correctament."
 pleaseEnterBoth = "Introduïu tant el correu com la contrasenya"
 pleaseEnterEmail = "Introduïu la vostra adreça de correu electrònic"
 relyingPartyRegistrationNotFound = "No s'ha trobat cap registre de la part confiada"
 rememberme = "Recordar"
+resetHelp = "Introdueix el teu correu electrònic per rebre un enllaç segur per restablir la contrasenya. Si l’enllaç ha caducat, sol·licita’n un de nou."
+resetYourPassword = "Restableix la teva contrasenya"
 saml2RequiresLicense = "L'inici de sessió SAML requereix una llicència de pagament (Server o Enterprise). Poseu-vos en contacte amb l'administrador per actualitzar el vostre pla."
 sending = "Enviant…"
 sendMagicLink = "Envia l'enllaç màgic"
+sendResetLink = "Envia l’enllaç de restabliment"
 sessionExpired = "La sessió ha caducat. Torneu a iniciar sessió."
 signin = "Accedir"
 signInAnonymously = "Registra't com a convidat"
+subtitle = "Torna a iniciar sessió a Stirling PDF"
 signingIn = "Iniciant sessió..."
 signinTitle = "Autenticat"
 signInWith = "Inicia sessió amb"
@@ -3913,6 +3991,7 @@ ssoSignIn = "Inicia sessió mitjançant inici de sessió únic"
 title = "Accedir"
 toManySessions = "Tens massa sessions actives"
 unexpectedError = "Error inesperat: {{message}}"
+updatePassword = "Actualitza la contrasenya"
 useEmailInstead = "Inicia sessió amb correu"
 useMagicLink = "Utilitza un enllaç màgic"
 userIsDisabled = "L'usuari està desactivat, l'inici de sessió està actualment bloquejat amb aquest nom d'usuari. Si us plau, contacta amb l'administrador."
@@ -4222,6 +4301,15 @@ viewSwitcher = "Utilitzeu aquests controls per seleccionar com voleu veure els v
 workbench = "Aquesta és la <strong>Taula de treball</strong> - l’àrea principal on visualitzeu i editeu els vostres PDF."
 wrapUp = "Ja està tot! Heu après les àrees principals de l’aplicació i com utilitzar-les. Feu clic al botó <strong>Ajuda</strong> quan vulgueu per tornar a veure aquesta visita."
 
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "Quan acabi la prova, continuaràs amb el nostre nivell gratuït. Afegeix un mètode de pagament per mantenir l’accés a Pro."
+afterTrialWithPayment = "La teva subscripció Pro s’iniciarà automàticament quan acabi la prova."
+body = "Durant la prova tens accés complet a les funcions de Stirling PDF Pro. Gaudeix de conversions il·limitades, fitxers de mida més gran i processament prioritari."
+daysRemaining = "{{days}} dies restants"
+daysRemainingSingular = "{{days}} dia restant"
+title = "La teva prova Pro de 30 dies"
+trialEnds = "La prova acaba el {{date}}"
+
 [onboarding.buttons]
 back = "Enrere"
 download = "Baixa →"
@@ -4392,6 +4480,31 @@ loading = "Carregant els adjunts..."
 empty = "No hi ha adjunts en aquest document"
 noMatch = "No hi ha adjunts que coincideixin amb la cerca"
 
+[viewer.comments]
+title = "Comentaris"
+hint = "Afegeix comentaris amb les eines Comentari, Insereix text o Substitueix el text. Apareixeran aquí per pàgina."
+placeholder = "Escriu el teu comentari..."
+pageLabel = "Pàgina {{page}}"
+oneComment = "1 comentari"
+nComments = "{{count}} comentaris"
+addCommentPlaceholder = "Afegeix un comentari..."
+addLink = "Afegeix un enllaç"
+goToLink = "Vés a l’enllaç"
+addComment = "Afegeix un comentari"
+viewComment = "Mostra el comentari"
+addReplyPlaceholder = "Afegeix una resposta..."
+saveReply = "Desa la resposta"
+send = "Envia"
+moreActions = "Més accions"
+typeComment = "Comentari"
+typeInsertText = "Insereix text"
+typeReplaceText = "Substitueix el text"
+locateAnnotation = "Localitza al document"
+deleteTitle = "Eliminar l’anotació dels comentaris?"
+deleteDescription = "Aquesta anotació té un comentari adjunt. Pots eliminar només el comentari de la barra lateral i mantenir l’anotació, o bé suprimir-ho tot."
+removeCommentOnly = "Elimina només el comentari"
+deleteAnnotationAndComment = "Suprimeix l’anotació i el comentari"
+
 [viewer.formBar]
 title = "Camps del formulari"
 unsavedBadge = "No desats"
@@ -4425,14 +4538,20 @@ rotateLeft = "Gira a l'esquerra"
 rotateRight = "Gira a la dreta"
 toggleSidebar = "Mostra/oculta la barra lateral"
 toggleBookmarks = "Mostra/amaga marcadors"
+toggleComments = "Comentaris"
 print = "Imprimeix el PDF"
 ruler = "Regle / Mesura"
+readAloud = "Lectura en veu alta"
+readAloudSpeed = "Velocitat"
+readAloudLanguage = "Idioma"
+selectLanguage = "Selecciona l’idioma"
 draw = "Dibuixa"
 redact = "Redacta"
 exitRedaction = "Surt del mode de redacció"
 save = "Desa"
 downloadAll = "Descarrega-ho tot"
 saveAll = "Desa-ho tot"
+saveAs = "Desa com a"
 
 [textAlign]
 left = "Esquerra"
@@ -4447,21 +4566,132 @@ title = "Extreu Pàgines"
 
 [pageLayout]
 addBorder = "Afegeix Marcs"
+borderWidth = "Gruix de la vora"
+bottom = "Marge inferior"
+cols = "Columnes"
 header = "Disposició de Múltiples Pàgines"
+innerMargin = "Marge intern"
+left = "Marge esquerre"
 pagesPerSheet = "Pàgines per full:"
+right = "Marge dret"
+rows = "Files"
 submit = "Envia"
 tags = "fusió,composició,vista única,organitzar"
 title = "Disposició de Múltiples Pàgines"
+top = "Marge superior"
+
+[pageLayout.mode]
+default = "Per defecte"
+custom = "Personalitzat"
+label = "Mode:"
+
+[pageLayout.arrangement]
+byColumns = "Per columnes"
+byRows = "Per files"
+label = "Organització de pàgina:"
 
 [pageLayout.desc]
 16 = "Col·loca 16 pàgines en un sol full (graella de 4 × 4)."
 2 = "Col·loca 2 pàgines de costat en un sol full."
-3 = "Col·loca 3 pàgines en un sol full en una sola fila."
 4 = "Col·loca 4 pàgines en un sol full (graella de 2 × 2)."
 9 = "Col·loca 9 pàgines en un sol full (graella de 3 × 3)."
 
 [pageLayout.error]
 failed = "S'ha produït un error en crear la disposició multipàgina."
+outerVerticalMarginsTooLarge = "Els marges superior/inferior són massa grans per a aquesta mida de pàgina."
+outerHorizontalMarginsTooLarge = "Els marges esquerre/dret són massa grans per a aquesta mida de pàgina."
+innerMarginTooLarge = "El marge intern és massa gran per al disseny seleccionat."
+
+[pageLayout.orientation]
+landscape = "Horitzontal"
+portrait = "Vertical"
+label = "Orientació:"
+
+[pageLayout.readingDirection]
+ltr = "D’esquerra a dreta"
+rtl = "De dreta a esquerra"
+label = "Direcció de lectura:"
+
+[pageLayout.tooltip.header]
+title = "Guia de disposició de pàgina"
+
+[pageLayout.tooltip.overview]
+title = "Què és la disposició de pàgina?"
+text = "Ajusta múltiples pàgines en un sol full per a dossiers o per estalviar paper."
+
+[pageLayout.tooltip.mode]
+title = "Mode"
+text = "Tria com es configura la quadrícula:"
+bullet1 = "Per defecte: Tria un valor predefinit i la quadrícula es calcula automàticament."
+bullet2 = "Personalitzat: Defineix manualment files i columnes."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Pàgines per full (Mode per defecte)"
+text = "Tria quantes pàgines per full (p. ex., 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Files i columnes (Mode personalitzat)"
+text = "Defineix les dimensions exactes de la quadrícula. Pàgines totals per full = files × columnes."
+
+[pageLayout.tooltip.orientation]
+title = "Orientació"
+text = "Defineix l’orientació del full de sortida:"
+bullet1 = "Vertical: Més alt que ample."
+bullet2 = "Horitzontal: Més ample que alt."
+
+[pageLayout.tooltip.arrangement]
+title = "Organització de pàgina"
+text = "Controla l’ordre amb què les pàgines omplen la quadrícula:"
+bullet1 = "Per files: Omple fila per fila (d’esquerra a dreta o de dreta a esquerra)."
+bullet2 = "Per columnes: Omple de dalt a baix, columna per columna."
+
+[pageLayout.tooltip.readingDirection]
+title = "Direcció de lectura"
+text = "Controla l’ordre horitzontal de les pàgines:"
+bullet1 = "LTR: d’esquerra a dreta."
+bullet2 = "RTL: de dreta a esquerra."
+
+[pageLayout.tooltip.addBorder]
+title = "Afegeix vores"
+text = "Dibuixa línies de vora al voltant de cada cel·la de pàgina per a guies de tall o separació visual."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Marges i vores"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Marges"
+text = "Utilitza els marges superior, inferior, esquerre i dret per controlar l’espai al voltant del full complet de sortida."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Marge intern"
+text = "El marge intern afegeix espai entre les cel·les de la quadrícula per millorar la separació i la llegibilitat."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Afegeix vores"
+text = "Activa les vores per dibuixar línies al voltant de cada pàgina col·locada. Això pot ajudar a la separació visual o al retall."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Gruix de la vora"
+text = "El gruix de la vora només s’aplica quan les vores estan activades. Valors més alts generen línies més gruixudes."
+
+[pageLayout.advanced.tooltip.header]
+title = "Opcions avançades de disposició"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Orientació"
+text = "Tria la direcció final del full. La vertical funciona millor per a contingut alt, mentre que l’horitzontal s’ajusta a dissenys més amples."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Organització de pàgina"
+text = "Controla si les pàgines omplen la quadrícula fila per fila o columna per columna."
+bullet1 = "Per files: Omple primer cada fila."
+bullet2 = "Per columnes: Omple primer cada columna."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Direcció de lectura"
+text = "Defineix l’ordre horitzontal a la quadrícula, útil per a convencions de documents d’esquerra a dreta i de dreta a esquerra."
+bullet1 = "LTR: Ordre d’esquerra a dreta."
+bullet2 = "RTL: Ordre de dreta a esquerra."
 
 [pageRemover]
 header = "Eliminació de Pàgines PDF"
@@ -4977,7 +5207,10 @@ perMonth = "/mes"
 perSeat = "/seient"
 popular = "Popular"
 selectPlan = "Selecciona el pla"
+selectCredits = "Selecciona la quantitat de crèdits"
 showComparison = "Compara totes les funcions"
+purchase = "Compra"
+totalCost = "Cost total"
 upgrade = "Actualitza"
 withServer = "+ Pla Server"
 
@@ -5068,6 +5301,30 @@ successMessage = "La llicència s'ha activat correctament. Ara pots tancar aques
 [plan.team]
 name = "Equip"
 siteLicense = "Llicència de lloc"
+
+[plan.api]
+large = "5,000 crèdits"
+medium = "1,000 crèdits"
+small = "500 crèdits"
+xsmall = "100 crèdits"
+
+[plan.apiPackages]
+subtitle = "Compra crèdits de l’API per a les teves aplicacions"
+title = "Paquets de crèdits de l’API"
+
+[plan.trial]
+badge = "Prova"
+continueWithFree = "Continua amb el nivell gratuït"
+daysRemaining = "La teva prova acaba d’aquí {{days}} dies"
+endDate = "Caduca: {{date}}"
+expired = "La prova ha finalitzat"
+expiredMessage = "La teva prova Pro de 30 dies ha caducat. Subscriu-te a Pro per continuar accedint a les funcions premium, o continua amb el nostre nivell gratuït."
+freeTierLimitations = "El nivell gratuït inclou eines PDF bàsiques amb límits d’ús."
+message = ""
+subscribe = "Subscriu-te a Pro"
+subscribeToPro = "Subscriu-te a Pro"
+subscriptionScheduled = "Subscripció programada: comença el {{date}}"
+title = "Prova gratuïta activa"
 
 [credits]
 enableOverageBilling = "Habilita la facturació per excés"
@@ -5631,6 +5888,32 @@ text = "Gira les pàgines del teu PDF en sentit horari o antihorari en increment
 [rotate.tooltip.header]
 title = "Resum de la configuració de rotació"
 
+[timestampPdf]
+completed = "S’ha aplicat la marca de temps al PDF correctament"
+desc = "Afegeix una marca de temps RFC 3161 al teu PDF amb un servidor d’una autoritat de marques de temps (TSA) de confiança."
+filenamePrefix = "amb-marca-de-temps"
+results = "Resultats de la marca de temps"
+submit = "Aplica la marca de temps"
+title = "Marca de temps al PDF"
+
+[timestampPdf.error]
+failed = "S’ha produït un error en aplicar la marca de temps al PDF."
+generic = "Ha fallat l’aplicació de la marca de temps"
+
+[timestampPdf.files]
+placeholder = "Selecciona un fitxer PDF a la vista principal per començar"
+
+[timestampPdf.options]
+note = "Només s’envia un resum SHA-256 del document al servidor TSA; el fitxer PDF no s’envia mai al servidor TSA."
+title = "Servidor de marques de temps (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Tria una autoritat de marques de temps de confiança"
+label = "Selecciona un servidor TSA"
+
+[timestampPdf.steps]
+settings = "Configuració"
+
 [sanitize]
 completed = "Sanitització completada correctament"
 desc = "Elimina elements potencialment nocius dels fitxers PDF."
@@ -5755,6 +6038,14 @@ placeholder = "Escriu el terme de cerca..."
 searching = "Cercant..."
 title = "Cerca al PDF"
 
+[selfHosted.offline]
+hideTools = "Amaga les eines no disponibles ▴"
+messageNoFallback = "Les eines no estaran disponibles fins que el teu servidor torni en línia."
+messageWithFallback = "Algunes eines requereixen connexió al servidor."
+showTools = "Mostra les eines no disponibles ▾"
+title = "No es pot accedir al teu servidor de Stirling-PDF"
+toolNotAvailableLocally = "El teu servidor de Stirling-PDF és fora de línia i \"{{endpoint}}\" no està disponible al backend local."
+
 [session]
 expired = "La teva sessió ha expirat. Si us plau, actualitza la pàgina i torna a intentar-ho."
 refreshPage = "Actualitza la pàgina"
@@ -5768,12 +6059,15 @@ systemSettings = "Configuració del sistema"
 title = "Configuració"
 
 [settings.connection]
+localDescription = "Estàs utilitzant el backend local sense cap compte. Algunes eines que requereixen processament al núvol o un servidor autoallotjat no estan disponibles."
 logout = "Tancar sessió"
 server = "Servidor"
+signIn = "Inicia sessió"
 title = "Mode de connexió"
 user = "Sessió iniciada com"
 
 [settings.connection.mode]
+local = "Només local"
 saas = "Stirling Cloud"
 selfhosted = "Autoallotjat"
 
@@ -5931,6 +6225,9 @@ title = "Polítiques i privadesa"
 [settings.preferences]
 title = "Preferències"
 
+[settings.search]
+placeholder = "Cerca a les pàgines de configuració..."
+
 [settings.security]
 description = "Actualitza la contrasenya per mantenir segur el compte."
 title = "Seguretat"
@@ -5968,6 +6265,18 @@ title = "Espai de treball"
 [settings.team]
 title = "Equip"
 
+[localMode]
+toolUnavailable = "Aquesta eina requereix un compte. Inicia sessió a Stirling Cloud o connecta’t a un servidor autoallotjat per utilitzar-la."
+
+[localMode.banner]
+message = "Inicia sessió per desbloquejar totes les eines."
+signIn = "Inicia sessió"
+title = "Executant-se localment"
+
+[localMode.toolPicker]
+message = "Inicia sessió per desbloquejar totes les eines."
+signIn = "Inicia sessió"
+
 [setup]
 description = "Comença triant com vols usar Stirling PDF"
 welcome = "Benvingut a Stirling PDF"
@@ -5975,6 +6284,7 @@ welcome = "Benvingut a Stirling PDF"
 [setup.login]
 connectingTo = "Connectant amb:"
 hideInstructions = "Amagueu les instruccions"
+skipSignIn = "Continua sense iniciar sessió"
 instructions = "Per habilitar l'inici de sessió al vostre servidor de Stirling PDF:"
 instructionsEnvVar = "Establiu la variable d'entorn:"
 instructionsOrYml = "O a settings.yml:"
@@ -6022,7 +6332,14 @@ title = "Inicia sessió a Stirling"
 [setup.selfhosted]
 link = "o connecteu-vos a un compte autoallotjat"
 subtitle = "Introdueix les credencials del servidor"
+switchToLocal = "Utilitza les eines locals"
 title = "Inicia sessió al servidor"
+
+[setup.selfhosted.unreachable]
+continueOffline = "Utilitza les eines locals"
+message = "No s’ha pogut accedir a {{url}}. Comprova que el servidor s’està executant i és accessible."
+retry = "Torna-ho a provar"
+title = "No es pot connectar amb el servidor"
 
 [setup.server]
 subtitle = "Introdueix la URL del servidor autoallotjat"
@@ -6032,6 +6349,7 @@ useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "No s'ha pogut obtenir la configuració del servidor. Comproveu l'URL i torneu-ho a provar."
+configFetchError = "No s’ha pogut obtenir la configuració del servidor: {{error}}"
 emptyUrl = "Introdueix una URL de servidor"
 invalidUrl = "Format d'URL invàlid. Introdueix una URL vàlida com https://your-server.com"
 testFailed = "Ha fallat la prova de connexió"
@@ -6557,6 +6875,7 @@ favorites = "Preferits"
 heading = "Totes les eines (vista a pantalla completa)"
 noResults = "Prova d'ajustar la cerca o activa/desactiva les descripcions per trobar el que necessites."
 recommended = "Recomanat"
+selfHostedOffline = "Requereix el teu servidor de Stirling-PDF (actualment fora de línia):"
 showDetails = "Mostra els detalls"
 unavailable = "Desactivat per l'administrador del servidor:"
 unavailableDependency = "No disponible: falta l'eina necessària al servidor:"
@@ -6601,6 +6920,12 @@ pageFormatting = "Format de pàgina"
 removal = "Eliminació"
 signing = "Signatura"
 verification = "Verificació"
+
+[tool]
+endpointUnavailable = "Aquesta eina no està disponible al teu servidor."
+endpointUnavailableClickable = "No disponible en aquest mode. Fes clic per iniciar sessió."
+invalidParams = "Omple els paràmetres requerits."
+noFiles = "Afegeix un fitxer per començar."
 
 [tools]
 noSearchResults = "No s’han trobat eines"

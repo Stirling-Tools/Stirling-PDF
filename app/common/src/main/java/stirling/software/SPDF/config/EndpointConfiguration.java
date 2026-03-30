@@ -356,6 +356,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Security", "cert-sign");
         addEndpointToGroup("Security", "remove-cert-sign");
         addEndpointToGroup("Security", "sanitize-pdf");
+        addEndpointToGroup("Security", "timestamp-pdf");
         addEndpointToGroup("Security", "auto-redact");
         addEndpointToGroup("Security", "validate-signature");
         addEndpointToGroup("Security", "add-stamp");
@@ -373,7 +374,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", REMOVE_BLANKS);
         addEndpointToGroup("Other", "remove-annotations");
         addEndpointToGroup("Other", "get-info-on-pdf");
-        addEndpointToGroup("Other", "remove-image-pdf");
         addEndpointToGroup("Other", "add-attachments");
         addEndpointToGroup("Other", "replace-invert-pdf");
         addEndpointToGroup("Other", "edit-table-of-contents");
@@ -473,6 +473,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "auto-rename");
         addEndpointToGroup("Java", "auto-split-pdf");
         addEndpointToGroup("Java", "sanitize-pdf");
+        addEndpointToGroup("Java", "timestamp-pdf");
         addEndpointToGroup("Java", "crop");
         addEndpointToGroup("Java", "get-info-on-pdf");
         addEndpointToGroup("Java", "pdf-to-single-page");
@@ -488,7 +489,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", REMOVE_BLANKS);
         addEndpointToGroup("Java", "remove-annotations");
         addEndpointToGroup("Java", "pdf-to-text");
-        addEndpointToGroup("Java", "remove-image-pdf");
         addEndpointToGroup("Java", "pdf-to-markdown");
         addEndpointToGroup("Java", "add-attachments");
         addEndpointToGroup("Java", "compress-pdf");

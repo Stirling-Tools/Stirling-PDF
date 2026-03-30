@@ -89,15 +89,16 @@ for (let i = 0; i < 32; i++) {
 Object.defineProperty(globalThis, 'crypto', {
   value: {
     subtle: {
-      digest: vi.fn().mockImplementation(async (_algorithm: string, _data: any) => {
+      digest: vi.fn().mockImplementation(async (_algorithm: string, _data: BufferSource) => {
         // Always return the mock hash buffer regardless of input
         return mockHashBuffer.slice();
       }),
     },
-    getRandomValues: vi.fn().mockImplementation((array: any) => {
+    getRandomValues: vi.fn().mockImplementation(<T extends ArrayBufferView>(array: T): T => {
       // Mock getRandomValues if needed
-      for (let i = 0; i < array.length; i++) {
-        array[i] = Math.floor(Math.random() * 256);
+      const view = new Uint8Array(array.buffer, array.byteOffset, array.byteLength);
+      for (let i = 0; i < view.length; i++) {
+        view[i] = Math.floor(Math.random() * 256);
       }
       return array;
     }),
