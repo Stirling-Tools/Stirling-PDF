@@ -12,7 +12,7 @@ import { alert } from "@app/components/toast";
  * false if this is not a SaaS error.
  */
 export function handleSaaSError(error: unknown): boolean {
-  if ((error as any)?.config?._isSaaSRequest !== true) return false;
+  if ((error as { config?: { _isSaaSRequest?: boolean } })?.config?._isSaaSRequest !== true) return false;
 
   const { title: originalTitle, body: originalBody } =
     extractAxiosErrorMessage(error);

@@ -15,6 +15,11 @@ declare module "assets/material-symbols-icons.json" {
 declare global {
   interface Window {
     __STIRLING_PDF_BASE_URL__?: string;
+    STIRLING_PDF_API_BASE_URL?: string;
+    __TAURI__?: unknown;
+    __TAURI_INTERNALS__?: unknown;
+    process?: { env?: Record<string, string | undefined> };
+    endpointAvailabilityService?: unknown;
   }
 }
 
