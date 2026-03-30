@@ -361,7 +361,7 @@ export function LayerSidebar({
 
         const arrayBuffer = await file.arrayBuffer();
         const modifiedBytes = await applyOCGVisibilityToPdf(arrayBuffer, nameVisibility);
-        const blob = new Blob([modifiedBytes], { type: 'application/pdf' });
+        const blob = new Blob([new Uint8Array(modifiedBytes)], { type: 'application/pdf' });
 
         await onApplyLayers(blob);
       } catch (err) {
