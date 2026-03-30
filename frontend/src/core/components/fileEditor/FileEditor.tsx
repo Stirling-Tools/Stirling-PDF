@@ -5,6 +5,7 @@ import {
 import { Dropzone } from '@mantine/dropzone';
 import { useFileSelection, useFileState, useFileManagement, useFileActions, useFileContext } from '@app/contexts/FileContext';
 import { useNavigationActions } from '@app/contexts/NavigationContext';
+import { useViewer } from '@app/contexts/ViewerContext';
 import { zipFileService } from '@app/services/zipFileService';
 import { detectFileExtension } from '@app/utils/fileUtils';
 import FileEditorThumbnail from '@app/components/fileEditor/FileEditorThumbnail';
@@ -50,6 +51,9 @@ const FileEditor = ({
 
   // Get navigation actions
   const { actions: navActions } = useNavigationActions();
+
+  // Get viewer context for setting active file index
+  const { setActiveFileIndex } = useViewer();
 
   // Get file selection context
   const { setSelectedFiles } = useFileSelection();
@@ -345,13 +349,14 @@ const FileEditor = ({
   }, [activeStirlingFileStubs, selectors, fileActions, removeFiles]);
 
   const handleViewFile = useCallback((fileId: FileId) => {
-    const record = activeStirlingFileStubs.find(r => r.id === fileId);
-    if (record) {
-      // Set the file as selected in context and switch to viewer for preview
+    const index = activeStirlingFileStubs.findIndex(r => r.id === fileId);
+    if (index !== -1) {
+      // Set the file as selected in context, sync the viewer index, and switch to viewer
       setSelectedFiles([fileId]);
+      setActiveFileIndex(index);
       navActions.setWorkbench('viewer');
     }
-  }, [activeStirlingFileStubs, setSelectedFiles, navActions.setWorkbench]);
+  }, [activeStirlingFileStubs, setSelectedFiles, setActiveFileIndex, navActions.setWorkbench]);
 
   const handleLoadFromStorage = useCallback(async (selectedFiles: File[]) => {
     if (selectedFiles.length === 0) return;

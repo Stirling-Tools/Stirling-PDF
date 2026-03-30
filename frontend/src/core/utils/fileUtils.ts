@@ -97,3 +97,45 @@ export function isPdfFile(file: { name?: string; type?: string } | File | Blob |
 
   return false;
 }
+
+export type NonPdfFileType = 'image' | 'csv' | 'json' | 'text' | 'markdown' | 'html' | 'unknown';
+
+const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'tiff', 'tif', 'webp']);
+const CSV_EXTENSIONS = new Set(['csv', 'tsv']);
+const JSON_EXTENSIONS = new Set(['json']);
+const TEXT_EXTENSIONS = new Set(['txt']);
+const MARKDOWN_EXTENSIONS = new Set(['md', 'markdown']);
+const HTML_EXTENSIONS = new Set(['html', 'htm']);
+
+/**
+ * Detects the non-PDF file type category for viewer routing.
+ * Returns 'unknown' for PDFs or unrecognized formats.
+ */
+export function detectNonPdfFileType(file: { name?: string; type?: string } | File | null | undefined): NonPdfFileType {
+  if (!file) return 'unknown';
+
+  const name = 'name' in file ? file.name : undefined;
+  const mimeType = file.type ?? '';
+
+  // Check MIME type first
+  if (mimeType.startsWith('image/')) return 'image';
+  if (mimeType === 'text/csv') return 'csv';
+  if (mimeType === 'text/tab-separated-values') return 'csv';
+  if (mimeType === 'application/json') return 'json';
+  if (mimeType === 'text/html') return 'html';
+  if (mimeType === 'text/markdown') return 'markdown';
+
+  // Fall back to extension
+  if (name) {
+    const ext = detectFileExtension(name);
+    if (IMAGE_EXTENSIONS.has(ext)) return 'image';
+    if (CSV_EXTENSIONS.has(ext)) return 'csv';
+    if (JSON_EXTENSIONS.has(ext)) return 'json';
+    if (MARKDOWN_EXTENSIONS.has(ext)) return 'markdown';
+    if (TEXT_EXTENSIONS.has(ext)) return 'text';
+    if (HTML_EXTENSIONS.has(ext)) return 'html';
+  }
+
+  return 'unknown';
+}
+
