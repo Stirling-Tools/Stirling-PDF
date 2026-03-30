@@ -142,6 +142,10 @@ welcome = "Willkommen"
 white = "Weiß"
 WorkInProgess = "In Arbeit: funktioniert möglicherweise nicht oder ist fehlerhaft. Bitte melden Sie alle Probleme."
 yes = "Ja"
+insufficientCredits = "Unzureichende Credits. Erforderlich: {{requiredCredits}}, Verfügbar: {{currentBalance}}, Fehlbetrag: {{shortfall}}"
+loadingCredits = "Credits werden geprüft..."
+loadingProStatus = "Abonnementstatus wird geprüft..."
+noticeTopUpOrPlan = "Nicht genug Credits, bitte aufladen oder auf einen Tarif upgraden"
 
 [account]
 accountSettings = "Kontoeinstellungen"
@@ -1513,6 +1517,7 @@ editStampHint = "Um das Bild zu ändern, löschen Sie diesen Stempel und fügen 
 editSwitchToSelect = "Wechseln Sie zu „Auswählen und Bearbeiten“, um diese Anmerkung zu bearbeiten."
 editText = "Textfeld bearbeiten"
 editTextMarkup = "Textmarkierung bearbeiten"
+annotationStyle = "Anmerkungsstil"
 ellipse = "Ellipse"
 exit = "Anmerkungsmodus beenden"
 fillColor = "Füllfarbe"
@@ -1523,13 +1528,19 @@ highlight = "Markieren"
 imagePreview = "Vorschau"
 inkHighlighter = "Freihand-Textmarker"
 line = "Linie"
+lineArrow = "Pfeil"
 noBackground = "Kein Hintergrund"
 note = "Notiz"
+comment = "Kommentar"
+comments = "Kommentare"
+insertText = "Text einfügen"
+replaceText = "Text ersetzen"
 noteIcon = "Notizsymbol"
 notesStamps = "Notizen & Stempel"
 opacity = "Deckkraft"
 pen = "Stift"
 polygon = "Polygon"
+polyline = "Polylinie"
 properties = "Properties"
 rectangle = "Rechteck"
 redo = "Wiederholen"
@@ -2574,10 +2585,48 @@ title = "Qualitätsanpassung"
 [compressPdfs]
 tags = "komprimieren,verkleinern,minimieren"
 
+[config]
+plan = "Tarif"
+
 [config.account.overview]
+confirmDelete = "Mein Konto löschen"
+deleteAccount = "Konto löschen"
+deleteAccountTitle = "Konto löschen"
+deleteFailed = "Löschen des Kontos fehlgeschlagen."
+deleteFailedTitle = "Konto kann nicht gelöscht werden"
+deleteWarning = "Diese Aktion ist dauerhaft und kann nicht rückgängig gemacht werden. Alle Ihre Daten werden gelöscht."
+enterEmailConfirm = "Geben Sie zur Bestätigung unten Ihre E-Mail-Adresse ({{email}}) ein:"
 guestDescription = "Sie sind als Gast angemeldet. Erwägen Sie ein Upgrade Ihres Kontos oben."
+label = "Übersicht"
 manageAccountPreferences = "Verwalten Sie Ihre Kontoeinstellungen"
+signedInAs = "Angemeldet als"
 title = "Kontoeinstellungen"
+
+[config.account.profilePicture]
+description = "Laden Sie ein Bild hoch, um Ihr Konto zu personalisieren."
+help = "PNG, JPG oder WebP bis 2 MB."
+remove = "Entfernen"
+sizeError = "Bitte wählen Sie ein Bild kleiner als 2 MB."
+switchedToCustom = "Auf benutzerdefiniertes Bild umgestellt. Sie können nun Ihr eigenes hochladen."
+title = "Profilbild"
+upload = "Hochladen"
+useCustom = "Benutzerdefiniertes Bild verwenden"
+usingProvider = "Verwendet {{provider}}-Profilbild"
+
+[config.account.profilePicture.cropper]
+cropError = "Zuschneiden des Bildes fehlgeschlagen. Bitte erneut versuchen."
+invalidImage = "Ungültige Bilddatei. Bitte wählen Sie eine gültige PNG-, JPG- oder WebP-Datei."
+processing = "Zuschnitt wird verarbeitet..."
+save = "Zugeschnittenes Bild speichern"
+sizeErrorAfterCrop = "Das zugeschnittene Bild ist zu groß. Bitte herauszoomen oder einen kleineren Bereich zuschneiden."
+title = "Profilbild zuschneiden"
+zoom = "Zoom"
+
+[config.account.security]
+changePassword = "Passwort ändern"
+description = "Verwalten Sie Ihr Passwort und Ihre Sicherheitseinstellungen."
+title = "Passwörter & Sicherheit"
+update = "Passwort aktualisieren"
 
 [config.account.upgrade]
 description = "Verknüpfen Sie Ihr Konto, um Ihre Historie zu bewahren und mehr Funktionen zu nutzen!"
@@ -2595,6 +2644,7 @@ upgradeButton = "Konto upgraden"
 [config.apiKeys]
 chartAriaLabel = "Credit-Verbrauch: enthalten {{includedUsed}} von {{includedTotal}}, gekauft {{purchasedUsed}} von {{purchasedTotal}}"
 copyKeyAriaLabel = "API-Schlüssel kopieren"
+creditsRemaining = "Verbleibende Credits"
 description = "Ihr API-Schlüssel für den Zugriff auf Stirlings PDF-Tools. Kopieren Sie ihn in Ihr Projekt oder aktualisieren Sie, um einen neuen zu generieren."
 docsDescription = "Erfahren Sie mehr über die Integration mit Stirling PDF:"
 docsLink = "API-Dokumentation"
@@ -2643,6 +2693,14 @@ basic = "Grundkonfiguration"
 integration = "Integrationskonfiguration"
 security = "Sicherheitskonfiguration"
 system = "Systemkonfiguration"
+
+[connectionMode.status]
+localOffline = "Offline-Modus aktiv"
+localOnline = "Offline-Modus aktiv"
+saas = "Mit Stirling Cloud verbunden"
+selfhostedChecking = "Mit selbstgehostetem Server verbunden (wird geprüft...)"
+selfhostedOffline = "Selbstgehosteter Server nicht erreichbar"
+selfhostedOnline = "Mit selbstgehostetem Server verbunden"
 
 [convert]
 autoRotate = "Automatisch drehen"
@@ -2728,6 +2786,15 @@ webOptions = "Web-zu-PDF-Optionen"
 wordDoc = "Word-Dokument"
 wordDocExt = "Word-Dokument (.docx)"
 zoomLevel = "Zoomstufe"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "eBook → PDF"
+emlToPdf = "E-Mail → PDF"
+fileToPdf = "Office/Dokument → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "Optionen: E-Book zu PDF"
@@ -3718,6 +3785,11 @@ desc = "Fügt PDF-Signaturen durch Zeichnung, Text oder Bild hinzu"
 tags = "unterschrift,autogramm"
 title = "Signieren"
 
+[home.timestampPdf]
+desc = "Fügen Sie einen RFC 3161-Dokumentzeitstempel hinzu, um nachzuweisen, wann Ihr PDF existiert hat"
+tags = "Zeitstempel,RFC 3161,TSA,Time Stamp Authority,Dokument-Zeitstempel,Existenznachweis,Timestamp-Token,vertrauenswürdiger Zeitstempel,Signatur-Zeitstempel,beglaubigen"
+title = "PDF mit Zeitstempel"
+
 [home.split]
 desc = "PDFs in mehrere Dokumente aufteilen"
 tags = "teilen,trennen,aufteilen"
@@ -3854,6 +3926,7 @@ version = "Version"
 accountCreatedSuccess = "Konto erfolgreich erstellt! Sie können sich jetzt anmelden."
 alreadyLoggedIn = "Sie sind bereits auf mehreren"
 alreadyLoggedIn2 = "Geräten angemeldet. Bitte melden Sie sich dort ab und versuchen es dann erneut."
+backToSignIn = "Zurück zur Anmeldung"
 cancel = "Abbrechen"
 changePasswordWarning = "Bitte ändern Sie Ihr Passwort nach dem ersten Login."
 credentialsUpdated = "Ihre Anmeldedaten wurden aktualisiert. Bitte melden Sie sich erneut an."
@@ -3895,16 +3968,21 @@ or = "Oder"
 password = "Passwort"
 passwordChangedSuccess = "Passwort erfolgreich geändert! Bitte melden Sie sich mit Ihrem neuen Passwort an."
 passwordResetSent = "Passwort-Reset-Link wurde an {{email}} gesendet! Prüfen Sie Ihre E-Mails und folgen Sie den Anweisungen."
+passwordUpdatedSuccess = "Ihr Passwort wurde erfolgreich aktualisiert."
 pleaseEnterBoth = "Bitte geben Sie sowohl E-Mail als auch Passwort ein"
 pleaseEnterEmail = "Bitte geben Sie Ihre E-Mail-Adresse ein"
 relyingPartyRegistrationNotFound = "Keine Relying-Party-Registrierung gefunden"
 rememberme = "Angemeldet bleiben"
+resetHelp = "Geben Sie Ihre E-Mail ein, um einen sicheren Link zum Zurücksetzen Ihres Passworts zu erhalten. Wenn der Link abgelaufen ist, fordern Sie bitte einen neuen an."
+resetYourPassword = "Passwort zurücksetzen"
 saml2RequiresLicense = "SAML-Anmeldung erfordert eine kostenpflichtige Lizenz (Server oder Enterprise). Bitte wenden Sie sich an den Administrator, um Ihren Plan zu aktualisieren."
 sending = "Wird gesendet…"
 sendMagicLink = "Magic Link senden"
+sendResetLink = "Link zum Zurücksetzen senden"
 sessionExpired = "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
 signin = "Anmelden"
 signInAnonymously = "Als Gast anmelden"
+subtitle = "Melden Sie sich wieder bei Stirling PDF an"
 signingIn = "Anmeldung läuft..."
 signinTitle = "Bitte melden Sie sich an."
 signInWith = "Anmelden mit"
@@ -3913,6 +3991,7 @@ ssoSignIn = "Anmeldung per Single Sign-On"
 title = "Anmelden"
 toManySessions = "Sie haben zu viele aktive Sitzungen"
 unexpectedError = "Unerwarteter Fehler: {{message}}"
+updatePassword = "Passwort aktualisieren"
 useEmailInstead = "Mit E-Mail anmelden"
 useMagicLink = "Stattdessen Magic Link verwenden"
 userIsDisabled = "Benutzer ist deaktiviert, die Anmeldung ist mit diesem Benutzernamen derzeit gesperrt. Bitte wenden Sie sich an den Administrator."
@@ -4222,6 +4301,15 @@ viewSwitcher = "Verwenden Sie diese Steuerelemente, um auszuwählen, wie Sie Ihr
 workbench = "Dies ist der <strong>Arbeitsbereich</strong> – der Hauptbereich, in dem Sie Ihre PDFs ansehen und bearbeiten."
 wrapUp = "Alles fertig! Sie haben die Hauptbereiche der App und deren Verwendung kennengelernt. Klicken Sie jederzeit auf die Schaltfläche <strong>Hilfe</strong>, um diese Tour erneut zu sehen."
 
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "Nach Ende der Testphase nutzen Sie weiterhin unseren kostenlosen Tarif. Fügen Sie eine Zahlungsmethode hinzu, um den Pro-Zugang beizubehalten."
+afterTrialWithPayment = "Ihr Pro-Abonnement beginnt automatisch, wenn die Testphase endet."
+body = "Während der Testphase haben Sie vollen Zugriff auf die Pro-Funktionen von Stirling PDF. Genießen Sie unbegrenzte Konvertierungen, größere Dateigrößen und priorisierte Verarbeitung."
+daysRemaining = "{{days}} Tage verbleibend"
+daysRemainingSingular = "{{days}} Tag verbleibend"
+title = "Ihre 30-tägige Pro-Testversion"
+trialEnds = "Testzeitraum endet am {{date}}"
+
 [onboarding.buttons]
 back = "Zurück"
 download = "Herunterladen →"
@@ -4392,6 +4480,31 @@ loading = "Loading attachments..."
 empty = "No attachments in this document"
 noMatch = "No attachments match your search"
 
+[viewer.comments]
+title = "Kommentare"
+hint = "Platzieren Sie Kommentare mit den Tools Kommentar, Text einfügen oder Text ersetzen. Sie erscheinen hier nach Seiten."
+placeholder = "Kommentar eingeben..."
+pageLabel = "Seite {{page}}"
+oneComment = "1 Kommentar"
+nComments = "{{count}} Kommentare"
+addCommentPlaceholder = "Kommentar hinzufügen..."
+addLink = "Link hinzufügen"
+goToLink = "Link öffnen"
+addComment = "Kommentar hinzufügen"
+viewComment = "Kommentar anzeigen"
+addReplyPlaceholder = "Antwort hinzufügen..."
+saveReply = "Antwort speichern"
+send = "Senden"
+moreActions = "Weitere Aktionen"
+typeComment = "Kommentar"
+typeInsertText = "Text einfügen"
+typeReplaceText = "Text ersetzen"
+locateAnnotation = "Im Dokument anzeigen"
+deleteTitle = "Anmerkung aus Kommentaren entfernen?"
+deleteDescription = "Diese Anmerkung hat einen Kommentar. Sie können nur den Kommentar aus der Seitenleiste entfernen und die Anmerkung behalten oder alles löschen."
+removeCommentOnly = "Nur Kommentar entfernen"
+deleteAnnotationAndComment = "Anmerkung und Kommentar löschen"
+
 [viewer.formBar]
 title = "Form Fields"
 unsavedBadge = "Unsaved"
@@ -4425,14 +4538,20 @@ rotateLeft = "Nach links drehen"
 rotateRight = "Nach rechts drehen"
 toggleSidebar = "Seitenleiste umschalten"
 toggleBookmarks = "Lesezeichen ein-/ausblenden"
+toggleComments = "Kommentare"
 print = "PDF drucken"
 ruler = "Lineal / Messen"
+readAloud = "Vorlesen"
+readAloudSpeed = "Geschwindigkeit"
+readAloudLanguage = "Sprache"
+selectLanguage = "Sprache auswählen"
 draw = "Draw"
 redact = "Redact"
 exitRedaction = "Exit Redaction Mode"
 save = "Save"
 downloadAll = "Alle herunterladen"
 saveAll = "Alle speichern"
+saveAs = "Speichern unter"
 
 [textAlign]
 left = "Links"
@@ -4447,21 +4566,132 @@ title = "Seiten extrahieren"
 
 [pageLayout]
 addBorder = "Ränder hinzufügen"
+borderWidth = "Rahmenstärke"
+bottom = "Unterer Rand"
+cols = "Spalten"
 header = "Mehrseitiges Layout"
+innerMargin = "Innenabstand"
+left = "Linker Rand"
 pagesPerSheet = "Seiten pro Blatt:"
+right = "Rechter Rand"
+rows = "Zeilen"
 submit = "Abschicken"
 tags = "zusammenführen,zusammensetzen,einzelansicht,organisieren"
 title = "Mehrseitiges Layout"
+top = "Oberer Rand"
+
+[pageLayout.mode]
+default = "Standard"
+custom = "Benutzerdefiniert"
+label = "Modus:"
+
+[pageLayout.arrangement]
+byColumns = "Nach Spalten"
+byRows = "Nach Zeilen"
+label = "Seitenanordnung:"
 
 [pageLayout.desc]
 16 = "16 Seiten auf einem Blatt platzieren (4 × 4 Raster)."
 2 = "2 Seiten nebeneinander auf einem Blatt platzieren."
-3 = "3 Seiten auf einem Blatt in einer einzelnen Reihe platzieren."
 4 = "4 Seiten auf einem Blatt platzieren (2 × 2 Raster)."
 9 = "9 Seiten auf einem Blatt platzieren (3 × 3 Raster)."
 
 [pageLayout.error]
 failed = "Beim Erstellen des Mehrseiten-Layouts ist ein Fehler aufgetreten."
+outerVerticalMarginsTooLarge = "Obere/Untere Ränder sind für dieses Seitenformat zu groß."
+outerHorizontalMarginsTooLarge = "Linker/Rechter Rand ist für dieses Seitenformat zu groß."
+innerMarginTooLarge = "Der Innenabstand ist für das ausgewählte Layout zu groß."
+
+[pageLayout.orientation]
+landscape = "Querformat"
+portrait = "Hochformat"
+label = "Ausrichtung:"
+
+[pageLayout.readingDirection]
+ltr = "Links nach rechts"
+rtl = "Rechts nach links"
+label = "Leserichtung:"
+
+[pageLayout.tooltip.header]
+title = "Seitenlayout-Leitfaden"
+
+[pageLayout.tooltip.overview]
+title = "Was ist Seitenlayout?"
+text = "Mehrere Seiten auf ein einziges Blatt anordnen, z. B. für Handouts oder um Papier zu sparen."
+
+[pageLayout.tooltip.mode]
+title = "Modus"
+text = "Wählen Sie, wie das Raster konfiguriert wird:"
+bullet1 = "Standard: Eine Voreinstellung wählen, das Raster wird automatisch berechnet."
+bullet2 = "Benutzerdefiniert: Zeilen und Spalten manuell festlegen."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Seiten pro Blatt (Standardmodus)"
+text = "Wählen Sie, wie viele Seiten pro Blatt (z. B. 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Zeilen & Spalten (Benutzerdefinierter Modus)"
+text = "Exakte Rasterabmessungen festlegen. Gesamte Seiten pro Blatt = Zeilen × Spalten."
+
+[pageLayout.tooltip.orientation]
+title = "Ausrichtung"
+text = "Legt die Ausrichtung des Ausgabeblatts fest:"
+bullet1 = "Hochformat: Höher als breit."
+bullet2 = "Querformat: Breiter als hoch."
+
+[pageLayout.tooltip.arrangement]
+title = "Seitenanordnung"
+text = "Steuert die Reihenfolge, in der Seiten das Raster füllen:"
+bullet1 = "Nach Zeilen: Zeile für Zeile füllen (links-nach-rechts oder rechts-nach-links)."
+bullet2 = "Nach Spalten: Von oben nach unten, Spalte für Spalte füllen."
+
+[pageLayout.tooltip.readingDirection]
+title = "Leserichtung"
+text = "Steuert die horizontale Reihenfolge der Seiten:"
+bullet1 = "LTR: Links nach rechts."
+bullet2 = "RTL: Rechts nach links."
+
+[pageLayout.tooltip.addBorder]
+title = "Rahmen hinzufügen"
+text = "Zeichnet Rahmenlinien um jede Seitenzelle als Schneidehilfe oder zur visuellen Trennung."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Ränder und Rahmen"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Ränder"
+text = "Verwenden Sie obere, untere, linke und rechte Ränder, um den Abstand um die gesamte Blattausgabe zu steuern."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Innenabstand"
+text = "Der Innenabstand fügt Zwischenräume zwischen Zellen im Seitenraster hinzu, um Trennung und Lesbarkeit zu verbessern."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Rahmen hinzufügen"
+text = "Aktivieren Sie Rahmen, um Linien um jede platzierte Seite zu zeichnen. Dies kann bei visueller Trennung oder beim Zuschneiden helfen."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Rahmenstärke"
+text = "Die Rahmenstärke wird nur angewendet, wenn Rahmen aktiviert sind. Höhere Werte ergeben dickere Linien."
+
+[pageLayout.advanced.tooltip.header]
+title = "Erweiterte Layoutoptionen"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Ausrichtung"
+text = "Wählen Sie die Ausrichtung des finalen Blatts. Hochformat eignet sich besser für hohes Inhalt, Querformat für breitere Layouts."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Seitenanordnung"
+text = "Steuert, ob Seiten das Raster zeilenweise oder spaltenweise füllen."
+bullet1 = "Nach Zeilen: Zuerst jede Zeile füllen."
+bullet2 = "Nach Spalten: Zuerst jede Spalte füllen."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Leserichtung"
+text = "Legt die horizontale Reihenfolge im Raster fest, nützlich für links-nach-rechts und rechts-nach-links Konventionen."
+bullet1 = "LTR: Links-nach-rechts-Reihenfolge."
+bullet2 = "RTL: Rechts-nach-links-Reihenfolge."
 
 [pageRemover]
 header = "PDF Seiten entfernen"
@@ -4977,7 +5207,10 @@ perMonth = "/Monat"
 perSeat = "/Platz"
 popular = "Beliebt"
 selectPlan = "Plan auswählen"
+selectCredits = "Credit-Menge auswählen"
 showComparison = "Alle Funktionen vergleichen"
+purchase = "Kaufen"
+totalCost = "Gesamtkosten"
 upgrade = "Upgrade"
 withServer = "+ Server-Plan"
 
@@ -5068,6 +5301,30 @@ successMessage = "Ihre Lizenz wurde erfolgreich aktiviert. Sie können dieses Fe
 [plan.team]
 name = "Team"
 siteLicense = "Site License"
+
+[plan.api]
+large = "5.000 Credits"
+medium = "1.000 Credits"
+small = "500 Credits"
+xsmall = "100 Credits"
+
+[plan.apiPackages]
+subtitle = "API-Credits für Ihre Anwendungen kaufen"
+title = "API-Credit-Pakete"
+
+[plan.trial]
+badge = "Test"
+continueWithFree = "Mit der kostenlosen Version fortfahren"
+daysRemaining = "Ihre Testversion endet in {{days}} Tagen"
+endDate = "Läuft ab: {{date}}"
+expired = "Ihre Testversion ist abgelaufen"
+expiredMessage = "Ihre 30-tägige Pro-Testversion ist abgelaufen. Abonnieren Sie Pro, um weiterhin auf Premiumfunktionen zuzugreifen, oder fahren Sie mit unserem kostenlosen Tarif fort."
+freeTierLimitations = "Der kostenlose Tarif umfasst grundlegende PDF-Tools mit Nutzungslimits."
+message = ""
+subscribe = "Pro abonnieren"
+subscribeToPro = "Pro abonnieren"
+subscriptionScheduled = "Abonnement geplant – beginnt am {{date}}"
+title = "Kostenlose Testversion aktiv"
 
 [credits]
 enableOverageBilling = "Mehrverbrauchsabrechnung aktivieren"
@@ -5631,6 +5888,32 @@ text = "Drehen Sie Ihre PDF-Seiten im oder gegen den Uhrzeigersinn in 90-Grad-Sc
 [rotate.tooltip.header]
 title = "Übersicht der Rotationseinstellungen"
 
+[timestampPdf]
+completed = "PDF erfolgreich mit Zeitstempel versehen"
+desc = "Fügen Sie Ihrem PDF einen RFC 3161-Dokumentzeitstempel über einen vertrauenswürdigen Time Stamp Authority (TSA)-Server hinzu."
+filenamePrefix = "zeitgestempelt"
+results = "Zeitstempel-Ergebnisse"
+submit = "Zeitstempel anwenden"
+title = "PDF mit Zeitstempel"
+
+[timestampPdf.error]
+failed = "Beim Hinzufügen des Zeitstempels ist ein Fehler aufgetreten."
+generic = "Zeitstempeln fehlgeschlagen"
+
+[timestampPdf.files]
+placeholder = "Wählen Sie in der Hauptansicht eine PDF-Datei aus, um zu beginnen"
+
+[timestampPdf.options]
+note = "Es wird nur ein SHA-256-Hash Ihres Dokuments an den TSA-Server gesendet; die PDF-Datei selbst wird niemals an den TSA-Server gesendet."
+title = "Zeitstempel-Server (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Vertrauenswürdige Time Stamp Authority auswählen"
+label = "TSA-Server auswählen"
+
+[timestampPdf.steps]
+settings = "Einstellungen"
+
 [sanitize]
 completed = "Bereinigung erfolgreich abgeschlossen"
 desc = "Potentiell schädliche Elemente aus PDF-Dateien entfernen."
@@ -5755,6 +6038,14 @@ placeholder = "Suchbegriff eingeben..."
 searching = "Suche..."
 title = "PDF durchsuchen"
 
+[selfHosted.offline]
+hideTools = "Nicht verfügbare Tools ausblenden ▴"
+messageNoFallback = "Tools sind nicht verfügbar, bis Ihr Server wieder online ist."
+messageWithFallback = "Einige Tools erfordern eine Serververbindung."
+showTools = "Nicht verfügbare Tools anzeigen ▾"
+title = "Ihr Stirling-PDF-Server ist nicht erreichbar"
+toolNotAvailableLocally = "Ihr Stirling-PDF-Server ist offline und „{{endpoint}}“ ist im lokalen Backend nicht verfügbar."
+
 [session]
 expired = "Ihre Sitzung ist abgelaufen. Bitte laden Sie die Seite neu und versuchen Sie es erneut."
 refreshPage = "Seite aktualisieren"
@@ -5768,12 +6059,15 @@ systemSettings = "Systemeinstellungen"
 title = "Konfiguration"
 
 [settings.connection]
+localDescription = "Sie verwenden das lokale Backend ohne Konto. Einige Tools, die Cloud-Verarbeitung oder einen selbstgehosteten Server erfordern, sind nicht verfügbar."
 logout = "Abmelden"
 server = "Server"
+signIn = "Anmelden"
 title = "Verbindungsmodus"
 user = "Angemeldet als"
 
 [settings.connection.mode]
+local = "Nur lokal"
 saas = "Stirling Cloud"
 selfhosted = "Selbst gehostet"
 
@@ -5931,6 +6225,9 @@ title = "Richtlinien & Datenschutz"
 [settings.preferences]
 title = "Einstellungen"
 
+[settings.search]
+placeholder = "Einstellungen durchsuchen..."
+
 [settings.security]
 description = "Aktualisieren Sie Ihr Passwort, um Ihr Konto zu schützen."
 title = "Sicherheit"
@@ -5968,6 +6265,18 @@ title = "Arbeitsbereich"
 [settings.team]
 title = "Team"
 
+[localMode]
+toolUnavailable = "Dieses Tool erfordert ein Konto. Melden Sie sich bei Stirling Cloud an oder verbinden Sie sich mit einem selbstgehosteten Server, um es zu verwenden."
+
+[localMode.banner]
+message = "Melden Sie sich an, um alle Tools freizuschalten."
+signIn = "Anmelden"
+title = "Wird lokal ausgeführt"
+
+[localMode.toolPicker]
+message = "Melden Sie sich an, um alle Tools freizuschalten."
+signIn = "Anmelden"
+
 [setup]
 description = "Wählen Sie, wie Sie Stirling PDF verwenden möchten, um zu starten"
 welcome = "Willkommen bei Stirling PDF"
@@ -5975,6 +6284,7 @@ welcome = "Willkommen bei Stirling PDF"
 [setup.login]
 connectingTo = "Verbinden mit:"
 hideInstructions = "Anleitung ausblenden"
+skipSignIn = "Ohne Anmeldung fortfahren"
 instructions = "So aktivieren Sie die Anmeldung auf Ihrem Stirling PDF-Server:"
 instructionsEnvVar = "Setzen Sie die Umgebungsvariable:"
 instructionsOrYml = "Oder in der settings.yml:"
@@ -6022,7 +6332,14 @@ title = "Bei Stirling anmelden"
 [setup.selfhosted]
 link = "oder mit einem selbstgehosteten Konto verbinden"
 subtitle = "Geben Sie Ihre Server-Anmeldedaten ein"
+switchToLocal = "Stattdessen lokale Tools verwenden"
 title = "Am Server anmelden"
+
+[setup.selfhosted.unreachable]
+continueOffline = "Stattdessen lokale Tools verwenden"
+message = "Konnte {{url}} nicht erreichen. Prüfen Sie, ob der Server läuft und erreichbar ist."
+retry = "Erneut versuchen"
+title = "Verbindung zum Server nicht möglich"
 
 [setup.server]
 subtitle = "Geben Sie die URL Ihres Self-Hosted-Servers ein"
@@ -6032,6 +6349,7 @@ useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "Serverkonfiguration konnte nicht abgerufen werden. Bitte überprüfen Sie die URL und versuchen Sie es erneut."
+configFetchError = "Abrufen der Serverkonfiguration fehlgeschlagen: {{error}}"
 emptyUrl = "Bitte eine Server-URL eingeben"
 invalidUrl = "Ungültiges URL-Format. Bitte geben Sie eine gültige URL ein wie https://ihr-server.de"
 testFailed = "Verbindungstest fehlgeschlagen"
@@ -6557,6 +6875,7 @@ favorites = "Favoriten"
 heading = "Alle Tools (Vollbildansicht)"
 noResults = "Passen Sie Ihre Suche an oder blenden Sie Beschreibungen ein/aus, um das Gewünschte zu finden."
 recommended = "Empfohlen"
+selfHostedOffline = "Erfordert Ihren Stirling-PDF-Server (derzeit offline):"
 showDetails = "Details anzeigen"
 unavailable = "Vom Serveradministrator deaktiviert:"
 unavailableDependency = "Nicht verfügbar – erforderliches Tool auf dem Server fehlt:"
@@ -6601,6 +6920,12 @@ pageFormatting = "Seitenformatierung"
 removal = "Entfernung"
 signing = "Signierung"
 verification = "Verifizierung"
+
+[tool]
+endpointUnavailable = "Dieses Tool ist auf Ihrem Server nicht verfügbar."
+endpointUnavailableClickable = "In diesem Modus nicht verfügbar. Klicken Sie, um sich anzumelden."
+invalidParams = "Erforderliche Einstellungen ausfüllen."
+noFiles = "Fügen Sie eine Datei hinzu, um zu beginnen."
 
 [tools]
 noSearchResults = "Keine Tools gefunden"

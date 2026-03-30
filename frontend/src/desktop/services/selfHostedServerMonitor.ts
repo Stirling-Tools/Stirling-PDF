@@ -104,7 +104,8 @@ class SelfHostedServerMonitor {
         connectTimeout: REQUEST_TIMEOUT_MS,
       });
 
-      if (response.ok) {
+      // 401/403 means the server is running but requires authentication — treat as online
+      if (response.ok || response.status === 401 || response.status === 403) {
         this.updateState({ status: 'online', isOnline: true });
       } else {
         this.updateState({ status: 'offline', isOnline: false });

@@ -81,6 +81,18 @@ type AnnotationDefaults =
       imageSize?: { width: number; height: number };
       customData?: Record<string, unknown>;
     }
+  | {
+      type: PdfAnnotationSubtype.TEXT;
+      strokeColor?: string;
+      opacity?: number;
+      customData?: Record<string, unknown>;
+    }
+  | {
+      type: PdfAnnotationSubtype.CARET;
+      strokeColor?: string;
+      opacity?: number;
+      customData?: Record<string, unknown>;
+    }
   | null;
 
 type AnnotationApiSurface = {
@@ -294,6 +306,24 @@ const TOOL_DEFAULT_BUILDERS: Record<AnnotationToolId, ToolDefaultsBuilder> = {
   stamp: buildStampDefaults,
   signatureStamp: buildStampDefaults,
   signatureInk: (options) => buildInkDefaults(options),
+  textComment: (options) => ({
+    type: PdfAnnotationSubtype.TEXT,
+    strokeColor: options?.color ?? DEFAULTS.note,
+    opacity: options?.opacity ?? 1,
+    ...withCustomData(options),
+  }),
+  insertText: (options) => ({
+    type: PdfAnnotationSubtype.CARET,
+    strokeColor: options?.color ?? '#E44234',
+    opacity: options?.opacity ?? 1,
+    ...withCustomData(options),
+  }),
+  replaceText: (options) => ({
+    type: PdfAnnotationSubtype.CARET,
+    strokeColor: options?.color ?? '#E44234',
+    opacity: options?.opacity ?? 1,
+    ...withCustomData(options),
+  }),
 };
 
 export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function AnnotationAPIBridge(_props, ref) {

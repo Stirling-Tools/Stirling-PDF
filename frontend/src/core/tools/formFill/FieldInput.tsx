@@ -138,14 +138,12 @@ function FieldInputInner({
     case 'radio': {
       const radioOptions: { value: string; label: string }[] = [];
       if (field.widgets && field.widgets.length > 0) {
-        for (const w of field.widgets) {
-          if (w.exportValue && !radioOptions.some((o) => o.value === w.exportValue)) {
-            radioOptions.push({ value: w.exportValue, label: w.exportValue });
-          }
+        for (let i = 0; i < field.widgets.length; i++) {
+          const w = field.widgets[i];
+          // Use widget index as value; display option label, export value, or index
+          const label = (field.options && field.options[i]) || w.exportValue || String(i);
+          radioOptions.push({ value: String(i), label });
         }
-      }
-      if (radioOptions.length === 0 && field.options) {
-        radioOptions.push(...field.options.map((o) => ({ value: o, label: o })));
       }
       return (
         <Radio.Group

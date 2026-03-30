@@ -142,10 +142,11 @@ export default function Login() {
   // Redirect immediately if user has valid session (JWT already validated by AuthProvider)
   useEffect(() => {
     if (!loading && session) {
-      console.debug('[Login] User already authenticated, redirecting to home');
-      navigate('/', { replace: true });
+      const returnPath = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
+      console.debug('[Login] User already authenticated, redirecting to home', { returnPath });
+      navigate(returnPath || '/', { replace: true });
     }
-  }, [session, loading, navigate]);
+  }, [session, loading, navigate, location.state]);
 
   // If backend reports login is disabled, redirect to home (anonymous mode)
   useEffect(() => {

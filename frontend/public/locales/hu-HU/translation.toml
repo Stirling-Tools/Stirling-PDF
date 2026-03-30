@@ -142,6 +142,10 @@ welcome = "Üdvözöljük"
 white = "Fehér"
 WorkInProgess = "Fejlesztés alatt álló funkció, hibák előfordulhatnak. Kérjük, jelezze a problémákat!"
 yes = "Igen"
+insufficientCredits = "Elégtelen kreditek. Szükséges: {{requiredCredits}}, Elérhető: {{currentBalance}}, Hiány: {{shortfall}}"
+loadingCredits = "Kreditek ellenőrzése..."
+loadingProStatus = "Előfizetési állapot ellenőrzése..."
+noticeTopUpOrPlan = "Nincs elég kredit, kérjük, töltsön fel vagy váltson csomagra"
 
 [account]
 accountSettings = "Fiókbeállítások"
@@ -1513,6 +1517,7 @@ editStampHint = "A kép módosításához törölje ezt a bélyeget, és adjon h
 editSwitchToSelect = "Váltson Kijelölés és szerkesztés módra ennek a jegyzetnek a szerkesztéséhez."
 editText = "Szövegdoboz szerkesztése"
 editTextMarkup = "Szövegkiemelés szerkesztése"
+annotationStyle = "Jelölés stílusa"
 ellipse = "Ellipszis"
 exit = "Kilépés a jegyzetelésből"
 fillColor = "Kitöltés színe"
@@ -1523,13 +1528,19 @@ highlight = "Kiemelés"
 imagePreview = "Előnézet"
 inkHighlighter = "Szabadkézi kiemelő"
 line = "Vonal"
+lineArrow = "Nyíl"
 noBackground = "Nincs háttér"
 note = "Jegyzet"
+comment = "Megjegyzés"
+comments = "Megjegyzések"
+insertText = "Szöveg beszúrása"
+replaceText = "Szöveg cseréje"
 noteIcon = "Jegyzet ikonja"
 notesStamps = "Jegyzetek és bélyegek"
 opacity = "Átlátszóság"
 pen = "Toll"
 polygon = "Sokszög"
+polyline = "Polivonal"
 properties = "Tulajdonságok"
 rectangle = "Téglalap"
 redo = "Újra"
@@ -2574,10 +2585,48 @@ title = "Minőség állítása"
 [compressPdfs]
 tags = "tömörítés,kicsi,kompakt"
 
+[config]
+plan = "Csomag"
+
 [config.account.overview]
+confirmDelete = "Fiókom törlése"
+deleteAccount = "Fiók törlése"
+deleteAccountTitle = "Fiók törlése"
+deleteFailed = "Nem sikerült törölni a fiókot."
+deleteFailedTitle = "A fiók törlése nem lehetséges"
+deleteWarning = "Ez a művelet végleges és nem vonható vissza. Minden adata törlődik."
+enterEmailConfirm = "A törlés megerősítéséhez írja be alább az e-mail címét ({{email}}):"
 guestDescription = "Vendégként van bejelentkezve. Fontolja meg a fiók frissítését fentebb."
+label = "Áttekintés"
 manageAccountPreferences = "Fiókbeállítások kezelése"
+signedInAs = "Bejelentkezve mint"
 title = "Fiókbeállítások"
+
+[config.account.profilePicture]
+description = "Töltsön fel egy képet a fiókja személyre szabásához."
+help = "PNG, JPG vagy WebP legfeljebb 2 MB-ig."
+remove = "Eltávolítás"
+sizeError = "Kérjük, 2 MB-nál kisebb képet válasszon."
+switchedToCustom = "Egyéni képre váltott. Most feltöltheti a sajátját."
+title = "Profilkép"
+upload = "Feltöltés"
+useCustom = "Egyéni kép használata"
+usingProvider = "A(z) {{provider}} profilképét használja"
+
+[config.account.profilePicture.cropper]
+cropError = "Nem sikerült a kép kivágása. Kérjük, próbálja újra."
+invalidImage = "Érvénytelen képfájl. Válasszon érvényes PNG, JPG vagy WebP fájlt."
+processing = "Kivágás feldolgozása..."
+save = "Kivágott kép mentése"
+sizeErrorAfterCrop = "A kivágott kép túl nagy. Kérjük, kicsinyítsen vagy vágjon kisebb területet."
+title = "Profilkép kivágása"
+zoom = "Nagyítás"
+
+[config.account.security]
+changePassword = "Jelszó módosítása"
+description = "Kezelje jelszavát és biztonsági beállításait."
+title = "Jelszavak és biztonság"
+update = "Jelszó frissítése"
 
 [config.account.upgrade]
 description = "Kapcsolja össze a fiókját, hogy megőrizze az előzményeket és további funkciókhoz férjen hozzá!"
@@ -2595,6 +2644,7 @@ upgradeButton = "Fiók frissítése"
 [config.apiKeys]
 chartAriaLabel = "Kredithasználat: tartalmazott {{includedUsed}} / {{includedTotal}}, vásárolt {{purchasedUsed}} / {{purchasedTotal}}"
 copyKeyAriaLabel = "API-kulcs másolása"
+creditsRemaining = "Fennmaradó kreditek"
 description = "Az API-kulcsa a Stirling PDF eszközkészletének eléréséhez. Másolja a projektjébe, vagy frissítse, hogy újat generáljon."
 docsDescription = "További információ a Stirling PDF integrálásáról:"
 docsLink = "API-dokumentáció"
@@ -2643,6 +2693,14 @@ basic = "Alapkonfiguráció"
 integration = "Integrációs konfiguráció"
 security = "Biztonsági konfiguráció"
 system = "Rendszerkonfiguráció"
+
+[connectionMode.status]
+localOffline = "Offline mód fut"
+localOnline = "Offline mód fut"
+saas = "Csatlakozva a Stirling Cloudhoz"
+selfhostedChecking = "Csatlakozva az önhosztolt szerverhez (ellenőrzés...)"
+selfhostedOffline = "Az önhosztolt szerver nem érhető el"
+selfhostedOnline = "Csatlakozva az önhosztolt szerverhez"
 
 [convert]
 autoRotate = "Automatikus forgatás"
@@ -2728,6 +2786,15 @@ webOptions = "Web to PDF beállítások"
 wordDoc = "Word-dokumentum"
 wordDocExt = "Word-dokumentum (.docx)"
 zoomLevel = "Nagyítási szint"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "e-könyv → PDF"
+emlToPdf = "E-mail → PDF"
+fileToPdf = "Office/dokumentum → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "E-könyv → PDF beállítások"
@@ -3718,6 +3785,11 @@ desc = "Aláírás hozzáadása PDF-hez rajzolással, szöveggel vagy képpel"
 tags = "aláírás,szignó"
 title = "Aláírás"
 
+[home.timestampPdf]
+desc = "RFC 3161 dokumentum-időbélyeg hozzáadása a PDF-hez annak igazolására, hogy mikor létezett"
+tags = "időbélyeg,RFC 3161,TSA,időbélyeg-szolgáltató,dokumentum-időbélyeg,létezés igazolása,időbélyeg token,megbízható időbélyeg,időbélyeg aláírása,hitelesítés"
+title = "PDF időbélyegzése"
+
 [home.split]
 desc = "PDF-ek felosztása több dokumentumra"
 tags = "feloszt,szétválaszt,szétbont"
@@ -3854,6 +3926,7 @@ version = "Verzió"
 accountCreatedSuccess = "A fiók sikeresen létrejött! Most már bejelentkezhet."
 alreadyLoggedIn = "Már be van jelentkezve"
 alreadyLoggedIn2 = "eszközön. Kérjük, jelentkezzen ki az eszközökről és próbálja újra."
+backToSignIn = "Vissza a bejelentkezéshez"
 cancel = "Mégse"
 changePasswordWarning = "Kérjük, az első bejelentkezés után változtassa meg a jelszavát"
 credentialsUpdated = "Az adatait frissítettük. Kérjük, jelentkezzen be újra."
@@ -3895,16 +3968,21 @@ or = "Vagy"
 password = "Jelszó"
 passwordChangedSuccess = "A jelszó sikeresen megváltozott! Jelentkezzen be az új jelszavával."
 passwordResetSent = "Jelszó-visszaállító link elküldve ide: {{email}}! Ellenőrizze e-mailjét, és kövesse az utasításokat."
+passwordUpdatedSuccess = "A jelszava sikeresen frissült."
 pleaseEnterBoth = "Adja meg az e-mail-címet és a jelszót is"
 pleaseEnterEmail = "Adja meg e-mail-címét"
 relyingPartyRegistrationNotFound = "Kliens regisztráció nem található"
 rememberme = "Emlékezzen rám"
+resetHelp = "Adja meg e-mail címét, hogy biztonságos hivatkozást kapjon a jelszó visszaállításához. Ha a hivatkozás lejárt, kérjen újat."
+resetYourPassword = "Jelszó visszaállítása"
 saml2RequiresLicense = "A SAML bejelentkezés fizetős licencet igényel (Server vagy Enterprise). Kérjük, lépjen kapcsolatba az adminisztrátorral a csomag frissítéséhez."
 sending = "Küldés…"
 sendMagicLink = "Magic Link küldése"
+sendResetLink = "Visszaállítási link küldése"
 sessionExpired = "A munkamenet lejárt. Kérjük, jelentkezzen be újra."
 signin = "Bejelentkezés"
 signInAnonymously = "Bejelentkezés vendégként"
+subtitle = "Jelentkezzen be újra a Stirling PDF"
 signingIn = "Bejelentkezés..."
 signinTitle = "Kérjük, jelentkezzen be"
 signInWith = "Bejelentkezés ezzel:"
@@ -3913,6 +3991,7 @@ ssoSignIn = "Bejelentkezés egyszeri bejelentkezéssel"
 title = "Bejelentkezés"
 toManySessions = "Túl sok aktív munkamenet"
 unexpectedError = "Váratlan hiba: {{message}}"
+updatePassword = "Jelszó frissítése"
 useEmailInstead = "Bejelentkezés e-maillel"
 useMagicLink = "Használjon Magic Linket"
 userIsDisabled = "A felhasználó letiltva, a bejelentkezés jelenleg nem lehetséges ezzel a felhasználónévvel. Kérjük, forduljon a rendszergazdához."
@@ -4222,6 +4301,15 @@ viewSwitcher = "Ezekkel a vezérlőkkel választhatja ki, hogyan szeretné megte
 workbench = "Ez a <strong>Munkaterület</strong> – a fő terület, ahol megtekintheti és szerkesztheti a PDF-jeit."
 wrapUp = "Készen is van! Megismerte az alkalmazás fő területeit és használatukat. A túrát bármikor újra megtekintheti a <strong>Súgó</strong> gombra kattintva."
 
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "A próbaidőszak után az ingyenes csomaggal folytatja. Adjon meg fizetési módot a Pro hozzáférés megtartásához."
+afterTrialWithPayment = "A próbaidőszak lejártakor a Pro előfizetés automatikusan elindul."
+body = "A próbaidő alatt teljes hozzáférése van a Stirling PDF Pro funkcióihoz. Élvezze a korlátlan konverziókat, a nagyobb fájlméretet és az elsőbbségi feldolgozást."
+daysRemaining = "{{days}} nap van hátra"
+daysRemainingSingular = "{{days}} nap van hátra"
+title = "30 napos Pro próbaidőszak"
+trialEnds = "A próbaidőszak vége: {{date}}"
+
 [onboarding.buttons]
 back = "Vissza"
 download = "Letöltés →"
@@ -4392,6 +4480,31 @@ loading = "Mellékletek betöltése..."
 empty = "Nincsenek mellékletek ebben a dokumentumban"
 noMatch = "Nincs a keresésnek megfelelő melléklet"
 
+[viewer.comments]
+title = "Megjegyzések"
+hint = "Helyezzen el megjegyzéseket a Megjegyzés, Szöveg beszúrása vagy Szöveg cseréje eszközzel. Itt oldalak szerint jelennek meg."
+placeholder = "Írja be megjegyzését..."
+pageLabel = "Oldal {{page}}"
+oneComment = "1 megjegyzés"
+nComments = "{{count}} megjegyzés"
+addCommentPlaceholder = "Megjegyzés hozzáadása..."
+addLink = "Hivatkozás hozzáadása"
+goToLink = "Ugrás a hivatkozásra"
+addComment = "Megjegyzés hozzáadása"
+viewComment = "Megjegyzés megtekintése"
+addReplyPlaceholder = "Válasz hozzáadása..."
+saveReply = "Válasz mentése"
+send = "Küldés"
+moreActions = "További műveletek"
+typeComment = "Megjegyzés"
+typeInsertText = "Szöveg beszúrása"
+typeReplaceText = "Szöveg cseréje"
+locateAnnotation = "Megkeresés a dokumentumban"
+deleteTitle = "Eltávolítja a jelölést a megjegyzésekből?"
+deleteDescription = "Ehhez a jelöléshez megjegyzés tartozik. Eltávolíthatja csak a megjegyzést az oldalsávról a jelölés megtartásával, vagy mindent törölhet."
+removeCommentOnly = "Csak a megjegyzés eltávolítása"
+deleteAnnotationAndComment = "Jelölés és megjegyzés törlése"
+
 [viewer.formBar]
 title = "Űrlapmezők"
 unsavedBadge = "Mentetlen"
@@ -4425,14 +4538,20 @@ rotateLeft = "Forgatás balra"
 rotateRight = "Forgatás jobbra"
 toggleSidebar = "Oldalsáv ki/be"
 toggleBookmarks = "Könyvjelzők megjelenítése/elrejtése"
+toggleComments = "Megjegyzések"
 print = "PDF nyomtatása"
 ruler = "Vonalzó / mérés"
+readAloud = "Felolvasás"
+readAloudSpeed = "Sebesség"
+readAloudLanguage = "Nyelv"
+selectLanguage = "Nyelv kiválasztása"
 draw = "Rajzolás"
 redact = "Kitakarás"
 exitRedaction = "Kilépés a kitakarás módból"
 save = "Mentés"
 downloadAll = "Összes letöltése"
 saveAll = "Összes mentése"
+saveAs = "Mentés másként"
 
 [textAlign]
 left = "Balra"
@@ -4447,21 +4566,132 @@ title = "Oldalak kinyerése"
 
 [pageLayout]
 addBorder = "Keret hozzáadása"
+borderWidth = "Szegély vastagsága"
+bottom = "Alsó margó"
+cols = "Oszlopok"
 header = "Többoldalas elrendezés"
+innerMargin = "Belső margó"
+left = "Bal margó"
 pagesPerSheet = "Oldalak laponként:"
+right = "Jobb margó"
+rows = "Sorok"
 submit = "Küldés"
 tags = "egyesítés,kompozit,egyoldalas nézet,rendszerezés"
 title = "Többoldalas elrendezés"
+top = "Felső margó"
+
+[pageLayout.mode]
+default = "Alapértelmezett"
+custom = "Egyéni"
+label = "Mód:"
+
+[pageLayout.arrangement]
+byColumns = "Oszlopok szerint"
+byRows = "Sorok szerint"
+label = "Oldalelrendezés:"
 
 [pageLayout.desc]
 16 = "16 oldal elhelyezése egyetlen lapon (4 × 4 rács)."
 2 = "2 oldal elhelyezése egymás mellett egyetlen lapon."
-3 = "3 oldal elhelyezése egyetlen lapon, egy sorban."
 4 = "4 oldal elhelyezése egyetlen lapon (2 × 2 rács)."
 9 = "9 oldal elhelyezése egyetlen lapon (3 × 3 rács)."
 
 [pageLayout.error]
 failed = "Hiba történt a többoldalas elrendezés létrehozása közben."
+outerVerticalMarginsTooLarge = "A felső/alsó margók túl nagyok ehhez a lapmérethez."
+outerHorizontalMarginsTooLarge = "A bal/jobb margók túl nagyok ehhez a lapmérethez."
+innerMarginTooLarge = "A belső margó túl nagy a kiválasztott elrendezéshez."
+
+[pageLayout.orientation]
+landscape = "Fekvő"
+portrait = "Álló"
+label = "Tájolás:"
+
+[pageLayout.readingDirection]
+ltr = "Balról jobbra"
+rtl = "Jobbról balra"
+label = "Olvasási irány:"
+
+[pageLayout.tooltip.header]
+title = "Oldalelrendezés súgó"
+
+[pageLayout.tooltip.overview]
+title = "Mi az oldalelrendezés?"
+text = "Több oldalt illesszen egyetlen lapra kényelmi vagy papírmegtakarítási célból."
+
+[pageLayout.tooltip.mode]
+title = "Mód"
+text = "Válassza ki, hogyan legyen beállítva a rács:"
+bullet1 = "Alapértelmezett: Válasszon egy előbeállítást, a rács automatikusan kiszámításra kerül."
+bullet2 = "Egyéni: Sorokat és oszlopokat kézzel adhat meg."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Oldalak laponként (Alapértelmezett mód)"
+text = "Válassza ki, hány oldal legyen egy lapon (pl. 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Sorok és oszlopok (Egyéni mód)"
+text = "Állítsa be a pontos rácsméreteket. Összes oldal/lap = sorok × oszlopok."
+
+[pageLayout.tooltip.orientation]
+title = "Tájolás"
+text = "Beállítja a kimeneti lap tájolását:"
+bullet1 = "Álló: Magasabb, mint amilyen széles."
+bullet2 = "Fekvő: Szélesebb, mint amilyen magas."
+
+[pageLayout.tooltip.arrangement]
+title = "Oldalak kitöltése"
+text = "Szabályozza, milyen sorrendben töltik ki az oldalak a rácsot:"
+bullet1 = "Sorok szerint: Soronként tölti fel (balról jobbra vagy jobbról balra)."
+bullet2 = "Oszlopok szerint: Oszloponként, felülről lefelé tölti fel."
+
+[pageLayout.tooltip.readingDirection]
+title = "Olvasási irány"
+text = "A vízszintes oldalsorrendet állítja be:"
+bullet1 = "LTR: Balról jobbra."
+bullet2 = "RTL: Jobbról balra."
+
+[pageLayout.tooltip.addBorder]
+title = "Szegélyek hozzáadása"
+text = "Szegélyvonalakat rajzol minden cella köré vágási segédletként vagy vizuális elválasztáshoz."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Margók és szegélyek"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Margók"
+text = "A felső, alsó, bal és jobb margókkal szabályozhatja a teljes lap körüli térközt."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Belső margó"
+text = "A belső margó helyet ad a rács cellái között a jobb elválasztás és olvashatóság érdekében."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Szegélyek hozzáadása"
+text = "A szegélyek engedélyezésével vonalakat rajzol minden elhelyezett oldal köré. Segíthet a vizuális elválasztásban vagy vágásban."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Szegély vastagsága"
+text = "A szegély vastagsága csak bekapcsolt szegélyeknél érvényes. A nagyobb érték vastagabb vonalat eredményez."
+
+[pageLayout.advanced.tooltip.header]
+title = "Speciális elrendezési beállítások"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Tájolás"
+text = "Válassza ki a végső lap tájolását. Az álló jobb a magas tartalomhoz, míg a fekvő a szélesebb elrendezésekhez illik."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Oldalak kitöltése"
+text = "Szabályozza, hogy az oldalak soronként vagy oszloponként töltsék ki a rácsot."
+bullet1 = "Sorok szerint: Először minden sor töltődik fel."
+bullet2 = "Oszlopok szerint: Először minden oszlop töltődik fel."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Olvasási irány"
+text = "A vízszintes sorrendet állítja be a rácsban; hasznos balról jobbra és jobbról balra írásirányú dokumentumoknál."
+bullet1 = "LTR: Balról jobbra sorrend."
+bullet2 = "RTL: Jobbról balra sorrend."
 
 [pageRemover]
 header = "PDF oldaleltávolító"
@@ -4977,7 +5207,10 @@ perMonth = "/hó"
 perSeat = "/hely"
 popular = "Népszerű"
 selectPlan = "Csomag kiválasztása"
+selectCredits = "Válasszon kreditmennyiséget"
 showComparison = "Összes funkció összehasonlítása"
+purchase = "Vásárlás"
+totalCost = "Végösszeg"
 upgrade = "Frissítés"
 withServer = "+ Szervercsomag"
 
@@ -5068,6 +5301,30 @@ successMessage = "A licenc sikeresen aktiválva. Most bezárhatja ezt az ablakot
 [plan.team]
 name = "Csapat"
 siteLicense = "Telephelyi licenc"
+
+[plan.api]
+large = "5,000 kredit"
+medium = "1,000 kredit"
+small = "500 kredit"
+xsmall = "100 kredit"
+
+[plan.apiPackages]
+subtitle = "Vásároljon API krediteket az alkalmazásaihoz"
+title = "API kreditcsomagok"
+
+[plan.trial]
+badge = "Próba"
+continueWithFree = "Folytatás az ingyenes csomaggal"
+daysRemaining = "A próbaidőszaka {{days}} nap múlva lejár"
+endDate = "Lejár: {{date}}"
+expired = "A próbaidőszak lejárt"
+expiredMessage = "A 30 napos Pro próbaidőszaka lejárt. Fizessen elő a Pro-ra a prémium funkciók további eléréséhez, vagy folytassa az ingyenes csomaggal."
+freeTierLimitations = "Az ingyenes csomag alap PDF eszközöket tartalmaz használati korlátokkal."
+message = ""
+subscribe = "Előfizetés a Pro-ra"
+subscribeToPro = "Előfizetés a Pro-ra"
+subscriptionScheduled = "Előfizetés ütemezve – kezdés: {{date}}"
+title = "Ingyenes próba aktív"
 
 [credits]
 enableOverageBilling = "Túlhasználati számlázás engedélyezése"
@@ -5631,6 +5888,32 @@ text = "Forgassa el a PDF oldalakat az óramutató járásával megegyezően vag
 [rotate.tooltip.header]
 title = "Forgatási beállítások áttekintése"
 
+[timestampPdf]
+completed = "A PDF időbélyegzése sikeres"
+desc = "RFC 3161 dokumentum-időbélyeg hozzáadása a PDF-hez megbízható Time Stamp Authority (TSA) szerverrel."
+filenamePrefix = "időbélyegzett"
+results = "Időbélyegzés eredményei"
+submit = "Időbélyeg alkalmazása"
+title = "PDF időbélyegzése"
+
+[timestampPdf.error]
+failed = "Hiba történt a PDF időbélyegzése közben."
+generic = "Az időbélyegzés sikertelen"
+
+[timestampPdf.files]
+placeholder = "Válasszon ki egy PDF fájlt a fő nézetben a kezdéshez"
+
+[timestampPdf.options]
+note = "A dokumentumából csak a SHA-256 kivonat kerül elküldésre a TSA szervernek; magát a PDF fájlt soha nem küldjük el a TSA szerverre."
+title = "Időbélyeg-szerver (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Válasszon megbízható időbélyeg-szolgáltatót"
+label = "Válasszon TSA szervert"
+
+[timestampPdf.steps]
+settings = "Beállítások"
+
 [sanitize]
 completed = "A tisztítás sikeresen befejeződött"
 desc = "Potenciálisan ártalmas elemek eltávolítása PDF fájlokból."
@@ -5755,6 +6038,14 @@ placeholder = "Adja meg a keresőkifejezést..."
 searching = "Keresés..."
 title = "PDF keresése"
 
+[selfHosted.offline]
+hideTools = "Nem elérhető eszközök elrejtése ▴"
+messageNoFallback = "Az eszközök csak akkor lesznek elérhetők, ha a szervere újra online."
+messageWithFallback = "Néhány eszközhöz szerverkapcsolat szükséges."
+showTools = "Nem elérhető eszközök megtekintése ▾"
+title = "A Stirling-PDF szervere nem érhető el"
+toolNotAvailableLocally = "A Stirling-PDF szervere offline, és a(z) \"{{endpoint}}\" nem érhető el a helyi backenden."
+
 [session]
 expired = "A munkamenet lejárt. Kérjük, frissítse az oldalt és próbálja újra."
 refreshPage = "Oldal frissítése"
@@ -5768,12 +6059,15 @@ systemSettings = "Rendszerbeállítások"
 title = "Konfiguráció"
 
 [settings.connection]
+localDescription = "A helyi backendet használja fiók nélkül. Egyes eszközök, amelyek felhőalapú feldolgozást vagy önhosztolt szervert igényelnek, nem érhetők el."
 logout = "Kijelentkezés"
 server = "Szerver"
+signIn = "Bejelentkezés"
 title = "Kapcsolati mód"
 user = "Bejelentkezve mint"
 
 [settings.connection.mode]
+local = "Csak helyi"
 saas = "Stirling Cloud"
 selfhosted = "Önhostolt"
 
@@ -5931,6 +6225,9 @@ title = "Irányelvek és adatvédelem"
 [settings.preferences]
 title = "Beállítások"
 
+[settings.search]
+placeholder = "Keresés a beállítások között..."
+
 [settings.security]
 description = "Frissítse jelszavát fiókja biztonságáért."
 title = "Biztonság"
@@ -5968,6 +6265,18 @@ title = "Munkaterület"
 [settings.team]
 title = "Csapat"
 
+[localMode]
+toolUnavailable = "Ehhez az eszközhöz fiók szükséges. Jelentkezzen be a Stirling Cloudba, vagy csatlakozzon egy önhosztolt szerverhez a használatához."
+
+[localMode.banner]
+message = "Jelentkezzen be az összes eszköz feloldásához."
+signIn = "Bejelentkezés"
+title = "Helyben fut"
+
+[localMode.toolPicker]
+message = "Jelentkezzen be az összes eszköz feloldásához."
+signIn = "Bejelentkezés"
+
 [setup]
 description = "Kezdésként válassza ki, hogyan szeretné használni a Stirling PDF-et"
 welcome = "Üdvözöljük a Stirling PDF-ben"
@@ -5975,6 +6284,7 @@ welcome = "Üdvözöljük a Stirling PDF-ben"
 [setup.login]
 connectingTo = "Kapcsolódás ehhez:"
 hideInstructions = "Utasítások elrejtése"
+skipSignIn = "Folytatás bejelentkezés nélkül"
 instructions = "A bejelentkezés engedélyezéséhez a Stirling PDF szerverén:"
 instructionsEnvVar = "Állítsa be a környezeti változót:"
 instructionsOrYml = "Vagy a settings.yml-ben:"
@@ -6022,7 +6332,14 @@ title = "Bejelentkezés a Stirlingbe"
 [setup.selfhosted]
 link = "vagy csatlakozzon egy saját üzemeltetésű fiókhoz"
 subtitle = "Adja meg a szerver hitelesítő adatait"
+switchToLocal = "Használja inkább a helyi eszközöket"
 title = "Bejelentkezés a szerverre"
+
+[setup.selfhosted.unreachable]
+continueOffline = "Használja inkább a helyi eszközöket"
+message = "Nem sikerült elérni: {{url}}. Ellenőrizze, hogy a szerver fut-e és elérhető-e."
+retry = "Újrapróbálás"
+title = "Nem lehet csatlakozni a szerverhez"
 
 [setup.server]
 subtitle = "Adja meg az önhostolt szerver URL-jét"
@@ -6032,6 +6349,7 @@ useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "Nem sikerült letölteni a szerver konfigurációját. Ellenőrizze az URL-t, és próbálja meg újra."
+configFetchError = "Nem sikerült lekérni a szerver konfigurációját: {{error}}"
 emptyUrl = "Adjon meg egy szerver URL-t"
 invalidUrl = "Érvénytelen URL-formátum. Adjon meg egy érvényes URL-t, például https://your-server.com"
 testFailed = "A kapcsolat tesztje sikertelen"
@@ -6557,6 +6875,7 @@ favorites = "Kedvencek"
 heading = "Minden eszköz (teljes képernyős nézet)"
 noResults = "Próbálja módosítani a keresést vagy kapcsolja be a leírásokat, hogy megtalálja, amit keres."
 recommended = "Ajánlott"
+selfHostedOffline = "A saját Stirling-PDF szerverére van szükség (jelenleg offline):"
 showDetails = "Részletek megjelenítése"
 unavailable = "Szerveradminisztrátor letiltotta:"
 unavailableDependency = "Nem érhető el – szükséges eszköz hiányzik a szerveren:"
@@ -6601,6 +6920,12 @@ pageFormatting = "Oldalformázás"
 removal = "Eltávolítás"
 signing = "Aláírás"
 verification = "Ellenőrzés"
+
+[tool]
+endpointUnavailable = "Ez az eszköz nem érhető el a szerverén."
+endpointUnavailableClickable = "Ebben a módban nem érhető el. Kattintson a bejelentkezéshez."
+invalidParams = "Töltse ki a kötelező beállításokat."
+noFiles = "Adjon hozzá egy fájlt a kezdéshez."
 
 [tools]
 noSearchResults = "Nem találhatók eszközök"

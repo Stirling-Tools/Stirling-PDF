@@ -45,6 +45,7 @@ export default function HomePage() {
     readerMode,
     setLeftPanelView,
     toolAvailability,
+    customWorkbenchViews,
   } = useToolWorkflow();
 
   const { openFilesModal } = useFilesModalContext();
@@ -103,6 +104,10 @@ export default function HomePage() {
     selectedToolKey,
     navigationState.workbench,
   ]);
+
+  const hideToolPanel = customWorkbenchViews.find(
+    (v) => v.workbenchId === navigationState.workbench
+  )?.hideToolPanel ?? false;
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
   const brandIconSrc = useLogoPath();
@@ -177,6 +182,14 @@ export default function HomePage() {
       setActiveMobileView('workbench');
     }
   }, [isMobile, readerMode, selectedToolKey]);
+
+  // Automatically switch to workbench slide when a custom workbench (e.g. signing) is active on mobile.
+  // hideToolPanel is true for all custom workbenches that take over the full screen.
+  useEffect(() => {
+    if (isMobile && hideToolPanel) {
+      setActiveMobileView('workbench');
+    }
+  }, [isMobile, hideToolPanel]);
 
   // When navigating back to tools view in mobile with a workbench-only tool, show tool picker
   useEffect(() => {
@@ -314,7 +327,7 @@ export default function HomePage() {
           className="flex-nowrap flex"
         >
           <QuickAccessBar ref={quickAccessRef} />
-          <ToolPanel />
+          {!hideToolPanel && <ToolPanel />}
           <Workbench />
           <RightRail />
           <FileManager selectedTool={selectedTool as any /* FIX ME */} />

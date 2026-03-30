@@ -1,4 +1,4 @@
-import { rgb } from '@cantoo/pdf-lib';
+import { rgb } from '@app/services/pdfiumDocBuilder';
 
 type RgbTuple = [number, number, number];
 
@@ -21,7 +21,7 @@ const defaultLightPalette: Record<
 const toRgb = ([r, g, b]: RgbTuple) => rgb(r / 255, g / 255, b / 255);
 
 /**
- * Utility function to get CSS variable values and convert them to pdf-lib RGB format.
+ * Utility function to get CSS variable values and convert them to RGB format.
  * Falls back to sensible defaults when the CSS variable cannot be resolved.
  */
 function getCssVariableAsRgb(variableName: string, fallback: RgbTuple) {

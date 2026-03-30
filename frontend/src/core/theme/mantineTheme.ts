@@ -221,14 +221,9 @@ export const mantineTheme = createTheme({
         },
         option: {
           color: 'var(--text-primary)',
-          '&[data-hovered]': {
-            backgroundColor: 'var(--hover-bg)',
-          },
-          '&[data-selected]': {
-            backgroundColor: 'var(--color-primary-100)',
-            color: 'var(--color-primary-900)',
-          },
-        },
+          '--combobox-option-hover': 'var(--hover-bg)',
+          '--combobox-option-selected': 'var(--color-primary-100)',
+        } as any,
       },
     },
 
@@ -254,14 +249,9 @@ export const mantineTheme = createTheme({
         },
         option: {
           color: 'var(--text-primary)',
-          '&[data-hovered]': {
-            backgroundColor: 'var(--hover-bg)',
-          },
-          '&[data-selected]': {
-            backgroundColor: 'var(--color-primary-100)',
-            color: 'var(--color-primary-900)',
-          },
-        },
+          '--combobox-option-hover': 'var(--hover-bg)',
+          '--combobox-option-selected': 'var(--color-primary-100)',
+        } as any,
       },
     },
     Tooltip: {
@@ -356,7 +346,7 @@ export const mantineTheme = createTheme({
         },
         control: {
           color: 'var(--text-secondary)',
-          '&[data-active]': {
+          '&[dataActive]': {
             backgroundColor: 'var(--bg-surface)',
             color: 'var(--text-primary)',
             boxShadow: 'var(--shadow-sm)',
