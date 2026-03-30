@@ -3,11 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { Tooltip } from '@app/components/shared/Tooltip';
 import { useBackendHealth } from '@app/hooks/useBackendHealth';
 import { CloudBadge } from '@app/components/shared/CloudBadge';
+import type { ExecuteDisabledReason } from '@app/hooks/tools/shared/toolOperationTypes';
+import { useToolActions } from '@app/contexts/ToolActionsContext';
 
 export interface OperationButtonProps {
   onClick?: () => void;
   isLoading?: boolean;
   disabled?: boolean;
+  disabledReason?: ExecuteDisabledReason;
   loadingText?: string;
   submitText?: string;
   variant?: 'filled' | 'outline' | 'subtle';
@@ -24,6 +27,7 @@ const OperationButton = ({
   onClick,
   isLoading = false,
   disabled = false,
+  disabledReason,
   loadingText,
   submitText,
   variant = 'filled',
@@ -36,21 +40,33 @@ const OperationButton = ({
   'data-tour': dataTour
 }: OperationButtonProps) => {
   const { t } = useTranslation();
-  const { isHealthy, message: backendMessage } = useBackendHealth();
-  const blockedByBackend = !isHealthy;
-  const combinedDisabled = disabled || blockedByBackend;
+  const { isOnline, message: backendMessage } = useBackendHealth();
+  const { onEndpointUnavailableClick } = useToolActions();
+  const blockedByBackend = !isOnline;
+
+  const effectiveDisabled = disabled || disabledReason !== null && disabledReason !== undefined;
+  const combinedDisabled = effectiveDisabled || blockedByBackend;
+
+  const reasonTooltip: Record<NonNullable<ExecuteDisabledReason>, string> = {
+    endpointUnavailable: onEndpointUnavailableClick
+      ? t('tool.endpointUnavailableClickable', "Not available in this mode. Click to sign in.")
+      : t('tool.endpointUnavailable', 'This tool is unavailable on your server.'),
+    noFiles: t('tool.noFiles', 'Add a file to get started.'),
+    invalidParams: t('tool.invalidParams', 'Fill in the required settings.'),
+  };
+
   const tooltipLabel = blockedByBackend
     ? (backendMessage ?? t('backendHealth.checking', 'Checking backend status...'))
-    : null;
+    : (disabledReason ? (reasonTooltip[disabledReason] ?? null) : null);
 
   const button = (
     <Button
       type={type}
       onClick={onClick}
-      fullWidth={fullWidth}
-      mr='md'
-      ml='md'
-      mt={mt}
+      fullWidth={fullWidth || !!tooltipLabel}
+      mr={tooltipLabel ? 0 : 'md'}
+      ml={tooltipLabel ? 0 : 'md'}
+      mt={tooltipLabel ? 0 : mt}
       loading={isLoading}
       disabled={combinedDisabled}
       variant={variant}
@@ -72,9 +88,22 @@ const OperationButton = ({
   );
 
   if (tooltipLabel) {
+    // Disabled buttons suppress pointer events at the browser level, so the Tooltip's
+    // cloneElement handlers would never fire. Wrap in a Box to capture them instead.
+    // When endpointUnavailable and a click handler is provided (desktop), the Box
+    // also acts as the click target to open the sign-in / connect modal.
+    const boxClickHandler = disabledReason === 'endpointUnavailable' ? onEndpointUnavailableClick : undefined;
     return (
       <Tooltip content={tooltipLabel} position="top" arrow>
-        {button}
+        <Box
+          mr="md"
+          ml="md"
+          mt={mt}
+          style={{ display: 'block', cursor: boxClickHandler ? 'pointer' : undefined }}
+          onClick={boxClickHandler}
+        >
+          {button}
+        </Box>
       </Tooltip>
     );
   }

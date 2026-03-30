@@ -15,6 +15,7 @@ import AdminFeaturesSection from '@app/components/shared/config/configSections/A
 import AdminEndpointsSection from '@app/components/shared/config/configSections/AdminEndpointsSection';
 import AdminAuditSection from '@app/components/shared/config/configSections/AdminAuditSection';
 import AdminUsageSection from '@app/components/shared/config/configSections/AdminUsageSection';
+import AdminStorageSharingSection from '@app/components/shared/config/configSections/AdminStorageSharingSection';
 import ApiKeys from '@app/components/shared/config/configSections/ApiKeys';
 import AccountSection from '@app/components/shared/config/configSections/AccountSection';
 import GeneralSection from '@app/components/shared/config/configSections/GeneralSection';
@@ -95,6 +96,14 @@ export const useConfigNavSections = (
           label: t('settings.configuration.features', 'Features'),
           icon: 'extension-rounded',
           component: <AdminFeaturesSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined
+        },
+        {
+          key: 'adminStorageSharing',
+          label: t('settings.configuration.storageSharing', 'File Storage & Sharing'),
+          icon: 'storage-rounded',
+          component: <AdminStorageSharingSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined
         },

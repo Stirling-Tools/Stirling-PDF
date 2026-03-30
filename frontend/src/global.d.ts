@@ -12,6 +12,12 @@ declare module 'assets/material-symbols-icons.json' {
   export default value;
 }
 
+declare global {
+  interface Window {
+    __STIRLING_PDF_BASE_URL__?: string;
+  }
+}
+
 declare module 'axios' {
   export interface AxiosRequestConfig<_D = unknown> {
     suppressErrorToast?: boolean;
@@ -24,18 +30,6 @@ declare module 'axios' {
     skipAuthRedirect?: boolean;
     skipBackendReadyCheck?: boolean;
   }
-}
-
-declare module 'posthog-js/react' {
-  import { ReactNode } from 'react';
-  import posthogJs, { PostHogConfig } from 'posthog-js';
-
-  export const PostHogProvider: React.FC<{
-    client?: typeof posthogJs;
-    options?: Partial<PostHogConfig>;
-    apiKey?: string;
-    children?: ReactNode;
-  }>;
 }
 
 export { };

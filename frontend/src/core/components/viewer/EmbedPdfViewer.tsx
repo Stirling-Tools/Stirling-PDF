@@ -20,11 +20,10 @@ import { isStirlingFile, getFormFillFileId } from '@app/types/fileContext';
 import { useViewerRightRailButtons } from '@app/components/viewer/useViewerRightRailButtons';
 import { StampPlacementOverlay } from '@app/components/viewer/StampPlacementOverlay';
 import { RulerOverlay, type PageMeasureScales, type PageScaleInfo, type ViewportScale } from '@app/components/viewer/RulerOverlay';
+import type { PDFDict, PDFNumber } from '@cantoo/pdf-lib';
 import { useWheelZoom } from '@app/hooks/useWheelZoom';
 import { useFormFill } from '@app/tools/formFill/FormFillContext';
 import { FormSaveBar } from '@app/tools/formFill/FormSaveBar';
-
-import type { PDFDict, PDFNumber } from '@cantoo/pdf-lib';
 
 // ─── Measure dictionary extraction ────────────────────────────────────────────
 
@@ -38,7 +37,7 @@ async function extractPageMeasureScales(file: Blob): Promise<PageMeasureScales |
       if (!(measureObj instanceof PDFDict)) return null;
       const rObj = measureObj.lookup(PDFName.of('R'));
       const ratioLabel = (rObj instanceof PDFString || rObj instanceof PDFHexString)
-        ? rObj.decodeText() : '';
+              ? rObj.decodeText() : '';
       // D = distance array, X = x-axis fallback
       let fmtArray = measureObj.lookup(PDFName.of('D'));
       if (!(fmtArray instanceof PDFArray)) fmtArray = measureObj.lookup(PDFName.of('X'));
@@ -126,6 +125,7 @@ const EmbedPdfViewerContent = ({
     toggleThumbnailSidebar,
     isBookmarkSidebarVisible,
     isAttachmentSidebarVisible,
+    isCommentsSidebarVisible,
     isSearchInterfaceVisible,
     searchInterfaceActions,
     zoomActions,
@@ -140,6 +140,8 @@ const EmbedPdfViewerContent = ({
     printActions,
     setApplyChanges,
     applyChanges: viewerApplyChanges,
+    pdfRenderMode,
+    cyclePdfRenderMode,
   } = useViewer();
 
   const scrollState = getScrollState();
@@ -201,8 +203,9 @@ const EmbedPdfViewerContent = ({
   const isSignatureMode = isInAnnotationTool;
   const isManualRedactMode = selectedTool === 'redact';
 
-  // Enable annotations only when annotation tool is selected
-  const shouldEnableAnnotations = selectedTool === 'annotate' || isSignatureMode;
+  // Enable annotations when annotation tool is selected OR when annotations are visible
+  // (so users can interact with existing comment annotations in reader/viewer mode)
+  const shouldEnableAnnotations = selectedTool === 'annotate' || isSignatureMode || isAnnotationsVisible;
 
   // Enable redaction only when redaction tool is selected
   const shouldEnableRedaction = selectedTool === 'redact';
@@ -211,7 +214,7 @@ const EmbedPdfViewerContent = ({
   const isFormFillToolActive = (selectedTool as string) === 'formFill';
 
   // Form overlays are shown in BOTH modes:
-  // - Normal viewer: form overlays visible (pdf-lib, frontend-only)
+  // - Normal viewer: form overlays visible (PDFium WASM, frontend-only)
   // - formFill tool: form overlays visible (PDFBox, backend)
   const shouldEnableFormFill = true;
 
@@ -397,16 +400,6 @@ const EmbedPdfViewerContent = ({
               event.preventDefault();
               printActions.print();
               return;
-            case 'r':
-            case 'R':
-              // Ctrl+R: Rotate forward; Ctrl+Shift+R: Rotate backward
-              event.preventDefault();
-              if (event.shiftKey) {
-                rotationActions.rotateBackward();
-              } else {
-                rotationActions.rotateForward();
-              }
-              return;
           }
         }
       }
@@ -458,6 +451,7 @@ const EmbedPdfViewerContent = ({
               }
             }
             return;
+
           case 'z':
           case 'Z':
             // Ctrl+Z: Undo; Ctrl+Shift+Z: Redo
@@ -512,7 +506,7 @@ const EmbedPdfViewerContent = ({
   }, [
     isViewerHovered, isSearchInterfaceVisible, zoomActions, searchInterfaceActions,
     scrollActions, printActions, exportActions, rotationActions, historyApiRef,
-    viewerApplyChanges,
+    viewerApplyChanges, cyclePdfRenderMode,
   ]);
 
   // Watch the annotation history API to detect when the document becomes "dirty".
@@ -889,7 +883,7 @@ const EmbedPdfViewerContent = ({
   useViewerRightRailButtons(isRulerActive, setIsRulerActive);
 
   // Auto-fetch form fields when a PDF is loaded in the viewer.
-  // In normal viewer mode, this uses pdf-lib (frontend-only).
+  // In normal viewer mode, this uses PDFium WASM (frontend-only).
   // In formFill tool mode, this uses PDFBox (backend).
   const formFillFileIdRef = useRef<string | null>(null);
   const formFillProviderRef = useRef(isFormFillToolActive);
@@ -920,10 +914,12 @@ const EmbedPdfViewerContent = ({
   }, [isFormFillToolActive, currentFile, currentFileId, fetchFormFields]);
 
   const sidebarWidthRem = 15;
+  const commentsSidebarWidthRem = 18;
   const totalRightMargin =
     (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
     (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
-    (isAttachmentSidebarVisible ? sidebarWidthRem : 0);
+    (isAttachmentSidebarVisible ? sidebarWidthRem : 0) +
+    (isCommentsSidebarVisible ? commentsSidebarWidthRem : 0);
 
   return (
     <Box
@@ -971,6 +967,7 @@ const EmbedPdfViewerContent = ({
             }}>
             <LocalEmbedPDF
               key={currentFileId || 'no-file'}
+              pdfRenderMode={pdfRenderMode}
               file={effectiveFile.file}
               url={effectiveFile.url}
               fileName={
@@ -979,6 +976,7 @@ const EmbedPdfViewerContent = ({
                 (effectiveFile?.file instanceof File ? effectiveFile.file.name : undefined))
               }
               enableAnnotations={shouldEnableAnnotations}
+              isSignMode={selectedTool === 'sign'}
               showBakedAnnotations={isAnnotationsVisible}
               enableRedaction={shouldEnableRedaction}
               enableFormFill={shouldEnableFormFill}
@@ -988,6 +986,8 @@ const EmbedPdfViewerContent = ({
               historyApiRef={historyApiRef as React.RefObject<any>}
               redactionTrackerRef={redactionTrackerRef as React.RefObject<RedactionPendingTrackerAPI>}
               fileId={currentFileId}
+              isCommentsSidebarVisible={isCommentsSidebarVisible}
+              commentsSidebarRightOffset={`${(isThumbnailSidebarVisible ? sidebarWidthRem : 0) + (isBookmarkSidebarVisible ? sidebarWidthRem : 0) + (isAttachmentSidebarVisible ? sidebarWidthRem : 0)}rem`}
               onSignatureAdded={() => {
                 // Handle signature added - for debugging, enable console logs as needed
                 // Future: Handle signature completion
@@ -1053,6 +1053,7 @@ const EmbedPdfViewerContent = ({
       <AttachmentSidebar
         visible={isAttachmentSidebarVisible}
         thumbnailVisible={isThumbnailSidebarVisible}
+        bookmarkVisible={isBookmarkSidebarVisible}
         documentCacheKey={bookmarkCacheKey}
         preloadCacheKeys={allBookmarkCacheKeys}
       />
@@ -1066,6 +1067,8 @@ const EmbedPdfViewerContent = ({
           onDiscardAndContinue={async () => {
             // Save applied redactions (if any) while discarding pending ones
             await discardAndSaveApplied();
+            // Reset annotation changes ref so future show/hide doesn't re-prompt
+            hasAnnotationChangesRef.current = false;
           }}
         />
       )}

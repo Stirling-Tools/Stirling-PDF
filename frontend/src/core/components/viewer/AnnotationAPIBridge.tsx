@@ -8,6 +8,7 @@ import type {
   AnnotationEvent,
   AnnotationPatch,
   AnnotationRect,
+  AnnotationSelection,
 } from '@app/components/viewer/viewerTypes';
 import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
 
@@ -80,15 +81,31 @@ type AnnotationDefaults =
       imageSize?: { width: number; height: number };
       customData?: Record<string, unknown>;
     }
+  | {
+      type: PdfAnnotationSubtype.TEXT;
+      strokeColor?: string;
+      opacity?: number;
+      customData?: Record<string, unknown>;
+    }
+  | {
+      type: PdfAnnotationSubtype.CARET;
+      strokeColor?: string;
+      opacity?: number;
+      customData?: Record<string, unknown>;
+    }
   | null;
 
 type AnnotationApiSurface = {
   setActiveTool: (toolId: AnnotationToolId | null) => void;
   getActiveTool?: () => { id: AnnotationToolId } | null;
   setToolDefaults?: (toolId: AnnotationToolId, defaults: AnnotationDefaults) => void;
-  getSelectedAnnotation?: () => unknown | null;
+  getSelectedAnnotation?: () => AnnotationSelection | null;
   deselectAnnotation?: () => void;
   updateAnnotation?: (pageIndex: number, annotationId: string, patch: AnnotationPatch) => void;
+  deleteAnnotation?: (pageIndex: number, annotationId: string) => void;
+  deleteAnnotations?: (annotations: Array<{ pageIndex: number; id: string }>) => void;
+  createAnnotation?: (pageIndex: number, annotation: Record<string, unknown>) => void;
+  getSelectedAnnotations?: () => AnnotationSelection[];
   onAnnotationEvent?: (listener: (event: AnnotationEvent) => void) => void | (() => void);
   purgeAnnotation?: (pageIndex: number, annotationId: string) => void;
   /** v2.7.0: move annotation without regenerating its appearance stream */
@@ -289,6 +306,24 @@ const TOOL_DEFAULT_BUILDERS: Record<AnnotationToolId, ToolDefaultsBuilder> = {
   stamp: buildStampDefaults,
   signatureStamp: buildStampDefaults,
   signatureInk: (options) => buildInkDefaults(options),
+  textComment: (options) => ({
+    type: PdfAnnotationSubtype.TEXT,
+    strokeColor: options?.color ?? DEFAULTS.note,
+    opacity: options?.opacity ?? 1,
+    ...withCustomData(options),
+  }),
+  insertText: (options) => ({
+    type: PdfAnnotationSubtype.CARET,
+    strokeColor: options?.color ?? '#E44234',
+    opacity: options?.opacity ?? 1,
+    ...withCustomData(options),
+  }),
+  replaceText: (options) => ({
+    type: PdfAnnotationSubtype.CARET,
+    strokeColor: options?.color ?? '#E44234',
+    opacity: options?.opacity ?? 1,
+    ...withCustomData(options),
+  }),
 };
 
 export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function AnnotationAPIBridge(_props, ref) {
@@ -378,6 +413,26 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function Annotation
       getActiveTool: () => {
         const api = annotationApi as unknown as AnnotationApiSurface | undefined;
         return api?.getActiveTool?.() ?? null;
+      },
+
+      deleteAnnotation: (pageIndex: number, annotationId: string) => {
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
+        api?.deleteAnnotation?.(pageIndex, annotationId);
+      },
+
+      deleteAnnotations: (annotations: Array<{ pageIndex: number; id: string }>) => {
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
+        api?.deleteAnnotations?.(annotations);
+      },
+
+      createAnnotation: (pageIndex: number, annotation: Record<string, unknown>) => {
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
+        api?.createAnnotation?.(pageIndex, annotation);
+      },
+
+      getSelectedAnnotations: () => {
+        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
+        return api?.getSelectedAnnotations?.() ?? [];
       },
 
       purgeAnnotation: (pageIndex: number, annotationId: string) => {

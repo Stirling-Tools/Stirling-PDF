@@ -142,6 +142,10 @@ welcome = "Välkommen"
 white = "Vit"
 WorkInProgess = "Pågående arbete, kan vara icke fungerande eller buggigt. Rapportera eventuella problem!"
 yes = "Ja"
+insufficientCredits = "Otillräckliga krediter. Krävs: {{requiredCredits}}, Tillgängligt: {{currentBalance}}, Underskott: {{shortfall}}"
+loadingCredits = "Kontrollerar krediter..."
+loadingProStatus = "Kontrollerar prenumerationsstatus..."
+noticeTopUpOrPlan = "Inte tillräckligt med krediter, fyll på eller uppgradera till ett abonnemang"
 
 [account]
 accountSettings = "Kontoinställningar"
@@ -1513,6 +1517,7 @@ editStampHint = "För att byta bild, ta bort denna stämpel och lägg till en ny
 editSwitchToSelect = "Byt till Välj och redigera för att redigera denna annotering."
 editText = "Redigera textruta"
 editTextMarkup = "Redigera textmarkering"
+annotationStyle = "Annoteringsstil"
 ellipse = "Ellips"
 exit = "Avsluta annoteringsläge"
 fillColor = "Fyllnadsfärg"
@@ -1523,13 +1528,19 @@ highlight = "Överstrykning"
 imagePreview = "Förhandsvisning"
 inkHighlighter = "Frihandsöverstrykning"
 line = "Linje"
+lineArrow = "Pil"
 noBackground = "Ingen bakgrund"
 note = "Anteckning"
+comment = "Kommentar"
+comments = "Kommentarer"
+insertText = "Infoga text"
+replaceText = "Ersätt text"
 noteIcon = "Ikon för anteckning"
 notesStamps = "Anteckningar och stämplar"
 opacity = "Opacitet"
 pen = "Penna"
 polygon = "Polygon"
+polyline = "Polylinje"
 properties = "Egenskaper"
 rectangle = "Rektangel"
 redo = "Gör om"
@@ -2574,10 +2585,48 @@ title = "Kvalitetsjustering"
 [compressPdfs]
 tags = "pressa ihop,liten,minimal"
 
+[config]
+plan = "Abonnemang"
+
 [config.account.overview]
+confirmDelete = "Ta bort mitt konto"
+deleteAccount = "Ta bort konto"
+deleteAccountTitle = "Ta bort konto"
+deleteFailed = "Det gick inte att ta bort kontot."
+deleteFailedTitle = "Kan inte ta bort kontot"
+deleteWarning = "Denna åtgärd är permanent och kan inte ångras. All din data kommer att raderas."
+enterEmailConfirm = "För att bekräfta borttagningen, skriv din e-postadress ({{email}}) nedan:"
 guestDescription = "Du är inloggad som gäst. Överväg att uppgradera ditt konto ovan."
+label = "Översikt"
 manageAccountPreferences = "Hantera dina kontoinställningar"
+signedInAs = "Inloggad som"
 title = "Kontoinställningar"
+
+[config.account.profilePicture]
+description = "Ladda upp en bild för att anpassa ditt konto."
+help = "PNG, JPG eller WebP upp till 2 MB."
+remove = "Ta bort"
+sizeError = "Välj en bild som är mindre än 2 MB."
+switchedToCustom = "Växlade till anpassad bild. Du kan nu ladda upp din egen."
+title = "Profilbild"
+upload = "Ladda upp"
+useCustom = "Använd anpassad bild"
+usingProvider = "Använder profilbild från {{provider}}"
+
+[config.account.profilePicture.cropper]
+cropError = "Det gick inte att beskära bilden. Försök igen."
+invalidImage = "Ogiltig bildfil. Välj en giltig PNG-, JPG- eller WebP-fil."
+processing = "Bearbetar beskärning..."
+save = "Spara beskuren bild"
+sizeErrorAfterCrop = "Den beskurna bilden är för stor. Zooma ut eller beskär ett mindre område."
+title = "Beskär profilbild"
+zoom = "Zooma"
+
+[config.account.security]
+changePassword = "Byt lösenord"
+description = "Hantera ditt lösenord och dina säkerhetsinställningar."
+title = "Lösenord och säkerhet"
+update = "Uppdatera lösenord"
 
 [config.account.upgrade]
 description = "Koppla ditt konto för att bevara din historik och få tillgång till fler funktioner!"
@@ -2595,6 +2644,7 @@ upgradeButton = "Uppgradera konto"
 [config.apiKeys]
 chartAriaLabel = "Kreditförbrukning: inkluderade {{includedUsed}} av {{includedTotal}}, köpta {{purchasedUsed}} av {{purchasedTotal}}"
 copyKeyAriaLabel = "Kopiera API-nyckel"
+creditsRemaining = "Återstående krediter"
 description = "Din API-nyckel för att komma åt Stirlings svit av PDF-verktyg. Kopiera den till ditt projekt eller uppdatera för att generera en ny."
 docsDescription = "Läs mer om integration med Stirling PDF:"
 docsLink = "API-dokumentation"
@@ -2643,6 +2693,14 @@ basic = "Grundläggande konfiguration"
 integration = "Integrationskonfiguration"
 security = "Säkerhetskonfiguration"
 system = "Systemkonfiguration"
+
+[connectionMode.status]
+localOffline = "Offline-läge körs"
+localOnline = "Offline-läge körs"
+saas = "Ansluten till Stirling Cloud"
+selfhostedChecking = "Ansluten till självhostad server (kontrollerar...)"
+selfhostedOffline = "Självhostad server kan inte nås"
+selfhostedOnline = "Ansluten till självhostad server"
 
 [convert]
 autoRotate = "Rotera automatiskt"
@@ -2728,6 +2786,15 @@ webOptions = "Webb till PDF‑alternativ"
 wordDoc = "Word‑dokument"
 wordDocExt = "Word‑dokument (.docx)"
 zoomLevel = "Zoomnivå"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "E-bok → PDF"
+emlToPdf = "E-post → PDF"
+fileToPdf = "Office/dokument → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "Alternativ för e-bok till PDF"
@@ -3718,6 +3785,11 @@ desc = "Lägger till signatur till PDF genom ritning, text eller bild"
 tags = "signatur,autograf"
 title = "Signera"
 
+[home.timestampPdf]
+desc = "Lägg till en RFC 3161-dokumenttidsstämpel för att bevisa när din PDF fanns"
+tags = "tidsstämpel,RFC 3161,TSA,time stamp authority,dokumenttidsstämpel,bevis på existens,tidsstämpeltoken,betrodd tidsstämpel,signera tidsstämpel,notarisera"
+title = "Tidsstämpla PDF"
+
 [home.split]
 desc = "Dela upp PDF-filer i flera dokument"
 tags = "dela,separera,bryta"
@@ -3854,6 +3926,7 @@ version = "Version"
 accountCreatedSuccess = "Kontot har skapats! Du kan nu logga in."
 alreadyLoggedIn = "Du är redan inloggad på"
 alreadyLoggedIn2 = "enheter. Logga ut från enheterna och försök igen."
+backToSignIn = "Tillbaka till inloggning"
 cancel = "Avbryt"
 changePasswordWarning = "Byt ditt lösenord efter att du loggat in första gången"
 credentialsUpdated = "Dina uppgifter har uppdaterats. Logga in igen."
@@ -3895,16 +3968,21 @@ or = "Eller"
 password = "Lösenord"
 passwordChangedSuccess = "Lösenordet har ändrats. Logga in med ditt nya lösenord."
 passwordResetSent = "Länk för återställning av lösenord skickad till {{email}}! Kontrollera din e-post och följ instruktionerna."
+passwordUpdatedSuccess = "Ditt lösenord har uppdaterats."
 pleaseEnterBoth = "Ange både e-post och lösenord"
 pleaseEnterEmail = "Ange din e-postadress"
 relyingPartyRegistrationNotFound = "Ingen 'relying party'-registrering hittades"
 rememberme = "Kom ihåg mig"
+resetHelp = "Ange din e-post för att få en säker länk för att återställa ditt lösenord. Om länken har gått ut, begär en ny."
+resetYourPassword = "Återställ ditt lösenord"
 saml2RequiresLicense = "SAML-inloggning kräver en betald licens (Server eller Enterprise). Kontakta administratören för att uppgradera din plan."
 sending = "Skickar…"
 sendMagicLink = "Skicka magisk länk"
+sendResetLink = "Skicka återställningslänk"
 sessionExpired = "Din session har gått ut. Logga in igen."
 signin = "Logga in"
 signInAnonymously = "Logga in som gäst"
+subtitle = "Logga in igen i Stirling PDF"
 signingIn = "Loggar in..."
 signinTitle = "Vänligen logga in"
 signInWith = "Logga in med"
@@ -3913,6 +3991,7 @@ ssoSignIn = "Logga in via enkel inloggning"
 title = "Logga in"
 toManySessions = "Du har för många aktiva sessioner"
 unexpectedError = "Oväntat fel: {{message}}"
+updatePassword = "Uppdatera lösenord"
 useEmailInstead = "Logga in med e-post"
 useMagicLink = "Använd magisk länk i stället"
 userIsDisabled = "Användaren är inaktiverad, inloggning är för närvarande blockerad med detta användarnamn. Kontakta administratören."
@@ -4222,6 +4301,15 @@ viewSwitcher = "Använd dessa kontroller för att välja hur du vill visa dina P
 workbench = "Detta är <strong>Arbetsbänken</strong> - huvudområdet där du visar och redigerar dina PDF:er."
 wrapUp = "Allt klart! Du har lärt dig om appens huvudområden och hur du använder dem. Klicka på knappen <strong>Hjälp</strong> när du vill för att se denna rundtur igen."
 
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "När din provperiod slutar fortsätter du med vår gratisnivå. Lägg till en betalningsmetod för att behålla Pro-åtkomst."
+afterTrialWithPayment = "Din Pro-prenumeration startar automatiskt när provperioden slutar."
+body = "Du har full tillgång till Stirling PDF Pro-funktioner under provperioden. Njut av obegränsade konverteringar, större filstorlekar och prioriterad behandling."
+daysRemaining = "{{days}} dagar kvar"
+daysRemainingSingular = "{{days}} dag kvar"
+title = "Din 30-dagars Pro-provperiod"
+trialEnds = "Provperioden slutar {{date}}"
+
 [onboarding.buttons]
 back = "Tillbaka"
 download = "Ladda ner →"
@@ -4392,6 +4480,31 @@ loading = "Läser in bilagor..."
 empty = "Inga bilagor i det här dokumentet"
 noMatch = "Inga bilagor matchar din sökning"
 
+[viewer.comments]
+title = "Kommentarer"
+hint = "Placera kommentarer med verktygen Kommentar, Infoga text eller Ersätt text. De visas här per sida."
+placeholder = "Skriv din kommentar..."
+pageLabel = "Sida {{page}}"
+oneComment = "1 kommentar"
+nComments = "{{count}} kommentarer"
+addCommentPlaceholder = "Lägg till kommentar..."
+addLink = "Lägg till länk"
+goToLink = "Gå till länk"
+addComment = "Lägg till kommentar"
+viewComment = "Visa kommentar"
+addReplyPlaceholder = "Lägg till svar..."
+saveReply = "Spara svar"
+send = "Skicka"
+moreActions = "Fler åtgärder"
+typeComment = "Kommentar"
+typeInsertText = "Infoga text"
+typeReplaceText = "Ersätt text"
+locateAnnotation = "Hitta i dokumentet"
+deleteTitle = "Ta bort annotering från kommentarer?"
+deleteDescription = "Denna annotering har en kommentar kopplad. Du kan ta bort bara kommentaren i sidofältet och behålla annoteringen, eller ta bort allt."
+removeCommentOnly = "Ta bort endast kommentaren"
+deleteAnnotationAndComment = "Ta bort annotering & kommentar"
+
 [viewer.formBar]
 title = "Formulärfält"
 unsavedBadge = "Ej sparat"
@@ -4425,14 +4538,20 @@ rotateLeft = "Rotera åt vänster"
 rotateRight = "Rotera åt höger"
 toggleSidebar = "Växla sidofält"
 toggleBookmarks = "Visa/dölj bokmärken"
+toggleComments = "Kommentarer"
 print = "Skriv ut PDF"
 ruler = "Linjal / Mätning"
+readAloud = "Läs upp"
+readAloudSpeed = "Hastighet"
+readAloudLanguage = "Språk"
+selectLanguage = "Välj språk"
 draw = "Rita"
 redact = "Maskera"
 exitRedaction = "Avsluta maskeringsläge"
 save = "Spara"
 downloadAll = "Ladda ner alla"
 saveAll = "Spara alla"
+saveAs = "Spara som"
 
 [textAlign]
 left = "Vänster"
@@ -4447,21 +4566,132 @@ title = "Extrahera sidor"
 
 [pageLayout]
 addBorder = "Lägg till kanter"
+borderWidth = "Kantlinjetjocklek"
+bottom = "Nedre marginal"
+cols = "Kolumner"
 header = "Flersidigt layout"
+innerMargin = "Inre marginal"
+left = "Vänster marginal"
 pagesPerSheet = "Sidor per ark:"
+right = "Höger marginal"
+rows = "Rader"
 submit = "Skicka"
 tags = "slå samman,sammansatt,enkel-vy,organisera"
 title = "Flersidigt layout"
+top = "Övre marginal"
+
+[pageLayout.mode]
+default = "Standard"
+custom = "Anpassad"
+label = "Läge:"
+
+[pageLayout.arrangement]
+byColumns = "Kolumnvis"
+byRows = "Radvis"
+label = "Sidordning:"
 
 [pageLayout.desc]
 16 = "Placera 16 sidor på ett ark (4 × 4-rutnät)."
 2 = "Placera 2 sidor sida vid sida på ett ark."
-3 = "Placera 3 sidor på ett ark i en enda rad."
 4 = "Placera 4 sidor på ett ark (2 × 2-rutnät)."
 9 = "Placera 9 sidor på ett ark (3 × 3-rutnät)."
 
 [pageLayout.error]
 failed = "Ett fel inträffade vid skapandet av layouten med flera sidor."
+outerVerticalMarginsTooLarge = "Övre/nedre marginalerna är för stora för denna pappersstorlek."
+outerHorizontalMarginsTooLarge = "Vänster/högermarginalerna är för stora för denna pappersstorlek."
+innerMarginTooLarge = "Den inre marginalen är för stor för den valda layouten."
+
+[pageLayout.orientation]
+landscape = "Liggande"
+portrait = "Stående"
+label = "Orientering:"
+
+[pageLayout.readingDirection]
+ltr = "Vänster till höger"
+rtl = "Höger till vänster"
+label = "Läsriktning:"
+
+[pageLayout.tooltip.header]
+title = "Guide för sidlayout"
+
+[pageLayout.tooltip.overview]
+title = "Vad är sidlayout?"
+text = "Placera flera sidor på ett enda ark för utdelningar eller för att spara papper."
+
+[pageLayout.tooltip.mode]
+title = "Läge"
+text = "Välj hur rutnätet konfigureras:"
+bullet1 = "Standard: Välj en förinställning så beräknas rutnätet automatiskt."
+bullet2 = "Anpassad: Ställ in rader och kolumner manuellt."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Sidor per ark (standardläge)"
+text = "Välj hur många sidor per ark (t.ex. 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Rader och kolumner (anpassat läge)"
+text = "Ange exakta rutnätsmått. Totalt antal sidor per ark = rader × kolumner."
+
+[pageLayout.tooltip.orientation]
+title = "Orientering"
+text = "Anger orienteringen för utdataarket:"
+bullet1 = "Stående: Högre än bred."
+bullet2 = "Liggande: Bredare än hög."
+
+[pageLayout.tooltip.arrangement]
+title = "Sidordning"
+text = "Styr i vilken ordning sidorna fyller rutnätet:"
+bullet1 = "Radvis: Fyll rad för rad (vänster till höger eller höger till vänster)."
+bullet2 = "Kolumnvis: Fyll uppifrån och ned, kolumn för kolumn."
+
+[pageLayout.tooltip.readingDirection]
+title = "Läsriktning"
+text = "Styr den horisontella ordningen på sidorna:"
+bullet1 = "LTR: Vänster till höger."
+bullet2 = "RTL: Höger till vänster."
+
+[pageLayout.tooltip.addBorder]
+title = "Lägg till kantlinjer"
+text = "Ritar kantlinjer runt varje sidruta för skärlinjer eller visuell åtskillnad."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Marginaler och kantlinjer"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Marginaler"
+text = "Använd övre, nedre, vänster och höger marginal för att styra avståndet runt hela arket."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Inre marginal"
+text = "Den inre marginalen lägger till mellanrum mellan cellerna i sidrutnätet för bättre åtskillnad och läsbarhet."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Lägg till kantlinjer"
+text = "Aktivera kantlinjer för att rita linjer runt varje placerad sida. Detta kan hjälpa visuell åtskillnad eller trimning."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Kantlinjetjocklek"
+text = "Kantlinjetjocklek används bara när kantlinjer är aktiverade. Högre värden ger tjockare linjer."
+
+[pageLayout.advanced.tooltip.header]
+title = "Avancerade layoutalternativ"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Orientering"
+text = "Välj det slutliga arkets riktning. Stående fungerar bättre för högt innehåll, medan liggande passar bredare layouter."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Sidordning"
+text = "Styr om sidorna fyller rutnätet rad för rad eller kolumn för kolumn."
+bullet1 = "Radvis: Fyll varje rad först."
+bullet2 = "Kolumnvis: Fyll varje kolumn först."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Läsriktning"
+text = "Anger horisontell ordning i rutnätet, användbart för vänster-till-höger- och höger-till-vänster-dokumentkonventioner."
+bullet1 = "LTR: Vänster till höger."
+bullet2 = "RTL: Höger till vänster."
 
 [pageRemover]
 header = "PDF Sidborttagning"
@@ -4977,7 +5207,10 @@ perMonth = "/månad"
 perSeat = "/plats"
 popular = "Populär"
 selectPlan = "Välj plan"
+selectCredits = "Välj kreditbelopp"
 showComparison = "Jämför alla funktioner"
+purchase = "Köp"
+totalCost = "Total kostnad"
 upgrade = "Uppgradera"
 withServer = "+ Serverplan"
 
@@ -5068,6 +5301,30 @@ successMessage = "Din licens har aktiverats. Du kan nu stänga detta fönster."
 [plan.team]
 name = "Team"
 siteLicense = "Sitelicens"
+
+[plan.api]
+large = "5 000 krediter"
+medium = "1 000 krediter"
+small = "500 krediter"
+xsmall = "100 krediter"
+
+[plan.apiPackages]
+subtitle = "Köp API-krediter för dina applikationer"
+title = "API-kreditpaket"
+
+[plan.trial]
+badge = "Prov"
+continueWithFree = "Fortsätt med gratis"
+daysRemaining = "Din provperiod slutar om {{days}} dagar"
+endDate = "Upphör: {{date}}"
+expired = "Din provperiod har avslutats"
+expiredMessage = "Din 30-dagars Pro-provperiod har löpt ut. Prenumerera på Pro för att fortsätta använda premiumfunktioner, eller fortsätt med vår gratisnivå."
+freeTierLimitations = "Gratisnivån inkluderar grundläggande PDF-verktyg med användningsbegränsningar."
+message = ""
+subscribe = "Prenumerera på Pro"
+subscribeToPro = "Prenumerera på Pro"
+subscriptionScheduled = "Prenumeration schemalagd – startar {{date}}"
+title = "Gratis provperiod aktiv"
 
 [credits]
 enableOverageBilling = "Aktivera debitering vid överförbrukning"
@@ -5631,6 +5888,32 @@ text = "Rotera dina PDF‑sidor medurs eller moturs i steg om 90 grader. Alla si
 [rotate.tooltip.header]
 title = "Översikt över rotationsinställningar"
 
+[timestampPdf]
+completed = "PDF har tidsstämplats"
+desc = "Lägg till en RFC 3161-dokumenttidsstämpel i din PDF med en betrodd Time Stamp Authority (TSA)-server."
+filenamePrefix = "tidsstämplad"
+results = "Tidsstämpelresultat"
+submit = "Använd tidsstämpel"
+title = "Tidsstämpla PDF"
+
+[timestampPdf.error]
+failed = "Ett fel inträffade när PDF:en tidsstämplades."
+generic = "Tidsstämpling misslyckades"
+
+[timestampPdf.files]
+placeholder = "Välj en PDF-fil i huvudvyn för att komma igång"
+
+[timestampPdf.options]
+note = "Endast en SHA-256-hash av ditt dokument skickas till TSA-servern; själva PDF-filen skickas aldrig till TSA-servern."
+title = "Tidsstämpelserver (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Välj en betrodd Time Stamp Authority"
+label = "Välj en TSA-server"
+
+[timestampPdf.steps]
+settings = "Inställningar"
+
 [sanitize]
 completed = "Saneringen slutfördes"
 desc = "Ta bort potentiellt skadliga element från PDF-filer."
@@ -5755,6 +6038,14 @@ placeholder = "Ange sökterm..."
 searching = "Söker..."
 title = "Sök i PDF"
 
+[selfHosted.offline]
+hideTools = "Dölj otillgängliga verktyg ▴"
+messageNoFallback = "Verktygen är otillgängliga tills din server är online igen."
+messageWithFallback = "Vissa verktyg kräver en serveranslutning."
+showTools = "Visa otillgängliga verktyg ▾"
+title = "Din Stirling-PDF-server kan inte nås"
+toolNotAvailableLocally = "Din Stirling-PDF-server är offline och \"{{endpoint}}\" är inte tillgänglig i den lokala backend."
+
 [session]
 expired = "Din session har löpt ut. Uppdatera sidan och försök igen."
 refreshPage = "Uppdatera sida"
@@ -5768,12 +6059,15 @@ systemSettings = "Systeminställningar"
 title = "Konfiguration"
 
 [settings.connection]
+localDescription = "Du använder den lokala backend utan konto. Vissa verktyg som kräver molnbearbetning eller en självhostad server är inte tillgängliga."
 logout = "Logga ut"
 server = "Server"
+signIn = "Logga in"
 title = "Anslutningsläge"
 user = "Inloggad som"
 
 [settings.connection.mode]
+local = "Endast lokalt"
 saas = "Stirling Cloud"
 selfhosted = "Självhostad"
 
@@ -5931,6 +6225,9 @@ title = "Policyer och integritet"
 [settings.preferences]
 title = "Preferenser"
 
+[settings.search]
+placeholder = "Sök i inställningar..."
+
 [settings.security]
 description = "Uppdatera ditt lösenord för att hålla ditt konto säkert."
 title = "Säkerhet"
@@ -5968,6 +6265,18 @@ title = "Arbetsyta"
 [settings.team]
 title = "Team"
 
+[localMode]
+toolUnavailable = "Detta verktyg kräver ett konto. Logga in på Stirling Cloud eller anslut till en självhostad server för att använda det."
+
+[localMode.banner]
+message = "Logga in för att låsa upp alla verktyg."
+signIn = "Logga in"
+title = "Körs lokalt"
+
+[localMode.toolPicker]
+message = "Logga in för att låsa upp alla verktyg."
+signIn = "Logga in"
+
 [setup]
 description = "Kom igång genom att välja hur du vill använda Stirling PDF"
 welcome = "Välkommen till Stirling PDF"
@@ -5975,6 +6284,7 @@ welcome = "Välkommen till Stirling PDF"
 [setup.login]
 connectingTo = "Ansluter till:"
 hideInstructions = "Dölj instruktioner"
+skipSignIn = "Fortsätt utan att logga in"
 instructions = "För att aktivera inloggning på din Stirling PDF-server:"
 instructionsEnvVar = "Ställ in miljövariabeln:"
 instructionsOrYml = "Eller i settings.yml:"
@@ -6022,7 +6332,14 @@ title = "Logga in på Stirling"
 [setup.selfhosted]
 link = "eller anslut till ett självhostat konto"
 subtitle = "Ange dina serveruppgifter"
+switchToLocal = "Använd lokala verktyg i stället"
 title = "Logga in på server"
+
+[setup.selfhosted.unreachable]
+continueOffline = "Använd lokala verktyg i stället"
+message = "Kunde inte nå {{url}}. Kontrollera att servern körs och är tillgänglig."
+retry = "Försök igen"
+title = "Kan inte ansluta till servern"
 
 [setup.server]
 subtitle = "Ange URL till din självhostade server"
@@ -6032,6 +6349,7 @@ useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "Det gick inte att hämta serverkonfigurationen. Kontrollera URL:en och försök igen."
+configFetchError = "Det gick inte att hämta serverkonfigurationen: {{error}}"
 emptyUrl = "Ange en server-URL"
 invalidUrl = "Ogiltigt URL-format. Ange en giltig URL som https://your-server.com"
 testFailed = "Anslutningstest misslyckades"
@@ -6557,6 +6875,7 @@ favorites = "Favoriter"
 heading = "Alla verktyg (helskärmsvy)"
 noResults = "Försök justera din sökning eller visa beskrivningar för att hitta det du behöver."
 recommended = "Rekommenderas"
+selfHostedOffline = "Kräver din Stirling-PDF-server (för närvarande offline):"
 showDetails = "Visa detaljer"
 unavailable = "Inaktiverad av serveradministratören:"
 unavailableDependency = "Otillgänglig – nödvändigt verktyg saknas på servern:"
@@ -6601,6 +6920,12 @@ pageFormatting = "Sidformatering"
 removal = "Borttagning"
 signing = "Signering"
 verification = "Verifiering"
+
+[tool]
+endpointUnavailable = "Detta verktyg är inte tillgängligt på din server."
+endpointUnavailableClickable = "Inte tillgängligt i detta läge. Klicka för att logga in."
+invalidParams = "Fyll i de obligatoriska inställningarna."
+noFiles = "Lägg till en fil för att komma igång."
 
 [tools]
 noSearchResults = "Inga verktyg hittades"

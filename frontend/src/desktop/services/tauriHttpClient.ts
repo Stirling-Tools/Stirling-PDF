@@ -30,6 +30,7 @@ export interface TauriHttpRequestConfig {
   // Axios compatibility properties (ignored by Tauri HTTP)
   suppressErrorToast?: boolean;
   cancelToken?: any;
+  signal?: AbortSignal;
 }
 
 export interface TauriHttpError extends Error {
@@ -201,6 +202,7 @@ class TauriHttpClient {
         headers,
         body,
         credentials,
+        ...(finalConfig.signal ? { signal: finalConfig.signal } : {}),
       };
 
       // Always enable dangerous settings for HTTPS to allow connections to servers with:

@@ -7,6 +7,7 @@ import { operationRouter } from '@app/services/operationRouter';
 import { authService } from '@app/services/authService';
 import { connectionModeService } from '@app/services/connectionModeService';
 import { STIRLING_SAAS_URL, STIRLING_SAAS_BACKEND_API_URL } from '@app/constants/connection';
+import { OPEN_SIGN_IN_EVENT } from '@app/constants/signInEvents';
 import i18n from '@app/i18n';
 
 const BACKEND_TOAST_COOLDOWN_MS = 4000;
@@ -52,8 +53,6 @@ export function setupApiInterceptors(client: AxiosInstance): void {
           extendedConfig.url = `${baseUrl}${extendedConfig.url}`;
         }
 
-        localStorage.setItem('server_url', baseUrl);
-
         // Debug logging
         console.debug(`[apiClientSetup] Request to: ${extendedConfig.url}`);
 
@@ -96,7 +95,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
       // Backend readiness check (for local backend)
       const isSaaS = await operationRouter.isSaaSMode();
-      const backendHealthy = tauriBackendService.isBackendHealthy();
+      const backendHealthy = tauriBackendService.isOnline;
       const backendStatus = tauriBackendService.getBackendStatus();
       const backendPort = tauriBackendService.getBackendPort();
 
@@ -162,6 +161,12 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         if (originalRequest.skipAuthRedirect) {
           return Promise.reject(error);
         }
+        // If no Authorization header was sent, the user was never authenticated —
+        // the 401 is expected (e.g. endpoint availability checks when not signed in).
+        // Don't attempt a refresh or open the sign-in modal in that case.
+        if (!originalRequest.headers.Authorization) {
+          return Promise.reject(error);
+        }
         originalRequest._retry = true;
 
         console.debug(`[apiClientSetup] 401 error, attempting token refresh for: ${originalRequest.url}`);
@@ -194,13 +199,8 @@ export function setupApiInterceptors(client: AxiosInstance): void {
           return client.request(originalRequest);
         }
 
-        // Refresh failed - user needs to login again
-        alert({
-          alertType: 'error',
-          title: i18n.t('auth.sessionExpired', 'Session Expired'),
-          body: i18n.t('auth.pleaseLoginAgain', 'Please login again.'),
-          isPersistentPopup: false,
-        });
+        // Refresh failed - prompt for re-authentication via the sign-in modal.
+        window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: { locked: false } }));
       }
 
       // Handle 403 Forbidden - unauthorized access

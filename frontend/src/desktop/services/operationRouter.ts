@@ -1,6 +1,8 @@
+import i18n from '@app/i18n';
 import { connectionModeService } from '@app/services/connectionModeService';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
+import { selfHostedServerMonitor } from '@app/services/selfHostedServerMonitor';
 import { STIRLING_SAAS_BACKEND_API_URL } from '@app/constants/connection';
 import { CONVERSION_ENDPOINTS, ENDPOINT_NAMES } from '@app/constants/convertConstants';
 
@@ -25,9 +27,7 @@ export class OperationRouter {
     const mode = await connectionModeService.getCurrentMode();
 
     // Current implementation: simple mode-based routing
-    if (mode === 'saas') {
-      // SaaS mode: For now, all operations run locally
-      // Future enhancement: complex operations will be sent to SaaS server
+    if (mode === 'saas' || mode === 'local') {
       return 'local';
     }
 
@@ -131,6 +131,35 @@ export class OperationRouter {
   async getBaseUrl(operation?: string): Promise<string> {
     const mode = await connectionModeService.getCurrentMode();
 
+    // Local-only mode: route everything to local backend; open settings if tool unavailable
+    if (mode === 'local') {
+      if (operation && this.isToolEndpoint(operation)) {
+        const endpointName = this.extractEndpointName(operation);
+        const backendUrl = tauriBackendService.getBackendUrl();
+        if (backendUrl) {
+          const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(
+            endpointName,
+            backendUrl
+          );
+          if (!supportedLocally) {
+            // Open the connection settings so the user can sign in
+            window.dispatchEvent(new CustomEvent('appConfig:navigate', { detail: { key: 'connectionMode' } }));
+            throw new Error(
+              i18n.t(
+                'localMode.toolUnavailable',
+                'This tool requires an account. Sign in to Stirling Cloud or connect to a self-hosted server to use it.'
+              )
+            );
+          }
+        }
+      }
+      const backendUrl = tauriBackendService.getBackendUrl();
+      if (!backendUrl) {
+        throw new Error('Backend URL not available - backend may still be starting');
+      }
+      return backendUrl.replace(/\/$/, '');
+    }
+
     // Always route team endpoints to SaaS backend (existing logic)
     if (mode === 'saas' && this.isSaaSBackendEndpoint(operation)) {
       if (!STIRLING_SAAS_BACKEND_API_URL) {
@@ -146,39 +175,76 @@ export class OperationRouter {
       const endpointToCheck = this.extractEndpointName(operation);
       console.debug(`[operationRouter] Checking capability for ${operation} -> endpoint name: ${endpointToCheck}`);
 
-      const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(
-        endpointToCheck,
-        tauriBackendService.getBackendUrl()
-      );
-      console.debug(`[operationRouter] Endpoint ${endpointToCheck} supported locally: ${supportedLocally}`);
+      const backendUrl = tauriBackendService.getBackendUrl();
+      const backendHealthy = tauriBackendService.isOnline;
 
-      if (!supportedLocally) {
-        // Local backend doesn't support this - check if SaaS supports it
-        const supportedOnSaaS = await endpointAvailabilityService.isEndpointSupportedOnSaaS(endpointToCheck);
-        console.debug(`[operationRouter] Endpoint ${endpointToCheck} supported on SaaS: ${supportedOnSaaS}`);
+      // If the local backend isn't ready (no URL yet, or not yet healthy), skip the
+      // capability check and fall through to local routing — the backend-readiness check
+      // in the Axios interceptor will block non-GET requests until the backend is healthy.
+      if (backendUrl && backendHealthy) {
+        const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(
+          endpointToCheck,
+          backendUrl
+        );
+        console.debug(`[operationRouter] Endpoint ${endpointToCheck} supported locally: ${supportedLocally}`);
 
-        if (!supportedOnSaaS) {
-          // Neither local nor SaaS support this - throw error
-          console.error(`[operationRouter] Endpoint ${endpointToCheck} not supported on local or SaaS backend`);
-          throw new Error(
-            `This operation (${endpointToCheck}) is not available. It may require a self-hosted instance with additional features enabled.`
-          );
+        if (!supportedLocally) {
+          // Local backend doesn't support this - check if SaaS supports it
+          const supportedOnSaaS = await endpointAvailabilityService.isEndpointSupportedOnSaaS(endpointToCheck);
+          console.debug(`[operationRouter] Endpoint ${endpointToCheck} supported on SaaS: ${supportedOnSaaS}`);
+
+          if (!supportedOnSaaS) {
+            // Neither local nor SaaS support this - throw error
+            console.error(`[operationRouter] Endpoint ${endpointToCheck} not supported on local or SaaS backend`);
+            throw new Error(
+              `This operation (${endpointToCheck}) is not available. It may require a self-hosted instance with additional features enabled.`
+            );
+          }
+
+          // SaaS supports it - route to SaaS backend
+          if (!STIRLING_SAAS_BACKEND_API_URL) {
+            console.error('[operationRouter] VITE_SAAS_BACKEND_API_URL not configured');
+            throw new Error(
+              'Cloud processing is required for this tool but VITE_SAAS_BACKEND_API_URL is not configured. ' +
+              'Please check your environment configuration.'
+            );
+          }
+          console.debug(`[operationRouter] Routing ${operation} to SaaS backend (not supported locally, but supported on SaaS)`);
+          return STIRLING_SAAS_BACKEND_API_URL.replace(/\/$/, '');
         }
 
-        // SaaS supports it - route to SaaS backend
-        if (!STIRLING_SAAS_BACKEND_API_URL) {
-          console.error('[operationRouter] VITE_SAAS_BACKEND_API_URL not configured');
-          throw new Error(
-            'Cloud processing is required for this tool but VITE_SAAS_BACKEND_API_URL is not configured. ' +
-            'Please check your environment configuration.'
-          );
-        }
-        console.debug(`[operationRouter] Routing ${operation} to SaaS backend (not supported locally, but supported on SaaS)`);
-        return STIRLING_SAAS_BACKEND_API_URL.replace(/\/$/, '');
+        // Supported locally - continue with local backend
+        console.debug(`[operationRouter] Routing ${operation} to local backend (supported locally)`);
       }
+    }
 
-      // Supported locally - continue with local backend
-      console.debug(`[operationRouter] Routing ${operation} to local backend (supported locally)`);
+    // Self-hosted fallback: when the remote server is offline, route tool endpoints
+    // to the local bundled backend if it supports them.
+    if (mode === 'selfhosted' && operation && this.isToolEndpoint(operation)) {
+      const { status } = selfHostedServerMonitor.getSnapshot();
+      if (status === 'offline') {
+        const endpointName = this.extractEndpointName(operation);
+        const localUrl = tauriBackendService.getBackendUrl();
+        if (localUrl) {
+          const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(
+            endpointName,
+            localUrl
+          );
+          if (supportedLocally) {
+            console.debug(
+              `[operationRouter] Self-hosted server offline, routing ${operation} to local backend`
+            );
+            return localUrl.replace(/\/$/, '');
+          }
+        }
+        throw new Error(
+          i18n.t(
+            'selfHosted.offline.toolNotAvailableLocally',
+            'Your Stirling-PDF server is offline and "{{endpoint}}" is not available on the local backend.',
+            { endpoint: endpointName }
+          )
+        );
+      }
     }
 
     // Existing logic for local/remote routing
@@ -237,11 +303,13 @@ export class OperationRouter {
     // NEW: Skip if endpoint will be routed to SaaS due to local unavailability
     const mode = await connectionModeService.getCurrentMode();
     if (mode === 'saas' && endpoint && this.isToolEndpoint(endpoint)) {
-      // For UI data endpoints, extract the endpoint name
+      const backendUrl = tauriBackendService.getBackendUrl();
+      // Backend not ready — don't skip the readiness check; let it gate the request.
+      if (!backendUrl || !tauriBackendService.isOnline) return false;
       const endpointToCheck = this.extractEndpointName(endpoint);
       const supportedLocally = await endpointAvailabilityService.isEndpointSupportedLocally(
         endpointToCheck,
-        tauriBackendService.getBackendUrl()
+        backendUrl
       );
       return !supportedLocally; // Skip check if not supported locally
     }
@@ -257,7 +325,9 @@ export class OperationRouter {
    */
   async willRouteToSaaS(endpoint: string): Promise<boolean> {
     const mode = await connectionModeService.getCurrentMode();
-    if (mode !== 'saas') return false;
+    // In local mode, show cloud badge for tools not supported locally
+    // (clicking them will prompt sign-in via onUnavailableClick)
+    if (mode !== 'saas' && mode !== 'local') return false;
 
     // Team endpoints always go to SaaS
     if (this.isSaaSBackendEndpoint(endpoint)) return true;

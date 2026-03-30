@@ -8,6 +8,8 @@ import { SaaSTeamsSection } from '@app/components/shared/config/configSections/S
 import { connectionModeService } from '@app/services/connectionModeService';
 import { authService } from '@app/services/authService';
 
+export type { ConfigNavSection, ConfigNavItem } from '@core/components/shared/config/configNavSections';
+
 /**
  * Hook version of desktop config nav sections with proper i18n support
  */
@@ -18,23 +20,12 @@ export const useConfigNavSections = (
 ): ConfigNavSection[] => {
   const { t } = useTranslation();
 
-  // Check if in SaaS mode and authenticated (for Team section visibility)
-  const [isSaasMode, setIsSaasMode] = useState<boolean>(false);
+  const [connectionMode, setConnectionMode] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
-    const checkAccess = async () => {
-      const mode = await connectionModeService.getCurrentMode();
-      const auth = await authService.isAuthenticated();
-      setIsSaasMode(mode === 'saas');
-      setIsAuthenticated(auth);
-    };
-
-    checkAccess();
-
-    // Subscribe to connection mode changes
-    const unsubscribe = connectionModeService.subscribeToModeChanges(checkAccess);
-    return unsubscribe;
+    void connectionModeService.getCurrentMode().then(setConnectionMode);
+    return connectionModeService.subscribeToModeChanges(config => setConnectionMode(config.mode));
   }, []);
 
   // Subscribe to auth changes
@@ -45,8 +36,32 @@ export const useConfigNavSections = (
     return unsubscribe;
   }, []);
 
+  const isSaasMode = connectionMode === 'saas';
+  const isLocalMode = connectionMode === 'local';
+
   // Get the proprietary sections (includes core Preferences + admin sections)
   const sections = useProprietaryConfigNavSections(isAdmin, runningEE, loginEnabled);
+
+  const connectionModeSection: ConfigNavSection = {
+    title: t('settings.connection.title', 'Connection Mode'),
+    items: [
+      {
+        key: 'connectionMode',
+        label: t('settings.connection.title', 'Connection Mode'),
+        icon: 'desktop-cloud-rounded',
+        component: <ConnectionSettings />,
+      },
+    ],
+  };
+
+  // In local mode only show Preferences + Connection Mode — everything else
+  // requires a server and will 500 or show irrelevant admin UI.
+  if (isLocalMode) {
+    const result: ConfigNavSection[] = [];
+    if (sections.length > 0) result.push(sections[0]);
+    result.push(connectionModeSection);
+    return result;
+  }
 
   // Identifies self-hosted admin sections by their first item's stable key.
   // Using item keys avoids dependency on translated section titles (#17).
@@ -65,17 +80,7 @@ export const useConfigNavSections = (
   if (sections.length > 0) result.push(sections[0]);
 
   // Connection Mode always sits immediately after Preferences
-  result.push({
-    title: t('settings.connection.title', 'Connection Mode'),
-    items: [
-      {
-        key: 'connectionMode',
-        label: t('settings.connection.title', 'Connection Mode'),
-        icon: 'desktop-cloud-rounded',
-        component: <ConnectionSettings />,
-      },
-    ],
-  });
+  result.push(connectionModeSection);
 
   // Plan & Billing and Team sections only when authenticated in SaaS mode
   if (isSaasMode && isAuthenticated) {
@@ -104,12 +109,17 @@ export const useConfigNavSections = (
   }
 
   // Append remaining proprietary sections, skipping self-hosted admin sections in SaaS mode
+  // and hiding the Account section when not authenticated.
   for (const section of sections.slice(1)) {
     const firstItemKey = section.items[0]?.key;
     if (isSaasMode && firstItemKey && SELF_HOSTED_SECTION_FIRST_KEYS.has(firstItemKey)) {
       continue;
     }
-    result.push(section);
+    const filteredItems = isAuthenticated
+      ? section.items
+      : section.items.filter(item => item.key !== 'account');
+    if (filteredItems.length === 0) continue;
+    result.push({ ...section, items: filteredItems });
   }
 
   return result;

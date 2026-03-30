@@ -7,6 +7,7 @@ import React, {
   useCallback,
 } from 'react';
 import { useNavigation } from '@app/contexts/NavigationContext';
+import { preferencesService, type PdfRenderMode } from '@app/services/preferencesService';
 import {
   createViewerActions,
   ScrollActions,
@@ -77,7 +78,7 @@ function useImmediateNotifier<Args extends unknown[]>() {
  * - Actions call EmbedPDF APIs directly through bridge references
  * - No circular dependencies - bridges don't call back into this context
  */
-interface ViewerContextType {
+export interface ViewerContextType {
   // UI state managed by this context
   isThumbnailSidebarVisible: boolean;
   toggleThumbnailSidebar: () => void;
@@ -85,6 +86,19 @@ interface ViewerContextType {
   toggleBookmarkSidebar: () => void;
   isAttachmentSidebarVisible: boolean;
   toggleAttachmentSidebar: () => void;
+  isCommentsSidebarVisible: boolean;
+  setCommentsSidebarVisible: (visible: boolean) => void;
+  toggleCommentsSidebar: () => void;
+
+  /** Request focus or highlight of a comment card in the sidebar (opens sidebar, then scrolls + flashes or focuses input). */
+  highlightCommentRequest: {
+    documentId: string;
+    pageIndex: number;
+    annotationId: string;
+    action: 'focus' | 'highlight';
+  } | null;
+  requestCommentFocus: (documentId: string, pageIndex: number, annotationId: string, hasContent: boolean) => void;
+  clearHighlightCommentRequest: () => void;
 
   // Search interface visibility
   isSearchInterfaceVisible: boolean;
@@ -157,6 +171,10 @@ interface ViewerContextType {
   // Save changes function - registered by EmbedPdfViewer
   applyChanges: (() => Promise<void>) | null;
   setApplyChanges: (fn: (() => Promise<void>) | null) => void;
+
+  // PDF page color rendering mode (viewer-only, never modifies the PDF)
+  pdfRenderMode: PdfRenderMode;
+  cyclePdfRenderMode: () => void;
 }
 
 export const ViewerContext = createContext<ViewerContextType | null>(null);
@@ -170,10 +188,20 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const [isThumbnailSidebarVisible, setIsThumbnailSidebarVisible] = useState(false);
   const [isBookmarkSidebarVisible, setIsBookmarkSidebarVisible] = useState(false);
   const [isAttachmentSidebarVisible, setIsAttachmentSidebarVisible] = useState(false);
+  const [isCommentsSidebarVisible, setIsCommentsSidebarVisible] = useState(false);
+  const [highlightCommentRequest, setHighlightCommentRequest] = useState<{
+    documentId: string;
+    pageIndex: number;
+    annotationId: string;
+    action: 'focus' | 'highlight';
+  } | null>(null);
   const [isSearchInterfaceVisible, setSearchInterfaceVisible] = useState(false);
   const [isAnnotationsVisible, setIsAnnotationsVisible] = useState(true);
   const [isAnnotationMode, setIsAnnotationModeState] = useState(false);
   const [activeFileIndex, setActiveFileIndex] = useState(0);
+  const [pdfRenderMode, setPdfRenderModeState] = useState<PdfRenderMode>(
+    () => preferencesService.getPreference('pdfRenderMode')
+  );
 
   // Get current navigation state to check if we're in sign mode
   useNavigation();
@@ -261,6 +289,31 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     setIsAttachmentSidebarVisible(prev => !prev);
   };
 
+  const setCommentsSidebarVisible = (visible: boolean) => {
+    setIsCommentsSidebarVisible(visible);
+  };
+
+  const toggleCommentsSidebar = () => {
+    setIsCommentsSidebarVisible(prev => !prev);
+  };
+
+  const requestCommentFocus = useCallback(
+    (documentId: string, pageIndex: number, annotationId: string, hasContent: boolean) => {
+      setIsCommentsSidebarVisible(true);
+      setHighlightCommentRequest({
+        documentId,
+        pageIndex,
+        annotationId,
+        action: hasContent ? 'highlight' : 'focus',
+      });
+    },
+    []
+  );
+
+  const clearHighlightCommentRequest = useCallback(() => {
+    setHighlightCommentRequest(null);
+  }, []);
+
   const searchInterfaceActions = {
     open: () => setSearchInterfaceVisible(true),
     close: () => setSearchInterfaceVisible(false),
@@ -274,6 +327,15 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const setAnnotationMode = (enabled: boolean) => {
     setIsAnnotationModeState(enabled);
   };
+
+  const cyclePdfRenderMode = useCallback(() => {
+    setPdfRenderModeState(prev => {
+      const next: PdfRenderMode =
+        prev === 'normal' ? 'dark' : prev === 'dark' ? 'sepia' : 'normal';
+      preferencesService.setPreference('pdfRenderMode', next);
+      return next;
+    });
+  }, []);
 
   // State getters - read from bridge refs
   const getScrollState = (): ScrollState => {
@@ -392,6 +454,12 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     toggleBookmarkSidebar,
     isAttachmentSidebarVisible,
     toggleAttachmentSidebar,
+    isCommentsSidebarVisible,
+    setCommentsSidebarVisible,
+    toggleCommentsSidebar,
+    highlightCommentRequest,
+    requestCommentFocus,
+    clearHighlightCommentRequest,
 
     // Search interface
     isSearchInterfaceVisible,
@@ -453,6 +521,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     // Apply changes
     applyChanges,
     setApplyChanges,
+
+    // PDF page rendering mode
+    pdfRenderMode,
+    cyclePdfRenderMode,
   };
 
   return (

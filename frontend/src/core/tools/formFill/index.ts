@@ -7,5 +7,5 @@ export { FieldInput } from '@app/tools/formFill/FieldInput';
 export { FIELD_TYPE_ICON, FIELD_TYPE_COLOR } from '@app/tools/formFill/fieldMeta';
 export type { FormField, FormFieldType, FormFillState, WidgetCoordinates } from '@app/tools/formFill/types';
 export type { IFormDataProvider } from '@app/tools/formFill/providers/types';
-export { PdfLibFormProvider } from '@app/tools/formFill/providers/PdfLibFormProvider';
+export { PdfiumFormProvider } from '@app/tools/formFill/providers/PdfiumFormProvider';
 export { PdfBoxFormProvider } from '@app/tools/formFill/providers/PdfBoxFormProvider';

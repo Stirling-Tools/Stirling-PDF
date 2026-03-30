@@ -4,5 +4,5 @@ export interface BackendHealthState {
   status: BackendStatus;
   message?: string | null;
   error: string | null;
-  isHealthy: boolean;
+  isOnline: boolean;
 }

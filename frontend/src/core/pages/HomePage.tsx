@@ -23,6 +23,7 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import AppConfigModal from "@app/components/shared/AppConfigModal";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
+import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 
 import "@app/pages/HomePage.css";
 
@@ -44,6 +45,7 @@ export default function HomePage() {
     readerMode,
     setLeftPanelView,
     toolAvailability,
+    customWorkbenchViews,
   } = useToolWorkflow();
 
   const { openFilesModal } = useFilesModalContext();
@@ -102,6 +104,10 @@ export default function HomePage() {
     selectedToolKey,
     navigationState.workbench,
   ]);
+
+  const hideToolPanel = customWorkbenchViews.find(
+    (v) => v.workbenchId === navigationState.workbench
+  )?.hideToolPanel ?? false;
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
   const brandIconSrc = useLogoPath();
@@ -177,6 +183,14 @@ export default function HomePage() {
     }
   }, [isMobile, readerMode, selectedToolKey]);
 
+  // Automatically switch to workbench slide when a custom workbench (e.g. signing) is active on mobile.
+  // hideToolPanel is true for all custom workbenches that take over the full screen.
+  useEffect(() => {
+    if (isMobile && hideToolPanel) {
+      setActiveMobileView('workbench');
+    }
+  }, [isMobile, hideToolPanel]);
+
   // When navigating back to tools view in mobile with a workbench-only tool, show tool picker
   useEffect(() => {
     if (isMobile && activeMobileView === 'tools' && selectedTool) {
@@ -204,6 +218,7 @@ export default function HomePage() {
 
   return (
     <div className="h-screen overflow-hidden">
+      <HomePageExtensions />
       {isMobile ? (
         <div className="mobile-layout">
           <div className="mobile-toggle">
@@ -312,7 +327,7 @@ export default function HomePage() {
           className="flex-nowrap flex"
         >
           <QuickAccessBar ref={quickAccessRef} />
-          <ToolPanel />
+          {!hideToolPanel && <ToolPanel />}
           <Workbench />
           <RightRail />
           <FileManager selectedTool={selectedTool as any /* FIX ME */} />

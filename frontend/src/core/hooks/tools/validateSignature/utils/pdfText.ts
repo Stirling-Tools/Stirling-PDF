@@ -1,6 +1,6 @@
-import { PDFFont } from '@cantoo/pdf-lib';
+import { PdfiumFont } from '@app/services/pdfiumDocBuilder';
 
-export const wrapText = (text: string, font: PDFFont, fontSize: number, maxWidth: number): string[] => {
+export const wrapText = (text: string, font: PdfiumFont, fontSize: number, maxWidth: number): string[] => {
   const lines: string[] = [];
   const paragraphs = text.split(/\r?\n/);
 
