@@ -128,8 +128,9 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       text: t("ocr.operation.submit", "Process OCR and Review"),
       loadingText: t("loading"),
       onClick: handleOCR,
-      isVisible: hasValidSettings && !hasResults,
-      disabled: !ocrParams.validateParameters() || !hasFiles || !endpointEnabled,
+      isVisible: !hasResults,
+      endpointEnabled: endpointEnabled,
+      paramsValid: hasValidSettings,
     },
     review: {
       isVisible: hasResults,

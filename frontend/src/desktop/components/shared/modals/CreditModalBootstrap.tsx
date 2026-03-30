@@ -54,7 +54,9 @@ export function CreditModalBootstrap() {
         toolId: customEvent.detail?.operationType,
         requiredCredits: customEvent.detail?.requiredCredits,
       });
-      setInsufficientOpen(true);
+      // Show the plans banner (CreditExhaustedModal) instead of the simpler
+      // InsufficientCreditsModal — same experience as clicking the upgrade button.
+      setExhaustedOpen(true);
     };
 
     window.addEventListener(CREDIT_EVENTS.EXHAUSTED, handleExhausted);

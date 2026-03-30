@@ -42,7 +42,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
         with:
-          gradle-version: 8.14
+          gradle-version: 9.3.1
 
       - name: Generate Swagger documentation
         run: ./gradlew :stirling-pdf:generateOpenApiDocs

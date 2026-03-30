@@ -12,6 +12,7 @@ import ToolButton from "@app/components/tools/toolPicker/ToolButton";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { ToolId } from "@app/types/toolId";
 import { getSubcategoryLabel } from "@app/data/toolsTaxonomy";
+import { ToolPickerFooterExtensions } from "@app/components/tools/toolPicker/ToolPickerFooterExtensions";
 
 interface ToolPickerProps {
   selectedToolKey: string | null;
@@ -150,6 +151,7 @@ const ToolPicker = ({ selectedToolKey, onSelect, filteredTools, isSearching = fa
           </>
         )}
       </Box>
+      <ToolPickerFooterExtensions />
     </Box>
   );
 };
