@@ -2,6 +2,8 @@ package stirling.software.proprietary.workflow.controller;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,6 +30,8 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.workflow.dto.CertificateInfo;
+import stirling.software.proprietary.workflow.dto.CertificateValidationResponse;
 import stirling.software.proprietary.workflow.dto.ParticipantResponse;
 import stirling.software.proprietary.workflow.dto.SignatureSubmissionRequest;
 import stirling.software.proprietary.workflow.dto.WetSignatureMetadata;
@@ -35,6 +40,7 @@ import stirling.software.proprietary.workflow.model.ParticipantStatus;
 import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
+import stirling.software.proprietary.workflow.service.CertificateSubmissionValidator;
 import stirling.software.proprietary.workflow.service.MetadataEncryptionService;
 import stirling.software.proprietary.workflow.service.WorkflowSessionService;
 import stirling.software.proprietary.workflow.util.WorkflowMapper;
@@ -59,6 +65,10 @@ public class WorkflowParticipantController {
     private final WorkflowParticipantRepository participantRepository;
     private final ObjectMapper objectMapper;
     private final MetadataEncryptionService metadataEncryptionService;
+    private final CertificateSubmissionValidator certificateSubmissionValidator;
+
+    private static final DateTimeFormatter ISO_UTC =
+            DateTimeFormatter.ISO_INSTANT.withZone(ZoneOffset.UTC);
 
     @Operation(
             summary = "Get workflow session details by participant token",
@@ -173,6 +183,8 @@ public class WorkflowParticipantController {
 
             return ResponseEntity.ok(WorkflowMapper.toParticipantResponse(participant));
 
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error submitting signature for participant {}", participant.getEmail(), e);
             throw new ResponseStatusException(
@@ -268,6 +280,94 @@ public class WorkflowParticipantController {
         }
     }
 
+    @Operation(
+            summary = "Pre-validate a certificate before submission",
+            description =
+                    "Validates that the provided certificate is loadable, not expired, and can "
+                            + "successfully sign a document. Returns validation details so the "
+                            + "participant can confirm the correct certificate before committing.")
+    @PostMapping(
+            value = "/validate-certificate",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<CertificateValidationResponse> validateCertificate(
+            @RequestParam("participantToken") @NotBlank String participantToken,
+            @RequestParam("certType") String certType,
+            @RequestParam(value = "password", required = false) String password,
+            @RequestParam(value = "p12File", required = false) MultipartFile p12File,
+            @RequestParam(value = "jksFile", required = false) MultipartFile jksFile) {
+
+        workflowSessionService.ensureSigningEnabled();
+
+        participantRepository
+                .findByShareToken(participantToken)
+                .filter(p -> !p.isExpired())
+                .orElseThrow(
+                        () ->
+                                new ResponseStatusException(
+                                        HttpStatus.FORBIDDEN,
+                                        "Invalid or expired participant token"));
+
+        // Require a file for non-SERVER/non-USER_CERT types — this is a request error, not a
+        // validation failure
+        if (!"SERVER".equalsIgnoreCase(certType)
+                && !"USER_CERT".equalsIgnoreCase(certType)
+                && (p12File == null || p12File.isEmpty())
+                && (jksFile == null || jksFile.isEmpty())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "No certificate file provided");
+        }
+
+        try {
+            byte[] keystoreBytes = null;
+            if (p12File != null && !p12File.isEmpty()) {
+                keystoreBytes = p12File.getBytes();
+            } else if (jksFile != null && !jksFile.isEmpty()) {
+                keystoreBytes = jksFile.getBytes();
+            }
+
+            CertificateInfo info =
+                    certificateSubmissionValidator.validateAndExtractInfo(
+                            keystoreBytes, certType, password);
+
+            if (info == null) {
+                // SERVER type — nothing to validate
+                return ResponseEntity.ok(
+                        new CertificateValidationResponse(
+                                true, null, null, null, null, false, null));
+            }
+
+            return ResponseEntity.ok(
+                    new CertificateValidationResponse(
+                            true,
+                            info.subjectName(),
+                            info.issuerName(),
+                            info.notAfter() != null ? info.notAfter().toInstant().toString() : null,
+                            info.notBefore() != null
+                                    ? info.notBefore().toInstant().toString()
+                                    : null,
+                            info.selfSigned(),
+                            null));
+
+        } catch (ResponseStatusException e) {
+            // Validation failure — return 200 with valid:false so the frontend can display inline
+            return ResponseEntity.ok(
+                    new CertificateValidationResponse(
+                            false, null, null, null, null, false, e.getReason()));
+        } catch (IOException e) {
+            log.error("Error reading certificate file during pre-validation", e);
+            return ResponseEntity.ok(
+                    new CertificateValidationResponse(
+                            false,
+                            null,
+                            null,
+                            null,
+                            null,
+                            false,
+                            "Failed to read certificate file"));
+        }
+    }
+
     /**
      * Builds metadata map from signature submission request. Includes certificate submission and
      * wet signature data.
@@ -275,6 +375,20 @@ public class WorkflowParticipantController {
     private Map<String, Object> buildSubmissionMetadata(SignatureSubmissionRequest request)
             throws IOException {
         Map<String, Object> metadata = new HashMap<>();
+
+        // Validate certificate before storing — throws 400 if invalid, expired, or wrong password
+        if (request.getCertType() != null && !"SERVER".equalsIgnoreCase(request.getCertType())) {
+            byte[] keystoreBytes = null;
+            if (request.getP12File() != null && !request.getP12File().isEmpty()) {
+                keystoreBytes = request.getP12File().getBytes();
+            } else if (request.getJksFile() != null && !request.getJksFile().isEmpty()) {
+                keystoreBytes = request.getJksFile().getBytes();
+            }
+            if (keystoreBytes != null) {
+                certificateSubmissionValidator.validateAndExtractInfo(
+                        keystoreBytes, request.getCertType(), request.getPassword());
+            }
+        }
 
         // Add certificate submission if provided
         if (request.getCertType() != null) {

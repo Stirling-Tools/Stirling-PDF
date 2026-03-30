@@ -1,7 +1,10 @@
-import { Modal, Stack, Group, Button, Text, Collapse, TextInput } from '@mantine/core';
+import { Modal, Stack, Group, Button, Text, Collapse, TextInput, Loader } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ErrorIcon from '@mui/icons-material/Error';
 import { CertificateSelector, CertificateType, UploadFormat } from '@app/components/tools/certSign/CertificateSelector';
+import apiClient from '@app/services/apiClient';
 
 export interface CertificateSubmitData {
   certType: CertificateType;
@@ -13,6 +16,12 @@ export interface CertificateSubmitData {
   password: string;
 }
 
+type CertValidationState =
+  | { status: 'idle' }
+  | { status: 'validating' }
+  | { status: 'valid'; subjectName: string | null; notAfter: string | null }
+  | { status: 'error'; message: string };
+
 interface CertificateConfigModalProps {
   opened: boolean;
   onClose: () => void;
@@ -21,6 +30,8 @@ interface CertificateConfigModalProps {
   disabled?: boolean;
   defaultReason?: string;
   defaultLocation?: string;
+  /** Share token for external participants. When present, the participant validation endpoint is used. */
+  participantToken?: string;
 }
 
 export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
@@ -31,6 +42,7 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
   disabled = false,
   defaultReason = '',
   defaultLocation = '',
+  participantToken,
 }) => {
   const { t } = useTranslation();
 
@@ -42,6 +54,65 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
   const [jksFile, setJksFile] = useState<File | null>(null);
   const [password, setPassword] = useState('');
   const [signing, setSigning] = useState(false);
+  const [certValidation, setCertValidation] = useState<CertValidationState>({ status: 'idle' });
+  const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounced certificate pre-validation: fires 600ms after cert file or password changes
+  useEffect(() => {
+    // Only validate uploaded keystores (not SERVER/USER_CERT, not PEM which uses separate files)
+    const keystoreFile = uploadFormat === 'JKS' ? jksFile : p12File;
+    if (certType !== 'UPLOAD' || !keystoreFile || uploadFormat === 'PEM') {
+      setCertValidation({ status: 'idle' });
+      return;
+    }
+
+    if (validationTimerRef.current) clearTimeout(validationTimerRef.current);
+    setCertValidation({ status: 'validating' });
+
+    validationTimerRef.current = setTimeout(async () => {
+      try {
+        const formData = new FormData();
+        formData.append('certType', uploadFormat === 'JKS' ? 'JKS' : 'P12');
+        formData.append('password', password);
+        if (uploadFormat === 'JKS') {
+          formData.append('jksFile', keystoreFile);
+        } else {
+          formData.append('p12File', keystoreFile);
+        }
+
+        const endpoint = participantToken
+          ? '/api/v1/workflow/participant/validate-certificate'
+          : '/api/v1/security/cert-sign/validate-certificate';
+
+        if (participantToken) {
+          formData.append('participantToken', participantToken);
+        }
+
+        const response = await apiClient.post<{
+          valid: boolean;
+          subjectName: string | null;
+          notAfter: string | null;
+          error: string | null;
+        }>(endpoint, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+
+        if (response.data.valid) {
+          setCertValidation({
+            status: 'valid',
+            subjectName: response.data.subjectName,
+            notAfter: response.data.notAfter,
+          });
+        } else {
+          setCertValidation({ status: 'error', message: response.data.error ?? t('certSign.collab.signRequest.certModal.certInvalidFallback', 'Invalid certificate') });
+        }
+      } catch {
+        setCertValidation({ status: 'error', message: t('certSign.collab.signRequest.certModal.certNetworkError', 'Could not validate certificate') });
+      }
+    }, 600);
+
+    return () => {
+      if (validationTimerRef.current) clearTimeout(validationTimerRef.current);
+    };
+  }, [certType, uploadFormat, p12File, jksFile, password, participantToken]);
 
   // Advanced settings
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -118,6 +189,39 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
           disabled={disabled || signing}
         />
 
+        {/* Certificate validation status */}
+        {certValidation.status === 'validating' && (
+          <Group gap="xs">
+            <Loader size="xs" />
+            <Text size="sm" c="dimmed">
+              {t('certSign.collab.signRequest.certModal.certValidating', 'Validating certificate...')}
+            </Text>
+          </Group>
+        )}
+        {certValidation.status === 'valid' && (
+          <Group gap="xs">
+            <CheckCircleIcon fontSize="small" style={{ color: 'var(--mantine-color-green-6)' }} />
+            <Text size="sm" c="green">
+              {t('certSign.collab.signRequest.certModal.certValidUntil', 'Certificate valid until {{date}}', {
+                date: certValidation.notAfter
+                  ? new Date(certValidation.notAfter).toLocaleDateString()
+                  : '—',
+              })}
+              {certValidation.subjectName ? ` · ${certValidation.subjectName}` : ''}
+            </Text>
+          </Group>
+        )}
+        {certValidation.status === 'error' && (
+          <Group gap="xs">
+            <ErrorIcon fontSize="small" style={{ color: 'var(--mantine-color-red-6)' }} />
+            <Text size="sm" c="red">
+              {t('certSign.collab.signRequest.certModal.certInvalid', 'Certificate invalid: {{error}}', {
+                error: certValidation.message,
+              })}
+            </Text>
+          </Group>
+        )}
+
         {/* Advanced Settings - Optional */}
         <div>
           <Button
@@ -156,7 +260,7 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
           </Button>
           <Button
             onClick={handleSign}
-            disabled={!isValid || disabled || signing}
+            disabled={!isValid || disabled || signing || certValidation.status === 'validating'}
             loading={signing}
           >
             {t('certSign.collab.signRequest.certModal.sign', 'Sign Document')}
