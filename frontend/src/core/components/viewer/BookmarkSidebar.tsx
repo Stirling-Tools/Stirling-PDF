@@ -4,6 +4,7 @@ import LocalIcon from '@app/components/shared/LocalIcon';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { PdfBookmarkObject, PdfActionType } from '@embedpdf/models';
 import BookmarksIcon from '@mui/icons-material/BookmarksRounded';
+import '@app/components/viewer/SidebarBase.css';
 import '@app/components/viewer/BookmarkSidebar.css';
 
 interface BookmarkSidebarProps {
@@ -429,7 +430,7 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey, p
 
   return (
     <Box
-      className="bookmark-sidebar"
+      className="sidebar-base bookmark-sidebar"
       style={{
         position: 'fixed',
         right: thumbnailVisible ? SIDEBAR_WIDTH : 0,
@@ -439,9 +440,9 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey, p
         zIndex: 998,
       }}
     >
-      <div className="bookmark-sidebar__header">
-        <div className="bookmark-sidebar__header-title">
-          <span className="bookmark-sidebar__header-icon">
+      <div className="sidebar-base__header bookmark-sidebar__header">
+        <div className="sidebar-base__header-title bookmark-sidebar__header-title">
+          <span className="sidebar-base__header-icon bookmark-sidebar__header-icon">
             <BookmarksIcon />
           </span>
           <Text fw={600} size="sm" tt="uppercase" lts={0.5}>
@@ -475,7 +476,7 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey, p
         )}
       </div>
 
-      <Box px="sm" pb="sm" className="bookmark-sidebar__search">
+      <Box px="sm" pb="sm" className="sidebar-base__search bookmark-sidebar__search">
         <TextInput
           value={searchTerm}
           placeholder="Search bookmarks"
@@ -486,9 +487,9 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey, p
       </Box>
 
       <ScrollArea style={{ flex: 1 }}>
-        <Box p="sm" className="bookmark-sidebar__content">
+        <Box p="sm" className="sidebar-base__content bookmark-sidebar__content">
           {!bookmarkSupport && (
-            <div className="bookmark-sidebar__empty-state">
+            <div className="sidebar-base__empty-state">
               <Text size="sm" c="dimmed" ta="center">
                 Bookmark support is unavailable for this viewer.
               </Text>
@@ -496,7 +497,7 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey, p
           )}
 
           {bookmarkSupport && showNoDocument && (
-            <div className="bookmark-sidebar__empty-state">
+            <div className="sidebar-base__empty-state">
               <Text size="sm" c="dimmed" ta="center">
                 Open a PDF to view its bookmarks.
               </Text>
@@ -504,7 +505,7 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey, p
           )}
 
           {bookmarkSupport && documentCacheKey && currentError && (
-            <Stack gap="xs" align="center" className="bookmark-sidebar__error">
+            <Stack gap="xs" align="center" className="sidebar-base__error">
               <Text size="sm" c="red" ta="center">
                 {currentError}
               </Text>
@@ -515,7 +516,7 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey, p
           )}
 
           {bookmarkSupport && documentCacheKey && isLocalLoading && (
-            <Stack gap="md" align="center" c="dimmed" py="xl" className="bookmark-sidebar__loading">
+            <Stack gap="md" align="center" c="dimmed" py="xl" className="sidebar-base__loading">
               <Loader size="md" type="dots" />
               <Text size="sm" ta="center">
                 Loading bookmarks...
@@ -524,7 +525,7 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey, p
           )}
 
           {showEmptyState && (
-            <div className="bookmark-sidebar__empty-state">
+            <div className="sidebar-base__empty-state">
               <Text size="sm" c="dimmed" ta="center">
                 No bookmarks in this document
               </Text>
@@ -538,7 +539,7 @@ export const BookmarkSidebar = ({ visible, thumbnailVisible, documentCacheKey, p
           )}
 
           {showSearchEmpty && (
-            <div className="bookmark-sidebar__empty-state">
+            <div className="sidebar-base__empty-state">
               <Text size="sm" c="dimmed" ta="center">
                 No bookmarks match your search
               </Text>

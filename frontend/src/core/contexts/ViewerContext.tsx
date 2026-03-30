@@ -86,6 +86,10 @@ export interface ViewerContextType {
   toggleBookmarkSidebar: () => void;
   isAttachmentSidebarVisible: boolean;
   toggleAttachmentSidebar: () => void;
+  isLayerSidebarVisible: boolean;
+  toggleLayerSidebar: () => void;
+  hasLayers: boolean;
+  setHasLayers: (value: boolean) => void;
   isCommentsSidebarVisible: boolean;
   setCommentsSidebarVisible: (visible: boolean) => void;
   toggleCommentsSidebar: () => void;
@@ -188,6 +192,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const [isThumbnailSidebarVisible, setIsThumbnailSidebarVisible] = useState(false);
   const [isBookmarkSidebarVisible, setIsBookmarkSidebarVisible] = useState(false);
   const [isAttachmentSidebarVisible, setIsAttachmentSidebarVisible] = useState(false);
+  const [isLayerSidebarVisible, setIsLayerSidebarVisible] = useState(false);
+  const [hasLayers, setHasLayers] = useState(false);
   const [isCommentsSidebarVisible, setIsCommentsSidebarVisible] = useState(false);
   const [highlightCommentRequest, setHighlightCommentRequest] = useState<{
     documentId: string;
@@ -287,6 +293,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   const toggleAttachmentSidebar = () => {
     setIsAttachmentSidebarVisible(prev => !prev);
+  };
+
+  const toggleLayerSidebar = () => {
+    setIsLayerSidebarVisible(prev => !prev);
   };
 
   const setCommentsSidebarVisible = (visible: boolean) => {
@@ -454,6 +464,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     toggleBookmarkSidebar,
     isAttachmentSidebarVisible,
     toggleAttachmentSidebar,
+    isLayerSidebarVisible,
+    toggleLayerSidebar,
+    hasLayers,
+    setHasLayers,
     isCommentsSidebarVisible,
     setCommentsSidebarVisible,
     toggleCommentsSidebar,

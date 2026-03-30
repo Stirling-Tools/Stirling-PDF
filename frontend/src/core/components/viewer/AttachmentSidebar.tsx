@@ -6,6 +6,7 @@ import { PdfAttachmentObject } from '@embedpdf/models';
 import AttachmentIcon from '@mui/icons-material/AttachmentRounded';
 import DownloadIcon from '@mui/icons-material/DownloadRounded';
 import { useTranslation } from 'react-i18next';
+import '@app/components/viewer/SidebarBase.css';
 import '@app/components/viewer/AttachmentSidebar.css';
 
 interface AttachmentSidebarProps {
@@ -284,7 +285,7 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
 
   return (
     <Box
-      className="attachment-sidebar"
+      className="sidebar-base attachment-sidebar"
       style={{
         position: 'fixed',
         right: `${(thumbnailVisible ? 15 : 0) + (bookmarkVisible ? 15 : 0)}rem`,
@@ -294,9 +295,9 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
         zIndex: 998,
       }}
     >
-      <div className="attachment-sidebar__header">
-        <div className="attachment-sidebar__header-title">
-          <span className="attachment-sidebar__header-icon">
+      <div className="sidebar-base__header attachment-sidebar__header">
+        <div className="sidebar-base__header-title attachment-sidebar__header-title">
+          <span className="sidebar-base__header-icon attachment-sidebar__header-icon">
             <AttachmentIcon />
           </span>
           <Text fw={600} size="sm" tt="uppercase" lts={0.5}>
@@ -305,7 +306,7 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
         </div>
       </div>
 
-      <Box px="sm" pb="sm" className="attachment-sidebar__search">
+      <Box px="sm" pb="sm" className="sidebar-base__search attachment-sidebar__search">
         <TextInput
           value={searchTerm}
           placeholder={t('viewer.attachments.searchPlaceholder', 'Search attachments')}
@@ -316,9 +317,9 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
       </Box>
 
       <ScrollArea style={{ flex: 1 }}>
-        <Box p="sm" className="attachment-sidebar__content">
+        <Box p="sm" className="sidebar-base__content attachment-sidebar__content">
           {!attachmentSupport && (
-            <div className="attachment-sidebar__empty-state">
+            <div className="sidebar-base__empty-state">
               <Text size="sm" c="dimmed" ta="center">
                 {t('viewer.attachments.noSupport', 'Attachment support is unavailable for this viewer.')}
               </Text>
@@ -326,7 +327,7 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
           )}
 
           {attachmentSupport && showNoDocument && (
-            <div className="attachment-sidebar__empty-state">
+            <div className="sidebar-base__empty-state">
               <Text size="sm" c="dimmed" ta="center">
                 {t('viewer.attachments.noDocument', 'Open a PDF to view its attachments.')}
               </Text>
@@ -334,7 +335,7 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
           )}
 
           {attachmentSupport && documentCacheKey && currentError && (
-            <Stack gap="xs" align="center" className="attachment-sidebar__error">
+            <Stack gap="xs" align="center" className="sidebar-base__error">
               <Text size="sm" c="red" ta="center">
                 {currentError}
               </Text>
@@ -345,7 +346,7 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
           )}
 
           {attachmentSupport && documentCacheKey && isLocalLoading && (
-            <Stack gap="md" align="center" c="dimmed" py="xl" className="attachment-sidebar__loading">
+            <Stack gap="md" align="center" c="dimmed" py="xl" className="sidebar-base__loading">
               <Loader size="md" type="dots" />
               <Text size="sm" ta="center">
                 {t('viewer.attachments.loading', 'Loading attachments...')}
@@ -354,7 +355,7 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
           )}
 
           {showEmptyState && (
-            <div className="attachment-sidebar__empty-state">
+            <div className="sidebar-base__empty-state">
               <Text size="sm" c="dimmed" ta="center">
                 {t('viewer.attachments.empty', 'No attachments in this document')}
               </Text>
@@ -368,7 +369,7 @@ export const AttachmentSidebar = ({ visible, thumbnailVisible, bookmarkVisible, 
           )}
 
           {showSearchEmpty && (
-            <div className="attachment-sidebar__empty-state">
+            <div className="sidebar-base__empty-state">
               <Text size="sm" c="dimmed" ta="center">
                 {t('viewer.attachments.noMatch', 'No attachments match your search')}
               </Text>
