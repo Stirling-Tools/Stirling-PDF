@@ -1,4 +1,5 @@
 import apiClient from '@app/services/apiClient';
+import { getSessionId } from '@app/hooks/useSSEConnection';
 import { ToolRegistry } from '@app/data/toolsTaxonomy';
 import { ToolId } from '@app/types/toolId';
 import { AUTOMATION_CONSTANTS } from '@app/constants/automation';
@@ -136,7 +137,7 @@ export const executeToolOperation = async (
   operationName: string,
   parameters: any,
   files: File[],
-  toolRegistry: ToolRegistry
+  toolRegistry: Partial<ToolRegistry>
 ): Promise<File[]> => {
   return executeToolOperationWithPrefix(operationName, parameters, files, toolRegistry, AUTOMATION_CONSTANTS.FILE_PREFIX);
 };
@@ -148,7 +149,7 @@ export const executeToolOperationWithPrefix = async (
   operationName: string,
   parameters: any,
   files: File[],
-  toolRegistry: ToolRegistry,
+  toolRegistry: Partial<ToolRegistry>,
   filePrefix: string = AUTOMATION_CONSTANTS.FILE_PREFIX
 ): Promise<File[]> => {
   const config = toolRegistry[operationName as ToolId]?.operationConfig;
@@ -187,7 +188,7 @@ export const executeToolOperationWithPrefix = async (
 export const executeAutomationSequence = async (
   automation: any,
   initialFiles: File[],
-  toolRegistry: ToolRegistry,
+  toolRegistry: Partial<ToolRegistry>,
   onStepStart?: (stepIndex: number, operationName: string) => void,
   onStepComplete?: (stepIndex: number, resultFiles: File[]) => void,
   onStepError?: (stepIndex: number, error: string) => void
@@ -235,6 +236,99 @@ export const executeAutomationSequence = async (
 };
 
 /**
+ * Build the pipeline config JSON string for a server-side request.
+ * Returns null if any step requires client-side processing (custom processor).
+ */
+export function buildPipelineJson(
+  automation: any,
+  toolRegistry: Partial<ToolRegistry>
+): string | null {
+  const needsFrontendFallback = automation.operations.some(
+    (op: any) => toolRegistry[op.operation as ToolId]?.operationConfig?.customProcessor != null
+  );
+  if (needsFrontendFallback) return null;
+
+  const pipeline = automation.operations.map((op: any) => {
+    const toolConfig = toolRegistry[op.operation as ToolId]?.operationConfig;
+    if (!toolConfig) throw new Error(`Tool operation not supported: ${op.operation}`);
+    const parameters = { ...toolConfig.defaultParameters, ...(op.parameters ?? {}) };
+    const rawEndpoint =
+      typeof toolConfig.endpoint === 'function'
+        ? toolConfig.endpoint(parameters)
+        : toolConfig.endpoint;
+    // Keep the leading slash — the backend's apiDocumentation map uses Swagger path keys
+    // which all start with '/' (e.g. '/api/v1/general/rotate-pdf').
+    const operation = rawEndpoint ?? '';
+    return { operation, parameters };
+  });
+
+  return JSON.stringify({ name: automation.name, pipeline });
+}
+
+/**
+ * Build the FormData payload for a pipeline request (handleData or jobs).
+ * Returns null if any step requires client-side processing (custom processor).
+ */
+export function buildPipelineFormData(
+  automation: any,
+  files: File[],
+  toolRegistry: Partial<ToolRegistry>
+): FormData | null {
+  const configJson = buildPipelineJson(automation, toolRegistry);
+  if (!configJson) return null;
+
+  const formData = new FormData();
+  for (const file of files) formData.append('fileInput', file);
+  formData.append('json', configJson);
+  formData.append('sessionId', getSessionId());
+  return formData;
+}
+
+/**
+ * Submit an async pipeline job. Returns the jobId, or null if the automation requires
+ * client-side processing (caller should fall back to executeBackendPipeline).
+ */
+export async function submitBackendJob(
+  automation: any,
+  files: File[],
+  toolRegistry: Partial<ToolRegistry>
+): Promise<string | null> {
+  const formData = buildPipelineFormData(automation, files, toolRegistry);
+  if (!formData) return null;
+  const response = await apiClient.post<{ jobId: string }>('/api/v1/pipeline/jobs', formData);
+  return response.data.jobId;
+}
+
+export interface BackendJobStatus {
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  filename: string;
+  error: string;
+}
+
+/** Poll job status. Throws if the job ID is not found (404). */
+export async function getBackendJobStatus(jobId: string): Promise<BackendJobStatus> {
+  const response = await apiClient.get<BackendJobStatus>(`/api/v1/pipeline/jobs/${jobId}/status`);
+  return response.data;
+}
+
+/** Fetch the completed job result as File[]. */
+export async function getBackendJobResult(jobId: string, automationName?: string): Promise<File[]> {
+  const response = await apiClient.get<Blob>(`/api/v1/pipeline/jobs/${jobId}/result`, {
+    responseType: 'blob',
+  });
+  const blob: Blob = response.data;
+  const contentType: string = response.headers['content-type'] ?? '';
+  if (contentType.includes('zip')) {
+    const { files } = await AutomationFileProcessor.extractAutomationZipFiles(blob);
+    return files;
+  }
+  const filename =
+    getFilenameFromHeaders(response.headers['content-disposition'] ?? '') ??
+    `${automationName ?? 'output'}.pdf`;
+  return [new File([blob], filename, { type: blob.type || 'application/pdf', lastModified: Date.now() })];
+}
+
+/**
  * Execute an automation pipeline via POST /api/v1/pipeline/handleData.
  *
  * Falls back to executeAutomationSequence for automations that contain a step requiring
@@ -243,7 +337,7 @@ export const executeAutomationSequence = async (
 export const executeBackendPipeline = async (
   automation: any,
   initialFiles: File[],
-  toolRegistry: ToolRegistry
+  toolRegistry: Partial<ToolRegistry>
 ): Promise<File[]> => {
   if (!automation?.operations || automation.operations.length === 0) {
     throw new Error('No operations in automation');
@@ -265,11 +359,12 @@ export const executeBackendPipeline = async (
     // Apply frontend defaults so the backend receives complete parameters
     const parameters = { ...toolConfig.defaultParameters, ...(op.parameters ?? {}) };
 
-    // Backend builds URL as getBaseUrl() + operation where getBaseUrl() ends with "/"
+    // Keep the leading slash — PipelineProcessor normalizes both formats but the
+    // apiDocumentation map (used by isValidOperation) uses Swagger path keys with '/'.
     const rawEndpoint = typeof toolConfig.endpoint === 'function'
       ? toolConfig.endpoint(parameters)
       : toolConfig.endpoint;
-    const operation = rawEndpoint.replace(/^\//, '');
+    const operation = rawEndpoint ?? '';
 
     return { operation, parameters };
   });

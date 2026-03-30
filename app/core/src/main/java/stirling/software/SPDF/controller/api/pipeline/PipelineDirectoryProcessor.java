@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -31,8 +32,10 @@ import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PipelineConfig;
+import stirling.software.SPDF.model.PipelineEvent;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
+import stirling.software.SPDF.model.SessionConfig;
 import stirling.software.SPDF.service.ApiDocService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.service.PostHogService;
@@ -52,6 +55,7 @@ public class PipelineDirectoryProcessor {
     private final PipelineProcessor processor;
     private final FileMonitor fileMonitor;
     private final PostHogService postHogService;
+    private final ApplicationEventPublisher eventPublisher;
     private final List<String> watchedFoldersDirs;
     private final String finishedFoldersDir;
 
@@ -65,12 +69,14 @@ public class PipelineDirectoryProcessor {
             PipelineProcessor processor,
             FileMonitor fileMonitor,
             PostHogService postHogService,
+            ApplicationEventPublisher eventPublisher,
             RuntimePathConfig runtimePathConfig) {
         this.objectMapper = objectMapper;
         this.apiDocService = apiDocService;
         this.processor = processor;
         this.fileMonitor = fileMonitor;
         this.postHogService = postHogService;
+        this.eventPublisher = eventPublisher;
         this.watchedFoldersDirs = runtimePathConfig.getPipelineWatchedFoldersPaths();
         this.finishedFoldersDir = runtimePathConfig.getPipelineFinishedFoldersPath();
     }
@@ -86,6 +92,22 @@ public class PipelineDirectoryProcessor {
             }
         } finally {
             // Clean up ThreadLocal to prevent memory leaks
+            processedDirsInScan.remove();
+        }
+    }
+
+    /**
+     * Process a specific server-managed watch folder immediately. Called from the trigger endpoint
+     * after the frontend uploads a file, so the folder doesn't have to wait for the 60s scan.
+     * Initialises the processedDirsInScan ThreadLocal for this one-shot call.
+     */
+    public void processNow(Path dir) {
+        processedDirsInScan.get().clear();
+        try {
+            handleDirectory(dir.toAbsolutePath().normalize());
+        } catch (IOException e) {
+            log.error("Error processing directory: {}", dir, e);
+        } finally {
             processedDirsInScan.remove();
         }
     }
@@ -126,9 +148,16 @@ public class PipelineDirectoryProcessor {
                                         dir.getFileName() != null
                                                 ? dir.getFileName().toString()
                                                 : "";
-                                // Skip root directory and "processing" subdirectories
+                                // Skip root directory and known subdirectories
                                 if (!dir.equals(watchedFolderPath)
-                                        && !"processing".equals(dirName)) {
+                                        && !"processing".equals(dirName)
+                                        && !"processed".equals(dirName)
+                                        && !"error".equals(dirName)) {
+                                    // Skip server-managed folders — they are processed on-demand via
+                                    // the trigger endpoint; session.json marks them as managed.
+                                    if (Files.exists(dir.resolve("session.json"))) {
+                                        return FileVisitResult.SKIP_SUBTREE;
+                                    }
                                     handleDirectory(dir);
                                 }
                             } catch (Exception e) {
@@ -186,8 +215,17 @@ public class PipelineDirectoryProcessor {
     }
 
     private Optional<Path> findJsonFile(Path dir) throws IOException {
+        // Prefer pipeline.json (server-managed folders); fall back to any .json (legacy folders)
+        Path pipelineJson = dir.resolve("pipeline.json");
+        if (Files.exists(pipelineJson)) return Optional.of(pipelineJson);
         try (Stream<Path> paths = Files.list(dir)) {
-            return paths.filter(file -> file.toString().endsWith(".json")).findFirst();
+            return paths.filter(
+                            file ->
+                                    file.toString().endsWith(".json")
+                                            && !file.getFileName()
+                                                    .toString()
+                                                    .equals("session.json"))
+                    .findFirst();
         }
     }
 
@@ -237,6 +275,9 @@ public class PipelineDirectoryProcessor {
                 inputExtensions);
 
         boolean allowAllFiles = inputExtensions.contains("ALL");
+        // Server-managed folders (session.json present) only process files that have a
+        // corresponding .ready marker, preventing partial-upload races.
+        boolean isServerManaged = Files.exists(dir.resolve("session.json"));
 
         try (Stream<Path> paths = Files.list(dir)) {
             File[] files =
@@ -248,27 +289,41 @@ public class PipelineDirectoryProcessor {
                                         if (path.equals(jsonFile)) {
                                             return false;
                                         }
-
-                                        // Get file extension
-                                        String filename = path.getFileName().toString();
-                                        String extension =
-                                                filename.contains(".")
-                                                        ? filename.substring(
-                                                                        filename.lastIndexOf('.')
-                                                                                + 1)
-                                                                .toLowerCase(Locale.ROOT)
-                                                        : "";
+                                        String fname = path.getFileName().toString();
+                                        // Skip session.json (SSE routing metadata, not a PDF)
+                                        if (fname.equals("session.json")) {
+                                            return false;
+                                        }
+                                        // Skip .ready marker files themselves
+                                        if (fname.endsWith(".ready")) {
+                                            return false;
+                                        }
+                                        // For server-managed folders, require a .ready marker
+                                        if (isServerManaged) {
+                                            int dot = fname.lastIndexOf('.');
+                                            String stem = dot > 0 ? fname.substring(0, dot) : fname;
+                                            if (!Files.exists(dir.resolve(stem + ".ready"))) {
+                                                log.debug(
+                                                        "Skipping {} — no .ready marker (upload may be in progress)",
+                                                        fname);
+                                                return false;
+                                            }
+                                        }
 
                                         // Check against allowed extensions
+                                        String extension =
+                                                fname.contains(".")
+                                                        ? fname.substring(fname.lastIndexOf('.') + 1)
+                                                                .toLowerCase(Locale.ROOT)
+                                                        : "";
                                         boolean isAllowed =
                                                 allowAllFiles
-                                                        || inputExtensions.contains(
-                                                                extension.toLowerCase());
+                                                        || inputExtensions.contains(extension);
                                         if (!isAllowed) {
                                             log.info(
                                                     "Skipping file with unsupported extension: {}"
                                                             + " ({})",
-                                                    filename,
+                                                    fname,
                                                     extension);
                                         }
                                         return isAllowed;
@@ -326,6 +381,15 @@ public class PipelineDirectoryProcessor {
 
             if (moved) {
                 filesToProcess.add(targetPath.toFile());
+                // Remove the .ready marker now that the file is safely in processingDir
+                String stem = file.getName().contains(".")
+                        ? file.getName().substring(0, file.getName().lastIndexOf('.'))
+                        : file.getName();
+                try {
+                    Files.deleteIfExists(file.toPath().getParent().resolve(stem + ".ready"));
+                } catch (IOException ignore) {
+                    // Best-effort — marker absence is benign
+                }
             } else {
                 log.error("Failed to move file after {} attempts: {}", maxRetries, file.getName());
             }
@@ -369,9 +433,12 @@ public class PipelineDirectoryProcessor {
             if (result.isHasErrors()) {
                 log.error("Errors occurred during processing, retaining original files");
                 moveToErrorDirectory(filesToProcess, dir);
+                notifySSEError(dir, filesToProcess);
             } else {
-                moveAndRenameFiles(result.getOutputFiles(), config, dir);
+                List<String> outputFilenames =
+                        moveAndRenameFiles(result.getOutputFiles(), config, dir);
                 deleteOriginalFiles(filesToProcess, processingDir);
+                notifySSECompletion(dir, outputFilenames);
             }
             return result;
         } catch (Exception e) {
@@ -394,8 +461,9 @@ public class PipelineDirectoryProcessor {
         }
     }
 
-    private void moveAndRenameFiles(List<Resource> resources, PipelineConfig config, Path dir)
-            throws IOException {
+    private List<String> moveAndRenameFiles(
+            List<Resource> resources, PipelineConfig config, Path dir) throws IOException {
+        List<String> outputFilenames = new ArrayList<>();
         for (Resource resource : resources) {
             String outputFileName = createOutputFileName(resource, config);
             Path outputPath = determineOutputPath(config, dir);
@@ -409,7 +477,9 @@ public class PipelineDirectoryProcessor {
                 is.transferTo(os);
             }
             log.info("File moved and renamed to {}", outputFile);
+            outputFilenames.add(outputFileName);
         }
+        return outputFilenames;
     }
 
     private String createOutputFileName(Resource resource, PipelineConfig config) {
@@ -452,16 +522,73 @@ public class PipelineDirectoryProcessor {
         }
     }
 
+    /**
+     * If the watch folder contains a session.json (written by {@link ServerFolderService}), push a
+     * {@code server-folder-complete} SSE event so the frontend can download the outputs.
+     *
+     * <p>Output filenames have the form {@code {fileId}.{ext}} so the frontend can recover the IDB
+     * fileId by stripping the extension — no name-based lookup is needed.
+     */
+    private void notifySSECompletion(Path dir, List<String> outputFilenames) {
+        Path sessionFile = dir.resolve("session.json");
+        if (!Files.exists(sessionFile)) return;
+        try {
+            SessionConfig session =
+                    objectMapper.readValue(sessionFile.toFile(), SessionConfig.class);
+            String sessionId = session.sessionId();
+            String folderId = session.folderId();
+            if (sessionId == null || sessionId.isBlank()) return;
+
+            eventPublisher.publishEvent(
+                    new PipelineEvent.FolderCompleted(
+                            sessionId, folderId != null ? folderId : "", outputFilenames));
+        } catch (Exception e) {
+            log.warn("Failed to push SSE completion for folder {}: {}", dir, e.getMessage());
+        }
+    }
+
+    /**
+     * If the watch folder contains a session.json, push a {@code server-folder-error} SSE event so
+     * the frontend can mark the affected files as failed. The fileId is encoded as the basename of
+     * each input filename ({@code {fileId}.{ext}}).
+     */
+    private void notifySSEError(Path dir, List<File> failedFiles) {
+        Path sessionFile = dir.resolve("session.json");
+        if (!Files.exists(sessionFile)) return;
+        try {
+            SessionConfig session =
+                    objectMapper.readValue(sessionFile.toFile(), SessionConfig.class);
+            String sessionId = session.sessionId();
+            String folderId = session.folderId();
+            if (sessionId == null || sessionId.isBlank()) return;
+
+            List<String> failedFileIds =
+                    failedFiles.stream()
+                            .map(
+                                    f -> {
+                                        String name = f.getName();
+                                        int dot = name.lastIndexOf('.');
+                                        return dot > 0 ? name.substring(0, dot) : name;
+                                    })
+                            .toList();
+
+            eventPublisher.publishEvent(
+                    new PipelineEvent.FolderError(
+                            sessionId, folderId != null ? folderId : "", failedFileIds));
+        } catch (Exception e) {
+            log.warn("Failed to push SSE error for folder {}: {}", dir, e.getMessage());
+        }
+    }
+
     private void moveFilesBack(List<File> filesToProcess, Path processingDir) {
+        Path folderRoot = processingDir.getParent();
         for (File file : filesToProcess) {
             try {
-                Files.move(processingDir.resolve(file.getName()), file.toPath());
-                log.info(
-                        "Moved file back to original location: {} , {}",
-                        file.toPath(),
-                        file.getName());
+                Path target = folderRoot.resolve(file.getName());
+                Files.move(file.toPath(), target, StandardCopyOption.REPLACE_EXISTING);
+                log.info("Moved file back to folder root for retry: {}", target);
             } catch (IOException e) {
-                log.error("Error moving file back to original location: {}", file.getName(), e);
+                log.error("Error moving file back to folder root: {}", file.getName(), e);
             }
         }
     }

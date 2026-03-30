@@ -48,6 +48,8 @@ import {
 import { SmartFolderHomePage, humaniseOp } from '@app/components/smartFolders/SmartFolderHomePage';
 import { useNavigationActions } from '@app/contexts/NavigationContext';
 import { FilePreviewModal } from '@app/components/smartFolders/FilePreviewModal';
+import { isServerFolderInput } from '@app/types/smartFolders';
+import { downloadServerFolderOutput } from '@app/services/serverFolderApiService';
 
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest' },
@@ -155,6 +157,8 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
 
   const { recentRuns } = useFolderRunState(folderId ?? '');
 
+  const isServerFolder = folder ? isServerFolderInput(folder) : false;
+
   const [isDragOver, setIsDragOver] = useState(false);
   const [outputFiles, setOutputFiles] = useState<StirlingFile[]>([]);
   const [inputFiles, setInputFiles] = useState<StirlingFile[]>([]);
@@ -168,7 +172,8 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   const [automation, setAutomation] = useState<AutomationConfig | null>(null);
   const handledPendingRef = useRef<string | null>(null);
 
-  // Load input/output blobs from the main file store whenever folderRecord changes
+  // Load input/output blobs from the main file store whenever folderRecord changes.
+  // For server-folder mode outputs are not in IDB — they live on the server.
   useEffect(() => {
     if (!folderRecord) {
       setInputFiles([]);
@@ -176,15 +181,18 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
       return;
     }
     const inputIds = Object.keys(folderRecord.files);
-    const outputIds = Object.values(folderRecord.files)
-      .flatMap(m => m.displayFileIds ?? (m.displayFileId ? [m.displayFileId] : []));
-
     Promise.all(inputIds.map(id => fileStorage.getStirlingFile(id as FileId)))
       .then(files => setInputFiles(files.filter(Boolean) as StirlingFile[]));
 
-    Promise.all(outputIds.map(id => fileStorage.getStirlingFile(id as FileId)))
-      .then(files => setOutputFiles(files.filter(Boolean) as StirlingFile[]));
-  }, [folderRecord]);
+    if (!isServerFolder) {
+      const outputIds = Object.values(folderRecord.files)
+        .flatMap(m => m.displayFileIds ?? (m.displayFileId ? [m.displayFileId] : []));
+      Promise.all(outputIds.map(id => fileStorage.getStirlingFile(id as FileId)))
+        .then(files => setOutputFiles(files.filter(Boolean) as StirlingFile[]));
+    } else {
+      setOutputFiles([]);
+    }
+  }, [folderRecord, isServerFolder]);
 
   useEffect(() => {
     if (folder?.automationId) {
@@ -308,6 +316,17 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
     a.click();
     URL.revokeObjectURL(url);
   }, []);
+
+  /** Download a server-folder output file on demand (it is not in IDB). */
+  const handleServerOutputDownload = useCallback(async (filename: string) => {
+    if (!folderId) return;
+    try {
+      const file = await downloadServerFolderOutput(folderId, filename);
+      await handleDownload(file, filename);
+    } catch {
+      // Surface as a no-op — the file may have expired from the server
+    }
+  }, [folderId, handleDownload]);
 
   const goHome = useCallback(() => {
     setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId: null });
@@ -480,6 +499,30 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   }, [activityOutputMap, inputFiles]);
 
   const handleBatchDownload = useCallback(async (ids: Iterable<string> = selectedActivityIds) => {
+    if (isServerFolder && folderId) {
+      // For server folders, collect server filenames and zip them on-demand
+      const zip = new JSZip();
+      let count = 0;
+      for (const id of ids) {
+        const names = folderRecord?.files[id]?.serverOutputFilenames ?? [];
+        for (const fname of names) {
+          try {
+            const file = await downloadServerFolderOutput(folderId, fname);
+            zip.file(fname, await file.arrayBuffer());
+            count++;
+          } catch { /* skip expired/missing files */ }
+        }
+      }
+      if (count === 0) return;
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${folder?.name ?? 'watch-folder'}-export.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      return;
+    }
     const zip = new JSZip();
     let count = 0;
     for (const f of collectExportFiles(ids)) {
@@ -494,9 +537,25 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
     a.download = `${folder?.name ?? 'watch-folder'}-export.zip`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [selectedActivityIds, collectExportFiles, folder]);
+  }, [selectedActivityIds, collectExportFiles, folder, isServerFolder, folderId, folderRecord]);
 
   const handleBatchDownloadSeparate = useCallback(async (ids: Iterable<string> = selectedActivityIds) => {
+    if (isServerFolder && folderId) {
+      for (const id of ids) {
+        const names = folderRecord?.files[id]?.serverOutputFilenames ?? [];
+        for (const fname of names) {
+          try {
+            const file = await downloadServerFolderOutput(folderId, fname);
+            const url = URL.createObjectURL(file);
+            const a = document.createElement('a');
+            a.href = url; a.download = fname; a.click();
+            URL.revokeObjectURL(url);
+            await new Promise(res => setTimeout(res, 150));
+          } catch { /* skip */ }
+        }
+      }
+      return;
+    }
     for (const f of collectExportFiles(ids)) {
       const url = URL.createObjectURL(f);
       const a = document.createElement('a');
@@ -506,7 +565,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
       URL.revokeObjectURL(url);
       await new Promise(res => setTimeout(res, 150));
     }
-  }, [selectedActivityIds, collectExportFiles]);
+  }, [selectedActivityIds, collectExportFiles, isServerFolder, folderId, folderRecord]);
 
   // ── Filtered + sorted lists — all before early returns ──
 
@@ -743,7 +802,9 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
               {/* Outputs */}
               <StatCard
                 icon={<TaskAltIcon style={{ fontSize: '1.125rem', color: '#22c55e' }} />}
-                count={outputFiles.length}
+                count={isServerFolder
+                  ? Object.values(folderRecord?.files ?? {}).reduce((n, m) => n + (m.serverOutputFilenames?.length ?? 0), 0)
+                  : outputFiles.length}
                 label={t('smartFolders.workbench.outputs', 'Outputs')}
                 hoverColor="#22c55e"
                 isActive={activityStatusFilter === 'processed'}
@@ -918,7 +979,9 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                     const isHovered = hoveredRowId === fileId;
                     const isFocused = focusedRowIndex === rowIdx;
                     const outputs = activityOutputMap.get(fileId) ?? [];
+                    const serverOutputNames = isServerFolder ? (meta?.serverOutputFilenames ?? []) : [];
                     const primaryFile = outputs[0] ?? inputFile;
+                    const hasPrimaryServerOutput = serverOutputNames.length > 0;
                     return (
                       <Box
                         key={fileId}
@@ -962,11 +1025,14 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                           </Text>
                           {isHovered && (
                             <Box style={{ display: 'flex', alignItems: 'center', gap: '0.125rem', flexShrink: 0 }}>
-                              {!isExpanded && primaryFile && (
+                              {!isExpanded && !isServerFolder && primaryFile && (
                                 <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); handleView(primaryFile); }} title="Preview"><VisibilityIcon style={{ fontSize: '0.875rem' }} /></button>
                               )}
-                              {!isExpanded && primaryFile && (
+                              {!isExpanded && !isServerFolder && primaryFile && (
                                 <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); void handleDownload(primaryFile, primaryFile.name); }} title="Export"><DownloadIcon style={{ fontSize: '0.875rem' }} /></button>
+                              )}
+                              {!isExpanded && isServerFolder && hasPrimaryServerOutput && (
+                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); void handleServerOutputDownload(serverOutputNames[0]); }} title="Export from server"><DownloadIcon style={{ fontSize: '0.875rem' }} /></button>
                               )}
                               <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); void handleDeleteOne(fileId); }} title="Delete"><DeleteOutlineIcon style={{ fontSize: '0.875rem' }} /></button>
                             </Box>
@@ -985,14 +1051,23 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                                 <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); handleDownload(inputFile, inputFile.name); }} title="Download input"><DownloadIcon style={{ fontSize: '0.875rem' }} /></button>
                               </Box>
                             )}
-                            {/* Output files */}
-                            {outputs.map(out => (
+                            {/* Output files — IDB path (non-server-folder) */}
+                            {!isServerFolder && outputs.map(out => (
                               <Box key={out.fileId} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.2rem 0' }}>
                                 <Text style={{ fontSize: '0.625rem', letterSpacing: '0.04em', color: '#22c55e', textTransform: 'uppercase', flexShrink: 0 }}>out</Text>
                                 <Text size="xs" style={{ flex: 1, minWidth: 0 }} lineClamp={1}>{out.name}</Text>
                                 <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>{formatBytes(out.size)}</Text>
                                 <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); handleView(out); }} title="Preview output"><VisibilityIcon style={{ fontSize: '0.875rem' }} /></button>
                                 <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); handleDownload(out, out.name); }} title="Download output"><DownloadIcon style={{ fontSize: '0.875rem' }} /></button>
+                              </Box>
+                            ))}
+                            {/* Output files — server path (server-folder mode, outputs live on server) */}
+                            {isServerFolder && serverOutputNames.map(fname => (
+                              <Box key={fname} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.2rem 0' }}>
+                                <Text style={{ fontSize: '0.625rem', letterSpacing: '0.04em', color: '#22c55e', textTransform: 'uppercase', flexShrink: 0 }}>out</Text>
+                                <Text size="xs" style={{ flex: 1, minWidth: 0 }} lineClamp={1}>{fname}</Text>
+                                <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>on server</Text>
+                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); void handleServerOutputDownload(fname); }} title="Download from server"><DownloadIcon style={{ fontSize: '0.875rem' }} /></button>
                               </Box>
                             ))}
                             {/* Error detail + retry */}

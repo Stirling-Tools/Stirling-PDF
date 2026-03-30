@@ -3,11 +3,12 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { SmartFolder } from '@app/types/smartFolders';
+import { SmartFolder, isServerFolderInput } from '@app/types/smartFolders';
 import { smartFolderStorage, SMART_FOLDER_STORAGE_CHANGE_EVENT } from '@app/services/smartFolderStorage';
 import { folderStorage } from '@app/services/folderStorage';
 import { folderRunStateStorage } from '@app/services/folderRunStateStorage';
 import { fileStorage } from '@app/services/fileStorage';
+import { deleteServerFolder } from '@app/services/serverFolderApiService';
 import { FileId } from '@app/types/fileContext';
 
 interface UseSmartFoldersReturn {
@@ -59,6 +60,12 @@ export function useSmartFolders(): UseSmartFoldersReturn {
   );
 
   const deleteFolder = useCallback(async (id: string): Promise<void> => {
+    // Clean up server watch folder first (best-effort — don't block if server is down)
+    const folderMeta = await smartFolderStorage.getFolder(id);
+    if (folderMeta && isServerFolderInput(folderMeta)) {
+      await deleteServerFolder(id).catch(() => {});
+    }
+
     const record = await folderStorage.getFolderData(id);
     if (record) {
       // Only delete input files the folder created from disk — never touch sidebar-sourced files.

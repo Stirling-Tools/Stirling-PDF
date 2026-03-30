@@ -21,6 +21,12 @@ import AutomationCreation from '@app/components/tools/automate/AutomationCreatio
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { smartFolderStorage } from '@app/services/smartFolderStorage';
 import { folderDirectoryHandleStorage } from '@app/services/folderDirectoryHandleStorage';
+import {
+  createServerFolder,
+  updateServerFolder,
+  deleteServerFolder,
+} from '@app/services/serverFolderApiService';
+import { buildPipelineJson } from '@app/utils/automationExecutor';
 import FolderSpecialIcon from '@mui/icons-material/FolderSpecial';
 
 const ACCENT_SWATCHES = [
@@ -96,6 +102,11 @@ export function SmartFolderManagementModal({
   const [outputMode, setOutputMode] = useState<'new_file' | 'new_version'>(editFolder?.outputMode ?? 'new_file');
   const [outputName, setOutputName] = useState(editFolder?.outputName ?? editFolder?.name ?? '');
   const [outputNamePosition, setOutputNamePosition] = useState<'prefix' | 'suffix' | 'auto-number'>(editFolder?.outputNamePosition ?? 'prefix');
+  const [inputSource, setInputSource] = useState<NonNullable<SmartFolder['inputSource']>>(editFolder?.inputSource ?? 'idb');
+  const [outputTtlHours, setOutputTtlHours] = useState<string>(
+    editFolder?.outputTtlHours != null ? String(editFolder.outputTtlHours) : 'forever'
+  );
+  const [deleteOutputOnDownload, setDeleteOutputOnDownload] = useState(editFolder?.deleteOutputOnDownload ?? false);
   const outputNameDirty = useRef(!!editFolder?.outputName);
   const [saving, setSaving] = useState(false);
   const [outputDirName, setOutputDirName] = useState<string | null>(editFolder?.hasOutputDirectory ? '(loading…)' : null);
@@ -116,6 +127,9 @@ export function SmartFolderManagementModal({
     setOutputMode(editFolder?.outputMode ?? 'new_file');
     setOutputName(editFolder?.outputName ?? editFolder?.name ?? '');
     setOutputNamePosition((editFolder?.outputNamePosition as 'prefix' | 'suffix' | 'auto-number') ?? 'prefix');
+    setInputSource(editFolder?.inputSource ?? 'idb');
+    setOutputTtlHours(editFolder?.outputTtlHours != null ? String(editFolder.outputTtlHours) : 'forever');
+    setDeleteOutputOnDownload(editFolder?.deleteOutputOnDownload ?? false);
     outputNameDirty.current = !!editFolder?.outputName;
     setNameError('');
     setAutomationError('');
@@ -139,43 +153,65 @@ export function SmartFolderManagementModal({
 
   const handleAutomationComplete = useCallback(async (automation: AutomationConfig) => {
     const trimmedName = name.trim();
+    const isServerFolder = inputSource === 'server-folder';
+
+    // Validate server-folder compatibility before touching IDB
+    let configJson: string | null = null;
+    if (isServerFolder) {
+      configJson = buildPipelineJson(automation, toolRegistry);
+      if (!configJson) {
+        setSaveError('This automation contains browser-only steps and cannot run as a server watch folder. Remove those steps or choose a different input source.');
+        setSaving(false);
+        return;
+      }
+    }
+
     try {
       const retryFields = { maxRetries, retryDelayMinutes };
       const hasOutputDirectory = outputDirName !== null;
+      const ttlHoursNum = isServerFolder && outputTtlHours !== 'forever' ? Number(outputTtlHours) : null;
+      const folderData = {
+        name: trimmedName,
+        description: description.trim(),
+        icon,
+        accentColor,
+        automationId: automation.id,
+        ...retryFields,
+        outputMode: outputMode === 'new_version' ? 'new_version' as const : undefined,
+        outputName: outputName.trim() || undefined,
+        outputNamePosition: outputNamePosition !== 'prefix' ? outputNamePosition : undefined,
+        hasOutputDirectory,
+        inputSource: inputSource !== 'idb' ? inputSource : undefined,
+        processingMode: isServerFolder ? 'server' as const : undefined,
+        outputTtlHours: isServerFolder ? ttlHoursNum : undefined,
+        deleteOutputOnDownload: isServerFolder ? deleteOutputOnDownload : undefined,
+      };
+
       if (isEditMode && editFolder) {
-        await smartFolderStorage.updateFolder({
-          ...editFolder,
-          name: trimmedName,
-          description: description.trim(),
-          icon,
-          accentColor,
-          automationId: automation.id,
-          ...retryFields,
-          outputMode: outputMode === 'new_version' ? 'new_version' : undefined,
-          outputName: outputName.trim() || undefined,
-          outputNamePosition: outputNamePosition === 'suffix' ? 'suffix' : undefined,
-          hasOutputDirectory,
-        });
+        const wasServerFolder = editFolder.inputSource === 'server-folder';
+        await smartFolderStorage.updateFolder({ ...editFolder, ...folderData });
         if (pendingDirHandle.current) {
           await folderDirectoryHandleStorage.set(editFolder.id, pendingDirHandle.current);
         } else if (!hasOutputDirectory) {
           await folderDirectoryHandleStorage.remove(editFolder.id);
         }
+        // Sync server watch folder
+        if (isServerFolder && configJson) {
+          if (wasServerFolder) {
+            await updateServerFolder(editFolder.id, trimmedName, configJson, ttlHoursNum, deleteOutputOnDownload);
+          } else {
+            await createServerFolder(editFolder.id, trimmedName, configJson, ttlHoursNum, deleteOutputOnDownload);
+          }
+        } else if (wasServerFolder && !isServerFolder) {
+          await deleteServerFolder(editFolder.id).catch(() => {}); // best-effort
+        }
       } else {
-        const newFolder = await smartFolderStorage.createFolder({
-          name: trimmedName,
-          description: description.trim(),
-          icon,
-          accentColor,
-          automationId: automation.id,
-          ...retryFields,
-          outputMode: outputMode === 'new_version' ? 'new_version' : undefined,
-          outputName: outputName.trim() || undefined,
-          outputNamePosition: outputNamePosition === 'suffix' ? 'suffix' : undefined,
-          hasOutputDirectory,
-        });
+        const newFolder = await smartFolderStorage.createFolder(folderData);
         if (pendingDirHandle.current) {
           await folderDirectoryHandleStorage.set(newFolder.id, pendingDirHandle.current);
+        }
+        if (isServerFolder && configJson) {
+          await createServerFolder(newFolder.id, trimmedName, configJson, ttlHoursNum, deleteOutputOnDownload);
         }
       }
       resetState();
@@ -187,7 +223,7 @@ export function SmartFolderManagementModal({
     } finally {
       setSaving(false);
     }
-  }, [name, description, icon, accentColor, outputMode, outputName, outputNamePosition, outputDirName, maxRetries, retryDelayMinutes, isEditMode, editFolder, resetState, onSaved, onClose]);
+  }, [name, description, icon, accentColor, outputMode, outputName, outputNamePosition, outputDirName, maxRetries, retryDelayMinutes, inputSource, outputTtlHours, deleteOutputOnDownload, isEditMode, editFolder, toolRegistry, resetState, onSaved, onClose, t]);
 
   const handleSave = () => {
     const trimmedName = name.trim();
@@ -425,6 +461,57 @@ export function SmartFolderManagementModal({
                       disabled={maxRetries === 0}
                     />
                   </Group>
+                </div>
+
+                {/* Data Flow */}
+                <div>
+                  <SectionLabel>Data Flow</SectionLabel>
+                  <Stack gap="sm">
+                    <Select
+                      label="Input source"
+                      value={inputSource}
+                      onChange={(v) => v && setInputSource(v as NonNullable<SmartFolder['inputSource']>)}
+                      data={[
+                        { value: 'idb', label: 'Browser storage (default)' },
+                        { value: 'server-folder', label: 'Server watch folder' },
+                      ]}
+                      size="sm"
+                      description={
+                        inputSource === 'server-folder'
+                          ? 'Files are placed in a server directory and processed on a 60 s scan cycle. All automation steps must run server-side.'
+                          : 'Files stay in the browser and are processed locally.'
+                      }
+                      comboboxProps={{ withinPortal: true, zIndex: 400 }}
+                    />
+
+                    {inputSource === 'server-folder' && (
+                      <>
+                        <Select
+                          label="Keep output files on server"
+                          value={outputTtlHours}
+                          onChange={(v) => v && setOutputTtlHours(v)}
+                          data={[
+                            { value: '1', label: '1 hour' },
+                            { value: '6', label: '6 hours' },
+                            { value: '24', label: '24 hours' },
+                            { value: '168', label: '7 days' },
+                            { value: '720', label: '30 days' },
+                            { value: 'forever', label: 'Forever' },
+                          ]}
+                          size="sm"
+                          comboboxProps={{ withinPortal: true, zIndex: 400 }}
+                        />
+                        <Switch
+                          label="Delete from server after local export"
+                          description="Output file is removed from the server after it has been written to the configured local output folder."
+                          checked={deleteOutputOnDownload}
+                          onChange={(e) => setDeleteOutputOnDownload(e.currentTarget.checked)}
+                          size="sm"
+                          disabled={outputDirName === null}
+                        />
+                      </>
+                    )}
+                  </Stack>
                 </div>
 
               </Stack>

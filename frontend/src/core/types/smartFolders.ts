@@ -20,6 +20,20 @@ export interface SmartFolder {
   outputName?: string;                           // output filename prefix/suffix
   outputNamePosition?: 'prefix' | 'suffix' | 'auto-number'; // default: 'prefix'
   hasOutputDirectory?: boolean;                  // true when a local FS output folder is configured
+  /** Where input files come from. Default: 'idb' (dropped/sidebar files stay in browser). */
+  inputSource?: 'idb' | 'local-folder' | 'server-folder';
+  /** Where processing happens. Default: 'local' (browser). Forced to 'server' when inputSource='server-folder'. */
+  processingMode?: 'local' | 'server';
+  /**
+   * How long to keep output files in the server's processed/ dir (hours).
+   * null / undefined = keep forever. Only meaningful when inputSource='server-folder'.
+   */
+  outputTtlHours?: number | null;
+  /**
+   * If true, the frontend sends a DELETE request to remove the output file from the server
+   * immediately after downloading it. Only meaningful when inputSource='server-folder'.
+   */
+  deleteOutputOnDownload?: boolean;
 }
 
 export interface FolderFileMetadata {
@@ -38,6 +52,19 @@ export interface FolderFileMetadata {
   nextRetryAt?: number; // ms timestamp — set when an automatic retry is scheduled
   lastFailedAt?: Date;
   name?: string; // original filename
+  serverJobId?: string; // async backend job ID — set while the job is running server-side
+  /** True when the file has been uploaded to a server watch folder and is awaiting PipelineDirectoryProcessor. */
+  pendingOnServerFolder?: boolean;
+  /**
+   * For server-folder mode: filenames of processed outputs in the server's processed/ directory.
+   * Outputs are NOT stored in IDB — this is the only reference to them.
+   */
+  serverOutputFilenames?: string[];
+}
+
+/** Type guard / helper — true when the folder's input source is the server watch folder. */
+export function isServerFolderInput(folder: SmartFolder): boolean {
+  return folder.inputSource === 'server-folder';
 }
 
 export interface FolderRecord {

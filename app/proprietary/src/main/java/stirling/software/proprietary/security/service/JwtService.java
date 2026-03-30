@@ -342,8 +342,7 @@ public class JwtService implements JwtServiceInterface {
         // Extract from Authorization header Bearer token
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7); // Remove "Bearer " prefix
-            return token;
+            return authHeader.substring(7); // Remove "Bearer " prefix
         }
 
         return null;

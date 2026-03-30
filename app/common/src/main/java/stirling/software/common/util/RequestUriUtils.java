@@ -181,7 +181,10 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/readiness")
                 || trimmedUri.startsWith(
                         "/api/v1/mobile-scanner/") // Mobile scanner endpoints (no auth)
-                || trimmedUri.startsWith("/v1/api-docs");
+                || trimmedUri.startsWith("/v1/api-docs")
+                // SSE event stream — auth handled via one-time sseToken issued by /sse-token;
+                // the JWT filter is intentionally bypassed here (token is not safe in URLs)
+                || trimmedUri.equals("/api/v1/pipeline/events");
     }
 
     private static String stripContextPath(String contextPath, String requestURI) {
