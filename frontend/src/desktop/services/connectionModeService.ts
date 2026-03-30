@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke, isTauri } from '@tauri-apps/api/core';
 import { fetch } from '@tauri-apps/plugin-http';
 import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
 
@@ -220,33 +220,7 @@ export class ConnectionModeService {
       console.log(`[ConnectionModeService]    - No proxy environment variables detected`);
     }
 
-    // Check if running in Tauri (v2 uses different detection)
-    console.log(`[ConnectionModeService]    - Checking Tauri context...`);
-    console.log(`[ConnectionModeService]    - window.__TAURI__ type: ${typeof window.__TAURI__}`);
-    console.log(`[ConnectionModeService]    - window.__TAURI_INTERNALS__ type: ${typeof window.__TAURI_INTERNALS__}`);
-    console.log(`[ConnectionModeService]    - window.location.href:`, window.location.href);
-    console.log(`[ConnectionModeService]    - window.location.protocol:`, window.location.protocol);
-
-    // Tauri v2 detection: check for __TAURI_INTERNALS__ or tauri:// protocol
-    const isTauriV2 = typeof window.__TAURI_INTERNALS__ !== 'undefined' ||
-                      window.location.protocol === 'tauri:' ||
-                      window.location.hostname === 'tauri.localhost';
-    const isTauriV1 = typeof window.__TAURI__ !== 'undefined';
-    const isTauri = isTauriV1 || isTauriV2;
-
-    console.log(`[ConnectionModeService]    - Running in Tauri v1: ${isTauriV1}`);
-    console.log(`[ConnectionModeService]    - Running in Tauri v2: ${isTauriV2}`);
-    console.log(`[ConnectionModeService]    - Running in Tauri: ${isTauri}`);
-
-    if (isTauri) {
-      if (isTauriV1) {
-        console.log(`[ConnectionModeService]    - Tauri v1 API:`, window.__TAURI__);
-      }
-      if (isTauriV2) {
-        console.log(`[ConnectionModeService]    - Tauri v2 detected via internals/protocol`);
-        console.log(`[ConnectionModeService]    - Tauri internals:`, window.__TAURI_INTERNALS__);
-      }
-    }
+    console.log(`[ConnectionModeService]    - Running in Tauri: ${isTauri()}`);
 
     const diagnostics: DiagnosticResult[] = [];
     const healthUrl = `${url.replace(/\/$/, '')}/api/v1/info/status`;
