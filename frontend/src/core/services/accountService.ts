@@ -36,7 +36,7 @@ export const accountService = {
    * Get current user account data
    */
   async getAccountData(): Promise<AccountData> {
-    const response = await apiClient.get<AccountData>('/api/v1/proprietary/ui-data/account');
+    const response = await apiClient.get<AccountData>('/api/v1/proprietary/ui-data/account', { suppressErrorToast: true });
     return response.data;
   },
 

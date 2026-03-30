@@ -42,6 +42,7 @@ class SignatureStorageService {
       // Probe the proprietary signatures endpoint (requires authentication)
       await apiClient.get('/api/v1/proprietary/signatures', {
         timeout: 3000,
+        suppressErrorToast: true,
       });
 
       // 200 = Backend available and accessible (authenticated)

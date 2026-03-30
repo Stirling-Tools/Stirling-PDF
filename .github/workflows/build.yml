@@ -30,6 +30,7 @@ jobs:
       project: ${{ steps.changes.outputs.project }}
       openapi: ${{ steps.changes.outputs.openapi }}
       frontend: ${{ steps.changes.outputs.frontend }}
+      docker-base: ${{ steps.changes.outputs.docker-base }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
@@ -39,7 +40,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Check for file changes
-        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
         id: changes
         with:
           filters: .github/config/.files.yaml
@@ -69,7 +70,7 @@ jobs:
           distribution: "temurin"
 
       - name: Cache Gradle dependency artifacts
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
           path: |
             ~/.gradle/wrapper
@@ -80,7 +81,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
         with:
-          gradle-version: 8.14
+          gradle-version: 9.3.1
           cache-disabled: true
 
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
@@ -111,7 +112,7 @@ jobs:
 
       - name: Upload Test Reports
         if: always()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: test-reports-jdk-${{ matrix.jdk-version }}-spring-security-${{ matrix.spring-security }}
           path: |
@@ -154,7 +155,7 @@ jobs:
           distribution: "temurin"
 
       - name: Cache Gradle dependency artifacts
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
           path: |
             ~/.gradle/wrapper
@@ -165,7 +166,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
         with:
-          gradle-version: 8.14
+          gradle-version: 9.3.1
           cache-disabled: true
 
       - name: Generate OpenAPI documentation
@@ -177,7 +178,7 @@ jobs:
           DISABLE_ADDITIONAL_FEATURES: true
 
       - name: Upload OpenAPI Documentation
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: openapi-docs
           path: ./SwaggerDoc.json
@@ -210,11 +211,42 @@ jobs:
       - name: Run frontend tests
         run: cd frontend && npm run test -- --run
       - name: Upload frontend build artifacts
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: frontend-build
           path: frontend/dist/
           retention-days: 3
+
+  playwright-e2e:
+    if: needs.files-changed.outputs.frontend == 'true'
+    needs: files-changed
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+      - name: Install Playwright (chromium only)
+        run: cd frontend && npx playwright install chromium --with-deps
+      - name: Run E2E tests (chromium)
+        run: cd frontend && npx playwright test src/core/tests/certValidation --project=chromium
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: playwright-report-pr-${{ github.run_id }}
+          path: frontend/playwright-report/
+          retention-days: 7
 
   check-licence:
     if: needs.files-changed.outputs.build == 'true'
@@ -236,7 +268,7 @@ jobs:
           distribution: "temurin"
 
       - name: Cache Gradle dependency artifacts
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
           path: |
             ~/.gradle/wrapper
@@ -247,7 +279,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
         with:
-          gradle-version: 8.14
+          gradle-version: 9.3.1
           cache-disabled: true
 
       - name: check the licenses for compatibility
@@ -264,7 +296,7 @@ jobs:
 
       - name: FAILED - check the licenses for compatibility
         if: failure()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: dependencies-without-allowed-license.json
           path: build/reports/dependency-license/dependencies-without-allowed-license.json
@@ -309,7 +341,7 @@ jobs:
           distribution: "temurin"
 
       - name: Cache Gradle dependency artifacts
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
           path: |
             ~/.gradle/wrapper
@@ -320,7 +352,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
         with:
-          gradle-version: 8.14
+          gradle-version: 9.3.1
           cache-disabled: true
 
       - name: Set up Docker Buildx
@@ -328,7 +360,7 @@ jobs:
 
       # Expose ACTIONS_RUNTIME_TOKEN / ACTIONS_RESULTS_URL for docker buildx type=gha cache backend.
       - name: Expose GitHub runtime for Buildx cache
-        uses: crazy-max/ghaction-github-runtime@3cb05d89e1f492524af3d41a1c98c83bc3025124 # v3.1.0
+        uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # v4.0.0
 
       - name: Install Docker Compose
         run: |
@@ -336,7 +368,7 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
 
       - name: Set up Python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.12"
           cache: "pip" # caching pip dependencies
@@ -357,13 +389,23 @@ jobs:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+          DOCKER_BASE_CHANGED: ${{ needs.files-changed.outputs.docker-base }}
 
       - name: Upload Cucumber Report
         if: always()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: cucumber-report
           path: testing/cucumber/report.html
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: docker-compose-test-reports
+          path: testing/reports/
           retention-days: 7
           if-no-files-found: warn
 
@@ -402,6 +444,17 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Convert repository owner to lowercase
+        id: repoowner
+        run: echo "lowercase=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
+
       - name: Free disk space on runner
         run: |
           echo "Disk space before cleanup:" && df -h
@@ -416,7 +469,7 @@ jobs:
           distribution: "temurin"
 
       - name: Cache Gradle dependency artifacts
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
           path: |
             ~/.gradle/wrapper
@@ -427,7 +480,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
         with:
-          gradle-version: 8.14
+          gradle-version: 9.3.1
           cache-disabled: true
 
       - name: Build application
@@ -440,11 +493,27 @@ jobs:
           STIRLING_PDF_DESKTOP_UI: false
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
 
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+      - name: Build base image locally (PR base change only)
+        if: github.event_name == 'pull_request' && needs.files-changed.outputs.docker-base == 'true'
+        run: |
+          docker build -t stirling-pdf-base:pr-test -f docker/base/Dockerfile docker/base
+
+      - name: Set base image and platform for this build
+        id: build-params
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ] && [ "${{ needs.files-changed.outputs.docker-base }}" == "true" ]; then
+            echo "base_image=stirling-pdf-base:pr-test" >> $GITHUB_OUTPUT
+            echo "platforms=linux/amd64" >> $GITHUB_OUTPUT
+          else
+            echo "base_image=ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-base:latest" >> $GITHUB_OUTPUT
+            echo "platforms=linux/amd64,linux/arm64/v8" >> $GITHUB_OUTPUT
+          fi
 
       - name: Build ${{ matrix.docker-rev }}
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
@@ -455,13 +524,15 @@ jobs:
           push: false
           cache-from: type=gha,scope=${{ matrix.cache-scope }}
           cache-to: type=gha,mode=max,scope=${{ matrix.cache-scope }}
-          platforms: linux/amd64,linux/arm64/v8
+          platforms: ${{ steps.build-params.outputs.platforms }}
+          build-args: |
+            BASE_IMAGE=${{ steps.build-params.outputs.base_image }}
           provenance: true
           sbom: true
 
       - name: Upload Reports
         if: always()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: reports-docker-${{ matrix.artifact-suffix }}
           path: |

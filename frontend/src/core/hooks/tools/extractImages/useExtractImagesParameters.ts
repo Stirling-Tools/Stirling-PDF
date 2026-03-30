@@ -2,12 +2,12 @@ import { useBaseParameters } from '@app/hooks/tools/shared/useBaseParameters';
 
 export interface ExtractImagesParameters {
   format: 'png' | 'jpg' | 'gif';
-  allowDuplicates: boolean;
+  // allowDuplicates: boolean;
 }
 
 export const defaultParameters: ExtractImagesParameters = {
   format: 'png',
-  allowDuplicates: false,
+  // allowDuplicates: false,
 };
 
 export const useExtractImagesParameters = () => {

@@ -142,6 +142,10 @@ welcome = "Welkom"
 white = "Wit"
 WorkInProgess = "Werk in uitvoering. Werkt mogelijk niet of bevat fouten. Meld eventuele problemen!"
 yes = "Ja"
+insufficientCredits = "Onvoldoende credits. Vereist: {{requiredCredits}}, Beschikbaar: {{currentBalance}}, Tekort: {{shortfall}}"
+loadingCredits = "Credits controleren..."
+loadingProStatus = "Abonnementsstatus controleren..."
+noticeTopUpOrPlan = "Onvoldoende credits, vul aan of upgrade naar een abonnement"
 
 [account]
 accountSettings = "Account instellingen"
@@ -1513,6 +1517,7 @@ editStampHint = "Om de afbeelding te wijzigen; verwijder deze stempel en voeg ee
 editSwitchToSelect = "Schakel over op Selecten & Bewerken om deze annotatie te bewerken."
 editText = "Tekstkader bewerken"
 editTextMarkup = "Tekstannotatie bewerken"
+annotationStyle = "Annotatiestijl"
 ellipse = "Ellips"
 exit = "Annotatiemodus sluiten"
 fillColor = "Vulkleur"
@@ -1523,13 +1528,19 @@ highlight = "Markeren"
 imagePreview = "Voorbeeld"
 inkHighlighter = "Vrije hand marker"
 line = "Lijn"
+lineArrow = "Pijl"
 noBackground = "Geen achtergrond"
 note = "Notitie"
+comment = "Opmerking"
+comments = "Opmerkingen"
+insertText = "Tekst invoegen"
+replaceText = "Tekst vervangen"
 noteIcon = "Notitiepictogram"
 notesStamps = "Notities & Stempels"
 opacity = "Dekking"
 pen = "Pen"
 polygon = "Veelhoek"
+polyline = "Polylijn"
 properties = "Eigenschappen"
 rectangle = "Rechthoek"
 redo = "Opnieuw uitvoeren"
@@ -2574,10 +2585,48 @@ title = "Kwaliteitsaanpassing"
 [compressPdfs]
 tags = "comprimeren,klein"
 
+[config]
+plan = "Abonnement"
+
 [config.account.overview]
+confirmDelete = "Mijn account verwijderen"
+deleteAccount = "Account verwijderen"
+deleteAccountTitle = "Account verwijderen"
+deleteFailed = "Kan account niet verwijderen."
+deleteFailedTitle = "Account verwijderen mislukt"
+deleteWarning = "Deze actie is permanent en kan niet ongedaan worden gemaakt. Al je gegevens worden verwijderd."
+enterEmailConfirm = "Typ ter bevestiging hieronder je e-mailadres ({{email}}):"
 guestDescription = "U bent aangemeld als gast. Overweeg uw account hierboven op te waarderen."
+label = "Overzicht"
 manageAccountPreferences = "Accountvoorkeuren beheren"
+signedInAs = "Aangemeld als"
 title = "Accountinstellingen"
+
+[config.account.profilePicture]
+description = "Upload een afbeelding om je account te personaliseren."
+help = "PNG, JPG of WebP tot 2MB."
+remove = "Verwijderen"
+sizeError = "Selecteer een afbeelding die kleiner is dan 2MB."
+switchedToCustom = "Er is overgeschakeld naar een aangepaste afbeelding. Je kunt nu je eigen afbeelding uploaden."
+title = "Profielfoto"
+upload = "Uploaden"
+useCustom = "Aangepaste afbeelding gebruiken"
+usingProvider = "Profielfoto van {{provider}} wordt gebruikt"
+
+[config.account.profilePicture.cropper]
+cropError = "Bijsnijden van afbeelding mislukt. Probeer het opnieuw."
+invalidImage = "Ongeldig afbeeldingsbestand. Selecteer een geldige PNG-, JPG- of WebP-afbeelding."
+processing = "Bijsnijden wordt verwerkt..."
+save = "Bijsneden afbeelding opslaan"
+sizeErrorAfterCrop = "Bijsneden afbeelding is te groot. Zoom uit of snijd een kleiner gebied bij."
+title = "Profielfoto bijsnijden"
+zoom = "Zoom"
+
+[config.account.security]
+changePassword = "Wachtwoord wijzigen"
+description = "Beheer je wachtwoord en beveiligingsinstellingen."
+title = "Wachtwoorden en beveiliging"
+update = "Wachtwoord bijwerken"
 
 [config.account.upgrade]
 description = "Koppel uw account om uw geschiedenis te behouden en toegang te krijgen tot meer functies!"
@@ -2595,6 +2644,7 @@ upgradeButton = "Account opwaarderen"
 [config.apiKeys]
 chartAriaLabel = "Creditsgebruik: inbegrepen {{includedUsed}} van {{includedTotal}}, aangekocht {{purchasedUsed}} van {{purchasedTotal}}"
 copyKeyAriaLabel = "API-sleutel kopiëren"
+creditsRemaining = "Resterende credits"
 description = "Uw API-sleutel voor toegang tot Stirling's suite van PDF-tools. Kopieer hem naar uw project of vernieuw om een nieuwe te genereren."
 docsDescription = "Leer meer over integreren met Stirling PDF:"
 docsLink = "API-documentatie"
@@ -2643,6 +2693,14 @@ basic = "Basisconfiguratie"
 integration = "Integratieconfiguratie"
 security = "Beveiligingsconfiguratie"
 system = "Systeemconfiguratie"
+
+[connectionMode.status]
+localOffline = "Offline-modus actief"
+localOnline = "Offline-modus actief"
+saas = "Verbonden met Stirling Cloud"
+selfhostedChecking = "Verbonden met zelfgehoste server (controleren...)"
+selfhostedOffline = "Zelfgehoste server onbereikbaar"
+selfhostedOnline = "Verbonden met zelfgehoste server"
 
 [convert]
 autoRotate = "Automatisch roteren"
@@ -2728,6 +2786,15 @@ webOptions = "Web-naar-PDF-opties"
 wordDoc = "Word-document"
 wordDocExt = "Word-document (.docx)"
 zoomLevel = "Zoomniveau"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "eBook → PDF"
+emlToPdf = "E-mail → PDF"
+fileToPdf = "Office/Document → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "eBook-naar-PDF-opties"
@@ -3718,6 +3785,11 @@ desc = "Voegt handtekening toe aan PDF via tekenen, tekst of afbeelding"
 tags = "handtekening,ondertekenen"
 title = "Ondertekenen"
 
+[home.timestampPdf]
+desc = "Voeg een RFC 3161-documenttijdstempel toe om te bewijzen wanneer je PDF bestond"
+tags = "tijdstempel,RFC 3161,TSA,time stamp authority,documenttijdstempel,bestaansbewijs,tijdstempeltoken,vertrouwde tijdstempel,tijdstempel ondertekenen,notariseren"
+title = "PDF tijdstempelen"
+
 [home.split]
 desc = "Splits PDF's in meerdere documenten"
 tags = "splitsen,scheiden,opdelen"
@@ -3854,6 +3926,7 @@ version = "Versie"
 accountCreatedSuccess = "Account succesvol aangemaakt! U kunt nu inloggen."
 alreadyLoggedIn = "U zit reeds ingelogd bij"
 alreadyLoggedIn2 = "apparaten. U moet u a.u.b. uitloggen van de apparaten en opnieuw proberen."
+backToSignIn = "Terug naar inloggen"
 cancel = "Annuleren"
 changePasswordWarning = "Wijzig uw wachtwoord nadat u voor het eerst bent ingelogd"
 credentialsUpdated = "Uw inloggegevens zijn bijgewerkt. Log opnieuw in."
@@ -3895,16 +3968,21 @@ or = "Of"
 password = "Wachtwoord"
 passwordChangedSuccess = "Wachtwoord succesvol gewijzigd! Log in met uw nieuwe wachtwoord."
 passwordResetSent = "Link voor wachtwoordherstel verzonden naar {{email}}! Controleer uw e-mail en volg de instructies."
+passwordUpdatedSuccess = "Je wachtwoord is succesvol bijgewerkt."
 pleaseEnterBoth = "Voer zowel e-mail als wachtwoord in"
 pleaseEnterEmail = "Voer uw e-mailadres in"
 relyingPartyRegistrationNotFound = "Geen relying party-registratie gevonden"
 rememberme = "Onthoud mij"
+resetHelp = "Voer je e-mailadres in om een beveiligde link te ontvangen om je wachtwoord te resetten. Als de link is verlopen, vraag dan een nieuwe aan."
+resetYourPassword = "Reset je wachtwoord"
 saml2RequiresLicense = "SAML-inloggen vereist een betaalde licentie (Server of Enterprise). Neem contact op met de beheerder om uw abonnement te upgraden."
 sending = "Verzenden..."
 sendMagicLink = "Magic link verzenden"
+sendResetLink = "Resetlink verzenden"
 sessionExpired = "Uw sessie is verlopen. Log alstublieft opnieuw in."
 signin = "Inloggen"
 signInAnonymously = "Als gast aanmelden"
+subtitle = "Log opnieuw in bij Stirling PDF"
 signingIn = "Inloggen..."
 signinTitle = "Gelieve in te loggen"
 signInWith = "Inloggen met"
@@ -3913,6 +3991,7 @@ ssoSignIn = "Inloggen via Single Sign-on"
 title = "Inloggen"
 toManySessions = "U heeft te veel actieve sessies"
 unexpectedError = "Onverwachte fout: {{message}}"
+updatePassword = "Wachtwoord bijwerken"
 useEmailInstead = "Inloggen met e-mail"
 useMagicLink = "Gebruik in plaats daarvan een magic link"
 userIsDisabled = "De gebruiker is gedesactiveerd, inloggen is momenteel geblokkeerd voor deze gebruikersnaam. Neem contact op met de beheerder."
@@ -4222,6 +4301,15 @@ viewSwitcher = "Gebruik deze bedieningselementen om te kiezen hoe u uw PDF's wil
 workbench = "Dit is de <strong>Werkbank</strong> - het hoofdgebied waar u uw PDF's bekijkt en bewerkt."
 wrapUp = "U bent er klaar voor! U kent de belangrijkste onderdelen van de app en hoe u ze gebruikt. Klik wanneer u wilt op de knop <strong>Help</strong> om deze rondleiding opnieuw te zien."
 
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "Na afloop van je proefperiode ga je door met ons gratis niveau. Voeg een betaalmethode toe om Pro-toegang te behouden."
+afterTrialWithPayment = "Je Pro-abonnement start automatisch wanneer de proefperiode eindigt."
+body = "Je hebt tijdens je proefperiode volledige toegang tot de Pro-functies van Stirling PDF. Geniet van onbeperkte conversies, grotere bestandsgroottes en prioriteitsverwerking."
+daysRemaining = "Nog {{days}} dagen resterend"
+daysRemainingSingular = "Nog {{days}} dag resterend"
+title = "Je 30-daagse Pro-proefperiode"
+trialEnds = "Proefperiode eindigt op {{date}}"
+
 [onboarding.buttons]
 back = "Terug"
 download = "Downloaden →"
@@ -4392,6 +4480,31 @@ loading = "Bijlagen laden..."
 empty = "Geen bijlagen in dit document"
 noMatch = "Geen bijlagen komen overeen met uw zoekopdracht"
 
+[viewer.comments]
+title = "Opmerkingen"
+hint = "Plaats opmerkingen met de tools Opmerking, Tekst invoegen of Tekst vervangen. Ze verschijnen hier per pagina."
+placeholder = "Typ je opmerking..."
+pageLabel = "Pagina {{page}}"
+oneComment = "1 opmerking"
+nComments = "{{count}} opmerkingen"
+addCommentPlaceholder = "Opmerking toevoegen..."
+addLink = "Link toevoegen"
+goToLink = "Naar link gaan"
+addComment = "Opmerking toevoegen"
+viewComment = "Opmerking bekijken"
+addReplyPlaceholder = "Antwoord toevoegen..."
+saveReply = "Antwoord opslaan"
+send = "Verzenden"
+moreActions = "Meer acties"
+typeComment = "Opmerking"
+typeInsertText = "Tekst invoegen"
+typeReplaceText = "Tekst vervangen"
+locateAnnotation = "Zoeken in document"
+deleteTitle = "Annotatie uit opmerkingen verwijderen?"
+deleteDescription = "Deze annotatie heeft een opmerking gekoppeld. Je kunt alleen de opmerking uit de zijbalk verwijderen en de annotatie behouden, of alles verwijderen."
+removeCommentOnly = "Alleen opmerking verwijderen"
+deleteAnnotationAndComment = "Annotatie en opmerking verwijderen"
+
 [viewer.formBar]
 title = "Formuliervelden"
 unsavedBadge = "Niet opgeslagen"
@@ -4425,14 +4538,20 @@ rotateLeft = "Linksom draaien"
 rotateRight = "Rechtsom draaien"
 toggleSidebar = "Zijbalk tonen/verbergen"
 toggleBookmarks = "Bladwijzers tonen/verbergen"
+toggleComments = "Opmerkingen"
 print = "PDF afdrukken"
 ruler = "Liniaal / Meten"
+readAloud = "Voorlezen"
+readAloudSpeed = "Snelheid"
+readAloudLanguage = "Taal"
+selectLanguage = "Selecteer taal"
 draw = "Draw"
 redact = "Redact"
 exitRedaction = "Exit Redaction Mode"
 save = "Save"
 downloadAll = "Alles downloaden"
 saveAll = "Alles opslaan"
+saveAs = "Opslaan als"
 
 [textAlign]
 left = "Links"
@@ -4447,21 +4566,132 @@ title = "Pagina's extraheren"
 
 [pageLayout]
 addBorder = "Randen toevoegen"
+borderWidth = "Randdikte"
+bottom = "Ondermarge"
+cols = "Kolommen"
 header = "Meerdere pagina indeling"
+innerMargin = "Binnenmarge"
+left = "Linkermarge"
 pagesPerSheet = "Pagina's per vel:"
+right = "Rechtermarge"
+rows = "Rijen"
 submit = "Indienen"
 tags = "samenvoegen,composiet,enkel-zicht,organiseren"
 title = "Meerdere pagina indeling"
+top = "Bovenmarge"
+
+[pageLayout.mode]
+default = "Standaard"
+custom = "Aangepast"
+label = "Modus:"
+
+[pageLayout.arrangement]
+byColumns = "Op kolommen"
+byRows = "Op rijen"
+label = "Paginavolgorde:"
 
 [pageLayout.desc]
 16 = "Plaats 16 pagina's op één vel (4 × 4 raster)."
 2 = "Plaats 2 pagina's naast elkaar op één vel."
-3 = "Plaats 3 pagina's op één rij op één vel."
 4 = "Plaats 4 pagina's op één vel (2 × 2 raster)."
 9 = "Plaats 9 pagina's op één vel (3 × 3 raster)."
 
 [pageLayout.error]
 failed = "Er is een fout opgetreden bij het maken van de multi-pagina-indeling."
+outerVerticalMarginsTooLarge = "Boven-/ondermarges zijn te groot voor dit paginaformaat."
+outerHorizontalMarginsTooLarge = "Links-/rechtermarges zijn te groot voor dit paginaformaat."
+innerMarginTooLarge = "Binnenmarge is te groot voor de geselecteerde lay-out."
+
+[pageLayout.orientation]
+landscape = "Liggend"
+portrait = "Staand"
+label = "Oriëntatie:"
+
+[pageLayout.readingDirection]
+ltr = "Links naar rechts"
+rtl = "Rechts naar links"
+label = "Leesrichting:"
+
+[pageLayout.tooltip.header]
+title = "Handleiding pagina-indeling"
+
+[pageLayout.tooltip.overview]
+title = "Wat is pagina-indeling?"
+text = "Plaats meerdere pagina's op één vel voor hand-outs of om papier te besparen."
+
+[pageLayout.tooltip.mode]
+title = "Modus"
+text = "Kies hoe het raster wordt geconfigureerd:"
+bullet1 = "Standaard: Kies een voorinstelling en het raster wordt automatisch berekend."
+bullet2 = "Aangepast: Stel rijen en kolommen handmatig in."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Pagina's per vel (standaardmodus)"
+text = "Kies hoeveel pagina's per vel (bijv. 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Rijen en kolommen (aangepaste modus)"
+text = "Stel de exacte rasterafmetingen in. Totaal pagina's per vel = rijen × kolommen."
+
+[pageLayout.tooltip.orientation]
+title = "Oriëntatie"
+text = "Stelt de oriëntatie van het uitvoervel in:"
+bullet1 = "Staand: Hoger dan breed."
+bullet2 = "Liggend: Breder dan hoog."
+
+[pageLayout.tooltip.arrangement]
+title = "Paginavolgorde"
+text = "Bepaalt in welke volgorde pagina's het raster vullen:"
+bullet1 = "Op rijen: Vul rij voor rij (links-naar-rechts of rechts-naar-links)."
+bullet2 = "Op kolommen: Vul van boven naar beneden, kolom per kolom."
+
+[pageLayout.tooltip.readingDirection]
+title = "Leesrichting"
+text = "Bepaalt de horizontale volgorde van pagina's:"
+bullet1 = "LTR: Links naar rechts."
+bullet2 = "RTL: Rechts naar links."
+
+[pageLayout.tooltip.addBorder]
+title = "Randen toevoegen"
+text = "Tekent randlijnen rond elke paginacel voor snijhulplijnen of visuele scheiding."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Marges en randen"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Marges"
+text = "Gebruik boven-, onder-, linker- en rechtermarges om de ruimte rond het volledige uitvoervel te bepalen."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Binnenmarge"
+text = "Binnenmarge voegt ruimte toe tussen cellen in het paginaraster voor betere scheiding en leesbaarheid."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Randen toevoegen"
+text = "Schakel randen in om lijnen rond elke geplaatste pagina te tekenen. Dit kan helpen bij visuele scheiding of bij het afsnijden."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Randdikte"
+text = "Randdikte wordt alleen toegepast wanneer randen zijn ingeschakeld. Hogere waarden geven dikkere lijnen."
+
+[pageLayout.advanced.tooltip.header]
+title = "Geavanceerde indelingsopties"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Oriëntatie"
+text = "Kies de richting van het uiteindelijke vel. Staand werkt beter voor hoge inhoud, terwijl liggend breder opgezette lay-outs beter past."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Paginavolgorde"
+text = "Bepaalt of pagina's het raster rij-voor-rij of kolom-voor-kolom vullen."
+bullet1 = "Op rijen: Elke rij eerst vullen."
+bullet2 = "Op kolommen: Elke kolom eerst vullen."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Leesrichting"
+text = "Stelt de horizontale volgorde in het raster in, handig voor links-naar-rechts en rechts-naar-links documentconventies."
+bullet1 = "LTR: Links-naar-rechts volgorde."
+bullet2 = "RTL: Rechts-naar-links volgorde."
 
 [pageRemover]
 header = "PDF pagina verwijderaar"
@@ -4977,7 +5207,10 @@ perMonth = "/maand"
 perSeat = "/plaats"
 popular = "Populair"
 selectPlan = "Abonnement selecteren"
+selectCredits = "Selecteer het aantal credits"
 showComparison = "Alle functies vergelijken"
+purchase = "Kopen"
+totalCost = "Totale kosten"
 upgrade = "Upgraden"
 withServer = "+ Server-abonnement"
 
@@ -5068,6 +5301,30 @@ successMessage = "Uw licentie is met succes geactiveerd. U kunt dit venster nu s
 [plan.team]
 name = "Team"
 siteLicense = "Site-licentie"
+
+[plan.api]
+large = "5,000 Credits"
+medium = "1,000 Credits"
+small = "500 Credits"
+xsmall = "100 Credits"
+
+[plan.apiPackages]
+subtitle = "Koop API-credits voor je applicaties"
+title = "API-creditpakketten"
+
+[plan.trial]
+badge = "Proef"
+continueWithFree = "Doorgaan met gratis niveau"
+daysRemaining = "Je proefperiode eindigt over {{days}} dagen"
+endDate = "Verloopt: {{date}}"
+expired = "Je proefperiode is verlopen"
+expiredMessage = "Je 30-daagse Pro-proefperiode is verlopen. Neem een Pro-abonnement om premiumfuncties te blijven gebruiken of ga door met ons gratis niveau."
+freeTierLimitations = "Gratis niveau bevat basis-PDF-tools met gebruikslimieten."
+message = ""
+subscribe = "Abonneer je op Pro"
+subscribeToPro = "Abonneer je op Pro"
+subscriptionScheduled = "Abonnement gepland - start op {{date}}"
+title = "Gratis proefperiode actief"
 
 [credits]
 enableOverageBilling = "Overschrijdingsfacturering inschakelen"
@@ -5631,6 +5888,32 @@ text = "Draai uw PDF-pagina's met de klok mee of tegen de klok in in stappen van
 [rotate.tooltip.header]
 title = "Overzicht rotatie-instellingen"
 
+[timestampPdf]
+completed = "PDF succesvol van tijdstempel voorzien"
+desc = "Voeg een RFC 3161-documenttijdstempel toe aan je PDF met een vertrouwde Time Stamp Authority (TSA)-server."
+filenamePrefix = "tijdgestempeld"
+results = "Tijdstempelresultaten"
+submit = "Tijdstempel toepassen"
+title = "PDF tijdstempelen"
+
+[timestampPdf.error]
+failed = "Er is een fout opgetreden bij het tijdstempelen van de PDF."
+generic = "Tijdstempelen mislukt"
+
+[timestampPdf.files]
+placeholder = "Selecteer een PDF-bestand in de hoofdweergave om te beginnen"
+
+[timestampPdf.options]
+note = "Alleen een SHA-256-hash van je document wordt naar de TSA-server gestuurd; het PDF-bestand zelf wordt nooit naar de TSA-server verzonden."
+title = "Tijdstempelserver (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Kies een vertrouwde Time Stamp Authority"
+label = "Selecteer een TSA-server"
+
+[timestampPdf.steps]
+settings = "Instellingen"
+
 [sanitize]
 completed = "Opschonen succesvol voltooid"
 desc = "Verwijder mogelijk schadelijke elementen uit PDF-bestanden."
@@ -5755,6 +6038,14 @@ placeholder = "Voer zoekterm in..."
 searching = "Zoeken..."
 title = "PDF doorzoeken"
 
+[selfHosted.offline]
+hideTools = "Niet-beschikbare tools verbergen ▴"
+messageNoFallback = "Tools zijn niet beschikbaar totdat je server weer online is."
+messageWithFallback = "Sommige tools vereisen een serververbinding."
+showTools = "Niet-beschikbare tools bekijken ▾"
+title = "Je Stirling-PDF-server is onbereikbaar"
+toolNotAvailableLocally = "Je Stirling-PDF-server is offline en \"{{endpoint}}\" is niet beschikbaar op de lokale backend."
+
 [session]
 expired = "Uw sessie is verlopen. Voer de pagina opnieuw in en probeer het opnieuw."
 refreshPage = "Pagina vernieuwen"
@@ -5768,12 +6059,15 @@ systemSettings = "Systeeminstellingen"
 title = "Configuratie"
 
 [settings.connection]
+localDescription = "Je gebruikt de lokale backend zonder een account. Sommige tools die cloudverwerking of een zelfgehoste server vereisen, zijn niet beschikbaar."
 logout = "Uitloggen"
 server = "Server"
+signIn = "Inloggen"
 title = "Verbindingsmodus"
 user = "Ingelogd als"
 
 [settings.connection.mode]
+local = "Alleen lokaal"
 saas = "Stirling Cloud"
 selfhosted = "Self-hosted"
 
@@ -5931,6 +6225,9 @@ title = "Beleid & Privacy"
 [settings.preferences]
 title = "Voorkeuren"
 
+[settings.search]
+placeholder = "Instellingen doorzoeken..."
+
 [settings.security]
 description = "Werk uw wachtwoord bij om uw account veilig te houden."
 title = "Beveiliging"
@@ -5968,6 +6265,18 @@ title = "Werkruimte"
 [settings.team]
 title = "Team"
 
+[localMode]
+toolUnavailable = "Deze tool vereist een account. Log in bij Stirling Cloud of verbind met een zelfgehoste server om deze te gebruiken."
+
+[localMode.banner]
+message = "Log in om alle tools te ontgrendelen."
+signIn = "Inloggen"
+title = "Lokaal actief"
+
+[localMode.toolPicker]
+message = "Log in om alle tools te ontgrendelen."
+signIn = "Inloggen"
+
 [setup]
 description = "Begin door te kiezen hoe u Stirling PDF wilt gebruiken"
 welcome = "Welkom bij Stirling PDF"
@@ -5975,6 +6284,7 @@ welcome = "Welkom bij Stirling PDF"
 [setup.login]
 connectingTo = "Verbinden met:"
 hideInstructions = "Instructies verbergen"
+skipSignIn = "Doorgaan zonder in te loggen"
 instructions = "Om inloggen op uw Stirling PDF-server in te schakelen:"
 instructionsEnvVar = "Stel de omgevingsvariabele in:"
 instructionsOrYml = "Of in settings.yml:"
@@ -6022,7 +6332,14 @@ title = "Inloggen bij Stirling"
 [setup.selfhosted]
 link = "of maak verbinding met een zelfgehost account"
 subtitle = "Vul uw servergegevens in"
+switchToLocal = "In plaats daarvan lokale tools gebruiken"
 title = "Inloggen bij server"
+
+[setup.selfhosted.unreachable]
+continueOffline = "In plaats daarvan lokale tools gebruiken"
+message = "Kon {{url}} niet bereiken. Controleer of de server actief en toegankelijk is."
+retry = "Opnieuw proberen"
+title = "Kan geen verbinding maken met server"
 
 [setup.server]
 subtitle = "Vul de URL van uw self-hosted server in"
@@ -6032,6 +6349,7 @@ useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "Ophalen van serverconfiguratie mislukt. Controleer de URL en probeer het opnieuw."
+configFetchError = "Kan serverconfiguratie niet ophalen: {{error}}"
 emptyUrl = "Voer een server-URL in"
 invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
 testFailed = "Verbindingstest mislukt"
@@ -6557,6 +6875,7 @@ favorites = "Favorieten"
 heading = "Alle tools (volledig scherm)"
 noResults = "Pas uw zoekopdracht aan of schakel beschrijvingen om te vinden wat u nodig hebt."
 recommended = "Aanbevolen"
+selfHostedOffline = "Vereist je Stirling-PDF-server (momenteel offline):"
 showDetails = "Details weergeven"
 unavailable = "Uitgeschakeld door serverbeheerder:"
 unavailableDependency = "Niet beschikbaar - vereiste tool ontbreekt op server:"
@@ -6601,6 +6920,12 @@ pageFormatting = "Pagina-opmaak"
 removal = "Verwijdering"
 signing = "Ondertekenen"
 verification = "Verificatie"
+
+[tool]
+endpointUnavailable = "Deze tool is niet beschikbaar op je server."
+endpointUnavailableClickable = "Niet beschikbaar in deze modus. Klik om in te loggen."
+invalidParams = "Vul de vereiste instellingen in."
+noFiles = "Voeg een bestand toe om te beginnen."
 
 [tools]
 noSearchResults = "Geen tools gevonden"

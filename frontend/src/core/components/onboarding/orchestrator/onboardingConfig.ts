@@ -78,7 +78,8 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: 'welcome',
     type: 'modal-slide',
     slideId: 'welcome',
-    condition: () => true,
+    // Desktop has its own onboarding modal (DesktopOnboardingModal)
+    condition: (ctx) => !ctx.isDesktopApp,
   },
   {
     id: 'admin-overview',
@@ -107,7 +108,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: 'tour-overview',
     type: 'modal-slide',
     slideId: 'tour-overview',
-    condition: (ctx) => !ctx.effectiveIsAdmin && ctx.tourType !== 'admin',
+    condition: (ctx) => !ctx.effectiveIsAdmin && ctx.tourType !== 'admin' && !ctx.isDesktopApp,
   },
   {
     id: 'server-license',
