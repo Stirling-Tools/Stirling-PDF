@@ -32,7 +32,7 @@ describe('RedactSingleStepSettings', () => {
     );
 
     expect(screen.getByText('Mode')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Automatic' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Search & Redact' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Manual' })).toBeInTheDocument();
   });
 
@@ -124,7 +124,7 @@ describe('RedactSingleStepSettings', () => {
     );
 
     // Mode selector buttons should be disabled
-    expect(screen.getByRole('button', { name: 'Automatic' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Search & Redact' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Manual' })).toBeDisabled();
 
     // Automatic settings controls should be disabled
