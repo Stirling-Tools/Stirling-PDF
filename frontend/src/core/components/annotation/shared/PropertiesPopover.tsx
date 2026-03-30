@@ -1,17 +1,20 @@
 import { ActionIcon, Tooltip, Popover, Stack, Slider, Text, Group, Button } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
+import type { TrackedAnnotation } from '@embedpdf/plugin-annotation';
+import type { PdfAnnotationObject } from '@embedpdf/models';
+import type { AnnotationPatch } from '@app/components/viewer/viewerTypes';
 import TuneIcon from '@mui/icons-material/Tune';
 import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
 import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter';
 import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight';
 
-type AnnotationType = 'text' | 'note' | 'shape';
+export type PropertiesAnnotationType = 'text' | 'note' | 'shape';
 
 interface PropertiesPopoverProps {
-  annotationType: AnnotationType;
-  annotation: any;
-  onUpdate: (patch: Record<string, any>) => void;
+  annotationType: PropertiesAnnotationType;
+  annotation: TrackedAnnotation<PdfAnnotationObject> | undefined;
+  onUpdate: (patch: AnnotationPatch) => void;
   disabled?: boolean;
 }
 
@@ -24,7 +27,15 @@ export function PropertiesPopover({
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
 
-  const obj = annotation?.object;
+  interface AnnotationObjectProps {
+    fontSize?: number;
+    textAlign?: number | string;
+    opacity?: number;
+    borderWidth?: number;
+    strokeWidth?: number;
+  }
+
+  const obj = annotation?.object as (PdfAnnotationObject & AnnotationObjectProps) | undefined;
 
   // Get current values
   const fontSize = obj?.fontSize ?? 14;

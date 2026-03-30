@@ -19,6 +19,14 @@ This file provides guidance to AI Agents when working with code in this reposito
 ### Security Mode Development
 Set `DOCKER_ENABLE_SECURITY=true` environment variable to enable security features during development. This is required for testing the full version locally.
 
+### Python Development
+Development for the AI engine happens in the `engine/` folder. The frontend calls the Python via Java as a proxy.
+
+- Follow the engine-specific guidance in [engine/AGENTS.md](engine/AGENTS.md) for Python architecture, code style, and AI usage.
+- Use Makefile commands for Python work:
+  - From `engine/`: `make check` to lint, type-check, test, etc. and `make fix` to fix easily fixable linting and formatting issues.
+- The project structure is defined in `engine/pyproject.toml`. Any new dependencies should be listed there, followed by running `make install`.
+
 ### Frontend Development
 - **Frontend dev server**: `cd frontend && npm run dev` (requires backend on localhost:8080)
 - **Tech Stack**: Vite + React + TypeScript + Mantine UI + TailwindCSS
@@ -42,6 +50,8 @@ Set `DOCKER_ENABLE_SECURITY=true` environment variable to enable security featur
 
 #### Import Paths - CRITICAL
 **ALWAYS use `@app/*` for imports.** Do not use `@core/*` or `@proprietary/*` unless explicitly wrapping/extending a lower layer implementation.
+
+For a broader explanation of the frontend layering and override architecture, see [frontend/DeveloperGuide.md](frontend/DeveloperGuide.md).
 
 ```typescript
 // ✅ CORRECT - Use @app/* for all imports
@@ -82,7 +92,7 @@ export function RightRailFooterExtensions(_props: RightRailFooterExtensionsProps
 }
 ```
 
-```typescript
+```tsx
 // desktop/components/rightRail/RightRailFooterExtensions.tsx (real implementation)
 import { Box } from '@mantine/core';
 import { BackendHealthIndicator } from '@app/components/BackendHealthIndicator';
@@ -100,7 +110,7 @@ export function RightRailFooterExtensions({ className }: RightRailFooterExtensio
 }
 ```
 
-```typescript
+```tsx
 // core/components/shared/RightRail.tsx (usage - works in ALL builds)
 import { RightRailFooterExtensions } from '@app/components/rightRail/RightRailFooterExtensions';
 

@@ -9,6 +9,9 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import LastPageIcon from '@mui/icons-material/LastPage';
 import DescriptionIcon from '@mui/icons-material/Description';
 import ViewWeekIcon from '@mui/icons-material/ViewWeek';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import WbSunnyIcon from '@mui/icons-material/WbSunny';
+import WbTwilightIcon from '@mui/icons-material/WbTwilight';
 
 interface PdfViewerToolbarProps {
   // Page navigation props (placeholders for now)
@@ -33,6 +36,8 @@ export function PdfViewerToolbar({
     registerImmediateZoomUpdate,
     registerImmediateScrollUpdate,
     registerImmediateSpreadUpdate,
+    pdfRenderMode,
+    cyclePdfRenderMode,
   } = useViewer();
 
   const scrollState = getScrollState();
@@ -97,11 +102,13 @@ export function PdfViewerToolbar({
   };
 
   const handlePreviousPage = () => {
-    scrollActions.scrollToPreviousPage();
+    const { currentPage: cur } = getScrollState();
+    if (cur > 1) scrollActions.scrollToPage(cur - 1);
   };
 
   const handleNextPage = () => {
-    scrollActions.scrollToNextPage();
+    const { currentPage: cur, totalPages: tot } = getScrollState();
+    if (cur < tot) scrollActions.scrollToPage(cur + 1);
   };
 
   const handleLastPage = () => {
@@ -124,7 +131,7 @@ export function PdfViewerToolbar({
           borderBottomRightRadius: 0,
           boxShadow: "0 -2px 8px rgba(0,0,0,0.04)",
           pointerEvents: "auto",
-          minWidth: '26.5rem',
+          minWidth: '30rem',
         }}
       >
         {/* First Page Button */}
@@ -232,6 +239,39 @@ export function PdfViewerToolbar({
           </Button>
         </Tooltip>
 
+        {/* PDF Render Mode Toggle */}
+        <Tooltip
+          content={
+            pdfRenderMode === 'normal'
+              ? t("viewer.enableDarkFilter", "Enable Dark Filter")
+              : pdfRenderMode === 'dark'
+                ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
+                : t("viewer.disableColorFilter", "Disable Color Filter")
+          }
+          position="top"
+          arrow
+        >
+          <Button
+            variant={pdfRenderMode !== 'normal' ? "filled" : "light"}
+            color="blue"
+            size="md"
+            radius="xl"
+            onClick={cyclePdfRenderMode}
+            style={{ minWidth: '2.5rem' }}
+            aria-label={
+              pdfRenderMode === 'normal'
+                ? t("viewer.enableDarkFilter", "Enable Dark Filter")
+                : pdfRenderMode === 'dark'
+                  ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
+                  : t("viewer.disableColorFilter", "Disable Color Filter")
+            }
+          >
+            {pdfRenderMode === 'normal' && <DarkModeIcon fontSize="small" />}
+            {pdfRenderMode === 'dark' && <WbTwilightIcon fontSize="small" />}
+            {pdfRenderMode === 'sepia' && <WbSunnyIcon fontSize="small" />}
+          </Button>
+        </Tooltip>
+
         {/* Zoom Controls */}
         <Group gap={4} align="center" style={{ marginLeft: 16 }}>
           <Button
@@ -259,6 +299,7 @@ export function PdfViewerToolbar({
           >
             +
           </Button>
+
         </Group>
       </Paper>
   );
