@@ -13,6 +13,11 @@ const nodeGlobs = [
   '*.config.{js,ts,mjs}',
 ];
 
+const baseRestrictedImportPatterns = [
+  { regex: '^\\.', message: "Use @app/* imports instead of relative imports." },
+  { regex: '^src/', message: "Use @app/* imports instead of absolute src/ imports." },
+];
+
 export default defineConfig(
   {
     // Everything that contains 3rd party code that we don't want to lint
@@ -30,10 +35,7 @@ export default defineConfig(
       'no-restricted-imports': [
         'error',
         {
-          patterns: [
-            ".*", // Disallow any relative imports (they should be '@app/x/y/z' or similar)
-            "src/*", // Disallow any absolute imports (they should be '@app/x/y/z' or similar)
-          ],
+          patterns: baseRestrictedImportPatterns,
         },
       ],
       '@typescript-eslint/no-empty-object-type': [
@@ -55,6 +57,26 @@ export default defineConfig(
           'destructuredArrayIgnorePattern': '^_', // Allow unused variables beginning with an underscore
           'varsIgnorePattern': '^_', // Allow unused variables beginning with an underscore
           'ignoreRestSiblings': true, // Allow unused variables when removing attributes from objects (otherwise this requires explicit renaming like `({ x: _x, ...y }) => y`, which is clunky)
+        },
+      ],
+    },
+  },
+  // Desktop-only packages must not be imported from core or proprietary code.
+  // Use the stub/shadow pattern instead: define a stub in src/core/ and override in src/desktop/.
+  {
+    files: srcGlobs,
+    ignores: ['src/desktop/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            ...baseRestrictedImportPatterns,
+            {
+              regex: '^@tauri-apps/',
+              message: "Tauri APIs are desktop-only. Review frontend/DeveloperGuide.md for structure advice.",
+            },
+          ],
         },
       ],
     },
