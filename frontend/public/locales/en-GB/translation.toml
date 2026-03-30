@@ -6801,6 +6801,7 @@ title = "Sign in to Stirling"
 [setup.selfhosted]
 link = "or connect to a self-hosted account"
 subtitle = "Enter your server credentials"
+changeServerLocked = "Your organisation has restricted this app to a specific server"
 switchToLocal = "Use local tools instead"
 title = "Sign in to Server"
 

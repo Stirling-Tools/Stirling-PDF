@@ -28,19 +28,6 @@ function getExampleKeys(exampleFile: string): string[] {
   return Object.keys(parse(readFileSync(examplePath, 'utf-8')));
 }
 
-function getOptionalKeys(exampleFile: string): Set<string> {
-  const examplePath = join(root, exampleFile);
-  if (!existsSync(examplePath)) return new Set();
-  const optional = new Set<string>();
-  for (const line of readFileSync(examplePath, 'utf-8').split('\n')) {
-    if (line.includes('# optional')) {
-      const key = line.split('=')[0].trim();
-      if (key && !key.startsWith('#')) optional.add(key);
-    }
-  }
-  return optional;
-}
-
 function ensureEnvFile(envFile: string, exampleFile: string): boolean {
   const envPath = join(root, envFile);
   const examplePath = join(root, exampleFile);
@@ -57,8 +44,7 @@ function ensureEnvFile(envFile: string, exampleFile: string): boolean {
 
   config({ path: envPath });
 
-  const optional = getOptionalKeys(exampleFile);
-  const missing = getExampleKeys(exampleFile).filter(k => !(k in process.env) && !optional.has(k));
+  const missing = getExampleKeys(exampleFile).filter(k => !(k in process.env));
 
   if (missing.length > 0) {
     console.error(
