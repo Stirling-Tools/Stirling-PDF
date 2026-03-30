@@ -39,13 +39,12 @@ Development for the AI engine happens in the `engine/` folder. The frontend call
   - **Development**: `npm run tauri-dev` for desktop dev mode
 
 #### Environment Variables
-- All `VITE_*` variables must be declared in the appropriate example file:
-  - `frontend/config/.env.example` — core, proprietary, and shared vars
-  - `frontend/config/.env.saas.example` — SaaS-only vars
-  - `frontend/config/.env.desktop.example` — desktop (Tauri)-only vars
-- Never use `|| 'hardcoded-fallback'` inline — put defaults in the example files
-- `npm run prep` / `prep:saas` / `prep:desktop` auto-create the env files from examples on first run, and error if any required keys are missing
-- These prep scripts run automatically at the start of all `dev*`, `build*`, and `tauri*` commands
+- Committed `.env` files contain defaults; local overrides go in `.env.local` / `.env.*.local` (gitignored):
+  - `frontend/.env` — core, proprietary, and shared vars
+  - `frontend/.env.saas` — SaaS-only vars
+  - `frontend/.env.desktop` — desktop (Tauri)-only vars
+- All `VITE_*` variables must be declared in one of these committed `.env` files
+- Never use `|| 'hardcoded-fallback'` inline — put defaults in the `.env` files
 - See `frontend/README.md#environment-variables` for full documentation
 
 #### Import Paths - CRITICAL

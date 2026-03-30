@@ -1,11 +1,13 @@
 # Frontend
 ## Environment Variables
 
-The frontend requires environment variables to be set before running. `npm run dev` will create a `.env` file for you automatically on first run using the defaults from `config/.env.example` - for most development work this is all you need.
+The frontend uses Vite's built-in `.env` file convention.
+Committed `.env` files contain sensible defaults where possible, along with documentation for the variable.
+To override any value locally, create the corresponding `.local` file (gitignored):
 
-If you need to configure specific services (Google Drive, Supabase, Stripe, PostHog), edit your local `.env` file. The values in `config/.env.example` show what each variable does and provides sensible defaults where applicable.
-
-For desktop (Tauri) development, `npm run tauri-dev` will additionally create a `.env.desktop` file from `config/.env.desktop.example`.
+- **`.env.local`** — local overrides for base variables
+- **`.env.saas.local`** — local overrides for SaaS variables
+- **`.env.desktop.local`** — local overrides for desktop variables
 
 ## Docker Setup
 
@@ -127,8 +129,8 @@ This will run the gradle runboot command and the tauri dev command concurrently,
 
 > [!NOTE]
 >
-> Desktop builds require additional environment variables. See [Environment Variables](#environment-variables)
-> above - `npm run tauri-dev` will set these up automatically from `config/.env.desktop.example` on first run.
+> Desktop builds use additional environment variables from `.env.desktop`. See [Environment Variables](#environment-variables)
+> above. Override locally with `.env.desktop.local`.
 
 ### Build
 To build a deployment of the Tauri app. Use this command in the `frontend` folder:
@@ -141,5 +143,5 @@ This will bundle the backend and frontend into one executable for each target. T
 
 > [!NOTE]
 >
-> Desktop builds require additional environment variables. See [Environment Variables](#environment-variables)
-> above - `npm run tauri-build` will set these up automatically from `config/.env.desktop.example` on first run.
+> Desktop builds use additional environment variables from `.env.desktop`. See [Environment Variables](#environment-variables)
+> above. Override locally with `.env.desktop.local`.

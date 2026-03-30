@@ -44,15 +44,15 @@ function findViteEnvVars(srcDir: string): Set<string> {
 }
 
 describe('env vars', () => {
-  it('every VITE_ var used in source is present in an example env file', () => {
-    const baseEnv = readFileSync(join(frontendRoot, 'config/.env.example'), 'utf-8');
-    const desktopEnv = readFileSync(join(frontendRoot, 'config/.env.desktop.example'), 'utf-8');
-    const saasEnv = readFileSync(join(frontendRoot, 'config/.env.saas.example'), 'utf-8');
+  it('every VITE_ var used in source is present in a committed .env file', () => {
+    const baseEnv = readFileSync(join(frontendRoot, '.env'), 'utf-8');
+    const desktopEnv = readFileSync(join(frontendRoot, '.env.desktop'), 'utf-8');
+    const saasEnv = readFileSync(join(frontendRoot, '.env.saas'), 'utf-8');
 
-    const exampleKeys = new Set([...parseEnvKeys(baseEnv), ...parseEnvKeys(desktopEnv), ...parseEnvKeys(saasEnv)]);
+    const declaredKeys = new Set([...parseEnvKeys(baseEnv), ...parseEnvKeys(desktopEnv), ...parseEnvKeys(saasEnv)]);
     const sourceVars = findViteEnvVars(join(frontendRoot, 'src'));
 
-    const missing = [...sourceVars].filter(v => !exampleKeys.has(v));
-    expect(missing, `Missing from 'frontend/config/.env.example' files: ${missing.join(', ')}`).toHaveLength(0);
+    const missing = [...sourceVars].filter(v => !declaredKeys.has(v));
+    expect(missing, `Missing from 'frontend/.env' files: ${missing.join(', ')}`).toHaveLength(0);
   });
 });
