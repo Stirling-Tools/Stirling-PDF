@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Badge, Center, Group, Paper, ScrollArea, Stack, Table, Text } from '@mantine/core';
 import SortIcon from '@mui/icons-material/Sort';
+import { useTranslation } from 'react-i18next';
 
 import { formatFileSize } from '@app/utils/fileUtils';
 
@@ -64,6 +65,7 @@ interface CsvViewerProps {
 }
 
 export function CsvViewer({ file, isTsv }: CsvViewerProps) {
+  const { t } = useTranslation();
   const [rows, setRows] = useState<string[][]>([]);
   const [loading, setLoading] = useState(true);
   const [sortCol, setSortCol] = useState<number | null>(null);
@@ -103,11 +105,11 @@ export function CsvViewer({ file, isTsv }: CsvViewerProps) {
   };
 
   if (loading) {
-    return <Center style={{ flex: 1 }}><Text c="dimmed" size="sm">Loading...</Text></Center>;
+    return <Center style={{ flex: 1 }}><Text c="dimmed" size="sm">{t('viewer.nonPdf.loading')}</Text></Center>;
   }
 
   if (rows.length === 0) {
-    return <Center style={{ flex: 1 }}><Text c="dimmed" size="sm">Empty file</Text></Center>;
+    return <Center style={{ flex: 1 }}><Text c="dimmed" size="sm">{t('viewer.nonPdf.emptyFile')}</Text></Center>;
   }
 
   return (
@@ -116,7 +118,7 @@ export function CsvViewer({ file, isTsv }: CsvViewerProps) {
       <Paper radius={0} p="xs" style={{ borderBottom: '1px solid var(--mantine-color-gray-2)', flexShrink: 0 }}>
         <Group gap="md" align="center">
           <Text size="xs" c="dimmed">
-            {dataRows.length.toLocaleString()} rows · {headers.length} columns · {formatFileSize(file.size)}
+            {t('viewer.nonPdf.csvStats', { rows: dataRows.length.toLocaleString(), columns: headers.length, size: formatFileSize(file.size) })}
           </Text>
           {sortCol !== null && (
             <Badge
@@ -126,7 +128,7 @@ export function CsvViewer({ file, isTsv }: CsvViewerProps) {
               style={{ cursor: 'pointer' }}
               onClick={() => { setSortCol(null); setSortAsc(true); }}
             >
-              Sorted by: {headers[sortCol] || `Col ${sortCol + 1}`} {sortAsc ? '\u2191' : '\u2193'} \u2715
+              {t('viewer.nonPdf.sortedBy', { column: headers[sortCol] || t('viewer.nonPdf.columnDefault', { index: sortCol + 1 }) })} {sortAsc ? '\u2191' : '\u2193'} \u2715
             </Badge>
           )}
         </Group>
@@ -154,7 +156,7 @@ export function CsvViewer({ file, isTsv }: CsvViewerProps) {
                   onClick={() => handleSort(i)}
                 >
                   <Group gap={4} align="center" wrap="nowrap">
-                    <Text size="xs" fw={600} truncate style={{ maxWidth: 200 }}>{h || `Column ${i + 1}`}</Text>
+                    <Text size="xs" fw={600} truncate style={{ maxWidth: 200 }}>{h || t('viewer.nonPdf.columnDefault', { index: i + 1 })}</Text>
                     <SortIcon
                       style={{
                         fontSize: '0.85rem',

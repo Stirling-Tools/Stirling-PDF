@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Center, Checkbox, Group, Paper, ScrollArea, Stack, Text } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 
 import { formatFileSize } from '@app/utils/fileUtils';
 
@@ -97,6 +98,7 @@ interface TextViewerProps {
 }
 
 export function TextViewer({ file, isMarkdown }: TextViewerProps) {
+  const { t } = useTranslation();
   const [content, setContent] = useState<string | null>(null);
   const [showLineNumbers, setShowLineNumbers] = useState(!isMarkdown);
   const [renderMd, setRenderMd] = useState(isMarkdown);
@@ -112,10 +114,10 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
       {/* Toolbar */}
       <Paper radius={0} p="xs" style={{ borderBottom: '1px solid var(--mantine-color-gray-2)', flexShrink: 0 }}>
         <Group gap="md" align="center">
-          <Text size="xs" c="dimmed">{lines.length.toLocaleString()} lines · {formatFileSize(file.size)}</Text>
+          <Text size="xs" c="dimmed">{t('viewer.nonPdf.textStats', { lines: lines.length.toLocaleString(), size: formatFileSize(file.size) })}</Text>
           {!isMarkdown && (
             <Checkbox
-              label={<Text size="xs">Line numbers</Text>}
+              label={<Text size="xs">{t('viewer.nonPdf.lineNumbers')}</Text>}
               checked={showLineNumbers}
               onChange={e => setShowLineNumbers(e.currentTarget.checked)}
               size="xs"
@@ -123,7 +125,7 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
           )}
           {isMarkdown && (
             <Checkbox
-              label={<Text size="xs">Render markdown</Text>}
+              label={<Text size="xs">{t('viewer.nonPdf.renderMarkdown')}</Text>}
               checked={renderMd}
               onChange={e => setRenderMd(e.currentTarget.checked)}
               size="xs"
@@ -135,7 +137,7 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
       {/* Content */}
       <ScrollArea style={{ flex: 1 }} p="md">
         {content === null ? (
-          <Center><Text c="dimmed" size="sm">Loading...</Text></Center>
+          <Center><Text c="dimmed" size="sm">{t('viewer.nonPdf.loading')}</Text></Center>
         ) : isMarkdown && renderMd ? (
           <Box style={{ maxWidth: 800, margin: '0 auto', padding: '8px 0' }}>
             {renderMarkdown(content)}

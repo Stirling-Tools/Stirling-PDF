@@ -1,5 +1,6 @@
 import { Badge, Box, Button, Group } from '@mantine/core';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import { useTranslation } from 'react-i18next';
 
 import type { FileTypeMeta } from '@app/components/viewer/nonpdf/types';
 
@@ -9,6 +10,8 @@ interface NonPdfBannerProps {
 }
 
 export function NonPdfBanner({ meta, onConvertToPdf }: NonPdfBannerProps) {
+  const { t } = useTranslation();
+
   return (
     <Group
       gap="xs"
@@ -32,7 +35,7 @@ export function NonPdfBanner({ meta, onConvertToPdf }: NonPdfBannerProps) {
         }
         style={{ fontWeight: 600 }}
       >
-        {meta.label} File
+        {t('viewer.nonPdf.fileTypeBadge', { type: meta.label })}
       </Badge>
       {onConvertToPdf && (
         <Button
@@ -42,7 +45,7 @@ export function NonPdfBanner({ meta, onConvertToPdf }: NonPdfBannerProps) {
           leftSection={<PictureAsPdfIcon style={{ fontSize: '0.9rem' }} />}
           onClick={onConvertToPdf}
         >
-          Convert to PDF
+          {t('viewer.nonPdf.convertToPdf')}
         </Button>
       )}
     </Group>

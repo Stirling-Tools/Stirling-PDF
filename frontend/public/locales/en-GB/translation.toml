@@ -4864,6 +4864,21 @@ zoomIn = "Zoom In"
 zoomOut = "Zoom Out"
 resetZoom = "Reset zoom"
 
+[viewer.nonPdf]
+fileTypeBadge = "{{type}} File"
+convertToPdf = "Convert to PDF"
+loading = "Loading..."
+emptyFile = "Empty file"
+csvStats = "{{rows}} rows · {{columns}} columns · {{size}}"
+sortedBy = "Sorted by: {{column}}"
+columnDefault = "Column {{index}}"
+htmlPreviewWarning = "HTML preview — external resources may not load · {{size}}"
+htmlPreview = "HTML preview"
+invalidJson = "Invalid JSON — showing raw content"
+textStats = "{{lines}} lines · {{size}}"
+lineNumbers = "Line numbers"
+renderMarkdown = "Render markdown"
+
 [rightRail]
 closeSelected = "Close Selected Files"
 selectAll = "Select All"
