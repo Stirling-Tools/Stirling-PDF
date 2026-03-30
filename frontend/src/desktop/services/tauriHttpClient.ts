@@ -218,48 +218,26 @@ class TauriHttpClient {
 
       const response = await fetch(url, fetchOptions);
 
-      // Parse response based on responseType
-      let data: T;
-      const responseType = finalConfig.responseType || 'json';
-
-      if (responseType === 'json') {
-        data = await response.json() as T;
-      } else if (responseType === 'text') {
-        data = (await response.text()) as T;
-      } else if (responseType === 'blob') {
-        // Standard fetch doesn't set blob.type from Content-Type header (unlike axios)
-        // Set it manually to match axios behavior
-        const blob = await response.blob();
-        if (!blob.type) {
-          const contentType = response.headers.get('content-type') || 'application/octet-stream';
-          data = new Blob([blob], { type: contentType }) as T;
-        } else {
-          data = blob as T;
-        }
-      } else if (responseType === 'arraybuffer') {
-        data = (await response.arrayBuffer()) as T;
-      } else {
-        data = await response.json() as T;
-      }
-
       // Convert Headers to plain object
       const responseHeaders: Record<string, string> = {};
       response.headers.forEach((value, key) => {
         responseHeaders[key] = value;
       });
 
-      const httpResponse: TauriHttpResponse<T> = {
-        data,
-        status: response.status,
-        statusText: response.statusText || '',
-        headers: responseHeaders,
-        config: finalConfig,
-      };
-
-      // Check for HTTP errors
+      // Check for HTTP errors BEFORE reading the body so that a plain-text error
+      // response from the server doesn't cause a JSON parse failure that gets
+      // misreported as ERR_NETWORK.
       if (!response.ok) {
+        // Read the body as text to surface the real server error message
+        let errorBody: string;
+        try {
+          errorBody = await response.text();
+        } catch {
+          errorBody = '';
+        }
+
         // Create more descriptive error messages based on status code
-        let errorMessage = `Request failed with status code ${response.status}`;
+        let errorMessage = errorBody || `Request failed with status code ${response.status}`;
         let errorCode = 'ERR_BAD_REQUEST';
 
         if (response.status === 401) {
@@ -284,13 +262,22 @@ class TauriHttpClient {
           method,
           status: response.status,
           statusText: response.statusText,
+          body: errorBody,
         });
+
+        const errorResponse: TauriHttpResponse<T> = {
+          data: errorBody as T,
+          status: response.status,
+          statusText: response.statusText || '',
+          headers: responseHeaders,
+          config: finalConfig,
+        };
 
         const error = this.createError(
           errorMessage,
           finalConfig,
           errorCode,
-          httpResponse
+          errorResponse
         );
 
         // Run error interceptors
@@ -306,6 +293,39 @@ class TauriHttpClient {
         }
         throw finalError;
       }
+
+      // Parse response body for successful responses
+      let data: T;
+      const responseType = finalConfig.responseType || 'json';
+
+      if (responseType === 'json') {
+        const text = await response.text();
+        data = (text ? JSON.parse(text) : null) as T;
+      } else if (responseType === 'text') {
+        data = (await response.text()) as T;
+      } else if (responseType === 'blob') {
+        // Standard fetch doesn't set blob.type from Content-Type header (unlike axios)
+        // Set it manually to match axios behavior
+        const blob = await response.blob();
+        if (!blob.type) {
+          const contentType = response.headers.get('content-type') || 'application/octet-stream';
+          data = new Blob([blob], { type: contentType }) as T;
+        } else {
+          data = blob as T;
+        }
+      } else if (responseType === 'arraybuffer') {
+        data = (await response.arrayBuffer()) as T;
+      } else {
+        data = await response.json() as T;
+      }
+
+      const httpResponse: TauriHttpResponse<T> = {
+        data,
+        status: response.status,
+        statusText: response.statusText || '',
+        headers: responseHeaders,
+        config: finalConfig,
+      };
 
       // Run response interceptors
       let finalResponse = httpResponse;
