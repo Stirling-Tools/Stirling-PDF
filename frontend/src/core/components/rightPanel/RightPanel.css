@@ -251,6 +251,78 @@
   border-radius: 2px;
 }
 
+/* ── General agent (pinned at top) ─── */
+
+.right-panel-general-agent {
+  padding-top: 0.5rem;
+}
+
+.right-panel-agent-item--general {
+  padding: 0.625rem 0.875rem;
+}
+
+.right-panel-agent-item--general .right-panel-agent-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+}
+
+.right-panel-agent-item--general .right-panel-agent-icon svg {
+  font-size: 1.125rem !important;
+}
+
+/* ── Agent category groups ─── */
+
+.right-panel-agent-group {
+  margin-bottom: 0.25rem;
+}
+
+.right-panel-agent-group-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted, var(--text-tertiary));
+  padding: 0.5rem 0.875rem 0.25rem;
+  opacity: 0.7;
+}
+
+/* ── Agent search bar (all-agents view) ─── */
+
+.right-panel-agent-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.right-panel-agent-search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 0.75rem;
+  color: var(--text-primary);
+  font-family: inherit;
+}
+
+.right-panel-agent-search-input::placeholder {
+  color: var(--text-muted, var(--text-tertiary));
+}
+
+/* ── Empty state for search ─── */
+
+.right-panel-empty-search {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
 /* Tool items */
 .right-panel-tool-item {
   display: flex;
