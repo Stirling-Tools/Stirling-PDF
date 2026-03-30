@@ -28,6 +28,7 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.EmailService;
+import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
@@ -47,6 +48,7 @@ class UserControllerTest {
     @Mock private UserRepository userRepository;
     @Mock private EmailService emailService;
     @Mock private UserLicenseSettingsService licenseSettingsService;
+    @Mock private LoginAttemptService loginAttemptService;
 
     private ApplicationProperties applicationProperties;
     private MockMvc mockMvc;
@@ -65,7 +67,8 @@ class UserControllerTest {
                         teamRepository,
                         userRepository,
                         Optional.of(emailService),
-                        licenseSettingsService);
+                        licenseSettingsService,
+                        loginAttemptService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -137,5 +140,14 @@ class UserControllerTest {
         mockMvc.perform(post("/api/v1/user/admin/deleteUser/ghost").principal(authentication))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("User not found."));
+    }
+
+    @Test
+    void unlockUserCallsResetAttemptsAndReturnsOk() throws Exception {
+        mockMvc.perform(post("/api/v1/user/admin/unlockUser/lockeduser"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("User account unlocked successfully"));
+
+        verify(loginAttemptService).resetAttempts("lockeduser");
     }
 }

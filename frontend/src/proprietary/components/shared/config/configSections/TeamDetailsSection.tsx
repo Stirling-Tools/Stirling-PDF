@@ -51,6 +51,9 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
     availableSlots: number;
   } | null>(null);
   const [mailEnabled, setMailEnabled] = useState(false);
+  const [lockedUsers, setLockedUsers] = useState<string[]>([]);
+
+  const isLockedUser = (user: User) => lockedUsers.includes(user.username);
 
   useEffect(() => {
     fetchTeamDetails();
@@ -75,6 +78,7 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
         availableSlots: adminData.availableSlots,
       });
       setMailEnabled(adminData.mailEnabled);
+      setLockedUsers(adminData.lockedUsers || []);
     } catch (error) {
       console.error('Failed to fetch team details:', error);
       alert({ alertType: 'error', title: t('workspace.teams.loadError', 'Failed to load team details') });
@@ -168,6 +172,26 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
+    }
+  };
+
+  const handleUnlockUser = async (user: User) => {
+    const confirmMessage = t('workspace.people.confirmUnlock', 'Are you sure you want to unlock this user account?');
+    if (!window.confirm(`${confirmMessage}\n\nUser: ${user.username}`)) {
+      return;
+    }
+
+    try {
+      await userManagementService.unlockUser(user.username);
+      alert({ alertType: 'success', title: t('workspace.people.unlockUserSuccess', 'User account unlocked successfully') });
+      fetchTeamDetails();
+    } catch (error: any) {
+      console.error('[TeamDetailsSection] Failed to unlock user:', error);
+      const errorMessage = error.response?.data?.message ||
+                          error.response?.data?.error ||
+                          error.message ||
+                          t('workspace.people.unlockUserError', 'Failed to unlock user account');
+      alert({ alertType: 'error', title: errorMessage });
     }
   };
 
@@ -335,22 +359,29 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
                           </Avatar>
                         </Tooltip>
                         <Box style={{ minWidth: 0, flex: 1 }}>
-                          <Tooltip label={user.username} disabled={user.username.length <= 20} zIndex={Z_INDEX_OVER_CONFIG_MODAL}>
-                            <Text
-                              size="sm"
-                              fw={500}
-                              maw={200}
-                              style={{
-                                lineHeight: 1.3,
-                                opacity: user.enabled ? 1 : 0.6,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {user.username}
-                            </Text>
-                          </Tooltip>
+                          <Group gap={6} wrap="nowrap" align="center">
+                            <Tooltip label={user.username} disabled={user.username.length <= 20} zIndex={Z_INDEX_OVER_CONFIG_MODAL}>
+                              <Text
+                                size="sm"
+                                fw={500}
+                                maw={200}
+                                style={{
+                                  lineHeight: 1.3,
+                                  opacity: user.enabled ? 1 : 0.6,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {user.username}
+                              </Text>
+                            </Tooltip>
+                            {isLockedUser(user) && (
+                              <Badge color="orange" variant="light" size="xs">
+                                {t('workspace.people.lockedBadge', 'Locked')}
+                              </Badge>
+                            )}
+                          </Group>
                           {user.email && (
                             <Text size="xs" c="dimmed" truncate style={{ lineHeight: 1.3 }}>
                               {user.email}
@@ -420,6 +451,15 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
                           >
                             {t('workspace.people.changePassword.action', 'Change password')}
                           </Menu.Item>
+                          {isLockedUser(user) && (
+                            <Menu.Item
+                              leftSection={<LocalIcon icon="lock-open" width="1rem" height="1rem" />}
+                              onClick={() => handleUnlockUser(user)}
+                              disabled={processing}
+                            >
+                              {t('workspace.people.unlockAccount', 'Unlock Account')}
+                            </Menu.Item>
+                          )}
                           {team.name !== 'Internal' && team.name !== 'Default' && (
                             <Menu.Item
                               leftSection={<LocalIcon icon="person-remove" width="1rem" height="1rem" />}

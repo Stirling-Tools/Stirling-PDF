@@ -47,6 +47,7 @@ import stirling.software.proprietary.security.model.dto.AdminUserSummary;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.DatabaseService;
+import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.MfaService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
@@ -71,6 +72,7 @@ public class ProprietaryUIDataController {
     private final UserLicenseSettingsService licenseSettingsService;
     private final PersistentAuditEventRepository auditRepository;
     private final MfaService mfaService;
+    private final LoginAttemptService loginAttemptService;
 
     public ProprietaryUIDataController(
             ApplicationProperties applicationProperties,
@@ -84,7 +86,8 @@ public class ProprietaryUIDataController {
             @Qualifier("runningEE") boolean runningEE,
             UserLicenseSettingsService licenseSettingsService,
             PersistentAuditEventRepository auditRepository,
-            MfaService mfaService) {
+            MfaService mfaService,
+            LoginAttemptService loginAttemptService) {
         this.applicationProperties = applicationProperties;
         this.auditConfig = auditConfig;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
@@ -97,6 +100,7 @@ public class ProprietaryUIDataController {
         this.licenseSettingsService = licenseSettingsService;
         this.auditRepository = auditRepository;
         this.mfaService = mfaService;
+        this.loginAttemptService = loginAttemptService;
     }
 
     /**
@@ -387,6 +391,7 @@ public class ProprietaryUIDataController {
         data.setPremiumEnabled(premiumEnabled);
         data.setMailEnabled(applicationProperties.getMail().isEnabled());
         data.setUserSettings(userSettings);
+        data.setLockedUsers(loginAttemptService.getAllBlockedUsers());
 
         return ResponseEntity.ok(data);
     }
@@ -605,6 +610,7 @@ public class ProprietaryUIDataController {
         private boolean premiumEnabled;
         private boolean mailEnabled;
         private Map<String, Map<String, String>> userSettings;
+        private List<String> lockedUsers;
     }
 
     @Data
