@@ -142,6 +142,10 @@ welcome = "Hoş geldiniz"
 white = "Beyaz"
 WorkInProgess = "Çalışmalar devam ediyor, Çalışmayabilir veya hatalı olabilir, Lütfen herhangi bir sorunu bildirin!"
 yes = "Evet"
+insufficientCredits = "Yetersiz kredi. Gerekli: {{requiredCredits}}, Mevcut: {{currentBalance}}, Eksik: {{shortfall}}"
+loadingCredits = "Krediler kontrol ediliyor..."
+loadingProStatus = "Abonelik durumu kontrol ediliyor..."
+noticeTopUpOrPlan = "Yeterli kredi yok, lütfen bakiye yükleyin veya bir plana yükseltin"
 
 [account]
 accountSettings = "Hesap Ayarları"
@@ -1513,6 +1517,7 @@ editStampHint = "Görseli değiştirmek için bu damgayı silip yenisini ekleyin
 editSwitchToSelect = "Bu açıklamayı düzenlemek için Seç ve Düzenle moduna geçin."
 editText = "Metin Kutusunu Düzenle"
 editTextMarkup = "Metin İşaretlemeyi Düzenle"
+annotationStyle = "Açıklama stili"
 ellipse = "Elips"
 exit = "Açıklama modundan çık"
 fillColor = "Dolgu Rengi"
@@ -1523,13 +1528,19 @@ highlight = "Vurgula"
 imagePreview = "Önizleme"
 inkHighlighter = "Serbest Vurgu Kalemi"
 line = "Çizgi"
+lineArrow = "Ok"
 noBackground = "Arka plan yok"
 note = "Not"
+comment = "Yorum"
+comments = "Yorumlar"
+insertText = "Metin Ekle"
+replaceText = "Metni Değiştir"
 noteIcon = "Not Simgesi"
 notesStamps = "Notlar ve Damgalar"
 opacity = "Opaklık"
 pen = "Kalem"
 polygon = "Çokgen"
+polyline = "Kırık Çizgi"
 properties = "Özellikler"
 rectangle = "Dikdörtgen"
 redo = "Yinele"
@@ -2574,10 +2585,48 @@ title = "Kalite Ayarı"
 [compressPdfs]
 tags = "sıkıştır,küçük,minik"
 
+[config]
+plan = "Plan"
+
 [config.account.overview]
+confirmDelete = "Hesabımı Sil"
+deleteAccount = "Hesabı Sil"
+deleteAccountTitle = "Hesabı Sil"
+deleteFailed = "Hesap silinemedi."
+deleteFailedTitle = "Hesap silinemiyor"
+deleteWarning = "Bu işlem kalıcıdır ve geri alınamaz. Tüm verileriniz silinecektir."
+enterEmailConfirm = "Silmeyi onaylamak için lütfen aşağıya e-posta adresinizi ({{email}}) yazın:"
 guestDescription = "Misafir olarak oturum açtınız. Yukarıdan hesabınızı yükseltmeyi düşünün."
+label = "Genel Bakış"
 manageAccountPreferences = "Hesap tercihlerinizi yönetin"
+signedInAs = "Şu adla oturum açıldı"
 title = "Hesap Ayarları"
+
+[config.account.profilePicture]
+description = "Hesabınızı kişiselleştirmek için bir görsel yükleyin."
+help = "PNG, JPG veya WebP, en fazla 2 MB."
+remove = "Kaldır"
+sizeError = "Lütfen 2 MB'tan küçük bir görsel seçin."
+switchedToCustom = "Özel görsele geçildi. Artık kendi görselinizi yükleyebilirsiniz."
+title = "Profil resmi"
+upload = "Yükle"
+useCustom = "Özel görsel kullan"
+usingProvider = "{{provider}} profil resmi kullanılıyor"
+
+[config.account.profilePicture.cropper]
+cropError = "Görsel kırpılamadı. Lütfen tekrar deneyin."
+invalidImage = "Geçersiz görsel dosyası. Lütfen geçerli bir PNG, JPG veya WebP dosyası seçin."
+processing = "Kırpma işleniyor..."
+save = "Kırpılmış Görseli Kaydet"
+sizeErrorAfterCrop = "Kırpılmış görsel çok büyük. Lütfen uzaklaştırın veya daha küçük bir alanı kırpın."
+title = "Profil Resmini Kırp"
+zoom = "Yakınlaştırma"
+
+[config.account.security]
+changePassword = "Parolayı değiştir"
+description = "Parolanızı ve güvenlik ayarlarınızı yönetin."
+title = "Parolalar ve Güvenlik"
+update = "Parolayı güncelle"
 
 [config.account.upgrade]
 description = "Geçmişinizi korumak ve daha fazla özelliğe erişmek için hesabınızı bağlayın!"
@@ -2595,6 +2644,7 @@ upgradeButton = "Hesabı Yükselt"
 [config.apiKeys]
 chartAriaLabel = "Kredi kullanımı: dahil {{includedUsed}} / {{includedTotal}}, satın alınan {{purchasedUsed}} / {{purchasedTotal}}"
 copyKeyAriaLabel = "API anahtarını kopyala"
+creditsRemaining = "Kalan Krediler"
 description = "Stirling'in PDF araç paketine erişmek için API anahtarınız. Projenize kopyalayın veya yenisini üretmek için yenileyin."
 docsDescription = "Stirling PDF ile entegrasyon hakkında daha fazla bilgi edinin:"
 docsLink = "API Dokümantasyonu"
@@ -2643,6 +2693,14 @@ basic = "Temel Yapılandırma"
 integration = "Entegrasyon Yapılandırması"
 security = "Güvenlik Yapılandırması"
 system = "Sistem Yapılandırması"
+
+[connectionMode.status]
+localOffline = "Çevrimdışı mod çalışıyor"
+localOnline = "Çevrimdışı mod çalışıyor"
+saas = "Stirling Cloud'a bağlı"
+selfhostedChecking = "Kendi barındırılan sunucuya bağlı (kontrol ediliyor...)"
+selfhostedOffline = "Kendi barındırılan sunucuya ulaşılamıyor"
+selfhostedOnline = "Kendi barındırılan sunucuya bağlı"
 
 [convert]
 autoRotate = "Otomatik Döndür"
@@ -2728,6 +2786,15 @@ webOptions = "Web'den PDF'e Seçenekleri"
 wordDoc = "Word Belgesi"
 wordDocExt = "Word Belgesi (.docx)"
 zoomLevel = "Yakınlaştırma Düzeyi"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "eBook → PDF"
+emlToPdf = "E-posta → PDF"
+fileToPdf = "Office/Belge → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "eBook'tan PDF'ye Dönüştürme Seçenekleri"
@@ -3718,6 +3785,11 @@ desc = "Çizim, metin veya resim ile PDF'e imza ekler"
 tags = "imza,imzala"
 title = "İmzala"
 
+[home.timestampPdf]
+desc = "PDF'nizin ne zaman var olduğunu kanıtlamak için bir RFC 3161 belge zaman damgası ekleyin"
+tags = "timestamp,RFC 3161,TSA,zaman damgası otoritesi,belge zaman damgası,mevcudiyet kanıtı,zaman damgası belirteci,güvenilir zaman damgası,imzayı zaman damgalama,noter onayı"
+title = "PDF'yi Zaman Damgala"
+
 [home.split]
 desc = "PDF'leri birden fazla belgeye ayırın"
 tags = "böl,ayır,parçala"
@@ -3854,6 +3926,7 @@ version = "Sürüm"
 accountCreatedSuccess = "Hesap başarıyla oluşturuldu! Artık giriş yapabilirsiniz."
 alreadyLoggedIn = "Zaten şu cihazlarda oturum açılmış:"
 alreadyLoggedIn2 = "Lütfen bu cihazlardan çıkış yaparak tekrar deneyin."
+backToSignIn = "Oturum açmaya geri dön"
 cancel = "İptal"
 changePasswordWarning = "İlk kez giriş yaptıktan sonra lütfen parolanızı değiştirin"
 credentialsUpdated = "Kimlik bilgileriniz güncellendi. Lütfen tekrar giriş yapın."
@@ -3895,16 +3968,21 @@ or = "Veya"
 password = "Şifre"
 passwordChangedSuccess = "Şifre başarıyla değiştirildi! Lütfen yeni şifrenizle giriş yapın."
 passwordResetSent = "Şifre sıfırlama bağlantısı {{email}} adresine gönderildi! E-postanızı kontrol edip talimatları izleyin."
+passwordUpdatedSuccess = "Parolanız başarıyla güncellendi."
 pleaseEnterBoth = "Lütfen hem e-posta hem şifreyi girin"
 pleaseEnterEmail = "Lütfen e-posta adresinizi girin"
 relyingPartyRegistrationNotFound = "Bağlı taraf kaydı bulunamadı"
 rememberme = "Beni hatırla"
+resetHelp = "Parolanızı sıfırlamak için güvenli bir bağlantı almak üzere e-posta adresinizi girin. Bağlantının süresi dolduysa lütfen yenisini isteyin."
+resetYourPassword = "Parolanızı sıfırlayın"
 saml2RequiresLicense = "SAML ile oturum açma ücretli bir lisans (Server veya Enterprise) gerektirir. Planınızı yükseltmek için lütfen yöneticiyle iletişime geçin."
 sending = "Gönderiliyor…"
 sendMagicLink = "Sihirli Bağlantı Gönder"
+sendResetLink = "Sıfırlama bağlantısı gönder"
 sessionExpired = "Oturumunuzun süresi doldu. Lütfen tekrar giriş yapın."
 signin = "Giriş Yap"
 signInAnonymously = "Misafir olarak kaydol"
+subtitle = "Stirling PDF'de yeniden oturum açın"
 signingIn = "Giriş yapılıyor..."
 signinTitle = "Lütfen giriş yapınız."
 signInWith = "Şununla giriş yap"
@@ -3913,6 +3991,7 @@ ssoSignIn = "Tek Oturum Açma ile Giriş Yap"
 title = "Giriş Yap"
 toManySessions = "Çok fazla aktif oturumunuz var"
 unexpectedError = "Beklenmeyen hata: {{message}}"
+updatePassword = "Parolayı güncelle"
 useEmailInstead = "E-posta ile giriş yap"
 useMagicLink = "Bunun yerine sihirli bağlantı kullan"
 userIsDisabled = "Kullanıcı devre dışı bırakıldı, şu anda bu kullanıcı adıyla giriş engellendi. Lütfen yöneticiyle iletişime geçin."
@@ -4222,6 +4301,15 @@ viewSwitcher = "PDF'lerinizi nasıl görüntülemek istediğinizi seçmek için 
 workbench = "Burası <strong>Çalışma Alanı</strong> - PDF'lerinizi görüntüleyip düzenlediğiniz ana alandır."
 wrapUp = "Her şey hazır! Uygulamanın ana alanlarını ve bunları nasıl kullanacağınızı öğrendiniz. Bu turu tekrar görmek istediğinizde istediğiniz zaman <strong>Yardım</strong> düğmesine tıklayın."
 
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "Denemeniz bittiğinde ücretsiz katmanla devam edeceksiniz. Pro erişimini sürdürmek için bir ödeme yöntemi ekleyin."
+afterTrialWithPayment = "Deneme bittiğinde Pro aboneliğiniz otomatik olarak başlayacak."
+body = "Deneme süreniz boyunca Stirling PDF Pro özelliklerine tam erişiminiz var. Sınırsız dönüştürme, daha büyük dosya boyutları ve öncelikli işlemden yararlanın."
+daysRemaining = "{{days}} gün kaldı"
+daysRemainingSingular = "{{days}} gün kaldı"
+title = "30 Günlük Pro Denemeniz"
+trialEnds = "Deneme {{date}} tarihinde bitiyor"
+
 [onboarding.buttons]
 back = "Geri"
 download = "İndir →"
@@ -4392,6 +4480,31 @@ loading = "Ekler yükleniyor..."
 empty = "Bu belgede ek yok"
 noMatch = "Aramanızla eşleşen ek yok"
 
+[viewer.comments]
+title = "Yorumlar"
+hint = "Yorum, Metin Ekle veya Metni Değiştir araçlarıyla yorum bırakın. Bunlar burada sayfaya göre görünecektir."
+placeholder = "Yorumunuzu yazın..."
+pageLabel = "Sayfa {{page}}"
+oneComment = "1 yorum"
+nComments = "{{count}} yorum"
+addCommentPlaceholder = "Yorum ekle..."
+addLink = "Bağlantı ekle"
+goToLink = "Bağlantıya git"
+addComment = "Yorum ekle"
+viewComment = "Yorumu görüntüle"
+addReplyPlaceholder = "Yanıt ekle..."
+saveReply = "Yanıtı kaydet"
+send = "Gönder"
+moreActions = "Diğer işlemler"
+typeComment = "Yorum"
+typeInsertText = "Metin Ekle"
+typeReplaceText = "Metni Değiştir"
+locateAnnotation = "Belgede konumlandır"
+deleteTitle = "Açıklamayı yorumlardan kaldır?"
+deleteDescription = "Bu açıklamaya bir yorum eklenmiş. Açıklamayı koruyup kenar çubuğundan yalnızca yorumu kaldırabilir veya hepsini silebilirsiniz."
+removeCommentOnly = "Yalnızca yorumu kaldır"
+deleteAnnotationAndComment = "Açıklamayı ve yorumu sil"
+
 [viewer.formBar]
 title = "Form Alanları"
 unsavedBadge = "Kaydedilmemiş"
@@ -4425,14 +4538,20 @@ rotateLeft = "Sola Döndür"
 rotateRight = "Sağa Döndür"
 toggleSidebar = "Kenar Çubuğunu Aç/Kapat"
 toggleBookmarks = "Yer imlerini aç/kapat"
+toggleComments = "Yorumlar"
 print = "PDF'yi Yazdır"
 ruler = "Cetvel / Ölçüm"
+readAloud = "Sesli Oku"
+readAloudSpeed = "Hız"
+readAloudLanguage = "Dil"
+selectLanguage = "Dil seçin"
 draw = "Çiz"
 redact = "Karart"
 exitRedaction = "Karartma Modundan Çık"
 save = "Kaydet"
 downloadAll = "Tümünü İndir"
 saveAll = "Tümünü Kaydet"
+saveAs = "Farklı Kaydet"
 
 [textAlign]
 left = "Sol"
@@ -4447,21 +4566,132 @@ title = "Sayfaları Çıkar"
 
 [pageLayout]
 addBorder = "Kenarlık Ekle"
+borderWidth = "Kenarlık Kalınlığı"
+bottom = "Alt Kenar Boşluğu"
+cols = "Sütunlar"
 header = "Çoklu Sayfa Düzeni"
+innerMargin = "İç Kenar Boşluğu"
+left = "Sol Kenar Boşluğu"
 pagesPerSheet = "Sayfa başına sayfalar:"
+right = "Sağ Kenar Boşluğu"
+rows = "Satırlar"
 submit = "Gönder"
 tags = "birleştir,kompozit,tek-görünüm,düzenle"
 title = "Çoklu Sayfa Düzeni"
+top = "Üst Kenar Boşluğu"
+
+[pageLayout.mode]
+default = "Varsayılan"
+custom = "Özel"
+label = "Mod:"
+
+[pageLayout.arrangement]
+byColumns = "Sütunlara Göre"
+byRows = "Satırlara Göre"
+label = "Yerleşim Sırası:"
 
 [pageLayout.desc]
 16 = "Tek sayfaya 16 sayfa yerleştir (4 × 4 ızgara)."
 2 = "Bir sayfaya yan yana 2 sayfa yerleştirin."
-3 = "Tek satır halinde bir sayfaya 3 sayfa yerleştirin."
 4 = "Bir sayfaya 4 sayfa yerleştirin (2 × 2 ızgara)."
 9 = "Tek sayfaya 9 sayfa yerleştir (3 × 3 ızgara)."
 
 [pageLayout.error]
 failed = "Çok sayfalı yerleşim oluşturulurken bir hata oluştu."
+outerVerticalMarginsTooLarge = "Üst/Alt kenar boşlukları bu sayfa boyutu için çok büyük."
+outerHorizontalMarginsTooLarge = "Sol/Sağ kenar boşlukları bu sayfa boyutu için çok büyük."
+innerMarginTooLarge = "Seçili yerleşim için iç kenar boşluğu çok büyük."
+
+[pageLayout.orientation]
+landscape = "Yatay"
+portrait = "Dikey"
+label = "Yönlendirme:"
+
+[pageLayout.readingDirection]
+ltr = "Soldan Sağa"
+rtl = "Sağdan Sola"
+label = "Okuma Yönü:"
+
+[pageLayout.tooltip.header]
+title = "Sayfa Yerleşimi Rehberi"
+
+[pageLayout.tooltip.overview]
+title = "Sayfa Yerleşimi nedir?"
+text = "Elden dağıtım için veya kağıt tasarrufu amacıyla birden çok sayfayı tek bir yaprağa sığdırın."
+
+[pageLayout.tooltip.mode]
+title = "Mod"
+text = "Izgaranın nasıl yapılandırılacağını seçin:"
+bullet1 = "Varsayılan: Bir hazır ayar seçin, ızgara otomatik hesaplanır."
+bullet2 = "Özel: Satır ve sütunları manuel ayarlayın."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Kağıt Başına Sayfa (Varsayılan Mod)"
+text = "Kağıt başına kaç sayfa olacağını seçin (ör. 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Satırlar ve Sütunlar (Özel Mod)"
+text = "Kesin ızgara boyutlarını ayarlayın. Kağıt başına toplam sayfa = satır × sütun."
+
+[pageLayout.tooltip.orientation]
+title = "Yönlendirme"
+text = "Çıktı yaprağının yönünü ayarlar:"
+bullet1 = "Dikey: Eninden uzun."
+bullet2 = "Yatay: Boyundan geniş."
+
+[pageLayout.tooltip.arrangement]
+title = "Sayfa Yerleşimi"
+text = "Sayfaların ızgarayı doldurma sırasını kontrol eder:"
+bullet1 = "Satırlara Göre: Satır satır doldurur (soldan sağa veya sağdan sola)."
+bullet2 = "Sütunlara Göre: Yukarıdan aşağıya, sütun sütun doldurur."
+
+[pageLayout.tooltip.readingDirection]
+title = "Okuma Yönü"
+text = "Sayfaların yatay sırasını kontrol eder:"
+bullet1 = "LTR: Soldan sağa."
+bullet2 = "RTL: Sağdan sola."
+
+[pageLayout.tooltip.addBorder]
+title = "Kenarlık Ekle"
+text = "Her sayfa hücresinin etrafına kesim kılavuzları veya görsel ayrım için kenarlık çizgileri çizer."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Kenar Boşlukları ve Kenarlıklar"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Kenar Boşlukları"
+text = "Tam yaprak çıktı etrafındaki boşluğu kontrol etmek için üst, alt, sol ve sağ kenar boşluklarını kullanın."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "İç Kenar Boşluğu"
+text = "İç kenar boşluğu, sayfa ızgarasındaki hücreler arasında boşluk ekleyerek ayrımı ve okunabilirliği artırır."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Kenarlık Ekle"
+text = "Yerleştirilen her sayfanın etrafına çizgiler çizmek için kenarlıkları etkinleştirin. Bu, görsel ayrım veya kırpma için yardımcı olabilir."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Kenarlık Kalınlığı"
+text = "Kenarlık kalınlığı yalnızca kenarlıklar etkinleştirildiğinde uygulanır. Daha yüksek değerler daha kalın çizgiler üretir."
+
+[pageLayout.advanced.tooltip.header]
+title = "Gelişmiş Yerleşim Seçenekleri"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Yönlendirme"
+text = "Nihai yaprak yönünü seçin. Dikey uzun içerikler için daha iyi çalışırken, yatay daha geniş düzenlere uygundur."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Sayfa Yerleşimi"
+text = "Sayfaların ızgarayı satır satır mı yoksa sütun sütun mu dolduracağını kontrol eder."
+bullet1 = "Satırlara Göre: Önce her satırı doldurur."
+bullet2 = "Sütunlara Göre: Önce her sütunu doldurur."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Okuma Yönü"
+text = "Izgaradaki yatay sıralamayı belirler; soldan-sağa ve sağdan-sola belgeler için faydalıdır."
+bullet1 = "LTR: Soldan sağa sıra."
+bullet2 = "RTL: Sağdan sola sıra."
 
 [pageRemover]
 header = "PDF Sayfa silici"
@@ -4977,7 +5207,10 @@ perMonth = "/ay"
 perSeat = "/koltuk"
 popular = "Popüler"
 selectPlan = "Plan Seç"
+selectCredits = "Kredi Miktarını Seçin"
 showComparison = "Tüm Özellikleri Karşılaştır"
+purchase = "Satın Al"
+totalCost = "Toplam Maliyet"
 upgrade = "Yükselt"
 withServer = "+ Sunucu Planı"
 
@@ -5068,6 +5301,30 @@ successMessage = "Lisansınız başarıyla etkinleştirildi. Bu pencereyi şimdi
 [plan.team]
 name = "Takım"
 siteLicense = "Site Lisansı"
+
+[plan.api]
+large = "5.000 Kredi"
+medium = "1.000 Kredi"
+small = "500 Kredi"
+xsmall = "100 Kredi"
+
+[plan.apiPackages]
+subtitle = "Uygulamalarınız için API kredi satın alın"
+title = "API Kredi Paketleri"
+
+[plan.trial]
+badge = "Deneme"
+continueWithFree = "Ücretsiz ile Devam Et"
+daysRemaining = "Denemeniz {{days}} gün içinde sona eriyor"
+endDate = "Sona erme: {{date}}"
+expired = "Deneme Süreniz Sona Erdi"
+expiredMessage = "30 günlük Pro denemenizin süresi doldu. Premium özelliklere erişmeye devam etmek için Pro'ya abone olun ya da ücretsiz katmanımızla devam edin."
+freeTierLimitations = "Ücretsiz katman, kullanım sınırlarıyla temel PDF araçlarını içerir."
+message = ""
+subscribe = "Pro'ya Abone Ol"
+subscribeToPro = "Pro'ya Abone Ol"
+subscriptionScheduled = "Abonelik planlandı - {{date}} tarihinde başlar"
+title = "Ücretsiz Deneme Etkin"
 
 [credits]
 enableOverageBilling = "Aşım Faturalandırmasını Etkinleştir"
@@ -5631,6 +5888,32 @@ text = "PDF sayfalarınızı 90 derecelik artışlarla saat yönünde veya saat 
 [rotate.tooltip.header]
 title = "Döndürme Ayarları Genel Bakış"
 
+[timestampPdf]
+completed = "PDF başarıyla zaman damgalandı"
+desc = "Güvenilir bir Time Stamp Authority (TSA) sunucusu kullanarak PDF'nize bir RFC 3161 belge zaman damgası ekleyin."
+filenamePrefix = "zaman-damgalı"
+results = "Zaman Damgası Sonuçları"
+submit = "Zaman Damgası Uygula"
+title = "PDF'yi Zaman Damgala"
+
+[timestampPdf.error]
+failed = "PDF zaman damgalanırken bir hata oluştu."
+generic = "Zaman damgalama başarısız"
+
+[timestampPdf.files]
+placeholder = "Başlamak için ana görünümde bir PDF dosyası seçin"
+
+[timestampPdf.options]
+note = "Yalnızca belgenizin SHA-256 özeti TSA sunucusuna gönderilir; PDF dosyasının kendisi asla TSA sunucusuna gönderilmez."
+title = "Zaman Damgası Sunucusu (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Güvenilir bir Zaman Damgası Otoritesi seçin"
+label = "Bir TSA sunucusu seçin"
+
+[timestampPdf.steps]
+settings = "Ayarlar"
+
 [sanitize]
 completed = "Temizleme başarıyla tamamlandı"
 desc = "PDF dosyalarından potansiyel olarak zararlı öğeleri kaldırın."
@@ -5755,6 +6038,14 @@ placeholder = "Arama terimi girin..."
 searching = "Aranıyor..."
 title = "PDF Ara"
 
+[selfHosted.offline]
+hideTools = "Kullanılamayan araçları gizle ▴"
+messageNoFallback = "Sunucunuz geri gelene kadar araçlar kullanılamaz."
+messageWithFallback = "Bazı araçlar sunucu bağlantısı gerektirir."
+showTools = "Kullanılamayan araçları görüntüle ▾"
+title = "Stirling-PDF sunucunuza ulaşılamıyor"
+toolNotAvailableLocally = "Stirling-PDF sunucunuz çevrimdışı ve \"{{endpoint}}\" yerel arka uçta kullanılamıyor."
+
 [session]
 expired = "Oturumunuzun süresi doldu. Lütfen sayfayı yenileyip tekrar deneyin."
 refreshPage = "Sayfayı Yenile"
@@ -5768,12 +6059,15 @@ systemSettings = "Sistem Ayarları"
 title = "Yapılandırma"
 
 [settings.connection]
+localDescription = "Bir hesap olmadan yerel arka ucu kullanıyorsunuz. Bulut işlem veya kendi barındırılan sunucu gerektiren bazı araçlar kullanılamaz."
 logout = "Çıkış Yap"
 server = "Sunucu"
+signIn = "Oturum Aç"
 title = "Bağlantı Modu"
 user = "Şu olarak oturum açıldı"
 
 [settings.connection.mode]
+local = "Yalnızca Yerel"
 saas = "Stirling Cloud"
 selfhosted = "Öz Barındırılan"
 
@@ -5931,6 +6225,9 @@ title = "Politikalar ve Gizlilik"
 [settings.preferences]
 title = "Tercihler"
 
+[settings.search]
+placeholder = "Ayar sayfalarında ara..."
+
 [settings.security]
 description = "Hesabınızı güvende tutmak için şifrenizi güncelleyin."
 title = "Güvenlik"
@@ -5968,6 +6265,18 @@ title = "Çalışma Alanı"
 [settings.team]
 title = "Takım"
 
+[localMode]
+toolUnavailable = "Bu araç bir hesap gerektirir. Kullanmak için Stirling Cloud'da oturum açın veya kendi barındırılan bir sunucuya bağlanın."
+
+[localMode.banner]
+message = "Tüm araçların kilidini açmak için oturum açın."
+signIn = "Oturum Aç"
+title = "Yerelde çalışıyor"
+
+[localMode.toolPicker]
+message = "Tüm araçların kilidini açmak için oturum açın."
+signIn = "Oturum Aç"
+
 [setup]
 description = "Stirling PDF'yi nasıl kullanmak istediğinizi seçerek başlayın"
 welcome = "Stirling PDF'ye hoş geldiniz"
@@ -5975,6 +6284,7 @@ welcome = "Stirling PDF'ye hoş geldiniz"
 [setup.login]
 connectingTo = "Bağlanılıyor:"
 hideInstructions = "Yönergeleri gizle"
+skipSignIn = "Oturum açmadan devam et"
 instructions = "Stirling PDF sunucunuzda oturum açmayı etkinleştirmek için:"
 instructionsEnvVar = "Ortam değişkenini ayarlayın:"
 instructionsOrYml = "Veya settings.yml içinde:"
@@ -6022,7 +6332,14 @@ title = "Stirling'de Oturum Açın"
 [setup.selfhosted]
 link = "veya kendi barındırdığınız bir hesaba bağlanın"
 subtitle = "Sunucu kimlik bilgilerinizi girin"
+switchToLocal = "Bunun yerine yerel araçları kullan"
 title = "Sunucuda Oturum Açın"
+
+[setup.selfhosted.unreachable]
+continueOffline = "Bunun yerine yerel araçları kullan"
+message = "{{url}} adresine ulaşılamadı. Sunucunun çalıştığını ve erişilebilir olduğunu kontrol edin."
+retry = "Yeniden dene"
+title = "Sunucuya bağlanılamıyor"
 
 [setup.server]
 subtitle = "Öz barındırılan sunucu URL'nizi girin"
@@ -6032,6 +6349,7 @@ useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "Sunucu yapılandırması alınamadı. Lütfen URL'yi kontrol edip tekrar deneyin."
+configFetchError = "Sunucu yapılandırması getirilemedi: {{error}}"
 emptyUrl = "Lütfen bir sunucu URL'si girin"
 invalidUrl = "Geçersiz URL biçimi. Lütfen https://your-server.com gibi geçerli bir URL girin"
 testFailed = "Bağlantı testi başarısız"
@@ -6557,6 +6875,7 @@ favorites = "Favoriler"
 heading = "Tüm araçlar (tam ekran görünüm)"
 noResults = "Aramanızı ayarlamayı deneyin veya ihtiyacınızı bulmak için açıklamaları aç/kapatın."
 recommended = "Önerilen"
+selfHostedOffline = "Stirling-PDF sunucunuzu gerektirir (şu anda çevrimdışı):"
 showDetails = "Ayrıntıları Göster"
 unavailable = "Sunucu yöneticisi tarafından devre dışı bırakıldı:"
 unavailableDependency = "Kullanılamıyor - sunucuda gerekli araç eksik:"
@@ -6601,6 +6920,12 @@ pageFormatting = "Sayfa Biçimlendirme"
 removal = "Kaldırma"
 signing = "İmzalama"
 verification = "Doğrulama"
+
+[tool]
+endpointUnavailable = "Bu araç sunucunuzda kullanılamıyor."
+endpointUnavailableClickable = "Bu modda kullanılamaz. Oturum açmak için tıklayın."
+invalidParams = "Gerekli ayarları doldurun."
+noFiles = "Başlamak için bir dosya ekleyin."
 
 [tools]
 noSearchResults = "Araç bulunamadı"

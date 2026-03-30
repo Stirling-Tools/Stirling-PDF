@@ -15,11 +15,8 @@ export function DocumentReadyWrapper({ children, fallback = null }: DocumentRead
 
     const checkActiveDocument = async () => {
       await ready;
-
-      // Try to get the active document from the plugin's provides()
       const docManagerApi = plugin.provides?.();
       if (docManagerApi) {
-        // Try different methods to get the active document
         const activeDoc = docManagerApi.getActiveDocument?.();
         if (activeDoc?.id) {
           setActiveDocumentId(activeDoc.id);

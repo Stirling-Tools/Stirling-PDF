@@ -37,7 +37,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   };
 
   const hasFiles = selectedFiles.length > 0;
-  const hasResults = convertOperation.files.length > 0 || convertOperation.downloadUrl !== null;
+  const hasResults = convertOperation.files.length > 0 || convertOperation.downloadUrl !== null || !!convertOperation.errorMessage;
   const settingsCollapsed = hasResults;
 
   // When operation completes, flag the next selection change to skip reset
@@ -152,7 +152,8 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       loadingText: t("convert.converting", "Converting..."),
       onClick: handleConvert,
       isVisible: !hasResults,
-      disabled: !convertParams.validateParameters() || !hasFiles || !endpointEnabled,
+      endpointEnabled: endpointEnabled,
+      paramsValid: convertParams.validateParameters(),
       testId: "convert-button",
     },
     review: {

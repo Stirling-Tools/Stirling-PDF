@@ -21,7 +21,7 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion
 
 ext {
     springBootVersion = "4.0.3"
-    pdfboxVersion = "3.0.6"
+    pdfboxVersion = "3.0.7"
     imageioVersion = "3.13.1"
     lombokVersion = "1.18.42"
     bouncycastleVersion = "1.83"
@@ -78,7 +78,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '2.7.3'
+    version = '2.8.0'
 
     configurations.configureEach {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
@@ -177,8 +177,6 @@ subprojects {
         exclude group: 'org.bouncycastle', module: 'bcpkix-jdk15on'
         exclude group: 'org.bouncycastle', module: 'bcutil-jdk15on'
         exclude group: 'org.bouncycastle', module: 'bcmail-jdk15on'
-        // Force a compatible Guava version for spotless
-        resolutionStrategy.force 'com.google.guava:guava:33.0.0-jre'
 
         // Security CVE fixes - hardcoded resolution strategy to ensure safe versions
         // Primary fixes via explicit dependencies in app/core/build.gradle:

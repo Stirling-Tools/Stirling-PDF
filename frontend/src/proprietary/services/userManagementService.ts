@@ -79,6 +79,7 @@ export interface InviteLinkRequest {
   teamId?: number;
   expiryHours?: number;
   sendEmail?: boolean;
+  frontendBaseUrl?: string;
 }
 
 export interface InviteLinkResponse {
@@ -234,6 +235,9 @@ export const userManagementService = {
     }
     if (data.sendEmail !== undefined) {
       formData.append('sendEmail', data.sendEmail.toString());
+    }
+    if (data.frontendBaseUrl) {
+      formData.append('frontendBaseUrl', data.frontendBaseUrl);
     }
 
     const response = await apiClient.post<InviteLinkResponse>(

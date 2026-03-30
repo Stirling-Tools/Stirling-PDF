@@ -23,7 +23,8 @@ public class EmlToPdf {
 
         EmlParser.EmailContent emailContent =
                 EmlParser.extractEmailContent(emlBytes, request, customHtmlSanitizer);
-        return EmlProcessingUtils.generateEnhancedEmailHtml(emailContent, request, customHtmlSanitizer);
+        return EmlProcessingUtils.generateEnhancedEmailHtml(
+                emailContent, request, customHtmlSanitizer);
     }
 
     public static byte[] convertEmlToPdf(

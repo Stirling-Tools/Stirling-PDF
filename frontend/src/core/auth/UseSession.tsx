@@ -1,6 +1,6 @@
 export interface AuthContextType {
   session: null;
-  user: null;
+  user: { id?: string; email?: string; [key: string]: unknown } | null;
   loading: boolean;
   error: Error | null;
   signOut: () => Promise<void>;
