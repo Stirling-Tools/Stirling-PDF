@@ -35,11 +35,14 @@ jobs:
       - name: Install frontend dependencies
         run: cd frontend && npm ci
 
+      - name: Generate icons
+        run: cd frontend && node scripts/generate-icons.js
+
       - name: Install all Playwright browsers
         run: cd frontend && npx playwright install --with-deps
 
       - name: Run E2E tests (all browsers)
-        run: cd frontend && npx playwright test src/core/tests/certValidation
+        run: cd frontend && npx playwright test
 
       - name: Upload Playwright report
         if: always()

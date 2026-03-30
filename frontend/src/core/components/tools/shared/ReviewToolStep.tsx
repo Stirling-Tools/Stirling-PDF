@@ -123,6 +123,7 @@ function ReviewStepContent<TParams = unknown>({
       )}
       {operation.downloadUrl && (
         <Button
+          data-testid="download-result-button"
           leftSection={<DownloadIcon />}
           color="blue"
           fullWidth

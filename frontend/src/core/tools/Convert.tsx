@@ -37,7 +37,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   };
 
   const hasFiles = selectedFiles.length > 0;
-  const hasResults = convertOperation.files.length > 0 || convertOperation.downloadUrl !== null;
+  const hasResults = convertOperation.files.length > 0 || convertOperation.downloadUrl !== null || !!convertOperation.errorMessage;
   const settingsCollapsed = hasResults;
 
   // When operation completes, flag the next selection change to skip reset
