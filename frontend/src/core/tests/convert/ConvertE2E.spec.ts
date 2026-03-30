@@ -20,7 +20,7 @@ const MOCK_ENDPOINTS_AVAILABILITY = Object.fromEntries(
     'pdf-to-html', 'pdf-to-xml', 'pdf-to-csv', 'pdf-to-xlsx', 'pdf-to-pdfa',
     'pdf-to-pdfx', 'pdf-to-presentation', 'pdf-to-markdown', 'pdf-to-cbz',
     'pdf-to-cbr', 'pdf-to-epub', 'html-to-pdf', 'svg-to-pdf', 'markdown-to-pdf',
-    'eml-to-pdf', 'cbz-to-pdf', 'cbr-to-pdf', 'img-to-pdf',
+    'eml-to-pdf', 'cbz-to-pdf', 'cbr-to-pdf',
   ].map((k) => [k, { enabled: true }])
 );
 
@@ -28,12 +28,12 @@ const MOCK_ENDPOINTS_AVAILABILITY = Object.fromEntries(
 // Helper: mock all standard app APIs needed to load the main UI
 // ---------------------------------------------------------------------------
 async function mockAppApis(page: Page) {
-  // Backend probe — must return UP so Landing doesn't show "Backend not found"
+  // Backend probe — must return UP so Landing shows app in anonymous mode
   await page.route('**/api/v1/info/status', (route) =>
     route.fulfill({ json: { status: 'UP' } })
   );
 
-  // App config — enableLogin:false puts the app in anonymous mode so no JWT/redirect needed
+  // App config — enableLogin:false puts the app in anonymous mode
   await page.route('**/api/v1/config/app-config', (route) =>
     route.fulfill({
       json: { enableLogin: false, languages: ['en-GB'], defaultLocale: 'en-GB' },
@@ -47,7 +47,7 @@ async function mockAppApis(page: Page) {
     })
   );
 
-  // Endpoint availability — queried in batch by ConvertSettings
+  // Endpoint availability — queried by ConvertSettings
   await page.route('**/api/v1/config/endpoints-availability', (route) =>
     route.fulfill({ json: MOCK_ENDPOINTS_AVAILABILITY })
   );
@@ -57,33 +57,51 @@ async function mockAppApis(page: Page) {
     route.fulfill({ json: true })
   );
 
-  // Group-enabled check — queried by some feature guards
+  // Group-enabled check
   await page.route('**/api/v1/config/group-enabled*', (route) =>
     route.fulfill({ json: true })
   );
 
-  // Footer info — non-critical, silence proxy errors
+  // Footer info — non-critical
   await page.route('**/api/v1/ui-data/footer-info', (route) =>
+    route.fulfill({ json: {} })
+  );
+
+  // Proprietary endpoints — silence proxy errors in the Vite dev server
+  await page.route('**/api/v1/proprietary/**', (route) =>
     route.fulfill({ json: {} })
   );
 }
 
 // ---------------------------------------------------------------------------
 // Helper: upload a file through the Files modal
+// Uses the HiddenFileInput (data-testid="file-input") which has the correct
+// onChange handler. Waits for the modal to auto-close after upload.
 // ---------------------------------------------------------------------------
 async function uploadFile(page: Page, filePath: string) {
   await page.getByTestId('files-button').click();
   await page.waitForSelector('.mantine-Modal-overlay', { state: 'visible', timeout: 5000 });
-  await page.locator('input[type="file"]').first().setInputFiles(filePath);
-  await page.waitForSelector('[data-testid="file-thumbnail"]', { timeout: 10000 });
+  await page.locator('[data-testid="file-input"]').setInputFiles(filePath);
+  // Modal auto-closes after file is selected
+  await page.waitForSelector('.mantine-Modal-overlay', { state: 'hidden', timeout: 10000 });
 }
 
 // ---------------------------------------------------------------------------
-// Helper: select FROM and TO formats in the Convert dropdowns
+// Helper: navigate to the Convert tool panel
+// Tools use data-tour="tool-button-{key}" anchors in the ToolPanel.
+// After clicking, the URL changes to /convert and the settings appear.
 // ---------------------------------------------------------------------------
-async function selectConvertFormats(page: Page, fromValue: string, toValue: string) {
-  await page.getByTestId('convert-from-dropdown').click();
-  await page.getByTestId(`format-option-${fromValue}`).click();
+async function navigateToConvert(page: Page) {
+  await page.locator('[data-tour="tool-button-convert"]').click();
+  await page.waitForSelector('[data-testid="convert-from-dropdown"]', { timeout: 5000 });
+}
+
+// ---------------------------------------------------------------------------
+// Helper: select the TO format in the convert dropdown
+// The FROM format is auto-detected from the uploaded file (e.g. PDF → "Document (PDF)").
+// Opening the TO dropdown renders format-option-{value} buttons in a portal.
+// ---------------------------------------------------------------------------
+async function selectToFormat(page: Page, toValue: string) {
   await page.getByTestId('convert-to-dropdown').click();
   await page.getByTestId(`format-option-${toValue}`).click();
 }
@@ -98,21 +116,20 @@ test.describe('Convert Tool', () => {
     await page.waitForSelector('[data-testid="files-button"]', { timeout: 10000 });
   });
 
-  test('convert button is not visible before a format pair is selected', async ({ page }) => {
+  test('convert button is disabled before a TO format is selected', async ({ page }) => {
     await uploadFile(page, SAMPLE_PDF);
+    await navigateToConvert(page);
 
-    await page.getByTestId('tool-convert').click();
-    await page.waitForSelector('[data-testid="file-thumbnail"]');
-    await page.getByTestId('file-thumbnail').first().click();
-
-    // No formats chosen yet — the convert button should not exist
-    await expect(page.getByTestId('convert-button')).toHaveCount(0);
+    // FROM is auto-detected as PDF; TO not selected → button visible but disabled
+    const convertBtn = page.getByTestId('convert-button');
+    await expect(convertBtn).toBeVisible({ timeout: 3000 });
+    await expect(convertBtn).toBeDisabled();
   });
 
   test('successful PDF to PNG conversion shows download option', async ({ page }) => {
-    // Minimal valid PNG header (8 bytes signature + IHDR chunk stub)
+    // Minimal valid PNG header (8 bytes signature + padding)
     const fakePng = Buffer.from([
-      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, // PNG signature
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
       ...Array(504).fill(0),
     ]);
 
@@ -126,11 +143,8 @@ test.describe('Convert Tool', () => {
     );
 
     await uploadFile(page, SAMPLE_PDF);
-    await page.getByTestId('tool-convert').click();
-    await page.waitForSelector('[data-testid="file-thumbnail"]');
-    await page.getByTestId('file-thumbnail').first().click();
-
-    await selectConvertFormats(page, 'pdf', 'png');
+    await navigateToConvert(page);
+    await selectToFormat(page, 'png');
     await page.getByTestId('convert-button').click();
 
     await expect(page.getByTestId('download-result-button')).toBeVisible({ timeout: 10000 });
@@ -146,35 +160,25 @@ test.describe('Convert Tool', () => {
     );
 
     await uploadFile(page, SAMPLE_PDF);
-    await page.getByTestId('tool-convert').click();
-    await page.waitForSelector('[data-testid="file-thumbnail"]');
-    await page.getByTestId('file-thumbnail').first().click();
-
-    await selectConvertFormats(page, 'pdf', 'png');
+    await navigateToConvert(page);
+    await selectToFormat(page, 'png');
     await page.getByTestId('convert-button').click();
 
     // Mantine Notification renders as role="alert"
     await expect(page.getByRole('alert').first()).toBeVisible({ timeout: 5000 });
   });
 
-  test('convert button appears only after a valid format pair is selected', async ({ page }) => {
+  test('convert button becomes enabled after selecting a valid TO format', async ({ page }) => {
     await uploadFile(page, SAMPLE_PDF);
-    await page.getByTestId('tool-convert').click();
-    await page.waitForSelector('[data-testid="file-thumbnail"]');
-    await page.getByTestId('file-thumbnail').first().click();
+    await navigateToConvert(page);
 
-    // Before formats selected — button absent
-    await expect(page.getByTestId('convert-button')).toHaveCount(0);
+    // Before selecting TO format — button visible but disabled
+    const convertBtn = page.getByTestId('convert-button');
+    await expect(convertBtn).toBeVisible({ timeout: 3000 });
+    await expect(convertBtn).toBeDisabled();
 
-    // Mock the single-endpoint check for pdf-to-img so the button is enabled
-    await page.route('**/api/v1/config/endpoint-enabled*', (route) =>
-      route.fulfill({ json: true })
-    );
-
-    await selectConvertFormats(page, 'pdf', 'png');
-
-    // After selecting valid formats — button present and enabled
-    await expect(page.getByTestId('convert-button')).toBeVisible({ timeout: 3000 });
-    await expect(page.getByTestId('convert-button')).toBeEnabled();
+    // After selecting PNG as TO format — button enabled
+    await selectToFormat(page, 'png');
+    await expect(convertBtn).toBeEnabled({ timeout: 3000 });
   });
 });
