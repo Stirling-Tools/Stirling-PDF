@@ -220,7 +220,7 @@ jobs:
       - name: Check if image exists
         id: check-image
         run: |
-          if docker manifest inspect ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-${{ steps.commit-hash.outputs.app_short }} >/dev/null 2>&1; then
+          if docker manifest inspect ${DOCKER_HUB_USERNAME}/test:v2-${{ steps.commit-hash.outputs.app_short }} >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "Image already exists, skipping build"
           else
@@ -228,6 +228,8 @@ jobs:
             echo "Image needs to be built"
           fi
 
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
       - name: Build and push V2 image
         if: steps.check-image.outputs.exists == 'false'
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
@@ -246,9 +248,11 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
+          echo "${NEW_VPS_SSH_KEY}" > ../private.key
           sudo chmod 600 ../private.key
 
+        env:
+          NEW_VPS_SSH_KEY: ${{ secrets.NEW_VPS_SSH_KEY }}
       - name: Deploy V2 to VPS
         id: deploy
         run: |
@@ -261,7 +265,7 @@ jobs:
           services:
             stirling-pdf-v2:
               container_name: stirling-pdf-v2-pr-${{ needs.check-pr.outputs.pr_number }}
-              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-${{ steps.commit-hash.outputs.app_short }}
+              image: ${DOCKER_HUB_USERNAME}/test:v2-${{ steps.commit-hash.outputs.app_short }}
               ports:
                 - "${V2_PORT}:8080"
               volumes:
@@ -273,8 +277,8 @@ jobs:
                 DISABLE_ADDITIONAL_FEATURES: "false"
                 STIRLING_BILLING_ACCOUNT_LINK_ENABLED: "true"
                 SECURITY_ENABLELOGIN: "true"
-                SECURITY_INITIALLOGIN_USERNAME: "${{ secrets.TEST_LOGIN_USERNAME }}"
-                SECURITY_INITIALLOGIN_PASSWORD: "${{ secrets.TEST_LOGIN_PASSWORD }}"
+                SECURITY_INITIALLOGIN_USERNAME: "${TEST_LOGIN_USERNAME}"
+                SECURITY_INITIALLOGIN_PASSWORD: "${TEST_LOGIN_PASSWORD}"
                 SYSTEM_DEFAULTLOCALE: en-US
                 UI_APPNAME: "Stirling-PDF V2 PR#${{ needs.check-pr.outputs.pr_number }}"
                 UI_HOMEDESCRIPTION: "V2 PR#${{ needs.check-pr.outputs.pr_number }} - Embedded Architecture"
@@ -288,9 +292,9 @@ jobs:
           EOF
 
           # Deploy to VPS
-          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }}:/tmp/docker-compose-v2.yml
+          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${NEW_VPS_USERNAME}@${NEW_VPS_HOST}:/tmp/docker-compose-v2.yml
 
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << ENDSSH
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${NEW_VPS_USERNAME}@${NEW_VPS_HOST} << ENDSSH
             # Create V2 PR-specific directories
             mkdir -p /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/{data,config,logs,storage}
 
@@ -314,6 +318,13 @@ jobs:
 
           # Set port for output
           echo "v2_port=${V2_PORT}" >> $GITHUB_OUTPUT
+
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          TEST_LOGIN_USERNAME: ${{ secrets.TEST_LOGIN_USERNAME }}
+          TEST_LOGIN_PASSWORD: ${{ secrets.TEST_LOGIN_PASSWORD }}
+          NEW_VPS_USERNAME: ${{ secrets.NEW_VPS_USERNAME }}
+          NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
 
       # ---- Storybook preview (only when this PR touches stories/.storybook) ----
       # Runs inside the same approved-contributor-gated deploy job, so it deploys
@@ -504,12 +515,14 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
+          echo "${NEW_VPS_SSH_KEY}" > ../private.key
           sudo chmod 600 ../private.key
 
+        env:
+          NEW_VPS_SSH_KEY: ${{ secrets.NEW_VPS_SSH_KEY }}
       - name: Cleanup V2 deployment
         run: |
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << 'ENDSSH'
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${NEW_VPS_USERNAME}@${NEW_VPS_HOST} << 'ENDSSH'
             if [ -d "/stirling/V2-PR-${{ github.event.pull_request.number }}" ]; then
               echo "Found V2 PR directory, proceeding with cleanup..."
 
@@ -542,6 +555,9 @@ jobs:
             # Only remove PR-specific containers and directories
           ENDSSH
 
+        env:
+          NEW_VPS_USERNAME: ${{ secrets.NEW_VPS_USERNAME }}
+          NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
       - name: Cleanup temporary files
         if: always()
         run: |
