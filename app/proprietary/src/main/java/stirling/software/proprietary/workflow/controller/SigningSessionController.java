@@ -1,5 +1,6 @@
 package stirling.software.proprietary.workflow.controller;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
 
@@ -14,7 +15,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,9 +35,12 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.workflow.dto.CertificateInfo;
+import stirling.software.proprietary.workflow.dto.CertificateValidationResponse;
 import stirling.software.proprietary.workflow.dto.ParticipantRequest;
 import stirling.software.proprietary.workflow.dto.WorkflowCreationRequest;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
+import stirling.software.proprietary.workflow.service.CertificateSubmissionValidator;
 import stirling.software.proprietary.workflow.service.SigningFinalizationService;
 import stirling.software.proprietary.workflow.service.WorkflowSessionService;
 
@@ -48,6 +54,7 @@ public class SigningSessionController {
     private final WorkflowSessionService workflowSessionService;
     private final UserService userService;
     private final SigningFinalizationService signingFinalizationService;
+    private final CertificateSubmissionValidator certificateSubmissionValidator;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Operation(summary = "List all signing sessions for current user")
@@ -394,6 +401,84 @@ public class SigningSessionController {
             log.error("Error declining sign request for session {}", sessionId, e);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("Cannot decline sign request: " + e.getMessage());
+        }
+    }
+
+    @Operation(
+            summary = "Pre-validate a certificate before signing",
+            description =
+                    "Validates that the provided certificate is loadable, not expired, and can "
+                            + "successfully sign a document. Returns validation details so the "
+                            + "user can confirm the correct certificate before committing.")
+    @PostMapping(
+            value = "/cert-sign/validate-certificate",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<CertificateValidationResponse> validateCertificate(
+            @RequestParam("certType") String certType,
+            @RequestParam(value = "password", required = false) String password,
+            @RequestParam(value = "p12File", required = false) MultipartFile p12File,
+            @RequestParam(value = "jksFile", required = false) MultipartFile jksFile,
+            Principal principal) {
+
+        workflowSessionService.ensureSigningEnabled();
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (!"SERVER".equalsIgnoreCase(certType)
+                && !"USER_CERT".equalsIgnoreCase(certType)
+                && (p12File == null || p12File.isEmpty())
+                && (jksFile == null || jksFile.isEmpty())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "No certificate file provided");
+        }
+
+        try {
+            byte[] keystoreBytes = null;
+            if (p12File != null && !p12File.isEmpty()) {
+                keystoreBytes = p12File.getBytes();
+            } else if (jksFile != null && !jksFile.isEmpty()) {
+                keystoreBytes = jksFile.getBytes();
+            }
+
+            CertificateInfo info =
+                    certificateSubmissionValidator.validateAndExtractInfo(
+                            keystoreBytes, certType, password);
+
+            if (info == null) {
+                return ResponseEntity.ok(
+                        new CertificateValidationResponse(
+                                true, null, null, null, null, false, null));
+            }
+
+            return ResponseEntity.ok(
+                    new CertificateValidationResponse(
+                            true,
+                            info.subjectName(),
+                            info.issuerName(),
+                            info.notAfter() != null ? info.notAfter().toInstant().toString() : null,
+                            info.notBefore() != null
+                                    ? info.notBefore().toInstant().toString()
+                                    : null,
+                            info.selfSigned(),
+                            null));
+
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.ok(
+                    new CertificateValidationResponse(
+                            false, null, null, null, null, false, e.getReason()));
+        } catch (IOException e) {
+            log.error("Error reading certificate file during pre-validation", e);
+            return ResponseEntity.ok(
+                    new CertificateValidationResponse(
+                            false,
+                            null,
+                            null,
+                            null,
+                            null,
+                            false,
+                            "Failed to read certificate file"));
         }
     }
 
