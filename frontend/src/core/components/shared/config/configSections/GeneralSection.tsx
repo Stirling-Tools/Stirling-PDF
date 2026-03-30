@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Paper,
   Stack,
@@ -22,8 +22,7 @@ import type { ToolPanelMode } from "@app/constants/toolPanel";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { updateService, UpdateSummary } from "@app/services/updateService";
 import UpdateModal from "@app/components/shared/UpdateModal";
-import { getVersion } from "@tauri-apps/api/app";
-import { isTauri } from "@tauri-apps/api/core";
+import { useFrontendVersionInfo } from "@app/hooks/useFrontendVersionInfo";
 
 const DEFAULT_AUTO_UNZIP_FILE_LIMIT = 4;
 const BANNER_DISMISSED_KEY = "stirlingpdf_features_banner_dismissed";
@@ -46,10 +45,8 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
   const [updateSummary, setUpdateSummary] = useState<UpdateSummary | null>(null);
   const [updateModalOpened, setUpdateModalOpened] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
-  const [mismatchVersion, setMismatchVersion] = useState(false);
-  const isTauriApp = useMemo(() => isTauri(), []);
-  const [appVersion, setAppVersion] = useState<string | null>(null);
-  const frontendVersionLabel = appVersion ?? t("common.loading", "Loading...");
+  const { appVersion, mismatchVersion } = useFrontendVersionInfo(config?.appVersion);
+  const frontendVersionLabel = appVersion ?? t("common.loading", "Loading..."); // null = loading, shown only when appVersion !== undefined
 
   // Sync local state with preference changes
   useEffect(() => {
@@ -90,52 +87,6 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
     }
     setCheckingUpdate(false);
   };
-
-  useEffect(() => {
-    if (!isTauriApp) {
-      setMismatchVersion(false);
-      return;
-    }
-
-    let cancelled = false;
-    const fetchFrontendVersion = async () => {
-      try {
-        const frontendVersion = await getVersion();
-        if (!cancelled) {
-          setAppVersion(frontendVersion);
-        }
-      } catch (error) {
-        console.error("[GeneralSection] Failed to fetch frontend version:", error);
-      }
-    };
-
-    fetchFrontendVersion();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isTauriApp]);
-
-  useEffect(() => {
-    if (!isTauriApp) {
-      return;
-    }
-
-    if (!appVersion || !config?.appVersion) {
-      setMismatchVersion(false);
-      return;
-    }
-
-    if (appVersion !== config.appVersion) {
-      console.warn("[GeneralSection] Mismatch between Tauri version and AppConfig version:", {
-        backendVersion: config.appVersion,
-        frontendVersion: appVersion,
-      });
-      setMismatchVersion(true);
-    } else {
-      setMismatchVersion(false);
-    }
-  }, [isTauriApp, appVersion, config?.appVersion]);
 
   // Check if login is disabled
   const loginDisabled = !config?.enableLogin;
@@ -239,7 +190,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
                 )}
               </Group>
             </div>
-            {isTauriApp && (
+            {appVersion !== undefined && (
               <Group justify="space-between" align="center">
                 <div>
                   <Text size="sm" c="dimmed">
