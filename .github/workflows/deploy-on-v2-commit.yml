@@ -65,7 +65,7 @@ jobs:
       - name: Check if frontend image exists
         id: check-frontend
         run: |
-          if docker manifest inspect ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }} >/dev/null 2>&1; then
+          if docker manifest inspect ${DOCKER_HUB_USERNAME}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }} >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "Frontend image already exists, skipping build"
           else
@@ -73,10 +73,12 @@ jobs:
             echo "Frontend image needs to be built"
           fi
 
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
       - name: Check if backend image exists
         id: check-backend
         run: |
-          if docker manifest inspect ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }} >/dev/null 2>&1; then
+          if docker manifest inspect ${DOCKER_HUB_USERNAME}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }} >/dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "Backend image already exists, skipping build"
           else
@@ -84,6 +86,8 @@ jobs:
             echo "Backend image needs to be built"
           fi
 
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
       - name: Login to Docker Hub
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
@@ -123,9 +127,11 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
+          echo "${NEW_VPS_SSH_KEY}" > ../private.key
           chmod 600 ../private.key
 
+        env:
+          NEW_VPS_SSH_KEY: ${{ secrets.NEW_VPS_SSH_KEY }}
       - name: Deploy to VPS on port 3000
         run: |
           export UNIQUE_NAME=docker-compose-v2-$GITHUB_RUN_ID.yml
@@ -135,7 +141,7 @@ jobs:
           services:
             backend:
               container_name: stirling-v2-backend
-              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }}
+              image: ${DOCKER_HUB_USERNAME}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }}
               ports:
                 - "13000:8080"
               volumes:
@@ -158,21 +164,21 @@ jobs:
 
             frontend:
               container_name: stirling-v2-frontend
-              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
+              image: ${DOCKER_HUB_USERNAME}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
               ports:
                 - "3000:80"
               environment:
-                VITE_API_BASE_URL: "http://${{ secrets.NEW_VPS_HOST }}:13000"
+                VITE_API_BASE_URL: "http://${NEW_VPS_HOST}:13000"
               depends_on:
                 - backend
               restart: on-failure:5
           EOF
 
           # Copy to remote with unique name
-          scp -i ../private.key -o StrictHostKeyChecking=no $UNIQUE_NAME ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }}:/tmp/$UNIQUE_NAME
+          scp -i ../private.key -o StrictHostKeyChecking=no $UNIQUE_NAME ${NEW_VPS_USERNAME}@${NEW_VPS_HOST}:/tmp/$UNIQUE_NAME
 
           # SSH and rename/move atomically to avoid interference
-          ssh -i ../private.key -o StrictHostKeyChecking=no ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << ENDSSH
+          ssh -i ../private.key -o StrictHostKeyChecking=no ${NEW_VPS_USERNAME}@${NEW_VPS_HOST} << ENDSSH
             mkdir -p /stirling/V2/{data,config,logs}
             mv /tmp/$UNIQUE_NAME /stirling/V2/docker-compose.yml
             cd /stirling/V2
@@ -183,6 +189,10 @@ jobs:
             docker image prune -af --filter "until=336h" --filter "label!=keep=true" || true
           ENDSSH
 
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
+          NEW_VPS_USERNAME: ${{ secrets.NEW_VPS_USERNAME }}
       - name: Cleanup temporary files
         if: always()
         run: |
