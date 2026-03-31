@@ -622,8 +622,7 @@ RUN set -eux; \
         -d /home/stirlingpdfuser -s /bin/bash stirlingpdfuser 2>/dev/null \
         || useradd -m -g stirlingpdfgroup \
           -d /home/stirlingpdfuser -s /bin/bash stirlingpdfuser; \
-    fi; \
-
+    fi
 
 # Application directories
 RUN set -eux; \
