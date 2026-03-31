@@ -335,9 +335,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
         formData.append('workflowMetadata', workflowMetadata);
       }
 
-      await apiClient.post('/api/v1/security/cert-sign/sessions', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      await apiClient.post('/api/v1/security/cert-sign/sessions', formData);
 
       alert({
         alertType: 'success',
@@ -493,9 +491,7 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
 
   // Action handlers
   const handleSign = async (sessionId: string, certificateData: FormData) => {
-    await apiClient.post(`/api/v1/security/cert-sign/sign-requests/${sessionId}/sign`, certificateData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    await apiClient.post(`/api/v1/security/cert-sign/sign-requests/${sessionId}/sign`, certificateData);
     alert({
       alertType: 'success',
       title: t('success'),
