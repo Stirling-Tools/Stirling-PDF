@@ -10,6 +10,7 @@ import { PdfViewerToolbar } from '@app/components/viewer/PdfViewerToolbar';
 import { ThumbnailSidebar } from '@app/components/viewer/ThumbnailSidebar';
 import { BookmarkSidebar } from '@app/components/viewer/BookmarkSidebar';
 import { AttachmentSidebar } from '@app/components/viewer/AttachmentSidebar';
+import { LayerSidebar } from '@app/components/viewer/LayerSidebar';
 import { useNavigationGuard, useNavigationState } from '@app/contexts/NavigationContext';
 import { useSignature } from '@app/contexts/SignatureContext';
 import { useRedaction } from '@app/contexts/RedactionContext';
@@ -126,6 +127,8 @@ const EmbedPdfViewerContent = ({
     toggleThumbnailSidebar,
     isBookmarkSidebarVisible,
     isAttachmentSidebarVisible,
+    isLayerSidebarVisible,
+    setHasLayers,
     isCommentsSidebarVisible,
     isSearchInterfaceVisible,
     searchInterfaceActions,
@@ -141,6 +144,8 @@ const EmbedPdfViewerContent = ({
     printActions,
     setApplyChanges,
     applyChanges: viewerApplyChanges,
+    pdfRenderMode,
+    cyclePdfRenderMode,
   } = useViewer();
 
   const scrollState = getScrollState();
@@ -464,6 +469,7 @@ const EmbedPdfViewerContent = ({
               }
             }
             return;
+
           case 'z':
           case 'Z':
             // Ctrl+Z: Undo; Ctrl+Shift+Z: Redo
@@ -518,7 +524,7 @@ const EmbedPdfViewerContent = ({
   }, [
     isViewerHovered, isSearchInterfaceVisible, zoomActions, searchInterfaceActions,
     scrollActions, printActions, exportActions, rotationActions, historyApiRef,
-    viewerApplyChanges,
+    viewerApplyChanges, cyclePdfRenderMode,
   ]);
 
   // Watch the annotation history API to detect when the document becomes "dirty".
@@ -711,6 +717,46 @@ const EmbedPdfViewerContent = ({
     window.addEventListener('formfill:apply', handler);
     return () => window.removeEventListener('formfill:apply', handler);
   }, [handleFormApply]);
+
+  // Apply layer visibility changes - reload the modified PDF into the viewer
+  const layerApplyInProgressRef = useRef(false);
+  const handleLayerApply = useCallback(async (modifiedBlob: Blob) => {
+    if (layerApplyInProgressRef.current) return;
+    if (!currentFile || activeFileIds.length === 0) return;
+
+    layerApplyInProgressRef.current = true;
+    try {
+      const pageToRestore = lastKnownScrollPageRef.current;
+      const currentRotation = rotationState.rotation ?? 0;
+
+      const filename = currentFile.name || 'document.pdf';
+      const file = new File([modifiedBlob], filename, { type: 'application/pdf' });
+
+      const currentFileId = activeFiles[activeFileIndex]?.fileId;
+      if (!currentFileId) throw new Error('Current file ID not found');
+
+      const parentStub = selectors.getStirlingFileStub(currentFileId);
+      if (!parentStub) throw new Error('Parent stub not found');
+
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, 'multiTool');
+
+      pendingScrollRestoreRef.current = pageToRestore;
+      scrollRestoreAttemptsRef.current = 0;
+      pendingRotationRestoreRef.current = currentRotation;
+      rotationRestoreAttemptsRef.current = 0;
+
+      const newFileId = stubs[0]?.id;
+      if (newFileId) {
+        pendingFileIdRef.current = newFileId;
+      }
+
+      await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
+    } catch (error) {
+      console.error('[Viewer] Apply layer changes failed:', error);
+    } finally {
+      layerApplyInProgressRef.current = false;
+    }
+  }, [currentFile, activeFiles, activeFileIndex, actions, selectors, activeFileIds.length, rotationState.rotation]);
 
   // Discard pending redactions but save already-applied ones
   // This is called when user clicks "Discard & Leave" - we want to:
@@ -931,6 +977,7 @@ const EmbedPdfViewerContent = ({
     (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
     (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
     (isAttachmentSidebarVisible ? sidebarWidthRem : 0) +
+    (isLayerSidebarVisible ? sidebarWidthRem : 0) +
     (isCommentsSidebarVisible ? commentsSidebarWidthRem : 0);
 
   return (
@@ -979,6 +1026,7 @@ const EmbedPdfViewerContent = ({
             }}>
             <LocalEmbedPDF
               key={currentFileId || 'no-file'}
+              pdfRenderMode={pdfRenderMode}
               file={effectiveFile.file}
               url={effectiveFile.url}
               fileName={
@@ -998,7 +1046,7 @@ const EmbedPdfViewerContent = ({
               redactionTrackerRef={redactionTrackerRef as React.RefObject<RedactionPendingTrackerAPI>}
               fileId={currentFileId}
               isCommentsSidebarVisible={isCommentsSidebarVisible}
-              commentsSidebarRightOffset={`${(isThumbnailSidebarVisible ? sidebarWidthRem : 0) + (isBookmarkSidebarVisible ? sidebarWidthRem : 0) + (isAttachmentSidebarVisible ? sidebarWidthRem : 0)}rem`}
+              commentsSidebarRightOffset={`${(isThumbnailSidebarVisible ? sidebarWidthRem : 0) + (isBookmarkSidebarVisible ? sidebarWidthRem : 0) + (isAttachmentSidebarVisible ? sidebarWidthRem : 0) + (isLayerSidebarVisible ? sidebarWidthRem : 0)}rem`}
               onSignatureAdded={() => {
                 // Handle signature added - for debugging, enable console logs as needed
                 // Future: Handle signature completion
@@ -1067,6 +1115,18 @@ const EmbedPdfViewerContent = ({
         bookmarkVisible={isBookmarkSidebarVisible}
         documentCacheKey={bookmarkCacheKey}
         preloadCacheKeys={allBookmarkCacheKeys}
+      />
+      <LayerSidebar
+        visible={isLayerSidebarVisible}
+        rightOffset={
+          (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
+          (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
+          (isAttachmentSidebarVisible ? sidebarWidthRem : 0)
+        }
+        file={effectiveFile?.file ?? null}
+        documentCacheKey={bookmarkCacheKey}
+        onApplyLayers={handleLayerApply}
+        onLayersDetected={setHasLayers}
       />
 
       {/* Navigation Warning Modal */}

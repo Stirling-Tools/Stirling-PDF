@@ -32,6 +32,8 @@ export interface CustomWorkbenchViewRegistration {
   label: string;
   icon?: React.ReactNode;
   component: React.ComponentType<{ data: any }>;
+  hideTopControls?: boolean;
+  hideToolPanel?: boolean;
 }
 
 export interface CustomWorkbenchViewInstance extends CustomWorkbenchViewRegistration {
@@ -201,8 +203,14 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     }
   }, [actions, navigationState.workbench]);
 
-  const setCustomWorkbenchViewData = useCallback((id: string, data: any) => {
-    setCustomViewData(prev => ({ ...prev, [id]: data }));
+  const setCustomWorkbenchViewData = useCallback((id: string, dataOrUpdater: any | ((prev: any) => any)) => {
+    setCustomViewData(prev => {
+      const currentData = prev[id];
+      const newData = typeof dataOrUpdater === 'function'
+        ? dataOrUpdater(currentData)
+        : dataOrUpdater;
+      return { ...prev, [id]: newData };
+    });
   }, []);
 
   const clearCustomWorkbenchViewData = useCallback((id: string) => {

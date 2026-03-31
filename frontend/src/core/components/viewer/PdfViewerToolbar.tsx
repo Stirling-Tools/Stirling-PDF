@@ -9,6 +9,9 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import LastPageIcon from '@mui/icons-material/LastPage';
 import DescriptionIcon from '@mui/icons-material/Description';
 import ViewWeekIcon from '@mui/icons-material/ViewWeek';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import WbSunnyIcon from '@mui/icons-material/WbSunny';
+import WbTwilightIcon from '@mui/icons-material/WbTwilight';
 
 interface PdfViewerToolbarProps {
   // Page navigation props (placeholders for now)
@@ -33,6 +36,8 @@ export function PdfViewerToolbar({
     registerImmediateZoomUpdate,
     registerImmediateScrollUpdate,
     registerImmediateSpreadUpdate,
+    pdfRenderMode,
+    cyclePdfRenderMode,
   } = useViewer();
 
   const scrollState = getScrollState();
@@ -126,7 +131,7 @@ export function PdfViewerToolbar({
           borderBottomRightRadius: 0,
           boxShadow: "0 -2px 8px rgba(0,0,0,0.04)",
           pointerEvents: "auto",
-          minWidth: '26.5rem',
+          minWidth: '30rem',
         }}
       >
         {/* First Page Button */}
@@ -231,6 +236,39 @@ export function PdfViewerToolbar({
             style={{ minWidth: '2.5rem' }}
           >
             {isDualPageActive ? <DescriptionIcon fontSize="small" /> : <ViewWeekIcon fontSize="small" />}
+          </Button>
+        </Tooltip>
+
+        {/* PDF Render Mode Toggle */}
+        <Tooltip
+          content={
+            pdfRenderMode === 'normal'
+              ? t("viewer.enableDarkFilter", "Enable Dark Filter")
+              : pdfRenderMode === 'dark'
+                ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
+                : t("viewer.disableColorFilter", "Disable Color Filter")
+          }
+          position="top"
+          arrow
+        >
+          <Button
+            variant={pdfRenderMode !== 'normal' ? "filled" : "light"}
+            color="blue"
+            size="md"
+            radius="xl"
+            onClick={cyclePdfRenderMode}
+            style={{ minWidth: '2.5rem' }}
+            aria-label={
+              pdfRenderMode === 'normal'
+                ? t("viewer.enableDarkFilter", "Enable Dark Filter")
+                : pdfRenderMode === 'dark'
+                  ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
+                  : t("viewer.disableColorFilter", "Disable Color Filter")
+            }
+          >
+            {pdfRenderMode === 'normal' && <DarkModeIcon fontSize="small" />}
+            {pdfRenderMode === 'dark' && <WbTwilightIcon fontSize="small" />}
+            {pdfRenderMode === 'sepia' && <WbSunnyIcon fontSize="small" />}
           </Button>
         </Tooltip>
 
