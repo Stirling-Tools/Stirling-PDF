@@ -69,42 +69,6 @@ public class AiEngineController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
     }
 
-    @PostMapping(value = "/agents/draft", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(
-            summary = "Draft an agent specification",
-            description =
-                    "Sends a user message to the agent drafting workflow to create a new agent"
-                            + " specification")
-    public ResponseEntity<String> draftAgent(@RequestBody String requestBody) throws IOException {
-        validateJson(requestBody);
-        String response = aiEngineClient.post("/api/v1/agents/draft", requestBody);
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
-    }
-
-    @PostMapping(value = "/agents/revise", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(
-            summary = "Revise an agent specification",
-            description =
-                    "Sends a user message and current draft to the agent revision workflow to"
-                            + " update an existing agent specification")
-    public ResponseEntity<String> reviseAgent(@RequestBody String requestBody) throws IOException {
-        validateJson(requestBody);
-        String response = aiEngineClient.post("/api/v1/agents/revise", requestBody);
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
-    }
-
-    @PostMapping(value = "/agents/next-action", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(
-            summary = "Get next execution action for an agent",
-            description =
-                    "Given an agent spec and current execution state, returns the next tool call"
-                            + " action to perform")
-    public ResponseEntity<String> nextAction(@RequestBody String requestBody) throws IOException {
-        validateJson(requestBody);
-        String response = aiEngineClient.post("/api/v1/agents/next-action", requestBody);
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
-    }
-
     private void validateJson(String body) {
         try {
             objectMapper.readValue(body, JsonNode.class);
