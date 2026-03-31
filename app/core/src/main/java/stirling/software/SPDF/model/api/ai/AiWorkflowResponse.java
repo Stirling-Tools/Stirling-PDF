@@ -13,7 +13,7 @@ import lombok.Data;
 public class AiWorkflowResponse {
 
     @Schema(description = "Workflow outcome")
-    private String outcome;
+    private AiWorkflowOutcome outcome;
 
     @Schema(description = "Answer returned by the AI workflow when applicable")
     private String answer;

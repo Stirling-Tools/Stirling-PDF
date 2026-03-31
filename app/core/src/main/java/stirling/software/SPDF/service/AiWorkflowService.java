@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.SPDF.model.api.ai.AiWorkflowOutcome;
 import stirling.software.SPDF.model.api.ai.AiWorkflowRequest;
 import stirling.software.SPDF.model.api.ai.AiWorkflowResponse;
 import stirling.software.SPDF.model.api.ai.AiWorkflowTextSelection;
@@ -26,11 +27,16 @@ import tools.jackson.databind.ObjectMapper;
 public class AiWorkflowService {
 
     private static final int MAX_CHARACTERS_PER_PAGE = 4_000;
-    private static final int MAX_ORCHESTRATION_TURNS = 3;
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final AiEngineClient aiEngineClient;
     private final ObjectMapper objectMapper;
+
+    private sealed interface StepResult {
+        record Continue() implements StepResult {}
+
+        record Done(AiWorkflowResponse response) implements StepResult {}
+    }
 
     public AiWorkflowResponse orchestrate(AiWorkflowRequest request) throws IOException {
         validateRequest(request);
@@ -40,29 +46,62 @@ public class AiWorkflowService {
         turnRequest.setFileName(request.getFileInput().getOriginalFilename());
 
         try (PDDocument document = pdfDocumentFactory.load(request.getFileInput(), true)) {
-            for (int turn = 0; turn < MAX_ORCHESTRATION_TURNS; turn++) {
-                AiWorkflowResponse response = invokeOrchestrator(turnRequest);
-                if (!"need_text".equals(response.getOutcome())) {
-                    return response;
-                }
+            boolean textExtracted = false;
 
-                List<AiWorkflowTextSelection> extractedPages =
-                        extractRequestedText(response, document);
-                turnRequest.setArtifacts(List.of(createExtractedTextArtifact(extractedPages)));
-                turnRequest.setResumeWith(response.getResumeWith());
+            while (true) {
+                AiWorkflowResponse response = invokeOrchestrator(turnRequest);
+                StepResult result =
+                        switch (response.getOutcome()) {
+                            case NEED_TEXT ->
+                                    onNeedText(response, document, turnRequest, textExtracted);
+                            case ANSWER,
+                                NOT_FOUND,
+                                PLAN,
+                                CLARIFICATION_REQUEST,
+                                CANNOT_DO,
+                                UNSUPPORTED_CAPABILITY,
+                                CANNOT_CONTINUE ->
+                                    new StepResult.Done(response);
+                        };
+
+                switch (result) {
+                    case StepResult.Continue c -> textExtracted = true;
+                    case StepResult.Done d -> {
+                        return d.response();
+                    }
+                }
             }
         }
+    }
 
-        AiWorkflowResponse response = new AiWorkflowResponse();
-        response.setOutcome("cannot_continue");
-        response.setReason("AI orchestration exceeded the maximum number of invocations.");
-        return response;
+    private StepResult onNeedText(
+            AiWorkflowResponse response,
+            PDDocument document,
+            WorkflowTurnRequest turnRequest,
+            boolean textExtracted)
+            throws IOException {
+        if (textExtracted) {
+            return new StepResult.Done(
+                    cannotContinue("AI engine requested text extraction more than once."));
+        }
+
+        List<AiWorkflowTextSelection> extractedPages = extractRequestedText(response, document);
+        turnRequest.setArtifacts(List.of(createExtractedTextArtifact(extractedPages)));
+        turnRequest.setResumeWith(response.getResumeWith());
+        return new StepResult.Continue();
     }
 
     private void validateRequest(AiWorkflowRequest request) {
         if (request.getFileInput().isEmpty()) {
             throw ExceptionUtils.createFileNullOrEmptyException();
         }
+    }
+
+    private AiWorkflowResponse cannotContinue(String reason) {
+        AiWorkflowResponse response = new AiWorkflowResponse();
+        response.setOutcome(AiWorkflowOutcome.CANNOT_CONTINUE);
+        response.setReason(reason);
+        return response;
     }
 
     private AiWorkflowResponse invokeOrchestrator(WorkflowTurnRequest request) throws IOException {
