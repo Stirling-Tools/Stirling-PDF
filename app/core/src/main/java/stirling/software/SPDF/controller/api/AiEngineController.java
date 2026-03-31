@@ -23,6 +23,8 @@ import stirling.software.SPDF.model.api.ai.AiWorkflowRequest;
 import stirling.software.SPDF.model.api.ai.AiWorkflowResponse;
 import stirling.software.SPDF.service.AiEngineClient;
 import stirling.software.SPDF.service.AiWorkflowService;
+
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -108,8 +110,9 @@ public class AiEngineController {
     private void validateJson(String body) {
         try {
             objectMapper.readValue(body, JsonNode.class);
-        } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request body is not valid JSON");
+        } catch (JacksonException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Request body is not valid JSON");
         }
     }
 }

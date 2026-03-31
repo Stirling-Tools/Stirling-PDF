@@ -53,6 +53,8 @@ public class AiWorkflowResponse {
     @Schema(description = "Requested character limit when Python asks Java to extract text")
     private Integer maxCharacters;
 
-    @Schema(description = "Agent to resume with on the next turn, bypassing orchestrator re-routing")
+    @Schema(
+            description =
+                    "Agent to resume with on the next turn, bypassing orchestrator re-routing")
     private String resumeWith;
 }

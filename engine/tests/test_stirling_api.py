@@ -39,7 +39,9 @@ class StubSettingsProvider:
 
 class StubOrchestratorAgent:
     async def handle(self, request: OrchestratorRequest) -> PdfQuestionNeedTextResponse:
-        return PdfQuestionNeedTextResponse(reason=request.user_message, page_numbers=[1], max_pages=1)
+        return PdfQuestionNeedTextResponse(
+            reason=request.user_message, page_numbers=[1], max_pages=1, max_characters=1000
+        )
 
 
 class StubPdfEditAgent:

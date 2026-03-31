@@ -25,8 +25,6 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class AiWorkflowService {
 
-    private static final int DEFAULT_MAX_PAGES = 12;
-    private static final int DEFAULT_MAX_CHARACTERS = 24_000;
     private static final int MAX_CHARACTERS_PER_PAGE = 4_000;
     private static final int MAX_ORCHESTRATION_TURNS = 3;
 
@@ -69,11 +67,6 @@ public class AiWorkflowService {
                     "A user message is required for AI orchestration.");
         }
         if (request.getFileInput() == null) {
-            if (request.getFileId() != null && !request.getFileId().isBlank()) {
-                throw ExceptionUtils.createIllegalArgumentException(
-                        "error.aiFileIdUnsupported",
-                        "AI workflows currently require a direct file upload.");
-            }
             throw ExceptionUtils.createPdfFileRequiredException();
         }
         if (request.getFileInput().isEmpty()) {
@@ -96,27 +89,17 @@ public class AiWorkflowService {
                         response.getPageNumbers().isEmpty()
                                 ? request.getPageNumbers()
                                 : response.getPageNumbers(),
-                        response.getMaxPages() != null
-                                ? response.getMaxPages()
-                                : request.getMaxPages());
+                        response.getMaxPages());
 
-        return extractPageText(
-                document,
-                selectedPages,
-                normalizePositive(
-                        response.getMaxCharacters() != null
-                                ? response.getMaxCharacters()
-                                : request.getMaxCharacters(),
-                        DEFAULT_MAX_CHARACTERS));
+        return extractPageText(document, selectedPages, response.getMaxCharacters());
     }
 
     private List<Integer> selectPages(
-            int totalPages, List<Integer> requestedPageNumbers, Integer requestedMaxPages) {
+            int totalPages, List<Integer> requestedPageNumbers, int maxPages) {
         if (totalPages <= 0) {
             throw ExceptionUtils.createPdfNoPages();
         }
 
-        int maxPages = normalizePositive(requestedMaxPages, DEFAULT_MAX_PAGES);
         List<Integer> pages = new ArrayList<>();
 
         if (requestedPageNumbers == null || requestedPageNumbers.isEmpty()) {
@@ -183,13 +166,6 @@ public class AiWorkflowService {
         ExtractedTextArtifact artifact = new ExtractedTextArtifact();
         artifact.setPages(pages);
         return artifact;
-    }
-
-    private int normalizePositive(Integer requestedValue, int defaultValue) {
-        if (requestedValue == null || requestedValue <= 0) {
-            return defaultValue;
-        }
-        return requestedValue;
     }
 
     private String clip(String text, int maxLength) {

@@ -3,17 +3,25 @@ package stirling.software.SPDF.model.api.ai;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import jakarta.validation.constraints.NotNull;
 
-import stirling.software.common.model.api.PDFFile;
+import lombok.Data;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
 @Schema(description = "Run an AI workflow against a PDF file")
-public class AiWorkflowRequest extends PDFFile {
+public class AiWorkflowRequest {
+
+    @NotNull
+    @Schema(
+            description = "The input PDF file",
+            contentMediaType = MediaType.APPLICATION_PDF_VALUE,
+            format = "binary")
+    private MultipartFile fileInput;
 
     @Schema(description = "The user message to orchestrate", example = "What is the notice period?")
     private String userMessage;

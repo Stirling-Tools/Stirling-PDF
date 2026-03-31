@@ -27,8 +27,8 @@ class PdfQuestionNeedTextResponse(ApiModel):
     resume_with: SupportedCapability = SupportedCapability.PDF_QUESTION
     reason: str
     page_numbers: list[int] = Field(default_factory=list)
-    max_pages: int | None = None
-    max_characters: int | None = None
+    max_pages: int
+    max_characters: int
 
 
 class PdfQuestionNotFoundResponse(ApiModel):
