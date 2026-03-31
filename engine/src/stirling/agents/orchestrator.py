@@ -81,6 +81,7 @@ class OrchestratorAgent:
         return result.output
 
     async def _resume(self, request: OrchestratorRequest, capability: SupportedCapability) -> OrchestratorResponse:
+        """Fast-path to get back to the correct endpoint without having to call AI."""
         match capability:
             case SupportedCapability.PDF_QUESTION:
                 return await self._run_pdf_question(request)
