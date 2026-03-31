@@ -32,7 +32,7 @@ import tools.jackson.databind.ObjectMapper;
 @RestController
 @RequestMapping("/api/v1/ai")
 @RequiredArgsConstructor
-@Tag(name = "AI Engine", description = "Proxy endpoints for the Stirling AI engine")
+@Tag(name = "AI Engine", description = "Endpoints for AI-powered PDF workflows")
 public class AiEngineController {
 
     private final AiEngineClient aiEngineClient;
@@ -51,9 +51,7 @@ public class AiEngineController {
     @PostMapping(value = "/orchestrate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Run an AI workflow against a PDF",
-            description =
-                    "Accepts a PDF upload, asks Python what it needs next, performs Java-side"
-                            + " extraction work, and loops until Python returns a final result")
+            description = "Accepts a PDF upload and a user message and returns an AI workflow result")
     public ResponseEntity<AiWorkflowResponse> orchestrate(@ModelAttribute AiWorkflowRequest request)
             throws IOException {
         return ResponseEntity.ok(aiWorkflowService.orchestrate(request));
