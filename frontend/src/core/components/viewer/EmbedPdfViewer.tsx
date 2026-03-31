@@ -25,7 +25,7 @@ import type { PDFDict, PDFNumber } from '@cantoo/pdf-lib';
 import { useWheelZoom } from '@app/hooks/useWheelZoom';
 import { useFormFill } from '@app/tools/formFill/FormFillContext';
 import { FormSaveBar } from '@app/tools/formFill/FormSaveBar';
-import { isDesktop } from '@app/utils/environmentDetector';
+import { useViewerKeyCommand } from '@app/hooks/useViewerKeyCommand';
 
 // ─── Measure dictionary extraction ────────────────────────────────────────────
 
@@ -381,6 +381,8 @@ const EmbedPdfViewerContent = ({
     onZoomOut: zoomActions.zoomOut,
   });
 
+  const viewerKeyCommand = useViewerKeyCommand();
+
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -400,24 +402,15 @@ const EmbedPdfViewerContent = ({
           (target as HTMLElement).isContentEditable;
 
         if (!isInTextInput) {
-          switch (event.key) {
-            case 'p':
-            case 'P':
-              event.preventDefault();
-              printActions.print();
-              return;
-            // Ctrl+R: Rotate PDF when on desktop or refresh when on web
-            case 'r':
-            case 'R':
-              if (isDesktop()) {
+          const wasOverridden = viewerKeyCommand(event)
+          if (!wasOverridden){
+            switch (event.key) {
+              case 'p':
+              case 'P':
                 event.preventDefault();
-                if (event.shiftKey) {
-                  rotationActions.rotateBackward();
-                } else {
-                  rotationActions.rotateForward();
-                }
-              }
-              return;
+                printActions.print();
+                return;
+            }
           }
         }
       }
@@ -524,7 +517,7 @@ const EmbedPdfViewerContent = ({
   }, [
     isViewerHovered, isSearchInterfaceVisible, zoomActions, searchInterfaceActions,
     scrollActions, printActions, exportActions, rotationActions, historyApiRef,
-    viewerApplyChanges, cyclePdfRenderMode,
+    viewerApplyChanges, cyclePdfRenderMode, viewerKeyCommand,
   ]);
 
   // Watch the annotation history API to detect when the document becomes "dirty".
