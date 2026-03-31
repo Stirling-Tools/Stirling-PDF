@@ -6,6 +6,7 @@ from stirling.api.dependencies import (
     get_orchestrator_agent,
     get_pdf_edit_agent,
     get_pdf_question_agent,
+    get_tracking,
     get_user_spec_agent,
 )
 from stirling.config import AppSettings, load_settings
@@ -25,6 +26,7 @@ from stirling.contracts import (
     PdfQuestionRequest,
 )
 from stirling.models.tool_models import RotateParams
+from stirling.services.tracking import NoOpTracking
 
 
 class StubSettingsProvider:
@@ -34,6 +36,9 @@ class StubSettingsProvider:
             fast_model_name="test",
             smart_model_max_tokens=8192,
             fast_model_max_tokens=2048,
+            posthog_enabled=False,
+            posthog_api_key="",
+            posthog_host="https://eu.i.posthog.com",
         )
 
 
@@ -105,6 +110,7 @@ app.dependency_overrides[get_pdf_edit_agent] = override_pdf_edit_agent
 app.dependency_overrides[get_pdf_question_agent] = override_pdf_question_agent
 app.dependency_overrides[get_user_spec_agent] = override_user_spec_agent
 app.dependency_overrides[get_execution_planning_agent] = override_execution_agent
+app.dependency_overrides[get_tracking] = NoOpTracking
 
 
 def test_health_route() -> None:

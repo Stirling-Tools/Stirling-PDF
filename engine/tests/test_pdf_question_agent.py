@@ -33,6 +33,9 @@ def build_test_settings() -> AppSettings:
         fast_model_name="test",
         smart_model_max_tokens=8192,
         fast_model_max_tokens=2048,
+        posthog_enabled=False,
+        posthog_api_key="",
+        posthog_host="https://eu.i.posthog.com",
     )
 
 

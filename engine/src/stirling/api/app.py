@@ -15,7 +15,7 @@ from stirling.api.routes import (
 )
 from stirling.config import AppSettings, load_settings
 from stirling.contracts import HealthResponse
-from stirling.services import build_runtime
+from stirling.services import build_runtime, build_tracking
 
 
 def _load_startup_settings(fast_api: FastAPI) -> AppSettings:
@@ -37,7 +37,10 @@ async def lifespan(fast_api: FastAPI):
     fast_api.state.pdf_question_agent = PdfQuestionAgent(runtime)
     fast_api.state.user_spec_agent = UserSpecAgent(runtime)
     fast_api.state.execution_planning_agent = ExecutionPlanningAgent(runtime)
+    tracking = build_tracking(settings)
+    fast_api.state.tracking = tracking
     yield
+    tracking.close()
 
 
 app = FastAPI(title="Stirling AI Engine", lifespan=lifespan, version="0.1.0")
