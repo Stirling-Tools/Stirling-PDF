@@ -338,7 +338,43 @@ RUN mkdir -p /magick-export/usr/bin \
     cp -a /usr/local/etc/ImageMagick-7  /magick-export/usr/local/etc/
 
 
-# Stage 4: Build Python venv
+# Stage 4: Build FFmpeg from source
+FROM ubuntu:noble AS ffmpeg-build
+ARG TARGETPLATFORM
+ARG FFMPEG_VERSION=8.1
+
+COPY ffmpeg-${FFMPEG_VERSION}.tar.gz.asc /tmp/ffmpeg-sig/
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/tmp/ffmpeg-build,id=ffmpeg-build-${TARGETPLATFORM:-local} \
+    apt-get update && apt-get install -y --no-install-recommends \
+      build-essential curl ca-certificates pkg-config nasm \
+      libx264-dev libvpx-dev gnupg && \
+    rm -rf /var/lib/apt/lists/* && \
+    cd /tmp/ffmpeg-build && \
+    rm -rf ffmpeg-* && \
+    # Download tarball and verify against locally-pinned GPG signature
+    curl -fsSL --max-time 300 --retry 3 --retry-delay 5 \
+      -o "ffmpeg-${FFMPEG_VERSION}.tar.gz" \
+      "https://www.ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.gz" && \
+    gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys FCF986EA15E6E293A5644F10B4322F04D67658D8 && \
+    gpg --verify /tmp/ffmpeg-sig/ffmpeg-${FFMPEG_VERSION}.tar.gz.asc "ffmpeg-${FFMPEG_VERSION}.tar.gz" && \
+    tar xzf "ffmpeg-${FFMPEG_VERSION}.tar.gz" && \
+    cd "ffmpeg-${FFMPEG_VERSION}" && \
+    ./configure \
+      --prefix=/usr/local \
+      --enable-gpl \
+      --enable-libx264 \
+      --enable-libvpx \
+      --disable-doc \
+      --disable-debug \
+      --disable-static \
+      --enable-shared && \
+    make -j"$(nproc)" && \
+    make install
+
+
+# Stage 5: Build Python venv
 FROM ubuntu:noble AS python-venv-build
 ARG TARGETPLATFORM
 ARG UNOSERVER_VERSION=3.6
@@ -385,7 +421,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get install -y --no-install-recommends \
       # Core tools
       ca-certificates tzdata tini bash fontconfig curl \
-      ffmpeg poppler-utils fontforge \
+      poppler-utils fontforge \
+      # ffmpeg runtime shared libs (ffmpeg binary comes from ffmpeg-build stage)
+      libx264-164 libvpx9 \
       gosu unpaper pngquant \
       # Fonts: full coverage for standard + fat variants
       fonts-dejavu \
@@ -596,6 +634,10 @@ COPY --link --from=pdf-tools-build /usr/local/bin/qpdf    /usr/bin/qpdf
 COPY --link --from=pdf-tools-build /magick-export/        /
 COPY --link --from=gs-build        /usr/local/bin/gs                /usr/local/bin/gs
 COPY --link --from=gs-build        /usr/local/share/ghostscript     /usr/local/share/ghostscript
+COPY --link --from=ffmpeg-build    /usr/local/bin/ff*               /usr/local/bin/
+COPY --link --from=ffmpeg-build    /usr/local/lib/libav*.so*        /usr/local/lib/
+COPY --link --from=ffmpeg-build    /usr/local/lib/libsw*.so*        /usr/local/lib/
+COPY --link --from=ffmpeg-build    /usr/local/lib/libpostproc*.so*  /usr/local/lib/
 # Python venv pre-built (no pip install at runtime, no build tools needed)
 COPY --link --from=python-venv-build /opt/venv /opt/venv
 
