@@ -705,6 +705,7 @@ main() {
             --load \
             ${DOCKER_CACHE_ARGS_ULTRA_LITE} .; then
             failed_tests+=("Build-Ultra-Lite-Docker")
+            capture_build_failure "Build-Ultra-Lite-Docker"
             gha_endgroup
             exit 1
         fi
@@ -790,6 +791,7 @@ main() {
             --load \
             ${DOCKER_CACHE_ARGS_FAT} .; then
             failed_tests+=("Build-Fat-Docker")
+            capture_build_failure "Build-Fat-Docker"
             gha_endgroup
             exit 1
         fi
