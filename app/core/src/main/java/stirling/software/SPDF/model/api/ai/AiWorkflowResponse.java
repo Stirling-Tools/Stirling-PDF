@@ -44,17 +44,15 @@ public class AiWorkflowResponse {
     @Schema(description = "Structured tool steps when the workflow returns a plan")
     private List<Map<String, Object>> steps = new ArrayList<>();
 
-    @Schema(description = "Requested page numbers when Python asks Java to extract text")
+    @Schema(description = "Page numbers the AI engine has requested text be extracted from")
     private List<Integer> pageNumbers = new ArrayList<>();
 
-    @Schema(description = "Requested page limit when Python asks Java to extract text")
+    @Schema(description = "Maximum number of pages the AI engine wants text extracted from")
     private Integer maxPages;
 
-    @Schema(description = "Requested character limit when Python asks Java to extract text")
+    @Schema(description = "Maximum number of characters the AI engine wants extracted")
     private Integer maxCharacters;
 
-    @Schema(
-            description =
-                    "Agent to resume with on the next turn, bypassing orchestrator re-routing")
+    @Schema(description = "AI engine capability to resume with on the next turn")
     private String resumeWith;
 }
