@@ -55,7 +55,7 @@ public class AiWorkflowService {
 
         AiWorkflowResponse response = new AiWorkflowResponse();
         response.setOutcome("cannot_continue");
-        response.setReason("AI orchestration exceeded the maximum number of Java/Python turns.");
+        response.setReason("AI orchestration exceeded the maximum number of invocations.");
         return response;
     }
 
