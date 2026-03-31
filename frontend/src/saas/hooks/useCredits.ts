@@ -1,4 +1,4 @@
-import { useAuth } from '@app/auth/UseSession'
+import { useAuth } from '@app/auth/useAuth'
 
 /**
  * Hook for credit management and checking in tools.

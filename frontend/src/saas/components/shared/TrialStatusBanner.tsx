@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useBanner } from '@app/contexts/BannerContext';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 import { useTranslation } from 'react-i18next';
 import { InfoBanner } from '@app/components/shared/InfoBanner';
 import StripeCheckout from '@app/components/shared/StripeCheckoutSaas';

@@ -1,5 +1,5 @@
 import { usePreferences } from '@app/contexts/PreferencesContext';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 import { useIsMobile } from '@app/hooks/useIsMobile';
 
 export function useShouldShowWelcomeModal(): boolean {

@@ -9,7 +9,7 @@ import {
 } from 'react';
 import apiClient from '@app/services/apiClient';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 import { useLicense } from '@app/contexts/LicenseContext';
 import {
   getSimulatedAdminUsage,

@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { Modal, Button, Text, ActionIcon } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 import { isUserAnonymous } from '@app/auth/supabase';
 import { useTranslation } from 'react-i18next';
 import LocalIcon from '@app/components/shared/LocalIcon';

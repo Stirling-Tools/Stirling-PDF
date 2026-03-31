@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Text, Stack, Alert } from '@mantine/core';
 import { springAuth } from '@app/auth/springAuthClient';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useTranslation } from 'react-i18next';
 import { useDocumentMeta } from '@app/hooks/useDocumentMeta';

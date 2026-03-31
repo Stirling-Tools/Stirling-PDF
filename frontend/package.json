@@ -166,6 +166,7 @@
     "dotenv": "^16.4.7",
     "dpdm": "^3.14.0",
     "eslint": "^10.0.2",
+    "eslint-plugin-react-refresh": "^0.5.2",
     "jsdom": "^27.0.0",
     "license-checker": "^25.0.1",
     "madge": "^8.0.0",

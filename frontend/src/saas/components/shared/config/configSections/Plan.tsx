@@ -5,7 +5,7 @@ import StripeCheckout, { PurchaseType, CreditsPack, PlanID } from '@app/componen
 import AvailablePlansSection from '@app/components/shared/config/configSections/plan/AvailablePlansSection';
 import ApiPackagesSection from '@app/components/shared/config/configSections/plan/ApiPackagesSection';
 import ActivePlanSection from '@app/components/shared/config/configSections/plan/ActivePlanSection';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 
 const Plan: React.FC = () => {
   const [checkoutOpen, setCheckoutOpen] = useState(false);

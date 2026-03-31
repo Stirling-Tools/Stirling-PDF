@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@app/auth/supabase';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 
 // Currency mapping
 const getCurrencySymbol = (currency: string): string => {

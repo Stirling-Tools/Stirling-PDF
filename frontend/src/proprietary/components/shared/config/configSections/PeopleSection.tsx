@@ -31,7 +31,7 @@ import { useNavigate } from 'react-router-dom';
 import UpdateSeatsButton from '@app/components/shared/UpdateSeatsButton';
 import { useLicense } from '@app/contexts/LicenseContext';
 import ChangeUserPasswordModal from '@app/components/shared/ChangeUserPasswordModal';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 
 export default function PeopleSection() {
   const { t } = useTranslation();

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core';
 import Login from '@app/routes/Login';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 import { springAuth } from '@app/auth/springAuthClient';
 import { PreferencesProvider } from '@app/contexts/PreferencesContext';
 import apiClient from '@app/services/apiClient';

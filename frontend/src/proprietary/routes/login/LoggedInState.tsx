@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 import { useTranslation } from 'react-i18next';
 import { useLogoPath } from '@app/hooks/useLogoPath';
 

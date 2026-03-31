@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { usePreferences } from '@app/contexts/PreferencesContext';
 import { useOnboarding } from '@app/contexts/OnboardingContext';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 import SaasOnboardingModal from '@app/components/onboarding/SaasOnboardingModal';
 
 const STORAGE_KEY = 'saas_onboarding_seen';

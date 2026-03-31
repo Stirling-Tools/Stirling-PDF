@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import apiClient from '@app/services/apiClient';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 import { useFileActions } from '@app/contexts/FileContext';
 import { useNavigationActions } from '@app/contexts/NavigationContext';
 import { alert } from '@app/components/toast';

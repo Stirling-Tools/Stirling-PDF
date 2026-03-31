@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useDocumentMeta } from '@app/hooks/useDocumentMeta';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 import AuthLayout from '@app/routes/authShared/AuthLayout';
 import '@app/routes/authShared/auth.css';
 import { BASE_PATH } from '@app/constants/app';

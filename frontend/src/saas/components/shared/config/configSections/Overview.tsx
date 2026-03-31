@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Alert, Avatar, Button, Divider, FileButton, Group, Image, LoadingOverlay, PasswordInput, Text, TextInput, Modal } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 import { isUserAnonymous, linkEmailIdentity, linkOAuthIdentity, supabase } from '@app/auth/supabase';
 import { BASE_PATH } from '@app/constants/app';
 import { oauthProviders } from '@app/constants/authProviders';
