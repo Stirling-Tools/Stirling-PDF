@@ -191,7 +191,7 @@ run_as_runtime_user() {
   if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
     "$@"
   elif [ "$CURRENT_UID" -eq 0 ] && command_exists setpriv; then
-    setpriv --reuid="$RUNTIME_USER" --regid="$RUNTIME_USER" --init-groups -- "$@"
+    setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "$@"
   else
     warn_switch_user_once
     "$@"
@@ -909,7 +909,7 @@ fi
 if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
   "${JAVA_CMD[@]}" &
 elif [ "$CURRENT_UID" -eq 0 ] && command_exists setpriv; then
-  setpriv --reuid="$RUNTIME_USER" --regid="$RUNTIME_USER" --init-groups -- "${JAVA_CMD[@]}" &
+  setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "${JAVA_CMD[@]}" &
 else
   warn_switch_user_once
   "${JAVA_CMD[@]}" &
