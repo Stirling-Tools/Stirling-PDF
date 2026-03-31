@@ -16,6 +16,7 @@ import { BASE_PATH, withBasePath } from '@app/constants/app';
 import { useRedaction, useRedactionMode } from '@app/contexts/RedactionContext';
 import TextFieldsIcon from '@mui/icons-material/TextFields';
 import StraightenIcon from '@mui/icons-material/Straighten';
+import LayersIcon from '@mui/icons-material/Layers';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import StopIcon from '@mui/icons-material/Stop';
 import { useViewerReadAloud } from '@app/components/viewer/useViewerReadAloud';
@@ -26,7 +27,7 @@ export function useViewerRightRailButtons(
 ) {
   const { t, i18n } = useTranslation();
   const viewer = useViewer();
-  const { isThumbnailSidebarVisible, isBookmarkSidebarVisible, isAttachmentSidebarVisible, isCommentsSidebarVisible, toggleCommentsSidebar, isSearchInterfaceVisible, registerImmediatePanUpdate } = viewer;
+  const { isThumbnailSidebarVisible, isBookmarkSidebarVisible, isAttachmentSidebarVisible, isLayerSidebarVisible, hasLayers, isCommentsSidebarVisible, toggleCommentsSidebar, isSearchInterfaceVisible, registerImmediatePanUpdate } = viewer;
   const [isPanning, setIsPanning] = useState<boolean>(() => viewer.getPanState()?.isPanning ?? false);
   const { sidebarRefs } = useSidebarContext();
   const { position: tooltipPosition } = useRightRailTooltipSide(sidebarRefs, 12);
@@ -83,6 +84,7 @@ export function useViewerRightRailButtons(
   const sidebarLabel = t('rightRail.toggleSidebar', 'Toggle Sidebar');
   const bookmarkLabel = t('rightRail.toggleBookmarks', 'Toggle Bookmarks');
   const attachmentLabel = t('rightRail.toggleAttachments', 'Toggle Attachments');
+  const layersLabel = t('rightRail.toggleLayers', 'Toggle Layers');
   const commentsLabel = t('rightRail.toggleComments', 'Comments');
   const printLabel = t('rightRail.print', 'Print PDF');
   const annotationsLabel = t('rightRail.annotations', 'Annotations');
@@ -236,6 +238,18 @@ export function useViewerRightRailButtons(
           viewer.toggleAttachmentSidebar();
         }
       },
+      ...(hasLayers ? [{
+        id: 'viewer-toggle-layers',
+        icon: <LayersIcon sx={{ fontSize: '1.5rem' }} />,
+        tooltip: layersLabel,
+        ariaLabel: layersLabel,
+        section: 'top' as const,
+        order: 56.3,
+        active: isLayerSidebarVisible,
+        onClick: () => {
+          viewer.toggleLayerSidebar();
+        }
+      }] : []),
       {
         id: 'viewer-toggle-comments',
         icon: <LocalIcon icon="comment" width="1.5rem" height="1.5rem" />,
@@ -424,6 +438,8 @@ export function useViewerRightRailButtons(
     isThumbnailSidebarVisible,
     isBookmarkSidebarVisible,
     isAttachmentSidebarVisible,
+    isLayerSidebarVisible,
+    hasLayers,
     isSearchInterfaceVisible,
     isPanning,
     searchLabel,
@@ -434,6 +450,7 @@ export function useViewerRightRailButtons(
     sidebarLabel,
     bookmarkLabel,
     attachmentLabel,
+    layersLabel,
     printLabel,
     tooltipPosition,
     annotationsLabel,

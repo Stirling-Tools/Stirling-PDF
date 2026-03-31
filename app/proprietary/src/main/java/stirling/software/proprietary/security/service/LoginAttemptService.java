@@ -1,8 +1,11 @@
 package stirling.software.proprietary.security.service;
 
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -77,6 +80,28 @@ public class LoginAttemptService {
             return false;
         }
         return attemptCounter.getAttemptCount() >= MAX_ATTEMPT;
+    }
+
+    public void resetAttempts(String key) {
+        if (key == null || key.trim().isEmpty()) {
+            return;
+        }
+        String normalizedKey = key.toLowerCase(Locale.ROOT);
+        attemptsCache.remove(normalizedKey);
+    }
+
+    public boolean isBlockingEnabled() {
+        return isBlockedEnabled;
+    }
+
+    public List<String> getAllBlockedUsers() {
+        if (!isBlockedEnabled) {
+            return List.of();
+        }
+        return attemptsCache.entrySet().stream()
+                .filter(entry -> entry.getValue().getAttemptCount() >= MAX_ATTEMPT)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
     }
 
     public int getRemainingAttempts(String key) {
