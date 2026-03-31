@@ -9,7 +9,6 @@ import java.util.Set;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -35,8 +34,7 @@ public class AiWorkflowService {
     private final AiEngineClient aiEngineClient;
     private final ObjectMapper objectMapper;
 
-    public AiWorkflowResponse orchestrate(AiWorkflowRequest request)
-            throws IOException, InterruptedException {
+    public AiWorkflowResponse orchestrate(AiWorkflowRequest request) throws IOException {
         validateRequest(request);
 
         WorkflowTurnRequest turnRequest = new WorkflowTurnRequest();
@@ -44,15 +42,18 @@ public class AiWorkflowService {
         turnRequest.setConversationId(request.getConversationId());
         turnRequest.setFileName(request.getFileInput().getOriginalFilename());
 
-        for (int turn = 0; turn < MAX_ORCHESTRATION_TURNS; turn++) {
-            AiWorkflowResponse response = invokeOrchestrator(turnRequest);
-            if (!"need_text".equals(response.getOutcome())) {
-                return response;
-            }
+        try (PDDocument document = pdfDocumentFactory.load(request.getFileInput(), true)) {
+            for (int turn = 0; turn < MAX_ORCHESTRATION_TURNS; turn++) {
+                AiWorkflowResponse response = invokeOrchestrator(turnRequest);
+                if (!"need_text".equals(response.getOutcome())) {
+                    return response;
+                }
 
-            List<AiWorkflowTextSelection> extractedPages = extractRequestedText(request, response);
-            turnRequest.setArtifacts(List.of(createExtractedTextArtifact(extractedPages)));
-            turnRequest.setResumeWith(response.getResumeWith());
+                List<AiWorkflowTextSelection> extractedPages =
+                        extractRequestedText(request, response, document);
+                turnRequest.setArtifacts(List.of(createExtractedTextArtifact(extractedPages)));
+                turnRequest.setResumeWith(response.getResumeWith());
+            }
         }
 
         AiWorkflowResponse response = new AiWorkflowResponse();
@@ -80,36 +81,33 @@ public class AiWorkflowService {
         }
     }
 
-    private AiWorkflowResponse invokeOrchestrator(WorkflowTurnRequest request)
-            throws IOException, InterruptedException {
+    private AiWorkflowResponse invokeOrchestrator(WorkflowTurnRequest request) throws IOException {
         String requestBody = objectMapper.writeValueAsString(request);
         String responseBody = aiEngineClient.post("/api/v1/orchestrator", requestBody);
         return objectMapper.readValue(responseBody, AiWorkflowResponse.class);
     }
 
     private List<AiWorkflowTextSelection> extractRequestedText(
-            AiWorkflowRequest request, AiWorkflowResponse response) throws IOException {
-        MultipartFile file = request.getFileInput();
-        try (PDDocument document = pdfDocumentFactory.load(file, true)) {
-            List<Integer> selectedPages =
-                    selectPages(
-                            document.getNumberOfPages(),
-                            response.getPageNumbers().isEmpty()
-                                    ? request.getPageNumbers()
-                                    : response.getPageNumbers(),
-                            response.getMaxPages() != null
-                                    ? response.getMaxPages()
-                                    : request.getMaxPages());
+            AiWorkflowRequest request, AiWorkflowResponse response, PDDocument document)
+            throws IOException {
+        List<Integer> selectedPages =
+                selectPages(
+                        document.getNumberOfPages(),
+                        response.getPageNumbers().isEmpty()
+                                ? request.getPageNumbers()
+                                : response.getPageNumbers(),
+                        response.getMaxPages() != null
+                                ? response.getMaxPages()
+                                : request.getMaxPages());
 
-            return extractPageText(
-                    document,
-                    selectedPages,
-                    normalizePositive(
-                            response.getMaxCharacters() != null
-                                    ? response.getMaxCharacters()
-                                    : request.getMaxCharacters(),
-                            DEFAULT_MAX_CHARACTERS));
-        }
+        return extractPageText(
+                document,
+                selectedPages,
+                normalizePositive(
+                        response.getMaxCharacters() != null
+                                ? response.getMaxCharacters()
+                                : request.getMaxCharacters(),
+                        DEFAULT_MAX_CHARACTERS));
     }
 
     private List<Integer> selectPages(
@@ -198,7 +196,12 @@ public class AiWorkflowService {
         if (text.length() <= maxLength) {
             return text;
         }
-        return text.substring(0, maxLength);
+        // Avoid splitting a surrogate pair at the boundary
+        int end = maxLength;
+        if (Character.isHighSurrogate(text.charAt(end - 1))) {
+            end--;
+        }
+        return text.substring(0, end);
     }
 
     @Data

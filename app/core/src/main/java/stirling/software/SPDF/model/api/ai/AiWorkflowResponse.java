@@ -2,6 +2,7 @@ package stirling.software.SPDF.model.api.ai;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -41,7 +42,7 @@ public class AiWorkflowResponse {
     private List<AiWorkflowTextSelection> evidence = new ArrayList<>();
 
     @Schema(description = "Structured tool steps when the workflow returns a plan")
-    private List<Object> steps = new ArrayList<>();
+    private List<Map<String, Object>> steps = new ArrayList<>();
 
     @Schema(description = "Requested page numbers when Python asks Java to extract text")
     private List<Integer> pageNumbers = new ArrayList<>();

@@ -27,7 +27,7 @@ public class AiEngineClient {
         this.httpClient = HttpClient.newBuilder().build();
     }
 
-    public String post(String path, String jsonBody) throws IOException, InterruptedException {
+    public String post(String path, String jsonBody) throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
         if (!config.isEnabled()) {
             throw new ResponseStatusException(
@@ -46,20 +46,14 @@ public class AiEngineClient {
                         .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                         .build();
 
-        HttpResponse<String> response =
-                httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = sendRequest(request);
 
         log.debug("AI engine responded with status {}", response.statusCode());
-
-        if (response.statusCode() >= 500) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_GATEWAY, "AI engine returned error: " + response.statusCode());
-        }
-
+        checkResponseStatus(response);
         return response.body();
     }
 
-    public String get(String path) throws IOException, InterruptedException {
+    public String get(String path) throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
         if (!config.isEnabled()) {
             throw new ResponseStatusException(
@@ -77,16 +71,33 @@ public class AiEngineClient {
                         .GET()
                         .build();
 
-        HttpResponse<String> response =
-                httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = sendRequest(request);
 
         log.debug("AI engine responded with status {}", response.statusCode());
-
-        if (response.statusCode() >= 500) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_GATEWAY, "AI engine returned error: " + response.statusCode());
-        }
-
+        checkResponseStatus(response);
         return response.body();
+    }
+
+    private HttpResponse<String> sendRequest(HttpRequest request) throws IOException {
+        try {
+            return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine request was interrupted");
+        }
+    }
+
+    private void checkResponseStatus(HttpResponse<String> response) {
+        int status = response.statusCode();
+        if (status >= 500) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY, "AI engine returned error: " + status);
+        }
+        if (status >= 400) {
+            throw new ResponseStatusException(
+                    HttpStatus.valueOf(status),
+                    "AI engine returned client error: " + response.body());
+        }
     }
 }

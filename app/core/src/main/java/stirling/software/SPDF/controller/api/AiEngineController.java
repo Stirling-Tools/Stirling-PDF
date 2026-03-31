@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api;
 
 import java.io.IOException;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,6 +23,8 @@ import stirling.software.SPDF.model.api.ai.AiWorkflowRequest;
 import stirling.software.SPDF.model.api.ai.AiWorkflowResponse;
 import stirling.software.SPDF.service.AiEngineClient;
 import stirling.software.SPDF.service.AiWorkflowService;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 @RestController
@@ -31,12 +35,13 @@ public class AiEngineController {
 
     private final AiEngineClient aiEngineClient;
     private final AiWorkflowService aiWorkflowService;
+    private final ObjectMapper objectMapper;
 
     @GetMapping("/health")
     @Operation(
             summary = "AI engine health check",
             description = "Returns the health status of the AI engine including configured models")
-    public ResponseEntity<String> health() throws IOException, InterruptedException {
+    public ResponseEntity<String> health() throws IOException {
         String response = aiEngineClient.get("/health");
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
     }
@@ -48,7 +53,7 @@ public class AiEngineController {
                     "Accepts a PDF upload, asks Python what it needs next, performs Java-side"
                             + " extraction work, and loops until Python returns a final result")
     public ResponseEntity<AiWorkflowResponse> orchestrate(@ModelAttribute AiWorkflowRequest request)
-            throws IOException, InterruptedException {
+            throws IOException {
         return ResponseEntity.ok(aiWorkflowService.orchestrate(request));
     }
 
@@ -58,8 +63,8 @@ public class AiEngineController {
             description =
                     "Sends a user message to the PDF edit agent which returns a structured plan"
                             + " of tool operations to perform")
-    public ResponseEntity<String> pdfEdit(@RequestBody String requestBody)
-            throws IOException, InterruptedException {
+    public ResponseEntity<String> pdfEdit(@RequestBody String requestBody) throws IOException {
+        validateJson(requestBody);
         String response = aiEngineClient.post("/api/v1/pdf/edit", requestBody);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
     }
@@ -70,8 +75,8 @@ public class AiEngineController {
             description =
                     "Sends a user message to the agent drafting workflow to create a new agent"
                             + " specification")
-    public ResponseEntity<String> draftAgent(@RequestBody String requestBody)
-            throws IOException, InterruptedException {
+    public ResponseEntity<String> draftAgent(@RequestBody String requestBody) throws IOException {
+        validateJson(requestBody);
         String response = aiEngineClient.post("/api/v1/agents/draft", requestBody);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
     }
@@ -82,8 +87,8 @@ public class AiEngineController {
             description =
                     "Sends a user message and current draft to the agent revision workflow to"
                             + " update an existing agent specification")
-    public ResponseEntity<String> reviseAgent(@RequestBody String requestBody)
-            throws IOException, InterruptedException {
+    public ResponseEntity<String> reviseAgent(@RequestBody String requestBody) throws IOException {
+        validateJson(requestBody);
         String response = aiEngineClient.post("/api/v1/agents/revise", requestBody);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
     }
@@ -94,9 +99,17 @@ public class AiEngineController {
             description =
                     "Given an agent spec and current execution state, returns the next tool call"
                             + " action to perform")
-    public ResponseEntity<String> nextAction(@RequestBody String requestBody)
-            throws IOException, InterruptedException {
+    public ResponseEntity<String> nextAction(@RequestBody String requestBody) throws IOException {
+        validateJson(requestBody);
         String response = aiEngineClient.post("/api/v1/agents/next-action", requestBody);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
+    }
+
+    private void validateJson(String body) {
+        try {
+            objectMapper.readValue(body, JsonNode.class);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request body is not valid JSON");
+        }
     }
 }
