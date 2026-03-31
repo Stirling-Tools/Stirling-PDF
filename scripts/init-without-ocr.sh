@@ -176,13 +176,6 @@ UNOSERVER_PIDS=()
 UNOSERVER_PORTS=()
 UNOSERVER_UNO_PORTS=()
 
-SU_EXEC_BIN=""
-if command_exists su-exec; then
-  SU_EXEC_BIN="su-exec"
-elif command_exists gosu; then
-  SU_EXEC_BIN="gosu"
-fi
-
 CURRENT_USER="$(id -un)"
 CURRENT_UID="$(id -u)"
 SWITCH_USER_WARNING_EMITTED=false
@@ -197,8 +190,8 @@ warn_switch_user_once() {
 run_as_runtime_user() {
   if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
     "$@"
-  elif [ "$CURRENT_UID" -eq 0 ] && [ -n "$SU_EXEC_BIN" ]; then
-    "$SU_EXEC_BIN" "$RUNTIME_USER" "$@"
+  elif [ "$CURRENT_UID" -eq 0 ] && command_exists setpriv; then
+    setpriv --reuid="$RUNTIME_USER" --regid="$RUNTIME_USER" --init-groups -- "$@"
   else
     warn_switch_user_once
     "$@"
@@ -915,8 +908,8 @@ fi
 
 if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
   "${JAVA_CMD[@]}" &
-elif [ "$CURRENT_UID" -eq 0 ] && [ -n "$SU_EXEC_BIN" ]; then
-  "$SU_EXEC_BIN" "$RUNTIME_USER" "${JAVA_CMD[@]}" &
+elif [ "$CURRENT_UID" -eq 0 ] && command_exists setpriv; then
+  setpriv --reuid="$RUNTIME_USER" --regid="$RUNTIME_USER" --init-groups -- "${JAVA_CMD[@]}" &
 else
   warn_switch_user_once
   "${JAVA_CMD[@]}" &

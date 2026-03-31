@@ -386,7 +386,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       # Core tools
       ca-certificates tzdata tini bash fontconfig curl \
       ffmpeg poppler-utils fontforge \
-      gosu unpaper pngquant \
+      unpaper pngquant \
       # Fonts: full coverage for standard + fat variants
       fonts-dejavu \
       fonts-liberation2 \
@@ -623,7 +623,7 @@ RUN set -eux; \
         || useradd -m -g stirlingpdfgroup \
           -d /home/stirlingpdfuser -s /bin/bash stirlingpdfuser; \
     fi; \
-    ln -sf /usr/sbin/gosu /usr/local/bin/su-exec
+
 
 # Application directories
 RUN set -eux; \
