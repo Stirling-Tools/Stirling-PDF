@@ -2124,7 +2124,7 @@ viewed = "Viewed"
 invisible = "Invisible"
 stepTitle = "Apparence de la signature"
 visible = "Visible"
-visibility = "Visibility"
+visibility = "Visibilité"
 
 [certSign.appearance.options]
 title = "Détails de la signature"
@@ -4872,8 +4872,8 @@ exitRedaction = "Quitter le mode de caviardage"
 save = "Enregistrer"
 downloadAll = "Tout télécharger"
 saveAll = "Tout enregistrer"
-saveAs = "Save As"
-toggleLayers = "Toggle Layers"
+saveAs = "Souvegarder sous"
+toggleLayers = "Changer les calques"
 
 [textAlign]
 left = "Gauche"
@@ -6431,19 +6431,19 @@ endpoints = "Endpoints"
 features = "Fonctionnalités"
 systemSettings = "Paramètres système"
 title = "Configuration"
-storageSharing = "File Storage & Sharing"
+storageSharing = "Stockage et partage de fichier"
 
 [settings.connection]
-localDescription = "You are using the local backend without an account. Some tools requiring cloud processing or a self-hosted server are unavailable."
+localDescription = "Vous utilisez le backend local sans compte. Certains outils nécessitant le cloud ou un serveur auto-hébergé ne sont pas disponibles."
 logout = "Se déconnecter"
 server = "Serveur"
-signIn = "Sign In"
+signIn = "Se connecter"
 title = "Mode de connexion"
 user = "Connecté en tant que"
 
 [settings.connection.mode]
-local = "Local Only"
-saas = "Stirling Cloud"
+local = "En local seulement"
+saas = "Cloud Stirling"
 selfhosted = "Auto-hébergé"
 
 [settings.planBilling]
