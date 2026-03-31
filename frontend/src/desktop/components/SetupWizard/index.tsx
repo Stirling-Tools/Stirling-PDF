@@ -12,6 +12,7 @@ import { tauriBackendService } from '@app/services/tauriBackendService';
 import { STIRLING_SAAS_URL } from '@app/constants/connection';
 import { listen } from '@tauri-apps/api/event';
 import '@app/routes/authShared/auth.css';
+import '@app/components/SetupWizard/desktopOAuth.css';
 
 enum SetupStep {
   SaaSLogin,
@@ -36,13 +37,11 @@ function LockedButtonWithTooltip({ label, children }: { label: string; children:
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div className="w-full text-center cursor-not-allowed select-none rounded-[var(--mantine-radius-sm)] text-[var(--mantine-color-dimmed)] text-[1rem] bg-[rgba(51,154,240,0.08)] px-[var(--mantine-spacing-md)] py-[var(--mantine-spacing-xs)]">
-        {children}
-      </div>
+      <div className="locked-button">{children}</div>
       {hovered && (
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+8px)] text-white whitespace-nowrap pointer-events-none z-[1000] shadow-lg rounded-[var(--mantine-radius-sm)] text-[.8rem] bg-[var(--mantine-color-dark-7)] px-[10px] py-[6px]">
+        <div className="locked-button-tooltip">
           {label}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-solid border-[var(--mantine-color-dark-7)] border-x-transparent border-b-transparent" />
+          <div className="locked-button-tooltip-arrow" />
         </div>
       )}
     </div>

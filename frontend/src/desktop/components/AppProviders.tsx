@@ -210,6 +210,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   // Dispatch sign-in modal after authChecked so SignInModal's listener is registered.
   // (Child effects run before parent effects, so this fires after SignInModal mounts.)
+  // detail.locked is always false here: setPendingSignIn(true) is only called inside
+  // `if (!cfg?.lock_connection_mode)` branches above, so locked deployments never set
+  // pendingSignIn and therefore never reach this dispatch.
   useEffect(() => {
     if (!authChecked || !pendingSignIn) return;
     window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: { locked: false } }));
