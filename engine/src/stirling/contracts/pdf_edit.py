@@ -11,7 +11,6 @@ from .common import ToolOperationStep
 
 class PdfEditRequest(ApiModel):
     user_message: str
-    conversation_id: str | None = None
     file_names: list[str] = Field(default_factory=list)
 
 

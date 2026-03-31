@@ -11,7 +11,6 @@ from .common import PdfTextSelection, SupportedCapability
 
 class PdfQuestionRequest(ApiModel):
     question: str
-    conversation_id: str | None = None
     page_text: list[PdfTextSelection] = Field(default_factory=list)
     file_name: str | None = None
 

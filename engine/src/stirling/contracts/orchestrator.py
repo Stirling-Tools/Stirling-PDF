@@ -23,7 +23,6 @@ WorkflowArtifact = Annotated[ExtractedTextArtifact, Field(discriminator="kind")]
 
 class OrchestratorRequest(ApiModel):
     user_message: str
-    conversation_id: str | None = None
     file_name: str | None = None
     artifacts: list[WorkflowArtifact] = Field(default_factory=list)
     resume_with: SupportedCapability | None = None

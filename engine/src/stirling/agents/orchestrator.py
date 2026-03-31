@@ -101,9 +101,7 @@ class OrchestratorAgent:
         return await self._run_pdf_edit(ctx.deps.request)
 
     async def _run_pdf_edit(self, request: OrchestratorRequest) -> PdfEditResponse:
-        return await PdfEditAgent(self.runtime).handle(
-            PdfEditRequest(user_message=request.user_message, conversation_id=request.conversation_id)
-        )
+        return await PdfEditAgent(self.runtime).handle(PdfEditRequest(user_message=request.user_message))
 
     async def delegate_pdf_question(self, ctx: RunContext[OrchestratorDeps]) -> PdfQuestionResponse:
         return await self._run_pdf_question(ctx.deps.request)
@@ -113,7 +111,6 @@ class OrchestratorAgent:
         return await PdfQuestionAgent(self.runtime).handle(
             PdfQuestionRequest(
                 question=request.user_message,
-                conversation_id=request.conversation_id,
                 file_name=request.file_name,
                 page_text=extracted_text.pages if extracted_text is not None else [],
             )
@@ -142,12 +139,7 @@ class OrchestratorAgent:
     def _build_prompt(self, request: OrchestratorRequest) -> str:
         artifact_summary = self._describe_artifacts(request)
         file_name = request.file_name or "Unknown file"
-        return (
-            f"User message: {request.user_message}\n"
-            f"File: {file_name}\n"
-            f"Conversation ID: {request.conversation_id or 'none'}\n"
-            f"Available artifacts:\n{artifact_summary}"
-        )
+        return f"User message: {request.user_message}\nFile: {file_name}\nAvailable artifacts:\n{artifact_summary}"
 
     def _describe_artifacts(self, request: OrchestratorRequest) -> str:
         if not request.artifacts:

@@ -16,6 +16,8 @@ import org.springframework.web.server.ResponseStatusException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,9 +53,10 @@ public class AiEngineController {
     @PostMapping(value = "/orchestrate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Run an AI workflow against a PDF",
-            description = "Accepts a PDF upload and a user message and returns an AI workflow result")
-    public ResponseEntity<AiWorkflowResponse> orchestrate(@ModelAttribute AiWorkflowRequest request)
-            throws IOException {
+            description =
+                    "Accepts a PDF upload and a user message and returns an AI workflow result")
+    public ResponseEntity<AiWorkflowResponse> orchestrate(
+            @Valid @ModelAttribute AiWorkflowRequest request) throws IOException {
         return ResponseEntity.ok(aiWorkflowService.orchestrate(request));
     }
 

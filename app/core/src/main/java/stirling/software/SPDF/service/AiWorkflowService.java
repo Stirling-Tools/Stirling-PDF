@@ -37,7 +37,6 @@ public class AiWorkflowService {
 
         WorkflowTurnRequest turnRequest = new WorkflowTurnRequest();
         turnRequest.setUserMessage(request.getUserMessage().trim());
-        turnRequest.setConversationId(request.getConversationId());
         turnRequest.setFileName(request.getFileInput().getOriginalFilename());
 
         try (PDDocument document = pdfDocumentFactory.load(request.getFileInput(), true)) {
@@ -48,7 +47,7 @@ public class AiWorkflowService {
                 }
 
                 List<AiWorkflowTextSelection> extractedPages =
-                        extractRequestedText(request, response, document);
+                        extractRequestedText(response, document);
                 turnRequest.setArtifacts(List.of(createExtractedTextArtifact(extractedPages)));
                 turnRequest.setResumeWith(response.getResumeWith());
             }
@@ -61,14 +60,6 @@ public class AiWorkflowService {
     }
 
     private void validateRequest(AiWorkflowRequest request) {
-        if (request.getUserMessage() == null || request.getUserMessage().isBlank()) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    "error.userMessageRequired",
-                    "A user message is required for AI orchestration.");
-        }
-        if (request.getFileInput() == null) {
-            throw ExceptionUtils.createPdfFileRequiredException();
-        }
         if (request.getFileInput().isEmpty()) {
             throw ExceptionUtils.createFileNullOrEmptyException();
         }
@@ -81,16 +72,12 @@ public class AiWorkflowService {
     }
 
     private List<AiWorkflowTextSelection> extractRequestedText(
-            AiWorkflowRequest request, AiWorkflowResponse response, PDDocument document)
-            throws IOException {
+            AiWorkflowResponse response, PDDocument document) throws IOException {
         List<Integer> selectedPages =
                 selectPages(
                         document.getNumberOfPages(),
-                        response.getPageNumbers().isEmpty()
-                                ? request.getPageNumbers()
-                                : response.getPageNumbers(),
+                        response.getPageNumbers(),
                         response.getMaxPages());
-
         return extractPageText(document, selectedPages, response.getMaxCharacters());
     }
 
@@ -183,7 +170,6 @@ public class AiWorkflowService {
     @Data
     private static class WorkflowTurnRequest {
         private String userMessage;
-        private String conversationId;
         private String fileName;
         private List<ExtractedTextArtifact> artifacts = new ArrayList<>();
         private String resumeWith;
