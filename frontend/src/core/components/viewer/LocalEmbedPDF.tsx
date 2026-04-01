@@ -4,6 +4,7 @@ import type { PluginRegistry } from '@embedpdf/core';
 import { EmbedPDF } from '@embedpdf/core/react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
+import { useAppConfig } from '@app/contexts/AppConfigContext';
 
 // Import the essential plugins
 import { Viewport, ViewportPluginPackage } from '@embedpdf/plugin-viewport/react';
@@ -94,15 +95,17 @@ interface LocalEmbedPDFProps {
 
 export function LocalEmbedPDF({ file, url, fileName, enableAnnotations = false, enableRedaction = false, enableFormFill = false, isManualRedactionMode = false, showBakedAnnotations = true, onSignatureAdded, signatureApiRef, annotationApiRef, historyApiRef, redactionTrackerRef, fileId, isCommentsSidebarVisible = false, commentsSidebarRightOffset = '0rem', isSignMode = false, pdfRenderMode = 'normal' }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
+  const { config } = useAppConfig();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [, setAnnotations] = useState<Array<{id: string, pageIndex: number, rect: Rect}>>([]);
   const [commentAuthorName, setCommentAuthorName] = useState<string>('Guest');
 
   useEffect(() => {
+    if (!config?.enableLogin) return;
     accountService.getAccountData().then((data) => {
       if (data?.username) setCommentAuthorName(data.username);
     }).catch(() => {/* not logged in or security disabled */});
-  }, []);
+  }, [config?.enableLogin]);
 
   // Convert File to URL if needed
   useEffect(() => {
