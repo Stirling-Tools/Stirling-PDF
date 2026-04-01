@@ -199,28 +199,8 @@ export class ConnectionModeService {
    * @returns Detailed test results with diagnostics and recommendations
    */
   async testConnection(url: string): Promise<ConnectionTestResult> {
-    console.log(`[ConnectionModeService] 🔍 Starting comprehensive connection diagnostics for: ${url}`);
-    console.log(`[ConnectionModeService] ==================== DIAGNOSTIC SESSION START ====================`);
-    console.log(`[ConnectionModeService] System Information:`);
-    console.log(`[ConnectionModeService]    - User Agent: ${navigator.userAgent}`);
-    console.log(`[ConnectionModeService]    - Platform: ${navigator.platform}`);
-    console.log(`[ConnectionModeService]    - Online: ${navigator.onLine}`);
-    console.log(`[ConnectionModeService]    - Connection Type: ${'connection' in navigator ? (navigator as Navigator & { connection: { effectiveType?: string } }).connection.effectiveType ?? 'unknown' : 'unknown'}`);
-    console.log(`[ConnectionModeService]    - Language: ${navigator.language}`);
-    console.log(`[ConnectionModeService]    - Cookies Enabled: ${navigator.cookieEnabled}`);
-    console.log(`[ConnectionModeService]    - Hardware Concurrency: ${navigator.hardwareConcurrency || 'unknown'} cores`);
-    console.log(`[ConnectionModeService]    - Max Touch Points: ${navigator.maxTouchPoints}`);
-
-    // Check for proxy environment variables
-    console.log(`[ConnectionModeService] Environment Check:`);
-    const envProxy = window.process?.env?.HTTP_PROXY || window.process?.env?.HTTPS_PROXY;
-    if (envProxy) {
-      console.log(`[ConnectionModeService]    - Proxy detected: ${envProxy}`);
-    } else {
-      console.log(`[ConnectionModeService]    - No proxy environment variables detected`);
-    }
-
-    console.log(`[ConnectionModeService]    - Running in Tauri: ${isTauri()}`);
+    console.log(`[ConnectionModeService] 🔍 Starting connection diagnostics for: ${url}`);
+    console.log(`[ConnectionModeService] System: online=${navigator.onLine}, tauri=${isTauri()}, concurrency=${navigator.hardwareConcurrency || 'unknown'}`);
 
     const diagnostics: DiagnosticResult[] = [];
     const healthUrl = `${url.replace(/\/$/, '')}/api/v1/info/status`;
