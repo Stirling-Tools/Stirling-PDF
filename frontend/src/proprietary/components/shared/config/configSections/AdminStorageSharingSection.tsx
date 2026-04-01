@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Anchor, Group, Loader, Paper, Stack, Switch, Text } from '@mantine/core';
+import { Anchor, Badge, Group, Loader, Paper, Stack, Switch, Text } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { alert } from '@app/components/toast';
 import RestartConfirmationModal from '@app/components/shared/config/RestartConfirmationModal';
@@ -124,42 +124,50 @@ export default function AdminStorageSharingSection() {
   return (
     <div className="settings-section-container">
     <div className="settings-section-content">
-    <Stack gap="lg">
+    <Stack gap="sm">
       <LoginRequiredBanner show={!loginEnabled} />
       <div>
-        <Text fw={600} size="lg">{t('admin.settings.storage.title', 'File Storage & Sharing')}</Text>
+        <Group gap="xs" align="center">
+          <Text fw={600} size="lg">{t('admin.settings.storage.title', 'File Storage & Sharing')}</Text>
+          <Badge size="sm" variant="light" color="orange">{t('toolPanel.alpha', 'Alpha')}</Badge>
+        </Group>
         <Text size="sm" c="dimmed">
           {t('admin.settings.storage.description', 'Control server storage and sharing options.')}
         </Text>
       </div>
 
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
-          <Group justify="space-between" align="center">
-            <Text fw={600} size="sm">{t('admin.settings.storage.enabled.label', 'Enable Server File Storage')}</Text>
-            {isFieldPending('enabled') && <PendingBadge show={true} />}
-          </Group>
-          <Text size="xs" c="dimmed">
-            {t('admin.settings.storage.enabled.description', 'Allow users to store files on the server.')}
-          </Text>
+      <Paper withBorder p="sm" radius="md">
+        <Group justify="space-between" align="flex-start" wrap="nowrap">
+          <div>
+            <Group gap="xs" align="center">
+              <Text fw={600} size="sm">{t('admin.settings.storage.enabled.label', 'Enable Server File Storage')}</Text>
+              {isFieldPending('enabled') && <PendingBadge show={true} />}
+            </Group>
+            <Text size="xs" c="dimmed">
+              {t('admin.settings.storage.enabled.description', 'Allow users to store files on the server.')}
+            </Text>
+          </div>
           <Switch
             checked={storageEnabled}
             onChange={(e) => setSettings({ ...settings, enabled: e.currentTarget.checked })}
             disabled={!loginEnabled}
             styles={getDisabledStyles()}
+            style={{ flexShrink: 0 }}
           />
-        </Stack>
+        </Group>
       </Paper>
 
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
-          <Group justify="space-between" align="center">
-            <Text fw={600} size="sm">{t('admin.settings.storage.sharing.enabled.label', 'Enable Sharing')}</Text>
-            {isFieldPending('sharing.enabled') && <PendingBadge show={true} />}
-          </Group>
-          <Text size="xs" c="dimmed">
-            {t('admin.settings.storage.sharing.enabled.description', 'Allow users to share stored files.')}
-          </Text>
+      <Paper withBorder p="sm" radius="md">
+        <Group justify="space-between" align="flex-start" wrap="nowrap">
+          <div>
+            <Group gap="xs" align="center">
+              <Text fw={600} size="sm">{t('admin.settings.storage.sharing.enabled.label', 'Enable Sharing')}</Text>
+              {isFieldPending('sharing.enabled') && <PendingBadge show={true} />}
+            </Group>
+            <Text size="xs" c="dimmed">
+              {t('admin.settings.storage.sharing.enabled.description', 'Allow users to share stored files.')}
+            </Text>
+          </div>
           <Switch
             checked={settings.sharing?.enabled ?? false}
             onChange={(e) =>
@@ -170,35 +178,38 @@ export default function AdminStorageSharingSection() {
             }
             disabled={!loginEnabled || !storageEnabled}
             styles={getDisabledStyles()}
+            style={{ flexShrink: 0 }}
           />
-        </Stack>
+        </Group>
       </Paper>
 
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
-          <Group justify="space-between" align="center">
-            <Text fw={600} size="sm">{t('admin.settings.storage.sharing.links.label', 'Enable Share Links')}</Text>
-            {isFieldPending('sharing.linkEnabled') && <PendingBadge show={true} />}
-          </Group>
-          <Text size="xs" c="dimmed">
-            {t('admin.settings.storage.sharing.links.description', 'Allow sharing via signed-in links.')}
-          </Text>
-          {!frontendUrlConfigured && (
-            <Text size="xs" c="orange">
-              {t('admin.settings.storage.sharing.links.frontendUrlNote', 'Requires a Frontend URL. ')}
-              <Anchor
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate('/settings/adminGeneral#frontendUrl');
-                }}
-                c="orange"
-                td="underline"
-              >
-                {t('admin.settings.storage.sharing.links.frontendUrlLink', 'Configure in System Settings')}
-              </Anchor>
+      <Paper withBorder p="sm" radius="md">
+        <Group justify="space-between" align="flex-start" wrap="nowrap">
+          <div>
+            <Group gap="xs" align="center">
+              <Text fw={600} size="sm">{t('admin.settings.storage.sharing.links.label', 'Enable Share Links')}</Text>
+              {isFieldPending('sharing.linkEnabled') && <PendingBadge show={true} />}
+            </Group>
+            <Text size="xs" c="dimmed">
+              {t('admin.settings.storage.sharing.links.description', 'Allow sharing via signed-in links.')}
             </Text>
-          )}
+            {!frontendUrlConfigured && (
+              <Text size="xs" c="orange">
+                {t('admin.settings.storage.sharing.links.frontendUrlNote', 'Requires a Frontend URL. ')}
+                <Anchor
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate('/settings/adminGeneral#frontendUrl');
+                  }}
+                  c="orange"
+                  td="underline"
+                >
+                  {t('admin.settings.storage.sharing.links.frontendUrlLink', 'Configure in System Settings')}
+                </Anchor>
+              </Text>
+            )}
+          </div>
           <Switch
             checked={settings.sharing?.linkEnabled ?? false}
             onChange={(e) =>
@@ -209,35 +220,38 @@ export default function AdminStorageSharingSection() {
             }
             disabled={!loginEnabled || !sharingEnabled || !frontendUrlConfigured}
             styles={getDisabledStyles()}
+            style={{ flexShrink: 0 }}
           />
-        </Stack>
+        </Group>
       </Paper>
 
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
-          <Group justify="space-between" align="center">
-            <Text fw={600} size="sm">{t('admin.settings.storage.sharing.email.label', 'Enable Email Sharing')}</Text>
-            {isFieldPending('sharing.emailEnabled') && <PendingBadge show={true} />}
-          </Group>
-          <Text size="xs" c="dimmed">
-            {t('admin.settings.storage.sharing.email.description', 'Allow sharing with email addresses.')}
-          </Text>
-          {!mailEnabled && (
-            <Text size="xs" c="orange">
-              {t('admin.settings.storage.sharing.email.mailNote', 'Requires mail configuration. ')}
-              <Anchor
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate('/settings/adminConnections');
-                }}
-                c="orange"
-                td="underline"
-              >
-                {t('admin.settings.storage.sharing.email.mailLink', 'Configure Mail Settings')}
-              </Anchor>
+      <Paper withBorder p="sm" radius="md">
+        <Group justify="space-between" align="flex-start" wrap="nowrap">
+          <div>
+            <Group gap="xs" align="center">
+              <Text fw={600} size="sm">{t('admin.settings.storage.sharing.email.label', 'Enable Email Sharing')}</Text>
+              {isFieldPending('sharing.emailEnabled') && <PendingBadge show={true} />}
+            </Group>
+            <Text size="xs" c="dimmed">
+              {t('admin.settings.storage.sharing.email.description', 'Allow sharing with email addresses.')}
             </Text>
-          )}
+            {!mailEnabled && (
+              <Text size="xs" c="orange">
+                {t('admin.settings.storage.sharing.email.mailNote', 'Requires mail configuration. ')}
+                <Anchor
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate('/settings/adminConnections');
+                  }}
+                  c="orange"
+                  td="underline"
+                >
+                  {t('admin.settings.storage.sharing.email.mailLink', 'Configure Mail Settings')}
+                </Anchor>
+              </Text>
+            )}
+          </div>
           <Switch
             checked={settings.sharing?.emailEnabled ?? false}
             onChange={(e) =>
@@ -248,19 +262,22 @@ export default function AdminStorageSharingSection() {
             }
             disabled={!loginEnabled || !sharingEnabled || !mailEnabled}
             styles={getDisabledStyles()}
+            style={{ flexShrink: 0 }}
           />
-        </Stack>
+        </Group>
       </Paper>
 
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
-          <Group justify="space-between" align="center">
-            <Text fw={600} size="sm">{t('admin.settings.storage.signing.enabled.label', 'Enable Group Signing (Alpha)')}</Text>
-            {isFieldPending('signing.enabled') && <PendingBadge show={true} />}
-          </Group>
-          <Text size="xs" c="dimmed">
-            {t('admin.settings.storage.signing.enabled.description', 'Allow users to create multi-participant document signing sessions. Requires server file storage to be enabled.')}
-          </Text>
+      <Paper withBorder p="sm" radius="md">
+        <Group justify="space-between" align="flex-start" wrap="nowrap">
+          <div>
+            <Group gap="xs" align="center">
+              <Text fw={600} size="sm">{t('admin.settings.storage.signing.enabled.label', 'Enable Group Signing')}</Text>
+              {isFieldPending('signing.enabled') && <PendingBadge show={true} />}
+            </Group>
+            <Text size="xs" c="dimmed">
+              {t('admin.settings.storage.signing.enabled.description', 'Allow users to create multi-participant document signing sessions. Requires server file storage to be enabled.')}
+            </Text>
+          </div>
           <Switch
             checked={settings.signing?.enabled ?? false}
             onChange={(e) =>
@@ -271,8 +288,9 @@ export default function AdminStorageSharingSection() {
             }
             disabled={!loginEnabled || !storageEnabled}
             styles={getDisabledStyles()}
+            style={{ flexShrink: 0 }}
           />
-        </Stack>
+        </Group>
       </Paper>
 
       <RestartConfirmationModal

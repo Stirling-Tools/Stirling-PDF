@@ -11,6 +11,8 @@ export interface ConfigNavItem {
   component: React.ReactNode;
   disabled?: boolean;
   disabledTooltip?: string;
+  badge?: string;
+  badgeColor?: string;
 }
 
 export interface ConfigNavSection {
