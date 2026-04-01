@@ -48,7 +48,7 @@ import tools.jackson.databind.ObjectMapper;
 public class PipelineDirectoryProcessor {
 
     private static final int MAX_DIRECTORY_DEPTH = 50; // Prevent excessive recursion
-    private static final Pattern WATCHED_FOLDERS_PATTERN = Pattern.compile("\\\\?watchedFolders");
+    private static final Pattern WATCHED_FOLDERS_PATTERN = Pattern.compile("[/\\\\]watchedFolders");
 
     private final ObjectMapper objectMapper;
     private final ApiDocService apiDocService;
@@ -105,7 +105,7 @@ public class PipelineDirectoryProcessor {
         processedDirsInScan.get().clear();
         try {
             handleDirectory(dir.toAbsolutePath().normalize());
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Error processing directory: {}", dir, e);
         } finally {
             processedDirsInScan.remove();
@@ -153,7 +153,8 @@ public class PipelineDirectoryProcessor {
                                         && !"processing".equals(dirName)
                                         && !"processed".equals(dirName)
                                         && !"error".equals(dirName)) {
-                                    // Skip server-managed folders — they are processed on-demand via
+                                    // Skip server-managed folders — they are processed on-demand
+                                    // via
                                     // the trigger endpoint; session.json marks them as managed.
                                     if (Files.exists(dir.resolve("session.json"))) {
                                         return FileVisitResult.SKIP_SUBTREE;
@@ -241,7 +242,7 @@ public class PipelineDirectoryProcessor {
             validateOperation(operation);
             File[] files = collectFilesForProcessing(dir, jsonFile, operation);
             if (files.length == 0) {
-                log.debug("No files detected for {} ", dir);
+                log.info("No files ready for processing in {}", dir);
                 return;
             }
 
@@ -274,6 +275,13 @@ public class PipelineDirectoryProcessor {
                 operation.getOperation(),
                 inputExtensions);
 
+        if (inputExtensions == null) {
+            log.warn(
+                    "No input extension info found for operation {} — skipping directory {}",
+                    operation.getOperation(),
+                    dir);
+            return new File[0];
+        }
         boolean allowAllFiles = inputExtensions.contains("ALL");
         // Server-managed folders (session.json present) only process files that have a
         // corresponding .ready marker, preventing partial-upload races.
@@ -313,7 +321,8 @@ public class PipelineDirectoryProcessor {
                                         // Check against allowed extensions
                                         String extension =
                                                 fname.contains(".")
-                                                        ? fname.substring(fname.lastIndexOf('.') + 1)
+                                                        ? fname.substring(
+                                                                        fname.lastIndexOf('.') + 1)
                                                                 .toLowerCase(Locale.ROOT)
                                                         : "";
                                         boolean isAllowed =
@@ -331,6 +340,9 @@ public class PipelineDirectoryProcessor {
                             .map(Path::toAbsolutePath)
                             .filter(
                                     path -> {
+                                        // Server-managed folders use the .ready marker to
+                                        // guarantee upload completion — skip the timestamp delay.
+                                        if (isServerManaged) return true;
                                         boolean isReady =
                                                 fileMonitor.isFileReadyForProcessing(path);
                                         if (!isReady) {
@@ -382,9 +394,10 @@ public class PipelineDirectoryProcessor {
             if (moved) {
                 filesToProcess.add(targetPath.toFile());
                 // Remove the .ready marker now that the file is safely in processingDir
-                String stem = file.getName().contains(".")
-                        ? file.getName().substring(0, file.getName().lastIndexOf('.'))
-                        : file.getName();
+                String stem =
+                        file.getName().contains(".")
+                                ? file.getName().substring(0, file.getName().lastIndexOf('.'))
+                                : file.getName();
                 try {
                     Files.deleteIfExists(file.toPath().getParent().resolve(stem + ".ready"));
                 } catch (IOException ignore) {
@@ -504,13 +517,17 @@ public class PipelineDirectoryProcessor {
     }
 
     private Path determineOutputPath(PipelineConfig config, Path dir) {
+        String rawOutputDir =
+                config.getOutputDir()
+                        .replace("{outputFolder}", finishedFoldersDir)
+                        .replace("{folderName}", dir.toString());
+        // Only strip the watchedFolders segment for relative (legacy) output paths.
+        // Server-managed folders set an absolute output path — leave it untouched so
+        // output lands in the correct {folderId}/processed directory.
         String outputDir =
-                WATCHED_FOLDERS_PATTERN
-                        .matcher(
-                                config.getOutputDir()
-                                        .replace("{outputFolder}", finishedFoldersDir)
-                                        .replace("{folderName}", dir.toString()))
-                        .replaceAll("");
+                Paths.get(rawOutputDir).isAbsolute()
+                        ? rawOutputDir
+                        : WATCHED_FOLDERS_PATTERN.matcher(rawOutputDir).replaceAll("");
         return Paths.get(outputDir).isAbsolute() ? Paths.get(outputDir) : Paths.get(".", outputDir);
     }
 

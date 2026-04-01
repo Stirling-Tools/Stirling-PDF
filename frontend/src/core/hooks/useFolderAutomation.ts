@@ -25,10 +25,12 @@ import {
   submitBackendJob,
   getBackendJobStatus,
   getBackendJobResult,
+  buildPipelineJson,
 } from '@app/utils/automationExecutor';
 import {
   uploadFileToServerFolder,
   updateServerFolderSession,
+  createServerFolder,
   listServerFolderOutput,
   downloadServerFolderOutput,
   deleteServerFolderOutput,
@@ -349,7 +351,11 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
             if (dirHandle) {
               const hasPermission = await folderDirectoryHandleStorage.ensurePermission(dirHandle);
               if (hasPermission) {
-                await folderDirectoryHandleStorage.writeFile(dirHandle, outputFilename, resultFile);
+                const origName = meta?.name ?? outputFilename;
+                const outExt = outputFilename.includes('.') ? outputFilename.substring(outputFilename.lastIndexOf('.')) : '';
+                const origBase = origName.includes('.') ? origName.substring(0, origName.lastIndexOf('.')) : origName;
+                const displayName = origBase + outExt;
+                await folderDirectoryHandleStorage.writeFile(dirHandle, displayName, resultFile);
               }
             }
           } catch {
@@ -515,7 +521,9 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
               if (dirHandle) {
                 const hasPermission = await folderDirectoryHandleStorage.ensurePermission(dirHandle);
                 if (hasPermission) {
-                  await folderDirectoryHandleStorage.writeFile(dirHandle, outputFile.filename, resultFile);
+                  const outExt = outputFile.filename.includes('.') ? outputFile.filename.substring(outputFile.filename.lastIndexOf('.')) : '';
+                  const origBase = inputFile.name.includes('.') ? inputFile.name.substring(0, inputFile.name.lastIndexOf('.')) : inputFile.name;
+                  await folderDirectoryHandleStorage.writeFile(dirHandle, origBase + outExt, resultFile);
                 }
               }
             } catch { /* best-effort */ }
@@ -558,7 +566,11 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
 
         // Server-folder input — upload to watch folder, trigger immediate processing via SSE
         if (isServerFolderInput(folder)) {
-          await uploadFileToServerFolder(folder.id, inputFileId, file);
+          // Load from IDB to guarantee we have the full file bytes.
+          // The `file` parameter may be a stale drag-event reference whose data
+          // is no longer readable after the async resolveInputFile call completed.
+          const uploadFile = await fileStorage.getStirlingFile(inputFileId as FileId) ?? file;
+          await uploadFileToServerFolder(folder.id, inputFileId, uploadFile);
           await folderStorage.updateFileMetadata(folder.id, inputFileId, {
             pendingOnServerFolder: true,
           });
@@ -638,11 +650,35 @@ export function useFolderAutomation(toolRegistry: Partial<ToolRegistry>) {
       if (!isServerFolderInput(folder)) continue;
       try {
         await updateServerFolderSession(folder.id);
-      } catch {
-        // Best-effort — server folder may not exist yet or server may be down
+      } catch (err: any) {
+        // 404 means the server directory was never provisioned (e.g. backend wasn't running
+        // when the folder was created). Re-provision it now using the stored automation.
+        if (err?.response?.status === 404) {
+          try {
+            const automation = await automationStorage.getAutomation(folder.automationId);
+            if (!automation) {
+              console.warn(`[watch-folders] Cannot re-provision ${folder.id}: automation ${folder.automationId} not found in IDB`);
+            } else {
+              const configJson = buildPipelineJson(automation, toolRegistry);
+              if (!configJson) {
+                console.warn(`[watch-folders] Cannot re-provision ${folder.id}: automation has browser-only steps`);
+              } else {
+                await createServerFolder(
+                  folder.id, folder.name, configJson,
+                  folder.outputTtlHours ?? null, folder.deleteOutputOnDownload ?? false
+                );
+                console.info(`[watch-folders] Re-provisioned server folder ${folder.id}`);
+              }
+            }
+          } catch (reprovisionErr) {
+            console.warn(`[watch-folders] Re-provision failed for ${folder.id}:`, reprovisionErr);
+          }
+        } else {
+          console.warn(`[watch-folders] updateSession failed for ${folder.id}:`, err?.response?.status, err?.message);
+        }
       }
     }
-  }, []);
+  }, [toolRegistry]);
 
   // ── Lifecycle effects ──────────────────────────────────────────────────────
   useEffect(() => {

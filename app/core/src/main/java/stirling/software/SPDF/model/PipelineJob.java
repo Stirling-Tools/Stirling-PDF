@@ -14,8 +14,8 @@ import lombok.extern.slf4j.Slf4j;
  * is set to {@code COMPLETED} or {@code FAILED}, so any thread that observes the terminal status is
  * guaranteed (by the Java Memory Model volatile write/read ordering) to see the result fields.
  *
- * <p>Results are stored as a temp file on disk rather than in the JVM heap, preventing large
- * PDFs from causing memory pressure when many jobs are in flight simultaneously.
+ * <p>Results are stored as a temp file on disk rather than in the JVM heap, preventing large PDFs
+ * from causing memory pressure when many jobs are in flight simultaneously.
  */
 @Getter
 @Slf4j
@@ -38,6 +38,7 @@ public class PipelineJob {
     private volatile Status status = Status.PENDING;
 
     private String resultFilename;
+
     /** Temp file holding the result bytes; deleted when the job is cleaned up. */
     private Path resultPath;
 

@@ -164,6 +164,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   const [inputFiles, setInputFiles] = useState<StirlingFile[]>([]);
   const [previewFileId, setPreviewFileId] = useState<FileId | null>(null);
   const [previewFileName, setPreviewFileName] = useState('');
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
 
   // Filter / sort state
   const [activitySearch, setActivitySearch] = useState('');
@@ -318,15 +319,27 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   }, []);
 
   /** Download a server-folder output file on demand (it is not in IDB). */
-  const handleServerOutputDownload = useCallback(async (filename: string) => {
+  const handleServerOutputDownload = useCallback(async (serverFilename: string, displayName?: string) => {
     if (!folderId) return;
     try {
-      const file = await downloadServerFolderOutput(folderId, filename);
-      await handleDownload(file, filename);
+      const file = await downloadServerFolderOutput(folderId, serverFilename);
+      await handleDownload(file, displayName ?? serverFilename);
     } catch {
       // Surface as a no-op — the file may have expired from the server
     }
   }, [folderId, handleDownload]);
+
+  /** Preview a server-folder output file by fetching it on demand. */
+  const handleServerOutputPreview = useCallback(async (serverFilename: string, displayName?: string) => {
+    if (!folderId) return;
+    try {
+      const file = await downloadServerFolderOutput(folderId, serverFilename);
+      setPreviewFileName(displayName ?? serverFilename);
+      setPreviewFile(file);
+    } catch {
+      // no-op
+    }
+  }, [folderId]);
 
   const goHome = useCallback(() => {
     setCustomWorkbenchViewData(SMART_FOLDER_VIEW_ID, { folderId: null });
@@ -1032,7 +1045,10 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                                 <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); void handleDownload(primaryFile, primaryFile.name); }} title="Export"><DownloadIcon style={{ fontSize: '0.875rem' }} /></button>
                               )}
                               {!isExpanded && isServerFolder && hasPrimaryServerOutput && (
-                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); void handleServerOutputDownload(serverOutputNames[0]); }} title="Export from server"><DownloadIcon style={{ fontSize: '0.875rem' }} /></button>
+                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); const fn = serverOutputNames[0]; const ext = fn.includes('.') ? fn.substring(fn.lastIndexOf('.')) : ''; const base = filename.includes('.') ? filename.substring(0, filename.lastIndexOf('.')) : filename; void handleServerOutputPreview(fn, base + ext); }} title="Preview"><VisibilityIcon style={{ fontSize: '0.875rem' }} /></button>
+                              )}
+                              {!isExpanded && isServerFolder && hasPrimaryServerOutput && (
+                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); const fn = serverOutputNames[0]; const ext = fn.includes('.') ? fn.substring(fn.lastIndexOf('.')) : ''; const base = filename.includes('.') ? filename.substring(0, filename.lastIndexOf('.')) : filename; void handleServerOutputDownload(fn, base + ext); }} title="Export from server"><DownloadIcon style={{ fontSize: '0.875rem' }} /></button>
                               )}
                               <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); void handleDeleteOne(fileId); }} title="Delete"><DeleteOutlineIcon style={{ fontSize: '0.875rem' }} /></button>
                             </Box>
@@ -1067,7 +1083,8 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
                                 <Text style={{ fontSize: '0.625rem', letterSpacing: '0.04em', color: '#22c55e', textTransform: 'uppercase', flexShrink: 0 }}>out</Text>
                                 <Text size="xs" style={{ flex: 1, minWidth: 0 }} lineClamp={1}>{fname}</Text>
                                 <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>on server</Text>
-                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); void handleServerOutputDownload(fname); }} title="Download from server"><DownloadIcon style={{ fontSize: '0.875rem' }} /></button>
+                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); const ext = fname.includes('.') ? fname.substring(fname.lastIndexOf('.')) : ''; const base = filename.includes('.') ? filename.substring(0, filename.lastIndexOf('.')) : filename; void handleServerOutputPreview(fname, base + ext); }} title="Preview"><VisibilityIcon style={{ fontSize: '0.875rem' }} /></button>
+                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.2rem', borderRadius: '0.25rem', display: 'flex', alignItems: 'center', color: 'var(--mantine-color-dimmed)' }} onClick={(e) => { e.stopPropagation(); const ext = fname.includes('.') ? fname.substring(fname.lastIndexOf('.')) : ''; const base = filename.includes('.') ? filename.substring(0, filename.lastIndexOf('.')) : filename; void handleServerOutputDownload(fname, base + ext); }} title="Download from server"><DownloadIcon style={{ fontSize: '0.875rem' }} /></button>
                               </Box>
                             ))}
                             {/* Error detail + retry */}
@@ -1284,8 +1301,9 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
 
       <FilePreviewModal
         fileId={previewFileId}
+        file={previewFile}
         fileName={previewFileName}
-        onClose={() => setPreviewFileId(null)}
+        onClose={() => { setPreviewFileId(null); setPreviewFile(null); }}
       />
 
       {/* Delete confirmation */}

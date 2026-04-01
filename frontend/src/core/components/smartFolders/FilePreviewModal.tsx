@@ -7,17 +7,20 @@ import { PdfViewerToolbar } from '@app/components/viewer/PdfViewerToolbar';
 import { ViewerProvider } from '@app/contexts/ViewerContext';
 
 interface FilePreviewModalProps {
-  fileId: FileId | null;
+  fileId?: FileId | null;
+  /** Pass a File directly (e.g. server-folder outputs not stored in IDB). */
+  file?: File | null;
   fileName: string;
   onClose: () => void;
 }
 
-export function FilePreviewModal({ fileId, fileName, onClose }: FilePreviewModalProps) {
+export function FilePreviewModal({ fileId, file: fileProp, fileName, onClose }: FilePreviewModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    if (fileProp) { setFile(fileProp); setError(false); setLoading(false); return; }
     if (!fileId) { setFile(null); setError(false); setLoading(false); return; }
     setError(false);
     setLoading(true);
@@ -28,11 +31,13 @@ export function FilePreviewModal({ fileId, fileName, onClose }: FilePreviewModal
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, [fileId]);
+  }, [fileId, fileProp]);
+
+  const opened = !!(fileId || fileProp);
 
   return (
     <Modal
-      opened={!!fileId}
+      opened={opened}
       onClose={onClose}
       title={fileName}
       size="90%"
