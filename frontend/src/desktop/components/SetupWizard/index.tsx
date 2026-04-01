@@ -12,7 +12,7 @@ import { tauriBackendService } from '@app/services/tauriBackendService';
 import { STIRLING_SAAS_URL } from '@app/constants/connection';
 import { listen } from '@tauri-apps/api/event';
 import '@app/routes/authShared/auth.css';
-import '@app/components/SetupWizard/desktopOAuth.css';
+import { DisabledButtonWithTooltip } from '@app/components/shared/DisabledButtonWithTooltip';
 
 enum SetupStep {
   SaaSLogin,
@@ -29,24 +29,6 @@ interface SetupWizardProps {
   onClose?: () => void;
 }
 
-function LockedButtonWithTooltip({ label, children }: { label: string; children: React.ReactNode }) {
-  const [hovered, setHovered] = React.useState(false);
-  return (
-    <div
-      className="relative w-full"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div className="locked-button">{children}</div>
-      {hovered && (
-        <div className="locked-button-tooltip">
-          {label}
-          <div className="locked-button-tooltip-arrow" />
-        </div>
-      )}
-    </div>
-  );
-}
 
 export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete, noLayout = false, onClose }) => {
   const { t } = useTranslation();
@@ -451,11 +433,11 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete, noLayout =
             {t('setup.selfhosted.unreachable.retry', 'Retry')}
           </Button>
           {lockConnectionMode ? (
-            <LockedButtonWithTooltip
-              label={t('setup.selfhosted.changeServerLocked', 'Your organisation has restricted this app to a specific server')}
+            <DisabledButtonWithTooltip
+              tooltip={t('setup.selfhosted.changeServerLocked', 'Your organisation has restricted this app to a specific server')}
             >
               {t('setup.selfhosted.unreachable.changeServer', 'Connect to a different server')}
-            </LockedButtonWithTooltip>
+            </DisabledButtonWithTooltip>
           ) : (
             <Button
               variant="light"
