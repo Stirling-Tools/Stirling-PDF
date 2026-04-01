@@ -33,7 +33,7 @@ export default function AdminPrivacySection() {
     isFieldPending,
   } = useAdminSettings<PrivacySettingsData>({
     sectionName: 'privacy',
-    fetchTransformer: async (): Promise<PrivacySettingsData & { _pending?: Record<string, any> }> => {
+    fetchTransformer: async (): Promise<PrivacySettingsData & { _pending?: Record<string, unknown> }> => {
       const [metricsResponse, systemResponse] = await Promise.all([
         apiClient.get('/api/v1/admin/settings/section/metrics'),
         apiClient.get('/api/v1/admin/settings/section/system')
@@ -42,14 +42,14 @@ export default function AdminPrivacySection() {
       const metrics = metricsResponse.data;
       const system = systemResponse.data;
 
-      const result: PrivacySettingsData & { _pending?: Record<string, any> } = {
+      const result: PrivacySettingsData & { _pending?: Record<string, unknown> } = {
         enableAnalytics: system.enableAnalytics || false,
         googleVisibility: system.googlevisibility || false,
         metricsEnabled: metrics.enabled || false
       };
 
       // Merge pending blocks from both endpoints
-      const pendingBlock: Record<string, any> = {};
+      const pendingBlock: Record<string, unknown> = {};
       if (system._pending?.enableAnalytics !== undefined) {
         pendingBlock.enableAnalytics = system._pending.enableAnalytics;
       }
