@@ -24,7 +24,12 @@ public class AiEngineClient {
 
     public AiEngineClient(ApplicationProperties applicationProperties) {
         this.applicationProperties = applicationProperties;
-        this.httpClient = HttpClient.newBuilder().build();
+        this.httpClient =
+                HttpClient.newBuilder()
+                        .connectTimeout(
+                                Duration.ofSeconds(
+                                        applicationProperties.getAiEngine().getTimeoutSeconds()))
+                        .build();
     }
 
     public String post(String path, String jsonBody) throws IOException {
