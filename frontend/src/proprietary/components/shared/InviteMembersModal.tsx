@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { isAxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
 import {
   Modal,
@@ -158,9 +159,11 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
         forceChange: false,
         forceMFA: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to invite user:', error);
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || t('workspace.people.addMember.error');
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) || t('workspace.people.addMember.error');
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
@@ -211,12 +214,11 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
           body: response.errors || response.error
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to invite users:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.people.emailInvite.error', 'Failed to send invites');
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) || t('workspace.people.emailInvite.error', 'Failed to send invites');
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
@@ -239,9 +241,11 @@ export default function InviteMembersModal({ opened, onClose, onSuccess }: Invit
       if (inviteLinkForm.sendEmail && inviteLinkForm.email) {
         alert({ alertType: 'success', title: t('workspace.people.inviteLink.emailSent', 'Invite link generated and sent via email') });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to generate invite link:', error);
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || t('workspace.people.inviteLink.error', 'Failed to generate invite link');
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) || t('workspace.people.inviteLink.error', 'Failed to generate invite link');
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);

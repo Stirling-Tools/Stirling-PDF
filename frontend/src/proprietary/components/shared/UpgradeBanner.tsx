@@ -86,7 +86,7 @@ const UpgradeBanner: React.FC = () => {
   const scenarioProvidesInfo =
     scenarioKey && scenarioKey !== 'unknown' && scenarioKey !== 'licensed';
   const derivedIsAdmin = scenarioProvidesInfo
-    ? scenarioKey!.includes('admin')
+    ? scenarioKey.includes('admin')
     : isAdmin;
   const derivedHasPaidLicense =
     scenarioKey === 'licensed'
@@ -95,10 +95,10 @@ const UpgradeBanner: React.FC = () => {
         ? hasPaidLicense
         : false;
   const derivedIsUnderLimit = scenarioProvidesInfo
-    ? scenarioKey!.includes('under-limit')
+    ? scenarioKey.includes('under-limit')
     : isUnderLimit === true;
   const derivedIsOverLimit = scenarioProvidesInfo
-    ? scenarioKey!.includes('over-limit')
+    ? scenarioKey.includes('over-limit')
     : isOverLimit === true;
 
   const effectiveIsAdmin = scenario

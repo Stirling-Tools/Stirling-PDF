@@ -85,7 +85,7 @@ export interface User {
   is_anonymous?: boolean;
   isFirstLogin?: boolean;
   authenticationType?: string;
-  app_metadata?: Record<string, any>;
+  app_metadata?: Record<string, unknown>;
 }
 
 export interface Session {
@@ -447,7 +447,7 @@ class SpringAuthClient {
    */
   async signInWithOAuth(params: {
     provider: OAuthProvider;
-    options?: { redirectTo?: string; queryParams?: Record<string, any> };
+    options?: { redirectTo?: string; queryParams?: Record<string, string> };
   }): Promise<{ error: AuthError | null }> {
     try {
       const redirectPath = normalizeRedirectPath(params.options?.redirectTo);
