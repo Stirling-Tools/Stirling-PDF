@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
+import { isAxiosError } from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import apiClient from '@app/services/apiClient';
@@ -99,7 +100,7 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
 
             const idMap = new Map<string, FileId>();
             for (let i = 0; i < stirlingFiles.length; i += 1) {
-              idMap.set(sortedEntries[i].logicalId, stirlingFiles[i].fileId as FileId);
+              idMap.set(sortedEntries[i].logicalId, stirlingFiles[i].fileId);
             }
 
             const rootIdMap = new Map<string, FileId>();
@@ -199,9 +200,9 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
 
         navActions.setWorkbench('viewer');
         navigate('/', { replace: true });
-      } catch (error: any) {
+      } catch (error: unknown) {
         if (signal.aborted) return;
-        const status = error?.response?.status;
+        const status = isAxiosError(error) ? error.response?.status : undefined;
         if (status === 401 || status === 403) {
           if (!isAuthenticated && !authLoading) {
             alert({

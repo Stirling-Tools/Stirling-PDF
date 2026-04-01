@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { isAxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
 import {
   Stack,
@@ -17,6 +18,7 @@ import {
   CloseButton,
   Avatar,
   Box,
+  type ComboboxItem,
 } from '@mantine/core';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { alert } from '@app/components/toast';
@@ -114,7 +116,7 @@ export default function PeopleSection() {
           ...user,
           isActive: adminData.userSessions[user.username] || false,
           lastRequest: adminData.userLastRequest[user.username] || undefined,
-          mfaEnabled: adminData.userSettings?.[user.username]?.mfaEnabled === 'true',
+          mfaEnabled: (adminData.userSettings?.[user.username] as Record<string, unknown> | undefined)?.mfaEnabled === 'true',
         }));
 
         setUsers(enrichedUsers);
@@ -225,12 +227,11 @@ export default function PeopleSection() {
       alert({ alertType: 'success', title: t('workspace.people.editMember.success') });
       closeEditModal();
       fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[PeopleSection] Failed to update user:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.people.editMember.error');
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) || t('workspace.people.editMember.error');
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
@@ -242,12 +243,11 @@ export default function PeopleSection() {
       await userManagementService.toggleUserEnabled(user.username, !user.enabled);
       alert({ alertType: 'success', title: t('workspace.people.toggleEnabled.success') });
       fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[PeopleSection] Failed to toggle user status:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.people.toggleEnabled.error');
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) || t('workspace.people.toggleEnabled.error');
       alert({ alertType: 'error', title: errorMessage });
     }
   };
@@ -262,12 +262,12 @@ export default function PeopleSection() {
       await userManagementService.deleteUser(user.username);
       alert({ alertType: 'success', title: t('workspace.people.deleteUserSuccess', 'User deleted successfully') });
       fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[PeopleSection] Failed to delete user:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.people.deleteUserError', 'Failed to delete user');
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) ||
+        t('workspace.people.deleteUserError', 'Failed to delete user');
       alert({ alertType: 'error', title: errorMessage });
     }
   };
@@ -282,12 +282,11 @@ export default function PeopleSection() {
       await userManagementService.unlockUser(user.username);
       alert({ alertType: 'success', title: t('workspace.people.unlockUserSuccess', 'User account unlocked successfully') });
       fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[PeopleSection] Failed to unlock user:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.people.unlockUserError', 'Failed to unlock user account');
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) || t('workspace.people.unlockUserError', 'Failed to unlock user account');
       alert({ alertType: 'error', title: errorMessage });
     }
   };
@@ -339,9 +338,9 @@ export default function PeopleSection() {
     },
   ];
 
-  const renderRoleOption = ({ option }: { option: any }) => (
+  const renderRoleOption = ({ option }: { option: ComboboxItem & { icon?: string; description?: string } }) => (
     <Group gap="sm" wrap="nowrap">
-      <LocalIcon icon={option.icon} width="1.25rem" height="1.25rem" style={{ flexShrink: 0 }} />
+      <LocalIcon icon={option.icon ?? ''} width="1.25rem" height="1.25rem" style={{ flexShrink: 0 }} />
       <Box style={{ flex: 1 }}>
         <Text size="sm" fw={500}>{option.label}</Text>
         <Text size="xs" c="dimmed" style={{ whiteSpace: 'normal', lineHeight: 1.4 }}>
@@ -668,12 +667,12 @@ export default function PeopleSection() {
                                   try {
                                     await userManagementService.disableMfaByAdmin(user.username);
                                     alert({ alertType: 'success', title: t('workspace.people.mfa.adminDisableSuccess', 'MFA disabled successfully for user') });
-                                  } catch (error: any) {
+                                  } catch (error: unknown) {
                                     console.error('[PeopleSection] Failed to disable MFA for user:', error);
-                                    const errorMessage = error.response?.data?.message ||
-                                                        error.response?.data?.error ||
-                                                        error.message ||
-                                                        t('workspace.people.mfa.adminDisableError', 'Failed to disable MFA for user');
+                                    const errorMessage = isAxiosError(error)
+                                      ? (error.response?.data?.message || error.response?.data?.error || error.message)
+                                      : (error instanceof Error ? error.message : undefined) ||
+                                      t('workspace.people.mfa.adminDisableError', 'Failed to disable MFA for user');
                                     alert({ alertType: 'error', title: errorMessage });
                                   }
                                 }}

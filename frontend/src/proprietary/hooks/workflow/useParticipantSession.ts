@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { isAxiosError } from 'axios';
 import workflowService, {
   WorkflowSessionResponse,
   ParticipantResponse,
@@ -35,9 +36,10 @@ export const useParticipantSession = (token?: string): UseParticipantSessionResu
       ]);
       setSession(sessionData);
       setParticipant(participantData);
-    } catch (err: any) {
-      const errorMsg =
-        err.response?.data?.message || err.message || 'Failed to load session';
+    } catch (err: unknown) {
+      const errorMsg = isAxiosError(err)
+        ? (err.response?.data?.message || err.message)
+        : (err instanceof Error ? err.message : undefined) || 'Failed to load session';
       setError(errorMsg);
     } finally {
       setLoading(false);
@@ -55,9 +57,10 @@ export const useParticipantSession = (token?: string): UseParticipantSessionResu
         if (request.participantToken) {
           await loadSession(request.participantToken);
         }
-      } catch (err: any) {
-        const errorMsg =
-          err.response?.data?.message || err.message || 'Failed to submit signature';
+      } catch (err: unknown) {
+        const errorMsg = isAxiosError(err)
+          ? (err.response?.data?.message || err.message)
+          : (err instanceof Error ? err.message : undefined) || 'Failed to submit signature';
         setError(errorMsg);
         throw new Error(errorMsg, { cause: err });
       } finally {
@@ -79,9 +82,10 @@ export const useParticipantSession = (token?: string): UseParticipantSessionResu
         setParticipant(updatedParticipant);
         // Reload session
         await loadSession(token);
-      } catch (err: any) {
-        const errorMsg =
-          err.response?.data?.message || err.message || 'Failed to decline';
+      } catch (err: unknown) {
+        const errorMsg = isAxiosError(err)
+          ? (err.response?.data?.message || err.message)
+          : (err instanceof Error ? err.message : undefined) || 'Failed to decline';
         setError(errorMsg);
         throw new Error(errorMsg, { cause: err });
       } finally {
@@ -104,9 +108,10 @@ export const useParticipantSession = (token?: string): UseParticipantSessionResu
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-    } catch (err: any) {
-      const errorMsg =
-        err.response?.data?.message || err.message || 'Failed to download document';
+    } catch (err: unknown) {
+      const errorMsg = isAxiosError(err)
+        ? (err.response?.data?.message || err.message)
+        : (err instanceof Error ? err.message : undefined) || 'Failed to download document';
       setError(errorMsg);
     } finally {
       setLoading(false);

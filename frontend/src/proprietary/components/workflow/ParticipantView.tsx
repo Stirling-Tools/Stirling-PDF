@@ -112,8 +112,8 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
         showLogo: true,
       });
       setNotification({ type: 'success', message: 'Signature submitted successfully!' });
-    } catch (err: any) {
-      setNotification({ type: 'error', message: `Failed to submit signature: ${err.message}` });
+    } catch (err: unknown) {
+      setNotification({ type: 'error', message: `Failed to submit signature: ${err instanceof Error ? err.message : String(err)}` });
     } finally {
       setIsSubmitting(false);
     }
@@ -125,8 +125,8 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
       try {
         await decline(token, declineReason || 'Declined by participant');
         setNotification({ type: 'success', message: 'You have declined this signing request.' });
-      } catch (err: any) {
-        setNotification({ type: 'error', message: `Failed to decline: ${err.message}` });
+      } catch (err: unknown) {
+        setNotification({ type: 'error', message: `Failed to decline: ${err instanceof Error ? err.message : String(err)}` });
       }
     }
   };

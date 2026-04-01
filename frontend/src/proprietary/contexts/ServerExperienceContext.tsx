@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import apiClient from '@app/services/apiClient';
+import { isAxiosError } from 'axios';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
 import { useAuth } from '@app/auth/UseSession';
 import { useLicense } from '@app/contexts/LicenseContext';
@@ -95,13 +96,8 @@ function getErrorMessage(error: unknown): string {
   if (typeof error === 'string') {
     return error;
   }
-  if (
-    typeof error === 'object' &&
-    error !== null &&
-    'response' in error &&
-    typeof (error as any).response?.data?.message === 'string'
-  ) {
-    return (error as any).response.data.message;
+  if (isAxiosError(error) && typeof error.response?.data?.message === 'string') {
+    return error.response.data.message;
   }
   if (error instanceof Error) {
     return error.message;
@@ -196,7 +192,7 @@ export function ServerExperienceProvider({ children }: { children: ReactNode }) 
           (
             await apiClient.get<{ totalUsers?: number }>(
               '/api/v1/proprietary/ui-data/admin-settings',
-              { suppressErrorToast: true } as any,
+              { suppressErrorToast: true },
             )
           ).data;
         const totalUsers =
@@ -219,7 +215,7 @@ export function ServerExperienceProvider({ children }: { children: ReactNode }) 
           (
             await apiClient.get<WeeklyActiveUsersResponse>('/api/v1/info/wau', {
               suppressErrorToast: true,
-            } as any)
+            })
           ).data;
         const weeklyActiveUsers =
           typeof responseData?.weeklyActiveUsers === 'number'

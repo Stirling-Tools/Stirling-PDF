@@ -155,10 +155,10 @@ const AdminUsageSection: React.FC = () => {
 
   const displayedVisits = endpoints.reduce((sum, e) => sum + e.visits, 0);
   const totalVisits = Number.isFinite(data?.totalVisits)
-    ? Math.max(0, data?.totalVisits as number)
+    ? Math.max(0, data?.totalVisits ?? 0)
     : displayedVisits;
   const totalEndpoints = Number.isFinite(data?.totalEndpoints)
-    ? Math.max(0, data?.totalEndpoints as number)
+    ? Math.max(0, data?.totalEndpoints ?? 0)
     : endpoints.length;
 
   const displayedPercentage = totalVisits > 0

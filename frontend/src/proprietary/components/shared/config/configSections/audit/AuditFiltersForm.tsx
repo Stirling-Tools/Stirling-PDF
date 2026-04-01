@@ -43,7 +43,7 @@ interface AuditFiltersFormProps {
   filters: AuditFilters;
   eventTypes: string[];
   users: string[];
-  onFilterChange: (key: keyof AuditFilters, value: any) => void;
+  onFilterChange: (key: keyof AuditFilters, value: AuditFilters[keyof AuditFilters]) => void;
   onClearFilters: () => void;
   disabled?: boolean;
 }
@@ -147,8 +147,8 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
         <DateInput
           placeholder={t('audit.events.startDate', 'Start date')}
           value={filters.startDate ? new Date(filters.startDate) : null}
-          onChange={(value: any) => {
-            onFilterChange('startDate', value ? formatDateToYMD(value as Date) : undefined);
+          onChange={(value) => {
+            onFilterChange('startDate', value ? formatDateToYMD(new Date(value)) : undefined);
           }}
           clearable
           disabled={disabled}
@@ -157,8 +157,8 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
         <DateInput
           placeholder={t('audit.events.endDate', 'End date')}
           value={filters.endDate ? new Date(filters.endDate) : null}
-          onChange={(value: any) => {
-            onFilterChange('endDate', value ? formatDateToYMD(value as Date) : undefined);
+          onChange={(value) => {
+            onFilterChange('endDate', value ? formatDateToYMD(new Date(value)) : undefined);
           }}
           clearable
           disabled={disabled}

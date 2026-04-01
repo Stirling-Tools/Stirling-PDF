@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { isAxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
 import {
   Stack,
@@ -110,12 +111,11 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       setAddMemberModalOpened(false);
       setSelectedUserId('');
       fetchTeamDetails();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to add member:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.teams.addMemberToTeam.error', 'Failed to add user to team');
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) || t('workspace.teams.addMemberToTeam.error', 'Failed to add user to team');
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
@@ -140,12 +140,11 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       await teamService.moveUserToTeam(user.username, user.rolesAsString || 'ROLE_USER', defaultTeam.id);
       alert({ alertType: 'success', title: t('workspace.teams.removeMemberSuccess', 'User removed from team') });
       fetchTeamDetails();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to remove member:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.teams.removeMemberError', 'Failed to remove user from team');
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) || t('workspace.teams.removeMemberError', 'Failed to remove user from team');
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
@@ -163,12 +162,12 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       await userManagementService.deleteUser(user.username);
       alert({ alertType: 'success', title: t('workspace.people.deleteUserSuccess', 'User deleted successfully') });
       fetchTeamDetails();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to delete user:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.people.deleteUserError', 'Failed to delete user');
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) ||
+        t('workspace.people.deleteUserError', 'Failed to delete user');
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
@@ -185,12 +184,11 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       await userManagementService.unlockUser(user.username);
       alert({ alertType: 'success', title: t('workspace.people.unlockUserSuccess', 'User account unlocked successfully') });
       fetchTeamDetails();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[TeamDetailsSection] Failed to unlock user:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.people.unlockUserError', 'Failed to unlock user account');
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) || t('workspace.people.unlockUserError', 'Failed to unlock user account');
       alert({ alertType: 'error', title: errorMessage });
     }
   };
@@ -225,12 +223,12 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       setSelectedUser(null);
       setSelectedTeamId('');
       fetchTeamDetails();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to change team:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.teams.changeTeam.error', 'Failed to change team');
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) ||
+        t('workspace.teams.changeTeam.error', 'Failed to change team');
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);

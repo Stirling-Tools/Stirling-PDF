@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { isAxiosError } from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Badge, Button, Group, Loader, Paper, Stack, Text, Title } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
@@ -45,8 +46,8 @@ export default function ShareLinkPage() {
       const data = await fetchShareLinkMetadata(normalizedToken);
       setMetadata(data);
       setStatus('ready');
-    } catch (error: any) {
-      const statusCode = error?.response?.status as number | undefined;
+    } catch (error: unknown) {
+      const statusCode = isAxiosError(error) ? error.response?.status : undefined;
       if (statusCode === 401) {
         setStatus('login');
       } else if (statusCode === 403) {
@@ -83,8 +84,8 @@ export default function ShareLinkPage() {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-    } catch (error: any) {
-      const statusCode = error?.response?.status as number | undefined;
+    } catch (error: unknown) {
+      const statusCode = isAxiosError(error) ? error.response?.status : undefined;
       if (statusCode === 401) {
         setStatus('login');
       } else if (statusCode === 403) {
@@ -118,8 +119,8 @@ export default function ShareLinkPage() {
       }
       navActions.setWorkbench('viewer');
       navigate('/', { replace: true });
-    } catch (error: any) {
-      const statusCode = error?.response?.status as number | undefined;
+    } catch (error: unknown) {
+      const statusCode = isAxiosError(error) ? error.response?.status : undefined;
       if (statusCode === 401) {
         setStatus('login');
       } else if (statusCode === 403) {
