@@ -1,5 +1,5 @@
 import React from 'react';
-import './DisabledButtonWithTooltip.css';
+import '@app/components/shared/DisabledButtonWithTooltip.css';
 
 interface DisabledButtonWithTooltipProps {
   /** Tooltip text shown on hover */
