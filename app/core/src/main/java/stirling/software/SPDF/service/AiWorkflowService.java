@@ -20,6 +20,8 @@ import stirling.software.SPDF.model.api.ai.AiWorkflowTextSelection;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import tools.jackson.databind.ObjectMapper;
 
 @Service
@@ -203,17 +205,37 @@ public class AiWorkflowService {
         return text.substring(0, end);
     }
 
+    private enum ArtifactKind {
+        // Must match discriminators in Pydantic models
+        EXTRACTED_TEXT("extracted_text");
+
+        private final String value;
+
+        ArtifactKind(String value) {
+            this.value = value;
+        }
+
+        @JsonValue
+        public String getValue() {
+            return value;
+        }
+    }
+
+    private interface WorkflowArtifact {
+        ArtifactKind getKind();
+    }
+
     @Data
     private static class WorkflowTurnRequest {
         private String userMessage;
         private String fileName;
-        private List<ExtractedTextArtifact> artifacts = new ArrayList<>();
+        private List<WorkflowArtifact> artifacts = new ArrayList<>();
         private String resumeWith;
     }
 
     @Data
-    private static class ExtractedTextArtifact {
-        private final String kind = "extracted_text";
+    private static final class ExtractedTextArtifact implements WorkflowArtifact {
+        private final ArtifactKind kind = ArtifactKind.EXTRACTED_TEXT;
         private List<AiWorkflowTextSelection> pages = new ArrayList<>();
     }
 }
