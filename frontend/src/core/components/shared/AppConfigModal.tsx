@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
-import { Modal, Text, ActionIcon, Tooltip, Group } from '@mantine/core';
+import { Badge, Modal, Text, ActionIcon, Tooltip, Group } from '@mantine/core';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { useConfigNavSections } from '@app/components/shared/config/configNavSections';
@@ -186,6 +186,11 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
                             <Text size="sm" fw={500} style={{ color }}>
                               {item.label}
                             </Text>
+                            {item.badge && (
+                              <Badge size="xs" variant="light" color={item.badgeColor ?? 'orange'} style={{ flexShrink: 0 }}>
+                                {item.badge}
+                              </Badge>
+                            )}
                             {showPlanWarning && (
                               <LocalIcon
                                 icon="warning-rounded"
