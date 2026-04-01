@@ -32,63 +32,60 @@ public class AiWorkflowService {
     private final AiEngineClient aiEngineClient;
     private final ObjectMapper objectMapper;
 
-    private sealed interface StepResult {
-        record Continue() implements StepResult {}
+    private sealed interface WorkflowState {
+        record Pending(WorkflowTurnRequest request) implements WorkflowState {}
 
-        record Done(AiWorkflowResponse response) implements StepResult {}
+        record Terminal(AiWorkflowResponse response) implements WorkflowState {}
     }
 
     public AiWorkflowResponse orchestrate(AiWorkflowRequest request) throws IOException {
         validateRequest(request);
 
-        WorkflowTurnRequest turnRequest = new WorkflowTurnRequest();
-        turnRequest.setUserMessage(request.getUserMessage().trim());
-        turnRequest.setFileName(request.getFileInput().getOriginalFilename());
+        WorkflowTurnRequest initialRequest = new WorkflowTurnRequest();
+        initialRequest.setUserMessage(request.getUserMessage().trim());
+        initialRequest.setFileName(request.getFileInput().getOriginalFilename());
 
         try (PDDocument document = pdfDocumentFactory.load(request.getFileInput(), true)) {
-            boolean textExtracted = false;
-
-            while (true) {
-                AiWorkflowResponse response = invokeOrchestrator(turnRequest);
-                StepResult result =
-                        switch (response.getOutcome()) {
-                            case NEED_TEXT ->
-                                    onNeedText(response, document, turnRequest, textExtracted);
-                            case ANSWER,
-                                NOT_FOUND,
-                                PLAN,
-                                CLARIFICATION_REQUEST,
-                                CANNOT_DO,
-                                UNSUPPORTED_CAPABILITY,
-                                CANNOT_CONTINUE ->
-                                    new StepResult.Done(response);
-                        };
-
-                switch (result) {
-                    case StepResult.Continue c -> textExtracted = true;
-                    case StepResult.Done d -> {
-                        return d.response();
-                    }
-                }
+            WorkflowState state = new WorkflowState.Pending(initialRequest);
+            while (state instanceof WorkflowState.Pending pending) {
+                state = advance(pending.request(), document);
             }
+            return ((WorkflowState.Terminal) state).response();
         }
     }
 
-    private StepResult onNeedText(
-            AiWorkflowResponse response,
-            PDDocument document,
-            WorkflowTurnRequest turnRequest,
-            boolean textExtracted)
+    private WorkflowState advance(WorkflowTurnRequest request, PDDocument document)
             throws IOException {
-        if (textExtracted) {
-            return new StepResult.Done(
+        AiWorkflowResponse response = invokeOrchestrator(request);
+        return switch (response.getOutcome()) {
+            case NEED_TEXT -> onNeedText(response, document, request);
+            case ANSWER,
+                    NOT_FOUND,
+                    PLAN,
+                    CLARIFICATION_REQUEST,
+                    CANNOT_DO,
+                    UNSUPPORTED_CAPABILITY,
+                    CANNOT_CONTINUE ->
+                    new WorkflowState.Terminal(response);
+        };
+    }
+
+    private WorkflowState onNeedText(
+            AiWorkflowResponse response, PDDocument document, WorkflowTurnRequest request)
+            throws IOException {
+        if (!request.getArtifacts().isEmpty()) {
+            return new WorkflowState.Terminal(
                     cannotContinue("AI engine requested text extraction more than once."));
         }
 
         List<AiWorkflowTextSelection> extractedPages = extractRequestedText(response, document);
-        turnRequest.setArtifacts(List.of(createExtractedTextArtifact(extractedPages)));
-        turnRequest.setResumeWith(response.getResumeWith());
-        return new StepResult.Continue();
+
+        WorkflowTurnRequest nextRequest = new WorkflowTurnRequest();
+        nextRequest.setUserMessage(request.getUserMessage());
+        nextRequest.setFileName(request.getFileName());
+        nextRequest.setArtifacts(List.of(createExtractedTextArtifact(extractedPages)));
+        nextRequest.setResumeWith(response.getResumeWith());
+        return new WorkflowState.Pending(nextRequest);
     }
 
     private void validateRequest(AiWorkflowRequest request) {
