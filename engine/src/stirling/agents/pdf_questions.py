@@ -53,7 +53,7 @@ class PdfQuestionAgent:
     def _build_prompt(self, request: PdfQuestionRequest) -> str:
         file_name = request.file_name or "Unknown file"
         pages = "\n\n".join(
-            f"[Page {selection.page_number if selection.page_number is not None else '?'}]\n{selection.text}"
+            f"[Page {selection.page_number or '?'}]\n{selection.text}"
             for selection in request.page_text
         )
         return f"File: {file_name}\nQuestion: {request.question}\nExtracted page text:\n{pages}"
