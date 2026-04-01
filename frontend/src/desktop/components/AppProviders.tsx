@@ -10,7 +10,7 @@ import { ToolActionsContext } from '@app/contexts/ToolActionsContext';
 import { useFirstLaunchCheck } from '@app/hooks/useFirstLaunchCheck';
 import { useBackendInitializer } from '@app/hooks/useBackendInitializer';
 import { DESKTOP_DEFAULT_APP_CONFIG } from '@app/config/defaultAppConfig';
-import { connectionModeService } from '@app/services/connectionModeService';
+import { connectionModeService, JWT_EXPIRED_PROMPTED_KEY } from '@app/services/connectionModeService';
 import { STIRLING_SAAS_URL } from '@app/constants/connection';
 import { tauriBackendService } from '@app/services/tauriBackendService';
 import { selfHostedServerMonitor } from '@app/services/selfHostedServerMonitor';
@@ -47,9 +47,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const { isFirstLaunch, setupComplete } = useFirstLaunchCheck();
   const [connectionMode, setConnectionMode] = useState<'saas' | 'selfhosted' | 'local' | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
-  // When auth check finds no valid session, record the sign-in detail here so the
-  // dispatch useEffect below can fire it only after SignInModal has mounted.
-  const [pendingSignIn, setPendingSignIn] = useState<{ locked: boolean } | null>(null);
+  const [pendingSignIn, setPendingSignIn] = useState(false);
   // Prevent first-launch setup from running twice when connectionMode state update re-triggers the effect
   const firstLaunchInitiated = useRef(false);
   // Key incremented on every connection mode change after initial load — forces SaaS provider
@@ -99,69 +97,73 @@ export function AppProviders({ children }: { children: ReactNode }) {
           })
           .finally(() => setAuthChecked(true));
       } else {
-        let pendingDetail: { locked: boolean } | null = null;
         authService.isAuthenticated()
           .then(async (isAuth) => {
             if (!isAuth) {
               const cfg = await connectionModeService.getCurrentConfig().catch(() => null);
-              if (cfg?.lock_connection_mode) {
-                // Provisioned deployment — stay in the configured mode and prompt for credentials.
-                // Don't fall back to local; the admin has locked the connection mode.
-                pendingDetail = { locked: true };
-              } else {
-                // JWT expired — fall back to local so local tools still work, then prompt
-                // for re-authentication via the sign-in modal.
+              if (!cfg?.lock_connection_mode) {
+                // JWT expired — fall back to local so local tools still work.
                 await connectionModeService.switchToLocal().catch(console.error);
                 setConnectionMode('local');
-                pendingDetail = { locked: false };
+                // Show sign-in modal once per expiry cycle. If the user dismisses
+                // without signing in the flag stays set and we won't prompt again
+                // until they successfully sign in (which clears the flag).
+                if (!localStorage.getItem(JWT_EXPIRED_PROMPTED_KEY)) {
+                  localStorage.setItem(JWT_EXPIRED_PROMPTED_KEY, 'true');
+                  setPendingSignIn(true);
+                }
               }
+              // Locked deployments stay in their configured mode — user can sign in
+              // via Settings when they're ready.
             }
           })
           .catch(async () => {
             const cfg = await connectionModeService.getCurrentConfig().catch(() => null);
-            if (cfg?.lock_connection_mode) {
-              // Auth check threw (e.g. network error) but mode is locked — still prompt for
-              // credentials so the user can sign in when connectivity is restored.
-              pendingDetail = { locked: true };
-            } else {
+            if (!cfg?.lock_connection_mode) {
               await connectionModeService.switchToLocal().catch(console.error);
               setConnectionMode('local');
-              pendingDetail = { locked: false };
+              if (!localStorage.getItem(JWT_EXPIRED_PROMPTED_KEY)) {
+                localStorage.setItem(JWT_EXPIRED_PROMPTED_KEY, 'true');
+                setPendingSignIn(true);
+              }
             }
           })
-          .finally(() => {
-            setAuthChecked(true);
-            // Schedule sign-in via state so the dispatch useEffect fires AFTER
-            // SignInModal mounts (children effects run before parent effects).
-            if (pendingDetail) {
-              setPendingSignIn(pendingDetail);
-            }
-          });
+          .finally(() => setAuthChecked(true));
       }
     } else if (isFirstLaunch && !setupComplete) {
-      // Auto-enter local mode on first launch — skip the setup wizard entirely.
-      // The onboarding carousel + sign-in toast will be shown inside the main app.
-      // Start the backend explicitly here because shouldMonitorBackend relies on
-      // setupComplete (still false from the hook), so useBackendInitializer won't fire.
-      // Guard against re-running when setConnectionMode('local') below triggers this effect.
+      // Guard against re-running when setConnectionMode triggers this effect.
       if (firstLaunchInitiated.current) return;
       firstLaunchInitiated.current = true;
-      connectionModeService.switchToLocal()
-        .then(() => tauriBackendService.startBackend())
+      connectionModeService.getCurrentConfig()
+        .then(async (cfg) => {
+          if (cfg.lock_connection_mode && cfg.server_config?.url) {
+            // Locked provisioned deployment — do NOT switch to local (would clear server_config
+            // from the store). Show onboarding normally; the sign-in slide handles locked auth.
+            // Still start the local backend so local tools work while the user signs in.
+            await tauriBackendService.startBackend().catch(console.error);
+            setConnectionMode('selfhosted');
+          } else {
+            // Normal first launch — auto-enter local mode.
+            // The onboarding carousel + sign-in slide will be shown inside the main app.
+            await connectionModeService.switchToLocal();
+            await tauriBackendService.startBackend();
+            setConnectionMode('local');
+          }
+        })
         .catch(console.error)
-        .finally(() => {
-          setConnectionMode('local');
-          setAuthChecked(true);
-        });
+        .finally(() => setAuthChecked(true));
     }
   }, [isFirstLaunch, setupComplete, connectionMode]);
 
   // Initialize backend health monitoring for self-hosted mode
   useEffect(() => {
-    if (setupComplete && !isFirstLaunch && connectionMode === 'selfhosted') {
+    if (connectionMode !== 'selfhosted') {
+      // Stop the monitor whenever we leave selfhosted mode so the dot resets.
+      selfHostedServerMonitor.stop();
+      return;
+    }
+    if (setupComplete && !isFirstLaunch) {
       void tauriBackendService.initializeExternalBackend();
-      // Also start the self-hosted server monitor so the operation router and UI
-      // can detect when the remote server goes offline and fall back to local backend.
       connectionModeService.getServerConfig().then(cfg => {
         if (cfg?.url) {
           selfHostedServerMonitor.start(cfg.url);
@@ -205,13 +207,16 @@ export function AppProviders({ children }: { children: ReactNode }) {
     return unsubscribe;
   }, [shouldPreloadLocalEndpoints, connectionMode]);
 
-  // Dispatch sign-in event only after authChecked=true so SignInModal is mounted.
-  // Using useEffect (not setTimeout) guarantees child effects (SignInModal's listener
-  // registration) run before this parent effect fires the event.
+
+  // Dispatch sign-in modal after authChecked so SignInModal's listener is registered.
+  // (Child effects run before parent effects, so this fires after SignInModal mounts.)
+  // detail.locked is always false here: setPendingSignIn(true) is only called inside
+  // `if (!cfg?.lock_connection_mode)` branches above, so locked deployments never set
+  // pendingSignIn and therefore never reach this dispatch.
   useEffect(() => {
     if (!authChecked || !pendingSignIn) return;
-    window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: pendingSignIn }));
-    setPendingSignIn(null);
+    window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: { locked: false } }));
+    setPendingSignIn(false);
   }, [authChecked, pendingSignIn]);
 
   useEffect(() => {

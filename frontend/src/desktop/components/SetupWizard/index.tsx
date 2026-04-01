@@ -12,6 +12,7 @@ import { tauriBackendService } from '@app/services/tauriBackendService';
 import { STIRLING_SAAS_URL } from '@app/constants/connection';
 import { listen } from '@tauri-apps/api/event';
 import '@app/routes/authShared/auth.css';
+import { DisabledButtonWithTooltip } from '@app/components/shared/DisabledButtonWithTooltip';
 
 enum SetupStep {
   SaaSLogin,
@@ -27,6 +28,7 @@ interface SetupWizardProps {
   /** Called when the user dismisses the wizard (modal close button) */
   onClose?: () => void;
 }
+
 
 export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete, noLayout = false, onClose }) => {
   const { t } = useTranslation();
@@ -313,10 +315,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete, noLayout =
   const loadLockedConfig = useCallback(async () => {
     const currentConfig = await connectionModeService.getCurrentConfig();
     if (!currentConfig.lock_connection_mode) return;
-    // server_config may be null when the user switched to local mode from a locked deployment.
-    // Fall back to the URL saved by switchToLocal() so the wizard still shows locked login.
-    const serverUrl = currentConfig.server_config?.url
-      || localStorage.getItem('stirling-provisioned-server-url');
+    const serverUrl = currentConfig.server_config?.url;
     if (!serverUrl) return;
 
     setLockConnectionMode(true);
@@ -433,6 +432,26 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete, noLayout =
           >
             {t('setup.selfhosted.unreachable.retry', 'Retry')}
           </Button>
+          {lockConnectionMode ? (
+            <DisabledButtonWithTooltip
+              tooltip={t('setup.selfhosted.changeServerLocked', 'Your organisation has restricted this app to a specific server')}
+            >
+              {t('setup.selfhosted.unreachable.changeServer', 'Connect to a different server')}
+            </DisabledButtonWithTooltip>
+          ) : (
+            <Button
+              variant="light"
+              color="blue"
+              fullWidth
+              loading={loading}
+              onClick={() => {
+                setLockedServerUnreachable(false);
+                setActiveStep(SetupStep.ServerSelection);
+              }}
+            >
+              {t('setup.selfhosted.unreachable.changeServer', 'Connect to a different server')}
+            </Button>
+          )}
           <Button
             variant="subtle"
             color="white"
@@ -458,18 +477,16 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete, noLayout =
             loading={loading}
             error={error}
           />
-          {lockConnectionMode && (
-            <div className="navigation-link-container" style={{ marginTop: '1.5rem' }}>
-              <button
-                type="button"
-                onClick={handleLocalMode}
-                className="navigation-link-button"
-                disabled={loading}
-              >
-                {t('setup.selfhosted.switchToLocal', 'Use local tools instead')}
-              </button>
-            </div>
-          )}
+          <div className="navigation-link-container" style={{ marginTop: '1.5rem' }}>
+            <button
+              type="button"
+              onClick={handleLocalMode}
+              className="navigation-link-button"
+              disabled={loading}
+            >
+              {t('setup.selfhosted.switchToLocal', 'Use local tools instead')}
+            </button>
+          </div>
         </>
       )}
 

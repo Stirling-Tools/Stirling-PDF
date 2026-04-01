@@ -441,7 +441,7 @@ const licenseService = {
    */
   async getLicenseInfo(): Promise<LicenseInfo> {
     try {
-      const response = await apiClient.get('/api/v1/admin/license-info');
+      const response = await apiClient.get('/api/v1/admin/license-info', { suppressErrorToast: true });
       return response.data;
     } catch (error) {
       console.error('Error fetching license info:', error);
