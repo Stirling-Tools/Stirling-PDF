@@ -5,6 +5,7 @@ build: &build
 openapi: &openapi
   - *build
   - app/(common|core|proprietary)/src/main/java/**
+  - SwaggerDoc.json
 
 docker-base: &docker-base
   - docker/base/Dockerfile
@@ -42,6 +43,7 @@ project: &project
 
 frontend: &frontend
   - frontend/**
+  - SwaggerDoc.json
   - .github/workflows/testdriver.yml
   - testing/**
   - docker/**

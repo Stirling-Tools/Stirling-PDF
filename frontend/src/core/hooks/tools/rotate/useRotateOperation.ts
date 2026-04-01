@@ -1,7 +1,10 @@
 import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
+import { RotatePDFRequest } from '@app/generated/openapi';
+import { defineBackendToolMapping, useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
 import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
 import { RotateParameters, defaultParameters, normalizeAngle } from '@app/hooks/tools/rotate/useRotateParameters';
+
+type RotateApiParams = Omit<RotatePDFRequest, 'fileInput' | 'fileId'>;
 
 // Static configuration that can be used by both the hook and automation executor
 export const buildRotateFormData = (parameters: RotateParameters, file: File): FormData => {
@@ -19,6 +22,16 @@ export const rotateOperationConfig = {
   operationType: 'rotate',
   endpoint: '/api/v1/general/rotate-pdf',
   defaultParameters,
+  backendMapping: defineBackendToolMapping<RotateParameters, 'rotatePDF', RotateApiParams>({
+    operationId: 'rotatePDF',
+    toFrontendParameters: (apiParams: RotateApiParams): RotateParameters => ({
+      ...defaultParameters,
+      angle: apiParams.angle,
+    }),
+    toApiParams: (parameters: RotateParameters): RotateApiParams => ({
+      angle: normalizeAngle(parameters.angle) as RotateApiParams['angle'],
+    }),
+  }),
 } as const;
 
 export const useRotateOperation = () => {

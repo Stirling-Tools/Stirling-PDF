@@ -23,11 +23,14 @@ import {
   ToolOperationConfig,
   ToolOperationHook,
   CustomProcessorResult,
+  BackendToolMapping,
+  ToolErrorLike,
   SingleFileToolOperationConfig,
   MultiFileToolOperationConfig,
   CustomToolOperationConfig,
   ProcessingProgress,
   ResponseHandler,
+  defineBackendToolMapping,
 } from '@app/hooks/tools/shared/toolOperationTypes';
 
 export { ToolType };
@@ -35,12 +38,16 @@ export type {
   ToolOperationConfig,
   ToolOperationHook,
   CustomProcessorResult,
+  BackendToolMapping,
+  ToolErrorLike,
   SingleFileToolOperationConfig,
   MultiFileToolOperationConfig,
   CustomToolOperationConfig,
   ProcessingProgress,
   ResponseHandler,
 };
+
+export { defineBackendToolMapping };
 
 // Re-export for backwards compatibility
 export { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
@@ -150,7 +157,7 @@ export const useToolOperation = <TParams>(
     // Listen for global error file id events from HTTP interceptor during this run
     let externalErrorFileIds: string[] = [];
     const errorListener = (e: Event) => {
-      const detail = (e as CustomEvent)?.detail as any;
+      const detail = (e as CustomEvent<{ fileIds?: string[] }>).detail;
       if (detail?.fileIds) {
         externalErrorFileIds = Array.isArray(detail.fileIds) ? detail.fileIds : [];
       }
@@ -402,7 +409,8 @@ export const useToolOperation = <TParams>(
 
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const toolError = error as ToolErrorLike;
       try {
         const handled = await handle422Error(error, (id) => fileActions.markFileError(id as FileId));
         if (handled) {
@@ -411,7 +419,7 @@ export const useToolOperation = <TParams>(
         }
       } catch (_e) { void _e; }
 
-      const errorMessage = config.getErrorMessage?.(error) || extractErrorMessage(error);
+      const errorMessage = config.getErrorMessage?.(toolError) || extractErrorMessage(error);
       actions.setError(errorMessage);
       actions.setStatus('');
     } finally {
@@ -472,15 +480,16 @@ export const useToolOperation = <TParams>(
       // Show success message
       actions.setStatus(t('undoSuccess', 'Operation undone successfully'));
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const toolError = error as ToolErrorLike;
       let errorMessage = extractErrorMessage(error);
 
       // Provide more specific error messages based on error type
-      if (error.message?.includes('Mismatch between input files')) {
+      if (toolError.message?.includes('Mismatch between input files')) {
         errorMessage = t('undoDataMismatch', 'Cannot undo: operation data is corrupted');
-      } else if (error.message?.includes('IndexedDB')) {
+      } else if (toolError.message?.includes('IndexedDB')) {
         errorMessage = t('undoStorageError', 'Undo completed but some files could not be saved to storage');
-      } else if (error.name === 'QuotaExceededError') {
+      } else if (toolError.name === 'QuotaExceededError') {
         errorMessage = t('undoQuotaError', 'Cannot undo: insufficient storage space');
       }
 
