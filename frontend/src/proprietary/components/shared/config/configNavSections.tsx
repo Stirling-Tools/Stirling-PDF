@@ -105,7 +105,9 @@ export const useConfigNavSections = (
           icon: 'storage-rounded',
           component: <AdminStorageSharingSection />,
           disabled: requiresLogin,
-          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined
+          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
+          badge: t('toolPanel.alpha', 'Alpha'),
+          badgeColor: 'orange',
         },
         {
           key: 'adminEndpoints',
