@@ -1,5 +1,5 @@
 import React from 'react';
-import '@app/components/SetupWizard/desktopOAuth.css';
+import './DisabledButtonWithTooltip.css';
 
 interface DisabledButtonWithTooltipProps {
   /** Tooltip text shown on hover */
