@@ -15,7 +15,7 @@ import {
   UnstyledButton,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import auditService, { AuditEvent } from '@app/services/auditService';
+import auditService, { AuditEvent, AuditFilters } from '@app/services/auditService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { useAuditFilters } from '@app/hooks/useAuditFilters';
 import AuditFiltersForm from '@app/components/shared/config/configSections/audit/AuditFiltersForm';
@@ -122,7 +122,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
   }, [filters, currentPage, loginEnabled]);
 
   // Wrap filter handlers to reset pagination
-  const handleFilterChangeWithReset = (key: keyof typeof filters, value: any) => {
+  const handleFilterChangeWithReset = (key: keyof AuditFilters, value: AuditFilters[keyof AuditFilters]) => {
     handleFilterChange(key, value);
     setCurrentPage(1);
   };
@@ -170,8 +170,8 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
 
   // Apply sorting to current events
   const sortedEvents = [...events].sort((a, b) => {
-    let aVal: any;
-    let bVal: any;
+    let aVal: string | number | undefined;
+    let bVal: string | number | undefined;
 
     switch (sortKey) {
       case 'timestamp':
@@ -296,14 +296,14 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                     let author = '';
                     let fileHash = '';
                     if (event.details && typeof event.details === 'object') {
-                      const details = event.details as Record<string, any>;
+                      const details = event.details as Record<string, unknown>;
                       const files = details.files;
                       if (Array.isArray(files) && files.length > 0) {
-                        const firstFile = files[0] as Record<string, any>;
-                        documentName = firstFile.name || '';
+                        const firstFile = files[0] as Record<string, unknown>;
+                        documentName = typeof firstFile.name === 'string' ? firstFile.name : '';
                         if (showAuthor || showFileHash) {
-                          author = firstFile.pdfAuthor || '';
-                          fileHash = firstFile.fileHash ? firstFile.fileHash.substring(0, 16) + '...' : '';
+                          author = typeof firstFile.pdfAuthor === 'string' ? firstFile.pdfAuthor : '';
+                          fileHash = typeof firstFile.fileHash === 'string' ? firstFile.fileHash.substring(0, 16) + '...' : '';
                         }
                       }
                     }

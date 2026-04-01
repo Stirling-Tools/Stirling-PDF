@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { isAxiosError } from 'axios';
 import { Tabs, Loader, Alert, Stack, Text, Button, Accordion } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -35,9 +36,9 @@ const AdminAuditSection: React.FC = () => {
         setError(null);
         const status = await auditService.getSystemStatus();
         setSystemStatus(status);
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Check if this is a permission/license error (403/404)
-        const status = err?.response?.status;
+        const status = isAxiosError(err) ? err.response?.status : undefined;
         if (status === 403 || status === 404) {
           setError('enterprise-license-required');
         } else {
