@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { isAxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 import {
   NumberInput,
@@ -68,7 +69,7 @@ export default function AdminDatabaseSection() {
   const { settings, setSettings, loading, saving, fetchSettings, saveSettings, isFieldPending } =
     useAdminSettings<DatabaseSettingsData>({
       sectionName: "database",
-      fetchTransformer: async (): Promise<DatabaseSettingsData & { _pending?: Record<string, any> }> => {
+      fetchTransformer: async (): Promise<DatabaseSettingsData & { _pending?: Record<string, unknown> }> => {
         const response = await apiClient.get("/api/v1/admin/settings/section/system");
         const systemData = response.data || {};
 
@@ -85,7 +86,7 @@ export default function AdminDatabaseSection() {
         };
 
         // Map pending changes from system._pending.datasource to root level
-        const result: DatabaseSettingsData & { _pending?: Record<string, any> } = { ...datasource };
+        const result: DatabaseSettingsData & { _pending?: Record<string, unknown> } = { ...datasource };
         if (systemData._pending?.datasource) {
           result._pending = systemData._pending.datasource;
         }
@@ -94,7 +95,7 @@ export default function AdminDatabaseSection() {
       },
       saveTransformer: (settings: DatabaseSettingsData) => {
         // Convert flat settings to dot-notation for delta endpoint
-        const deltaSettings: Record<string, any> = {
+        const deltaSettings: Record<string, unknown> = {
           "system.datasource.enableCustomDatabase": settings.enableCustomDatabase,
           "system.datasource.customDatabaseUrl": settings.customDatabaseUrl,
           "system.datasource.username": settings.username,
@@ -141,8 +142,8 @@ export default function AdminDatabaseSection() {
       const data = await databaseManagementService.getDatabaseData();
       setBackupFiles(data.backupFiles || []);
       setDatabaseVersion(data.databaseVersion || null);
-    } catch (error: any) {
-      const message = error?.response?.data?.message || error?.message;
+    } catch (error: unknown) {
+      const message = isAxiosError(error) ? (error.response?.data?.message || error.message) : undefined;
       alert({
         alertType: "error",
         title: t("admin.settings.database.loadError", "Failed to load database backups"),
@@ -189,8 +190,8 @@ export default function AdminDatabaseSection() {
       await databaseManagementService.createBackup();
       alert({ alertType: "success", title: t("admin.settings.database.backupCreated", "Backup created successfully") });
       await loadBackupData();
-    } catch (error: any) {
-      const message = error?.response?.data?.message || error?.message;
+    } catch (error: unknown) {
+      const message = isAxiosError(error) ? (error.response?.data?.message || error.message) : undefined;
       alert({
         alertType: "error",
         title: t("admin.settings.database.backupFailed", "Failed to create backup"),
@@ -209,8 +210,8 @@ export default function AdminDatabaseSection() {
       alert({ alertType: "success", title: t("admin.settings.database.importSuccess", "Backup imported successfully") });
       setUploadFile(null);
       await loadBackupData();
-    } catch (error: any) {
-      const message = error?.response?.data?.message || error?.message;
+    } catch (error: unknown) {
+      const message = isAxiosError(error) ? (error.response?.data?.message || error.message) : undefined;
       alert({
         alertType: "error",
         title: t("admin.settings.database.importFailed", "Failed to import backup"),
@@ -270,8 +271,8 @@ export default function AdminDatabaseSection() {
       await databaseManagementService.importFromFileName(fileName);
       alert({ alertType: "success", title: t("admin.settings.database.importSuccess", "Backup imported successfully") });
       await loadBackupData();
-    } catch (error: any) {
-      const message = error?.response?.data?.message || error?.message;
+    } catch (error: unknown) {
+      const message = isAxiosError(error) ? (error.response?.data?.message || error.message) : undefined;
       alert({
         alertType: "error",
         title: t("admin.settings.database.importFailed", "Failed to import backup"),
@@ -289,8 +290,8 @@ export default function AdminDatabaseSection() {
       await databaseManagementService.deleteBackup(fileName);
       alert({ alertType: "success", title: t("admin.settings.database.deleteSuccess", "Backup deleted") });
       await loadBackupData();
-    } catch (error: any) {
-      const message = error?.response?.data?.message || error?.message;
+    } catch (error: unknown) {
+      const message = isAxiosError(error) ? (error.response?.data?.message || error.message) : undefined;
       alert({
         alertType: "error",
         title: t("admin.settings.database.deleteFailed", "Failed to delete backup"),
@@ -320,8 +321,8 @@ export default function AdminDatabaseSection() {
       link.download = fileName;
       document.body.appendChild(link);
       link.click();
-    } catch (error: any) {
-      const message = error?.response?.data?.message || error?.message;
+    } catch (error: unknown) {
+      const message = isAxiosError(error) ? (error.response?.data?.message || error.message) : undefined;
       alert({
         alertType: "error",
         title: t("admin.settings.database.downloadFailed", "Failed to download backup"),
