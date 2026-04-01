@@ -422,9 +422,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       # Core tools
       ca-certificates tzdata tini bash fontconfig curl \
       poppler-utils fontforge \
-      # ffmpeg runtime shared libs (ffmpeg binary comes from ffmpeg-build stage)
-      libx264-164 libvpx9 \
-      gosu unpaper pngquant \
+      unpaper pngquant \
       # Fonts: full coverage for standard + fat variants
       fonts-dejavu \
       fonts-liberation2 \
@@ -638,6 +636,9 @@ COPY --link --from=ffmpeg-build    /usr/local/bin/ff*               /usr/local/b
 COPY --link --from=ffmpeg-build    /usr/local/lib/libav*.so*        /usr/local/lib/
 COPY --link --from=ffmpeg-build    /usr/local/lib/libsw*.so*        /usr/local/lib/
 COPY --link --from=ffmpeg-build    /usr/local/lib/libpostproc*.so*  /usr/local/lib/
+# ffmpeg runtime deps (libx264, libvpx) — copied from build stage instead of apt
+COPY --link --from=ffmpeg-build    /usr/lib/*/libx264*.so*          /usr/local/lib/
+COPY --link --from=ffmpeg-build    /usr/lib/*/libvpx*.so*           /usr/local/lib/
 # Python venv pre-built (no pip install at runtime, no build tools needed)
 COPY --link --from=python-venv-build /opt/venv /opt/venv
 
