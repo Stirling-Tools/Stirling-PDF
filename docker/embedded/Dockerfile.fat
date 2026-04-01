@@ -2,8 +2,8 @@
 # Extra fonts for air-gapped environments
 # Uses pre-built base image for fast builds
 
-ARG BASE_VERSION=1.0.0
-ARG BASE_IMAGE=ghcr.io/stirling-tools/stirling-pdf-base:${BASE_VERSION}
+ARG BASE_VERSION=1.0.1
+ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:${BASE_VERSION}
 
 # Stage 1: Build the Java application and frontend
 FROM gradle:9.3.1-jdk25 AS app-build

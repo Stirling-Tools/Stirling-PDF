@@ -88,6 +88,7 @@ capture_failure_logs() {
 capture_build_failure() {
     local build_name=$1
     local log_file="$REPORT_DIR/${build_name//[^a-zA-Z0-9_-]/_}.failure.log"
+    local build_log="$REPORT_DIR/${build_name//[^a-zA-Z0-9_-]/_}.build.log"
     local gradle_report_dirs=(
         "$PROJECT_ROOT/app/core/build/reports/tests"
         "$PROJECT_ROOT/app/common/build/reports/tests"
@@ -98,6 +99,13 @@ capture_build_failure() {
         echo "=== Build failure: $build_name ==="
         echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
         echo "---"
+
+        # Include Docker/command build output if captured
+        if [ -f "$build_log" ]; then
+            echo "--- Build output (last 100 lines) ---"
+            tail -100 "$build_log"
+            echo ""
+        fi
 
         for report_dir in "${gradle_report_dirs[@]}"; do
             if [ -d "$report_dir" ]; then
@@ -699,12 +707,14 @@ main() {
         else
             DOCKER_CACHE_ARGS_ULTRA_LITE=""
         fi
+        local ultra_lite_build_log="$REPORT_DIR/Build-Ultra-Lite-Docker.build.log"
         if ! docker buildx build --build-arg VERSION_TAG=alpha \
             -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite \
             -f ./docker/embedded/Dockerfile.ultra-lite \
             --load \
-            ${DOCKER_CACHE_ARGS_ULTRA_LITE} .; then
+            ${DOCKER_CACHE_ARGS_ULTRA_LITE} . 2>&1 | tee "$ultra_lite_build_log"; then
             failed_tests+=("Build-Ultra-Lite-Docker")
+            capture_build_failure "Build-Ultra-Lite-Docker"
             gha_endgroup
             exit 1
         fi
@@ -783,13 +793,15 @@ main() {
         else
             DOCKER_CACHE_ARGS_FAT=""
         fi
+        local fat_build_log="$REPORT_DIR/Build-Fat-Docker.build.log"
         if ! docker buildx build --build-arg VERSION_TAG=alpha \
             ${BASE_IMAGE_ARG} \
             -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat \
             -f ./docker/embedded/Dockerfile.fat \
             --load \
-            ${DOCKER_CACHE_ARGS_FAT} .; then
+            ${DOCKER_CACHE_ARGS_FAT} . 2>&1 | tee "$fat_build_log"; then
             failed_tests+=("Build-Fat-Docker")
+            capture_build_failure "Build-Fat-Docker"
             gha_endgroup
             exit 1
         fi
