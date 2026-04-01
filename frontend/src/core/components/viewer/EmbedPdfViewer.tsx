@@ -25,6 +25,7 @@ import type { PDFDict, PDFNumber } from '@cantoo/pdf-lib';
 import { useWheelZoom } from '@app/hooks/useWheelZoom';
 import { useFormFill } from '@app/tools/formFill/FormFillContext';
 import { FormSaveBar } from '@app/tools/formFill/FormSaveBar';
+import { useViewerKeyCommand } from '@app/hooks/useViewerKeyCommand';
 
 // ─── Measure dictionary extraction ────────────────────────────────────────────
 
@@ -380,15 +381,19 @@ const EmbedPdfViewerContent = ({
     onZoomOut: zoomActions.zoomOut,
   });
 
+  const viewerKeyCommand = useViewerKeyCommand();
+
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const mod = event.ctrlKey || event.metaKey;
 
-      // Ctrl+P (print) and Ctrl+R (rotate) must be intercepted unconditionally
+      // Ctrl+P (print) must be intercepted unconditionally
       // whenever the viewer is mounted, even before the user has hovered over it.
+      // Ctrl+R (rotate) is intercepted only on desktop (Tauri), while on web it still falls through to browser refresh.
       // Without this, the browser falls through to its native "print HTML page"
       // or "reload page" behaviour.
+
       if (mod) {
         const target = event.target as Element;
         const isInTextInput =
@@ -397,12 +402,15 @@ const EmbedPdfViewerContent = ({
           (target as HTMLElement).isContentEditable;
 
         if (!isInTextInput) {
-          switch (event.key) {
-            case 'p':
-            case 'P':
-              event.preventDefault();
-              printActions.print();
-              return;
+          const wasOverridden = viewerKeyCommand(event)
+          if (!wasOverridden){
+            switch (event.key) {
+              case 'p':
+              case 'P':
+                event.preventDefault();
+                printActions.print();
+                return;
+            }
           }
         }
       }
@@ -509,7 +517,7 @@ const EmbedPdfViewerContent = ({
   }, [
     isViewerHovered, isSearchInterfaceVisible, zoomActions, searchInterfaceActions,
     scrollActions, printActions, exportActions, rotationActions, historyApiRef,
-    viewerApplyChanges, cyclePdfRenderMode,
+    viewerApplyChanges, cyclePdfRenderMode, viewerKeyCommand,
   ]);
 
   // Watch the annotation history API to detect when the document becomes "dirty".
