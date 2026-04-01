@@ -44,6 +44,66 @@ interface TelegramSettingsData {
   feedback?: FeedbackSettings;
 }
 
+interface MailSettings {
+  enabled?: boolean;
+  enableInvites?: boolean;
+  host?: string;
+  port?: number;
+  username?: string;
+  password?: string;
+  from?: string;
+}
+
+interface GoogleDriveSettings {
+  enabled?: boolean;
+  clientId?: string;
+  apiKey?: string;
+  appId?: string;
+}
+
+interface OAuth2GenericSettings {
+  enabled?: boolean;
+  provider?: string;
+  issuer?: string;
+  clientId?: string;
+  clientSecret?: string;
+  scopes?: string;
+  useAsUsername?: string;
+  autoCreateUser?: boolean;
+  blockRegistration?: boolean;
+}
+
+interface Saml2Settings {
+  enabled?: boolean;
+  provider?: string;
+  registrationId?: string;
+  idpMetadataUri?: string;
+  idpSingleLoginUrl?: string;
+  idpSingleLogoutUrl?: string;
+  idpIssuer?: string;
+  idpCert?: string;
+  privateKey?: string;
+  spCert?: string;
+  autoCreateUser?: boolean;
+  blockRegistration?: boolean;
+}
+
+interface OAuth2ClientSettings {
+  clientId?: string;
+  clientSecret?: string;
+  scopes?: string;
+  useAsUsername?: string;
+  issuer?: string;
+}
+
+type ProviderSettings =
+  | MailSettings
+  | TelegramSettingsData
+  | GoogleDriveSettings
+  | OAuth2GenericSettings
+  | Saml2Settings
+  | OAuth2ClientSettings;
+
 interface ConnectionsSettingsData {
   oauth2?: {
     enabled?: boolean;
@@ -55,22 +115,10 @@ interface ConnectionsSettingsData {
     blockRegistration?: boolean;
     useAsUsername?: string;
     scopes?: string;
-    client?: {
-      [key: string]: any;
-    };
+    client?: Record<string, OAuth2ClientSettings>;
   };
-  saml2?: {
-    [key: string]: any;
-  };
-  mail?: {
-    enabled?: boolean;
-    enableInvites?: boolean;
-    host?: string;
-    port?: number;
-    username?: string;
-    password?: string;
-    from?: string;
-  };
+  saml2?: Saml2Settings;
+  mail?: MailSettings;
   telegram?: TelegramSettingsData;
   ssoAutoLogin?: boolean;
   enableMobileScanner?: boolean;
@@ -93,7 +141,7 @@ export default function AdminConnectionsSection() {
 
   const adminSettings = useAdminSettings<ConnectionsSettingsData>({
     sectionName: 'connections',
-    fetchTransformer: async (): Promise<ConnectionsSettingsData & { _pending?: Record<string, any> }> => {
+    fetchTransformer: async (): Promise<ConnectionsSettingsData & { _pending?: Record<string, unknown> }> => {
       // Fetch security settings (oauth2, saml2)
       const securityResponse = await apiClient.get('/api/v1/admin/settings/section/security');
       const securityData = securityResponse.data || {};
@@ -114,7 +162,7 @@ export default function AdminConnectionsSection() {
       const systemResponse = await apiClient.get('/api/v1/admin/settings/section/system');
       const systemData = systemResponse.data || {};
 
-      const result: ConnectionsSettingsData & { _pending?: Record<string, any> } = {
+      const result: ConnectionsSettingsData & { _pending?: Record<string, unknown> } = {
         oauth2: securityData.oauth2 || {},
         saml2: securityData.saml2 || {},
         mail: mailData || {},
@@ -132,7 +180,7 @@ export default function AdminConnectionsSection() {
       };
 
       // Merge pending blocks from all endpoints
-      const pendingBlock: Record<string, any> = {};
+      const pendingBlock: Record<string, unknown> = {};
       if (securityData._pending?.oauth2) {
         pendingBlock.oauth2 = securityData._pending.oauth2;
       }
@@ -183,13 +231,13 @@ export default function AdminConnectionsSection() {
       return result;
     },
     saveTransformer: (currentSettings: ConnectionsSettingsData) => {
-      const deltaSettings: Record<string, any> = {};
+      const deltaSettings: Record<string, unknown> = {};
 
       // Build delta for oauth2 settings
       if (currentSettings.oauth2) {
         Object.keys(currentSettings.oauth2).forEach((key) => {
           if (key !== 'client') {
-            deltaSettings[`security.oauth2.${key}`] = (currentSettings.oauth2 as Record<string, any>)[key];
+            deltaSettings[`security.oauth2.${key}`] = (currentSettings.oauth2 as Record<string, unknown>)[key];
           }
         });
 
@@ -197,7 +245,7 @@ export default function AdminConnectionsSection() {
         const oauth2Client = currentSettings.oauth2.client;
         if (oauth2Client) {
           Object.keys(oauth2Client).forEach((providerId) => {
-            const providerSettings = oauth2Client[providerId];
+            const providerSettings = oauth2Client[providerId] as Record<string, unknown>;
             Object.keys(providerSettings).forEach((key) => {
               deltaSettings[`security.oauth2.client.${providerId}.${key}`] = providerSettings[key];
             });
@@ -207,22 +255,25 @@ export default function AdminConnectionsSection() {
 
       // Build delta for saml2 settings
       if (currentSettings.saml2) {
-        Object.keys(currentSettings.saml2).forEach((key) => {
-          deltaSettings[`security.saml2.${key}`] = (currentSettings.saml2 as Record<string, any>)[key];
+        const saml2 = currentSettings.saml2 as Record<string, unknown>;
+        Object.keys(saml2).forEach((key) => {
+          deltaSettings[`security.saml2.${key}`] = saml2[key];
         });
       }
 
       // Mail settings
       if (currentSettings.mail) {
-        Object.keys(currentSettings.mail).forEach((key) => {
-          deltaSettings[`mail.${key}`] = (currentSettings.mail as Record<string, any>)[key];
+        const mail = currentSettings.mail as Record<string, unknown>;
+        Object.keys(mail).forEach((key) => {
+          deltaSettings[`mail.${key}`] = mail[key];
         });
       }
 
       // Telegram settings
       if (currentSettings.telegram) {
-        Object.keys(currentSettings.telegram).forEach((key) => {
-          deltaSettings[`telegram.${key}`] = (currentSettings.telegram as Record<string, any>)[key];
+        const telegram = currentSettings.telegram as Record<string, unknown>;
+        Object.keys(telegram).forEach((key) => {
+          deltaSettings[`telegram.${key}`] = telegram[key];
         });
       }
 
@@ -332,7 +383,7 @@ export default function AdminConnectionsSection() {
     return !!(providerSettings?.clientId);
   };
 
-  const getProviderSettings = (provider: Provider): Record<string, any> => {
+  const getProviderSettings = (provider: Provider): ProviderSettings => {
     if (provider.id === 'saml2') {
       return settings?.saml2 || {};
     }
@@ -346,17 +397,17 @@ export default function AdminConnectionsSection() {
     }
 
     if (provider.id === 'googledrive') {
-      return {
+      const gd: GoogleDriveSettings = {
         enabled: settings?.googleDriveEnabled,
         clientId: settings?.googleDriveClientId,
         apiKey: settings?.googleDriveApiKey,
         appId: settings?.googleDriveAppId,
       };
+      return gd;
     }
 
     if (provider.id === 'oauth2-generic') {
-      // Generic OAuth2 settings are at the root oauth2 level
-      return {
+      const generic: OAuth2GenericSettings = {
         enabled: settings?.oauth2?.enabled,
         provider: settings?.oauth2?.provider,
         issuer: settings?.oauth2?.issuer,
@@ -367,6 +418,7 @@ export default function AdminConnectionsSection() {
         autoCreateUser: settings?.oauth2?.autoCreateUser,
         blockRegistration: settings?.oauth2?.blockRegistration,
       };
+      return generic;
     }
 
     // Specific OAuth2 provider settings
@@ -386,32 +438,35 @@ export default function AdminConnectionsSection() {
   const linkedProviders = allProviders.filter((p) => isProviderConfigured(p));
   const availableProviders = allProviders.filter((p) => !isProviderConfigured(p));
 
-  const updateProviderSettings = (provider: Provider, updatedSettings: Record<string, any>) => {
+  const updateProviderSettings = (provider: Provider, updatedSettings: Record<string, unknown>) => {
     if (provider.id === 'smtp') {
-      setSettings({ ...settings, mail: updatedSettings });
+      setSettings({ ...settings, mail: updatedSettings as MailSettings });
     } else if (provider.id === 'telegram') {
-      setSettings({ ...settings, telegram: updatedSettings });
+      setSettings({ ...settings, telegram: updatedSettings as TelegramSettingsData });
     } else if (provider.id === 'googledrive') {
+      const gd = updatedSettings as GoogleDriveSettings;
       setSettings({
         ...settings,
-        googleDriveEnabled: updatedSettings.enabled,
-        googleDriveClientId: updatedSettings.clientId,
-        googleDriveApiKey: updatedSettings.apiKey,
-        googleDriveAppId: updatedSettings.appId,
+        googleDriveEnabled: gd.enabled,
+        googleDriveClientId: gd.clientId,
+        googleDriveApiKey: gd.apiKey,
+        googleDriveAppId: gd.appId,
       });
     } else if (provider.id === 'saml2') {
-      setSettings({ ...settings, saml2: updatedSettings });
+      setSettings({ ...settings, saml2: updatedSettings as Saml2Settings });
     } else if (provider.id === 'oauth2-generic') {
-      setSettings({ ...settings, oauth2: updatedSettings });
+      const generic = updatedSettings as OAuth2GenericSettings;
+      setSettings({ ...settings, oauth2: { ...settings.oauth2, ...generic } });
     } else {
       // Specific OAuth2 provider
+      const clientSettings = updatedSettings as OAuth2ClientSettings;
       setSettings({
         ...settings,
         oauth2: {
           ...settings.oauth2,
           client: {
             ...settings.oauth2?.client,
-            [provider.id]: updatedSettings
+            [provider.id]: clientSettings,
           }
         }
       });

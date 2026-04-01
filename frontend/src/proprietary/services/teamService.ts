@@ -1,4 +1,5 @@
 import apiClient from '@app/services/apiClient';
+import type { User } from '@app/services/userManagementService';
 
 export interface Team {
   id: number;
@@ -25,6 +26,13 @@ export interface TeamDetailsResponse {
   availableUsers: TeamMember[];
 }
 
+export interface TeamDetailsUIResponse {
+  team: Team;
+  teamUsers: User[];
+  availableUsers: User[];
+  userLastRequest?: Record<string, number>;
+}
+
 /**
  * Team Management Service
  * Provides functions to interact with team-related backend APIs
@@ -41,8 +49,8 @@ export const teamService = {
   /**
    * Get team details including members
    */
-  async getTeamDetails(teamId: number): Promise<any> {
-    const response = await apiClient.get(`/api/v1/proprietary/ui-data/teams/${teamId}`);
+  async getTeamDetails(teamId: number): Promise<TeamDetailsUIResponse> {
+    const response = await apiClient.get<TeamDetailsUIResponse>(`/api/v1/proprietary/ui-data/teams/${teamId}`);
     return response.data;
   },
 
@@ -54,7 +62,7 @@ export const teamService = {
     formData.append('name', name);
     await apiClient.post('/api/v1/team/create', formData, {
       suppressErrorToast: true,
-    } as any);
+    });
   },
 
   /**
@@ -66,7 +74,7 @@ export const teamService = {
     formData.append('newName', newName);
     await apiClient.post('/api/v1/team/rename', formData, {
       suppressErrorToast: true,
-    } as any);
+    });
   },
 
   /**
@@ -77,7 +85,7 @@ export const teamService = {
     formData.append('teamId', teamId.toString());
     await apiClient.post('/api/v1/team/delete', formData, {
       suppressErrorToast: true,
-    } as any);
+    });
   },
 
   /**
@@ -89,7 +97,7 @@ export const teamService = {
     formData.append('userId', userId.toString());
     await apiClient.post('/api/v1/team/addUser', formData, {
       suppressErrorToast: true,
-    } as any);
+    });
   },
 
   /**
@@ -102,6 +110,6 @@ export const teamService = {
     formData.append('teamId', teamId.toString());
     await apiClient.post('/api/v1/user/admin/changeRole', formData, {
       suppressErrorToast: true,
-    } as any);
+    });
   },
 };

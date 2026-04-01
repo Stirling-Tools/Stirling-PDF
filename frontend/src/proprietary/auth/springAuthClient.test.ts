@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { springAuth } from '@app/auth/springAuthClient';
 import { startOAuthNavigation } from '@app/extensions/oauthNavigation';
 import apiClient from '@app/services/apiClient';
-import { AxiosError } from 'axios';
+import { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
 
 // Mock apiClient
 vi.mock('@app/services/apiClient');
@@ -45,7 +45,7 @@ describe('SpringAuthClient', () => {
       vi.mocked(apiClient.get).mockResolvedValueOnce({
         status: 200,
         data: { user: mockUser },
-      } as any);
+      } as unknown as AxiosResponse);
 
       const result = await springAuth.getSession();
 
@@ -74,7 +74,7 @@ describe('SpringAuthClient', () => {
           statusText: 'Unauthorized',
           data: {},
           headers: {},
-          config: {} as any,
+          config: {} as InternalAxiosRequestConfig,
         }
       );
 
@@ -102,7 +102,7 @@ describe('SpringAuthClient', () => {
           statusText: 'Forbidden',
           data: {},
           headers: {},
-          config: {} as any,
+          config: {} as InternalAxiosRequestConfig,
         }
       );
 
@@ -141,7 +141,7 @@ describe('SpringAuthClient', () => {
             expires_in: 3600,
           },
         },
-      } as any);
+      } as unknown as AxiosResponse);
 
       // Spy on window.dispatchEvent
       const dispatchEventSpy = vi.spyOn(window, 'dispatchEvent');
@@ -208,7 +208,7 @@ describe('SpringAuthClient', () => {
       vi.mocked(apiClient.post).mockResolvedValueOnce({
         status: 200,
         data: { user: mockUser },
-      } as any);
+      } as unknown as AxiosResponse);
 
       const result = await springAuth.signUp(credentials);
 
@@ -259,7 +259,7 @@ describe('SpringAuthClient', () => {
       vi.mocked(apiClient.post).mockResolvedValueOnce({
         status: 200,
         data: {},
-      } as any);
+      } as unknown as AxiosResponse);
 
       const result = await springAuth.signOut();
 
@@ -308,7 +308,7 @@ describe('SpringAuthClient', () => {
             expires_in: 3600,
           },
         },
-      } as any);
+      } as unknown as AxiosResponse);
 
       const result = await springAuth.refreshSession();
 
