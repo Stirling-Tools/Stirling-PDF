@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { isAxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
 import { NumberInput, Switch, Button, Stack, Paper, Text, Loader, Group, Accordion, TextInput, MultiSelect } from '@mantine/core';
 import { alert } from '@app/components/toast';
@@ -72,7 +73,7 @@ export default function AdminAdvancedSection() {
     isFieldPending,
   } = useAdminSettings<AdvancedSettingsData>({
     sectionName: 'advanced',
-    fetchTransformer: async (): Promise<AdvancedSettingsData & { _pending?: Record<string, any> }> => {
+    fetchTransformer: async (): Promise<AdvancedSettingsData & { _pending?: Record<string, unknown> }> => {
       const [systemResponse, processExecutorResponse] = await Promise.all([
         apiClient.get('/api/v1/admin/settings/section/system'),
         apiClient.get('/api/v1/admin/settings/section/processExecutor')
@@ -81,7 +82,7 @@ export default function AdminAdvancedSection() {
       const systemData = systemResponse.data || {};
       const processExecutorData = processExecutorResponse.data || {};
 
-      const result: AdvancedSettingsData & { _pending?: Record<string, any> } = {
+      const result: AdvancedSettingsData & { _pending?: Record<string, unknown> } = {
         enableAlphaFunctionality: systemData.enableAlphaFunctionality || false,
         maxDPI: systemData.maxDPI || 0,
         enableUrlToPDF: systemData.enableUrlToPDF || false,
@@ -101,7 +102,7 @@ export default function AdminAdvancedSection() {
       };
 
       // Merge pending blocks from both endpoints
-      const pendingBlock: Record<string, any> = {};
+      const pendingBlock: Record<string, unknown> = {};
       if (systemData._pending?.enableAlphaFunctionality !== undefined) {
         pendingBlock.enableAlphaFunctionality = systemData._pending.enableAlphaFunctionality;
       }
@@ -131,7 +132,7 @@ export default function AdminAdvancedSection() {
       return result;
     },
     saveTransformer: (settings) => {
-      const deltaSettings: Record<string, any> = {
+      const deltaSettings: Record<string, unknown> = {
         'system.enableAlphaFunctionality': settings.enableAlphaFunctionality,
         'system.maxDPI': settings.maxDPI,
         'system.enableUrlToPDF': settings.enableUrlToPDF,
@@ -281,9 +282,8 @@ export default function AdminAdvancedSection() {
       setManualDownloadLinks([]);
     } catch (error) {
       console.error('[AdminAdvancedSection] Download tessdata languages failed', error);
-      const response = (error as any)?.response;
-      const status = response?.status;
-      const serverMessage = response?.data?.message;
+      const status = isAxiosError(error) ? error.response?.status : undefined;
+      const serverMessage = isAxiosError(error) ? error.response?.data?.message : undefined;
 
       if (status === 403) {
         console.warn('[AdminAdvancedSection] Tessdata directory not writable, falling back to manual download:', serverMessage);
@@ -309,12 +309,12 @@ export default function AdminAdvancedSection() {
       }
 
       let message: string;
-      if (!response) {
+      if (!isAxiosError(error) || !error.response) {
         message = t(
           'admin.settings.advanced.tessdataDir.downloadErrorNetwork',
           'Download failed due to a network error. Please check your connection and try again.'
         );
-      } else if (status >= 500) {
+      } else if (status !== undefined && status >= 500) {
         message = t(
           'admin.settings.advanced.tessdataDir.downloadErrorServer',
           'The server encountered an error while downloading tessdata languages. Please try again later.'

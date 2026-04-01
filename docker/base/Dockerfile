@@ -664,8 +664,7 @@ RUN set -eux; \
         -d /home/stirlingpdfuser -s /bin/bash stirlingpdfuser 2>/dev/null \
         || useradd -m -g stirlingpdfgroup \
           -d /home/stirlingpdfuser -s /bin/bash stirlingpdfuser; \
-    fi; \
-    ln -sf /usr/sbin/gosu /usr/local/bin/su-exec
+    fi
 
 # Application directories
 RUN set -eux; \
