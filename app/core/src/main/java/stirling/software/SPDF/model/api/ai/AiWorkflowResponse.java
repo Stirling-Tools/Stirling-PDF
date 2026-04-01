@@ -44,8 +44,8 @@ public class AiWorkflowResponse {
     @Schema(description = "Structured tool steps when the workflow returns a plan")
     private List<Map<String, Object>> steps = new ArrayList<>();
 
-    @Schema(description = "Page numbers the AI engine has requested text be extracted from")
-    private List<Integer> pageNumbers = new ArrayList<>();
+    @Schema(description = "Per-file text extraction requests from the AI engine")
+    private List<AiWorkflowFileRequest> files = new ArrayList<>();
 
     @Schema(description = "Maximum number of pages the AI engine wants text extracted from")
     private Integer maxPages;

@@ -8,7 +8,7 @@ from .agent_drafts import (
     AgentRevisionWorkflowResponse,
 )
 from .agent_specs import AgentSpec, AgentSpecStep, AiToolAgentStep
-from .common import ConversationMessage, PdfTextSelection, SupportedCapability, ToolOperationStep
+from .common import ConversationMessage, ExtractedFileText, PdfTextSelection, SupportedCapability, ToolOperationStep
 from .execution import (
     AgentExecutionRequest,
     CannotContinueExecutionAction,
@@ -34,6 +34,7 @@ from .pdf_edit import (
     PdfEditResponse,
 )
 from .pdf_questions import (
+    NeedTextFileRequest,
     PdfQuestionAnswerResponse,
     PdfQuestionNeedTextResponse,
     PdfQuestionNotFoundResponse,
@@ -55,6 +56,7 @@ __all__ = [
     "AiToolAgentStep",
     "CannotContinueExecutionAction",
     "ConversationMessage",
+    "ExtractedFileText",
     "CompletedExecutionAction",
     "EditCannotDoResponse",
     "EditClarificationRequest",
@@ -62,6 +64,7 @@ __all__ = [
     "ExecutionContext",
     "ExecutionStepResult",
     "HealthResponse",
+    "NeedTextFileRequest",
     "NextExecutionAction",
     "ExtractedTextArtifact",
     "OrchestratorRequest",

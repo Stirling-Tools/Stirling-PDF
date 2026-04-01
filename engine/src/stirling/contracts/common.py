@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 
 from stirling.models import OPERATIONS, ApiModel, OperationId, ParamToolModel
 
@@ -25,6 +25,11 @@ class ConversationMessage(ApiModel):
 class PdfTextSelection(ApiModel):
     page_number: int | None = None
     text: str
+
+
+class ExtractedFileText(ApiModel):
+    file_name: str
+    pages: list[PdfTextSelection] = Field(default_factory=list)
 
 
 class ToolOperationStep(ApiModel):

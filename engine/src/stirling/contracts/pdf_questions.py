@@ -6,26 +6,31 @@ from pydantic import Field
 
 from stirling.models import ApiModel
 
-from .common import PdfTextSelection, SupportedCapability
+from .common import ExtractedFileText, SupportedCapability
 
 
 class PdfQuestionRequest(ApiModel):
     question: str
-    page_text: list[PdfTextSelection] = Field(default_factory=list)
-    file_name: str | None = None
+    page_text: list[ExtractedFileText] = Field(default_factory=list)
+    file_names: list[str]
 
 
 class PdfQuestionAnswerResponse(ApiModel):
     outcome: Literal["answer"] = "answer"
     answer: str
-    evidence: list[PdfTextSelection] = Field(default_factory=list)
+    evidence: list[ExtractedFileText] = Field(default_factory=list)
+
+
+class NeedTextFileRequest(ApiModel):
+    file_name: str
+    page_numbers: list[int] = Field(default_factory=list)
 
 
 class PdfQuestionNeedTextResponse(ApiModel):
     outcome: Literal["need_text"] = "need_text"
     resume_with: SupportedCapability = SupportedCapability.PDF_QUESTION
     reason: str
-    page_numbers: list[int] = Field(default_factory=list)
+    files: list[NeedTextFileRequest] = Field(default_factory=list)
     max_pages: int
     max_characters: int
 

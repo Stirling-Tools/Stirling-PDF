@@ -5,6 +5,7 @@ import pytest
 from stirling.agents import PdfQuestionAgent
 from stirling.config import AppSettings
 from stirling.contracts import (
+    ExtractedFileText,
     PdfQuestionAnswerResponse,
     PdfQuestionNeedTextResponse,
     PdfQuestionNotFoundResponse,
@@ -35,11 +36,20 @@ def build_test_settings() -> AppSettings:
     )
 
 
+def invoice_page() -> ExtractedFileText:
+    return ExtractedFileText(
+        file_name="invoice.pdf",
+        pages=[PdfTextSelection(page_number=1, text="Invoice total: 120.00")],
+    )
+
+
 @pytest.mark.anyio
 async def test_pdf_question_agent_requires_extracted_text() -> None:
     agent = PdfQuestionAgent(build_runtime(build_test_settings()))
 
-    response = await agent.handle(PdfQuestionRequest(question="What is the total?", page_text=[]))
+    response = await agent.handle(
+        PdfQuestionRequest(question="What is the total?", page_text=[], file_names=["test.pdf"])
+    )
 
     assert isinstance(response, PdfQuestionNeedTextResponse)
 
@@ -49,15 +59,15 @@ async def test_pdf_question_agent_returns_grounded_answer() -> None:
     agent = StubPdfQuestionAgent(
         PdfQuestionAnswerResponse(
             answer="The invoice total is 120.00.",
-            evidence=[PdfTextSelection(page_number=1, text="Invoice total: 120.00")],
+            evidence=[invoice_page()],
         )
     )
 
     response = await agent.handle(
         PdfQuestionRequest(
             question="What is the total?",
-            page_text=[PdfTextSelection(page_number=1, text="Invoice total: 120.00")],
-            file_name="invoice.pdf",
+            page_text=[invoice_page()],
+            file_names=["invoice.pdf"],
         )
     )
 
@@ -72,8 +82,13 @@ async def test_pdf_question_agent_returns_not_found_when_text_is_insufficient() 
     response = await agent.handle(
         PdfQuestionRequest(
             question="What is the total?",
-            page_text=[PdfTextSelection(page_number=1, text="This page contains only a shipping address.")],
-            file_name="invoice.pdf",
+            page_text=[
+                ExtractedFileText(
+                    file_name="invoice.pdf",
+                    pages=[PdfTextSelection(page_number=1, text="This page contains only a shipping address.")],
+                )
+            ],
+            file_names=["invoice.pdf"],
         )
     )
 

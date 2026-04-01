@@ -112,8 +112,8 @@ class OrchestratorAgent:
         return await PdfQuestionAgent(self.runtime).handle(
             PdfQuestionRequest(
                 question=request.user_message,
-                file_name=request.file_name,
-                page_text=extracted_text.pages if extracted_text is not None else [],
+                file_names=request.file_names,
+                page_text=extracted_text.files if extracted_text is not None else [],
             )
         )
 
@@ -139,8 +139,8 @@ class OrchestratorAgent:
 
     def _build_prompt(self, request: OrchestratorRequest) -> str:
         artifact_summary = self._describe_artifacts(request)
-        file_name = request.file_name or "Unknown file"
-        return f"User message: {request.user_message}\nFile: {file_name}\nAvailable artifacts:\n{artifact_summary}"
+        file_names = ", ".join(request.file_names) if request.file_names else "Unknown files"
+        return f"User message: {request.user_message}\nFiles: {file_names}\nAvailable artifacts:\n{artifact_summary}"
 
     def _describe_artifacts(self, request: OrchestratorRequest) -> str:
         if not request.artifacts:
@@ -149,11 +149,9 @@ class OrchestratorAgent:
         descriptions: list[str] = []
         for artifact in request.artifacts:
             if isinstance(artifact, ExtractedTextArtifact):
-                page_numbers = [page.page_number for page in artifact.pages if page.page_number is not None]
-                descriptions.append(
-                    f"- extracted_text: {len(artifact.pages)} pages"
-                    + (f" (pages {page_numbers})" if page_numbers else "")
-                )
+                total_pages = sum(len(f.pages) for f in artifact.files)
+                file_names = [f.file_name for f in artifact.files]
+                descriptions.append(f"- extracted_text: {total_pages} pages from {file_names}")
                 continue
             descriptions.append("- unknown artifact")
         return "\n".join(descriptions)

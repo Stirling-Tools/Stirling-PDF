@@ -4,12 +4,12 @@ from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
 from stirling.contracts import (
+    ExtractedFileText,
     PdfQuestionAnswerResponse,
     PdfQuestionNeedTextResponse,
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
     PdfQuestionResponse,
-    PdfTextSelection,
 )
 from stirling.services import AppRuntime
 
@@ -29,7 +29,7 @@ class PdfQuestionAgent:
                 ]
             ),
             system_prompt=(
-                "Answer questions about a PDF using only the extracted page text provided in the prompt. "
+                "Answer questions about PDFs using only the extracted page text provided in the prompt. "
                 "Do not guess or use outside knowledge. "
                 "If the answer is not supported by the provided text, return not_found. "
                 "When answering, include a short list of evidence snippets with their page numbers."
@@ -51,12 +51,14 @@ class PdfQuestionAgent:
         return result.output
 
     def _build_prompt(self, request: PdfQuestionRequest) -> str:
-        file_name = request.file_name or "Unknown file"
-        pages = "\n\n".join(
-            f"[Page {selection.page_number or '?'}]\n{selection.text}"
-            for selection in request.page_text
-        )
-        return f"File: {file_name}\nQuestion: {request.question}\nExtracted page text:\n{pages}"
+        file_names = ", ".join(request.file_names) if request.file_names else "Unknown files"
+        sections = [
+            f"[File: {file_text.file_name}, Page {selection.page_number or '?'}]\n{selection.text}"
+            for file_text in request.page_text
+            for selection in file_text.pages
+        ]
+        pages = "\n\n".join(sections)
+        return f"Files: {file_names}\nQuestion: {request.question}\nExtracted page text:\n{pages}"
 
-    def _has_page_text(self, page_text: list[PdfTextSelection]) -> bool:
-        return any(selection.text.strip() for selection in page_text)
+    def _has_page_text(self, page_text: list[ExtractedFileText]) -> bool:
+        return any(selection.text.strip() for file_text in page_text for selection in file_text.pages)
