@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { isAxiosError } from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Stack, Text, Paper, Center, Loader, TextInput, PasswordInput, Anchor } from '@mantine/core';
@@ -56,14 +57,14 @@ export default function InviteAccept() {
       setLoading(true);
       const response = await apiClient.get<InviteData>(`/api/v1/invite/validate/${token}`, {
         suppressErrorToast: true,
-      } as any);
+      });
       setInviteData(response.data);
       setError(null);
-    } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.error ||
-        err.message ||
-        t('invite.validationError', 'Failed to validate invitation link');
+    } catch (err: unknown) {
+      const errorMessage = isAxiosError(err)
+        ? (err.response?.data?.error || err.message)
+        : (err instanceof Error ? err.message : undefined) ||
+          t('invite.validationError', 'Failed to validate invitation link');
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -108,15 +109,15 @@ export default function InviteAccept() {
 
       await apiClient.post(`/api/v1/invite/accept/${token}`, formData, {
         suppressErrorToast: true,
-      } as any);
+      });
 
       // Success - redirect to login
       navigate('/login?messageType=accountCreated');
-    } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.error ||
-        err.message ||
-        t('invite.acceptError', 'Failed to create account');
+    } catch (err: unknown) {
+      const errorMessage = isAxiosError(err)
+        ? (err.response?.data?.error || err.message)
+        : (err instanceof Error ? err.message : undefined) ||
+          t('invite.acceptError', 'Failed to create account');
       setError(errorMessage);
     } finally {
       setSubmitting(false);

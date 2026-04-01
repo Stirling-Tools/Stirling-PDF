@@ -513,7 +513,7 @@ jobs:
             echo "base_image=stirling-pdf-base:pr-test" >> $GITHUB_OUTPUT
             echo "platforms=linux/amd64" >> $GITHUB_OUTPUT
           else
-            echo "base_image=ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-base:latest" >> $GITHUB_OUTPUT
+            echo "base_image=stirlingtools/stirling-pdf-base:latest" >> $GITHUB_OUTPUT
             echo "platforms=linux/amd64,linux/arm64/v8" >> $GITHUB_OUTPUT
           fi
 

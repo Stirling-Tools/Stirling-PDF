@@ -51,7 +51,7 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = ({
     try {
       setExporting(true);
 
-      const fieldsParam = Object.keys(selectedFields).filter(k => selectedFields[k as keyof typeof selectedFields]).join(',');
+      const fieldsParam = Object.keys(selectedFields).filter(k => selectedFields[k]).join(',');
 
       const blob = await auditService.exportData(exportFormat, { ...filters, fields: fieldsParam });
 

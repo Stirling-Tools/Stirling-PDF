@@ -14,7 +14,7 @@ export const useLicensePolling = (
   const pollForLicenseKey = useCallback(async (installId: string) => {
     // Use shared polling utility
     const result = await pollLicenseKeyWithBackoff(installId, {
-      isMounted: () => isMountedRef.current!,
+      isMounted: () => isMountedRef.current ?? false,
       onStatusChange: setPollingStatus,
     });
 
@@ -23,7 +23,7 @@ export const useLicensePolling = (
 
       // Activate the license key
       const activation = await activateLicenseKey(result.licenseKey, {
-        isMounted: () => isMountedRef.current!,
+        isMounted: () => isMountedRef.current ?? false,
         onActivated: onLicenseActivated,
       });
 
