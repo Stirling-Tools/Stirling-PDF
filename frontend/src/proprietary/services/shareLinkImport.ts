@@ -24,7 +24,7 @@ export interface ShareLinkMetadata {
 export async function fetchShareLinkMetadata(token: string): Promise<ShareLinkMetadata> {
   const response = await apiClient.get<ShareLinkMetadata>(
     `/api/v1/storage/share-links/${token}/metadata`,
-    { suppressErrorToast: true, skipAuthRedirect: true } as any
+    { suppressErrorToast: true, skipAuthRedirect: true }
   );
   return response.data || {};
 }
@@ -38,7 +38,7 @@ export async function downloadShareLink(token: string): Promise<{
     responseType: 'blob',
     suppressErrorToast: true,
     skipAuthRedirect: true,
-  } as any);
+  });
   const contentType =
     (response.headers && (response.headers['content-type'] || response.headers['Content-Type'])) ||
     '';
@@ -73,7 +73,7 @@ export async function importShareLinkToWorkbench(
 
       const idMap = new Map<string, FileId>();
       for (let i = 0; i < stirlingFiles.length; i += 1) {
-        idMap.set(sortedEntries[i].logicalId, stirlingFiles[i].fileId as FileId);
+        idMap.set(sortedEntries[i].logicalId, stirlingFiles[i].fileId);
       }
 
       const rootIdMap = new Map<string, FileId>();
@@ -141,7 +141,7 @@ export async function importShareLinkToWorkbench(
     autoUnzip: false,
     skipAutoUnzip: false,
   });
-  const ids = stirlingFiles.map((stirlingFile: StirlingFile) => stirlingFile.fileId as FileId);
+  const ids = stirlingFiles.map((stirlingFile: StirlingFile) => stirlingFile.fileId);
   if (ids.length > 0) {
     const sharedUpdates = {
       remoteStorageId: shareMetadata?.fileId,

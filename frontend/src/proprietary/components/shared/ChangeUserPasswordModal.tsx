@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { isAxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
 import {
   ActionIcon,
@@ -125,8 +126,10 @@ export default function ChangeUserPasswordModal({ opened, onClose, user, onSucce
       alert({ alertType: 'success', title: t('workspace.people.changePassword.success', 'Password updated successfully') });
       onSuccess();
       handleClose();
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || t('workspace.people.changePassword.error', 'Failed to update password');
+    } catch (error: unknown) {
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) || t('workspace.people.changePassword.error', 'Failed to update password');
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);

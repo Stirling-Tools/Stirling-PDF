@@ -91,7 +91,7 @@ export default function AdminGeneralSection() {
     isFieldPending,
   } = useAdminSettings<GeneralSettingsData>({
     sectionName: 'general',
-    fetchTransformer: async (): Promise<GeneralSettingsData & { _pending?: Record<string, any> }> => {
+    fetchTransformer: async (): Promise<GeneralSettingsData & { _pending?: Record<string, unknown> }> => {
       const [uiResponse, systemResponse, premiumResponse] = await Promise.all([
         apiClient.get('/api/v1/admin/settings/section/ui'),
         apiClient.get('/api/v1/admin/settings/section/system'),
@@ -113,7 +113,7 @@ export default function AdminGeneralSection() {
           ? watchedFoldersDirs
           : (pipelinePaths.watchedFoldersDir ? [pipelinePaths.watchedFoldersDir] : []);
 
-      const result: GeneralSettingsData & { _pending?: Record<string, any> } = {
+      const result: GeneralSettingsData & { _pending?: Record<string, unknown> } = {
         ui,
         system,
         customPaths: {
@@ -140,7 +140,7 @@ export default function AdminGeneralSection() {
       };
 
       // Merge pending blocks from all three endpoints
-      const pendingBlock: Record<string, any> = {};
+      const pendingBlock: Record<string, unknown> = {};
       if (ui._pending) {
         pendingBlock.ui = ui._pending;
       }
@@ -161,7 +161,7 @@ export default function AdminGeneralSection() {
       return result;
     },
     saveTransformer: (settings: GeneralSettingsData) => {
-      const deltaSettings: Record<string, any> = {
+      const deltaSettings: Record<string, unknown> = {
         // UI settings
         'ui.appNameNavbar': settings.ui?.appNameNavbar,
         'ui.languages': settings.ui?.languages,
