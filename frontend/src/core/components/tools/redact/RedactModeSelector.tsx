@@ -6,16 +6,14 @@ interface RedactModeSelectorProps {
   mode: RedactMode;
   onModeChange: (mode: RedactMode) => void;
   disabled?: boolean;
-  hasFilesSelected?: boolean;  // Files are selected in workbench
-  hasAnyFiles?: boolean;       // Any files exist in workbench (for manual mode)
+  hasAnyFiles?: boolean;
 }
 
-export default function RedactModeSelector({ 
-  mode, 
-  onModeChange, 
-  disabled, 
-  hasFilesSelected = false,
-  hasAnyFiles = false 
+export default function RedactModeSelector({
+  mode,
+  onModeChange,
+  disabled,
+  hasAnyFiles = false
 }: RedactModeSelectorProps) {
   const { t } = useTranslation();
 
@@ -28,9 +26,9 @@ export default function RedactModeSelector({
         {
           value: 'automatic' as const,
           label: t('redact.modeSelector.automatic', 'Automatic'),
-          disabled: !hasFilesSelected, // Automatic requires files to be selected
-          tooltip: !hasFilesSelected 
-            ? t('redact.modeSelector.automaticDisabledTooltip', 'Select files in the file manager to redact multiple files at once')
+          disabled: !hasAnyFiles, // Allow switching to automatic whenever files exist; selection can happen after
+          tooltip: !hasAnyFiles
+            ? t('redact.modeSelector.automaticDisabledTooltip', 'Upload files to use automatic redaction')
             : undefined,
         },
         {
