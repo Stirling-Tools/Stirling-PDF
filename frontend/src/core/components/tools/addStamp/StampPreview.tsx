@@ -63,7 +63,8 @@ export default function StampPreview({ parameters, onParameterChange, file, show
         const buffer = await file.arrayBuffer();
         const pdf = await pdfWorkerManager.createDocument(buffer, { disableAutoFetch: true, disableStream: true });
         const page = await pdf.getPage(1);
-        const viewport = page.getViewport({ scale: 1 });
+        // Unrotated viewport keeps points to pixels aligned and avoids width and height swaps
+        const viewport = page.getViewport({ scale: 1, rotation: 0 });
         if (!cancelled) {
           setPageSize({ widthPts: viewport.width, heightPts: viewport.height });
         }
@@ -143,8 +144,10 @@ export default function StampPreview({ parameters, onParameterChange, file, show
       const heightPts = pageSize?.heightPts ?? 841.89;
       const scaleX = containerSize.width / widthPts;
       const scaleY = containerSize.height / heightPts;
-      const newLeftPts = Math.max(0, Math.min(containerSize.width, newLeftPx)) / scaleX;
-      const newBottomPts = Math.max(0, Math.min(containerSize.height, newBottomPx)) / scaleY;
+      const maxLeftPx = Math.max(0, containerSize.width - widthPx);
+      const maxBottomPx = Math.max(0, containerSize.height - heightPx);
+      const newLeftPts = Math.max(0, Math.min(maxLeftPx, newLeftPx)) / scaleX;
+      const newBottomPts = Math.max(0, Math.min(maxBottomPx, newBottomPx)) / scaleY;
       onParameterChange('overrideX', newLeftPts as any);
       onParameterChange('overrideY', newBottomPts as any);
     }
@@ -153,7 +156,7 @@ export default function StampPreview({ parameters, onParameterChange, file, show
   }, [parameters.fontSize, style.item, containerSize, pageSize, showQuickGrid, parameters.overrideX, parameters.overrideY, onParameterChange]);
 
   // Drag/resize/rotate interactions
-  const draggingRef = useRef<{ type: 'move' | 'resize' | 'rotate'; startX: number; startY: number; initLeft: number; initBottom: number; initHeight: number; centerX: number; centerY: number } | null>(null);
+  const draggingRef = useRef<{ type: 'move' | 'resize' | 'rotate'; startX: number; startY: number; initLeft: number; initBottom: number; initWidth: number; initHeight: number; centerX: number; centerY: number } | null>(null);
 
   const ensureOverrides = () => {
     const pageWidth = containerSize.width;
@@ -164,13 +167,17 @@ export default function StampPreview({ parameters, onParameterChange, file, show
     const itemStyle = style.item as any;
     const leftPx = parseFloat(String(itemStyle.left).replace('px', '')) || 0;
     const bottomPx = parseFloat(String(itemStyle.bottom).replace('px', '')) || 0;
+    const widthPx = parseFloat(String(itemStyle.width).replace('px', '')) || 0;
+    const heightPx = parseFloat(String(itemStyle.height).replace('px', '')) || 0;
     const widthPts = pageSize?.widthPts ?? 595.28;
     const heightPts = pageSize?.heightPts ?? 841.89;
     const scaleX = containerSize.width / widthPts;
     const scaleY = containerSize.height / heightPts;
     if (parameters.overrideX < 0 || parameters.overrideY < 0) {
-      onParameterChange('overrideX', Math.max(0, Math.min(pageWidth, leftPx)) / scaleX as any);
-      onParameterChange('overrideY', Math.max(0, Math.min(pageHeight, bottomPx)) / scaleY as any);
+      const maxLeftPx = Math.max(0, pageWidth - widthPx);
+      const maxBottomPx = Math.max(0, pageHeight - heightPx);
+      onParameterChange('overrideX', Math.max(0, Math.min(maxLeftPx, leftPx)) / scaleX as any);
+      onParameterChange('overrideY', Math.max(0, Math.min(maxBottomPx, bottomPx)) / scaleY as any);
     }
   };
 
@@ -194,6 +201,7 @@ export default function StampPreview({ parameters, onParameterChange, file, show
       startY: (rect ? rect.bottom - e.clientY : 0), // convert to bottom-based coords
       initLeft: left,
       initBottom: bottom,
+      initWidth: width,
       initHeight: height,
       centerX,
       centerY,
@@ -215,8 +223,10 @@ export default function StampPreview({ parameters, onParameterChange, file, show
     if (drag.type === 'move') {
       const dx = x - drag.startX;
       const dy = y - drag.startY;
-      const newLeftPx = Math.max(0, Math.min(containerSize.width, drag.initLeft + dx));
-      const newBottomPx = Math.max(0, Math.min(containerSize.height, drag.initBottom + dy));
+      const maxLeftPx = Math.max(0, containerSize.width - drag.initWidth);
+      const maxBottomPx = Math.max(0, containerSize.height - drag.initHeight);
+      const newLeftPx = Math.max(0, Math.min(maxLeftPx, drag.initLeft + dx));
+      const newBottomPx = Math.max(0, Math.min(maxBottomPx, drag.initBottom + dy));
       const widthPts = pageSize?.widthPts ?? 595.28;
       const heightPts = pageSize?.heightPts ?? 841.89;
       const scaleX = containerSize.width / widthPts;
