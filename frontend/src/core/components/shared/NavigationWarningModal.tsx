@@ -19,20 +19,24 @@ const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue, onDis
   const { showNavigationWarning, hasUnsavedChanges, pendingNavigation, cancelNavigation, confirmNavigation, setHasUnsavedChanges } =
     useNavigationGuard();
 
-  // Keep a ref to confirmNavigation so async handlers always call the latest version,
-  // not a stale closure captured before the await.
-  const confirmNavigationRef = useRef(confirmNavigation);
+  // Store pendingNavigation in a ref so async handlers always have the latest,
+  // not a stale closure captured before an await.
+  const pendingNavigationRef = useRef(pendingNavigation);
   useEffect(() => {
-    confirmNavigationRef.current = confirmNavigation;
-  }, [confirmNavigation]);
+    pendingNavigationRef.current = pendingNavigation;
+  }, [pendingNavigation]);
 
   const handleKeepWorking = () => {
     cancelNavigation();
   };
 
   const finishAndNavigate = () => {
+    const nav = pendingNavigationRef.current;
     setHasUnsavedChanges(false);
-    confirmNavigationRef.current();
+    cancelNavigation(); // clear pending state and hide modal
+    if (nav) {
+      nav(); // execute the stored navigation
+    }
   };
 
   const handleDiscardChanges = async () => {

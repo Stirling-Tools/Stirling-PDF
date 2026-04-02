@@ -1131,6 +1131,13 @@ const EmbedPdfViewerContent = ({
           onDiscardAndContinue={async () => {
             // Save applied redactions (if any) while discarding pending ones
             await discardAndSaveApplied();
+            // Undo all remaining changes (removes unapplied redaction marks, annotations, etc.)
+            const historyApi = historyApiRef.current;
+            if (historyApi?.canUndo) {
+              while (historyApi.canUndo()) {
+                historyApi.undo?.();
+              }
+            }
             // Reset annotation changes ref so future show/hide doesn't re-prompt
             hasAnnotationChangesRef.current = false;
           }}
