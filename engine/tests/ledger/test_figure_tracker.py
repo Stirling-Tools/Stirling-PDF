@@ -9,7 +9,7 @@ from decimal import Decimal
 
 import pytest
 
-from ledger.validators.figures import FigureTracker
+from stirling.agents.ledger.validators.figures import FigureTracker
 
 
 @pytest.fixture

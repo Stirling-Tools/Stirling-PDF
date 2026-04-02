@@ -7,7 +7,6 @@ from fastapi import Depends, FastAPI
 
 from stirling.agents import ExecutionPlanningAgent, OrchestratorAgent, PdfEditAgent, PdfQuestionAgent, UserSpecAgent
 from stirling.agents.ledger import LedgerAuditorAgent
-from stirling.agents.ledger.session_log import configure as configure_session_logging
 from stirling.api.routes import (
     agent_draft_router,
     execution_router,
@@ -17,7 +16,6 @@ from stirling.api.routes import (
     pdf_question_router,
 )
 from stirling.config import AppSettings, load_settings
-from stirling.config.settings import ENGINE_ROOT
 from stirling.contracts import HealthResponse
 from stirling.services import build_runtime
 
@@ -41,11 +39,7 @@ async def lifespan(fast_api: FastAPI):
     fast_api.state.pdf_question_agent = PdfQuestionAgent(runtime)
     fast_api.state.user_spec_agent = UserSpecAgent(runtime)
     fast_api.state.execution_planning_agent = ExecutionPlanningAgent(runtime)
-    fast_api.state.ledger_agent = LedgerAuditorAgent(
-        fast_model=runtime.fast_model,
-        model_settings=runtime.fast_model_settings,
-    )
-    configure_session_logging(settings.ai_log_level, ENGINE_ROOT / "logs")
+    fast_api.state.ledger_agent = LedgerAuditorAgent(runtime)
     yield
 
 

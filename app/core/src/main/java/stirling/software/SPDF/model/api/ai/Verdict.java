@@ -2,8 +2,6 @@ package stirling.software.SPDF.model.api.ai;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 /**
  * The Auditor's final opinion on the document's mathematical integrity.
  *
@@ -17,19 +15,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @param roundsTaken How many negotiation rounds were needed (1–3).
  * @param summary One or two sentences suitable for the end user.
  * @param clean {@code true} iff no errors were found (warnings are tolerated).
- * @param unautablePages Pages that could not be audited — typically image-only pages for which OCR
- *     was requested but is not yet wired. The client should indicate that these pages were not
+ * @param unauditablePages Pages that could not be audited — typically image-only pages for which
+ *     OCR was requested but is not yet wired. The client should indicate that these pages were not
  *     checked.
  */
 public record Verdict(
         String type,
-        @JsonProperty("session_id") String sessionId,
+        String sessionId,
         List<AuditDiscrepancy> discrepancies,
-        @JsonProperty("pages_examined") List<Integer> pagesExamined,
-        @JsonProperty("rounds_taken") int roundsTaken,
+        List<Integer> pagesExamined,
+        int roundsTaken,
         String summary,
         boolean clean,
-        @JsonProperty("unauditable_pages") List<Integer> unautablePages) {
+        List<Integer> unauditablePages) {
 
     public long errorCount() {
         return discrepancies == null

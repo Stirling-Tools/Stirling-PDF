@@ -2,8 +2,6 @@ package stirling.software.SPDF.model.api.ai;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 /**
  * Java's opening move in the audit negotiation.
  *
@@ -17,7 +15,4 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @param round Which negotiation round this manifest belongs to (1–3).
  */
 public record FolioManifest(
-        @JsonProperty("session_id") String sessionId,
-        @JsonProperty("page_count") int pageCount,
-        @JsonProperty("folio_types") List<FolioType> folioTypes,
-        int round) {}
+        String sessionId, int pageCount, List<FolioType> folioTypes, int round) {}

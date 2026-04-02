@@ -16,29 +16,12 @@ from __future__ import annotations
 import csv
 import io
 import logging
-import re
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 
-from ..models import Discrepancy, DiscrepancyKind, FigureRecord, Severity, TallyError
+from ..models import Discrepancy, DiscrepancyKind, Severity, TallyError
+from ._parsing import to_decimal as _to_decimal
 
 logger = logging.getLogger(__name__)
-
-# Strip common currency symbols and thousands separators before parsing.
-_STRIP_PATTERN = re.compile(r"[£$€¥,\s]")
-
-
-def _to_decimal(raw: str) -> Decimal | None:
-    """Parse a cell value to Decimal, returning None for non-numeric cells."""
-    cleaned = _STRIP_PATTERN.sub("", raw.strip())
-    if not cleaned or cleaned in {"-", "—", "n/a", "N/A", "na", "NA"}:
-        return None
-    # Handle parenthesised negatives: (123.45) → -123.45
-    if cleaned.startswith("(") and cleaned.endswith(")"):
-        cleaned = "-" + cleaned[1:-1]
-    try:
-        return Decimal(cleaned)
-    except InvalidOperation:
-        return None
 
 
 class TallyChecker:
@@ -85,8 +68,12 @@ class TallyChecker:
 
         discrepancies: list[Discrepancy] = []
         errors: list[TallyError] = []
+        # When no explicit indices are given, heuristically check column totals
+        # using the last row as the assumed total row.
         if total_row_index is not None:
             errors += self._check_column_totals(rows, total_row_index)
+        elif total_col_index is None:
+            errors += self._check_column_totals(rows, len(rows) - 1)
         if total_col_index is not None:
             errors += self._check_row_totals(rows, total_col_index)
 

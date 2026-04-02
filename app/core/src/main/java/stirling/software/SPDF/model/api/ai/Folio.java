@@ -2,8 +2,6 @@ package stirling.software.SPDF.model.api.ai;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 /**
  * One page's worth of extracted content, assembled by Java in response to a {@link Requisition}.
  *
@@ -16,8 +14,4 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @param ocrConfidence Mean character confidence from OCRmyPDF, 0.0–1.0 (null if OCR not run).
  */
 public record Folio(
-        int page,
-        String text,
-        List<String> tables,
-        @JsonProperty("ocr_text") String ocrText,
-        @JsonProperty("ocr_confidence") Double ocrConfidence) {}
+        int page, String text, List<String> tables, String ocrText, Double ocrConfidence) {}

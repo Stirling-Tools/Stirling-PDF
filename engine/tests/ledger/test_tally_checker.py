@@ -9,7 +9,7 @@ from decimal import Decimal
 
 import pytest
 
-from ledger.validators.tally import TallyChecker
+from stirling.agents.ledger.validators.tally import TallyChecker
 
 
 @pytest.fixture
@@ -36,10 +36,10 @@ def test_clean_column_totals(checker: TallyChecker) -> None:
 def test_clean_with_currency_symbols(checker: TallyChecker) -> None:
     """Currency symbols and commas in cells must be stripped before arithmetic."""
     csv = (
-        "Description,Amount\n"
-        "Fee,£1,200.00\n"
-        "Tax,£240.00\n"
-        "Total,£1,440.00\n"
+        'Description,Amount\n'
+        'Fee,"£1,200.00"\n'
+        'Tax,"£240.00"\n'
+        'Total,"£1,440.00"\n'
     )
     assert checker.check(page=0, table_csv=csv) == []
 

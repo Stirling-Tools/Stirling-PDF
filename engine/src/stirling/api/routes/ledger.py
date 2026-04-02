@@ -21,10 +21,13 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 
 from stirling.agents.ledger import LedgerAuditorAgent
-from stirling.agents.ledger.models import (
-    AgentTurn, Evidence, FolioManifest, Requisition,
-)
 from stirling.api.dependencies import get_ledger_agent
+from stirling.contracts.ledger import (
+    AgentTurn,
+    Evidence,
+    FolioManifest,
+    Requisition,
+)
 
 logger = logging.getLogger(__name__)
 

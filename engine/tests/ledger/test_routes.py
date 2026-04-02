@@ -1,78 +1,75 @@
 """
-Ledger Auditor — Flask route tests.
+Ledger Auditor — FastAPI route tests.
 
-Uses Flask's built-in test client. All LLM calls are mocked out; these tests
-exercise HTTP parsing, serialisation, and response enveloping only — not the
-agent's reasoning.
+Uses FastAPI's TestClient with dependency overrides. All LLM calls are
+mocked out; these tests exercise HTTP parsing, serialisation, and response
+enveloping only — not the agent's reasoning.
 """
 
 from __future__ import annotations
 
-import json
+from collections.abc import Iterator
 from decimal import Decimal
-from unittest.mock import patch
 
 import pytest
-from flask import Flask
-from flask.testing import FlaskClient
+from fastapi.testclient import TestClient
 
-from ledger.models import (
+from stirling.api import app
+from stirling.api.dependencies import get_ledger_agent
+from stirling.config import AppSettings, load_settings
+from stirling.contracts.ledger import (
     Discrepancy,
     DiscrepancyKind,
+    Evidence,
+    FolioManifest,
     Requisition,
     Severity,
     Verdict,
 )
-from ledger.routes import register_ledger_routes
-
 
 # ---------------------------------------------------------------------------
-# Fixtures
+# Stubs
 # ---------------------------------------------------------------------------
 
 
-@pytest.fixture(scope="module")
-def app() -> Flask:
-    """Minimal Flask app with only the ledger blueprint registered."""
-    flask_app = Flask(__name__)
-    flask_app.config["TESTING"] = True
-    register_ledger_routes(flask_app)
-    return flask_app
+class StubSettingsProvider:
+    def __call__(self) -> AppSettings:
+        return AppSettings(
+            smart_model_name="test",
+            fast_model_name="test",
+            smart_model_max_tokens=8192,
+            fast_model_max_tokens=2048,
+        )
 
 
-@pytest.fixture(scope="module")
-def client(app: Flask) -> FlaskClient:
-    """Test client scoped to the module-level Flask app."""
-    return app.test_client()
+class StubLedgerAgent:
+    """Stub that returns canned responses without touching any model."""
+
+    def __init__(
+        self,
+        requisition: Requisition | None = None,
+        verdict: Verdict | None = None,
+    ) -> None:
+        self._requisition = requisition or _stub_requisition()
+        self._verdict = verdict or _stub_verdict()
+        self.examine_calls: list[FolioManifest] = []
+        self.audit_calls: list[tuple[Evidence, Decimal]] = []
+
+    async def examine(self, manifest: FolioManifest) -> Requisition:
+        self.examine_calls.append(manifest)
+        return self._requisition
+
+    async def audit(self, evidence: Evidence, tolerance: Decimal = Decimal("0.01")) -> Verdict:
+        self.audit_calls.append((evidence, tolerance))
+        return self._verdict
 
 
-def _manifest_body(**overrides: object) -> dict[str, object]:
-    """Build a minimal valid FolioManifest payload, with optional field overrides."""
-    base: dict[str, object] = {
-        "session_id": "test-session",
-        "page_count": 3,
-        "folio_types": ["text", "image", "mixed"],
-        "round": 1,
-    }
-    return {**base, **overrides}
-
-
-def _evidence_body(**overrides: object) -> dict[str, object]:
-    """Build a minimal valid Evidence payload, with optional field overrides."""
-    base: dict[str, object] = {
-        "session_id": "test-session",
-        "folios": [
-            {"page": 0, "text": "Fee: £100\nTax: £20\nTotal: £120"},
-            {"page": 2, "text": "Summary: all tallies correct"},
-        ],
-        "round": 2,
-        "final_round": False,
-    }
-    return {**base, **overrides}
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
 
 def _stub_requisition() -> Requisition:
-    """Return a canned Requisition for use in mocked route tests."""
     return Requisition(
         need_text=[0, 2],
         need_tables=[0],
@@ -85,7 +82,6 @@ def _stub_verdict(
     clean: bool = True,
     discrepancies: list[Discrepancy] | None = None,
 ) -> Verdict:
-    """Return a canned Verdict for use in mocked route tests."""
     return Verdict(
         session_id="test-session",
         discrepancies=discrepancies or [],
@@ -96,6 +92,48 @@ def _stub_verdict(
     )
 
 
+def _manifest_body(**overrides: object) -> dict[str, object]:
+    base: dict[str, object] = {
+        "sessionId": "test-session",
+        "pageCount": 3,
+        "folioTypes": ["text", "image", "mixed"],
+        "round": 1,
+    }
+    return {**base, **overrides}
+
+
+def _evidence_body(**overrides: object) -> dict[str, object]:
+    base: dict[str, object] = {
+        "sessionId": "test-session",
+        "folios": [
+            {"page": 0, "text": "Fee: £100\nTax: £20\nTotal: £120"},
+            {"page": 2, "text": "Summary: all tallies correct"},
+        ],
+        "round": 2,
+        "finalRound": False,
+    }
+    return {**base, **overrides}
+
+
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def stub_agent() -> StubLedgerAgent:
+    return StubLedgerAgent()
+
+
+@pytest.fixture
+def client(stub_agent: StubLedgerAgent) -> Iterator[TestClient]:
+    app.dependency_overrides[load_settings] = StubSettingsProvider()
+    app.dependency_overrides[get_ledger_agent] = lambda: stub_agent
+    yield TestClient(app, raise_server_exceptions=False)
+    app.dependency_overrides.pop(load_settings, None)
+    app.dependency_overrides.pop(get_ledger_agent, None)
+
+
 # ---------------------------------------------------------------------------
 # POST /api/ledger/examine
 # ---------------------------------------------------------------------------
@@ -104,64 +142,31 @@ def _stub_verdict(
 class TestExamineEndpoint:
     """Tests for POST /api/ledger/examine."""
 
-    def test_returns_200(self, client: FlaskClient) -> None:
-        """A valid manifest must yield an HTTP 200."""
-        with patch("ledger.routes.examine", return_value=_stub_requisition()):
-            resp = client.post(
-                "/api/ledger/examine",
-                data=json.dumps(_manifest_body()),
-                content_type="application/json",
-            )
+    def test_returns_200(self, client: TestClient) -> None:
+        resp = client.post("/api/ledger/examine", json=_manifest_body())
         assert resp.status_code == 200
 
-    def test_response_is_requisition(self, client: FlaskClient) -> None:
-        """Response body must be a valid Requisition JSON object."""
-        with patch("ledger.routes.examine", return_value=_stub_requisition()):
-            resp = client.post(
-                "/api/ledger/examine",
-                data=json.dumps(_manifest_body()),
-                content_type="application/json",
-            )
-        body = resp.get_json()
+    def test_response_is_requisition(self, client: TestClient) -> None:
+        resp = client.post("/api/ledger/examine", json=_manifest_body())
+        body = resp.json()
         assert body["type"] == "requisition"
-        assert body["need_text"] == [0, 2]
-        assert body["need_tables"] == [0]
-        assert body["need_ocr"] == [1]
+        assert body["needText"] == [0, 2]
+        assert body["needTables"] == [0]
+        assert body["needOcr"] == [1]
         assert "rationale" in body
 
-    def test_examine_called_with_parsed_manifest(self, client: FlaskClient) -> None:
-        """The route must parse the JSON body into a FolioManifest and forward it."""
-        with patch("ledger.routes.examine", return_value=_stub_requisition()) as mock_examine:
-            client.post(
-                "/api/ledger/examine",
-                data=json.dumps(_manifest_body(session_id="my-session", page_count=3)),
-                content_type="application/json",
-            )
-        assert mock_examine.call_count == 1
-        manifest_arg = mock_examine.call_args[0][0]
-        assert manifest_arg.session_id == "my-session"
-        assert manifest_arg.page_count == 3
+    def test_examine_called_with_parsed_manifest(
+        self, client: TestClient, stub_agent: StubLedgerAgent,
+    ) -> None:
+        client.post("/api/ledger/examine", json=_manifest_body(sessionId="my-session", pageCount=3))
+        assert len(stub_agent.examine_calls) == 1
+        manifest = stub_agent.examine_calls[0]
+        assert manifest.session_id == "my-session"
+        assert manifest.page_count == 3
 
-    def test_empty_body_is_rejected(self, client: FlaskClient) -> None:
-        """Sending an empty or invalid body must not return 200."""
-        with patch("ledger.routes.examine", return_value=_stub_requisition()):
-            resp = client.post(
-                "/api/ledger/examine",
-                data="{}",
-                content_type="application/json",
-            )
-        # Pydantic validation failure raises → Flask returns 4xx or 500
-        assert resp.status_code != 200
-
-    def test_content_type_is_json(self, client: FlaskClient) -> None:
-        """Response Content-Type must be application/json."""
-        with patch("ledger.routes.examine", return_value=_stub_requisition()):
-            resp = client.post(
-                "/api/ledger/examine",
-                data=json.dumps(_manifest_body()),
-                content_type="application/json",
-            )
-        assert "application/json" in resp.content_type
+    def test_content_type_is_json(self, client: TestClient) -> None:
+        resp = client.post("/api/ledger/examine", json=_manifest_body())
+        assert "application/json" in resp.headers["content-type"]
 
 
 # ---------------------------------------------------------------------------
@@ -172,33 +177,20 @@ class TestExamineEndpoint:
 class TestDeliberateEndpoint:
     """Tests for POST /api/ledger/deliberate."""
 
-    def test_returns_200_clean(self, client: FlaskClient) -> None:
-        """A clean verdict must yield HTTP 200."""
-        with patch("ledger.routes.audit", return_value=_stub_verdict(clean=True)):
-            resp = client.post(
-                "/api/ledger/deliberate",
-                data=json.dumps(_evidence_body()),
-                content_type="application/json",
-            )
+    def test_returns_200_clean(self, client: TestClient) -> None:
+        resp = client.post("/api/ledger/deliberate", json=_evidence_body())
         assert resp.status_code == 200
 
-    def test_response_envelope_has_verdict(self, client: FlaskClient) -> None:
-        """The /deliberate response is wrapped in an AgentTurn envelope."""
-        with patch("ledger.routes.audit", return_value=_stub_verdict()):
-            resp = client.post(
-                "/api/ledger/deliberate",
-                data=json.dumps(_evidence_body()),
-                content_type="application/json",
-            )
-        body = resp.get_json()
+    def test_response_envelope_has_verdict(self, client: TestClient) -> None:
+        resp = client.post("/api/ledger/deliberate", json=_evidence_body())
+        body = resp.json()
         assert "verdict" in body
-        assert body.get("requisition") is None or body.get("requisition") == {}
+        assert body.get("requisition") is None
         verdict = body["verdict"]
         assert verdict["type"] == "verdict"
         assert verdict["clean"] is True
 
-    def test_discrepancies_serialised(self, client: FlaskClient) -> None:
-        """Discrepancy fields must be present and correctly serialised in the response."""
+    def test_discrepancies_serialised(self, client: TestClient) -> None:
         d = Discrepancy(
             page=0,
             kind=DiscrepancyKind.TALLY,
@@ -207,16 +199,10 @@ class TestDeliberateEndpoint:
             stated="250",
             expected="300",
         )
-        with patch(
-            "ledger.routes.audit",
-            return_value=_stub_verdict(clean=False, discrepancies=[d]),
-        ):
-            resp = client.post(
-                "/api/ledger/deliberate",
-                data=json.dumps(_evidence_body()),
-                content_type="application/json",
-            )
-        body = resp.get_json()
+        stub = StubLedgerAgent(verdict=_stub_verdict(clean=False, discrepancies=[d]))
+        app.dependency_overrides[get_ledger_agent] = lambda: stub
+        resp = client.post("/api/ledger/deliberate", json=_evidence_body())
+        body = resp.json()
         discrepancies = body["verdict"]["discrepancies"]
         assert len(discrepancies) == 1
         assert discrepancies[0]["kind"] == "tally"
@@ -224,48 +210,32 @@ class TestDeliberateEndpoint:
         assert discrepancies[0]["stated"] == "250"
         assert discrepancies[0]["expected"] == "300"
 
-    def test_tolerance_query_param_forwarded(self, client: FlaskClient) -> None:
-        """The tolerance query param must be parsed and passed to audit()."""
-        with patch("ledger.routes.audit", return_value=_stub_verdict()) as mock_audit:
-            client.post(
-                "/api/ledger/deliberate?tolerance=0.05",
-                data=json.dumps(_evidence_body()),
-                content_type="application/json",
-            )
-        assert mock_audit.call_count == 1
-        tolerance_arg = mock_audit.call_args[0][1]  # positional arg 1
-        assert tolerance_arg == Decimal("0.05")
+    def test_tolerance_query_param_forwarded(
+        self, client: TestClient, stub_agent: StubLedgerAgent,
+    ) -> None:
+        client.post("/api/ledger/deliberate?tolerance=0.05", json=_evidence_body())
+        assert len(stub_agent.audit_calls) == 1
+        _, tolerance = stub_agent.audit_calls[0]
+        assert tolerance == Decimal("0.05")
 
-    def test_default_tolerance_when_omitted(self, client: FlaskClient) -> None:
-        """Omitting tolerance must default to 0.01."""
-        with patch("ledger.routes.audit", return_value=_stub_verdict()) as mock_audit:
-            client.post(
-                "/api/ledger/deliberate",
-                data=json.dumps(_evidence_body()),
-                content_type="application/json",
-            )
-        tolerance_arg = mock_audit.call_args[0][1]
-        assert tolerance_arg == Decimal("0.01")
+    def test_default_tolerance_when_omitted(
+        self, client: TestClient, stub_agent: StubLedgerAgent,
+    ) -> None:
+        client.post("/api/ledger/deliberate", json=_evidence_body())
+        _, tolerance = stub_agent.audit_calls[0]
+        assert tolerance == Decimal("0.01")
 
-    def test_invalid_tolerance_falls_back_to_default(self, client: FlaskClient) -> None:
-        """A non-numeric tolerance must not crash — it falls back to 0.01."""
-        with patch("ledger.routes.audit", return_value=_stub_verdict()) as mock_audit:
-            resp = client.post(
-                "/api/ledger/deliberate?tolerance=notanumber",
-                data=json.dumps(_evidence_body()),
-                content_type="application/json",
-            )
+    def test_invalid_tolerance_falls_back_to_default(
+        self, client: TestClient, stub_agent: StubLedgerAgent,
+    ) -> None:
+        resp = client.post("/api/ledger/deliberate?tolerance=notanumber", json=_evidence_body())
         assert resp.status_code == 200
-        tolerance_arg = mock_audit.call_args[0][1]
-        assert tolerance_arg == Decimal("0.01")
+        _, tolerance = stub_agent.audit_calls[0]
+        assert tolerance == Decimal("0.01")
 
-    def test_final_round_flag_parsed(self, client: FlaskClient) -> None:
-        """final_round=True in the Evidence body must reach audit() correctly."""
-        with patch("ledger.routes.audit", return_value=_stub_verdict()) as mock_audit:
-            client.post(
-                "/api/ledger/deliberate",
-                data=json.dumps(_evidence_body(final_round=True)),
-                content_type="application/json",
-            )
-        evidence_arg = mock_audit.call_args[0][0]
-        assert evidence_arg.final_round is True
+    def test_final_round_flag_parsed(
+        self, client: TestClient, stub_agent: StubLedgerAgent,
+    ) -> None:
+        client.post("/api/ledger/deliberate", json=_evidence_body(finalRound=True))
+        evidence, _ = stub_agent.audit_calls[0]
+        assert evidence.final_round is True

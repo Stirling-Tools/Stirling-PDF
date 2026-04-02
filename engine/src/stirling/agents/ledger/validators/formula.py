@@ -12,35 +12,15 @@ All arithmetic is Decimal. No eval(), no arbitrary code execution.
 
 from __future__ import annotations
 
-import csv
-import io
 import logging
 import re
 from decimal import Decimal, InvalidOperation
 
 from ..models import Discrepancy, DiscrepancyKind, Severity
+from ._parsing import parse_csv as _parse_csv
+from ._parsing import to_decimal as _to_decimal
 
 logger = logging.getLogger(__name__)
-
-_STRIP_PATTERN = re.compile(r"[£$€¥,\s]")
-
-
-def _to_decimal(raw: str) -> Decimal | None:
-    """Parse a cell value to Decimal, returning None for non-numeric cells."""
-    cleaned = _STRIP_PATTERN.sub("", raw.strip())
-    if not cleaned or cleaned in {"-", "—", "n/a", "N/A", "na", "NA", ""}:
-        return None
-    if cleaned.startswith("(") and cleaned.endswith(")"):
-        cleaned = "-" + cleaned[1:-1]
-    try:
-        return Decimal(cleaned)
-    except InvalidOperation:
-        return None
-
-
-def _parse_csv(table_csv: str) -> list[list[str]]:
-    reader = csv.reader(io.StringIO(table_csv.strip()))
-    return [row for row in reader if any(cell.strip() for cell in row)]
 
 
 class FormulaEvaluator:
@@ -286,7 +266,7 @@ class FormulaEvaluator:
         """
         try:
             # Tokenise: split into numbers and operators
-            tokens = re.findall(r"[\d.]+|[+\-*/]", expr.strip())
+            tokens = re.findall(r"\d+(?:\.\d+)?|[+\-*/]", expr.strip())
             if not tokens:
                 return None
 

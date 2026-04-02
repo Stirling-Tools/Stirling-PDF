@@ -10,7 +10,7 @@ from decimal import Decimal
 
 import pytest
 
-from ledger.validators.arithmetic import ArithmeticScanner
+from stirling.agents.ledger.validators.arithmetic import ArithmeticScanner
 
 
 @pytest.fixture

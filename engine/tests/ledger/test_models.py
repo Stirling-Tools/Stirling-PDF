@@ -5,13 +5,11 @@ These tests confirm the wire contract: models round-trip through JSON
 correctly and their helper properties behave as documented.
 """
 
-import json
-from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
 
-from ledger.models import (
+from stirling.contracts.ledger import (
     AgentTurn,
     Discrepancy,
     DiscrepancyKind,
@@ -23,7 +21,6 @@ from ledger.models import (
     Severity,
     Verdict,
 )
-
 
 # ---------------------------------------------------------------------------
 # FolioManifest

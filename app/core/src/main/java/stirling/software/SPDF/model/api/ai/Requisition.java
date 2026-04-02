@@ -2,8 +2,6 @@ package stirling.software.SPDF.model.api.ai;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 /**
  * The Python Examiner's shopping list: which pages Java must extract before the Auditor can form an
  * opinion.
@@ -19,9 +17,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public record Requisition(
         String type,
-        @JsonProperty("need_text") List<Integer> needText,
-        @JsonProperty("need_tables") List<Integer> needTables,
-        @JsonProperty("need_ocr") List<Integer> needOcr,
+        List<Integer> needText,
+        List<Integer> needTables,
+        List<Integer> needOcr,
         String rationale) {
 
     public boolean isEmpty() {

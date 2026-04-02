@@ -25,13 +25,20 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
-from pydantic_ai.models import Model
-from pydantic_ai.settings import ModelSettings
 
-from .models import (
-    Discrepancy, DiscrepancyKind, Evidence, Folio,
-    FolioManifest, Requisition, Severity, Verdict,
+from stirling.config.settings import ENGINE_ROOT
+from stirling.contracts.ledger import (
+    Discrepancy,
+    DiscrepancyKind,
+    Evidence,
+    Folio,
+    FolioManifest,
+    Requisition,
+    Severity,
+    Verdict,
 )
+from stirling.services import AppRuntime
+
 from .prompts import (
     EXAMINER_SYSTEM_PROMPT,
     FIGURE_EXTRACTOR_PROMPT,
@@ -106,7 +113,12 @@ class LedgerAuditorAgent:
     pre-built Model objects and ModelSettings.
     """
 
-    def __init__(self, fast_model: Model, model_settings: ModelSettings) -> None:
+    def __init__(self, runtime: AppRuntime) -> None:
+        fast_model = runtime.fast_model
+        model_settings = runtime.fast_model_settings
+        self._runtime = runtime
+        self._ai_log_level = runtime.settings.ai_log_level
+        self._log_path = ENGINE_ROOT / "logs"
         self._examiner = Agent(
             model=fast_model,
             deps_type=FolioManifest,
@@ -145,7 +157,7 @@ class LedgerAuditorAgent:
 
     async def examine(self, manifest: FolioManifest) -> Requisition:
         """Inspect a FolioManifest and declare the Requisition."""
-        slog = SessionLogger(manifest.session_id)
+        slog = SessionLogger(manifest.session_id, ai_log_level=self._ai_log_level, log_path=self._log_path)
         logger.info(
             "[ledger] session=%s round=%d examining %d folios",
             manifest.session_id, manifest.round, manifest.page_count,
@@ -182,7 +194,7 @@ class LedgerAuditorAgent:
         4. Generate human summary with fast model
         5. Assemble Verdict
         """
-        slog = SessionLogger(evidence.session_id)
+        slog = SessionLogger(evidence.session_id, ai_log_level=self._ai_log_level, log_path=self._log_path)
         logger.info(
             "[ledger] session=%s round=%d auditing %d folios (final=%s)",
             evidence.session_id, evidence.round,
@@ -345,7 +357,7 @@ class LedgerAuditorAgent:
         )
 
         # Step 5: Assemble Verdict
-        error_count = sum(1 for d in all_discrepancies if d.severity == "error")
+        error_count = sum(1 for d in all_discrepancies if d.severity == Severity.ERROR)
         verdict = Verdict(
             session_id=evidence.session_id,
             discrepancies=all_discrepancies,
@@ -444,8 +456,8 @@ class LedgerAuditorAgent:
         verification_stats: str,
         slog: SessionLogger | None,
     ) -> str:
-        error_count = sum(1 for d in discrepancies if d.severity == "error")
-        warning_count = sum(1 for d in discrepancies if d.severity == "warning")
+        error_count = sum(1 for d in discrepancies if d.severity == Severity.ERROR)
+        warning_count = sum(1 for d in discrepancies if d.severity == Severity.WARNING)
 
         prompt = (
             f"{verification_stats}\n"
