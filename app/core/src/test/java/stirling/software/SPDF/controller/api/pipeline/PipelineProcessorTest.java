@@ -205,7 +205,8 @@ class PipelineProcessorTest {
                                             });
                         })) {
             ResponseEntity<Resource> response =
-                    pipelineProcessor.sendWebRequest("http://localhost/api", body);
+                    pipelineProcessor.sendWebRequest(
+                            "http://localhost/api/v1/general/merge-pdfs", body);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
