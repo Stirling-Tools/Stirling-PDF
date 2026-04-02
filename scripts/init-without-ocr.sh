@@ -41,7 +41,8 @@ print_versions() {
   command_exists unoserver && unoserver --version 2>&1 | head -n 1 | log
   command_exists tesseract && tesseract --version | head -n 1 | log
   command_exists gs && gs --version | printf "Ghostscript %s\n" "$(cat)" | log
-  command_exists ffmpeg && ffmpeg -version | head -n 1 | log
+  # ffmpeg disabled due to raised CVEs
+  # command_exists ffmpeg && ffmpeg -version | head -n 1 | log
   command_exists pdfinfo && pdfinfo -v 2>&1 | head -n 1 | log
   command_exists fontforge && fontforge --version 2>&1 | head -n 1 | log
   command_exists unpaper && unpaper --version 2>&1 | head -n 1 | log

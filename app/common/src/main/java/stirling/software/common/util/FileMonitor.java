@@ -129,7 +129,9 @@ public class FileMonitor {
 
         // Skip expensive collection work when there is nothing to track
         WatchKey firstKey = watchService.poll();
-        if (firstKey == null && newlyDiscoveredFiles.isEmpty() && readyForProcessingFiles.isEmpty()) {
+        if (firstKey == null
+                && newlyDiscoveredFiles.isEmpty()
+                && readyForProcessingFiles.isEmpty()) {
             return;
         }
 
