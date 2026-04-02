@@ -169,7 +169,7 @@ try {
     }
 
     // Write to file
-    writeFileSync(OUTPUT_FILE, JSON.stringify(transformedData, null, 4));
+    writeFileSync(OUTPUT_FILE, JSON.stringify(transformedData, null, 2) + "\n");
 
     console.log(`✅ License report generated successfully!`);
     console.log(`📄 Found ${transformedData.dependencies.length} dependencies`);
