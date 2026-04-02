@@ -8,6 +8,38 @@ from pydantic import Field, model_validator
 from stirling.models import OPERATIONS, ApiModel, OperationId, ParamToolModel
 
 
+class PdfContentType(StrEnum):
+    """Types of content that can be extracted from a PDF and sent to the AI.
+
+    Java counterpart: AiPdfContentType.java — values must stay in sync.
+    """
+
+    # Document-level structured data
+    PAGE_LAYOUT = "page_layout"
+    DOCUMENT_METADATA = "document_metadata"
+    ENCRYPTION_INFO = "encryption_info"
+    BOOKMARKS = "bookmarks"
+    LAYERS = "layers"
+    EMBEDDED_FILES = "embedded_files"
+    JAVASCRIPT = "javascript"
+    LINKS = "links"
+    IMAGE_INFO = "image_info"
+    FONTS = "fonts"
+
+    # Text and content
+    PAGE_TEXT = "page_text"
+    FULL_TEXT = "full_text"
+    FORM_FIELDS = "form_fields"
+    ANNOTATIONS = "annotations"
+    SIGNATURES = "signatures"
+    STRUCTURE_TREE = "structure_tree"
+    XMP_METADATA = "xmp_metadata"
+
+    # Heavy content
+    COMPLIANCE = "compliance"
+    IMAGES = "images"
+
+
 class WorkflowOutcome(StrEnum):
     """Discriminator values for all workflow response unions (outcome field).
 
@@ -15,7 +47,7 @@ class WorkflowOutcome(StrEnum):
     """
 
     ANSWER = "answer"
-    NEED_TEXT = "need_text"
+    NEED_CONTENT = "need_content"
     NOT_FOUND = "not_found"
     PLAN = "plan"
     NEED_CLARIFICATION = "need_clarification"

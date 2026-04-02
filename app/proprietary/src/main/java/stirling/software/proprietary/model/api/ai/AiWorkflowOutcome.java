@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum AiWorkflowOutcome {
     ANSWER("answer"),
     NOT_FOUND("not_found"),
-    NEED_TEXT("need_text"),
+    NEED_CONTENT("need_content"),
     PLAN("plan"),
     NEED_CLARIFICATION("need_clarification"),
     CANNOT_DO("cannot_do"),

@@ -5,8 +5,10 @@ from pydantic_ai.output import NativeOutput
 
 from stirling.contracts import (
     ExtractedFileText,
+    NeedContentFileRequest,
+    PdfContentType,
     PdfQuestionAnswerResponse,
-    PdfQuestionNeedTextResponse,
+    PdfQuestionNeedContentResponse,
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
     PdfQuestionResponse,
@@ -39,8 +41,15 @@ class PdfQuestionAgent:
 
     async def handle(self, request: PdfQuestionRequest) -> PdfQuestionResponse:
         if not self._has_page_text(request.page_text):
-            return PdfQuestionNeedTextResponse(
+            return PdfQuestionNeedContentResponse(
                 reason="No extracted PDF page text was provided, so the question cannot be answered yet.",
+                files=[
+                    NeedContentFileRequest(
+                        file_name=file_name,
+                        content_types=[PdfContentType.PAGE_TEXT],
+                    )
+                    for file_name in request.file_names
+                ],
                 max_pages=self.DEFAULT_MAX_PAGES,
                 max_characters=self.DEFAULT_MAX_CHARACTERS,
             )

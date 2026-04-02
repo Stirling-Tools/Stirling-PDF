@@ -7,7 +7,7 @@ from stirling.config import AppSettings
 from stirling.contracts import (
     ExtractedFileText,
     PdfQuestionAnswerResponse,
-    PdfQuestionNeedTextResponse,
+    PdfQuestionNeedContentResponse,
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
     PdfTextSelection,
@@ -51,7 +51,7 @@ async def test_pdf_question_agent_requires_extracted_text() -> None:
         PdfQuestionRequest(question="What is the total?", page_text=[], file_names=["test.pdf"])
     )
 
-    assert isinstance(response, PdfQuestionNeedTextResponse)
+    assert isinstance(response, PdfQuestionNeedContentResponse)
 
 
 @pytest.mark.anyio

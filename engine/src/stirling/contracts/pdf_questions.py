@@ -6,7 +6,7 @@ from pydantic import Field
 
 from stirling.models import ApiModel
 
-from .common import ExtractedFileText, SupportedCapability, WorkflowOutcome
+from .common import ExtractedFileText, PdfContentType, SupportedCapability, WorkflowOutcome
 
 
 class PdfQuestionRequest(ApiModel):
@@ -21,16 +21,17 @@ class PdfQuestionAnswerResponse(ApiModel):
     evidence: list[ExtractedFileText] = Field(default_factory=list)
 
 
-class NeedTextFileRequest(ApiModel):
+class NeedContentFileRequest(ApiModel):
     file_name: str
     page_numbers: list[int] = Field(default_factory=list)
+    content_types: list[PdfContentType]
 
 
-class PdfQuestionNeedTextResponse(ApiModel):
-    outcome: Literal[WorkflowOutcome.NEED_TEXT] = WorkflowOutcome.NEED_TEXT
+class PdfQuestionNeedContentResponse(ApiModel):
+    outcome: Literal[WorkflowOutcome.NEED_CONTENT] = WorkflowOutcome.NEED_CONTENT
     resume_with: SupportedCapability = SupportedCapability.PDF_QUESTION
     reason: str
-    files: list[NeedTextFileRequest] = Field(default_factory=list)
+    files: list[NeedContentFileRequest] = Field(default_factory=list)
     max_pages: int
     max_characters: int
 
@@ -41,6 +42,6 @@ class PdfQuestionNotFoundResponse(ApiModel):
 
 
 PdfQuestionResponse = Annotated[
-    PdfQuestionAnswerResponse | PdfQuestionNeedTextResponse | PdfQuestionNotFoundResponse,
+    PdfQuestionAnswerResponse | PdfQuestionNeedContentResponse | PdfQuestionNotFoundResponse,
     Field(discriminator="outcome"),
 ]

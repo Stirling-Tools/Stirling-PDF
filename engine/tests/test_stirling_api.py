@@ -20,7 +20,7 @@ from stirling.contracts import (
     EditCannotDoResponse,
     OrchestratorRequest,
     PdfEditRequest,
-    PdfQuestionNeedTextResponse,
+    PdfQuestionNeedContentResponse,
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
 )
@@ -38,8 +38,8 @@ class StubSettingsProvider:
 
 
 class StubOrchestratorAgent:
-    async def handle(self, request: OrchestratorRequest) -> PdfQuestionNeedTextResponse:
-        return PdfQuestionNeedTextResponse(reason=request.user_message, files=[], max_pages=1, max_characters=1000)
+    async def handle(self, request: OrchestratorRequest) -> PdfQuestionNeedContentResponse:
+        return PdfQuestionNeedContentResponse(reason=request.user_message, files=[], max_pages=1, max_characters=1000)
 
 
 class StubPdfEditAgent:
@@ -118,7 +118,7 @@ def test_orchestrator_route() -> None:
     response = client.post("/api/v1/orchestrator", json={"userMessage": "route this", "fileNames": ["test.pdf"]})
 
     assert response.status_code == 200
-    assert response.json()["outcome"] == "need_text"
+    assert response.json()["outcome"] == "need_content"
 
 
 def test_pdf_edit_route() -> None:
