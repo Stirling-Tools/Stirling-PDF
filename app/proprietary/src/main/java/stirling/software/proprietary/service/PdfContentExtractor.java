@@ -13,6 +13,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 import lombok.Data;
@@ -213,12 +214,15 @@ public class PdfContentExtractor {
     // --- Types shared with AiWorkflowService (package-private) ---
 
     interface PdfContentResult {
+        @JsonIgnore
         ArtifactKind getArtifactKind();
 
+        @JsonIgnore
         default int pagesConsumed() {
             return 0;
         }
 
+        @JsonIgnore
         default int charactersConsumed() {
             return 0;
         }
