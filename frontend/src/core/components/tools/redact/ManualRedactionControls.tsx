@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useEffect, useRef, useCallback } from 'react';
 import { Button, Stack, Text, Divider, ColorInput } from '@mantine/core';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import { useRedaction, useRedactionMode } from '@app/contexts/RedactionContext';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useSignature } from '@app/contexts/SignatureContext';
@@ -27,40 +26,35 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
   // Get signature context to deactivate annotation tools when switching to redaction
   const { signatureApiRef } = useSignature();
 
-  // Check if redaction mode is active
-  const isRedactActive = isRedacting;
-
-  // Track if we've auto-activated for the current bridge session
-  const hasAutoActivated = useRef(false);
-
   // Track the previous file index to detect file switches
   const prevFileIndexRef = useRef<number>(activeFileIndex);
 
-  // Auto-activate selection mode when the API bridge becomes ready
-  // This ensures Mark Text is pre-selected when entering manual redaction mode
+  // Keep redaction tool active at all times while this component is mounted.
+  // If anything deactivates it (annotation tools, text selection, file switch, etc.)
+  // this re-enables it automatically — no manual "Activate" button needed.
   useEffect(() => {
-    if (isBridgeReady && !disabled && !hasAutoActivated.current) {
-      hasAutoActivated.current = true;
-      // Small delay to ensure EmbedPDF is fully ready
-      const timer = setTimeout(() => {
-        // Deactivate annotation mode to show redaction layer
+    if (disabled || !isBridgeReady) return;
+
+    if (!isRedacting || isAnnotationMode) {
+      // Kill annotation mode if it stole focus
+      if (isAnnotationMode) {
         setAnnotationMode(false);
-        // Pre-select the Redaction tool
-        activateManualRedact();
-      }, 150);
+        if (signatureApiRef?.current) {
+          try {
+            signatureApiRef.current.deactivateTools();
+          } catch (error) {
+            console.log('Unable to deactivate annotation tools:', error);
+          }
+        }
+      }
+      // Small delay to avoid racing with EmbedPDF's own state updates
+      const timer = setTimeout(() => activateManualRedact(), 50);
       return () => clearTimeout(timer);
     }
-  }, [isBridgeReady, disabled, activateManualRedact, setAnnotationMode]);
-
-  // Reset auto-activation flag when disabled changes or bridge becomes not ready
-  useEffect(() => {
-    if (disabled || !isBridgeReady) {
-      hasAutoActivated.current = false;
-    }
-  }, [disabled, isBridgeReady]);
+  }, [isRedacting, isAnnotationMode, disabled, isBridgeReady, setAnnotationMode, signatureApiRef, activateManualRedact]);
 
   // Reset redaction tool when switching between files
-  // The new PDF gets a fresh EmbedPDF instance - forcing user to re-select tool ensures it works properly
+  // The new PDF gets a fresh EmbedPDF instance
   useEffect(() => {
     if (prevFileIndexRef.current !== activeFileIndex) {
       prevFileIndexRef.current = activeFileIndex;
@@ -69,28 +63,8 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
       if (activeType) {
         setActiveType(null);
       }
-
-      // Reset auto-activation flag so new file can auto-activate
-      hasAutoActivated.current = false;
     }
   }, [activeFileIndex, activeType, setActiveType]);
-
-  const handleRedactClick = () => {
-    // Deactivate annotation mode and tools to switch to redaction layer
-    if (isAnnotationMode) {
-      setAnnotationMode(false);
-      // Deactivate any active annotation tools (like draw)
-      if (signatureApiRef?.current) {
-        try {
-          signatureApiRef.current.deactivateTools();
-        } catch (error) {
-          console.log('Unable to deactivate annotation tools:', error);
-        }
-      }
-    }
-
-    activateManualRedact();
-  };
 
   // Handle saving changes - this will apply pending redactions and save to file
   const handleSaveChanges = useCallback(async () => {
@@ -100,10 +74,8 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
   }, [applyChanges]);
 
   // Check if there are unsaved changes to save (pending redactions OR applied redactions)
-  // Save Changes button will apply pending redactions and then save everything
   const hasUnsavedChanges = pendingCount > 0 || redactionsApplied;
 
-  // Check if API is available - use isBridgeReady state instead of ref (refs don't trigger re-renders)
   const isApiReady = isBridgeReady;
 
   return (
@@ -128,18 +100,6 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
           popoverProps={{ withinPortal: true }}
         />
 
-        <Button
-          variant={isRedactActive && !isAnnotationMode ? 'filled' : 'outline'}
-          color={isRedactActive && !isAnnotationMode ? 'blue' : 'gray'}
-          leftSection={<AutoFixHighIcon style={{ fontSize: 18, flexShrink: 0 }} />}
-          onClick={handleRedactClick}
-          disabled={disabled || !isApiReady}
-          fullWidth
-          size="sm"
-        >
-          {isRedactActive && !isAnnotationMode ? t('redact.manual.active', 'Redaction Mode Active') : t('redact.manual.activate', 'Activate Redaction Tool')}
-        </Button>
-
         {/* Save Changes Button - applies pending redactions and saves to file */}
         <Button
           fullWidth
@@ -157,4 +117,3 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
     </>
   );
 }
-
