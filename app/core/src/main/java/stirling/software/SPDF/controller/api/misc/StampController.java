@@ -483,8 +483,18 @@ public class StampController {
             y = overrideY;
         } else {
             x = calculatePositionX(pageSize, position, desiredPhysicalWidth, margin);
-            y = calculatePositionY(pageSize, position, desiredPhysicalHeight, margin);
+            // drawImage() places the lower-left corner at (x, y); use image-specific Y logic
+            y = calculateImagePositionY(pageSize, position, desiredPhysicalHeight, margin);
         }
+
+        float llx = pageSize.getLowerLeftX();
+        float lly = pageSize.getLowerLeftY();
+        float urx = pageSize.getUpperRightX();
+        float ury = pageSize.getUpperRightY();
+        float xMax = Math.max(llx, urx - desiredPhysicalWidth);
+        float yMax = Math.max(lly, ury - desiredPhysicalHeight);
+        x = Math.min(xMax, Math.max(llx, x));
+        y = Math.min(yMax, Math.max(lly, y));
 
         contentStream.saveGraphicsState();
         contentStream.transform(Matrix.getTranslateInstance(x, y));
@@ -495,15 +505,34 @@ public class StampController {
 
     private float calculatePositionX(
             PDRectangle pageSize, int position, float contentWidth, float margin) {
+        float llx = pageSize.getLowerLeftX();
+        float urx = pageSize.getUpperRightX();
         return switch (position % 3) {
             case 1: // Left
-                yield pageSize.getLowerLeftX() + margin;
+                yield llx + margin;
             case 2: // Center
-                yield (pageSize.getWidth() - contentWidth) / 2;
+                yield llx + (pageSize.getWidth() - contentWidth) / 2;
             case 0: // Right
-                yield pageSize.getUpperRightX() - contentWidth - margin;
+                yield urx - contentWidth - margin;
             default:
                 yield 0;
+        };
+    }
+
+    private float calculateImagePositionY(
+            PDRectangle pageSize, int position, float imageHeight, float margin) {
+        float lly = pageSize.getLowerLeftY();
+        float pageHeight = pageSize.getHeight();
+        float ury = pageSize.getUpperRightY();
+        return switch ((position - 1) / 3) {
+            case 0: // Top - upper image edge flush below top margin
+                yield ury - margin - imageHeight;
+            case 1: // Middle - center image on page
+                yield lly + (pageHeight - imageHeight) / 2;
+            case 2: // Bottom - lower image edge at bottom margin
+                yield lly + margin;
+            default:
+                yield lly;
         };
     }
 
