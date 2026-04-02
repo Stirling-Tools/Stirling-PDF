@@ -3882,47 +3882,47 @@ sortBy = "排序方式："
 
 [home.addAttachments]
 desc = "在 PDF 中新增或移除內嵌檔案（附件）"
-tags = "內嵌,附加,包含"
+tags = "內嵌,附加,包含,embed,attach,include,attachments,attach files,embed files,include files,add files,file attachment,associated files,supplementary files"
 title = "新增附件"
 
 [home.addImage]
 desc = "在 PDF 的指定位置新增圖片"
-tags = "插入,內嵌,放置"
+tags = "插入,內嵌,放置,insert,embed,place,add image,insert image,place image,embed image,add photo,add picture,add logo,graphics,insert picture,place photo,PNG,JPG,JPEG"
 title = "新增圖片"
 
 [home.addPageNumbers]
 desc = "在文件的設定位置新增頁碼"
-tags = "編號,頁碼,計數"
+tags = "編號,頁碼,計數,number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 title = "新增頁碼"
 
 [home.addPassword]
 desc = "用密碼加密您的 PDF 檔案。"
-tags = "加密,密碼,鎖定,安全,保護,安全性,加密,保障,機密,私人,限制存取"
+tags = "加密,密碼,鎖定,安全,保護,安全性,加密,保障,機密,私人,限制存取,encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "新增密碼"
 
 [home.addStamp]
 desc = "在指定位置加入文字或影像圖章"
-tags = "圖章,標記,印章"
+tags = "圖章,標記,印章,stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 title = "新增圖章至 PDF"
 
 [home.addText]
 desc = "在 PDF 的任意位置新增自訂文字"
-tags = "文字,註解,標籤"
+tags = "文字,註解,標籤,text,annotation,label,add text,insert text,place text,text box,add label,add caption,type on PDF,write on PDF,add words,add note,text overlay,typewriter"
 title = "新增文字"
 
 [home.adjustContrast]
 desc = "調整 PDF 的對比度、飽和度和亮度"
-tags = "對比,亮度,飽和度"
+tags = "對比,亮度,飽和度,contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
 title = "調整顏色/對比度"
 
 [home.annotate]
 desc = "在檢視器中突顯、手繪、加入註釋與形狀"
-tags = "註解,螢光標記,繪圖"
+tags = "註解,螢光標記,繪圖,annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 title = "註解"
 
 [home.automate]
 desc = "將多個 PDF 動作串接，建立多步驟工作流程。適合重複性工作。"
-tags = "工作流程,序列,自動化"
+tags = "工作流程,序列,自動化,workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
 title = "自動化"
 
 [home.formFill]
@@ -3931,112 +3931,112 @@ title = "填寫表單"
 
 [home.autoRename]
 desc = "依偵測到的標頭自動重新命名 PDF 檔案"
-tags = "自動偵測,依標頭,整理,重新命名"
+tags = "自動偵測,依標頭,整理,重新命名,auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 title = "自動重新命名 PDF 檔案"
 
 [home.autoSizeSplitPDF]
 desc = "根據大小、頁數或檔案數將單一 PDF 分割為多個檔案"
-tags = "自動,分割,大小"
+tags = "自動,分割,大小,auto,split,size"
 title = "根據大小/數量自動分割"
 
 [home.autoSplitPDF]
 desc = "自動分割掃描的 PDF，使用實體掃描頁面分割器 QR Code"
-tags = "自動,分割,QR"
+tags = "自動,分割,QR,auto,split,auto split,QR code,QR split,barcode,automatic split,divider page,separator page,scan divider,batch scanning"
 title = "自動分割頁面"
 
 [home.bookletImposition]
 desc = "建立適合列印與裝訂的小冊子頁序與多頁版面"
-tags = "小冊子,列印,裝訂"
+tags = "小冊子,列印,裝訂,booklet,print,binding,imposition,booklet printing,saddle stitch,fold,pamphlet,brochure,print booklet,duplex,two-sided,signature,book layout,page imposition,print layout"
 title = "小冊子拼版"
 
 [home.certSign]
 desc = "使用憑證/金鑰（PEM/P12）簽章 PDF"
-tags = "驗證,PEM,P12,官方,加密,簽署,憑證,PKCS12,JKS,伺服器,手動,自動"
+tags = "驗證,PEM,P12,官方,加密,簽署,憑證,PKCS12,JKS,伺服器,手動,自動,authenticate,official,encrypt,sign,certificate,server,manual,auto,digital certificate,certificate signature,PKI,cryptographic signature,trusted signature"
 title = "使用憑證簽章"
 
 [home.changeMetadata]
 desc = "從 PDF 檔案中變更/移除/新增中繼資料"
-tags = "編輯,修改,更新"
+tags = "編輯,修改,更新,edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 title = "變更中繼資料"
 
 [home.changePermissions]
 desc = "變更文件限制與權限"
-tags = "權限,限制,權利,存取控制,允許,拒絕,列印,複製,編輯,修改權限,安全設定,使用者權利"
+tags = "權限,限制,權利,存取控制,允許,拒絕,列印,複製,編輯,修改權限,安全設定,使用者權利,permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "變更權限"
 
 [home.compare]
 desc = "比較並顯示 2 個 PDF 檔案的差異"
-tags = "差異"
+tags = "差異,difference,compare,diff,compare PDFs,compare documents,find differences,show differences,changes,what changed,track changes,revisions,version compare,side by side,contrast,delta"
 title = "比較"
 
 [home.compress]
 desc = "壓縮 PDF 以減少其檔案大小。"
-tags = "壓縮,減少,最佳化"
+tags = "壓縮,減少,最佳化,shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
 title = "壓縮"
 
 [home.convert]
 desc = "在不同格式之間轉換檔案"
-tags = "轉換,變更"
+tags = "轉換,變更,transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 title = "轉換"
 
 [home.crop]
 desc = "裁剪 PDF 以減少其大小（保持文字！）"
-tags = "裁切,剪裁,調整大小"
+tags = "裁切,剪裁,調整大小,trim,cut,resize,crop,crop PDF,trim PDF,trim margins,remove margins,cut edges,trim borders,remove white space,crop pages,trim pages,reduce margins,set margins"
 title = "裁剪 PDF"
 
 [home.devAirgapped]
 desc = "連結至隔離網路設定指南"
-tags = "離線,隔離,無網路,斷線,安全,網路隔離,獨立運作"
+tags = "離線,隔離,無網路,斷線,安全,網路隔離,獨立運作,air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
 title = "隔離網路設定"
 
 [home.devApi]
 desc = "連結至 API 文件"
-tags = "API,開發,文件"
+tags = "API,開發,文件,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
 title = "API"
 
 [home.devFolderScanning]
 desc = "連結至自動化資料夾掃描指南"
-tags = "自動化,資料夾,掃描"
+tags = "自動化,資料夾,掃描,automation,folder,scanning,watch folder,hot folder,automatic processing,batch,monitor folder,auto process,folder monitoring"
 title = "自動化資料夾掃描"
 
 [home.devSsoGuide]
 desc = "連結至 SSO 指南"
-tags = "SSO,單一登入,驗證,SAML,OAuth,OIDC,登入,企業,身分提供者,IdP"
+tags = "SSO,單一登入,驗證,SAML,OAuth,OIDC,登入,企業,身分提供者,IdP,single sign-on,authentication,login,enterprise,identity provider"
 title = "SSO 指南"
 
 [home.editTableOfContents]
 desc = "在 PDF 檔案中新增或編輯書籤和目錄"
-tags = "書籤,目錄,編輯"
+tags = "書籤,目錄,編輯,bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
 title = "編輯目錄"
 
 [home.extractImages]
 desc = "從 PDF 中提取所有圖片並將它們儲存到壓縮檔中"
-tags = "擷取,儲存,匯出"
+tags = "擷取,儲存,匯出,pull,save,export,extract images,get images,save images,export images,extract photos,extract pictures,pull images,download images,rip images,extract graphics,save photos"
 title = "提取圖片"
 
 [home.extractPages]
 desc = "從 PDF 檔案中擷取特定頁面"
-tags = "擷取,選取,複製"
+tags = "擷取,選取,複製,pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
 title = "提取頁面"
 
 [home.flatten]
 desc = "從 PDF 中移除所有互動元素和表單"
-tags = "簡化,移除,互動"
+tags = "簡化,移除,互動,simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
 title = "平坦化"
 
 [home.getPdfInfo]
 desc = "取得 PDF 的所有可能資訊"
-tags = "資訊,中繼資料,詳細"
+tags = "資訊,中繼資料,詳細,info,metadata,details,PDF info,document info,properties,file info,get info,show info,view properties,document properties,statistics,page count,file details,inspect"
 title = "取得 PDF 的所有資訊"
 
 [home.manageCertificates]
 desc = "匯入、匯出或刪除用於簽署 PDF 的數位憑證檔。"
-tags = "憑證,匯入,匯出"
+tags = "憑證,匯入,匯出,certificates,import,export,manage certificates,digital certificates,certificate management,PFX,P12,keystore,import certificate,export certificate,certificate store,PKI"
 title = "管理憑證"
 
 [home.merge]
 desc = "輕鬆將多個 PDF 合併為一個。"
-tags = "合併,連接,整合"
+tags = "合併,連接,整合,combine,join,unite,merge,merge PDFs,combine PDFs,join PDFs,concatenate,append,stitch,combine files,join files,merge documents"
 title = "合併"
 
 [home.mobile]
@@ -4051,162 +4051,162 @@ workspace = "工作區"
 
 [home.multiTool]
 desc = "合併、旋轉、重新排列和移除頁面"
-tags = "多個,工具"
+tags = "多個,工具,multiple,tools,multi-tool,all-in-one,swiss army,page organizer,page editor,edit pages,manage pages,organize,reorganize"
 title = "PDF 複合工具"
 
 [home.ocr]
 desc = "清理掃描並從 PDF 中的影像中偵測文字並重新新增為文字。"
-tags = "擷取,掃描"
+tags = "擷取,掃描,extract,scan,OCR,optical character recognition,text recognition,scan to text,image to text,scanned document,searchable PDF,make searchable,extract text,recognize text,read scanned"
 title = "OCR / 清理掃描"
 
 [home.overlay-pdfs]
 desc = "將 PDF 覆蓋在另一個 PDF 上"
-tags = "疊加,合併,圖層,重疊,疊加 PDF,圖層 PDF,合併 PDF,堆疊,疊加頁面,背景,前景,合成"
+tags = "疊加,合併,圖層,重疊,疊加 PDF,圖層 PDF,合併 PDF,堆疊,疊加頁面,背景,前景,合成,overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
 title = "覆蓋 PDF"
 
 [home.pageLayout]
 desc = "將 PDF 檔案的多個頁面合併到單一頁面"
-tags = "版面,排列,組合"
+tags = "版面,排列,組合,layout,arrange,combine,N-up,2-up,4-up,multiple per page,pages per sheet,layout pages,tile,grid layout,multi-page layout,combine on page,handout"
 title = "多頁版面配置"
 
 [home.pdfOrganiser]
 desc = "以任何順序移除/重新排列頁面"
-tags = "整理,重新排列,重新排序"
+tags = "整理,重新排列,重新排序,organize,rearrange,reorder,organise,arrange pages,sort,move pages,delete pages,remove pages,page management,page organizer,page organiser,resequence"
 title = "整理"
 
 [home.pdfTextEditor]
 desc = "檢視與編輯 Stirling PDF 的 JSON 匯出，支援群組文字編輯與重新產生 PDF"
-tags = "編輯文字,修改文字,變更文字,編輯內容,更新文字,改寫,校正,修訂,文字編輯器,內容編輯器"
+tags = "編輯文字,修改文字,變更文字,編輯內容,更新文字,改寫,校正,修訂,文字編輯器,內容編輯器,edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF 文字編輯器"
 
 [home.pdfToSinglePage]
 desc = "將所有 PDF 頁面合併為一個大的單一頁面"
-tags = "合併,整合,單頁"
+tags = "合併,整合,單頁,combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
 title = "PDF 轉單一大頁面"
 
 [home.read]
 desc = "檢視並註解 PDFs。可反白文字、繪圖或插入評論以供審閱與協作。"
-tags = "檢視,開啟,顯示"
+tags = "檢視,開啟,顯示,view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
 title = "閱讀"
 
 [home.redact]
 desc = "依據選取的文字、繪製的形狀和選取的頁面塗黑 PDF"
-tags = "遮蔽,塗黑,隱藏"
+tags = "遮蔽,塗黑,隱藏,censor,blackout,hide,redact,redaction,black out,block out,remove sensitive,hide text,privacy,confidential,GDPR,PII,sensitive data,permanently remove,cover up,legal redaction"
 title = "手動塗黑"
 
 [home.removeAnnotations]
 desc = "從 PDF 中移除所有註釋/註解"
-tags = "刪除,清理,去除"
+tags = "刪除,清理,去除,delete,clean,strip,remove annotations,remove comments,delete comments,remove markup,remove highlights,clean annotations,strip comments,remove notes,delete markup,clear comments"
 title = "移除註釋"
 
 [home.removeBlanks]
 desc = "偵測並從文件中移除空白頁面"
-tags = "刪除,清理,空白"
+tags = "刪除,清理,空白,delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
 title = "移除空白頁面"
 
 [home.removeCertSign]
 desc = "從 PDF 移除簽章"
-tags = "移除,刪除,解鎖"
+tags = "移除,刪除,解鎖,remove,delete,unlock,remove certificate,remove signature,delete signature,unsigned,remove digital signature,strip signature,remove cert,unsign"
 title = "移除簽章"
 
 [home.removeImage]
 desc = "從 PDF 中移除圖片以減少檔案大小"
-tags = "移除,刪除,清理"
+tags = "移除,刪除,清理,remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
 title = "移除圖片"
 
 [home.removePages]
 desc = "從您的 PDF 檔案中刪除不需要的頁面。"
-tags = "刪除,擷取,排除"
+tags = "刪除,擷取,排除,delete,extract,exclude,remove pages,delete pages,remove page,delete page,exclude pages,take out pages,discard pages,drop pages"
 title = "移除"
 
 [home.removePassword]
 desc = "從您的 PDF 檔案中移除密碼保護。"
-tags = "解鎖"
+tags = "解鎖,unlock,remove password,unlock PDF,decrypt,remove encryption,unprotect,open protected PDF,password removal,unlock protected,disable password,remove security,remove owner password"
 title = "移除密碼"
 
 [home.reorganizePages]
 desc = "透過視覺化拖放控制，重新排列、複製或刪除 PDF 頁面。"
-tags = "重新排列,重新排序,整理"
+tags = "重新排列,重新排序,整理,rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
 title = "重組頁面"
 
 [home.repair]
 desc = "嘗試修復損壞/破損的 PDF"
-tags = "修復,還原"
+tags = "修復,還原,fix,restore,repair,fix PDF,fix broken,fix corrupt,repair PDF,repair corrupt,broken PDF,corrupt PDF,damaged PDF,recover,fix errors,PDF won't open,can't open PDF,PDF errors,troubleshoot,restore PDF,rebuild,corrupted"
 title = "修復"
 
 [home.replaceColor]
 desc = "在 PDF 檔案中取代或反轉顏色"
-tags = "取代顏色,反轉顏色,顏色取代,交換顏色,變更顏色,反轉,負片,顏色交換,尋找並取代顏色,轉換顏色,顏色變更"
+tags = "取代顏色,反轉顏色,顏色取代,交換顏色,變更顏色,反轉,負片,顏色交換,尋找並取代顏色,轉換顏色,顏色變更,replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
 title = "取代與反轉顏色"
 
 [home.rotate]
 desc = "輕鬆旋轉您的 PDF。"
-tags = "旋轉,翻轉,調整方向"
+tags = "旋轉,翻轉,調整方向,turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "旋轉"
 
 [home.sanitize]
 desc = "移除 PDF 中可能有害的元素"
-tags = "清理,清除,移除"
+tags = "清理,清除,移除,clean,purge,remove,sanitize,sanitise,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
 title = "淨化"
 
 [home.scalePages]
 desc = "修改頁面及其內容的大小/比例。"
-tags = "調整大小,調整,縮放"
+tags = "調整大小,調整,縮放,resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "調整頁面大小/比例"
 
 [home.scannerEffect]
 desc = "建立看起來像是掃描過的 PDF"
-tags = "掃描,模擬,建立"
+tags = "掃描,模擬,建立,scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
 title = "掃描器效果"
 
 [home.scannerImageSplit]
 desc = "偵測並將掃描的照片分割為獨立頁面"
-tags = "偵測,分割,照片"
+tags = "偵測,分割,照片,detect,split,photos,auto detect,detect photos,split photos,separate photos,split scanned images,multiple photos,auto split,photo detection,image detection,scan separation"
 title = "偵測並分割掃描照片"
 
 [home.showJS]
 desc = "搜尋並顯示嵌入 PDF 中的任何 JS（JavaScript）"
-tags = "JavaScript,程式碼,指令碼"
+tags = "JavaScript,程式碼,指令碼,javascript,code,script,show javascript,show JS,find javascript,detect javascript,view javascript,embedded scripts,malware,security,inspect,debug"
 title = "顯示 JavaScript"
 
 [home.sign]
 desc = "透過繪圖、文字或影像新增簽章到 PDF"
-tags = "簽名,署名"
+tags = "簽名,署名,signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
 title = "簽章"
 
 [home.timestampPdf]
 desc = "新增 RFC 3161 文件時間戳記，以證明您的 PDF 於何時存在"
-tags = "時間戳記,RFC 3161,TSA,時間戳記授權機構,文件時間戳記,存在證明,時間戳記權杖,可信時間戳記,簽署時間戳記,公證"
+tags = "時間戳記,RFC 3161,TSA,時間戳記授權機構,文件時間戳記,存在證明,時間戳記權杖,可信時間戳記,簽署時間戳記,公證,timestamp,time stamp authority,document timestamp,proof of existence,timestamp token,trusted timestamp,sign timestamp,notarise"
 title = "PDF 加上時間戳記"
 
 [home.split]
 desc = "將 PDF 分割為多個檔案"
-tags = "分割,分開,拆分"
+tags = "分割,分開,拆分,divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
 title = "分割"
 
 [home.splitByChapters]
 desc = "根據 PDF 的章節結構將其分割成多個檔案。"
-tags = "分割,章節,結構"
+tags = "分割,章節,結構,split,chapters,structure,split by chapters,split by bookmarks,bookmarks,outline,table of contents,TOC split,chapter split,divide by sections"
 title = "依章節分割 PDF"
 
 [home.splitBySections]
 desc = "將 PDF 的每頁分成較小的水平與垂直區塊"
-tags = "分割,區塊,切分"
+tags = "分割,區塊,切分,split,sections,divide,split by sections,grid split,divide pages,split into sections,cut pages,divide grid,section split,horizontal split,vertical split"
 title = "依區塊分割 PDF"
 
 [home.swagger]
 desc = "檢視 API 文件並測試端點"
-tags = "API,文件,測試"
+tags = "API,文件,測試,documentation,test,swagger,API docs,REST API,endpoints,developer,API reference,API testing,OpenAPI,integration,developer docs"
 title = "API 文件"
 
 [home.unlockPDFForms]
 desc = "移除 PDF 檔案中表單欄位的唯讀屬性"
-tags = "解鎖,啟用,編輯"
+tags = "解鎖,啟用,編輯,unlock,enable,edit,unlock forms,enable forms,editable forms,remove read only,make editable,unlock fields,enable editing,form fields,fillable,unprotect forms"
 title = "解鎖 PDF 表單"
 
 [home.validateSignature]
 desc = "驗證 PDF 檔案中的數位簽章與憑證"
-tags = "驗證,校驗,憑證"
+tags = "驗證,校驗,憑證,validate,verify,certificate,validate signature,verify signature,check signature,digital signature,certificate verification,signature validation,authentic,trust,signed,verify certificate"
 title = "驗證 PDF 簽章"
 
 [home.viewPdf]
@@ -4215,7 +4215,7 @@ title = "檢視/編輯 PDF"
 
 [home.watermark]
 desc = "在您的 PDF 檔案中新增自訂浮水印。"
-tags = "圖章,標記,覆蓋"
+tags = "圖章,標記,覆蓋,stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
 title = "新增浮水印"
 
 [HTMLToPDF]
