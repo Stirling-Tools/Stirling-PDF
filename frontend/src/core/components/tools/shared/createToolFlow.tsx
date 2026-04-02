@@ -1,7 +1,8 @@
 import React from 'react';
 import { Stack } from '@mantine/core';
 import { createToolSteps, ToolStepProvider } from '@app/components/tools/shared/ToolStep';
-import OperationButton from '@app/components/tools/shared/OperationButton';
+import { OperationButtonProps } from '@app/components/tools/shared/OperationButton';
+import { ScopedOperationButton } from '@app/components/tools/shared/ScopedOperationButton';
 import { ToolOperationHook } from '@app/hooks/tools/shared/useToolOperation';
 import { ToolWorkflowTitle, ToolWorkflowTitleProps } from '@app/components/tools/shared/ToolWorkflowTitle';
 import { StirlingFile } from '@app/types/fileContext';
@@ -57,6 +58,8 @@ export interface ExecuteButtonConfig {
   disabled?: boolean;
   testId?: string;
   showCloudBadge?: boolean;
+  /** Suppress the automatic "(this file)" / "(N files)" scope hints in the button text. */
+  disableScopeHints?: boolean;
 }
 
 export interface ReviewStepConfig<TParams = unknown> {
@@ -77,6 +80,8 @@ export interface ToolFlowConfig<TParams = unknown> {
   // Optional preview content rendered between steps and the execute button
   preview?: React.ReactNode;
   executeButton?: ExecuteButtonConfig;
+  /** Optional content rendered immediately below the execute button (e.g. contextual help). */
+  belowExecuteButton?: React.ReactNode;
   review: ReviewStepConfig<TParams>;
   forceStepNumbers?: boolean;
 }
@@ -128,17 +133,22 @@ export function createToolFlow<TParams = unknown>(config: ToolFlowConfig<TParams
             : eb.paramsValid === false       ? 'invalidParams'
             : null;
           return (
-            <OperationButton
-              onClick={eb.onClick}
-              isLoading={config.review.operation.isLoading}
-              disabled={eb.disabled}
-              disabledReason={effectiveDisabledReason}
-              loadingText={eb.loadingText}
-              submitText={eb.text}
-              showCloudBadge={eb.showCloudBadge ?? config.review.operation.willUseCloud ?? false}
-              data-testid={eb.testId}
-              data-tour="run-button"
-            />
+            <>
+              <ScopedOperationButton
+                selectedFiles={config.files.selectedFiles ?? []}
+                disableScopeHints={eb.disableScopeHints}
+                onClick={eb.onClick}
+                isLoading={config.review.operation.isLoading}
+                disabled={eb.disabled}
+                disabledReason={effectiveDisabledReason}
+                loadingText={eb.loadingText}
+                submitText={eb.text}
+                showCloudBadge={eb.showCloudBadge ?? config.review.operation.willUseCloud ?? false}
+                data-testid={eb.testId}
+                data-tour="run-button"
+              />
+              {config.belowExecuteButton}
+            </>
           );
         })()}
 

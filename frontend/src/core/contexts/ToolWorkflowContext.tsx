@@ -317,14 +317,16 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     const validToolId = isValidToolId(toolId) ? toolId : null;
     actions.setSelectedTool(validToolId);
 
-    // Get the tool from registry to determine workbench
+    // Get the tool from registry to determine workbench.
+    // Only switch the workbench when explicitly required — either we're leaving a
+    // custom workbench (must return to a base view) or the tool declares a specific
+    // workbench (e.g. Annotate → viewer). Regular tools have no preference, so we
+    // leave the user on whichever view they were already on.
     const tool = getSelectedTool(toolId);
     if (wasInCustomWorkbench) {
       actions.setWorkbench(getDefaultWorkbench());
     } else if (tool && tool.workbench) {
       actions.setWorkbench(tool.workbench);
-    } else {
-      actions.setWorkbench(getDefaultWorkbench());
     }
 
     // Clear search query when selecting a tool
@@ -342,8 +344,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       actions.setWorkbench(getDefaultWorkbench());
     } else if (tool && tool.workbench) {
       actions.setWorkbench(tool.workbench);
-    } else {
-      actions.setWorkbench(getDefaultWorkbench());
     }
     setSearchQuery('');
     setLeftPanelView('toolContent');

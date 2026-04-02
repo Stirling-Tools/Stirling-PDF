@@ -48,7 +48,7 @@ const Compare = (props: BaseToolProps) => {
     useCompareParameters,
     useCompareOperation,
     props,
-    { minFiles: 2 }
+    { minFiles: 2, ignoreViewerScope: true }
   );
 
   const operation = base.operation as CompareOperationHook;
@@ -93,33 +93,56 @@ const Compare = (props: BaseToolProps) => {
   // Register once; avoid re-registering on translation/prop changes which clears data mid-flight
   }, []);
 
-  // Auto-map from workbench selection: always reflect the first two selected files in order.
-  // This also handles deselection by promoting the remaining selection to base and clearing comparison.
+  // On mount: clear selections unless exactly 2 files are loaded.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    // Use selected IDs directly from state so it works even if File objects aren't loaded yet
-    const selectedIds = (fileState.ui.selectedFileIds as FileId[]) ?? [];
+    if ((fileState.files.ids as FileId[]).length !== 2) {
+      fileActions.clearSelections();
+    }
+  }, []);
 
-    // Determine next base: keep current if still selected; otherwise use the first selected id
-    const nextBase: FileId | null = params.baseFileId && selectedIds.includes(params.baseFileId)
-      ? (params.baseFileId as FileId)
-      : (selectedIds[0] ?? null);
+  // Map workbench selection → slots (1st = Original, 2nd = Edited, max 2).
+  // If exactly 2 files exist, auto-fill both slots immediately.
+  // Excludes params from deps to avoid conflicting with direct picker updates.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const selectedIds = fileState.ui.selectedFileIds as FileId[];
+    const allIds = fileState.files.ids as FileId[];
 
-    // Determine next comparison: keep current if still selected and distinct; otherwise use the first other selected id
-    let nextComp: FileId | null = null;
-    if (params.comparisonFileId && selectedIds.includes(params.comparisonFileId) && params.comparisonFileId !== nextBase) {
-      nextComp = params.comparisonFileId as FileId;
-    } else {
-      nextComp = (selectedIds.find(id => id !== nextBase) ?? null) as FileId | null;
+    if (allIds.length === 2) {
+      const [firstId, secondId] = allIds as [FileId, FileId];
+      fileActions.setSelectedFiles([firstId, secondId]);
+      base.params.setParameters(prev => {
+        if (prev.baseFileId === firstId && prev.comparisonFileId === secondId) return prev;
+        return { ...prev, baseFileId: firstId, comparisonFileId: secondId };
+      });
+      return;
     }
 
-    if (nextBase !== params.baseFileId || nextComp !== params.comparisonFileId) {
-      base.params.setParameters(prev => ({
-        ...prev,
-        baseFileId: nextBase,
-        comparisonFileId: nextComp,
-      }));
+    if (selectedIds.length > 2) {
+      fileActions.setSelectedFiles(selectedIds.slice(0, 2) as FileId[]);
+      return;
     }
-  }, [fileState.ui.selectedFileIds, base.params, params.baseFileId, params.comparisonFileId]);
+
+    const nextBase = (selectedIds[0] ?? null) as FileId | null;
+    const nextComp = (selectedIds[1] ?? null) as FileId | null;
+    base.params.setParameters(prev => {
+      if (prev.baseFileId === nextBase && prev.comparisonFileId === nextComp) return prev;
+      return { ...prev, baseFileId: nextBase, comparisonFileId: nextComp };
+    });
+  }, [fileState.ui.selectedFileIds, fileState.files.ids]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Clear a slot if its file is removed from the workbench.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const allIds = fileState.files.ids as FileId[];
+    if (params.baseFileId && !allIds.includes(params.baseFileId as FileId)) {
+      base.params.setParameters(prev => ({ ...prev, baseFileId: null }));
+    }
+    if (params.comparisonFileId && !allIds.includes(params.comparisonFileId as FileId)) {
+      base.params.setParameters(prev => ({ ...prev, comparisonFileId: null }));
+    }
+  }, [fileState.files.ids]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Track workbench data and drive loading/result state transitions
   const lastProcessedAtRef = useRef<number | null>(null);
@@ -576,6 +599,7 @@ const Compare = (props: BaseToolProps) => {
       onClick: handleExecuteCompare,
       disabled: !canExecute,
       testId: 'compare-execute',
+      disableScopeHints: true,
     },
     review: {
       isVisible: false,

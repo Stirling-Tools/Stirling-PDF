@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useFileSelection } from '@app/contexts/FileContext';
 import { useEndpointEnabled } from '@app/hooks/useEndpointConfig';
+import { useViewerScopedFiles } from '@app/hooks/tools/shared/useViewerScopedFiles';
 import { BaseToolProps } from '@app/types/tool';
 import { ToolOperationHook } from '@app/hooks/tools/shared/useToolOperation';
 import { BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
@@ -38,14 +39,30 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
   useParams: () => TParamsHook,
   useOperation: () => ToolOperationHook<TParams>,
   props: BaseToolProps,
-  options?: { minFiles?: number }
+  options?: {
+    minFiles?: number;
+    /**
+     * When true, always uses the full file selection rather than the viewer's
+     * active file. Use for tools like Compare and Merge that manage their own
+     * multi-file logic and should never be scoped to a single viewer file.
+     */
+    ignoreViewerScope?: boolean;
+  }
 ): BaseToolReturn<TParams, TParamsHook> {
   const minFiles = options?.minFiles ?? 1;
+  const ignoreViewerScope = options?.ignoreViewerScope ?? false;
   const { onPreviewFile, onComplete, onError } = props;
 
-  // File selection
-  const { selectedFiles } = useFileSelection();
-  const previousFileCount = useRef(selectedFiles.length);
+  const { selectedFiles: rawSelectedFiles } = useFileSelection();
+  const viewerScopedFiles = useViewerScopedFiles();
+
+  // In the viewer the tool always operates on the file currently shown, so that
+  // "what you see is what gets processed". In the file editor the user has explicitly
+  // chosen files via the selection UI, so we respect that full selection.
+  // Tools that opt out via ignoreViewerScope always use the raw selection.
+  const effectiveFiles = ignoreViewerScope ? rawSelectedFiles : viewerScopedFiles;
+
+  const previousFileCount = useRef(effectiveFiles.length);
 
   // Prevent reset immediately after operation completes (when consumeFiles auto-selects outputs)
   const skipNextSelectionResetRef = useRef(false);
@@ -59,7 +76,7 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(params.getEndpointName());
 
   // Standard computed state - defined early so it's available in useEffects
-  const hasFiles = selectedFiles.length >= minFiles;
+  const hasFiles = effectiveFiles.length >= minFiles;
   const hasResults = operation.files.length > 0 || operation.downloadUrl !== null;
   const settingsCollapsed = !hasFiles || hasResults;
 
@@ -77,13 +94,13 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
     }
   }, [hasResults]);
 
-  // Reset results when user manually changes file selection
+  // Reset results when effective files change (viewer file switch or selection change)
   useEffect(() => {
-    if (selectedFiles.length === 0) return;
+    if (effectiveFiles.length === 0) return;
 
-    const currentSelection = selectedFiles.map(f => f.fileId).sort().join(',');
+    const currentSelection = effectiveFiles.map(f => f.fileId).sort().join(',');
 
-    if (currentSelection === previousSelectionRef.current) return; // No change
+    if (currentSelection === previousSelectionRef.current) return;
 
     // Skip reset if this is the auto-selection after operation completed
     if (skipNextSelectionResetRef.current) {
@@ -92,15 +109,14 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
       return;
     }
 
-    // User manually selected different files - reset results
     previousSelectionRef.current = currentSelection;
     operation.resetResults();
     onPreviewFile?.(null);
-  }, [selectedFiles]);
+  }, [effectiveFiles]);
 
   // Reset parameters when transitioning from 0 files to at least 1 file
   useEffect(() => {
-    const currentFileCount = selectedFiles.length;
+    const currentFileCount = effectiveFiles.length;
     const prevFileCount = previousFileCount.current;
 
     if (prevFileCount === 0 && currentFileCount > 0) {
@@ -108,12 +124,12 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
     }
 
     previousFileCount.current = currentFileCount;
-  }, [selectedFiles.length]);
+  }, [effectiveFiles.length]);
 
   // Standard handlers
   const handleExecute = useCallback(async () => {
     try {
-      await operation.executeOperation(params.parameters, selectedFiles);
+      await operation.executeOperation(params.parameters, effectiveFiles);
       if (operation.files && onComplete) {
         onComplete(operation.files);
       }
@@ -123,7 +139,7 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
         onError(message);
       }
     }
-  }, [operation, params.parameters, selectedFiles, onComplete, onError, toolName]);
+  }, [operation, params.parameters, effectiveFiles, onComplete, onError, toolName]);
 
   const handleThumbnailClick = useCallback((file: File) => {
     onPreviewFile?.(file);
@@ -143,7 +159,7 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
 
   return {
     // File management
-    selectedFiles,
+    selectedFiles: effectiveFiles,
 
     // Tool-specific hooks
     params,

@@ -4422,6 +4422,8 @@ title = "Markdown To PDF"
 submit = "Merge"
 tags = "merge,Page operations,Back end,server side"
 title = "Merge"
+viewerModeHint = "Merge needs 2 or more files. Head to the file editor to select them."
+goToFileEditor = "Go to file editor"
 
 [merge.error]
 failed = "An error occurred while merging the PDFs."
@@ -7523,6 +7525,10 @@ endpointUnavailable = "This tool is unavailable on your server."
 endpointUnavailableClickable = "Not available in this mode. Click to sign in."
 invalidParams = "Fill in the required settings."
 noFiles = "Add a file to get started."
+viewerMode = "Switch to the file editor to select multiple files."
+singleFileScope = "Only applying to: {{fileName}}"
+scopeThisFile = "this file"
+scopeFiles = "files"
 
 [tools]
 noSearchResults = "No tools found"

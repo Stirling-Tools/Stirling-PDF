@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useFileSelection } from "@app/contexts/FileContext";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
+import { useViewerScopedFiles } from "@app/hooks/tools/shared/useViewerScopedFiles";
 import { useAddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
 import { useAddStampOperation } from "@app/components/tools/addStamp/useAddStampOperation";
 import { Stack, Text } from "@mantine/core";
@@ -17,7 +17,7 @@ import StampPositionFormattingSettings from "@app/components/tools/addStamp/Stam
 
 const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { selectedFiles } = useFileSelection();
+  const selectedFiles = useViewerScopedFiles();
 
   const [quickPositionModeSelected, setQuickPositionModeSelected] = useState(false);
   const [customPositionModeSelected, setCustomPositionModeSelected] = useState(true);

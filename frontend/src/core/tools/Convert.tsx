@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useFileState, useFileSelection } from "@app/contexts/FileContext";
+import { useFileState } from "@app/contexts/FileContext";
+import { useViewerScopedFiles } from "@app/hooks/tools/shared/useViewerScopedFiles";
 
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 
@@ -15,7 +16,7 @@ const Convert = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
   const { selectors } = useFileState();
   const activeFiles = selectors.getFiles();
-  const { selectedFiles } = useFileSelection();
+  const selectedFiles = useViewerScopedFiles();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const convertParams = useConvertParameters();

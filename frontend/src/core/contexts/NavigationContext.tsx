@@ -241,9 +241,11 @@ export const NavigationProvider: React.FC<{
           return;
         }
 
-        // Look up the tool in the registry to get its proper workbench
-        const tool = isValidToolId(toolId)? toolRegistry[toolId] : null;
-        const workbench = tool ? (tool.workbench || getDefaultWorkbench()) : getDefaultWorkbench();
+        // Look up the tool in the registry to get its proper workbench.
+        // Regular tools have no workbench preference — keep the current view so
+        // opening a tool doesn't unexpectedly switch the user to the viewer.
+        const tool = isValidToolId(toolId) ? toolRegistry[toolId] : null;
+        const workbench = (tool && tool.workbench) ? tool.workbench : state.workbench;
 
         // Validate toolId and convert to ToolId type
         const validToolId = isValidToolId(toolId) ? toolId : null;
