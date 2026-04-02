@@ -1,69 +1,69 @@
-# Viewer Scope Testing Guide
+# View Scope Testing Guide
 
-Tests the fix ensuring tools only process the **currently viewed file** when
-triggered from the viewer, not all selected files.
+## Fix 1 — Viewer bug (8 tools)
 
-## Setup (applies to all tests)
+8 tools called `useFileSelection()` directly instead of routing through
+`useBaseTool`. In the viewer, this meant they operated on **all selected files**
+instead of only the one being viewed. For example: 10 files loaded, viewing
+file 3, running Add Stamp — all 10 files got stamped.
 
-1. Load **3+ files** into the workbench
-2. Select all of them
-3. Open the viewer and navigate to a **specific file** (not the first one)
-4. Open the tool from the viewer sidebar
-5. Run the operation
-6. **Expected**: only the viewed file is processed; other files are unchanged
+**Root cause:** These tools had no viewer-scope awareness. `useFileSelection()`
+returns the raw workbench selection with no knowledge of which file is active in
+the viewer.
 
----
+**Fix:** A new hook `useViewScopedFiles` was introduced:
 
-## Category 1 — Tools using `useBaseTool` (were already correct)
+```ts
+// Viewer → only the active file
+// Everywhere else → all loaded files
+const selectedFiles = useViewScopedFiles();
+```
 
-These use `useBaseTool` which has always applied viewer scope. Smoke-test only
-to confirm no regression.
+The 8 tools were updated to call this instead of `useFileSelection()`.
 
-| Tool | Notes |
-|---|---|
-| Compress | Single-file tool |
-| Rotate | Single-file tool |
-| Split | Multi-page output |
-| Remove Pages | |
-| Extract Pages | |
-| Extract Images | |
-| Flatten | |
-| Repair | |
-| Sanitize | |
-| Remove Blanks | |
-| Remove Annotations | |
-| Remove Password | |
-| Add Certificate Sign | |
-| Change Metadata | |
-| Change Permissions | |
-| Crop | |
-| Adjust Contrast | |
-| Adjust Page Scale | |
-| Page Layout | |
-| Booklet Imposition | |
-| Single Large Page | |
-| Get PDF Info | |
-| Auto Rename | |
-| Overlay PDFs | |
-| Remove Image | |
-| Replace Color | |
-| Scanner Image Split | |
-| Timestamp PDF | |
-| Unlock PDF Forms | |
-| Validate Signature | |
-| Remove Certificate Sign | |
-| Redact | |
-| Edit Table of Contents | Uses `useBaseTool`; `useFileSelection` only for `clearSelections` |
-| Show JS | Uses `useBaseTool`; `useFileSelection` only for `clearSelections` |
+**Tools fixed:** Add Stamp, Add Watermark, Add Password, Add Page Numbers,
+Add Attachments, Reorganize Pages, OCR, Convert
 
 ---
 
-## Category 2 — Tools fixed in this PR (were broken, now fixed)
+## Fix 2 — Page selector / active files context (all tools)
 
-These bypassed `useBaseTool` and have been updated to use `useViewerScopedFiles`.
+`useBaseTool` returned `selectedFiles` (checked files only) in non-viewer
+contexts. In the page selector this is typically empty or stale — not the full
+set of loaded files that tools should operate on.
+
+**Fix:** `useBaseTool` was updated to use `useViewScopedFiles`, which returns
+all loaded files in non-viewer contexts. This affected every tool via
+`useBaseTool`.
+
+---
+
+## Workarounds for Compare & Merge
+
+Two tools intentionally need all loaded files regardless of view, so they use
+`ignoreViewerScope: true` in `useBaseTool`.
+
+**Compare** — needs exactly 2 files for its Original/Edited slots. Scoping to
+one file would break the comparison entirely. `ignoreViewerScope: true` is set
+and `disableScopeHints: true` hides the "(this file)" button label hint. The
+slot auto-mapping logic was also improved alongside this fix.
+
+**Merge** — needs 2+ files; merging a single file is meaningless. Rather than
+leaving the button silently disabled, Merge now:
+- Auto-redirects to the active files view on first open from the viewer
+- If the user navigates back to the viewer, shows a disabled button with a hint
+  and a "Go to active files view" shortcut button
+
+---
+
+## How to Test
+
+---
+
+## Fix 1 — 8 tools (viewer scoping)
 
 ### Test steps (same for each)
-1. Load 3 PDFs into workbench, select all
+1. Load 3 PDFs into workbench
 2. Open viewer, navigate to file **#2**
 3. Open the tool, configure settings, run
 4. ✅ Only file #2 is in the results
@@ -83,24 +83,29 @@ These bypassed `useBaseTool` and have been updated to use `useViewerScopedFiles`
 
 ---
 
-## Category 3 — Compare (intentionally ignores viewer scope)
+## Fix 2 — All tools (page selector context)
 
-Compare always needs exactly 2 files and must never be scoped to a single viewer
-file. `ignoreViewerScope: true` is set explicitly.
+### Test steps
+1. Load 3 PDFs into workbench
+2. Open the page selector view, do **not** check any files
+3. Open any tool from the sidebar, run it
+4. ✅ All 3 files are processed (not zero or a stale subset)
 
-### Tests
+---
+
+## Compare (intentionally ignores view scope)
 
 **A — Auto-fill with exactly 2 files**
 1. Load exactly 2 PDFs
-2. Open Compare from either the viewer or file editor
+2. Open Compare from either the viewer or active files view
 3. ✅ Both slots are filled automatically (Original + Edited)
 4. ✅ No scope hint appears on the button
 
 **B — Manual selection with 3+ files**
-1. Load 3+ PDFs, select any 2
+1. Load 3+ PDFs
 2. Open Compare
-3. ✅ The 2 selected files fill the slots
-4. ✅ Selecting a 3rd file does not add a 3rd slot (capped at 2)
+3. ✅ The first 2 files fill the slots
+4. ✅ A 3rd file does not add a 3rd slot (capped at 2)
 
 **C — File removed mid-session**
 1. Load 2 PDFs, let Compare auto-fill both slots
@@ -114,21 +119,21 @@ file. `ignoreViewerScope: true` is set explicitly.
 
 ---
 
-## Category 4 — Merge (intentionally ignores viewer scope, disabled in viewer)
+## Merge (intentionally ignores view scope, disabled in viewer)
 
-Merge requires 2+ files and is disabled in viewer mode with a redirect hint.
-
-### Tests
-
-**A — Viewer mode disabled state**
-1. Load 2+ PDFs, open viewer
+**A — Auto-redirect on first open from viewer**
+1. Load 2+ PDFs, open the viewer
 2. Open Merge from the viewer sidebar
-3. ✅ Execute button is **disabled** with tooltip "Switch to the file editor to select multiple files"
-4. ✅ A note appears below the button: *"Merge needs 2 or more files. Head to the file editor to select them."*
-5. ✅ A **"Go to file editor"** button is shown; clicking it navigates to the file editor
+3. ✅ Immediately redirected to the active files view
 
-**B — File editor mode works normally**
-1. Load 3 PDFs, select all, open Merge from the file editor
+**B — Viewer mode disabled state (after navigating back)**
+1. From the active files view, open Merge, then navigate back to the viewer
+2. ✅ Execute button is **disabled** with tooltip "Switch to the file editor to select multiple files"
+3. ✅ A note appears: *"Merge needs 2 or more files. Head to the file editor to select them."*
+4. ✅ A **"Go to active files view"** button is shown; clicking it navigates back
+
+**C — Active files view works normally**
+1. Load 3 PDFs, open Merge from the active files view
 2. ✅ All 3 files appear in the merge list
 3. ✅ Button shows **"Merge (3 files)"**
 4. Run the merge
@@ -142,7 +147,7 @@ Merge requires 2+ files and is disabled in viewer mode with a redirect hint.
 |---|---|
 | Viewer, 1 file loaded | `[Action]` (no suffix) |
 | Viewer, 2+ files loaded | `[Action] (this file)` |
-| File editor, 1 file selected | `[Action]` (no suffix) |
-| File editor, 2+ files selected | `[Action] (N files)` |
+| Active files view, 1 file loaded | `[Action]` (no suffix) |
+| Active files view, 2+ files loaded | `[Action] (N files)` |
 | Merge in viewer | disabled — no suffix |
 | Compare | never shows scope suffix (`disableScopeHints: true`) |

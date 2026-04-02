@@ -1,18 +1,20 @@
 import { useMemo } from 'react';
-import { useFileSelection, useAllFiles } from '@app/contexts/FileContext';
+import { useAllFiles } from '@app/contexts/FileContext';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { useNavigationState } from '@app/contexts/NavigationContext';
 import { StirlingFile } from '@app/types/fileContext';
 
 /**
- * Returns the effective file selection for tool operations.
+ * Returns the effective file set for tool operations.
  *
- * In viewer mode, scopes to the single file currently shown so that
- * "what you see is what gets processed". In file-editor mode the full
- * selection is returned unchanged.
+ * - Viewer: scopes to the single file currently shown ("what you see is what gets processed").
+ * - All other views (pageEditor, fileEditor, custom): returns all loaded files.
+ *
+ * Individual file selection is intentionally ignored outside the viewer — in views
+ * like the page selector, selection tracks pages not files, and tools should
+ * operate on the full active file set.
  */
 export function useViewScopedFiles(): StirlingFile[] {
-  const { selectedFiles } = useFileSelection();
   const { activeFileIndex } = useViewer();
   const { files: allFiles } = useAllFiles();
   const { workbench } = useNavigationState();
@@ -20,8 +22,8 @@ export function useViewScopedFiles(): StirlingFile[] {
   return useMemo(() => {
     if (workbench === 'viewer') {
       const viewerFile = allFiles[activeFileIndex];
-      return viewerFile ? [viewerFile] : selectedFiles;
+      return viewerFile ? [viewerFile] : allFiles;
     }
-    return selectedFiles;
-  }, [workbench, allFiles, activeFileIndex, selectedFiles]);
+    return allFiles;
+  }, [workbench, allFiles, activeFileIndex]);
 }

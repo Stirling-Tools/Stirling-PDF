@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useRef } from 'react';
-import { useFileSelection } from '@app/contexts/FileContext';
+import { useAllFiles } from '@app/contexts/FileContext';
 import { useEndpointEnabled } from '@app/hooks/useEndpointConfig';
 import { useViewScopedFiles } from '@app/hooks/tools/shared/useViewScopedFiles';
 import { BaseToolProps } from '@app/types/tool';
@@ -53,14 +53,14 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
   const ignoreViewerScope = options?.ignoreViewerScope ?? false;
   const { onPreviewFile, onComplete, onError } = props;
 
-  const { selectedFiles: rawSelectedFiles } = useFileSelection();
+  const { files: allFiles } = useAllFiles();
   const viewerScopedFiles = useViewScopedFiles();
 
   // In the viewer the tool always operates on the file currently shown, so that
-  // "what you see is what gets processed". In the file editor the user has explicitly
-  // chosen files via the selection UI, so we respect that full selection.
-  // Tools that opt out via ignoreViewerScope always use the raw selection.
-  const effectiveFiles = ignoreViewerScope ? rawSelectedFiles : viewerScopedFiles;
+  // "what you see is what gets processed". Outside the viewer (pageEditor, fileEditor,
+  // custom) tools operate on all loaded files. Tools with ignoreViewerScope also
+  // receive all loaded files, bypassing the single-file viewer scoping.
+  const effectiveFiles = ignoreViewerScope ? allFiles : viewerScopedFiles;
 
   const previousFileCount = useRef(effectiveFiles.length);
 
