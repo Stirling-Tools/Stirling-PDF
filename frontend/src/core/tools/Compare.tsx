@@ -109,7 +109,11 @@ const Compare = (props: BaseToolProps) => {
 
     if (allIds.length === 2) {
       const [firstId, secondId] = allIds as [FileId, FileId];
-      fileActions.setSelectedFiles([firstId, secondId]);
+      const alreadySelected =
+        selectedIds.length === 2 && selectedIds[0] === firstId && selectedIds[1] === secondId;
+      if (!alreadySelected) {
+        fileActions.setSelectedFiles([firstId, secondId]);
+      }
       base.params.setParameters(prev => {
         if (prev.baseFileId === firstId && prev.comparisonFileId === secondId) return prev;
         return { ...prev, baseFileId: firstId, comparisonFileId: secondId };
