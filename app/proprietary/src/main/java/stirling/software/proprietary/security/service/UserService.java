@@ -198,6 +198,15 @@ public class UserService implements UserServiceInterface {
         return user.getApiKey();
     }
 
+    @Override
+    public String getCurrentUserApiKey() {
+        String username = getCurrentUsername();
+        if (username == null || username.isEmpty()) {
+            throw new IllegalStateException("Cannot determine calling user for API key lookup");
+        }
+        return getApiKeyForUser(username);
+    }
+
     public boolean isValidApiKey(String apiKey) {
         return userRepository.findByApiKey(apiKey).isPresent();
     }

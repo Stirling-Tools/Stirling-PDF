@@ -18,9 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -104,8 +101,7 @@ public class PipelineProcessor {
             path = pathStart != -1 ? url.substring(pathStart) : "/";
         }
         final String pathToCheck = path;
-        boolean allowed =
-                ALLOWED_PIPELINE_PATH_PREFIXES.stream().anyMatch(pathToCheck::contains);
+        boolean allowed = ALLOWED_PIPELINE_PATH_PREFIXES.stream().anyMatch(pathToCheck::contains);
         if (!allowed) {
             log.warn("Blocked pipeline request to disallowed URL: {}", url);
             throw new SecurityException(
@@ -115,13 +111,7 @@ public class PipelineProcessor {
 
     private String getApiKeyForUser() {
         if (userService == null) return "";
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null
-                && auth.isAuthenticated()
-                && !"anonymousUser".equals(auth.getName())) {
-            return userService.getApiKeyForUser(auth.getName());
-        }
-        throw new AccessDeniedException("Cannot determine calling user for pipeline request");
+        return userService.getCurrentUserApiKey();
     }
 
     private String getBaseUrl() {
