@@ -11,7 +11,7 @@ from stirling.models import OPERATIONS, ApiModel, OperationId, ParamToolModel
 class PdfContentType(StrEnum):
     """Types of content that can be extracted from a PDF and sent to the AI.
 
-    Java counterpart: AiPdfContentType.java — values must stay in sync.
+    Java counterpart: AiPdfContentType.java - values must stay in sync.
     """
 
     # Document-level structured data
@@ -43,7 +43,7 @@ class PdfContentType(StrEnum):
 class WorkflowOutcome(StrEnum):
     """Discriminator values for all workflow response unions (outcome field).
 
-    Java counterpart: AiWorkflowOutcome.java — values must stay in sync.
+    Java counterpart: AiWorkflowOutcome.java - values must stay in sync.
     """
 
     ANSWER = "answer"
@@ -60,7 +60,10 @@ class WorkflowOutcome(StrEnum):
 
 
 class ArtifactKind(StrEnum):
-    """Discriminator values for WorkflowArtifact unions (kind field)."""
+    """Discriminator values for WorkflowArtifact unions (kind field).
+
+    Java counterpart: PdfContentExtractor.ArtifactKind - values must stay in sync.
+    """
 
     EXTRACTED_TEXT = "extracted_text"
 
