@@ -6,15 +6,12 @@ LedgerExaminer  (Round 1, /api/ledger/examine)
     Java must extract before validation can begin.
 
 LedgerAuditor   (Round 2, /api/ledger/deliberate)
-    Receives Evidence (folios with text, tables, OCR) and uses its tool
-    suite to validate every figure it can find, then returns a Verdict.
-
-Protocol note:
-    The Auditor always returns a Verdict — it works with whatever evidence
-    Java provides. If evidence for a page is absent (e.g. OCR not wired yet),
-    that page is listed in Verdict.unauditable_pages so the caller knows
-    coverage was incomplete. A further Requisition from the Auditor is not
-    needed: the Examiner handles all dependency declaration up front.
+    Processes Evidence per-page:
+      1. Deterministic pass — TallyChecker + ArithmeticScanner on every folio
+      2. Fast-model pass  — extract named figures from each page (parallel)
+      3. FigureTracker    — cross-page consistency check
+      4. Fast-model call  — generate human-readable summary
+      5. Assemble Verdict programmatically
 
 Neither agent ever touches a PDF file. All content arrives pre-extracted
 by Java, which owns the PDF from start to finish.
@@ -23,17 +20,24 @@ by Java, which owns the PDF from start to finish.
 from __future__ import annotations
 
 import logging
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import Final
 
-from pydantic_ai import Agent, RunContext
+from pydantic import BaseModel, Field
+from pydantic_ai import Agent
 
 from ai_logging import SessionLogger
-from config import FAST_MODEL, SMART_MODEL, get_pydantic_ai_model_id
-from .deps import AuditContext
-from .models import Discrepancy, Evidence, FolioManifest, Requisition, Verdict
-from .prompts import AUDITOR_SYSTEM_PROMPT, EXAMINER_SYSTEM_PROMPT
-from .validators import ArithmeticScanner, TallyChecker
+from config import FAST_MODEL, get_pydantic_ai_model_id
+from .models import (
+    Discrepancy, Evidence, Folio,
+    FolioManifest, Requisition, Verdict,
+)
+from .prompts import (
+    EXAMINER_SYSTEM_PROMPT,
+    FIGURE_EXTRACTOR_PROMPT,
+    SUMMARY_PROMPT,
+)
+from .validators import ArithmeticScanner, FigureTracker, TallyChecker
 
 logger = logging.getLogger(__name__)
 
@@ -89,148 +93,167 @@ def examine(manifest: FolioManifest) -> Requisition:
 
 
 # ---------------------------------------------------------------------------
-# LedgerAuditor — Round 2: validate the evidence, render a verdict
+# Structured output models for the per-page figure extractor
 # ---------------------------------------------------------------------------
 
-ledger_auditor: Final[Agent[AuditContext, Verdict]] = Agent(
-    model=get_pydantic_ai_model_id(SMART_MODEL),
-    deps_type=AuditContext,
-    output_type=Verdict,
-    system_prompt=AUDITOR_SYSTEM_PROMPT,
+
+class ExtractedFigure(BaseModel):
+    """A single named figure found on a page."""
+    label: str = Field(description="Normalised name, e.g. 'Total Revenue', 'VAT'.")
+    value: str = Field(description="Numeric value as a string, e.g. '1200.00'.")
+    raw: str = Field(description="Original text from the document, e.g. '£1,200.00'.")
+
+
+class FigureExtractionResult(BaseModel):
+    """All named figures found on a single page."""
+    figures: list[ExtractedFigure] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# Per-page figure extractor — fast model, one call per page
+# ---------------------------------------------------------------------------
+
+figure_extractor: Final[Agent[None, FigureExtractionResult]] = Agent(
+    model=get_pydantic_ai_model_id(FAST_MODEL),
+    output_type=FigureExtractionResult,
+    system_prompt=FIGURE_EXTRACTOR_PROMPT,
 )
 
 
-@ledger_auditor.tool
-def check_tally(
-    ctx: RunContext[AuditContext],
-    page: int,
-    table_csv: str,
-    total_row_index: int | None = None,
-    total_col_index: int | None = None,
-) -> list[Discrepancy]:
+def _extract_figures_for_page(
+    folio: Folio,
+    slog: SessionLogger | None,
+) -> list[tuple[ExtractedFigure, int]]:
     """
-    Verify that row and column totals in a CSV table balance arithmetically.
-    Returns a list of Discrepancy objects (empty if the table is clean).
-
-    page            — 0-indexed page number
-    table_csv       — Tabula CSV string for one table
-    total_row_index — which row holds column totals (None = heuristic: last row)
-    total_col_index — which column holds row totals (None = heuristic: last column)
+    Ask the fast model to identify named figures on a single page.
+    Returns list of (figure, page_number) tuples.
     """
-    checker = TallyChecker(tolerance=ctx.deps.tolerance)
-    result = checker.check(page, table_csv, total_row_index, total_col_index)
-    if ctx.deps.slog:
-        ctx.deps.slog.tool_call("check_tally", args={
-            "page": page, "table_csv": table_csv,
-            "total_row_index": total_row_index,
-            "total_col_index": total_col_index,
-        }, result=[d.model_dump() for d in result])
-    return result
+    text = folio.readable_text
+    if not text or not text.strip():
+        return []
 
-
-@ledger_auditor.tool
-def scan_arithmetic(
-    ctx: RunContext[AuditContext],
-    page: int,
-    text: str,
-) -> list[Discrepancy]:
-    """
-    Find and verify inline arithmetic expressions in a block of text.
-    Checks patterns like '100 + 200 = 300' and 'Total: 450 (200 + 150 + 100)'.
-    Returns a list of Discrepancy objects (empty if all arithmetic is correct).
-
-    page — 0-indexed page number
-    text — the plain-text content of the folio (or a relevant excerpt)
-    """
-    scanner = ArithmeticScanner(tolerance=ctx.deps.tolerance)
-    result = scanner.scan(page, text)
-    if ctx.deps.slog:
-        ctx.deps.slog.tool_call("scan_arithmetic", args={
-            "page": page, "text": text[:200],
-        }, result=[d.model_dump() for d in result])
-    return result
-
-
-@ledger_auditor.tool
-def register_figure(
-    ctx: RunContext[AuditContext],
-    label: str,
-    value_str: str,
-    page: int,
-    raw: str,
-) -> str:
-    """
-    Register a named numeric figure for cross-page consistency checking.
-    Call this for every significant named figure you encounter
-    (e.g. "Total Revenue", "Net Profit", "VAT").
-
-    label     — normalised human-readable name of the figure
-    value_str — the numeric value as a string (e.g. "1200.00")
-    page      — 0-indexed page number where this figure appears
-    raw       — the original text from the document (e.g. "£1,200.00")
-
-    Returns "recorded" on success or an error message.
-    """
+    logger.info(
+        "[ledger] extracting figures from page %d (%d chars)",
+        folio.page, len(text),
+    )
+    prompt = f"Page {folio.page + 1} text:\n{text}"
     try:
-        value = Decimal(value_str.replace(",", "").strip())
-    except InvalidOperation:
-        msg = f"Could not parse '{value_str}' as a number — figure not recorded."
-        if ctx.deps.slog:
-            ctx.deps.slog.tool_call("register_figure", args={
-                "label": label, "value_str": value_str, "page": page, "raw": raw,
-            }, result=msg)
-        return msg
+        result = figure_extractor.run_sync(prompt)
+        figures = result.output.figures
+    except Exception:
+        logger.warning(
+            "[ledger] figure extraction failed for page %d, skipping",
+            folio.page,
+            exc_info=True,
+        )
+        figures = []
 
-    ctx.deps.figure_registry.record(label=label, value=value, page=page, raw=raw)
-    if ctx.deps.slog:
-        ctx.deps.slog.tool_call("register_figure", args={
-            "label": label, "value_str": value_str, "page": page, "raw": raw,
-        }, result="recorded")
-    return "recorded"
+    if slog:
+        slog.tool_call("extract_figures", args={
+            "page": folio.page,
+            "text_length": len(text),
+        }, result=[f.model_dump() for f in figures])
+
+    return [(fig, folio.page) for fig in figures]
 
 
-@ledger_auditor.tool
-def check_figure_consistency(ctx: RunContext[AuditContext]) -> list[Discrepancy]:
-    """
-    Check all registered figures for cross-page consistency.
-    Call this once after registering all figures you have encountered.
-    Returns a Discrepancy for every figure that is cited with different
-    values on different pages.
-    """
-    result = ctx.deps.figure_registry.conflicts()
-    if ctx.deps.slog:
-        ctx.deps.slog.tool_call("check_figure_consistency",
-                                result=[d.model_dump() for d in result])
-    return result
+# ---------------------------------------------------------------------------
+# Summary generator — fast model, one call with just the discrepancy list
+# ---------------------------------------------------------------------------
 
+summary_agent: Final[Agent[None, str]] = Agent(
+    model=get_pydantic_ai_model_id(FAST_MODEL),
+    output_type=str,
+    system_prompt=SUMMARY_PROMPT,
+)
+
+
+def _generate_summary(
+    discrepancies: list[Discrepancy],
+    pages_examined: list[int],
+    unauditable_pages: list[int],
+    slog: SessionLogger | None,
+) -> str:
+    """Generate a 1-2 sentence user-facing summary from the discrepancy list."""
+    error_count = sum(1 for d in discrepancies if d.severity == "error")
+    warning_count = sum(1 for d in discrepancies if d.severity == "warning")
+
+    prompt = (
+        f"Errors: {error_count}, Warnings: {warning_count}, "
+        f"Pages examined: {len(pages_examined)}, "
+        f"Unauditable pages: "
+        f"{unauditable_pages or 'none'}.\n"
+    )
+    if discrepancies:
+        prompt += "Discrepancies:\n"
+        for d in discrepancies:
+            prompt += (
+                f"  - [{d.severity}] p{d.page + 1}: "
+                f"{d.description}\n"
+            )
+
+    try:
+        result = summary_agent.run_sync(prompt)
+        summary = result.output
+    except Exception:
+        logger.warning(
+            "[ledger] summary generation failed, using fallback",
+            exc_info=True,
+        )
+        summary = _fallback_summary(
+            error_count, warning_count,
+            pages_examined, unauditable_pages,
+        )
+
+    if slog:
+        slog.response("summary", body={"summary": summary})
+
+    return summary
+
+
+def _fallback_summary(
+    error_count: int,
+    warning_count: int,
+    pages_examined: list[int],
+    unauditable_pages: list[int],
+) -> str:
+    """Deterministic fallback if the summary model fails."""
+    parts = []
+    if error_count == 0 and warning_count == 0:
+        parts.append(f"No mathematical errors found across {len(pages_examined)} pages.")
+    else:
+        if error_count:
+            parts.append(f"Found {error_count} error{'s' if error_count != 1 else ''}.")
+        if warning_count:
+            parts.append(f"Found {warning_count} warning{'s' if warning_count != 1 else ''}.")
+    if unauditable_pages:
+        parts.append(
+            f"Pages {', '.join(str(p + 1) for p in unauditable_pages)} "
+            "could not be audited (OCR unavailable)."
+        )
+    return " ".join(parts)
+
+
+# ---------------------------------------------------------------------------
+# LedgerAuditor — deterministic-first, LLM-lite audit pipeline
+# ---------------------------------------------------------------------------
 
 def audit(evidence: Evidence, tolerance: Decimal = Decimal("0.01")) -> Verdict:
     """
-    Run the Auditor against a fulfilled Evidence payload.
-    Returns the Verdict the Auditor renders after inspecting all folios.
-    Synchronous — safe to call directly from a Flask route handler.
+    Audit the evidence using a deterministic-first pipeline:
 
-    If a folio was requested but not provided (e.g. OCR pages Java couldn't
-    process), the Auditor notes those pages in Verdict.unauditable_pages.
+    1. Run TallyChecker + ArithmeticScanner on every folio (no LLM, instant)
+    2. Extract named figures per-page with fast model (parallel)
+    3. Run FigureTracker cross-page consistency check (no LLM)
+    4. Generate human summary with fast model (one small call)
+    5. Assemble Verdict
+
+    This replaces the previous single-smart-model approach. Benefits:
+    - Scales linearly with page count (no single giant prompt)
+    - Uses fast model only where LLM is actually needed
+    - Deterministic validators run instantly regardless of document size
     """
     slog = SessionLogger(evidence.session_id)
-    context = AuditContext(evidence=evidence, tolerance=tolerance, slog=slog)
-
-    folio_summary = "\n".join(
-        f"  Page {f.page + 1}: "
-        f"{'text ✓' if f.text else 'text ✗'} "
-        f"{'tables ✓' if f.tables else ''} "
-        f"{'OCR ✓' if f.ocr_text else ''}"
-        for f in evidence.folios
-    )
-
-    prompt = (
-        f"Audit this evidence. Session: {evidence.session_id}, "
-        f"Round: {evidence.round}, Final: {evidence.final_round}.\n\n"
-        f"Available folios:\n{folio_summary}\n\n"
-        f"Folio content (JSON):\n{evidence.model_dump_json()}"
-    )
-
     logger.info(
         "[ledger] session=%s round=%d auditing %d folios (final=%s)",
         evidence.session_id,
@@ -239,19 +262,112 @@ def audit(evidence: Evidence, tolerance: Decimal = Decimal("0.01")) -> Verdict:
         evidence.final_round,
     )
 
-    slog.request("deliberate", body={
-        "model": get_pydantic_ai_model_id(SMART_MODEL),
-        "system_prompt": AUDITOR_SYSTEM_PROMPT,
-        "user_prompt": prompt,
-        "evidence": evidence.model_dump(),
-    })
+    all_discrepancies: list[Discrepancy] = []
+    pages_examined: list[int] = []
+    figure_tracker = FigureTracker(tolerance=tolerance)
 
-    result = ledger_auditor.run_sync(
-        prompt,
-        deps=context,
-        model_settings={"timeout": 90.0},
+    # ------------------------------------------------------------------
+    # Step 1: Deterministic validation — instant, no LLM
+    # ------------------------------------------------------------------
+    tally_checker = TallyChecker(tolerance=tolerance)
+    arithmetic_scanner = ArithmeticScanner(tolerance=tolerance)
+
+    for folio in evidence.folios:
+        pages_examined.append(folio.page)
+
+        # Check tables
+        if folio.tables:
+            for table_csv in folio.tables:
+                results = tally_checker.check(folio.page, table_csv)
+                all_discrepancies.extend(results)
+                if slog:
+                    slog.tool_call("check_tally", args={
+                        "page": folio.page,
+                        "table_csv": table_csv[:200],
+                    }, result=[d.model_dump() for d in results])
+
+        # Check inline arithmetic
+        text = folio.readable_text
+        if text and text.strip():
+            results = arithmetic_scanner.scan(folio.page, text)
+            all_discrepancies.extend(results)
+            if slog:
+                slog.tool_call("scan_arithmetic", args={
+                    "page": folio.page,
+                    "text_length": len(text),
+                }, result=[d.model_dump() for d in results])
+
+    logger.info(
+        "[ledger] session=%s deterministic pass: %d discrepancies from %d pages",
+        evidence.session_id,
+        len(all_discrepancies),
+        len(pages_examined),
     )
-    verdict = result.output
+
+    # ------------------------------------------------------------------
+    # Step 2: Figure extraction — fast model, per-page
+    # ------------------------------------------------------------------
+    folios_with_text = [
+        f for f in evidence.folios if f.readable_text.strip()
+    ]
+    logger.info(
+        "[ledger] session=%s step 2: extracting figures from %d pages",
+        evidence.session_id,
+        len(folios_with_text),
+    )
+
+    for folio in folios_with_text:
+        for fig, page in _extract_figures_for_page(folio, slog):
+            figure_tracker.record(
+                label=fig.label,
+                value=Decimal(
+                    fig.value.replace(",", "").strip()
+                ),
+                page=page,
+                raw=fig.raw,
+            )
+
+    logger.info(
+        "[ledger] session=%s step 2 complete: %d figures registered",
+        evidence.session_id,
+        figure_tracker.entry_count,
+    )
+
+    # ------------------------------------------------------------------
+    # Step 3: Cross-page consistency — deterministic
+    # ------------------------------------------------------------------
+    consistency_discrepancies = figure_tracker.conflicts()
+    all_discrepancies.extend(consistency_discrepancies)
+    if slog and consistency_discrepancies:
+        slog.tool_call("check_figure_consistency",
+                        result=[d.model_dump() for d in consistency_discrepancies])
+
+    # ------------------------------------------------------------------
+    # Step 4: Summary — fast model, small payload
+    # ------------------------------------------------------------------
+    logger.info(
+        "[ledger] session=%s step 4: generating summary (%d discrepancies)",
+        evidence.session_id,
+        len(all_discrepancies),
+    )
+    pages_examined.sort()
+    summary = _generate_summary(
+        all_discrepancies, pages_examined, evidence.unauditable_pages, slog,
+    )
+
+    # ------------------------------------------------------------------
+    # Step 5: Assemble Verdict
+    # ------------------------------------------------------------------
+    error_count = sum(1 for d in all_discrepancies if d.severity == "error")
+    verdict = Verdict(
+        session_id=evidence.session_id,
+        discrepancies=all_discrepancies,
+        pages_examined=pages_examined,
+        rounds_taken=evidence.round,
+        summary=summary,
+        clean=error_count == 0,
+        unauditable_pages=evidence.unauditable_pages,
+    )
 
     slog.response("deliberate", body=verdict.model_dump())
     logger.info(

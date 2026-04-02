@@ -27,6 +27,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       libx11-6 \
       libxext6 \
       libxfixes3 \
+      libgbm1 \
+      libdrm2 \
+      libxshmfence1 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
