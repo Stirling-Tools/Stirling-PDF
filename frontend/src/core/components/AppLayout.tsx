@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { useBanner } from '@app/contexts/BannerContext';
+import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -26,6 +27,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           {children}
         </div>
       </div>
+      <NavigationWarningModal />
     </>
   );
 }

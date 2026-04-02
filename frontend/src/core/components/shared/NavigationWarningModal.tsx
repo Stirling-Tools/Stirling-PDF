@@ -7,17 +7,16 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { Z_INDEX_TOAST } from "@app/styles/zIndex";
 
-interface NavigationWarningModalProps {
-  onApplyAndContinue?: () => Promise<void>;
-  onExportAndContinue?: () => Promise<void>;
-  /** Called when discarding - allows saving applied changes while discarding pending ones */
-  onDiscardAndContinue?: () => Promise<void>;
-}
-
-const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue, onDiscardAndContinue }: NavigationWarningModalProps) => {
+const NavigationWarningModal = () => {
   const { t } = useTranslation();
-  const { showNavigationWarning, hasUnsavedChanges, pendingNavigation, cancelNavigation, confirmNavigation, setHasUnsavedChanges } =
-    useNavigationGuard();
+  const {
+    showNavigationWarning,
+    hasUnsavedChanges,
+    pendingNavigation,
+    cancelNavigation,
+    setHasUnsavedChanges,
+    navigationWarningHandlersRef,
+  } = useNavigationGuard();
 
   // Store pendingNavigation in a ref so async handlers always have the latest,
   // not a stale closure captured before an await.
@@ -33,37 +32,44 @@ const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue, onDis
   const finishAndNavigate = () => {
     const nav = pendingNavigationRef.current;
     setHasUnsavedChanges(false);
-    cancelNavigation(); // clear pending state and hide modal
+    cancelNavigation();
     if (nav) {
-      nav(); // execute the stored navigation
+      nav();
     }
   };
 
   const handleDiscardChanges = async () => {
-    if (onDiscardAndContinue) {
-      await onDiscardAndContinue();
+    const handlers = navigationWarningHandlersRef.current;
+    if (handlers?.onDiscardAndContinue) {
+      await handlers.onDiscardAndContinue();
     }
     finishAndNavigate();
   };
 
   const handleApplyAndContinue = async () => {
-    if (onApplyAndContinue) {
-      await onApplyAndContinue();
+    const handlers = navigationWarningHandlersRef.current;
+    if (handlers?.onApplyAndContinue) {
+      await handlers.onApplyAndContinue();
     }
     finishAndNavigate();
   };
 
   const handleExportAndContinue = async () => {
-    if (onExportAndContinue) {
-      await onExportAndContinue();
+    const handlers = navigationWarningHandlersRef.current;
+    if (handlers?.onExportAndContinue) {
+      await handlers.onExportAndContinue();
     }
     finishAndNavigate();
   };
 
+  // Read handler availability at render time for button visibility
+  const handlers = navigationWarningHandlersRef.current;
+  const hasApply = !!handlers?.onApplyAndContinue;
+  const hasExport = !!handlers?.onExportAndContinue;
+
   const BUTTON_WIDTH = "12rem";
 
   // Only show modal if there are unsaved changes AND there's an actual pending navigation
-  // This prevents the modal from showing due to spurious state updates
   if (!hasUnsavedChanges || !pendingNavigation) {
     return null;
   }
@@ -100,12 +106,12 @@ const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue, onDis
             <Button variant="filled" color="var(--mantine-color-red-9)" onClick={handleDiscardChanges} w={BUTTON_WIDTH} leftSection={<DeleteOutlineIcon fontSize="small" />}>
               {t("discardChanges", "Discard Changes")}
             </Button>
-            {onApplyAndContinue && (
+            {hasApply && (
               <Button variant="filled"  onClick={handleApplyAndContinue} w={BUTTON_WIDTH} leftSection={<CheckCircleOutlineIcon fontSize="small" />}>
                 {t("applyAndContinue", "Apply & Leave")}
               </Button>
             )}
-            {onExportAndContinue && (
+            {hasExport && (
               <Button variant="filled"  onClick={handleExportAndContinue} w={BUTTON_WIDTH} leftSection={<CheckCircleOutlineIcon fontSize="small" />}>
                 {t("exportAndContinue", "Export & Leave")}
               </Button>
@@ -121,12 +127,12 @@ const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue, onDis
           <Button variant="filled" color="var(--mantine-color-red-9)" onClick={handleDiscardChanges} w={BUTTON_WIDTH} leftSection={<DeleteOutlineIcon fontSize="small" />}>
             {t("discardChanges", "Discard Changes")}
           </Button>
-          {onApplyAndContinue && (
+          {hasApply && (
             <Button variant="filled" onClick={handleApplyAndContinue} w={BUTTON_WIDTH} leftSection={<CheckCircleOutlineIcon fontSize="small" />}>
               {t("applyAndContinue", "Apply & Leave")}
             </Button>
           )}
-          {onExportAndContinue && (
+          {hasExport && (
             <Button variant="filled" onClick={handleExportAndContinue} w={BUTTON_WIDTH} leftSection={<CheckCircleOutlineIcon fontSize="small" />}>
               {t("exportAndContinue", "Export & Leave")}
             </Button>
