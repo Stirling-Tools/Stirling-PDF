@@ -1,3 +1,4 @@
+import { useRef, useEffect } from "react";
 import { Modal, Text, Button, Group, Stack } from "@mantine/core";
 import { useNavigationGuard } from "@app/contexts/NavigationContext";
 import { useTranslation } from "react-i18next";
@@ -18,33 +19,41 @@ const NavigationWarningModal = ({ onApplyAndContinue, onExportAndContinue, onDis
   const { showNavigationWarning, hasUnsavedChanges, pendingNavigation, cancelNavigation, confirmNavigation, setHasUnsavedChanges } =
     useNavigationGuard();
 
+  // Keep a ref to confirmNavigation so async handlers always call the latest version,
+  // not a stale closure captured before the await.
+  const confirmNavigationRef = useRef(confirmNavigation);
+  useEffect(() => {
+    confirmNavigationRef.current = confirmNavigation;
+  }, [confirmNavigation]);
+
   const handleKeepWorking = () => {
     cancelNavigation();
   };
 
+  const finishAndNavigate = () => {
+    setHasUnsavedChanges(false);
+    confirmNavigationRef.current();
+  };
+
   const handleDiscardChanges = async () => {
-    // If a discard handler is provided, call it to save any already-applied changes, then discard the unsaved changes
     if (onDiscardAndContinue) {
       await onDiscardAndContinue();
     }
-    setHasUnsavedChanges(false);
-    confirmNavigation();
+    finishAndNavigate();
   };
 
   const handleApplyAndContinue = async () => {
     if (onApplyAndContinue) {
       await onApplyAndContinue();
     }
-    setHasUnsavedChanges(false);
-    confirmNavigation();
+    finishAndNavigate();
   };
 
   const handleExportAndContinue = async () => {
     if (onExportAndContinue) {
       await onExportAndContinue();
     }
-    setHasUnsavedChanges(false);
-    confirmNavigation();
+    finishAndNavigate();
   };
 
   const BUTTON_WIDTH = "12rem";
