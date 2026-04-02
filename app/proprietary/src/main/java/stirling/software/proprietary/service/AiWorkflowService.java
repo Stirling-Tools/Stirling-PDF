@@ -3,19 +3,13 @@ package stirling.software.proprietary.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.fasterxml.jackson.annotation.JsonValue;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -23,13 +17,14 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
-import stirling.software.proprietary.model.api.ai.AiPdfContentType;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowOutcome;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
-import stirling.software.proprietary.model.api.ai.AiWorkflowTextSelection;
+import stirling.software.proprietary.service.PdfContentExtractor.LoadedFile;
+import stirling.software.proprietary.service.PdfContentExtractor.PdfContentResult;
+import stirling.software.proprietary.service.PdfContentExtractor.WorkflowArtifact;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -38,10 +33,9 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class AiWorkflowService {
 
-    private static final int MAX_CHARACTERS_PER_PAGE = 4_000;
-
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final AiEngineClient aiEngineClient;
+    private final PdfContentExtractor pdfContentExtractor;
     private final ObjectMapper objectMapper;
 
     private sealed interface WorkflowState {
@@ -49,8 +43,6 @@ public class AiWorkflowService {
 
         record Terminal(AiWorkflowResponse response) implements WorkflowState {}
     }
-
-    private record LoadedFile(String fileName, PDDocument document) {}
 
     public AiWorkflowResponse orchestrate(AiWorkflowRequest request) throws IOException {
         validateRequest(request);
@@ -134,35 +126,17 @@ public class AiWorkflowService {
                 loadedFiles.add(new LoadedFile(fileName, doc));
             }
 
-            List<PdfContentResult> contentResults = new ArrayList<>();
-            int remainingPages = response.getMaxPages();
-            int remainingCharacters = response.getMaxCharacters();
-
-            for (LoadedFile lf : loadedFiles) {
-                if (remainingPages <= 0 || remainingCharacters <= 0) break;
-                AiWorkflowFileRequest fileReq = requestedByName.get(lf.fileName());
-                List<AiPdfContentType> contentTypes =
-                        fileReq != null && !fileReq.getContentTypes().isEmpty()
-                                ? fileReq.getContentTypes()
-                                : List.of(AiPdfContentType.PAGE_TEXT);
-
-                for (AiPdfContentType contentType : contentTypes) {
-                    Optional<PdfContentResult> result =
-                            dispatchContentType(
-                                    contentType, lf, fileReq, remainingPages, remainingCharacters);
-                    if (result.isPresent()) {
-                        PdfContentResult content = result.get();
-                        contentResults.add(content);
-                        remainingPages -= content.pagesConsumed();
-                        remainingCharacters -= content.charactersConsumed();
-                    }
-                }
-            }
+            List<PdfContentResult> contentResults =
+                    pdfContentExtractor.extractContent(
+                            loadedFiles,
+                            requestedByName,
+                            response.getMaxPages(),
+                            response.getMaxCharacters());
 
             WorkflowTurnRequest nextRequest = new WorkflowTurnRequest();
             nextRequest.setUserMessage(request.getUserMessage());
             nextRequest.setFileNames(request.getFileNames());
-            nextRequest.setArtifacts(buildArtifacts(contentResults));
+            nextRequest.setArtifacts(pdfContentExtractor.buildArtifacts(contentResults));
             nextRequest.setResumeWith(response.getResumeWith());
             return new WorkflowState.Pending(nextRequest);
         } finally {
@@ -174,41 +148,6 @@ public class AiWorkflowService {
                 }
             }
         }
-    }
-
-    private Optional<PdfContentResult> dispatchContentType(
-            AiPdfContentType contentType,
-            LoadedFile lf,
-            AiWorkflowFileRequest fileReq,
-            int remainingPages,
-            int remainingCharacters)
-            throws IOException {
-        return switch (contentType) {
-            case PAGE_TEXT, FULL_TEXT ->
-                    Optional.<PdfContentResult>ofNullable(
-                            extractText(lf, fileReq, remainingPages, remainingCharacters));
-            default -> {
-                log.warn(
-                        "Content type {} not yet implemented, skipping for {}",
-                        contentType,
-                        lf.fileName());
-                yield Optional.empty();
-            }
-        };
-    }
-
-    private ExtractedFileText extractText(
-            LoadedFile lf,
-            AiWorkflowFileRequest fileReq,
-            int remainingPages,
-            int remainingCharacters)
-            throws IOException {
-        List<Integer> requestedPages = fileReq != null ? fileReq.getPageNumbers() : null;
-        List<Integer> pages =
-                selectPages(lf.document().getNumberOfPages(), requestedPages, remainingPages);
-        List<AiWorkflowTextSelection> extracted =
-                extractPageText(lf.document(), pages, remainingCharacters);
-        return extracted.isEmpty() ? null : buildExtractedFileText(lf.fileName(), extracted);
     }
 
     private void validateRequest(AiWorkflowRequest request) {
@@ -232,178 +171,11 @@ public class AiWorkflowService {
         return objectMapper.readValue(responseBody, AiWorkflowResponse.class);
     }
 
-    private List<Integer> selectPages(
-            int totalPages, List<Integer> requestedPageNumbers, int maxPages) {
-        if (totalPages <= 0) {
-            throw ExceptionUtils.createPdfNoPages();
-        }
-
-        List<Integer> pages = new ArrayList<>();
-
-        if (requestedPageNumbers == null || requestedPageNumbers.isEmpty()) {
-            for (int p = 1; p <= totalPages && pages.size() < maxPages; p++) {
-                pages.add(p);
-            }
-            return pages;
-        }
-
-        Set<Integer> deduplicatedPages = new LinkedHashSet<>(requestedPageNumbers);
-        for (Integer pageNumber : deduplicatedPages) {
-            if (pageNumber == null || pageNumber < 1 || pageNumber > totalPages) {
-                throw ExceptionUtils.createIllegalArgumentException(
-                        "error.invalidPageNumber",
-                        "Requested page number %s is outside the PDF page range.",
-                        pageNumber);
-            }
-            pages.add(pageNumber);
-            if (pages.size() >= maxPages) {
-                break;
-            }
-        }
-        return pages;
-    }
-
-    private List<AiWorkflowTextSelection> extractPageText(
-            PDDocument document, List<Integer> selectedPages, int maxCharacters)
-            throws IOException {
-        PDFTextStripper textStripper = new PDFTextStripper();
-        List<AiWorkflowTextSelection> pages = new ArrayList<>();
-        int remainingCharacters = maxCharacters;
-
-        for (Integer pageNumber : selectedPages) {
-            if (remainingCharacters <= 0) {
-                break;
-            }
-
-            textStripper.setStartPage(pageNumber);
-            textStripper.setEndPage(pageNumber);
-
-            String pageText = textStripper.getText(document).trim();
-            if (pageText.isBlank()) {
-                continue;
-            }
-
-            int allowedCharacters = Math.min(remainingCharacters, MAX_CHARACTERS_PER_PAGE);
-            String clippedText = clip(pageText, allowedCharacters);
-            if (clippedText.isBlank()) {
-                continue;
-            }
-
-            AiWorkflowTextSelection selection = new AiWorkflowTextSelection();
-            selection.setPageNumber(pageNumber);
-            selection.setText(clippedText);
-            pages.add(selection);
-            remainingCharacters -= clippedText.length();
-        }
-        return pages;
-    }
-
-    private ExtractedFileText buildExtractedFileText(
-            String fileName, List<AiWorkflowTextSelection> pages) {
-        ExtractedFileText fileText = new ExtractedFileText();
-        fileText.setFileName(fileName);
-        fileText.setPages(pages);
-        return fileText;
-    }
-
-    private List<WorkflowArtifact> buildArtifacts(List<PdfContentResult> results) {
-        List<WorkflowArtifact> artifacts = new ArrayList<>();
-        Map<ArtifactKind, List<PdfContentResult>> byKind =
-                results.stream().collect(Collectors.groupingBy(PdfContentResult::getArtifactKind));
-        for (var entry : byKind.entrySet()) {
-            artifacts.add(buildArtifact(entry.getKey(), entry.getValue()));
-        }
-        return artifacts;
-    }
-
-    private WorkflowArtifact buildArtifact(ArtifactKind kind, List<PdfContentResult> results) {
-        return switch (kind) {
-            case EXTRACTED_TEXT -> {
-                ExtractedTextArtifact artifact = new ExtractedTextArtifact();
-                artifact.setFiles(results.stream().map(ExtractedFileText.class::cast).toList());
-                yield artifact;
-            }
-        };
-    }
-
-    private String clip(String text, int maxLength) {
-        if (text.length() <= maxLength) {
-            return text;
-        }
-        // Avoid splitting a surrogate pair at the boundary
-        int end = maxLength;
-        if (Character.isHighSurrogate(text.charAt(end - 1))) {
-            end--;
-        }
-        return text.substring(0, end);
-    }
-
-    /**
-     * Values MUST match {@code ArtifactKind} in {@code engine/src/stirling/contracts/common.py}.
-     */
-    private enum ArtifactKind {
-        EXTRACTED_TEXT("extracted_text");
-
-        private final String value;
-
-        ArtifactKind(String value) {
-            this.value = value;
-        }
-
-        @JsonValue
-        public String getValue() {
-            return value;
-        }
-    }
-
-    private interface WorkflowArtifact {
-        ArtifactKind getKind();
-    }
-
     @Data
     private static class WorkflowTurnRequest {
         private String userMessage;
         private List<String> fileNames = new ArrayList<>();
         private List<WorkflowArtifact> artifacts = new ArrayList<>();
         private String resumeWith;
-    }
-
-    private interface PdfContentResult {
-        ArtifactKind getArtifactKind();
-
-        default int pagesConsumed() {
-            return 0;
-        }
-
-        default int charactersConsumed() {
-            return 0;
-        }
-    }
-
-    @Data
-    private static class ExtractedFileText implements PdfContentResult {
-        private String fileName;
-        private List<AiWorkflowTextSelection> pages = new ArrayList<>();
-
-        @Override
-        public ArtifactKind getArtifactKind() {
-            return ArtifactKind.EXTRACTED_TEXT;
-        }
-
-        @Override
-        public int pagesConsumed() {
-            return pages.size();
-        }
-
-        @Override
-        public int charactersConsumed() {
-            return pages.stream().mapToInt(p -> p.getText().length()).sum();
-        }
-    }
-
-    @Data
-    private static final class ExtractedTextArtifact implements WorkflowArtifact {
-        private final ArtifactKind kind = ArtifactKind.EXTRACTED_TEXT;
-        private List<ExtractedFileText> files = new ArrayList<>();
     }
 }
