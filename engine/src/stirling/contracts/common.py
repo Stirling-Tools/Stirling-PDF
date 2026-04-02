@@ -8,6 +8,38 @@ from pydantic import Field, model_validator
 from stirling.models import OPERATIONS, ApiModel, OperationId, ParamToolModel
 
 
+class WorkflowOutcome(StrEnum):
+    """Discriminator values for all workflow response unions (outcome field).
+
+    Java counterpart: AiWorkflowOutcome.java — values must stay in sync.
+    """
+
+    ANSWER = "answer"
+    NEED_TEXT = "need_text"
+    NOT_FOUND = "not_found"
+    PLAN = "plan"
+    NEED_CLARIFICATION = "need_clarification"
+    CANNOT_DO = "cannot_do"
+    DRAFT = "draft"
+    TOOL_CALL = "tool_call"
+    COMPLETED = "completed"
+    CANNOT_CONTINUE = "cannot_continue"
+    UNSUPPORTED_CAPABILITY = "unsupported_capability"
+
+
+class ArtifactKind(StrEnum):
+    """Discriminator values for WorkflowArtifact unions (kind field)."""
+
+    EXTRACTED_TEXT = "extracted_text"
+
+
+class StepKind(StrEnum):
+    """Discriminator values for AgentSpecStep unions (kind field)."""
+
+    TOOL = "tool"
+    AI_TOOL = "ai_tool"
+
+
 class SupportedCapability(StrEnum):
     ORCHESTRATE = "orchestrate"
     PDF_EDIT = "pdf_edit"
@@ -33,7 +65,7 @@ class ExtractedFileText(ApiModel):
 
 
 class ToolOperationStep(ApiModel):
-    kind: Literal["tool"] = "tool"
+    kind: Literal[StepKind.TOOL] = StepKind.TOOL
     tool: OperationId
     parameters: ParamToolModel
 

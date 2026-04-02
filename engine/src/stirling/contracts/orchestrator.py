@@ -7,14 +7,14 @@ from pydantic import Field
 from stirling.models import ApiModel
 
 from .agent_drafts import AgentDraftResponse
-from .common import ExtractedFileText, SupportedCapability
+from .common import ArtifactKind, ExtractedFileText, SupportedCapability, WorkflowOutcome
 from .execution import NextExecutionAction
 from .pdf_edit import PdfEditResponse
 from .pdf_questions import PdfQuestionResponse
 
 
 class ExtractedTextArtifact(ApiModel):
-    kind: Literal["extracted_text"] = "extracted_text"
+    kind: Literal[ArtifactKind.EXTRACTED_TEXT] = ArtifactKind.EXTRACTED_TEXT
     files: list[ExtractedFileText] = Field(default_factory=list)
 
 
@@ -29,7 +29,7 @@ class OrchestratorRequest(ApiModel):
 
 
 class UnsupportedCapabilityResponse(ApiModel):
-    outcome: Literal["unsupported_capability"] = "unsupported_capability"
+    outcome: Literal[WorkflowOutcome.UNSUPPORTED_CAPABILITY] = WorkflowOutcome.UNSUPPORTED_CAPABILITY
     capability: str
     message: str
 

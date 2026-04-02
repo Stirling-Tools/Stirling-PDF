@@ -3,13 +3,20 @@ package stirling.software.SPDF.model.api.ai;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+/**
+ * Discriminator values for AI workflow responses.
+ *
+ * <p>Values MUST match {@code WorkflowOutcome} in {@code engine/src/stirling/contracts/common.py}.
+ */
 public enum AiWorkflowOutcome {
     ANSWER("answer"),
     NOT_FOUND("not_found"),
     NEED_TEXT("need_text"),
     PLAN("plan"),
-    CLARIFICATION_REQUEST("clarification_request"),
+    NEED_CLARIFICATION("need_clarification"),
     CANNOT_DO("cannot_do"),
+    TOOL_CALL("tool_call"),
+    COMPLETED("completed"),
     UNSUPPORTED_CAPABILITY("unsupported_capability"),
     CANNOT_CONTINUE("cannot_continue");
 

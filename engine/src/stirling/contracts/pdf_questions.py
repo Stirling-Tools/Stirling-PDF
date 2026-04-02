@@ -6,7 +6,7 @@ from pydantic import Field
 
 from stirling.models import ApiModel
 
-from .common import ExtractedFileText, SupportedCapability
+from .common import ExtractedFileText, SupportedCapability, WorkflowOutcome
 
 
 class PdfQuestionRequest(ApiModel):
@@ -16,7 +16,7 @@ class PdfQuestionRequest(ApiModel):
 
 
 class PdfQuestionAnswerResponse(ApiModel):
-    outcome: Literal["answer"] = "answer"
+    outcome: Literal[WorkflowOutcome.ANSWER] = WorkflowOutcome.ANSWER
     answer: str
     evidence: list[ExtractedFileText] = Field(default_factory=list)
 
@@ -27,7 +27,7 @@ class NeedTextFileRequest(ApiModel):
 
 
 class PdfQuestionNeedTextResponse(ApiModel):
-    outcome: Literal["need_text"] = "need_text"
+    outcome: Literal[WorkflowOutcome.NEED_TEXT] = WorkflowOutcome.NEED_TEXT
     resume_with: SupportedCapability = SupportedCapability.PDF_QUESTION
     reason: str
     files: list[NeedTextFileRequest] = Field(default_factory=list)
@@ -36,7 +36,7 @@ class PdfQuestionNeedTextResponse(ApiModel):
 
 
 class PdfQuestionNotFoundResponse(ApiModel):
-    outcome: Literal["not_found"] = "not_found"
+    outcome: Literal[WorkflowOutcome.NOT_FOUND] = WorkflowOutcome.NOT_FOUND
     reason: str
 
 

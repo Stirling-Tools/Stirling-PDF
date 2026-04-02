@@ -8,7 +8,16 @@ from .agent_drafts import (
     AgentRevisionWorkflowResponse,
 )
 from .agent_specs import AgentSpec, AgentSpecStep, AiToolAgentStep
-from .common import ConversationMessage, ExtractedFileText, PdfTextSelection, SupportedCapability, ToolOperationStep
+from .common import (
+    ArtifactKind,
+    ConversationMessage,
+    ExtractedFileText,
+    PdfTextSelection,
+    StepKind,
+    SupportedCapability,
+    ToolOperationStep,
+    WorkflowOutcome,
+)
 from .execution import (
     AgentExecutionRequest,
     CannotContinueExecutionAction,
@@ -43,6 +52,7 @@ from .pdf_questions import (
 )
 
 __all__ = [
+    "ArtifactKind",
     "AgentDraft",
     "AgentDraftRequest",
     "AgentDraftResponse",
@@ -77,9 +87,11 @@ __all__ = [
     "PdfQuestionRequest",
     "PdfQuestionResponse",
     "PdfTextSelection",
+    "StepKind",
     "SupportedCapability",
     "ToolOperationStep",
     "ToolCallExecutionAction",
+    "WorkflowOutcome",
     "UnsupportedCapabilityResponse",
     "WorkflowArtifact",
 ]

@@ -86,8 +86,10 @@ public class AiWorkflowService {
             case ANSWER,
                     NOT_FOUND,
                     PLAN,
-                    CLARIFICATION_REQUEST,
+                    NEED_CLARIFICATION,
                     CANNOT_DO,
+                    TOOL_CALL,
+                    COMPLETED,
                     UNSUPPORTED_CAPABILITY,
                     CANNOT_CONTINUE ->
                     new WorkflowState.Terminal(response);
@@ -302,8 +304,8 @@ public class AiWorkflowService {
         return text.substring(0, end);
     }
 
+    /** Values MUST match {@code ArtifactKind} in {@code engine/src/stirling/contracts/common.py}. */
     private enum ArtifactKind {
-        // Must match discriminators in Pydantic models
         EXTRACTED_TEXT("extracted_text");
 
         private final String value;
