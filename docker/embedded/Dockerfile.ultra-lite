@@ -93,7 +93,7 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     bash \
     curl \
     shadow \
-    su-exec && \
+    util-linux && \
     mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps && \
     mkdir -p /usr/share/fonts/opentype/noto && \
     # User permissions

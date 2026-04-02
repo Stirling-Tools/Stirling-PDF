@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { isAxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
 import {
   Stack,
@@ -51,6 +52,9 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
     availableSlots: number;
   } | null>(null);
   const [mailEnabled, setMailEnabled] = useState(false);
+  const [lockedUsers, setLockedUsers] = useState<string[]>([]);
+
+  const isLockedUser = (user: User) => lockedUsers.includes(user.username);
 
   useEffect(() => {
     fetchTeamDetails();
@@ -75,6 +79,7 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
         availableSlots: adminData.availableSlots,
       });
       setMailEnabled(adminData.mailEnabled);
+      setLockedUsers(adminData.lockedUsers || []);
     } catch (error) {
       console.error('Failed to fetch team details:', error);
       alert({ alertType: 'error', title: t('workspace.teams.loadError', 'Failed to load team details') });
@@ -106,12 +111,11 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       setAddMemberModalOpened(false);
       setSelectedUserId('');
       fetchTeamDetails();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to add member:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.teams.addMemberToTeam.error', 'Failed to add user to team');
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) || t('workspace.teams.addMemberToTeam.error', 'Failed to add user to team');
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
@@ -136,12 +140,11 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       await teamService.moveUserToTeam(user.username, user.rolesAsString || 'ROLE_USER', defaultTeam.id);
       alert({ alertType: 'success', title: t('workspace.teams.removeMemberSuccess', 'User removed from team') });
       fetchTeamDetails();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to remove member:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.teams.removeMemberError', 'Failed to remove user from team');
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) || t('workspace.teams.removeMemberError', 'Failed to remove user from team');
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
@@ -159,15 +162,34 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       await userManagementService.deleteUser(user.username);
       alert({ alertType: 'success', title: t('workspace.people.deleteUserSuccess', 'User deleted successfully') });
       fetchTeamDetails();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to delete user:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.people.deleteUserError', 'Failed to delete user');
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) ||
+        t('workspace.people.deleteUserError', 'Failed to delete user');
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
+    }
+  };
+
+  const handleUnlockUser = async (user: User) => {
+    const confirmMessage = t('workspace.people.confirmUnlock', 'Are you sure you want to unlock this user account?');
+    if (!window.confirm(`${confirmMessage}\n\nUser: ${user.username}`)) {
+      return;
+    }
+
+    try {
+      await userManagementService.unlockUser(user.username);
+      alert({ alertType: 'success', title: t('workspace.people.unlockUserSuccess', 'User account unlocked successfully') });
+      fetchTeamDetails();
+    } catch (error: unknown) {
+      console.error('[TeamDetailsSection] Failed to unlock user:', error);
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) || t('workspace.people.unlockUserError', 'Failed to unlock user account');
+      alert({ alertType: 'error', title: errorMessage });
     }
   };
 
@@ -201,12 +223,12 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       setSelectedUser(null);
       setSelectedTeamId('');
       fetchTeamDetails();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to change team:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.teams.changeTeam.error', 'Failed to change team');
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) ||
+        t('workspace.teams.changeTeam.error', 'Failed to change team');
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
@@ -335,22 +357,29 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
                           </Avatar>
                         </Tooltip>
                         <Box style={{ minWidth: 0, flex: 1 }}>
-                          <Tooltip label={user.username} disabled={user.username.length <= 20} zIndex={Z_INDEX_OVER_CONFIG_MODAL}>
-                            <Text
-                              size="sm"
-                              fw={500}
-                              maw={200}
-                              style={{
-                                lineHeight: 1.3,
-                                opacity: user.enabled ? 1 : 0.6,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {user.username}
-                            </Text>
-                          </Tooltip>
+                          <Group gap={6} wrap="nowrap" align="center">
+                            <Tooltip label={user.username} disabled={user.username.length <= 20} zIndex={Z_INDEX_OVER_CONFIG_MODAL}>
+                              <Text
+                                size="sm"
+                                fw={500}
+                                maw={200}
+                                style={{
+                                  lineHeight: 1.3,
+                                  opacity: user.enabled ? 1 : 0.6,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {user.username}
+                              </Text>
+                            </Tooltip>
+                            {isLockedUser(user) && (
+                              <Badge color="orange" variant="light" size="xs">
+                                {t('workspace.people.lockedBadge', 'Locked')}
+                              </Badge>
+                            )}
+                          </Group>
                           {user.email && (
                             <Text size="xs" c="dimmed" truncate style={{ lineHeight: 1.3 }}>
                               {user.email}
@@ -420,6 +449,15 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
                           >
                             {t('workspace.people.changePassword.action', 'Change password')}
                           </Menu.Item>
+                          {isLockedUser(user) && (
+                            <Menu.Item
+                              leftSection={<LocalIcon icon="lock-open" width="1rem" height="1rem" />}
+                              onClick={() => handleUnlockUser(user)}
+                              disabled={processing}
+                            >
+                              {t('workspace.people.unlockAccount', 'Unlock Account')}
+                            </Menu.Item>
+                          )}
                           {team.name !== 'Internal' && team.name !== 'Default' && (
                             <Menu.Item
                               leftSection={<LocalIcon icon="person-remove" width="1rem" height="1rem" />}

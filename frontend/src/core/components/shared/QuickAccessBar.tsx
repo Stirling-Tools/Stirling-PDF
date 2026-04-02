@@ -19,6 +19,8 @@ import AllToolsNavButton from '@app/components/shared/AllToolsNavButton';
 import ActiveToolButton from "@app/components/shared/quickAccessBar/ActiveToolButton";
 import AppConfigModal from '@app/components/shared/AppConfigModal';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { useGroupSigningEnabled } from '@app/hooks/useGroupSigningEnabled';
+import { useSharingEnabled } from '@app/hooks/useSharingEnabled';
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
 import { requestStartTour } from '@app/constants/events';
 import QuickAccessButton from '@app/components/shared/quickAccessBar/QuickAccessButton';
@@ -77,9 +79,8 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const accessButtonRef = useRef<HTMLDivElement>(null);
   const accessPopoverRef = useRef<HTMLDivElement>(null);
   const [accessPopoverPosition, setAccessPopoverPosition] = useState({ top: 160, left: 84 });
-  const sharingEnabled = config?.storageSharingEnabled === true;
-  const shareLinksEnabled = config?.storageShareLinksEnabled === true;
-  const groupSigningEnabled = config?.storageGroupSigningEnabled === true;
+  const { sharingEnabled, shareLinksEnabled } = useSharingEnabled();
+  const groupSigningEnabled = useGroupSigningEnabled();
   const isSignWorkbenchActive =
     currentWorkbench === SIGN_REQUEST_WORKBENCH_TYPE ||
     currentWorkbench === SESSION_DETAIL_WORKBENCH_TYPE;

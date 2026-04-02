@@ -217,6 +217,39 @@ jobs:
           path: frontend/dist/
           retention-days: 3
 
+  playwright-e2e:
+    if: needs.files-changed.outputs.frontend == 'true'
+    needs: files-changed
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+      - name: Generate icons
+        run: cd frontend && node scripts/generate-icons.js
+      - name: Install Playwright (chromium only)
+        run: cd frontend && npx playwright install chromium --with-deps
+      - name: Run E2E tests (chromium)
+        run: cd frontend && npx playwright test --project=chromium
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: playwright-report-pr-${{ github.run_id }}
+          path: frontend/playwright-report/
+          retention-days: 7
+
   check-licence:
     if: needs.files-changed.outputs.build == 'true'
     needs: [files-changed, build]
@@ -358,6 +391,7 @@ jobs:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+          DOCKER_BASE_CHANGED: ${{ needs.files-changed.outputs.docker-base }}
 
       - name: Upload Cucumber Report
         if: always()
@@ -365,6 +399,15 @@ jobs:
         with:
           name: cucumber-report
           path: testing/cucumber/report.html
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: docker-compose-test-reports
+          path: testing/reports/
           retention-days: 7
           if-no-files-found: warn
 
@@ -470,7 +513,7 @@ jobs:
             echo "base_image=stirling-pdf-base:pr-test" >> $GITHUB_OUTPUT
             echo "platforms=linux/amd64" >> $GITHUB_OUTPUT
           else
-            echo "base_image=ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-pdf-base:latest" >> $GITHUB_OUTPUT
+            echo "base_image=stirlingtools/stirling-pdf-base:latest" >> $GITHUB_OUTPUT
             echo "platforms=linux/amd64,linux/arm64/v8" >> $GITHUB_OUTPUT
           fi
 

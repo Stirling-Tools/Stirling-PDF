@@ -13,6 +13,11 @@ const nodeGlobs = [
   '*.config.{js,ts,mjs}',
 ];
 
+const baseRestrictedImportPatterns = [
+  { regex: '^\\.', message: "Use @app/* imports instead of relative imports." },
+  { regex: '^src/', message: "Use @app/* imports instead of absolute src/ imports." },
+];
+
 export default defineConfig(
   {
     // Everything that contains 3rd party code that we don't want to lint
@@ -30,10 +35,7 @@ export default defineConfig(
       'no-restricted-imports': [
         'error',
         {
-          patterns: [
-            ".*", // Disallow any relative imports (they should be '@app/x/y/z' or similar)
-            "src/*", // Disallow any absolute imports (they should be '@app/x/y/z' or similar)
-          ],
+          patterns: baseRestrictedImportPatterns,
         },
       ],
       '@typescript-eslint/no-empty-object-type': [
@@ -59,9 +61,32 @@ export default defineConfig(
       ],
     },
   },
+  // Desktop-only packages must not be imported from core or proprietary code.
+  // Use the stub/shadow pattern instead: define a stub in src/core/ and override in src/desktop/.
+  {
+    files: srcGlobs,
+    ignores: ['src/desktop/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            ...baseRestrictedImportPatterns,
+            {
+              regex: '^@tauri-apps/',
+              message: "Tauri APIs are desktop-only. Review frontend/DeveloperGuide.md for structure advice.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   // Folders that have been cleaned up and are now conformant - stricter rules enforced here
   {
-    files: ['src/saas/**/*.{js,mjs,jsx,ts,tsx}'],
+    files: [
+      'src/proprietary/**/*.{js,mjs,jsx,ts,tsx}',
+      'src/saas/**/*.{js,mjs,jsx,ts,tsx}',
+    ],
     languageOptions: {
       parserOptions: {
         project: true,
