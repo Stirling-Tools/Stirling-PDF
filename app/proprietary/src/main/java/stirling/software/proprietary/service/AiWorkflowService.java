@@ -2,6 +2,7 @@ package stirling.software.proprietary.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import java.util.stream.Collectors;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -50,39 +52,30 @@ public class AiWorkflowService {
 
     public AiWorkflowResponse orchestrate(AiWorkflowRequest request) throws IOException {
         validateRequest(request);
-        List<LoadedFile> loadedFiles = new ArrayList<>();
-        try {
-            for (AiWorkflowFileInput fileInput : request.getFileInputs()) {
-                PDDocument doc = pdfDocumentFactory.load(fileInput.getFileInput(), true);
-                loadedFiles.add(
-                        new LoadedFile(fileInput.getFileInput().getOriginalFilename(), doc));
-            }
 
-            WorkflowTurnRequest initialRequest = new WorkflowTurnRequest();
-            initialRequest.setUserMessage(request.getUserMessage().trim());
-            initialRequest.setFileNames(loadedFiles.stream().map(LoadedFile::fileName).toList());
-
-            WorkflowState state = new WorkflowState.Pending(initialRequest);
-            while (state instanceof WorkflowState.Pending pending) {
-                state = advance(pending.request(), loadedFiles);
-            }
-            return ((WorkflowState.Terminal) state).response();
-        } finally {
-            for (LoadedFile lf : loadedFiles) {
-                try {
-                    lf.document().close();
-                } catch (IOException e) {
-                    log.warn("Failed to close PDF document: {}", lf.fileName(), e);
-                }
-            }
+        Map<String, MultipartFile> filesByName = new LinkedHashMap<>();
+        for (AiWorkflowFileInput fileInput : request.getFileInputs()) {
+            filesByName.put(
+                    fileInput.getFileInput().getOriginalFilename(), fileInput.getFileInput());
         }
+
+        WorkflowTurnRequest initialRequest = new WorkflowTurnRequest();
+        initialRequest.setUserMessage(request.getUserMessage().trim());
+        initialRequest.setFileNames(new ArrayList<>(filesByName.keySet()));
+
+        WorkflowState state = new WorkflowState.Pending(initialRequest);
+        while (state instanceof WorkflowState.Pending pending) {
+            state = advance(pending.request(), filesByName);
+        }
+        return ((WorkflowState.Terminal) state).response();
     }
 
-    private WorkflowState advance(WorkflowTurnRequest request, List<LoadedFile> loadedFiles)
+    private WorkflowState advance(
+            WorkflowTurnRequest request, Map<String, MultipartFile> filesByName)
             throws IOException {
         AiWorkflowResponse response = invokeOrchestrator(request);
         return switch (response.getOutcome()) {
-            case NEED_TEXT -> onNeedText(response, loadedFiles, request);
+            case NEED_TEXT -> onNeedText(response, filesByName, request);
             case ANSWER,
                     NOT_FOUND,
                     PLAN,
@@ -97,7 +90,9 @@ public class AiWorkflowService {
     }
 
     private WorkflowState onNeedText(
-            AiWorkflowResponse response, List<LoadedFile> loadedFiles, WorkflowTurnRequest request)
+            AiWorkflowResponse response,
+            Map<String, MultipartFile> filesByName,
+            WorkflowTurnRequest request)
             throws IOException {
         if (!request.getArtifacts().isEmpty()) {
             return new WorkflowState.Terminal(
@@ -105,15 +100,9 @@ public class AiWorkflowService {
         }
 
         List<AiWorkflowFileRequest> requestedFiles = response.getFiles();
-        List<ExtractedFileText> extracted;
 
-        if (requestedFiles == null || requestedFiles.isEmpty()) {
-            extracted =
-                    extractFromAllFiles(
-                            loadedFiles, response.getMaxPages(), response.getMaxCharacters());
-        } else {
-            Map<String, LoadedFile> filesByName =
-                    loadedFiles.stream().collect(Collectors.toMap(LoadedFile::fileName, f -> f));
+        // Validate requested file names before loading anything
+        if (requestedFiles != null && !requestedFiles.isEmpty()) {
             for (AiWorkflowFileRequest fileReq : requestedFiles) {
                 if (!filesByName.containsKey(fileReq.getFileName())) {
                     return new WorkflowState.Terminal(
@@ -121,20 +110,49 @@ public class AiWorkflowService {
                                     "AI engine requested unknown file: " + fileReq.getFileName()));
                 }
             }
-            extracted =
-                    extractFromRequestedFiles(
-                            requestedFiles,
-                            filesByName,
-                            response.getMaxPages(),
-                            response.getMaxCharacters());
         }
 
-        WorkflowTurnRequest nextRequest = new WorkflowTurnRequest();
-        nextRequest.setUserMessage(request.getUserMessage());
-        nextRequest.setFileNames(request.getFileNames());
-        nextRequest.setArtifacts(List.of(createExtractedTextArtifact(extracted)));
-        nextRequest.setResumeWith(response.getResumeWith());
-        return new WorkflowState.Pending(nextRequest);
+        List<String> fileNamesToLoad =
+                (requestedFiles == null || requestedFiles.isEmpty())
+                        ? new ArrayList<>(filesByName.keySet())
+                        : requestedFiles.stream().map(AiWorkflowFileRequest::getFileName).toList();
+
+        List<LoadedFile> loadedFiles = new ArrayList<>();
+        try {
+            for (String fileName : fileNamesToLoad) {
+                PDDocument doc = pdfDocumentFactory.load(filesByName.get(fileName), true);
+                loadedFiles.add(new LoadedFile(fileName, doc));
+            }
+
+            Map<String, LoadedFile> loadedByName =
+                    loadedFiles.stream().collect(Collectors.toMap(LoadedFile::fileName, f -> f));
+            List<ExtractedFileText> extracted =
+                    (requestedFiles == null || requestedFiles.isEmpty())
+                            ? extractFromAllFiles(
+                                    loadedFiles,
+                                    response.getMaxPages(),
+                                    response.getMaxCharacters())
+                            : extractFromRequestedFiles(
+                                    requestedFiles,
+                                    loadedByName,
+                                    response.getMaxPages(),
+                                    response.getMaxCharacters());
+
+            WorkflowTurnRequest nextRequest = new WorkflowTurnRequest();
+            nextRequest.setUserMessage(request.getUserMessage());
+            nextRequest.setFileNames(request.getFileNames());
+            nextRequest.setArtifacts(List.of(createExtractedTextArtifact(extracted)));
+            nextRequest.setResumeWith(response.getResumeWith());
+            return new WorkflowState.Pending(nextRequest);
+        } finally {
+            for (LoadedFile lf : loadedFiles) {
+                try {
+                    lf.document().close();
+                } catch (IOException e) {
+                    log.warn("Failed to close PDF document: {}", lf.fileName(), e);
+                }
+            }
+        }
     }
 
     private record FileExtractionRequest(
