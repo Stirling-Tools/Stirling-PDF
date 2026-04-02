@@ -1,7 +1,6 @@
 import React from 'react';
 import { Stack } from '@mantine/core';
 import { createToolSteps, ToolStepProvider } from '@app/components/tools/shared/ToolStep';
-import { OperationButtonProps } from '@app/components/tools/shared/OperationButton';
 import { ScopedOperationButton } from '@app/components/tools/shared/ScopedOperationButton';
 import { ToolOperationHook } from '@app/hooks/tools/shared/useToolOperation';
 import { ToolWorkflowTitle, ToolWorkflowTitleProps } from '@app/components/tools/shared/ToolWorkflowTitle';

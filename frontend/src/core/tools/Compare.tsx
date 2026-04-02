@@ -94,7 +94,6 @@ const Compare = (props: BaseToolProps) => {
   }, []);
 
   // On mount: clear selections unless exactly 2 files are loaded.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if ((fileState.files.ids as FileId[]).length !== 2) {
       fileActions.clearSelections();
@@ -104,7 +103,6 @@ const Compare = (props: BaseToolProps) => {
   // Map workbench selection → slots (1st = Original, 2nd = Edited, max 2).
   // If exactly 2 files exist, auto-fill both slots immediately.
   // Excludes params from deps to avoid conflicting with direct picker updates.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const selectedIds = fileState.ui.selectedFileIds as FileId[];
     const allIds = fileState.files.ids as FileId[];
@@ -130,10 +128,9 @@ const Compare = (props: BaseToolProps) => {
       if (prev.baseFileId === nextBase && prev.comparisonFileId === nextComp) return prev;
       return { ...prev, baseFileId: nextBase, comparisonFileId: nextComp };
     });
-  }, [fileState.ui.selectedFileIds, fileState.files.ids]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fileState.ui.selectedFileIds, fileState.files.ids]);
 
   // Clear a slot if its file is removed from the workbench.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const allIds = fileState.files.ids as FileId[];
     if (params.baseFileId && !allIds.includes(params.baseFileId as FileId)) {
@@ -142,7 +139,7 @@ const Compare = (props: BaseToolProps) => {
     if (params.comparisonFileId && !allIds.includes(params.comparisonFileId as FileId)) {
       base.params.setParameters(prev => ({ ...prev, comparisonFileId: null }));
     }
-  }, [fileState.files.ids]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fileState.files.ids]);
 
   // Track workbench data and drive loading/result state transitions
   const lastProcessedAtRef = useRef<number | null>(null);
