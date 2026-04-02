@@ -1,4 +1,4 @@
-package stirling.software.SPDF.service;
+package stirling.software.proprietary.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,14 +18,14 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.model.api.ai.AiWorkflowFileInput;
-import stirling.software.SPDF.model.api.ai.AiWorkflowFileRequest;
-import stirling.software.SPDF.model.api.ai.AiWorkflowOutcome;
-import stirling.software.SPDF.model.api.ai.AiWorkflowRequest;
-import stirling.software.SPDF.model.api.ai.AiWorkflowResponse;
-import stirling.software.SPDF.model.api.ai.AiWorkflowTextSelection;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
+import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
+import stirling.software.proprietary.model.api.ai.AiWorkflowOutcome;
+import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
+import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
+import stirling.software.proprietary.model.api.ai.AiWorkflowTextSelection;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -304,7 +304,9 @@ public class AiWorkflowService {
         return text.substring(0, end);
     }
 
-    /** Values MUST match {@code ArtifactKind} in {@code engine/src/stirling/contracts/common.py}. */
+    /**
+     * Values MUST match {@code ArtifactKind} in {@code engine/src/stirling/contracts/common.py}.
+     */
     private enum ArtifactKind {
         EXTRACTED_TEXT("extracted_text");
 

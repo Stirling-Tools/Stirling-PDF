@@ -1,4 +1,4 @@
-package stirling.software.SPDF.model.api.ai;
+package stirling.software.proprietary.model.api.ai;
 
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;

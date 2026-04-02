@@ -1,4 +1,4 @@
-package stirling.software.SPDF.model.api.ai;
+package stirling.software.proprietary.model.api.ai;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

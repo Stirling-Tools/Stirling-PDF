@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api;
+package stirling.software.proprietary.controller.api;
 
 import java.io.IOException;
 
@@ -21,10 +21,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.model.api.ai.AiWorkflowRequest;
-import stirling.software.SPDF.model.api.ai.AiWorkflowResponse;
-import stirling.software.SPDF.service.AiEngineClient;
-import stirling.software.SPDF.service.AiWorkflowService;
+import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
+import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
+import stirling.software.proprietary.service.AiEngineClient;
+import stirling.software.proprietary.service.AiWorkflowService;
 
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;

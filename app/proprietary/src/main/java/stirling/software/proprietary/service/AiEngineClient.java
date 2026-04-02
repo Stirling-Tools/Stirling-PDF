@@ -1,4 +1,4 @@
-package stirling.software.SPDF.service;
+package stirling.software.proprietary.service;
 
 import java.io.IOException;
 import java.net.URI;
