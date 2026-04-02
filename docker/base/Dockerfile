@@ -385,7 +385,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get install -y --no-install-recommends \
       # Core tools
       ca-certificates tzdata tini bash fontconfig curl \
-      ffmpeg poppler-utils fontforge \
+      # ffmpeg disabled due to raised CVEs
+      # ffmpeg \
+      poppler-utils fontforge \
       unpaper pngquant \
       # Fonts: full coverage for standard + fat variants
       fonts-dejavu \
