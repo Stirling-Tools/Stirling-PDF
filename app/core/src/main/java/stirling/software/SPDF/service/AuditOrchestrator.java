@@ -200,6 +200,13 @@ public class AuditOrchestrator {
         List<Folio> folios = new ArrayList<>();
         List<Integer> unautablePages = new ArrayList<>();
 
+        // Create a single ObjectExtractor for all table extractions in this round.
+        // Must NOT be closed — closing it invalidates the PDDocument streams.
+        boolean needsTableExtraction =
+                requisition.needTables() != null && !requisition.needTables().isEmpty();
+        ObjectExtractor tabulaExtractor =
+                needsTableExtraction ? new ObjectExtractor(document) : null;
+
         for (int page : allPages) {
             String text = null;
             List<String> tables = null;
@@ -208,8 +215,8 @@ public class AuditOrchestrator {
             if (contains(requisition.needText(), page)) {
                 text = extractText(document, page);
             }
-            if (contains(requisition.needTables(), page)) {
-                tables = extractTables(document, page);
+            if (contains(requisition.needTables(), page) && tabulaExtractor != null) {
+                tables = extractTables(tabulaExtractor, page);
             }
             if (contains(requisition.needOcr(), page)) {
                 // OCR is triggered via OCRmyPDF subprocess — not yet implemented in this
@@ -252,23 +259,25 @@ public class AuditOrchestrator {
     /**
      * Extract all tables from a single page using Tabula, returning one CSV string per table.
      * Returns an empty list if Tabula finds no tables.
+     *
+     * <p><b>Note:</b> The ObjectExtractor must NOT be closed here — closing it invalidates the
+     * underlying PDDocument streams, breaking extraction for subsequent pages. The PDDocument
+     * itself is closed by the caller in {@link #audit}.
      */
-    private List<String> extractTables(PDDocument document, int page) throws Exception {
+    private List<String> extractTables(ObjectExtractor extractor, int page) throws Exception {
         SpreadsheetExtractionAlgorithm sea = new SpreadsheetExtractionAlgorithm();
         CSVFormat format =
                 CSVFormat.EXCEL.builder().setEscape('"').setQuoteMode(QuoteMode.ALL).build();
         List<String> csvStrings = new ArrayList<>();
 
-        try (ObjectExtractor extractor = new ObjectExtractor(document)) {
-            Page tabulaPage = extractor.extract(page + 1); // Tabula is 1-indexed
-            List<Table> tables = sea.extract(tabulaPage);
+        Page tabulaPage = extractor.extract(page + 1); // Tabula is 1-indexed
+        List<Table> tables = sea.extract(tabulaPage);
 
-            for (Table table : tables) {
-                StringWriter sw = new StringWriter();
-                FlexibleCSVWriter csvWriter = new FlexibleCSVWriter(format);
-                csvWriter.write(sw, Collections.singletonList(table));
-                csvStrings.add(sw.toString());
-            }
+        for (Table table : tables) {
+            StringWriter sw = new StringWriter();
+            FlexibleCSVWriter csvWriter = new FlexibleCSVWriter(format);
+            csvWriter.write(sw, Collections.singletonList(table));
+            csvStrings.add(sw.toString());
         }
 
         return csvStrings;

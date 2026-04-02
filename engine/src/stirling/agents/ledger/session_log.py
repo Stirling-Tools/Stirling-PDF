@@ -55,6 +55,7 @@ class SessionLogger:
         self._session_id = session_id
         self._fh: Any | None = None
         self._entry = 0
+        self._start = datetime.now(timezone.utc)
 
         if not self._enabled:
             return
@@ -83,7 +84,8 @@ class SessionLogger:
         if not self._fh:
             return
         self._entry += 1
-        self._fh.write(f"--- [{self._entry}] {label} ---\n")
+        elapsed = (datetime.now(timezone.utc) - self._start).total_seconds()
+        self._fh.write(f"--- [{self._entry}] +{elapsed:.2f}s {label} ---\n")
 
     def request(self, phase: str, *, url: str = "", body: Any = None) -> None:
         if not self._enabled:

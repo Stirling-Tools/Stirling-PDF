@@ -17,6 +17,7 @@ from stirling.api.routes import (
     pdf_question_router,
 )
 from stirling.config import AppSettings, load_settings
+from stirling.config.settings import ENGINE_ROOT
 from stirling.contracts import HealthResponse
 from stirling.services import build_runtime
 
@@ -44,7 +45,7 @@ async def lifespan(fast_api: FastAPI):
         fast_model=runtime.fast_model,
         model_settings=runtime.fast_model_settings,
     )
-    configure_session_logging(settings.ai_log_level)
+    configure_session_logging(settings.ai_log_level, ENGINE_ROOT / "logs")
     yield
 
 

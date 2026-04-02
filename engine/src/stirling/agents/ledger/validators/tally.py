@@ -84,8 +84,11 @@ class TallyChecker:
             return []
 
         discrepancies: list[Discrepancy] = []
-        errors = self._check_column_totals(rows, total_row_index)
-        errors += self._check_row_totals(rows, total_col_index)
+        errors: list[TallyError] = []
+        if total_row_index is not None:
+            errors += self._check_column_totals(rows, total_row_index)
+        if total_col_index is not None:
+            errors += self._check_row_totals(rows, total_col_index)
 
         for err in errors:
             discrepancies.append(

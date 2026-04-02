@@ -135,6 +135,7 @@ class DiscrepancyKind(StrEnum):
     TALLY = "tally"            # a row/column sum is wrong
     ARITHMETIC = "arithmetic"  # an inline calculation is wrong
     CONSISTENCY = "consistency"  # the same figure is stated differently elsewhere
+    STATEMENT = "statement"    # a prose claim contradicts the numbers
 
 
 class Severity(StrEnum):

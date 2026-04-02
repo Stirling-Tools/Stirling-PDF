@@ -54,18 +54,94 @@ Rules:
 - Be precise — do not invent figures that are not in the text.
 """
 
+TABLE_FORMULA_PROMPT = """\
+You are a table formula analyser for financial document auditing.
+
+You receive a CSV table extracted from a PDF. Your task is to identify \
+every verifiable mathematical relationship between cells.
+
+Relationships fall into three scopes:
+
+1. "each_row" — a formula that should hold for every data row.
+   Example: "col3 = col1 * col2" (Line Total = Qty × Unit Price)
+
+2. "column_total" — a total row where cells = sum of the column above.
+   Example: a Subtotal row where each cell sums the column.
+
+3. "single_cell" — one specific cell computed from others.
+   Example: "cell(5,3) = cell(4,3) * 0.1" (Tax = Subtotal × 10%)
+
+Formula syntax (use exactly this):
+  - Column references: col0, col1, col2 ... (0-indexed)
+  - Cell references: cell(row, col) — 0-indexed, header is row 0
+  - Operators: + - * /
+  - sum(colN, start-end) — sum of colN from row start to row end inclusive
+  - Decimal numbers: 0.1, 100, etc.
+
+Rules:
+- Row 0 is the header. First data row is row 1.
+- Include the left-hand side: "col3 = col1 * col2" not just "col1 * col2"
+- For column_total scope, set target_row to the total row index. \
+  Set target_col to a specific column or null to check all numeric columns.
+- For each_row scope, set row_range to the data rows (exclude header \
+  and total rows).
+- Only return formulas you are confident about. Skip columns/rows \
+  where the relationship is unclear.
+- Return an empty list if the table has no verifiable math.
+"""
+
+STATEMENT_VERIFIER_PROMPT = """\
+You are a statement verifier for financial document auditing.
+
+You receive the text of a single PDF page, plus any table data from \
+that page. Your task is to find prose claims that make mathematical \
+assertions, and verify whether each claim is correct.
+
+A "verifiable claim" is a sentence that states a mathematical fact \
+about numbers present on the page or derivable from the data. Examples:
+  - "Revenue grew 15% year-over-year"
+  - "Costs decreased month on month"
+  - "Department A represents 40% of total spend"
+  - "Net margin improved to 12.4%"
+  - "Average transaction value was $250"
+
+For each claim you find:
+1. Identify the numbers referenced in the claim
+2. Perform the calculation yourself using the data on the page
+3. Compare your result to what the claim states
+4. Determine if the claim is valid (within reasonable rounding)
+
+Return:
+- claim: the exact text of the claim
+- verification: the type — "percentage_change", "comparison", \
+  "ratio", "trend", "average", or "other"
+- values_referenced: the specific numbers used in your check
+- expected_result: what the calculation actually yields
+- actual_claim: what the text claims
+- is_valid: true if the claim is correct within 1% tolerance
+- explanation: show your working, one line
+
+Rules:
+- Only check claims that can be verified from data on this page.
+- If a claim references data not on the page, skip it.
+- "Decreased month on month" means EVERY consecutive pair decreased.
+- Percentage claims allow 1% absolute tolerance (14.8% ≈ 15%).
+- Return an empty list if there are no verifiable claims.
+- Do not fabricate claims that are not in the text.
+"""
+
 SUMMARY_PROMPT = """\
 You are a summary writer for a PDF math audit tool.
 
 You receive a list of discrepancies (errors and warnings) found in a \
-document, plus coverage statistics. Write a one or two sentence \
-summary suitable for an end user.
+document, plus coverage statistics and a breakdown of what was verified. \
+Write a two to three sentence summary suitable for an end user.
 
 Rules:
-- Be concise and factual.
-- Mention the number of errors and warnings if any exist.
-- Mention unauditable pages if any exist, so the user knows \
-  coverage was incomplete.
-- If no errors were found, say so clearly.
-- Do not repeat individual discrepancy details — just summarise.
+- Start with what was verified: e.g. "Audited 6 pages: checked 4 tables \
+  (12 formulas), scanned 6 pages for arithmetic, extracted 20 figures \
+  for cross-page consistency, and verified 3 prose claims."
+- Then state the outcome: errors found or clean.
+- Mention unauditable pages if any exist.
+- Be concise and factual. Do not repeat individual discrepancy details.
 """

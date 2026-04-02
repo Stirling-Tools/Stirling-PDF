@@ -19,6 +19,7 @@ by Java, which owns the PDF from start to finish.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from decimal import Decimal
 
@@ -28,16 +29,18 @@ from pydantic_ai.models import Model
 from pydantic_ai.settings import ModelSettings
 
 from .models import (
-    Discrepancy, Evidence, Folio,
-    FolioManifest, Requisition, Verdict,
+    Discrepancy, DiscrepancyKind, Evidence, Folio,
+    FolioManifest, Requisition, Severity, Verdict,
 )
 from .prompts import (
     EXAMINER_SYSTEM_PROMPT,
     FIGURE_EXTRACTOR_PROMPT,
+    STATEMENT_VERIFIER_PROMPT,
     SUMMARY_PROMPT,
+    TABLE_FORMULA_PROMPT,
 )
 from .session_log import SessionLogger
-from .validators import ArithmeticScanner, FigureTracker, TallyChecker
+from .validators import ArithmeticScanner, FigureTracker, FormulaEvaluator
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +60,37 @@ class ExtractedFigure(BaseModel):
 class FigureExtractionResult(BaseModel):
     """All named figures found on a single page."""
     figures: list[ExtractedFigure] = Field(default_factory=list)
+
+
+class FormulaCheck(BaseModel):
+    """One verifiable mathematical relationship in a table."""
+    description: str = Field(description="Human-readable, e.g. 'Line Total = Qty × Unit Price'")
+    formula: str = Field(description="Expression: 'col3 = col1 * col2' or 'cell(4,3) = sum(col3, 1-3)'")
+    scope: str = Field(description="'each_row' | 'column_total' | 'single_cell'")
+    row_range: list[int] | None = Field(default=None, description="Data rows to check (for each_row scope)")
+    target_row: int | None = Field(default=None, description="Row index of total (for column_total/single_cell)")
+    target_col: int | None = Field(default=None, description="Column index (for column_total/single_cell)")
+
+
+class TableFormulas(BaseModel):
+    """All verifiable formulas found in one table."""
+    formulas: list[FormulaCheck] = Field(default_factory=list)
+
+
+class StatementCheck(BaseModel):
+    """One prose claim and its verification result."""
+    claim: str = Field(description="The exact text of the claim")
+    verification: str = Field(description="Type: percentage_change, comparison, ratio, trend, average, other")
+    values_referenced: list[str] = Field(default_factory=list, description="Numbers used in the check")
+    expected_result: str = Field(description="What the calculation actually yields")
+    actual_claim: str = Field(description="What the text claims")
+    is_valid: bool = Field(description="True if the claim is correct within tolerance")
+    explanation: str = Field(description="One-line working showing the calculation")
+
+
+class StatementsResult(BaseModel):
+    """All verifiable prose claims found on a page."""
+    statements: list[StatementCheck] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -84,6 +118,18 @@ class LedgerAuditorAgent:
             model=fast_model,
             output_type=FigureExtractionResult,
             system_prompt=FIGURE_EXTRACTOR_PROMPT,
+            model_settings=model_settings,
+        )
+        self._table_analyser = Agent(
+            model=fast_model,
+            output_type=TableFormulas,
+            system_prompt=TABLE_FORMULA_PROMPT,
+            model_settings=model_settings,
+        )
+        self._statement_verifier = Agent(
+            model=fast_model,
+            output_type=StatementsResult,
+            system_prompt=STATEMENT_VERIFIER_PROMPT,
             model_settings=model_settings,
         )
         self._summary_agent = Agent(
@@ -147,23 +193,10 @@ class LedgerAuditorAgent:
         pages_examined: list[int] = []
         figure_tracker = FigureTracker(tolerance=tolerance)
 
-        # Step 1: Deterministic validation — instant, no LLM
-        tally_checker = TallyChecker(tolerance=tolerance)
+        # Step 1: Arithmetic scanning (deterministic, instant)
         arithmetic_scanner = ArithmeticScanner(tolerance=tolerance)
-
         for folio in evidence.folios:
             pages_examined.append(folio.page)
-
-            if folio.tables:
-                for table_csv in folio.tables:
-                    results = tally_checker.check(folio.page, table_csv)
-                    all_discrepancies.extend(results)
-                    if slog:
-                        slog.tool_call("check_tally", args={
-                            "page": folio.page,
-                            "table_csv": table_csv[:200],
-                        }, result=[d.model_dump() for d in results])
-
             text = folio.readable_text
             if text and text.strip():
                 results = arithmetic_scanner.scan(folio.page, text)
@@ -174,26 +207,102 @@ class LedgerAuditorAgent:
                         "text_length": len(text),
                     }, result=[d.model_dump() for d in results])
 
-        logger.info(
-            "[ledger] session=%s deterministic pass: %d discrepancies from %d pages",
-            evidence.session_id, len(all_discrepancies), len(pages_examined),
-        )
-
-        # Step 2: Figure extraction — fast model, per-page
+        # Step 2: Parallel LLM calls — formula inference + figure extraction
+        # These are independent per-page so we fire them all concurrently.
+        formula_evaluator = FormulaEvaluator(tolerance=tolerance)
         folios_with_text = [f for f in evidence.folios if f.readable_text.strip()]
+
+        # Collect all tables as (page, csv) pairs for formula inference
+        table_tasks: list[tuple[int, str]] = []
+        for folio in evidence.folios:
+            if folio.tables:
+                for table_csv in folio.tables:
+                    table_tasks.append((folio.page, table_csv))
+
         logger.info(
-            "[ledger] session=%s step 2: extracting figures from %d pages",
-            evidence.session_id, len(folios_with_text),
+            "[ledger] session=%s step 2: %d formula + %d figure LLM calls (parallel)",
+            evidence.session_id, len(table_tasks), len(folios_with_text),
         )
 
-        for folio in folios_with_text:
-            for fig, page in await self._extract_figures_for_page(folio, slog):
+        # Fire all LLM calls concurrently
+        formula_coros = [self._infer_formulas(csv, slog) for _, csv in table_tasks]
+        figure_coros = [self._extract_figures_for_page(f, slog) for f in folios_with_text]
+        statement_coros = [self._verify_statements(f, slog) for f in folios_with_text]
+        all_results = await asyncio.gather(
+            *formula_coros, *figure_coros, *statement_coros,
+            return_exceptions=True,
+        )
+
+        n_formulas = len(table_tasks)
+        n_figures = len(folios_with_text)
+
+        # Process formula results
+        for i, (page, table_csv) in enumerate(table_tasks):
+            result = all_results[i]
+            if isinstance(result, Exception):
+                logger.warning("[ledger] formula inference failed for page %d: %s", page, result)
+                continue
+            formulas: TableFormulas = result
+            if not formulas.formulas:
+                logger.info("[ledger] page %d: no verifiable formulas found", page)
+                continue
+            for fc in formulas.formulas:
+                checked = formula_evaluator.evaluate(
+                    page=page,
+                    table_csv=table_csv,
+                    formula=fc.formula,
+                    scope=fc.scope,
+                    description=fc.description,
+                    row_range=fc.row_range,
+                    target_row=fc.target_row,
+                    target_col=fc.target_col,
+                )
+                all_discrepancies.extend(checked)
+                if slog:
+                    slog.tool_call("check_formula", args={
+                        "page": page,
+                        "formula": fc.formula,
+                        "scope": fc.scope,
+                        "description": fc.description,
+                    }, result=[d.model_dump() for d in checked])
+
+        # Process figure results
+        for i, folio in enumerate(folios_with_text):
+            result = all_results[n_formulas + i]
+            if isinstance(result, Exception):
+                logger.warning("[ledger] figure extraction failed for page %d: %s", folio.page, result)
+                continue
+            for fig, page in result:
                 figure_tracker.record(
                     label=fig.label,
                     value=Decimal(fig.value.replace(",", "").strip()),
                     page=page,
                     raw=fig.raw,
                 )
+
+        # Process statement verification results
+        for i, folio in enumerate(folios_with_text):
+            result = all_results[n_formulas + n_figures + i]
+            if isinstance(result, Exception):
+                logger.warning("[ledger] statement verification failed for page %d: %s", folio.page, result)
+                continue
+            stmts: StatementsResult = result
+            for sc in stmts.statements:
+                if not sc.is_valid:
+                    all_discrepancies.append(Discrepancy(
+                        page=folio.page,
+                        kind=DiscrepancyKind.STATEMENT,
+                        severity=Severity.ERROR,
+                        description=f"{sc.claim}: {sc.explanation}",
+                        stated=sc.actual_claim,
+                        expected=sc.expected_result,
+                        context=sc.claim,
+                    ))
+                if slog:
+                    slog.tool_call("verify_statement", args={
+                        "page": folio.page,
+                        "claim": sc.claim,
+                    }, result=sc.model_dump())
 
         logger.info(
             "[ledger] session=%s step 2 complete: %d figures registered",
@@ -208,13 +317,31 @@ class LedgerAuditorAgent:
                             result=[d.model_dump() for d in consistency_discrepancies])
 
         # Step 4: Summary — fast model, small payload
+        # Collect verification stats for the summary
+        total_tables = sum(len(f.tables) for f in evidence.folios if f.tables)
+        total_formulas_checked = sum(
+            len(r.formulas) for r in all_results[:n_formulas]
+            if not isinstance(r, Exception) and hasattr(r, 'formulas')
+        )
+        total_statements_checked = sum(
+            len(r.statements) for r in all_results[n_formulas + n_figures:]
+            if not isinstance(r, Exception) and hasattr(r, 'statements')
+        )
+        verification_stats = (
+            f"Verified: {len(pages_examined)} pages, {total_tables} tables "
+            f"({total_formulas_checked} formulas), "
+            f"{figure_tracker.entry_count} figures tracked, "
+            f"{total_statements_checked} prose claims checked."
+        )
+
         logger.info(
             "[ledger] session=%s step 4: generating summary (%d discrepancies)",
             evidence.session_id, len(all_discrepancies),
         )
         pages_examined.sort()
         summary = await self._generate_summary(
-            all_discrepancies, pages_examined, evidence.unauditable_pages, slog,
+            all_discrepancies, pages_examined, evidence.unauditable_pages,
+            verification_stats, slog,
         )
 
         # Step 5: Assemble Verdict
@@ -240,6 +367,51 @@ class LedgerAuditorAgent:
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+
+    async def _infer_formulas(self, table_csv: str, slog: SessionLogger | None) -> TableFormulas:
+        """Ask the fast model to infer verifiable formulas from a CSV table."""
+        try:
+            result = await self._table_analyser.run(f"CSV table:\n{table_csv}")
+            formulas = result.output
+        except Exception:
+            logger.warning("[ledger] formula inference failed, skipping table", exc_info=True)
+            formulas = TableFormulas(formulas=[])
+
+        if slog:
+            slog.tool_call("infer_formulas", args={
+                "table_csv": table_csv[:300],
+            }, result=formulas.model_dump())
+        return formulas
+
+    async def _verify_statements(
+        self, folio: Folio, slog: SessionLogger | None,
+    ) -> StatementsResult:
+        """Ask the fast model to find and verify prose claims on a page."""
+        text = folio.readable_text
+        if not text or not text.strip():
+            return StatementsResult(statements=[])
+
+        # Build context: page text + any table CSVs
+        prompt = f"Page {folio.page + 1} text:\n{text}"
+        if folio.tables:
+            prompt += "\n\nTable data on this page:\n"
+            for i, csv in enumerate(folio.tables):
+                prompt += f"\nTable {i + 1}:\n{csv}"
+
+        try:
+            result = await self._statement_verifier.run(prompt)
+            stmts = result.output
+        except Exception:
+            logger.warning("[ledger] statement verification failed for page %d", folio.page, exc_info=True)
+            stmts = StatementsResult(statements=[])
+
+        if slog and stmts.statements:
+            slog.tool_call("verify_statements", args={
+                "page": folio.page,
+                "text_length": len(text),
+                "n_tables": len(folio.tables) if folio.tables else 0,
+            }, result=[s.model_dump() for s in stmts.statements])
+        return stmts
 
     async def _extract_figures_for_page(
         self, folio: Folio, slog: SessionLogger | None,
@@ -269,12 +441,14 @@ class LedgerAuditorAgent:
         discrepancies: list[Discrepancy],
         pages_examined: list[int],
         unauditable_pages: list[int],
+        verification_stats: str,
         slog: SessionLogger | None,
     ) -> str:
         error_count = sum(1 for d in discrepancies if d.severity == "error")
         warning_count = sum(1 for d in discrepancies if d.severity == "warning")
 
         prompt = (
+            f"{verification_stats}\n"
             f"Errors: {error_count}, Warnings: {warning_count}, "
             f"Pages examined: {len(pages_examined)}, "
             f"Unauditable pages: {unauditable_pages or 'none'}.\n"

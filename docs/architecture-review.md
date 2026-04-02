@@ -2,7 +2,7 @@
 
 ## Context
 
-Review of the `feat/math-validation-agent` branch. The feature adds an AI-powered math validation agent that audits PDFs for arithmetic, tally, and cross-page consistency errors. It spans two codebases: **Java (Spring Boot)** orchestrates PDF extraction and state; **Python (Flask + pydantic-ai)** hosts the AI agents that reason about the content.
+Review of the `feat/math-validation-agent` branch after merge with `main` and refactoring to a **deterministic-first audit pipeline**. The feature adds an AI-powered math validation agent that audits PDFs for arithmetic, tally, formula, and cross-page consistency errors. It spans two codebases: **Java (Spring Boot)** orchestrates PDF extraction and state; **Python (FastAPI + pydantic-ai)** hosts the AI agents and deterministic validators that reason about the content.
 
 ---
 
@@ -21,7 +21,7 @@ The system uses a **multi-round negotiation protocol** over HTTP. Java always in
                         |
                    FolioManifest ----------------------->  POST /api/ledger/examine
                    (page types: text/image/mixed)              |
-                                                          LedgerExaminer (fast model)
+                                                          Examiner agent (fast model)
                    Requisition  <------------------------     "I need text for pages 0,2
                    (need_text, need_tables, need_ocr)          and tables for page 0"
                         |
@@ -32,11 +32,12 @@ The system uses a **multi-round negotiation protocol** over HTTP. Java always in
                         |
                    Evidence ---------------------------->  POST /api/ledger/deliberate
                    (folios with text/tables, round #)          |
-                                                          LedgerAuditor (smart model)
-                                                          |-- check_tally()
-                                                          |-- scan_arithmetic()
-                                                          |-- register_figure()
-                                                          +-- check_figure_consistency()
+                                                          LedgerAuditorAgent pipeline:
+                                                          1. ArithmeticScanner (deterministic)
+                                                          2. LLM: formula inference + figure extraction (parallel)
+                                                          3. FormulaEvaluator (deterministic)
+                                                          4. FigureTracker (deterministic)
+                                                          5. Summary agent (fast LLM)
                                                                |
                    AgentTurn <----------------------------    { verdict | requisition }
                         |
@@ -48,6 +49,7 @@ The system uses a **multi-round negotiation protocol** over HTTP. Java always in
 - **PDF never leaves Java.** Only structured text/CSV crosses the wire. This is a security and performance boundary.
 - **Python decides what it needs.** Java doesn't speculatively extract everything — it only does work Python requests.
 - **Hard cap of 3 rounds.** On round 3, `final_round=true` forces Python to commit to a Verdict with whatever evidence it has.
+- **Deterministic-first pipeline.** Regex and decimal arithmetic run before any LLM calls. The LLM infers formulas and extracts figures; deterministic validators verify them.
 
 ---
 
@@ -63,41 +65,60 @@ The system uses a **multi-round negotiation protocol** over HTTP. Java always in
 | `round` counter | Incremented 1->2->3; capped at MAX_ROUNDS when sent to Python | Local variable |
 | Tolerance | Immutable per request | Forwarded as query param to `/deliberate` |
 
-### Per-Request State (Python side — `AuditContext`)
+### Per-Request State (Python side — `LedgerAuditorAgent`)
 
-| State | Lifecycle | Where |
-|-------|-----------|-------|
-| `evidence` | Immutable, received from Java | `AuditContext.evidence` |
-| `figure_registry` | Mutable, accumulates across tool calls within one `audit()` | `AuditContext.figure_registry` (FigureTracker) |
-| `tolerance` | Immutable | `AuditContext.tolerance` |
-| `slog` (SessionLogger) | Created per audit call if trace logging enabled | `AuditContext.slog` |
-
-**Critical observation:** Python is **stateless between HTTP calls**. Each `/deliberate` call gets a fresh `AuditContext`. The `FigureTracker` only accumulates figures within a single round — it does NOT carry over between rounds. This means cross-page consistency checking only works within a single deliberation round, not across rounds.
+The Python engine is **stateless between HTTP calls**. Each `/deliberate` call constructs a fresh pipeline run. The `FigureTracker` only accumulates figures within a single round — it does NOT carry over between rounds. Cross-page consistency checking only works within a single deliberation round, not across rounds.
 
 ---
 
-## 3. The Two-Agent Pattern
+## 3. The Deterministic-First Pipeline
 
-### LedgerExaminer (Fast, Cheap — Round 1 only)
-- **Model:** `claude-haiku-4-5` or `gpt-5-mini`
-- **Input:** `FolioManifest` (page types)
-- **Output:** `Requisition` (what to extract)
-- **Purpose:** Triage. Decides which pages need text, tables, or OCR. Keeps Round 1 cheap.
+The previous architecture used a two-agent pattern (Examiner + Auditor-with-tools). The current architecture replaces the tool-calling Auditor with a **5-step deterministic-first pipeline** inside `LedgerAuditorAgent`:
 
-### LedgerAuditor (Smart, Expensive — Round 2+)
-- **Model:** `claude-sonnet-4-5` or `gpt-5`
-- **Input:** `Evidence` (extracted content) via `AuditContext`
-- **Output:** `Verdict` (findings)
-- **Tools available:**
+### Step 1: Arithmetic Scanning (deterministic, no LLM)
+- `ArithmeticScanner` uses regex patterns to detect inline expressions (e.g. `100 + 200 = 300`) and totals (e.g. `Total: 450 (100 + 200 + 150)`)
+- Returns `Discrepancy` objects for mismatches
+- Uses `Decimal` arithmetic with configurable tolerance
 
-| Tool | What it does | Deterministic? |
-|------|-------------|----------------|
-| `check_tally(page, table_csv, ...)` | Validates row/column sums in CSV tables | Yes — `Decimal` arithmetic |
-| `scan_arithmetic(page, text)` | Regex-based inline expression checker (e.g. `100 + 200 = 300`) | Yes — regex + `Decimal` |
-| `register_figure(label, value_str, page, raw)` | Records named figures for cross-page checking | N/A (accumulator) |
-| `check_figure_consistency()` | Finds figures with conflicting values across pages | Yes — label normalization + `Decimal` comparison |
+### Step 2: Parallel LLM Calls (concurrent per-page)
+Two LLM tasks run concurrently via `asyncio.gather()`:
+- **Formula inference** (`_table_analyser` agent): inspects CSV tables and suggests verifiable formulas with scopes (`each_row`, `column_total`, `single_cell`)
+- **Figure extraction** (`_figure_extractor` agent): extracts named numeric figures from page text for cross-page consistency
 
-**The tools do the real math; the LLM decides when/how to call them.** The validators (`TallyChecker`, `ArithmeticScanner`, `FigureTracker`) are pure deterministic code using `Decimal` arithmetic — no LLM involved in the actual number crunching.
+### Step 3: Formula Verification (deterministic, no LLM)
+- `FormulaEvaluator` checks LLM-inferred formulas against actual table data
+- Supports three scopes: `each_row`, `column_total`, `single_cell`
+- Safe expression evaluation (no `eval()`)
+- Syntax: `col3 = col1 * col2`, `cell(4,3) = sum(col3, 1-3)`
+
+### Step 4: Figure Consistency (deterministic, no LLM)
+- `FigureTracker` performs cross-page consistency checking
+- Label normalization via regex
+- Detects when the same named figure is stated differently on different pages
+
+### Step 5: Summary Generation (fast LLM call)
+- `_summary_agent` generates a human-readable summary of all findings
+- Falls back to a programmatic summary if the LLM call fails
+
+### Four Specialized pydantic-ai Agents
+
+| Agent | Model | Input | Output | Purpose |
+|-------|-------|-------|--------|---------|
+| `_examiner` | fast | `FolioManifest` | `Requisition` | Triage: decides which pages need text, tables, or OCR |
+| `_figure_extractor` | fast | Page text | Named figures | Extracts labelled numeric values for cross-page checking |
+| `_table_analyser` | fast | CSV tables | Formula suggestions | Infers verifiable mathematical relationships in tables |
+| `_summary_agent` | fast | Discrepancy list | Summary text | Generates human-readable audit summary |
+
+All agents use the **fast model** tier. The LLM reasons about structure; deterministic validators do the math.
+
+### Four Deterministic Validators
+
+| Validator | What it does | Input |
+|-----------|-------------|-------|
+| `ArithmeticScanner` | Regex-based inline expression checker | Page text |
+| `TallyChecker` | CSV row/column sum validation | Tabula CSV output |
+| `FormulaEvaluator` | Verifies LLM-inferred formulas against table data | CSV + formula specs |
+| `FigureTracker` | Cross-page figure consistency | Extracted named figures |
 
 ---
 
@@ -123,7 +144,7 @@ The system uses a **multi-round negotiation protocol** over HTTP. Java always in
 | Type | Values | Purpose |
 |------|--------|---------|
 | `FolioType` | `text`, `image`, `mixed` | Page classification from PDFBox scan |
-| `DiscrepancyKind` | `tally`, `arithmetic`, `consistency` | Error category |
+| `DiscrepancyKind` | `tally`, `arithmetic`, `consistency`, `statement` | Error category |
 | `Severity` | `error`, `warning` | Error vs informational |
 
 All JSON uses **snake_case** on the wire. Java records use `@JsonProperty` annotations for mapping.
@@ -140,42 +161,69 @@ All JSON uses **snake_case** on the wire. Java records use `@JsonProperty` annot
 | `service/AuditOrchestrator.java` | Multi-round negotiation loop, PDF extraction (PDFBox + Tabula) |
 | `service/AiEngineClient.java` | HTTP client for Python engine (`examine` + `deliberate`) |
 | `config/AiEngineClientConfig.java` | `RestTemplate` bean |
-| `model/api/ai/*.java` | All wire protocol DTOs (records) |
+| `model/api/ai/*.java` | All wire protocol DTOs (records): `FolioManifest`, `Requisition`, `Folio`, `Evidence`, `AuditDiscrepancy`, `Verdict`, `AgentTurn`, `FolioType` |
+
+All Java files live under `app/core/src/main/java/stirling/software/SPDF/`.
 
 ### Python
 
 | File | Purpose |
 |------|---------|
-| `engine/src/ledger/routes.py` | Flask blueprint: `/api/ledger/examine` + `/api/ledger/deliberate` |
-| `engine/src/ledger/agent.py` | Two pydantic-ai agents + 4 tool definitions |
-| `engine/src/ledger/deps.py` | `AuditContext` dataclass (dependency injection) |
-| `engine/src/ledger/prompts.py` | System prompts for Examiner and Auditor |
-| `engine/src/ledger/models.py` | Pydantic models mirroring Java DTOs |
-| `engine/src/ledger/validators/tally.py` | CSV table sum validation |
-| `engine/src/ledger/validators/arithmetic.py` | Inline expression validation |
-| `engine/src/ledger/validators/figures.py` | Cross-page figure consistency |
-| `engine/src/config.py` | Model selection, token limits, logging config |
-| `engine/src/ai_logging.py` | Per-session trace logging |
+| `stirling/api/app.py` | FastAPI application with lifespan startup |
+| `stirling/api/routes/ledger.py` | Routes: `/api/ledger/examine` + `/api/ledger/deliberate` |
+| `stirling/api/dependencies.py` | FastAPI `Depends()` injection for agents |
+| `stirling/agents/ledger/agent.py` | `LedgerAuditorAgent`: 4 pydantic-ai agents + 5-step pipeline |
+| `stirling/agents/ledger/prompts.py` | System prompts for Examiner, Figure Extractor, Table Analyser, Summary |
+| `stirling/agents/ledger/models.py` | Pydantic models mirroring Java DTOs |
+| `stirling/agents/ledger/session_log.py` | Per-session trace logging (`SessionLog`) |
+| `stirling/agents/ledger/validators/arithmetic.py` | `ArithmeticScanner` — inline expression validation |
+| `stirling/agents/ledger/validators/tally.py` | `TallyChecker` — CSV table sum validation |
+| `stirling/agents/ledger/validators/formula.py` | `FormulaEvaluator` — LLM-inferred formula verification |
+| `stirling/agents/ledger/validators/figures.py` | `FigureTracker` — cross-page figure consistency |
+| `stirling/config/settings.py` | `AppSettings` (pydantic-settings, reads from `.env`) |
+| `stirling/services/runtime.py` | `AppRuntime` dataclass holding Model objects and settings |
+
+All Python files live under `engine/src/`.
 
 ---
 
-## 6. Expandability for Future Agents
+## 6. Broader Engine Architecture
 
-### The pattern to replicate
+The Python engine is not ledger-specific. It hosts multiple AI agent domains:
 
-Each new agent type needs:
+```
+engine/src/stirling/
+├── agents/                    # AI reasoning modules
+│   ├── ledger/                # Ledger auditor (this feature)
+│   ├── orchestrator.py        # Routes requests to domain-specific agents
+│   ├── execution.py           # Execution planning agent
+│   ├── pdf_edit.py            # PDF modification agent
+│   ├── pdf_questions.py       # PDF question-answering agent
+│   └── user_spec.py           # User specification agent
+├── api/                       # FastAPI routes & startup
+│   ├── app.py                 # FastAPI app with lifespan
+│   ├── dependencies.py        # Depends() injection
+│   └── routes/                # One module per domain
+├── contracts/                 # Request/response Pydantic models
+├── models/                    # Base model types (ApiModel, OperationId)
+├── services/                  # Shared runtime infrastructure
+└── config/                    # AppSettings (pydantic-settings)
+```
 
-**Python side** — new directory under `engine/src/{agent_name}/`:
+**Agent lifecycle:** All agents are instantiated once at startup (in `app.py` lifespan) and stored on `app.state`. FastAPI `Depends()` functions retrieve them per-request.
+
+### The pattern to replicate for new agents
+
+**Python side** — new directory under `engine/src/stirling/agents/{agent_name}/`:
 ```
 {agent_name}/
-  routes.py      -- Flask blueprint with endpoints
-  agent.py       -- pydantic-ai Agent(s) with tools
-  deps.py        -- context/dependency dataclass
-  prompts.py     -- system prompts
+  __init__.py
+  agent.py       -- pydantic-ai Agent(s) or pipeline class
   models.py      -- wire protocol Pydantic models
-  validators/    -- deterministic validation logic
+  prompts.py     -- system prompts
+  validators/    -- deterministic validation logic (if applicable)
 ```
-Register routes in `engine/src/app.py`.
+Register routes in `stirling/api/routes/` and include in `app.py`.
 
 **Java side:**
 ```
@@ -189,11 +237,11 @@ controller/     -- new REST endpoint
 | Reusable | Agent-Specific |
 |----------|----------------|
 | `AiEngineClientConfig` (RestTemplate bean) | Orchestrator loop logic |
-| `FolioManifest` / `FolioType` (page classification) | Agent tools and validators |
+| `FolioManifest` / `FolioType` (page classification) | Agent pipeline and validators |
 | PDF extraction utilities (text, tables) | System prompts |
-| `SessionLogger` / `ai_logging.py` | Wire protocol models beyond Folio |
-| Config infrastructure (`config.py`, model selection) | Controller endpoint |
-| Docker/deployment setup | Domain-specific tolerance/params |
+| `SessionLog` / session logging | Wire protocol models beyond Folio |
+| Config infrastructure (`AppSettings`, `AppRuntime`) | Controller endpoint |
+| FastAPI dependency injection pattern | Domain-specific tolerance/params |
 
 ### Current limitations for expansion
 
@@ -213,19 +261,19 @@ controller/     -- new REST endpoint
 3. **Orchestrator Round 1:**
    - Loads PDF, classifies 3 pages: `[text, text, text]`
    - Sends `FolioManifest{session_id: "abc", page_count: 3, folio_types: [text,text,text], round: 1}`
-   - **Examiner** (Haiku) returns `Requisition{need_text: [0,1,2], need_tables: [0,1], rationale: "Pages 0-1 appear to have tabular data"}`
+   - **Examiner** returns `Requisition{need_text: [0,1,2], need_tables: [0,1], rationale: "Pages 0-1 appear to have tabular data"}`
 4. **Orchestrator Round 2:**
    - Extracts text for pages 0,1,2 via PDFBox
    - Extracts tables for pages 0,1 via Tabula as CSV strings
    - Builds `Evidence{folios: [...], round: 2, final_round: false}`
    - Sends to `/deliberate?tolerance=0.01`
-   - **Auditor** (Sonnet) creates `AuditContext`, calls tools:
-     - `check_tally(0, csv_data)` -> finds column sum mismatch: stated 5000, actual 4850
-     - `scan_arithmetic(0, text)` -> no inline expressions found
-     - `register_figure("Total Revenue", "5000", 0, "Total Revenue: 5,000")`
-     - `register_figure("Total Revenue", "4850", 2, "Revenue brought forward: 4,850")`
-     - `check_figure_consistency()` -> WARNING: "Total Revenue" conflicting values
-   - Returns `Verdict{clean: false, discrepancies: [tally_error, consistency_warning], ...}`
+   - **LedgerAuditorAgent** runs 5-step pipeline:
+     1. `ArithmeticScanner` — scans all page text for inline expression errors
+     2. `_figure_extractor` + `_table_analyser` — concurrent LLM calls per page
+     3. `FormulaEvaluator` — checks inferred table formulas (e.g. column sum mismatch: stated 5000, actual 4850)
+     4. `FigureTracker` — detects "Total Revenue" stated as 5,000 on page 0 but 4,850 on page 2
+     5. `_summary_agent` — generates human-readable summary
+   - Returns `Verdict{clean: false, discrepancies: [formula_error, consistency_warning], ...}`
 5. **Orchestrator** sees `AgentTurn.isFinal() == true`, returns Verdict
 6. **Controller** returns JSON to client
 
@@ -233,11 +281,12 @@ controller/     -- new REST endpoint
 
 | Scenario | Behavior |
 |----------|----------|
-| Image-only pages | Classified as `IMAGE`, examiner requests OCR, Java marks unauditable, auditor works with available pages |
-| Round 3 forced final | `final_round=true` sent, auditor must commit to Verdict with current evidence |
+| Image-only pages | Classified as `IMAGE`, examiner requests OCR, Java marks unauditable, pipeline works with available pages |
+| Round 3 forced final | `final_round=true` sent, pipeline must commit to Verdict with current evidence |
 | Empty requisition | Orchestrator enters deliberation with empty evidence |
 | Python returns error | Spring `RestTemplate` throws `HttpClientErrorException`, propagates to client |
 | Python returns requisition on final round | Java throws `IllegalStateException` |
+| Summary LLM fails | Falls back to programmatic summary generation |
 
 ---
 
@@ -245,9 +294,11 @@ controller/     -- new REST endpoint
 
 | Asset | Location | Purpose |
 |-------|----------|---------|
-| 5 test PDFs | `testing/ledger/generate_test_pdfs.py` | Clean, tally error, arithmetic error, consistency error, mixed |
-| Postman collection | `testing/ledger/Ledger_Auditor_API.postman_collection.json` | 9 automated API tests |
-| Manual test plan | `testing/ledger/ledger-auditor-manual-test-plan.md` | 16 test cases (T-01 to T-16) |
+| Test PDFs | `testing/ledger/generate_test_pdfs.py` | Clean, tally error, arithmetic error, consistency error, mixed |
+| Stress test PDF | `testing/ledger/stress_100_pages.pdf` | 100-page stress test |
+| Combined test PDF | `testing/ledger/all_combined.pdf` | All error types combined |
+| Postman collection | `testing/ledger/Ledger_Auditor_API.postman_collection.json` | Automated API tests |
+| Manual test plan | `testing/ledger/ledger-auditor-manual-test-plan.md` | Test cases |
 | Session logs | `engine/src/logs/ai_sessions/` | Trace-level per-session AI interaction logs |
 
 ---
@@ -259,13 +310,41 @@ controller/     -- new REST endpoint
 stirling.ai.engine.url=${STIRLING_AI_ENGINE_URL:http://localhost:5001}
 ```
 
-### Python (`engine/config/.env`)
+### Python (`engine/.env` + `stirling/config/settings.py`)
+
+Configuration uses **pydantic-settings** (`AppSettings`) which reads from `engine/.env`.
+
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `STIRLING_SMART_MODEL` | `claude-sonnet-4-5-20250929` | Auditor model |
-| `STIRLING_FAST_MODEL` | `claude-haiku-4-5-20251001` | Examiner model |
+| `STIRLING_SMART_MODEL` | `anthropic:claude-haiku-4-5` | High-power model tier |
+| `STIRLING_FAST_MODEL` | `anthropic:claude-haiku-4-5` | Fast model tier (used by all ledger agents) |
+| `STIRLING_SMART_MODEL_MAX_TOKENS` | `8192` | Smart model token limit |
+| `STIRLING_FAST_MODEL_MAX_TOKENS` | `2048` | Fast model token limit |
 | `STIRLING_AI_LOG_LEVEL` | `info` | `info` / `debug` / `trace` |
-| `STIRLING_SMART_MODEL_MAX_TOKENS` | `8192` | Auditor token limit |
-| `STIRLING_FAST_MODEL_MAX_TOKENS` | `2048` | Examiner token limit |
-| `STIRLING_ANTHROPIC_API_KEY` | — | Claude API key |
-| `STIRLING_OPENAI_API_KEY` | — | GPT API key (alternative) |
+| `ANTHROPIC_API_KEY` | — | Claude API key (read directly by pydantic-ai) |
+| `OPENAI_API_KEY` | — | GPT API key (read directly by pydantic-ai) |
+
+Model strings use the `provider:model` format (e.g. `anthropic:claude-haiku-4-5`). Any model that supports `json_schema` structured output is compatible.
+
+### Runtime (`AppRuntime`)
+```python
+@dataclass(frozen=True)
+class AppRuntime:
+    settings: AppSettings
+    fast_model: Model
+    smart_model: Model
+```
+Built once at startup and shared across all agents.
+
+---
+
+## 10. Technology Stack (Python Engine)
+
+| Component | Technology | Notes |
+|-----------|-----------|-------|
+| Web framework | **FastAPI** (was Flask) | Lifespan startup, `APIRouter`, `Depends()` |
+| AI framework | **pydantic-ai** | Structured outputs, agent tool-calling |
+| Data models | **Pydantic v2** | All wire contracts, `ApiModel` base class |
+| Configuration | **pydantic-settings** | `.env` file + environment variable override |
+| Python version | **3.13+** | Required minimum |
+| Server | **Uvicorn** | ASGI server |

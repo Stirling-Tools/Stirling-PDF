@@ -214,6 +214,64 @@ def create_mixed_errors():
     print("  mixed_errors.pdf")
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# 6. Statement errors — prose claims that contradict the numbers
+# ─────────────────────────────────────────────────────────────────────────────
+def create_statement_errors():
+    pdf = _new_pdf()
+    pdf.add_page()
+
+    _heading(pdf, "FY2025 Annual Review - Statement Errors")
+    _body(pdf)
+
+    # Table with correct numbers
+    _table_row(pdf, ["Metric", "FY2024", "FY2025"], bold=True)
+    _table_row(pdf, ["Revenue", "$10,000,000", "$11,200,000"])
+    _table_row(pdf, ["Expenses", "$7,500,000", "$8,100,000"])
+    _table_row(pdf, ["Profit", "$2,500,000", "$3,100,000"])
+    _table_row(pdf, ["Headcount", "142", "187"])
+
+    pdf.ln(5)
+
+    # Correct claim: profit grew from 2.5M to 3.1M = 24% growth
+    pdf.cell(
+        0, 8,
+        "Profit grew 24% year-over-year, from $2,500,000 to $3,100,000.",
+        new_x="LMARGIN", new_y="NEXT",
+    )
+
+    # BUG: Revenue grew from 10M to 11.2M = 12% growth, NOT 15%
+    pdf.cell(
+        0, 8,
+        "Revenue increased 15% compared to the prior year.",
+        new_x="LMARGIN", new_y="NEXT",
+    )
+
+    # BUG: Expenses went UP from 7.5M to 8.1M, NOT decreased
+    pdf.cell(
+        0, 8,
+        "Operating expenses decreased year-over-year.",
+        new_x="LMARGIN", new_y="NEXT",
+    )
+
+    # BUG: Headcount grew from 142 to 187 = 31.7%, NOT 25%
+    pdf.cell(
+        0, 8,
+        "The team expanded by 25%, growing from 142 to 187 employees.",
+        new_x="LMARGIN", new_y="NEXT",
+    )
+
+    # Correct claim: profit margin = 3.1M / 11.2M = 27.68%
+    pdf.cell(
+        0, 8,
+        "Net profit margin reached approximately 28%.",
+        new_x="LMARGIN", new_y="NEXT",
+    )
+
+    pdf.output("testing/ledger/statement_errors.pdf")
+    print("  statement_errors.pdf")
+
+
 if __name__ == "__main__":
     import os
     os.makedirs("testing/ledger", exist_ok=True)
@@ -223,4 +281,5 @@ if __name__ == "__main__":
     create_arithmetic_error()
     create_consistency_error()
     create_mixed_errors()
+    create_statement_errors()
     print("Done!")
