@@ -46,12 +46,12 @@ export function ScopedOperationButton({ selectedFiles, disableScopeHints, ...pro
 
   return (
     <>
+      <OperationButton {...props} submitText={scopedText} />
       {viewerFileName && (
-        <Text size="xs" c="dimmed" ta="center" mx="md" mb={4}>
+        <Text size="xs" c="dimmed" ta="center" mx="md" mt={2}>
           {t('tool.singleFileScope', 'Only applying to: {{fileName}}', { fileName: viewerFileName })}
         </Text>
       )}
-      <OperationButton {...props} submitText={scopedText} />
     </>
   );
 }
