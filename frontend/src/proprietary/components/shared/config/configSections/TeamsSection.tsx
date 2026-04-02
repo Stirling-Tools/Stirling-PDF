@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { isAxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
 import {
   Stack,
@@ -83,12 +84,11 @@ export default function TeamsSection() {
       setNewTeamName('');
       setCreateModalOpened(false);
       await fetchTeams();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to create team:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.teams.createTeam.error');
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) || t('workspace.teams.createTeam.error');
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
@@ -109,12 +109,11 @@ export default function TeamsSection() {
       setSelectedTeam(null);
       setRenameModalOpened(false);
       await fetchTeams();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to rename team:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.teams.renameTeam.error');
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) || t('workspace.teams.renameTeam.error');
       alert({ alertType: 'error', title: errorMessage });
     } finally {
       setProcessing(false);
@@ -135,12 +134,12 @@ export default function TeamsSection() {
       await teamService.deleteTeam(team.id);
       alert({ alertType: 'success', title: t('workspace.teams.deleteTeam.success') });
       await fetchTeams();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to delete team:', error);
-      const errorMessage = error.response?.data?.message ||
-                          error.response?.data?.error ||
-                          error.message ||
-                          t('workspace.teams.deleteTeam.error');
+      const errorMessage = isAxiosError(error)
+        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        : (error instanceof Error ? error.message : undefined) ||
+        t('workspace.teams.deleteTeam.error');
       alert({ alertType: 'error', title: errorMessage });
     }
   };

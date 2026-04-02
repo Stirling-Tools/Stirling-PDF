@@ -34,12 +34,12 @@ export const ManageBillingButton: React.FC<ManageBillingButtonProps> = ({
       // Open billing portal in new tab
       window.open(response.url, '_blank');
       setLoading(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to open billing portal:', error);
       alert({
         alertType: 'error',
         title: t('billing.portal.error', 'Failed to open billing portal'),
-        body: error.message || 'Please try again or contact support.',
+        body: (error instanceof Error ? error.message : undefined) || 'Please try again or contact support.',
       });
       setLoading(false);
     }

@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { fetch } from '@tauri-apps/plugin-http';
 import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
+import { selfHostedServerMonitor } from '@app/services/selfHostedServerMonitor';
 
 export type ConnectionMode = 'saas' | 'selfhosted' | 'local';
 
@@ -37,6 +38,7 @@ export interface ConnectionTestResult {
 }
 
 export const LOCAL_MODE_STORAGE_KEY = 'stirling-local-mode';
+export const JWT_EXPIRED_PROMPTED_KEY = 'stirling-jwt-expired-prompted';
 
 export class ConnectionModeService {
   private static instance: ConnectionModeService;
@@ -87,8 +89,11 @@ export class ConnectionModeService {
 
       const localFlag = localStorage.getItem(LOCAL_MODE_STORAGE_KEY);
 
-      if (config.mode === 'saas' && localFlag === 'true') {
-        // User previously chose local-only mode.
+      if (localFlag === 'true') {
+        // User previously chose local-only mode (signed out or explicitly went offline).
+        // Applies to both 'saas' and 'selfhosted' store modes — the Rust guard on locked
+        // deployments can't change 'selfhosted' to 'saas' in the store, so we check the
+        // flag regardless of what the store says.
         config.mode = 'local';
       } else if (
         config.mode === 'saas' &&
@@ -122,8 +127,9 @@ export class ConnectionModeService {
       throw new Error('Connection mode is locked by provisioning');
     }
 
-    // Clear local-only flag if switching to a real account
+    // Clear local-only flag and expiry-prompted flag when signing in
     localStorage.removeItem(LOCAL_MODE_STORAGE_KEY);
+    localStorage.removeItem(JWT_EXPIRED_PROMPTED_KEY);
 
     console.log('Switching to SaaS mode');
 
@@ -153,18 +159,17 @@ export class ConnectionModeService {
     // the 'local' distinction purely on the TypeScript side.
     localStorage.setItem(LOCAL_MODE_STORAGE_KEY, 'true');
 
-    // When a locked provisioned deployment falls back to local, preserve the server URL
-    // so the SetupWizard can pre-fill it if the user tries to sign in again.
-    if (this.currentConfig?.lock_connection_mode && this.currentConfig.server_config?.url) {
-      localStorage.setItem('stirling-provisioned-server-url', this.currentConfig.server_config.url);
-    }
-
     await invoke('set_connection_mode', {
       mode: 'saas',
       serverConfig: null,
     });
 
-    this.currentConfig = { mode: 'local', server_config: null, lock_connection_mode: this.currentConfig?.lock_connection_mode ?? false };
+    // For locked deployments, preserve server_config so the sign-in form can still
+    // show the correct server URL if the user wants to sign in later.
+    const isLocked = this.currentConfig?.lock_connection_mode ?? false;
+    const preservedServerConfig = isLocked ? (this.currentConfig?.server_config ?? null) : null;
+
+    this.currentConfig = { mode: 'local', server_config: preservedServerConfig, lock_connection_mode: isLocked };
 
     // Clear endpoint availability cache when mode changes
     endpointAvailabilityService.clearCache();
@@ -173,8 +178,9 @@ export class ConnectionModeService {
   }
 
   async switchToSelfHosted(serverConfig: ServerConfig): Promise<void> {
-    // Clear local-only flag if switching to a real account
+    // Clear local-only flag and expiry-prompted flag when signing in
     localStorage.removeItem(LOCAL_MODE_STORAGE_KEY);
+    localStorage.removeItem(JWT_EXPIRED_PROMPTED_KEY);
 
     console.log('Switching to self-hosted mode:', serverConfig);
 
@@ -188,6 +194,10 @@ export class ConnectionModeService {
     // Clear endpoint availability cache when mode changes
     endpointAvailabilityService.clearCache();
     console.log('Cleared endpoint availability cache due to connection mode change');
+
+    // Single authoritative calling point for health monitoring — every path that
+    // switches to self-hosted mode funnels through here.
+    selfHostedServerMonitor.start(serverConfig.url);
 
     this.notifyListeners();
 
