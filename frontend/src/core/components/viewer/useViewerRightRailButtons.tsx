@@ -31,7 +31,7 @@ export function useViewerRightRailButtons(
   const [isPanning, setIsPanning] = useState<boolean>(() => viewer.getPanState()?.isPanning ?? false);
   const { sidebarRefs } = useSidebarContext();
   const { position: tooltipPosition } = useRightRailTooltipSide(sidebarRefs, 12);
-  const { handleToolSelect, handleBackToTools } = useToolWorkflow();
+  const { handleToolSelect, handleToolSelectForced, handleBackToTools } = useToolWorkflow();
   const { selectedTool } = useNavigationState();
   const { requestNavigation } = useNavigationGuard();
   const { redactionsApplied, activeType: redactionActiveType } = useRedaction();
@@ -373,7 +373,9 @@ export function useViewerRightRailButtons(
                     window.history.pushState(null, '', targetPath);
                   }
                   setIsAnnotationsActive(true);
-                  handleToolSelect('annotate');
+                  // Use handleToolSelectForced to bypass the unsaved-changes guard —
+                  // the navigation warning modal already handled that check.
+                  handleToolSelectForced('annotate');
                 };
 
                 if (hasRedactionChanges) {

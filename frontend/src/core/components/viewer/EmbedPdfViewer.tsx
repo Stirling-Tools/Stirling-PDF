@@ -16,7 +16,6 @@ import { useSignature } from '@app/contexts/SignatureContext';
 import { useRedaction } from '@app/contexts/RedactionContext';
 import type { RedactionPendingTrackerAPI } from '@app/components/viewer/RedactionPendingTracker';
 import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
-import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 import { isStirlingFile, getFormFillFileId } from '@app/types/fileContext';
 import { useViewerRightRailButtons } from '@app/components/viewer/useViewerRightRailButtons';
 import { StampPlacementOverlay } from '@app/components/viewer/StampPlacementOverlay';
@@ -196,7 +195,7 @@ const EmbedPdfViewerContent = ({
   const selectedFileIds = state.ui.selectedFileIds;
 
   // Navigation guard for unsaved changes
-  const { setHasUnsavedChanges, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker } = useNavigationGuard();
+  const { setHasUnsavedChanges, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker, registerNavigationWarningHandlers, unregisterNavigationWarningHandlers } = useNavigationGuard();
 
   const { selectedTool } = useNavigationState();
 
@@ -619,7 +618,7 @@ const EmbedPdfViewerContent = ({
       const parentStub = selectors.getStirlingFileStub(currentFileId);
       if (!parentStub) throw new Error('Parent stub not found');
 
-      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, 'multiTool');
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, selectedTool ?? 'multiTool');
 
       // Store the page to restore after file replacement triggers re-render
       pendingScrollRestoreRef.current = pageToRestore;
@@ -673,7 +672,7 @@ const EmbedPdfViewerContent = ({
       if (!parentStub) throw new Error('Parent stub not found');
 
       // Create StirlingFiles and stubs for version history
-      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, 'multiTool');
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, selectedTool ?? 'multiTool');
 
       // Store the page to restore after file replacement
       pendingScrollRestoreRef.current = pageToRestore;
@@ -731,7 +730,7 @@ const EmbedPdfViewerContent = ({
       const parentStub = selectors.getStirlingFileStub(currentFileId);
       if (!parentStub) throw new Error('Parent stub not found');
 
-      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, 'multiTool');
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, selectedTool ?? 'multiTool');
 
       pendingScrollRestoreRef.current = pageToRestore;
       scrollRestoreAttemptsRef.current = 0;
@@ -786,7 +785,7 @@ const EmbedPdfViewerContent = ({
       const parentStub = selectors.getStirlingFileStub(currentFileId);
       if (!parentStub) throw new Error('Parent stub not found');
 
-      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, 'multiTool');
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, selectedTool ?? 'multiTool');
 
       // Store view state to restore after file replacement
       pendingScrollRestoreRef.current = pageToRestore;
@@ -806,6 +805,28 @@ const EmbedPdfViewerContent = ({
       console.error('Failed to save applied redactions:', error);
     }
   }, [redactionsApplied, currentFile, activeFiles, activeFileIndex, activeFileIds.length, exportActions, actions, selectors, setRedactionsApplied, rotationState.rotation]);
+
+  // Register navigation warning handlers so the global modal can call our save/discard logic
+  useEffect(() => {
+    if (previewFile) return;
+
+    registerNavigationWarningHandlers({
+      onApplyAndContinue: async () => {
+        await applyChanges();
+      },
+      onDiscardAndContinue: async () => {
+        await discardAndSaveApplied();
+        const historyApi = historyApiRef.current;
+        if (historyApi?.canUndo) {
+          while (historyApi.canUndo()) {
+            historyApi.undo?.();
+          }
+        }
+        hasAnnotationChangesRef.current = false;
+      },
+    });
+    return () => unregisterNavigationWarningHandlers();
+  }, [previewFile, applyChanges, discardAndSaveApplied, registerNavigationWarningHandlers, unregisterNavigationWarningHandlers]);
 
   // Restore scroll position after file replacement or tool switch
   // Uses polling with retries to ensure the scroll succeeds
@@ -1122,20 +1143,6 @@ const EmbedPdfViewerContent = ({
         onLayersDetected={setHasLayers}
       />
 
-      {/* Navigation Warning Modal */}
-      {!previewFile && (
-        <NavigationWarningModal
-          onApplyAndContinue={async () => {
-            await applyChanges();
-          }}
-          onDiscardAndContinue={async () => {
-            // Save applied redactions (if any) while discarding pending ones
-            await discardAndSaveApplied();
-            // Reset annotation changes ref so future show/hide doesn't re-prompt
-            hasAnnotationChangesRef.current = false;
-          }}
-        />
-      )}
     </Box>
   );
 };

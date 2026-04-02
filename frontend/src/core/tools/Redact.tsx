@@ -96,7 +96,7 @@ const Redact = (props: BaseToolProps) => {
 
   // Compute actual collapsed state based on results and user state
   const getActualCollapsedState = (userCollapsed: boolean) => {
-    return (!base.hasFiles || base.hasResults) ? true : userCollapsed; // Force collapse when results are shown
+    return base.hasResults ? true : userCollapsed; // Force collapse when results are shown
   };
 
   // Build conditional steps based on redaction mode
@@ -117,7 +117,6 @@ const Redact = (props: BaseToolProps) => {
             mode={base.params.parameters.mode}
             onModeChange={handleModeChange}
             disabled={base.endpointLoading}
-            hasFilesSelected={base.hasFiles}
             hasAnyFiles={hasAnyFiles}
           />
         ),
