@@ -8,7 +8,7 @@ import { StirlingFile } from '@app/types/fileContext';
  * Returns the effective file set for tool operations.
  *
  * - Viewer: scopes to the single file currently shown, unless ignoreViewerScope is true.
- * - FileEditor with ≥1 selected files: scopes to the selected subset.
+ * - FileEditor: scopes to the selected subset (empty selection → empty → button disabled).
  * - PageEditor / custom workbenches: returns all loaded files (selection tracks pages, not files).
  */
 export function useViewScopedFiles(ignoreViewerScope = false): StirlingFile[] {
@@ -23,7 +23,7 @@ export function useViewScopedFiles(ignoreViewerScope = false): StirlingFile[] {
       return viewerFile ? [viewerFile] : allFiles;
     }
 
-    if (workbench === 'fileEditor' && selectedFiles.length > 0) {
+    if (workbench === 'fileEditor') {
       return selectedFiles;
     }
 
