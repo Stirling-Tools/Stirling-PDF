@@ -7529,6 +7529,7 @@ viewerMode = "Switch to the file editor to select multiple files."
 singleFileScope = "Only applying to: {{fileName}}"
 scopeThisFile = "this file"
 scopeFiles = "files"
+selectFilesHint = "Select files in Active Files to run this tool"
 
 [tools]
 noSearchResults = "No tools found"
