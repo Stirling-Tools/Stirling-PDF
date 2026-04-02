@@ -64,6 +64,8 @@ public class ConvertPdfToVideoController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
+    // ffmpeg disabled due to raised CVEs
+    /*
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/pdf/video")
     @Operation(
             summary = "Convert PDF to Video Slideshow",
@@ -163,6 +165,7 @@ public class ConvertPdfToVideoController {
             return WebResponseUtils.bytesToWebResponse(videoBytes, outputName, mediaType);
         }
     }
+    */
 
     private void generateFrames(
             Path inputPdf,
