@@ -37,7 +37,6 @@ import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
-import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -84,9 +83,35 @@ public class PipelineProcessor {
         return name.substring(0, underscoreIndex) + extension;
     }
 
+    // Allowlist of URL path prefixes permitted through the pipeline.
+    private static final List<String> ALLOWED_PIPELINE_PATH_PREFIXES =
+            List.of(
+                    "/api/v1/general/",
+                    "/api/v1/misc/",
+                    "/api/v1/security/",
+                    "/api/v1/convert/",
+                    "/api/v1/filter/");
+
+    private void validatePipelineUrl(String url) {
+        // Strip scheme+host to get the path portion for comparison
+        String path = url;
+        int schemeEnd = url.indexOf("://");
+        if (schemeEnd != -1) {
+            int pathStart = url.indexOf('/', schemeEnd + 3);
+            path = pathStart != -1 ? url.substring(pathStart) : "/";
+        }
+        final String pathToCheck = path;
+        boolean allowed = ALLOWED_PIPELINE_PATH_PREFIXES.stream().anyMatch(pathToCheck::contains);
+        if (!allowed) {
+            log.warn("Blocked pipeline request to disallowed URL: {}", url);
+            throw new SecurityException(
+                    "Pipeline operation not permitted for endpoint: " + pathToCheck);
+        }
+    }
+
     private String getApiKeyForUser() {
         if (userService == null) return "";
-        return userService.getApiKeyForUser(Role.INTERNAL_API_USER.getRoleId());
+        return userService.getCurrentUserApiKey();
     }
 
     private String getBaseUrl() {
@@ -283,6 +308,7 @@ public class PipelineProcessor {
 
     /* package */ ResponseEntity<Resource> sendWebRequest(
             String url, MultiValueMap<String, Object> body) {
+        validatePipelineUrl(url);
         RestTemplate restTemplate = new RestTemplate();
         // Set up headers, including API key
         HttpHeaders headers = new HttpHeaders();
