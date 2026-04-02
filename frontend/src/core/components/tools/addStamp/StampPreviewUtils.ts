@@ -88,9 +88,11 @@ export function computeStampPreviewStyle(
   const marginPts = (widthPts + heightPts) / 2 * (marginFactorMap[parameters.customMargin] ?? 0.035);
 
   // Compute content dimensions
-  const heightPtsContent = parameters.fontSize * getAlphabetPreviewScale(parameters.alphabet);
+  const heightPtsContent =
+    parameters.stampType === 'image'
+      ? parameters.fontSize
+      : parameters.fontSize * getAlphabetPreviewScale(parameters.alphabet);
   let widthPtsContent = heightPtsContent;
-
 
   if (parameters.stampType === 'image' && imageMeta) {
     const aspect = imageMeta.width / imageMeta.height;
@@ -222,7 +224,7 @@ export function computeStampPreviewStyle(
       height: `${heightPx}px`,
       opacity: displayOpacity,
       transform: `rotate(${-parameters.rotation}deg)`,
-      transformOrigin: 'center center',
+      transformOrigin: parameters.stampType === 'image' ? 'left bottom' : 'center center',
       color: parameters.customColor,
       display: 'flex',
       flexDirection: 'column',
