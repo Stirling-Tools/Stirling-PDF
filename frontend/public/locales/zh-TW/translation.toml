@@ -147,7 +147,6 @@ insufficientCredits = "點數不足。需要：{{requiredCredits}}，可用：{{
 loadingCredits = "正在檢查點數..."
 loadingProStatus = "正在檢查訂閱狀態..."
 noticeTopUpOrPlan = "點數不足，請儲值或升級方案"
-
 accessInvite = "邀請"
 
 [account]
@@ -1382,12 +1381,18 @@ title = "回饋訊息"
 
 [admin.settings.telegram.feedback.channel]
 title = "頻道回饋規則"
-errorMessage.description = "向頻道顯示詳細錯誤訊息。"
-errorMessage.label = "顯示錯誤訊息（頻道）"
-errorProcessing.description = "將處理錯誤訊息傳送至頻道。"
-errorProcessing.label = "顯示處理錯誤（頻道）"
-noValidDocument.description = "對頻道上傳抑制「沒有有效文件」的回應。"
-noValidDocument.label = "顯示「沒有有效文件」（頻道）"
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+description = "向頻道顯示詳細錯誤訊息。"
+label = "顯示錯誤訊息（頻道）"
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+description = "將處理錯誤訊息傳送至頻道。"
+label = "顯示處理錯誤（頻道）"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+description = "對頻道上傳抑制「沒有有效文件」的回應。"
+label = "顯示「沒有有效文件」（頻道）"
 
 [admin.settings.telegram.feedback.general.enabled]
 description = "控制機器人是否要發送回饋訊息。"
@@ -1395,12 +1400,18 @@ label = "啟用回饋"
 
 [admin.settings.telegram.feedback.user]
 title = "使用者回饋規則"
-errorMessage.description = "向使用者顯示詳細錯誤訊息。"
-errorMessage.label = "顯示錯誤訊息（使用者）"
-errorProcessing.description = "將處理錯誤訊息傳送給使用者。"
-errorProcessing.label = "顯示處理錯誤（使用者）"
-noValidDocument.description = "對使用者上傳抑制「沒有有效文件」的回應。"
-noValidDocument.label = "顯示「沒有有效文件」（使用者）"
+
+[admin.settings.telegram.feedback.user.errorMessage]
+description = "向使用者顯示詳細錯誤訊息。"
+label = "顯示錯誤訊息（使用者）"
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+description = "將處理錯誤訊息傳送給使用者。"
+label = "顯示處理錯誤（使用者）"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+description = "對使用者上傳抑制「沒有有效文件」的回應。"
+label = "顯示「沒有有效文件」（使用者）"
 
 [admin.settings.telegram.pipelineInboxFolder]
 description = "pipeline 目錄下儲存來自 Telegram 之傳入檔案的資料夾。"
@@ -2324,14 +2335,6 @@ certInvalidFallback = "憑證無效"
 certNetworkError = "無法驗證憑證"
 title = "設定憑證"
 
-[certSign.collab.participant]
-certValidating = "正在驗證憑證..."
-certValid = "✓ 憑證有效"
-certValidUntil = " 有效至 {{date}}"
-certInvalid = "✗ {{error}}"
-certInvalidFallback = "憑證無效"
-certNetworkError = "無法驗證憑證"
-
 [certSign.collab.signRequest.image]
 hint = "上傳 PNG 或 JPG 簽名圖片"
 
@@ -2397,6 +2400,14 @@ fontSizePlaceholder = "16"
 label = "簽名文字"
 modalHint = "請輸入姓名，然後點選 [繼續] 以放置於 PDF 上。"
 placeholder = "請輸入姓名..."
+
+[certSign.collab.participant]
+certValidating = "正在驗證憑證..."
+certValid = "✓ 憑證有效"
+certValidUntil = " 有效至 {{date}}"
+certInvalid = "✗ {{error}}"
+certInvalidFallback = "憑證無效"
+certNetworkError = "無法驗證憑證"
 
 [certSign.collab.addParticipants]
 add = "新增 {{count}} 位參與者"
@@ -2863,6 +2874,9 @@ title = "品質調整"
 [compressPdfs]
 tags = "壓縮,小,微小"
 
+[config]
+plan = "方案"
+
 [config.account.overview]
 confirmDelete = "刪除我的帳號"
 deleteAccount = "刪除帳號"
@@ -2915,9 +2929,6 @@ passwordPlaceholder = "設定密碼"
 socialLogin = "使用社群帳號升級"
 title = "升級訪客帳號"
 upgradeButton = "升級帳號"
-
-[config]
-plan = "方案"
 
 [config.apiKeys]
 chartAriaLabel = "額度使用：包含 {{includedUsed}} / {{includedTotal}}，已購買 {{purchasedUsed}} / {{purchasedTotal}}"
@@ -4879,6 +4890,49 @@ textStats = "{{lines}} 行 · {{size}}"
 lineNumbers = "行號"
 renderMarkdown = "轉譯 Markdown"
 
+[viewer.attachments]
+title = "附件"
+searchPlaceholder = "搜尋附件"
+noSupport = "此檢視器不支援附件。"
+noDocument = "開啟 PDF 以檢視其附件。"
+loading = "正在載入附件..."
+empty = "此文件沒有附件"
+noMatch = "沒有符合搜尋的附件"
+
+[viewer.comments]
+title = "評論"
+hint = "使用「評論」、「插入文字」或「取代文字」工具放置評論。它們會依頁面顯示於此處。"
+placeholder = "輸入您的評論..."
+pageLabel = "第 {{page}} 頁"
+oneComment = "1 則評論"
+nComments = "{{count}} 則評論"
+addCommentPlaceholder = "新增評論..."
+addLink = "新增連結"
+goToLink = "前往連結"
+addComment = "新增評論"
+viewComment = "檢視評論"
+addReplyPlaceholder = "新增回覆..."
+saveReply = "儲存回覆"
+send = "傳送"
+moreActions = "更多動作"
+typeComment = "評論"
+typeInsertText = "插入文字"
+typeReplaceText = "取代文字"
+locateAnnotation = "在文件中定位"
+deleteTitle = "要從評論中移除註解嗎？"
+deleteDescription = "此註解附有評論。您可以僅從側邊欄移除評論並保留註解，或刪除全部內容。"
+removeCommentOnly = "僅移除評論"
+deleteAnnotationAndComment = "刪除註解與評論"
+
+[viewer.formBar]
+title = "表單欄位"
+unsavedBadge = "未儲存"
+unsavedDesc = "您有未儲存的變更"
+hasFieldsDesc = "此 PDF 包含可填寫欄位"
+dismiss = "關閉"
+apply = "套用變更"
+download = "下載 PDF"
+
 [rightRail]
 closeSelected = "關閉已選檔案"
 selectAll = "全選"
@@ -5763,7 +5817,6 @@ messageWithAmount = "執行 {{tool}} 需要 {{required}} 點，但您僅有 {{cu
 teamMember = "啟用超量計費，永不耗盡點數。"
 title = "點數不足"
 
-
 [printFile]
 header = "使用印表機印出檔案"
 submit = "列印"
@@ -6457,8 +6510,6 @@ placeholder = "輸入搜尋詞..."
 searching = "搜尋中..."
 title = "搜尋 PDF"
 
-[selfHosted]
-
 [selfHosted.offline]
 hideTools = "隱藏無法使用的工具 ▴"
 messageNoFallback = "在您的伺服器恢復連線前，這些工具無法使用。"
@@ -6817,10 +6868,13 @@ title = "登入 Stirling"
 [setup.selfhosted]
 link = "或連線到自行託管的帳號"
 subtitle = "輸入您的伺服器認證資訊"
+changeServerLocked = "您的組織已將此應用程式限制於特定伺服器"
 switchToLocal = "改用本機工具"
 title = "登入伺服器"
 
 [setup.selfhosted.unreachable]
+changeServer = "連線至其他伺服器"
+changeServerLocked = "您的組織已將此應用程式限制於特定伺服器"
 continueOffline = "改用本機工具"
 message = "無法連線至 {{url}}。請確認伺服器正在執行且可存取。"
 retry = "重試"
@@ -7739,49 +7793,6 @@ fileManager = "檔案管理器"
 pageEditor = "頁面編輯器"
 viewer = "檢視器"
 
-[viewer.attachments]
-title = "附件"
-searchPlaceholder = "搜尋附件"
-noSupport = "此檢視器不支援附件。"
-noDocument = "開啟 PDF 以檢視其附件。"
-loading = "正在載入附件..."
-empty = "此文件沒有附件"
-noMatch = "沒有符合搜尋的附件"
-
-[viewer.comments]
-title = "評論"
-hint = "使用「評論」、「插入文字」或「取代文字」工具放置評論。它們會依頁面顯示於此處。"
-placeholder = "輸入您的評論..."
-pageLabel = "第 {{page}} 頁"
-oneComment = "1 則評論"
-nComments = "{{count}} 則評論"
-addCommentPlaceholder = "新增評論..."
-addLink = "新增連結"
-goToLink = "前往連結"
-addComment = "新增評論"
-viewComment = "檢視評論"
-addReplyPlaceholder = "新增回覆..."
-saveReply = "儲存回覆"
-send = "傳送"
-moreActions = "更多動作"
-typeComment = "評論"
-typeInsertText = "插入文字"
-typeReplaceText = "取代文字"
-locateAnnotation = "在文件中定位"
-deleteTitle = "要從評論中移除註解嗎？"
-deleteDescription = "此註解附有評論。您可以僅從側邊欄移除評論並保留註解，或刪除全部內容。"
-removeCommentOnly = "僅移除評論"
-deleteAnnotationAndComment = "刪除註解與評論"
-
-[viewer.formBar]
-title = "表單欄位"
-unsavedBadge = "未儲存"
-unsavedDesc = "您有未儲存的變更"
-hasFieldsDesc = "此 PDF 包含可填寫欄位"
-dismiss = "關閉"
-apply = "套用變更"
-download = "下載 PDF"
-
 [viewPdf]
 header = "檢視 PDF"
 tags = "檢視,閱讀,註釋,文字,圖片"
@@ -8254,7 +8265,6 @@ title = "大型 ZIP 檔案"
 
 [cloudBadge]
 tooltip = "此操作會使用您的雲端點數"
-
 
 [team]
 cancelInviteError = "取消邀請失敗"
