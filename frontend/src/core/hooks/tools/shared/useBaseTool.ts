@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useFileSelection } from '@app/contexts/FileContext';
 import { useEndpointEnabled } from '@app/hooks/useEndpointConfig';
-import { useViewerScopedFiles } from '@app/hooks/tools/shared/useViewerScopedFiles';
+import { useViewScopedFiles } from '@app/hooks/tools/shared/useViewScopedFiles';
 import { BaseToolProps } from '@app/types/tool';
 import { ToolOperationHook } from '@app/hooks/tools/shared/useToolOperation';
 import { BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
@@ -54,7 +54,7 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
   const { onPreviewFile, onComplete, onError } = props;
 
   const { selectedFiles: rawSelectedFiles } = useFileSelection();
-  const viewerScopedFiles = useViewerScopedFiles();
+  const viewerScopedFiles = useViewScopedFiles();
 
   // In the viewer the tool always operates on the file currently shown, so that
   // "what you see is what gets processed". In the file editor the user has explicitly

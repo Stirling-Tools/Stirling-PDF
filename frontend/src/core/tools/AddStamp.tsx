@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useViewerScopedFiles } from "@app/hooks/tools/shared/useViewerScopedFiles";
+import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 import { useAddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
 import { useAddStampOperation } from "@app/components/tools/addStamp/useAddStampOperation";
 import { Stack, Text } from "@mantine/core";
@@ -17,7 +17,7 @@ import StampPositionFormattingSettings from "@app/components/tools/addStamp/Stam
 
 const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const selectedFiles = useViewerScopedFiles();
+  const selectedFiles = useViewScopedFiles();
 
   const [quickPositionModeSelected, setQuickPositionModeSelected] = useState(false);
   const [customPositionModeSelected, setCustomPositionModeSelected] = useState(true);

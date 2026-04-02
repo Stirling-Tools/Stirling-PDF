@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useViewerScopedFiles } from "@app/hooks/tools/shared/useViewerScopedFiles";
+import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
 import ReorganizePagesSettings from "@app/components/tools/reorganizePages/ReorganizePagesSettings";
 import { useReorganizePagesParameters } from "@app/hooks/tools/reorganizePages/useReorganizePagesParameters";
@@ -11,7 +11,7 @@ import { useReorganizePagesOperation } from "@app/hooks/tools/reorganizePages/us
 
 const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const selectedFiles = useViewerScopedFiles();
+  const selectedFiles = useViewScopedFiles();
 
   const params = useReorganizePagesParameters();
   const operation = useReorganizePagesOperation();

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useViewerScopedFiles } from "@app/hooks/tools/shared/useViewerScopedFiles";
+import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 
@@ -16,7 +16,7 @@ import { BaseToolProps, ToolComponent } from "@app/types/tool";
 
 const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const selectedFiles = useViewerScopedFiles();
+  const selectedFiles = useViewScopedFiles();
 
   const [collapsedPermissions, setCollapsedPermissions] = useState(true);
 

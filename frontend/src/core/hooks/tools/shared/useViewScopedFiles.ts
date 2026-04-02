@@ -11,7 +11,7 @@ import { StirlingFile } from '@app/types/fileContext';
  * "what you see is what gets processed". In file-editor mode the full
  * selection is returned unchanged.
  */
-export function useViewerScopedFiles(): StirlingFile[] {
+export function useViewScopedFiles(): StirlingFile[] {
   const { selectedFiles } = useFileSelection();
   const { activeFileIndex } = useViewer();
   const { files: allFiles } = useAllFiles();

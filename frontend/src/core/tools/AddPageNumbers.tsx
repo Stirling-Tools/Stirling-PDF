@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useViewerScopedFiles } from "@app/hooks/tools/shared/useViewerScopedFiles";
+import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
@@ -12,7 +12,7 @@ import AddPageNumbersAppearanceSettings from "@app/components/tools/addPageNumbe
 
 const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const selectedFiles = useViewerScopedFiles();
+  const selectedFiles = useViewScopedFiles();
 
   const params = useAddPageNumbersParameters();
   const operation = useAddPageNumbersOperation();
