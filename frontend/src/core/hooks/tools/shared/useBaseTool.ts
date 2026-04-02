@@ -1,5 +1,4 @@
 import { useEffect, useCallback, useRef } from 'react';
-import { useAllFiles } from '@app/contexts/FileContext';
 import { useEndpointEnabled } from '@app/hooks/useEndpointConfig';
 import { useViewScopedFiles } from '@app/hooks/tools/shared/useViewScopedFiles';
 import { BaseToolProps } from '@app/types/tool';
@@ -53,14 +52,12 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
   const ignoreViewerScope = options?.ignoreViewerScope ?? false;
   const { onPreviewFile, onComplete, onError } = props;
 
-  const { files: allFiles } = useAllFiles();
-  const viewerScopedFiles = useViewScopedFiles();
+  const viewerScopedFiles = useViewScopedFiles(ignoreViewerScope);
 
-  // In the viewer the tool always operates on the file currently shown, so that
-  // "what you see is what gets processed". Outside the viewer (pageEditor, fileEditor,
-  // custom) tools operate on all loaded files. Tools with ignoreViewerScope also
-  // receive all loaded files, bypassing the single-file viewer scoping.
-  const effectiveFiles = ignoreViewerScope ? allFiles : viewerScopedFiles;
+  // In viewer mode: scope to the single displayed file (unless ignoreViewerScope).
+  // In fileEditor with a selection: scope to the selected files.
+  // All other cases (pageEditor, custom, no selection): use all loaded files.
+  const effectiveFiles = viewerScopedFiles;
 
   const previousFileCount = useRef(effectiveFiles.length);
 
