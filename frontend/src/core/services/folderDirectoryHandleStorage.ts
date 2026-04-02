@@ -17,7 +17,14 @@ function openDB(): Promise<IDBDatabase> {
   });
 }
 
+type ExtendedDirHandle = FileSystemDirectoryHandle & {
+  queryPermission(opts: object): Promise<PermissionState>;
+  requestPermission(opts: object): Promise<PermissionState>;
+};
+
 export const folderDirectoryHandleStorage = {
+  // ── Output directory handles (readwrite) ─────────────────────────────────
+
   async get(folderId: string): Promise<FileSystemDirectoryHandle | null> {
     const db = await openDB();
     return new Promise((resolve, reject) => {
@@ -51,10 +58,50 @@ export const folderDirectoryHandleStorage = {
    */
   async ensurePermission(handle: FileSystemDirectoryHandle): Promise<boolean> {
     const opts = { mode: 'readwrite' };
-    const h = handle as FileSystemDirectoryHandle & {
-      queryPermission(opts: object): Promise<PermissionState>;
-      requestPermission(opts: object): Promise<PermissionState>;
-    };
+    const h = handle as ExtendedDirHandle;
+    if ((await h.queryPermission(opts)) === 'granted') return true;
+    return (await h.requestPermission(opts)) === 'granted';
+  },
+
+  // ── Input directory handles (readonly) ────────────────────────────────────
+  // Stored under key "input:{folderId}" to avoid collisions with output handles.
+
+  async getInput(folderId: string): Promise<FileSystemDirectoryHandle | null> {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const req = db.transaction(STORE).objectStore(STORE).get(`input:${folderId}`);
+      req.onsuccess = () => resolve(req.result ?? null);
+      req.onerror = () => reject(req.error);
+    });
+  },
+
+  async setInput(folderId: string, handle: FileSystemDirectoryHandle): Promise<void> {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const req = db.transaction(STORE, 'readwrite').objectStore(STORE).put(handle, `input:${folderId}`);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  },
+
+  async removeInput(folderId: string): Promise<void> {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const req = db.transaction(STORE, 'readwrite').objectStore(STORE).delete(`input:${folderId}`);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  },
+
+  /**
+   * Verifies the handle still has read permission, requesting it if needed.
+   * On browsers that don't support queryPermission/requestPermission (Firefox),
+   * returns true optimistically — access errors will surface naturally during iteration.
+   */
+  async ensureReadPermission(handle: FileSystemDirectoryHandle): Promise<boolean> {
+    const h = handle as ExtendedDirHandle;
+    if (typeof h.queryPermission !== 'function') return true; // Firefox — no permission API
+    const opts = { mode: 'read' };
     if ((await h.queryPermission(opts)) === 'granted') return true;
     return (await h.requestPermission(opts)) === 'granted';
   },

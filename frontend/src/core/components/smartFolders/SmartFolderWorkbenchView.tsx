@@ -38,6 +38,7 @@ import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 import { SMART_FOLDER_VIEW_ID, SMART_FOLDER_WORKBENCH_ID } from '@app/components/smartFolders/SmartFoldersRegistration';
 import { automationStorage } from '@app/services/automationStorage';
 import { useFolderAutomation, resolveInputFile } from '@app/hooks/useFolderAutomation';
+import { useLocalFolderPoller } from '@app/hooks/useLocalFolderPoller';
 import { AutomationConfig } from '@app/types/automation';
 import { iconMap } from '@app/components/tools/automate/iconMap';
 import { fileStorage } from '@app/services/fileStorage';
@@ -50,6 +51,7 @@ import { useNavigationActions } from '@app/contexts/NavigationContext';
 import { FilePreviewModal } from '@app/components/smartFolders/FilePreviewModal';
 import { isServerFolderInput } from '@app/types/smartFolders';
 import { downloadServerFolderOutput } from '@app/services/serverFolderApiService';
+import { folderDirectoryHandleStorage } from '@app/services/folderDirectoryHandleStorage';
 
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest' },
@@ -144,6 +146,7 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   const { folders, updateFolder } = useSmartFolders();
   const folder = folders.find(f => f.id === folderId);
   const { runPipeline } = useFolderAutomation(toolRegistry);
+  useLocalFolderPoller(runPipeline);
 
   const {
     folderRecord,
@@ -158,8 +161,10 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
   const { recentRuns } = useFolderRunState(folderId ?? '');
 
   const isServerFolder = folder ? isServerFolderInput(folder) : false;
+  const isLocalFolder = folder?.inputSource === 'local-folder';
 
   const [isDragOver, setIsDragOver] = useState(false);
+  const [localInputFolderName, setLocalInputFolderName] = useState<string | null>(null);
   const [outputFiles, setOutputFiles] = useState<StirlingFile[]>([]);
   const [inputFiles, setInputFiles] = useState<StirlingFile[]>([]);
   const [previewFileId, setPreviewFileId] = useState<FileId | null>(null);
@@ -200,6 +205,14 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
       automationStorage.getAutomation(folder.automationId).then(setAutomation);
     }
   }, [folder?.automationId]);
+
+  useEffect(() => {
+    if (isLocalFolder && folderId) {
+      folderDirectoryHandleStorage.getInput(folderId).then(h => setLocalInputFolderName(h?.name ?? null));
+    } else {
+      setLocalInputFolderName(null);
+    }
+  }, [isLocalFolder, folderId]);
 
 
   const handleFiles = useCallback(
@@ -725,6 +738,13 @@ export function SmartFolderWorkbenchView({ data }: SmartFolderWorkbenchViewProps
               )}
               {folder.description && !ops.length && (
                 <Text size="xs" c="dimmed">{folder.description}</Text>
+              )}
+              {isLocalFolder && (
+                <Text size="xs" c={localInputFolderName ? 'green' : 'yellow'} style={{ fontSize: '0.6875rem' }}>
+                  {localInputFolderName
+                    ? `Watching: ${localInputFolderName}`
+                    : 'No input folder — edit to configure'}
+                </Text>
               )}
             </Stack>
           </Group>

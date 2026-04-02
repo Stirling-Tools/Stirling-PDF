@@ -13,6 +13,7 @@ import {
   Select,
   Box,
   Collapse,
+  Tooltip,
 } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { SmartFolder } from '@app/types/smartFolders';
@@ -28,6 +29,12 @@ import {
   deleteServerFolder,
 } from '@app/services/serverFolderApiService';
 import { buildPipelineJson } from '@app/utils/automationExecutor';
+import {
+  canReadLocalFolder,
+  canWriteLocalFolder,
+  FS_READ_UNSUPPORTED_MSG,
+  FS_WRITE_UNSUPPORTED_MSG,
+} from '@app/utils/fsAccessCapability';
 import FolderSpecialIcon from '@mui/icons-material/FolderSpecial';
 
 const ACCENT_SWATCHES = [
@@ -111,6 +118,8 @@ export function SmartFolderManagementModal({
   const [saving, setSaving] = useState(false);
   const [outputDirName, setOutputDirName] = useState<string | null>(editFolder?.hasOutputDirectory ? '(loading…)' : null);
   const pendingDirHandle = useRef<FileSystemDirectoryHandle | null>(null);
+  const [inputDirName, setInputDirName] = useState<string | null>(editFolder?.inputSource === 'local-folder' ? '(loading…)' : null);
+  const pendingInputDirHandle = useRef<FileSystemDirectoryHandle | null>(null);
   const [nameError, setNameError] = useState('');
   const [automationError, setAutomationError] = useState('');
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -128,6 +137,7 @@ export function SmartFolderManagementModal({
     setOutputName(editFolder?.outputName ?? editFolder?.name ?? '');
     setOutputNamePosition((editFolder?.outputNamePosition as 'prefix' | 'suffix' | 'auto-number') ?? 'prefix');
     setInputSource(editFolder?.inputSource ?? 'idb');
+    setInputDirName(editFolder?.inputSource === 'local-folder' ? '(loading…)' : null);
     setOutputTtlHours(editFolder?.outputTtlHours != null ? String(editFolder.outputTtlHours) : 'forever');
     setDeleteOutputOnDownload(editFolder?.deleteOutputOnDownload ?? false);
     outputNameDirty.current = !!editFolder?.outputName;
@@ -142,10 +152,16 @@ export function SmartFolderManagementModal({
     if (opened) {
       resetState();
       pendingDirHandle.current = null;
+      pendingInputDirHandle.current = null;
       if (editFolder?.hasOutputDirectory && editFolder.id) {
         folderDirectoryHandleStorage.get(editFolder.id).then(h => setOutputDirName(h?.name ?? null));
       } else {
         setOutputDirName(null);
+      }
+      if (editFolder?.inputSource === 'local-folder' && editFolder.id) {
+        folderDirectoryHandleStorage.getInput(editFolder.id).then(h => setInputDirName(h?.name ?? null));
+      } else {
+        setInputDirName(null);
       }
     }
   }, [opened, resetState, editFolder]);
@@ -189,11 +205,19 @@ export function SmartFolderManagementModal({
 
       if (isEditMode && editFolder) {
         const wasServerFolder = editFolder.inputSource === 'server-folder';
+        const wasLocalFolder = editFolder.inputSource === 'local-folder';
         await smartFolderStorage.updateFolder({ ...editFolder, ...folderData });
         if (pendingDirHandle.current) {
           await folderDirectoryHandleStorage.set(editFolder.id, pendingDirHandle.current);
         } else if (!hasOutputDirectory) {
           await folderDirectoryHandleStorage.remove(editFolder.id);
+        }
+        if (inputSource === 'local-folder') {
+          if (pendingInputDirHandle.current) {
+            await folderDirectoryHandleStorage.setInput(editFolder.id, pendingInputDirHandle.current);
+          }
+        } else if (wasLocalFolder) {
+          await folderDirectoryHandleStorage.removeInput(editFolder.id);
         }
         if (isServerFolder && configJson) {
           if (wasServerFolder) {
@@ -208,6 +232,9 @@ export function SmartFolderManagementModal({
         const newFolder = await smartFolderStorage.createFolder(folderData);
         if (pendingDirHandle.current) {
           await folderDirectoryHandleStorage.set(newFolder.id, pendingDirHandle.current);
+        }
+        if (inputSource === 'local-folder' && pendingInputDirHandle.current) {
+          await folderDirectoryHandleStorage.setInput(newFolder.id, pendingInputDirHandle.current);
         }
         if (isServerFolder && configJson) {
           await createServerFolder(newFolder.id, trimmedName, configJson, ttlHoursNum, deleteOutputOnDownload);
@@ -356,11 +383,78 @@ export function SmartFolderManagementModal({
                       onChange={(v) => v && setInputSource(v as NonNullable<SmartFolder['inputSource']>)}
                       data={[
                         { value: 'idb', label: 'Browser — drop files here' },
+                        {
+                          value: 'local-folder',
+                          label: canReadLocalFolder
+                            ? 'Local folder (auto-scan)'
+                            : 'Local folder (auto-scan) — Chrome/Edge only',
+                          disabled: !canReadLocalFolder,
+                        },
                         { value: 'server-folder', label: 'Server watch folder' },
                       ]}
                       size="sm"
                       comboboxProps={{ withinPortal: true, zIndex: 400 }}
                     />
+
+                    {/* Local-folder input directory picker */}
+                    {inputSource === 'local-folder' && (
+                      <Box
+                        style={{
+                          marginLeft: '0.75rem',
+                          paddingLeft: '0.75rem',
+                          borderLeft: '2px solid var(--border-subtle)',
+                        }}
+                      >
+                        <Box
+                          style={{
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: 'var(--mantine-radius-sm)',
+                            border: `0.0625rem solid ${inputDirName ? 'rgba(34,197,94,0.4)' : 'var(--mantine-color-yellow-5)'}`,
+                            backgroundColor: inputDirName ? 'rgba(34,197,94,0.06)' : 'rgba(234,179,8,0.06)',
+                          }}
+                        >
+                          <Group gap="xs" align="center" wrap="nowrap">
+                            <FolderSpecialIcon style={{
+                              fontSize: '1rem',
+                              color: inputDirName ? '#22c55e' : 'var(--mantine-color-yellow-6)',
+                              flexShrink: 0,
+                            }} />
+                            <Stack gap={1} style={{ flex: 1, minWidth: 0 }}>
+                              <Text size="xs" fw={500}>Input folder</Text>
+                              <Text size="xs" c="dimmed" lineClamp={1}>
+                                {inputDirName ?? 'No folder chosen — required for auto-scan'}
+                              </Text>
+                            </Stack>
+                            <Button
+                              size="xs"
+                              variant="subtle"
+                              onClick={async () => {
+                                try {
+                                  const handle = await (window as any).showDirectoryPicker({ mode: 'read' });
+                                  pendingInputDirHandle.current = handle;
+                                  setInputDirName(handle.name);
+                                } catch { /* cancelled */ }
+                              }}
+                            >
+                              {inputDirName ? 'Change' : 'Choose'}
+                            </Button>
+                            {inputDirName && (
+                              <Button
+                                size="xs"
+                                variant="subtle"
+                                color="red"
+                                onClick={() => { pendingInputDirHandle.current = null; setInputDirName(null); }}
+                              >
+                                Clear
+                              </Button>
+                            )}
+                          </Group>
+                        </Box>
+                        <Text size="xs" c="dimmed" mt={6}>
+                          New PDF files in this folder are processed automatically every 10 seconds.
+                        </Text>
+                      </Box>
+                    )}
 
                     {/* Server-specific options, visually indented under the select */}
                     {inputSource === 'server-folder' && (
@@ -414,22 +508,32 @@ export function SmartFolderManagementModal({
                         <Stack gap={1} style={{ flex: 1, minWidth: 0 }}>
                           <Text size="xs" fw={500}>Local output folder</Text>
                           <Text size="xs" c="dimmed" lineClamp={1}>
-                            {outputDirName ?? 'Not set — outputs stay in app'}
+                            {!canWriteLocalFolder
+                              ? 'Not supported in this browser'
+                              : (outputDirName ?? 'Not set — outputs stay in app')}
                           </Text>
                         </Stack>
-                        <Button
-                          size="xs"
-                          variant="subtle"
-                          onClick={async () => {
-                            try {
-                              const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
-                              pendingDirHandle.current = handle;
-                              setOutputDirName(handle.name);
-                            } catch { /* cancelled */ }
-                          }}
+                        <Tooltip
+                          label={FS_WRITE_UNSUPPORTED_MSG}
+                          disabled={canWriteLocalFolder}
+                          withinPortal
+                          zIndex={500}
                         >
-                          {outputDirName ? 'Change' : 'Choose'}
-                        </Button>
+                          <Button
+                            size="xs"
+                            variant="subtle"
+                            disabled={!canWriteLocalFolder}
+                            onClick={async () => {
+                              try {
+                                const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+                                pendingDirHandle.current = handle;
+                                setOutputDirName(handle.name);
+                              } catch { /* cancelled */ }
+                            }}
+                          >
+                            {outputDirName ? 'Change' : 'Choose'}
+                          </Button>
+                        </Tooltip>
                         {outputDirName && (
                           <Button
                             size="xs"
