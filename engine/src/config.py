@@ -37,19 +37,27 @@ LOG_PATH = _get_log_path()
 LOG_PATH.mkdir(parents=True, exist_ok=True)
 LOG_FILE = LOG_PATH / "docgen.log"
 
+# ---------------------------------------------------------------------------
+# AI log level: "info" (default) | "debug" | "trace"
+#   info  — app lifecycle and session summaries on terminal
+#   debug — also shows tool calls, round transitions, model info on terminal
+#   trace — same terminal as debug, plus per-session log files in logs/ai_sessions/
+# ---------------------------------------------------------------------------
+AI_LOG_LEVEL = os.environ.get("STIRLING_AI_LOG_LEVEL", "info").lower().strip()
+
 # Create formatters
 console_formatter = logging.Formatter(
-    "%(asctime)s [%(thread)d] %(levelname)-5s %(name)s - %(message)s", datefmt="%H:%M:%S.%f"
+    "%(asctime)s [%(thread)d] %(levelname)-5s %(name)s - %(message)s", datefmt="%H:%M:%S"
 )
 file_formatter = logging.Formatter("%(asctime)s %(levelname)s %(name)s [%(thread)d] %(message)s")
 
 # Configure root logger
 root_logger = logging.getLogger()
-root_logger.setLevel(logging.INFO)
+root_logger.setLevel(logging.DEBUG if AI_LOG_LEVEL in ("debug", "trace") else logging.INFO)
 
 # Console handler
 console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
+console_handler.setLevel(logging.DEBUG if AI_LOG_LEVEL in ("debug", "trace") else logging.INFO)
 console_handler.setFormatter(console_formatter)
 root_logger.addHandler(console_handler)
 
@@ -65,8 +73,24 @@ file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(file_formatter)
 root_logger.addHandler(file_handler)
 
+# AI framework loggers — quiet by default, verbose in debug/trace
+_ai_framework_loggers = ["pydantic_ai", "httpx"]
+if AI_LOG_LEVEL == "info":
+    for _name in _ai_framework_loggers:
+        logging.getLogger(_name).setLevel(logging.WARNING)
+elif AI_LOG_LEVEL in ("debug", "trace"):
+    for _name in _ai_framework_loggers:
+        logging.getLogger(_name).setLevel(logging.INFO)
+
+# Configure per-session AI logging
+import ai_logging  # noqa: E402
+
+ai_logging.configure(AI_LOG_LEVEL, LOG_PATH)
+
 logger = logging.getLogger(__name__)
 logger.info(f"Logging to: {LOG_FILE}")
+if AI_LOG_LEVEL != "info":
+    logger.info(f"AI log level: {AI_LOG_LEVEL}")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(BASE_DIR, "output")
@@ -84,6 +108,9 @@ os.makedirs(TEMPLATE_DIR, exist_ok=True)
 OPENAI_API_KEY = os.environ["STIRLING_OPENAI_API_KEY"]
 OPENAI_BASE_URL = os.environ["STIRLING_OPENAI_BASE_URL"]
 ANTHROPIC_API_KEY = os.environ["STIRLING_ANTHROPIC_API_KEY"]
+# pydantic-ai's AnthropicProvider reads the standard env var directly
+if ANTHROPIC_API_KEY:
+    os.environ["ANTHROPIC_API_KEY"] = ANTHROPIC_API_KEY
 JAVA_BACKEND_URL = os.environ["STIRLING_JAVA_BACKEND_URL"]
 JAVA_BACKEND_API_KEY = os.environ["STIRLING_JAVA_BACKEND_API_KEY"]
 JAVA_REQUEST_TIMEOUT_SECONDS = float(os.environ["STIRLING_JAVA_REQUEST_TIMEOUT_SECONDS"])

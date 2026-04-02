@@ -11,9 +11,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from .models import Evidence, Folio
 from .validators import FigureTracker
+
+if TYPE_CHECKING:
+    from ai_logging import SessionLogger
 
 
 @dataclass
@@ -27,11 +31,13 @@ class AuditContext:
                       initialised automatically with the same tolerance as the audit
     tolerance       — maximum allowed rounding delta (e.g. Decimal("0.01") for 1p)
     final_round     — when True the agent must commit to a Verdict; no more Requisitions
+    slog            — optional per-session logger for AI trace output
     """
 
     evidence: Evidence
     tolerance: Decimal = field(default_factory=lambda: Decimal("0.01"))
     figure_registry: FigureTracker = field(init=False)
+    slog: SessionLogger | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         # Initialise the tracker with the same tolerance so figure-consistency

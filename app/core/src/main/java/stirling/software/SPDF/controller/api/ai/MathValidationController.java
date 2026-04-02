@@ -67,13 +67,19 @@ public class MathValidationController {
                     """)
     public ResponseEntity<Verdict> validateMath(
             @Parameter(description = "The PDF document to audit", required = true)
-            @RequestParam("fileInput") MultipartFile fileInput,
-
-            @Parameter(description = "Arithmetic tolerance — differences smaller than this are ignored (default: 0.01)")
-            @RequestParam(value = "tolerance", defaultValue = "0.01") BigDecimal tolerance)
+                    @RequestParam("fileInput")
+                    MultipartFile fileInput,
+            @Parameter(
+                            description =
+                                    "Arithmetic tolerance — differences smaller than this are ignored (default: 0.01)")
+                    @RequestParam(value = "tolerance", defaultValue = "0.01")
+                    BigDecimal tolerance)
             throws Exception {
 
-        log.info("[ledger] math-validate request file={} tolerance={}", fileInput.getOriginalFilename(), tolerance);
+        log.info(
+                "[ledger] math-validate request file={} tolerance={}",
+                fileInput.getOriginalFilename(),
+                tolerance);
         Verdict verdict = orchestrator.audit(fileInput, tolerance);
         return ResponseEntity.ok(verdict);
     }

@@ -28,6 +28,7 @@ from typing import Final
 
 from pydantic_ai import Agent, RunContext
 
+from ai_logging import SessionLogger
 from config import FAST_MODEL, SMART_MODEL, get_pydantic_ai_model_id
 from .deps import AuditContext
 from .models import Discrepancy, Evidence, FolioManifest, Requisition, Verdict
@@ -43,7 +44,7 @@ logger = logging.getLogger(__name__)
 ledger_examiner: Final[Agent[FolioManifest, Requisition]] = Agent(
     model=get_pydantic_ai_model_id(FAST_MODEL),
     deps_type=FolioManifest,
-    result_type=Requisition,
+    output_type=Requisition,
     system_prompt=EXAMINER_SYSTEM_PROMPT,
 )
 
@@ -54,17 +55,28 @@ def examine(manifest: FolioManifest) -> Requisition:
     Returns the Requisition the auditor needs Java to fulfil.
     Synchronous — safe to call directly from a Flask route handler.
     """
+    slog = SessionLogger(manifest.session_id)
     logger.info(
         "[ledger] session=%s round=%d examining %d folios",
         manifest.session_id,
         manifest.round,
         manifest.page_count,
     )
-    result = ledger_examiner.run_sync(
-        f"Examine this folio manifest and declare your requisition:\n{manifest.model_dump_json()}",
-        deps=manifest,
+
+    user_prompt = (
+        "Examine this folio manifest and declare your requisition:\n"
+        + manifest.model_dump_json()
     )
-    req = result.data
+    slog.request("examine", body={
+        "model": get_pydantic_ai_model_id(FAST_MODEL),
+        "system_prompt": EXAMINER_SYSTEM_PROMPT,
+        "user_prompt": user_prompt,
+    })
+
+    result = ledger_examiner.run_sync(user_prompt, deps=manifest)
+    req = result.output
+
+    slog.response("examine", body=req.model_dump())
     logger.info(
         "[ledger] session=%s requisition: text=%s tables=%s ocr=%s",
         manifest.session_id,
@@ -72,6 +84,7 @@ def examine(manifest: FolioManifest) -> Requisition:
         req.need_tables,
         req.need_ocr,
     )
+    slog.close()
     return req
 
 
@@ -82,7 +95,7 @@ def examine(manifest: FolioManifest) -> Requisition:
 ledger_auditor: Final[Agent[AuditContext, Verdict]] = Agent(
     model=get_pydantic_ai_model_id(SMART_MODEL),
     deps_type=AuditContext,
-    result_type=Verdict,
+    output_type=Verdict,
     system_prompt=AUDITOR_SYSTEM_PROMPT,
 )
 
@@ -105,7 +118,14 @@ def check_tally(
     total_col_index — which column holds row totals (None = heuristic: last column)
     """
     checker = TallyChecker(tolerance=ctx.deps.tolerance)
-    return checker.check(page, table_csv, total_row_index, total_col_index)
+    result = checker.check(page, table_csv, total_row_index, total_col_index)
+    if ctx.deps.slog:
+        ctx.deps.slog.tool_call("check_tally", args={
+            "page": page, "table_csv": table_csv,
+            "total_row_index": total_row_index,
+            "total_col_index": total_col_index,
+        }, result=[d.model_dump() for d in result])
+    return result
 
 
 @ledger_auditor.tool
@@ -123,7 +143,12 @@ def scan_arithmetic(
     text — the plain-text content of the folio (or a relevant excerpt)
     """
     scanner = ArithmeticScanner(tolerance=ctx.deps.tolerance)
-    return scanner.scan(page, text)
+    result = scanner.scan(page, text)
+    if ctx.deps.slog:
+        ctx.deps.slog.tool_call("scan_arithmetic", args={
+            "page": page, "text": text[:200],
+        }, result=[d.model_dump() for d in result])
+    return result
 
 
 @ledger_auditor.tool
@@ -149,9 +174,18 @@ def register_figure(
     try:
         value = Decimal(value_str.replace(",", "").strip())
     except InvalidOperation:
-        return f"Could not parse '{value_str}' as a number — figure not recorded."
+        msg = f"Could not parse '{value_str}' as a number — figure not recorded."
+        if ctx.deps.slog:
+            ctx.deps.slog.tool_call("register_figure", args={
+                "label": label, "value_str": value_str, "page": page, "raw": raw,
+            }, result=msg)
+        return msg
 
     ctx.deps.figure_registry.record(label=label, value=value, page=page, raw=raw)
+    if ctx.deps.slog:
+        ctx.deps.slog.tool_call("register_figure", args={
+            "label": label, "value_str": value_str, "page": page, "raw": raw,
+        }, result="recorded")
     return "recorded"
 
 
@@ -163,7 +197,11 @@ def check_figure_consistency(ctx: RunContext[AuditContext]) -> list[Discrepancy]
     Returns a Discrepancy for every figure that is cited with different
     values on different pages.
     """
-    return ctx.deps.figure_registry.conflicts()
+    result = ctx.deps.figure_registry.conflicts()
+    if ctx.deps.slog:
+        ctx.deps.slog.tool_call("check_figure_consistency",
+                                result=[d.model_dump() for d in result])
+    return result
 
 
 def audit(evidence: Evidence, tolerance: Decimal = Decimal("0.01")) -> Verdict:
@@ -175,7 +213,8 @@ def audit(evidence: Evidence, tolerance: Decimal = Decimal("0.01")) -> Verdict:
     If a folio was requested but not provided (e.g. OCR pages Java couldn't
     process), the Auditor notes those pages in Verdict.unauditable_pages.
     """
-    context = AuditContext(evidence=evidence, tolerance=tolerance)
+    slog = SessionLogger(evidence.session_id)
+    context = AuditContext(evidence=evidence, tolerance=tolerance, slog=slog)
 
     folio_summary = "\n".join(
         f"  Page {f.page + 1}: "
@@ -200,9 +239,21 @@ def audit(evidence: Evidence, tolerance: Decimal = Decimal("0.01")) -> Verdict:
         evidence.final_round,
     )
 
-    result = ledger_auditor.run_sync(prompt, deps=context)
-    verdict = result.data
+    slog.request("deliberate", body={
+        "model": get_pydantic_ai_model_id(SMART_MODEL),
+        "system_prompt": AUDITOR_SYSTEM_PROMPT,
+        "user_prompt": prompt,
+        "evidence": evidence.model_dump(),
+    })
 
+    result = ledger_auditor.run_sync(
+        prompt,
+        deps=context,
+        model_settings={"timeout": 90.0},
+    )
+    verdict = result.output
+
+    slog.response("deliberate", body=verdict.model_dump())
     logger.info(
         "[ledger] session=%s verdict: %d errors, %d warnings, clean=%s",
         evidence.session_id,
@@ -210,4 +261,5 @@ def audit(evidence: Evidence, tolerance: Decimal = Decimal("0.01")) -> Verdict:
         verdict.warning_count,
         verdict.clean,
     )
+    slog.close()
     return verdict

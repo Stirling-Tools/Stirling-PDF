@@ -27,6 +27,7 @@ dev = [
     "ruff>=0.14.10",
     "pyright>=1.1.408",
     "datamodel-code-generator[ruff]>=0.27.0",
+    "fpdf2>=2.8.7",
 ]
 
 [build-system]
