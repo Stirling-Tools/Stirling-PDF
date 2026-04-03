@@ -19,6 +19,7 @@ export type ExecuteDisabledReason =
   | 'endpointUnavailable'
   | 'noFiles'
   | 'invalidParams'
+  | 'viewerMode'
   | null;
 
 /**
