@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { BaseParameters } from '@app/types/parameters';
 import { useBaseParameters, type BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
 
@@ -20,7 +21,7 @@ export const defaultParameters: OverlayPdfsParameters = {
 export type OverlayPdfsParametersHook = BaseParametersHook<OverlayPdfsParameters>;
 
 export const useOverlayPdfsParameters = (): OverlayPdfsParametersHook => {
-  return useBaseParameters<OverlayPdfsParameters>({
+  const base = useBaseParameters<OverlayPdfsParameters>({
     defaultParameters,
     endpointName: 'overlay-pdfs',
     validateFn: (params) => {
@@ -32,6 +33,18 @@ export const useOverlayPdfsParameters = (): OverlayPdfsParametersHook => {
       return true;
     },
   });
+
+  // Overlay files are chosen independently of the base file selection, so they
+  // must survive the parameter reset that fires when the workbench selection
+  // transitions from 0 → 1+ files. Only mode/position/counts are reset.
+  const resetParameters = useCallback(() => {
+    base.setParameters(prev => ({
+      ...defaultParameters,
+      overlayFiles: prev.overlayFiles,
+    }));
+  }, [base.setParameters]);
+
+  return { ...base, resetParameters };
 };
 
 

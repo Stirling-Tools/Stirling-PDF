@@ -1,8 +1,9 @@
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useRef, useEffect, useContext } from 'react';
 import apiClient from '@app/services/apiClient';
 import { useTranslation } from 'react-i18next';
 import { useFileContext } from '@app/contexts/FileContext';
 import { useNavigationActions } from '@app/contexts/NavigationContext';
+import { ViewerContext } from '@app/contexts/ViewerContext';
 import { useToolState } from '@app/hooks/tools/shared/useToolState';
 import { useToolApiCalls, type ApiCallsConfig } from '@app/hooks/tools/shared/useToolApiCalls';
 import { useToolResources } from '@app/hooks/tools/shared/useToolResources';
@@ -63,6 +64,8 @@ export const useToolOperation = <TParams>(
   const { t } = useTranslation();
   const { addFiles, consumeFiles, undoConsumeFiles, selectors } = useFileContext();
   const { actions: navActions } = useNavigationActions();
+  const viewerContext = useContext(ViewerContext);
+  const setActiveFileId = viewerContext?.setActiveFileId ?? (() => {});
 
   // Composed hooks
   const { state, actions } = useToolState();
@@ -348,6 +351,9 @@ export const useToolOperation = <TParams>(
           const toConsumeInputIds = successSourceIds.filter((id) => inputFileIds.includes(id));
           console.debug('[useToolOperation] Consuming files (version)', { inputCount: inputFileIds.length, toConsume: toConsumeInputIds.length });
           const outputFileIds = await consumeFiles(toConsumeInputIds, outputStirlingFiles, outputStirlingFileStubs);
+          // Tell the viewer to follow the replacement file — consumeFiles prepends the new file
+          // to the list, so activeFileIndex would point to the wrong file without this.
+          if (outputFileIds.length === 1) setActiveFileId(outputFileIds[0]);
 
           // Notify on desktop when processing completes
           await notifyPdfProcessingComplete(outputFileIds.length);

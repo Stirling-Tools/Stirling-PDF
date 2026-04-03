@@ -26,11 +26,11 @@ import { formatFileSize } from '@app/utils/fileUtils';
 import ToolChain from '@app/components/shared/ToolChain';
 import HoverActionMenu, { HoverAction } from '@app/components/shared/HoverActionMenu';
 import { downloadFile } from '@app/services/downloadService';
-import FileEditorFileName from '@app/components/fileEditor/FileEditorFileName';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
 import UploadToServerModal from '@app/components/shared/UploadToServerModal';
 import ShareFileModal from '@app/components/shared/ShareFileModal';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { truncateCenter } from '@app/utils/textUtils';
 
 
 
@@ -461,8 +461,8 @@ const FileEditorThumbnail = ({
         marginTop: '0.5rem',
         marginBottom: '0.5rem',
       }}>
-        <Text  size="lg" fw={700} className={styles.title}  lineClamp={2} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
-          <FileEditorFileName file={file} />
+        <Text size="lg" fw={700} className={styles.title} title={file.name}>
+          <PrivateContent>{truncateCenter(file.name, 40)}</PrivateContent>
         </Text>
         <Text
           size="sm"

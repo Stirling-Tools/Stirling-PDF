@@ -317,14 +317,12 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     const validToolId = isValidToolId(toolId) ? toolId : null;
     actions.setSelectedTool(validToolId);
 
-    // Get the tool from registry to determine workbench
+    // Switch workbench only when required: leaving a custom view, or the tool declares one.
     const tool = getSelectedTool(toolId);
     if (wasInCustomWorkbench) {
       actions.setWorkbench(getDefaultWorkbench());
     } else if (tool && tool.workbench) {
       actions.setWorkbench(tool.workbench);
-    } else {
-      actions.setWorkbench(getDefaultWorkbench());
     }
 
     // Clear search query when selecting a tool
@@ -342,8 +340,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       actions.setWorkbench(getDefaultWorkbench());
     } else if (tool && tool.workbench) {
       actions.setWorkbench(tool.workbench);
-    } else {
-      actions.setWorkbench(getDefaultWorkbench());
     }
     setSearchQuery('');
     setLeftPanelView('toolContent');
