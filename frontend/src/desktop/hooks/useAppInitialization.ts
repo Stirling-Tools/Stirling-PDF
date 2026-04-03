@@ -3,6 +3,7 @@ import { useOpenedFile } from '@app/hooks/useOpenedFile';
 import { fileOpenService } from '@app/services/fileOpenService';
 import { useFileManagement } from '@app/contexts/file/fileHooks';
 import { createQuickKey } from '@app/types/fileContext';
+import { useNavigationActions } from '@app/contexts/NavigationContext';
 
 /**
  * App initialization hook
@@ -16,6 +17,7 @@ export function useAppInitialization(): void {
 
   // Handle files opened with app (Tauri mode)
   const { openedFilePaths, loading: openedFileLoading, consumeOpenedFilePaths } = useOpenedFile();
+  const navActions = useNavigationActions();
 
   // Load opened files and add directly to FileContext
   useEffect(() => {
@@ -67,6 +69,8 @@ export function useAppInitialization(): void {
             }
           });
 
+          navActions.actions.setWorkbench('viewer');
+
           console.log(`[Desktop] ${loadedFiles.length} opened file(s) added to FileContext`);
         }
       } catch (error) {
@@ -75,7 +79,7 @@ export function useAppInitialization(): void {
     };
 
     loadOpenedFiles();
-  }, [openedFilePaths, openedFileLoading, addFiles, updateStirlingFileStub, consumeOpenedFilePaths]);
+  }, [openedFilePaths, openedFileLoading, addFiles, updateStirlingFileStub, consumeOpenedFilePaths, navActions]);
 }
 
 export function useSetupCompletion(): (completed: boolean) => void {

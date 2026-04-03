@@ -105,11 +105,11 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                 <ScarfTrackingInitializer />
                 <AppConfigLoader />
                 <ServerDefaultsSync />
-                <FileContextProvider enableUrlSync={true} enablePersistence={true}>
-                  <AppInitializer />
+                <FileContextProvider enableUrlSync={true} enablePersistence={true}> 
                   <BrandingAssetManager />
                   <ToolRegistryProvider>
                       <NavigationProvider>
+                        <AppInitializer />
                         <FilesModalProvider>
                           <ToolWorkflowProvider>
                             <HotkeyProvider>
