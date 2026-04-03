@@ -3,7 +3,6 @@ import { useOpenedFile } from '@app/hooks/useOpenedFile';
 import { fileOpenService } from '@app/services/fileOpenService';
 import { useFileManagement } from '@app/contexts/file/fileHooks';
 import { createQuickKey } from '@app/types/fileContext';
-import { useNavigationActions } from '@app/contexts/NavigationContext';
 
 /**
  * App initialization hook
@@ -17,7 +16,6 @@ export function useAppInitialization(): void {
 
   // Handle files opened with app (Tauri mode)
   const { openedFilePaths, loading: openedFileLoading, consumeOpenedFilePaths } = useOpenedFile();
-  const navActions = useNavigationActions();
 
   // Load opened files and add directly to FileContext
   useEffect(() => {
@@ -61,15 +59,13 @@ export function useAppInitialization(): void {
           const filesArray = loadedFiles.map(entry => entry.file);
           const quickKeyToPath = new Map(loadedFiles.map(entry => [entry.quickKey, entry.filePath]));
 
-          const addedFiles = await addFiles(filesArray);
+          const addedFiles = await addFiles(filesArray, { selectFiles: true });
           addedFiles.forEach(file => {
             const localFilePath = quickKeyToPath.get(file.quickKey);
             if (localFilePath) {
               updateStirlingFileStub(file.fileId, { localFilePath });
             }
           });
-
-          navActions.actions.setWorkbench('viewer');
 
           console.log(`[Desktop] ${loadedFiles.length} opened file(s) added to FileContext`);
         }
@@ -79,7 +75,7 @@ export function useAppInitialization(): void {
     };
 
     loadOpenedFiles();
-  }, [openedFilePaths, openedFileLoading, addFiles, updateStirlingFileStub, consumeOpenedFilePaths, navActions]);
+  }, [openedFilePaths, openedFileLoading, addFiles, updateStirlingFileStub, consumeOpenedFilePaths]);
 }
 
 export function useSetupCompletion(): (completed: boolean) => void {
