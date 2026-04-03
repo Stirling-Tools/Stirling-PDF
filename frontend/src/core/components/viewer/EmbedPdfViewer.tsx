@@ -189,6 +189,8 @@ const EmbedPdfViewerContent = ({
   const { selectors } = useFileState();
   const { actions } = useFileActions();
   const activeFiles = selectors.getFiles();
+  const activeFilesRef = useRef(activeFiles);
+  activeFilesRef.current = activeFiles;
   const activeFileIds = activeFiles.map(f => f.fileId);
 
   // Navigation guard for unsaved changes
@@ -301,11 +303,11 @@ const EmbedPdfViewerContent = ({
       activeFileIndexMountedRef.current = true;
       return;
     }
-    const fileId = activeFiles[activeFileIndex]?.fileId;
+    const fileId = activeFilesRef.current[activeFileIndex]?.fileId;
     if (fileId && fileId !== activeFileId) {
       setActiveFileId(fileId);
     }
-  }, [activeFileIndex]); // only fires on tab changes — stale closure for activeFiles is intentional
+  }, [activeFileIndex]);
 
   // Reset active tab if it's out of bounds (safety net)
   useEffect(() => {

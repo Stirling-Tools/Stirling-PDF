@@ -40,11 +40,7 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
   props: BaseToolProps,
   options?: {
     minFiles?: number;
-    /**
-     * When true, always uses the full file selection rather than the viewer's
-     * active file. Use for tools like Compare and Merge that manage their own
-     * multi-file logic and should never be scoped to a single viewer file.
-     */
+    /** When true, uses the full file selection rather than the viewer-scoped single file. */
     ignoreViewerScope?: boolean;
   }
 ): BaseToolReturn<TParams, TParamsHook> {

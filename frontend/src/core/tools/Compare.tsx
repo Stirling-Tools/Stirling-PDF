@@ -100,15 +100,10 @@ const Compare = (props: BaseToolProps) => {
     }
   }, []);
 
-  // Track previous file count to distinguish "just reached 2 files" from
-  // "already at 2 files but user changed workbench selection".
+  // Track previous file count to detect the transition to exactly 2 files.
   const prevAllIdsLengthRef = useRef<number | null>(null);
 
-  // Map workbench selection → slots (1st = Original, 2nd = Edited, max 2).
-  // Auto-fills both slots only when transitioning TO exactly 2 files (mount or
-  // 2nd file added). When the count is already 2, user selection changes are
-  // respected so files can be deselected from the workbench.
-  // Excludes params from deps to avoid conflicting with direct picker updates.
+  // Auto-fill slots when the file count first reaches 2; respect manual picker changes after that.
   useEffect(() => {
     const selectedIds = fileState.ui.selectedFileIds as FileId[];
     const allIds = fileState.files.ids as FileId[];
