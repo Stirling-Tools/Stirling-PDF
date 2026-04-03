@@ -186,11 +186,10 @@ const EmbedPdfViewerContent = ({
   const redactionTrackerRef = useRef<RedactionPendingTrackerAPI>(null);
 
   // Get current file from FileContext
-  const { selectors, state } = useFileState();
+  const { selectors } = useFileState();
   const { actions } = useFileActions();
   const activeFiles = selectors.getFiles();
   const activeFileIds = activeFiles.map(f => f.fileId);
-  const selectedFileIds = state.ui.selectedFileIds;
 
   // Navigation guard for unsaved changes
   const { setHasUnsavedChanges, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker, registerNavigationWarningHandlers, unregisterNavigationWarningHandlers } = useNavigationGuard();
