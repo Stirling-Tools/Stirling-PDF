@@ -3,7 +3,7 @@
 
 The frontend requires environment variables to be set before running. `npm run dev` will create a `.env` file for you automatically on first run using the defaults from `config/.env.example` - for most development work this is all you need.
 
-If you need to configure specific services (Google Drive, Supabase, Stripe, PostHog), edit your local `.env` file. The values in `config/.env.example` show what each variable does and provides sensible defaults where applicable.
+If you need to configure specific services (Google Drive, Supabase, Stripe, PostHog), edit your local `.env` file. The values in `config/.env.example` show what each variable does and provide sensible defaults where applicable.
 
 For desktop (Tauri) development, `npm run tauri-dev` will additionally create a `.env.desktop` file from `config/.env.desktop.example`.
 

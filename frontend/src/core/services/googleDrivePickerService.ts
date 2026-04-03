@@ -155,7 +155,7 @@ class GoogleDrivePickerService {
           return;
         }
         if(response.access_token == null){
-          reject(new Error("No acces token in response"));
+          reject(new Error("No access token in response"));
         }
 
         this.accessToken = response.access_token;
