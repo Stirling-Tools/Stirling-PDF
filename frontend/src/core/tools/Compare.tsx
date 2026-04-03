@@ -23,9 +23,9 @@ import type { FileId } from '@app/types/file';
 import type { StirlingFile } from '@app/types/fileContext';
 import DocumentThumbnail from '@app/components/shared/filePreview/DocumentThumbnail';
 import type { CompareWorkbenchData } from '@app/types/compare';
-import FitText from '@app/components/shared/FitText';
 import { getDefaultWorkbench } from '@app/types/workbench';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
+import { truncateCenter } from '@app/utils/textUtils';
 
 const CUSTOM_VIEW_ID = 'compareWorkbenchView';
 const CUSTOM_WORKBENCH_ID = 'custom:compareWorkbenchView' as const;
@@ -426,14 +426,10 @@ const Compare = (props: BaseToolProps) => {
               <Box className="compare-tool__thumbnail" style={{ alignSelf: 'center' }}>
                 <DocumentThumbnail file={stub ?? null} thumbnail={stub?.thumbnailUrl || null} />
               </Box>
-              <Stack className="compare-tool__details">
-                <FitText 
-                  text={stub?.name || ''} 
-                  minimumFontScale={0.8} 
-                  lines={3}
-                  style={{ fontWeight: 600
-                  }}
-                />
+              <Stack className="compare-tool__details" style={{ minWidth: 0, overflow: 'hidden', flex: 1 }}>
+                <Text fw={600} title={stub?.name}>
+                  {truncateCenter(stub?.name || '', 50)}
+                </Text>
                 {pageCount && dateText && (
                   <>
                   <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
