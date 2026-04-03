@@ -6,16 +6,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import FitText from '@app/components/shared/FitText';
 import { PrivateContent } from '@app/components/shared/PrivateContent';
 import { FileId } from '@app/types/file';
-
-// Truncate text from the center: "very-long-filename.pdf" -> "very-lo...ame.pdf"
-function truncateCenter(text: string, maxLength: number = 25): string {
-  if (text.length <= maxLength) return text;
-  const ellipsis = '...';
-  const charsToShow = maxLength - ellipsis.length;
-  const frontChars = Math.ceil(charsToShow / 2);
-  const backChars = Math.floor(charsToShow / 2);
-  return text.substring(0, frontChars) + ellipsis + text.substring(text.length - backChars);
-}
+import { truncateCenter } from '@app/utils/textUtils';
 
 interface FileDropdownMenuProps {
   displayName: string;

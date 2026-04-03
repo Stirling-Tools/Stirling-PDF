@@ -23,9 +23,9 @@ import type { FileId } from '@app/types/file';
 import type { StirlingFile } from '@app/types/fileContext';
 import DocumentThumbnail from '@app/components/shared/filePreview/DocumentThumbnail';
 import type { CompareWorkbenchData } from '@app/types/compare';
-import FitText from '@app/components/shared/FitText';
 import { getDefaultWorkbench } from '@app/types/workbench';
 import { useFilesModalContext } from '@app/contexts/FilesModalContext';
+import { truncateCenter } from '@app/utils/textUtils';
 
 const CUSTOM_VIEW_ID = 'compareWorkbenchView';
 const CUSTOM_WORKBENCH_ID = 'custom:compareWorkbenchView' as const;
@@ -48,7 +48,7 @@ const Compare = (props: BaseToolProps) => {
     useCompareParameters,
     useCompareOperation,
     props,
-    { minFiles: 2 }
+    { minFiles: 2, ignoreViewerScope: true }
   );
 
   const operation = base.operation as CompareOperationHook;
@@ -93,33 +93,57 @@ const Compare = (props: BaseToolProps) => {
   // Register once; avoid re-registering on translation/prop changes which clears data mid-flight
   }, []);
 
-  // Auto-map from workbench selection: always reflect the first two selected files in order.
-  // This also handles deselection by promoting the remaining selection to base and clearing comparison.
+  // On mount: clear selections unless exactly 2 files are loaded.
   useEffect(() => {
-    // Use selected IDs directly from state so it works even if File objects aren't loaded yet
-    const selectedIds = (fileState.ui.selectedFileIds as FileId[]) ?? [];
+    if ((fileState.files.ids as FileId[]).length !== 2) {
+      fileActions.clearSelections();
+    }
+  }, []);
 
-    // Determine next base: keep current if still selected; otherwise use the first selected id
-    const nextBase: FileId | null = params.baseFileId && selectedIds.includes(params.baseFileId)
-      ? (params.baseFileId as FileId)
-      : (selectedIds[0] ?? null);
+  // Track previous file count to detect the transition to exactly 2 files.
+  const prevAllIdsLengthRef = useRef<number | null>(null);
 
-    // Determine next comparison: keep current if still selected and distinct; otherwise use the first other selected id
-    let nextComp: FileId | null = null;
-    if (params.comparisonFileId && selectedIds.includes(params.comparisonFileId) && params.comparisonFileId !== nextBase) {
-      nextComp = params.comparisonFileId as FileId;
-    } else {
-      nextComp = (selectedIds.find(id => id !== nextBase) ?? null) as FileId | null;
+  // Auto-fill slots when the file count first reaches 2; respect manual picker changes after that.
+  useEffect(() => {
+    const selectedIds = fileState.ui.selectedFileIds as FileId[];
+    const allIds = fileState.files.ids as FileId[];
+    const prevLength = prevAllIdsLengthRef.current;
+    prevAllIdsLengthRef.current = allIds.length;
+
+    if (allIds.length === 2 && prevLength !== 2) {
+      // Transitioned to exactly 2 files — auto-fill both slots.
+      const [firstId, secondId] = allIds as [FileId, FileId];
+      fileActions.setSelectedFiles([firstId, secondId]);
+      base.params.setParameters(prev => {
+        if (prev.baseFileId === firstId && prev.comparisonFileId === secondId) return prev;
+        return { ...prev, baseFileId: firstId, comparisonFileId: secondId };
+      });
+      return;
     }
 
-    if (nextBase !== params.baseFileId || nextComp !== params.comparisonFileId) {
-      base.params.setParameters(prev => ({
-        ...prev,
-        baseFileId: nextBase,
-        comparisonFileId: nextComp,
-      }));
+    if (selectedIds.length > 2) {
+      fileActions.setSelectedFiles(selectedIds.slice(0, 2) as FileId[]);
+      return;
     }
-  }, [fileState.ui.selectedFileIds, base.params, params.baseFileId, params.comparisonFileId]);
+
+    const nextBase = (selectedIds[0] ?? null) as FileId | null;
+    const nextComp = (selectedIds[1] ?? null) as FileId | null;
+    base.params.setParameters(prev => {
+      if (prev.baseFileId === nextBase && prev.comparisonFileId === nextComp) return prev;
+      return { ...prev, baseFileId: nextBase, comparisonFileId: nextComp };
+    });
+  }, [fileState.ui.selectedFileIds, fileState.files.ids]);
+
+  // Clear a slot if its file is removed from the workbench.
+  useEffect(() => {
+    const allIds = fileState.files.ids as FileId[];
+    if (params.baseFileId && !allIds.includes(params.baseFileId as FileId)) {
+      base.params.setParameters(prev => ({ ...prev, baseFileId: null }));
+    }
+    if (params.comparisonFileId && !allIds.includes(params.comparisonFileId as FileId)) {
+      base.params.setParameters(prev => ({ ...prev, comparisonFileId: null }));
+    }
+  }, [fileState.files.ids]);
 
   // Track workbench data and drive loading/result state transitions
   const lastProcessedAtRef = useRef<number | null>(null);
@@ -397,14 +421,10 @@ const Compare = (props: BaseToolProps) => {
               <Box className="compare-tool__thumbnail" style={{ alignSelf: 'center' }}>
                 <DocumentThumbnail file={stub ?? null} thumbnail={stub?.thumbnailUrl || null} />
               </Box>
-              <Stack className="compare-tool__details">
-                <FitText 
-                  text={stub?.name || ''} 
-                  minimumFontScale={0.8} 
-                  lines={3}
-                  style={{ fontWeight: 600
-                  }}
-                />
+              <Stack className="compare-tool__details" style={{ minWidth: 0, overflow: 'hidden', flex: 1 }}>
+                <Text fw={600} title={stub?.name}>
+                  {truncateCenter(stub?.name || '', 50)}
+                </Text>
                 {pageCount && dateText && (
                   <>
                   <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -576,6 +596,7 @@ const Compare = (props: BaseToolProps) => {
       onClick: handleExecuteCompare,
       disabled: !canExecute,
       testId: 'compare-execute',
+      disableScopeHints: true,
     },
     review: {
       isVisible: false,

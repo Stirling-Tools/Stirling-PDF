@@ -52,8 +52,8 @@ const FileEditor = ({
   // Get navigation actions
   const { actions: navActions } = useNavigationActions();
 
-  // Get viewer context for setting active file index
-  const { setActiveFileIndex } = useViewer();
+  // Get viewer context for setting active file index and ID
+  const { setActiveFileIndex, setActiveFileId } = useViewer();
 
   // Get file selection context
   const { setSelectedFiles } = useFileSelection();
@@ -351,12 +351,11 @@ const FileEditor = ({
   const handleViewFile = useCallback((fileId: FileId) => {
     const index = activeStirlingFileStubs.findIndex(r => r.id === fileId);
     if (index !== -1) {
-      // Set the file as selected in context, sync the viewer index, and switch to viewer
-      setSelectedFiles([fileId]);
+      setActiveFileId(fileId as string);
       setActiveFileIndex(index);
       navActions.setWorkbench('viewer');
     }
-  }, [activeStirlingFileStubs, setSelectedFiles, setActiveFileIndex, navActions.setWorkbench]);
+  }, [activeStirlingFileStubs, setActiveFileId, setActiveFileIndex, navActions.setWorkbench]);
 
   const handleLoadFromStorage = useCallback(async (selectedFiles: File[]) => {
     if (selectedFiles.length === 0) return;
