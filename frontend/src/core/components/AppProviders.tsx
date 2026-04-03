@@ -106,12 +106,12 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
                 <AppConfigLoader />
                 <ServerDefaultsSync />
                 <FileContextProvider enableUrlSync={true} enablePersistence={true}>
+                  <AppInitializer />
                   <BrandingAssetManager />
                   <ToolRegistryProvider>
                       <NavigationProvider>
                         <FilesModalProvider>
                           <ToolWorkflowProvider>
-                            <AppInitializer />
                             <HotkeyProvider>
                               <SidebarProvider>
                                 <ViewerProvider>
