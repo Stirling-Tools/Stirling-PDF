@@ -340,6 +340,8 @@ capture_file_list() {
         -not -path '*/tmp/hsperfdata_stirlingpdfuser/*' \
         -not -path '*/tmp/hsperfdata_root/*' \
         -not -path '*/tmp/stirling-pdf/jetty-*/*' \
+        -not -path '*/tmp/stirling-pdf/lu*' \
+        -not -path '*/tmp/stirling-pdf/tmp*' \
         -not -path '/tmp/lu*' \
         -not -path '*/tmp/*/user/registrymodifications.xcu' \
         -not -path '/app/stirling.aot' \
@@ -369,8 +371,10 @@ capture_file_list() {
             -not -path '*/tmp/hsperfdata_root/*' \
             -not -path '*/tmp/stirling-pdf/hsperfdata_stirlingpdfuser/*' \
             -not -path '*/tmp/stirling-pdf/jetty-*/*' \
-            -not -path '/tmp/lu*' \
-            -not -path '/tmp/tmp*' \
+            -not -path '*/tmp/stirling-pdf/lu*' \
+            -not -path '*/tmp/stirling-pdf/tmp*' \
+            -not -path '*/tmp/lu*' \
+            -not -path '*/tmp/tmp*' \
             -not -path '/app/stirling.aot' \
             -not -path '*/tmp/stirling.aotconf' \
             -not -path '*/tmp/aot-*.log' \
