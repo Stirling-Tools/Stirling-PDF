@@ -28,7 +28,7 @@ import CallSplitIcon from '@mui/icons-material/CallSplit';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import UploadFileIcon from '@mui/icons-material/UploadFileOutlined';
 import { Rnd } from 'react-rnd';
-import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
+import { useNavigationGuard } from '@app/contexts/NavigationContext';
 
 import { useFileContext } from '@app/contexts/FileContext';
 import {
@@ -414,6 +414,15 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
       pageCount: pages.length,
     } : null,
   });
+
+  // Register navigation warning handlers for the global modal
+  const { registerNavigationWarningHandlers, unregisterNavigationWarningHandlers } = useNavigationGuard();
+  useEffect(() => {
+    registerNavigationWarningHandlers({
+      onApplyAndContinue: onSaveToWorkbench,
+    });
+    return () => unregisterNavigationWarningHandlers();
+  }, [onSaveToWorkbench, registerNavigationWarningHandlers, unregisterNavigationWarningHandlers]);
 
   const clearSelection = useCallback(() => {
     setSelectedGroupIds(new Set());
@@ -2385,10 +2394,6 @@ const selectionToolbarPosition = useMemo(() => {
         </Stack>
       )}
 
-      {/* Navigation Warning Modal */}
-      <NavigationWarningModal
-        onApplyAndContinue={onSaveToWorkbench}
-      />
     </Stack>
   );
 };

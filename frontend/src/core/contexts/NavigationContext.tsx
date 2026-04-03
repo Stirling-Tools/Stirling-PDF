@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useMemo, useRef } from 'react';
 import { WorkbenchType, getDefaultWorkbench } from '@app/types/workbench';
 import { ToolId, isValidToolId } from '@app/types/toolId';
 import { useToolRegistry } from '@app/contexts/ToolRegistryContext';
@@ -68,6 +68,13 @@ const initialState: NavigationContextState = {
   showNavigationWarning: false
 };
 
+// Handlers that editors register for the navigation warning modal
+export interface NavigationWarningHandlers {
+  onApplyAndContinue?: () => Promise<void>;
+  onExportAndContinue?: () => Promise<void>;
+  onDiscardAndContinue?: () => Promise<void>;
+}
+
 // Navigation context actions interface
 export interface NavigationContextActions {
   setWorkbench: (workbench: WorkbenchType) => void;
@@ -82,6 +89,9 @@ export interface NavigationContextActions {
   cancelNavigation: () => void;
   clearToolSelection: () => void;
   handleToolSelect: (toolId: string) => void;
+  registerNavigationWarningHandlers: (handlers: NavigationWarningHandlers) => void;
+  unregisterNavigationWarningHandlers: () => void;
+  navigationWarningHandlersRef: React.RefObject<NavigationWarningHandlers | null>;
 }
 
 // Context state values
@@ -109,6 +119,7 @@ export const NavigationProvider: React.FC<{
   const [state, dispatch] = useReducer(navigationReducer, initialState);
   const { allTools: toolRegistry } = useToolRegistry();
   const unsavedChangesCheckerRef = React.useRef<(() => boolean) | null>(null);
+  const navigationWarningHandlersRef = useRef<NavigationWarningHandlers | null>(null);
 
   // Memoize individual callbacks
   const setWorkbench = useCallback((workbench: WorkbenchType) => {
@@ -189,6 +200,14 @@ export const NavigationProvider: React.FC<{
 
     const unregisterUnsavedChangesChecker = useCallback(() => {
       unsavedChangesCheckerRef.current = null;
+    }, []);
+
+    const registerNavigationWarningHandlers = useCallback((handlers: NavigationWarningHandlers) => {
+      navigationWarningHandlersRef.current = handlers;
+    }, []);
+
+    const unregisterNavigationWarningHandlers = useCallback(() => {
+      navigationWarningHandlersRef.current = null;
     }, []);
 
     const showNavigationWarning = useCallback((show: boolean) => {
@@ -279,6 +298,9 @@ export const NavigationProvider: React.FC<{
     cancelNavigation,
     clearToolSelection,
     handleToolSelect,
+    registerNavigationWarningHandlers,
+    unregisterNavigationWarningHandlers,
+    navigationWarningHandlersRef,
   }), [
     setWorkbench,
     setSelectedTool,
@@ -292,6 +314,8 @@ export const NavigationProvider: React.FC<{
     cancelNavigation,
     clearToolSelection,
     handleToolSelect,
+    registerNavigationWarningHandlers,
+    unregisterNavigationWarningHandlers,
   ]);
 
   const stateValue: NavigationContextStateValue = {
@@ -355,6 +379,9 @@ export const useNavigationGuard = () => {
     setHasUnsavedChanges: actions.setHasUnsavedChanges,
     setShowNavigationWarning: actions.showNavigationWarning,
     registerUnsavedChangesChecker: actions.registerUnsavedChangesChecker,
-    unregisterUnsavedChangesChecker: actions.unregisterUnsavedChangesChecker
+    unregisterUnsavedChangesChecker: actions.unregisterUnsavedChangesChecker,
+    registerNavigationWarningHandlers: actions.registerNavigationWarningHandlers,
+    unregisterNavigationWarningHandlers: actions.unregisterNavigationWarningHandlers,
+    navigationWarningHandlersRef: actions.navigationWarningHandlersRef,
   };
 };

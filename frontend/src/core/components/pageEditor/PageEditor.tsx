@@ -9,7 +9,6 @@ import '@app/components/pageEditor/PageEditor.module.css';
 import PageThumbnail from '@app/components/pageEditor/PageThumbnail';
 import DragDropGrid from '@app/components/pageEditor/DragDropGrid';
 import SkeletonLoader from '@app/components/shared/SkeletonLoader';
-import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 import { FileId } from "@app/types/file";
 import { GRID_CONSTANTS } from '@app/components/pageEditor/constants';
 import { useInitialPageDocument } from '@app/components/pageEditor/hooks/useInitialPageDocument';
@@ -39,7 +38,7 @@ const PageEditor = ({
   const { actions } = useFileActions();
 
   // Navigation guard for unsaved changes
-  const { setHasUnsavedChanges } = useNavigationGuard();
+  const { setHasUnsavedChanges, registerNavigationWarningHandlers, unregisterNavigationWarningHandlers } = useNavigationGuard();
   const navigationState = useNavigationState();
 
   // Get PageEditor coordination functions
@@ -393,6 +392,19 @@ const PageEditor = ({
     updateCurrentPages,
   });
 
+  // Register navigation warning handlers for the global modal
+  useEffect(() => {
+    registerNavigationWarningHandlers({
+      onApplyAndContinue: async () => {
+        await applyChanges();
+      },
+      onExportAndContinue: async () => {
+        await onExportAll();
+      },
+    });
+    return () => unregisterNavigationWarningHandlers();
+  }, [applyChanges, onExportAll, registerNavigationWarningHandlers, unregisterNavigationWarningHandlers]);
+
   // Derived values for right rail and usePageEditorRightRailButtons (must be after displayDocument)
   const selectedPageCount = selectedPageIds.length;
   const activeFileIds = selectedFileIds;
@@ -704,14 +716,6 @@ const PageEditor = ({
         </Box>
       )}
 
-      <NavigationWarningModal
-        onApplyAndContinue={async () => {
-          await applyChanges();
-        }}
-        onExportAndContinue={async () => {
-          await onExportAll();
-        }}
-      />
     </div>
   );
 };
