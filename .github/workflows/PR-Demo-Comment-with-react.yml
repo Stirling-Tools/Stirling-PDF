@@ -199,9 +199,11 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.NEW_VPS_SSH_KEY }}" > ../private.key
+          echo "${NEW_VPS_SSH_KEY}" > ../private.key
           sudo chmod 600 ../private.key
 
+        env:
+          NEW_VPS_SSH_KEY: ${{ secrets.NEW_VPS_SSH_KEY }}
       - name: Deploy to VPS
         id: deploy
         run: |
@@ -219,11 +221,11 @@ jobs:
           # Set pro/enterprise settings (enterprise implies pro)
           if [ "${{ needs.check-comment.outputs.enable_enterprise }}" == "true" ]; then
             PREMIUM_ENABLED="true"
-            PREMIUM_KEY="${{ secrets.ENTERPRISE_KEY }}"
+            PREMIUM_KEY="${ENTERPRISE_KEY}"
             PREMIUM_PROFEATURES_AUDIT_ENABLED="true"
           elif [ "${{ needs.check-comment.outputs.enable_pro }}" == "true" ]; then
             PREMIUM_ENABLED="true"
-            PREMIUM_KEY="${{ secrets.PREMIUM_KEY }}"
+            PREMIUM_KEY="${PREMIUM_KEY}"
             PREMIUM_PROFEATURES_AUDIT_ENABLED="true"
           else
             PREMIUM_ENABLED="false"
@@ -237,7 +239,7 @@ jobs:
           services:
             stirling-pdf:
               container_name: stirling-pdf-pr-${{ needs.check-comment.outputs.pr_number }}
-              image: ${{ secrets.DOCKER_HUB_USERNAME }}/test:pr-${{ needs.check-comment.outputs.pr_number }}
+              image: ${DOCKER_HUB_USERNAME}/test:pr-${{ needs.check-comment.outputs.pr_number }}
               ports:
                 - "${{ needs.check-comment.outputs.pr_number }}:8080"
               volumes:
@@ -261,9 +263,9 @@ jobs:
           EOF
 
           # Then copy the file and execute commands
-          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }}:/tmp/docker-compose.yml
+          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null docker-compose.yml ${NEW_VPS_USERNAME}@${NEW_VPS_HOST}:/tmp/docker-compose.yml
 
-          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${{ secrets.NEW_VPS_USERNAME }}@${{ secrets.NEW_VPS_HOST }} << ENDSSH
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T ${NEW_VPS_USERNAME}@${NEW_VPS_HOST} << ENDSSH
             # Create PR-specific directories
             mkdir -p /stirling/PR-${{ needs.check-comment.outputs.pr_number }}/{data,config,logs}
 
@@ -279,6 +281,12 @@ jobs:
           # Set output for use in PR comment
           echo "security_status=${SECURITY_STATUS}" >> $GITHUB_ENV
 
+        env:
+          ENTERPRISE_KEY: ${{ secrets.ENTERPRISE_KEY }}
+          PREMIUM_KEY: ${{ secrets.PREMIUM_KEY }}
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          NEW_VPS_USERNAME: ${{ secrets.NEW_VPS_USERNAME }}
+          NEW_VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
       - name: Add success reaction to comment
         if: success()
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0

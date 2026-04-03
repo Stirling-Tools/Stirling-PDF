@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4
         with:
           enable-cache: true
 
@@ -42,7 +42,7 @@ jobs:
 
       - name: Post fixer suggestions
         if: steps.fixer_changes.outputs.changed == 'true' && github.event_name == 'pull_request'
-        uses: reviewdog/action-suggester@v1
+        uses: reviewdog/action-suggester@aa38384ceb608d00f84b4690cacc83a5aba307ff # v1
         continue-on-error: true
         with:
           tool_name: engine-make-fix
