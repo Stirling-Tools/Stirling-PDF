@@ -34,6 +34,7 @@ public class TextFinder extends PDFTextStripper {
         this.useRegex = useRegex;
         this.wholeWordSearch = wholeWordSearch;
         this.setWordSeparator(" ");
+        this.setLineSeparator("\n");
     }
 
     @Override
