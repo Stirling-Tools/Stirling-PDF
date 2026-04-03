@@ -159,9 +159,8 @@ public class SecurityConfiguration {
         firewall.setAllowedHeaderValues(
                 headerValue -> headerValue != null && allowedChars.matcher(headerValue).matches());
 
-        // Allow non-ASCII characters and newlines in parameter values. 
-        Pattern allowedParamChars =
-                Pattern.compile("[\\p{IsAssigned}&&[^\\p{IsControl}]\\r\\n]*");
+        // Allow non-ASCII characters and newlines in parameter values.
+        Pattern allowedParamChars = Pattern.compile("[\\p{IsAssigned}&&[^\\p{IsControl}]\\r\\n]*");
         firewall.setAllowedParameterValues(
                 parameterValue ->
                         parameterValue != null
