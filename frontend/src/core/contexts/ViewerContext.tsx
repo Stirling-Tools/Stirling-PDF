@@ -120,7 +120,9 @@ export interface ViewerContextType {
   isAnnotationMode: boolean;
   setAnnotationMode: (enabled: boolean) => void;
 
-  // Active file index for multi-file viewing
+  // Active file tracking — ID is the stable source of truth; index is derived from it
+  activeFileId: string | null;
+  setActiveFileId: (id: string | null) => void;
   activeFileIndex: number;
   setActiveFileIndex: (index: number) => void;
 
@@ -204,6 +206,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const [isSearchInterfaceVisible, setSearchInterfaceVisible] = useState(false);
   const [isAnnotationsVisible, setIsAnnotationsVisible] = useState(true);
   const [isAnnotationMode, setIsAnnotationModeState] = useState(false);
+  const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [activeFileIndex, setActiveFileIndex] = useState(0);
   const [pdfRenderMode, setPdfRenderModeState] = useState<PdfRenderMode>(
     () => preferencesService.getPreference('pdfRenderMode')
@@ -485,7 +488,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     isAnnotationMode,
     setAnnotationMode,
 
-    // Active file index
+    // Active file tracking
+    activeFileId,
+    setActiveFileId,
     activeFileIndex,
     setActiveFileIndex,
 
