@@ -898,6 +898,36 @@ main() {
                 passed_tests+=("Stirling-PDF-Regression $CONTAINER_NAME")
             else
                 echo "WARNING: Unexpected temporary files detected after behave tests!"
+
+                # Save temp file failure details to a log for the test report
+                local tempfile_log="$REPORT_DIR/temp-files-failure.log"
+                {
+                    echo "=== Temp File Regression Failure ==="
+                    echo "Container: $CONTAINER_NAME"
+                    echo ""
+                    echo "=== Before snapshot ==="
+                    cat "$BEFORE_FILE" 2>/dev/null || echo "(empty)"
+                    echo ""
+                    echo "=== After snapshot ==="
+                    cat "$AFTER_FILE" 2>/dev/null || echo "(empty)"
+                    echo ""
+                    echo "=== Diff (new/changed files) ==="
+                    cat "$DIFF_FILE" 2>/dev/null || echo "(empty)"
+                    echo ""
+                    echo "=== Leftover temp files ==="
+                    cat "${DIFF_FILE}.tmp" 2>/dev/null || echo "(none found)"
+                    echo ""
+                    echo "=== Docker logs ==="
+                    docker logs "$CONTAINER_NAME" 2>&1 | tail -200
+                } > "$tempfile_log" 2>/dev/null || true
+
+                # Copy snapshots to report dir for artifact upload
+                cp "$BEFORE_FILE" "$REPORT_DIR/" 2>/dev/null || true
+                cp "$AFTER_FILE" "$REPORT_DIR/" 2>/dev/null || true
+                cp "$DIFF_FILE" "$REPORT_DIR/" 2>/dev/null || true
+                cp "${DIFF_FILE}.tmp" "$REPORT_DIR/files_diff_tmp_matches.txt" 2>/dev/null || true
+
+                test_failure_logs["Stirling-PDF-Regression-Temp-Files"]="$tempfile_log"
                 failed_tests+=("Stirling-PDF-Regression-Temp-Files")
             fi
             passed_tests+=("Stirling-PDF-Regression $CONTAINER_NAME")
