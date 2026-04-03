@@ -53,6 +53,7 @@ const OperationButton = ({
       : t('tool.endpointUnavailable', 'This tool is unavailable on your server.'),
     noFiles: t('tool.noFiles', 'Add a file to get started.'),
     invalidParams: t('tool.invalidParams', 'Fill in the required settings.'),
+    viewerMode: t('tool.viewerMode', 'Switch to the file editor to select multiple files.'),
   };
 
   const tooltipLabel = blockedByBackend
