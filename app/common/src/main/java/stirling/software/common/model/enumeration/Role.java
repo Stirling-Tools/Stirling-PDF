@@ -31,7 +31,18 @@ public enum Role {
             Integer.MAX_VALUE,
             "adminUserSettings.internalApiUser"),
 
-    DEMO_USER("ROLE_DEMO_USER", 100, 100, "adminUserSettings.demoUser");
+    DEMO_USER("ROLE_DEMO_USER", 100, 100, "adminUserSettings.demoUser"),
+
+    // SaaS plan tier roles
+    FREE_USER("ROLE_FREE_USER", 0, 20, "adminUserSettings.freeUser"),
+
+    PRO_USER("ROLE_PRO_USER", 200, 1000, "adminUserSettings.proUser"),
+
+    ENTERPRISE_USER(
+            "ROLE_ENTERPRISE_USER",
+            Integer.MAX_VALUE,
+            Integer.MAX_VALUE,
+            "adminUserSettings.enterpriseUser");
 
     private final String roleId;
     private final int apiCallsPerDay;
