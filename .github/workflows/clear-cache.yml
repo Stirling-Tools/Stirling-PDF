@@ -1,0 +1,56 @@
+name: Clear GitHub Actions Cache
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - clear-github-cache
+
+jobs:
+  clear-cache:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Clear all caches
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const caches = await github.rest.actions.getActionsCacheList({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100,
+            });
+
+            let deleted = 0;
+            for (const cache of caches.data.actions_caches) {
+              console.log(`Deleting cache: ${cache.key} (${cache.id})`);
+              await github.rest.actions.deleteActionsCacheById({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                cache_id: cache.id,
+              });
+              deleted++;
+            }
+
+            // Handle pagination if more than 100 caches
+            let totalCount = caches.data.total_count;
+            while (deleted < totalCount) {
+              const moreCaches = await github.rest.actions.getActionsCacheList({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                per_page: 100,
+              });
+              if (moreCaches.data.actions_caches.length === 0) break;
+              for (const cache of moreCaches.data.actions_caches) {
+                console.log(`Deleting cache: ${cache.key} (${cache.id})`);
+                await github.rest.actions.deleteActionsCacheById({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  cache_id: cache.id,
+                });
+                deleted++;
+              }
+            }
+
+            console.log(`Successfully deleted ${deleted} caches.`);
