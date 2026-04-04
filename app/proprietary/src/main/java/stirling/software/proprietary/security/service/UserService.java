@@ -342,6 +342,14 @@ public class UserService implements UserServiceInterface {
         return userRepository.findByUsernameIgnoreCase(username);
     }
 
+    public Optional<User> findBySupabaseId(String supabaseId) {
+        return userRepository.findBySupabaseId(supabaseId);
+    }
+
+    public User saveUser(User user) {
+        return userRepository.save(user);
+    }
+
     public Optional<User> findByUsernameIgnoreCaseWithSettings(String username) {
         return userRepository.findByUsernameIgnoreCaseWithSettings(username);
     }

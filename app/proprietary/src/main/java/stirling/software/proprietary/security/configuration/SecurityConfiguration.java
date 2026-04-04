@@ -50,6 +50,7 @@ import stirling.software.proprietary.security.database.repository.JPATokenReposi
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
 import stirling.software.proprietary.security.filter.IPRateLimitingFilter;
 import stirling.software.proprietary.security.filter.JwtAuthenticationFilter;
+import stirling.software.proprietary.security.filter.SupabaseJwtAuthenticationFilter;
 import stirling.software.proprietary.security.filter.UserAuthenticationFilter;
 import stirling.software.proprietary.security.oauth2.CustomOAuth2AuthenticationFailureHandler;
 import stirling.software.proprietary.security.oauth2.CustomOAuth2AuthenticationSuccessHandler;
@@ -210,7 +211,10 @@ public class SecurityConfiguration {
                         "X-Page-Number",
                         "X-Page-Size",
                         "Content-Disposition",
-                        "Content-Type"));
+                        "Content-Type",
+                        "X-Credits-Remaining",
+                        "X-Rate-Limit-Remaining",
+                        "X-Rate-Limit-Retry-After-Seconds"));
 
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);
@@ -300,6 +304,13 @@ public class SecurityConfiguration {
                     // .addFilterBefore(rateLimitingFilter,
                     // UsernamePasswordAuthenticationFilter.class)
                     .addFilterBefore(jwtAuthenticationFilter, UserAuthenticationFilter.class);
+
+            // Supabase JWT filter runs before the standard JWT filter so SaaS tokens
+            // are validated first; if absent or invalid, the standard filter takes over.
+            SupabaseJwtAuthenticationFilter supabaseFilter = supabaseJwtAuthenticationFilter();
+            if (supabaseFilter != null) {
+                http.addFilterBefore(supabaseFilter, JwtAuthenticationFilter.class);
+            }
 
             http.sessionManagement(
                     sessionManagement -> sessionManagement.sessionCreationPolicy(sessionPolicy));
@@ -486,5 +497,23 @@ public class SecurityConfiguration {
                 userDetailsService,
                 jwtAuthenticationEntryPoint,
                 securityProperties);
+    }
+
+    /**
+     * Creates a SupabaseJwtAuthenticationFilter if the SUPABASE_JWT_SECRET environment variable is
+     * set. Returns null if Supabase auth is not configured.
+     */
+    @Bean
+    public SupabaseJwtAuthenticationFilter supabaseJwtAuthenticationFilter() {
+        String secret = System.getenv("SUPABASE_JWT_SECRET");
+        if (secret == null || secret.isBlank()) {
+            secret = System.getProperty("SUPABASE_JWT_SECRET");
+        }
+        if (secret == null || secret.isBlank()) {
+            log.info("SUPABASE_JWT_SECRET not set — Supabase JWT auth disabled");
+            return null;
+        }
+        log.info("Supabase JWT authentication enabled");
+        return new SupabaseJwtAuthenticationFilter(secret, userService, userDetailsService);
     }
 }

@@ -81,6 +81,16 @@ public class User implements UserDetails, Serializable {
     @Column(name = "oauth_grandfathered")
     private Boolean oauthGrandfathered = false;
 
+    @Column(name = "email")
+    private String email;
+
+    @Column(name = "supabase_id", unique = true)
+    private String supabaseId;
+
+    /** SaaS plan tier: "free", "pro", or "enterprise". */
+    @Column(name = "plan_tier")
+    private String planTier;
+
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "user")
     private Set<Authority> authorities = new HashSet<>();
 
