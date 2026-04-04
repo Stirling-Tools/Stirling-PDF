@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, PasswordInput, Group, Alert, LoadingOverlay, Modal, Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@app/auth/UseSession';
-import { supabase } from '@app/auth/supabase';
+import { updatePassword } from '@app/auth/supabase';
 import { Z_INDEX_OVER_SETTINGS_MODAL } from '@app/styles/zIndex';
 
 const PasswordSecurity: React.FC = () => {
@@ -37,11 +37,7 @@ const PasswordSecurity: React.FC = () => {
       setSuccess(null);
 
       // Update to the new password directly
-      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
-      if (updateError) {
-        setError(updateError.message);
-        return;
-      }
+      await updatePassword(newPassword);
 
       setSuccess(t('login.passwordUpdatedSuccess', 'Your password has been updated successfully.'));
       setNewPassword('');

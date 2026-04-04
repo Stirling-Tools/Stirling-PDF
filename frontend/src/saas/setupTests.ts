@@ -15,16 +15,21 @@ const localStorageMock = (() => {
 })();
 Object.defineProperty(global, 'localStorage', { value: localStorageMock });
 
-// Mock Supabase for tests
+// Mock auth module for tests
 vi.mock('@app/auth/supabase', () => ({
-  supabase: {
-    auth: {
-      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
-      refreshSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
-      onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } })
-    }
-  },
-  debugAuthEvents: vi.fn()
+  getToken: vi.fn().mockReturnValue(null),
+  getUser: vi.fn().mockReturnValue(null),
+  setAuthData: vi.fn(),
+  clearAuthData: vi.fn(),
+  isUserAnonymous: vi.fn().mockReturnValue(false),
+  onAuthStateChange: vi.fn().mockReturnValue({ unsubscribe: vi.fn() }),
+  signInWithPassword: vi.fn(),
+  signInWithOAuth: vi.fn(),
+  signOut: vi.fn(),
+  refreshToken: vi.fn().mockResolvedValue(null),
+  signUp: vi.fn(),
+  resetPasswordForEmail: vi.fn(),
+  updatePassword: vi.fn(),
 }))
 
 // Mock i18next for tests

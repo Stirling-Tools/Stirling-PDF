@@ -6,8 +6,7 @@ import ErrorMessage from '@app/routes/login/ErrorMessage'
 import SuccessMessage from '@app/routes/login/SuccessMessage'
 import EmailPasswordForm from '@app/routes/login/EmailPasswordForm'
 import NavigationLink from '@app/routes/login/NavigationLink'
-import { supabase } from '@app/auth/supabase'
-import { absoluteWithBasePath } from '@app/constants/app'
+import { resetPasswordForEmail, updatePassword, getToken } from '@app/auth/supabase'
 import { useTranslation } from '@app/hooks/useTranslation'
 
 export default function ResetPassword() {
@@ -25,64 +24,15 @@ export default function ResetPassword() {
   useEffect(() => {
     const url = new URL(window.location.href)
     const type = url.searchParams.get('type')
-    const code = url.searchParams.get('code')
+    const token = url.searchParams.get('token')
 
-    // Also parse hash params (Supabase puts tokens & type in the hash)
-    const hash = url.hash || ''
-    const hashParams = new URLSearchParams(hash.startsWith('#') ? hash.substring(1) : hash)
-    const hashType = hashParams.get('type')
-    const hashError = hashParams.get('error')
-    const hashErrorDescription = hashParams.get('error_description')
-
-    if (hashError) {
-      // Show a human-readable error and fall back to email-entry form
-      setError(hashErrorDescription || hashError)
-      setIsRecovery(false)
-    }
-
-    // Consider either source (query or hash) to decide if we're in recovery mode
-    const inRecovery = type === 'recovery' || hashType === 'recovery'
-    setIsRecovery(inRecovery)
-
-    // If a PKCE-style code is present, exchange it for a session immediately
-    const tryExchange = async () => {
-      if (code) {
-        try {
-          const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-          if (error) {
-            setError(error.message)
-            setIsRecovery(false)
-          } else if (data.session) {
-            setIsRecovery(true)
-          }
-        } catch (e) {
-          setError(e instanceof Error ? e.message : String(e))
-          setIsRecovery(false)
-        }
-      } else {
-        // If no code, see if Supabase already set the session from hash
-        const { data } = await supabase.auth.getSession()
-        if (data.session && inRecovery) {
-          setIsRecovery(true)
-        }
-      }
-    }
-    void tryExchange()
-
-    // Clear sensitive tokens from the URL hash
-    if (hash.includes('access_token') || hashError) {
-      window.history.replaceState({}, document.title, window.location.pathname + (inRecovery ? '?type=recovery' : ''))
-    }
-
-    // Listen for Supabase auth state changes to confirm recovery state
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setIsRecovery(true)
-      }
-    })
-
-    return () => {
-      sub.subscription.unsubscribe()
+    if (type === 'recovery' && token) {
+      // Store the reset token and show password form
+      localStorage.setItem('reset_token', token)
+      setIsRecovery(true)
+    } else if (type === 'recovery' && getToken()) {
+      // Already authenticated, show password form
+      setIsRecovery(true)
     }
   }, [])
 
@@ -94,15 +44,10 @@ export default function ResetPassword() {
     try {
       setIsSubmitting(true)
       setError(null)
-      const redirectTo = absoluteWithBasePath('/auth/reset?type=recovery')
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo
-      })
-      if (error) {
-        setError(error.message)
-      } else {
-        setSuccess(t('login.passwordResetSent', { email }))
-      }
+      await resetPasswordForEmail(email.trim())
+      setSuccess(t('login.passwordResetSent', { email }))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send reset email')
     } finally {
       setIsSubmitting(false)
     }
@@ -124,30 +69,18 @@ export default function ResetPassword() {
     try {
       setIsSubmitting(true)
       setError(null)
-      const { data, error } = await supabase.auth.updateUser({ password })
-      if (error) {
-        setError(error.message)
-        return
-      }
-      if (data.user) {
-        setSuccess(t('login.passwordUpdatedSuccess', 'Your password has been updated successfully.'))
-        // Clear the form fields
-        setPassword('')
-        setConfirmPassword('')
-        // Show success-only state and then redirect after a short delay
-        setDidUpdate(true)
-        setTimeout(async () => {
-          const { data: sessionData } = await supabase.auth.getSession()
-          const { data: userData } = await supabase.auth.getUser()
-          const derivedEmail = userData.user?.email || email
-          if (sessionData.session) {
-            navigate('/')
-          } else {
-            const query = derivedEmail ? `?email=${encodeURIComponent(derivedEmail)}` : ''
-            navigate(`/login${query}`)
-          }
-        }, 2000)
-      }
+      await updatePassword(password)
+      setSuccess(t('login.passwordUpdatedSuccess', 'Your password has been updated successfully.'))
+      setPassword('')
+      setConfirmPassword('')
+      setDidUpdate(true)
+      localStorage.removeItem('reset_token')
+      setTimeout(() => {
+        const query = email ? `?email=${encodeURIComponent(email)}` : ''
+        navigate(`/login${query}`)
+      }, 2000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update password')
     } finally {
       setIsSubmitting(false)
     }
@@ -236,5 +169,3 @@ export default function ResetPassword() {
     </AuthLayout>
   )
 }
-
-

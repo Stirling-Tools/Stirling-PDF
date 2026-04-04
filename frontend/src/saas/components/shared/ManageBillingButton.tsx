@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '@app/auth/supabase';
+import apiClient from '@app/services/apiClient';
 import { Button } from '@mantine/core';
 import { usePlans } from '@app/hooks/usePlans';
 
@@ -38,13 +38,11 @@ export function ManageBillingButton({
     setLoading(true);
     setErr(null);
     try {
-      const { data, error } = await supabase.functions.invoke<{ url: string; error?: string }>('manage-billing', {
-        body: {
-        name: 'Functions',
-        return_url: returnUrl},
-      })
-      if (error) throw error;
-      if (!data || 'error' in data) throw new Error(data?.error ?? 'No portal URL');
+      const response = await apiClient.post<{ url: string; error?: string }>('/api/v1/billing/portal', {
+        return_url: returnUrl,
+      });
+      const data = response.data;
+      if (!data?.url) throw new Error(data?.error ?? 'No portal URL');
       window.location.href = data.url;
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : 'Could not open billing portal');

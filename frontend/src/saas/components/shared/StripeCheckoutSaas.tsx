@@ -3,7 +3,7 @@ import { Modal, Button, Text, Alert, Loader, Stack } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { loadStripe } from '@stripe/stripe-js';
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
-import { supabase } from '@app/auth/supabase';
+import apiClient from '@app/services/apiClient';
 import { Z_INDEX_OVER_SETTINGS_MODAL } from '@app/styles/zIndex';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
@@ -65,26 +65,16 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     try {
       setState({ status: 'loading' });
 
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: {
-          purchase_type: purchaseType,
-          ui_mode: 'embedded',
-          plan: planId,
-          credits_pack: creditsPack,
-          callback_base_url: window.location.origin,
-          trial_conversion: isTrialConversion || false
-        }
+      const response = await apiClient.post('/api/v1/billing/checkout', {
+        purchase_type: purchaseType,
+        ui_mode: 'embedded',
+        plan: planId,
+        credits_pack: creditsPack,
+        callback_base_url: window.location.origin,
+        trial_conversion: isTrialConversion || false
       });
 
-      if (error) {
-        throw new Error(error.message || 'Failed to create checkout session');
-      }
-
-      if (!data) {
-        throw new Error('No data received from server');
-      }
-
-      const jsonData = typeof data === 'string' ? JSON.parse(data) : data;
+      const jsonData = response.data;
 
       if (!jsonData?.clientSecret) {
         throw new Error('No client secret received from server');

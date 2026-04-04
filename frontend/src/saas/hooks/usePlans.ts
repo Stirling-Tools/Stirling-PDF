@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '@app/auth/supabase';
+import apiClient from '@app/services/apiClient';
 import { useAuth } from '@app/auth/UseSession';
 
 // Currency mapping
@@ -59,60 +59,52 @@ export const usePlans = (currency: string = 'gbp') => {
   const [currentPlanId, setCurrentPlanId] = useState<string>('free');
   const [dynamicPrices, setDynamicPrices] = useState<Map<string, { unit_amount: number; currency: string }>>(new Map());
 
-const fetchPricing = async () => {
-  try {
-    setLoading(true);
-    setError(null);
+  const fetchPricing = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-    const lookupKeys = ['plan:pro', 'api:xsmall', 'api:small', 'api:medium', 'api:large'];
+      const response = await apiClient.get<{
+        prices: Record<string, { unit_amount: number; currency: string }>;
+        missing: string[];
+      }>('/api/v1/billing/prices', {
+        params: {
+          lookup_keys: 'plan:pro,api:xsmall,api:small,api:medium,api:large',
+          currency
+        }
+      });
 
-    const { data, error } = await supabase.functions.invoke<{
-      prices: Record<string, { unit_amount: number; currency: string }>;
-      missing: string[];
-    }>('stripe-price-lookup', {
-      body: { lookup_keys: lookupKeys, currency }
-    });
-    if (error) throw error;
-    if (!data || !data.prices || !data.missing) throw new Error('No pricing data returned');
-    console.log('Fetched pricing data:', data);
+      const data = response.data;
+      if (!data || !data.prices) throw new Error('No pricing data returned');
 
-    const priceMap = new Map<string, { unit_amount: number; currency: string }>();
-    // map your UI keys to lookup keys (if names differ)
-    const keyMap: Record<string, string> = {
-      pro: 'plan:pro',
-      xsmall: 'api:xsmall',
-      small: 'api:small',
-      medium: 'api:medium',
-      large: 'api:large',
-    };
+      const priceMap = new Map<string, { unit_amount: number; currency: string }>();
+      const keyMap: Record<string, string> = {
+        pro: 'plan:pro',
+        xsmall: 'api:xsmall',
+        small: 'api:small',
+        medium: 'api:medium',
+        large: 'api:large',
+      };
 
-    for (const [uiKey, lookupKey] of Object.entries(keyMap)) {
-      const p = data?.prices?.[lookupKey];
-      if (p) {
-        priceMap.set(uiKey, {
-          unit_amount: p.unit_amount ?? 0,
-          currency: p.currency
-        });
+      for (const [uiKey, lookupKey] of Object.entries(keyMap)) {
+        const p = data?.prices?.[lookupKey];
+        if (p) {
+          priceMap.set(uiKey, {
+            unit_amount: p.unit_amount ?? 0,
+            currency: p.currency
+          });
+        }
       }
+
+      setDynamicPrices(priceMap);
+    } catch (err) {
+      console.error('Error fetching pricing:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch pricing data');
+    } finally {
+      setLoading(false);
     }
+  };
 
-    if (data.missing.length) {
-      console.warn('Missing prices for', data.missing, 'in', currency);
-      // Optionally re-request with a fallback currency (e.g., 'usd')
-    }
-
-    setDynamicPrices(priceMap);
-  } catch (err) {
-    console.error('Error fetching pricing:', err);
-    setError(err instanceof Error ? err.message : 'Failed to fetch pricing data');
-    // continue with static prices if needed
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-  // Memoize static plan and package data to prevent recreation on every render
   const staticPlansData = useMemo(() => {
     const plans: PlanTier[] = [
       {
@@ -179,7 +171,6 @@ const fetchPricing = async () => {
       }
     ];
 
-    // Helper function to get price info
     const getPriceInfo = (key: string, fallbackPrice: number) => {
       const priceObj = dynamicPrices.get(key);
       const price = priceObj ? priceObj.unit_amount / 100 : fallbackPrice;
@@ -192,7 +183,6 @@ const fetchPricing = async () => {
     const mediumPrice = getPriceInfo('medium', 25);
     const largePrice = getPriceInfo('large', 90);
 
-    // Calculate dynamic discounts based on per-credit cost (using xsmall as baseline)
     const xsmallPerCredit = xsmallPrice.price / 100;
     const smallPerCredit = smallPrice.price / 500;
     const mediumPerCredit = mediumPrice.price / 1000;
@@ -241,7 +231,6 @@ const fetchPricing = async () => {
     return { plans: plansMap, apiPackages };
   }, [t, dynamicPrices]);
 
-  // Create final data object with current plan info
   const data = useMemo<PlansData | null>(() => {
     if (!staticPlansData) return null;
 
@@ -252,23 +241,18 @@ const fetchPricing = async () => {
       plans: staticPlansData.plans,
       apiPackages: staticPlansData.apiPackages,
       currentPlan,
-      nextBillingDate: 'Feb 15, 2025',
-      activeSince: 'January 2025'
     };
   }, [staticPlansData, currentPlanId]);
 
-
-  // Update currentPlanId when isPro changes
   useEffect(() => {
     if (isPro !== null) {
       setCurrentPlanId(isPro ? 'pro' : 'free');
     }
   }, [isPro]);
 
-  // Initial load - fetch pricing data
   useEffect(() => {
     fetchPricing();
-  }, [currency]); // Re-fetch when currency changes
+  }, [currency]);
 
   const updateCurrentPlan = (newPlanId: string) => {
     setCurrentPlanId(newPlanId);
@@ -276,10 +260,10 @@ const fetchPricing = async () => {
 
   return {
     data,
-    plans: data ? Array.from(data.plans.values()) : [], // Convert Map to array for compatibility with proprietary code
+    plans: data ? Array.from(data.plans.values()) : [],
     loading,
     error,
-    refetch: refreshProStatus, // Refetch pro status from auth context
-    updateCurrentPlan // Add local plan update function
+    refetch: refreshProStatus,
+    updateCurrentPlan
   };
 };

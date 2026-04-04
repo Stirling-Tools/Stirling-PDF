@@ -1,5 +1,4 @@
 import apiClient from '@app/services/apiClient';
-import { supabase, isSupabaseConfigured } from '@app/services/supabaseClient';
 
 export interface User {
   id: number;
@@ -171,23 +170,17 @@ export const userManagementService = {
    * Delete a user (admin only)
    */
   async deleteUser(user: User, options?: { notifyUser?: boolean }): Promise<void> {
-    if (isSupabaseConfigured && supabase) {
-      if (!user.email) {
-        throw new Error('Email missing for this user. Please contact support for manual removal.');
-      }
-
-      const { error } = await supabase.functions.invoke('delete-user', {
-        body: {
-          target_email: user.email,
-          notify_user: options?.notifyUser ?? true,
-        },
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Supabase deletion failed');
-      }
-      return;
+    if (!user.email && !user.username) {
+      throw new Error('User identifier missing. Please contact support for manual removal.');
     }
+
+    await apiClient.delete('/api/v1/user/account', {
+      data: {
+        target_email: user.email || user.username,
+        notify_user: options?.notifyUser ?? true,
+      },
+      suppressErrorToast: true,
+    });
   },
 
   /**

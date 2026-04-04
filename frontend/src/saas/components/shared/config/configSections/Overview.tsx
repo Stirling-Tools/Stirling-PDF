@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Alert, Avatar, Button, Divider, FileButton, Group, Image, LoadingOverlay, PasswordInput, Text, TextInput, Modal } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@app/auth/UseSession';
-import { isUserAnonymous, linkEmailIdentity, linkOAuthIdentity, supabase } from '@app/auth/supabase';
+import { isUserAnonymous } from '@app/auth/supabase';
+import apiClient from '@app/services/apiClient';
 import { BASE_PATH } from '@app/constants/app';
 import { oauthProviders } from '@app/constants/authProviders';
 import { Tooltip } from '@app/components/shared/Tooltip';
@@ -169,8 +170,8 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
       setUpgradeError(null);
       setSuccess(null);
 
-      // First, upgrade the account in Supabase
-      await linkEmailIdentity(email.trim(), password || undefined);
+      // Register the user via backend API
+      await apiClient.post('/api/v1/auth/register', { username: email.trim(), password });
 
       // Synchronize with backend database (using "email" as auth method for email/password)
       await synchronizeUserUpgrade('email');
@@ -201,11 +202,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
       // Redirect back to homepage after OAuth completes
       // The UseSession hook will handle the pendingUpgrade synchronization
       const redirectUrl = absoluteWithBasePath('/auth/callback?next=/');
-      const result = await linkOAuthIdentity(provider, redirectUrl);
-
-      if (result.data?.url) {
-        window.location.href = result.data.url;
-      }
+      window.location.href = `/oauth2/authorization/${provider}?redirect_uri=${encodeURIComponent(redirectUrl)}`;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : `Failed to upgrade account with ${provider}`;
       setUpgradeError(errorMessage);

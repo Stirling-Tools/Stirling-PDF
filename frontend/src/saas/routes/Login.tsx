@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase, signInAnonymously } from '@app/auth/supabase'
+import { signInWithPassword, signInWithOAuth } from '@app/auth/supabase'
 import { useAuth } from '@app/auth/UseSession'
 import { useTranslation } from '@app/hooks/useTranslation'
 import { useDocumentMeta } from '@app/hooks/useDocumentMeta'
@@ -80,15 +80,8 @@ export default function Login() {
         }
       }
 
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: oauthOptions
-      })
-
-      if (error) {
-        console.error(`[Login] ${provider} error:`, error)
-        setError(t('login.failedToSignIn', { provider, message: error.message }))
-      }
+      signInWithOAuth(provider, redirectTo)
+      // OAuth redirects away from the page, so no further handling needed
     } catch (err) {
       console.error(`[Login] Unexpected error:`, err)
       setError(t('login.unexpectedError', { message: err instanceof Error ? err.message : 'Unknown error' }))
@@ -109,18 +102,8 @@ export default function Login() {
 
       console.log('[Login] Signing in with email:', email)
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password
-      })
-
-      if (error) {
-        console.error('[Login] Email sign in error:', error)
-        setError(error.message)
-      } else if (data.user) {
-        console.log('[Login] Email sign in successful')
-        // User will be redirected by the auth state change
-      }
+      await signInWithPassword(email.trim(), password)
+      console.log('[Login] Email sign in successful')
     } catch (err) {
       console.error('[Login] Unexpected error]:', err)
       setError(t('login.unexpectedError', { message: err instanceof Error ? err.message : 'Unknown error' }))
@@ -141,22 +124,9 @@ export default function Login() {
 
       console.log('[Login] Sending magic link to:', magicLinkEmail)
 
-      const { error } = await supabase.auth.signInWithOtp({
-        email: magicLinkEmail.trim(),
-        options: {
-          emailRedirectTo: absoluteWithBasePath('/auth/callback')
-        }
-      })
-
-      if (error) {
-        console.error('[Login] Magic link error:', error)
-        setError(error.message)
-      } else {
-        setError(null)
-        alert(t('login.magicLinkSent', { email: magicLinkEmail }))
-        setMagicLinkEmail('')
-        setShowMagicLink(false)
-      }
+      // Magic link is not supported in Spring Security mode
+      setError('Magic link sign-in is not available. Please use email/password or OAuth.')
+      setShowMagicLink(false)
     } catch (err) {
       console.error('[Login] Unexpected error:', err)
       setError(t('login.unexpectedError', { message: err instanceof Error ? err.message : 'Unknown error' }))
@@ -175,17 +145,8 @@ export default function Login() {
       setError(null)
       console.log('[Login] Signing in anonymously')
 
-      const { data } = await signInAnonymously()
-
-      if (data.user) {
-        console.log('[Login] Anonymous sign in successful, refreshing session...')
-
-        // Refresh session to ensure backend endpoints are properly synchronized
-        await refreshSession()
-
-        console.log('[Login] Session refreshed, user will be redirected by auth state change')
-        // User will be redirected by the auth state change after session refresh
-      }
+      // Anonymous sign-in is not supported in Spring Security mode
+      setError('Guest sign-in is not available. Please sign in with email or OAuth.')
     } catch (err) {
       console.error('[Login] Unexpected error:', err)
       setError(t('login.unexpectedError', { message: err instanceof Error ? err.message : 'Unknown error' }))
