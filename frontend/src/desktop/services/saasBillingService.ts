@@ -1,37 +1,29 @@
 import { open as shellOpen } from '@tauri-apps/plugin-shell';
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
-import { supabase } from '@app/auth/supabase';
 import { authService } from '@app/services/authService';
 import { connectionModeService } from '@app/services/connectionModeService';
-import { STIRLING_SAAS_URL, STIRLING_SAAS_BACKEND_API_URL, SUPABASE_KEY } from '@app/constants/connection';
+import { STIRLING_SAAS_BACKEND_API_URL } from '@app/constants/connection';
 import type { TierLevel, SubscriptionStatus, StripePlanId } from '@app/types/billing';
 import { getCurrencySymbol } from '@app/config/billing';
 
 /**
- * Billing status returned from Supabase edge function
+ * Billing status returned from backend API
  */
 export interface BillingStatus {
   subscription: {
     id: string;
     status: SubscriptionStatus;
-    currentPeriodStart: number; // Unix timestamp
-    currentPeriodEnd: number; // Unix timestamp
+    currentPeriodStart: number;
+    currentPeriodEnd: number;
   } | null;
   meterUsage: {
-    currentPeriodCredits: number; // Overage credits used
-    estimatedCost: number; // In cents
+    currentPeriodCredits: number;
+    estimatedCost: number;
   } | null;
   tier: TierLevel;
   isTrialing: boolean;
   trialDaysRemaining?: number;
-  creditBalance?: number; // Real-time remaining credits
-}
-
-/**
- * Response from manage-billing edge function
- */
-interface ManageBillingResponse {
-  url: string;
+  creditBalance?: number;
 }
 
 /**
@@ -44,8 +36,8 @@ export interface PlanPrice {
 }
 
 /**
- * Service for managing SaaS billing operations (Stripe + Supabase)
- * Desktop-layer implementation using Tauri APIs for browser integration
+ * Service for managing SaaS billing operations via backend API.
+ * Desktop-layer implementation using Tauri APIs for browser integration.
  */
 export class SaasBillingService {
   private static instance: SaasBillingService;
@@ -57,9 +49,10 @@ export class SaasBillingService {
     return SaasBillingService.instance;
   }
 
-  /**
-   * Check if billing features are available (SaaS mode only)
-   */
+  private get apiBase(): string {
+    return STIRLING_SAAS_BACKEND_API_URL || '';
+  }
+
   async isBillingAvailable(): Promise<boolean> {
     try {
       const mode = await connectionModeService.getCurrentMode();
@@ -71,112 +64,40 @@ export class SaasBillingService {
     }
   }
 
-  /**
-   * Fetch billing status from Supabase edge function
-   * Calls get-usage-billing which returns subscription + meter usage data
-   */
   async getBillingStatus(): Promise<BillingStatus> {
-    // Check if in SaaS mode
     const isAvailable = await this.isBillingAvailable();
     if (!isAvailable) {
       throw new Error('Billing is only available in SaaS mode');
     }
 
-    // Get JWT token for authentication
     const token = await authService.getAuthToken();
     if (!token) {
       throw new Error('No authentication token available');
     }
 
     try {
-      // Call RPC via REST API using Tauri fetch (Supabase client RPC may not work in Tauri)
-      const rpcUrl = `${STIRLING_SAAS_URL}/rest/v1/rpc/get_user_billing_status`;
-
-      const response = await tauriFetch(rpcUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_KEY || '',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({}),
+      // Fetch plan status from backend
+      const planResponse = await tauriFetch(`${this.apiBase}/api/v1/user/plan-status`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` },
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('[Desktop Billing] RPC error response:', errorText);
-        throw new Error(`RPC call failed: ${response.status} ${response.statusText}`);
-      }
-
-      // RPC may return an array or a single object — normalise to array then take first element
-      const raw = await response.json() as unknown;
-      const billingDataArray = Array.isArray(raw) ? raw : (raw ? [raw] : []);
-      const billingData = billingDataArray[0] as {
-        user_id: string;
-        has_metered_billing_enabled: boolean;
-        is_pro: boolean;
-      } | undefined;
-
-      // Determine tier based on pro status
-      const isPro = billingData?.is_pro || false;
+      const planData = planResponse.ok ? await planResponse.json() as { isPro?: boolean } : { isPro: false };
+      const isPro = planData?.isPro || false;
       const tier: BillingStatus['tier'] = isPro ? 'team' : 'free';
 
-      // Fetch additional subscription details if pro
-      let subscription: BillingStatus['subscription'] = null;
-      let meterUsage: BillingStatus['meterUsage'] = null;
-      let isTrialing = false;
-      let trialDaysRemaining: number | undefined;
-
-      if (isPro) {
-        // Fetch usage details
-        try {
-          const { data: usageData, error: usageError } = await supabase.functions.invoke<{
-            subscription: BillingStatus['subscription'];
-            meterUsage: BillingStatus['meterUsage'];
-          }>('get-usage-billing', {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: {},
-          });
-
-          if (!usageError && usageData) {
-            subscription = usageData.subscription;
-            meterUsage = usageData.meterUsage;
-
-            if (subscription?.status === 'trialing') {
-              isTrialing = true;
-              const trialEnd = subscription.currentPeriodEnd;
-              const now = Math.floor(Date.now() / 1000);
-              trialDaysRemaining = Math.ceil((trialEnd - now) / (24 * 60 * 60));
-            }
-          }
-        } catch (usageError) {
-          console.warn('[Desktop Billing] Failed to fetch usage data:', usageError);
-        }
-
-      }
-
-      // Fetch credit balance for all authenticated users (both Pro and Free)
-      // Use backend API endpoint /api/v1/credits (same as SaaS web)
+      // Fetch credit balance
       let creditBalance: number | undefined;
       try {
-        const creditsEndpoint = `${STIRLING_SAAS_BACKEND_API_URL}/api/v1/credits`;
-        const creditResponse = await tauriFetch(creditsEndpoint, {
+        const creditResponse = await tauriFetch(`${this.apiBase}/api/v1/credits`, {
           method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+          headers: { 'Authorization': `Bearer ${token}` },
         });
 
         if (creditResponse.ok) {
-          const creditData = await creditResponse.json();
-          // Backend returns { totalAvailableCredits: number, ... }
-          const credits = creditData?.totalAvailableCredits;
-          creditBalance = typeof credits === 'number' ? credits : 0;
+          const creditData = await creditResponse.json() as { totalAvailableCredits?: number };
+          creditBalance = typeof creditData?.totalAvailableCredits === 'number' ? creditData.totalAvailableCredits : 0;
         } else {
-          const errorText = await creditResponse.text();
-          console.warn('[Desktop Billing] Failed to fetch credit balance:', creditResponse.status, errorText);
           creditBalance = 0;
         }
       } catch (error) {
@@ -184,117 +105,96 @@ export class SaasBillingService {
         creditBalance = 0;
       }
 
-      const billingStatus: BillingStatus = {
-        subscription,
-        meterUsage,
+      // Fetch trial status
+      let isTrialing = false;
+      let trialDaysRemaining: number | undefined;
+      try {
+        const trialResponse = await tauriFetch(`${this.apiBase}/api/v1/user/trial-status`, {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (trialResponse.ok) {
+          const trialData = await trialResponse.json() as { isTrialing?: boolean; daysRemaining?: number };
+          isTrialing = trialData?.isTrialing || false;
+          trialDaysRemaining = trialData?.daysRemaining;
+        }
+      } catch {
+        // Trial status not available
+      }
+
+      return {
+        subscription: null,
+        meterUsage: null,
         tier,
         isTrialing,
         trialDaysRemaining,
         creditBalance,
       };
-
-      return billingStatus;
     } catch (error) {
       console.error('[Desktop Billing] Failed to fetch billing status:', error);
-
-      if (error instanceof Error) {
-        throw error;
-      }
-
+      if (error instanceof Error) throw error;
       throw new Error('Failed to fetch billing status', { cause: error });
     }
   }
 
-  /**
-   * Open Stripe billing portal in system browser
-   * Calls manage-billing edge function to get portal URL
-   */
   async openBillingPortal(returnUrl: string): Promise<void> {
-    // Check if in SaaS mode
     const isAvailable = await this.isBillingAvailable();
     if (!isAvailable) {
       throw new Error('Billing portal is only available in SaaS mode');
     }
 
-    // Get JWT token for authentication
     const token = await authService.getAuthToken();
     if (!token) {
       throw new Error('No authentication token available');
     }
 
     try {
-      // Call Supabase edge function to get Stripe portal URL
-      const { data, error } = await supabase.functions.invoke<ManageBillingResponse>('manage-billing', {
+      const response = await tauriFetch(`${this.apiBase}/api/v1/billing/portal`, {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        body: {
-          return_url: returnUrl,
-        },
+        body: JSON.stringify({ return_url: returnUrl }),
       });
 
-      if (error) {
-        console.error('[Desktop Billing] Error creating billing portal session:', error);
-        throw new Error(error.message || 'Failed to create billing portal session');
-      }
+      if (!response.ok) throw new Error(`Portal request failed: ${response.status}`);
+      const data = await response.json() as { url?: string };
+      if (!data?.url) throw new Error('No portal URL returned');
 
-      if (!data || !data.url) {
-        throw new Error('No portal URL returned from manage-billing');
-      }
-
-      // Open in system browser (same pattern as OAuth)
       await shellOpen(data.url);
     } catch (error) {
       console.error('[Desktop Billing] Failed to open billing portal:', error);
-
-      if (error instanceof Error) {
-        throw error;
-      }
-
+      if (error instanceof Error) throw error;
       throw new Error('Failed to open billing portal', { cause: error });
     }
   }
 
-  /**
-   * Fetch available plan pricing from Stripe
-   * Calls stripe-price-lookup edge function to get current pricing for all plans
-   */
   async getAvailablePlans(currencyCode: string = 'usd'): Promise<Map<string, PlanPrice>> {
-    // Check if in SaaS mode
     const isAvailable = await this.isBillingAvailable();
     if (!isAvailable) {
       throw new Error('Billing is only available in SaaS mode');
     }
 
-    // Get JWT token for authentication
     const token = await authService.getAuthToken();
     if (!token) {
       throw new Error('No authentication token available');
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke<{
-        prices: Record<string, { unit_amount: number; currency: string }>;
-        missing: string[];
-      }>('stripe-price-lookup', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: {
-          lookup_keys: ['plan:pro', 'meter:overage'],
-          currency: currencyCode,
-        },
-      });
+      const response = await tauriFetch(
+        `${this.apiBase}/api/v1/billing/prices?lookup_keys=plan:pro,meter:overage&currency=${currencyCode}`,
+        {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${token}` },
+        }
+      );
 
-      if (error) {
-        throw new Error(error.message || 'Failed to fetch plan pricing');
-      }
+      if (!response.ok) throw new Error(`Pricing request failed: ${response.status}`);
+      const data = await response.json() as { prices?: Record<string, { unit_amount: number; currency: string }> };
 
-      if (!data || !data.prices) {
-        throw new Error('No pricing data returned');
-      }
+      if (!data?.prices) throw new Error('No pricing data returned');
 
-      // Map prices with currency symbols
       const plans = new Map<string, PlanPrice>();
       const proPrice = data.prices['plan:pro'];
       const overagePrice = data.prices['meter:overage'];
@@ -314,58 +214,41 @@ export class SaasBillingService {
     }
   }
 
-  /**
-   * Open Stripe checkout for plan upgrades in system browser
-   * Creates hosted checkout session and opens in browser
-   */
   async openCheckout(planId: StripePlanId, returnUrl: string): Promise<void> {
-    // Check if in SaaS mode
     const isAvailable = await this.isBillingAvailable();
     if (!isAvailable) {
       throw new Error('Checkout is only available in SaaS mode');
     }
 
-    // Get JWT token for authentication
     const token = await authService.getAuthToken();
     if (!token) {
       throw new Error('No authentication token available');
     }
 
     try {
-      // Call Supabase edge function to create checkout session
-      // Use 'hosted' mode for browser redirect instead of 'embedded'
-      const { data, error } = await supabase.functions.invoke<{ url: string }>('create-checkout', {
+      const response = await tauriFetch(`${this.apiBase}/api/v1/billing/checkout`, {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        body: {
+        body: JSON.stringify({
           ui_mode: 'hosted',
           success_url: `${returnUrl}/checkout/success`,
           cancel_url: `${returnUrl}/checkout/cancel`,
           purchase_type: 'subscription',
           plan: planId,
-        },
+        }),
       });
 
-      if (error) {
-        console.error('[Desktop Billing] Error creating checkout session:', error);
-        throw new Error(error.message || 'Failed to create checkout session');
-      }
+      if (!response.ok) throw new Error(`Checkout request failed: ${response.status}`);
+      const data = await response.json() as { url?: string };
+      if (!data?.url) throw new Error('No checkout URL returned');
 
-      if (!data || !data.url) {
-        console.error('[Desktop Billing] Invalid response data:', data);
-        throw new Error('No checkout URL returned from create-checkout');
-      }
-
-      // Open in system browser (same pattern as billing portal)
       await shellOpen(data.url);
     } catch (error) {
       console.error('[Desktop Billing] Failed to create checkout session:', error);
-
-      if (error instanceof Error) {
-        throw error;
-      }
-
+      if (error instanceof Error) throw error;
       throw new Error('Failed to create checkout session', { cause: error });
     }
   }

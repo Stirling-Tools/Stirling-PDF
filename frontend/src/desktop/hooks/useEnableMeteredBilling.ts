@@ -1,14 +1,11 @@
 import { useState } from 'react';
-import { supabase } from '@app/auth/supabase';
+import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import { authService } from '@app/services/authService';
+import { STIRLING_SAAS_BACKEND_API_URL } from '@app/constants/connection';
 
 /**
- * Shared hook for enabling metered (overage) billing via Supabase edge function.
- * Used by CreditExhaustedModal and InsufficientCreditsModal to avoid duplicate logic.
- *
- * @param refreshBilling - Callback to refresh billing state after success
- * @param onSuccess - Callback invoked after billing is enabled and refreshed
- * @param logPrefix - Label used in console messages for easier tracing
+ * Shared hook for enabling metered (overage) billing via backend API.
+ * Used by CreditExhaustedModal and InsufficientCreditsModal.
  */
 export function useEnableMeteredBilling(
   refreshBilling: () => Promise<void>,
@@ -33,15 +30,23 @@ export function useEnableMeteredBilling(
         throw new Error('Not authenticated');
       }
 
-      const { data, error } = await supabase.functions.invoke('create-meter-subscription', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await tauriFetch(
+        `${STIRLING_SAAS_BACKEND_API_URL}/api/v1/billing/enable-metered`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
 
-      if (error) {
-        throw new Error(error.message || 'Failed to enable metered billing');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({})) as { error?: string; message?: string };
+        throw new Error(errorData?.error || errorData?.message || 'Failed to enable metered billing');
       }
 
+      const data = await response.json() as { success?: boolean; error?: string; message?: string };
       if (!data?.success) {
         throw new Error(data?.error || data?.message || 'Failed to enable metered billing');
       }
