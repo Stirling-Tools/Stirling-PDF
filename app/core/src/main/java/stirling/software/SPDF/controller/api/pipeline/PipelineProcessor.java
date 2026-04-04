@@ -37,6 +37,7 @@ import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
+import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -111,7 +112,12 @@ public class PipelineProcessor {
 
     private String getApiKeyForUser() {
         if (userService == null) return "";
-        return userService.getCurrentUserApiKey();
+        String username = userService.getCurrentUsername();
+        if (username != null && !username.equals("anonymousUser")) {
+            return userService.getApiKeyForUser(username);
+        }
+        // Scheduled/internal context — no user in security context
+        return userService.getApiKeyForUser(Role.INTERNAL_API_USER.getRoleId());
     }
 
     private String getBaseUrl() {
