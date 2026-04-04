@@ -32,9 +32,6 @@ import jakarta.servlet.ServletContext;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-
 import stirling.software.SPDF.SPDFApplication;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
@@ -115,10 +112,9 @@ public class PipelineProcessor {
 
     private String getApiKeyForUser() {
         if (userService == null) return "";
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getName() != null
-                && !auth.getName().equals("anonymousUser")) {
-            return userService.getApiKeyForUser(auth.getName());
+        String username = userService.getCurrentUsername();
+        if (username != null && !username.equals("anonymousUser")) {
+            return userService.getApiKeyForUser(username);
         }
         // Scheduled/internal context — no user in security context
         return userService.getApiKeyForUser(Role.INTERNAL_API_USER.getRoleId());
