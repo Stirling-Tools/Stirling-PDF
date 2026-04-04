@@ -32,11 +32,15 @@ import jakarta.servlet.ServletContext;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import stirling.software.SPDF.SPDFApplication;
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
+import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -111,7 +115,13 @@ public class PipelineProcessor {
 
     private String getApiKeyForUser() {
         if (userService == null) return "";
-        return userService.getCurrentUserApiKey();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getName() != null
+                && !auth.getName().equals("anonymousUser")) {
+            return userService.getApiKeyForUser(auth.getName());
+        }
+        // Scheduled/internal context — no user in security context
+        return userService.getApiKeyForUser(Role.INTERNAL_API_USER.getRoleId());
     }
 
     private String getBaseUrl() {
