@@ -1211,3 +1211,30 @@
 [data-theme="dark"] {
   --shadow-color: rgba(0, 0, 0, 0.75);
 }
+
+/* ─── Resize handles for sidebar panels ────────────────────────────── */
+
+.resize-handle {
+  position: absolute;
+  top: 0;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 10;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.resize-handle--left {
+  left: -2px;
+}
+
+.resize-handle--right {
+  right: -2px;
+}
+
+.resize-handle:hover,
+.resize-handle:active {
+  background: var(--mantine-color-blue-5);
+  opacity: 0.4;
+}

@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import { useTranslation } from 'react-i18next';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import { useAgentContext } from '@app/contexts/AgentContext';
+import { useAgentChatState, useAgentChatActions } from '@app/contexts/AgentChatContext';
+import { ResizeHandle } from '@app/components/shared/ResizeHandle';
 import { ToolId } from '@app/types/toolId';
 import { filterToolRegistryByQuery } from '@app/utils/toolSearch';
 import ToolPicker from '@app/components/tools/ToolPicker';
@@ -22,6 +23,7 @@ import {
   filterAgents,
   AgentDefinition,
   AgentId,
+  AGENT_MAP,
 } from '@app/data/agentRegistry';
 
 import '@app/components/rightPanel/RightPanel.css';
@@ -42,13 +44,15 @@ const GENERAL_AGENT = AGENT_DEFINITIONS.find((a) => a.isGeneralAgent)!;
 function BrowseView({
   onShowAllTools,
   onShowAllAgents,
+  onOpenAgent,
 }: {
   onShowAllTools: () => void;
   onShowAllAgents: () => void;
+  onOpenAgent: (agent: AgentDefinition) => void;
 }) {
   const { t } = useTranslation();
   const { toolRegistry, handleToolSelect } = useToolWorkflow();
-  const { openAgent, getRuntime } = useAgentContext();
+  const { isStreaming } = useAgentChatState();
   const [toolSearchQuery, setToolSearchQuery] = useState('');
 
   const agentsByCategory = useMemo(() => getAgentsByCategory(), []);
@@ -78,9 +82,9 @@ function BrowseView({
       <div className="right-panel-general-agent">
         <AgentItem
           agent={GENERAL_AGENT}
-          runtimeStatus={getRuntime(GENERAL_AGENT.id).status}
+          runtimeStatus={isStreaming ? 'running' : 'idle'}
           isGeneral
-          onClick={() => openAgent(GENERAL_AGENT.id)}
+          onClick={() => onOpenAgent(GENERAL_AGENT)}
         />
       </div>
 
@@ -99,8 +103,7 @@ function BrowseView({
               <AgentItem
                 key={agent.id}
                 agent={agent}
-                runtimeStatus={getRuntime(agent.id).status}
-                onClick={() => openAgent(agent.id)}
+                onClick={() => onOpenAgent(agent)}
               />
             ))}
           </div>
@@ -148,16 +151,20 @@ function BrowseView({
 }
 
 /** All-agents view with search and full category listing */
-function AllAgentsView({ onBack }: { onBack: () => void }) {
+function AllAgentsView({
+  onBack,
+  onOpenAgent,
+}: {
+  onBack: () => void;
+  onOpenAgent: (agent: AgentDefinition) => void;
+}) {
   const { t } = useTranslation();
-  const { openAgent, getRuntime } = useAgentContext();
   const [query, setQuery] = useState('');
 
   const agentsByCategory = useMemo(() => getAgentsByCategory(), []);
   const filteredAgents = useMemo(() => filterAgents(query), [query]);
   const isSearching = query.trim().length > 0;
 
-  // When searching, show flat list; otherwise show grouped
   return (
     <>
       <div className="right-panel-all-tools-header">
@@ -192,8 +199,7 @@ function AllAgentsView({ onBack }: { onBack: () => void }) {
                 <AgentItem
                   key={agent.id}
                   agent={agent}
-                  runtimeStatus={getRuntime(agent.id).status}
-                  onClick={() => openAgent(agent.id)}
+                  onClick={() => onOpenAgent(agent)}
                 />
               ))
           )
@@ -207,8 +213,7 @@ function AllAgentsView({ onBack }: { onBack: () => void }) {
                   <AgentItem
                     key={agent.id}
                     agent={agent}
-                    runtimeStatus={getRuntime(agent.id).status}
-                    onClick={() => openAgent(agent.id)}
+                    onClick={() => onOpenAgent(agent)}
                   />
                 ))}
               </div>
@@ -270,20 +275,44 @@ function AllToolsView({ onBack }: { onBack: () => void }) {
 // Main RightPanel
 // ---------------------------------------------------------------------------
 
-type PanelView = 'default' | 'allTools' | 'allAgents';
+type PanelView = 'default' | 'allTools' | 'allAgents' | 'agentChat';
 
 export default function RightPanel() {
   const { selectedToolKey, leftPanelView, handleBackToTools } = useToolWorkflow();
-  const { state: agentState } = useAgentContext();
+  const { clearChat } = useAgentChatActions();
   const [view, setView] = useState<PanelView>('default');
+  const [activeAgentDef, setActiveAgentDef] = useState<AgentDefinition | null>(null);
+  const [width, setWidth] = useState(280);
+  const [chatWidth, setChatWidth] = useState(420);
 
   const isToolContentView = Boolean(selectedToolKey) && leftPanelView === 'toolContent';
-  const isAgentChatOpen = agentState.view === 'chat' && agentState.activeAgentId !== null;
+  const isChat = view === 'agentChat' && activeAgentDef;
+  const currentWidth = isChat ? chatWidth : width;
+  const setCurrentWidth = isChat ? setChatWidth : setWidth;
+
+  const handleOpenAgent = useCallback(
+    (agent: AgentDefinition) => {
+      clearChat();
+      setActiveAgentDef(agent);
+      setView('agentChat');
+    },
+    [clearChat]
+  );
+
+  const handleBackFromChat = useCallback(() => {
+    setActiveAgentDef(null);
+    setView('default');
+  }, []);
 
   // Tool content mode takes priority
   if (isToolContentView) {
     return (
-      <div className="right-panel right-panel--tool-mode" data-sidebar="right-panel">
+      <div
+        className="right-panel right-panel--tool-mode"
+        data-sidebar="right-panel"
+        style={{ '--right-panel-width': `${width}px` } as React.CSSProperties}
+      >
+        <ResizeHandle side="left" currentWidth={width} minWidth={200} maxWidth={500} onResize={setWidth} />
         <LeftSidebarToolView
           selectedToolKey={selectedToolKey!}
           onBack={handleBackToTools}
@@ -293,23 +322,34 @@ export default function RightPanel() {
   }
 
   // Agent chat mode
-  if (isAgentChatOpen) {
+  if (isChat) {
     return (
-      <div className="right-panel" data-sidebar="right-panel">
-        <AgentChat />
+      <div
+        className="right-panel right-panel--chat-expanded"
+        data-sidebar="right-panel"
+        style={{ '--right-panel-width': `${chatWidth}px`, '--chat-panel-width': `${chatWidth}px` } as React.CSSProperties}
+      >
+        <ResizeHandle side="left" currentWidth={chatWidth} minWidth={320} maxWidth={800} onResize={setChatWidth} />
+        <AgentChat agent={activeAgentDef!} onBack={handleBackFromChat} />
       </div>
     );
   }
 
   // Browse / list views
   return (
-    <div className="right-panel" data-sidebar="right-panel">
+    <div
+      className="right-panel"
+      data-sidebar="right-panel"
+      style={{ '--right-panel-width': `${width}px` } as React.CSSProperties}
+    >
+      <ResizeHandle side="left" currentWidth={width} minWidth={200} maxWidth={500} onResize={setWidth} />
       {view === 'allTools' && <AllToolsView onBack={() => setView('default')} />}
-      {view === 'allAgents' && <AllAgentsView onBack={() => setView('default')} />}
+      {view === 'allAgents' && <AllAgentsView onBack={() => setView('default')} onOpenAgent={handleOpenAgent} />}
       {view === 'default' && (
         <BrowseView
           onShowAllTools={() => setView('allTools')}
           onShowAllAgents={() => setView('allAgents')}
+          onOpenAgent={handleOpenAgent}
         />
       )}
     </div>

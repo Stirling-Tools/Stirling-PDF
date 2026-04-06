@@ -1,8 +1,7 @@
 .left-sidebar {
   background-color: var(--landing-paper-bg);
-  width: 260px;
-  min-width: 260px;
-  max-width: 260px;
+  width: var(--left-sidebar-width, 260px);
+  min-width: 180px;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -10,7 +9,7 @@
   flex-shrink: 0;
   box-sizing: border-box;
   overflow: hidden;
-  transition: width 0.2s ease, min-width 0.2s ease, max-width 0.2s ease;
+  position: relative;
 }
 
 /* Collapsed: narrow strip, icons only */

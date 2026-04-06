@@ -27,6 +27,7 @@ from .pdf_edit import (
     PdfEditRequest,
     PdfEditResponse,
 )
+from .chat import AgentMetaResponse, ChatRequest
 from .pdf_questions import (
     PdfQuestionAnswerResponse,
     PdfQuestionNeedTextResponse,
@@ -36,6 +37,7 @@ from .pdf_questions import (
 )
 
 __all__ = [
+    "AgentMetaResponse",
     "AgentDraft",
     "AgentDraftRequest",
     "AgentDraftResponse",
@@ -48,6 +50,7 @@ __all__ = [
     "AgentSpecStep",
     "AiToolAgentStep",
     "CannotContinueExecutionAction",
+    "ChatRequest",
     "ConversationMessage",
     "CompletedExecutionAction",
     "EditCannotDoResponse",

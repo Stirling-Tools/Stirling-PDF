@@ -37,6 +37,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import jakarta.servlet.DispatcherType;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.AppConfig;
@@ -338,7 +340,14 @@ public class SecurityConfiguration {
                                     .alwaysRemember(false));
             http.authorizeHttpRequests(
                     authz ->
-                            authz.requestMatchers(
+                            authz
+                                    // Allow async dispatches through — the initial request
+                                    // already passed authentication. Without this, SSE
+                                    // endpoints fail because Spring re-runs auth filters
+                                    // on the async dispatch after the response is committed.
+                                    .dispatcherTypeMatchers(DispatcherType.ASYNC)
+                                    .permitAll()
+                                    .requestMatchers(
                                             req -> {
                                                 String uri = req.getRequestURI();
                                                 String contextPath = req.getContextPath();

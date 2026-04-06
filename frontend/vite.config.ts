@@ -62,6 +62,32 @@ export default defineConfig(({ mode }) => {
       },
       // Only use proxy in web mode - Tauri handles backend connections directly
       proxy: effectiveMode === 'desktop' ? undefined : {
+        '/api/v1/ai': {
+          target: 'http://localhost:5001',
+          changeOrigin: true,
+          secure: false,
+          xfwd: true,
+          // Route AI endpoints directly to Python engine in dev:
+          // /api/v1/ai/chat/stream → /api/v1/chat/stream
+          // /api/v1/ai/agents     → /api/v1/chat/agents
+          rewrite: (path: string) => {
+            // Strip /ai segment, then ensure /chat prefix for Python router
+            const stripped = path.replace('/api/v1/ai/', '/api/v1/');
+            return stripped.startsWith('/api/v1/chat') ? stripped : stripped.replace('/api/v1/', '/api/v1/chat/');
+          },
+          // Disable response buffering so SSE events stream through immediately
+          // instead of being held until the connection closes.
+          configure: (proxy) => {
+            proxy.on('proxyRes', (proxyRes) => {
+              if (proxyRes.headers['content-type']?.includes('text/event-stream')) {
+                // Ensure no compression that would buffer chunks
+                delete proxyRes.headers['content-encoding'];
+                proxyRes.headers['cache-control'] = 'no-cache';
+                proxyRes.headers['connection'] = 'keep-alive';
+              }
+            });
+          },
+        },
         '/api': {
           target: 'http://localhost:8080',
           changeOrigin: true,

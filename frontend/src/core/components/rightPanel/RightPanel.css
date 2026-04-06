@@ -1,8 +1,7 @@
 .right-panel {
   background-color: var(--landing-paper-bg);
-  width: 280px;
-  min-width: 280px;
-  max-width: 280px;
+  width: var(--right-panel-width, 280px);
+  min-width: 200px;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -10,7 +9,7 @@
   flex-shrink: 0;
   box-sizing: border-box;
   overflow: hidden;
-  transition: width 0.2s ease, min-width 0.2s ease, max-width 0.2s ease;
+  position: relative;
 }
 
 .right-panel--tool-mode {
@@ -155,6 +154,22 @@
 [data-mantine-color-scheme='dark'] .right-panel-agent-badge.running {
   background-color: rgba(64, 192, 87, 0.2);
   color: var(--mantine-color-green-4);
+}
+
+.right-panel-agent-badge.coming-soon {
+  background-color: rgba(0, 0, 0, 0.06);
+  color: var(--text-tertiary);
+}
+
+[data-mantine-color-scheme='dark'] .right-panel-agent-badge.coming-soon {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: var(--text-tertiary);
+}
+
+.right-panel-agent-item--disabled {
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
 }
 
 .right-panel-agent-meta {
