@@ -181,6 +181,8 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith(
                         "/api/v1/mobile-scanner/") // Mobile scanner endpoints (no auth)
                 || trimmedUri.startsWith("/v1/api-docs")
+                // Webhook endpoints — verified by webhook secret, not user auth
+                || trimmedUri.startsWith("/api/v1/webhooks/")
                 // Workflow participant endpoints — access controlled by share tokens, not login
                 || trimmedUri.startsWith("/api/v1/workflow/participant/");
     }
