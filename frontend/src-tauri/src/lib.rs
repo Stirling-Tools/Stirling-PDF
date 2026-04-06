@@ -31,6 +31,10 @@ use commands::{
     print_pdf_file_native,
     start_backend,
     start_oauth_login,
+    check_for_update,
+    download_and_install_update,
+    get_app_version,
+    restart_app,
 };
 use commands::connection::apply_provisioning_if_present;
 use state::connection_state::AppConnectionState;
@@ -63,6 +67,7 @@ pub fn run() {
     .plugin(tauri_plugin_store::Builder::new().build())
     .plugin(tauri_plugin_deep_link::init())
     .plugin(tauri_plugin_notification::init())
+    .plugin(tauri_plugin_updater::Builder::new().build())
     .plugin(tauri_plugin_window_state::Builder::default().build())
     .manage(AppConnectionState::default())
     .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
@@ -167,6 +172,10 @@ pub fn run() {
       start_oauth_login,
       get_desktop_os,
       print_pdf_file_native,
+      check_for_update,
+      download_and_install_update,
+      get_app_version,
+      restart_app,
     ])
     .build(tauri::generate_context!())
     .expect("error while building tauri application")

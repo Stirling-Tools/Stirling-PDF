@@ -60,6 +60,11 @@
     "notification:allow-is-permission-granted",
     "window-state:allow-filename",
     "window-state:allow-restore-state",
-    "window-state:allow-save-window-state"
+    "window-state:allow-save-window-state",
+    "updater:default",
+    "updater:allow-check",
+    "updater:allow-download",
+    "updater:allow-download-and-install",
+    "updater:allow-install"
   ]
 }

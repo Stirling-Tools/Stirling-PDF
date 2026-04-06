@@ -22,18 +22,28 @@ import type { ToolPanelMode } from "@app/constants/toolPanel";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { updateService, UpdateSummary } from "@app/services/updateService";
 import UpdateModal from "@app/components/shared/UpdateModal";
+import type { DesktopInstallState, DesktopInstallProgress, DesktopInstallActions } from "@app/components/shared/UpdateModal";
 import { useFrontendVersionInfo } from "@app/hooks/useFrontendVersionInfo";
 
 const DEFAULT_AUTO_UNZIP_FILE_LIMIT = 4;
 const BANNER_DISMISSED_KEY = "stirlingpdf_features_banner_dismissed";
 
+
 interface GeneralSectionProps {
   hideTitle?: boolean;
   hideUpdateSection?: boolean;
   hideAdminBanner?: boolean;
+  /** Desktop-only: Tauri updater install state, passed from the desktop override. */
+  desktopInstall?: {
+    state: DesktopInstallState;
+    progress: DesktopInstallProgress | null;
+    errorMessage: string | null;
+    tauriInstallReady: boolean;
+    actions: DesktopInstallActions;
+  };
 }
 
-const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hideUpdateSection = false, hideAdminBanner = false }) => {
+const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hideUpdateSection = false, hideAdminBanner = false, desktopInstall }) => {
   const { t } = useTranslation();
   const { preferences, updatePreference } = usePreferences();
   const { config } = useAppConfig();
@@ -53,40 +63,47 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
     setFileLimitInput(preferences.autoUnzipFileLimit);
   }, [preferences.autoUnzipFileLimit]);
 
+
+  // The version to use for update checks — on desktop use the Tauri app version,
+  // falling back to the backend version
+  const currentVersion = appVersion ?? config?.appVersion ?? null;
+
   // Check for updates on mount
   useEffect(() => {
-    if (config?.appVersion && config?.machineType) {
+    if (currentVersion) {
       checkForUpdate();
     }
-  }, [config?.appVersion, config?.machineType]);
+  }, [currentVersion, config?.machineType]);
 
   const checkForUpdate = async () => {
-    if (!config?.appVersion || !config?.machineType) {
-      return;
-    }
+    if (!currentVersion) return;
 
     setCheckingUpdate(true);
+
     const machineInfo = {
-      machineType: config.machineType,
-      activeSecurity: config.activeSecurity ?? false,
-      licenseType: config.license ?? "NORMAL",
+      machineType: config?.machineType ?? "unknown",
+      activeSecurity: config?.activeSecurity ?? false,
+      licenseType: config?.license ?? "NORMAL",
     };
 
-    const summary = await updateService.getUpdateSummary(config.appVersion, machineInfo);
-    if (summary && summary.latest_version) {
-      const isNewerVersion = updateService.compareVersions(summary.latest_version, config.appVersion) > 0;
-      if (isNewerVersion) {
-        setUpdateSummary(summary);
-      } else {
-        // Clear any existing update summary if user is on latest version
-        setUpdateSummary(null);
-      }
+    const summary = await updateService.getUpdateSummary(currentVersion, machineInfo);
+
+    if (summary?.latest_version && updateService.compareVersions(summary.latest_version, currentVersion) > 0) {
+      setUpdateSummary(summary);
     } else {
-      // No update available (latest_version is null) - clear any existing update summary
       setUpdateSummary(null);
     }
+
     setCheckingUpdate(false);
   };
+
+  // Build desktop install props for the UpdateModal (only when provided by desktop override)
+  const desktopInstallProps = desktopInstall?.tauriInstallReady ? {
+    state: desktopInstall.state,
+    progress: desktopInstall.progress,
+    errorMessage: desktopInstall.errorMessage,
+    actions: desktopInstall.actions,
+  } : undefined;
 
   // Check if login is disabled
   const loginDisabled = !config?.enableLogin;
@@ -167,8 +184,8 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
         </Paper>
       )}
 
-      {/* Update Check Section */}
-      {!hideUpdateSection && config?.appVersion && (
+      {/* Update Check Section — show when backend version is known OR in desktop mode (Tauri version is always available) */}
+      {!hideUpdateSection && (config?.appVersion || !!desktopInstall) && (
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">
             <div>
@@ -212,12 +229,14 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
             )}
             <Group justify="space-between" align="center">
               <div>
+                {config?.appVersion && (
                 <Text size="sm" c="dimmed">
                   {t("settings.general.updates.currentBackendVersion", "Current Backend Version")}:{" "}
                   <Text component="span" fw={500}>
                     {config.appVersion}
                   </Text>
                 </Text>
+                )}
                 {updateSummary && (
                   <Text size="sm" c="dimmed" mt={4}>
                     {t("settings.general.updates.latestVersion", "Latest Version")}:{" "}
@@ -233,6 +252,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
                   variant="default"
                   onClick={checkForUpdate}
                   loading={checkingUpdate}
+                  disabled={!currentVersion}
                   leftSection={<LocalIcon icon="refresh-rounded" width="1rem" height="1rem" />}
                 >
                   {t("settings.general.updates.checkForUpdates", "Check for Updates")}
@@ -394,17 +414,21 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
       </Paper>
 
       {/* Update Modal */}
-      {updateSummary && config?.appVersion && config?.machineType && (
+      {updateSummary && (config?.appVersion || !!desktopInstall) && (
         <UpdateModal
           opened={updateModalOpened}
           onClose={() => setUpdateModalOpened(false)}
-          currentVersion={config.appVersion}
+          onRemindLater={() => {
+            localStorage.setItem('stirling-pdf-updater:snoozedUntil', String(Date.now() + 24 * 60 * 60 * 1000));
+          }}
+          currentVersion={appVersion ?? config?.appVersion ?? ""}
           updateSummary={updateSummary}
           machineInfo={{
-            machineType: config.machineType,
-            activeSecurity: config.activeSecurity ?? false,
-            licenseType: config.license ?? "NORMAL",
+            machineType: config?.machineType ?? "unknown",
+            activeSecurity: config?.activeSecurity ?? false,
+            licenseType: config?.license ?? "NORMAL",
           }}
+          desktopInstall={desktopInstallProps}
         />
       )}
     </Stack>

@@ -93,6 +93,16 @@
                     "stirlingpdf"
                 ]
             }
+        },
+        "updater": {
+            "endpoints": [
+                "https://github.com/Stirling-Tools/Stirling-PDF/releases/latest/download/latest.json"
+            ],
+            "dialog": false,
+            "pubkey": "REPLACE_WITH_TAURI_PUBLIC_KEY",
+            "windows": {
+                "installMode": "passive"
+            }
         }
     }
 }

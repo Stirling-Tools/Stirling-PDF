@@ -33,3 +33,9 @@ test-results
 # auto-generated files
 /src/assets/material-symbols-icons.json
 /src/assets/material-symbols-icons.d.ts
+
+# dev update testing — keys, built bundles, screenshots, and generated config override
+/scripts/dev-update-test/.keys/
+/scripts/dev-update-test/.update-dist/
+/scripts/dev-update-test/screenshots/
+/src-tauri/tauri.conf.dev-update.json
