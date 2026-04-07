@@ -1,0 +1,146 @@
+version: '3'
+
+tasks:
+  install:
+    desc: "Install frontend npm dependencies"
+    cmds:
+      - npm install
+    status:
+      - test -d node_modules
+
+  prep:
+    desc: "Run env setup and icon generation"
+    deps: [install]
+    cmds:
+      - npm run prep
+
+  prep:saas:
+    desc: "Prep for SaaS mode"
+    deps: [install]
+    cmds:
+      - npm run prep:saas
+
+  prep:desktop:
+    desc: "Prep for desktop mode"
+    deps: [install]
+    cmds:
+      - npm run prep:desktop
+
+  dev:
+    desc: "Start Vite dev server (default mode)"
+    deps: [install]
+    cmds:
+      - npm run dev
+
+  dev:core:
+    desc: "Start Vite dev server in core mode"
+    deps: [install]
+    cmds:
+      - npm run dev:core
+
+  dev:proprietary:
+    desc: "Start Vite dev server in proprietary mode"
+    deps: [install]
+    cmds:
+      - npm run dev:proprietary
+
+  dev:saas:
+    desc: "Start Vite dev server in SaaS mode"
+    deps: [install]
+    cmds:
+      - npm run dev:saas
+
+  dev:desktop:
+    desc: "Start Vite dev server in desktop mode"
+    deps: [install]
+    cmds:
+      - npm run dev:desktop
+
+  build:
+    desc: "Production build (default mode)"
+    deps: [install]
+    cmds:
+      - npm run build
+
+  build:core:
+    desc: "Build for core mode"
+    deps: [install]
+    cmds:
+      - npm run build:core
+
+  build:proprietary:
+    desc: "Build for proprietary mode"
+    deps: [install]
+    cmds:
+      - npm run build:proprietary
+
+  build:saas:
+    desc: "Build for SaaS mode"
+    deps: [install]
+    cmds:
+      - npm run build:saas
+
+  build:desktop:
+    desc: "Build for desktop mode"
+    deps: [install]
+    cmds:
+      - npm run build:desktop
+
+  lint:
+    desc: "Run ESLint + cycle detection"
+    deps: [install]
+    cmds:
+      - npm run lint
+
+  typecheck:
+    desc: "Run TypeScript type checking"
+    deps: [install]
+    cmds:
+      - npm run typecheck
+
+  typecheck:all:
+    desc: "Typecheck all build variants"
+    deps: [install]
+    cmds:
+      - npm run typecheck:all
+
+  check:
+    desc: "Run typecheck + lint + test"
+    deps: [install]
+    cmds:
+      - npm run check
+
+  test:
+    desc: "Run Vitest (single run)"
+    deps: [install]
+    cmds:
+      - npm run test:run
+
+  test:watch:
+    desc: "Run Vitest in watch mode"
+    deps: [install]
+    cmds:
+      - npm run test:watch
+
+  test:coverage:
+    desc: "Run Vitest with coverage"
+    deps: [install]
+    cmds:
+      - npm run test:coverage
+
+  test:e2e:
+    desc: "Run Playwright E2E tests"
+    deps: [install]
+    cmds:
+      - npm run test:e2e
+
+  test:e2e:install:
+    desc: "Install Playwright browsers"
+    cmds:
+      - npm run test:e2e:install
+
+  generate:licenses:
+    desc: "Generate frontend license report"
+    deps: [install]
+    cmds:
+      - npm run generate-licenses

@@ -1,0 +1,57 @@
+version: '3'
+
+vars:
+  GRADLE: '{{if eq OS "windows"}}gradlew.bat{{else}}./gradlew{{end}}'
+
+tasks:
+  run:
+    desc: "Run Spring Boot backend on :8080"
+    cmds:
+      - '{{.GRADLE}} :stirling-pdf:bootRun'
+
+  build:
+    desc: "Full Gradle build (compile + test + jar)"
+    cmds:
+      - '{{.GRADLE}} clean build'
+
+  build:fast:
+    desc: "Build without tests"
+    cmds:
+      - '{{.GRADLE}} clean build -x test'
+
+  test:
+    desc: "Run JUnit tests"
+    cmds:
+      - '{{.GRADLE}} test'
+
+  format:
+    desc: "Apply Spotless formatting"
+    cmds:
+      - '{{.GRADLE}} spotlessApply'
+
+  format:check:
+    desc: "Check Spotless formatting (no changes)"
+    cmds:
+      - '{{.GRADLE}} spotlessCheck'
+
+  coverage:
+    desc: "Generate JaCoCo coverage report"
+    cmds:
+      - '{{.GRADLE}} jacocoTestReport'
+
+  swagger:
+    desc: "Generate OpenAPI docs"
+    cmds:
+      - '{{.GRADLE}} generateOpenApiDocs'
+
+  check:
+    desc: "Run full backend checks (format-check + test + coverage)"
+    cmds:
+      - task: format:check
+      - task: test
+      - task: coverage
+
+  clean:
+    desc: "Gradle clean"
+    cmds:
+      - '{{.GRADLE}} clean'

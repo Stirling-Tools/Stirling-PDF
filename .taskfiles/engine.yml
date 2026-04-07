@@ -1,0 +1,99 @@
+version: '3'
+
+tasks:
+  install:
+    desc: "Install Python dependencies via uv"
+    cmds:
+      - uv python install 3.13.8
+      - uv sync
+    sources:
+      - uv.lock
+      - pyproject.toml
+    status:
+      - test -f .venv/.deps-installed
+
+  prep:
+    desc: "Set up engine .env from template"
+    deps: [install]
+    cmds:
+      - uv run scripts/setup_env.py
+
+  run:
+    desc: "Run FastAPI engine on :5001"
+    deps: [prep]
+    dir: src
+    env:
+      PYTHONUNBUFFERED: "1"
+    cmds:
+      - uv run uvicorn stirling.api.app:app --host 0.0.0.0 --port 5001
+
+  run-dev:
+    desc: "Run FastAPI engine on :5001 with hot reload"
+    deps: [prep]
+    dir: src
+    env:
+      PYTHONUNBUFFERED: "1"
+    cmds:
+      - uv run uvicorn stirling.api.app:app --host 0.0.0.0 --port 5001 --reload
+
+  lint:
+    desc: "Run ruff linting"
+    deps: [install]
+    cmds:
+      - uv run ruff check .
+
+  lint:fix:
+    desc: "Auto-fix ruff lint issues"
+    deps: [install]
+    cmds:
+      - uv run ruff check . --fix
+
+  format:
+    desc: "Format code with ruff"
+    deps: [install]
+    cmds:
+      - uv run ruff format .
+
+  format:check:
+    desc: "Check formatting without changes"
+    deps: [install]
+    cmds:
+      - uv run ruff format . --diff
+
+  typecheck:
+    desc: "Run pyright type checking"
+    deps: [install]
+    cmds:
+      - uv run pyright . --warnings
+
+  test:
+    desc: "Run pytest"
+    deps: [prep]
+    cmds:
+      - uv run pytest tests
+
+  fix:
+    desc: "Auto-fix lint + format"
+    cmds:
+      - task: lint:fix
+      - task: format
+
+  check:
+    desc: "Run all engine checks (typecheck + lint + format-check + test)"
+    cmds:
+      - task: typecheck
+      - task: lint
+      - task: format:check
+      - task: test
+
+  tool-models:
+    desc: "Generate tool_models.py from frontend TypeScript defs"
+    deps: [install]
+    cmds:
+      - uv run python scripts/generate_tool_models.py --output src/stirling/models/tool_models.py
+      - task: fix
+
+  clean:
+    desc: "Remove venv and generated files"
+    cmds:
+      - rm -rf .venv data logs output

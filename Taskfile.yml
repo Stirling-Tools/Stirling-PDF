@@ -1,0 +1,155 @@
+version: '3'
+
+output: prefixed
+
+vars:
+  GRADLE: '{{if eq OS "windows"}}gradlew.bat{{else}}./gradlew{{end}}'
+
+includes:
+  backend:
+    taskfile: .taskfiles/backend.yml
+    dir: .
+  frontend:
+    taskfile: .taskfiles/frontend.yml
+    dir: frontend
+  engine:
+    taskfile: .taskfiles/engine.yml
+    dir: engine
+  docker:
+    taskfile: .taskfiles/docker.yml
+    dir: .
+  desktop:
+    taskfile: .taskfiles/desktop.yml
+    dir: frontend
+  check:
+    taskfile: .taskfiles/check.yml
+    dir: .
+
+tasks:
+  default:
+    desc: "Show all available tasks"
+    cmds:
+      - task --list
+
+  # ============================================================
+  # Setup & Prerequisites
+  # ============================================================
+
+  setup:
+    desc: "Install all dependencies (frontend + engine; Gradle self-resolves)"
+    cmds:
+      - task: check:all
+      - task: frontend:install
+      - task: engine:install
+
+  # ============================================================
+  # Development
+  # ============================================================
+
+  dev:
+    desc: "Show instructions for starting full-stack dev"
+    cmds:
+      - |
+        echo ""
+        echo "=== Stirling-PDF Full-Stack Development ==="
+        echo ""
+        echo "Start each service in a separate terminal:"
+        echo "  Terminal 1:  task backend:run      (Spring Boot on :8080)"
+        echo "  Terminal 2:  task frontend:dev      (Vite on :5173)"
+        echo "  Terminal 3:  task engine:run-dev    (FastAPI on :5001)"
+        echo ""
+        echo "Or run all concurrently (interleaved output):"
+        echo "  task dev:all"
+        echo ""
+    silent: true
+
+  dev:all:
+    desc: "Start backend + frontend + engine concurrently (Ctrl+C to stop)"
+    deps:
+      - backend:run
+      - frontend:dev
+      - engine:run-dev
+
+  dev:backend:
+    desc: "Start backend only (Spring Boot on :8080)"
+    cmds:
+      - task: backend:run
+
+  dev:frontend:
+    desc: "Start frontend dev server only (Vite on :5173)"
+    cmds:
+      - task: frontend:dev
+
+  dev:engine:
+    desc: "Start engine dev server only (FastAPI on :5001)"
+    cmds:
+      - task: engine:run-dev
+
+  dev:saas:
+    desc: "Start frontend in SaaS mode"
+    cmds:
+      - task: frontend:dev:saas
+
+  dev:desktop:
+    desc: "Start Tauri desktop dev"
+    cmds:
+      - task: desktop:dev
+
+  # ============================================================
+  # Build
+  # ============================================================
+
+  build:
+    desc: "Build all components"
+    cmds:
+      - task: backend:build
+      - task: frontend:build
+
+  # ============================================================
+  # Test
+  # ============================================================
+
+  test:
+    desc: "Run ALL tests (backend + frontend + engine)"
+    cmds:
+      - task: backend:test
+      - task: frontend:test
+      - task: engine:test
+
+  # ============================================================
+  # Lint & Format
+  # ============================================================
+
+  lint:
+    desc: "Run ALL linters (backend + frontend + engine)"
+    cmds:
+      - task: backend:format:check
+      - task: frontend:lint
+      - task: engine:lint
+
+  format:
+    desc: "Auto-fix formatting across all components"
+    cmds:
+      - task: backend:format
+      - task: engine:fix
+
+  # ============================================================
+  # Quality Gate
+  # ============================================================
+
+  check:
+    desc: "Run all checks (lint + typecheck + test) across all components"
+    cmds:
+      - task: backend:check
+      - task: frontend:check
+      - task: engine:check
+
+  # ============================================================
+  # Clean
+  # ============================================================
+
+  clean:
+    desc: "Clean all build artifacts"
+    cmds:
+      - task: backend:clean
+      - task: engine:clean

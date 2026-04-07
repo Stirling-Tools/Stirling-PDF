@@ -1,0 +1,37 @@
+version: '3'
+
+tasks:
+  dev:
+    desc: "Start Tauri desktop dev mode"
+    cmds:
+      - npm run tauri-dev
+
+  build:
+    desc: "Build Tauri desktop app (production, all platforms)"
+    cmds:
+      - npm run tauri-build
+
+  build:dev:
+    desc: "Build Tauri desktop app (dev, no bundling)"
+    cmds:
+      - npm run tauri-build-dev
+
+  build:dev:mac:
+    desc: "Build Tauri desktop .app bundle (macOS)"
+    cmds:
+      - npm run tauri-build-dev-mac
+
+  build:dev:windows:
+    desc: "Build Tauri desktop NSIS installer (Windows)"
+    cmds:
+      - npm run tauri-build-dev-windows
+
+  build:dev:linux:
+    desc: "Build Tauri desktop AppImage (Linux)"
+    cmds:
+      - npm run tauri-build-dev-linux
+
+  clean:
+    desc: "Clean Tauri/Cargo build artifacts"
+    cmds:
+      - npm run tauri-clean
