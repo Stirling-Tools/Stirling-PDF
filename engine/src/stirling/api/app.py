@@ -4,6 +4,8 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import Depends, FastAPI
+from pydantic_ai import Agent
+from pydantic_ai.models.instrumented import InstrumentationSettings
 
 from stirling.agents import ExecutionPlanningAgent, OrchestratorAgent, PdfEditAgent, PdfQuestionAgent, UserSpecAgent
 from stirling.api.routes import (
@@ -15,7 +17,7 @@ from stirling.api.routes import (
 )
 from stirling.config import AppSettings, load_settings
 from stirling.contracts import HealthResponse
-from stirling.services import build_runtime, build_tracking
+from stirling.services import build_runtime, setup_posthog_tracking
 
 
 def _load_startup_settings(fast_api: FastAPI) -> AppSettings:
@@ -37,10 +39,12 @@ async def lifespan(fast_api: FastAPI):
     fast_api.state.pdf_question_agent = PdfQuestionAgent(runtime)
     fast_api.state.user_spec_agent = UserSpecAgent(runtime)
     fast_api.state.execution_planning_agent = ExecutionPlanningAgent(runtime)
-    tracking = build_tracking(settings)
-    fast_api.state.tracking = tracking
+    tracer_provider = setup_posthog_tracking(settings)
+    if tracer_provider:
+        Agent.instrument_all(InstrumentationSettings(tracer_provider=tracer_provider))
     yield
-    tracking.close()
+    if tracer_provider:
+        tracer_provider.shutdown()
 
 
 app = FastAPI(title="Stirling AI Engine", lifespan=lifespan, version="0.1.0")

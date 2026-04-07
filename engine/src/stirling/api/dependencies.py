@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import Request
 
 from stirling.agents import ExecutionPlanningAgent, OrchestratorAgent, PdfEditAgent, PdfQuestionAgent, UserSpecAgent
-from stirling.services import AppRuntime, TrackingService
+from stirling.services import AppRuntime
 
 
 def get_runtime(request: Request) -> AppRuntime:
@@ -28,7 +28,3 @@ def get_user_spec_agent(request: Request) -> UserSpecAgent:
 
 def get_execution_planning_agent(request: Request) -> ExecutionPlanningAgent:
     return request.app.state.execution_planning_agent
-
-
-def get_tracking(request: Request) -> TrackingService:
-    return request.app.state.tracking
