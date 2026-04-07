@@ -80,66 +80,55 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/t
 
 
 ## Tauri
-In order to run Tauri, you first have to build the Java backend for Tauri to use.
 
-**macOS/Linux:**
-
-From the root of the repo, run:
-
-```bash
-./gradlew clean build
-./scripts/build-tauri-jlink.sh
-```
-
-**Windows**
-
-From the root of the repo, run:
-
-```batch
-gradlew clean build
-scripts\build-tauri-jlink.bat
-```
-
-### Testing the Bundled Runtime
-
-Before building the full Tauri app, you can test the bundled runtime:
-
-**macOS/Linux:**
-```bash
-./frontend/src-tauri/runtime/launch-stirling.sh
-```
-
-**Windows:**
-```cmd
-frontend\src-tauri\runtime\launch-stirling.bat
-```
-
-This will start Stirling-PDF using the bundled JRE, accessible at http://localhost:8080
+All desktop tasks are available via [Task](https://taskfile.dev). From the root of the repo:
 
 ### Dev
-To run Tauri in development. Use the command in the `frontend` folder:
 
 ```bash
-npm run tauri-dev
+task desktop:dev
 ```
 
-This will run the gradle runboot command and the tauri dev command concurrently, starting the app once both are stable.
-
-> [!NOTE]
->
-> Desktop builds require additional environment variables. See [Environment Variables](#environment-variables)
-> above - `npm run tauri-dev` will set these up automatically from `config/.env.desktop.example` on first run.
+This ensures the JLink runtime and backend JAR exist (skipping if already built), then starts Tauri in dev mode.
 
 ### Build
-To build a deployment of the Tauri app. Use this command in the `frontend` folder:
 
 ```bash
-npm run tauri-build
+task desktop:build
 ```
 
-This will bundle the backend and frontend into one executable for each target. Targets can be set within the `tauri.conf.json` file.
+This does a full clean rebuild of the backend JAR and JLink runtime, then builds the Tauri app for production.
+
+Platform-specific dev builds are also available:
+
+```bash
+task desktop:build:dev           # No bundling
+task desktop:build:dev:mac       # macOS .app bundle
+task desktop:build:dev:windows   # Windows NSIS installer
+task desktop:build:dev:linux     # Linux AppImage
+```
+
+### JLink Tasks
+
+You can also run JLink steps individually:
+
+```bash
+task desktop:jlink          # Build JAR + create JLink runtime + test
+task desktop:jlink:jar      # Build backend JAR only
+task desktop:jlink:runtime  # Create JLink custom JRE only
+task desktop:jlink:test     # Verify the bundled JRE works
+task desktop:jlink:clean    # Remove JLink artifacts
+```
+
+### Clean
+
+```bash
+task desktop:clean
+```
+
+Removes all desktop build artifacts including JLink runtime, bundled JARs, Cargo build, and dist/build directories.
 
 > [!NOTE]
 >
 > Desktop builds require additional environment variables. See [Environment Variables](#environment-variables)
-> above - `npm run tauri-build` will set these up automatically from `config/.env.desktop.example` on first run.
+> above - `task desktop:dev` will set these up automatically from `config/.env.desktop.example` on first run.
