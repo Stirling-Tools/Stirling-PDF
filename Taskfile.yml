@@ -21,16 +21,8 @@ includes:
   desktop:
     taskfile: .taskfiles/desktop.yml
     dir: frontend
-  check:
-    taskfile: .taskfiles/check.yml
-    dir: .
 
 tasks:
-  default:
-    desc: "Show all available tasks"
-    cmds:
-      - task --list
-
   # ============================================================
   # Setup & Prerequisites
   # ============================================================
@@ -38,7 +30,6 @@ tasks:
   setup:
     desc: "Install all dependencies (frontend + engine; Gradle self-resolves)"
     cmds:
-      - task: check:all
       - task: frontend:install
       - task: engine:install
 
@@ -46,54 +37,12 @@ tasks:
   # Development
   # ============================================================
 
-  dev:
-    desc: "Show instructions for starting full-stack dev"
-    cmds:
-      - |
-        echo ""
-        echo "=== Stirling-PDF Full-Stack Development ==="
-        echo ""
-        echo "Start each service in a separate terminal:"
-        echo "  Terminal 1:  task backend:run      (Spring Boot on :8080)"
-        echo "  Terminal 2:  task frontend:dev      (Vite on :5173)"
-        echo "  Terminal 3:  task engine:run-dev    (FastAPI on :5001)"
-        echo ""
-        echo "Or run all concurrently (interleaved output):"
-        echo "  task dev:all"
-        echo ""
-    silent: true
-
   dev:all:
     desc: "Start backend + frontend + engine concurrently (Ctrl+C to stop)"
     deps:
       - backend:run
       - frontend:dev
       - engine:run-dev
-
-  dev:backend:
-    desc: "Start backend only (Spring Boot on :8080)"
-    cmds:
-      - task: backend:run
-
-  dev:frontend:
-    desc: "Start frontend dev server only (Vite on :5173)"
-    cmds:
-      - task: frontend:dev
-
-  dev:engine:
-    desc: "Start engine dev server only (FastAPI on :5001)"
-    cmds:
-      - task: engine:run-dev
-
-  dev:saas:
-    desc: "Start frontend in SaaS mode"
-    cmds:
-      - task: frontend:dev:saas
-
-  dev:desktop:
-    desc: "Start Tauri desktop dev"
-    cmds:
-      - task: desktop:dev
 
   # ============================================================
   # Build
