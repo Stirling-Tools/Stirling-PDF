@@ -5,9 +5,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import jakarta.validation.Valid;
 
 import stirling.software.SPDF.model.ai.AgentInfo;
 import stirling.software.SPDF.model.ai.ChatRequest;
@@ -33,15 +37,29 @@ public class AgentChatController {
     private static final long SSE_TIMEOUT_MS = 5 * 60 * 1000L; // 5 minutes
 
     private final EngineClientService engineClient;
+    private final Semaphore streamSemaphore;
 
-    public AgentChatController(EngineClientService engineClient) {
+    public AgentChatController(
+            EngineClientService engineClient,
+            @Value("${stirling.ai.max-concurrent-streams:50}") int maxConcurrentStreams) {
         this.engineClient = engineClient;
+        this.streamSemaphore = new Semaphore(maxConcurrentStreams);
     }
 
     /** Stream a chat session via SSE. Proxies events from the Python engine. */
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter chatStream(@RequestBody ChatRequest request) {
+    public SseEmitter chatStream(@Valid @RequestBody ChatRequest request) {
+        if (!streamSemaphore.tryAcquire()) {
+            SseEmitter rejected = new SseEmitter(0L);
+            rejected.completeWithError(
+                    new IllegalStateException("Too many concurrent chat streams"));
+            return rejected;
+        }
+
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT_MS);
+        emitter.onCompletion(streamSemaphore::release);
+        emitter.onTimeout(streamSemaphore::release);
+        emitter.onError(e -> streamSemaphore.release());
 
         // Use a virtual thread to read from the engine and push events.
         Thread.ofVirtual().name("agent-chat-stream").start(() -> proxyStream(emitter, request));

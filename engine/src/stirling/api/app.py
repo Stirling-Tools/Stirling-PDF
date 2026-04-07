@@ -9,9 +9,11 @@ from stirling.agents import ExecutionPlanningAgent, OrchestratorAgent, PdfEditAg
 from stirling.agents.chat_agents import (
     AutoRedactAgent,
     DocSummaryAgent,
+    PdfEditChatAgent,
     StreamingOrchestrator,
 )
 from stirling.agents.registry import AgentMeta, AgentRegistry
+from stirling.models import OPERATIONS
 from stirling.api.routes import (
     agent_draft_router,
     execution_router,
@@ -53,13 +55,34 @@ async def lifespan(fast_api: FastAPI):
         description="Summarize a PDF document, extracting key points and main topics.",
         category="analysis",
         agent_factory=DocSummaryAgent,
+        requires_files=True,
     ))
     registry.register(AgentMeta(
         agent_id="auto_redact",
         name="Auto Redact",
-        description="Detect sensitive information (PII, SSN, financial data) and auto-redact it.",
-        category="security",
+        description=(
+            "Find and redact content from PDFs based on any user criteria. "
+            "Handles pattern-based requests via regex (e.g. 8-digit numbers, emails, "
+            "words matching a rule) and semantic requests via AI (e.g. names, addresses, "
+            "financial data, PII, or any custom category the user describes)."
+        ),
+        category="editing",
         agent_factory=AutoRedactAgent,
+        requires_files=True,
+    ))
+    # Build capabilities list from the actual OPERATIONS registry
+    edit_capabilities = tuple(op.value for op in OPERATIONS)
+    registry.register(AgentMeta(
+        agent_id="pdf_edit",
+        name="PDF Editor",
+        description=(
+            "Edit PDFs using natural language. Plans and executes multi-step tool chains. "
+            "Use this agent when the user asks for ANY of the operations listed in Tools below."
+        ),
+        category="editing",
+        agent_factory=PdfEditChatAgent,
+        capabilities=edit_capabilities,
+        requires_files=True,
     ))
     fast_api.state.agent_registry = registry
     fast_api.state.streaming_orchestrator = StreamingOrchestrator(runtime, registry)

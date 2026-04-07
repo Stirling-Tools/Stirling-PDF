@@ -19,6 +19,10 @@ class AgentMeta:
     description: str
     category: str
     agent_factory: Callable[[AppRuntime], Any]
+    # Optional list of sub-capabilities the orchestrator can mention in routing.
+    capabilities: tuple[str, ...] = ()
+    # Whether this agent requires files to be loaded.
+    requires_files: bool = False
 
 
 class AgentRegistry:

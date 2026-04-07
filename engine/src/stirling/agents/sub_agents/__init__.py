@@ -1,11 +1,11 @@
 """Shared sub-agents that main chat agents compose."""
 
-from .sensitive_data import SensitiveDataDetector
+from .content_detector import ContentDetector
 from .summarization import SummarizationSubAgent
 from .text_extraction import TextExtractionSubAgent
 
 __all__ = [
-    "SensitiveDataDetector",
+    "ContentDetector",
     "SummarizationSubAgent",
     "TextExtractionSubAgent",
 ]

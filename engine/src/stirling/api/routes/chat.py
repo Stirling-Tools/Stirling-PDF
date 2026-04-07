@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/chat", tags=["chat"])
 
+# Strong references to background tasks so the GC doesn't collect them mid-run.
+_background_tasks: set[asyncio.Task[None]] = set()
+
 
 def get_streaming_orchestrator(request: Request) -> StreamingOrchestrator:
     return request.app.state.streaming_orchestrator
@@ -38,16 +41,18 @@ async def chat_stream(
     emitter = EventEmitter(run_id)
     logger.info("Chat stream started: run_id=%s, message=%r", run_id, chat_request.message[:80])
 
-    async def _run_orchestrator():
+    async def _run_orchestrator() -> None:
         try:
             await orchestrator.handle(chat_request, emitter)
-        except Exception as exc:
+        except BaseException as exc:
             logger.exception("Orchestrator failed for run_id=%s", run_id)
             emitter.error("orchestrator", str(exc))
             emitter.done()
 
     # Launch orchestrator in the background; the SSE response drains the emitter.
-    asyncio.create_task(_run_orchestrator())
+    task = asyncio.create_task(_run_orchestrator())
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
 
     return create_sse_response(emitter)
 

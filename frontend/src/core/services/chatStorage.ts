@@ -10,6 +10,7 @@
 import { indexedDBManager } from './indexedDBManager';
 import type { DatabaseConfig } from './indexedDBManager';
 import type { AgentId } from '@app/data/agentRegistry';
+import type { AgentTreeNode, ActionDecision, SuggestionChip } from '@app/types/agentChat';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -33,6 +34,15 @@ export interface PersistedChatMessage {
   role: 'user' | 'agent' | 'system';
   content: string;
   timestamp: number;
+  /** Persisted agent call tree for display in history. */
+  agentTree?: AgentTreeNode;
+  /** Action metadata so history shows the approval bar state. */
+  actionType?: string;
+  actionPayload?: unknown;
+  actionDecision?: ActionDecision;
+  isError?: boolean;
+  suggestions?: SuggestionChip[];
+  selectedSuggestion?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -172,6 +182,23 @@ export const chatStorage = {
     const db = await getDb();
     const tx = db.transaction('messages', 'readwrite');
     await idbRequest(tx.objectStore('messages').put(message));
+  },
+
+  /**
+   * Patch mutable fields on a persisted message (e.g. actionDecision after user approval).
+   */
+  async updateMessage(
+    messageId: string,
+    updates: Partial<Pick<PersistedChatMessage, 'actionDecision' | 'content' | 'isError'>>
+  ): Promise<void> {
+    const db = await getDb();
+    const readTx = db.transaction('messages', 'readonly');
+    const existing = await idbRequest<PersistedChatMessage | undefined>(
+      readTx.objectStore('messages').get(messageId)
+    );
+    if (!existing) return;
+    const writeTx = db.transaction('messages', 'readwrite');
+    await idbRequest(writeTx.objectStore('messages').put({ ...existing, ...updates }));
   },
 
   /**

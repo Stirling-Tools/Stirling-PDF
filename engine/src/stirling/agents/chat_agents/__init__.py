@@ -2,10 +2,12 @@
 
 from .auto_redact import AutoRedactAgent
 from .doc_summary import DocSummaryAgent
+from .pdf_edit_chat import PdfEditChatAgent
 from .streaming_orchestrator import StreamingOrchestrator
 
 __all__ = [
     "AutoRedactAgent",
     "DocSummaryAgent",
+    "PdfEditChatAgent",
     "StreamingOrchestrator",
 ]

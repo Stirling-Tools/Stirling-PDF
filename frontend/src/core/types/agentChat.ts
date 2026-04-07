@@ -5,6 +5,13 @@
 /** Action approval state for messages that require user confirmation. */
 export type ActionDecision = 'pending' | 'accepted' | 'denied';
 
+/** A suggestion chip the AI generates for the user to click. */
+export interface SuggestionChip {
+  label: string;
+  /** When true, clicking focuses the text input instead of sending the label as a message. */
+  isOther?: boolean;
+}
+
 /** A single message in the chat conversation. */
 export interface ChatMessage {
   id: string;
@@ -13,10 +20,16 @@ export interface ChatMessage {
   timestamp: string;
   agentTree?: AgentTreeNode;
   isStreaming?: boolean;
+  /** Set when this message represents an error (action failure, connection issue, etc.). */
+  isError?: boolean;
   /** Set when the agent emits an action_required event (e.g. auto_redact, form_fill). */
   actionType?: string;
   actionPayload?: unknown;
   actionDecision?: ActionDecision;
+  /** AI-generated follow-up suggestions shown as clickable chips. */
+  suggestions?: SuggestionChip[];
+  /** Index of the suggestion the user clicked (undefined = none selected yet). */
+  selectedSuggestion?: number;
 }
 
 /** A node in the collapsible agent call tree. */
@@ -49,6 +62,7 @@ export interface ChatEvent {
   actionType?: string;
   actionPayload?: unknown;
   error?: string;
+  suggestions?: SuggestionChip[];
 }
 
 /** Metadata for a registered AI agent. */

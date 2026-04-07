@@ -18,7 +18,8 @@
 export type AgentId =
   | 'stirling-general'
   | 'document-summary'
-  | 'advanced-redaction';
+  | 'advanced-redaction'
+  | 'pdf-editor';
 
 export type AgentCategory =
   | 'general'
@@ -90,7 +91,7 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
       { id: 'summarise', label: 'Summarise this document', prompt: 'Summarise the key points of this PDF.', iconHint: 'Summarize' },
       { id: 'extract-all', label: 'Extract all data', prompt: 'Extract all structured data (tables, forms, key-value pairs) from this document.', iconHint: 'TableChart' },
       { id: 'what-can', label: 'What can you do?', prompt: 'List all the things you can help me with for this document.', iconHint: 'Help' },
-      { id: 'redact-sensitive', label: 'Redact sensitive info', prompt: 'Find and redact all sensitive/PII information in this document.', iconHint: 'Security' },
+      { id: 'redact-pii', label: 'Redact all PII', prompt: 'Find and redact all personally identifiable information in this document.', iconHint: 'Security' },
     ],
   },
 
@@ -116,19 +117,37 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
   // ── Editing & Transformation ─────────────────────────────────────────
   {
     id: 'advanced-redaction',
-    name: 'Advanced Redaction',
+    name: 'Auto Redaction',
     implemented: true,
-    shortDescription: 'Auto-detect & redact sensitive information',
+    shortDescription: 'Find & redact anything from your PDFs',
     fullDescription:
-      'Uses AI to detect PII, financial data, and other sensitive information, then redacts it automatically.',
+      'Tell it what to redact in plain language — names, 8-digit codes, emails, financial data, words matching a pattern, or anything else. Uses regex for pattern requests and AI for semantic ones.',
     category: 'editing',
     iconHint: 'AutoFixHighRounded',
     color: 'var(--mantine-color-red-5)',
     requiresFiles: true,
     quickActions: [
       { id: 'redact-pii', label: 'Redact all PII', prompt: 'Find and redact all personally identifiable information.' },
-      { id: 'redact-financial', label: 'Redact financial data', prompt: 'Redact all financial figures and account numbers.' },
-      { id: 'preview-redactions', label: 'Preview before redacting', prompt: 'Show me what would be redacted without applying changes.' },
+      { id: 'redact-names', label: 'Redact all names', prompt: 'Find and redact every person name in this document.' },
+      { id: 'redact-numbers', label: 'Redact phone numbers', prompt: 'Find and redact all phone numbers.' },
+    ],
+  },
+  {
+    id: 'pdf-editor',
+    name: 'PDF Editor',
+    implemented: true,
+    shortDescription: 'Edit PDFs with natural language',
+    fullDescription:
+      'Tell it what you want to do in plain English — rotate, compress, merge, split, watermark, OCR, convert, and 30+ more operations. Plans multi-step workflows and executes them.',
+    category: 'editing',
+    iconHint: 'EditNoteRounded',
+    color: 'var(--mantine-color-green-6)',
+    requiresFiles: true,
+    quickActions: [
+      { id: 'rotate', label: 'Rotate 90° clockwise', prompt: 'Rotate this document 90 degrees clockwise.' },
+      { id: 'compress', label: 'Compress this PDF', prompt: 'Compress this PDF to reduce file size.' },
+      { id: 'ocr', label: 'Run OCR', prompt: 'Run OCR on this document to make it searchable.' },
+      { id: 'watermark', label: 'Add watermark', prompt: 'Add a "CONFIDENTIAL" watermark to every page.' },
     ],
   },
 ];

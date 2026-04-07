@@ -22,7 +22,7 @@ class TextExtractionSubAgent:
         agent_id = emitter.agent_start("Text Extraction", parent_agent_id)
 
         if not extracted_text or not extracted_text.strip():
-            emitter.agent_complete(agent_id, status="error", result_summary="No text provided")
+            emitter.agent_complete(agent_id, status="success", result_summary="Skipped — not needed")
             return ""
 
         word_count = len(extracted_text.split())

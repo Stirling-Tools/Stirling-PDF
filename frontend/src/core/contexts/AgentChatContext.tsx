@@ -6,10 +6,11 @@
  */
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import type { ActionDecision, AgentMeta, AgentTreeNode, ChatEvent, ChatMessage } from '@app/types/agentChat';
+import type { ActionDecision, AgentMeta, AgentTreeNode, ChatEvent, ChatMessage, SuggestionChip } from '@app/types/agentChat';
 import { fetchAgentList, startAgentStream } from '@app/services/agentStreamService';
 import { executeAgentAction } from '@app/services/agentActionService';
 import { chatStorage } from '@app/services/chatStorage';
+import type { PersistedChatMessage } from '@app/services/chatStorage';
 import type { AgentId } from '@app/data/agentRegistry';
 
 interface AgentChatState {
@@ -38,13 +39,81 @@ interface AgentChatActions {
   openSession: (sessionId: string) => void;
   /** Delete a session from IndexedDB; clears in-memory state if it was active. */
   deleteSession: (sessionId: string) => Promise<void>;
+  /** Mark a suggestion chip as selected on a message. */
+  selectSuggestion: (messageId: string, index: number) => void;
 }
 
 const AgentChatStateContext = createContext<AgentChatState | null>(null);
 const AgentChatActionsContext = createContext<AgentChatActions | null>(null);
 
+/** Map frontend agent IDs to backend agent IDs for direct routing. */
+const BACKEND_AGENT_MAP: Record<string, string> = {
+  'document-summary': 'doc_summary',
+  'advanced-redaction': 'auto_redact',
+  'pdf-editor': 'pdf_edit',
+  // 'stirling-general' is intentionally absent — it always routes via the orchestrator.
+};
+
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+/** Map a persisted IndexedDB message back to the in-memory ChatMessage shape. */
+function fromPersisted(m: PersistedChatMessage): ChatMessage {
+  return {
+    id: m.id,
+    role: m.role === 'user' ? 'user' : 'assistant',
+    content: m.content,
+    timestamp: new Date(m.timestamp).toISOString(),
+    agentTree: m.agentTree,
+    actionType: m.actionType,
+    actionPayload: m.actionPayload,
+    actionDecision: m.actionDecision,
+    isError: m.isError,
+    suggestions: m.suggestions,
+    selectedSuggestion: m.selectedSuggestion,
+  };
+}
+
+/** Patterns that indicate a "custom/other" option in fallback-parsed suggestions. */
+const OTHER_HINT = /^(a\s+)?custom\b|^other\b|^specify\b|^type\b|^enter\b/i;
+
+/**
+ * Fallback: extract suggestion options from parenthesized lists anywhere in text.
+ * Matches patterns like "(90, 180, 270 degrees, or other)" or "(e.g., 90°, 180°, 270°)".
+ * Picks the longest match with 2+ items to avoid false positives.
+ */
+function extractInlineSuggestions(text: string): SuggestionChip[] | undefined {
+  // Find ALL parenthesized groups with comma/or-separated items
+  const groups = [...text.matchAll(/\(([^)]{8,200})\)/g)];
+  if (groups.length === 0) return undefined;
+
+  let best: SuggestionChip[] | undefined;
+
+  for (const group of groups) {
+    const inner = group[1];
+    // Must contain a comma or " or " to be a list
+    if (!inner.includes(',') && !/ or /i.test(inner)) continue;
+
+    const parts = inner
+      .split(/,\s*|\s+or\s+/)
+      .map((s) => s.replace(/^e\.g\.?\s*/i, '').replace(/^\d+\)\s*/, '').trim())
+      .filter((s) => s.length > 1 && s.length < 60);
+
+    if (parts.length >= 2 && (!best || parts.length > best.length)) {
+      best = parts.map((label) => ({
+        label,
+        isOther: OTHER_HINT.test(label),
+      }));
+    }
+  }
+
+  // Always ensure an "other" option exists
+  if (best && !best.some((c) => c.isOther)) {
+    best.push({ label: 'Something else', isOther: true });
+  }
+
+  return best;
 }
 
 function buildTreeFromMap(nodeMap: Map<string, AgentTreeNode>): AgentTreeNode | undefined {
@@ -75,6 +144,7 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
   const autoAcceptTypes = useRef<Set<string>>(new Set());
   const nodeMapRef = useRef<Map<string, AgentTreeNode>>(new Map());
   const streamingMessageIdRef = useRef<string | null>(null);
+  const rafPendingRef = useRef(false);
 
   // Refs for use inside callbacks (avoid stale closure issues)
   const currentAgentRef = useRef<AgentId | null>(null);
@@ -91,13 +161,19 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
       .catch((err) => console.warn('[AgentChat] Failed to fetch agents:', err));
   }, []);
 
+  /** Throttled tree→state flush: coalesces rapid token events into one rAF update. */
   const updateStreamingMessage = useCallback(() => {
-    const msgId = streamingMessageIdRef.current;
-    if (!msgId) return;
-    const tree = buildTreeFromMap(nodeMapRef.current);
-    setMessages((prev) =>
-      prev.map((m) => (m.id === msgId ? { ...m, agentTree: tree ? { ...tree } : undefined } : m))
-    );
+    if (rafPendingRef.current) return;
+    rafPendingRef.current = true;
+    requestAnimationFrame(() => {
+      rafPendingRef.current = false;
+      const msgId = streamingMessageIdRef.current;
+      if (!msgId) return;
+      const tree = buildTreeFromMap(nodeMapRef.current);
+      setMessages((prev) =>
+        prev.map((m) => (m.id === msgId ? { ...m, agentTree: tree ? { ...tree } : undefined } : m))
+      );
+    });
   }, []);
 
   const handleEvent = useCallback(
@@ -150,6 +226,17 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
             node.actionType = event.actionType;
             node.actionPayload = event.actionPayload;
             updateStreamingMessage();
+          }
+          break;
+        }
+
+        case 'suggestions': {
+          // Store suggestions on the streaming message so the UI can render them as chips
+          const msgId = streamingMessageIdRef.current;
+          if (msgId && event.suggestions) {
+            setMessages((prev) =>
+              prev.map((m) => (m.id === msgId ? { ...m, suggestions: event.suggestions } : m))
+            );
           }
           break;
         }
@@ -207,16 +294,27 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
                       actionDecision: actionType
                         ? (autoAcceptTypes.current.has(actionType) ? 'accepted' : 'pending')
                         : undefined,
+                      // Preserve suggestions set during streaming; if none, try to
+                      // extract parenthesized options from the content as a fallback.
+                      suggestions: m.suggestions?.length
+                        ? m.suggestions
+                        : extractInlineSuggestions(finalContent),
                     }
                   : m
               )
             );
 
-            // Persist assistant message to IndexedDB
+            // Persist assistant message to IndexedDB (including agent tree + action data)
             const sid = sessionIdRef.current;
             const agId = currentAgentRef.current;
             if (sid && agId && finalContent) {
               const now = Date.now();
+              const decision = actionType
+                ? (autoAcceptTypes.current.has(actionType) ? 'accepted' as const : 'pending' as const)
+                : undefined;
+              // Get suggestions from the streaming message (set by the suggestions event)
+              const currentMsg = messagesRef.current.find((m) => m.id === msgId);
+              const suggestions = currentMsg?.suggestions;
               chatStorage.addMessage({
                 id: `msg-${now}-${Math.random().toString(36).slice(2, 7)}`,
                 sessionId: sid,
@@ -224,6 +322,11 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
                 role: 'agent',
                 content: finalContent,
                 timestamp: now,
+                agentTree: tree ? { ...tree } : undefined,
+                actionType,
+                actionPayload,
+                actionDecision: decision,
+                suggestions,
               }).catch(console.error);
               chatStorage.updateSession(sid, {
                 updatedAt: now,
@@ -273,8 +376,8 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
         isStreaming: true,
       };
 
-      // Build history from prior messages (exclude the new ones we're about to add)
-      const history = messages
+      // Build history from prior messages (use ref to avoid stale closure)
+      const history = messagesRef.current
         .filter((m) => !m.isStreaming && m.content)
         .map((m) => ({ role: m.role, content: m.content }));
 
@@ -311,11 +414,19 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
         }).catch(console.error);
       }
 
+      // On follow-up messages in a non-general agent chat, skip orchestrator routing
+      // by sending the backend agent_id directly.
+      const currentAgent = currentAgentRef.current;
+      const backendAgentId = (history.length > 0 && currentAgent)
+        ? BACKEND_AGENT_MAP[currentAgent]
+        : undefined;
+
       abortRef.current = startAgentStream({
         message: text,
         fileNames,
         extractedText,
         history,
+        agentId: backendAgentId,
         onEvent: handleEvent,
         onError: (error) => {
           console.error('[AgentChat] Stream error:', error);
@@ -327,7 +438,7 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
           setMessages((prev) =>
             prev.map((m) =>
               m.id === assistantMsg.id
-                ? { ...m, content: userMessage, isStreaming: false }
+                ? { ...m, content: userMessage, isStreaming: false, isError: true }
                 : m
             )
           );
@@ -372,47 +483,17 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
     if (currentAgentRef.current === agentId) return;
     currentAgentRef.current = agentId;
 
-    // Don't auto-load history if there's already an active conversation
-    if (messagesRef.current.length > 0) return;
-
-    setIsLoadingHistory(true);
-    chatStorage.getSessionsForAgent(agentId)
-      .then((sessions) => {
-        if (sessions.length === 0) {
-          setIsLoadingHistory(false);
-          return;
-        }
-        const latest = sessions[0];
-        return chatStorage.getMessagesForSession(latest.id).then((msgs) => {
-          const chatMessages: ChatMessage[] = msgs.map((m) => ({
-            id: m.id,
-            role: m.role === 'user' ? 'user' : 'assistant',
-            content: m.content,
-            timestamp: new Date(m.timestamp).toISOString(),
-          }));
-          setMessages(chatMessages);
-          setSessionId(latest.id);
-          sessionIdRef.current = latest.id;
-          setIsLoadingHistory(false);
-        });
-      })
-      .catch((err) => {
-        console.error('[AgentChat] Failed to auto-load history:', err);
-        setIsLoadingHistory(false);
-      });
+    // Always start fresh when switching agents — user can explicitly open history via the clock icon.
+    setMessages([]);
+    setSessionId(null);
+    sessionIdRef.current = null;
   }, []);
 
   const openSession = useCallback((sid: string) => {
     setIsLoadingHistory(true);
     chatStorage.getMessagesForSession(sid)
       .then((msgs) => {
-        const chatMessages: ChatMessage[] = msgs.map((m) => ({
-          id: m.id,
-          role: m.role === 'user' ? 'user' : 'assistant',
-          content: m.content,
-          timestamp: new Date(m.timestamp).toISOString(),
-        }));
-        setMessages(chatMessages);
+        setMessages(msgs.map(fromPersisted));
         setSessionId(sid);
         sessionIdRef.current = sid;
         setIsLoadingHistory(false);
@@ -451,24 +532,83 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
 
   const handleAction = useCallback(
     async (messageId: string, decision: ActionDecision, activeFiles: File[], instructions?: string) => {
-      // Find the message to get action info
-      const msg = messages.find((m) => m.id === messageId);
+      // Use ref to avoid stale closure — prevents re-render cascade via actions memo.
+      const msg = messagesRef.current.find((m) => m.id === messageId);
 
       setMessages((prev) =>
         prev.map((m) => (m.id === messageId ? { ...m, actionDecision: decision } : m))
       );
 
+      // Persist decision change to IndexedDB
+      chatStorage.updateMessage(messageId, { actionDecision: decision }).catch(console.error);
+
       if (decision === 'accepted' && msg?.actionType && msg?.actionPayload) {
         try {
-          const results = await executeAgentAction(msg.actionType, msg.actionPayload, activeFiles);
-          if (results.length > 0) {
-            // Dispatch results so the AgentChat component can add them as file versions
+          const { successes, errors } = await executeAgentAction(msg.actionType, msg.actionPayload, activeFiles);
+
+          if (successes.length > 0) {
             window.dispatchEvent(
-              new CustomEvent('agent-action-files', { detail: { results, actionType: msg.actionType } })
+              new CustomEvent('agent-action-files', { detail: { results: successes, actionType: msg.actionType } })
             );
+            // Show success confirmation
+            const successMsg: ChatMessage = {
+              id: generateId(),
+              role: 'assistant',
+              content: successes.length === 1
+                ? `Done — processed **${successes[0].outputFileName}** successfully.`
+                : `Done — processed **${successes.length} file(s)** successfully.`,
+              timestamp: new Date().toISOString(),
+            };
+            setMessages((prev) => [...prev, successMsg]);
+          }
+
+          if (successes.length === 0 && errors.length === 0) {
+            const noFilesMsg: ChatMessage = {
+              id: generateId(),
+              role: 'assistant',
+              content: 'No files were processed. Make sure PDF documents are loaded in the workbench.',
+              timestamp: new Date().toISOString(),
+              isError: true,
+            };
+            setMessages((prev) => [...prev, noFilesMsg]);
+          }
+
+          if (errors.length > 0) {
+            // Show errors as a follow-up message and revert to pending for retry
+            const errorText = errors.length === 1
+              ? `Failed to process: ${errors[0].error}`
+              : `Failed to process ${errors.length} file(s):\n${errors.map((e) => `- ${e.error}`).join('\n')}`;
+            const hasPartialSuccess = successes.length > 0;
+            const prefix = hasPartialSuccess
+              ? `Processed ${successes.length} file(s) successfully, but some failed.\n\n`
+              : '';
+
+            const errorMsg: ChatMessage = {
+              id: generateId(),
+              role: 'assistant',
+              content: `${prefix}${errorText}\n\nYou can retry the action or ask me to try a different approach.`,
+              timestamp: new Date().toISOString(),
+              isError: true,
+            };
+            setMessages((prev) => [...prev, errorMsg]);
+
+            // If no successes at all, revert to pending so user can retry
+            if (successes.length === 0) {
+              setMessages((prev) =>
+                prev.map((m) => (m.id === messageId ? { ...m, actionDecision: 'pending' as ActionDecision } : m))
+              );
+            }
           }
         } catch (err) {
           console.error('[AgentChat] Action execution failed:', err);
+          const errorMsg: ChatMessage = {
+            id: generateId(),
+            role: 'assistant',
+            content: `Action failed: ${err instanceof Error ? err.message : 'Unknown error'}. You can retry or ask me to try a different approach.`,
+            timestamp: new Date().toISOString(),
+            isError: true,
+          };
+          setMessages((prev) => [...prev, errorMsg]);
           // Revert to pending so the user can retry
           setMessages((prev) =>
             prev.map((m) => (m.id === messageId ? { ...m, actionDecision: 'pending' as ActionDecision } : m))
@@ -486,11 +626,17 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
         });
       }
     },
-    [messages]
+    []
   );
 
   const setAutoAccept = useCallback((actionType: string) => {
     autoAcceptTypes.current.add(actionType);
+  }, []);
+
+  const selectSuggestion = useCallback((messageId: string, index: number) => {
+    setMessages((prev) =>
+      prev.map((m) => (m.id === messageId ? { ...m, selectedSuggestion: index } : m))
+    );
   }, []);
 
   const state = useMemo<AgentChatState>(
@@ -502,11 +648,11 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
     () => ({
       sendMessage, cancelStream, clearChat, togglePanel, setPanel,
       toggleNodeExpanded, handleAction, setAutoAccept,
-      setCurrentAgent, openSession, deleteSession,
+      setCurrentAgent, openSession, deleteSession, selectSuggestion,
     }),
     [sendMessage, cancelStream, clearChat, togglePanel, setPanel,
      toggleNodeExpanded, handleAction, setAutoAccept,
-     setCurrentAgent, openSession, deleteSession]
+     setCurrentAgent, openSession, deleteSession, selectSuggestion]
   );
 
   return (

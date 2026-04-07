@@ -2,8 +2,8 @@
  * SimpleMarkdown — lightweight markdown renderer for agent chat responses.
  *
  * Handles: headings (##), bold (**), italic (*), inline code (`),
- * numbered lists, bullet lists, and paragraphs.
- * No external dependencies.
+ * fenced code blocks (```), numbered lists, bullet lists, horizontal rules,
+ * and paragraphs.  No external dependencies.
  */
 
 import React from 'react';
@@ -15,8 +15,8 @@ interface SimpleMarkdownProps {
 
 function parseInline(text: string): React.ReactNode[] {
   const nodes: React.ReactNode[] = [];
-  // Match: **bold**, *italic*, `code`
-  const regex = /(\*\*(.+?)\*\*)|(\*(.+?)\*)|(`(.+?)`)/g;
+  // Match: **bold**, *italic*, `code` — code checked first to avoid * inside backticks
+  const regex = /(`(.+?)`)|((\*\*|__)(.+?)\4)|((\*|_)(.+?)\7)/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
   let key = 0;
@@ -26,11 +26,14 @@ function parseInline(text: string): React.ReactNode[] {
       nodes.push(text.slice(lastIndex, match.index));
     }
     if (match[1]) {
-      nodes.push(<strong key={key++}>{match[2]}</strong>);
+      // Inline code
+      nodes.push(<code key={key++} className="md-inline-code">{match[2]}</code>);
     } else if (match[3]) {
-      nodes.push(<em key={key++}>{match[4]}</em>);
-    } else if (match[5]) {
-      nodes.push(<code key={key++} className="md-inline-code">{match[6]}</code>);
+      // Bold
+      nodes.push(<strong key={key++}>{match[5]}</strong>);
+    } else if (match[6]) {
+      // Italic
+      nodes.push(<em key={key++}>{match[8]}</em>);
     }
     lastIndex = match.index + match[0].length;
   }
@@ -58,16 +61,38 @@ export function SimpleMarkdown({ content, className }: SimpleMarkdownProps) {
       continue;
     }
 
+    // Fenced code block (``` ... ```)
+    if (trimmed.startsWith('```')) {
+      const lang = trimmed.slice(3).trim();
+      const codeLines: string[] = [];
+      i++;
+      while (i < lines.length && !lines[i].trim().startsWith('```')) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      i++; // skip closing ```
+      elements.push(
+        <pre key={key++} className="md-code-block" data-lang={lang || undefined}>
+          <code>{codeLines.join('\n')}</code>
+        </pre>
+      );
+      continue;
+    }
+
+    // Horizontal rule
+    if (/^[-*_]{3,}\s*$/.test(trimmed)) {
+      elements.push(<hr key={key++} className="md-hr" />);
+      i++;
+      continue;
+    }
+
     // Heading
     const headingMatch = trimmed.match(/^(#{1,4})\s+(.+)$/);
     if (headingMatch) {
       const level = headingMatch[1].length;
       const inner = parseInline(headingMatch[2]);
-      const cls = `md-h${level}`;
-      if (level === 1) elements.push(<h1 key={key++} className={cls}>{inner}</h1>);
-      else if (level === 2) elements.push(<h2 key={key++} className={cls}>{inner}</h2>);
-      else if (level === 3) elements.push(<h3 key={key++} className={cls}>{inner}</h3>);
-      else elements.push(<h4 key={key++} className={cls}>{inner}</h4>);
+      const Tag = `h${level}` as keyof JSX.IntrinsicElements;
+      elements.push(<Tag key={key++} className={`md-h${level}`}>{inner}</Tag>);
       i++;
       continue;
     }

@@ -752,3 +752,58 @@ Spring rejects `\r\n` in multipart form field values. The auto-redact action ser
 ### URL namespace differences between Java and Python
 
 Java exposes `/api/v1/ai/chat/stream` (namespaced under `/ai`). Python's router uses `/api/v1/chat/stream` (no `/ai` prefix). The Vite dev proxy rewrites the URL. In production, the Java controller handles the rewrite internally when proxying to Python.
+
+---
+
+## 22. Scalability & Performance Hardening
+
+Recent changes added production-grade protections across the stack:
+
+### Concurrency control (Java)
+
+`AgentChatController` uses a `Semaphore(maxConcurrentStreams)` (default 50, configurable via `stirling.ai.max-concurrent-streams`). If the limit is reached, new requests are rejected immediately. The semaphore is released via `SseEmitter.onCompletion`, `onTimeout`, and `onError` callbacks.
+
+### Input validation (Java + Python)
+
+`ChatRequest` fields are constrained on both sides:
+- `message`: max 10,000 chars (`@Size(max=10_000)` / `Field(max_length=10_000)`)
+- `extractedText`: max 500,000 chars (~500KB)
+- `fileNames`: max 50 items
+- `history`: max 100 items (Python only)
+- Java controller uses `@Valid` to enforce at the HTTP layer.
+
+### EventEmitter backpressure (Python)
+
+The `asyncio.Queue` is bounded (`maxsize=2000`). If the queue fills (slow SSE consumer), the producer drops the oldest event. The consumer has a 300-second timeout — if the producer crashes without calling `done()`, the SSE stream terminates cleanly instead of hanging forever.
+
+### Background task lifecycle (Python)
+
+`asyncio.create_task()` results are stored in a module-level `_background_tasks` set. Without this, Python's event loop holds only a weak reference, and the GC can collect the task mid-execution. Tasks self-remove via `add_done_callback(discard)`.
+
+### Streaming render throttling (Frontend)
+
+`updateStreamingMessage()` is throttled via `requestAnimationFrame`. Without this, every SSE `token` event (~20/sec) triggers a full `setMessages(prev => prev.map(...))` — creating a new array and re-rendering every message component. With rAF, updates coalesce to ~60fps.
+
+### Action context stability (Frontend)
+
+`handleAction` reads messages via `messagesRef.current` instead of the `messages` state closure. This removes `messages` from its dependency array, preventing the `actions` memo from recreating on every token — which would otherwise cause every `useAgentChatActions()` consumer to re-render during streaming.
+
+### Performance instrumentation (Frontend)
+
+`agentStreamService.ts` tracks Time-to-First-Token (TTFT) and token throughput (tok/s), logged at `console.debug` level. Visible in devtools but silent in production.
+
+### Extracted text deduplication (Frontend)
+
+Full PDF text is only sent on the first message of a session (or when files change). Subsequent messages in the same session omit `extractedText` since the backend has the context from conversation history.
+
+### Error handling & retry (Frontend)
+
+`agentActionService.ts` returns `{ successes, errors }` instead of throwing. Each redaction pass retries once on failure. Errors are shown inline in the chat with red styling. If all files fail, the action bar reverts to "pending" for retry.
+
+### IndexedDB persistence of agent trees
+
+Assistant messages are persisted with `agentTree`, `actionType`, `actionPayload`, and `actionDecision`. When loading history, the collapsible agent call tree and action approval state are fully restored.
+
+### Agent isolation per session
+
+Each agent starts with a fresh chat. Switching agents clears messages and session state. Previous sessions are accessible via the history view (clock icon) but never auto-loaded.

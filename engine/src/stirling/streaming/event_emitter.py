@@ -18,9 +18,16 @@ class EventEmitter:
     The ``events()`` async generator yields these for the SSE endpoint to drain.
     """
 
+    # Maximum events buffered before the producer blocks / drops.
+    _MAX_QUEUE_SIZE = 2000
+    # Seconds the consumer waits for the next event before assuming the producer died.
+    _CONSUMER_TIMEOUT_S = 300
+
     def __init__(self, run_id: str) -> None:
         self.run_id = run_id
-        self._queue: asyncio.Queue[dict[str, Any] | object] = asyncio.Queue()
+        self._queue: asyncio.Queue[dict[str, Any] | object] = asyncio.Queue(
+            maxsize=self._MAX_QUEUE_SIZE,
+        )
         self._counter = 0
         self._timers: dict[str, float] = {}
 
@@ -31,7 +38,15 @@ class EventEmitter:
 
     def _put(self, event_type: str, data: dict[str, Any]) -> None:
         data["runId"] = self.run_id
-        self._queue.put_nowait({"event": event_type, "data": data})
+        try:
+            self._queue.put_nowait({"event": event_type, "data": data})
+        except asyncio.QueueFull:
+            # Drop oldest non-sentinel item to make room (backpressure).
+            try:
+                self._queue.get_nowait()
+            except asyncio.QueueEmpty:
+                pass
+            self._queue.put_nowait({"event": event_type, "data": data})
 
     # ------------------------------------------------------------------
     # Public API — called by agents
@@ -88,6 +103,14 @@ class EventEmitter:
             },
         )
 
+    def suggestions(self, agent_id: str, suggestions: list[dict[str, Any]]) -> None:
+        """Emit suggested follow-up prompts the user can click.
+
+        Each suggestion is ``{"label": str, "isOther": bool}``.
+        """
+        if suggestions:
+            self._put("suggestions", {"agentId": agent_id, "suggestions": suggestions})
+
     def error(self, agent_id: str, error_message: str) -> None:
         """Emit an error event."""
         self._put("error", {"agentId": agent_id, "error": error_message})
@@ -104,8 +127,15 @@ class EventEmitter:
     async def events(self):
         """Async generator that yields (event_type, json_data) tuples."""
         while True:
-            item = await self._queue.get()
+            try:
+                item = await asyncio.wait_for(
+                    self._queue.get(), timeout=self._CONSUMER_TIMEOUT_S
+                )
+            except TimeoutError:
+                # Producer likely crashed without calling done().
+                return
             if item is _SENTINEL:
                 return
-            assert isinstance(item, dict)
+            if not isinstance(item, dict):
+                continue
             yield item["event"], json.dumps(item["data"], ensure_ascii=False)

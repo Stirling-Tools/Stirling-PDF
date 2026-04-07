@@ -209,9 +209,9 @@
 }
 
 .agent-chat-quick-chip {
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
-  padding: 0.3125rem 0.625rem;
+  padding: 0.4375rem 0.875rem;
   border-radius: 999px;
   border: 1px solid var(--border-subtle);
   background: var(--bg-surface, #fff);
@@ -243,8 +243,130 @@
 }
 
 .agent-chat-quick-chip--small {
-  font-size: 0.625rem;
-  padding: 0.1875rem 0.5rem;
+  font-size: 0.75rem;
+  padding: 0.3125rem 0.75rem;
+}
+
+/* ── AI-generated suggestion chips (inline, after a message) ── */
+
+.agent-chat-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.25rem;
+}
+
+.agent-chat-suggestion-chip {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 0.4375rem 0.875rem;
+  border-radius: 999px;
+  border: 1px solid var(--mantine-color-blue-3);
+  background: var(--mantine-color-blue-0, #e7f5ff);
+  color: var(--mantine-color-blue-7);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.agent-chat-suggestion-chip:hover {
+  background: var(--mantine-color-blue-1, #d0ebff);
+  border-color: var(--mantine-color-blue-5);
+  color: var(--mantine-color-blue-8);
+}
+
+[data-mantine-color-scheme='dark'] .agent-chat-suggestion-chip {
+  background: rgba(34, 139, 230, 0.12);
+  border-color: var(--mantine-color-blue-5);
+  color: var(--mantine-color-blue-4);
+}
+
+[data-mantine-color-scheme='dark'] .agent-chat-suggestion-chip:hover {
+  background: rgba(34, 139, 230, 0.22);
+}
+
+.agent-chat-suggestion-chip--selected {
+  background: var(--mantine-color-green-1, #d3f9d8);
+  border-color: var(--mantine-color-green-5);
+  color: var(--mantine-color-green-8);
+  cursor: default;
+}
+
+.agent-chat-suggestion-chip--selected:hover {
+  background: var(--mantine-color-green-1, #d3f9d8);
+  border-color: var(--mantine-color-green-5);
+  color: var(--mantine-color-green-8);
+}
+
+[data-mantine-color-scheme='dark'] .agent-chat-suggestion-chip--selected {
+  background: rgba(64, 192, 87, 0.18);
+  border-color: var(--mantine-color-green-5);
+  color: var(--mantine-color-green-4);
+}
+
+.agent-chat-suggestion-chip--disabled {
+  opacity: 0.4;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* ── Inline "other" input (appears below chips) ── */
+
+.agent-chat-other-input {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.agent-chat-other-input-field {
+  flex: 1;
+  font-size: 0.8125rem;
+  padding: 0.4375rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--mantine-color-blue-3);
+  background: var(--bg-surface, #fff);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.12s ease;
+}
+
+.agent-chat-other-input-field:focus {
+  border-color: var(--mantine-color-blue-5);
+  box-shadow: 0 0 0 2px rgba(34, 139, 230, 0.12);
+}
+
+.agent-chat-other-input-field::placeholder {
+  color: var(--text-tertiary);
+}
+
+[data-mantine-color-scheme='dark'] .agent-chat-other-input-field {
+  background: var(--bg-toolbar);
+  border-color: var(--mantine-color-blue-5);
+}
+
+.agent-chat-other-send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  border: none;
+  background: var(--mantine-color-blue-6);
+  color: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.12s ease;
+}
+
+.agent-chat-other-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.agent-chat-other-send:hover:not(:disabled) {
+  background: var(--mantine-color-blue-7);
 }
 
 .agent-chat-quick-bar {
@@ -291,6 +413,20 @@
 .agent-chat-msg--assistant {
   align-items: stretch;
   gap: 0.5rem;
+}
+
+/* ── Error messages ── */
+
+.agent-chat-msg--error {
+  background: color-mix(in srgb, var(--mantine-color-red-1) 40%, transparent);
+  border: 1px solid var(--mantine-color-red-3);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+.agent-chat-msg--error .agent-chat-response {
+  color: var(--mantine-color-red-8);
+  font-size: 0.8125rem;
 }
 
 /* ─── Agent call rows (flat accordion) ─────────────────────────────── */
@@ -585,6 +721,35 @@
 
 [data-mantine-color-scheme='dark'] .md-inline-code {
   background: rgba(255, 255, 255, 0.08);
+}
+
+.md-code-block {
+  background: var(--mantine-color-gray-0, #f8f9fa);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  margin: 0.375rem 0;
+  overflow-x: auto;
+  font-family: var(--mantine-font-family-monospace, monospace);
+  font-size: 0.8em;
+  line-height: 1.5;
+  white-space: pre;
+}
+
+[data-mantine-color-scheme='dark'] .md-code-block {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.md-code-block code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+.md-hr {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 0.5rem 0;
 }
 
 /* ─── Action approval bar ───────────────────────────────────────────── */

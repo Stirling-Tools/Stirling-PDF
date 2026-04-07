@@ -19,6 +19,8 @@ export interface StreamOptions {
   fileNames?: string[];
   extractedText?: string;
   history?: ChatHistoryItem[];
+  /** If set, skip orchestrator routing and delegate directly to this agent. */
+  agentId?: string;
   onEvent: (event: ChatEvent) => void;
   onError: (error: Error) => void;
   onComplete: () => void;
@@ -44,6 +46,25 @@ function getAuthHeaders(): Record<string, string> {
   return {};
 }
 
+// ---------------------------------------------------------------------------
+// Perf metrics (TTFT, throughput) — logged at debug level
+// ---------------------------------------------------------------------------
+
+interface PerfTracker {
+  streamStart: number;
+  firstTokenAt: number | null;
+  tokenCount: number;
+}
+
+function perfLog(perf: PerfTracker, label: string, extra?: Record<string, unknown>) {
+  const elapsed = performance.now() - perf.streamStart;
+  const parts = [`[Agent:Perf] ${label}`, `${elapsed.toFixed(1)}ms`];
+  if (extra) {
+    for (const [k, v] of Object.entries(extra)) parts.push(`${k}=${v}`);
+  }
+  console.debug(parts.join(' | '));
+}
+
 /**
  * Start a streaming chat session. Returns an AbortController for cancellation.
  */
@@ -59,6 +80,7 @@ export function startAgentStream(options: StreamOptions): AbortController {
     fileNames: options.fileNames ?? [],
     extractedText: options.extractedText ?? null,
     history: options.history ?? [],
+    agentId: options.agentId ?? null,
   });
 
   fetch(url, {
@@ -101,6 +123,7 @@ async function readSSEStream(
   let buffer = '';
   let currentEvent = 'message';
   let currentData = '';
+  const perf: PerfTracker = { streamStart: performance.now(), firstTokenAt: null, tokenCount: 0 };
 
   try {
     while (true) {
@@ -136,7 +159,22 @@ async function readSSEStream(
               actionType: parsed.actionType,
               actionPayload: parsed.actionPayload,
               error: parsed.error,
+              suggestions: parsed.suggestions,
             };
+            // Perf instrumentation
+            if (event.eventType === 'token') {
+              perf.tokenCount++;
+              if (!perf.firstTokenAt) {
+                perf.firstTokenAt = performance.now();
+                perfLog(perf, 'First token (TTFT)');
+              }
+            } else if (event.eventType === 'done') {
+              const tokSec = perf.firstTokenAt
+                ? ((perf.tokenCount / (performance.now() - perf.firstTokenAt)) * 1000).toFixed(1)
+                : 'N/A';
+              perfLog(perf, 'Stream complete', { tokens: perf.tokenCount, 'tok/s': tokSec });
+            }
+
             options.onEvent(event);
           } catch {
             console.warn('[AgentStream] Failed to parse SSE data:', currentData);

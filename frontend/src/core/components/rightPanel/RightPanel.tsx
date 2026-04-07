@@ -3,7 +3,7 @@ import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import { useTranslation } from 'react-i18next';
 import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import { useAgentChatState, useAgentChatActions } from '@app/contexts/AgentChatContext';
+import { useAgentChatState } from '@app/contexts/AgentChatContext';
 import { ResizeHandle } from '@app/components/shared/ResizeHandle';
 import { ToolId } from '@app/types/toolId';
 import { filterToolRegistryByQuery } from '@app/utils/toolSearch';
@@ -279,7 +279,6 @@ type PanelView = 'default' | 'allTools' | 'allAgents' | 'agentChat';
 
 export default function RightPanel() {
   const { selectedToolKey, leftPanelView, handleBackToTools } = useToolWorkflow();
-  const { clearChat } = useAgentChatActions();
   const [view, setView] = useState<PanelView>('default');
   const [activeAgentDef, setActiveAgentDef] = useState<AgentDefinition | null>(null);
   const [width, setWidth] = useState(280);
@@ -292,11 +291,10 @@ export default function RightPanel() {
 
   const handleOpenAgent = useCallback(
     (agent: AgentDefinition) => {
-      clearChat();
       setActiveAgentDef(agent);
       setView('agentChat');
     },
-    [clearChat]
+    []
   );
 
   const handleBackFromChat = useCallback(() => {
