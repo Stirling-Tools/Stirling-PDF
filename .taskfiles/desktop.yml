@@ -1,37 +1,113 @@
 version: '3'
 
+vars:
+  JLINK_MODULES: "java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
+
 tasks:
   dev:
     desc: "Start Tauri desktop dev mode"
     cmds:
+      - task: jlink:ensure
       - npm run tauri-dev
 
   build:
     desc: "Build Tauri desktop app (production, all platforms)"
     cmds:
+      - task: jlink:clean
+      - task: jlink:jar
+      - task: jlink:runtime
+      - task: jlink:test
       - npm run tauri-build
 
   build:dev:
     desc: "Build Tauri desktop app (dev, no bundling)"
     cmds:
+      - task: jlink:ensure
       - npm run tauri-build-dev
 
   build:dev:mac:
     desc: "Build Tauri desktop .app bundle (macOS)"
     cmds:
+      - task: jlink:ensure
       - npm run tauri-build-dev-mac
 
   build:dev:windows:
     desc: "Build Tauri desktop NSIS installer (Windows)"
     cmds:
+      - task: jlink:ensure
       - npm run tauri-build-dev-windows
 
   build:dev:linux:
     desc: "Build Tauri desktop AppImage (Linux)"
     cmds:
+      - task: jlink:ensure
       - npm run tauri-build-dev-linux
 
   clean:
     desc: "Clean Tauri/Cargo build artifacts"
     cmds:
-      - npm run tauri-clean
+      - task: jlink:clean
+      - cd src-tauri && cargo clean
+      - rm -rf dist build
+
+  # ============================================================
+  # JLink — Build bundled Java runtime for Tauri
+  # ============================================================
+
+  jlink:
+    desc: "Build backend JAR and create JLink runtime for Tauri"
+    cmds:
+      - task: jlink:jar
+      - task: jlink:runtime
+      - task: jlink:test
+
+  jlink:ensure:
+    desc: "Ensure JLink runtime exists (skip if already built)"
+    status:
+      - test -d src-tauri/runtime/jre
+      - test -f src-tauri/libs/stirling-pdf-*.jar
+    cmds:
+      - task: jlink
+
+  jlink:jar:
+    desc: "Build backend JAR for Tauri bundling"
+    dir: ..
+    deps:
+      - :check:java
+    env:
+      DISABLE_ADDITIONAL_FEATURES: "true"
+    vars:
+      GRADLE: '{{if eq OS "windows"}}gradlew.bat{{else}}./gradlew{{end}}'
+    cmds:
+      - '{{.GRADLE}} bootJar --no-daemon'
+      - mkdir -p frontend/src-tauri/libs
+      - cp app/core/build/libs/stirling-pdf-*.jar frontend/src-tauri/libs/
+
+  jlink:runtime:
+    desc: "Create custom JRE with jlink"
+    deps:
+      - :check:jlink
+    cmds:
+      - rm -rf src-tauri/runtime/jre
+      - mkdir -p src-tauri/runtime
+      - >-
+        jlink
+        --add-modules {{.JLINK_MODULES}}
+        --strip-debug
+        --compress=2
+        --no-header-files
+        --no-man-pages
+        --output src-tauri/runtime/jre
+
+  jlink:test:
+    desc: "Test the bundled JRE"
+    preconditions:
+      - sh: test -d src-tauri/runtime/jre
+        msg: "JRE not found. Run 'task desktop:jlink:runtime' first."
+    cmds:
+      - src-tauri/runtime/jre/bin/java --version
+
+  jlink:clean:
+    desc: "Remove JLink runtime and bundled JARs"
+    cmds:
+      - rm -rf src-tauri/libs src-tauri/runtime

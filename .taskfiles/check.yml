@@ -13,13 +13,13 @@ tasks:
   java:
     desc: "Check Java 21+ is available"
     preconditions:
-      - sh: java -version 2>&1 | grep -qE 'version "(2[1-9]|[3-9][0-9])'
+      - sh: java -version
         msg: "Java 21+ is required. Install JDK 21 or later."
 
   node:
     desc: "Check Node.js 18+ is available"
     preconditions:
-      - sh: node --version | grep -qE '^v(1[89]|[2-9][0-9])\.'
+      - sh: node --version
         msg: "Node.js 18+ is required. Install from https://nodejs.org/"
 
   python:
@@ -45,3 +45,9 @@ tasks:
     preconditions:
       - sh: command -v cargo
         msg: "Rust is required for Tauri desktop builds. Install from https://rustup.rs/"
+
+  jlink:
+    desc: "Check jlink is available (JDK required, not just JRE)"
+    preconditions:
+      - sh: command -v jlink
+        msg: "jlink is required. Install a full JDK (not just JRE)."
