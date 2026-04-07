@@ -540,7 +540,6 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
-    { name = "opentelemetry-sdk" },
     { name = "posthog" },
     { name = "pydantic" },
     { name = "pydantic-ai" },
@@ -559,7 +558,6 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.116.0" },
-    { name = "opentelemetry-sdk", specifier = ">=1.39.0" },
     { name = "posthog", specifier = ">=3.0.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pydantic-ai", specifier = ">=1.67.0" },

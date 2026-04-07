@@ -4,8 +4,6 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import Depends, FastAPI
-from pydantic_ai import Agent
-from pydantic_ai.models.instrumented import InstrumentationSettings
 
 from stirling.agents import ExecutionPlanningAgent, OrchestratorAgent, PdfEditAgent, PdfQuestionAgent, UserSpecAgent
 from stirling.api.routes import (
@@ -17,7 +15,8 @@ from stirling.api.routes import (
 )
 from stirling.config import AppSettings, load_settings
 from stirling.contracts import HealthResponse
-from stirling.services import build_runtime, setup_posthog_tracking
+from stirling.services import build_runtime, shutdown_posthog_client
+from stirling.services.tracking import build_posthog_client
 
 
 def _load_startup_settings(fast_api: FastAPI) -> AppSettings:
@@ -31,7 +30,8 @@ def _load_startup_settings(fast_api: FastAPI) -> AppSettings:
 async def lifespan(fast_api: FastAPI):
     # Load env vars on startup so we can immediately crash if required env vars aren't set
     settings = _load_startup_settings(fast_api)
-    runtime = build_runtime(settings)
+    ph_client = build_posthog_client(settings)
+    runtime = build_runtime(settings, ph_client)
     fast_api.state.settings = settings
     fast_api.state.runtime = runtime
     fast_api.state.orchestrator_agent = OrchestratorAgent(runtime)
@@ -39,12 +39,8 @@ async def lifespan(fast_api: FastAPI):
     fast_api.state.pdf_question_agent = PdfQuestionAgent(runtime)
     fast_api.state.user_spec_agent = UserSpecAgent(runtime)
     fast_api.state.execution_planning_agent = ExecutionPlanningAgent(runtime)
-    tracer_provider = setup_posthog_tracking(settings)
-    if tracer_provider:
-        Agent.instrument_all(InstrumentationSettings(tracer_provider=tracer_provider))
     yield
-    if tracer_provider:
-        tracer_provider.shutdown()
+    shutdown_posthog_client(ph_client)
 
 
 app = FastAPI(title="Stirling AI Engine", lifespan=lifespan, version="0.1.0")
