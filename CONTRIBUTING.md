@@ -15,6 +15,20 @@ Before you start working on an issue, please comment on (or create) the issue an
 Once you have been assigned an issue, you can start working on it. When you are ready to submit your changes, open a pull request.
 For a detailed pull request tutorial, see [this guide](https://www.digitalocean.com/community/tutorials/how-to-create-a-pull-request-on-github).
 
+## Development Quick Start
+
+This project uses [Task](https://taskfile.dev/) as a unified command runner. After cloning:
+
+1. Install the `task` CLI: https://taskfile.dev/installation/
+2. Run `task check:all` to verify your dev tools are installed
+3. Run `task setup` to install all dependencies
+4. Run `task dev:all` to start all services (backend, frontend, engine)
+5. Run `task check` before submitting a PR (lint + typecheck + test)
+
+Run `task --list` to see all available commands.
+
+## Pull Request Guidelines
+
 Please make sure your Pull Request adheres to the following guidelines:
 
 - Use the PR template provided.
@@ -39,9 +53,10 @@ If, at any point in time, you have a question, please feel free to ask in the sa
 
 ## Developer Documentation
 
-For technical guides, setup instructions, and development resources, please see our [Developer Documentation](devGuide/) which includes:
+For technical guides, setup instructions, and development resources:
 
-- [Developer Guide](devGuide/DeveloperGuide.md) - Main setup and architecture guide
+- [Developer Guide](DeveloperGuide.md) - Main setup and architecture guide
+- [Taskfile.yml](Taskfile.yml) - Unified task runner for all build/dev/test/lint commands
 - [Exception Handling Guide](devGuide/EXCEPTION_HANDLING_GUIDE.md) - Error handling patterns and i18n
 - [Translation Guide](devGuide/HowToAddNewLanguage.md) - Adding new languages
 - And more in the [devGuide folder](devGuide/)
