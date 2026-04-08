@@ -28,7 +28,7 @@ export function useViewerRightRailButtons(
   const { t, i18n } = useTranslation();
   const viewer = useViewer();
   const { isThumbnailSidebarVisible, isBookmarkSidebarVisible, isAttachmentSidebarVisible, isLayerSidebarVisible, hasLayers, isCommentsSidebarVisible, toggleCommentsSidebar, isSearchInterfaceVisible, registerImmediatePanUpdate } = viewer;
-  const [isPanning, setIsPanning] = useState<boolean>(() => viewer.getPanState()?.isPanning ?? false);
+  const [isPanning, setIsPanning] = useState<boolean>(false);
   const { sidebarRefs } = useSidebarContext();
   const { position: tooltipPosition } = useRightRailTooltipSide(sidebarRefs, 12);
   const { handleToolSelect, handleToolSelectForced, handleBackToTools } = useToolWorkflow();
@@ -160,7 +160,6 @@ export function useViewerRightRailButtons(
         disabled: !isPanning && pendingCount > 0 && redactionActiveType !== null,
         onClick: () => {
           viewer.panActions.togglePan();
-          setIsPanning(prev => !prev);
         },
       },
       {
@@ -174,9 +173,8 @@ export function useViewerRightRailButtons(
         onClick: () => {
           const next = !isRulerActive;
           setIsRulerActive?.(next);
-          if (next && viewer.getPanState()?.isPanning) {
-            viewer.panActions.togglePan();
-            setIsPanning(false);
+          if (next && isPanning) {
+            viewer.panActions.disablePan();
           }
         },
       },
