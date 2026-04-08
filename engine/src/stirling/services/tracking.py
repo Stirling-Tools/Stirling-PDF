@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import json
-import uuid
+from collections import OrderedDict
 from collections.abc import Mapping
+from contextvars import ContextVar
 from typing import Any
 
 from opentelemetry.context import Context
@@ -11,6 +12,10 @@ from opentelemetry.trace import Span
 from posthog.client import Client as PostHogClient
 
 from stirling.config import AppSettings
+
+# Per-request user ID, set by middleware from the X-User-Id header.
+# When not set, PostHog generates a random ID and marks the event as personless.
+current_user_id: ContextVar[str | None] = ContextVar("current_user_id", default=None)
 
 # Pydantic AI OTel span attributes (gen_ai semantic conventions)
 _OTEL_OPERATION_NAME = "gen_ai.operation.name"
@@ -26,6 +31,22 @@ _OTEL_REQUEST_MAX_TOKENS = "gen_ai.request.max_tokens"
 _OTEL_TOOL_DEFINITIONS = "gen_ai.tool.definitions"
 _OTEL_SERVER_ADDRESS = "server.address"
 _OTEL_SERVER_PORT = "server.port"
+
+
+class LRUSet:
+    """A set with a maximum size that evicts the oldest entries first."""
+
+    def __init__(self, max_size: int) -> None:
+        self._max_size = max_size
+        self._data: OrderedDict[str, None] = OrderedDict()
+
+    def __contains__(self, key: str) -> bool:
+        return key in self._data
+
+    def add(self, key: str) -> None:
+        self._data[key] = None
+        if len(self._data) > self._max_size:
+            self._data.popitem(last=False)
 
 
 def _parse_json_attr(attrs: Mapping[str, Any], key: str) -> Any | None:
@@ -82,10 +103,9 @@ def _extract_user_message(attrs: Mapping[str, Any]) -> str:
 class PostHogSpanProcessor(SpanProcessor):
     """Translates Pydantic AI OpenTelemetry spans into PostHog $ai_generation events."""
 
-    def __init__(self, client: PostHogClient, distinct_id: str) -> None:
+    def __init__(self, client: PostHogClient) -> None:
         self._client = client
-        self._distinct_id = distinct_id
-        self._seen_traces: set[str] = set()
+        self._seen_traces = LRUSet(max_size=10_000)
 
     def on_start(self, span: Span, parent_context: Context | None = None) -> None:
         pass
@@ -98,7 +118,7 @@ class PostHogSpanProcessor(SpanProcessor):
         properties = self._build_generation_properties(span, attrs)
         self._maybe_emit_trace_event(span, attrs, properties)
         self._client.capture(
-            distinct_id=self._distinct_id,
+            distinct_id=current_user_id.get(),
             event="$ai_generation",
             properties=properties,
         )
@@ -144,7 +164,7 @@ class PostHogSpanProcessor(SpanProcessor):
         if span.start_time and span.end_time:
             trace_properties["$ai_latency"] = (span.end_time - span.start_time) / 1e9
         self._client.capture(
-            distinct_id=self._distinct_id,
+            distinct_id=current_user_id.get(),
             event="$ai_trace",
             properties=trace_properties,
         )
@@ -205,8 +225,7 @@ def setup_posthog_tracking(settings: AppSettings) -> TracerProvider | None:
         return None
 
     client = PostHogClient(project_api_key=settings.posthog_api_key, host=settings.posthog_host)
-    distinct_id = str(uuid.uuid4())
-    processor = PostHogSpanProcessor(client, distinct_id)
+    processor = PostHogSpanProcessor(client)
 
     provider = TracerProvider()
     provider.add_span_processor(processor)

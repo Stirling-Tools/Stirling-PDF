@@ -8,6 +8,7 @@ from pydantic_ai import Agent
 from pydantic_ai.models.instrumented import InstrumentationSettings
 
 from stirling.agents import ExecutionPlanningAgent, OrchestratorAgent, PdfEditAgent, PdfQuestionAgent, UserSpecAgent
+from stirling.api.middleware import UserIdMiddleware
 from stirling.api.routes import (
     agent_draft_router,
     execution_router,
@@ -48,6 +49,7 @@ async def lifespan(fast_api: FastAPI):
 
 
 app = FastAPI(title="Stirling AI Engine", lifespan=lifespan, version="0.1.0")
+app.add_middleware(UserIdMiddleware)
 app.include_router(orchestrator_router)
 app.include_router(pdf_edit_router)
 app.include_router(pdf_question_router)
