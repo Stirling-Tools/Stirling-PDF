@@ -77,6 +77,7 @@ tasks:
       - task: jlink
 
   jlink:jar:
+    internal: true
     desc: "Build backend JAR for Tauri bundling"
     dir: ..
     env:
@@ -89,6 +90,7 @@ tasks:
       - cp app/core/build/libs/stirling-pdf-*.jar frontend/src-tauri/libs/
 
   jlink:runtime:
+    internal: true
     desc: "Create custom JRE with jlink"
     cmds:
       - rm -rf src-tauri/runtime/jre
@@ -103,6 +105,7 @@ tasks:
         --output src-tauri/runtime/jre
 
   jlink:test:
+    internal: true
     desc: "Test the bundled JRE"
     preconditions:
       - sh: test -d src-tauri/runtime/jre

@@ -89,12 +89,16 @@ jobs:
           NPM_CONFIG_IGNORE_SCRIPTS: "true"
         run: npm ci --ignore-scripts --audit=false --fund=false
 
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: '3.x'
+
       - name: Generate frontend license report (internal PR)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
-        working-directory: frontend
         env:
           PR_IS_FORK: "false"
-        run: npm run generate-licenses
+        run: task frontend:licenses:generate
 
       - name: Generate frontend license report (fork PRs, pinned)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true
@@ -341,15 +345,14 @@ jobs:
         with:
           gradle-version: 9.3.1
 
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: '3.x'
+
       - name: Check licenses and generate report
         id: license-check
-        run: |
-          # NOTE: --no-parallel is intentional here. Running the license-checking tasks in parallel has
-          # previously caused intermittent concurrency issues in CI (e.g. flaky failures in the license
-          # plugin/Gradle when multiple projects are evaluated concurrently). Disabling parallelism trades
-          # some build speed for more reliable license reports. If the underlying issues are resolved in
-          # future Gradle or plugin versions, this flag can be reconsidered.
-          ./gradlew checkLicense generateLicenseReport --no-parallel || echo "LICENSE_CHECK_FAILED=true" >> $GITHUB_ENV
+        run: task backend:licenses:generate || echo "LICENSE_CHECK_FAILED=true" >> $GITHUB_ENV
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}

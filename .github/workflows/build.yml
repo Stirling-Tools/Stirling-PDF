@@ -84,8 +84,13 @@ jobs:
           gradle-version: 9.3.1
           cache-disabled: true
 
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: '3.x'
+
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
-        run: ./gradlew build -PnoSpotless
+        run: task backend:build:ci
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
@@ -169,8 +174,13 @@ jobs:
           gradle-version: 9.3.1
           cache-disabled: true
 
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: '3.x'
+
       - name: Generate OpenAPI documentation
-        run: ./gradlew :stirling-pdf:generateOpenApiDocs
+        run: task backend:swagger
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
@@ -200,16 +210,21 @@ jobs:
           node-version: "22"
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: '3.x'
+
       - name: Install frontend dependencies
-        run: cd frontend && npm ci
+        run: task frontend:install
       - name: Type-check frontend
-        run: cd frontend && npm run prep && npm run typecheck:all
+        run: task frontend:prep && task frontend:typecheck:all
       - name: Lint frontend
-        run: cd frontend && npm run lint
+        run: task frontend:lint
       - name: Build frontend
-        run: cd frontend && npm run build
+        run: task frontend:build
       - name: Run frontend tests
-        run: cd frontend && npm run test -- --run
+        run: task frontend:test
       - name: Upload frontend build artifacts
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
@@ -234,14 +249,17 @@ jobs:
           node-version: "22"
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
-      - name: Install frontend dependencies
-        run: cd frontend && npm ci
-      - name: Generate icons
-        run: cd frontend && node scripts/generate-icons.js
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: '3.x'
+
+      - name: Install and prep frontend
+        run: task frontend:prep
       - name: Install Playwright (chromium only)
-        run: cd frontend && npx playwright install chromium --with-deps
+        run: npm run playwright --prefix frontend -- install chromium --with-deps
       - name: Run E2E tests (chromium)
-        run: cd frontend && npx playwright test --project=chromium
+        run: npm run playwright --prefix frontend -- test --project=chromium
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
@@ -284,13 +302,13 @@ jobs:
           gradle-version: 9.3.1
           cache-disabled: true
 
-      - name: check the licenses for compatibility
-        # NOTE: --no-parallel is intentional here. Running the checkLicense task in parallel with other
-        # Gradle tasks has been observed to cause intermittent failures with the dependency license
-        # checking plugin on this Gradle version. Disabling parallel execution trades some build speed
-        # for more reliable, deterministic license checks. If upgrading Gradle or the plugin, consider
-        # re-evaluating whether this flag is still required before removing it.
-        run: ./gradlew checkLicense --no-parallel
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: '3.x'
+
+      - name: Check licenses for compatibility
+        run: task backend:licenses:check
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
@@ -485,8 +503,13 @@ jobs:
           gradle-version: 9.3.1
           cache-disabled: true
 
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: '3.x'
+
       - name: Build application
-        run: ./gradlew build
+        run: task backend:build
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}

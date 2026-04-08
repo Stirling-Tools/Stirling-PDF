@@ -19,6 +19,12 @@ tasks:
     cmds:
       - '{{.GRADLE}} clean build -x test'
 
+  build:ci:
+    internal: true
+    desc: "Build without Spotless (CI — formatting checked separately)"
+    cmds:
+      - '{{.GRADLE}} build -PnoSpotless'
+
   test:
     desc: "Run JUnit tests"
     cmds:
@@ -42,7 +48,7 @@ tasks:
   swagger:
     desc: "Generate OpenAPI docs"
     cmds:
-      - '{{.GRADLE}} generateOpenApiDocs'
+      - '{{.GRADLE}} :stirling-pdf:generateOpenApiDocs'
 
   check:
     desc: "Run full backend checks (format-check + test + coverage)"
@@ -50,6 +56,23 @@ tasks:
       - task: format:check
       - task: test
       - task: coverage
+
+  version:
+    internal: true
+    desc: "Print project version"
+    silent: true
+    cmds:
+      - '{{.GRADLE}} printVersion --quiet | tail -1'
+
+  licenses:check:
+    desc: "Check dependency licenses"
+    cmds:
+      - '{{.GRADLE}} checkLicense --no-parallel'
+
+  licenses:generate:
+    desc: "Check and generate dependency license report"
+    cmds:
+      - '{{.GRADLE}} checkLicense generateLicenseReport --no-parallel'
 
   clean:
     desc: "Gradle clean"

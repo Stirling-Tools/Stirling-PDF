@@ -2,6 +2,7 @@ version: '3'
 
 tasks:
   install:
+    internal: true
     desc: "Install Python dependencies via uv"
     cmds:
       - uv python install 3.13.8

@@ -63,12 +63,15 @@ jobs:
         with:
           gradle-version: 9.3.1
 
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: '3.x'
+
       - name: Get version number
         id: versionNumber
         run: |
-          echo "Running gradlew printVersion..."
-          ./gradlew printVersion --quiet
-          VERSION=$(./gradlew printVersion --quiet | tail -1)
+          VERSION=$(task backend:version)
           echo "Extracted version: $VERSION"
           echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
         env:
@@ -295,8 +298,7 @@ jobs:
           DISABLE_ADDITIONAL_FEATURES: true
 
       - name: Install frontend dependencies
-        working-directory: ./frontend
-        run: npm ci
+        run: task frontend:install
 
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
