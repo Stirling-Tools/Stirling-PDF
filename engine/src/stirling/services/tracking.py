@@ -28,6 +28,57 @@ _OTEL_SERVER_ADDRESS = "server.address"
 _OTEL_SERVER_PORT = "server.port"
 
 
+def _parse_json_attr(attrs: Mapping[str, Any], key: str) -> Any | None:
+    """Parse a JSON string span attribute, returning None on failure."""
+    raw = attrs.get(key)
+    if raw is None:
+        return None
+    try:
+        return json.loads(str(raw))
+    except (json.JSONDecodeError, TypeError):
+        return None
+
+
+def _transform_output_choices(choices: list[Any]) -> list[Any]:
+    """Transform Pydantic AI's parts-based output format to PostHog-compatible format.
+
+    Pydantic AI emits: ``[{"role": "assistant", "parts": [{"type": "tool_call", "name": "..."}]}]``
+    PostHog expects: ``[{"role": "assistant", "tool_calls": [{"type": "function", "function": {"name": "..."}}]}]``
+    """
+    for choice in choices:
+        if not isinstance(choice, dict) or "parts" not in choice:
+            continue
+        tool_calls = []
+        for part in choice.get("parts", []):
+            if isinstance(part, dict) and part.get("type") == "tool_call":
+                tool_calls.append(
+                    {
+                        "type": "function",
+                        "id": part.get("id", ""),
+                        "function": {"name": part.get("name", "")},
+                    }
+                )
+        if tool_calls:
+            choice["tool_calls"] = tool_calls
+        choice["content"] = choice.pop("parts")
+    return choices
+
+
+def _extract_user_message(attrs: Mapping[str, Any]) -> str:
+    """Extract the last user message text from the input messages span attribute."""
+    messages = _parse_json_attr(attrs, _OTEL_INPUT_MESSAGES)
+    if not isinstance(messages, list):
+        return ""
+    for msg in reversed(messages):
+        if not isinstance(msg, dict):
+            continue
+        if msg.get("role") == "user":
+            for part in msg.get("parts", []):
+                if isinstance(part, dict) and part.get("type") == "text":
+                    return str(part.get("content", ""))
+    return ""
+
+
 class PostHogSpanProcessor(SpanProcessor):
     """Translates Pydantic AI OpenTelemetry spans into PostHog $ai_generation events."""
 
@@ -41,10 +92,19 @@ class PostHogSpanProcessor(SpanProcessor):
 
     def on_end(self, span: ReadableSpan) -> None:
         attrs = dict(span.attributes or {})
-
         if attrs.get(_OTEL_OPERATION_NAME) != "chat":
             return
 
+        properties = self._build_generation_properties(span, attrs)
+        self._maybe_emit_trace_event(span, attrs, properties)
+        self._client.capture(
+            distinct_id=self._distinct_id,
+            event="$ai_generation",
+            properties=properties,
+        )
+
+    def _build_generation_properties(self, span: ReadableSpan, attrs: Mapping[str, Any]) -> dict[str, object]:
+        """Build the $ai_generation event properties from span data."""
         properties: dict[str, object] = {
             "$ai_provider": attrs.get(_OTEL_SYSTEM, ""),
             "$ai_model": attrs.get(_OTEL_RESPONSE_MODEL) or attrs.get(_OTEL_REQUEST_MODEL, ""),
@@ -55,25 +115,54 @@ class PostHogSpanProcessor(SpanProcessor):
         if span.context:
             properties["$ai_trace_id"] = format(span.context.trace_id, "032x")
             properties["$ai_span_id"] = format(span.context.span_id, "016x")
-
         if span.parent and span.parent.span_id:
             properties["$ai_parent_id"] = format(span.parent.span_id, "016x")
-
         if span.start_time and span.end_time:
             properties["$ai_latency"] = (span.end_time - span.start_time) / 1e9
 
-        if _OTEL_INPUT_MESSAGES in attrs:
-            try:
-                properties["$ai_input"] = json.loads(str(attrs[_OTEL_INPUT_MESSAGES]))
-            except (json.JSONDecodeError, TypeError):
-                properties["$ai_input"] = attrs[_OTEL_INPUT_MESSAGES]
-        if _OTEL_OUTPUT_MESSAGES in attrs:
-            try:
-                output = json.loads(str(attrs[_OTEL_OUTPUT_MESSAGES]))
-                properties["$ai_output_choices"] = self._transform_output_choices(output)
-            except (json.JSONDecodeError, TypeError):
-                properties["$ai_output_choices"] = attrs[_OTEL_OUTPUT_MESSAGES]
+        self._add_message_properties(properties, attrs)
+        self._add_model_parameters(properties, attrs)
+        self._add_tool_definitions(properties, attrs)
+        self._add_base_url(properties, attrs)
 
+        return properties
+
+    def _maybe_emit_trace_event(
+        self, span: ReadableSpan, attrs: Mapping[str, Any], properties: dict[str, object]
+    ) -> None:
+        """Emit an $ai_trace event for the first span seen per trace ID."""
+        trace_id = str(properties.get("$ai_trace_id", ""))
+        if not trace_id or trace_id in self._seen_traces:
+            return
+
+        self._seen_traces.add(trace_id)
+        trace_properties: dict[str, object] = {
+            "$ai_trace_id": trace_id,
+            "$ai_trace_name": _extract_user_message(attrs),
+            "$ai_provider": attrs.get(_OTEL_SYSTEM, ""),
+        }
+        if span.start_time and span.end_time:
+            trace_properties["$ai_latency"] = (span.end_time - span.start_time) / 1e9
+        self._client.capture(
+            distinct_id=self._distinct_id,
+            event="$ai_trace",
+            properties=trace_properties,
+        )
+
+    @staticmethod
+    def _add_message_properties(properties: dict[str, object], attrs: Mapping[str, Any]) -> None:
+        input_messages = _parse_json_attr(attrs, _OTEL_INPUT_MESSAGES)
+        if input_messages is not None:
+            properties["$ai_input"] = input_messages
+
+        output_messages = _parse_json_attr(attrs, _OTEL_OUTPUT_MESSAGES)
+        if isinstance(output_messages, list):
+            properties["$ai_output_choices"] = _transform_output_choices(output_messages)
+        elif output_messages is not None:
+            properties["$ai_output_choices"] = output_messages
+
+    @staticmethod
+    def _add_model_parameters(properties: dict[str, object], attrs: Mapping[str, Any]) -> None:
         model_parameters: dict[str, object] = {}
         if _OTEL_REQUEST_TEMPERATURE in attrs:
             model_parameters["temperature"] = attrs[_OTEL_REQUEST_TEMPERATURE]
@@ -82,83 +171,21 @@ class PostHogSpanProcessor(SpanProcessor):
         if model_parameters:
             properties["$ai_model_parameters"] = model_parameters
 
-        if _OTEL_TOOL_DEFINITIONS in attrs:
-            try:
-                properties["$ai_tools"] = json.loads(str(attrs[_OTEL_TOOL_DEFINITIONS]))
-            except (json.JSONDecodeError, TypeError):
-                pass
+    @staticmethod
+    def _add_tool_definitions(properties: dict[str, object], attrs: Mapping[str, Any]) -> None:
+        tools = _parse_json_attr(attrs, _OTEL_TOOL_DEFINITIONS)
+        if tools is not None:
+            properties["$ai_tools"] = tools
 
-        base_url_parts = []
+    @staticmethod
+    def _add_base_url(properties: dict[str, object], attrs: Mapping[str, Any]) -> None:
+        parts = []
         if host := attrs.get(_OTEL_SERVER_ADDRESS):
-            base_url_parts.append(str(host))
+            parts.append(str(host))
         if port := attrs.get(_OTEL_SERVER_PORT):
-            base_url_parts.append(str(port))
-        if base_url_parts:
-            properties["$ai_base_url"] = ":".join(base_url_parts)
-
-        trace_id = str(properties.get("$ai_trace_id", ""))
-        if trace_id and trace_id not in self._seen_traces:
-            self._seen_traces.add(trace_id)
-            trace_properties: dict[str, object] = {
-                "$ai_trace_id": trace_id,
-                "$ai_trace_name": self._extract_user_message(attrs),
-                "$ai_provider": attrs.get(_OTEL_SYSTEM, ""),
-            }
-            if span.start_time and span.end_time:
-                trace_properties["$ai_latency"] = (span.end_time - span.start_time) / 1e9
-            self._client.capture(
-                distinct_id=self._distinct_id,
-                event="$ai_trace",
-                properties=trace_properties,
-            )
-
-        self._client.capture(
-            distinct_id=self._distinct_id,
-            event="$ai_generation",
-            properties=properties,
-        )
-
-    @staticmethod
-    def _transform_output_choices(choices: list[Any]) -> list[Any]:
-        """Transform Pydantic AI's parts-based output format to PostHog-compatible format.
-
-        Pydantic AI emits: ``[{"role": "assistant", "parts": [{"type": "tool_call", "name": "..."}]}]``
-        PostHog expects: ``[{"role": "assistant", "tool_calls": [{"type": "function", "function": {"name": "..."}}]}]``
-        """
-        for choice in choices:
-            if not isinstance(choice, dict) or "parts" not in choice:
-                continue
-            tool_calls = []
-            for part in choice.get("parts", []):
-                if isinstance(part, dict) and part.get("type") == "tool_call":
-                    tool_calls.append(
-                        {
-                            "type": "function",
-                            "id": part.get("id", ""),
-                            "function": {"name": part.get("name", "")},
-                        }
-                    )
-            if tool_calls:
-                choice["tool_calls"] = tool_calls
-            choice["content"] = choice.pop("parts")
-        return choices
-
-    @staticmethod
-    def _extract_user_message(attrs: Mapping[str, Any]) -> str:
-        """Extract the last user message from the input messages span attribute."""
-        raw = attrs.get(_OTEL_INPUT_MESSAGES)
-        if not raw:
-            return ""
-        try:
-            messages = json.loads(str(raw))
-            for msg in reversed(messages):
-                if msg.get("role") == "user":
-                    for part in msg.get("parts", []):
-                        if part.get("type") == "text":
-                            return str(part.get("content", ""))
-        except (json.JSONDecodeError, TypeError, KeyError):
-            pass
-        return ""
+            parts.append(str(port))
+        if parts:
+            properties["$ai_base_url"] = ":".join(parts)
 
     def shutdown(self) -> None:
         self._client.shutdown()
