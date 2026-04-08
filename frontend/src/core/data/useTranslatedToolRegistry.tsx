@@ -40,6 +40,7 @@ import SingleLargePage from "@app/tools/SingleLargePage";
 import PageLayout from "@app/tools/PageLayout";
 import UnlockPdfForms from "@app/tools/UnlockPdfForms";
 import FormFill from "@app/tools/formFill/FormFill";
+import AiFormFill from "@app/tools/aiFormFill/AiFormFill";
 import RemoveCertificateSign from "@app/tools/RemoveCertificateSign";
 import RemoveImage from "@app/tools/RemoveImage";
 import CertSign from "@app/tools/CertSign";
@@ -374,6 +375,19 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
         supportsAutomate: false,
         synonyms: ['form', 'fill', 'fillable', 'input', 'field', 'acroform'],
+      },
+      aiFormFill: {
+        icon: <LocalIcon icon="auto-awesome" width="1.5rem" height="1.5rem" />,
+        name: t('home.aiFormFill.title', 'AI Form Fill'),
+        component: AiFormFill,
+        description: t('home.aiFormFill.desc', 'Use AI to automatically fill PDF form fields from your knowledge base'),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        workbench: 'viewer' as const,
+        endpoints: [],
+        automationSettings: null,
+        supportsAutomate: false,
+        synonyms: ['ai', 'auto', 'form', 'fill', 'smart', 'intelligent', 'knowledge'],
       },
       changePermissions: {
         icon: <LocalIcon icon="lock-outline" width="1.5rem" height="1.5rem" />,

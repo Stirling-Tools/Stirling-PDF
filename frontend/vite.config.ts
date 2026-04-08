@@ -29,6 +29,9 @@ export default defineConfig(({ mode }) => {
 
   const tsconfigProject = TSCONFIG_MAP[effectiveMode];
 
+  const backendTarget = `http://localhost:${env.VITE_BACKEND_PORT || '8080'}`;
+  const aiEngineTarget = `http://localhost:${env.VITE_AI_ENGINE_PORT || '5001'}`;
+
   return {
     plugins: [
       react(),
@@ -63,46 +66,52 @@ export default defineConfig(({ mode }) => {
       // Only use proxy in web mode - Tauri handles backend connections directly
       proxy: effectiveMode === 'desktop' ? undefined : {
         '/api': {
-          target: 'http://localhost:8080',
+          target: backendTarget,
           changeOrigin: true,
           secure: false,
           xfwd: true,
         },
         '/oauth2': {
-          target: 'http://localhost:8080',
+          target: backendTarget,
           changeOrigin: true,
           secure: false,
           xfwd: true,
         },
         '/saml2': {
-          target: 'http://localhost:8080',
+          target: backendTarget,
           changeOrigin: true,
           secure: false,
           xfwd: true,
         },
         '/login/oauth2': {
-          target: 'http://localhost:8080',
+          target: backendTarget,
           changeOrigin: true,
           secure: false,
           xfwd: true,
         },
         '/login/saml2': {
-          target: 'http://localhost:8080',
+          target: backendTarget,
           changeOrigin: true,
           secure: false,
           xfwd: true,
         },
         '/swagger-ui': {
-          target: 'http://localhost:8080',
+          target: backendTarget,
           changeOrigin: true,
           secure: false,
           xfwd: true,
         },
         '/v1/api-docs': {
-          target: 'http://localhost:8080',
+          target: backendTarget,
           changeOrigin: true,
           secure: false,
           xfwd: true,
+        },
+        '/engine-api': {
+          target: aiEngineTarget,
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path: string) => path.replace(/^\/engine-api/, ''),
         },
       },
     },

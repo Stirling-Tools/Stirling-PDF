@@ -71,6 +71,7 @@ export const TOOL_CREDIT_COSTS: Record<ToolId, number> = {
   replaceColor: CREDIT_COSTS.MEDIUM,
   annotate: CREDIT_COSTS.MEDIUM,
   formFill: CREDIT_COSTS.MEDIUM,
+  aiFormFill: CREDIT_COSTS.MEDIUM,
 
   // Large operations (5 credits)
   compress: CREDIT_COSTS.LARGE,

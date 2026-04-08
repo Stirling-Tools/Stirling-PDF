@@ -9,6 +9,7 @@ from stirling.models import ApiModel
 
 from .agent_drafts import AgentDraftResponse
 from .execution import NextExecutionAction
+from .form_fill import FormFillResponse
 from .pdf_edit import PdfEditResponse
 from .pdf_questions import PdfQuestionResponse
 
@@ -20,6 +21,7 @@ class SupportedCapability(StrEnum):
     AGENT_DRAFT = "agent_draft"
     AGENT_REVISE = "agent_revise"
     AGENT_NEXT_ACTION = "agent_next_action"
+    FORM_FILL = "form_fill"
 
 
 class OrchestratorRequest(ApiModel):
@@ -34,6 +36,11 @@ class UnsupportedCapabilityResponse(ApiModel):
 
 
 OrchestratorResponse = Annotated[
-    PdfEditResponse | PdfQuestionResponse | AgentDraftResponse | NextExecutionAction | UnsupportedCapabilityResponse,
+    PdfEditResponse
+    | PdfQuestionResponse
+    | FormFillResponse
+    | AgentDraftResponse
+    | NextExecutionAction
+    | UnsupportedCapabilityResponse,
     Field(discriminator="outcome"),
 ]

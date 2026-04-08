@@ -5,10 +5,20 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI
 
-from stirling.agents import ExecutionPlanningAgent, OrchestratorAgent, PdfEditAgent, PdfQuestionAgent, UserSpecAgent
+from stirling.agents import (
+    ExecutionPlanningAgent,
+    FormAnalyserAgent,
+    FormFillAgent,
+    FormFillerAgent,
+    OrchestratorAgent,
+    PdfEditAgent,
+    PdfQuestionAgent,
+    UserSpecAgent,
+)
 from stirling.api.routes import (
     agent_draft_router,
     execution_router,
+    form_fill_router,
     orchestrator_router,
     pdf_edit_router,
     pdf_question_router,
@@ -37,6 +47,9 @@ async def lifespan(fast_api: FastAPI):
     fast_api.state.pdf_question_agent = PdfQuestionAgent(runtime)
     fast_api.state.user_spec_agent = UserSpecAgent(runtime)
     fast_api.state.execution_planning_agent = ExecutionPlanningAgent(runtime)
+    fast_api.state.form_fill_agent = FormFillAgent(runtime)
+    fast_api.state.form_analyser_agent = FormAnalyserAgent(runtime)
+    fast_api.state.form_filler_agent = FormFillerAgent(runtime)
     yield
 
 
@@ -46,6 +59,7 @@ app.include_router(pdf_edit_router)
 app.include_router(pdf_question_router)
 app.include_router(agent_draft_router)
 app.include_router(execution_router)
+app.include_router(form_fill_router)
 
 
 @app.get("/health", response_model=HealthResponse)

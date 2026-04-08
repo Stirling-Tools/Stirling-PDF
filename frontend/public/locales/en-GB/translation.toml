@@ -3929,6 +3929,10 @@ title = "Automate"
 desc = "Fill PDF form fields interactively with a visual editor"
 title = "Fill Form"
 
+[home.aiFormFill]
+desc = "Use AI to automatically fill PDF form fields from your knowledge base"
+title = "AI Form Fill"
+
 [home.autoRename]
 desc = "Auto renames a PDF file based on its detected header"
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
@@ -8527,3 +8531,27 @@ description = "Google API Key for Google Picker API from Google Cloud Console"
 [provider.googledrive.appId]
 label = "App ID"
 description = "Google Drive App ID from Google Cloud Console"
+
+[aiFormFill]
+title = "AI Form Fill"
+setupDesc = "Upload a PDF form and let AI fill it using your stored knowledge."
+noFile = "Open a PDF form to get started."
+autoFillButton = "Auto-Fill with AI"
+filling = "AI is filling your form..."
+applying = "Generating filled PDF..."
+filledCount = "Filled {{filled}} of {{total}} fields"
+filledSection = "Filled Fields"
+unfilledSection = "Needs Your Input"
+saveApply = "Save & Apply"
+reset = "Start Over"
+knowledgeSummary = "{{count}} entries stored"
+knowledgeEmpty = "No knowledge stored yet"
+knowledgeClear = "Clear All"
+editHint = "Edit remaining fields directly on the PDF or in the form sidebar."
+roleConfirmQuestion = "Are you the \"{{role}}\" in this form?"
+roleSelectQuestion = "Which section is yours?"
+rememberRole = "Remember this for similar forms"
+notMe = "No, let me choose"
+yesConfirm = "Yes, fill as {{role}}"
+fillAsRole = "Fill as {{role}}"
+rerun = "Re-run AI Fill"

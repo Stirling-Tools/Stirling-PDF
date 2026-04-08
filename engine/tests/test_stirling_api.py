@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 from stirling.api import app
 from stirling.api.dependencies import (
     get_execution_planning_agent,
+    get_form_fill_agent,
     get_orchestrator_agent,
     get_pdf_edit_agent,
     get_pdf_question_agent,
@@ -23,6 +24,10 @@ from stirling.contracts import (
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
     UnsupportedCapabilityResponse,
+)
+from stirling.contracts.form_fill import (
+    FormFillClarificationResponse,
+    FormFillRequest,
 )
 from stirling.models.tool_models import RotateParams
 
@@ -67,6 +72,14 @@ class StubUserSpecAgent:
         return AgentRevisionResponse(draft=request.current_draft)
 
 
+class StubFormFillAgent:
+    async def handle(self, request: FormFillRequest) -> FormFillClarificationResponse:
+        return FormFillClarificationResponse(
+            question="Please upload a PDF form.",
+            reason=request.user_message,
+        )
+
+
 class StubExecutionPlanningAgent:
     async def next_action(self, request: AgentExecutionRequest) -> CannotContinueExecutionAction:
         return CannotContinueExecutionAction(reason=str(request.current_step_index))
@@ -95,6 +108,10 @@ def override_user_spec_agent() -> StubUserSpecAgent:
     return StubUserSpecAgent()
 
 
+def override_form_fill_agent() -> StubFormFillAgent:
+    return StubFormFillAgent()
+
+
 def override_execution_agent() -> StubExecutionPlanningAgent:
     return StubExecutionPlanningAgent()
 
@@ -105,6 +122,7 @@ app.dependency_overrides[get_pdf_edit_agent] = override_pdf_edit_agent
 app.dependency_overrides[get_pdf_question_agent] = override_pdf_question_agent
 app.dependency_overrides[get_user_spec_agent] = override_user_spec_agent
 app.dependency_overrides[get_execution_planning_agent] = override_execution_agent
+app.dependency_overrides[get_form_fill_agent] = override_form_fill_agent
 
 
 def test_health_route() -> None:
@@ -164,6 +182,13 @@ def test_agent_revise_route() -> None:
 
     assert response.status_code == 200
     assert response.json()["outcome"] == "draft"
+
+
+def test_form_fill_route() -> None:
+    response = client.post("/api/v1/form/ai", json={"userMessage": "fill my form"})
+
+    assert response.status_code == 200
+    assert response.json()["outcome"] == "form_fill_clarification"
 
 
 def test_next_action_route() -> None:

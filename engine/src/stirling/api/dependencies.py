@@ -2,7 +2,16 @@ from __future__ import annotations
 
 from fastapi import Request
 
-from stirling.agents import ExecutionPlanningAgent, OrchestratorAgent, PdfEditAgent, PdfQuestionAgent, UserSpecAgent
+from stirling.agents import (
+    ExecutionPlanningAgent,
+    FormAnalyserAgent,
+    FormFillAgent,
+    FormFillerAgent,
+    OrchestratorAgent,
+    PdfEditAgent,
+    PdfQuestionAgent,
+    UserSpecAgent,
+)
 from stirling.services import AppRuntime
 
 
@@ -28,3 +37,15 @@ def get_user_spec_agent(request: Request) -> UserSpecAgent:
 
 def get_execution_planning_agent(request: Request) -> ExecutionPlanningAgent:
     return request.app.state.execution_planning_agent
+
+
+def get_form_fill_agent(request: Request) -> FormFillAgent:
+    return request.app.state.form_fill_agent
+
+
+def get_form_analyser_agent(request: Request) -> FormAnalyserAgent:
+    return request.app.state.form_analyser_agent
+
+
+def get_form_filler_agent(request: Request) -> FormFillerAgent:
+    return request.app.state.form_filler_agent
