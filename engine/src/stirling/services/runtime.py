@@ -2,12 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from posthog.client import Client as PostHogClient
-from pydantic_ai.models import Model
+from pydantic_ai.models import Model, infer_model
 from pydantic_ai.settings import ModelSettings
 
 from stirling.config import AppSettings
-from stirling.services.tracking import build_tracked_model
 
 
 @dataclass(frozen=True)
@@ -41,9 +39,9 @@ def validate_structured_output_support(model: Model, model_name: str) -> None:
         raise ValueError(f"Unsupported model {model_name}. This model does not support structured outputs.")
 
 
-def build_runtime(settings: AppSettings, ph_client: PostHogClient | None = None) -> AppRuntime:
-    fast_model = build_tracked_model(settings.fast_model_name, ph_client)
-    smart_model = build_tracked_model(settings.smart_model_name, ph_client)
+def build_runtime(settings: AppSettings) -> AppRuntime:
+    fast_model = infer_model(settings.fast_model_name)
+    smart_model = infer_model(settings.smart_model_name)
     validate_structured_output_support(fast_model, settings.fast_model_name)
     validate_structured_output_support(smart_model, settings.smart_model_name)
     return AppRuntime(
