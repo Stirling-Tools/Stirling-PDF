@@ -12,132 +12,177 @@ tasks:
     desc: "Run env setup and icon generation"
     deps: [install]
     cmds:
-      - npm run prep
+      - npm run tsx -- scripts/setup-env.ts
+      - npm run generate-icons
 
   prep:saas:
     desc: "Prep for SaaS mode"
     deps: [install]
     cmds:
-      - npm run prep:saas
+      - npm run tsx -- scripts/setup-env.ts --saas
+      - npm run generate-icons
 
   prep:desktop:
     desc: "Prep for desktop mode"
     deps: [install]
     cmds:
-      - npm run prep:desktop
+      - npm run tsx -- scripts/setup-env.ts --desktop
+      - npm run generate-icons
+
+  # ============================================================
+  # Development
+  # ============================================================
 
   dev:
     desc: "Start Vite dev server (default mode)"
     deps: [install]
     cmds:
-      - npm run dev
+      - task: prep
+      - npm run vite
 
   dev:core:
     desc: "Start Vite dev server in core mode"
     deps: [install]
     cmds:
-      - npm run dev:core
+      - task: prep
+      - npm run vite -- --mode core
 
   dev:proprietary:
     desc: "Start Vite dev server in proprietary mode"
     deps: [install]
     cmds:
-      - npm run dev:proprietary
+      - task: prep
+      - npm run vite -- --mode proprietary
 
   dev:saas:
     desc: "Start Vite dev server in SaaS mode"
     deps: [install]
     cmds:
-      - npm run dev:saas
+      - task: prep:saas
+      - npm run vite -- --mode saas
 
   dev:desktop:
     desc: "Start Vite dev server in desktop mode"
     deps: [install]
     cmds:
-      - npm run dev:desktop
+      - task: prep:desktop
+      - npm run vite -- --mode desktop
+
+  # ============================================================
+  # Build
+  # ============================================================
 
   build:
     desc: "Production build (default mode)"
     deps: [install]
     cmds:
-      - npm run build
+      - task: prep
+      - npm run vite -- build
 
   build:core:
     desc: "Build for core mode"
     deps: [install]
     cmds:
-      - npm run build:core
+      - task: prep
+      - npm run vite -- build --mode core
 
   build:proprietary:
     desc: "Build for proprietary mode"
     deps: [install]
     cmds:
-      - npm run build:proprietary
+      - task: prep
+      - npm run vite -- build --mode proprietary
 
   build:saas:
     desc: "Build for SaaS mode"
     deps: [install]
     cmds:
-      - npm run build:saas
+      - task: prep:saas
+      - npm run vite -- build --mode saas
 
   build:desktop:
     desc: "Build for desktop mode"
     deps: [install]
     cmds:
-      - npm run build:desktop
+      - task: prep:desktop
+      - npm run vite -- build --mode desktop
+
+  # ============================================================
+  # Lint & Typecheck
+  # ============================================================
 
   lint:
     desc: "Run ESLint + cycle detection"
     deps: [install]
     cmds:
-      - npm run lint
+      - npm run eslint -- --max-warnings=0
+      - npm run dpdm -- src --circular --no-warning --no-tree --exit-code circular:1
 
   typecheck:
     desc: "Run TypeScript type checking"
     deps: [install]
     cmds:
-      - npm run typecheck
+      - npm run tsc -- --noEmit --project src/proprietary/tsconfig.json
 
   typecheck:all:
     desc: "Typecheck all build variants"
     deps: [install]
     cmds:
-      - npm run typecheck:all
+      - npm run tsc -- --noEmit --project src/core/tsconfig.json
+      - npm run tsc -- --noEmit --project src/proprietary/tsconfig.json
+      - npm run tsc -- --noEmit --project src/saas/tsconfig.json
+      - npm run tsc -- --noEmit --project src/desktop/tsconfig.json
+      - npm run tsc -- --noEmit --project scripts/tsconfig.json
+
+  # ============================================================
+  # Quality Gate
+  # ============================================================
 
   check:
     desc: "Run typecheck + lint + test"
     deps: [install]
     cmds:
-      - npm run check
+      - task: typecheck
+      - task: lint
+      - task: test
+
+  # ============================================================
+  # Test
+  # ============================================================
 
   test:
     desc: "Run Vitest (single run)"
     deps: [install]
     cmds:
-      - npm run test:run
+      - npm run vitest -- run
 
   test:watch:
     desc: "Run Vitest in watch mode"
     deps: [install]
     cmds:
-      - npm run test:watch
+      - npm run vitest -- --watch
 
   test:coverage:
     desc: "Run Vitest with coverage"
     deps: [install]
     cmds:
-      - npm run test:coverage
+      - npm run vitest -- --coverage
 
   test:e2e:
     desc: "Run Playwright E2E tests"
     deps: [install]
     cmds:
-      - npm run test:e2e
+      - task: prep
+      - npm run playwright -- test
 
   test:e2e:install:
     desc: "Install Playwright browsers"
     cmds:
-      - npm run test:e2e:install
+      - npm run playwright -- install
+
+  # ============================================================
+  # Code Generation
+  # ============================================================
 
   generate:licenses:
     desc: "Generate frontend license report"

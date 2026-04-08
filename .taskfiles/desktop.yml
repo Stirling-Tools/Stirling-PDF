@@ -8,7 +8,8 @@ tasks:
     desc: "Start Tauri desktop dev mode"
     cmds:
       - task: jlink:ensure
-      - npm run tauri-dev
+      - task: :frontend:prep:desktop
+      - npm run tauri -- dev --no-watch
 
   build:
     desc: "Build Tauri desktop app (production, all platforms)"
@@ -17,31 +18,37 @@ tasks:
       - task: jlink:jar
       - task: jlink:runtime
       - task: jlink:test
-      - npm run tauri-build
+      - node scripts/build-provisioner.mjs
+      - task: :frontend:prep:desktop
+      - npm run tauri -- build
 
   build:dev:
     desc: "Build Tauri desktop app (dev, no bundling)"
     cmds:
       - task: jlink:ensure
-      - npm run tauri-build-dev
+      - task: :frontend:prep:desktop
+      - npm run tauri -- build --no-bundle
 
   build:dev:mac:
     desc: "Build Tauri desktop .app bundle (macOS)"
     cmds:
       - task: jlink:ensure
-      - npm run tauri-build-dev-mac
+      - task: :frontend:prep:desktop
+      - npm run tauri -- build --bundles app
 
   build:dev:windows:
     desc: "Build Tauri desktop NSIS installer (Windows)"
     cmds:
       - task: jlink:ensure
-      - npm run tauri-build-dev-windows
+      - task: :frontend:prep:desktop
+      - npm run tauri -- build --bundles nsis
 
   build:dev:linux:
     desc: "Build Tauri desktop AppImage (Linux)"
     cmds:
       - task: jlink:ensure
-      - npm run tauri-build-dev-linux
+      - task: :frontend:prep:desktop
+      - npm run tauri -- build --bundles appimage
 
   clean:
     desc: "Clean Tauri/Cargo build artifacts"
@@ -72,8 +79,6 @@ tasks:
   jlink:jar:
     desc: "Build backend JAR for Tauri bundling"
     dir: ..
-    deps:
-      - :check:java
     env:
       DISABLE_ADDITIONAL_FEATURES: "true"
     vars:
@@ -85,8 +90,6 @@ tasks:
 
   jlink:runtime:
     desc: "Create custom JRE with jlink"
-    deps:
-      - :check:jlink
     cmds:
       - rm -rf src-tauri/runtime/jre
       - mkdir -p src-tauri/runtime
