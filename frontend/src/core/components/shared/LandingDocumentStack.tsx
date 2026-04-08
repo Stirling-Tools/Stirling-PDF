@@ -10,10 +10,10 @@ export function LandingDocumentStack() {
     <div aria-hidden className="landing-stack">
       <div className="landing-sheet landing-sheet--back landing-sheet--left">
         <div className="landing-sheet-side-body">
-          <div className="landing-bar landing-bar--strong" style={bar(100, 10, true, 12)} />
-          <div className="landing-bar" style={bar(80, 8, false, 8)} />
-          <div className="landing-bar" style={bar(100, 8, false, 8)} />
-          <div className="landing-bar" style={bar(60, 8, false, 0)} />
+          <div className="landing-bar landing-bar--strong" style={bar(100, 10, 12)} />
+          <div className="landing-bar" style={bar(80, 8, 8)} />
+          <div className="landing-bar" style={bar(100, 8, 8)} />
+          <div className="landing-bar" style={bar(60, 8, 0)} />
         </div>
       </div>
 
@@ -24,22 +24,22 @@ export function LandingDocumentStack() {
           <div className="landing-sheet-dot" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }} />
         </div>
         <div className="landing-sheet-body">
-          <div className="landing-bar landing-bar--strong" style={bar(100, 10, true, 10)} />
-          <div className="landing-bar" style={bar(80, 7, false, 6)} />
-          <div className="landing-bar" style={bar(100, 7, false, 6)} />
-          <div className="landing-bar" style={bar(66, 7, false, 6)} />
-          <div className="landing-bar" style={bar(100, 7, false, 6)} />
-          <div className="landing-bar" style={bar(88, 7, false, 6)} />
-          <div className="landing-bar" style={bar(72, 7, false, 0)} />
+          <div className="landing-bar landing-bar--strong" style={bar(100, 10, 10)} />
+          <div className="landing-bar" style={bar(80, 7, 6)} />
+          <div className="landing-bar" style={bar(100, 7, 6)} />
+          <div className="landing-bar" style={bar(66, 7, 6)} />
+          <div className="landing-bar" style={bar(100, 7, 6)} />
+          <div className="landing-bar" style={bar(88, 7, 6)} />
+          <div className="landing-bar" style={bar(72, 7, 0)} />
         </div>
       </div>
 
       <div className="landing-sheet landing-sheet--back landing-sheet--right">
         <div className="landing-sheet-side-body">
-          <div className="landing-bar landing-bar--strong" style={bar(100, 10, true, 12)} />
-          <div className="landing-bar" style={bar(75, 8, false, 8)} />
-          <div className="landing-bar" style={bar(100, 8, false, 8)} />
-          <div className="landing-bar" style={bar(80, 8, false, 0)} />
+          <div className="landing-bar landing-bar--strong" style={bar(100, 10, 12)} />
+          <div className="landing-bar" style={bar(75, 8, 8)} />
+          <div className="landing-bar" style={bar(100, 8, 8)} />
+          <div className="landing-bar" style={bar(80, 8, 0)} />
         </div>
       </div>
     </div>
