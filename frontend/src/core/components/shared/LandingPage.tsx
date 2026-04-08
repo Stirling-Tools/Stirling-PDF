@@ -6,9 +6,9 @@ import { useFileHandler } from '@app/hooks/useFileHandler';
 import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
 import MobileUploadModal from '@app/components/shared/MobileUploadModal';
 import { openFilesFromDisk } from '@app/services/openFilesFromDisk';
-import { LandingDocumentStack } from './LandingDocumentStack';
-import { LandingActions } from './LandingActions';
-import './LandingPage.css';
+import { LandingDocumentStack } from '@app/components/shared/LandingDocumentStack';
+import { LandingActions } from '@app/components/shared/LandingActions';
+import '@app/core/styles/LandingPage.css';
 
 const LandingPage = () => {
   const { t } = useTranslation();

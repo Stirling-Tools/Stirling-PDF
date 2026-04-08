@@ -1,6 +1,6 @@
 /** Decorative stack only: window dots + grey bars — no text or i18n (avoids keys showing in the UI). */
 export function LandingDocumentStack() {
-  const bar = (widthPct: number, heightPx: number, strong: boolean, marginBottom: number) => ({
+  const bar = (widthPct: number, heightPx: number, marginBottom: number) => ({
     width: `${widthPct}%`,
     height: heightPx,
     marginBottom: marginBottom || undefined,
