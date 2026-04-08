@@ -8,7 +8,7 @@
  *  - No indentation nesting — all agent rows are flush-left with borders
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import StopCircleRoundedIcon from '@mui/icons-material/StopCircleRounded';
@@ -27,6 +27,7 @@ import { extractTextFromFiles } from '@app/services/pdfTextExtractionService';
 import { createChildStub } from '@app/contexts/file/fileActions';
 import { createStirlingFile } from '@app/types/fileContext';
 import { thumbnailGenerationService } from '@app/services/thumbnailGenerationService';
+import { executeAgentAction } from '@app/services/agentActionService';
 import type { ActionFileResult } from '@app/services/agentActionService';
 
 import '@app/components/rightPanel/AgentChat.css';
@@ -50,6 +51,8 @@ export function AgentChat({ agent, onBack }: AgentChatProps) {
   const [historyOpen, setHistoryOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const activeFilesRef = useRef(activeFiles);
+  activeFilesRef.current = activeFiles;
 
   // Notify context which agent is open (triggers history auto-load on first open)
   useEffect(() => {
@@ -128,13 +131,13 @@ export function AgentChat({ agent, onBack }: AgentChatProps) {
     return () => window.removeEventListener('agent-action-files', handler);
   }, [consumeFiles, findFileId, selectors]);
 
-  // Listen for auto-execute events (from "Accept always" auto-acceptance)
+  // Listen for auto-execute events (from "Accept always" auto-acceptance).
+  // Uses activeFilesRef to avoid re-attaching the listener on every activeFiles change.
   useEffect(() => {
     const handler = async (e: Event) => {
       const { actionType, actionPayload } = (e as CustomEvent).detail;
       try {
-        const { executeAgentAction } = await import('@app/services/agentActionService');
-        const { successes } = await executeAgentAction(actionType, actionPayload, activeFiles);
+        const { successes } = await executeAgentAction(actionType, actionPayload, activeFilesRef.current);
         if (successes.length > 0) {
           window.dispatchEvent(
             new CustomEvent('agent-action-files', { detail: { results: successes, actionType } })
@@ -146,7 +149,7 @@ export function AgentChat({ agent, onBack }: AgentChatProps) {
     };
     window.addEventListener('agent-action-auto-execute', handler);
     return () => window.removeEventListener('agent-action-auto-execute', handler);
-  }, [activeFiles]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps — uses ref
 
   // Listen for "deny with instructions" — send follow-up through normal flow (ref avoids ordering)
   const denyInstructionsRef = useRef<((text: string) => void) | null>(null);
@@ -164,7 +167,7 @@ export function AgentChat({ agent, onBack }: AgentChatProps) {
   }, [agent.id, historyOpen]);
 
   // Invalidate text cache and sent-text tracker when files change
-  const fileKey = activeFiles.map((f) => `${f.name}:${f.size}`).join('|');
+  const fileKey = useMemo(() => activeFiles.map((f) => `${f.name}:${f.size}`).join('|'), [activeFiles]);
   useEffect(() => {
     if (textCacheRef.current && textCacheRef.current.fileKey !== fileKey) {
       textCacheRef.current = null;
@@ -224,6 +227,13 @@ export function AgentChat({ agent, onBack }: AgentChatProps) {
     window.addEventListener('agent-deny-with-instructions', handler);
     return () => window.removeEventListener('agent-deny-with-instructions', handler);
   }, []);
+
+  const handleActionStable = useCallback(
+    (msgId: string, decision: 'pending' | 'accepted' | 'denied', instructions?: string) => {
+      handleAction(msgId, decision, activeFilesRef.current, instructions);
+    },
+    [handleAction]
+  );
 
   const handleSuggestionClick = useCallback(
     (text: string, messageId: string, index: number) => {
@@ -312,7 +322,7 @@ export function AgentChat({ agent, onBack }: AgentChatProps) {
             key={msg.id}
             msg={msg}
             onToggleExpanded={toggleNodeExpanded}
-            onAction={(msgId, decision, instructions) => handleAction(msgId, decision, activeFiles, instructions)}
+            onAction={handleActionStable}
             onAutoAccept={setAutoAccept}
             onSuggestionClick={handleSuggestionClick}
           />

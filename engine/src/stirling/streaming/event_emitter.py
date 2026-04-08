@@ -118,7 +118,17 @@ class EventEmitter:
     def done(self) -> None:
         """Emit done and signal end of stream."""
         self._put("done", {})
-        self._queue.put_nowait(_SENTINEL)
+        # Sentinel MUST be enqueued — retry until there's room.
+        while True:
+            try:
+                self._queue.put_nowait(_SENTINEL)
+                return
+            except asyncio.QueueFull:
+                # Drop the oldest item to make room for the sentinel.
+                try:
+                    self._queue.get_nowait()
+                except asyncio.QueueEmpty:
+                    pass
 
     # ------------------------------------------------------------------
     # Consumer API — used by the SSE endpoint

@@ -151,8 +151,10 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
   const sessionIdRef = useRef<string | null>(null);
   const messagesRef = useRef<ChatMessage[]>([]);
 
+  const isStreamingRef = useRef(false);
   useEffect(() => { sessionIdRef.current = sessionId; }, [sessionId]);
   useEffect(() => { messagesRef.current = messages; }, [messages]);
+  useEffect(() => { isStreamingRef.current = isStreaming; }, [isStreaming]);
 
   // Fetch agents on mount
   useEffect(() => {
@@ -316,7 +318,7 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
               const currentMsg = messagesRef.current.find((m) => m.id === msgId);
               const suggestions = currentMsg?.suggestions;
               chatStorage.addMessage({
-                id: `msg-${now}-${Math.random().toString(36).slice(2, 7)}`,
+                id: msgId,
                 sessionId: sid,
                 agentId: agId,
                 role: 'agent',
@@ -354,7 +356,7 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
 
   const sendMessage = useCallback(
     (text: string, fileNames?: string[], extractedText?: string) => {
-      if (isStreaming) return;
+      if (isStreamingRef.current) return;
 
       const now = Date.now();
       const userMsgId = generateId();
@@ -454,7 +456,7 @@ export function AgentChatProvider({ children }: { children: React.ReactNode }) {
         },
       });
     },
-    [isStreaming, handleEvent]
+    [handleEvent]
   );
 
   const cancelStream = useCallback(() => {

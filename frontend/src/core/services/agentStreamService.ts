@@ -140,6 +140,7 @@ async function readSSEStream(
         if (line.startsWith('event:')) {
           currentEvent = line.substring(line.indexOf(':') + 1).trimStart();
         } else if (line.startsWith('data:')) {
+          if (currentData) currentData += '\n';
           currentData += line.substring(line.indexOf(':') + 1).trimStart();
         } else if (line === '' && currentData) {
           // End of SSE event

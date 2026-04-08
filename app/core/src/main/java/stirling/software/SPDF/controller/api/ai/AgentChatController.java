@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,16 +51,23 @@ public class AgentChatController {
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter chatStream(@Valid @RequestBody ChatRequest request) {
         if (!streamSemaphore.tryAcquire()) {
-            SseEmitter rejected = new SseEmitter(0L);
+            SseEmitter rejected = new SseEmitter(1000L);
             rejected.completeWithError(
                     new IllegalStateException("Too many concurrent chat streams"));
             return rejected;
         }
 
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT_MS);
-        emitter.onCompletion(streamSemaphore::release);
-        emitter.onTimeout(streamSemaphore::release);
-        emitter.onError(e -> streamSemaphore.release());
+
+        // Guard against double-release: Spring calls onCompletion AFTER onTimeout/onError.
+        AtomicBoolean released = new AtomicBoolean(false);
+        Runnable releaseOnce =
+                () -> {
+                    if (released.compareAndSet(false, true)) streamSemaphore.release();
+                };
+        emitter.onCompletion(releaseOnce::run);
+        emitter.onTimeout(releaseOnce::run);
+        emitter.onError(e -> releaseOnce.run());
 
         // Use a virtual thread to read from the engine and push events.
         Thread.ofVirtual().name("agent-chat-stream").start(() -> proxyStream(emitter, request));
@@ -91,6 +99,7 @@ public class AgentChatController {
                 if (line.startsWith("event: ")) {
                     currentEvent = line.substring(7).trim();
                 } else if (line.startsWith("data: ")) {
+                    if (dataBuffer.length() > 0) dataBuffer.append('\n');
                     dataBuffer.append(line.substring(6));
                 } else if (line.isEmpty() && dataBuffer.length() > 0) {
                     // End of SSE event — forward it

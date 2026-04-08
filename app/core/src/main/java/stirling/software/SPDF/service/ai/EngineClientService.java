@@ -61,6 +61,12 @@ public class EngineClientService {
                 httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
 
         if (response.statusCode() != 200) {
+            // Drain and close the body to avoid leaking the HTTP connection.
+            try (InputStream body = response.body()) {
+                body.readAllBytes();
+            } catch (Exception ignored) {
+                // Best-effort drain.
+            }
             throw new RuntimeException("Engine returned status " + response.statusCode());
         }
 

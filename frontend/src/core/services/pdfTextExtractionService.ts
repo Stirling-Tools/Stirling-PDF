@@ -80,9 +80,9 @@ async function extractTextFromPdf(file: File): Promise<string> {
  */
 export async function extractTextFromFiles(files: File[]): Promise<string> {
   const pdfFiles = files.filter(
-    (f) => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf') || !f.type
+    (f) => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
   );
-  console.log('[TextExtraction] Files:', files.length, 'PDFs:', pdfFiles.length, pdfFiles.map(f => `${f.name}(${f.size}b,type=${f.type})`));
+  console.debug('[TextExtraction] Files:', files.length, 'PDFs:', pdfFiles.length);
 
   if (pdfFiles.length === 0) return '';
 

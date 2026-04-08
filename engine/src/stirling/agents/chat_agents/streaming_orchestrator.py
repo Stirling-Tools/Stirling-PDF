@@ -205,6 +205,9 @@ class StreamingOrchestrator:
             await agent.handle(request, emitter, parent_agent_id=orch_id)  # type: ignore[union-attr]
         except Exception as exc:
             emitter.error(orch_id, str(exc))
+            emitter.agent_complete(orch_id, status="error", result_summary=f"Agent {agent_id} failed")
+            emitter.done()
+            return
 
         emitter.agent_complete(orch_id, status="success", result_summary=f"Routed to {agent_id}")
         emitter.done()

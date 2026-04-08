@@ -62,7 +62,7 @@ class PdfEditChatAgent:
             return
 
         if isinstance(result, EditCannotDoResponse):
-            emitter.token(agent_id, result.message)
+            emitter.token(agent_id, result.reason)
             emitter.agent_complete(plan_id, status="success", result_summary="Cannot do")
             emitter.agent_complete(agent_id, status="success", result_summary="Cannot do")
             return
