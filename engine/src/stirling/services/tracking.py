@@ -200,7 +200,7 @@ class PostHogSpanProcessor(SpanProcessor):
 
     @staticmethod
     def _add_base_url(properties: dict[str, object], attrs: Mapping[str, Any]) -> None:
-        parts = []
+        parts: list[str] = []
         if host := attrs.get(_OTEL_SERVER_ADDRESS):
             parts.append(str(host))
         if port := attrs.get(_OTEL_SERVER_PORT):
