@@ -2,7 +2,6 @@ version: '3'
 
 tasks:
   install:
-    internal: true
     desc: "Install frontend npm dependencies"
     cmds:
       - npm install
@@ -10,7 +9,6 @@ tasks:
       - test -d node_modules
 
   prep:
-    internal: true
     desc: "Run env setup and icon generation"
     deps: [install]
     cmds:
@@ -18,7 +16,6 @@ tasks:
       - npm run generate-icons
 
   prep:saas:
-    internal: true
     desc: "Prep for SaaS mode"
     deps: [install]
     cmds:
@@ -26,7 +23,6 @@ tasks:
       - npm run generate-icons
 
   prep:desktop:
-    internal: true
     desc: "Prep for desktop mode"
     deps: [install]
     cmds:

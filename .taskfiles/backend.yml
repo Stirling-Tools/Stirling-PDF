@@ -20,7 +20,6 @@ tasks:
       - '{{.GRADLE}} clean build -x test'
 
   build:ci:
-    internal: true
     desc: "Build without Spotless (CI — formatting checked separately)"
     cmds:
       - '{{.GRADLE}} build -PnoSpotless'
@@ -58,7 +57,6 @@ tasks:
       - task: coverage
 
   version:
-    internal: true
     desc: "Print project version"
     silent: true
     cmds:
