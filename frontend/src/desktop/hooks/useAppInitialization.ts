@@ -59,7 +59,7 @@ export function useAppInitialization(): void {
           const filesArray = loadedFiles.map(entry => entry.file);
           const quickKeyToPath = new Map(loadedFiles.map(entry => [entry.quickKey, entry.filePath]));
 
-          const addedFiles = await addFiles(filesArray);
+          const addedFiles = await addFiles(filesArray, { selectFiles: true });
           addedFiles.forEach(file => {
             const localFilePath = quickKeyToPath.get(file.quickKey);
             if (localFilePath) {
