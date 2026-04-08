@@ -100,6 +100,7 @@ def _extract_user_message(attrs: Mapping[str, Any]) -> str:
     return ""
 
 
+# TODO: Replace with an official PostHog integration if one ever exists
 class PostHogSpanProcessor(SpanProcessor):
     """Translates Pydantic AI OpenTelemetry spans into PostHog $ai_generation events."""
 
