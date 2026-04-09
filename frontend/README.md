@@ -59,10 +59,9 @@ task desktop:build:dev:linux     # Linux AppImage
 You can also run JLink steps individually:
 
 ```bash
-task desktop:jlink          # Build JAR + create JLink runtime + test
+task desktop:jlink          # Build JAR + create JLink runtime
 task desktop:jlink:jar      # Build backend JAR only
 task desktop:jlink:runtime  # Create JLink custom JRE only
-task desktop:jlink:test     # Verify the bundled JRE works
 task desktop:jlink:clean    # Remove JLink artifacts
 ```
 
