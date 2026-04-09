@@ -68,7 +68,7 @@ jobs:
       - name: Get version number
         id: versionNumber
         run: |
-          VERSION=$(task backend:version)
+          VERSION=$(./gradlew printVersion --quiet | tail -1)
           echo "Extracted version: $VERSION"
           echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
         env:
