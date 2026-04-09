@@ -86,7 +86,7 @@ For local testing, you should generally be testing the full 'Security' version o
 
 ### Verify Setup
 
-Run `task check:all` to verify all required tools are installed, then run `task setup` to install all project dependencies (frontend npm packages, engine Python packages). Gradle manages its own dependencies automatically.
+Run `task install` to install all project dependencies (frontend npm packages, engine Python packages). Gradle manages its own dependencies automatically. Then run `task check` to verify everything builds and passes.
 
 ## 4. Stirling 2.0 Development Workflow
 

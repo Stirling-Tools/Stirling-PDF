@@ -174,7 +174,7 @@ tasks:
   # ============================================================
 
   check:
-    desc: "Run typecheck + lint + test"
+    desc: "Quick quality gate for local development"
     cmds:
       - task: typecheck
       - task: lint

@@ -7,7 +7,7 @@ This file provides guidance to AI Agents when working with code in this reposito
 This project uses [Task](https://taskfile.dev/) as a unified command runner. All build, dev, test, lint, and docker commands can be run from the repo root via `task <command>`. Run `task --list` to see all available commands.
 
 ### Quick Reference
-- `task setup` — install all dependencies
+- `task install` — install all dependencies
 - `task dev:all` — start backend + frontend + engine concurrently
 - `task build` — build all components
 - `task test` — run all tests (backend + frontend + engine)
@@ -325,7 +325,7 @@ The frontend is organized with a clear separation of concerns:
 1. **Local Development** (using Taskfile):
    - All services: `task dev:all` (starts backend, frontend, and engine concurrently)
    - Or individually: `task backend:run` (localhost:8080), `task frontend:dev` (localhost:5173), `task engine:run-dev` (localhost:5001)
-2. **Quality Gate**: Run `task check` before submitting PRs (lint + typecheck + test)
+2. **Quality Gate**: Run `task check` before submitting PRs
 3. **Docker Testing**: Use `./test.sh` for full Docker integration tests
 4. **Code Style**: Spotless enforces Google Java Format automatically (`task backend:format`)
 5. **Translations**:

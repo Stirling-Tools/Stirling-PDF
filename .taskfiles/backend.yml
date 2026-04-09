@@ -11,7 +11,7 @@ tasks:
       - '{{.GRADLE}} :stirling-pdf:bootRun'
 
   build:
-    desc: "Full Gradle build (compile + test + jar)"
+    desc: "Full backend build"
     cmds:
       - '{{.GRADLE}} clean build'
 
@@ -21,7 +21,7 @@ tasks:
       - '{{.GRADLE}} clean build -x test'
 
   build:ci:
-    desc: "Build without Spotless (CI — formatting checked separately)"
+    desc: "Build for CI (formatting checked separately)"
     cmds:
       - '{{.GRADLE}} build -PnoSpotless'
 
@@ -36,7 +36,7 @@ tasks:
       - '{{.GRADLE}} spotlessApply'
 
   format:check:
-    desc: "Check Spotless formatting (no changes)"
+    desc: "Check code formatting"
     cmds:
       - '{{.GRADLE}} spotlessCheck'
 
@@ -51,7 +51,7 @@ tasks:
       - '{{.GRADLE}} :stirling-pdf:generateOpenApiDocs'
 
   check:
-    desc: "Run full backend checks (format-check + test + coverage)"
+    desc: "Full backend quality gate"
     cmds:
       - task: format:check
       - task: test

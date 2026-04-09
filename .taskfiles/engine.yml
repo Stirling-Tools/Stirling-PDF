@@ -87,7 +87,7 @@ tasks:
       - task: format
 
   check:
-    desc: "Run all engine checks (typecheck + lint + format-check + test)"
+    desc: "Full engine quality gate"
     cmds:
       - task: typecheck
       - task: lint

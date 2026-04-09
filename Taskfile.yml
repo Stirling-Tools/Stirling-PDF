@@ -27,8 +27,8 @@ tasks:
   # Setup & Prerequisites
   # ============================================================
 
-  setup:
-    desc: "Install all dependencies (frontend + engine; Gradle self-resolves)"
+  install:
+    desc: "Install all project dependencies"
     cmds:
       - task: frontend:install
       - task: engine:install
@@ -87,10 +87,17 @@ tasks:
   # ============================================================
 
   check:
-    desc: "Run all checks (lint + typecheck + test) across all components"
+    desc: "Quick quality gate for local development"
     cmds:
       - task: backend:check
       - task: frontend:check
+      - task: engine:check
+
+  check:all:
+    desc: "Full CI quality gate"
+    cmds:
+      - task: backend:check
+      - task: frontend:check:all
       - task: engine:check
 
   # ============================================================
