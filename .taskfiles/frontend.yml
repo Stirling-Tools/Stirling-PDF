@@ -18,7 +18,7 @@ tasks:
     desc: "Generate .env from example if missing"
     deps: [install]
     cmds:
-      - npm run tsx -- scripts/setup-env.ts
+      - npx tsx scripts/setup-env.ts
     sources:
       - scripts/setup-env.ts
       - config/.env.example
@@ -29,7 +29,7 @@ tasks:
     desc: "Generate .env and .env.saas from examples if missing"
     deps: [install]
     cmds:
-      - npm run tsx -- scripts/setup-env.ts --saas
+      - npx tsx scripts/setup-env.ts --saas
     sources:
       - scripts/setup-env.ts
       - config/.env.example
@@ -42,7 +42,7 @@ tasks:
     desc: "Generate .env and .env.desktop from examples if missing"
     deps: [install]
     cmds:
-      - npm run tsx -- scripts/setup-env.ts --desktop
+      - npx tsx scripts/setup-env.ts --desktop
     sources:
       - scripts/setup-env.ts
       - config/.env.example
@@ -55,7 +55,7 @@ tasks:
     desc: "Generate icon bundle from source references"
     deps: [install]
     cmds:
-      - npm run generate-icons
+      - node scripts/generate-icons.js
 
   prep:
     desc: "Set up dev environment"
@@ -78,35 +78,35 @@ tasks:
     deps: [prep]
     ignore_error: true
     cmds:
-      - npm run vite
+      - npx vite
 
   dev:core:
     desc: "Start frontend dev server in core mode"
     deps: [prep]
     ignore_error: true
     cmds:
-      - npm run vite -- --mode core
+      - npx vite --mode core
 
   dev:proprietary:
     desc: "Start frontend dev server in proprietary mode"
     deps: [prep]
     ignore_error: true
     cmds:
-      - npm run vite -- --mode proprietary
+      - npx vite --mode proprietary
 
   dev:saas:
     desc: "Start frontend dev server in SaaS mode"
     deps: [prep:saas]
     ignore_error: true
     cmds:
-      - npm run vite -- --mode saas
+      - npx vite --mode saas
 
   dev:desktop:
     desc: "Start frontend dev server in desktop mode"
     deps: [prep:desktop]
     ignore_error: true
     cmds:
-      - npm run vite -- --mode desktop
+      - npx vite --mode desktop
 
   # ============================================================
   # Build
@@ -116,31 +116,31 @@ tasks:
     desc: "Production build (default mode)"
     deps: [prep]
     cmds:
-      - npm run vite -- build
+      - npx vite build
 
   build:core:
     desc: "Build for core mode"
     deps: [prep]
     cmds:
-      - npm run vite -- build --mode core
+      - npx vite build --mode core
 
   build:proprietary:
     desc: "Build for proprietary mode"
     deps: [prep]
     cmds:
-      - npm run vite -- build --mode proprietary
+      - npx vite build --mode proprietary
 
   build:saas:
     desc: "Build for SaaS mode"
     deps: [prep:saas]
     cmds:
-      - npm run vite -- build --mode saas
+      - npx vite build --mode saas
 
   build:desktop:
     desc: "Build for desktop mode"
     deps: [prep:desktop]
     cmds:
-      - npm run vite -- build --mode desktop
+      - npx vite build --mode desktop
 
   # ============================================================
   # Lint & Typecheck
@@ -150,24 +150,24 @@ tasks:
     desc: "Run linting"
     deps: [install]
     cmds:
-      - npm run eslint -- --max-warnings=0
-      - npm run dpdm -- src --circular --no-warning --no-tree --exit-code circular:1
+      - npx eslint --max-warnings=0
+      - npx dpdm src --circular --no-warning --no-tree --exit-code circular:1
 
   typecheck:
     desc: "Run type checking"
     deps: [install]
     cmds:
-      - npm run tsc -- --noEmit --project src/proprietary/tsconfig.json
+      - npx tsc --noEmit --project src/proprietary/tsconfig.json
 
   typecheck:all:
     desc: "Typecheck all build variants"
     deps: [install]
     cmds:
-      - npm run tsc -- --noEmit --project src/core/tsconfig.json
-      - npm run tsc -- --noEmit --project src/proprietary/tsconfig.json
-      - npm run tsc -- --noEmit --project src/saas/tsconfig.json
-      - npm run tsc -- --noEmit --project src/desktop/tsconfig.json
-      - npm run tsc -- --noEmit --project scripts/tsconfig.json
+      - npx tsc --noEmit --project src/core/tsconfig.json
+      - npx tsc --noEmit --project src/proprietary/tsconfig.json
+      - npx tsc --noEmit --project src/saas/tsconfig.json
+      - npx tsc --noEmit --project src/desktop/tsconfig.json
+      - npx tsc --noEmit --project scripts/tsconfig.json
 
   # ============================================================
   # Quality Gate
@@ -196,30 +196,30 @@ tasks:
     desc: "Run tests"
     deps: [install]
     cmds:
-      - npm run vitest -- run
+      - npx vitest run
 
   test:watch:
     desc: "Run tests in watch mode"
     deps: [install]
     cmds:
-      - npm run vitest -- --watch
+      - npx vitest --watch
 
   test:coverage:
     desc: "Run tests with coverage"
     deps: [install]
     cmds:
-      - npm run vitest -- --coverage
+      - npx vitest --coverage
 
   test:e2e:
     desc: "Run E2E tests"
     deps: [prep]
     cmds:
-      - npm run playwright -- test {{.CLI_ARGS}}
+      - npx playwright test {{.CLI_ARGS}}
 
   test:e2e:install:
     desc: "Install E2E test browsers"
     cmds:
-      - npm run playwright -- install {{.CLI_ARGS}} --with-deps
+      - npx playwright install {{.CLI_ARGS}} --with-deps
 
   # ============================================================
   # Code Generation
@@ -229,4 +229,4 @@ tasks:
     desc: "Generate frontend license report"
     deps: [install]
     cmds:
-      - npm run generate-licenses
+      - node scripts/generate-licenses.js

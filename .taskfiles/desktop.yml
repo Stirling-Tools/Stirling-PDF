@@ -9,38 +9,38 @@ tasks:
     deps: [jlink, ":frontend:prep:desktop"]
     ignore_error: true
     cmds:
-      - npm run tauri -- dev --no-watch
+      - npx tauri dev --no-watch
 
   build:
     desc: "Build Tauri desktop app (production)"
     deps: [jlink, ":frontend:prep:desktop"]
     cmds:
       - node scripts/build-provisioner.mjs
-      - npm run tauri -- build
+      - npx tauri build
 
   build:dev:
     desc: "Build Tauri desktop app (dev, no bundling)"
     deps: [jlink, ":frontend:prep:desktop"]
     cmds:
-      - npm run tauri -- build --no-bundle
+      - npx tauri build --no-bundle
 
   build:dev:mac:
     desc: "Build Tauri desktop .app bundle (macOS)"
     deps: [jlink, ":frontend:prep:desktop"]
     cmds:
-      - npm run tauri -- build --bundles app
+      - npx tauri build --bundles app
 
   build:dev:windows:
     desc: "Build Tauri desktop NSIS installer (Windows)"
     deps: [jlink, ":frontend:prep:desktop"]
     cmds:
-      - npm run tauri -- build --bundles nsis
+      - npx tauri build --bundles nsis
 
   build:dev:linux:
     desc: "Build Tauri desktop AppImage (Linux)"
     deps: [jlink, ":frontend:prep:desktop"]
     cmds:
-      - npm run tauri -- build --bundles appimage
+      - npx tauri build --bundles appimage
 
   clean:
     desc: "Clean Tauri/Cargo build artifacts"
