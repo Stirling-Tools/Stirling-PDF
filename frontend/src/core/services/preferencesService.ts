@@ -5,10 +5,16 @@ export type LogoVariant = 'modern' | 'classic';
 
 export type PdfRenderMode = 'normal' | 'dark' | 'sepia';
 
+export type StartupView = 'tools' | 'read' | 'automate';
+
+export type ViewerZoomSetting = 'auto' | 'fitWidth' | 'fitPage' | '50' | '75' | '100' | '125' | '150' | '200';
+
 export interface UserPreferences {
   autoUnzip: boolean;
   autoUnzipFileLimit: number;
   defaultToolPanelMode: ToolPanelMode;
+  defaultStartupView: StartupView;
+  defaultViewerZoom: ViewerZoomSetting;
   theme: ThemeMode;
   toolPanelModePromptSeen: boolean;
   hasSelectedToolPanelMode: boolean;
@@ -26,6 +32,8 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   autoUnzip: true,
   autoUnzipFileLimit: 4,
   defaultToolPanelMode: DEFAULT_TOOL_PANEL_MODE,
+  defaultStartupView: 'tools',
+  defaultViewerZoom: 'auto',
   theme: getSystemTheme(),
   toolPanelModePromptSeen: false,
   hasSelectedToolPanelMode: false,

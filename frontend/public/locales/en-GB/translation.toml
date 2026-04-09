@@ -6638,9 +6638,13 @@ defaultPdfEditorActive = "Stirling PDF is your default PDF editor"
 defaultPdfEditorChecking = "Checking..."
 defaultPdfEditorInactive = "Another application is set as default"
 defaultPdfEditorSet = "Already Default"
+defaultStartupView = "Default view on launch"
+defaultStartupViewDescription = "Choose which tab is active in the left column when the app starts"
 defaultToolPickerMode = "Default tool picker mode"
 defaultToolPickerModeDescription = "Choose whether the tool picker opens in fullscreen or sidebar by default"
 description = "Configure general application preferences."
+defaultViewerZoom = "Default reader zoom"
+defaultViewerZoomDescription = "Set the default zoom level when opening PDFs in the reader"
 hideUnavailableConversions = "Hide unavailable conversions"
 hideUnavailableConversionsDescription = "Remove disabled conversion options in the Convert tool instead of showing them greyed out."
 hideUnavailableTools = "Hide unavailable tools"
@@ -6662,6 +6666,16 @@ title = "For System Administrators"
 [settings.general.mode]
 fullscreen = "Fullscreen"
 sidebar = "Sidebar"
+
+[settings.general.startupView]
+automate = "Automate"
+read = "Reader"
+tools = "Tools"
+
+[settings.general.zoomLevel]
+auto = "Auto"
+fitPage = "Fit page"
+fitWidth = "Fit width"
 
 [settings.general.updates]
 checkForUpdates = "Check for Updates"

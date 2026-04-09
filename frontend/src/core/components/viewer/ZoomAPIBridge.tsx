@@ -12,6 +12,7 @@ import {
 } from '@app/utils/viewerZoom';
 import { getFirstPageAspectRatioFromStub } from '@app/utils/pageMetadata';
 import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
+import { preferencesService, type ViewerZoomSetting } from '@app/services/preferencesService';
 
 /**
  * Connects the PDF zoom plugin to the shared ViewerContext.
@@ -152,6 +153,21 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
       const pagesPerSpread = currentSpreadMode !== SpreadMode.None ? 2 : 1;
 
       if (cancelled) {
+        return;
+      }
+
+      // Check user preference for default viewer zoom
+      const zoomPref: ViewerZoomSetting = preferencesService.getPreference('defaultViewerZoom');
+      if (zoomPref !== 'auto') {
+        if (zoomPref === 'fitWidth') {
+          applyTrackedZoom(ZoomMode.FitWidth, fitWidthZoom);
+        } else if (zoomPref === 'fitPage') {
+          applyTrackedZoom(ZoomMode.FitPage, fitWidthZoom);
+        } else {
+          // Numeric zoom: '50', '75', '100', '125', '150', '200'
+          const numericZoom = parseInt(zoomPref, 10) / 100;
+          applyTrackedZoom(numericZoom, numericZoom);
+        }
         return;
       }
 
