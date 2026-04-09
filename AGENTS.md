@@ -44,10 +44,10 @@ Set `DOCKER_ENABLE_SECURITY=true` environment variable to enable security featur
 Development for the AI engine happens in the `engine/` folder. The frontend calls the Python via Java as a proxy.
 
 - Follow the engine-specific guidance in [engine/AGENTS.md](engine/AGENTS.md) for Python architecture, code style, and AI usage.
-- Use Task commands from the repo root (or Make from `engine/`):
-  - `task engine:check` (or `make check` from `engine/`) — lint, type-check, test
-  - `task engine:fix` (or `make fix` from `engine/`) — auto-fix linting and formatting
-  - `task engine:install` (or `make install` from `engine/`) — install dependencies
+- Use Task commands from the repo root:
+  - `task engine:check` — lint, type-check, test
+  - `task engine:fix` — auto-fix linting and formatting
+  - `task engine:install` — install dependencies
 - The project structure is defined in `engine/pyproject.toml`. Any new dependencies should be listed there, followed by running `task engine:install`.
 
 ### Frontend Development
@@ -331,7 +331,7 @@ The frontend is organized with a clear separation of concerns:
 5. **Translations**:
    - Backend: Use helper scripts in `/scripts` for multi-language updates
    - Frontend: Update JSON files in `frontend/public/locales/` or use conversion script
-5. **Documentation**: API docs auto-generated and available at `/swagger-ui/index.html`
+6. **Documentation**: API docs auto-generated and available at `/swagger-ui/index.html`
 
 ## Frontend Architecture Status
 

@@ -18,11 +18,9 @@ All engine commands can be run from the repository root using Task:
 - `task engine:format` — format code with ruff
 - `task engine:tool-models` — generate tool_models.py from frontend TypeScript defs
 
-Alternatively, from the `engine/` directory, you can use Make: `make check`, `make fix`, `make install`, etc.
-
 ## Code Style
 
-- Keep `task engine:check` passing (or `make check` from `engine/`).
+- Keep `task engine:check` passing.
 - Use modern Python when it improves clarity.
 - Prefer explicit names to cleverness.
 - Avoid nested functions and nested classes unless the language construct requires them.
