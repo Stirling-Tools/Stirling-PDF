@@ -215,16 +215,8 @@ jobs:
         with:
           version: '3.x'
 
-      - name: Install frontend dependencies
-        run: task frontend:install
-      - name: Type-check frontend
-        run: task frontend:prep && task frontend:typecheck:all
-      - name: Lint frontend
-        run: task frontend:lint
-      - name: Build frontend
-        run: task frontend:build
-      - name: Run frontend tests
-        run: task frontend:test
+      - name: Check and build frontend
+        run: task frontend:check:all
       - name: Upload frontend build artifacts
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:

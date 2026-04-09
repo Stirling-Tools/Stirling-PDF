@@ -180,6 +180,14 @@ tasks:
       - task: lint
       - task: test
 
+  check:all:
+    desc: "Full CI quality gate"
+    cmds:
+      - task: typecheck:all
+      - task: lint
+      - task: build
+      - task: test
+
   # ============================================================
   # Test
   # ============================================================
