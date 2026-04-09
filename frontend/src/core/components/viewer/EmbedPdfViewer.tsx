@@ -16,7 +16,6 @@ import { useSignature } from '@app/contexts/SignatureContext';
 import { useRedaction } from '@app/contexts/RedactionContext';
 import type { RedactionPendingTrackerAPI } from '@app/components/viewer/RedactionPendingTracker';
 import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
-import NavigationWarningModal from '@app/components/shared/NavigationWarningModal';
 import { isStirlingFile, getFormFillFileId } from '@app/types/fileContext';
 import { useViewerRightRailButtons } from '@app/components/viewer/useViewerRightRailButtons';
 import { StampPlacementOverlay } from '@app/components/viewer/StampPlacementOverlay';
@@ -177,8 +176,6 @@ const EmbedPdfViewerContent = ({
   // Similar to scroll preservation - track rotation across file reloads
   const pendingRotationRestoreRef = useRef<number | null>(null);
   const rotationRestoreAttemptsRef = useRef<number>(0);
-  // Track the file ID we should be viewing after a save (to handle list reordering)
-  const pendingFileIdRef = useRef<string | null>(null);
 
   const formApplyInProgressRef = useRef(false);
 
@@ -189,14 +186,15 @@ const EmbedPdfViewerContent = ({
   const redactionTrackerRef = useRef<RedactionPendingTrackerAPI>(null);
 
   // Get current file from FileContext
-  const { selectors, state } = useFileState();
+  const { selectors } = useFileState();
   const { actions } = useFileActions();
   const activeFiles = selectors.getFiles();
+  const activeFilesRef = useRef(activeFiles);
+  activeFilesRef.current = activeFiles;
   const activeFileIds = activeFiles.map(f => f.fileId);
-  const selectedFileIds = state.ui.selectedFileIds;
 
   // Navigation guard for unsaved changes
-  const { setHasUnsavedChanges, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker } = useNavigationGuard();
+  const { setHasUnsavedChanges, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker, registerNavigationWarningHandlers, unregisterNavigationWarningHandlers } = useNavigationGuard();
 
   const { selectedTool } = useNavigationState();
 
@@ -278,40 +276,45 @@ const EmbedPdfViewerContent = ({
   const [internalActiveFileIndex, setInternalActiveFileIndex] = useState(0);
   const activeFileIndex = externalActiveFileIndex ?? internalActiveFileIndex;
   const setActiveFileIndex = externalSetActiveFileIndex ?? setInternalActiveFileIndex;
-  const hasInitializedFromSelection = useRef(false);
 
-  // When viewer opens with a selected file, switch to that file
+  // activeFileId (from ViewerContext) is the stable source of truth.
+  // We derive activeFileIndex from it so reorders after tool operations don't lose the viewed file.
+  const { activeFileId, setActiveFileId } = useViewer();
+
+  // Stable string key representing the current file list order.
+  // Using a joined ID string avoids depending on the activeFiles array reference,
+  // which is a new object every render and would cause an infinite effect loop.
+  const fileIdsKey = activeFiles.map(f => f.fileId).join(',');
+
+  // When the file list actually changes, re-derive activeFileIndex from the stable activeFileId.
   useEffect(() => {
-    if (!hasInitializedFromSelection.current && selectedFileIds.length > 0 && activeFiles.length > 0) {
-      const selectedFileId = selectedFileIds[0];
-      const index = activeFiles.findIndex(f => f.fileId === selectedFileId);
-      if (index !== -1 && index !== activeFileIndex) {
-        setActiveFileIndex(index);
-      }
-      hasInitializedFromSelection.current = true;
+    if (!activeFileId || activeFiles.length === 0) return;
+    const newIndex = activeFiles.findIndex(f => f.fileId === activeFileId);
+    if (newIndex !== -1 && newIndex !== activeFileIndex) {
+      setActiveFileIndex(newIndex);
     }
-  }, [selectedFileIds, activeFiles, activeFileIndex]);
+  }, [fileIdsKey, activeFileId]); // stable primitives — no infinite loop
 
-  // Reset active tab if it's out of bounds
+  // When the user manually switches file tabs, keep activeFileId in sync.
+  // Skips the initial mount to avoid overwriting an activeFileId set by handleViewFile.
+  const activeFileIndexMountedRef = useRef(false);
+  useEffect(() => {
+    if (!activeFileIndexMountedRef.current) {
+      activeFileIndexMountedRef.current = true;
+      return;
+    }
+    const fileId = activeFilesRef.current[activeFileIndex]?.fileId;
+    if (fileId && fileId !== activeFileId) {
+      setActiveFileId(fileId);
+    }
+  }, [activeFileIndex]);
+
+  // Reset active tab if it's out of bounds (safety net)
   useEffect(() => {
     if (activeFileIndex >= activeFiles.length && activeFiles.length > 0) {
       setActiveFileIndex(0);
     }
   }, [activeFiles.length, activeFileIndex]);
-
-  // After saving a file, the list may reorder (sorted by version).
-  // Track the saved file's ID and update activeFileIndex to follow it.
-  useEffect(() => {
-    if (pendingFileIdRef.current && activeFiles.length > 0) {
-      const targetFileId = pendingFileIdRef.current;
-      const newIndex = activeFiles.findIndex(f => f.fileId === targetFileId);
-      if (newIndex !== -1 && newIndex !== activeFileIndex) {
-        setActiveFileIndex(newIndex);
-      }
-      // Clear the pending file ID once we've found and switched to it
-      pendingFileIdRef.current = null;
-    }
-  }, [activeFiles, activeFileIndex, setActiveFileIndex]);
 
   // Determine which file to display
   const currentFile = React.useMemo(() => {
@@ -619,7 +622,7 @@ const EmbedPdfViewerContent = ({
       const parentStub = selectors.getStirlingFileStub(currentFileId);
       if (!parentStub) throw new Error('Parent stub not found');
 
-      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, 'multiTool');
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, selectedTool ?? 'multiTool');
 
       // Store the page to restore after file replacement triggers re-render
       pendingScrollRestoreRef.current = pageToRestore;
@@ -628,11 +631,9 @@ const EmbedPdfViewerContent = ({
       // Store the rotation to restore after file replacement
       pendingRotationRestoreRef.current = currentRotation;
       rotationRestoreAttemptsRef.current = 0;
-      // Store the new file ID so we can track it after the list reorders
+      // Track the new file ID so the viewer follows it after the list reorders
       const newFileId = stubs[0]?.id;
-      if (newFileId) {
-        pendingFileIdRef.current = newFileId;
-      }
+      if (newFileId) setActiveFileId(newFileId);
 
       // Step 4: Consume only the current file (replace in context)
       await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
@@ -673,7 +674,7 @@ const EmbedPdfViewerContent = ({
       if (!parentStub) throw new Error('Parent stub not found');
 
       // Create StirlingFiles and stubs for version history
-      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, 'multiTool');
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, selectedTool ?? 'multiTool');
 
       // Store the page to restore after file replacement
       pendingScrollRestoreRef.current = pageToRestore;
@@ -683,11 +684,9 @@ const EmbedPdfViewerContent = ({
       pendingRotationRestoreRef.current = currentRotation;
       rotationRestoreAttemptsRef.current = 0;
 
-      // Store the new file ID for tracking
+      // Track the new file ID so the viewer follows it after the list reorders
       const newFileId = stubs[0]?.id;
-      if (newFileId) {
-        pendingFileIdRef.current = newFileId;
-      }
+      if (newFileId) setActiveFileId(newFileId);
 
       // Replace the current file in context
       await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
@@ -731,7 +730,7 @@ const EmbedPdfViewerContent = ({
       const parentStub = selectors.getStirlingFileStub(currentFileId);
       if (!parentStub) throw new Error('Parent stub not found');
 
-      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, 'multiTool');
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, selectedTool ?? 'multiTool');
 
       pendingScrollRestoreRef.current = pageToRestore;
       scrollRestoreAttemptsRef.current = 0;
@@ -739,9 +738,7 @@ const EmbedPdfViewerContent = ({
       rotationRestoreAttemptsRef.current = 0;
 
       const newFileId = stubs[0]?.id;
-      if (newFileId) {
-        pendingFileIdRef.current = newFileId;
-      }
+      if (newFileId) setActiveFileId(newFileId);
 
       await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
     } catch (error) {
@@ -786,7 +783,7 @@ const EmbedPdfViewerContent = ({
       const parentStub = selectors.getStirlingFileStub(currentFileId);
       if (!parentStub) throw new Error('Parent stub not found');
 
-      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, 'multiTool');
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, selectedTool ?? 'multiTool');
 
       // Store view state to restore after file replacement
       pendingScrollRestoreRef.current = pageToRestore;
@@ -806,6 +803,28 @@ const EmbedPdfViewerContent = ({
       console.error('Failed to save applied redactions:', error);
     }
   }, [redactionsApplied, currentFile, activeFiles, activeFileIndex, activeFileIds.length, exportActions, actions, selectors, setRedactionsApplied, rotationState.rotation]);
+
+  // Register navigation warning handlers so the global modal can call our save/discard logic
+  useEffect(() => {
+    if (previewFile) return;
+
+    registerNavigationWarningHandlers({
+      onApplyAndContinue: async () => {
+        await applyChanges();
+      },
+      onDiscardAndContinue: async () => {
+        await discardAndSaveApplied();
+        const historyApi = historyApiRef.current;
+        if (historyApi?.canUndo) {
+          while (historyApi.canUndo()) {
+            historyApi.undo?.();
+          }
+        }
+        hasAnnotationChangesRef.current = false;
+      },
+    });
+    return () => unregisterNavigationWarningHandlers();
+  }, [previewFile, applyChanges, discardAndSaveApplied, registerNavigationWarningHandlers, unregisterNavigationWarningHandlers]);
 
   // Restore scroll position after file replacement or tool switch
   // Uses polling with retries to ensure the scroll succeeds
@@ -1122,20 +1141,6 @@ const EmbedPdfViewerContent = ({
         onLayersDetected={setHasLayers}
       />
 
-      {/* Navigation Warning Modal */}
-      {!previewFile && (
-        <NavigationWarningModal
-          onApplyAndContinue={async () => {
-            await applyChanges();
-          }}
-          onDiscardAndContinue={async () => {
-            // Save applied redactions (if any) while discarding pending ones
-            await discardAndSaveApplied();
-            // Reset annotation changes ref so future show/hide doesn't re-prompt
-            hasAnnotationChangesRef.current = false;
-          }}
-        />
-      )}
     </Box>
   );
 };
