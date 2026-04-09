@@ -2,7 +2,8 @@ version: '3'
 
 tasks:
   install:
-    desc: "Install Python dependencies via uv"
+    desc: "Install Python dependencies"
+    run: once
     cmds:
       - uv python install 3.13.8
       - uv sync
@@ -10,13 +11,18 @@ tasks:
       - uv.lock
       - pyproject.toml
     status:
-      - test -f .venv/.deps-installed
+      - test -d .venv
 
   prep:
     desc: "Set up engine .env from template"
     deps: [install]
     cmds:
       - uv run scripts/setup_env.py
+    sources:
+      - scripts/setup_env.py
+      - config/.env.example
+    generates:
+      - .env
 
   run:
     desc: "Run FastAPI engine on :5001"
