@@ -7,6 +7,7 @@ from pydantic import Field
 from stirling.models import ApiModel, OperationId, ParamToolModel
 
 from .agent_specs import AgentSpec
+from .common import WorkflowOutcome
 
 
 class ExecutionStepResult(ApiModel):
@@ -31,19 +32,19 @@ class AgentExecutionRequest(ApiModel):
 
 
 class ToolCallExecutionAction(ApiModel):
-    outcome: Literal["tool_call"] = "tool_call"
+    outcome: Literal[WorkflowOutcome.TOOL_CALL] = WorkflowOutcome.TOOL_CALL
     tool: OperationId
     parameters: ParamToolModel
     rationale: str | None = None
 
 
 class CompletedExecutionAction(ApiModel):
-    outcome: Literal["completed"] = "completed"
+    outcome: Literal[WorkflowOutcome.COMPLETED] = WorkflowOutcome.COMPLETED
     summary: str
 
 
 class CannotContinueExecutionAction(ApiModel):
-    outcome: Literal["cannot_continue"] = "cannot_continue"
+    outcome: Literal[WorkflowOutcome.CANNOT_CONTINUE] = WorkflowOutcome.CANNOT_CONTINUE
     reason: str
 
 

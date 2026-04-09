@@ -20,9 +20,9 @@ from stirling.contracts import (
     EditCannotDoResponse,
     OrchestratorRequest,
     PdfEditRequest,
+    PdfQuestionNeedContentResponse,
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
-    UnsupportedCapabilityResponse,
 )
 from stirling.models.tool_models import RotateParams
 
@@ -38,8 +38,8 @@ class StubSettingsProvider:
 
 
 class StubOrchestratorAgent:
-    async def handle(self, request: OrchestratorRequest) -> UnsupportedCapabilityResponse:
-        return UnsupportedCapabilityResponse(capability="pdf_edit", message=request.user_message)
+    async def handle(self, request: OrchestratorRequest) -> PdfQuestionNeedContentResponse:
+        return PdfQuestionNeedContentResponse(reason=request.user_message, files=[], max_pages=1, max_characters=1000)
 
 
 class StubPdfEditAgent:
@@ -115,10 +115,10 @@ def test_health_route() -> None:
 
 
 def test_orchestrator_route() -> None:
-    response = client.post("/api/v1/orchestrator", json={"userMessage": "route this"})
+    response = client.post("/api/v1/orchestrator", json={"userMessage": "route this", "fileNames": ["test.pdf"]})
 
     assert response.status_code == 200
-    assert response.json()["outcome"] == "unsupported_capability"
+    assert response.json()["outcome"] == "need_content"
 
 
 def test_pdf_edit_route() -> None:
@@ -129,7 +129,14 @@ def test_pdf_edit_route() -> None:
 
 
 def test_pdf_questions_route() -> None:
-    response = client.post("/api/v1/pdf/questions", json={"question": "what is this?"})
+    response = client.post(
+        "/api/v1/pdf/questions",
+        json={
+            "question": "what is this?",
+            "fileNames": ["test.pdf"],
+            "pageText": [{"fileName": "test.pdf", "pages": [{"pageNumber": 1, "text": "Example"}]}],
+        },
+    )
 
     assert response.status_code == 200
     assert response.json()["outcome"] == "not_found"
