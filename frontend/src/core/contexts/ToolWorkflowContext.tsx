@@ -258,6 +258,28 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     }
   }, [preferences.defaultToolPanelMode, state.toolPanelMode]);
 
+  // Apply default startup view preference on initial load.
+  // This runs once to navigate to the user's preferred tab (read/automate)
+  // instead of always starting on the tools tab.
+  const hasAppliedStartupView = React.useRef(false);
+  useEffect(() => {
+    if (hasAppliedStartupView.current) return;
+    const startupView = preferences.defaultStartupView;
+    if (startupView === 'read') {
+      hasAppliedStartupView.current = true;
+      setReaderMode(true);
+      actions.setSelectedTool('read');
+    } else if (startupView === 'automate') {
+      hasAppliedStartupView.current = true;
+      actions.setSelectedTool('automate');
+      setLeftPanelView('toolContent');
+    }
+    // 'tools' is the default — no action needed
+    if (startupView === 'tools') {
+      hasAppliedStartupView.current = true;
+    }
+  }, [preferences.defaultStartupView, actions, setReaderMode, setLeftPanelView]);
+
   // Tool reset methods
   const registerToolReset = useCallback((toolId: string, resetFunction: () => void) => {
     setToolResetFunctions(prev => ({ ...prev, [toolId]: resetFunction }));
