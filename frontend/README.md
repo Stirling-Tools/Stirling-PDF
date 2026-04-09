@@ -1,8 +1,6 @@
 # Frontend
 
-## Using Taskfile (Recommended)
-
-All frontend commands can be run from the repository root using [Task](https://taskfile.dev/):
+All frontend commands are run from the repository root using [Task](https://taskfile.dev/):
 
 - `task frontend:dev` — start Vite dev server (localhost:5173)
 - `task frontend:build` — production build
@@ -17,27 +15,15 @@ For desktop app development, see the [Tauri](#tauri) section below.
 
 ## Environment Variables
 
-The frontend requires environment variables to be set before running. `task frontend:dev` (or `npm run dev`) will create a `.env` file for you automatically on first run using the defaults from `config/.env.example` - for most development work this is all you need.
+The frontend requires environment variables to be set before running. `task frontend:dev` will create a `.env` file for you automatically on first run using the defaults from `config/.env.example` - for most development work this is all you need.
 
 If you need to configure specific services (Google Drive, Supabase, Stripe, PostHog), edit your local `.env` file. The values in `config/.env.example` show what each variable does and provides sensible defaults where applicable.
 
-For desktop (Tauri) development, `task desktop:dev` (or `npm run tauri-dev`) will additionally create a `.env.desktop` file from `config/.env.desktop.example`.
+For desktop (Tauri) development, `task desktop:dev` will additionally create a `.env.desktop` file from `config/.env.desktop.example`.
 
 ## Docker Setup
 
 For Docker deployments and configuration, see the [Docker README](../docker/README.md).
-
-## Available Scripts
-
-When working directly in the `frontend/` directory (instead of using Taskfile from the repo root):
-
-- `npm run dev` — start Vite dev server with hot reload (localhost:5173)
-- `npm run build` — production build to `dist/` folder
-- `npm run test` — run Vitest test suite
-- `npm run test:run` — run tests once (no watch)
-- `npm run lint` — run ESLint
-- `npm run typecheck` — run TypeScript type checking
-- `npm run prep` — set up environment variables and generate icons
 
 ## Tauri
 

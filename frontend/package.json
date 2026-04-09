@@ -92,13 +92,6 @@
     "generate-licenses": "node scripts/generate-licenses.js",
     "generate-sample-pdf": "node scripts/sample-pdf/generate.mjs",
 
-    "prep": "tsx scripts/setup-env.ts && npm run generate-icons",
-    "dev": "npm run prep && vite",
-    "build": "npm run prep && vite build",
-    "lint": "eslint --max-warnings=0 && dpdm src --circular --no-warning --no-tree --exit-code circular:1",
-    "typecheck:all": "tsc --noEmit --project src/core/tsconfig.json && tsc --noEmit --project src/proprietary/tsconfig.json && tsc --noEmit --project src/saas/tsconfig.json && tsc --noEmit --project src/desktop/tsconfig.json && tsc --noEmit --project scripts/tsconfig.json",
-    "test": "vitest",
-
     "update:minor": "npm outdated || npm update --before=$(date -v-7d +%Y-%m-%d) && (npm audit fix --before=$(date -v-7d +%Y-%m-%d) || true) && npm test",
     "update:major": "npx npm-check-updates -u && npm install",
     "update:interactive": "npx npm-check-updates -i",

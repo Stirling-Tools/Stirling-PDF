@@ -162,14 +162,18 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
+      - name: Setup Task
+        uses: arduino/setup-task@v2
+        with:
+          version: '3.x'
+
       - name: Run TestDriver.ai
         uses: testdriverai/action@f0d0f45fdd684db628baa843fe9313f3ca3a8aa8 #1.1.3
         with:
           key: ${{secrets.TESTDRIVER_API_KEY}}
           prerun: |
+            task frontend:build
             cd frontend
-            npm install
-            npm run build
             npm install dashcam-chrome --save
             Start-Process "C:/Program Files/Google/Chrome/Application/chrome.exe" -ArgumentList "--start-maximized", "--load-extension=$(pwd)/node_modules/dashcam-chrome/build", "http://${{ secrets.NEW_VPS_HOST }}:1337"
             Start-Sleep -Seconds 20

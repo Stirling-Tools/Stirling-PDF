@@ -51,15 +51,15 @@ Development for the AI engine happens in the `engine/` folder. The frontend call
 - The project structure is defined in `engine/pyproject.toml`. Any new dependencies should be listed there, followed by running `task engine:install`.
 
 ### Frontend Development
-- **Frontend dev server**: `task frontend:dev` (or `cd frontend && npm run dev`) — requires backend on localhost:8080
+- **Frontend dev server**: `task frontend:dev` — requires backend on localhost:8080
 - **Tech Stack**: Vite + React + TypeScript + Mantine UI + TailwindCSS
 - **Proxy Configuration**: Vite proxies `/api/*` calls to backend (localhost:8080)
 - **Build Process**: DO NOT run build scripts manually - builds are handled by CI/CD pipelines
-- **Package Installation**: `task frontend:install` (or `npm install` from `frontend/`)
+- **Package Installation**: `task frontend:install`
 - **Deployment Options**:
-  - **Desktop App**: `task desktop:build` (or `npm run tauri-build` from `frontend/`)
+  - **Desktop App**: `task desktop:build`
   - **Web Server**: `task frontend:build` then serve dist/ folder
-  - **Development**: `task desktop:dev` (or `npm run tauri-dev` from `frontend/`) for desktop dev mode
+  - **Development**: `task desktop:dev` for desktop dev mode
 
 #### Environment Variables
 - All `VITE_*` variables must be declared in the appropriate example file:
@@ -67,8 +67,8 @@ Development for the AI engine happens in the `engine/` folder. The frontend call
   - `frontend/config/.env.saas.example` — SaaS-only vars
   - `frontend/config/.env.desktop.example` — desktop (Tauri)-only vars
 - Never use `|| 'hardcoded-fallback'` inline — put defaults in the example files
-- `npm run prep` / `prep:saas` / `prep:desktop` auto-create the env files from examples on first run, and error if any required keys are missing
-- These prep scripts run automatically at the start of all `dev*`, `build*`, and `tauri*` commands
+- `task frontend:prep` / `prep:saas` / `prep:desktop` auto-create the env files from examples on first run, and error if any required keys are missing
+- Prep runs automatically as a dependency of all `dev*`, `build*`, and `desktop*` tasks
 - See `frontend/README.md#environment-variables` for full documentation
 
 #### Import Paths - CRITICAL
