@@ -6,11 +6,11 @@ from pydantic import Field
 
 from stirling.models import ApiModel, OperationId
 
-from .common import ToolOperationStep
+from .common import StepKind, ToolOperationStep
 
 
 class AiToolAgentStep(ApiModel):
-    kind: Literal["ai_tool"] = "ai_tool"
+    kind: Literal[StepKind.AI_TOOL] = StepKind.AI_TOOL
     title: str
     description: str
     tool: OperationId
