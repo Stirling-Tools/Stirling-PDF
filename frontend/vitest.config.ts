@@ -100,6 +100,24 @@ export default defineConfig({
           target: 'es2020'
         }
       },
+      {
+        test: {
+          name: 'prototypes',
+          include: ['src/prototypes/**/*.test.{ts,tsx}'],
+          environment: 'jsdom',
+          globals: true,
+          setupFiles: ['./src/core/setupTests.ts'],
+        },
+        plugins: [
+          react(),
+          tsconfigPaths({
+            projects: ['./tsconfig.prototypes.vite.json'],
+          }),
+        ],
+        esbuild: {
+          target: 'es2020'
+        }
+      },
     ],
   },
   esbuild: {
