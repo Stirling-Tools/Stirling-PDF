@@ -2,7 +2,7 @@ version: '3'
 
 tasks:
   install:
-    desc: "Install frontend npm dependencies"
+    desc: "Install dependencies"
     run: once
     cmds:
       - '{{ if eq .CI "true" }}npm ci{{ else }}npm install{{ end }}'
@@ -74,35 +74,35 @@ tasks:
   # ============================================================
 
   dev:
-    desc: "Start Vite dev server (default mode)"
+    desc: "Start frontend dev server"
     deps: [prep]
     ignore_error: true
     cmds:
       - npm run vite
 
   dev:core:
-    desc: "Start Vite dev server in core mode"
+    desc: "Start frontend dev server in core mode"
     deps: [prep]
     ignore_error: true
     cmds:
       - npm run vite -- --mode core
 
   dev:proprietary:
-    desc: "Start Vite dev server in proprietary mode"
+    desc: "Start frontend dev server in proprietary mode"
     deps: [prep]
     ignore_error: true
     cmds:
       - npm run vite -- --mode proprietary
 
   dev:saas:
-    desc: "Start Vite dev server in SaaS mode"
+    desc: "Start frontend dev server in SaaS mode"
     deps: [prep:saas]
     ignore_error: true
     cmds:
       - npm run vite -- --mode saas
 
   dev:desktop:
-    desc: "Start Vite dev server in desktop mode"
+    desc: "Start frontend dev server in desktop mode"
     deps: [prep:desktop]
     ignore_error: true
     cmds:
@@ -147,14 +147,14 @@ tasks:
   # ============================================================
 
   lint:
-    desc: "Run ESLint + cycle detection"
+    desc: "Run linting"
     deps: [install]
     cmds:
       - npm run eslint -- --max-warnings=0
       - npm run dpdm -- src --circular --no-warning --no-tree --exit-code circular:1
 
   typecheck:
-    desc: "Run TypeScript type checking"
+    desc: "Run type checking"
     deps: [install]
     cmds:
       - npm run tsc -- --noEmit --project src/proprietary/tsconfig.json
@@ -193,31 +193,31 @@ tasks:
   # ============================================================
 
   test:
-    desc: "Run Vitest (single run)"
+    desc: "Run tests"
     deps: [install]
     cmds:
       - npm run vitest -- run
 
   test:watch:
-    desc: "Run Vitest in watch mode"
+    desc: "Run tests in watch mode"
     deps: [install]
     cmds:
       - npm run vitest -- --watch
 
   test:coverage:
-    desc: "Run Vitest with coverage"
+    desc: "Run tests with coverage"
     deps: [install]
     cmds:
       - npm run vitest -- --coverage
 
   test:e2e:
-    desc: "Run Playwright E2E tests"
+    desc: "Run E2E tests"
     deps: [prep]
     cmds:
       - npm run playwright -- test
 
   test:e2e:install:
-    desc: "Install Playwright browsers"
+    desc: "Install E2E test browsers"
     cmds:
       - npm run playwright -- install --with-deps
 

@@ -2,7 +2,7 @@ version: '3'
 
 tasks:
   install:
-    desc: "Install Python dependencies"
+    desc: "Install engine dependencies"
     run: once
     cmds:
       - uv python install 3.13.8
@@ -25,7 +25,7 @@ tasks:
       - .env
 
   run:
-    desc: "Run FastAPI engine on :5001"
+    desc: "Run engine server"
     deps: [prep]
     ignore_error: true
     dir: src
@@ -34,8 +34,8 @@ tasks:
     cmds:
       - uv run uvicorn stirling.api.app:app --host 0.0.0.0 --port 5001
 
-  run-dev:
-    desc: "Run FastAPI engine on :5001 with hot reload"
+  dev:
+    desc: "Start engine dev server with hot reload"
     deps: [prep]
     ignore_error: true
     dir: src
@@ -45,37 +45,37 @@ tasks:
       - uv run uvicorn stirling.api.app:app --host 0.0.0.0 --port 5001 --reload
 
   lint:
-    desc: "Run ruff linting"
+    desc: "Run linting"
     deps: [install]
     cmds:
       - uv run ruff check .
 
   lint:fix:
-    desc: "Auto-fix ruff lint issues"
+    desc: "Auto-fix lint issues"
     deps: [install]
     cmds:
       - uv run ruff check . --fix
 
   format:
-    desc: "Format code with ruff"
+    desc: "Auto-fix code formatting"
     deps: [install]
     cmds:
       - uv run ruff format .
 
   format:check:
-    desc: "Check formatting without changes"
+    desc: "Check code formatting"
     deps: [install]
     cmds:
       - uv run ruff format . --diff
 
   typecheck:
-    desc: "Run pyright type checking"
+    desc: "Run type checking"
     deps: [install]
     cmds:
       - uv run pyright . --warnings
 
   test:
-    desc: "Run pytest"
+    desc: "Run tests"
     deps: [prep]
     cmds:
       - uv run pytest tests
@@ -102,6 +102,6 @@ tasks:
       - task: fix
 
   clean:
-    desc: "Remove venv and generated files"
+    desc: "Clean build artifacts"
     cmds:
       - rm -rf .venv data logs output

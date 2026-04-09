@@ -8,6 +8,7 @@ This project uses [Task](https://taskfile.dev/) as a unified command runner. All
 
 ### Quick Reference
 - `task install` — install all dependencies
+- `task dev` — start backend + frontend concurrently
 - `task dev:all` — start backend + frontend + engine concurrently
 - `task build` — build all components
 - `task test` — run all tests (backend + frontend + engine)
@@ -21,8 +22,8 @@ This project uses [Task](https://taskfile.dev/) as a unified command runner. All
 ## Common Development Commands
 
 ### Build and Test
-- **Build project**: `task build` (or `./gradlew clean build`)
-- **Run backend locally**: `task backend:run` (or `./gradlew bootRun`) — runs on localhost:8080
+- **Build project**: `task build`
+- **Run backend locally**: `task backend:dev`
 - **Run all tests**: `task test` (or individually: `task backend:test`, `task frontend:test`, `task engine:test`)
 - **Docker integration tests**: `./test.sh` (builds all Docker variants and runs comprehensive tests)
 - **Code formatting**: `task format` (or `task backend:format` for Java only)
@@ -323,8 +324,9 @@ The frontend is organized with a clear separation of concerns:
 ## Development Workflow
 
 1. **Local Development** (using Taskfile):
-   - All services: `task dev:all` (starts backend, frontend, and engine concurrently)
-   - Or individually: `task backend:run` (localhost:8080), `task frontend:dev` (localhost:5173), `task engine:run-dev` (localhost:5001)
+   - Backend + frontend: `task dev`
+   - All services (including AI engine): `task dev:all`
+   - Or individually: `task backend:dev` (localhost:8080), `task frontend:dev` (localhost:5173), `task engine:dev` (localhost:5001)
 2. **Quality Gate**: Run `task check` before submitting PRs
 3. **Docker Testing**: Use `./test.sh` for full Docker integration tests
 4. **Code Style**: Spotless enforces Google Java Format automatically (`task backend:format`)

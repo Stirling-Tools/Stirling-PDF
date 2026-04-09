@@ -94,18 +94,18 @@ Run `task install` to install all project dependencies (frontend npm packages, e
 
 The fastest way to start developing:
 
-1. **Start everything**: `task dev:all` (runs backend, frontend, and engine concurrently — Ctrl+C to stop)
+1. **Start developing**: `task dev` (runs backend + frontend concurrently — Ctrl+C to stop)
 2. **Or start services individually** in separate terminals:
-   - `task backend:run` — Spring Boot on localhost:8080
+   - `task backend:dev` — Spring Boot on localhost:8080
    - `task frontend:dev` — Vite on localhost:5173
-   - `task engine:run-dev` — FastAPI on localhost:5001
+   - `task engine:dev` — FastAPI on localhost:5001
 
 Run `task --list` to see all available commands.
 
 ### Frontend Development (React)
 The frontend is a React SPA that runs independently during development:
 
-1. **Start the backend**: `task backend:run` (serves API endpoints on localhost:8080)
+1. **Start the backend**: `task backend:dev` (serves API endpoints on localhost:8080)
 2. **Start the frontend dev server**: `task frontend:dev` (serves UI on localhost:5173)
 3. **Development flow**: The Vite dev server automatically proxies API calls to the backend
 
@@ -265,10 +265,10 @@ Stirling-PDF uses different Docker images for various configurations. The build 
    export DISABLE_ADDITIONAL_FEATURES=true  # or false for to enable login and security features for builds
    ```
 
-2. Build the project with Gradle:
+2. Build the project:
 
    ```bash
-   ./gradlew clean build
+   task backend:build
    ```
 
 3. Build the Docker images:
@@ -333,7 +333,7 @@ Note: The `test.sh` script will run automatically when you raise a PR. However, 
 
 For React frontend development:
 
-1. Start the backend: `task backend:run` (serves API endpoints on localhost:8080)
+1. Start the backend: `task backend:dev` (serves API endpoints on localhost:8080)
 2. Start the frontend dev server: `task frontend:dev` (serves UI on localhost:5173)
 3. The Vite dev server automatically proxies API calls to the backend
 4. Run frontend tests: `task frontend:test` (or `task frontend:test:watch` for watch mode)
@@ -353,7 +353,7 @@ To run Stirling-PDF locally:
 1. Compile and run the project using built-in IDE methods or by running:
 
    ```bash
-   task backend:run   # or: ./gradlew bootRun
+   task backend:dev
    ```
 
 2. Access the application at `http://localhost:8080` in your web browser.

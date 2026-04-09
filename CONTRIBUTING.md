@@ -21,7 +21,7 @@ This project uses [Task](https://taskfile.dev/) as a unified command runner. Aft
 
 1. Install the `task` CLI: https://taskfile.dev/installation/
 2. Run `task install` to install all dependencies
-3. Run `task dev:all` to start all services (backend, frontend, engine)
+3. Run `task dev` to start backend + frontend
 4. Run `task check` before submitting a PR
 
 Run `task --list` to see all available commands.

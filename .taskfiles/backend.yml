@@ -4,8 +4,8 @@ vars:
   GRADLE: '{{if eq OS "windows"}}gradlew.bat{{else}}./gradlew{{end}}'
 
 tasks:
-  run:
-    desc: "Run Spring Boot backend on :8080"
+  dev:
+    desc: "Start backend dev server"
     ignore_error: true
     cmds:
       - '{{.GRADLE}} :stirling-pdf:bootRun'
@@ -26,12 +26,12 @@ tasks:
       - '{{.GRADLE}} build -PnoSpotless'
 
   test:
-    desc: "Run JUnit tests"
+    desc: "Run backend tests"
     cmds:
       - '{{.GRADLE}} test'
 
   format:
-    desc: "Apply Spotless formatting"
+    desc: "Auto-fix code formatting"
     cmds:
       - '{{.GRADLE}} spotlessApply'
 
@@ -40,8 +40,8 @@ tasks:
     cmds:
       - '{{.GRADLE}} spotlessCheck'
 
-  coverage:
-    desc: "Generate JaCoCo coverage report"
+  test:coverage:
+    desc: "Generate test coverage report"
     cmds:
       - '{{.GRADLE}} jacocoTestReport'
 
@@ -55,7 +55,7 @@ tasks:
     cmds:
       - task: format:check
       - task: test
-      - task: coverage
+      - task: test:coverage
 
   version:
     desc: "Print project version"
@@ -74,6 +74,6 @@ tasks:
       - '{{.GRADLE}} checkLicense generateLicenseReport --no-parallel'
 
   clean:
-    desc: "Gradle clean"
+    desc: "Clean build artifacts"
     cmds:
       - '{{.GRADLE}} clean'

@@ -37,12 +37,18 @@ tasks:
   # Development
   # ============================================================
 
-  dev:all:
-    desc: "Start backend + frontend + engine concurrently (Ctrl+C to stop)"
+  dev:
+    desc: "Start backend + frontend concurrently"
     deps:
-      - backend:run
+      - backend:dev
       - frontend:dev
-      - engine:run-dev
+
+  dev:all:
+    desc: "Start backend + frontend + engine concurrently"
+    deps:
+      - backend:dev
+      - frontend:dev
+      - engine:dev
 
   # ============================================================
   # Build
@@ -70,17 +76,18 @@ tasks:
   # ============================================================
 
   lint:
-    desc: "Run ALL linters (backend + frontend + engine)"
+    desc: "Run all linters and format checks"
     cmds:
       - task: backend:format:check
       - task: frontend:lint
       - task: engine:lint
+      - task: engine:format:check
 
   format:
     desc: "Auto-fix formatting across all components"
     cmds:
       - task: backend:format
-      - task: engine:fix
+      - task: engine:format
 
   # ============================================================
   # Quality Gate

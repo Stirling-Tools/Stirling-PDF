@@ -11,7 +11,7 @@ All engine commands can be run from the repository root using Task:
 - `task engine:check` — run all checks (typecheck + lint + format-check + test)
 - `task engine:fix` — auto-fix lint + formatting
 - `task engine:install` — install Python dependencies via uv
-- `task engine:run-dev` — start FastAPI with hot reload (localhost:5001)
+- `task engine:dev` — start FastAPI with hot reload (localhost:5001)
 - `task engine:test` — run pytest
 - `task engine:lint` — run ruff linting
 - `task engine:typecheck` — run pyright
