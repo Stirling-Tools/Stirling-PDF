@@ -37,7 +37,7 @@ export const TOOL_CREDIT_COSTS: Record<ToolId, number> = {
   reorganizePages: CREDIT_COSTS.SMALL,
   scalePages: CREDIT_COSTS.SMALL,
   editTableOfContents: CREDIT_COSTS.SMALL,
-  sign: CREDIT_COSTS.SMALL,
+  sign: CREDIT_COSTS.LARGE,
   removeAnnotations: CREDIT_COSTS.SMALL,
   removeImage: CREDIT_COSTS.SMALL,
   scannerImageSplit: CREDIT_COSTS.SMALL,
@@ -76,7 +76,6 @@ export const TOOL_CREDIT_COSTS: Record<ToolId, number> = {
   compress: CREDIT_COSTS.LARGE,
   convert: CREDIT_COSTS.LARGE,
   ocr: CREDIT_COSTS.LARGE,
-  certSign: CREDIT_COSTS.LARGE,
   timestampPdf: CREDIT_COSTS.LARGE,
 
   // Extra large operations (10 credits)

@@ -673,11 +673,11 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
               className="quick-access-popout__quick-sign-btn"
               onClick={() => {
                 onClose();
-                handleToolSelect('certSign');
+                handleToolSelect('sign');
               }}
             >
-              <LocalIcon icon="workspace-premium-rounded" width="1rem" height="1rem" />
-              {t('quickAccess.certSign', 'Certificate Sign')}
+              <LocalIcon icon="signature-rounded" width="1rem" height="1rem" />
+              {t('quickAccess.sign', 'Sign')}
             </button>
           </div>
         </div>

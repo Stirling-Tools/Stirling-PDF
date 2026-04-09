@@ -42,7 +42,7 @@ import UnlockPdfForms from "@app/tools/UnlockPdfForms";
 import FormFill from "@app/tools/formFill/FormFill";
 import RemoveCertificateSign from "@app/tools/RemoveCertificateSign";
 import RemoveImage from "@app/tools/RemoveImage";
-import CertSign from "@app/tools/CertSign";
+import CombinedSign from "@app/tools/CombinedSign";
 import TimestampPdf from "@app/tools/TimestampPdf";
 import BookletImposition from "@app/tools/BookletImposition";
 import Flatten from "@app/tools/Flatten";
@@ -50,7 +50,6 @@ import Rotate from "@app/tools/Rotate";
 import PdfTextEditor from "@app/tools/pdfTextEditor/PdfTextEditor";
 import ChangeMetadata from "@app/tools/ChangeMetadata";
 import Crop from "@app/tools/Crop";
-import Sign from "@app/tools/Sign";
 import AddText from "@app/tools/AddText";
 import AddImage from "@app/tools/AddImage";
 import Annotate from "@app/tools/Annotate";
@@ -69,7 +68,6 @@ import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
 import { convertOperationConfig } from "@app/hooks/tools/convert/useConvertOperation";
 import { removeCertificateSignOperationConfig } from "@app/hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
 import { changePermissionsOperationConfig } from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
-import { certSignOperationConfig } from "@app/hooks/tools/certSign/useCertSignOperation";
 import { timestampPdfOperationConfig } from "@app/hooks/tools/timestampPdf/useTimestampPdfOperation";
 import { bookletImpositionOperationConfig } from "@app/hooks/tools/bookletImposition/useBookletImpositionOperation";
 import { mergeOperationConfig } from '@app/hooks/tools/merge/useMergeOperation';
@@ -113,7 +111,6 @@ import MergeSettings from '@app/components/tools/merge/MergeSettings';
 import AdjustPageScaleSettings from "@app/components/tools/adjustPageScale/AdjustPageScaleSettings";
 import ScannerImageSplitSettings from "@app/components/tools/scannerImageSplit/ScannerImageSplitSettings";
 import ChangeMetadataSingleStep from "@app/components/tools/changeMetadata/ChangeMetadataSingleStep";
-import SignSettings from "@app/components/tools/sign/SignSettings";
 import AddPageNumbers from "@app/tools/AddPageNumbers";
 import RemoveAnnotations from "@app/tools/RemoveAnnotations";
 import PageLayoutSettings from "@app/components/tools/pageLayout/PageLayoutSettings";
@@ -123,7 +120,6 @@ import ExtractImagesSettings from "@app/components/tools/extractImages/ExtractIm
 import ExtractPagesSettings from "@app/components/tools/extractPages/ExtractPagesSettings";
 import ReplaceColorSettings from "@app/components/tools/replaceColor/ReplaceColorSettings";
 import AddStampAutomationSettings from "@app/components/tools/addStamp/AddStampAutomationSettings";
-import CertSignAutomationSettings from "@app/components/tools/certSign/CertSignAutomationSettings";
 import CropAutomationSettings from "@app/components/tools/crop/CropAutomationSettings";
 import RotateAutomationSettings from "@app/components/tools/rotate/RotateAutomationSettings";
 import SplitAutomationSettings from "@app/components/tools/split/SplitAutomationSettings";
@@ -202,19 +198,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "merge")
       },
       // Signing
-      certSign: {
-        icon: <LocalIcon icon="workspace-premium-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.certSign.title", "Certificate Sign"),
-        component: CertSign,
-        description: t("home.certSign.desc", "Sign PDF documents using digital certificates"),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.SIGNING,
-        synonyms: getSynonyms(t, "certSign"),
-        maxFiles: -1,
-        endpoints: ["cert-sign"],
-        operationConfig: certSignOperationConfig,
-        automationSettings: CertSignAutomationSettings,
-      },
       timestampPdf: {
         icon: <LocalIcon icon="schedule-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.timestampPdf.title", "Timestamp PDF"),
@@ -231,15 +214,15 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       sign: {
         icon: <LocalIcon icon="signature-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.sign.title", "Sign"),
-        component: Sign,
-        description: t("home.sign.desc", "Adds signature to PDF by drawing, text or image"),
+        component: CombinedSign,
+        description: t("home.sign.desc", "Sign PDFs with a wet signature, digital certificate, or both"),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.SIGNING,
-        endpoints: ["sign"],
+        endpoints: ["sign", "cert-sign"],
         operationConfig: signOperationConfig,
-        automationSettings: SignSettings, // TODO:: not all settings shown, suggested next tools shown
+        automationSettings: null,
         synonyms: getSynonyms(t, "sign"),
-        supportsAutomate: false, //TODO make support Sign
+        supportsAutomate: false,
       },
       addText: {
         icon: <LocalIcon icon="text-fields-rounded" width="1.5rem" height="1.5rem" />,

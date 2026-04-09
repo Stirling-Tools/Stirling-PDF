@@ -1,9 +1,10 @@
-import { Modal, Stack, Group, Button, Text, Collapse, TextInput, Loader } from '@mantine/core';
+import { Modal, Stack, Group, Button, Text, Collapse, TextInput, Divider, Loader } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useRef } from 'react';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import { CertificateSelector, CertificateType, UploadFormat } from '@app/components/tools/certSign/CertificateSelector';
+import SignatureSettingsInput, { SignatureSettings } from '@app/components/tools/certSign/SignatureSettingsInput';
 import apiClient from '@app/services/apiClient';
 
 export interface CertificateSubmitData {
@@ -14,6 +15,11 @@ export interface CertificateSubmitData {
   certFile: File | null;
   jksFile: File | null;
   password: string;
+  // Appearance (only present when showAppearanceSettings=true)
+  showSignature?: boolean;
+  pageNumber?: number;
+  showLogo?: boolean;
+  includeSummaryPage?: boolean;
 }
 
 type CertValidationState =
@@ -30,6 +36,8 @@ interface CertificateConfigModalProps {
   disabled?: boolean;
   defaultReason?: string;
   defaultLocation?: string;
+  /** When true, renders SignatureSettingsInput so the user can configure cert appearance */
+  showAppearanceSettings?: boolean;
   /** Share token for external participants. When present, the participant validation endpoint is used. */
   participantToken?: string;
 }
@@ -42,6 +50,7 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
   disabled = false,
   defaultReason = '',
   defaultLocation = '',
+  showAppearanceSettings = false,
   participantToken,
 }) => {
   const { t } = useTranslation();
@@ -119,6 +128,11 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
   const [reason, setReason] = useState(defaultReason);
   const [location, setLocation] = useState(defaultLocation);
 
+  // Appearance settings (only used when showAppearanceSettings=true)
+  const [appearance, setAppearance] = useState<SignatureSettings>({
+    showSignature: false,
+  });
+
   const isUploadValid = () => {
     if (certType !== 'UPLOAD') return true;
     switch (uploadFormat) {
@@ -142,11 +156,22 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
 
     setSigning(true);
     try {
-      await onSign(
-        { certType, uploadFormat, p12File, privateKeyFile, certFile, jksFile, password },
-        reason,
-        location
-      );
+      const certData: CertificateSubmitData = {
+        certType,
+        uploadFormat,
+        p12File,
+        privateKeyFile,
+        certFile,
+        jksFile,
+        password,
+        ...(showAppearanceSettings && {
+          showSignature: appearance.showSignature,
+          pageNumber: appearance.pageNumber,
+          showLogo: appearance.showLogo,
+          includeSummaryPage: appearance.includeSummaryPage,
+        }),
+      };
+      await onSign(certData, reason, location);
     } catch (error) {
       console.error('Failed to sign document:', error);
     } finally {
@@ -188,6 +213,19 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
           onPasswordChange={setPassword}
           disabled={disabled || signing}
         />
+
+        {/* Signature Appearance Settings (combined sign tool) */}
+        {showAppearanceSettings && (
+          <>
+            <Divider />
+            <SignatureSettingsInput
+              value={appearance}
+              onChange={setAppearance}
+              disabled={disabled || signing}
+            />
+            <Divider />
+          </>
+        )}
 
         {/* Certificate validation status */}
         {certValidation.status === 'validating' && (

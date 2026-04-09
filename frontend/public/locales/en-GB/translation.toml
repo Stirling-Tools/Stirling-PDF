@@ -4170,8 +4170,8 @@ tags = "javascript,code,script,show javascript,show JS,find javascript,detect ja
 title = "Show Javascript"
 
 [home.sign]
-desc = "Adds signature to PDF by drawing, text or image"
-tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
+desc = "Sign PDFs with a wet signature, digital certificate, or both"
+tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting,certificate sign,cert sign,wet sign"
 title = "Sign"
 
 [home.timestampPdf]
@@ -6950,11 +6950,24 @@ saved = "Select a saved signature above, then click anywhere on the PDF to place
 text = "After entering your name above, click anywhere on the PDF to place your signature."
 title = "How to add signature"
 
+[sign.editor]
+back = "Back to file selection"
+hint = "Open the editor to place wet signatures, apply a digital certificate, or both."
+noSignatures = "Place at least one signature on the PDF first."
+open = "Open Sign Editor"
+openStep = "Open Sign Editor"
+signingFailed = "Signing failed. Please try again."
+signDocument = "Sign Document"
+title = "Sign Editor"
+
 [sign.mode]
+both = "Both"
+cert = "Cert Sign"
 move = "Move Signature"
 pause = "Pause placement"
 place = "Place Signature"
 resume = "Resume placement"
+wet = "Wet Sign"
 
 [sign.results]
 title = "Signature Results"
