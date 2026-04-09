@@ -4287,6 +4287,8 @@ welcomeTitle = "You've been invited!"
 
 [landing]
 addFiles = "Add Files"
+heroSubtitle = "Drop in or add an existing PDF to get started."
+heroTitle = "Stirling PDF"
 mobileUpload = "Upload from Mobile"
 openFromComputer = "Open from computer"
 uploadFromComputer = "Upload from computer"
