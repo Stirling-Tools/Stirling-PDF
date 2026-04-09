@@ -75,6 +75,7 @@ public class ApplicationProperties {
     private AutoPipeline autoPipeline = new AutoPipeline();
     private ProcessExecutor processExecutor = new ProcessExecutor();
     private PdfEditor pdfEditor = new PdfEditor();
+    private AiEngine aiEngine = new AiEngine();
 
     @Bean
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
@@ -229,6 +230,13 @@ public class ApplicationProperties {
                 private String index = "classpath:/type3/library/index.json";
             }
         }
+    }
+
+    @Data
+    public static class AiEngine {
+        private boolean enabled = false;
+        private String url = "http://localhost:5001";
+        private int timeoutSeconds = 120;
     }
 
     @Data
