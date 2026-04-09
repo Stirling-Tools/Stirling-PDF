@@ -85,10 +85,7 @@ jobs:
           cache-disabled: true
 
       - name: Install Task
-        uses: arduino/setup-task@v2
-        with:
-          version: '3.x'
-
+        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
         run: task backend:build:ci
         env:
@@ -175,10 +172,7 @@ jobs:
           cache-disabled: true
 
       - name: Install Task
-        uses: arduino/setup-task@v2
-        with:
-          version: '3.x'
-
+        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
       - name: Generate OpenAPI documentation
         run: task backend:swagger
         env:
@@ -211,10 +205,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
-        uses: arduino/setup-task@v2
-        with:
-          version: '3.x'
-
+        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
       - name: Check and build frontend
         run: task frontend:check:all
       - name: Upload frontend build artifacts
@@ -242,10 +233,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
-        uses: arduino/setup-task@v2
-        with:
-          version: '3.x'
-
+        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
       - name: Install and prep frontend
         run: task frontend:prep
       - name: Install Playwright (chromium only)
@@ -295,10 +283,7 @@ jobs:
           cache-disabled: true
 
       - name: Install Task
-        uses: arduino/setup-task@v2
-        with:
-          version: '3.x'
-
+        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
       - name: Check licenses for compatibility
         run: task backend:licenses:check
         env:
@@ -496,10 +481,7 @@ jobs:
           cache-disabled: true
 
       - name: Install Task
-        uses: arduino/setup-task@v2
-        with:
-          version: '3.x'
-
+        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
       - name: Build application
         run: task backend:build
         env:

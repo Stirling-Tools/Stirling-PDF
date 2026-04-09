@@ -90,10 +90,7 @@ jobs:
         run: npm ci --ignore-scripts --audit=false --fund=false
 
       - name: Install Task
-        uses: arduino/setup-task@v2
-        with:
-          version: '3.x'
-
+        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
       - name: Generate frontend license report (internal PR)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
         env:
@@ -346,10 +343,7 @@ jobs:
           gradle-version: 9.3.1
 
       - name: Install Task
-        uses: arduino/setup-task@v2
-        with:
-          version: '3.x'
-
+        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
       - name: Check licenses and generate report
         id: license-check
         run: task backend:licenses:generate || echo "LICENSE_CHECK_FAILED=true" >> $GITHUB_ENV

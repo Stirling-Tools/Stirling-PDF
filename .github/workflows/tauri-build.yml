@@ -129,10 +129,7 @@ jobs:
           gradle-version: 9.3.1
 
       - name: Setup Task
-        uses: arduino/setup-task@v2
-        with:
-          version: '3.x'
-
+        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
       - name: Build Java backend with JLink
         run: task desktop:jlink
         env:

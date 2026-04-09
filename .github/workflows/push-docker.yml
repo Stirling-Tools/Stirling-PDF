@@ -65,10 +65,7 @@ jobs:
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
       - name: Install Task
-        uses: arduino/setup-task@v2
-        with:
-          version: '3.x'
-
+        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
       - name: Get version number
         id: versionNumber
         run: echo "versionNumber=$(task backend:version)" >> $GITHUB_OUTPUT
