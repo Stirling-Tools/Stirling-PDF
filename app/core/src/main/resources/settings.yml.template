@@ -325,6 +325,11 @@ processExecutor:
     ghostscriptTimeoutMinutes: 30
     ocrMyPdfTimeoutMinutes: 30
 
+aiEngine:
+  enabled: false # Set to 'true' to enable the AI engine integration
+  url: http://localhost:5001 # URL of the Python AI engine
+  timeoutSeconds: 120 # Timeout in seconds for AI engine requests
+
 pdfEditor:
   fallback-font: classpath:/static/fonts/NotoSans-Regular.ttf # Override to point at a custom fallback font
   cache:

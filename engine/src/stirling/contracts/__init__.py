@@ -8,7 +8,17 @@ from .agent_drafts import (
     AgentRevisionWorkflowResponse,
 )
 from .agent_specs import AgentSpec, AgentSpecStep, AiToolAgentStep
-from .common import ConversationMessage, PdfTextSelection, ToolOperationStep
+from .common import (
+    ArtifactKind,
+    ConversationMessage,
+    ExtractedFileText,
+    PdfContentType,
+    PdfTextSelection,
+    StepKind,
+    SupportedCapability,
+    ToolOperationStep,
+    WorkflowOutcome,
+)
 from .execution import (
     AgentExecutionRequest,
     CannotContinueExecutionAction,
@@ -19,7 +29,13 @@ from .execution import (
     ToolCallExecutionAction,
 )
 from .health import HealthResponse
-from .orchestrator import OrchestratorRequest, OrchestratorResponse, SupportedCapability, UnsupportedCapabilityResponse
+from .orchestrator import (
+    ExtractedTextArtifact,
+    OrchestratorRequest,
+    OrchestratorResponse,
+    UnsupportedCapabilityResponse,
+    WorkflowArtifact,
+)
 from .pdf_edit import (
     EditCannotDoResponse,
     EditClarificationRequest,
@@ -28,14 +44,16 @@ from .pdf_edit import (
     PdfEditResponse,
 )
 from .pdf_questions import (
+    NeedContentFileRequest,
     PdfQuestionAnswerResponse,
-    PdfQuestionNeedTextResponse,
+    PdfQuestionNeedContentResponse,
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
     PdfQuestionResponse,
 )
 
 __all__ = [
+    "ArtifactKind",
     "AgentDraft",
     "AgentDraftRequest",
     "AgentDraftResponse",
@@ -49,6 +67,7 @@ __all__ = [
     "AiToolAgentStep",
     "CannotContinueExecutionAction",
     "ConversationMessage",
+    "ExtractedFileText",
     "CompletedExecutionAction",
     "EditCannotDoResponse",
     "EditClarificationRequest",
@@ -56,19 +75,25 @@ __all__ = [
     "ExecutionContext",
     "ExecutionStepResult",
     "HealthResponse",
+    "NeedContentFileRequest",
     "NextExecutionAction",
+    "ExtractedTextArtifact",
     "OrchestratorRequest",
     "OrchestratorResponse",
     "PdfEditRequest",
     "PdfEditResponse",
     "PdfQuestionAnswerResponse",
     "PdfQuestionNotFoundResponse",
-    "PdfQuestionNeedTextResponse",
+    "PdfContentType",
+    "PdfQuestionNeedContentResponse",
     "PdfQuestionRequest",
     "PdfQuestionResponse",
     "PdfTextSelection",
+    "StepKind",
     "SupportedCapability",
     "ToolOperationStep",
     "ToolCallExecutionAction",
+    "WorkflowOutcome",
     "UnsupportedCapabilityResponse",
+    "WorkflowArtifact",
 ]
