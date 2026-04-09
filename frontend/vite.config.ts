@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react-swc';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
-const VALID_MODES = ['core', 'proprietary', 'saas', 'desktop'] as const;
+const VALID_MODES = ['core', 'proprietary', 'saas', 'desktop', 'prototypes'] as const;
 type BuildMode = typeof VALID_MODES[number];
 
 const TSCONFIG_MAP: Record<BuildMode, string> = {
@@ -11,6 +11,7 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
   proprietary: './tsconfig.proprietary.vite.json',
   saas: './tsconfig.saas.vite.json',
   desktop: './tsconfig.desktop.vite.json',
+  prototypes: './tsconfig.prototypes.vite.json',
 };
 
 export default defineConfig(({ mode }) => {
