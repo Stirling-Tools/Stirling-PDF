@@ -1,28 +1,28 @@
-import { useEffect, useCallback, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
-import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
-import SignSettings, { SignatureSource } from '@app/components/tools/sign/SignSettings';
-import { DEFAULT_PARAMETERS, useSignParameters, SignParameters } from '@app/hooks/tools/sign/useSignParameters';
-import { useSignOperation } from '@app/hooks/tools/sign/useSignOperation';
-import { useBaseTool } from '@app/hooks/tools/shared/useBaseTool';
-import { BaseToolProps, ToolComponent } from '@app/types/tool';
-import { ToolId } from '@app/types/toolId';
-import { useNavigation } from '@app/contexts/NavigationContext';
-import { useSignature } from '@app/contexts/SignatureContext';
-import { useFileContext } from '@app/contexts/FileContext';
-import { useViewer } from '@app/contexts/ViewerContext';
-import { flattenSignatures } from '@app/utils/signatureFlattening';
+import { useEffect, useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import SignSettings, { SignatureSource } from "@app/components/tools/sign/SignSettings";
+import { DEFAULT_PARAMETERS, useSignParameters, SignParameters } from "@app/hooks/tools/sign/useSignParameters";
+import { useSignOperation } from "@app/hooks/tools/sign/useSignOperation";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { ToolId } from "@app/types/toolId";
+import { useNavigation } from "@app/contexts/NavigationContext";
+import { useSignature } from "@app/contexts/SignatureContext";
+import { useFileContext } from "@app/contexts/FileContext";
+import { useViewer } from "@app/contexts/ViewerContext";
+import { flattenSignatures } from "@app/utils/signatureFlattening";
 
 export type StampToolConfig = {
   toolId: ToolId;
   translationScope?: string;
   allowedSignatureSources?: SignatureSource[];
   defaultSignatureSource?: SignatureSource;
-  defaultSignatureType?: SignParameters['signatureType'];
+  defaultSignatureType?: SignParameters["signatureType"];
   enableApplyAction?: boolean;
 };
 
-const STAMP_TOOL_DEFAULT_SOURCES: SignatureSource[] = ['canvas', 'image', 'text', 'saved'];
+const STAMP_TOOL_DEFAULT_SOURCES: SignatureSource[] = ["canvas", "image", "text", "saved"];
 
 export const createStampTool = (config: StampToolConfig) => {
   const {
@@ -38,7 +38,7 @@ export const createStampTool = (config: StampToolConfig) => {
     const { t } = useTranslation();
     const translateTool = useCallback(
       (key: string, defaultValue: string) => t(`${translationScope}.${key}`, defaultValue),
-      [t, translationScope]
+      [t, translationScope],
     );
     const { setWorkbench, setHasUnsavedChanges, unregisterUnsavedChangesChecker } = useNavigation();
     const {
@@ -55,39 +55,33 @@ export const createStampTool = (config: StampToolConfig) => {
     } = useSignature();
     const { consumeFiles, selectors } = useFileContext();
     const { exportActions, getScrollState, activeFileIndex, setActiveFileIndex } = useViewer();
-    const base = useBaseTool(
-      toolId,
-      useSignParameters,
-      useSignOperation,
-      props
-    );
+    const base = useBaseTool(toolId, useSignParameters, useSignOperation, props);
 
     const allowedSignatureTypes = allowedSignatureSources.filter(
-      (source): source is SignParameters['signatureType'] => source !== 'saved'
+      (source): source is SignParameters["signatureType"] => source !== "saved",
     );
-    const enforcedSignatureType =
-      defaultSignatureType ?? allowedSignatureTypes[0] ?? DEFAULT_PARAMETERS.signatureType;
+    const enforcedSignatureType = defaultSignatureType ?? allowedSignatureTypes[0] ?? DEFAULT_PARAMETERS.signatureType;
 
     useEffect(() => {
       if (!allowedSignatureTypes.includes(base.params.parameters.signatureType)) {
-        base.params.updateParameter('signatureType', enforcedSignatureType);
+        base.params.updateParameter("signatureType", enforcedSignatureType);
       }
     }, [allowedSignatureTypes, base.params.parameters.signatureType, base.params.updateParameter, enforcedSignatureType]);
 
     const hasOpenedViewer = useRef(false);
-    const activeModeRef = useRef<'draw' | 'placement' | null>(null);
+    const activeModeRef = useRef<"draw" | "placement" | null>(null);
 
     const handleSignaturePlacement = useCallback(() => {
       activateSignaturePlacementMode();
     }, [activateSignaturePlacementMode]);
 
     const handleActivateDrawMode = useCallback(() => {
-      activeModeRef.current = 'draw';
+      activeModeRef.current = "draw";
       activateDrawMode();
     }, [activateDrawMode]);
 
     const handleActivateSignaturePlacement = useCallback(() => {
-      activeModeRef.current = 'placement';
+      activeModeRef.current = "placement";
       handleSignaturePlacement();
     }, [handleSignaturePlacement]);
 
@@ -98,7 +92,7 @@ export const createStampTool = (config: StampToolConfig) => {
 
     useEffect(() => {
       if (base.selectedFiles.length > 0 && !hasOpenedViewer.current) {
-        setWorkbench('viewer');
+        setWorkbench("viewer");
         hasOpenedViewer.current = true;
       }
     }, [base.selectedFiles.length, setWorkbench]);
@@ -117,7 +111,7 @@ export const createStampTool = (config: StampToolConfig) => {
         const originalFile = allFiles[fileIndex];
 
         if (!originalFile) {
-          console.error('No file available to replace');
+          console.error("No file available to replace");
           return;
         }
 
@@ -132,11 +126,7 @@ export const createStampTool = (config: StampToolConfig) => {
         });
 
         if (flattenResult) {
-          await consumeFiles(
-            flattenResult.inputFileIds,
-            [flattenResult.outputStirlingFile],
-            [flattenResult.outputStub]
-          );
+          await consumeFiles(flattenResult.inputFileIds, [flattenResult.outputStirlingFile], [flattenResult.outputStub]);
 
           setActiveFileIndex(0);
           setSignaturesApplied(true);
@@ -145,18 +135,18 @@ export const createStampTool = (config: StampToolConfig) => {
           const hasSignatureReady = (() => {
             const params = base.params.parameters;
             switch (params.signatureType) {
-              case 'canvas':
-              case 'image':
+              case "canvas":
+              case "image":
                 return Boolean(params.signatureData);
-              case 'text':
-                return Boolean(params.signerName && params.signerName.trim() !== '');
+              case "text":
+                return Boolean(params.signerName && params.signerName.trim() !== "");
               default:
                 return false;
             }
           })();
 
           if (hasSignatureReady) {
-            if (typeof window !== 'undefined') {
+            if (typeof window !== "undefined") {
               window.setTimeout(() => {
                 handleActivateSignaturePlacement();
               }, 150);
@@ -165,10 +155,10 @@ export const createStampTool = (config: StampToolConfig) => {
             }
           }
         } else {
-          console.error('Signature flattening failed');
+          console.error("Signature flattening failed");
         }
       } catch (error) {
-        console.error('Error saving signed document:', error);
+        console.error("Error saving signed document:", error);
       }
     }, [
       exportActions,
@@ -195,7 +185,7 @@ export const createStampTool = (config: StampToolConfig) => {
 
       if (base.selectedFiles.length > 0) {
         steps.push({
-          title: translateTool('steps.configure', 'Configure Stamp'),
+          title: translateTool("steps.configure", "Configure Stamp"),
           isCollapsed: false,
           onCollapsedClick: undefined,
           content: (
@@ -230,7 +220,7 @@ export const createStampTool = (config: StampToolConfig) => {
       review: {
         isVisible: false,
         operation: base.operation,
-        title: translateTool('results.title', 'Stamp Results'),
+        title: translateTool("results.title", "Stamp Results"),
         onFileClick: base.handleThumbnailClick,
         onUndo: () => {},
       },

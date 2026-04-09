@@ -1,8 +1,8 @@
-import { useState, useRef } from 'react';
-import { Stack, Button, Text, Image } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { useState, useRef } from "react";
+import { Stack, Button, Text, Image } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 interface UploadSignatureImageProps {
   signature: string | null;
@@ -10,11 +10,7 @@ interface UploadSignatureImageProps {
   disabled?: boolean;
 }
 
-export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
-  signature,
-  onChange,
-  disabled = false,
-}) => {
+export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({ signature, onChange, disabled = false }) => {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -24,14 +20,14 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError(t('certSign.collab.signRequest.invalidFileType', 'Please select an image file'));
+    if (!file.type.startsWith("image/")) {
+      setError(t("certSign.collab.signRequest.invalidFileType", "Please select an image file"));
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setError(t('certSign.collab.signRequest.fileTooLarge', 'File size must be less than 5MB'));
+      setError(t("certSign.collab.signRequest.fileTooLarge", "File size must be less than 5MB"));
       return;
     }
 
@@ -54,36 +50,31 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
     onChange(null);
     setError(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   return (
     <Stack gap="sm">
       <Text size="sm" c="dimmed">
-        {t('certSign.collab.signRequest.uploadSignature', 'Upload your signature image')}
+        {t("certSign.collab.signRequest.uploadSignature", "Upload your signature image")}
       </Text>
 
       {signature ? (
         <Stack gap="sm">
           <div
             style={{
-              border: '1px solid var(--mantine-color-default-border)',
-              borderRadius: 'var(--mantine-radius-default)',
-              padding: '16px',
-              backgroundColor: 'var(--mantine-color-default-hover)',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              minHeight: '150px',
+              border: "1px solid var(--mantine-color-default-border)",
+              borderRadius: "var(--mantine-radius-default)",
+              padding: "16px",
+              backgroundColor: "var(--mantine-color-default-hover)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              minHeight: "150px",
             }}
           >
-            <Image
-              src={signature}
-              alt="Signature"
-              fit="contain"
-              style={{ maxHeight: '150px', maxWidth: '100%' }}
-            />
+            <Image src={signature} alt="Signature" fit="contain" style={{ maxHeight: "150px", maxWidth: "100%" }} />
           </div>
 
           <Button
@@ -94,7 +85,7 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
             disabled={disabled}
             fullWidth
           >
-            {t('certSign.collab.signRequest.removeImage', 'Remove Image')}
+            {t("certSign.collab.signRequest.removeImage", "Remove Image")}
           </Button>
         </Stack>
       ) : (
@@ -105,7 +96,7 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
           disabled={disabled}
           fullWidth
         >
-          {t('certSign.collab.signRequest.selectFile', 'Select Image File')}
+          {t("certSign.collab.signRequest.selectFile", "Select Image File")}
         </Button>
       )}
 
@@ -119,7 +110,7 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
         ref={fileInputRef}
         type="file"
         accept="image/*"
-        style={{ display: 'none' }}
+        style={{ display: "none" }}
         onChange={handleFileSelect}
         disabled={disabled}
       />

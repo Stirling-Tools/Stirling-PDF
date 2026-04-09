@@ -109,63 +109,68 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const toggleOpen = useCallback(() => dispatch({ type: "TOGGLE_OPEN" }), []);
   const setOpen = useCallback((open: boolean) => dispatch({ type: "SET_OPEN", open }), []);
 
-  const sendMessage = useCallback(async (content: string) => {
-    const userMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: "user",
-      content,
-      timestamp: Date.now(),
-    };
-    dispatch({ type: "ADD_MESSAGE", message: userMessage });
-    dispatch({ type: "SET_LOADING", loading: true });
+  const sendMessage = useCallback(
+    async (content: string) => {
+      const userMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: "user",
+        content,
+        timestamp: Date.now(),
+      };
+      dispatch({ type: "ADD_MESSAGE", message: userMessage });
+      dispatch({ type: "SET_LOADING", loading: true });
 
-    try {
-      const formData = new FormData();
-      formData.append("userMessage", content);
-      activeFiles.forEach((file, i) => {
-        formData.append(`fileInputs[${i}].fileInput`, file);
-      });
+      try {
+        const formData = new FormData();
+        formData.append("userMessage", content);
+        activeFiles.forEach((file, i) => {
+          formData.append(`fileInputs[${i}].fileInput`, file);
+        });
 
-      const response = await fetch("/api/v1/ai/orchestrate", {
-        method: "POST",
-        body: formData,
-      });
+        const response = await fetch("/api/v1/ai/orchestrate", {
+          method: "POST",
+          body: formData,
+        });
 
-      if (!response.ok) {
-        throw new Error(`AI engine request failed: ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`AI engine request failed: ${response.status}`);
+        }
+
+        const data: AiWorkflowResponse = await response.json();
+        const replyContent = formatWorkflowResponse(data);
+        const assistantMessage: ChatMessage = {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: replyContent,
+          timestamp: Date.now(),
+        };
+        dispatch({ type: "ADD_MESSAGE", message: assistantMessage });
+      } catch {
+        const errorMessage: ChatMessage = {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: "Failed to get a response. The AI engine may not be available yet.",
+          timestamp: Date.now(),
+        };
+        dispatch({ type: "ADD_MESSAGE", message: errorMessage });
+      } finally {
+        dispatch({ type: "SET_LOADING", loading: false });
       }
-
-      const data: AiWorkflowResponse = await response.json();
-      const replyContent = formatWorkflowResponse(data);
-      const assistantMessage: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: replyContent,
-        timestamp: Date.now(),
-      };
-      dispatch({ type: "ADD_MESSAGE", message: assistantMessage });
-    } catch {
-      const errorMessage: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: "Failed to get a response. The AI engine may not be available yet.",
-        timestamp: Date.now(),
-      };
-      dispatch({ type: "ADD_MESSAGE", message: errorMessage });
-    } finally {
-      dispatch({ type: "SET_LOADING", loading: false });
-    }
-  }, [activeFiles]);
+    },
+    [activeFiles],
+  );
 
   return (
-    <ChatContext.Provider value={{
-      messages: state.messages,
-      isOpen: state.isOpen,
-      isLoading: state.isLoading,
-      toggleOpen,
-      setOpen,
-      sendMessage,
-    }}>
+    <ChatContext.Provider
+      value={{
+        messages: state.messages,
+        isOpen: state.isOpen,
+        isLoading: state.isLoading,
+        toggleOpen,
+        setOpen,
+        sendMessage,
+      }}
+    >
       {children}
     </ChatContext.Provider>
   );

@@ -1,5 +1,5 @@
-import { Stack, Text } from '@mantine/core';
-import { formatFileSize, getFileDate } from '@app/utils/fileUtils';
+import { Stack, Text } from "@mantine/core";
+import { formatFileSize, getFileDate } from "@app/utils/fileUtils";
 
 export interface FileMetadataProps {
   file: File;
@@ -13,7 +13,7 @@ const FileMetadata = ({ file }: FileMetadataProps) => {
           {formatFileSize(file.size)}
         </Text>
         <Text size="xs" c="dimmed">
-          {file.type || 'Unknown'}
+          {file.type || "Unknown"}
         </Text>
         <Text size="xs" c="dimmed">
           {getFileDate(file)}

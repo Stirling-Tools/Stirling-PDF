@@ -1,6 +1,6 @@
-import React from 'react';
-import SectionBlock from '@app/components/tools/getPdfInfo/shared/SectionBlock';
-import KeyValueList from '@app/components/tools/getPdfInfo/shared/KeyValueList';
+import React from "react";
+import SectionBlock from "@app/components/tools/getPdfInfo/shared/SectionBlock";
+import KeyValueList from "@app/components/tools/getPdfInfo/shared/KeyValueList";
 
 interface KeyValueSectionProps {
   title: string;
@@ -18,5 +18,3 @@ const KeyValueSection: React.FC<KeyValueSectionProps> = ({ title, anchorId, obj,
 };
 
 export default KeyValueSection;
-
-

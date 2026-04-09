@@ -2,11 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@app/*": [
-        "src/saas/*",
-        "src/proprietary/*",
-        "src/core/*"
-      ],
+      "@app/*": ["src/saas/*", "src/proprietary/*", "src/core/*"],
       "@proprietary/*": ["src/proprietary/*"],
       "@core/*": ["src/core/*"]
     }

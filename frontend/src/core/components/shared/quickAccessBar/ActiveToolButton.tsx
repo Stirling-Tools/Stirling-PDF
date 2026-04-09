@@ -12,25 +12,25 @@
  * - Only appears for tools that don't have dedicated nav buttons (read, sign, automate)
  */
 
-import React, { useEffect, useRef, useState } from 'react';
-import { ActionIcon, Divider } from '@mantine/core';
-import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
-import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
-import { useSidebarNavigation } from '@app/hooks/useSidebarNavigation';
-import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
-import FitText from '@app/components/shared/FitText';
-import { Tooltip } from '@app/components/shared/Tooltip';
+import React, { useEffect, useRef, useState } from "react";
+import { ActionIcon, Divider } from "@mantine/core";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useNavigationState, useNavigationActions } from "@app/contexts/NavigationContext";
+import { useSidebarNavigation } from "@app/hooks/useSidebarNavigation";
+import { handleUnlessSpecialClick } from "@app/utils/clickHandlers";
+import FitText from "@app/components/shared/FitText";
+import { Tooltip } from "@app/components/shared/Tooltip";
 
 interface ActiveToolButtonProps {
   activeButton: string;
   setActiveButton: (id: string) => void;
-  tooltipPosition?: 'left' | 'right' | 'top' | 'bottom';
+  tooltipPosition?: "left" | "right" | "top" | "bottom";
 }
 
-const NAV_IDS = ['read', 'sign', 'automate'];
+const NAV_IDS = ["read", "sign", "automate"];
 
-const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton, tooltipPosition = 'right' }) => {
+const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton, tooltipPosition = "right" }) => {
   const { selectedTool, selectedToolKey, leftPanelView, handleBackToTools } = useToolWorkflow();
   const { hasUnsavedChanges } = useNavigationState();
   const { actions: navigationActions } = useNavigationActions();
@@ -40,8 +40,7 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton, to
   // Special case: multiTool should always show even when sidebars are hidden
   const indicatorShouldShow = Boolean(
     selectedToolKey &&
-    ((leftPanelView === 'toolContent' && !NAV_IDS.includes(selectedToolKey)) ||
-     selectedToolKey === 'multiTool')
+    ((leftPanelView === "toolContent" && !NAV_IDS.includes(selectedToolKey)) || selectedToolKey === "multiTool"),
   );
 
   // Local animation and hover state
@@ -54,7 +53,9 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton, to
   const animTimeoutRef = useRef<number | null>(null);
   const replayRafRef = useRef<number | null>(null);
 
-  const isSwitchingToNewTool = () => { return prevKeyRef.current && prevKeyRef.current !== selectedToolKey; };
+  const isSwitchingToNewTool = () => {
+    return prevKeyRef.current && prevKeyRef.current !== selectedToolKey;
+  };
 
   const clearTimers = () => {
     if (collapseTimeoutRef.current) {
@@ -139,12 +140,15 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton, to
 
   return (
     <>
-      <div style={{ overflow: 'visible' }} className={`current-tool-slot ${indicatorVisible ? 'visible' : ''} ${replayAnim ? 'replay' : ''}`}>
+      <div
+        style={{ overflow: "visible" }}
+        className={`current-tool-slot ${indicatorVisible ? "visible" : ""} ${replayAnim ? "replay" : ""}`}
+      >
         {indicatorTool && (
           <div className="current-tool-content">
             <div className="flex flex-col items-center gap-1">
               <Tooltip
-                content={isBackHover ? 'Back to all tools' : indicatorTool.name}
+                content={isBackHover ? "Back to all tools" : indicatorTool.name}
                 position={tooltipPosition}
                 arrow
                 maxWidth={140}
@@ -154,7 +158,7 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton, to
                   href={getHomeNavigation().href}
                   onClick={(e: React.MouseEvent) => {
                     const performNavigation = () => {
-                      setActiveButton('tools');
+                      setActiveButton("tools");
                       handleBackToTools();
                     };
                     if (hasUnsavedChanges) {
@@ -164,26 +168,22 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton, to
                     }
                     handleUnlessSpecialClick(e, performNavigation);
                   }}
-                  size={'lg'}
+                  size={"lg"}
                   variant="subtle"
                   onMouseEnter={() => setIsBackHover(true)}
                   onMouseLeave={() => setIsBackHover(false)}
-                  aria-label={isBackHover ? 'Back to all tools' : indicatorTool.name}
+                  aria-label={isBackHover ? "Back to all tools" : indicatorTool.name}
                   style={{
-                    backgroundColor: isBackHover ? 'var(--color-gray-300)' : 'var(--icon-tools-bg)',
-                    color: isBackHover ? '#fff' : 'var(--icon-tools-color)',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    textDecoration: 'none'
+                    backgroundColor: isBackHover ? "var(--color-gray-300)" : "var(--icon-tools-bg)",
+                    color: isBackHover ? "#fff" : "var(--icon-tools-color)",
+                    border: "none",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    textDecoration: "none",
                   }}
                 >
                   <span className="iconContainer">
-                    {isBackHover ? (
-                      <ArrowBackRoundedIcon sx={{ fontSize: '1.875rem' }} />
-                    ) : (
-                      indicatorTool.icon
-                    )}
+                    {isBackHover ? <ArrowBackRoundedIcon sx={{ fontSize: "1.875rem" }} /> : indicatorTool.icon}
                   </span>
                 </ActionIcon>
               </Tooltip>
@@ -195,10 +195,7 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton, to
                 className="button-text active current-tool-label"
               />
             </div>
-            <Divider
-              size="xs"
-              className="current-tool-divider"
-            />
+            <Divider size="xs" className="current-tool-divider" />
           </div>
         )}
       </div>
@@ -207,4 +204,3 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton, to
 };
 
 export default ActiveToolButton;
-

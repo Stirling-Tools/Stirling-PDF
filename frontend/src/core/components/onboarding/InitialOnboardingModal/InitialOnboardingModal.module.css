@@ -118,7 +118,6 @@
   }
 }
 
-
 .heroIconsContainer {
   display: flex;
   gap: 32px;
@@ -141,7 +140,9 @@
   border: none;
   padding: 0;
   cursor: pointer;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -181,7 +182,14 @@
 }
 
 .iconLabel {
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
   font-size: 14px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.9);
@@ -266,7 +274,7 @@
   opacity: 1;
   border: 1px solid rgba(255, 255, 255, 0.9);
   background: rgba(255, 255, 255, 0.9);
-  color: #1F2933;
+  color: #1f2933;
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
 }
 
@@ -282,7 +290,14 @@
 
 /* Title styles */
 .titleText {
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
   font-weight: 600;
   font-size: 22px;
   color: var(--onboarding-title);
@@ -290,7 +305,14 @@
 
 /* Body text styles */
 .bodyText {
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
   font-size: 16px;
   color: var(--onboarding-body);
   line-height: 1.5;
@@ -314,8 +336,8 @@
 }
 
 .v2Badge {
-  background: #DBEFFF;
-  color: #2A4BFF;
+  background: #dbefff;
+  color: #2a4bff;
   padding: 4px 12px;
   border-radius: 6px;
   font-size: 14px;

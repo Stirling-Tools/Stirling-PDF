@@ -1,5 +1,5 @@
-import { useSaveShortcut } from '@app/hooks/useSaveShortcut';
-import { useExitWarning } from '@app/hooks/useExitWarning';
+import { useSaveShortcut } from "@app/hooks/useSaveShortcut";
+import { useExitWarning } from "@app/hooks/useExitWarning";
 
 /**
  * Desktop-only component that sets up keyboard shortcuts and exit warnings

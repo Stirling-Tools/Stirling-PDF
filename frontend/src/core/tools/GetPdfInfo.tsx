@@ -1,31 +1,31 @@
-import { useEffect, useMemo, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import LinkIcon from '@mui/icons-material/Link';
-import { Stack, Group, Divider, Text, UnstyledButton } from '@mantine/core';
-import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
-import { useBaseTool } from '@app/hooks/tools/shared/useBaseTool';
-import { BaseToolProps, ToolComponent } from '@app/types/tool';
-import { useGetPdfInfoParameters, defaultParameters } from '@app/hooks/tools/getPdfInfo/useGetPdfInfoParameters';
-import GetPdfInfoResults from '@app/components/tools/getPdfInfo/GetPdfInfoResults';
-import { useGetPdfInfoOperation, GetPdfInfoOperationHook } from '@app/hooks/tools/getPdfInfo/useGetPdfInfoOperation';
-import GetPdfInfoReportView from '@app/components/tools/getPdfInfo/GetPdfInfoReportView';
-import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import { useNavigationActions, useNavigationState } from '@app/contexts/NavigationContext';
-import type { PdfInfoReportData } from '@app/types/getPdfInfo';
+import { useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import LinkIcon from "@mui/icons-material/Link";
+import { Stack, Group, Divider, Text, UnstyledButton } from "@mantine/core";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import { useGetPdfInfoParameters, defaultParameters } from "@app/hooks/tools/getPdfInfo/useGetPdfInfoParameters";
+import GetPdfInfoResults from "@app/components/tools/getPdfInfo/GetPdfInfoResults";
+import { useGetPdfInfoOperation, GetPdfInfoOperationHook } from "@app/hooks/tools/getPdfInfo/useGetPdfInfoOperation";
+import GetPdfInfoReportView from "@app/components/tools/getPdfInfo/GetPdfInfoReportView";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useNavigationActions, useNavigationState } from "@app/contexts/NavigationContext";
+import type { PdfInfoReportData } from "@app/types/getPdfInfo";
 
 const CHAPTERS = [
-  { id: 'summary', labelKey: 'getPdfInfo.summary.title', fallback: 'PDF Summary' },
-  { id: 'metadata', labelKey: 'getPdfInfo.sections.metadata', fallback: 'Metadata' },
-  { id: 'formFields', labelKey: 'getPdfInfo.sections.formFields', fallback: 'Form Fields' },
-  { id: 'basicInfo', labelKey: 'getPdfInfo.sections.basicInfo', fallback: 'Basic Info' },
-  { id: 'documentInfo', labelKey: 'getPdfInfo.sections.documentInfo', fallback: 'Document Info' },
-  { id: 'compliance', labelKey: 'getPdfInfo.sections.compliance', fallback: 'Compliance' },
-  { id: 'encryption', labelKey: 'getPdfInfo.sections.encryption', fallback: 'Encryption' },
-  { id: 'permissions', labelKey: 'getPdfInfo.sections.permissions', fallback: 'Permissions' },
-  { id: 'toc', labelKey: 'getPdfInfo.sections.tableOfContents', fallback: 'Table of Contents' },
-  { id: 'other', labelKey: 'getPdfInfo.sections.other', fallback: 'Other' },
-  { id: 'perPage', labelKey: 'getPdfInfo.sections.perPageInfo', fallback: 'Per Page Info' },
+  { id: "summary", labelKey: "getPdfInfo.summary.title", fallback: "PDF Summary" },
+  { id: "metadata", labelKey: "getPdfInfo.sections.metadata", fallback: "Metadata" },
+  { id: "formFields", labelKey: "getPdfInfo.sections.formFields", fallback: "Form Fields" },
+  { id: "basicInfo", labelKey: "getPdfInfo.sections.basicInfo", fallback: "Basic Info" },
+  { id: "documentInfo", labelKey: "getPdfInfo.sections.documentInfo", fallback: "Document Info" },
+  { id: "compliance", labelKey: "getPdfInfo.sections.compliance", fallback: "Compliance" },
+  { id: "encryption", labelKey: "getPdfInfo.sections.encryption", fallback: "Encryption" },
+  { id: "permissions", labelKey: "getPdfInfo.sections.permissions", fallback: "Permissions" },
+  { id: "toc", labelKey: "getPdfInfo.sections.tableOfContents", fallback: "Table of Contents" },
+  { id: "other", labelKey: "getPdfInfo.sections.other", fallback: "Other" },
+  { id: "perPage", labelKey: "getPdfInfo.sections.perPageInfo", fallback: "Per Page Info" },
 ];
 
 const GetPdfInfo = (props: BaseToolProps) => {
@@ -39,16 +39,11 @@ const GetPdfInfo = (props: BaseToolProps) => {
     clearCustomWorkbenchViewData,
   } = useToolWorkflow();
 
-  const REPORT_VIEW_ID = 'getPdfInfoReport';
-  const REPORT_WORKBENCH_ID = 'custom:getPdfInfoReport' as const;
+  const REPORT_VIEW_ID = "getPdfInfoReport";
+  const REPORT_WORKBENCH_ID = "custom:getPdfInfoReport" as const;
   const reportIcon = useMemo(() => <PictureAsPdfIcon fontSize="small" />, []);
 
-  const base = useBaseTool(
-    'getPdfInfo',
-    useGetPdfInfoParameters,
-    useGetPdfInfoOperation,
-    props
-  );
+  const base = useBaseTool("getPdfInfo", useGetPdfInfoParameters, useGetPdfInfoOperation, props);
 
   const operation = base.operation as GetPdfInfoOperationHook;
   const hasResults = operation.results.length > 0;
@@ -58,7 +53,7 @@ const GetPdfInfo = (props: BaseToolProps) => {
     registerCustomWorkbenchView({
       id: REPORT_VIEW_ID,
       workbenchId: REPORT_WORKBENCH_ID,
-      label: t('getPdfInfo.report.shortTitle', 'PDF Information'),
+      label: t("getPdfInfo.report.shortTitle", "PDF Information"),
       icon: reportIcon,
       component: GetPdfInfoReportView,
     });
@@ -67,13 +62,7 @@ const GetPdfInfo = (props: BaseToolProps) => {
       clearCustomWorkbenchViewData(REPORT_VIEW_ID);
       unregisterCustomWorkbenchView(REPORT_VIEW_ID);
     };
-  }, [
-    clearCustomWorkbenchViewData,
-    registerCustomWorkbenchView,
-    reportIcon,
-    t,
-    unregisterCustomWorkbenchView,
-  ]);
+  }, [clearCustomWorkbenchViewData, registerCustomWorkbenchView, reportIcon, t, unregisterCustomWorkbenchView]);
 
   const reportData = useMemo<PdfInfoReportData | null>(() => {
     if (operation.results.length === 0) return null;
@@ -92,7 +81,7 @@ const GetPdfInfo = (props: BaseToolProps) => {
       const isNewReport = generatedAt && generatedAt !== lastReportGeneratedAtRef.current;
       if (isNewReport) {
         lastReportGeneratedAtRef.current = generatedAt;
-        if (navigationState.selectedTool === 'getPdfInfo' && navigationState.workbench !== REPORT_WORKBENCH_ID) {
+        if (navigationState.selectedTool === "getPdfInfo" && navigationState.workbench !== REPORT_WORKBENCH_ID) {
           navigationActions.setWorkbench(REPORT_WORKBENCH_ID);
         }
       }
@@ -116,7 +105,7 @@ const GetPdfInfo = (props: BaseToolProps) => {
     },
     steps: [
       {
-        title: t('getPdfInfo.indexTitle', 'Index'),
+        title: t("getPdfInfo.indexTitle", "Index"),
         isVisible: Boolean(reportData),
         isCollapsed: false,
         content: (
@@ -131,7 +120,7 @@ const GetPdfInfo = (props: BaseToolProps) => {
                       navigationActions.setWorkbench(REPORT_WORKBENCH_ID);
                     }
                   }}
-                  style={{ width: '100%', textAlign: 'left', padding: '8px 4px' }}
+                  style={{ width: "100%", textAlign: "left", padding: "8px 4px" }}
                 >
                   <Group justify="flex-start" gap="sm">
                     <LinkIcon fontSize="small" style={{ opacity: 0.7 }} />
@@ -147,7 +136,7 @@ const GetPdfInfo = (props: BaseToolProps) => {
         ),
       },
       {
-        title: t('getPdfInfo.results', 'Results'),
+        title: t("getPdfInfo.results", "Results"),
         isVisible: showResultsStep,
         isCollapsed: false,
         content: (
@@ -160,8 +149,8 @@ const GetPdfInfo = (props: BaseToolProps) => {
       },
     ],
     executeButton: {
-      text: t('getPdfInfo.submit', 'Generate'),
-      loadingText: t('loading', 'Loading...'),
+      text: t("getPdfInfo.submit", "Generate"),
+      loadingText: t("loading", "Loading..."),
       onClick: base.handleExecute,
       endpointEnabled: base.endpointEnabled,
       paramsValid: base.params.validateParameters(),
@@ -170,7 +159,7 @@ const GetPdfInfo = (props: BaseToolProps) => {
     review: {
       isVisible: false,
       operation: base.operation,
-      title: t('getPdfInfo.results', 'Results'),
+      title: t("getPdfInfo.results", "Results"),
       onUndo: base.handleUndo,
     },
   });
@@ -181,5 +170,3 @@ GetPdfInfoTool.tool = () => useGetPdfInfoOperation;
 GetPdfInfoTool.getDefaultParameters = () => ({ ...defaultParameters });
 
 export default GetPdfInfoTool;
-
-
