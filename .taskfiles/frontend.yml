@@ -56,13 +56,6 @@ tasks:
     deps: [install]
     cmds:
       - npm run generate-icons
-    sources:
-      - scripts/generate-icons.js
-      - src/**/*.ts
-      - src/**/*.tsx
-    generates:
-      - src/assets/material-symbols-icons.json
-      - src/assets/material-symbols-icons.d.ts
 
   prep:
     desc: "Set up dev environment"
