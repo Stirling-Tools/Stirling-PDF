@@ -89,9 +89,26 @@ export const handlePasswordError = async (
   const status = error?.response?.status;
 
   // Handle specific error cases with user-friendly messages
+  // Backend returns 400 with PdfPasswordException for incorrect/missing PDF passwords
   if (status === 500) {
-    // 500 typically means incorrect password for encrypted PDFs
     return incorrectPasswordMessage;
+  }
+  if (status === 400) {
+    const data = error?.response?.data;
+    // ProblemDetail JSON has type "/errors/pdf-password", blob needs parsing
+    const isPasswordError = await (async () => {
+      if (data instanceof Blob) {
+        try {
+          const text = await data.text();
+          return text.includes('pdf-password') || text.includes('passworded');
+        } catch { return false; }
+      }
+      const type = data?.type ?? '';
+      return type.includes('pdf-password');
+    })();
+    if (isPasswordError) {
+      return incorrectPasswordMessage;
+    }
   }
 
   // For other errors, try to extract the message

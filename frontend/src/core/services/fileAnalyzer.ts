@@ -72,20 +72,24 @@ export class FileAnalyzer {
       });
 
       const pageCount = pdf.numPages;
-      const isEncrypted = (pdf as any).isEncrypted;
 
       // Clean up using worker manager
       pdfWorkerManager.destroyDocument(pdf);
 
+      // If pdf.js opened the document successfully, the user can view it — even if
+      // the PDF carries encryption dictionaries (owner-password-only case).  We only
+      // flag isEncrypted when pdf.js *fails* to open the file (caught below).
       return {
         pageCount,
-        isEncrypted,
+        isEncrypted: false,
         isCorrupted: false
       };
 
     } catch (error) {
       // Try to determine if it's corruption vs encryption
-      const errorMessage = error instanceof Error ? error.message.toLowerCase() : '';
+      const errorMessage = (error && typeof error === 'object' && 'message' in error)
+        ? String((error as any).message).toLowerCase()
+        : '';
       const isEncrypted = errorMessage.includes('password') || errorMessage.includes('encrypted');
 
       return {
