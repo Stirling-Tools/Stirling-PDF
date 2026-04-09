@@ -8,7 +8,17 @@ from .agent_drafts import (
     AgentRevisionWorkflowResponse,
 )
 from .agent_specs import AgentSpec, AgentSpecStep, AiToolAgentStep
-from .common import ConversationMessage, PdfTextSelection, ToolOperationStep
+from .common import (
+    ArtifactKind,
+    ConversationMessage,
+    ExtractedFileText,
+    PdfContentType,
+    PdfTextSelection,
+    StepKind,
+    SupportedCapability,
+    ToolOperationStep,
+    WorkflowOutcome,
+)
 from .execution import (
     AgentExecutionRequest,
     CannotContinueExecutionAction,
@@ -31,7 +41,13 @@ from .ledger import (
     Severity,
     Verdict,
 )
-from .orchestrator import OrchestratorRequest, OrchestratorResponse, SupportedCapability, UnsupportedCapabilityResponse
+from .orchestrator import (
+    ExtractedTextArtifact,
+    OrchestratorRequest,
+    OrchestratorResponse,
+    UnsupportedCapabilityResponse,
+    WorkflowArtifact,
+)
 from .pdf_edit import (
     EditCannotDoResponse,
     EditClarificationRequest,
@@ -40,8 +56,9 @@ from .pdf_edit import (
     PdfEditResponse,
 )
 from .pdf_questions import (
+    NeedContentFileRequest,
     PdfQuestionAnswerResponse,
-    PdfQuestionNeedTextResponse,
+    PdfQuestionNeedContentResponse,
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
     PdfQuestionResponse,
@@ -60,9 +77,10 @@ __all__ = [
     "AgentSpecStep",
     "AgentTurn",
     "AiToolAgentStep",
+    "ArtifactKind",
     "CannotContinueExecutionAction",
-    "ConversationMessage",
     "CompletedExecutionAction",
+    "ConversationMessage",
     "Discrepancy",
     "DiscrepancyKind",
     "EditCannotDoResponse",
@@ -71,26 +89,33 @@ __all__ = [
     "Evidence",
     "ExecutionContext",
     "ExecutionStepResult",
+    "ExtractedFileText",
+    "ExtractedTextArtifact",
     "Folio",
     "FolioManifest",
     "FolioType",
     "HealthResponse",
+    "NeedContentFileRequest",
     "NextExecutionAction",
     "OrchestratorRequest",
     "OrchestratorResponse",
+    "PdfContentType",
     "PdfEditRequest",
     "PdfEditResponse",
     "PdfQuestionAnswerResponse",
+    "PdfQuestionNeedContentResponse",
     "PdfQuestionNotFoundResponse",
-    "PdfQuestionNeedTextResponse",
     "PdfQuestionRequest",
     "PdfQuestionResponse",
     "PdfTextSelection",
     "Requisition",
     "Severity",
+    "StepKind",
     "SupportedCapability",
-    "ToolOperationStep",
     "ToolCallExecutionAction",
+    "ToolOperationStep",
     "UnsupportedCapabilityResponse",
     "Verdict",
+    "WorkflowArtifact",
+    "WorkflowOutcome",
 ]

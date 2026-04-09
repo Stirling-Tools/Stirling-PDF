@@ -258,6 +258,28 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     }
   }, [preferences.defaultToolPanelMode, state.toolPanelMode]);
 
+  // Apply default startup view preference on initial load.
+  // This runs once to navigate to the user's preferred tab (read/automate)
+  // instead of always starting on the tools tab.
+  const hasAppliedStartupView = React.useRef(false);
+  useEffect(() => {
+    if (hasAppliedStartupView.current) return;
+    const startupView = preferences.defaultStartupView;
+    if (startupView === 'read') {
+      hasAppliedStartupView.current = true;
+      setReaderMode(true);
+      actions.setSelectedTool('read');
+    } else if (startupView === 'automate') {
+      hasAppliedStartupView.current = true;
+      actions.setSelectedTool('automate');
+      setLeftPanelView('toolContent');
+    }
+    // 'tools' is the default — no action needed
+    if (startupView === 'tools') {
+      hasAppliedStartupView.current = true;
+    }
+  }, [preferences.defaultStartupView, actions, setReaderMode, setLeftPanelView]);
+
   // Tool reset methods
   const registerToolReset = useCallback((toolId: string, resetFunction: () => void) => {
     setToolResetFunctions(prev => ({ ...prev, [toolId]: resetFunction }));
@@ -317,14 +339,12 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     const validToolId = isValidToolId(toolId) ? toolId : null;
     actions.setSelectedTool(validToolId);
 
-    // Get the tool from registry to determine workbench
+    // Switch workbench only when required: leaving a custom view, or the tool declares one.
     const tool = getSelectedTool(toolId);
     if (wasInCustomWorkbench) {
       actions.setWorkbench(getDefaultWorkbench());
     } else if (tool && tool.workbench) {
       actions.setWorkbench(tool.workbench);
-    } else {
-      actions.setWorkbench(getDefaultWorkbench());
     }
 
     // Clear search query when selecting a tool
@@ -342,8 +362,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       actions.setWorkbench(getDefaultWorkbench());
     } else if (tool && tool.workbench) {
       actions.setWorkbench(tool.workbench);
-    } else {
-      actions.setWorkbench(getDefaultWorkbench());
     }
     setSearchQuery('');
     setLeftPanelView('toolContent');
