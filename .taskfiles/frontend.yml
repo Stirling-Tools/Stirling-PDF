@@ -214,12 +214,12 @@ tasks:
     desc: "Run E2E tests"
     deps: [prep]
     cmds:
-      - npm run playwright -- test
+      - npm run playwright -- test {{.CLI_ARGS}}
 
   test:e2e:install:
     desc: "Install E2E test browsers"
     cmds:
-      - npm run playwright -- install --with-deps
+      - npm run playwright -- install {{.CLI_ARGS}} --with-deps
 
   # ============================================================
   # Code Generation

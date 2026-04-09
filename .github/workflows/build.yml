@@ -234,12 +234,10 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
         uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
-      - name: Install and prep frontend
-        run: task frontend:prep
       - name: Install Playwright (chromium only)
-        run: npm run playwright --prefix frontend -- install chromium --with-deps
+        run: task frontend:test:e2e:install -- chromium
       - name: Run E2E tests (chromium)
-        run: npm run playwright --prefix frontend -- test --project=chromium
+        run: task frontend:test:e2e -- --project=chromium
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
