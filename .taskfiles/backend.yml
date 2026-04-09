@@ -6,6 +6,7 @@ vars:
 tasks:
   run:
     desc: "Run Spring Boot backend on :8080"
+    ignore_error: true
     cmds:
       - '{{.GRADLE}} :stirling-pdf:bootRun'
 

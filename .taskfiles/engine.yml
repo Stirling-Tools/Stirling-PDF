@@ -27,6 +27,7 @@ tasks:
   run:
     desc: "Run FastAPI engine on :5001"
     deps: [prep]
+    ignore_error: true
     dir: src
     env:
       PYTHONUNBUFFERED: "1"
@@ -36,6 +37,7 @@ tasks:
   run-dev:
     desc: "Run FastAPI engine on :5001 with hot reload"
     deps: [prep]
+    ignore_error: true
     dir: src
     env:
       PYTHONUNBUFFERED: "1"

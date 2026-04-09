@@ -6,6 +6,7 @@ vars:
 tasks:
   dev:
     desc: "Start Tauri desktop dev mode"
+    ignore_error: true
     cmds:
       - task: jlink:ensure
       - task: :frontend:prep:desktop

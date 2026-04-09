@@ -76,30 +76,35 @@ tasks:
   dev:
     desc: "Start Vite dev server (default mode)"
     deps: [prep]
+    ignore_error: true
     cmds:
       - npm run vite
 
   dev:core:
     desc: "Start Vite dev server in core mode"
     deps: [prep]
+    ignore_error: true
     cmds:
       - npm run vite -- --mode core
 
   dev:proprietary:
     desc: "Start Vite dev server in proprietary mode"
     deps: [prep]
+    ignore_error: true
     cmds:
       - npm run vite -- --mode proprietary
 
   dev:saas:
     desc: "Start Vite dev server in SaaS mode"
     deps: [prep:saas]
+    ignore_error: true
     cmds:
       - npm run vite -- --mode saas
 
   dev:desktop:
     desc: "Start Vite dev server in desktop mode"
     deps: [prep:desktop]
+    ignore_error: true
     cmds:
       - npm run vite -- --mode desktop
 
