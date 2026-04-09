@@ -3,31 +3,78 @@ version: '3'
 tasks:
   install:
     desc: "Install frontend npm dependencies"
+    run: once
     cmds:
-      - npm install
+      - '{{ if eq .CI "true" }}npm ci{{ else }}npm install{{ end }}'
+    sources:
+      - package-lock.json
+      - package.json
     status:
       - test -d node_modules
+    env:
+      CI: '{{ .CI | default "false" }}'
 
-  prep:
-    desc: "Run env setup and icon generation"
+  prep:env:
+    desc: "Generate .env from example if missing"
     deps: [install]
     cmds:
       - npm run tsx -- scripts/setup-env.ts
-      - npm run generate-icons
+    sources:
+      - scripts/setup-env.ts
+      - config/.env.example
+    generates:
+      - .env
 
-  prep:saas:
-    desc: "Prep for SaaS mode"
+  prep:env:saas:
+    desc: "Generate .env and .env.saas from examples if missing"
     deps: [install]
     cmds:
       - npm run tsx -- scripts/setup-env.ts --saas
-      - npm run generate-icons
+    sources:
+      - scripts/setup-env.ts
+      - config/.env.example
+      - config/.env.saas.example
+    generates:
+      - .env
+      - .env.saas
 
-  prep:desktop:
-    desc: "Prep for desktop mode"
+  prep:env:desktop:
+    desc: "Generate .env and .env.desktop from examples if missing"
     deps: [install]
     cmds:
       - npm run tsx -- scripts/setup-env.ts --desktop
+    sources:
+      - scripts/setup-env.ts
+      - config/.env.example
+      - config/.env.desktop.example
+    generates:
+      - .env
+      - .env.desktop
+
+  prep:icons:
+    desc: "Generate icon bundle from source references"
+    deps: [install]
+    cmds:
       - npm run generate-icons
+    sources:
+      - scripts/generate-icons.js
+      - src/**/*.ts
+      - src/**/*.tsx
+    generates:
+      - src/assets/material-symbols-icons.json
+      - src/assets/material-symbols-icons.d.ts
+
+  prep:
+    desc: "Set up dev environment"
+    deps: [prep:env, prep:icons]
+
+  prep:saas:
+    desc: "Prep for SaaS mode"
+    deps: [prep:env:saas, prep:icons]
+
+  prep:desktop:
+    desc: "Prep for desktop mode"
+    deps: [prep:env:desktop, prep:icons]
 
   # ============================================================
   # Development
@@ -35,37 +82,32 @@ tasks:
 
   dev:
     desc: "Start Vite dev server (default mode)"
-    deps: [install]
+    deps: [prep]
     cmds:
-      - task: prep
       - npm run vite
 
   dev:core:
     desc: "Start Vite dev server in core mode"
-    deps: [install]
+    deps: [prep]
     cmds:
-      - task: prep
       - npm run vite -- --mode core
 
   dev:proprietary:
     desc: "Start Vite dev server in proprietary mode"
-    deps: [install]
+    deps: [prep]
     cmds:
-      - task: prep
       - npm run vite -- --mode proprietary
 
   dev:saas:
     desc: "Start Vite dev server in SaaS mode"
-    deps: [install]
+    deps: [prep:saas]
     cmds:
-      - task: prep:saas
       - npm run vite -- --mode saas
 
   dev:desktop:
     desc: "Start Vite dev server in desktop mode"
-    deps: [install]
+    deps: [prep:desktop]
     cmds:
-      - task: prep:desktop
       - npm run vite -- --mode desktop
 
   # ============================================================
@@ -74,37 +116,32 @@ tasks:
 
   build:
     desc: "Production build (default mode)"
-    deps: [install]
+    deps: [prep]
     cmds:
-      - task: prep
       - npm run vite -- build
 
   build:core:
     desc: "Build for core mode"
-    deps: [install]
+    deps: [prep]
     cmds:
-      - task: prep
       - npm run vite -- build --mode core
 
   build:proprietary:
     desc: "Build for proprietary mode"
-    deps: [install]
+    deps: [prep]
     cmds:
-      - task: prep
       - npm run vite -- build --mode proprietary
 
   build:saas:
     desc: "Build for SaaS mode"
-    deps: [install]
+    deps: [prep:saas]
     cmds:
-      - task: prep:saas
       - npm run vite -- build --mode saas
 
   build:desktop:
     desc: "Build for desktop mode"
-    deps: [install]
+    deps: [prep:desktop]
     cmds:
-      - task: prep:desktop
       - npm run vite -- build --mode desktop
 
   # ============================================================
@@ -140,7 +177,6 @@ tasks:
 
   check:
     desc: "Run typecheck + lint + test"
-    deps: [install]
     cmds:
       - task: typecheck
       - task: lint
@@ -170,9 +206,8 @@ tasks:
 
   test:e2e:
     desc: "Run Playwright E2E tests"
-    deps: [install]
+    deps: [prep]
     cmds:
-      - task: prep
       - npm run playwright -- test
 
   test:e2e:install:
