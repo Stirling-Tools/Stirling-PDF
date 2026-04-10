@@ -12,6 +12,8 @@ export function useFileActionTerminology() {
     uploadFile: t('fileUpload.openFile', 'Open File'),
     upload: t('fileUpload.open', 'Open'),
     dropFilesHere: t('fileUpload.dropFilesHereOpen', 'Drop files here or click the open button'),
+    addFiles: t('fileUpload.openFiles', 'Open Files'),
+    mobileUpload: t('landing.mobileUpload', 'Upload from Mobile'),
     uploadFromComputer: t('landing.openFromComputer', 'Open from computer'),
     download: t('save', 'Save'),
     downloadAll: t('rightRail.saveAll', 'Save All'),

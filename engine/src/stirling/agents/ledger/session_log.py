@@ -15,7 +15,7 @@ import json
 import logging
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TextIO
+from typing import Self, TextIO
 
 _logger = logging.getLogger(__name__)
 
@@ -121,10 +121,10 @@ class SessionLogger:
             self._fh.close()
             self._fh = None
 
-    def __enter__(self) -> SessionLogger:
+    def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, exc_type: type | None, exc_val: BaseException | None, exc_tb: object) -> None:
+    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: object) -> None:
         self.close()
 
     def __del__(self) -> None:
