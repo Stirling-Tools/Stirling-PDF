@@ -81,6 +81,7 @@ interface FileManagerProviderProps {
   refreshRecentFiles: () => Promise<void>;
   isLoading: boolean;
   activeFileIds: FileId[];
+  maxSelectable?: number | null;
 }
 
 type RemoteDeleteChoice = 'local' | 'server' | 'both' | 'leave' | 'cancel';
@@ -98,6 +99,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   refreshRecentFiles,
   isLoading,
   activeFileIds,
+  maxSelectable = null,
 }) => {
   const [activeSource, setActiveSource] = useState<'recent' | 'local' | 'drive'>('recent');
   const [storageFilter, setStorageFilter] = useState<
@@ -246,6 +248,11 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
           selectedSet.delete(fileId);
         } else {
           selectedSet.add(fileId);
+          // Enforce maxSelectable: drop the oldest selection if over the limit
+          if (maxSelectable != null && selectedSet.size > maxSelectable) {
+            const [oldest] = selectedSet;
+            selectedSet.delete(oldest);
+          }
         }
 
         return Array.from(selectedSet);
@@ -254,7 +261,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       // Update last clicked index for future range selections
       setLastClickedIndex(currentIndex);
     }
-  }, [filteredFiles, lastClickedIndex]);
+  }, [filteredFiles, lastClickedIndex, maxSelectable]);
 
   // Helper function to safely determine which files can be deleted
   const getSafeFilesToDelete = useCallback((
@@ -590,11 +597,12 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       setSelectedFileIds([]);
       setLastClickedIndex(null);
     } else {
-      // Select all filtered files
-      setSelectedFileIds(filteredFiles.map(file => file.id).filter(Boolean));
+      // Select all filtered files, capped at maxSelectable
+      const allIds = filteredFiles.map(file => file.id).filter(Boolean) as FileId[];
+      setSelectedFileIds(maxSelectable != null ? allIds.slice(0, maxSelectable) : allIds);
       setLastClickedIndex(null);
     }
-  }, [filteredFiles, selectedFileIds]);
+  }, [filteredFiles, selectedFileIds, maxSelectable]);
 
   const handleDeleteSelected = useCallback(async () => {
     if (selectedFileIds.length === 0) return;

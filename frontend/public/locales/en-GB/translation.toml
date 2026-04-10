@@ -2679,6 +2679,7 @@ used = "used"
 [compare]
 addFilesHint = "Add PDFs in the Files step to enable selection."
 clearSelected = "Clear selected"
+clearSlot = "Remove file"
 cta = "Compare"
 header = "Compare PDFs"
 loading = "Comparing..."
@@ -2731,6 +2732,7 @@ title = "These PDFs look highly different"
 [compare.edited]
 label = "Edited PDF"
 placeholder = "Select the edited PDF"
+selectBaseFirst = "Select original PDF first"
 
 [compare.error]
 filesMissing = "Unable to locate the selected files. Please re-select them."
@@ -2786,6 +2788,7 @@ pageLabel = "Page"
 confirm = "Swap and Re-run"
 confirmBody = "This will rerun the tool. Are you sure you want to swap the order of Original and Edited?"
 confirmTitle = "Re-run comparison?"
+label = "Swap"
 
 [compare.toasts]
 unlinkedBody = "Tip: Arrow Up/Down scroll both panes; panning only moves the active pane."
@@ -3449,6 +3452,9 @@ or = "or"
 
 [fileEditor]
 addFiles = "Add Files"
+pageCount = "{{count}} pages"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
 
 [fileManager]
 active = "Active"
@@ -3549,6 +3555,7 @@ owner = "Owner"
 ownerUnknown = "Unknown"
 share = "Share"
 shareSelected = "Share Selected"
+shared = "Shared"
 sharedByYou = "Shared by you"
 sharedEditNoticeBody = "You do not have edit rights to the server version of this file. Any edits you make will be saved as a local copy."
 sharedEditNoticeConfirm = "Got it"
@@ -3570,6 +3577,25 @@ size = "File Size"
 title = "Files"
 upload = "Upload"
 uploadFiles = "Upload Files"
+
+[fileSelectorPicker]
+empty = "No files available"
+placeholder = "Select file"
+tabListLabel = "Saved files, workbench, upload"
+upload = "Upload from computer"
+
+[fileSelectorPicker.sort]
+dateAsc = "Oldest first"
+dateDesc = "Newest first"
+dateLabel = "Latest"
+nameAsc = "A to Z"
+nameDesc = "Z to A"
+nameLabel = "A–Z"
+
+[fileSelectorPicker.tabs]
+saved = "Saved files"
+workbench = "Workbench"
+upload = "Upload"
 
 [fileToPDF]
 credit = "This service uses LibreOffice and Unoconv for file conversion."
@@ -4884,6 +4910,7 @@ lineNumbers = "Line numbers"
 renderMarkdown = "Render markdown"
 
 [rightRail]
+closeAll = "Close All Files"
 closeSelected = "Close Selected Files"
 selectAll = "Select All"
 deselectAll = "Deselect All"

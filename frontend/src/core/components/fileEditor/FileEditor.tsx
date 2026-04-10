@@ -1,21 +1,19 @@
-import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   Text, Center, Box, LoadingOverlay, Stack
 } from '@mantine/core';
 import { Dropzone } from '@mantine/dropzone';
-import { useFileSelection, useFileState, useFileManagement, useFileActions, useFileContext } from '@app/contexts/FileContext';
+import { useFileState, useFileManagement, useFileActions } from '@app/contexts/FileContext';
+import { useFileEditorRightRailButtons } from '@app/components/fileEditor/fileEditorRightRailButtons';
 import { useNavigationActions } from '@app/contexts/NavigationContext';
 import { useViewer } from '@app/contexts/ViewerContext';
 import { zipFileService } from '@app/services/zipFileService';
 import { detectFileExtension } from '@app/utils/fileUtils';
 import FileEditorThumbnail from '@app/components/fileEditor/FileEditorThumbnail';
-import AddFileCard from '@app/components/fileEditor/AddFileCard';
 import FilePickerModal from '@app/components/shared/FilePickerModal';
 import { FileId, StirlingFile } from '@app/types/fileContext';
 import { alert } from '@app/components/toast';
 import { downloadFile } from '@app/services/downloadService';
-import { useFileEditorRightRailButtons } from '@app/components/fileEditor/fileEditorRightRailButtons';
-import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
 
 
 interface FileEditorProps {
@@ -40,23 +38,15 @@ const FileEditor = ({
   const { state, selectors } = useFileState();
   const { addFiles, removeFiles, reorderFiles } = useFileManagement();
   const { actions: fileActions } = useFileActions();
-  const { actions: fileContextActions } = useFileContext();
-  const { clearAllFileErrors } = fileContextActions;
 
   // Extract needed values from state (memoized to prevent infinite loops)
   const activeStirlingFileStubs = useMemo(() => selectors.getStirlingFileStubs(), [state.files.byId, state.files.ids]);
-  const selectedFileIds = state.ui.selectedFileIds;
-  const totalItems = state.files.ids.length;
-  const selectedCount = selectedFileIds.length;
 
   // Get navigation actions
   const { actions: navActions } = useNavigationActions();
 
   // Get viewer context for setting active file index and ID
   const { setActiveFileIndex, setActiveFileId } = useViewer();
-
-  // Get file selection context
-  const { setSelectedFiles } = useFileSelection();
 
   const [_status, _setStatus] = useState<string | null>(null);
   const [_error, _setError] = useState<string | null>(null);
@@ -68,72 +58,16 @@ const FileEditor = ({
   const showError = useCallback((message: string) => {
     alert({ alertType: 'error', title: 'Error', body: message, expandable: true });
   }, []);
-  const [selectionMode, setSelectionMode] = useState(toolMode);
-
-  // Current tool (for enforcing maxFiles limits)
-  const { selectedTool } = useToolWorkflow();
-
-  // Compute effective max allowed files based on the active tool and mode
-  const maxAllowed = useMemo<number>(() => {
-    const rawMax = selectedTool?.maxFiles;
-    return (!toolMode || rawMax == null || rawMax < 0) ? Infinity : rawMax;
-  }, [selectedTool?.maxFiles, toolMode]);
-
-  // Enable selection mode automatically in tool mode
-  useEffect(() => {
-    if (toolMode) {
-      setSelectionMode(true);
-    }
-  }, [toolMode]);
-  const [showFilePickerModal, setShowFilePickerModal] = useState(false);
-  // Get selected file IDs from context (defensive programming)
-  const contextSelectedIds = Array.isArray(selectedFileIds) ? selectedFileIds : [];
-
-  // Create refs for frequently changing values to stabilize callbacks
-  const contextSelectedIdsRef = useRef<FileId[]>([]);
-  contextSelectedIdsRef.current = contextSelectedIds;
-
-  // Use activeStirlingFileStubs directly - no conversion needed
-  const localSelectedIds = contextSelectedIds;
-
-  const handleSelectAllFiles = useCallback(() => {
-    // Respect maxAllowed: if limited, select the last N files
-    const allIds = state.files.ids;
-    const idsToSelect = Number.isFinite(maxAllowed) ? allIds.slice(-maxAllowed) : allIds;
-    setSelectedFiles(idsToSelect);
-    try {
-      clearAllFileErrors();
-    } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('Failed to clear file errors on select all:', error);
-      }
-    }
-  }, [state.files.ids, setSelectedFiles, clearAllFileErrors, maxAllowed]);
-
-  const handleDeselectAllFiles = useCallback(() => {
-    setSelectedFiles([]);
-    try {
-      clearAllFileErrors();
-    } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('Failed to clear file errors on deselect:', error);
-      }
-    }
-  }, [setSelectedFiles, clearAllFileErrors]);
-
-  const handleCloseSelectedFiles = useCallback(() => {
-    if (selectedFileIds.length === 0) return;
-    void removeFiles(selectedFileIds, false);
-    setSelectedFiles([]);
-  }, [selectedFileIds, removeFiles, setSelectedFiles]);
+  const handleCloseAllFiles = useCallback(() => {
+    void removeFiles(activeStirlingFileStubs.map(r => r.id), false);
+  }, [activeStirlingFileStubs, removeFiles]);
 
   useFileEditorRightRailButtons({
-    totalItems,
-    selectedCount,
-    onSelectAll: handleSelectAllFiles,
-    onDeselectAll: handleDeselectAllFiles,
-    onCloseSelected: handleCloseSelectedFiles,
+    totalItems: activeStirlingFileStubs.length,
+    onCloseAll: handleCloseAllFiles,
   });
+
+  const [showFilePickerModal, setShowFilePickerModal] = useState(false);
 
   // Process uploaded files using context
   // ZIP extraction is now handled automatically in FileContext based on user preferences
@@ -148,13 +82,6 @@ const FileEditor = ({
         // - HTML ZIPs stay intact
         // - Non-ZIP files pass through unchanged
         await addFiles(uploadedFiles, { selectFiles: true });
-        // After auto-selection, enforce maxAllowed if needed
-        if (Number.isFinite(maxAllowed)) {
-          const nowSelectedIds = selectors.getSelectedStirlingFileStubs().map(r => r.id);
-          if (nowSelectedIds.length > maxAllowed) {
-            setSelectedFiles(nowSelectedIds.slice(-maxAllowed));
-          }
-        }
         showStatus(`Added ${uploadedFiles.length} file(s)`, 'success');
       }
     } catch (err) {
@@ -162,52 +89,7 @@ const FileEditor = ({
       showError(errorMessage);
       console.error('File processing error:', err);
     }
-  }, [addFiles, showStatus, showError, selectors, maxAllowed, setSelectedFiles]);
-
-  const toggleFile = useCallback((fileId: FileId) => {
-    const currentSelectedIds = contextSelectedIdsRef.current;
-
-    const targetRecord = activeStirlingFileStubs.find(r => r.id === fileId);
-    if (!targetRecord) return;
-
-    const contextFileId = fileId; // No need to create a new ID
-    const isSelected = currentSelectedIds.includes(contextFileId);
-
-    let newSelection: FileId[];
-
-    if (isSelected) {
-      // Remove file from selection
-      newSelection = currentSelectedIds.filter(id => id !== contextFileId);
-    } else {
-      // Add file to selection
-      // Determine max files allowed from the active tool (negative or undefined means unlimited)
-      const rawMax = selectedTool?.maxFiles;
-      const maxAllowed = (!toolMode || rawMax == null || rawMax < 0) ? Infinity : rawMax;
-
-      if (maxAllowed === 1) {
-        // Only one file allowed -> replace selection with the new file
-        newSelection = [contextFileId];
-      } else {
-        // If at capacity, drop the oldest selected and append the new one
-        if (Number.isFinite(maxAllowed) && currentSelectedIds.length >= maxAllowed) {
-          newSelection = [...currentSelectedIds.slice(1), contextFileId];
-        } else {
-          newSelection = [...currentSelectedIds, contextFileId];
-        }
-      }
-    }
-
-    // Update context (this automatically updates tool selection since they use the same action)
-    setSelectedFiles(newSelection);
-  }, [setSelectedFiles, toolMode, _setStatus, activeStirlingFileStubs, selectedTool?.maxFiles]);
-
-  // Enforce maxAllowed when tool changes or when an external action sets too many selected files
-  useEffect(() => {
-    if (Number.isFinite(maxAllowed) && selectedFileIds.length > maxAllowed) {
-      setSelectedFiles(selectedFileIds.slice(-maxAllowed));
-    }
-  }, [maxAllowed, selectedFileIds, setSelectedFiles]);
-
+  }, [addFiles, showStatus, showError]);
 
   // File reordering handler for drag and drop
   const handleReorderFiles = useCallback((sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => {
@@ -272,15 +154,9 @@ const FileEditor = ({
     const record = activeStirlingFileStubs.find(r => r.id === fileId);
     const file = record ? selectors.getFile(record.id) : null;
     if (record && file) {
-      // Remove file from context but keep in storage (close, don't delete)
-      const contextFileId = record.id;
-      removeFiles([contextFileId], false);
-
-      // Remove from context selections
-      const currentSelected = selectedFileIds.filter(id => id !== contextFileId);
-      setSelectedFiles(currentSelected);
+      removeFiles([record.id], false);
     }
-  }, [activeStirlingFileStubs, selectors, removeFiles, setSelectedFiles, selectedFileIds]);
+  }, [activeStirlingFileStubs, selectors, removeFiles]);
 
   const handleDownloadFile = useCallback(async (fileId: FileId) => {
     const record = activeStirlingFileStubs.find(r => r.id === fileId);
@@ -402,20 +278,12 @@ const FileEditor = ({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-              rowGap: '1.5rem',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+              gap: '1.5rem',
               padding: '1rem',
               pointerEvents: 'auto'
             }}
           >
-            {/* Add File Card - only show when files exist */}
-            {activeStirlingFileStubs.length > 0 && (
-              <AddFileCard
-                key="add-file-card"
-                onFileSelect={handleFileUpload}
-              />
-            )}
-
             {activeStirlingFileStubs.map((record, index) => {
               return (
                 <FileEditorThumbnail
@@ -423,9 +291,6 @@ const FileEditor = ({
                   file={record}
                   index={index}
                   totalFiles={activeStirlingFileStubs.length}
-                  selectedFiles={localSelectedIds}
-                  selectionMode={selectionMode}
-                  onToggleFile={toggleFile}
                   onCloseFile={handleCloseFile}
                   onViewFile={handleViewFile}
                   _onSetStatus={showStatus}
