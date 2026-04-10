@@ -16,13 +16,13 @@ const WatermarkWording = ({ parameters, onParameterChange, disabled = false }: W
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const filteredValue = removeEmojis(value);
-    onParameterChange('watermarkText', filteredValue);
+    onParameterChange("watermarkText", filteredValue);
   };
 
   return (
     <Stack gap="sm">
       <TextInput
-        placeholder={t('watermark.settings.text.placeholder', 'Enter watermark text')}
+        placeholder={t("watermark.settings.text.placeholder", "Enter watermark text")}
         value={parameters.watermarkText}
         onChange={handleTextChange}
         disabled={disabled}

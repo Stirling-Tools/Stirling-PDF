@@ -1,10 +1,10 @@
-import { useEffect, useCallback, useRef } from 'react';
-import { useEndpointEnabled } from '@app/hooks/useEndpointConfig';
-import { useViewScopedFiles } from '@app/hooks/tools/shared/useViewScopedFiles';
-import { BaseToolProps } from '@app/types/tool';
-import { ToolOperationHook } from '@app/hooks/tools/shared/useToolOperation';
-import { BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
-import { StirlingFile } from '@app/types/fileContext';
+import { useEffect, useCallback, useRef } from "react";
+import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
+import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
+import { BaseToolProps } from "@app/types/tool";
+import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
+import { BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
+import { StirlingFile } from "@app/types/fileContext";
 
 interface BaseToolReturn<TParams, TParamsHook extends BaseParametersHook<TParams>> {
   // File management
@@ -42,7 +42,7 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
     minFiles?: number;
     /** When true, uses the full file selection rather than the viewer-scoped single file. */
     ignoreViewerScope?: boolean;
-  }
+  },
 ): BaseToolReturn<TParams, TParamsHook> {
   const minFiles = options?.minFiles ?? 1;
   const ignoreViewerScope = options?.ignoreViewerScope ?? false;
@@ -59,7 +59,7 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
 
   // Prevent reset immediately after operation completes (when consumeFiles auto-selects outputs)
   const skipNextSelectionResetRef = useRef(false);
-  const previousSelectionRef = useRef<string>('');
+  const previousSelectionRef = useRef<string>("");
 
   // Tool-specific hooks
   const params = useParams();
@@ -91,7 +91,10 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
   useEffect(() => {
     if (effectiveFiles.length === 0) return;
 
-    const currentSelection = effectiveFiles.map(f => f.fileId).sort().join(',');
+    const currentSelection = effectiveFiles
+      .map((f) => f.fileId)
+      .sort()
+      .join(",");
 
     if (currentSelection === previousSelectionRef.current) return;
 
@@ -134,10 +137,13 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
     }
   }, [operation, params.parameters, effectiveFiles, onComplete, onError, toolName]);
 
-  const handleThumbnailClick = useCallback((file: File) => {
-    onPreviewFile?.(file);
-    sessionStorage.setItem('previousMode', toolName);
-  }, [onPreviewFile, toolName]);
+  const handleThumbnailClick = useCallback(
+    (file: File) => {
+      onPreviewFile?.(file);
+      sessionStorage.setItem("previousMode", toolName);
+    },
+    [onPreviewFile, toolName],
+  );
 
   const handleSettingsReset = useCallback(() => {
     skipNextSelectionResetRef.current = false;
@@ -170,6 +176,6 @@ export function useBaseTool<TParams, TParamsHook extends BaseParametersHook<TPar
     // State
     hasFiles,
     hasResults,
-    settingsCollapsed
+    settingsCollapsed,
   };
 }

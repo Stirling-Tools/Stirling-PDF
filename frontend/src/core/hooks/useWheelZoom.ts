@@ -1,4 +1,4 @@
-import { RefObject, useEffect } from 'react';
+import { RefObject, useEffect } from "react";
 
 interface UseWheelZoomOptions {
   /**
@@ -75,9 +75,9 @@ export function useWheelZoom({
       }
     };
 
-    element.addEventListener('wheel', handleWheel, { passive: false });
+    element.addEventListener("wheel", handleWheel, { passive: false });
     return () => {
-      element.removeEventListener('wheel', handleWheel);
+      element.removeEventListener("wheel", handleWheel);
     };
   }, [ref, onZoomIn, onZoomOut, enabled, threshold, requireModifierKey]);
 }

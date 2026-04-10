@@ -160,7 +160,7 @@ export interface TextGroup {
   lineSpacing?: number | null;
   lineElementCounts?: number[] | null;
   color?: string | null;
-  fontWeight?: number | 'normal' | 'bold' | null;
+  fontWeight?: number | "normal" | "bold" | null;
   rotation?: number | null;
   anchor?: { x: number; y: number } | null;
   baselineLength?: number | null;
@@ -200,7 +200,7 @@ export interface PdfTextEditorViewData {
   conversionProgress: ConversionProgress | null;
   hasChanges: boolean;
   forceSingleTextElement: boolean;
-  groupingMode: 'auto' | 'paragraph' | 'singleLine';
+  groupingMode: "auto" | "paragraph" | "singleLine";
   autoScaleText: boolean;
   onAutoScaleTextChange: (value: boolean) => void;
   requestPagePreview: (pageIndex: number, scale: number) => void;
@@ -226,7 +226,7 @@ export interface PdfTextEditorViewData {
   onSaveToWorkbench: () => Promise<void>;
   isSavingToWorkbench: boolean;
   onForceSingleTextElementChange: (value: boolean) => void;
-  onGroupingModeChange: (value: 'auto' | 'paragraph' | 'singleLine') => void;
+  onGroupingModeChange: (value: "auto" | "paragraph" | "singleLine") => void;
   onMergeGroups: (pageIndex: number, groupIds: string[]) => boolean;
   onUngroupGroup: (pageIndex: number, groupId: string) => boolean;
   onLoadFile: (file: File) => void;

@@ -27,8 +27,8 @@ import { truncateCenter } from '@app/utils/textUtils';
 import { FileSelectorPicker, FileSelectorResult } from '@app/components/shared/FileSelectorPicker';
 import '@app/components/tools/compare/compareView.css';
 
-const CUSTOM_VIEW_ID = 'compareWorkbenchView';
-const CUSTOM_WORKBENCH_ID = 'custom:compareWorkbenchView' as const;
+const CUSTOM_VIEW_ID = "compareWorkbenchView";
+const CUSTOM_WORKBENCH_ID = "custom:compareWorkbenchView" as const;
 
 const Compare = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -81,7 +81,7 @@ const Compare = (props: BaseToolProps) => {
     const handler = () => { performClearSelected(); };
     window.addEventListener('compare:clear-selected', handler as unknown as EventListener);
     return () => {
-      window.removeEventListener('compare:clear-selected', handler as unknown as EventListener);
+      window.removeEventListener("compare:clear-selected", handler as unknown as EventListener);
     };
   }, [performClearSelected]);
 
@@ -121,7 +121,7 @@ const Compare = (props: BaseToolProps) => {
       lastWorkbenchDataRef.current = data;
       setCustomWorkbenchViewData(CUSTOM_VIEW_ID, data);
     },
-    [setCustomWorkbenchViewData]
+    [setCustomWorkbenchViewData],
   );
 
   const prepareWorkbenchForRun = useCallback(
@@ -332,7 +332,7 @@ const Compare = (props: BaseToolProps) => {
     compSlot &&
     baseSlot.stirlingFile.fileId !== compSlot.stirlingFile.fileId &&
     !base.operation.isLoading &&
-    base.endpointEnabled !== false
+    base.endpointEnabled !== false,
   );
 
   const hasBothSelected = Boolean(baseSlot && compSlot);
@@ -345,7 +345,7 @@ const Compare = (props: BaseToolProps) => {
     },
     steps: [
       {
-        title: t('compare.selection.originalEditedTitle', 'Select Original and Edited PDFs'),
+        title: t("compare.selection.originalEditedTitle", "Select Original and Edited PDFs"),
         isVisible: true,
         content: (
           <Stack gap="sm" className="compare-step-selection">
@@ -361,7 +361,7 @@ const Compare = (props: BaseToolProps) => {
                   color: !hasAnySelected ? 'var(--spdf-clear-disabled-text)' : undefined,
                 }}
               >
-                {t('compare.clearSelected', 'Clear selected')}
+                {t("compare.clearSelected", "Clear selected")}
               </Button>
             </div>
 
@@ -395,14 +395,21 @@ const Compare = (props: BaseToolProps) => {
             <Modal
               opened={swapConfirmOpen}
               onClose={() => setSwapConfirmOpen(false)}
-              title={t('compare.swap.confirmTitle', 'Re-run comparison?')}
+              title={t("compare.swap.confirmTitle", "Re-run comparison?")}
               centered
               size="sm"
             >
               <Stack gap="md">
-                <Text>{t('compare.swap.confirmBody', 'This will rerun the tool. Are you sure you want to swap the order of Original and Edited?')}</Text>
+                <Text>
+                  {t(
+                    "compare.swap.confirmBody",
+                    "This will rerun the tool. Are you sure you want to swap the order of Original and Edited?",
+                  )}
+                </Text>
                 <Group justify="flex-end" gap="sm">
-                  <Button variant="light" onClick={() => setSwapConfirmOpen(false)}>{t('cancel', 'Cancel')}</Button>
+                  <Button variant="light" onClick={() => setSwapConfirmOpen(false)}>
+                    {t("cancel", "Cancel")}
+                  </Button>
                   <Button
                     variant="filled"
                     onClick={() => {
@@ -410,7 +417,7 @@ const Compare = (props: BaseToolProps) => {
                       performSwap();
                     }}
                   >
-                    {t('compare.swap.confirm', 'Swap and Re-run')}
+                    {t("compare.swap.confirm", "Swap and Re-run")}
                   </Button>
                 </Group>
               </Stack>
@@ -419,14 +426,16 @@ const Compare = (props: BaseToolProps) => {
             <Modal
               opened={clearConfirmOpen}
               onClose={() => setClearConfirmOpen(false)}
-              title={t('compare.clear.confirmTitle', 'Clear selected PDFs?')}
+              title={t("compare.clear.confirmTitle", "Clear selected PDFs?")}
               centered
               size="sm"
             >
               <Stack gap="md">
                 <Text>{t('compare.clear.confirmBody', 'This will clear the current file selections.')}</Text>
                 <Group justify="flex-end" gap="sm">
-                  <Button variant="light" onClick={() => setClearConfirmOpen(false)}>{t('cancel', 'Cancel')}</Button>
+                  <Button variant="light" onClick={() => setClearConfirmOpen(false)}>
+                    {t("cancel", "Cancel")}
+                  </Button>
                   <Button
                     variant="filled"
                     onClick={() => {
@@ -444,8 +453,8 @@ const Compare = (props: BaseToolProps) => {
       },
     ],
     executeButton: {
-      text: t('compare.cta', 'Compare'),
-      loadingText: t('compare.loading', 'Comparing...'),
+      text: t("compare.cta", "Compare"),
+      loadingText: t("compare.loading", "Comparing..."),
       onClick: handleExecuteCompare,
       disabled: !canExecute,
       // Explicitly null so the noFiles gate is bypassed — Compare manages its own slot state
@@ -456,7 +465,7 @@ const Compare = (props: BaseToolProps) => {
     review: {
       isVisible: false,
       operation: base.operation,
-      title: t('compare.review.title', 'Comparison Result'),
+      title: t("compare.review.title", "Comparison Result"),
       onUndo: base.operation.undoOperation,
     },
   });

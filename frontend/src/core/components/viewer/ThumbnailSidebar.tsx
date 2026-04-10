@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
-import { Box, ScrollArea } from '@mantine/core';
-import { useViewer } from '@app/contexts/ViewerContext';
-import { PrivateContent } from '@app/components/shared/PrivateContent';
+import { useState, useEffect, useRef } from "react";
+import { Box, ScrollArea } from "@mantine/core";
+import { useViewer } from "@app/contexts/ViewerContext";
+import { PrivateContent } from "@app/components/shared/PrivateContent";
 
 interface ThumbnailSidebarProps {
   visible: boolean;
@@ -20,7 +20,7 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle, activeFileIndex
   useEffect(() => {
     // Revoke old blob URLs to prevent memory leaks
     Object.values(thumbnails).forEach((thumbUrl) => {
-      if (typeof thumbUrl === 'string' && thumbUrl.startsWith('blob:')) {
+      if (typeof thumbUrl === "string" && thumbUrl.startsWith("blob:")) {
         URL.revokeObjectURL(thumbUrl);
       }
     });
@@ -38,7 +38,7 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle, activeFileIndex
     if (!visible) {
       Object.values(thumbnailsRef.current).forEach((thumbUrl) => {
         // Only revoke if it's a blob URL (not 'error')
-        if (typeof thumbUrl === 'string' && thumbUrl.startsWith('blob:')) {
+        if (typeof thumbUrl === "string" && thumbUrl.startsWith("blob:")) {
           URL.revokeObjectURL(thumbUrl);
         }
       });
@@ -50,7 +50,7 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle, activeFileIndex
   useEffect(() => {
     return () => {
       Object.values(thumbnailsRef.current).forEach((thumbUrl) => {
-        if (typeof thumbUrl === 'string' && thumbUrl.startsWith('blob:')) {
+        if (typeof thumbUrl === "string" && thumbUrl.startsWith("blob:")) {
           URL.revokeObjectURL(thumbUrl);
         }
       });
@@ -73,9 +73,9 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle, activeFileIndex
       // 2. Visible neighbors (current +/- 3)
       // 3. Everything else
       const prioritized = [
-        ...allPages.filter(i => i === currentPage),
-        ...allPages.filter(i => i !== currentPage && Math.abs(i - currentPage) <= 3),
-        ...allPages.filter(i => Math.abs(i - currentPage) > 3)
+        ...allPages.filter((i) => i === currentPage),
+        ...allPages.filter((i) => i !== currentPage && Math.abs(i - currentPage) <= 3),
+        ...allPages.filter((i) => Math.abs(i - currentPage) > 3),
       ];
 
       const CONCURRENCY_LIMIT = 3;
@@ -99,16 +99,16 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle, activeFileIndex
           }
           const thumbUrl = URL.createObjectURL(thumbBlob);
 
-          setThumbnails(prev => ({
+          setThumbnails((prev) => ({
             ...prev,
-            [pageIndex]: thumbUrl
+            [pageIndex]: thumbUrl,
           }));
         } catch (error) {
-          console.error('Failed to generate thumbnail for page', pageIndex + 1, error);
+          console.error("Failed to generate thumbnail for page", pageIndex + 1, error);
           if (!isCancelled) {
-            setThumbnails(prev => ({
+            setThumbnails((prev) => ({
               ...prev,
-              [pageIndex]: 'error'
+              [pageIndex]: "error",
             }));
           }
         }
@@ -139,113 +139,118 @@ export function ThumbnailSidebar({ visible, onToggle: _onToggle, activeFileIndex
       {visible && (
         <Box
           style={{
-            position: 'fixed',
+            position: "fixed",
             right: 0,
             top: 0,
             bottom: 0,
-            width: '15rem',
-            backgroundColor: 'var(--bg-surface)',
-            borderLeft: '1px solid var(--border-subtle)',
+            width: "15rem",
+            backgroundColor: "var(--bg-surface)",
+            borderLeft: "1px solid var(--border-subtle)",
             zIndex: 998,
-            display: 'flex',
-            flexDirection: 'column',
-            boxShadow: '-2px 0 8px rgba(0, 0, 0, 0.1)'
+            display: "flex",
+            flexDirection: "column",
+            boxShadow: "-2px 0 8px rgba(0, 0, 0, 0.1)",
           }}
         >
           {/* Thumbnails Container */}
           <ScrollArea style={{ flex: 1 }}>
             <Box p="sm">
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px'
-              }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                }}
+              >
                 {Array.from({ length: scrollState.totalPages }, (_, pageIndex) => (
                   <Box
                     key={pageIndex}
                     onClick={() => handlePageClick(pageIndex)}
                     style={{
-                      cursor: 'pointer',
-                      borderRadius: '8px',
-                      padding: '8px',
-                      backgroundColor: scrollState.currentPage === pageIndex + 1
-                        ? 'var(--color-primary-100)'
-                        : 'transparent',
-                      border: scrollState.currentPage === pageIndex + 1
-                        ? '2px solid var(--color-primary-500)'
-                        : '2px solid transparent',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '8px'
+                      cursor: "pointer",
+                      borderRadius: "8px",
+                      padding: "8px",
+                      backgroundColor: scrollState.currentPage === pageIndex + 1 ? "var(--color-primary-100)" : "transparent",
+                      border:
+                        scrollState.currentPage === pageIndex + 1
+                          ? "2px solid var(--color-primary-500)"
+                          : "2px solid transparent",
+                      transition: "all 0.2s ease",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "8px",
                     }}
                     onMouseEnter={(e) => {
                       if (scrollState.currentPage !== pageIndex + 1) {
-                        e.currentTarget.style.backgroundColor = 'var(--hover-bg)';
+                        e.currentTarget.style.backgroundColor = "var(--hover-bg)";
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (scrollState.currentPage !== pageIndex + 1) {
-                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.backgroundColor = "transparent";
                       }
                     }}
                   >
                     {/* Thumbnail Image */}
-                    {thumbnails[pageIndex] && thumbnails[pageIndex] !== 'error' ? (
+                    {thumbnails[pageIndex] && thumbnails[pageIndex] !== "error" ? (
                       <PrivateContent>
                         <img
                           src={thumbnails[pageIndex]}
                           alt={`Page ${pageIndex + 1} thumbnail`}
                           style={{
-                            maxWidth: '100%',
-                            height: 'auto',
-                            borderRadius: '4px',
-                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                            border: '1px solid var(--border-subtle)'
+                            maxWidth: "100%",
+                            height: "auto",
+                            borderRadius: "4px",
+                            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                            border: "1px solid var(--border-subtle)",
                           }}
                         />
                       </PrivateContent>
-                    ) : thumbnails[pageIndex] === 'error' ? (
-                      <div style={{
-                        width: '11.5rem',
-                        height: '15rem',
-                        backgroundColor: 'var(--color-red-50)',
-                        border: '1px solid var(--color-red-200)',
-                        borderRadius: '4px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'var(--color-red-500)',
-                        fontSize: '12px'
-                      }}>
+                    ) : thumbnails[pageIndex] === "error" ? (
+                      <div
+                        style={{
+                          width: "11.5rem",
+                          height: "15rem",
+                          backgroundColor: "var(--color-red-50)",
+                          border: "1px solid var(--color-red-200)",
+                          borderRadius: "4px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "var(--color-red-500)",
+                          fontSize: "12px",
+                        }}
+                      >
                         Failed
                       </div>
                     ) : (
-                      <div style={{
-                        width: '11.5rem',
-                        height: '15rem',
-                        backgroundColor: 'var(--bg-muted)',
-                        border: '1px solid var(--border-subtle)',
-                        borderRadius: '4px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'var(--text-muted)',
-                        fontSize: '12px'
-                      }}>
+                      <div
+                        style={{
+                          width: "11.5rem",
+                          height: "15rem",
+                          backgroundColor: "var(--bg-muted)",
+                          border: "1px solid var(--border-subtle)",
+                          borderRadius: "4px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "var(--text-muted)",
+                          fontSize: "12px",
+                        }}
+                      >
                         Loading...
                       </div>
                     )}
 
                     {/* Page Number */}
-                    <div style={{
-                      fontSize: '12px',
-                      fontWeight: 500,
-                      color: scrollState.currentPage === pageIndex + 1
-                        ? 'var(--color-primary-500)'
-                        : 'var(--text-muted)'
-                    }}>
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: 500,
+                        color: scrollState.currentPage === pageIndex + 1 ? "var(--color-primary-500)" : "var(--text-muted)",
+                      }}
+                    >
                       Page {pageIndex + 1}
                     </div>
                   </Box>

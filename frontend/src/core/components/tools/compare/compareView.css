@@ -92,7 +92,7 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background: var(--bg-toolbar);  
+  background: var(--bg-toolbar);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border-default);
   padding: 0.5rem;
@@ -154,7 +154,9 @@
   padding: 0 !important;
 }
 
-.compare-dropdown-scrollwrap { margin: 0; }
+.compare-dropdown-scrollwrap {
+  margin: 0;
+}
 
 /* Ensure search field sits flush and does not overflow */
 .compare-changes-dropdown .mantine-Combobox-search {
@@ -267,17 +269,17 @@
 /* Flash/pulse highlight for navigated change */
 @keyframes compare-flash {
   0% {
-    outline: 4px solid rgba(255, 235, 59, 0.0);
-    box-shadow: 0 0 0 rgba(255, 235, 59, 0.0);
+    outline: 4px solid rgba(255, 235, 59, 0);
+    box-shadow: 0 0 0 rgba(255, 235, 59, 0);
     background-color: rgba(255, 235, 59, 0.2) !important;
   }
   25% {
-    outline: 4px solid rgba(255, 235, 59, 1.0);
+    outline: 4px solid rgba(255, 235, 59, 1);
     box-shadow: 0 0 20px rgba(255, 235, 59, 0.8);
     background-color: rgba(255, 235, 59, 0.4) !important;
   }
   50% {
-    outline: 4px solid rgba(255, 235, 59, 1.0);
+    outline: 4px solid rgba(255, 235, 59, 1);
     box-shadow: 0 0 30px rgba(255, 235, 59, 0.9);
     background-color: rgba(255, 235, 59, 0.5) !important;
   }
@@ -287,9 +289,9 @@
     background-color: rgba(255, 235, 59, 0.3) !important;
   }
   100% {
-    outline: 4px solid rgba(255, 235, 59, 0.0);
-    box-shadow: 0 0 0 rgba(255, 235, 59, 0.0);
-    background-color: rgba(255, 235, 59, 0.0) !important;
+    outline: 4px solid rgba(255, 235, 59, 0);
+    box-shadow: 0 0 0 rgba(255, 235, 59, 0);
+    background-color: rgba(255, 235, 59, 0) !important;
   }
 }
 
@@ -415,7 +417,7 @@
 .compare-diff-highlight {
   position: absolute;
   pointer-events: none;
-  mix-blend-mode: normal; 
+  mix-blend-mode: normal;
 }
 
 /* Compare dropdown option formatting (page + clamped text) */

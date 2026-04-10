@@ -1,21 +1,18 @@
-import React from 'react';
-import { useTranslation } from 'react-i18next';
-import AppsIcon from '@mui/icons-material/AppsRounded';
-import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import { useNavigationState, useNavigationActions } from '@app/contexts/NavigationContext';
-import { useSidebarNavigation } from '@app/hooks/useSidebarNavigation';
-import { handleUnlessSpecialClick } from '@app/utils/clickHandlers';
-import QuickAccessButton from '@app/components/shared/quickAccessBar/QuickAccessButton';
+import React from "react";
+import { useTranslation } from "react-i18next";
+import AppsIcon from "@mui/icons-material/AppsRounded";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useNavigationState, useNavigationActions } from "@app/contexts/NavigationContext";
+import { useSidebarNavigation } from "@app/hooks/useSidebarNavigation";
+import { handleUnlessSpecialClick } from "@app/utils/clickHandlers";
+import QuickAccessButton from "@app/components/shared/quickAccessBar/QuickAccessButton";
 
 interface AllToolsNavButtonProps {
   activeButton: string;
   setActiveButton: (id: string) => void;
 }
 
-const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({
-  activeButton,
-  setActiveButton,
-}) => {
+const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({ activeButton, setActiveButton }) => {
   const { t } = useTranslation();
   const { handleReaderToggle, handleBackToTools, selectedToolKey, leftPanelView } = useToolWorkflow();
   const { hasUnsavedChanges } = useNavigationState();
@@ -23,7 +20,7 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({
   const { getHomeNavigation } = useSidebarNavigation();
 
   const performNavigation = () => {
-    setActiveButton('tools');
+    setActiveButton("tools");
     // Preserve existing behavior used in QuickAccessBar header
     handleReaderToggle();
     handleBackToTools();
@@ -38,7 +35,7 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({
   };
 
   // Do not highlight All Tools when a specific tool is open (indicator is shown)
-  const isActive = activeButton === 'tools' && !selectedToolKey && leftPanelView === 'toolPicker';
+  const isActive = activeButton === "tools" && !selectedToolKey && leftPanelView === "toolPicker";
 
   const navProps = getHomeNavigation();
 
@@ -54,7 +51,7 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({
   return (
     <div className="mt-4 mb-2">
       <QuickAccessButton
-        icon={<AppsIcon sx={{ fontSize: isActive ? '1.875rem' : '1.5rem' }} />}
+        icon={<AppsIcon sx={{ fontSize: isActive ? "1.875rem" : "1.5rem" }} />}
         label={t("quickAccess.allTools", "Tools")}
         isActive={isActive}
         onClick={handleNavClick}
@@ -68,4 +65,3 @@ const AllToolsNavButton: React.FC<AllToolsNavButtonProps> = ({
 };
 
 export default AllToolsNavButton;
-

@@ -3,16 +3,8 @@
   "compilerOptions": {
     "baseUrl": "../../",
     "paths": {
-      "@app/*": [
-        "src/core/*"
-      ]
+      "@app/*": ["src/core/*"]
     }
   },
-  "include": [
-    "../global.d.ts",
-    "../*.js",
-    "../*.ts",
-    "../*.tsx",
-    "."
-  ]
+  "include": ["../global.d.ts", "../*.js", "../*.ts", "../*.tsx", "."]
 }

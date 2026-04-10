@@ -1,4 +1,4 @@
-import { createContext, ReactNode } from 'react';
+import { createContext, ReactNode } from "react";
 
 /**
  * Core stub for SaaS Team Context

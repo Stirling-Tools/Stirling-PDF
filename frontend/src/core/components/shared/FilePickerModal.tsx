@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Modal,
   Text,
@@ -11,12 +11,12 @@ import {
   Image,
   Badge,
   ThemeIcon,
-  SimpleGrid
-} from '@mantine/core';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import { useTranslation } from 'react-i18next';
-import { FileId } from '@app/types/file';
-import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
+  SimpleGrid,
+} from "@mantine/core";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import { useTranslation } from "react-i18next";
+import { FileId } from "@app/types/file";
+import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 
 interface FilePickerModalProps {
   opened: boolean;
@@ -25,12 +25,7 @@ interface FilePickerModalProps {
   onSelectFiles: (selectedFiles: File[]) => void;
 }
 
-const FilePickerModal = ({
-  opened,
-  onClose,
-  storedFiles,
-  onSelectFiles,
-}: FilePickerModalProps) => {
+const FilePickerModal = ({ opened, onClose, storedFiles, onSelectFiles }: FilePickerModalProps) => {
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
   const [selectedFileIds, setSelectedFileIds] = useState<FileId[]>([]);
@@ -43,15 +38,13 @@ const FilePickerModal = ({
   }, [opened]);
 
   const toggleFileSelection = (fileId: FileId) => {
-    setSelectedFileIds(prev => {
-      return prev.includes(fileId)
-        ? prev.filter(id => id !== fileId)
-        : [...prev, fileId];
+    setSelectedFileIds((prev) => {
+      return prev.includes(fileId) ? prev.filter((id) => id !== fileId) : [...prev, fileId];
     });
   };
 
   const selectAll = () => {
-    setSelectedFileIds(storedFiles.map(f => f.id).filter(Boolean));
+    setSelectedFileIds(storedFiles.map((f) => f.id).filter(Boolean));
   };
 
   const selectNone = () => {
@@ -59,9 +52,7 @@ const FilePickerModal = ({
   };
 
   const handleConfirm = async () => {
-    const selectedFiles = storedFiles.filter(f =>
-      selectedFileIds.includes(f.id)
-    );
+    const selectedFiles = storedFiles.filter((f) => selectedFileIds.includes(f.id));
 
     // Convert stored files to File objects
     const convertedFiles = await Promise.all(
@@ -78,31 +69,31 @@ const FilePickerModal = ({
           }
 
           // If it's from IndexedDB storage, reconstruct the File
-          if (fileItem.arrayBuffer && typeof fileItem.arrayBuffer === 'function') {
+          if (fileItem.arrayBuffer && typeof fileItem.arrayBuffer === "function") {
             const arrayBuffer = await fileItem.arrayBuffer();
-            const blob = new Blob([arrayBuffer], { type: fileItem.type || 'application/pdf' });
+            const blob = new Blob([arrayBuffer], { type: fileItem.type || "application/pdf" });
             return new File([blob], fileItem.name, {
-              type: fileItem.type || 'application/pdf',
-              lastModified: fileItem.lastModified || Date.now()
+              type: fileItem.type || "application/pdf",
+              lastModified: fileItem.lastModified || Date.now(),
             });
           }
 
           // If it has data property, reconstruct the File
           if (fileItem.data) {
-            const blob = new Blob([fileItem.data], { type: fileItem.type || 'application/pdf' });
+            const blob = new Blob([fileItem.data], { type: fileItem.type || "application/pdf" });
             return new File([blob], fileItem.name, {
-              type: fileItem.type || 'application/pdf',
-              lastModified: fileItem.lastModified || Date.now()
+              type: fileItem.type || "application/pdf",
+              lastModified: fileItem.lastModified || Date.now(),
             });
           }
 
-          console.warn('Could not convert file item:', fileItem);
+          console.warn("Could not convert file item:", fileItem);
           return null;
         } catch (error) {
-          console.error('Error converting file:', error, fileItem);
+          console.error("Error converting file:", error, fileItem);
           return null;
         }
-      })
+      }),
     );
 
     // Filter out any null values and return valid Files
@@ -113,11 +104,11 @@ const FilePickerModal = ({
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) return "0 B";
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
   };
 
   return (
@@ -140,9 +131,7 @@ const FilePickerModal = ({
             <Group justify="space-between">
               <Text size="sm" c="dimmed">
                 {storedFiles.length} {t("fileUpload.filesAvailable", "files available")}
-                {selectedFileIds.length > 0 && (
-                  <> • {selectedFileIds.length} selected</>
-                )}
+                {selectedFileIds.length > 0 && <> • {selectedFileIds.length} selected</>}
               </Text>
               <Group gap="xs">
                 <Button size="xs" variant="light" onClick={selectAll}>
@@ -166,15 +155,11 @@ const FilePickerModal = ({
                       key={fileId}
                       p="sm"
                       style={{
-                        border: isSelected
-                          ? '2px solid var(--mantine-color-blue-6)'
-                          : '1px solid var(--mantine-color-gray-3)',
+                        border: isSelected ? "2px solid var(--mantine-color-blue-6)" : "1px solid var(--mantine-color-gray-3)",
                         borderRadius: 8,
-                        backgroundColor: isSelected
-                          ? 'var(--mantine-color-blue-0)'
-                          : 'transparent',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
+                        backgroundColor: isSelected ? "var(--mantine-color-blue-0)" : "transparent",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
                       }}
                       onClick={() => toggleFileSelection(fileId)}
                     >
@@ -190,29 +175,19 @@ const FilePickerModal = ({
                           style={{
                             width: 60,
                             height: 80,
-                            border: '1px solid var(--mantine-color-gray-3)',
+                            border: "1px solid var(--mantine-color-gray-3)",
                             borderRadius: 4,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: 'var(--mantine-color-gray-0)',
-                            flexShrink: 0
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "var(--mantine-color-gray-0)",
+                            flexShrink: 0,
                           }}
                         >
                           {file.thumbnail ? (
-                            <Image
-                              src={file.thumbnail}
-                              alt="PDF thumbnail"
-                              height={70}
-                              width={50}
-                              fit="contain"
-                            />
+                            <Image src={file.thumbnail} alt="PDF thumbnail" height={70} width={50} fit="contain" />
                           ) : (
-                            <ThemeIcon
-                              variant="light"
-                              color="red"
-                              size={40}
-                            >
+                            <ThemeIcon variant="light" color="red" size={40}>
                               <PictureAsPdfIcon style={{ fontSize: 24 }} />
                             </ThemeIcon>
                           )}
@@ -225,7 +200,7 @@ const FilePickerModal = ({
                           </Text>
                           <Group gap="xs">
                             <Badge size="xs" variant="light" color="gray">
-                              {formatFileSize(file.size || (file.file?.size || 0))}
+                              {formatFileSize(file.size || file.file?.size || 0)}
                             </Badge>
                           </Group>
                         </Stack>
@@ -250,14 +225,10 @@ const FilePickerModal = ({
           <Button variant="light" onClick={onClose}>
             {t("close", "Cancel")}
           </Button>
-          <Button
-            onClick={handleConfirm}
-            disabled={selectedFileIds.length === 0}
-          >
+          <Button onClick={handleConfirm} disabled={selectedFileIds.length === 0}>
             {selectedFileIds.length > 0
               ? `${t("fileUpload.loadFromStorage", "Load")} ${selectedFileIds.length} ${terminology.uploadFiles}`
-              : t("fileUpload.loadFromStorage", "Load Files")
-            }
+              : t("fileUpload.loadFromStorage", "Load Files")}
           </Button>
         </Group>
       </Stack>

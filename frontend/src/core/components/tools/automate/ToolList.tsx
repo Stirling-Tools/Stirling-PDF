@@ -58,9 +58,10 @@ export default function ToolList({
             <div
               style={{
                 border: "1px solid var(--mantine-color-gray-2)",
-                borderRadius: tool.operation && !tool.configured
-                  ? "var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0"
-                  : "var(--mantine-radius-lg)",
+                borderRadius:
+                  tool.operation && !tool.configured
+                    ? "var(--mantine-radius-lg) var(--mantine-radius-lg) 0 0"
+                    : "var(--mantine-radius-lg)",
                 backgroundColor: "var(--mantine-color-gray-2)",
                 position: "relative",
                 padding: "var(--mantine-spacing-xs)",
@@ -127,7 +128,7 @@ export default function ToolList({
                   padding: "var(--mantine-spacing-xs)",
                 }}
               >
-                <Text pl="md" size="xs" >
+                <Text pl="md" size="xs">
                   {t("automate.creation.tools.notConfigured", "! Not Configured")}
                 </Text>
               </div>

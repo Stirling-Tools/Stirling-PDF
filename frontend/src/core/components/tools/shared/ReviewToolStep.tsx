@@ -70,9 +70,9 @@ function ReviewStepContent<TParams = unknown>({
           const stub = selectors.getStirlingFileStub(fileId as FileId);
           fileActions.updateStirlingFileStub(fileId as FileId, {
             localFilePath: stub?.localFilePath ?? savedPath,
-            isDirty: false
+            isDirty: false,
           });
-        }
+        },
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -149,9 +149,9 @@ export function createReviewToolStep<TParams = unknown>(
       _excludeFromCount?: boolean;
       _noPadding?: boolean;
     },
-    children?: React.ReactNode
+    children?: React.ReactNode,
   ) => React.ReactElement,
-  props: ReviewToolStepProps<TParams>
+  props: ReviewToolStepProps<TParams>,
 ): React.ReactElement {
   return createStep(
     i18n.t("review", "Review"),
@@ -162,6 +162,6 @@ export function createReviewToolStep<TParams = unknown>(
       _excludeFromCount: true,
       _noPadding: true,
     },
-    <ReviewStepContent operation={props.operation} onFileClick={props.onFileClick} onUndo={props.onUndo} />
+    <ReviewStepContent operation={props.operation} onFileClick={props.onFileClick} onUndo={props.onUndo} />,
   );
 }

@@ -14,12 +14,7 @@ interface StorageStatsCardProps {
   onReloadFiles: () => void;
 }
 
-const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
-  storageStats,
-  filesCount,
-  onClearAll,
-  onReloadFiles,
-}) => {
+const StorageStatsCard: React.FC<StorageStatsCardProps> = ({ storageStats, filesCount, onClearAll, onReloadFiles }) => {
   const { t } = useTranslation();
 
   if (!storageStats) return null;
@@ -59,12 +54,7 @@ const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
               {t("fileManager.clearAll", "Clear All")}
             </Button>
           )}
-          <Button
-            variant="light"
-            color="blue"
-            size="xs"
-            onClick={onReloadFiles}
-          >
+          <Button variant="light" color="blue" size="xs" onClick={onReloadFiles}>
             Reload Files
           </Button>
         </Group>

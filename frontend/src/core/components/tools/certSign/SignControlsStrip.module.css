@@ -328,7 +328,9 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .zoomButton:hover {
@@ -366,7 +368,9 @@
   border: none;
   background: transparent;
   color: var(--text-secondary);
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .iconButton.iconTextButton {

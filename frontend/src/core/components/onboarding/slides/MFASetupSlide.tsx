@@ -4,7 +4,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { SlideConfig } from "@app/types/types";
 import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
 import { accountService } from "@app/services/accountService";
-import { useAccountLogout } from '@app/extensions/accountLogout';
+import { useAccountLogout } from "@app/extensions/accountLogout";
 import { useAuth } from "@app/auth/UseSession";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { BASE_PATH } from "@app/constants/app";
@@ -59,10 +59,10 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
   }, [fetchMfaSetup]);
 
   const redirectToLogin = useCallback(() => {
-    window.location.assign('/login');
+    window.location.assign("/login");
   }, []);
 
-  const onLogout = useCallback(async() => {
+  const onLogout = useCallback(async () => {
     await accountLogout({ signOut, redirectToLogin });
   }, [accountLogout, redirectToLogin, signOut]);
 
@@ -84,13 +84,13 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
       } catch (err) {
         const axiosError = err as { response?: { data?: { error?: string } } };
         setMfaError(
-          axiosError.response?.data?.error || "Unable to enable two-factor authentication. Check the code and try again."
+          axiosError.response?.data?.error || "Unable to enable two-factor authentication. Check the code and try again.",
         );
       } finally {
         setSubmitting(false);
       }
     },
-    [mfaSetupCode, onMfaSetupComplete]
+    [mfaSetupCode, onMfaSetupComplete],
   );
 
   const isReady = Boolean(mfaSetupData);
@@ -179,18 +179,10 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
                 >
                   Regenerate QR code
                 </Button>
-                <Button
-                  type="submit"
-                  loading={submitting}
-                  disabled={!isReady || setupComplete || mfaSetupCode.length < 6}
-                >
+                <Button type="submit" loading={submitting} disabled={!isReady || setupComplete || mfaSetupCode.length < 6}>
                   Enable MFA
                 </Button>
-                <Button
-                  type="button"
-                  variant="light"
-                  onClick={onLogout}
-                >
+                <Button type="button" variant="light" onClick={onLogout}>
                   Logout
                 </Button>
               </Group>

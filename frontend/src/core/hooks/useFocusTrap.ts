@@ -1,13 +1,13 @@
-import { useEffect, RefObject } from 'react';
+import { useEffect, RefObject } from "react";
 
 const FOCUSABLE_ELEMENTS = [
-  'a[href]',
-  'button:not([disabled])',
-  'input:not([disabled])',
-  'select:not([disabled])',
-  'textarea:not([disabled])',
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
   '[tabindex]:not([tabindex="-1"])',
-].join(', ');
+].join(", ");
 
 export function useFocusTrap(containerRef: RefObject<HTMLElement | null>, enabled: boolean = true) {
   useEffect(() => {
@@ -16,11 +16,10 @@ export function useFocusTrap(containerRef: RefObject<HTMLElement | null>, enable
     }
 
     const container = containerRef.current;
-    const getFocusableElements = () =>
-      Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_ELEMENTS));
+    const getFocusableElements = () => Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_ELEMENTS));
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Tab') {
+      if (event.key !== "Tab") {
         return;
       }
 
@@ -65,12 +64,10 @@ export function useFocusTrap(containerRef: RefObject<HTMLElement | null>, enable
       }, 100);
     }
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [containerRef, enabled]);
 }
-
-

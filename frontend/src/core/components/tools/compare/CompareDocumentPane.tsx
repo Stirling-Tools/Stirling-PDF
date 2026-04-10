@@ -1,11 +1,16 @@
-import { Group, Loader, Stack, Text } from '@mantine/core';
-import { useMemo, useRef, useEffect, useState } from 'react';
-import type { PagePreview } from '@app/types/compare';
-import type { TokenBoundingBox, CompareDocumentPaneProps } from '@app/types/compare';
-import { mergeConnectedRects, normalizeRotation, groupWordRects, computePageLayoutMetrics } from '@app/components/tools/compare/compare';
-import CompareNavigationDropdown from '@app/components/tools/compare/CompareNavigationDropdown';
-import { useIsMobile } from '@app/hooks/useIsMobile';
-import { truncateCenter } from '@app/utils/textUtils';
+import { Group, Loader, Stack, Text } from "@mantine/core";
+import { useMemo, useRef, useEffect, useState } from "react";
+import type { PagePreview } from "@app/types/compare";
+import type { TokenBoundingBox, CompareDocumentPaneProps } from "@app/types/compare";
+import {
+  mergeConnectedRects,
+  normalizeRotation,
+  groupWordRects,
+  computePageLayoutMetrics,
+} from "@app/components/tools/compare/compare";
+import CompareNavigationDropdown from "@app/components/tools/compare/CompareNavigationDropdown";
+import { useIsMobile } from "@app/hooks/useIsMobile";
+import { truncateCenter } from "@app/utils/textUtils";
 
 const COMPARE_PANE_TITLE_MAX_LEN = 48;
 
@@ -48,11 +53,18 @@ const CompareDocumentPane = ({
     return map;
   }, [pairedPages]);
 
-  const HIGHLIGHT_BG_VAR = pane === 'base' ? 'var(--spdf-compare-removed-bg)' : 'var(--spdf-compare-added-bg)';
-  const OFFSET_PIXELS = pane === 'base' ? 4 : 2;
-  const cursorStyle = isPanMode && zoom > 1 ? 'grab' : 'auto';
+  const HIGHLIGHT_BG_VAR = pane === "base" ? "var(--spdf-compare-removed-bg)" : "var(--spdf-compare-added-bg)";
+  const OFFSET_PIXELS = pane === "base" ? 4 : 2;
+  const cursorStyle = isPanMode && zoom > 1 ? "grab" : "auto";
   const pagePanRef = useRef<Map<number, { x: number; y: number }>>(new Map());
-  const dragRef = useRef<{ active: boolean; page: number | null; startX: number; startY: number; startPanX: number; startPanY: number }>({ active: false, page: null, startX: 0, startY: 0, startPanX: 0, startPanY: 0 });
+  const dragRef = useRef<{
+    active: boolean;
+    page: number | null;
+    startX: number;
+    startY: number;
+    startPanX: number;
+    startPanY: number;
+  }>({ active: false, page: null, startX: 0, startY: 0, startPanX: 0, startPanY: 0 });
 
   // Track which page images have finished loading to avoid flashing between states
   const imageLoadedRef = useRef<Map<number, boolean>>(new Map());
@@ -77,10 +89,7 @@ const CompareDocumentPane = ({
     }
   }, [zoom]);
 
-  const renderedPageNumbers = useMemo(
-    () => new Set(pages.map((p) => p.pageNumber)),
-    [pages]
-  );
+  const renderedPageNumbers = useMemo(() => new Set(pages.map((p) => p.pageNumber)), [pages]);
 
   return (
     <div className="compare-pane">
@@ -94,12 +103,12 @@ const CompareDocumentPane = ({
           >
             {title ? truncateCenter(title, COMPARE_PANE_TITLE_MAX_LEN) : title}
           </Text>
-          <Group justify="flex-end" align="center" gap="sm" wrap="nowrap"> 
+          <Group justify="flex-end" align="center" gap="sm" wrap="nowrap">
             {(changes.length > 0 || Boolean(dropdownPlaceholder)) && (
               <CompareNavigationDropdown
                 changes={changes}
                 placeholder={dropdownPlaceholder ?? null}
-                className={pane === 'comparison' ? 'compare-changes-select--comparison' : undefined}
+                className={pane === "comparison" ? "compare-changes-select--comparison" : undefined}
                 onNavigate={onNavigateChange}
                 renderedPageNumbers={renderedPageNumbers}
               />
@@ -123,7 +132,7 @@ const CompareDocumentPane = ({
             let bestDist = Number.POSITIVE_INFINITY;
             let nodes = pageNodesRef.current;
             if (!nodes || nodes.length !== pages.length) {
-              nodes = Array.from(container.querySelectorAll('.compare-diff-page')) as HTMLElement[];
+              nodes = Array.from(container.querySelectorAll(".compare-diff-page")) as HTMLElement[];
               pageNodesRef.current = nodes;
             }
             for (const el of nodes) {
@@ -133,12 +142,12 @@ const CompareDocumentPane = ({
               const dist = Math.abs(center - mid);
               if (dist < bestDist) {
                 bestDist = dist;
-                const attr = el.getAttribute('data-page-number');
+                const attr = el.getAttribute("data-page-number");
                 const pn = attr ? parseInt(attr, 10) : NaN;
                 if (!Number.isNaN(pn)) bestPage = pn;
               }
             }
-            if (typeof onVisiblePageChange === 'function' && bestPage !== lastReportedVisiblePageRef.current) {
+            if (typeof onVisiblePageChange === "function" && bestPage !== lastReportedVisiblePageRef.current) {
               lastReportedVisiblePageRef.current = bestPage;
               onVisiblePageChange(pane, bestPage);
             }
@@ -149,14 +158,17 @@ const CompareDocumentPane = ({
         onMouseMove={undefined}
         onMouseUp={undefined}
         onMouseLeave={undefined}
-        onWheel={(event) => { handleWheelZoom(pane, event); handleWheelOverscroll(pane, event); }}
+        onWheel={(event) => {
+          handleWheelZoom(pane, event);
+          handleWheelOverscroll(pane, event);
+        }}
         onTouchStart={(event) => onTouchStart(pane, event)}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
         className="compare-pane__scroll"
         style={{ cursor: cursorStyle }}
       >
-        <Stack gap={zoom <= 0.6 ? 2 : zoom <= 0.85 ? 'xs' : 'sm'} className="compare-pane__content">
+        <Stack gap={zoom <= 0.6 ? 2 : zoom <= 0.85 ? "xs" : "sm"} className="compare-pane__content">
           {isLoading && (
             <Group justify="center" gap="xs" py="md">
               <Loader size="sm" />
@@ -166,7 +178,7 @@ const CompareDocumentPane = ({
 
           {pages.map((page) => {
             const peerPage = pairedPageMap.get(page.pageNumber);
-            const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
+            const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 1200;
             const metrics = computePageLayoutMetrics({
               page,
               peerPage: peerPage ?? null,
@@ -200,7 +212,7 @@ const CompareDocumentPane = ({
                 >
                   <div
                     className="compare-page-title"
-                    style={{ width: `${containerWidth}px`, marginLeft: 'auto', marginRight: 'auto' }}
+                    style={{ width: `${containerWidth}px`, marginLeft: "auto", marginRight: "auto" }}
                   >
                     <Text size="xs" fw={600} c="dimmed" ta="center">
                       {documentLabel} · {pageLabel} {page.pageNumber}
@@ -208,7 +220,13 @@ const CompareDocumentPane = ({
                   </div>
                   <div
                     className="compare-diff-page__canvas compare-diff-page__canvas--zoom"
-                    style={{ width: `${containerWidth}px`, height: `${containerHeight}px`, marginLeft: 'auto', marginRight: 'auto', overflow: 'hidden' }}
+                    style={{
+                      width: `${containerWidth}px`,
+                      height: `${containerHeight}px`,
+                      marginLeft: "auto",
+                      marginRight: "auto",
+                      overflow: "hidden",
+                    }}
                     onMouseDown={(e) => {
                       if (!isPanMode || zoom <= 1) return;
                       dragRef.current.active = true;
@@ -218,7 +236,7 @@ const CompareDocumentPane = ({
                       const curr = pagePanRef.current.get(page.pageNumber) || { x: 0, y: 0 };
                       dragRef.current.startPanX = curr.x;
                       dragRef.current.startPanY = curr.y;
-                      (e.currentTarget as HTMLElement).style.cursor = 'grabbing';
+                      (e.currentTarget as HTMLElement).style.cursor = "grabbing";
                       e.preventDefault();
                     }}
                     onMouseMove={(e) => {
@@ -253,13 +271,13 @@ const CompareDocumentPane = ({
                     <div
                       className={`compare-diff-page__inner compare-diff-page__inner--${pane}`}
                       style={{
-                        transform: `scale(${innerScale}) translate3d(${-((clampedPanX) / innerScale)}px, ${-((clampedPanY) / innerScale)}px, 0)`,
-                        transformOrigin: 'top left'
+                        transform: `scale(${innerScale}) translate3d(${-(clampedPanX / innerScale)}px, ${-(clampedPanY / innerScale)}px, 0)`,
+                        transformOrigin: "top left",
                       }}
                     >
                       {/* Image layer */}
                       <img
-                        src={page.url ?? ''}
+                        src={page.url ?? ""}
                         alt={altLabel}
                         loading="lazy"
                         decoding="async"
@@ -272,7 +290,7 @@ const CompareDocumentPane = ({
                         }}
                       />
                       {/* Overlay loader until the page image is loaded */}
-                      {!((imageLoadedRef.current.get(page.pageNumber) ?? false)) && (
+                      {!(imageLoadedRef.current.get(page.pageNumber) ?? false) && (
                         <div className="compare-page-loader-overlay">
                           <Loader size="sm" />
                         </div>
@@ -295,12 +313,12 @@ const CompareDocumentPane = ({
                               }}
                             />
                           );
-                        })
+                        }),
                       )}
                     </div>
                   </div>
                 </div>
-                </>
+              </>
             );
           })}
         </Stack>
