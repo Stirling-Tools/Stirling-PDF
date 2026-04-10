@@ -1,31 +1,28 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import CompareRoundedIcon from '@mui/icons-material/CompareRounded';
-import CloseIcon from '@mui/icons-material/Close';
-import { Box, Group, Stack, Text, Button, Modal, ActionIcon } from '@mantine/core';
-import SwapVertRoundedIcon from '@mui/icons-material/SwapVertRounded';
-import { createToolFlow } from '@app/components/tools/shared/createToolFlow';
-import { useBaseTool } from '@app/hooks/tools/shared/useBaseTool';
-import { BaseToolProps, ToolComponent } from '@app/types/tool';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import CompareRoundedIcon from "@mui/icons-material/CompareRounded";
+import CloseIcon from "@mui/icons-material/Close";
+import { Box, Group, Stack, Text, Button, Modal, ActionIcon } from "@mantine/core";
+import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import {
   useCompareParameters,
   defaultParameters as compareDefaultParameters,
-} from '@app/hooks/tools/compare/useCompareParameters';
-import {
-  useCompareOperation,
-  CompareOperationHook,
-} from '@app/hooks/tools/compare/useCompareOperation';
-import CompareWorkbenchView from '@app/components/tools/compare/CompareWorkbenchView';
-import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import { useNavigationActions } from '@app/contexts/NavigationContext';
-import type { FileId } from '@app/types/file';
-import type { StirlingFile } from '@app/types/fileContext';
-import DocumentThumbnail from '@app/components/shared/filePreview/DocumentThumbnail';
-import type { CompareWorkbenchData } from '@app/types/compare';
-import { getDefaultWorkbench } from '@app/types/workbench';
-import { truncateCenter } from '@app/utils/textUtils';
-import { FileSelectorPicker, FileSelectorResult } from '@app/components/shared/FileSelectorPicker';
-import '@app/components/tools/compare/compareView.css';
+} from "@app/hooks/tools/compare/useCompareParameters";
+import { useCompareOperation, CompareOperationHook } from "@app/hooks/tools/compare/useCompareOperation";
+import CompareWorkbenchView from "@app/components/tools/compare/CompareWorkbenchView";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useNavigationActions } from "@app/contexts/NavigationContext";
+import type { FileId } from "@app/types/file";
+import type { StirlingFile } from "@app/types/fileContext";
+import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
+import type { CompareWorkbenchData } from "@app/types/compare";
+import { getDefaultWorkbench } from "@app/types/workbench";
+import { truncateCenter } from "@app/utils/textUtils";
+import { FileSelectorPicker, FileSelectorResult } from "@app/components/shared/FileSelectorPicker";
+import "@app/components/tools/compare/compareView.css";
 
 const CUSTOM_VIEW_ID = "compareWorkbenchView";
 const CUSTOM_WORKBENCH_ID = "custom:compareWorkbenchView" as const;
@@ -40,13 +37,10 @@ const Compare = (props: BaseToolProps) => {
     clearCustomWorkbenchViewData,
   } = useToolWorkflow();
 
-  const base = useBaseTool(
-    'compare',
-    useCompareParameters,
-    useCompareOperation,
-    props,
-    { minFiles: 0, ignoreViewerScope: true }
-  );
+  const base = useBaseTool("compare", useCompareParameters, useCompareOperation, props, {
+    minFiles: 0,
+    ignoreViewerScope: true,
+  });
 
   const operation = base.operation as CompareOperationHook;
   const params = base.params.parameters;
@@ -61,7 +55,7 @@ const Compare = (props: BaseToolProps) => {
 
   // Sync params fileIds from slots (needed for operation result matching)
   useEffect(() => {
-    base.params.setParameters(prev => ({
+    base.params.setParameters((prev) => ({
       ...prev,
       baseFileId: baseSlot?.stirlingFile.fileId ?? null,
       comparisonFileId: compSlot?.stirlingFile.fileId ?? null,
@@ -69,8 +63,16 @@ const Compare = (props: BaseToolProps) => {
   }, [baseSlot?.stirlingFile.fileId, compSlot?.stirlingFile.fileId]);
 
   const performClearSelected = useCallback(() => {
-    try { base.operation.cancelOperation(); } catch { console.error('Failed to cancel operation'); }
-    try { base.operation.resetResults(); } catch { console.error('Failed to reset results'); }
+    try {
+      base.operation.cancelOperation();
+    } catch {
+      console.error("Failed to cancel operation");
+    }
+    try {
+      base.operation.resetResults();
+    } catch {
+      console.error("Failed to reset results");
+    }
     setBaseSlot(null);
     setCompSlot(null);
     clearCustomWorkbenchViewData(CUSTOM_VIEW_ID);
@@ -78,8 +80,10 @@ const Compare = (props: BaseToolProps) => {
   }, [base.operation, clearCustomWorkbenchViewData, navigationActions]);
 
   useEffect(() => {
-    const handler = () => { performClearSelected(); };
-    window.addEventListener('compare:clear-selected', handler as unknown as EventListener);
+    const handler = () => {
+      performClearSelected();
+    };
+    window.addEventListener("compare:clear-selected", handler as unknown as EventListener);
     return () => {
       window.removeEventListener("compare:clear-selected", handler as unknown as EventListener);
     };
@@ -89,7 +93,7 @@ const Compare = (props: BaseToolProps) => {
     registerCustomWorkbenchView({
       id: CUSTOM_VIEW_ID,
       workbenchId: CUSTOM_WORKBENCH_ID,
-      label: 'Compare view',
+      label: "Compare view",
       icon: compareIcon,
       component: CompareWorkbenchView,
     });
@@ -97,7 +101,7 @@ const Compare = (props: BaseToolProps) => {
     return () => {
       unregisterCustomWorkbenchView(CUSTOM_VIEW_ID);
     };
-  // Register once only
+    // Register once only
   }, []);
 
   // Track workbench data and drive loading/result state transitions
@@ -125,12 +129,7 @@ const Compare = (props: BaseToolProps) => {
   );
 
   const prepareWorkbenchForRun = useCallback(
-    (
-      baseId: FileId | null,
-      compId: FileId | null,
-      baseFile: StirlingFile | null,
-      comparisonFile: StirlingFile | null,
-    ) => {
+    (baseId: FileId | null, compId: FileId | null, baseFile: StirlingFile | null, comparisonFile: StirlingFile | null) => {
       if (!baseId || !compId) return;
 
       updateWorkbenchData({
@@ -144,7 +143,7 @@ const Compare = (props: BaseToolProps) => {
 
       lastProcessedAtRef.current = null;
     },
-    [updateWorkbenchData]
+    [updateWorkbenchData],
   );
 
   useEffect(() => {
@@ -229,7 +228,9 @@ const Compare = (props: BaseToolProps) => {
       const compId = newComp.stirlingFile.fileId;
       const selected: StirlingFile[] = [newBase.stirlingFile, newComp.stirlingFile];
       prepareWorkbenchForRun(baseId, compId, newBase.stirlingFile, newComp.stirlingFile);
-      requestAnimationFrame(() => { navigationActions.setWorkbench(CUSTOM_WORKBENCH_ID); });
+      requestAnimationFrame(() => {
+        navigationActions.setWorkbench(CUSTOM_WORKBENCH_ID);
+      });
       void operation.executeOperation({ ...params, baseFileId: baseId, comparisonFileId: compId }, selected);
     }
   }, [baseSlot, compSlot, navigationActions, operation, params, prepareWorkbenchForRun]);
@@ -243,56 +244,56 @@ const Compare = (props: BaseToolProps) => {
     performSwap();
   }, [baseSlot, compSlot, operation.result, performSwap]);
 
-  const clearSlot = useCallback((role: 'base' | 'comparison') => {
-    if (role === 'base') setBaseSlot(null);
+  const clearSlot = useCallback((role: "base" | "comparison") => {
+    if (role === "base") setBaseSlot(null);
     else setCompSlot(null);
   }, []);
 
   const renderSlot = useCallback(
-    (role: 'base' | 'comparison') => {
-      const slot = role === 'base' ? baseSlot : compSlot;
-      const otherSlot = role === 'base' ? compSlot : baseSlot;
+    (role: "base" | "comparison") => {
+      const slot = role === "base" ? baseSlot : compSlot;
+      const otherSlot = role === "base" ? compSlot : baseSlot;
       const stub = slot?.stub;
 
       if (stub) {
         const dateMs = (stub.lastModified || stub.createdAt) ?? null;
         const dateText = dateMs
-          ? new Date(dateMs).toLocaleDateString(undefined, { month: 'short', day: '2-digit', year: 'numeric' })
-          : '';
+          ? new Date(dateMs).toLocaleDateString(undefined, { month: "short", day: "2-digit", year: "numeric" })
+          : "";
         const pageCount = stub.processedFile?.totalPages || null;
 
         return (
           <Box
             style={{
-              border: '1px solid var(--border-default)',
-              borderRadius: 'var(--radius-md)',
-              padding: '0.75rem 1rem',
-              background: 'var(--bg-surface)',
-              width: '100%',
-              minHeight: '9rem',
-              position: 'relative',
+              border: "1px solid var(--border-default)",
+              borderRadius: "var(--radius-md)",
+              padding: "0.75rem 1rem",
+              background: "var(--bg-surface)",
+              width: "100%",
+              minHeight: "9rem",
+              position: "relative",
             }}
           >
             <ActionIcon
               variant="subtle"
               size="xs"
-              style={{ position: 'absolute', top: '0.5rem', right: '0.5rem' }}
+              style={{ position: "absolute", top: "0.5rem", right: "0.5rem" }}
               onClick={() => clearSlot(role)}
-              aria-label={t('compare.clearSlot', 'Remove file')}
+              aria-label={t("compare.clearSlot", "Remove file")}
             >
               <CloseIcon fontSize="small" />
             </ActionIcon>
             <Group align="flex-start" wrap="nowrap" gap="md">
-              <Box style={{ alignSelf: 'center' }}>
+              <Box style={{ alignSelf: "center" }}>
                 <DocumentThumbnail file={stub} thumbnail={stub.thumbnailUrl || null} />
               </Box>
-              <Stack style={{ minWidth: 0, overflow: 'hidden', flex: 1 }}>
+              <Stack style={{ minWidth: 0, overflow: "hidden", flex: 1 }}>
                 <Text fw={600} title={stub.name}>
-                  {truncateCenter(stub.name || '', 50)}
+                  {truncateCenter(stub.name || "", 50)}
                 </Text>
                 {pageCount && dateText && (
-                  <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {pageCount} {t('compare.pages', 'pages')}
+                  <Text size="xs" c="dimmed" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {pageCount} {t("compare.pages", "pages")}
                     <br />
                     {dateText}
                   </Text>
@@ -303,28 +304,28 @@ const Compare = (props: BaseToolProps) => {
         );
       }
 
-      const isDisabled = role === 'comparison' && !baseSlot;
+      const isDisabled = role === "comparison" && !baseSlot;
 
       return (
         <FileSelectorPicker
           placeholder={
             isDisabled
-              ? t('compare.edited.selectBaseFirst', 'Select original PDF first')
+              ? t("compare.edited.selectBaseFirst", "Select original PDF first")
               : t(
-                  role === 'base' ? 'compare.original.placeholder' : 'compare.edited.placeholder',
-                  role === 'base' ? 'Select the original PDF' : 'Select the edited PDF'
+                  role === "base" ? "compare.original.placeholder" : "compare.edited.placeholder",
+                  role === "base" ? "Select the original PDF" : "Select the edited PDF",
                 )
           }
           excludeIds={otherSlot ? [otherSlot.stirlingFile.fileId as string] : []}
           disabled={isDisabled}
           onSelect={(result: FileSelectorResult) => {
-            if (role === 'base') setBaseSlot(result);
+            if (role === "base") setBaseSlot(result);
             else setCompSlot(result);
           }}
         />
       );
     },
-    [baseSlot, compSlot, clearSlot, t]
+    [baseSlot, compSlot, clearSlot, t],
   );
 
   const canExecute = Boolean(
@@ -355,10 +356,10 @@ const Compare = (props: BaseToolProps) => {
                 size="compact-xs"
                 onClick={() => setClearConfirmOpen(true)}
                 disabled={!hasAnySelected}
-                styles={{ root: { textDecoration: 'underline' } }}
+                styles={{ root: { textDecoration: "underline" } }}
                 style={{
-                  background: !hasAnySelected ? 'transparent' : undefined,
-                  color: !hasAnySelected ? 'var(--spdf-clear-disabled-text)' : undefined,
+                  background: !hasAnySelected ? "transparent" : undefined,
+                  color: !hasAnySelected ? "var(--spdf-clear-disabled-text)" : undefined,
                 }}
               >
                 {t("compare.clearSelected", "Clear selected")}
@@ -366,16 +367,16 @@ const Compare = (props: BaseToolProps) => {
             </div>
 
             <Text fw={700} size="sm" style={{ margin: 0 }}>
-              {t('compare.original.label', 'Original PDF')}
+              {t("compare.original.label", "Original PDF")}
             </Text>
 
             <div className="compare-step-selection__thumbs-row">
               <Stack gap="sm" className="compare-step-selection__thumbs-col">
-                {renderSlot('base')}
+                {renderSlot("base")}
                 <Text fw={700} size="sm" style={{ margin: 0 }}>
-                  {t('compare.edited.label', 'Edited PDF')}
+                  {t("compare.edited.label", "Edited PDF")}
                 </Text>
-                {renderSlot('comparison')}
+                {renderSlot("comparison")}
               </Stack>
 
               {hasBothSelected && (
@@ -384,10 +385,10 @@ const Compare = (props: BaseToolProps) => {
                   className="compare-step-selection__swap"
                   onClick={handleSwap}
                   disabled={base.operation.isLoading}
-                  aria-label={t('compare.swap.label', 'Swap')}
+                  aria-label={t("compare.swap.label", "Swap")}
                 >
                   <SwapVertRoundedIcon className="compare-step-selection__swap-icon" fontSize="inherit" />
-                  <span className="compare-step-selection__swap-label">{t('compare.swap.label', 'Swap')}</span>
+                  <span className="compare-step-selection__swap-label">{t("compare.swap.label", "Swap")}</span>
                 </button>
               )}
             </div>
@@ -431,7 +432,7 @@ const Compare = (props: BaseToolProps) => {
               size="sm"
             >
               <Stack gap="md">
-                <Text>{t('compare.clear.confirmBody', 'This will clear the current file selections.')}</Text>
+                <Text>{t("compare.clear.confirmBody", "This will clear the current file selections.")}</Text>
                 <Group justify="flex-end" gap="sm">
                   <Button variant="light" onClick={() => setClearConfirmOpen(false)}>
                     {t("cancel", "Cancel")}
@@ -443,7 +444,7 @@ const Compare = (props: BaseToolProps) => {
                       performClearSelected();
                     }}
                   >
-                    {t('compare.clear.confirm', 'Clear')}
+                    {t("compare.clear.confirm", "Clear")}
                   </Button>
                 </Group>
               </Stack>
@@ -458,8 +459,8 @@ const Compare = (props: BaseToolProps) => {
       onClick: handleExecuteCompare,
       disabled: !canExecute,
       // Explicitly null so the noFiles gate is bypassed — Compare manages its own slot state
-      disabledReason: base.endpointEnabled === false ? 'endpointUnavailable' : null,
-      testId: 'compare-execute',
+      disabledReason: base.endpointEnabled === false ? "endpointUnavailable" : null,
+      testId: "compare-execute",
       disableScopeHints: true,
     },
     review: {

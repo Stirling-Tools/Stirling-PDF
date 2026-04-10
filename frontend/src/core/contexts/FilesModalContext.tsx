@@ -175,7 +175,11 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, []);
 
   const openFilesModal = useCallback(
-    (options?: { insertAfterPage?: number; customHandler?: (files: File[], insertAfterPage?: number) => void; maxSelectable?: number | null }) => {
+    (options?: {
+      insertAfterPage?: number;
+      customHandler?: (files: File[], insertAfterPage?: number) => void;
+      maxSelectable?: number | null;
+    }) => {
       setInsertAfterPage(options?.insertAfterPage);
       setCustomHandler(() => options?.customHandler);
       setMaxSelectable(options?.maxSelectable ?? null);

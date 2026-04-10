@@ -89,7 +89,10 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
   const localSelectedIds = contextSelectedIds;
 
   const handleCloseAllFiles = useCallback(() => {
-    void removeFiles(activeStirlingFileStubs.map((r) => r.id), false);
+    void removeFiles(
+      activeStirlingFileStubs.map((r) => r.id),
+      false,
+    );
   }, [activeStirlingFileStubs, removeFiles]);
 
   useFileEditorRightRailButtons({

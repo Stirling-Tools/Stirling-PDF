@@ -1,63 +1,64 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Box, Popover, ScrollArea, Text, Loader, FileButton } from '@mantine/core';
-import AddIcon from '@mui/icons-material/Add';
-import { useTranslation } from 'react-i18next';
-import {
-  createStirlingFile,
-  createFileId,
-  createNewStirlingFileStub,
-} from '@app/types/fileContext';
-import type { StirlingFile, StirlingFileStub } from '@app/types/fileContext';
-import type { FileId } from '@app/types/file';
-import { useAllFiles } from '@app/contexts/FileContext';
-import { useFileContext } from '@app/contexts/file/fileHooks';
-import { useFileManager } from '@app/hooks/useFileManager';
-import { fileStorage } from '@app/services/fileStorage';
-import apiClient from '@app/services/apiClient';
-import { parseContentDispositionFilename, extractLatestFilesFromBundle } from '@app/services/shareBundleUtils';
-import { truncateCenter } from '@app/utils/textUtils';
-import { generateThumbnailForFile } from '@app/utils/thumbnailUtils';
-import styles from '@app/components/shared/FileSelectorPicker.module.css';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Box, Popover, ScrollArea, Text, Loader, FileButton } from "@mantine/core";
+import AddIcon from "@mui/icons-material/Add";
+import { useTranslation } from "react-i18next";
+import { createStirlingFile, createFileId, createNewStirlingFileStub } from "@app/types/fileContext";
+import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
+import type { FileId } from "@app/types/file";
+import { useAllFiles } from "@app/contexts/FileContext";
+import { useFileContext } from "@app/contexts/file/fileHooks";
+import { useFileManager } from "@app/hooks/useFileManager";
+import { fileStorage } from "@app/services/fileStorage";
+import apiClient from "@app/services/apiClient";
+import { parseContentDispositionFilename, extractLatestFilesFromBundle } from "@app/services/shareBundleUtils";
+import { truncateCenter } from "@app/utils/textUtils";
+import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
+import styles from "@app/components/shared/FileSelectorPicker.module.css";
 
-const LS_TAB = 'filePicker.tab';
-const LS_SORT = 'filePicker.sort';
-const LS_SORT_DIR = 'filePicker.sortDir';
+const LS_TAB = "filePicker.tab";
+const LS_SORT = "filePicker.sort";
+const LS_SORT_DIR = "filePicker.sortDir";
 
 function lsGet<const T extends readonly string[]>(key: string, fallback: T[number], valid: T): T[number] {
   try {
     const v = localStorage.getItem(key);
     const allowed = valid as readonly string[];
     if (v && allowed.includes(v)) return v as T[number];
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return fallback;
 }
 
 function lsSet(key: string, value: string) {
-  try { localStorage.setItem(key, value); } catch { /* ignore */ }
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    /* ignore */
+  }
 }
 
-
 function formatBytes(bytes: number): string {
-  if (!bytes) return '';
+  if (!bytes) return "";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
 function formatDate(ms: number | undefined): string {
-  if (!ms) return '';
-  return new Date(ms).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  if (!ms) return "";
+  return new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
 function buildMeta(stub: StirlingFileStub): string {
   const parts: string[] = [];
   const pages = stub.processedFile?.totalPages;
-  if (pages) parts.push(`${pages} ${pages === 1 ? 'page' : 'pages'}`);
+  if (pages) parts.push(`${pages} ${pages === 1 ? "page" : "pages"}`);
   const size = formatBytes(stub.size ?? 0);
   if (size) parts.push(size);
   const date = formatDate(stub.lastModified || stub.createdAt);
   if (date) parts.push(date);
-  return parts.join(' · ');
+  return parts.join(" · ");
 }
 
 export interface FileSelectorResult {
@@ -77,17 +78,12 @@ export interface FileSelectorPickerProps {
   onSelect: (result: FileSelectorResult) => void;
 }
 
-export function FileSelectorPicker({
-  placeholder,
-  excludeIds = [],
-  disabled = false,
-  onSelect,
-}: FileSelectorPickerProps) {
+export function FileSelectorPicker({ placeholder, excludeIds = [], disabled = false, onSelect }: FileSelectorPickerProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'workbench' | 'saved'>(() => lsGet(LS_TAB, 'saved', ['workbench', 'saved']));
-  const [sortBy, setSortBy] = useState<'date' | 'name'>(() => lsGet(LS_SORT, 'date', ['date', 'name']));
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>(() => lsGet(LS_SORT_DIR, 'desc', ['asc', 'desc']));
+  const [activeTab, setActiveTab] = useState<"workbench" | "saved">(() => lsGet(LS_TAB, "saved", ["workbench", "saved"]));
+  const [sortBy, setSortBy] = useState<"date" | "name">(() => lsGet(LS_SORT, "date", ["date", "name"]));
+  const [sortDir, setSortDir] = useState<"asc" | "desc">(() => lsGet(LS_SORT_DIR, "desc", ["asc", "desc"]));
   const [savedStubs, setSavedStubs] = useState<StirlingFileStub[]>([]);
   const [savedLoading, setSavedLoading] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -97,24 +93,27 @@ export function FileSelectorPicker({
   const { selectors } = useFileContext();
   const { loadRecentFiles } = useFileManager();
 
-  const handleTabChange = useCallback((tab: 'workbench' | 'saved') => {
+  const handleTabChange = useCallback((tab: "workbench" | "saved") => {
     lsSet(LS_TAB, tab);
     setActiveTab(tab);
   }, []);
 
-  const handleSortChange = useCallback((sort: 'date' | 'name') => {
-    if (sort === sortBy) {
-      const newDir = sortDir === 'asc' ? 'desc' : 'asc';
-      lsSet(LS_SORT_DIR, newDir);
-      setSortDir(newDir);
-    } else {
-      const defaultDir: 'asc' | 'desc' = sort === 'name' ? 'asc' : 'desc';
-      lsSet(LS_SORT, sort);
-      lsSet(LS_SORT_DIR, defaultDir);
-      setSortBy(sort);
-      setSortDir(defaultDir);
-    }
-  }, [sortBy, sortDir]);
+  const handleSortChange = useCallback(
+    (sort: "date" | "name") => {
+      if (sort === sortBy) {
+        const newDir = sortDir === "asc" ? "desc" : "asc";
+        lsSet(LS_SORT_DIR, newDir);
+        setSortDir(newDir);
+      } else {
+        const defaultDir: "asc" | "desc" = sort === "name" ? "asc" : "desc";
+        lsSet(LS_SORT, sort);
+        lsSet(LS_SORT_DIR, defaultDir);
+        setSortBy(sort);
+        setSortDir(defaultDir);
+      }
+    },
+    [sortBy, sortDir],
+  );
 
   // Sync tab/sort from localStorage whenever this picker opens.
   // Both slot pickers mount simultaneously so their useState initialisers run at
@@ -122,101 +121,114 @@ export function FileSelectorPicker({
   // other picker's React state is stale. Re-reading on open fixes that.
   useEffect(() => {
     if (!isOpen) return;
-    setActiveTab(lsGet(LS_TAB, 'saved', ['workbench', 'saved']));
-    setSortBy(lsGet(LS_SORT, 'date', ['date', 'name']));
-    setSortDir(lsGet(LS_SORT_DIR, 'desc', ['asc', 'desc']));
+    setActiveTab(lsGet(LS_TAB, "saved", ["workbench", "saved"]));
+    setSortBy(lsGet(LS_SORT, "date", ["date", "name"]));
+    setSortDir(lsGet(LS_SORT_DIR, "desc", ["asc", "desc"]));
   }, [isOpen]);
 
   // Load saved files when the saved tab is active and the picker is open
   useEffect(() => {
-    if (activeTab !== 'saved' || !isOpen) return;
+    if (activeTab !== "saved" || !isOpen) return;
     setSavedLoading(true);
     loadRecentFiles()
       .then(setSavedStubs)
       .finally(() => setSavedLoading(false));
   }, [activeTab, isOpen, loadRecentFiles]);
 
-  const workbenchIdSet = useMemo(() => new Set(workbenchStubs.map(s => s.id)), [workbenchStubs]);
+  const workbenchIdSet = useMemo(() => new Set(workbenchStubs.map((s) => s.id)), [workbenchStubs]);
 
   const displayStubs = useMemo(() => {
-    const base = activeTab === 'workbench' ? workbenchStubs : savedStubs;
-    const filtered = base.filter(s => !excludeIds.includes(s.id));
-    const dir = sortDir === 'asc' ? 1 : -1;
+    const base = activeTab === "workbench" ? workbenchStubs : savedStubs;
+    const filtered = base.filter((s) => !excludeIds.includes(s.id));
+    const dir = sortDir === "asc" ? 1 : -1;
     return [...filtered].sort((a, b) =>
-      sortBy === 'name'
+      sortBy === "name"
         ? dir * a.name.localeCompare(b.name)
-        : dir * ((a.lastModified || a.createdAt || 0) - (b.lastModified || b.createdAt || 0))
+        : dir * ((a.lastModified || a.createdAt || 0) - (b.lastModified || b.createdAt || 0)),
     );
   }, [activeTab, workbenchStubs, savedStubs, excludeIds, sortBy, sortDir]);
 
-  const loadAndSelect = useCallback(async (stub: StirlingFileStub) => {
-    if (loadingId) return;
+  const loadAndSelect = useCallback(
+    async (stub: StirlingFileStub) => {
+      if (loadingId) return;
 
-    // Workbench file — get StirlingFile directly from FileContext (no loading needed)
-    if (workbenchIdSet.has(stub.id)) {
-      const sf = selectors.getFile(stub.id as FileId);
-      if (sf) {
-        // Prefer the workbench stub (has thumbnail) over the saved stub (may not)
-        const workbenchStub = selectors.getStirlingFileStub(stub.id as FileId) ?? stub;
-        onSelect({ stub: workbenchStub, stirlingFile: sf });
-        setIsOpen(false);
-      }
-      return;
-    }
-
-    // Saved file — load bytes without touching the workbench
-    setLoadingId(stub.id);
-    try {
-      let stirlingFile: StirlingFile | null = null;
-
-      if (stub.remoteShareToken) {
-        const res = await apiClient.get(
-          `/api/v1/storage/share-links/${stub.remoteShareToken}`,
-          { responseType: 'blob', suppressErrorToast: true, skipAuthRedirect: true } as any
-        );
-        const ct = res.headers?.['content-type'] || res.headers?.['Content-Type'] || '';
-        const disp = res.headers?.['content-disposition'] || res.headers?.['Content-Disposition'] || '';
-        const files = await extractLatestFilesFromBundle(res.data as Blob, parseContentDispositionFilename(disp) || 'shared-file', ct);
-        if (files[0]) stirlingFile = createStirlingFile(files[0], createFileId());
-      } else if (stub.remoteStorageId) {
-        const res = await apiClient.get(
-          `/api/v1/storage/files/${stub.remoteStorageId}/download`,
-          { responseType: 'blob', suppressErrorToast: true, skipAuthRedirect: true } as any
-        );
-        const ct = res.headers?.['content-type'] || res.headers?.['Content-Type'] || '';
-        const disp = res.headers?.['content-disposition'] || res.headers?.['Content-Disposition'] || '';
-        const files = await extractLatestFilesFromBundle(res.data as Blob, parseContentDispositionFilename(disp) || stub.name, ct);
-        if (files[0]) stirlingFile = createStirlingFile(files[0], stub.id as FileId);
-      } else {
-        // Local IndexedDB file
-        const localFile = await fileStorage.getStirlingFile(stub.id);
-        if (localFile) stirlingFile = localFile;
-      }
-
-      if (stirlingFile) {
-        // Generate thumbnail on-the-fly if the stub doesn't already have one
-        let resolvedStub = stub;
-        if (!resolvedStub.thumbnailUrl) {
-          try {
-            const thumbnail = await generateThumbnailForFile(stirlingFile);
-            if (thumbnail) {
-              resolvedStub = { ...stub, thumbnailUrl: thumbnail };
-              // Persist so subsequent opens don't regenerate
-              void fileStorage.updateThumbnail(stirlingFile.fileId as FileId, thumbnail);
-            }
-          } catch {
-            // Non-fatal — thumbnail simply won't show
-          }
+      // Workbench file — get StirlingFile directly from FileContext (no loading needed)
+      if (workbenchIdSet.has(stub.id)) {
+        const sf = selectors.getFile(stub.id as FileId);
+        if (sf) {
+          // Prefer the workbench stub (has thumbnail) over the saved stub (may not)
+          const workbenchStub = selectors.getStirlingFileStub(stub.id as FileId) ?? stub;
+          onSelect({ stub: workbenchStub, stirlingFile: sf });
+          setIsOpen(false);
         }
-        onSelect({ stub: resolvedStub, stirlingFile });
-        setIsOpen(false);
+        return;
       }
-    } catch (err) {
-      console.error('FileSelectorPicker: failed to load file', err);
-    } finally {
-      setLoadingId(null);
-    }
-  }, [loadingId, workbenchIdSet, selectors, onSelect]);
+
+      // Saved file — load bytes without touching the workbench
+      setLoadingId(stub.id);
+      try {
+        let stirlingFile: StirlingFile | null = null;
+
+        if (stub.remoteShareToken) {
+          const res = await apiClient.get(`/api/v1/storage/share-links/${stub.remoteShareToken}`, {
+            responseType: "blob",
+            suppressErrorToast: true,
+            skipAuthRedirect: true,
+          } as any);
+          const ct = res.headers?.["content-type"] || res.headers?.["Content-Type"] || "";
+          const disp = res.headers?.["content-disposition"] || res.headers?.["Content-Disposition"] || "";
+          const files = await extractLatestFilesFromBundle(
+            res.data as Blob,
+            parseContentDispositionFilename(disp) || "shared-file",
+            ct,
+          );
+          if (files[0]) stirlingFile = createStirlingFile(files[0], createFileId());
+        } else if (stub.remoteStorageId) {
+          const res = await apiClient.get(`/api/v1/storage/files/${stub.remoteStorageId}/download`, {
+            responseType: "blob",
+            suppressErrorToast: true,
+            skipAuthRedirect: true,
+          } as any);
+          const ct = res.headers?.["content-type"] || res.headers?.["Content-Type"] || "";
+          const disp = res.headers?.["content-disposition"] || res.headers?.["Content-Disposition"] || "";
+          const files = await extractLatestFilesFromBundle(
+            res.data as Blob,
+            parseContentDispositionFilename(disp) || stub.name,
+            ct,
+          );
+          if (files[0]) stirlingFile = createStirlingFile(files[0], stub.id as FileId);
+        } else {
+          // Local IndexedDB file
+          const localFile = await fileStorage.getStirlingFile(stub.id);
+          if (localFile) stirlingFile = localFile;
+        }
+
+        if (stirlingFile) {
+          // Generate thumbnail on-the-fly if the stub doesn't already have one
+          let resolvedStub = stub;
+          if (!resolvedStub.thumbnailUrl) {
+            try {
+              const thumbnail = await generateThumbnailForFile(stirlingFile);
+              if (thumbnail) {
+                resolvedStub = { ...stub, thumbnailUrl: thumbnail };
+                // Persist so subsequent opens don't regenerate
+                void fileStorage.updateThumbnail(stirlingFile.fileId as FileId, thumbnail);
+              }
+            } catch {
+              // Non-fatal — thumbnail simply won't show
+            }
+          }
+          onSelect({ stub: resolvedStub, stirlingFile });
+          setIsOpen(false);
+        }
+      } catch (err) {
+        console.error("FileSelectorPicker: failed to load file", err);
+      } finally {
+        setLoadingId(null);
+      }
+    },
+    [loadingId, workbenchIdSet, selectors, onSelect],
+  );
 
   const handleUpload = useCallback(
     async (file: File | null) => {
@@ -234,26 +246,24 @@ export function FileSelectorPicker({
           // Non-fatal — thumbnail simply won't show
         }
         await fileStorage.storeStirlingFile(stirlingFile, stub);
-        lsSet(LS_TAB, 'saved');
-        setActiveTab('saved');
+        lsSet(LS_TAB, "saved");
+        setActiveTab("saved");
         const refreshed = await loadRecentFiles();
         setSavedStubs(refreshed);
         onSelect({ stub, stirlingFile });
         setIsOpen(false);
       } catch (err) {
-        console.error('FileSelectorPicker: upload failed', err);
+        console.error("FileSelectorPicker: upload failed", err);
       } finally {
         setUploadBusy(false);
       }
     },
-    [disabled, loadRecentFiles, onSelect, uploadBusy]
+    [disabled, loadRecentFiles, onSelect, uploadBusy],
   );
 
-  const triggerClass = [
-    styles.trigger,
-    disabled ? styles.triggerDisabled : '',
-    isOpen ? styles.triggerOpen : '',
-  ].filter(Boolean).join(' ');
+  const triggerClass = [styles.trigger, disabled ? styles.triggerDisabled : "", isOpen ? styles.triggerOpen : ""]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <Popover
@@ -264,23 +274,27 @@ export function FileSelectorPicker({
       withinPortal
       shadow="md"
       closeOnClickOutside
-      clickOutsideEvents={['mousedown', 'touchstart']}
+      clickOutsideEvents={["mousedown", "touchstart"]}
     >
       <Popover.Target>
         <Box
           className={triggerClass}
-          style={{ width: '100%' }}
-          onClick={() => { if (!disabled) setIsOpen(o => !o); }}
+          style={{ width: "100%" }}
+          onClick={() => {
+            if (!disabled) setIsOpen((o) => !o);
+          }}
           role="button"
           tabIndex={disabled ? -1 : 0}
-          onKeyDown={(e) => { if (!disabled && (e.key === 'Enter' || e.key === ' ')) setIsOpen(o => !o); }}
+          onKeyDown={(e) => {
+            if (!disabled && (e.key === "Enter" || e.key === " ")) setIsOpen((o) => !o);
+          }}
           aria-expanded={isOpen}
           aria-haspopup="listbox"
         >
-          <Text size="sm" c="dimmed" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {placeholder || t('fileSelectorPicker.placeholder', 'Select file')}
+          <Text size="sm" c="dimmed" style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {placeholder || t("fileSelectorPicker.placeholder", "Select file")}
           </Text>
-          <AddIcon style={{ fontSize: 18, color: 'var(--mantine-color-dimmed)', flexShrink: 0 }} />
+          <AddIcon style={{ fontSize: 18, color: "var(--mantine-color-dimmed)", flexShrink: 0 }} />
         </Box>
       </Popover.Target>
 
@@ -290,23 +304,23 @@ export function FileSelectorPicker({
             <div
               className={styles.slimTabBar}
               role="group"
-              aria-label={t('fileSelectorPicker.tabListLabel', 'Saved files, workbench, upload')}
+              aria-label={t("fileSelectorPicker.tabListLabel", "Saved files, workbench, upload")}
             >
               <button
                 type="button"
-                aria-pressed={activeTab === 'saved'}
-                className={activeTab === 'saved' ? styles.slimTabActive : styles.slimTab}
-                onClick={() => handleTabChange('saved')}
+                aria-pressed={activeTab === "saved"}
+                className={activeTab === "saved" ? styles.slimTabActive : styles.slimTab}
+                onClick={() => handleTabChange("saved")}
               >
-                {t('fileSelectorPicker.tabs.saved', 'Saved files')}
+                {t("fileSelectorPicker.tabs.saved", "Saved files")}
               </button>
               <button
                 type="button"
-                aria-pressed={activeTab === 'workbench'}
-                className={activeTab === 'workbench' ? styles.slimTabActive : styles.slimTab}
-                onClick={() => handleTabChange('workbench')}
+                aria-pressed={activeTab === "workbench"}
+                className={activeTab === "workbench" ? styles.slimTabActive : styles.slimTab}
+                onClick={() => handleTabChange("workbench")}
               >
-                {t('fileSelectorPicker.tabs.workbench', 'Workbench')}
+                {t("fileSelectorPicker.tabs.workbench", "Workbench")}
               </button>
               <FileButton onChange={handleUpload} accept=".pdf,application/pdf" disabled={disabled || uploadBusy}>
                 {(fbProps) => (
@@ -314,15 +328,11 @@ export function FileSelectorPicker({
                     {...fbProps}
                     type="button"
                     className={styles.slimTabUpload}
-                    aria-label={t('fileSelectorPicker.upload', 'Upload from computer')}
-                    title={t('fileSelectorPicker.upload', 'Upload from computer')}
+                    aria-label={t("fileSelectorPicker.upload", "Upload from computer")}
+                    title={t("fileSelectorPicker.upload", "Upload from computer")}
                     disabled={disabled || uploadBusy}
                   >
-                    {uploadBusy ? (
-                      <Loader size={11} />
-                    ) : (
-                      t('fileSelectorPicker.tabs.upload', 'Upload')
-                    )}
+                    {uploadBusy ? <Loader size={11} /> : t("fileSelectorPicker.tabs.upload", "Upload")}
                   </button>
                 )}
               </FileButton>
@@ -332,21 +342,29 @@ export function FileSelectorPicker({
           <div className={styles.sortGroup}>
             <button
               type="button"
-              className={[styles.sortBtn, sortBy === 'date' ? styles.sortBtnActive : ''].join(' ')}
-              onClick={() => handleSortChange('date')}
-              title={sortDir === 'desc' ? t('fileSelectorPicker.sort.dateDesc', 'Newest first') : t('fileSelectorPicker.sort.dateAsc', 'Oldest first')}
+              className={[styles.sortBtn, sortBy === "date" ? styles.sortBtnActive : ""].join(" ")}
+              onClick={() => handleSortChange("date")}
+              title={
+                sortDir === "desc"
+                  ? t("fileSelectorPicker.sort.dateDesc", "Newest first")
+                  : t("fileSelectorPicker.sort.dateAsc", "Oldest first")
+              }
             >
-              {t('fileSelectorPicker.sort.dateLabel', 'Latest')}
-              {sortBy === 'date' && <span className={styles.sortArrow}>{sortDir === 'desc' ? ' ↓' : ' ↑'}</span>}
+              {t("fileSelectorPicker.sort.dateLabel", "Latest")}
+              {sortBy === "date" && <span className={styles.sortArrow}>{sortDir === "desc" ? " ↓" : " ↑"}</span>}
             </button>
             <button
               type="button"
-              className={[styles.sortBtn, sortBy === 'name' ? styles.sortBtnActive : ''].join(' ')}
-              onClick={() => handleSortChange('name')}
-              title={sortDir === 'asc' ? t('fileSelectorPicker.sort.nameAsc', 'A to Z') : t('fileSelectorPicker.sort.nameDesc', 'Z to A')}
+              className={[styles.sortBtn, sortBy === "name" ? styles.sortBtnActive : ""].join(" ")}
+              onClick={() => handleSortChange("name")}
+              title={
+                sortDir === "asc"
+                  ? t("fileSelectorPicker.sort.nameAsc", "A to Z")
+                  : t("fileSelectorPicker.sort.nameDesc", "Z to A")
+              }
             >
-              {t('fileSelectorPicker.sort.nameLabel', 'A–Z')}
-              {sortBy === 'name' && <span className={styles.sortArrow}>{sortDir === 'asc' ? ' ↑' : ' ↓'}</span>}
+              {t("fileSelectorPicker.sort.nameLabel", "A–Z")}
+              {sortBy === "name" && <span className={styles.sortArrow}>{sortDir === "asc" ? " ↑" : " ↓"}</span>}
             </button>
           </div>
         </div>
@@ -358,10 +376,10 @@ export function FileSelectorPicker({
             </div>
           ) : displayStubs.length === 0 ? (
             <div className={styles.emptyState}>
-              <Text size="sm">{t('fileSelectorPicker.empty', 'No files available')}</Text>
+              <Text size="sm">{t("fileSelectorPicker.empty", "No files available")}</Text>
             </div>
           ) : (
-            displayStubs.map(stub => {
+            displayStubs.map((stub) => {
               const meta = buildMeta(stub);
               const isItemLoading = loadingId === stub.id;
               return (
@@ -373,7 +391,9 @@ export function FileSelectorPicker({
                   disabled={!!loadingId}
                 >
                   <div className={styles.fileItemContent}>
-                    <span className={styles.fileName} title={stub.name}>{truncateCenter(stub.name, 48)}</span>
+                    <span className={styles.fileName} title={stub.name}>
+                      {truncateCenter(stub.name, 48)}
+                    </span>
                     {meta && <span className={styles.fileMeta}>{meta}</span>}
                   </div>
                   {isItemLoading && <Loader size="xs" />}

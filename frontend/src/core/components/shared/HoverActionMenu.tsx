@@ -18,7 +18,7 @@ interface HoverActionMenuProps {
   actions: HoverAction[];
   position?: "inside" | "outside";
   className?: string;
-  visibility?: 'state' | 'cssHover';
+  visibility?: "state" | "cssHover";
 }
 
 const HoverActionMenu: React.FC<HoverActionMenuProps> = ({
@@ -26,7 +26,7 @@ const HoverActionMenu: React.FC<HoverActionMenuProps> = ({
   actions,
   position = "inside",
   className = "",
-  visibility = 'state',
+  visibility = "state",
 }) => {
   const visibleActions = actions.filter((action) => !action.hidden);
 
@@ -35,13 +35,13 @@ const HoverActionMenu: React.FC<HoverActionMenuProps> = ({
   }
 
   const style: React.CSSProperties = { zIndex: Z_INDEX_HOVER_ACTION_MENU };
-  if (visibility === 'state') {
+  if (visibility === "state") {
     style.opacity = show ? 1 : 0;
-    style.pointerEvents = show ? 'auto' : 'none';
+    style.pointerEvents = show ? "auto" : "none";
   } else if (show) {
     // Force visible (e.g. mobile) even when CSS-hover mode is active.
     style.opacity = 1;
-    style.pointerEvents = 'auto';
+    style.pointerEvents = "auto";
   }
 
   return (
@@ -50,7 +50,7 @@ const HoverActionMenu: React.FC<HoverActionMenuProps> = ({
       style={style}
       data-hover-action-menu="true"
       data-hover-action-menu-mode={visibility}
-      data-force-visible={show ? 'true' : 'false'}
+      data-force-visible={show ? "true" : "false"}
       onMouseDown={(e) => e.stopPropagation()}
       onMouseUp={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}

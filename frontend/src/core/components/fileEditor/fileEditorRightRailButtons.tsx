@@ -8,10 +8,7 @@ interface FileEditorRightRailButtonsParams {
   onCloseAll: () => void;
 }
 
-export function useFileEditorRightRailButtons({
-  totalItems,
-  onCloseAll,
-}: FileEditorRightRailButtonsParams) {
+export function useFileEditorRightRailButtons({ totalItems, onCloseAll }: FileEditorRightRailButtonsParams) {
   const { t, i18n } = useTranslation();
 
   const buttons = useMemo<RightRailButtonWithAction[]>(
