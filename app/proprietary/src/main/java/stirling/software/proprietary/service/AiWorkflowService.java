@@ -20,6 +20,7 @@ import stirling.software.common.util.ExceptionUtils;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowOutcome;
+import stirling.software.proprietary.model.api.ai.AiWorkflowPhase;
 import stirling.software.proprietary.model.api.ai.AiWorkflowProgressEvent;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
@@ -70,14 +71,11 @@ public class AiWorkflowService {
         initialRequest.setUserMessage(request.getUserMessage().trim());
         initialRequest.setFileNames(new ArrayList<>(filesByName.keySet()));
 
-        listener.onProgress(
-                AiWorkflowProgressEvent.of("analyzing", "Analyzing your request...", 0));
+        listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
 
-        int turn = 0;
         WorkflowState state = new WorkflowState.Pending(initialRequest);
         while (state instanceof WorkflowState.Pending pending) {
-            turn++;
-            state = advance(pending.request(), filesByName, listener, turn);
+            state = advance(pending.request(), filesByName, listener);
         }
         return ((WorkflowState.Terminal) state).response();
     }
@@ -85,17 +83,12 @@ public class AiWorkflowService {
     private WorkflowState advance(
             WorkflowTurnRequest request,
             Map<String, MultipartFile> filesByName,
-            ProgressListener listener,
-            int turn)
+            ProgressListener listener)
             throws IOException {
-        listener.onProgress(
-                AiWorkflowProgressEvent.of(
-                        "calling_engine",
-                        turn == 1 ? "AI is thinking..." : "AI is thinking... (turn " + turn + ")",
-                        turn));
+        listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.CALLING_ENGINE));
         AiWorkflowResponse response = invokeOrchestrator(request);
         return switch (response.getOutcome()) {
-            case NEED_CONTENT -> onNeedContent(response, filesByName, request, listener, turn);
+            case NEED_CONTENT -> onNeedContent(response, filesByName, request, listener);
             case ANSWER,
                     NOT_FOUND,
                     PLAN,
@@ -113,8 +106,7 @@ public class AiWorkflowService {
             AiWorkflowResponse response,
             Map<String, MultipartFile> filesByName,
             WorkflowTurnRequest request,
-            ProgressListener listener,
-            int turn)
+            ProgressListener listener)
             throws IOException {
         if (!request.getArtifacts().isEmpty()) {
             return new WorkflowState.Terminal(
@@ -147,9 +139,7 @@ public class AiWorkflowService {
                                         Collectors.toMap(
                                                 AiWorkflowFileRequest::getFileName, r -> r));
 
-        listener.onProgress(
-                AiWorkflowProgressEvent.of(
-                        "extracting_content", "Extracting content from your documents...", turn));
+        listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.EXTRACTING_CONTENT));
 
         List<LoadedFile> loadedFiles = new ArrayList<>();
         try {
@@ -165,9 +155,7 @@ public class AiWorkflowService {
                             response.getMaxPages(),
                             response.getMaxCharacters());
 
-            listener.onProgress(
-                    AiWorkflowProgressEvent.of(
-                            "processing", "Processing extracted content...", turn));
+            listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.PROCESSING));
 
             WorkflowTurnRequest nextRequest = new WorkflowTurnRequest();
             nextRequest.setUserMessage(request.getUserMessage());

@@ -6,12 +6,10 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class AiWorkflowProgressEvent {
-    private String phase;
-    private String message;
-    private int turn;
+    private AiWorkflowPhase phase;
     private long timestamp;
 
-    public static AiWorkflowProgressEvent of(String phase, String message, int turn) {
-        return new AiWorkflowProgressEvent(phase, message, turn, System.currentTimeMillis());
+    public static AiWorkflowProgressEvent of(AiWorkflowPhase phase) {
+        return new AiWorkflowProgressEvent(phase, System.currentTimeMillis());
     }
 }
