@@ -8,6 +8,21 @@ from typing import Any
 
 from opentelemetry.context import Context
 from opentelemetry.sdk.trace import ReadableSpan, SpanProcessor, TracerProvider
+from opentelemetry.semconv._incubating.attributes.gen_ai_attributes import (  # No public import for these constants yet
+    GEN_AI_INPUT_MESSAGES,
+    GEN_AI_OPERATION_NAME,
+    GEN_AI_OUTPUT_MESSAGES,
+    GEN_AI_REQUEST_MAX_TOKENS,
+    GEN_AI_REQUEST_MODEL,
+    GEN_AI_REQUEST_TEMPERATURE,
+    GEN_AI_RESPONSE_MODEL,
+    GEN_AI_SYSTEM,
+    GEN_AI_TOOL_DEFINITIONS,
+    GEN_AI_USAGE_INPUT_TOKENS,
+    GEN_AI_USAGE_OUTPUT_TOKENS,
+    GenAiOperationNameValues,
+)
+from opentelemetry.semconv.attributes.server_attributes import SERVER_ADDRESS, SERVER_PORT
 from opentelemetry.trace import Span
 from posthog.client import Client as PostHogClient
 
@@ -16,21 +31,6 @@ from stirling.config import AppSettings
 # Per-request user ID, set by middleware from the X-User-Id header.
 # When not set, PostHog generates a random ID and marks the event as personless.
 current_user_id: ContextVar[str | None] = ContextVar("current_user_id", default=None)
-
-# Pydantic AI OTel span attributes (gen_ai semantic conventions)
-_OTEL_OPERATION_NAME = "gen_ai.operation.name"
-_OTEL_SYSTEM = "gen_ai.system"
-_OTEL_REQUEST_MODEL = "gen_ai.request.model"
-_OTEL_RESPONSE_MODEL = "gen_ai.response.model"
-_OTEL_INPUT_TOKENS = "gen_ai.usage.input_tokens"
-_OTEL_OUTPUT_TOKENS = "gen_ai.usage.output_tokens"
-_OTEL_INPUT_MESSAGES = "gen_ai.input.messages"
-_OTEL_OUTPUT_MESSAGES = "gen_ai.output.messages"
-_OTEL_REQUEST_TEMPERATURE = "gen_ai.request.temperature"
-_OTEL_REQUEST_MAX_TOKENS = "gen_ai.request.max_tokens"
-_OTEL_TOOL_DEFINITIONS = "gen_ai.tool.definitions"
-_OTEL_SERVER_ADDRESS = "server.address"
-_OTEL_SERVER_PORT = "server.port"
 
 
 class LRUSet:
@@ -87,7 +87,7 @@ def _transform_output_choices(choices: list[Any]) -> list[Any]:
 
 def _extract_user_message(attrs: Mapping[str, Any]) -> str:
     """Extract the last user message text from the input messages span attribute."""
-    messages = _parse_json_attr(attrs, _OTEL_INPUT_MESSAGES)
+    messages = _parse_json_attr(attrs, GEN_AI_INPUT_MESSAGES)
     if not isinstance(messages, list):
         return ""
     for msg in reversed(messages):
@@ -113,7 +113,7 @@ class PostHogSpanProcessor(SpanProcessor):
 
     def on_end(self, span: ReadableSpan) -> None:
         attrs = dict(span.attributes or {})
-        if attrs.get(_OTEL_OPERATION_NAME) != "chat":
+        if attrs.get(GEN_AI_OPERATION_NAME) != GenAiOperationNameValues.CHAT.value:
             return
 
         properties = self._build_generation_properties(span, attrs)
@@ -127,10 +127,10 @@ class PostHogSpanProcessor(SpanProcessor):
     def _build_generation_properties(self, span: ReadableSpan, attrs: Mapping[str, Any]) -> dict[str, object]:
         """Build the $ai_generation event properties from span data."""
         properties: dict[str, object] = {
-            "$ai_provider": attrs.get(_OTEL_SYSTEM, ""),
-            "$ai_model": attrs.get(_OTEL_RESPONSE_MODEL) or attrs.get(_OTEL_REQUEST_MODEL, ""),
-            "$ai_input_tokens": attrs.get(_OTEL_INPUT_TOKENS, 0),
-            "$ai_output_tokens": attrs.get(_OTEL_OUTPUT_TOKENS, 0),
+            "$ai_provider": attrs.get(GEN_AI_SYSTEM, ""),
+            "$ai_model": attrs.get(GEN_AI_RESPONSE_MODEL) or attrs.get(GEN_AI_REQUEST_MODEL, ""),
+            "$ai_input_tokens": attrs.get(GEN_AI_USAGE_INPUT_TOKENS, 0),
+            "$ai_output_tokens": attrs.get(GEN_AI_USAGE_OUTPUT_TOKENS, 0),
         }
 
         if span.context:
@@ -160,7 +160,7 @@ class PostHogSpanProcessor(SpanProcessor):
         trace_properties: dict[str, object] = {
             "$ai_trace_id": trace_id,
             "$ai_trace_name": _extract_user_message(attrs),
-            "$ai_provider": attrs.get(_OTEL_SYSTEM, ""),
+            "$ai_provider": attrs.get(GEN_AI_SYSTEM, ""),
         }
         if span.start_time and span.end_time:
             trace_properties["$ai_latency"] = (span.end_time - span.start_time) / 1e9
@@ -172,11 +172,11 @@ class PostHogSpanProcessor(SpanProcessor):
 
     @staticmethod
     def _add_message_properties(properties: dict[str, object], attrs: Mapping[str, Any]) -> None:
-        input_messages = _parse_json_attr(attrs, _OTEL_INPUT_MESSAGES)
+        input_messages = _parse_json_attr(attrs, GEN_AI_INPUT_MESSAGES)
         if input_messages is not None:
             properties["$ai_input"] = input_messages
 
-        output_messages = _parse_json_attr(attrs, _OTEL_OUTPUT_MESSAGES)
+        output_messages = _parse_json_attr(attrs, GEN_AI_OUTPUT_MESSAGES)
         if isinstance(output_messages, list):
             properties["$ai_output_choices"] = _transform_output_choices(output_messages)
         elif output_messages is not None:
@@ -185,25 +185,25 @@ class PostHogSpanProcessor(SpanProcessor):
     @staticmethod
     def _add_model_parameters(properties: dict[str, object], attrs: Mapping[str, Any]) -> None:
         model_parameters: dict[str, object] = {}
-        if _OTEL_REQUEST_TEMPERATURE in attrs:
-            model_parameters["temperature"] = attrs[_OTEL_REQUEST_TEMPERATURE]
-        if _OTEL_REQUEST_MAX_TOKENS in attrs:
-            model_parameters["max_tokens"] = attrs[_OTEL_REQUEST_MAX_TOKENS]
+        if GEN_AI_REQUEST_TEMPERATURE in attrs:
+            model_parameters["temperature"] = attrs[GEN_AI_REQUEST_TEMPERATURE]
+        if GEN_AI_REQUEST_MAX_TOKENS in attrs:
+            model_parameters["max_tokens"] = attrs[GEN_AI_REQUEST_MAX_TOKENS]
         if model_parameters:
             properties["$ai_model_parameters"] = model_parameters
 
     @staticmethod
     def _add_tool_definitions(properties: dict[str, object], attrs: Mapping[str, Any]) -> None:
-        tools = _parse_json_attr(attrs, _OTEL_TOOL_DEFINITIONS)
+        tools = _parse_json_attr(attrs, GEN_AI_TOOL_DEFINITIONS)
         if tools is not None:
             properties["$ai_tools"] = tools
 
     @staticmethod
     def _add_base_url(properties: dict[str, object], attrs: Mapping[str, Any]) -> None:
         parts: list[str] = []
-        if host := attrs.get(_OTEL_SERVER_ADDRESS):
+        if host := attrs.get(SERVER_ADDRESS):
             parts.append(str(host))
-        if port := attrs.get(_OTEL_SERVER_PORT):
+        if port := attrs.get(SERVER_PORT):
             parts.append(str(port))
         if parts:
             properties["$ai_base_url"] = ":".join(parts)
