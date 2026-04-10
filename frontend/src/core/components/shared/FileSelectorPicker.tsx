@@ -123,6 +123,17 @@ export function FileSelectorPicker({
     }
   }, [sortBy, sortDir]);
 
+  // Sync tab/sort from shared module state whenever this picker opens.
+  // Both slot pickers mount simultaneously so their useState initialisers run at
+  // the same time — a tab change in one picker updates lastPickerTab but the
+  // other picker's state is stale. Reading on open fixes that.
+  useEffect(() => {
+    if (!isOpen) return;
+    setActiveTab(lastPickerTab);
+    setSortBy(lastPickerSort);
+    setSortDir(lastPickerSortDir);
+  }, [isOpen]);
+
   // Load saved files when the saved tab is active and the picker is open
   useEffect(() => {
     if (activeTab !== 'saved' || !isOpen) return;
