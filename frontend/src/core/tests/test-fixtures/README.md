@@ -93,7 +93,7 @@ To run the full test suite, please add the following test files to this director
 ## Test File Structure
 
 ```
-frontend/src/tests/test-fixtures/
+frontend/src/core/tests/test-fixtures/
 ├── README.md (this file)
 ├── sample.pdf
 ├── sample.docx

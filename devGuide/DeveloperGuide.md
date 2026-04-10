@@ -175,7 +175,7 @@ Stirling-PDF uses different Docker images for various configurations. The build 
 1. Set the security environment variable:
 
    ```bash
-   export DISABLE_ADDITIONAL_FEATURES=true  # or false for to enable login and security features for builds
+   export DISABLE_ADDITIONAL_FEATURES=true  # or false to enable login and security features for builds
    ```
 
 2. Build the project with Gradle:
@@ -205,7 +205,7 @@ Stirling-PDF uses different Docker images for various configurations. The build 
    docker build --no-cache --pull --build-arg VERSION_TAG=alpha -t stirlingtools/stirling-pdf:latest-fat -f ./Dockerfile.fat .
    ```
 
-Note: The `--no-cache` and `--pull` flags ensure that the build process uses the latest base images and doesn't use cached layers, which is useful for testing and ensuring reproducible builds. however to improve build times these can often be removed depending on your usecase
+Note: The `--no-cache` and `--pull` flags ensure that the build process uses the latest base images and doesn't use cached layers, which is useful for testing and ensuring reproducible builds. However, to improve build times these can often be removed depending on your use case
 
 ## 6. Testing
 

@@ -18,7 +18,7 @@ Apply Stylelint to your project's CSS with the following steps:
      {
        "scripts": {
           "lint:css:check": "stylelint \"../app/core/src/main/**/*.css\" \"../app/proprietary/src/main/resources/static/css/*.css\" --config ../.stylelintrc.json",
-          "lint:css:fix": "stylelint \"../app/core//src/main/**/*.css\" \"../app/proprietary/src/main/resources/static/css/*.css\" --config .stylelintrc.json --fix"
+          "lint:css:fix": "stylelint \"../app/core/src/main/**/*.css\" \"../app/proprietary/src/main/resources/static/css/*.css\" --config ../.stylelintrc.json --fix"
        }
      }
      ```

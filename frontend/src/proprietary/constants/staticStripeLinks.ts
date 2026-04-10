@@ -17,7 +17,7 @@ export interface StaticStripeLinks {
   };
   billingPortal: string;
 }
-// PRODCUTION LINKS FOR LIVE SERVER
+// PRODUCTION LINKS FOR LIVE SERVER
 export const STATIC_STRIPE_LINKS: StaticStripeLinks = {
   server: {
     monthly: 'https://buy.stripe.com/fZu4gB8Nv6ysfAj0ts8Zq03',

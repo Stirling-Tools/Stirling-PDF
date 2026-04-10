@@ -133,7 +133,7 @@ public class AppConfig {
             return true;
         }
         Path mountInfo = Paths.get("/proc/1/mountinfo");
-        // this should always exist, if not some unknown usecase
+        // this should always exist, if not some unknown use case
         if (!Files.exists(mountInfo)) {
             return true;
         }
