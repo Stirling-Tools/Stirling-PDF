@@ -40,22 +40,16 @@ tasks:
     cmds:
       - '{{.GRADLE}} spotlessCheck'
 
-  test:coverage:
-    desc: "Generate test coverage report"
-    cmds:
-      - '{{.GRADLE}} jacocoTestReport'
-
   swagger:
     desc: "Generate OpenAPI docs"
     cmds:
       - '{{.GRADLE}} :stirling-pdf:generateOpenApiDocs'
 
   check:
-    desc: "Full backend quality gate"
+    desc: "Backend quality gate"
     cmds:
       - task: format:check
       - task: test
-      - task: test:coverage
 
   version:
     desc: "Print project version"
