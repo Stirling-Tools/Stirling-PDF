@@ -120,3 +120,16 @@ class SessionLogger:
             self._fh.write(f"Ended: {datetime.now(UTC).isoformat()}\n")
             self._fh.close()
             self._fh = None
+
+    def __enter__(self) -> SessionLogger:
+        return self
+
+    def __exit__(self, exc_type: type | None, exc_val: BaseException | None, exc_tb: object) -> None:
+        self.close()
+
+    def __del__(self) -> None:
+        if self._fh is not None:
+            try:
+                self._fh.close()
+            except Exception:
+                pass

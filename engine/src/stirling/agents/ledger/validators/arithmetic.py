@@ -59,6 +59,8 @@ def _eval_expression(expr: str) -> Decimal | None:
     operator = "+"
     for token in tokens:
         token = token.strip()
+        if not token:
+            continue  # skip empty tokens (e.g. from leading negative)
         if token in ("+", "-"):
             operator = token
             continue

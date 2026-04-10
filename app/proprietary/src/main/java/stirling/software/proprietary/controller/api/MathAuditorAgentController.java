@@ -1,7 +1,9 @@
 package stirling.software.proprietary.controller.api;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -64,14 +66,32 @@ public class MathAuditorAgentController {
                                     "Arithmetic tolerance — differences smaller than this are"
                                             + " ignored (default: 0.01)")
                     @RequestParam(value = "tolerance", defaultValue = "0.01")
-                    BigDecimal tolerance)
-            throws Exception {
+                    BigDecimal tolerance) {
 
-        log.info(
-                "[math-auditor-agent] request file={} tolerance={}",
-                fileInput.getOriginalFilename(),
-                tolerance);
-        Verdict verdict = orchestrator.audit(fileInput, tolerance);
-        return ResponseEntity.ok(verdict);
+        String contentType = fileInput.getContentType();
+        if (contentType == null || !contentType.equals("application/pdf")) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        if (tolerance.compareTo(BigDecimal.ZERO) < 0) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        String safeName =
+                fileInput.getOriginalFilename() != null
+                        ? fileInput.getOriginalFilename().replaceAll("[\\r\\n]", "_")
+                        : "<unnamed>";
+        log.info("[math-auditor-agent] request file={} tolerance={}", safeName, tolerance);
+
+        try {
+            Verdict verdict = orchestrator.audit(fileInput, tolerance);
+            return ResponseEntity.ok(verdict);
+        } catch (IOException e) {
+            log.error("[math-auditor-agent] IO error during audit", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (Exception e) {
+            log.error("[math-auditor-agent] unexpected error during audit", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

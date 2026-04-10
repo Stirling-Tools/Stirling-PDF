@@ -52,32 +52,37 @@ class FigureTracker:
 
     def conflicts(self) -> list[Discrepancy]:
         """
-        Return a Discrepancy for every label that has two or more sightings
-        with values that differ by more than tolerance.
-        Pairs are de-duplicated (A vs B reported once, not twice).
+        Return a Discrepancy for every label that has sightings whose value
+        differs from the first-seen (canonical) value by more than tolerance.
+
+        O(n) per label — each record is compared against the canonical only.
         """
         discrepancies: list[Discrepancy] = []
 
         for label, records in self._ledger.items():
-            # Compare all unique pairs.
-            for i in range(len(records)):
-                for j in range(i + 1, len(records)):
-                    a, b = records[i], records[j]
-                    if abs(a.value - b.value) > self.tolerance:
-                        discrepancies.append(
-                            Discrepancy(
-                                page=b.page,  # flag the later occurrence
-                                kind=DiscrepancyKind.CONSISTENCY,
-                                severity=Severity.WARNING,
-                                description=(
-                                    f'"{label}" stated as {a.raw} on page {a.page + 1} '
-                                    f"but {b.raw} on page {b.page + 1}"
-                                ),
-                                stated=b.raw,
-                                expected=a.raw,
-                                context=f'First seen: page {a.page + 1} | Later: page {b.page + 1}',
-                            )
+            if len(records) < 2:
+                continue
+            canonical = records[0]
+            for other in records[1:]:
+                if abs(canonical.value - other.value) > self.tolerance:
+                    discrepancies.append(
+                        Discrepancy(
+                            page=other.page,
+                            kind=DiscrepancyKind.CONSISTENCY,
+                            severity=Severity.WARNING,
+                            description=(
+                                f'"{label}" stated as {canonical.raw} on page'
+                                f" {canonical.page + 1}"
+                                f" but {other.raw} on page {other.page + 1}"
+                            ),
+                            stated=other.raw,
+                            expected=canonical.raw,
+                            context=(
+                                f"First seen: page {canonical.page + 1}"
+                                f" | Later: page {other.page + 1}"
+                            ),
                         )
+                    )
 
         return discrepancies
 

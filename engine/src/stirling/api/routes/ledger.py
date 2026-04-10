@@ -9,7 +9,7 @@ Two internal endpoints, called only by the Java MathAuditorOrchestrator:
 
   POST /api/v1/ai/math-auditor-agent/deliberate
       Java sends Evidence (fulfilled extraction results).
-      Python returns an AgentTurn containing a Verdict.
+      Python returns a Verdict directly.
 """
 
 from __future__ import annotations
@@ -18,15 +18,15 @@ import logging
 from decimal import Decimal, InvalidOperation
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from stirling.agents.ledger import MathAuditorAgent
 from stirling.api.dependencies import get_math_auditor_agent
 from stirling.contracts.ledger import (
-    AgentTurn,
     Evidence,
     FolioManifest,
     Requisition,
+    Verdict,
 )
 
 logger = logging.getLogger(__name__)
@@ -43,17 +43,18 @@ async def examine_endpoint(
     return await agent.examine(manifest)
 
 
-@router.post("/deliberate", response_model=AgentTurn)
+@router.post("/deliberate", response_model=Verdict)
 async def deliberate_endpoint(
     evidence: Evidence,
     agent: Annotated[MathAuditorAgent, Depends(get_math_auditor_agent)],
     tolerance: str = Query(default="0.01"),
-) -> AgentTurn:
+) -> Verdict:
     """Round 2: Java presents fulfilled Evidence; Python returns a Verdict."""
     try:
         tol = Decimal(tolerance)
+        if tol < 0:
+            raise HTTPException(status_code=400, detail="tolerance must be non-negative")
     except InvalidOperation:
-        tol = Decimal("0.01")
+        raise HTTPException(status_code=400, detail=f"Invalid tolerance value: {tolerance!r}")
 
-    verdict = await agent.audit(evidence, tol)
-    return AgentTurn(verdict=verdict)
+    return await agent.audit(evidence, tol)

@@ -59,13 +59,14 @@ def test_conflict_different_values(tracker: FigureTracker) -> None:
 
 
 def test_conflict_three_sightings_two_values(tracker: FigureTracker) -> None:
-    """Three sightings where two differ should produce one conflict pair."""
+    """Three sightings where one differs from canonical → 1 conflict."""
     tracker.record("Revenue", Decimal("1000"), page=1, raw="£1,000")
     tracker.record("Revenue", Decimal("1000"), page=3, raw="£1,000")
     tracker.record("Revenue", Decimal("999"), page=5, raw="£999")
     conflicts = tracker.conflicts()
-    # Pairs: (p1,p3)✓ (p1,p5)✗ (p3,p5)✗ → 2 conflicts
-    assert len(conflicts) == 2
+    # Canonical=p1 (1000). p3 matches, p5 differs → 1 conflict
+    assert len(conflicts) == 1
+    assert conflicts[0].page == 5
 
 
 # ---------------------------------------------------------------------------

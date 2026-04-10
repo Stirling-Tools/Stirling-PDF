@@ -246,15 +246,22 @@ class FormulaEvaluator:
             else:
                 return None
 
-        # Replace colN references with values from the current row
-        col_pattern = re.compile(r"col(\d+)")
-        for match in col_pattern.finditer(resolved):
-            col_idx = int(match.group(1))
+        # Replace colN references with values from the current row.
+        # Use re.sub with word boundaries to avoid col1 corrupting col12.
+        _failed = False
+
+        def _col_replacer(m: re.Match) -> str:
+            nonlocal _failed
+            col_idx = int(m.group(1))
             val = self._get_cell(row, col_idx)
-            if val is not None:
-                resolved = resolved.replace(match.group(0), str(val), 1)
-            else:
-                return None
+            if val is None:
+                _failed = True
+                return m.group(0)
+            return str(val)
+
+        resolved = re.sub(r"\bcol(\d+)\b", _col_replacer, resolved)
+        if _failed:
+            return None
 
         # Evaluate the resulting arithmetic expression safely
         return self._safe_eval(resolved)
@@ -262,30 +269,71 @@ class FormulaEvaluator:
     def _safe_eval(self, expr: str) -> Decimal | None:
         """
         Evaluate a simple arithmetic expression containing only
-        numbers and +, -, *, / operators. No eval().
+        numbers and +, -, *, / operators.  Respects standard operator
+        precedence (* and / bind tighter than + and -).  No eval().
         """
         try:
-            # Tokenise: split into numbers and operators
-            tokens = re.findall(r"\d+(?:\.\d+)?|[+\-*/]", expr.strip())
-            if not tokens:
+            raw = re.findall(r"\d+(?:\.\d+)?|[+\-*/]", expr.strip())
+            if not raw:
                 return None
 
-            result = Decimal(tokens[0])
-            i = 1
-            while i < len(tokens) - 1:
-                op = tokens[i]
-                operand = Decimal(tokens[i + 1])
-                if op == "+":
-                    result += operand
-                elif op == "-":
-                    result -= operand
-                elif op == "*":
-                    result *= operand
-                elif op == "/":
-                    if operand == 0:
+            # Build (values, ops) lists, merging a leading '-' or an
+            # operator-adjacent '-' into the next number token.
+            values: list[Decimal] = []
+            ops: list[str] = []
+            i = 0
+            while i < len(raw):
+                tok = raw[i]
+                if tok in "+-*/" and not values and tok == "-":
+                    # Leading negative: merge with next number
+                    i += 1
+                    if i >= len(raw):
                         return None
-                    result /= operand
-                i += 2
+                    values.append(Decimal("-" + raw[i]))
+                elif tok in "+-*/":
+                    # Operator followed by '-' → negative operand
+                    if (
+                        tok in "+-*/"
+                        and i + 1 < len(raw)
+                        and raw[i + 1] == "-"
+                        and i + 2 < len(raw)
+                        and raw[i + 2] not in "+-*/"
+                    ):
+                        ops.append(tok)
+                        values.append(Decimal("-" + raw[i + 2]))
+                        i += 2  # skip the '-' and the number
+                    else:
+                        ops.append(tok)
+                else:
+                    values.append(Decimal(tok))
+                i += 1
+
+            if not values:
+                return None
+
+            # Pass 1: evaluate * and /
+            j = 0
+            while j < len(ops):
+                if ops[j] in ("*", "/"):
+                    if ops[j] == "*":
+                        values[j] = values[j] * values[j + 1]
+                    else:
+                        if values[j + 1] == 0:
+                            return None
+                        values[j] = values[j] / values[j + 1]
+                    values.pop(j + 1)
+                    ops.pop(j)
+                else:
+                    j += 1
+
+            # Pass 2: evaluate + and -
+            result = values[0]
+            for j, op in enumerate(ops):
+                if op == "+":
+                    result += values[j + 1]
+                elif op == "-":
+                    result -= values[j + 1]
+
             return result
         except (InvalidOperation, IndexError, ValueError):
             return None

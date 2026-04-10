@@ -181,14 +181,11 @@ class TestDeliberateEndpoint:
         resp = client.post("/api/v1/ai/math-auditor-agent/deliberate", json=_evidence_body())
         assert resp.status_code == 200
 
-    def test_response_envelope_has_verdict(self, client: TestClient) -> None:
+    def test_response_is_verdict(self, client: TestClient) -> None:
         resp = client.post("/api/v1/ai/math-auditor-agent/deliberate", json=_evidence_body())
         body = resp.json()
-        assert "verdict" in body
-        assert body.get("requisition") is None
-        verdict = body["verdict"]
-        assert verdict["type"] == "verdict"
-        assert verdict["clean"] is True
+        assert body["type"] == "verdict"
+        assert body["clean"] is True
 
     def test_discrepancies_serialised(self, client: TestClient) -> None:
         d = Discrepancy(
@@ -203,7 +200,7 @@ class TestDeliberateEndpoint:
         app.dependency_overrides[get_math_auditor_agent] = lambda: stub
         resp = client.post("/api/v1/ai/math-auditor-agent/deliberate", json=_evidence_body())
         body = resp.json()
-        discrepancies = body["verdict"]["discrepancies"]
+        discrepancies = body["discrepancies"]
         assert len(discrepancies) == 1
         assert discrepancies[0]["kind"] == "tally"
         assert discrepancies[0]["severity"] == "error"
@@ -225,13 +222,11 @@ class TestDeliberateEndpoint:
         _, tolerance = stub_agent.audit_calls[0]
         assert tolerance == Decimal("0.01")
 
-    def test_invalid_tolerance_falls_back_to_default(
+    def test_invalid_tolerance_returns_400(
         self, client: TestClient, stub_agent: StubLedgerAgent,
     ) -> None:
         resp = client.post("/api/v1/ai/math-auditor-agent/deliberate?tolerance=notanumber", json=_evidence_body())
-        assert resp.status_code == 200
-        _, tolerance = stub_agent.audit_calls[0]
-        assert tolerance == Decimal("0.01")
+        assert resp.status_code == 400
 
     def test_final_round_flag_parsed(
         self, client: TestClient, stub_agent: StubLedgerAgent,

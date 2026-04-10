@@ -10,7 +10,6 @@ import pytest
 from pydantic import ValidationError
 
 from stirling.contracts.ledger import (
-    AgentTurn,
     Discrepancy,
     DiscrepancyKind,
     Evidence,
@@ -117,30 +116,6 @@ def test_verdict_error_and_warning_counts() -> None:
     )
     assert verdict.error_count == 1
     assert verdict.warning_count == 1
-
-
-# ---------------------------------------------------------------------------
-# AgentTurn discriminator
-# ---------------------------------------------------------------------------
-
-
-def test_agent_turn_with_requisition_not_final() -> None:
-    req = Requisition(need_text=[0], rationale="need page 0")
-    turn = AgentTurn(requisition=req)
-    assert not turn.is_final
-
-
-def test_agent_turn_with_verdict_is_final() -> None:
-    verdict = Verdict(
-        session_id="s",
-        discrepancies=[],
-        pages_examined=[],
-        rounds_taken=1,
-        summary="Clean.",
-        clean=True,
-    )
-    turn = AgentTurn(verdict=verdict)
-    assert turn.is_final
 
 
 # ---------------------------------------------------------------------------

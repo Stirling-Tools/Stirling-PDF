@@ -19,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
-import stirling.software.proprietary.model.api.ai.AgentTurn;
 import stirling.software.proprietary.model.api.ai.Evidence;
 import stirling.software.proprietary.model.api.ai.Folio;
 import stirling.software.proprietary.model.api.ai.FolioManifest;
@@ -37,15 +36,13 @@ import tools.jackson.databind.ObjectMapper;
 /**
  * Orchestrator for the Math Auditor Agent (mathAuditorAgent).
  *
- * <p>Manages the multi-round Java-Python negotiation protocol:
+ * <p>Manages a two-step Java-Python protocol:
  *
  * <ol>
  *   <li>Classify all pages cheaply with PDFBox (no OCR or Tabula yet).
  *   <li>Send the {@link FolioManifest} to the Python Examiner; receive a {@link Requisition}.
  *   <li>Fulfil the Requisition (text / tables / OCR) for only the requested pages.
- *   <li>Send the {@link Evidence} to the Python Auditor; receive an {@link AgentTurn}.
- *   <li>If the turn contains another Requisition, go to step 3. Max 3 rounds total.
- *   <li>Return the final {@link Verdict} to the caller.
+ *   <li>Send the {@link Evidence} to the Python Auditor; receive a {@link Verdict}.
  * </ol>
  *
  * <p>The raw PDF never leaves Java. Python only receives structured text and CSV data.
@@ -55,7 +52,6 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class MathAuditorOrchestrator {
 
-    private static final int MAX_ROUNDS = 3;
     private static final String EXAMINE_PATH = "/api/v1/ai/math-auditor-agent/examine";
     private static final String DELIBERATE_PATH = "/api/v1/ai/math-auditor-agent/deliberate";
 
@@ -90,54 +86,24 @@ public class MathAuditorOrchestrator {
                     sessionId,
                     requisition.rationale());
 
-            // Rounds 2–MAX_ROUNDS: fulfil then deliberate
-            for (int round = 2; round <= MAX_ROUNDS + 1; round++) {
-                boolean isFinalRound = (round > MAX_ROUNDS);
-                int evidenceRound = Math.min(round, MAX_ROUNDS);
+            // Round 2: fulfil the requisition and get verdict
+            Evidence evidence = fulfil(document, sessionId, requisition, 2, true);
+            Verdict verdict = callDeliberate(evidence, tolerance);
 
-                Evidence evidence =
-                        fulfil(document, sessionId, requisition, evidenceRound, isFinalRound);
-                AgentTurn turn = callDeliberate(evidence, tolerance);
-
-                if (turn == null) {
-                    log.error(
-                            "[math-auditor-agent] session={} null AgentTurn on round {}",
-                            sessionId,
-                            round);
-                    throw new IllegalStateException(
-                            "Math Auditor Agent returned null on round " + round);
-                }
-
-                if (turn.isFinal()) {
-                    Verdict verdict = turn.verdict();
-                    log.info(
-                            "[math-auditor-agent] session={} verdict: {} errors, {} warnings,"
-                                    + " clean={}",
-                            sessionId,
-                            verdict.errorCount(),
-                            verdict.warningCount(),
-                            verdict.clean());
-                    return verdict;
-                }
-
-                if (isFinalRound) {
-                    log.warn(
-                            "[math-auditor-agent] session={} Auditor returned Requisition on final"
-                                    + " round — protocol violation",
-                            sessionId);
-                    throw new IllegalStateException(
-                            "Math Auditor Agent exceeded max rounds without verdict");
-                }
-
-                requisition = turn.requisition();
-                log.info(
-                        "[math-auditor-agent] session={} round {} requisition: {}",
-                        sessionId,
-                        round,
-                        requisition.rationale());
+            if (verdict == null) {
+                log.error(
+                        "[math-auditor-agent] session={} null Verdict from deliberate", sessionId);
+                throw new IllegalStateException("Math Auditor Agent returned null Verdict");
             }
 
-            throw new IllegalStateException("Audit loop exited without verdict");
+            log.info(
+                    "[math-auditor-agent] session={} verdict: {} errors, {} warnings,"
+                            + " clean={}",
+                    sessionId,
+                    verdict.errorCount(),
+                    verdict.warningCount(),
+                    verdict.clean());
+            return verdict;
         }
     }
 
@@ -156,7 +122,7 @@ public class MathAuditorOrchestrator {
         return objectMapper.readValue(responseBody, Requisition.class);
     }
 
-    private AgentTurn callDeliberate(Evidence evidence, BigDecimal tolerance) throws IOException {
+    private Verdict callDeliberate(Evidence evidence, BigDecimal tolerance) throws IOException {
         String path = DELIBERATE_PATH + "?tolerance=" + tolerance.toPlainString();
         String requestBody = objectMapper.writeValueAsString(evidence);
         log.info(
@@ -166,7 +132,7 @@ public class MathAuditorOrchestrator {
                 evidence.round(),
                 evidence.finalRound());
         String responseBody = aiEngineClient.post(path, requestBody);
-        return objectMapper.readValue(responseBody, AgentTurn.class);
+        return objectMapper.readValue(responseBody, Verdict.class);
     }
 
     // -----------------------------------------------------------------------
@@ -217,36 +183,44 @@ public class MathAuditorOrchestrator {
 
         List<Integer> allPages =
                 union(requisition.needText(), requisition.needTables(), requisition.needOcr());
+        int totalPages = document.getNumberOfPages();
+        allPages.removeIf(page -> page < 0 || page >= totalPages);
+        if (allPages.isEmpty()) {
+            log.warn(
+                    "[math-auditor-agent] session={} all requested pages are out of bounds",
+                    sessionId);
+        }
         List<Folio> folios = new ArrayList<>();
         List<Integer> unauditablePages = new ArrayList<>();
 
         boolean needsTableExtraction =
                 requisition.needTables() != null && !requisition.needTables().isEmpty();
-        ObjectExtractor tabulaExtractor =
-                needsTableExtraction ? new ObjectExtractor(document) : null;
 
-        for (int page : allPages) {
-            String text = null;
-            List<String> tables = null;
-            String ocrText = null;
+        try (ObjectExtractor tabulaExtractor =
+                needsTableExtraction ? new ObjectExtractor(document) : null) {
+            for (int page : allPages) {
+                String text = null;
+                List<String> tables = null;
+                String ocrText = null;
 
-            if (contains(requisition.needText(), page)) {
-                text = extractText(document, page);
-            }
-            if (contains(requisition.needTables(), page) && tabulaExtractor != null) {
-                tables = extractTables(tabulaExtractor, page);
-            }
-            if (contains(requisition.needOcr(), page)) {
-                log.warn(
-                        "[math-auditor-agent] session={} OCR requested for page {} but not yet"
-                                + " wired — marking unauditable",
-                        sessionId,
-                        page);
-                unauditablePages.add(page);
-            }
+                if (contains(requisition.needText(), page)) {
+                    text = extractText(document, page);
+                }
+                if (contains(requisition.needTables(), page) && tabulaExtractor != null) {
+                    tables = extractTables(tabulaExtractor, page);
+                }
+                if (contains(requisition.needOcr(), page)) {
+                    log.warn(
+                            "[math-auditor-agent] session={} OCR requested for page {} but not yet"
+                                    + " wired — marking unauditable",
+                            sessionId,
+                            page);
+                    unauditablePages.add(page);
+                }
 
-            if (text != null || tables != null) {
-                folios.add(new Folio(page, text, tables, ocrText, null));
+                if (text != null || tables != null) {
+                    folios.add(new Folio(page, text, tables, ocrText, null));
+                }
             }
         }
 

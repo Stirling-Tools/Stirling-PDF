@@ -201,20 +201,3 @@ class Verdict(ApiModel):
         return sum(1 for d in self.discrepancies if d.severity == Severity.WARNING)
 
 
-# ---------------------------------------------------------------------------
-# AgentTurn — the discriminated union Python returns to Java each round
-# ---------------------------------------------------------------------------
-
-
-class AgentTurn(ApiModel):
-    """
-    The envelope Java parses after each Python call.
-    Exactly one of 'requisition' or 'verdict' will be populated.
-    """
-
-    requisition: Requisition | None = None
-    verdict: Verdict | None = None
-
-    @property
-    def is_final(self) -> bool:
-        return self.verdict is not None

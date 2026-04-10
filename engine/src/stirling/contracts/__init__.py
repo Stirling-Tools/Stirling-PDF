@@ -30,7 +30,6 @@ from .execution import (
 )
 from .health import HealthResponse
 from .ledger import (
-    AgentTurn,
     Discrepancy,
     DiscrepancyKind,
     Evidence,
@@ -75,7 +74,6 @@ __all__ = [
     "AgentRevisionWorkflowResponse",
     "AgentSpec",
     "AgentSpecStep",
-    "AgentTurn",
     "AiToolAgentStep",
     "ArtifactKind",
     "CannotContinueExecutionAction",

@@ -47,15 +47,6 @@ from stirling.contracts.ledger import (
 # ---------------------------------------------------------------------------
 
 
-class TallyError(BaseModel):
-    """One bad sum inside a table."""
-
-    description: str
-    stated: Decimal
-    computed: Decimal
-    location: str  # e.g. "row 4" or "column 'Total'"
-
-
 class FigureRecord(BaseModel):
     """A named numeric figure seen on a specific page."""
 

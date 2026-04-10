@@ -7,7 +7,7 @@ Examiner  (Round 1, /api/v1/ai/math-auditor-agent/examine)
 
 Audit pipeline  (Round 2, /api/v1/ai/math-auditor-agent/deliberate)
     Processes Evidence per-page:
-      1. Deterministic pass — TallyChecker + ArithmeticScanner on every folio
+      1. Deterministic pass — ArithmeticScanner on every folio
       2. Fast-model pass  — extract named figures from each page
       3. FigureTracker    — cross-page consistency check
       4. Fast-model call  — generate human-readable summary
@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
@@ -150,6 +150,7 @@ class MathAuditorAgent:
             system_prompt=SUMMARY_PROMPT,
             model_settings=model_settings,
         )
+        self._llm_semaphore = asyncio.Semaphore(10)
 
     # ------------------------------------------------------------------
     # Round 1: Examine
@@ -157,28 +158,27 @@ class MathAuditorAgent:
 
     async def examine(self, manifest: FolioManifest) -> Requisition:
         """Inspect a FolioManifest and declare the Requisition."""
-        slog = SessionLogger(manifest.session_id, ai_log_level=self._ai_log_level, log_path=self._log_path)
-        logger.info(
-            "[math-auditor-agent] session=%s round=%d examining %d folios",
-            manifest.session_id, manifest.round, manifest.page_count,
-        )
+        with SessionLogger(manifest.session_id, ai_log_level=self._ai_log_level, log_path=self._log_path) as slog:
+            logger.info(
+                "[math-auditor-agent] session=%s round=%d examining %d folios",
+                manifest.session_id, manifest.round, manifest.page_count,
+            )
 
-        user_prompt = (
-            "Examine this folio manifest and declare your requisition:\n"
-            + manifest.model_dump_json()
-        )
-        slog.request("examine", body={"user_prompt": user_prompt})
+            user_prompt = (
+                "Examine this folio manifest and declare your requisition:\n"
+                + manifest.model_dump_json()
+            )
+            slog.request("examine", body={"user_prompt": user_prompt})
 
-        result = await self._examiner.run(user_prompt, deps=manifest)
-        req = result.output
+            result = await self._examiner.run(user_prompt, deps=manifest)
+            req = result.output
 
-        slog.response("examine", body=req.model_dump())
-        logger.info(
-            "[math-auditor-agent] session=%s requisition: text=%s tables=%s ocr=%s",
-            manifest.session_id, req.need_text, req.need_tables, req.need_ocr,
-        )
-        slog.close()
-        return req
+            slog.response("examine", body=req.model_dump())
+            logger.info(
+                "[math-auditor-agent] session=%s requisition: text=%s tables=%s ocr=%s",
+                manifest.session_id, req.need_text, req.need_tables, req.need_ocr,
+            )
+            return req
 
     # ------------------------------------------------------------------
     # Round 2: Deliberate (deterministic-first pipeline)
@@ -188,13 +188,18 @@ class MathAuditorAgent:
         """
         Audit the evidence using a deterministic-first pipeline:
 
-        1. Run TallyChecker + ArithmeticScanner on every folio (no LLM)
+        1. Run ArithmeticScanner on every folio (no LLM)
         2. Extract named figures per-page with fast model
         3. Run FigureTracker cross-page consistency check (no LLM)
         4. Generate human summary with fast model
         5. Assemble Verdict
         """
-        slog = SessionLogger(evidence.session_id, ai_log_level=self._ai_log_level, log_path=self._log_path)
+        with SessionLogger(evidence.session_id, ai_log_level=self._ai_log_level, log_path=self._log_path) as slog:
+            return await self._audit_inner(evidence, tolerance, slog)
+
+    async def _audit_inner(
+        self, evidence: Evidence, tolerance: Decimal, slog: SessionLogger,
+    ) -> Verdict:
         logger.info(
             "[math-auditor-agent] session=%s round=%d auditing %d folios (final=%s)",
             evidence.session_id, evidence.round,
@@ -236,10 +241,10 @@ class MathAuditorAgent:
             evidence.session_id, len(table_tasks), len(folios_with_text),
         )
 
-        # Fire all LLM calls concurrently
-        formula_coros = [self._infer_formulas(csv, slog) for _, csv in table_tasks]
-        figure_coros = [self._extract_figures_for_page(f, slog) for f in folios_with_text]
-        statement_coros = [self._verify_statements(f, slog) for f in folios_with_text]
+        # Fire all LLM calls concurrently (bounded by _llm_semaphore)
+        formula_coros = [self._throttled(self._infer_formulas(csv, slog)) for _, csv in table_tasks]
+        figure_coros = [self._throttled(self._extract_figures_for_page(f, slog)) for f in folios_with_text]
+        statement_coros = [self._throttled(self._verify_statements(f, slog)) for f in folios_with_text]
         all_results = await asyncio.gather(
             *formula_coros, *figure_coros, *statement_coros,
             return_exceptions=True,
@@ -285,9 +290,17 @@ class MathAuditorAgent:
                 logger.warning("[math-auditor-agent] figure extraction failed for page %d: %s", folio.page, result)
                 continue
             for fig, page in result:
+                try:
+                    decimal_value = Decimal(fig.value.replace(",", "").strip())
+                except (InvalidOperation, ValueError):
+                    logger.warning(
+                        "[math-auditor-agent] skipping figure %r on page %d: non-numeric value %r",
+                        fig.label, page, fig.value,
+                    )
+                    continue
                 figure_tracker.record(
                     label=fig.label,
-                    value=Decimal(fig.value.replace(",", "").strip()),
+                    value=decimal_value,
                     page=page,
                     raw=fig.raw,
                 )
@@ -373,12 +386,16 @@ class MathAuditorAgent:
             "[math-auditor-agent] session=%s verdict: %d errors, %d warnings, clean=%s",
             evidence.session_id, verdict.error_count, verdict.warning_count, verdict.clean,
         )
-        slog.close()
         return verdict
 
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+
+    async def _throttled(self, coro):
+        """Wrap a coroutine with the LLM concurrency semaphore."""
+        async with self._llm_semaphore:
+            return await coro
 
     async def _infer_formulas(self, table_csv: str, slog: SessionLogger | None) -> TableFormulas:
         """Ask the fast model to infer verifiable formulas from a CSV table."""

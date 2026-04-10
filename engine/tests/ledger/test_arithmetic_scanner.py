@@ -118,3 +118,16 @@ def test_no_expressions_in_text(scanner: ArithmeticScanner) -> None:
 
 def test_empty_text(scanner: ArithmeticScanner) -> None:
     assert scanner.scan(page=0, text="") == []
+
+
+def test_leading_negative_expression(scanner: ArithmeticScanner) -> None:
+    """Expressions starting with a negative number should evaluate correctly."""
+    text = "Adjustment: -100 + 250 = 150"
+    assert scanner.scan(page=0, text=text) == []
+
+
+def test_leading_negative_wrong(scanner: ArithmeticScanner) -> None:
+    text = "Adjustment: -100 + 250 = 200"  # should be 150
+    discrepancies = scanner.scan(page=0, text=text)
+    assert len(discrepancies) == 1
+    assert discrepancies[0].expected == "150"
