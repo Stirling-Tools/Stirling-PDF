@@ -1,8 +1,4 @@
-from collections.abc import Iterator
-
-import pytest
-
-from stirling.config import AppSettings, load_settings
+from stirling.config import AppSettings
 from stirling.contracts import (
     AgentExecutionRequest,
     AgentSpec,
@@ -74,13 +70,6 @@ def test_pdf_question_answer_defaults_evidence_list() -> None:
     response = PdfQuestionAnswerResponse(answer="The invoice total is 120.00")
 
     assert response.evidence == []
-
-
-@pytest.fixture(autouse=True)
-def clear_settings_cache() -> Iterator[None]:
-    load_settings.cache_clear()
-    yield
-    load_settings.cache_clear()
 
 
 def test_app_settings_accepts_model_configuration() -> None:
