@@ -92,51 +92,31 @@ public class AiEngineController {
                 });
         emitter.onError(e -> log.warn("SSE emitter error for AI orchestration stream", e));
 
-        aiStreamExecutor.execute(
-                () -> {
-                    try {
-                        AiWorkflowResponse result =
-                                aiWorkflowService.orchestrate(
-                                        request,
-                                        progress -> {
-                                            try {
-                                                emitter.send(
-                                                        SseEmitter.event()
-                                                                .name("progress")
-                                                                .data(
-                                                                        progress,
-                                                                        MediaType
-                                                                                .APPLICATION_JSON));
-                                            } catch (IOException e) {
-                                                log.debug(
-                                                        "Failed to send progress event"
-                                                                + " (client may have"
-                                                                + " disconnected)",
-                                                        e);
-                                            }
-                                        });
-                        emitter.send(
-                                SseEmitter.event()
-                                        .name("result")
-                                        .data(result, MediaType.APPLICATION_JSON));
-                        emitter.complete();
-                    } catch (Exception e) {
-                        log.error("AI orchestration stream failed", e);
-                        try {
-                            emitter.send(
-                                    SseEmitter.event()
-                                            .name("error")
-                                            .data(
-                                                    Map.of("message", e.getMessage()),
-                                                    MediaType.APPLICATION_JSON));
-                        } catch (IOException ignored) {
-                            // Client already disconnected
-                        }
-                        emitter.completeWithError(e);
-                    }
-                });
+        aiStreamExecutor.execute(() -> runOrchestrationStream(request, emitter));
 
         return emitter;
+    }
+
+    private void runOrchestrationStream(AiWorkflowRequest request, SseEmitter emitter) {
+        try {
+            AiWorkflowResponse result =
+                    aiWorkflowService.orchestrate(
+                            request, progress -> sendEvent(emitter, "progress", progress));
+            sendEvent(emitter, "result", result);
+            emitter.complete();
+        } catch (Exception e) {
+            log.error("AI orchestration stream failed", e);
+            sendEvent(emitter, "error", Map.of("message", e.getMessage()));
+            emitter.completeWithError(e);
+        }
+    }
+
+    private void sendEvent(SseEmitter emitter, String name, Object data) {
+        try {
+            emitter.send(SseEmitter.event().name(name).data(data, MediaType.APPLICATION_JSON));
+        } catch (IOException e) {
+            log.debug("Failed to send SSE event (client may have disconnected)", e);
+        }
     }
 
     @PostMapping(value = "/pdf/edit", consumes = MediaType.APPLICATION_JSON_VALUE)
