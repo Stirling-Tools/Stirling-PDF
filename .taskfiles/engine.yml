@@ -1,6 +1,5 @@
 version: '3'
-vars:
-  SHELL: 
+
 tasks:
   install:
     desc: "Install engine dependencies"
@@ -8,12 +7,11 @@ tasks:
     cmds:
       - uv python install 3.13.8
       - uv sync
-      - touch .venv/.deps-installed
     sources:
       - uv.lock
       - pyproject.toml
     status:
-      - test -f .venv/.deps-installed 
+      - test -d .venv
 
   prep:
     desc: "Set up engine .env from template"
@@ -103,8 +101,6 @@ tasks:
       - uv run python scripts/generate_tool_models.py --output src/stirling/models/tool_models.py
       - task: fix
 
-
-
   clean:
     desc: "Clean build artifacts"
     cmds:
@@ -126,5 +122,3 @@ tasks:
       - powershell rm -Recurse -Force -ErrorAction SilentlyContinue data 
       - powershell rm -Recurse -Force -ErrorAction SilentlyContinue logs 
       - powershell rm -Recurse -Force -ErrorAction SilentlyContinue output
-
-
