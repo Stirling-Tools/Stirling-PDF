@@ -21,7 +21,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Coroutine
 from decimal import Decimal, InvalidOperation
+from typing import Any, TypeVar
 
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
@@ -277,10 +279,11 @@ class MathAuditorAgent:
         # Process formula results
         for i, (page, table_csv) in enumerate(table_tasks):
             result = all_results[i]
-            if isinstance(result, Exception):
+            if isinstance(result, BaseException):
                 logger.warning("[math-auditor-agent] formula inference failed for page %d: %s", page, result)
                 continue
-            formulas: TableFormulas = result
+            assert isinstance(result, TableFormulas)
+            formulas = result
             if not formulas.formulas:
                 logger.info("[math-auditor-agent] page %d: no verifiable formulas found", page)
                 continue
@@ -311,9 +314,10 @@ class MathAuditorAgent:
         # Process figure results
         for i, folio in enumerate(folios_with_text):
             result = all_results[n_formulas + i]
-            if isinstance(result, Exception):
+            if isinstance(result, BaseException):
                 logger.warning("[math-auditor-agent] figure extraction failed for page %d: %s", folio.page, result)
                 continue
+            assert isinstance(result, list)
             for fig, page in result:
                 try:
                     decimal_value = Decimal(fig.value.replace(",", "").strip())
@@ -335,10 +339,11 @@ class MathAuditorAgent:
         # Process statement verification results
         for i, folio in enumerate(folios_with_text):
             result = all_results[n_formulas + n_figures + i]
-            if isinstance(result, Exception):
+            if isinstance(result, BaseException):
                 logger.warning("[math-auditor-agent] statement verification failed for page %d: %s", folio.page, result)
                 continue
-            stmts: StatementsResult = result
+            assert isinstance(result, StatementsResult)
+            stmts = result
             for sc in stmts.statements:
                 if not sc.is_valid:
                     all_discrepancies.append(
@@ -377,13 +382,9 @@ class MathAuditorAgent:
         # Step 4: Summary — fast model, small payload
         # Collect verification stats for the summary
         total_tables = sum(len(f.tables) for f in evidence.folios if f.tables)
-        total_formulas_checked = sum(
-            len(r.formulas) for r in all_results[:n_formulas] if not isinstance(r, Exception) and hasattr(r, "formulas")
-        )
+        total_formulas_checked = sum(len(r.formulas) for r in all_results[:n_formulas] if isinstance(r, TableFormulas))
         total_statements_checked = sum(
-            len(r.statements)
-            for r in all_results[n_formulas + n_figures :]
-            if not isinstance(r, Exception) and hasattr(r, "statements")
+            len(r.statements) for r in all_results[n_formulas + n_figures :] if isinstance(r, StatementsResult)
         )
         verification_stats = (
             f"Verified: {len(pages_examined)} pages, {total_tables} tables "
@@ -432,7 +433,9 @@ class MathAuditorAgent:
     # Internal helpers
     # ------------------------------------------------------------------
 
-    async def _throttled(self, coro):
+    _T = TypeVar("_T")
+
+    async def _throttled(self, coro: Coroutine[Any, Any, _T]) -> _T:
         """Wrap a coroutine with the LLM concurrency semaphore."""
         async with self._llm_semaphore:
             return await coro

@@ -270,7 +270,7 @@ class FormulaEvaluator:
         # Use re.sub with word boundaries to avoid col1 corrupting col12.
         _failed = False
 
-        def _col_replacer(m: re.Match) -> str:
+        def _col_replacer(m: re.Match[str]) -> str:
             nonlocal _failed
             col_idx = int(m.group(1))
             val = self._get_cell(row, col_idx)
