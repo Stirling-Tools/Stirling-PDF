@@ -34,7 +34,7 @@ _OTEL_SERVER_PORT = "server.port"
 
 
 class LRUSet:
-    """A set with a maximum size that evicts the oldest entries first."""
+    """Least Recently Used Set: a set with a maximum size that evicts the oldest entries first."""
 
     def __init__(self, max_size: int) -> None:
         self._max_size = max_size
