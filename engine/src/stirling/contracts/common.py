@@ -82,6 +82,7 @@ class SupportedCapability(StrEnum):
     AGENT_DRAFT = "agent_draft"
     AGENT_REVISE = "agent_revise"
     AGENT_NEXT_ACTION = "agent_next_action"
+    MATH_AUDITOR_AGENT = "math_auditor_agent"
 
 
 class ConversationMessage(ApiModel):

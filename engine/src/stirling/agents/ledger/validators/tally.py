@@ -13,12 +13,11 @@ Design notes:
 
 from __future__ import annotations
 
-import csv
-import io
 import logging
 from decimal import Decimal
 
 from ..models import Discrepancy, DiscrepancyKind, Severity, TallyError
+from ._parsing import parse_csv
 from ._parsing import to_decimal as _to_decimal
 
 logger = logging.getLogger(__name__)
@@ -62,7 +61,7 @@ class TallyChecker:
             The column (0-indexed) that contains row totals, if any.
             When None, the checker heuristically tries the last non-empty column.
         """
-        rows = self._parse(table_csv)
+        rows = parse_csv(table_csv)
         if len(rows) < 2:
             return []
 
@@ -94,10 +93,6 @@ class TallyChecker:
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
-
-    def _parse(self, table_csv: str) -> list[list[str]]:
-        reader = csv.reader(io.StringIO(table_csv.strip()))
-        return [row for row in reader if any(cell.strip() for cell in row)]
 
     def _check_column_totals(
         self, rows: list[list[str]], total_row_index: int | None

@@ -1,5 +1,6 @@
-package stirling.software.SPDF.service;
+package stirling.software.proprietary.service;
 
+import java.io.IOException;
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -17,25 +18,26 @@ import org.springframework.web.multipart.MultipartFile;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.model.api.ai.AgentTurn;
-import stirling.software.SPDF.model.api.ai.Evidence;
-import stirling.software.SPDF.model.api.ai.Folio;
-import stirling.software.SPDF.model.api.ai.FolioManifest;
-import stirling.software.SPDF.model.api.ai.FolioType;
-import stirling.software.SPDF.model.api.ai.Requisition;
-import stirling.software.SPDF.model.api.ai.Verdict;
-import stirling.software.SPDF.pdf.FlexibleCSVWriter;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.proprietary.model.api.ai.AgentTurn;
+import stirling.software.proprietary.model.api.ai.Evidence;
+import stirling.software.proprietary.model.api.ai.Folio;
+import stirling.software.proprietary.model.api.ai.FolioManifest;
+import stirling.software.proprietary.model.api.ai.FolioType;
+import stirling.software.proprietary.model.api.ai.Requisition;
+import stirling.software.proprietary.model.api.ai.Verdict;
+import stirling.software.proprietary.pdf.FlexibleCSVWriter;
 
 import technology.tabula.ObjectExtractor;
 import technology.tabula.Page;
 import technology.tabula.Table;
 import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
+import tools.jackson.databind.ObjectMapper;
 
 /**
- * The loop controller for the Ledger Audit negotiation.
+ * Orchestrator for the Math Auditor Agent (mathAuditorAgent).
  *
- * <p>Orchestrates the multi-round Java → Python protocol:
+ * <p>Manages the multi-round Java-Python negotiation protocol:
  *
  * <ol>
  *   <li>Classify all pages cheaply with PDFBox (no OCR or Tabula yet).
@@ -51,15 +53,18 @@ import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AuditOrchestrator {
+public class MathAuditorOrchestrator {
 
     private static final int MAX_ROUNDS = 3;
+    private static final String EXAMINE_PATH = "/api/v1/ai/math-auditor-agent/examine";
+    private static final String DELIBERATE_PATH = "/api/v1/ai/math-auditor-agent/deliberate";
 
-    private final AiEngineClient engineClient;
+    private final AiEngineClient aiEngineClient;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final ObjectMapper objectMapper;
 
     /**
-     * Run a full audit against the supplied PDF file.
+     * Run a full math audit against the supplied PDF file.
      *
      * @param pdfFile The uploaded PDF to audit.
      * @param tolerance Arithmetic tolerance — differences smaller than this are ignored.
@@ -68,50 +73,46 @@ public class AuditOrchestrator {
     public Verdict audit(MultipartFile pdfFile, BigDecimal tolerance) throws Exception {
         String sessionId = UUID.randomUUID().toString();
         log.info(
-                "[ledger] audit started session={} file={} tolerance={}",
+                "[math-auditor-agent] audit started session={} file={} tolerance={}",
                 sessionId,
                 pdfFile.getOriginalFilename(),
                 tolerance);
 
         try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
-            // ---------------------------------------------------------------
             // Round 1: classify pages cheaply; send manifest; get requisition
-            // ---------------------------------------------------------------
             List<FolioType> folioTypes = classifyPages(document);
             FolioManifest manifest =
                     new FolioManifest(sessionId, document.getNumberOfPages(), folioTypes, 1);
 
-            Requisition requisition = engineClient.examine(manifest);
+            Requisition requisition = callExamine(manifest);
             log.info(
-                    "[ledger] session={} requisition received: {}",
+                    "[math-auditor-agent] session={} requisition received: {}",
                     sessionId,
                     requisition.rationale());
 
-            // ---------------------------------------------------------------
-            // Rounds 2–MAX_ROUNDS: fulfil then deliberate.
-            // The Auditor always returns a Verdict — the loop is a safeguard for
-            // protocol compliance, not an expectation of multiple rounds.
-            // ---------------------------------------------------------------
+            // Rounds 2–MAX_ROUNDS: fulfil then deliberate
             for (int round = 2; round <= MAX_ROUNDS + 1; round++) {
                 boolean isFinalRound = (round > MAX_ROUNDS);
-                // Cap the round number sent to Python at MAX_ROUNDS — the Python model
-                // validates le=3, so we must not send round=4 even on a forced final pass.
                 int evidenceRound = Math.min(round, MAX_ROUNDS);
 
                 Evidence evidence =
                         fulfil(document, sessionId, requisition, evidenceRound, isFinalRound);
-                AgentTurn turn = engineClient.deliberate(evidence, tolerance);
+                AgentTurn turn = callDeliberate(evidence, tolerance);
 
                 if (turn == null) {
-                    log.error("[ledger] session={} null AgentTurn on round {}", sessionId, round);
+                    log.error(
+                            "[math-auditor-agent] session={} null AgentTurn on round {}",
+                            sessionId,
+                            round);
                     throw new IllegalStateException(
-                            "Ledger Auditor returned null on round " + round);
+                            "Math Auditor Agent returned null on round " + round);
                 }
 
                 if (turn.isFinal()) {
                     Verdict verdict = turn.verdict();
                     log.info(
-                            "[ledger] session={} verdict: {} errors, {} warnings, clean={}",
+                            "[math-auditor-agent] session={} verdict: {} errors, {} warnings,"
+                                    + " clean={}",
                             sessionId,
                             verdict.errorCount(),
                             verdict.warningCount(),
@@ -121,33 +122,57 @@ public class AuditOrchestrator {
 
                 if (isFinalRound) {
                     log.warn(
-                            "[ledger] session={} Auditor returned Requisition on final round — protocol violation",
+                            "[math-auditor-agent] session={} Auditor returned Requisition on final"
+                                    + " round — protocol violation",
                             sessionId);
                     throw new IllegalStateException(
-                            "Ledger Auditor exceeded max rounds without verdict");
+                            "Math Auditor Agent exceeded max rounds without verdict");
                 }
 
                 requisition = turn.requisition();
                 log.info(
-                        "[ledger] session={} round {} requisition: {}",
+                        "[math-auditor-agent] session={} round {} requisition: {}",
                         sessionId,
                         round,
                         requisition.rationale());
             }
 
-            // Unreachable — loop always returns or throws
             throw new IllegalStateException("Audit loop exited without verdict");
         }
+    }
+
+    // -----------------------------------------------------------------------
+    // Python engine calls
+    // -----------------------------------------------------------------------
+
+    private Requisition callExamine(FolioManifest manifest) throws IOException {
+        String requestBody = objectMapper.writeValueAsString(manifest);
+        log.info(
+                "[math-auditor-agent] POST {} session={} round={}",
+                EXAMINE_PATH,
+                manifest.sessionId(),
+                manifest.round());
+        String responseBody = aiEngineClient.post(EXAMINE_PATH, requestBody);
+        return objectMapper.readValue(responseBody, Requisition.class);
+    }
+
+    private AgentTurn callDeliberate(Evidence evidence, BigDecimal tolerance) throws IOException {
+        String path = DELIBERATE_PATH + "?tolerance=" + tolerance.toPlainString();
+        String requestBody = objectMapper.writeValueAsString(evidence);
+        log.info(
+                "[math-auditor-agent] POST {} session={} round={} final={}",
+                path,
+                evidence.sessionId(),
+                evidence.round(),
+                evidence.finalRound());
+        String responseBody = aiEngineClient.post(path, requestBody);
+        return objectMapper.readValue(responseBody, AgentTurn.class);
     }
 
     // -----------------------------------------------------------------------
     // Page classification
     // -----------------------------------------------------------------------
 
-    /**
-     * Classify every page cheaply using PDFBox character counts and page content analysis. No OCR
-     * or Tabula — this must be fast enough not to block the first round.
-     */
     private List<FolioType> classifyPages(PDDocument document) throws Exception {
         List<FolioType> types = new ArrayList<>();
         PDFTextStripper stripper = new PDFTextStripper();
@@ -182,10 +207,6 @@ public class AuditOrchestrator {
     // Requisition fulfilment
     // -----------------------------------------------------------------------
 
-    /**
-     * Fulfil a Requisition by extracting exactly the content Python asked for. Pages not mentioned
-     * in the Requisition are not touched.
-     */
     private Evidence fulfil(
             PDDocument document,
             String sessionId,
@@ -194,14 +215,11 @@ public class AuditOrchestrator {
             boolean finalRound)
             throws Exception {
 
-        // Collect all pages mentioned in this requisition.
         List<Integer> allPages =
                 union(requisition.needText(), requisition.needTables(), requisition.needOcr());
         List<Folio> folios = new ArrayList<>();
-        List<Integer> unautablePages = new ArrayList<>();
+        List<Integer> unauditablePages = new ArrayList<>();
 
-        // Create a single ObjectExtractor for all table extractions in this round.
-        // Must NOT be closed — closing it invalidates the PDDocument streams.
         boolean needsTableExtraction =
                 requisition.needTables() != null && !requisition.needTables().isEmpty();
         ObjectExtractor tabulaExtractor =
@@ -219,58 +237,43 @@ public class AuditOrchestrator {
                 tables = extractTables(tabulaExtractor, page);
             }
             if (contains(requisition.needOcr(), page)) {
-                // OCR is triggered via OCRmyPDF subprocess — not yet implemented in this
-                // initial version. Track the page as unauditable so the Auditor can report
-                // incomplete coverage rather than silently skipping the page.
                 log.warn(
-                        "[ledger] session={} OCR requested for page {} but not yet wired — marking unauditable",
+                        "[math-auditor-agent] session={} OCR requested for page {} but not yet"
+                                + " wired — marking unauditable",
                         sessionId,
                         page);
-                unautablePages.add(page);
+                unauditablePages.add(page);
             }
 
-            // Include a folio for any page that has at least text or table content,
-            // even when OCR was unavailable for that page.
             if (text != null || tables != null) {
                 folios.add(new Folio(page, text, tables, ocrText, null));
             }
         }
 
         log.info(
-                "[ledger] session={} fulfilled round {} with {} folios, {} unauditable pages",
+                "[math-auditor-agent] session={} fulfilled round {} with {} folios, {}"
+                        + " unauditable pages",
                 sessionId,
                 round,
                 folios.size(),
-                unautablePages.size());
-        return new Evidence(sessionId, folios, round, finalRound, unautablePages);
+                unauditablePages.size());
+        return new Evidence(sessionId, folios, round, finalRound, unauditablePages);
     }
 
-    /**
-     * Extract plain text from a single page using PDFBox. Returns empty string rather than null so
-     * the Auditor always has something to work with.
-     */
     private String extractText(PDDocument document, int page) throws Exception {
         PDFTextStripper stripper = new PDFTextStripper();
-        stripper.setStartPage(page + 1); // PDFBox is 1-indexed
+        stripper.setStartPage(page + 1);
         stripper.setEndPage(page + 1);
         return stripper.getText(document).strip();
     }
 
-    /**
-     * Extract all tables from a single page using Tabula, returning one CSV string per table.
-     * Returns an empty list if Tabula finds no tables.
-     *
-     * <p><b>Note:</b> The ObjectExtractor must NOT be closed here — closing it invalidates the
-     * underlying PDDocument streams, breaking extraction for subsequent pages. The PDDocument
-     * itself is closed by the caller in {@link #audit}.
-     */
     private List<String> extractTables(ObjectExtractor extractor, int page) throws Exception {
         SpreadsheetExtractionAlgorithm sea = new SpreadsheetExtractionAlgorithm();
         CSVFormat format =
                 CSVFormat.EXCEL.builder().setEscape('"').setQuoteMode(QuoteMode.ALL).build();
         List<String> csvStrings = new ArrayList<>();
 
-        Page tabulaPage = extractor.extract(page + 1); // Tabula is 1-indexed
+        Page tabulaPage = extractor.extract(page + 1);
         List<Table> tables = sea.extract(tabulaPage);
 
         for (Table table : tables) {

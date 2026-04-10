@@ -1,11 +1,11 @@
 """
-Ledger Auditor — pydantic-ai agents for PDF math validation.
+Math Auditor Agent (mathAuditorAgent) — pydantic-ai agents for PDF math validation.
 
-LedgerExaminer  (Round 1, /api/ledger/examine)
+Examiner  (Round 1, /api/v1/ai/math-auditor-agent/examine)
     Receives a FolioManifest and returns a Requisition declaring what
     Java must extract before validation can begin.
 
-Audit pipeline  (Round 2, /api/ledger/deliberate)
+Audit pipeline  (Round 2, /api/v1/ai/math-auditor-agent/deliberate)
     Processes Evidence per-page:
       1. Deterministic pass — TallyChecker + ArithmeticScanner on every folio
       2. Fast-model pass  — extract named figures from each page
@@ -101,11 +101,11 @@ class StatementsResult(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# LedgerAuditorAgent — main entry point, instantiated once at startup
+# MathAuditorAgent — main entry point, instantiated once at startup
 # ---------------------------------------------------------------------------
 
 
-class LedgerAuditorAgent:
+class MathAuditorAgent:
     """
     Encapsulates the Ledger Auditor pipeline.
 
@@ -159,7 +159,7 @@ class LedgerAuditorAgent:
         """Inspect a FolioManifest and declare the Requisition."""
         slog = SessionLogger(manifest.session_id, ai_log_level=self._ai_log_level, log_path=self._log_path)
         logger.info(
-            "[ledger] session=%s round=%d examining %d folios",
+            "[math-auditor-agent] session=%s round=%d examining %d folios",
             manifest.session_id, manifest.round, manifest.page_count,
         )
 
@@ -174,7 +174,7 @@ class LedgerAuditorAgent:
 
         slog.response("examine", body=req.model_dump())
         logger.info(
-            "[ledger] session=%s requisition: text=%s tables=%s ocr=%s",
+            "[math-auditor-agent] session=%s requisition: text=%s tables=%s ocr=%s",
             manifest.session_id, req.need_text, req.need_tables, req.need_ocr,
         )
         slog.close()
@@ -196,7 +196,7 @@ class LedgerAuditorAgent:
         """
         slog = SessionLogger(evidence.session_id, ai_log_level=self._ai_log_level, log_path=self._log_path)
         logger.info(
-            "[ledger] session=%s round=%d auditing %d folios (final=%s)",
+            "[math-auditor-agent] session=%s round=%d auditing %d folios (final=%s)",
             evidence.session_id, evidence.round,
             len(evidence.folios), evidence.final_round,
         )
@@ -232,7 +232,7 @@ class LedgerAuditorAgent:
                     table_tasks.append((folio.page, table_csv))
 
         logger.info(
-            "[ledger] session=%s step 2: %d formula + %d figure LLM calls (parallel)",
+            "[math-auditor-agent] session=%s step 2: %d formula + %d figure LLM calls (parallel)",
             evidence.session_id, len(table_tasks), len(folios_with_text),
         )
 
@@ -252,11 +252,11 @@ class LedgerAuditorAgent:
         for i, (page, table_csv) in enumerate(table_tasks):
             result = all_results[i]
             if isinstance(result, Exception):
-                logger.warning("[ledger] formula inference failed for page %d: %s", page, result)
+                logger.warning("[math-auditor-agent] formula inference failed for page %d: %s", page, result)
                 continue
             formulas: TableFormulas = result
             if not formulas.formulas:
-                logger.info("[ledger] page %d: no verifiable formulas found", page)
+                logger.info("[math-auditor-agent] page %d: no verifiable formulas found", page)
                 continue
             for fc in formulas.formulas:
                 checked = formula_evaluator.evaluate(
@@ -282,7 +282,7 @@ class LedgerAuditorAgent:
         for i, folio in enumerate(folios_with_text):
             result = all_results[n_formulas + i]
             if isinstance(result, Exception):
-                logger.warning("[ledger] figure extraction failed for page %d: %s", folio.page, result)
+                logger.warning("[math-auditor-agent] figure extraction failed for page %d: %s", folio.page, result)
                 continue
             for fig, page in result:
                 figure_tracker.record(
@@ -296,7 +296,7 @@ class LedgerAuditorAgent:
         for i, folio in enumerate(folios_with_text):
             result = all_results[n_formulas + n_figures + i]
             if isinstance(result, Exception):
-                logger.warning("[ledger] statement verification failed for page %d: %s", folio.page, result)
+                logger.warning("[math-auditor-agent] statement verification failed for page %d: %s", folio.page, result)
                 continue
             stmts: StatementsResult = result
             for sc in stmts.statements:
@@ -317,7 +317,7 @@ class LedgerAuditorAgent:
                     }, result=sc.model_dump())
 
         logger.info(
-            "[ledger] session=%s step 2 complete: %d figures registered",
+            "[math-auditor-agent] session=%s step 2 complete: %d figures registered",
             evidence.session_id, figure_tracker.entry_count,
         )
 
@@ -347,7 +347,7 @@ class LedgerAuditorAgent:
         )
 
         logger.info(
-            "[ledger] session=%s step 4: generating summary (%d discrepancies)",
+            "[math-auditor-agent] session=%s step 4: generating summary (%d discrepancies)",
             evidence.session_id, len(all_discrepancies),
         )
         pages_examined.sort()
@@ -370,7 +370,7 @@ class LedgerAuditorAgent:
 
         slog.response("deliberate", body=verdict.model_dump())
         logger.info(
-            "[ledger] session=%s verdict: %d errors, %d warnings, clean=%s",
+            "[math-auditor-agent] session=%s verdict: %d errors, %d warnings, clean=%s",
             evidence.session_id, verdict.error_count, verdict.warning_count, verdict.clean,
         )
         slog.close()
@@ -386,7 +386,7 @@ class LedgerAuditorAgent:
             result = await self._table_analyser.run(f"CSV table:\n{table_csv}")
             formulas = result.output
         except Exception:
-            logger.warning("[ledger] formula inference failed, skipping table", exc_info=True)
+            logger.warning("[math-auditor-agent] formula inference failed, skipping table", exc_info=True)
             formulas = TableFormulas(formulas=[])
 
         if slog:
@@ -414,7 +414,7 @@ class LedgerAuditorAgent:
             result = await self._statement_verifier.run(prompt)
             stmts = result.output
         except Exception:
-            logger.warning("[ledger] statement verification failed for page %d", folio.page, exc_info=True)
+            logger.warning("[math-auditor-agent] statement verification failed for page %d", folio.page, exc_info=True)
             stmts = StatementsResult(statements=[])
 
         if slog and stmts.statements:
@@ -432,13 +432,16 @@ class LedgerAuditorAgent:
         if not text or not text.strip():
             return []
 
-        logger.info("[ledger] extracting figures from page %d (%d chars)", folio.page, len(text))
+        logger.info("[math-auditor-agent] extracting figures from page %d (%d chars)", folio.page, len(text))
         prompt = f"Page {folio.page + 1} text:\n{text}"
         try:
             result = await self._figure_extractor.run(prompt)
             figures = result.output.figures
         except Exception:
-            logger.warning("[ledger] figure extraction failed for page %d, skipping", folio.page, exc_info=True)
+            logger.warning(
+                "[math-auditor-agent] figure extraction failed for page %d, skipping",
+                folio.page, exc_info=True,
+            )
             figures = []
 
         if slog:
@@ -474,7 +477,7 @@ class LedgerAuditorAgent:
             result = await self._summary_agent.run(prompt)
             summary = result.output
         except Exception:
-            logger.warning("[ledger] summary generation failed, using fallback", exc_info=True)
+            logger.warning("[math-auditor-agent] summary generation failed, using fallback", exc_info=True)
             summary = self._fallback_summary(error_count, warning_count, pages_examined, unauditable_pages)
 
         if slog:

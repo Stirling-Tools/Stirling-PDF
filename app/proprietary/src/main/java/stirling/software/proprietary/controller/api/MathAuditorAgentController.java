@@ -1,4 +1,4 @@
-package stirling.software.SPDF.controller.api.ai;
+package stirling.software.proprietary.controller.api;
 
 import java.math.BigDecimal;
 
@@ -17,14 +17,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.model.api.ai.Verdict;
-import stirling.software.SPDF.service.AuditOrchestrator;
+import stirling.software.proprietary.model.api.ai.Verdict;
+import stirling.software.proprietary.service.MathAuditorOrchestrator;
 
 /**
- * Public entry point for the Ledger Auditor feature.
+ * Public entry point for the Math Auditor Agent (mathAuditorAgent).
  *
- * <p>Accepts a PDF from the client, hands it to the {@link AuditOrchestrator} which runs the
- * multi-round Java → Python negotiation, and returns the Auditor's {@link Verdict}.
+ * <p>Accepts a PDF from the client, hands it to the {@link MathAuditorOrchestrator} which runs the
+ * multi-round Java-Python negotiation, and returns the Auditor's {@link Verdict}.
  *
  * <p>The raw PDF never leaves Java. Python receives only structured text and CSV data.
  */
@@ -32,52 +32,43 @@ import stirling.software.SPDF.service.AuditOrchestrator;
 @RestController
 @RequestMapping("/api/v1/ai")
 @RequiredArgsConstructor
-@Tag(
-        name = "AI",
-        description =
-                """
-                AI-powered document analysis endpoints.
+@Tag(name = "AI Engine", description = "AI-powered document analysis endpoints.")
+public class MathAuditorAgentController {
 
-                Ledger Auditor: validates mathematical calculations and table tallies in PDF documents.
-                Catches arithmetic errors in invoices, financial statements, and reports.
-                """)
-public class MathValidationController {
+    private final MathAuditorOrchestrator orchestrator;
 
-    private final AuditOrchestrator orchestrator;
-
-    @PostMapping(value = "/math-validate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/math-auditor-agent", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Validate mathematical calculations in a PDF",
             description =
                     """
-                    Analyses a PDF document for mathematical errors using the Ledger Auditor AI agent.
+                    Analyses a PDF document for mathematical errors using the Math Auditor Agent.
 
                     The auditor checks:
-                    • Table row and column totals (tally errors)
-                    • Inline arithmetic expressions (e.g. "100 + 200 = 300")
-                    • Cross-page figure consistency (same figure cited differently on different pages)
+                    - Table row and column totals (tally errors)
+                    - Inline arithmetic expressions (e.g. "100 + 200 = 300")
+                    - Cross-page figure consistency (same figure cited differently on different pages)
+                    - Prose claims about percentages, growth rates, and comparisons
 
                     The PDF is processed entirely on the Java side; only extracted text and table data
-                    are sent to the AI engine. Large PDFs are handled efficiently — only pages
-                    identified as relevant are extracted.
-
-                    Returns a Verdict containing all discrepancies found, a clean flag, and a summary.
+                    are sent to the AI engine.
 
                     Input: PDF  Output: JSON  Type: SISO
                     """)
-    public ResponseEntity<Verdict> validateMath(
+    public ResponseEntity<Verdict> mathAuditorAgent(
             @Parameter(description = "The PDF document to audit", required = true)
                     @RequestParam("fileInput")
                     MultipartFile fileInput,
             @Parameter(
                             description =
-                                    "Arithmetic tolerance — differences smaller than this are ignored (default: 0.01)")
+                                    "Arithmetic tolerance — differences smaller than this are"
+                                            + " ignored (default: 0.01)")
                     @RequestParam(value = "tolerance", defaultValue = "0.01")
                     BigDecimal tolerance)
             throws Exception {
 
         log.info(
-                "[ledger] math-validate request file={} tolerance={}",
+                "[math-auditor-agent] request file={} tolerance={}",
                 fileInput.getOriginalFilename(),
                 tolerance);
         Verdict verdict = orchestrator.audit(fileInput, tolerance);

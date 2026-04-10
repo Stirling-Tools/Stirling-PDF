@@ -1,4 +1,4 @@
-package stirling.software.SPDF.model.api.ai;
+package stirling.software.proprietary.model.api.ai;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 

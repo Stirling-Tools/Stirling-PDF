@@ -1,4 +1,4 @@
-package stirling.software.SPDF.model.api.ai;
+package stirling.software.proprietary.model.api.ai;
 
 /**
  * The envelope Java parses after each call to the Python Ledger Auditor.

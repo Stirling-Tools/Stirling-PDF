@@ -350,8 +350,20 @@ type ParamToolModel = (
     | SplitParams
     | UnlockPdfformsParams
     | WatermarkParams
+    | MathAuditorAgentParams
 )
 type ParamToolModelType = type[ParamToolModel]
+
+
+# ---------------------------------------------------------------------------
+# Agent tools — not auto-generated, backed by AI agent pipelines
+# ---------------------------------------------------------------------------
+
+
+class MathAuditorAgentParams(ApiModel):
+    """Parameters for the Math Auditor Agent (mathAuditorAgent)."""
+
+    tolerance: str = "0.01"
 
 
 class OperationId(StrEnum):
@@ -394,6 +406,8 @@ class OperationId(StrEnum):
     SPLIT = "split"
     UNLOCK_PDFFORMS = "unlockPDFForms"
     WATERMARK = "watermark"
+    # --- Agent tools (not auto-generated — backed by AI agent pipelines) ---
+    MATH_AUDITOR_AGENT = "mathAuditorAgent"
 
 
 OPERATIONS: dict[OperationId, ParamToolModelType] = {
@@ -436,4 +450,6 @@ OPERATIONS: dict[OperationId, ParamToolModelType] = {
     OperationId.SPLIT: SplitParams,
     OperationId.UNLOCK_PDFFORMS: UnlockPdfformsParams,
     OperationId.WATERMARK: WatermarkParams,
+    # --- Agent tools ---
+    OperationId.MATH_AUDITOR_AGENT: MathAuditorAgentParams,
 }

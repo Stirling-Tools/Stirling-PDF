@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import Depends, FastAPI
 
 from stirling.agents import ExecutionPlanningAgent, OrchestratorAgent, PdfEditAgent, PdfQuestionAgent, UserSpecAgent
-from stirling.agents.ledger import LedgerAuditorAgent
+from stirling.agents.ledger import MathAuditorAgent
 from stirling.api.routes import (
     agent_draft_router,
     execution_router,
@@ -39,7 +39,7 @@ async def lifespan(fast_api: FastAPI):
     fast_api.state.pdf_question_agent = PdfQuestionAgent(runtime)
     fast_api.state.user_spec_agent = UserSpecAgent(runtime)
     fast_api.state.execution_planning_agent = ExecutionPlanningAgent(runtime)
-    fast_api.state.ledger_agent = LedgerAuditorAgent(runtime)
+    fast_api.state.math_auditor_agent = MathAuditorAgent(runtime)
     yield
 
 

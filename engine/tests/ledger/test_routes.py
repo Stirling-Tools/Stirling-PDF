@@ -15,7 +15,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from stirling.api import app
-from stirling.api.dependencies import get_ledger_agent
+from stirling.api.dependencies import get_math_auditor_agent
 from stirling.config import AppSettings, load_settings
 from stirling.contracts.ledger import (
     Discrepancy,
@@ -128,26 +128,26 @@ def stub_agent() -> StubLedgerAgent:
 @pytest.fixture
 def client(stub_agent: StubLedgerAgent) -> Iterator[TestClient]:
     app.dependency_overrides[load_settings] = StubSettingsProvider()
-    app.dependency_overrides[get_ledger_agent] = lambda: stub_agent
+    app.dependency_overrides[get_math_auditor_agent] = lambda: stub_agent
     yield TestClient(app, raise_server_exceptions=False)
     app.dependency_overrides.pop(load_settings, None)
-    app.dependency_overrides.pop(get_ledger_agent, None)
+    app.dependency_overrides.pop(get_math_auditor_agent, None)
 
 
 # ---------------------------------------------------------------------------
-# POST /api/ledger/examine
+# POST /api/v1/ai/math-auditor-agent/examine
 # ---------------------------------------------------------------------------
 
 
 class TestExamineEndpoint:
-    """Tests for POST /api/ledger/examine."""
+    """Tests for POST /api/v1/ai/math-auditor-agent/examine."""
 
     def test_returns_200(self, client: TestClient) -> None:
-        resp = client.post("/api/ledger/examine", json=_manifest_body())
+        resp = client.post("/api/v1/ai/math-auditor-agent/examine", json=_manifest_body())
         assert resp.status_code == 200
 
     def test_response_is_requisition(self, client: TestClient) -> None:
-        resp = client.post("/api/ledger/examine", json=_manifest_body())
+        resp = client.post("/api/v1/ai/math-auditor-agent/examine", json=_manifest_body())
         body = resp.json()
         assert body["type"] == "requisition"
         assert body["needText"] == [0, 2]
@@ -158,31 +158,31 @@ class TestExamineEndpoint:
     def test_examine_called_with_parsed_manifest(
         self, client: TestClient, stub_agent: StubLedgerAgent,
     ) -> None:
-        client.post("/api/ledger/examine", json=_manifest_body(sessionId="my-session", pageCount=3))
+        client.post("/api/v1/ai/math-auditor-agent/examine", json=_manifest_body(sessionId="my-session", pageCount=3))
         assert len(stub_agent.examine_calls) == 1
         manifest = stub_agent.examine_calls[0]
         assert manifest.session_id == "my-session"
         assert manifest.page_count == 3
 
     def test_content_type_is_json(self, client: TestClient) -> None:
-        resp = client.post("/api/ledger/examine", json=_manifest_body())
+        resp = client.post("/api/v1/ai/math-auditor-agent/examine", json=_manifest_body())
         assert "application/json" in resp.headers["content-type"]
 
 
 # ---------------------------------------------------------------------------
-# POST /api/ledger/deliberate
+# POST /api/v1/ai/math-auditor-agent/deliberate
 # ---------------------------------------------------------------------------
 
 
 class TestDeliberateEndpoint:
-    """Tests for POST /api/ledger/deliberate."""
+    """Tests for POST /api/v1/ai/math-auditor-agent/deliberate."""
 
     def test_returns_200_clean(self, client: TestClient) -> None:
-        resp = client.post("/api/ledger/deliberate", json=_evidence_body())
+        resp = client.post("/api/v1/ai/math-auditor-agent/deliberate", json=_evidence_body())
         assert resp.status_code == 200
 
     def test_response_envelope_has_verdict(self, client: TestClient) -> None:
-        resp = client.post("/api/ledger/deliberate", json=_evidence_body())
+        resp = client.post("/api/v1/ai/math-auditor-agent/deliberate", json=_evidence_body())
         body = resp.json()
         assert "verdict" in body
         assert body.get("requisition") is None
@@ -200,8 +200,8 @@ class TestDeliberateEndpoint:
             expected="300",
         )
         stub = StubLedgerAgent(verdict=_stub_verdict(clean=False, discrepancies=[d]))
-        app.dependency_overrides[get_ledger_agent] = lambda: stub
-        resp = client.post("/api/ledger/deliberate", json=_evidence_body())
+        app.dependency_overrides[get_math_auditor_agent] = lambda: stub
+        resp = client.post("/api/v1/ai/math-auditor-agent/deliberate", json=_evidence_body())
         body = resp.json()
         discrepancies = body["verdict"]["discrepancies"]
         assert len(discrepancies) == 1
@@ -213,7 +213,7 @@ class TestDeliberateEndpoint:
     def test_tolerance_query_param_forwarded(
         self, client: TestClient, stub_agent: StubLedgerAgent,
     ) -> None:
-        client.post("/api/ledger/deliberate?tolerance=0.05", json=_evidence_body())
+        client.post("/api/v1/ai/math-auditor-agent/deliberate?tolerance=0.05", json=_evidence_body())
         assert len(stub_agent.audit_calls) == 1
         _, tolerance = stub_agent.audit_calls[0]
         assert tolerance == Decimal("0.05")
@@ -221,14 +221,14 @@ class TestDeliberateEndpoint:
     def test_default_tolerance_when_omitted(
         self, client: TestClient, stub_agent: StubLedgerAgent,
     ) -> None:
-        client.post("/api/ledger/deliberate", json=_evidence_body())
+        client.post("/api/v1/ai/math-auditor-agent/deliberate", json=_evidence_body())
         _, tolerance = stub_agent.audit_calls[0]
         assert tolerance == Decimal("0.01")
 
     def test_invalid_tolerance_falls_back_to_default(
         self, client: TestClient, stub_agent: StubLedgerAgent,
     ) -> None:
-        resp = client.post("/api/ledger/deliberate?tolerance=notanumber", json=_evidence_body())
+        resp = client.post("/api/v1/ai/math-auditor-agent/deliberate?tolerance=notanumber", json=_evidence_body())
         assert resp.status_code == 200
         _, tolerance = stub_agent.audit_calls[0]
         assert tolerance == Decimal("0.01")
@@ -236,6 +236,6 @@ class TestDeliberateEndpoint:
     def test_final_round_flag_parsed(
         self, client: TestClient, stub_agent: StubLedgerAgent,
     ) -> None:
-        client.post("/api/ledger/deliberate", json=_evidence_body(finalRound=True))
+        client.post("/api/v1/ai/math-auditor-agent/deliberate", json=_evidence_body(finalRound=True))
         evidence, _ = stub_agent.audit_calls[0]
         assert evidence.final_round is True

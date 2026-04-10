@@ -1,5 +1,5 @@
-"""Ledger Auditor — AI-powered math validation for PDF documents."""
+"""Math Auditor Agent (mathAuditorAgent) — AI-powered math validation for PDF documents."""
 
-from .agent import LedgerAuditorAgent
+from .agent import MathAuditorAgent
 
-__all__ = ["LedgerAuditorAgent"]
+__all__ = ["MathAuditorAgent"]

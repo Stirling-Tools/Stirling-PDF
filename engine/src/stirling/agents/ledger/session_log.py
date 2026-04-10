@@ -1,5 +1,5 @@
 """
-Per-session AI debug logging for the Ledger Auditor.
+Per-session AI debug logging for the Math Auditor Agent.
 
 When ``ai_log_level`` is set to ``trace``, each audit session gets its own
 log file under ``logs/ai_sessions/`` containing the full request/response
@@ -82,40 +82,35 @@ class SessionLogger:
         self._fh.write(f"--- [{self._entry}] +{elapsed:.2f}s {label} ---\n")
 
     def request(self, phase: str, *, url: str = "", body: object = None) -> None:
-        if not self._enabled:
+        if not self._fh:
             return
         self._next_entry(f"REQUEST ({phase})")
         if url:
-            assert self._fh is not None
             self._fh.write(f"URL: {url}\n")
-        assert self._fh is not None
         self._fh.write(f"Body:\n{_pretty(body)}\n\n")
         self._fh.flush()
 
     def response(self, phase: str, *, status: int = 0, body: object = None) -> None:
-        if not self._enabled:
+        if not self._fh:
             return
         self._next_entry(f"RESPONSE ({phase})")
-        assert self._fh is not None
         if status:
             self._fh.write(f"Status: {status}\n")
         self._fh.write(f"Body:\n{_pretty(body)}\n\n")
         self._fh.flush()
 
     def tool_call(self, tool_name: str, *, args: object = None, result: object = None) -> None:
-        if not self._enabled:
+        if not self._fh:
             return
         self._next_entry(f"TOOL ({tool_name})")
-        assert self._fh is not None
         self._fh.write(f"Args:\n{_pretty(args)}\n")
         self._fh.write(f"Result:\n{_pretty(result)}\n\n")
         self._fh.flush()
 
     def message(self, text: str) -> None:
-        if not self._enabled:
+        if not self._fh:
             return
         self._next_entry("MESSAGE")
-        assert self._fh is not None
         self._fh.write(f"{text}\n\n")
         self._fh.flush()
 

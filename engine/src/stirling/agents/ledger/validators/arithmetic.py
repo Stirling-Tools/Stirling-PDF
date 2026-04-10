@@ -14,9 +14,11 @@ from __future__ import annotations
 
 import logging
 import re
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 
 from ..models import Discrepancy, DiscrepancyKind, Severity
+from ._parsing import STRIP_PATTERN as _STRIP
+from ._parsing import to_decimal as _to_decimal
 
 logger = logging.getLogger(__name__)
 
@@ -40,20 +42,10 @@ _TOTAL_THEN_ADDENDS = re.compile(
     re.IGNORECASE,
 )
 
-# Strip currency symbols and thousands separators for parsing.
-_STRIP = re.compile(r"[£$€¥,\s]")
-
 
 def _parse(token: str) -> Decimal | None:
-    cleaned = _STRIP.sub("", token.strip())
-    if not cleaned:
-        return None
-    if cleaned.startswith("(") and cleaned.endswith(")"):
-        cleaned = "-" + cleaned[1:-1]
-    try:
-        return Decimal(cleaned)
-    except InvalidOperation:
-        return None
+    """Parse a regex-matched token to Decimal."""
+    return _to_decimal(token)
 
 
 def _eval_expression(expr: str) -> Decimal | None:
