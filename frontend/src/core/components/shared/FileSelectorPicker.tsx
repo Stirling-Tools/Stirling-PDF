@@ -16,13 +16,29 @@ import { fileStorage } from '@app/services/fileStorage';
 import apiClient from '@app/services/apiClient';
 import { parseContentDispositionFilename, extractLatestFilesFromBundle } from '@app/services/shareBundleUtils';
 import { truncateCenter } from '@app/utils/textUtils';
-import { thumbnailGenerationService } from '@app/services/thumbnailGenerationService';
+import { generateThumbnailForFile } from '@app/utils/thumbnailUtils';
 import styles from '@app/components/shared/FileSelectorPicker.module.css';
 
-// Persists choices across picker instances within a session
-let lastPickerTab: 'workbench' | 'saved' = 'workbench';
-let lastPickerSort: 'date' | 'name' = 'date';
-let lastPickerSortDir: 'asc' | 'desc' = 'desc';
+const LS_TAB = 'filePicker.tab';
+const LS_SORT = 'filePicker.sort';
+const LS_SORT_DIR = 'filePicker.sortDir';
+
+function lsGet<T extends string>(key: string, fallback: T, valid: T[]): T {
+  try {
+    const v = localStorage.getItem(key);
+    if (v && valid.includes(v as T)) return v as T;
+  } catch { /* ignore */ }
+  return fallback;
+}
+
+function lsSet(key: string, value: string) {
+  try { localStorage.setItem(key, value); } catch { /* ignore */ }
+}
+
+// Persists choices across picker instances and page reloads
+let lastPickerTab: 'workbench' | 'saved' = lsGet(LS_TAB, 'saved', ['workbench', 'saved']);
+let lastPickerSort: 'date' | 'name' = lsGet(LS_SORT, 'date', ['date', 'name']);
+let lastPickerSortDir: 'asc' | 'desc' = lsGet(LS_SORT_DIR, 'desc', ['asc', 'desc']);
 
 function formatBytes(bytes: number): string {
   if (!bytes) return '';
@@ -86,6 +102,7 @@ export function FileSelectorPicker({
 
   const handleTabChange = useCallback((tab: 'workbench' | 'saved') => {
     lastPickerTab = tab;
+    lsSet(LS_TAB, tab);
     setActiveTab(tab);
   }, []);
 
@@ -93,11 +110,14 @@ export function FileSelectorPicker({
     if (sort === sortBy) {
       const newDir = sortDir === 'asc' ? 'desc' : 'asc';
       lastPickerSortDir = newDir;
+      lsSet(LS_SORT_DIR, newDir);
       setSortDir(newDir);
     } else {
       const defaultDir: 'asc' | 'desc' = sort === 'name' ? 'asc' : 'desc';
       lastPickerSort = sort;
       lastPickerSortDir = defaultDir;
+      lsSet(LS_SORT, sort);
+      lsSet(LS_SORT_DIR, defaultDir);
       setSortBy(sort);
       setSortDir(defaultDir);
     }
@@ -132,7 +152,9 @@ export function FileSelectorPicker({
     if (workbenchIdSet.has(stub.id)) {
       const sf = selectors.getFile(stub.id as FileId);
       if (sf) {
-        onSelect({ stub, stirlingFile: sf });
+        // Prefer the workbench stub (has thumbnail) over the saved stub (may not)
+        const workbenchStub = selectors.getStirlingFileStub(stub.id as FileId) ?? stub;
+        onSelect({ stub: workbenchStub, stirlingFile: sf });
         setIsOpen(false);
       }
       return;
@@ -168,7 +190,21 @@ export function FileSelectorPicker({
       }
 
       if (stirlingFile) {
-        onSelect({ stub, stirlingFile });
+        // Generate thumbnail on-the-fly if the stub doesn't already have one
+        let resolvedStub = stub;
+        if (!resolvedStub.thumbnailUrl) {
+          try {
+            const thumbnail = await generateThumbnailForFile(stirlingFile);
+            if (thumbnail) {
+              resolvedStub = { ...stub, thumbnailUrl: thumbnail };
+              // Persist so subsequent opens don't regenerate
+              void fileStorage.updateThumbnail(stirlingFile.fileId as FileId, thumbnail);
+            }
+          } catch {
+            // Non-fatal — thumbnail simply won't show
+          }
+        }
+        onSelect({ stub: resolvedStub, stirlingFile });
         setIsOpen(false);
       }
     } catch (err) {
@@ -188,16 +224,8 @@ export function FileSelectorPicker({
         const stirlingFile = createStirlingFile(file, id);
         // Generate a first-page thumbnail for the uploaded file
         try {
-          const buf = await file.arrayBuffer();
-          const results = await thumbnailGenerationService.generateThumbnails(
-            id as FileId,
-            buf,
-            [1],
-            { scale: 0.3, quality: 0.8 }
-          );
-          if (results[0]?.success && results[0].thumbnail) {
-            stub = { ...stub, thumbnailUrl: results[0].thumbnail };
-          }
+          const thumbnail = await generateThumbnailForFile(file);
+          if (thumbnail) stub = { ...stub, thumbnailUrl: thumbnail };
         } catch {
           // Non-fatal — thumbnail simply won't show
         }
@@ -226,10 +254,13 @@ export function FileSelectorPicker({
   return (
     <Popover
       opened={isOpen}
+      onChange={setIsOpen}
       onClose={() => setIsOpen(false)}
       position="bottom-start"
       withinPortal
       shadow="md"
+      closeOnClickOutside
+      clickOutsideEvents={['mousedown', 'touchstart']}
     >
       <Popover.Target>
         <Box
