@@ -18,11 +18,11 @@
   .languageGrid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .languageItem:nth-child(4n) {
     border-right: 2px solid var(--mantine-color-gray-3);
   }
-  
+
   .languageItem:nth-child(2n) {
     border-right: none;
   }
@@ -32,11 +32,11 @@
   .languageGrid {
     grid-template-columns: repeat(3, 1fr);
   }
-  
+
   .languageItem:nth-child(4n) {
     border-right: 2px solid var(--mantine-color-gray-3);
   }
-  
+
   .languageItem:nth-child(3n) {
     border-right: none;
   }

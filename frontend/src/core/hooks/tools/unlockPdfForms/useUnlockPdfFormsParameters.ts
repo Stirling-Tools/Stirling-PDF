@@ -1,5 +1,5 @@
-import { BaseParameters } from '@app/types/parameters';
-import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
+import { BaseParameters } from "@app/types/parameters";
+import { useBaseParameters, BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
 
 export interface UnlockPdfFormsParameters extends BaseParameters {
   // Extends BaseParameters - ready for future parameter additions if needed
@@ -14,6 +14,6 @@ export type UnlockPdfFormsParametersHook = BaseParametersHook<UnlockPdfFormsPara
 export const useUnlockPdfFormsParameters = (): UnlockPdfFormsParametersHook => {
   return useBaseParameters({
     defaultParameters,
-    endpointName: 'unlock-pdf-forms',
+    endpointName: "unlock-pdf-forms",
   });
 };

@@ -6,9 +6,7 @@ interface UseUndoManagerStateParams {
   setHasUnsavedChanges: (dirty: boolean) => void;
 }
 
-export const useUndoManagerState = ({
-  setHasUnsavedChanges,
-}: UseUndoManagerStateParams) => {
+export const useUndoManagerState = ({ setHasUnsavedChanges }: UseUndoManagerStateParams) => {
   const undoManagerRef = useRef(new UndoManager());
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
@@ -33,7 +31,7 @@ export const useUndoManagerState = ({
       undoManagerRef.current.executeCommand(command);
       setHasUnsavedChanges(true);
     },
-    [setHasUnsavedChanges]
+    [setHasUnsavedChanges],
   );
 
   const handleUndo = useCallback(() => {

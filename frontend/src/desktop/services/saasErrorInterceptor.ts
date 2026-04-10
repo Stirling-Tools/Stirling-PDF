@@ -1,5 +1,5 @@
-import { extractAxiosErrorMessage } from '@app/services/httpErrorUtils';
-import { alert } from '@app/components/toast';
+import { extractAxiosErrorMessage } from "@app/services/httpErrorUtils";
+import { alert } from "@app/components/toast";
 
 /**
  * Desktop implementation: intercepts errors from SaaS backend requests
@@ -17,13 +17,13 @@ export function handleSaaSError(error: unknown): boolean {
   const { title: originalTitle, body: originalBody } = extractAxiosErrorMessage(error);
 
   alert({
-    alertType: 'error',
-    title: 'Cloud Processing Failed',
+    alertType: "error",
+    title: "Cloud Processing Failed",
     body: `This tool requires cloud processing but encountered an error: ${originalBody}. Please check your connection and try again.`,
     expandable: true,
     isPersistentPopup: false,
   });
 
-  console.error('[saasErrorInterceptor] SaaS backend error:', { originalTitle, originalBody });
+  console.error("[saasErrorInterceptor] SaaS backend error:", { originalTitle, originalBody });
   return true;
 }

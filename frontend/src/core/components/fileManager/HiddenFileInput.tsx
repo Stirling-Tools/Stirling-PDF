@@ -1,5 +1,5 @@
-import React from 'react';
-import { useFileManagerContext } from '@app/contexts/FileManagerContext';
+import React from "react";
+import { useFileManagerContext } from "@app/contexts/FileManagerContext";
 
 const HiddenFileInput: React.FC = () => {
   const { fileInputRef, onFileInputChange } = useFileManagerContext();
@@ -10,7 +10,7 @@ const HiddenFileInput: React.FC = () => {
       type="file"
       multiple={true}
       onChange={onFileInputChange}
-      style={{ display: 'none' }}
+      style={{ display: "none" }}
       data-testid="file-input"
     />
   );

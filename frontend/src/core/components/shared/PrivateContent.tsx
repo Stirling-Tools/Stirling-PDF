@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface PrivateContentProps extends React.HTMLAttributes<HTMLSpanElement> {
   children: React.ReactNode;
@@ -23,14 +23,9 @@ interface PrivateContentProps extends React.HTMLAttributes<HTMLSpanElement> {
  *   <img src={thumbnail} alt="preview" />
  * </PrivateContent>
  */
-export const PrivateContent: React.FC<PrivateContentProps> = ({
-  children,
-  className = '',
-  style,
-  ...props
-}) => {
-  const combinedClassName = `ph-no-capture${className ? ` ${className}` : ''}`;
-  const combinedStyle = { display: 'contents' as const, ...style };
+export const PrivateContent: React.FC<PrivateContentProps> = ({ children, className = "", style, ...props }) => {
+  const combinedClassName = `ph-no-capture${className ? ` ${className}` : ""}`;
+  const combinedStyle = { display: "contents" as const, ...style };
 
   return (
     <span className={combinedClassName} style={combinedStyle} {...props}>

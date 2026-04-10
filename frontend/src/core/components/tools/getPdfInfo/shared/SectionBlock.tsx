@@ -1,5 +1,5 @@
-import React from 'react';
-import { Stack, Text, Divider } from '@mantine/core';
+import React from "react";
+import { Stack, Text, Divider } from "@mantine/core";
 
 interface SectionBlockProps {
   title: string;
@@ -10,7 +10,9 @@ interface SectionBlockProps {
 const SectionBlock: React.FC<SectionBlockProps> = ({ title, anchorId, children }) => {
   return (
     <Stack gap="sm" id={anchorId}>
-      <Text fw={700} size="lg">{title}</Text>
+      <Text fw={700} size="lg">
+        {title}
+      </Text>
       <Divider />
       {children}
     </Stack>
@@ -18,5 +20,3 @@ const SectionBlock: React.FC<SectionBlockProps> = ({ title, anchorId, children }
 };
 
 export default SectionBlock;
-
-

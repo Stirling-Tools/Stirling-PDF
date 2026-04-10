@@ -1,4 +1,4 @@
-import { SidebarRefs, SidebarState, SidebarInfo } from '@app/types/sidebar';
+import { SidebarRefs, SidebarState, SidebarInfo } from "@app/types/sidebar";
 
 /**
  * Gets the All tools sidebar information using React refs and state
@@ -9,12 +9,12 @@ import { SidebarRefs, SidebarState, SidebarInfo } from '@app/types/sidebar';
 export function getSidebarInfo(refs: SidebarRefs, state: SidebarState): SidebarInfo {
   const { quickAccessRef, toolPanelRef } = refs;
   const { sidebarsVisible, readerMode } = state;
-  
+
   // Determine if tool panel should be active based on state
   const isToolPanelActive = sidebarsVisible && !readerMode;
-  
+
   let rect: DOMRect | null = null;
-  
+
   if (isToolPanelActive && toolPanelRef.current) {
     // Tool panel is expanded: use its rect
     rect = toolPanelRef.current.getBoundingClientRect();
@@ -23,12 +23,10 @@ export function getSidebarInfo(refs: SidebarRefs, state: SidebarState): SidebarI
     // This probably isn't needed but if we ever have tooltips or modals that need to be positioned relative to the quick access bar, we can use this
     rect = quickAccessRef.current.getBoundingClientRect();
   }
-  
+
   return {
     rect,
     isToolPanelActive,
-    sidebarState: state
+    sidebarState: state,
   };
 }
-
- 

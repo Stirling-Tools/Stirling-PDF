@@ -1,5 +1,5 @@
-import '@testing-library/jest-dom';
-import { vi } from 'vitest';
+import "@testing-library/jest-dom";
+import { vi } from "vitest";
 
 // Mock localStorage for tests
 class LocalStorageMock implements Storage {
@@ -30,13 +30,13 @@ class LocalStorageMock implements Storage {
   }
 }
 
-Object.defineProperty(window, 'localStorage', {
+Object.defineProperty(window, "localStorage", {
   value: new LocalStorageMock(),
   writable: true,
 });
 
 // Mock i18next for tests
-vi.mock('react-i18next', () => ({
+vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => key,
     i18n: {
@@ -44,16 +44,16 @@ vi.mock('react-i18next', () => ({
     },
   }),
   initReactI18next: {
-    type: '3rdParty',
+    type: "3rdParty",
     init: vi.fn(),
   },
   I18nextProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // Mock i18next-http-backend
-vi.mock('i18next-http-backend', () => ({
+vi.mock("i18next-http-backend", () => ({
   default: {
-    type: 'backend',
+    type: "backend",
     init: vi.fn(),
     read: vi.fn(),
     save: vi.fn(),
@@ -61,12 +61,12 @@ vi.mock('i18next-http-backend', () => ({
 }));
 
 // Mock window.URL.createObjectURL and revokeObjectURL for tests
-global.URL.createObjectURL = vi.fn(() => 'mocked-url');
+global.URL.createObjectURL = vi.fn(() => "mocked-url");
 global.URL.revokeObjectURL = vi.fn();
 
 // Mock File and Blob API methods that aren't available in jsdom
 if (!globalThis.File.prototype.arrayBuffer) {
-  globalThis.File.prototype.arrayBuffer = function() {
+  globalThis.File.prototype.arrayBuffer = function () {
     // Return a simple ArrayBuffer with some mock data
     const buffer = new ArrayBuffer(8);
     const view = new Uint8Array(buffer);
@@ -76,7 +76,7 @@ if (!globalThis.File.prototype.arrayBuffer) {
 }
 
 if (!globalThis.Blob.prototype.arrayBuffer) {
-  globalThis.Blob.prototype.arrayBuffer = function() {
+  globalThis.Blob.prototype.arrayBuffer = function () {
     // Return a simple ArrayBuffer with some mock data
     const buffer = new ArrayBuffer(8);
     const view = new Uint8Array(buffer);
@@ -94,7 +94,7 @@ for (let i = 0; i < 32; i++) {
 }
 
 // Force override crypto.subtle to avoid Node.js native implementation
-Object.defineProperty(globalThis, 'crypto', {
+Object.defineProperty(globalThis, "crypto", {
   value: {
     subtle: {
       digest: vi.fn().mockImplementation(async (_algorithm: string, _data: any) => {
@@ -139,9 +139,9 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 }));
 
 // Mock matchMedia for responsive components
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -154,7 +154,7 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Provide a minimal DOMMatrix implementation for pdf.js in the test environment
-if (typeof globalThis.DOMMatrix === 'undefined') {
+if (typeof globalThis.DOMMatrix === "undefined") {
   class DOMMatrixStub {
     a = 1;
     b = 0;
@@ -190,7 +190,7 @@ if (typeof globalThis.DOMMatrix === 'undefined') {
     }
   }
 
-  Object.defineProperty(globalThis, 'DOMMatrix', {
+  Object.defineProperty(globalThis, "DOMMatrix", {
     value: DOMMatrixStub,
     writable: false,
     configurable: true,

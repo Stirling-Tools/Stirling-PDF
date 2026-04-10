@@ -1,4 +1,4 @@
-import { useState, useCallback, Dispatch, SetStateAction } from 'react';
+import { useState, useCallback, Dispatch, SetStateAction } from "react";
 
 export interface BaseParametersHook<T> {
   parameters: T;
@@ -19,7 +19,7 @@ export function useBaseParameters<T>(config: BaseParametersConfig<T>): BaseParam
   const [parameters, setParameters] = useState<T>(config.defaultParameters);
 
   const updateParameter = useCallback(<K extends keyof T>(parameter: K, value: T[K]) => {
-    setParameters(prev => ({
+    setParameters((prev) => ({
       ...prev,
       [parameter]: value,
     }));

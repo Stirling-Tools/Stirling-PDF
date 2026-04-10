@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
-import { usePreferences } from '@app/contexts/PreferencesContext';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
-import type { LogoVariant } from '@app/services/preferencesService';
-import { ensureLogoVariant } from '@app/constants/logo';
+import { useMemo } from "react";
+import { usePreferences } from "@app/contexts/PreferencesContext";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import type { LogoVariant } from "@app/services/preferencesService";
+import { ensureLogoVariant } from "@app/constants/logo";
 
 export function useLogoVariant(): LogoVariant {
   const { preferences } = usePreferences();
@@ -15,4 +15,3 @@ export function useLogoVariant(): LogoVariant {
     return ensureLogoVariant(preferenceVariant ?? configVariant);
   }, [config?.logoStyle, preferences.logoVariant]);
 }
-

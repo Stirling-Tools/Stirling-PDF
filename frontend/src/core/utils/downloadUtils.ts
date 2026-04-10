@@ -1,7 +1,7 @@
-import { StirlingFileStub } from '@app/types/fileContext';
-import { fileStorage } from '@app/services/fileStorage';
-import { zipFileService } from '@app/services/zipFileService';
-import { downloadFile } from '@app/services/downloadService';
+import { StirlingFileStub } from "@app/types/fileContext";
+import { fileStorage } from "@app/services/fileStorage";
+import { zipFileService } from "@app/services/zipFileService";
+import { downloadFile } from "@app/services/downloadService";
 
 /**
  * Downloads a blob as a file using browser download API
@@ -28,7 +28,7 @@ export async function downloadFileFromStorage(file: StirlingFileStub): Promise<v
   await downloadFile({
     data: stirlingFile,
     filename: stirlingFile.name,
-    localPath: file.localFilePath
+    localPath: file.localFilePath,
   });
 }
 
@@ -49,7 +49,7 @@ export async function downloadMultipleFiles(files: StirlingFileStub[]): Promise<
  */
 export async function downloadFilesAsZip(files: StirlingFileStub[], zipFilename?: string): Promise<void> {
   if (files.length === 0) {
-    throw new Error('No files provided for ZIP download');
+    throw new Error("No files provided for ZIP download");
   }
 
   // Convert stored files to File objects
@@ -65,12 +65,11 @@ export async function downloadFilesAsZip(files: StirlingFileStub[], zipFilename?
   }
 
   if (filesToZip.length === 0) {
-    throw new Error('No valid files found in storage for ZIP download');
+    throw new Error("No valid files found in storage for ZIP download");
   }
 
   // Generate default filename if not provided
-  const finalZipFilename = zipFilename ||
-    `files-${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.zip`;
+  const finalZipFilename = zipFilename || `files-${new Date().toISOString().slice(0, 19).replace(/[:-]/g, "")}.zip`;
 
   // Create and download ZIP
   const { zipFile } = await zipFileService.createZipFromFiles(filesToZip, finalZipFilename);
@@ -90,10 +89,10 @@ export async function downloadFiles(
     forceZip?: boolean;
     zipFilename?: string;
     multipleAsIndividual?: boolean;
-  } = {}
+  } = {},
 ): Promise<void> {
   if (files.length === 0) {
-    throw new Error('No files provided for download');
+    throw new Error("No files provided for download");
   }
 
   if (files.length === 1 && !options.forceZip) {
@@ -123,11 +122,7 @@ export function downloadFileObject(file: File, filename?: string): void {
  * @param filename - Filename for the download
  * @param mimeType - MIME type (defaults to text/plain)
  */
-export function downloadTextAsFile(
-  content: string,
-  filename: string,
-  mimeType: string = 'text/plain'
-): void {
+export function downloadTextAsFile(content: string, filename: string, mimeType: string = "text/plain"): void {
   const blob = new Blob([content], { type: mimeType });
   void downloadFile({ data: blob, filename });
 }
@@ -139,5 +134,5 @@ export function downloadTextAsFile(
  */
 export function downloadJsonAsFile(data: any, filename: string): void {
   const content = JSON.stringify(data, null, 2);
-  downloadTextAsFile(content, filename, 'application/json');
+  downloadTextAsFile(content, filename, "application/json");
 }

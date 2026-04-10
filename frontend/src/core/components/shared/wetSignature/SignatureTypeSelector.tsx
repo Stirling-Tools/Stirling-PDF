@@ -1,7 +1,7 @@
-import { SegmentedControl } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
+import { SegmentedControl } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
-export type SignatureType = 'draw' | 'upload' | 'type';
+export type SignatureType = "draw" | "upload" | "type";
 
 interface SignatureTypeSelectorProps {
   value: SignatureType;
@@ -9,11 +9,7 @@ interface SignatureTypeSelectorProps {
   disabled?: boolean;
 }
 
-export const SignatureTypeSelector: React.FC<SignatureTypeSelectorProps> = ({
-  value,
-  onChange,
-  disabled = false,
-}) => {
+export const SignatureTypeSelector: React.FC<SignatureTypeSelectorProps> = ({ value, onChange, disabled = false }) => {
   const { t } = useTranslation();
 
   return (
@@ -23,16 +19,16 @@ export const SignatureTypeSelector: React.FC<SignatureTypeSelectorProps> = ({
       disabled={disabled}
       data={[
         {
-          value: 'draw',
-          label: t('certSign.collab.signRequest.signatureType.draw', 'Draw'),
+          value: "draw",
+          label: t("certSign.collab.signRequest.signatureType.draw", "Draw"),
         },
         {
-          value: 'upload',
-          label: t('certSign.collab.signRequest.signatureType.upload', 'Upload'),
+          value: "upload",
+          label: t("certSign.collab.signRequest.signatureType.upload", "Upload"),
         },
         {
-          value: 'type',
-          label: t('certSign.collab.signRequest.signatureType.type', 'Type'),
+          value: "type",
+          label: t("certSign.collab.signRequest.signatureType.type", "Type"),
         },
       ]}
       fullWidth

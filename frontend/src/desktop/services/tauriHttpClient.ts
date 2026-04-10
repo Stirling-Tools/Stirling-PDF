@@ -1,4 +1,4 @@
-import { fetch } from '@tauri-apps/plugin-http';
+import { fetch } from "@tauri-apps/plugin-http";
 
 /**
  * Tauri HTTP Client - wrapper around Tauri's native HTTP client
@@ -21,7 +21,7 @@ export interface TauriHttpRequestConfig {
   params?: Record<string, string | number | boolean> | any;
   data?: any;
   timeout?: number;
-  responseType?: 'json' | 'text' | 'blob' | 'arraybuffer';
+  responseType?: "json" | "text" | "blob" | "arraybuffer";
   withCredentials?: boolean;
   // Custom properties for desktop
   operationName?: string;
@@ -59,12 +59,12 @@ interface Interceptors {
 
 class TauriHttpClient {
   public defaults: TauriHttpRequestConfig = {
-    baseURL: '',
+    baseURL: "",
     headers: {
-      'User-Agent': 'StirlingPDF-Desktop/1.0 Tauri',
+      "User-Agent": "StirlingPDF-Desktop/1.0 Tauri",
     },
     timeout: 120000,
-    responseType: 'json',
+    responseType: "json",
     withCredentials: false, // Desktop doesn't need credentials (backend has allowCredentials=false)
   };
 
@@ -91,7 +91,13 @@ class TauriHttpClient {
     }
   }
 
-  private createError(message: string, config?: TauriHttpRequestConfig, code?: string, response?: TauriHttpResponse, originalError?: unknown): TauriHttpError {
+  private createError(
+    message: string,
+    config?: TauriHttpRequestConfig,
+    code?: string,
+    response?: TauriHttpResponse,
+    originalError?: unknown,
+  ): TauriHttpError {
     const error = new Error(message) as TauriHttpError;
     error.config = config;
     error.code = code;
@@ -105,38 +111,41 @@ class TauriHttpClient {
     });
 
     // Log detailed error information for debugging
-    console.error('[TauriHttpClient] Error details:', {
+    console.error("[TauriHttpClient] Error details:", {
       message,
       code,
       url: config?.url,
       method: config?.method,
       status: response?.status,
-      originalError: originalError instanceof Error ? {
-        name: originalError.name,
-        message: originalError.message,
-        stack: originalError.stack,
-      } : originalError,
+      originalError:
+        originalError instanceof Error
+          ? {
+              name: originalError.name,
+              message: originalError.message,
+              stack: originalError.stack,
+            }
+          : originalError,
     });
 
     return error;
   }
 
   private buildUrl(config: TauriHttpRequestConfig): string {
-    let url = config.url || '';
+    let url = config.url || "";
 
     // If URL is already absolute, use it as-is
-    if (url.startsWith('http://') || url.startsWith('https://')) {
+    if (url.startsWith("http://") || url.startsWith("https://")) {
       return url;
     }
 
     // Prepend baseURL if present
-    const baseURL = config.baseURL || this.defaults.baseURL || '';
+    const baseURL = config.baseURL || this.defaults.baseURL || "";
     if (baseURL) {
       url = baseURL + url;
     }
 
     // Add query parameters
-    if (config.params && typeof config.params === 'object') {
+    if (config.params && typeof config.params === "object") {
       const searchParams = new URLSearchParams();
       Object.entries(config.params as Record<string, unknown>).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
@@ -145,7 +154,7 @@ class TauriHttpClient {
       });
       const queryString = searchParams.toString();
       if (queryString) {
-        url += (url.includes('?') ? '&' : '?') + queryString;
+        url += (url.includes("?") ? "&" : "?") + queryString;
       }
     }
 
@@ -170,7 +179,7 @@ class TauriHttpClient {
     }
 
     const url = this.buildUrl(finalConfig);
-    const method = (finalConfig.method || 'GET').toUpperCase();
+    const method = (finalConfig.method || "GET").toUpperCase();
 
     // Prepare request body and headers
     let body: BodyInit | undefined;
@@ -180,11 +189,11 @@ class TauriHttpClient {
       if (finalConfig.data instanceof FormData) {
         // FormData can be passed directly
         body = finalConfig.data;
-      } else if (typeof finalConfig.data === 'object') {
+      } else if (typeof finalConfig.data === "object") {
         // Serialize as JSON
         body = JSON.stringify(finalConfig.data);
-        if (!headers['Content-Type']) {
-          headers['Content-Type'] = 'application/json';
+        if (!headers["Content-Type"]) {
+          headers["Content-Type"] = "application/json";
         }
       } else {
         body = String(finalConfig.data);
@@ -193,7 +202,7 @@ class TauriHttpClient {
 
     try {
       // Convert withCredentials to fetch API's credentials option
-      const credentials: RequestCredentials = finalConfig.withCredentials ? 'include' : 'omit';
+      const credentials: RequestCredentials = finalConfig.withCredentials ? "include" : "omit";
 
       // Make the request using Tauri's native HTTP client (standard Fetch API)
       // Enable certificate bypass for HTTPS to handle missing intermediate certs and self-signed certs
@@ -209,7 +218,7 @@ class TauriHttpClient {
       // - Missing intermediate certificates
       // - Self-signed certificates
       // - Certificate hostname mismatches
-      if (url.startsWith('https://')) {
+      if (url.startsWith("https://")) {
         fetchOptions.danger = {
           acceptInvalidCerts: true,
           acceptInvalidHostnames: true,
@@ -233,28 +242,28 @@ class TauriHttpClient {
         try {
           errorBody = await response.text();
         } catch {
-          errorBody = '';
+          errorBody = "";
         }
 
         // Create more descriptive error messages based on status code
         let errorMessage = errorBody || `Request failed with status code ${response.status}`;
-        let errorCode = 'ERR_BAD_REQUEST';
+        let errorCode = "ERR_BAD_REQUEST";
 
         if (response.status === 401) {
-          errorMessage = 'Authentication failed - Invalid credentials';
-          errorCode = 'ERR_UNAUTHORIZED';
+          errorMessage = "Authentication failed - Invalid credentials";
+          errorCode = "ERR_UNAUTHORIZED";
         } else if (response.status === 403) {
-          errorMessage = 'Access denied - Insufficient permissions';
-          errorCode = 'ERR_FORBIDDEN';
+          errorMessage = "Access denied - Insufficient permissions";
+          errorCode = "ERR_FORBIDDEN";
         } else if (response.status === 404) {
-          errorMessage = 'Endpoint not found - Server may not support this operation';
-          errorCode = 'ERR_NOT_FOUND';
+          errorMessage = "Endpoint not found - Server may not support this operation";
+          errorCode = "ERR_NOT_FOUND";
         } else if (response.status === 500) {
-          errorMessage = 'Internal server error - Please check server logs';
-          errorCode = 'ERR_SERVER_ERROR';
+          errorMessage = "Internal server error - Please check server logs";
+          errorCode = "ERR_SERVER_ERROR";
         } else if (response.status === 502 || response.status === 503 || response.status === 504) {
-          errorMessage = 'Server unavailable or timeout - Please try again';
-          errorCode = 'ERR_SERVICE_UNAVAILABLE';
+          errorMessage = "Server unavailable or timeout - Please try again";
+          errorCode = "ERR_SERVICE_UNAVAILABLE";
         }
 
         console.error(`[TauriHttpClient] HTTP Error ${response.status}:`, {
@@ -268,17 +277,12 @@ class TauriHttpClient {
         const errorResponse: TauriHttpResponse<T> = {
           data: errorBody as T,
           status: response.status,
-          statusText: response.statusText || '',
+          statusText: response.statusText || "",
           headers: responseHeaders,
           config: finalConfig,
         };
 
-        const error = this.createError(
-          errorMessage,
-          finalConfig,
-          errorCode,
-          errorResponse
-        );
+        const error = this.createError(errorMessage, finalConfig, errorCode, errorResponse);
 
         // Run error interceptors
         let finalError: unknown = error;
@@ -296,33 +300,33 @@ class TauriHttpClient {
 
       // Parse response body for successful responses
       let data: T;
-      const responseType = finalConfig.responseType || 'json';
+      const responseType = finalConfig.responseType || "json";
 
-      if (responseType === 'json') {
+      if (responseType === "json") {
         const text = await response.text();
         data = (text ? JSON.parse(text) : null) as T;
-      } else if (responseType === 'text') {
+      } else if (responseType === "text") {
         data = (await response.text()) as T;
-      } else if (responseType === 'blob') {
+      } else if (responseType === "blob") {
         // Standard fetch doesn't set blob.type from Content-Type header (unlike axios)
         // Set it manually to match axios behavior
         const blob = await response.blob();
         if (!blob.type) {
-          const contentType = response.headers.get('content-type') || 'application/octet-stream';
+          const contentType = response.headers.get("content-type") || "application/octet-stream";
           data = new Blob([blob], { type: contentType }) as T;
         } else {
           data = blob as T;
         }
-      } else if (responseType === 'arraybuffer') {
+      } else if (responseType === "arraybuffer") {
         data = (await response.arrayBuffer()) as T;
       } else {
-        data = await response.json() as T;
+        data = (await response.json()) as T;
       }
 
       const httpResponse: TauriHttpResponse<T> = {
         data,
         status: response.status,
-        statusText: response.statusText || '',
+        statusText: response.statusText || "",
         headers: responseHeaders,
         config: finalConfig,
       };
@@ -330,60 +334,70 @@ class TauriHttpClient {
       // Run response interceptors
       let finalResponse = httpResponse;
       for (const handler of this.interceptors.response.handlers) {
-        finalResponse = await Promise.resolve(handler.fulfilled(finalResponse)) as TauriHttpResponse<T>;
+        finalResponse = (await Promise.resolve(handler.fulfilled(finalResponse))) as TauriHttpResponse<T>;
       }
 
       return finalResponse;
     } catch (error: unknown) {
       // If it's already a TauriHttpError with interceptors run, re-throw
-      if (error && typeof error === 'object' && 'isAxiosError' in error) {
+      if (error && typeof error === "object" && "isAxiosError" in error) {
         throw error;
       }
 
       // Create detailed error messages for network/other failures
-      let errorMessage = 'Network Error';
-      let errorCode = 'ERR_NETWORK';
+      let errorMessage = "Network Error";
+      let errorCode = "ERR_NETWORK";
 
       if (error instanceof Error) {
         const errMsg = error.message.toLowerCase();
 
         // Connection refused - server not running or wrong port
-        if (errMsg.includes('connection refused') || errMsg.includes('econnrefused')) {
+        if (errMsg.includes("connection refused") || errMsg.includes("econnrefused")) {
           errorMessage = `Unable to connect to server at ${url}. Server may not be running or port is incorrect.`;
-          errorCode = 'ERR_CONNECTION_REFUSED';
+          errorCode = "ERR_CONNECTION_REFUSED";
         }
         // Timeout - server too slow or unreachable
-        else if (errMsg.includes('timeout') || errMsg.includes('timed out')) {
+        else if (errMsg.includes("timeout") || errMsg.includes("timed out")) {
           errorMessage = `Connection timed out to ${url}. Server is not responding or is too slow.`;
-          errorCode = 'ERR_TIMEOUT';
+          errorCode = "ERR_TIMEOUT";
         }
         // DNS failure - invalid domain or network issue
-        else if (errMsg.includes('getaddrinfo') || errMsg.includes('dns') || errMsg.includes('not found') || errMsg.includes('enotfound')) {
+        else if (
+          errMsg.includes("getaddrinfo") ||
+          errMsg.includes("dns") ||
+          errMsg.includes("not found") ||
+          errMsg.includes("enotfound")
+        ) {
           errorMessage = `Cannot resolve server address: ${url}. Please check the URL is correct.`;
-          errorCode = 'ERR_DNS_FAILURE';
+          errorCode = "ERR_DNS_FAILURE";
         }
         // SSL/TLS errors - certificate issues
-        else if (errMsg.includes('ssl') || errMsg.includes('tls') || errMsg.includes('certificate') || errMsg.includes('cert')) {
+        else if (
+          errMsg.includes("ssl") ||
+          errMsg.includes("tls") ||
+          errMsg.includes("certificate") ||
+          errMsg.includes("cert")
+        ) {
           errorMessage = `SSL/TLS certificate error for ${url}. Server may have invalid or self-signed certificate.`;
-          errorCode = 'ERR_SSL_ERROR';
+          errorCode = "ERR_SSL_ERROR";
         }
         // Protocol errors - wrong protocol (http vs https)
-        else if (errMsg.includes('protocol') || errMsg.includes('https') || errMsg.includes('http')) {
+        else if (errMsg.includes("protocol") || errMsg.includes("https") || errMsg.includes("http")) {
           errorMessage = `Protocol error connecting to ${url}. Try using https:// instead of http:// or vice versa.`;
-          errorCode = 'ERR_PROTOCOL';
+          errorCode = "ERR_PROTOCOL";
         }
         // CORS errors
-        else if (errMsg.includes('cors')) {
+        else if (errMsg.includes("cors")) {
           errorMessage = `CORS error connecting to ${url}. Server may not allow requests from this application.`;
-          errorCode = 'ERR_CORS';
+          errorCode = "ERR_CORS";
         }
         // Generic error with original message
         else {
           errorMessage = `Network error: ${error.message}`;
-          errorCode = 'ERR_NETWORK';
+          errorCode = "ERR_NETWORK";
         }
 
-        console.error('[TauriHttpClient] Network error:', {
+        console.error("[TauriHttpClient] Network error:", {
           url,
           method,
           errorType: errorCode,
@@ -391,16 +405,10 @@ class TauriHttpClient {
           stack: error.stack,
         });
       } else {
-        console.error('[TauriHttpClient] Unknown error type:', error);
+        console.error("[TauriHttpClient] Unknown error type:", error);
       }
 
-      const httpError = this.createError(
-        errorMessage,
-        finalConfig,
-        errorCode,
-        undefined,
-        error
-      );
+      const httpError = this.createError(errorMessage, finalConfig, errorCode, undefined, error);
 
       // Run error interceptors
       let finalError: unknown = httpError;
@@ -422,31 +430,31 @@ class TauriHttpClient {
   }
 
   async get<T = any>(url: string, config?: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
-    return this.executeRequest<T>({ ...config, method: 'GET', url });
+    return this.executeRequest<T>({ ...config, method: "GET", url });
   }
 
   async delete<T = any>(url: string, config?: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
-    return this.executeRequest<T>({ ...config, method: 'DELETE', url });
+    return this.executeRequest<T>({ ...config, method: "DELETE", url });
   }
 
   async head<T = any>(url: string, config?: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
-    return this.executeRequest<T>({ ...config, method: 'HEAD', url });
+    return this.executeRequest<T>({ ...config, method: "HEAD", url });
   }
 
   async options<T = any>(url: string, config?: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
-    return this.executeRequest<T>({ ...config, method: 'OPTIONS', url });
+    return this.executeRequest<T>({ ...config, method: "OPTIONS", url });
   }
 
   async post<T = any>(url: string, data?: any, config?: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
-    return this.executeRequest<T>({ ...config, method: 'POST', url, data });
+    return this.executeRequest<T>({ ...config, method: "POST", url, data });
   }
 
   async put<T = any>(url: string, data?: any, config?: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
-    return this.executeRequest<T>({ ...config, method: 'PUT', url, data });
+    return this.executeRequest<T>({ ...config, method: "PUT", url, data });
   }
 
   async patch<T = any>(url: string, data?: any, config?: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
-    return this.executeRequest<T>({ ...config, method: 'PATCH', url, data });
+    return this.executeRequest<T>({ ...config, method: "PATCH", url, data });
   }
 
   // Axios compatibility methods
@@ -460,7 +468,7 @@ class TauriHttpClient {
 
   async postForm<T = any>(url: string, data?: any, config?: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
     const formData = data instanceof FormData ? data : new FormData();
-    if (!(data instanceof FormData) && data && typeof data === 'object') {
+    if (!(data instanceof FormData) && data && typeof data === "object") {
       Object.entries(data).forEach(([key, value]) => {
         formData.append(key, String(value));
       });
@@ -470,7 +478,7 @@ class TauriHttpClient {
 
   async putForm<T = any>(url: string, data?: any, config?: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
     const formData = data instanceof FormData ? data : new FormData();
-    if (!(data instanceof FormData) && data && typeof data === 'object') {
+    if (!(data instanceof FormData) && data && typeof data === "object") {
       Object.entries(data).forEach(([key, value]) => {
         formData.append(key, String(value));
       });
@@ -480,7 +488,7 @@ class TauriHttpClient {
 
   async patchForm<T = any>(url: string, data?: any, config?: TauriHttpRequestConfig): Promise<TauriHttpResponse<T>> {
     const formData = data instanceof FormData ? data : new FormData();
-    if (!(data instanceof FormData) && data && typeof data === 'object') {
+    if (!(data instanceof FormData) && data && typeof data === "object") {
       Object.entries(data).forEach(([key, value]) => {
         formData.append(key, String(value));
       });

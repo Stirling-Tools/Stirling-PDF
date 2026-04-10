@@ -8,18 +8,10 @@ interface ToolRendererProps extends BaseToolProps {
   selectedToolKey: ToolId;
 }
 
-
-const ToolRenderer = ({
-  selectedToolKey,
-  onPreviewFile,
-  onComplete,
-  onError,
-}: ToolRendererProps) => {
+const ToolRenderer = ({ selectedToolKey, onPreviewFile, onComplete, onError }: ToolRendererProps) => {
   // Get the tool from context (instead of direct hook call)
   const { toolRegistry } = useToolWorkflow();
-  const selectedTool = (selectedToolKey in toolRegistry)
-    ? toolRegistry[selectedToolKey as ToolId]
-    : undefined;
+  const selectedTool = selectedToolKey in toolRegistry ? toolRegistry[selectedToolKey as ToolId] : undefined;
 
   // Handle tools that only work in workbenches (read, multiTool)
   if (selectedTool && !selectedTool.component && selectedTool.workbench) {
@@ -35,11 +27,7 @@ const ToolRenderer = ({
   // Wrap lazy-loaded component with Suspense
   return (
     <Suspense fallback={<ToolLoadingFallback toolName={selectedTool.name} />}>
-      <ToolComponent
-        onPreviewFile={onPreviewFile}
-        onComplete={onComplete}
-        onError={onError}
-      />
+      <ToolComponent onPreviewFile={onPreviewFile} onComplete={onComplete} onError={onError} />
     </Suspense>
   );
 };

@@ -11,12 +11,7 @@ const ExtractPages = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const tooltipContent = useExtractPagesTips();
 
-  const base = useBaseTool(
-    'extract-pages',
-    useExtractPagesParameters,
-    useExtractPagesOperation,
-    props
-  );
+  const base = useBaseTool("extract-pages", useExtractPagesParameters, useExtractPagesOperation, props);
 
   const settingsContent = (
     <ExtractPagesSettings
@@ -59,5 +54,3 @@ const ExtractPages = (props: BaseToolProps) => {
 };
 
 export default ExtractPages as ToolComponent;
-
-

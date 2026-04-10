@@ -1,4 +1,4 @@
-import { NavKey } from '@app/components/shared/config/types';
+import { NavKey } from "@app/components/shared/config/types";
 
 /**
  * Navigate to a specific settings section
@@ -13,12 +13,12 @@ import { NavKey } from '@app/components/shared/config/types';
  * navigateToSettings('adminPremium');
  */
 export function navigateToSettings(section: NavKey) {
-  const basePath = window.location.pathname.split('/settings')[0] || '';
+  const basePath = window.location.pathname.split("/settings")[0] || "";
   const newPath = `${basePath}/settings/${section}`;
-  window.history.pushState({}, '', newPath);
+  window.history.pushState({}, "", newPath);
 
   // Trigger a popstate event to notify components
-  window.dispatchEvent(new PopStateEvent('popstate'));
+  window.dispatchEvent(new PopStateEvent("popstate"));
 }
 
 /**
@@ -46,7 +46,7 @@ export function isInSettings(section?: NavKey): boolean {
   const pathname = window.location.pathname;
 
   if (!section) {
-    return pathname.startsWith('/settings');
+    return pathname.startsWith("/settings");
   }
 
   return pathname === `/settings/${section}`;

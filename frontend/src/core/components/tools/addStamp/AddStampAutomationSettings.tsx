@@ -21,11 +21,7 @@ const AddStampAutomationSettings = ({ parameters, onParameterChange, disabled = 
   return (
     <Stack gap="lg">
       {/* Stamp Setup (Type, Text/Image, Page Selection) */}
-      <StampSetupSettings
-        parameters={parameters}
-        onParameterChange={onParameterChange}
-        disabled={disabled}
-      />
+      <StampSetupSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
 
       {/* Position and Formatting Settings */}
       {parameters.stampType && (

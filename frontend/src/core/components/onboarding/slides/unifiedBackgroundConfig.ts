@@ -1,4 +1,4 @@
-import { AnimatedCircleConfig } from '@app/types/types';
+import { AnimatedCircleConfig } from "@app/types/types";
 
 /**
  * Unified circle background configuration used across all onboarding slides.
@@ -6,9 +6,9 @@ import { AnimatedCircleConfig } from '@app/types/types';
  */
 export const UNIFIED_CIRCLE_CONFIG: AnimatedCircleConfig[] = [
   {
-    position: 'bottom-left',
+    position: "bottom-left",
     size: 270,
-    color: 'rgba(255, 255, 255, 0.25)',
+    color: "rgba(255, 255, 255, 0.25)",
     opacity: 0.9,
     amplitude: 24,
     duration: 4.5,
@@ -16,9 +16,9 @@ export const UNIFIED_CIRCLE_CONFIG: AnimatedCircleConfig[] = [
     offsetY: 14,
   },
   {
-    position: 'top-right',
+    position: "top-right",
     size: 300,
-    color: 'rgba(255, 255, 255, 0.2)',
+    color: "rgba(255, 255, 255, 0.2)",
     opacity: 0.9,
     amplitude: 28,
     duration: 4.5,
@@ -27,4 +27,3 @@ export const UNIFIED_CIRCLE_CONFIG: AnimatedCircleConfig[] = [
     offsetY: 18,
   },
 ];
-

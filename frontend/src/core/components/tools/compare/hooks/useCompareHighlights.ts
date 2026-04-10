@@ -1,11 +1,11 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from "react";
 import type {
   CompareFilteredTokenInfo,
   WordHighlightEntry,
   CompareResultData,
   CompareChangeOption,
   PagePreview,
-} from '@app/types/compare';
+} from "@app/types/compare";
 
 interface MetaGroupMap {
   base: Map<number, string>;
@@ -28,7 +28,7 @@ export interface UseCompareHighlightsResult {
 const buildWordChanges = (
   tokens: CompareFilteredTokenInfo[],
   metaIndexToGroupId: Map<number, string>,
-  groupPrefix: string
+  groupPrefix: string,
 ): CompareChangeOption[] => {
   metaIndexToGroupId.clear();
   if (!tokens.length) return [];
@@ -38,7 +38,10 @@ const buildWordChanges = (
 
   const flushRun = () => {
     if (currentRun.length === 0) return;
-    const label = currentRun.map((token) => token.token).join(' ').trim();
+    const label = currentRun
+      .map((token) => token.token)
+      .join(" ")
+      .trim();
     if (label.length === 0) {
       currentRun = [];
       return;
@@ -66,9 +69,7 @@ const buildWordChanges = (
   return items;
 };
 
-const buildHighlightMap = (
-  tokens: CompareFilteredTokenInfo[]
-): Map<number, WordHighlightEntry[]> => {
+const buildHighlightMap = (tokens: CompareFilteredTokenInfo[]): Map<number, WordHighlightEntry[]> => {
   const map = new Map<number, WordHighlightEntry[]>();
   for (const token of tokens) {
     if (!token.hasHighlight || !token.bbox || token.page == null) continue;
@@ -89,20 +90,12 @@ export const useCompareHighlights = (
 
   const baseWordChanges = useMemo(() => {
     if (!result) return [];
-    return buildWordChanges(
-      result.filteredTokenData.base,
-      baseMetaIndexToGroupId,
-      'base-group'
-    );
+    return buildWordChanges(result.filteredTokenData.base, baseMetaIndexToGroupId, "base-group");
   }, [baseMetaIndexToGroupId, result]);
 
   const comparisonWordChanges = useMemo(() => {
     if (!result) return [];
-    return buildWordChanges(
-      result.filteredTokenData.comparison,
-      comparisonMetaIndexToGroupId,
-      'comparison-group'
-    );
+    return buildWordChanges(result.filteredTokenData.comparison, comparisonMetaIndexToGroupId, "comparison-group");
   }, [comparisonMetaIndexToGroupId, result]);
 
   const wordHighlightMaps = useMemo(() => {
@@ -128,7 +121,7 @@ export const useCompareHighlights = (
       const rowHeight = Math.max(baseHeight, comparisonHeight);
       return Math.round(rowHeight);
     },
-    [basePages, comparisonPages]
+    [basePages, comparisonPages],
   );
 
   return {

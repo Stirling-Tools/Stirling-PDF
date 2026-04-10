@@ -1,16 +1,16 @@
-import type { FileId } from '@app/types/file';
-import type { StirlingFile } from '@app/types/fileContext';
+import type { FileId } from "@app/types/file";
+import type { StirlingFile } from "@app/types/fileContext";
 
-export type CompareDiffTokenType = 'unchanged' | 'removed' | 'added';
+export type CompareDiffTokenType = "unchanged" | "removed" | "added";
 
 export interface CompareDiffToken {
   type: CompareDiffTokenType;
   text: string;
 }
 
-export const REMOVAL_HIGHLIGHT = '#FF3B30';
-export const ADDITION_HIGHLIGHT = '#34C759';
-export const PARAGRAPH_SENTINEL = '\uE000¶';
+export const REMOVAL_HIGHLIGHT = "#FF3B30";
+export const ADDITION_HIGHLIGHT = "#34C759";
+export const PARAGRAPH_SENTINEL = "\uE000¶";
 
 export interface TokenBoundingBox {
   left: number;
@@ -102,7 +102,7 @@ export interface CompareWorkerWarnings {
 }
 
 export interface CompareWorkerRequest {
-  type: 'compare';
+  type: "compare";
   payload: {
     baseTokens: string[];
     comparisonTokens: string[];
@@ -125,11 +125,11 @@ export interface CompareWorkerRequest {
 
 export type CompareWorkerResponse =
   | {
-      type: 'chunk';
+      type: "chunk";
       tokens: CompareDiffToken[];
     }
   | {
-      type: 'success';
+      type: "success";
       stats: {
         baseWordCount: number;
         comparisonWordCount: number;
@@ -137,24 +137,24 @@ export type CompareWorkerResponse =
       };
     }
   | {
-      type: 'warning';
+      type: "warning";
       message: string;
     }
   | {
-      type: 'error';
+      type: "error";
       message: string;
-      code?: 'EMPTY_TEXT' | 'TOO_LARGE' | 'TOO_DISSIMILAR';
+      code?: "EMPTY_TEXT" | "TOO_LARGE" | "TOO_DISSIMILAR";
     };
 
 export interface CompareDocumentPaneProps {
-  pane: 'base' | 'comparison';
-  layout: 'side-by-side' | 'stacked';
+  pane: "base" | "comparison";
+  layout: "side-by-side" | "stacked";
   scrollRef: React.RefObject<HTMLDivElement | null>;
   peerScrollRef: React.RefObject<HTMLDivElement | null>;
   handleScrollSync: (source: HTMLDivElement | null, target: HTMLDivElement | null) => void;
-  handleWheelZoom: (pane: 'base' | 'comparison', event: React.WheelEvent<HTMLDivElement>) => void;
-  handleWheelOverscroll: (pane: 'base' | 'comparison', event: React.WheelEvent<HTMLDivElement>) => void;
-  onTouchStart: (pane: 'base' | 'comparison', event: React.TouchEvent<HTMLDivElement>) => void;
+  handleWheelZoom: (pane: "base" | "comparison", event: React.WheelEvent<HTMLDivElement>) => void;
+  handleWheelOverscroll: (pane: "base" | "comparison", event: React.WheelEvent<HTMLDivElement>) => void;
+  onTouchStart: (pane: "base" | "comparison", event: React.TouchEvent<HTMLDivElement>) => void;
   onTouchMove: (event: React.TouchEvent<HTMLDivElement>) => void;
   onTouchEnd: (event: React.TouchEvent<HTMLDivElement>) => void;
   isPanMode: boolean;
@@ -178,7 +178,7 @@ export interface CompareDocumentPaneProps {
   onPageInputChange?: (next: string) => void;
   maxSharedPages?: number; // min(baseTotal, compTotal)
   renderedPageNumbers?: Set<number>;
-  onVisiblePageChange?: (pane: 'base' | 'comparison', pageNumber: number) => void;
+  onVisiblePageChange?: (pane: "base" | "comparison", pageNumber: number) => void;
 }
 
 // Import types that are referenced in CompareDocumentPaneProps
@@ -205,9 +205,9 @@ export interface NavigationDropdownProps {
 }
 
 // Pan/Zoom and Compare Workbench shared types (moved out of hooks for reuse)
-import type React from 'react';
+import type React from "react";
 
-export type ComparePane = 'base' | 'comparison';
+export type ComparePane = "base" | "comparison";
 
 export interface PanState {
   x: number;
@@ -249,8 +249,8 @@ export interface UseComparePanZoomOptions {
 }
 
 export interface UseComparePanZoomReturn {
-  layout: 'side-by-side' | 'stacked';
-  setLayout: (layout: 'side-by-side' | 'stacked') => void;
+  layout: "side-by-side" | "stacked";
+  setLayout: (layout: "side-by-side" | "stacked") => void;
   toggleLayout: () => void;
   baseScrollRef: React.RefObject<HTMLDivElement | null>;
   comparisonScrollRef: React.RefObject<HTMLDivElement | null>;
@@ -283,7 +283,7 @@ export interface UseComparePanZoomReturn {
 
 export interface PagePreview {
   pageNumber: number;
-  width: number;  
+  width: number;
   height: number;
   rotation: number;
   url: string | null;

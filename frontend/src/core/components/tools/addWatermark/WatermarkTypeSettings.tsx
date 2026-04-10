@@ -2,8 +2,8 @@ import { useTranslation } from "react-i18next";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
 
 interface WatermarkTypeSettingsProps {
-  watermarkType?: 'text' | 'image';
-  onWatermarkTypeChange: (type: 'text' | 'image') => void;
+  watermarkType?: "text" | "image";
+  onWatermarkTypeChange: (type: "text" | "image") => void;
   disabled?: boolean;
 }
 
@@ -16,12 +16,12 @@ const WatermarkTypeSettings = ({ watermarkType, onWatermarkTypeChange, disabled 
       onChange={onWatermarkTypeChange}
       options={[
         {
-          value: 'text',
-          label: t('watermark.watermarkType.text', 'Text'),
+          value: "text",
+          label: t("watermark.watermarkType.text", "Text"),
         },
         {
-          value: 'image',
-          label: t('watermark.watermarkType.image', 'Image'),
+          value: "image",
+          label: t("watermark.watermarkType.image", "Image"),
         },
       ]}
       disabled={disabled}

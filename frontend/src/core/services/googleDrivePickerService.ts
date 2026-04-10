@@ -3,10 +3,10 @@
  * Handles Google Drive file picker integration
  */
 
-import { loadScript } from '@app/utils/scriptLoader';
+import { loadScript } from "@app/utils/scriptLoader";
 
-const SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
-const SESSION_STORAGE_ID = 'googleDrivePickerAccessToken';
+const SCOPES = "https://www.googleapis.com/auth/drive.readonly";
+const SESSION_STORAGE_ID = "googleDrivePickerAccessToken";
 
 interface GoogleDriveConfig {
   clientId: string;
@@ -28,20 +28,20 @@ interface PickerOptions {
 
 // Expandable mime types for Google Picker
 const expandableMimeTypes: Record<string, string[]> = {
-  'image/*': ['image/jpeg', 'image/png', 'image/svg+xml'],
+  "image/*": ["image/jpeg", "image/png", "image/svg+xml"],
 };
 
 /**
  * Convert file input accept attribute to Google Picker mime types
  */
 function fileInputToGooglePickerMimeTypes(accept?: string): string | null {
-  if (!accept || accept === '' || accept.includes('*/*')) {
+  if (!accept || accept === "" || accept.includes("*/*")) {
     // Setting null will accept all supported mimetypes
     return null;
   }
 
   const mimeTypes: string[] = [];
-  accept.split(',').forEach((part) => {
+  accept.split(",").forEach((part) => {
     const trimmedPart = part.trim();
     if (!(trimmedPart in expandableMimeTypes)) {
       mimeTypes.push(trimmedPart);
@@ -53,7 +53,7 @@ function fileInputToGooglePickerMimeTypes(accept?: string): string | null {
     });
   });
 
-  return mimeTypes.join(',').replace(/\s+/g, '');
+  return mimeTypes.join(",").replace(/\s+/g, "");
 }
 
 class GoogleDrivePickerService {
@@ -74,10 +74,7 @@ class GoogleDrivePickerService {
     this.config = config;
 
     // Load Google APIs
-    await Promise.all([
-      this.loadGapi(),
-      this.loadGis(),
-    ]);
+    await Promise.all([this.loadGapi(), this.loadGis()]);
   }
 
   /**
@@ -87,13 +84,13 @@ class GoogleDrivePickerService {
     if (this.gapiLoaded) return;
 
     await loadScript({
-      src: 'https://apis.google.com/js/api.js',
-      id: 'gapi-script',
+      src: "https://apis.google.com/js/api.js",
+      id: "gapi-script",
     });
 
     return new Promise((resolve) => {
-      window.gapi.load('client:picker', async () => {
-        await window.gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest');
+      window.gapi.load("client:picker", async () => {
+        await window.gapi.client.load("https://www.googleapis.com/discovery/v1/apis/drive/v3/rest");
         this.gapiLoaded = true;
         resolve();
       });
@@ -107,12 +104,12 @@ class GoogleDrivePickerService {
     if (this.gisLoaded) return;
 
     await loadScript({
-      src: 'https://accounts.google.com/gsi/client',
-      id: 'gis-script',
+      src: "https://accounts.google.com/gsi/client",
+      id: "gis-script",
     });
 
     if (!this.config) {
-      throw new Error('Google Drive config not initialized');
+      throw new Error("Google Drive config not initialized");
     }
 
     this.tokenClient = window.google.accounts.oauth2.initTokenClient({
@@ -129,7 +126,7 @@ class GoogleDrivePickerService {
    */
   async openPicker(options: PickerOptions = {}): Promise<File[]> {
     if (!this.config) {
-      throw new Error('Google Drive service not initialized');
+      throw new Error("Google Drive service not initialized");
     }
 
     // Request access token
@@ -145,7 +142,7 @@ class GoogleDrivePickerService {
   private requestAccessToken(): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.tokenClient) {
-        reject(new Error('Token client not initialized'));
+        reject(new Error("Token client not initialized"));
         return;
       }
 
@@ -154,7 +151,7 @@ class GoogleDrivePickerService {
           reject(new Error(response.error));
           return;
         }
-        if(response.access_token == null){
+        if (response.access_token == null) {
           reject(new Error("No acces token in response"));
         }
 
@@ -164,7 +161,7 @@ class GoogleDrivePickerService {
       };
 
       this.tokenClient.requestAccessToken({
-        prompt: this.accessToken === null ? 'consent' : '',
+        prompt: this.accessToken === null ? "consent" : "",
       });
     });
   }
@@ -175,7 +172,7 @@ class GoogleDrivePickerService {
   private createPicker(options: PickerOptions): Promise<File[]> {
     return new Promise((resolve, reject) => {
       if (!this.config || !this.accessToken) {
-        reject(new Error('Not initialized or no access token'));
+        reject(new Error("Not initialized or no access token"));
         return;
       }
 
@@ -186,9 +183,7 @@ class GoogleDrivePickerService {
         view1.setMimeTypes(mimeTypes);
       }
 
-      const view2 = new window.google.picker.DocsView()
-        .setIncludeFolders(true)
-        .setEnableDrives(true);
+      const view2 = new window.google.picker.DocsView().setIncludeFolders(true).setEnableDrives(true);
       if (mimeTypes !== null) {
         view2.setMimeTypes(mimeTypes);
       }
@@ -213,11 +208,7 @@ class GoogleDrivePickerService {
   /**
    * Handle picker selection callback
    */
-  private async pickerCallback(
-    data: any,
-    resolve: (files: File[]) => void,
-    reject: (error: Error) => void
-  ): Promise<void> {
+  private async pickerCallback(data: any, resolve: (files: File[]) => void, reject: (error: Error) => void): Promise<void> {
     if (data.action === window.google.picker.Action.PICKED) {
       try {
         const files = await Promise.all(
@@ -225,7 +216,7 @@ class GoogleDrivePickerService {
             const fileId = pickedFile[window.google.picker.Document.ID];
             const res = await window.gapi.client.drive.files.get({
               fileId: fileId,
-              alt: 'media',
+              alt: "media",
             });
 
             // Convert response body to File object
@@ -235,15 +226,15 @@ class GoogleDrivePickerService {
               {
                 type: pickedFile.mimeType,
                 lastModified: pickedFile.lastModified,
-              }
+              },
             );
             return file;
-          })
+          }),
         );
 
         resolve(files);
       } catch (error) {
-        reject(error instanceof Error ? error : new Error('Failed to download files'));
+        reject(error instanceof Error ? error : new Error("Failed to download files"));
       }
     } else if (data.action === window.google.picker.Action.CANCEL) {
       resolve([]); // User cancelled, return empty array

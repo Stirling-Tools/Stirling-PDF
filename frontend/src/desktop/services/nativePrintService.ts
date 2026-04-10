@@ -34,10 +34,7 @@ export async function printPdfNatively(file?: File | Blob, url?: string | null, 
   const { tempDir, join } = await import("@tauri-apps/api/path");
   const { remove, writeFile } = await import("@tauri-apps/plugin-fs");
 
-  const tempPath = await join(
-    await tempDir(),
-    `stirling-print-${crypto.randomUUID()}-${sanitizeFileName(fileName)}`,
-  );
+  const tempPath = await join(await tempDir(), `stirling-print-${crypto.randomUUID()}-${sanitizeFileName(fileName)}`);
 
   await writeFile(tempPath, new Uint8Array(await source.arrayBuffer()));
 

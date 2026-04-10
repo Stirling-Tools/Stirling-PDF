@@ -1,7 +1,7 @@
-import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
-import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
-import { UnlockPdfFormsParameters, defaultParameters } from '@app/hooks/tools/unlockPdfForms/useUnlockPdfFormsParameters';
+import { useTranslation } from "react-i18next";
+import { ToolType, useToolOperation } from "@app/hooks/tools/shared/useToolOperation";
+import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+import { UnlockPdfFormsParameters, defaultParameters } from "@app/hooks/tools/unlockPdfForms/useUnlockPdfFormsParameters";
 
 // Static function that can be used by both the hook and automation executor
 export const buildUnlockPdfFormsFormData = (_parameters: UnlockPdfFormsParameters, file: File): FormData => {
@@ -14,8 +14,8 @@ export const buildUnlockPdfFormsFormData = (_parameters: UnlockPdfFormsParameter
 export const unlockPdfFormsOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildUnlockPdfFormsFormData,
-  operationType: 'unlockPDFForms',
-  endpoint: '/api/v1/misc/unlock-pdf-forms',
+  operationType: "unlockPDFForms",
+  endpoint: "/api/v1/misc/unlock-pdf-forms",
   defaultParameters,
 } as const;
 
@@ -24,6 +24,8 @@ export const useUnlockPdfFormsOperation = () => {
 
   return useToolOperation<UnlockPdfFormsParameters>({
     ...unlockPdfFormsOperationConfig,
-    getErrorMessage: createStandardErrorHandler(t('unlockPDFForms.error.failed', 'An error occurred while unlocking PDF forms.'))
+    getErrorMessage: createStandardErrorHandler(
+      t("unlockPDFForms.error.failed", "An error occurred while unlocking PDF forms."),
+    ),
   });
 };

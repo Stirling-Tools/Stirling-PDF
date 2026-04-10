@@ -1,18 +1,18 @@
-import { useState, useEffect } from 'react';
-import { connectionModeService } from '@app/services/connectionModeService';
-import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
-import { tauriBackendService } from '@app/services/tauriBackendService';
-import { selfHostedServerMonitor } from '@app/services/selfHostedServerMonitor';
-import { EXTENSION_TO_ENDPOINT } from '@app/constants/convertConstants';
-import { getEndpointName } from '@app/utils/convertUtils';
+import { useState, useEffect } from "react";
+import { connectionModeService } from "@app/services/connectionModeService";
+import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
+import { tauriBackendService } from "@app/services/tauriBackendService";
+import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
+import { EXTENSION_TO_ENDPOINT } from "@app/constants/convertConstants";
+import { getEndpointName } from "@app/utils/convertUtils";
 
 /**
  * Comprehensive conversion status data
  */
 export interface ConversionStatus {
-  availability: Record<string, boolean>;   // Available on local OR SaaS?
-  cloudStatus: Record<string, boolean>;    // Will use cloud?
-  localOnly: Record<string, boolean>;      // Available ONLY locally (not on SaaS)?
+  availability: Record<string, boolean>; // Available on local OR SaaS?
+  cloudStatus: Record<string, boolean>; // Will use cloud?
+  localOnly: Record<string, boolean>; // Available ONLY locally (not on SaaS)?
 }
 
 /**
@@ -33,10 +33,10 @@ export function useConversionCloudStatus(): ConversionStatus {
 
       // Self-hosted offline path: server is down but local backend is available.
       // Check each conversion against the local backend only (no cloud routing).
-      if (mode === 'selfhosted') {
+      if (mode === "selfhosted") {
         const { status } = selfHostedServerMonitor.getSnapshot();
         const localUrl = tauriBackendService.getBackendUrl();
-        if (status === 'offline' && localUrl) {
+        if (status === "offline" && localUrl) {
           const pairs: [string, string, string][] = [];
           for (const fromExt of Object.keys(EXTENSION_TO_ENDPOINT)) {
             for (const toExt of Object.keys(EXTENSION_TO_ENDPOINT[fromExt] || {})) {
@@ -56,7 +56,7 @@ export function useConversionCloudStatus(): ConversionStatus {
               } catch {
                 return { key, supported: false };
               }
-            })
+            }),
           );
           for (const { key, supported } of results) {
             availability[key] = supported;
@@ -77,7 +77,7 @@ export function useConversionCloudStatus(): ConversionStatus {
         return;
       }
 
-      if (mode !== 'saas') {
+      if (mode !== "saas") {
         // Non-SaaS, non-self-hosted: local endpoint checking handles everything
         setStatus({ availability: {}, cloudStatus: {}, localOnly: {} });
         return;
@@ -105,7 +105,7 @@ export function useConversionCloudStatus(): ConversionStatus {
             // used by useMultipleEndpointsEnabled's SaaS enhancement.
             const availableLocally = await endpointAvailabilityService.isEndpointSupportedLocally(
               endpointName,
-              tauriBackendService.getBackendUrl()
+              tauriBackendService.getBackendUrl(),
             );
             return { key, isAvailable: true, willUseCloud: !availableLocally, localOnly: false };
           } catch (error) {
@@ -113,7 +113,7 @@ export function useConversionCloudStatus(): ConversionStatus {
             // On error, assume available via cloud (safe default in SaaS mode)
             return { key, isAvailable: true, willUseCloud: true, localOnly: false };
           }
-        })
+        }),
       );
 
       for (const { key, isAvailable, willUseCloud: wuc, localOnly: lo } of results) {
@@ -130,7 +130,7 @@ export function useConversionCloudStatus(): ConversionStatus {
 
     // Re-check when SaaS local backend becomes healthy
     const unsubLocal = tauriBackendService.subscribeToStatus((status) => {
-      if (status === 'healthy') {
+      if (status === "healthy") {
         checkConversions();
       }
     });
@@ -143,7 +143,10 @@ export function useConversionCloudStatus(): ConversionStatus {
     // Skip the first invocation since checkConversions() was already called above.
     let skipFirst = true;
     const unsubServer = selfHostedServerMonitor.subscribe(() => {
-      if (skipFirst) { skipFirst = false; return; }
+      if (skipFirst) {
+        skipFirst = false;
+        return;
+      }
       void checkConversions();
     });
 

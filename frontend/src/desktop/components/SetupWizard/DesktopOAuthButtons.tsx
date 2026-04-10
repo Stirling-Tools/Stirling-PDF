@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { authService, UserInfo } from '@app/services/authService';
-import { buildOAuthCallbackHtml } from '@app/utils/oauthCallbackHtml';
-import { BASE_PATH } from '@app/constants/app';
-import { STIRLING_SAAS_URL } from '@app/constants/connection';
-import '@app/components/SetupWizard/desktopOAuth.css';
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { authService, UserInfo } from "@app/services/authService";
+import { buildOAuthCallbackHtml } from "@app/utils/oauthCallbackHtml";
+import { BASE_PATH } from "@app/constants/app";
+import { STIRLING_SAAS_URL } from "@app/constants/connection";
+import "@app/components/SetupWizard/desktopOAuth.css";
 
-type KnownProviderId = 'google' | 'github' | 'keycloak' | 'azure' | 'apple' | 'oidc';
+type KnownProviderId = "google" | "github" | "keycloak" | "azure" | "apple" | "oidc";
 export type OAuthProviderId = KnownProviderId | string;
 
 export interface DesktopSSOProvider {
@@ -21,7 +21,7 @@ interface DesktopOAuthButtonsProps {
   isDisabled: boolean;
   serverUrl: string;
   providers: DesktopSSOProvider[];
-  mode?: 'saas' | 'selfHosted';
+  mode?: "saas" | "selfHosted";
 }
 
 export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
@@ -30,7 +30,7 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
   isDisabled,
   serverUrl,
   providers,
-  mode = 'saas',
+  mode = "saas",
 }) => {
   const { t } = useTranslation();
   const [oauthLoading, setOauthLoading] = useState(false);
@@ -46,21 +46,20 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
 
       // Build callback page HTML with translations and dark mode support
       const successHtml = buildOAuthCallbackHtml({
-        title: t('oauth.success.title', 'Authentication Successful'),
-        message: t('oauth.success.message', 'You can close this window and return to Stirling PDF.'),
+        title: t("oauth.success.title", "Authentication Successful"),
+        message: t("oauth.success.message", "You can close this window and return to Stirling PDF."),
         isError: false,
       });
 
       const errorHtml = buildOAuthCallbackHtml({
-        title: t('oauth.error.title', 'Authentication Failed'),
-        message: t('oauth.error.message', 'Authentication was not successful. You can close this window and try again.'),
+        title: t("oauth.error.title", "Authentication Failed"),
+        message: t("oauth.error.message", "Authentication was not successful. You can close this window and try again."),
         isError: true,
         errorPlaceholder: true, // {error} will be replaced by Rust
       });
 
-      const normalizedServer = serverUrl.replace(/\/+$/, '');
-      const usingSupabaseFlow =
-        mode === 'saas' || normalizedServer === STIRLING_SAAS_URL.replace(/\/+$/, '');
+      const normalizedServer = serverUrl.replace(/\/+$/, "");
+      const usingSupabaseFlow = mode === "saas" || normalizedServer === STIRLING_SAAS_URL.replace(/\/+$/, "");
       const userInfo = usingSupabaseFlow
         ? await authService.loginWithOAuth(provider.id, serverUrl, successHtml, errorHtml)
         : await authService.loginWithSelfHostedOAuth(provider.path || provider.id, serverUrl);
@@ -68,11 +67,10 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
       // Call the onOAuthSuccess callback to complete setup
       await onOAuthSuccess(userInfo);
     } catch (error) {
-      console.error('OAuth login failed:', error);
+      console.error("OAuth login failed:", error);
 
-      const errorMessage = error instanceof Error
-        ? error.message
-        : t('setup.login.error.oauthFailed', 'OAuth login failed. Please try again.');
+      const errorMessage =
+        error instanceof Error ? error.message : t("setup.login.error.oauthFailed", "OAuth login failed. Please try again.");
 
       onError(errorMessage);
       setOauthLoading(false);
@@ -80,22 +78,21 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
   };
 
   const providerConfig: Record<KnownProviderId, { label: string; file: string }> = {
-    google: { label: 'Google', file: 'google.svg' },
-    github: { label: 'GitHub', file: 'github.svg' },
-    keycloak: { label: 'Keycloak', file: 'keycloak.svg' },
-    azure: { label: 'Microsoft', file: 'microsoft.svg' },
-    apple: { label: 'Apple', file: 'apple.svg' },
-    oidc: { label: 'OpenID', file: 'oidc.svg' },
+    google: { label: "Google", file: "google.svg" },
+    github: { label: "GitHub", file: "github.svg" },
+    keycloak: { label: "Keycloak", file: "keycloak.svg" },
+    azure: { label: "Microsoft", file: "microsoft.svg" },
+    apple: { label: "Apple", file: "apple.svg" },
+    oidc: { label: "OpenID", file: "oidc.svg" },
   };
-  const isKnownProvider = (id: OAuthProviderId): id is KnownProviderId =>
-    (id as KnownProviderId) in providerConfig;
-  const GENERIC_PROVIDER_ICON = 'oidc.svg';
+  const isKnownProvider = (id: OAuthProviderId): id is KnownProviderId => (id as KnownProviderId) in providerConfig;
+  const GENERIC_PROVIDER_ICON = "oidc.svg";
 
-  console.log('[DesktopOAuthButtons] Received providers:', providers);
-  console.log('[DesktopOAuthButtons] Mode:', mode, 'Server URL:', serverUrl);
+  console.log("[DesktopOAuthButtons] Received providers:", providers);
+  console.log("[DesktopOAuthButtons] Mode:", mode, "Server URL:", serverUrl);
 
   if (providers.length === 0) {
-    console.warn('[DesktopOAuthButtons] No providers to display, returning null');
+    console.warn("[DesktopOAuthButtons] No providers to display, returning null");
     return null;
   }
 
@@ -105,15 +102,13 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
       {providers
         .filter((providerConfigEntry) => providerConfigEntry && providerConfigEntry.id)
         .map((providerEntry) => {
-          const iconConfig = isKnownProvider(providerEntry.id)
-            ? providerConfig[providerEntry.id]
-            : undefined;
+          const iconConfig = isKnownProvider(providerEntry.id) ? providerConfig[providerEntry.id] : undefined;
           const label =
             providerEntry.label ||
             iconConfig?.label ||
             (providerEntry.id
               ? providerEntry.id.charAt(0).toUpperCase() + providerEntry.id.slice(1)
-              : t('setup.login.sso', 'Single Sign-On'));
+              : t("setup.login.sso", "Single Sign-On"));
           return (
             <button
               key={providerEntry.id}
@@ -136,8 +131,8 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
           );
         })}
       {oauthLoading && (
-        <p style={{ margin: '0.5rem 0', fontSize: '0.875rem', color: '#6b7280', textAlign: 'center' }}>
-          {t('setup.login.oauthPending', 'Opening browser for authentication...')}
+        <p style={{ margin: "0.5rem 0", fontSize: "0.875rem", color: "#6b7280", textAlign: "center" }}>
+          {t("setup.login.oauthPending", "Opening browser for authentication...")}
         </p>
       )}
     </div>

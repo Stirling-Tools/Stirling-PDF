@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
-import EmbedPdfViewer from '@app/components/viewer/EmbedPdfViewer';
-import { NonPdfViewerWrapper, type ViewerProps } from '@app/components/viewer/NonPdfViewer';
-import { useFileState } from '@app/contexts/FileContext';
-import { isPdfFile } from '@app/utils/fileUtils';
+import { useMemo } from "react";
+import EmbedPdfViewer from "@app/components/viewer/EmbedPdfViewer";
+import { NonPdfViewerWrapper, type ViewerProps } from "@app/components/viewer/NonPdfViewer";
+import { useFileState } from "@app/contexts/FileContext";
+import { isPdfFile } from "@app/utils/fileUtils";
 
 export type { ViewerProps };
 

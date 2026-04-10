@@ -9,36 +9,32 @@ interface ConvertToEpubSettingsProps {
   disabled?: boolean;
 }
 
-const ConvertToEpubSettings = ({
-  parameters,
-  onParameterChange,
-  disabled = false
-}: ConvertToEpubSettingsProps) => {
+const ConvertToEpubSettings = ({ parameters, onParameterChange, disabled = false }: ConvertToEpubSettingsProps) => {
   const { t } = useTranslation();
 
   const handleDetectChaptersChange = (value: boolean) => {
-    onParameterChange('epubOptions', {
+    onParameterChange("epubOptions", {
       detectChapters: value,
-      targetDevice: parameters.epubOptions?.targetDevice ?? 'TABLET_PHONE_IMAGES',
-      outputFormat: parameters.epubOptions?.outputFormat ?? parameters.toExtension === 'azw3' ? 'AZW3' : 'EPUB',
+      targetDevice: parameters.epubOptions?.targetDevice ?? "TABLET_PHONE_IMAGES",
+      outputFormat: (parameters.epubOptions?.outputFormat ?? parameters.toExtension === "azw3") ? "AZW3" : "EPUB",
     });
   };
 
   const handleTargetDeviceChange = (value: string | null) => {
     if (value) {
-      onParameterChange('epubOptions', {
+      onParameterChange("epubOptions", {
         detectChapters: parameters.epubOptions?.detectChapters ?? true,
         targetDevice: value,
-        outputFormat: parameters.epubOptions?.outputFormat ?? parameters.toExtension === 'azw3' ? 'AZW3' : 'EPUB',
+        outputFormat: (parameters.epubOptions?.outputFormat ?? parameters.toExtension === "azw3") ? "AZW3" : "EPUB",
       });
     }
   };
 
   const handleOutputFormatChange = (value: string | null) => {
     if (value) {
-      onParameterChange('epubOptions', {
+      onParameterChange("epubOptions", {
         detectChapters: parameters.epubOptions?.detectChapters ?? true,
-        targetDevice: parameters.epubOptions?.targetDevice ?? 'TABLET_PHONE_IMAGES',
+        targetDevice: parameters.epubOptions?.targetDevice ?? "TABLET_PHONE_IMAGES",
         outputFormat: value,
       });
     }
@@ -47,27 +43,30 @@ const ConvertToEpubSettings = ({
   // Initialize epubOptions if not present, set output format based on toExtension
   const epubOptions = parameters.epubOptions || {
     detectChapters: true,
-    targetDevice: 'TABLET_PHONE_IMAGES',
-    outputFormat: parameters.toExtension === 'azw3' ? 'AZW3' : 'EPUB',
+    targetDevice: "TABLET_PHONE_IMAGES",
+    outputFormat: parameters.toExtension === "azw3" ? "AZW3" : "EPUB",
   };
 
   // Sync output format with selected target extension if not manually set
-  if (parameters.toExtension === 'azw3' && epubOptions.outputFormat !== 'AZW3') {
-    handleOutputFormatChange('AZW3');
-  } else if (parameters.toExtension === 'epub' && epubOptions.outputFormat !== 'EPUB') {
-    handleOutputFormatChange('EPUB');
+  if (parameters.toExtension === "azw3" && epubOptions.outputFormat !== "AZW3") {
+    handleOutputFormatChange("AZW3");
+  } else if (parameters.toExtension === "epub" && epubOptions.outputFormat !== "EPUB") {
+    handleOutputFormatChange("EPUB");
   }
 
   return (
     <Stack gap="sm" data-testid="epub-settings">
       <Checkbox
         label={t("convert.epubOptions.detectChapters", "Detect chapters")}
-        description={t("convert.epubOptions.detectChaptersDesc", "Detect headings that look like chapters and insert EPUB page breaks")}
+        description={t(
+          "convert.epubOptions.detectChaptersDesc",
+          "Detect headings that look like chapters and insert EPUB page breaks",
+        )}
         checked={epubOptions.detectChapters}
         onChange={(event) => handleDetectChaptersChange(event.currentTarget.checked)}
         disabled={disabled}
       />
-      
+
       <Select
         label={t("convert.epubOptions.targetDevice", "Target device")}
         description={t("convert.epubOptions.targetDeviceDesc", "Choose an output profile optimized for the reader device")}
@@ -75,14 +74,14 @@ const ConvertToEpubSettings = ({
         onChange={handleTargetDeviceChange}
         disabled={disabled}
         data={[
-          { 
-            value: 'TABLET_PHONE_IMAGES', 
-            label: t("convert.epubOptions.tabletPhone", "Tablet/Phone (with images)") 
+          {
+            value: "TABLET_PHONE_IMAGES",
+            label: t("convert.epubOptions.tabletPhone", "Tablet/Phone (with images)"),
           },
-          { 
-            value: 'KINDLE_EINK_TEXT', 
-            label: t("convert.epubOptions.kindleEink", "Kindle e-Ink (text optimized)") 
-          }
+          {
+            value: "KINDLE_EINK_TEXT",
+            label: t("convert.epubOptions.kindleEink", "Kindle e-Ink (text optimized)"),
+          },
         ]}
         comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
       />
@@ -94,8 +93,8 @@ const ConvertToEpubSettings = ({
         onChange={handleOutputFormatChange}
         disabled={disabled}
         data={[
-          { value: 'EPUB', label: 'EPUB' },
-          { value: 'AZW3', label: 'AZW3' }
+          { value: "EPUB", label: "EPUB" },
+          { value: "AZW3", label: "AZW3" },
         ]}
         comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
       />

@@ -1,7 +1,7 @@
-import { Button, Stack, Group } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { CertificateSelector, CertificateType, UploadFormat } from '@app/components/tools/certSign/CertificateSelector';
+import { Button, Stack, Group } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { CertificateSelector, CertificateType, UploadFormat } from "@app/components/tools/certSign/CertificateSelector";
 
 interface CertificateSelectionStepProps {
   certType: CertificateType;
@@ -45,10 +45,7 @@ export const CertificateSelectionStep: React.FC<CertificateSelectionStepProps> =
   const { t } = useTranslation();
 
   // Validation: if UPLOAD type, need file and password
-  const isValid =
-    certType === 'USER_CERT' ||
-    certType === 'SERVER' ||
-    (certType === 'UPLOAD' && p12File && password);
+  const isValid = certType === "USER_CERT" || certType === "SERVER" || (certType === "UPLOAD" && p12File && password);
 
   return (
     <Stack gap="md">
@@ -72,10 +69,10 @@ export const CertificateSelectionStep: React.FC<CertificateSelectionStepProps> =
 
       <Group gap="sm">
         <Button variant="default" onClick={onBack} leftSection={<ArrowBackIcon sx={{ fontSize: 16 }} />}>
-          {t('certSign.collab.signRequest.steps.back', 'Back')}
+          {t("certSign.collab.signRequest.steps.back", "Back")}
         </Button>
         <Button onClick={onNext} disabled={!isValid || disabled} style={{ flex: 1 }}>
-          {t('certSign.collab.signRequest.steps.continueToPlacement', 'Continue to Placement')}
+          {t("certSign.collab.signRequest.steps.continueToPlacement", "Continue to Placement")}
         </Button>
       </Group>
     </Stack>

@@ -1,5 +1,5 @@
-import { Notification } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
+import { Notification } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 export interface ErrorNotificationProps {
   error: string | null;
@@ -9,24 +9,13 @@ export interface ErrorNotificationProps {
   mb?: string;
 }
 
-const ErrorNotification = ({
-  error,
-  onClose,
-  title,
-  color = 'red',
-  mb = 'md'
-}: ErrorNotificationProps) => {
+const ErrorNotification = ({ error, onClose, title, color = "red", mb = "md" }: ErrorNotificationProps) => {
   const { t } = useTranslation();
 
   if (!error) return null;
 
   return (
-    <Notification
-      color={color}
-      title={title || t("error._value", "Error")}
-      onClose={onClose}
-      mb={mb}
-    >
+    <Notification color={color} title={title || t("error._value", "Error")} onClose={onClose} mb={mb}>
       {error}
     </Notification>
   );

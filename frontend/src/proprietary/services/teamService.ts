@@ -1,5 +1,5 @@
-import apiClient from '@app/services/apiClient';
-import type { User } from '@app/services/userManagementService';
+import apiClient from "@app/services/apiClient";
+import type { User } from "@app/services/userManagementService";
 
 export interface Team {
   id: number;
@@ -42,7 +42,7 @@ export const teamService = {
    * Get all teams with user counts
    */
   async getTeams(): Promise<Team[]> {
-    const response = await apiClient.get<{ teamsWithCounts: Team[] }>('/api/v1/proprietary/ui-data/teams');
+    const response = await apiClient.get<{ teamsWithCounts: Team[] }>("/api/v1/proprietary/ui-data/teams");
     return response.data.teamsWithCounts;
   },
 
@@ -59,8 +59,8 @@ export const teamService = {
    */
   async createTeam(name: string): Promise<void> {
     const formData = new FormData();
-    formData.append('name', name);
-    await apiClient.post('/api/v1/team/create', formData, {
+    formData.append("name", name);
+    await apiClient.post("/api/v1/team/create", formData, {
       suppressErrorToast: true,
     });
   },
@@ -70,9 +70,9 @@ export const teamService = {
    */
   async renameTeam(teamId: number, newName: string): Promise<void> {
     const formData = new FormData();
-    formData.append('teamId', teamId.toString());
-    formData.append('newName', newName);
-    await apiClient.post('/api/v1/team/rename', formData, {
+    formData.append("teamId", teamId.toString());
+    formData.append("newName", newName);
+    await apiClient.post("/api/v1/team/rename", formData, {
       suppressErrorToast: true,
     });
   },
@@ -82,8 +82,8 @@ export const teamService = {
    */
   async deleteTeam(teamId: number): Promise<void> {
     const formData = new FormData();
-    formData.append('teamId', teamId.toString());
-    await apiClient.post('/api/v1/team/delete', formData, {
+    formData.append("teamId", teamId.toString());
+    await apiClient.post("/api/v1/team/delete", formData, {
       suppressErrorToast: true,
     });
   },
@@ -93,9 +93,9 @@ export const teamService = {
    */
   async addUserToTeam(teamId: number, userId: number): Promise<void> {
     const formData = new FormData();
-    formData.append('teamId', teamId.toString());
-    formData.append('userId', userId.toString());
-    await apiClient.post('/api/v1/team/addUser', formData, {
+    formData.append("teamId", teamId.toString());
+    formData.append("userId", userId.toString());
+    await apiClient.post("/api/v1/team/addUser", formData, {
       suppressErrorToast: true,
     });
   },
@@ -105,10 +105,10 @@ export const teamService = {
    */
   async moveUserToTeam(username: string, currentRole: string, teamId: number): Promise<void> {
     const formData = new FormData();
-    formData.append('username', username);
-    formData.append('role', currentRole);
-    formData.append('teamId', teamId.toString());
-    await apiClient.post('/api/v1/user/admin/changeRole', formData, {
+    formData.append("username", username);
+    formData.append("role", currentRole);
+    formData.append("teamId", teamId.toString());
+    await apiClient.post("/api/v1/user/admin/changeRole", formData, {
       suppressErrorToast: true,
     });
   },

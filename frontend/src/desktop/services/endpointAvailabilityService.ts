@@ -1,5 +1,5 @@
-import { fetch } from '@tauri-apps/plugin-http';
-import { STIRLING_SAAS_BACKEND_API_URL } from '@app/constants/connection';
+import { fetch } from "@tauri-apps/plugin-http";
+import { STIRLING_SAAS_BACKEND_API_URL } from "@app/constants/connection";
 
 /**
  * Service for checking endpoint availability on the local bundled backend.
@@ -41,16 +41,14 @@ export class EndpointAvailabilityService {
       const url = `${backendUrl}/api/v1/config/endpoints-availability?endpoints=${encodeURIComponent(endpoint)}`;
 
       const response = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Cache-Control': 'no-store',
+          "Cache-Control": "no-store",
         },
       });
 
       if (!response.ok) {
-        console.warn(
-          `[endpointAvailabilityService] Failed to check local endpoint availability: ${response.status}`
-        );
+        console.warn(`[endpointAvailabilityService] Failed to check local endpoint availability: ${response.status}`);
         return false;
       }
 
@@ -63,10 +61,7 @@ export class EndpointAvailabilityService {
 
       return available;
     } catch (error) {
-      console.error(
-        `[endpointAvailabilityService] Error checking local endpoint availability:`,
-        error
-      );
+      console.error(`[endpointAvailabilityService] Error checking local endpoint availability:`, error);
       return false; // Assume not supported on error
     }
   }
@@ -93,20 +88,18 @@ export class EndpointAvailabilityService {
         return false;
       }
 
-      const saasUrl = STIRLING_SAAS_BACKEND_API_URL.replace(/\/$/, '');
+      const saasUrl = STIRLING_SAAS_BACKEND_API_URL.replace(/\/$/, "");
       const url = `${saasUrl}/api/v1/config/endpoints-availability?endpoints=${encodeURIComponent(endpoint)}`;
 
       const response = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Cache-Control': 'no-store',
+          "Cache-Control": "no-store",
         },
       });
 
       if (!response.ok) {
-        console.warn(
-          `[endpointAvailabilityService] Failed to check SaaS endpoint availability: ${response.status}`
-        );
+        console.warn(`[endpointAvailabilityService] Failed to check SaaS endpoint availability: ${response.status}`);
         return false;
       }
 
@@ -119,10 +112,7 @@ export class EndpointAvailabilityService {
 
       return available;
     } catch (error) {
-      console.error(
-        `[endpointAvailabilityService] Error checking SaaS endpoint availability:`,
-        error
-      );
+      console.error(`[endpointAvailabilityService] Error checking SaaS endpoint availability:`, error);
       return false; // Assume not supported on error
     }
   }
@@ -142,9 +132,9 @@ export class EndpointAvailabilityService {
    * Call from console: window.endpointAvailabilityService.debugCache()
    */
   debugCache() {
-    console.group('[endpointAvailabilityService] Cache Debug');
+    console.group("[endpointAvailabilityService] Cache Debug");
 
-    console.group('Local Cache');
+    console.group("Local Cache");
     this.localCache.forEach((available, endpoint) => {
       const expiry = this.localCacheExpiry.get(endpoint);
       const expiresIn = expiry ? Math.max(0, expiry - Date.now()) : 0;
@@ -152,7 +142,7 @@ export class EndpointAvailabilityService {
     });
     console.groupEnd();
 
-    console.group('SaaS Cache');
+    console.group("SaaS Cache");
     this.saasCache.forEach((available, endpoint) => {
       const expiry = this.saasCacheExpiry.get(endpoint);
       const expiresIn = expiry ? Math.max(0, expiry - Date.now()) : 0;
@@ -176,13 +166,13 @@ export class EndpointAvailabilityService {
     }
 
     try {
-      const endpointsParam = endpoints.join(',');
+      const endpointsParam = endpoints.join(",");
       const url = `${backendUrl}/api/v1/config/endpoints-availability?endpoints=${encodeURIComponent(endpointsParam)}`;
 
       const response = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Cache-Control': 'no-store',
+          "Cache-Control": "no-store",
         },
       });
 
@@ -196,12 +186,10 @@ export class EndpointAvailabilityService {
           this.localCacheExpiry.set(endpoint, now + this.CACHE_DURATION);
         });
       } else {
-        console.warn(
-          `[endpointAvailabilityService] Failed to preload endpoints: ${response.status}`
-        );
+        console.warn(`[endpointAvailabilityService] Failed to preload endpoints: ${response.status}`);
       }
     } catch (error) {
-      console.error('[endpointAvailabilityService] Error preloading endpoints:', error);
+      console.error("[endpointAvailabilityService] Error preloading endpoints:", error);
     }
   }
 
@@ -212,12 +200,15 @@ export class EndpointAvailabilityService {
    * @param endpoint - The endpoint path to check
    * @returns Promise with availability details
    */
-  async checkEndpointCombined(endpoint: string, backendUrl: string | null): Promise<{
+  async checkEndpointCombined(
+    endpoint: string,
+    backendUrl: string | null,
+  ): Promise<{
     availableLocally: boolean;
     availableOnSaaS: boolean;
-    isAvailable: boolean;      // local || saas
-    willUseCloud: boolean;      // saas && !local
-    localOnly: boolean;         // local && !saas
+    isAvailable: boolean; // local || saas
+    willUseCloud: boolean; // saas && !local
+    localOnly: boolean; // local && !saas
   }> {
     // Check both backends in parallel for efficiency
     const [availableLocally, availableOnSaaS] = await Promise.all([
@@ -278,6 +269,6 @@ export class EndpointAvailabilityService {
 export const endpointAvailabilityService = new EndpointAvailabilityService();
 
 // Expose to window for debugging
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   (window as any).endpointAvailabilityService = endpointAvailabilityService;
 }

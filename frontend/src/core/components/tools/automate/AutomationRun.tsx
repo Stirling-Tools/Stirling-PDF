@@ -39,7 +39,7 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
           id: `${op.operation}-${index}`,
           operation: op.operation,
           name: tool?.name || op.operation,
-          status: EXECUTION_STATUS.PENDING
+          status: EXECUTION_STATUS.PENDING,
         };
       });
       setExecutionSteps(steps);
@@ -64,13 +64,13 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
     }
 
     if (!automateOperation) {
-      console.error('No automateOperation provided');
+      console.error("No automateOperation provided");
       return;
     }
 
     // Reset progress tracking
     setCurrentStepIndex(0);
-    setExecutionSteps(prev => prev.map(step => ({ ...step, status: EXECUTION_STATUS.PENDING, error: undefined })));
+    setExecutionSteps((prev) => prev.map((step) => ({ ...step, status: EXECUTION_STATUS.PENDING, error: undefined })));
 
     try {
       // Use the automateOperation.executeOperation to handle file consumption properly
@@ -79,22 +79,22 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
           automationConfig: automation,
           onStepStart: (stepIndex: number, _operationName: string) => {
             setCurrentStepIndex(stepIndex);
-            setExecutionSteps(prev => prev.map((step, idx) =>
-              idx === stepIndex ? { ...step, status: EXECUTION_STATUS.RUNNING } : step
-            ));
+            setExecutionSteps((prev) =>
+              prev.map((step, idx) => (idx === stepIndex ? { ...step, status: EXECUTION_STATUS.RUNNING } : step)),
+            );
           },
           onStepComplete: (stepIndex: number, _resultFiles: File[]) => {
-            setExecutionSteps(prev => prev.map((step, idx) =>
-              idx === stepIndex ? { ...step, status: EXECUTION_STATUS.COMPLETED } : step
-            ));
+            setExecutionSteps((prev) =>
+              prev.map((step, idx) => (idx === stepIndex ? { ...step, status: EXECUTION_STATUS.COMPLETED } : step)),
+            );
           },
           onStepError: (stepIndex: number, error: string) => {
-            setExecutionSteps(prev => prev.map((step, idx) =>
-              idx === stepIndex ? { ...step, status: EXECUTION_STATUS.ERROR, error } : step
-            ));
-          }
+            setExecutionSteps((prev) =>
+              prev.map((step, idx) => (idx === stepIndex ? { ...step, status: EXECUTION_STATUS.ERROR, error } : step)),
+            );
+          },
         },
-        selectedFiles
+        selectedFiles,
       );
 
       // Mark all as completed and reset current step
@@ -108,25 +108,29 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
 
   const getProgress = () => {
     if (executionSteps.length === 0) return 0;
-    const completedSteps = executionSteps.filter(step => step.status === EXECUTION_STATUS.COMPLETED).length;
+    const completedSteps = executionSteps.filter((step) => step.status === EXECUTION_STATUS.COMPLETED).length;
     return (completedSteps / executionSteps.length) * 100;
   };
 
   const getStepIcon = (step: ExecutionStep) => {
     switch (step.status) {
       case EXECUTION_STATUS.COMPLETED:
-        return <CheckIcon style={{ fontSize: 16, color: 'green' }} />;
+        return <CheckIcon style={{ fontSize: 16, color: "green" }} />;
       case EXECUTION_STATUS.ERROR:
-        return <span style={{ fontSize: 16, color: 'red' }}>✕</span>;
+        return <span style={{ fontSize: 16, color: "red" }}>✕</span>;
       case EXECUTION_STATUS.RUNNING:
         return <Loader size={16} />;
       default:
-        return <div style={{
-          width: 16,
-          height: 16,
-          border: '2px solid #ccc',
-          borderRadius: '50%'
-        }} />;
+        return (
+          <div
+            style={{
+              width: 16,
+              height: 16,
+              border: "2px solid #ccc",
+              borderRadius: "50%",
+            }}
+          />
+        );
     }
   };
 
@@ -167,8 +171,9 @@ export default function AutomationRun({ automation, onComplete, automateOperatio
                 <Text
                   size="sm"
                   style={{
-                    color: step.status === EXECUTION_STATUS.RUNNING ? 'var(--mantine-color-blue-6)' : 'var(--mantine-color-text)',
-                    fontWeight: step.status === EXECUTION_STATUS.RUNNING ? 500 : 400
+                    color:
+                      step.status === EXECUTION_STATUS.RUNNING ? "var(--mantine-color-blue-6)" : "var(--mantine-color-text)",
+                    fontWeight: step.status === EXECUTION_STATUS.RUNNING ? 500 : 400,
                   }}
                 >
                   {step.name}

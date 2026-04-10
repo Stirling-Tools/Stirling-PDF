@@ -13,7 +13,6 @@ interface WatermarkTextStyleProps {
 const WatermarkTextStyle = ({ parameters, onParameterChange, disabled = false }: WatermarkTextStyleProps) => {
   const { t } = useTranslation();
 
-
   return (
     <Stack gap="sm">
       <Stack gap="xs">

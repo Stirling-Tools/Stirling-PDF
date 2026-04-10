@@ -1,7 +1,7 @@
-import { FileId } from '@app/types/file';
+import { FileId } from "@app/types/file";
 
-export type PageSize = 'A4' | 'Letter' | 'Legal' | 'A3' | 'A5';
-export type PageOrientation = 'portrait' | 'landscape';
+export type PageSize = "A4" | "Letter" | "Legal" | "A3" | "A5";
+export type PageOrientation = "portrait" | "landscape";
 
 export interface PageBreakSettings {
   size: PageSize;
@@ -33,10 +33,10 @@ export interface PDFDocument {
 
 export interface PageOperation {
   id: string;
-  type: 'rotate' | 'delete' | 'move' | 'split' | 'insert' | 'reorder';
+  type: "rotate" | "delete" | "move" | "split" | "insert" | "reorder";
   pageIds: string[];
   timestamp: number;
-  status: 'pending' | 'applied' | 'failed';
+  status: "pending" | "applied" | "failed";
   data?: any;
   metadata?: {
     rotation?: number;
@@ -59,7 +59,7 @@ export interface PageEditorFunctions {
   handleRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
-  handleRotate: (direction: 'left' | 'right') => void;
+  handleRotate: (direction: "left" | "right") => void;
   handleDelete: () => void;
   handleSplit: () => void;
   handleSplitAll: () => void;

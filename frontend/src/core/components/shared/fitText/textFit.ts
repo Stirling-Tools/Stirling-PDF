@@ -1,4 +1,4 @@
-import { RefObject, useEffect } from 'react';
+import { RefObject, useEffect } from "react";
 
 export type AdjustFontSizeOptions = {
   /** Max font size to start from. Defaults to the element's computed font size. */
@@ -17,14 +17,11 @@ export type AdjustFontSizeOptions = {
  * Imperative util: progressively reduces font-size until content fits within the element
  * (width and optional line count). Returns a cleanup that disconnects observers.
  */
-export function adjustFontSizeToFit(
-  element: HTMLElement,
-  options: AdjustFontSizeOptions = {}
-): () => void {
+export function adjustFontSizeToFit(element: HTMLElement, options: AdjustFontSizeOptions = {}): () => void {
   if (!element) return () => {};
 
   const computed = window.getComputedStyle(element);
-  const baseFontPx = options.maxFontSizePx ?? parseFloat(computed.fontSize || '16');
+  const baseFontPx = options.maxFontSizePx ?? parseFloat(computed.fontSize || "16");
   const minScale = Math.max(0.1, options.minFontScale ?? 0.7);
   const stepScale = Math.max(0.005, options.stepScale ?? 0.05);
   const singleLine = options.singleLine ?? false;
@@ -32,14 +29,14 @@ export function adjustFontSizeToFit(
 
   // Ensure measurement is consistent
   if (singleLine) {
-    element.style.whiteSpace = 'nowrap';
+    element.style.whiteSpace = "nowrap";
   }
   // Never split within words; only allow natural breaks (spaces) or explicit soft breaks
-  element.style.wordBreak = 'keep-all';
-  element.style.overflowWrap = 'normal';
+  element.style.wordBreak = "keep-all";
+  element.style.overflowWrap = "normal";
   // Disable automatic hyphenation to avoid mid-word breaks; use only manual opportunities
-  element.style.setProperty('hyphens', 'manual');
-  element.style.overflow = 'visible';
+  element.style.setProperty("hyphens", "manual");
+  element.style.overflow = "visible";
 
   const minFontPx = baseFontPx * minScale;
   const stepPx = Math.max(0.5, baseFontPx * stepScale);
@@ -50,7 +47,7 @@ export function adjustFontSizeToFit(
 
     // Calculate target height threshold for line limit
     let maxHeight = Number.POSITIVE_INFINITY;
-    if (typeof maxLines === 'number' && maxLines > 0) {
+    if (typeof maxLines === "number" && maxLines > 0) {
       const cs = window.getComputedStyle(element);
       const lineHeight = parseFloat(cs.lineHeight) || baseFontPx * 1.2;
       maxHeight = lineHeight * maxLines + 0.1; // small epsilon
@@ -82,21 +79,24 @@ export function adjustFontSizeToFit(
 
   return () => {
     cancelAnimationFrame(raf);
-    try { ro.disconnect(); } catch { /* Ignore errors */ }
-    try { mo.disconnect(); } catch { /* Ignore errors */ }
+    try {
+      ro.disconnect();
+    } catch {
+      /* Ignore errors */
+    }
+    try {
+      mo.disconnect();
+    } catch {
+      /* Ignore errors */
+    }
   };
 }
 
 /** React hook wrapper for convenience */
-export function useAdjustFontSizeToFit(
-  ref: RefObject<HTMLElement | null>,
-  options: AdjustFontSizeOptions = {}
-) {
+export function useAdjustFontSizeToFit(ref: RefObject<HTMLElement | null>, options: AdjustFontSizeOptions = {}) {
   useEffect(() => {
     if (!ref.current) return;
     const cleanup = adjustFontSizeToFit(ref.current, options);
     return cleanup;
   }, [ref, options.maxFontSizePx, options.minFontScale, options.stepScale, options.maxLines, options.singleLine]);
 }
-
-

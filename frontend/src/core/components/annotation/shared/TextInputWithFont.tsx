@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Stack, TextInput, Select, Combobox, useCombobox, Group, Box, SegmentedControl } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { ColorPicker } from '@app/components/annotation/shared/ColorPicker';
+import React, { useState, useEffect } from "react";
+import { Stack, TextInput, Select, Combobox, useCombobox, Group, Box, SegmentedControl } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
 
 interface TextInputWithFontProps {
   text: string;
@@ -12,8 +12,8 @@ interface TextInputWithFontProps {
   onFontFamilyChange: (family: string) => void;
   textColor?: string;
   onTextColorChange?: (color: string) => void;
-  textAlign?: 'left' | 'center' | 'right';
-  onTextAlignChange?: (align: 'left' | 'center' | 'right') => void;
+  textAlign?: "left" | "center" | "right";
+  onTextAlignChange?: (align: "left" | "center" | "right") => void;
   disabled?: boolean;
   label: string;
   placeholder: string;
@@ -31,9 +31,9 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
   onFontSizeChange,
   fontFamily,
   onFontFamilyChange,
-  textColor = '#000000',
+  textColor = "#000000",
   onTextColorChange,
-  textAlign = 'left',
+  textAlign = "left",
   onTextAlignChange,
   disabled = false,
   label,
@@ -42,7 +42,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
   fontSizeLabel,
   fontSizePlaceholder,
   colorLabel,
-  onAnyChange
+  onAnyChange,
 }) => {
   const { t } = useTranslation();
   const [fontSizeInput, setFontSizeInput] = useState(fontSize.toString());
@@ -61,14 +61,37 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
   }, [textColor]);
 
   const fontOptions = [
-    { value: 'Helvetica', label: 'Helvetica' },
-    { value: 'Times-Roman', label: 'Times' },
-    { value: 'Courier', label: 'Courier' },
-    { value: 'Arial', label: 'Arial' },
-    { value: 'Georgia', label: 'Georgia' },
+    { value: "Helvetica", label: "Helvetica" },
+    { value: "Times-Roman", label: "Times" },
+    { value: "Courier", label: "Courier" },
+    { value: "Arial", label: "Arial" },
+    { value: "Georgia", label: "Georgia" },
   ];
 
-  const fontSizeOptions = ['8', '12', '16', '20', '24', '28', '32', '36', '40', '48', '56', '64', '72', '80', '96', '112', '128', '144', '160', '176', '192', '200'];
+  const fontSizeOptions = [
+    "8",
+    "12",
+    "16",
+    "20",
+    "24",
+    "28",
+    "32",
+    "36",
+    "40",
+    "48",
+    "56",
+    "64",
+    "72",
+    "80",
+    "96",
+    "112",
+    "128",
+    "144",
+    "160",
+    "176",
+    "192",
+    "200",
+  ];
 
   // Validate hex color
   const isValidHexColor = (color: string): boolean => {
@@ -94,7 +117,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
         label={fontLabel}
         value={fontFamily}
         onChange={(value) => {
-          onFontFamilyChange(value || 'Helvetica');
+          onFontFamilyChange(value || "Helvetica");
           onAnyChange?.();
         }}
         data={fontOptions}
@@ -187,7 +210,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
                   setColorInput(textColor);
                 }
               }}
-              style={{ width: '100%' }}
+              style={{ width: "100%" }}
               rightSection={
                 <Box
                   onClick={() => !disabled && setIsColorPickerOpen(true)}
@@ -195,9 +218,9 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
                     width: 24,
                     height: 24,
                     backgroundColor: textColor,
-                    border: '1px solid #ccc',
+                    border: "1px solid #ccc",
                     borderRadius: 4,
-                    cursor: disabled ? 'default' : 'pointer'
+                    cursor: disabled ? "default" : "pointer",
                   }}
                 />
               }
@@ -224,14 +247,14 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
         <SegmentedControl
           value={textAlign}
           onChange={(value: string) => {
-            onTextAlignChange(value as 'left' | 'center' | 'right');
+            onTextAlignChange(value as "left" | "center" | "right");
             onAnyChange?.();
           }}
           disabled={disabled}
           data={[
-            { label: t('textAlign.left', 'Left'), value: 'left' },
-            { label: t('textAlign.center', 'Center'), value: 'center' },
-            { label: t('textAlign.right', 'Right'), value: 'right' },
+            { label: t("textAlign.left", "Left"), value: "left" },
+            { label: t("textAlign.center", "Center"), value: "center" },
+            { label: t("textAlign.right", "Right"), value: "right" },
           ]}
         />
       )}

@@ -1,7 +1,7 @@
-import { ReactNode } from 'react';
+import { ReactNode } from "react";
 
-export type ToastLocation = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'bottom-center';
-export type ToastAlertType = 'success' | 'error' | 'warning' | 'neutral';
+export type ToastLocation = "top-left" | "top-right" | "bottom-left" | "bottom-right" | "bottom-center";
+export type ToastAlertType = "success" | "error" | "warning" | "neutral";
 
 export interface ToastOptions {
   alertType?: ToastAlertType;
@@ -22,7 +22,7 @@ export interface ToastOptions {
   expandable?: boolean;
 }
 
-export interface ToastInstance extends Omit<ToastOptions, 'id' | 'progressBarPercentage'> {
+export interface ToastInstance extends Omit<ToastOptions, "id" | "progressBarPercentage"> {
   id: string;
   alertType: ToastAlertType;
   isPersistentPopup: boolean;
@@ -46,5 +46,3 @@ export interface ToastApi {
   dismiss: (id: string) => void;
   dismissAll: () => void;
 }
-
-

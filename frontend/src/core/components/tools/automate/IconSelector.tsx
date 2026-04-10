@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Text, Stack, Button, SimpleGrid, Tooltip, Popover } from "@mantine/core";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import { iconMap, iconOptions } from '@app/components/tools/automate/iconMap';
-import { Z_INDEX_AUTOMATE_DROPDOWN } from '@app/styles/zIndex';
+import { iconMap, iconOptions } from "@app/components/tools/automate/iconMap";
+import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface IconSelectorProps {
   value?: string;
@@ -53,7 +53,6 @@ export default function IconSelector({ value = "SettingsIcon", onChange, size = 
               paddingLeft: "0.5rem",
               borderColor: "var(--mantine-color-gray-3)",
               color: "var(--mantine-color-text)",
-
             }}
           >
             {React.createElement(selectedIconComponent, { style: { fontSize: iconSize } })}

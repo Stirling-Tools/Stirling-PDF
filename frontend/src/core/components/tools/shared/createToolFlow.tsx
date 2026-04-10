@@ -1,12 +1,12 @@
-import React from 'react';
-import { Stack } from '@mantine/core';
-import { createToolSteps, ToolStepProvider } from '@app/components/tools/shared/ToolStep';
-import { ScopedOperationButton } from '@app/components/tools/shared/ScopedOperationButton';
-import { ToolOperationHook } from '@app/hooks/tools/shared/useToolOperation';
-import { ToolWorkflowTitle, ToolWorkflowTitleProps } from '@app/components/tools/shared/ToolWorkflowTitle';
-import { StirlingFile } from '@app/types/fileContext';
-import type { TooltipTip } from '@app/types/tips';
-import type { ExecuteDisabledReason } from '@app/hooks/tools/shared/toolOperationTypes';
+import React from "react";
+import { Stack } from "@mantine/core";
+import { createToolSteps, ToolStepProvider } from "@app/components/tools/shared/ToolStep";
+import { ScopedOperationButton } from "@app/components/tools/shared/ScopedOperationButton";
+import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
+import { ToolWorkflowTitle, ToolWorkflowTitleProps } from "@app/components/tools/shared/ToolWorkflowTitle";
+import { StirlingFile } from "@app/types/fileContext";
+import type { TooltipTip } from "@app/types/tips";
+import type { ExecuteDisabledReason } from "@app/hooks/tools/shared/toolOperationTypes";
 
 export interface FilesStepConfig {
   selectedFiles: StirlingFile[];
@@ -93,27 +93,32 @@ export function createToolFlow<TParams = unknown>(config: ToolFlowConfig<TParams
   const steps = createToolSteps();
 
   return (
-    <Stack gap="sm" p="sm" >
-    {/* <Stack gap="sm" p="sm" h="100%" w="100%" style={{ overflow: 'auto' }}> */}
+    <Stack gap="sm" p="sm">
+      {/* <Stack gap="sm" p="sm" h="100%" w="100%" style={{ overflow: 'auto' }}> */}
       <ToolStepProvider forceStepNumbers={config.forceStepNumbers}>
         {config.title && <ToolWorkflowTitle {...config.title} />}
 
         {/* Files Step */}
-        {config.files.isVisible !== false && steps.createFilesStep({
-          selectedFiles: config.files.selectedFiles,
-          isCollapsed: config.files.isCollapsed,
-          minFiles: config.files.minFiles,
-          onCollapsedClick: config.files.onCollapsedClick
-        })}
+        {config.files.isVisible !== false &&
+          steps.createFilesStep({
+            selectedFiles: config.files.selectedFiles,
+            isCollapsed: config.files.isCollapsed,
+            minFiles: config.files.minFiles,
+            onCollapsedClick: config.files.onCollapsedClick,
+          })}
 
         {/* Middle Steps */}
         {config.steps.map((stepConfig) =>
-          steps.create(stepConfig.title, {
-            isVisible: stepConfig.isVisible,
-            isCollapsed: stepConfig.isCollapsed,
-            onCollapsedClick: stepConfig.onCollapsedClick,
-            tooltip: stepConfig.tooltip
-          }, stepConfig.content)
+          steps.create(
+            stepConfig.title,
+            {
+              isVisible: stepConfig.isVisible,
+              isCollapsed: stepConfig.isCollapsed,
+              onCollapsedClick: stepConfig.onCollapsedClick,
+              tooltip: stepConfig.tooltip,
+            },
+            stepConfig.content,
+          ),
         )}
 
         {/* Preview (outside steps, above execute button).
@@ -121,35 +126,41 @@ export function createToolFlow<TParams = unknown>(config: ToolFlowConfig<TParams
         {!config.review.isVisible && (config.files.selectedFiles?.length ?? 0) > 0 && config.preview}
 
         {/* Execute Button */}
-        {config.executeButton && config.executeButton.isVisible !== false && (() => {
-          const eb = config.executeButton;
-          const hasFiles = (config.files.selectedFiles?.length ?? 0) > 0;
-          // Compute the disabled reason from structured fields; explicit disabledReason wins if set.
-          const effectiveDisabledReason: ExecuteDisabledReason =
-            eb.disabledReason !== undefined ? eb.disabledReason
-            : eb.endpointEnabled === false  ? 'endpointUnavailable'
-            : !hasFiles                     ? 'noFiles'
-            : eb.paramsValid === false       ? 'invalidParams'
-            : null;
-          return (
-            <>
-              <ScopedOperationButton
-                selectedFiles={config.files.selectedFiles ?? []}
-                disableScopeHints={eb.disableScopeHints}
-                onClick={eb.onClick}
-                isLoading={config.review.operation.isLoading}
-                disabled={eb.disabled}
-                disabledReason={effectiveDisabledReason}
-                loadingText={eb.loadingText}
-                submitText={eb.text}
-                showCloudBadge={eb.showCloudBadge ?? config.review.operation.willUseCloud ?? false}
-                data-testid={eb.testId}
-                data-tour="run-button"
-              />
-              {config.belowExecuteButton}
-            </>
-          );
-        })()}
+        {config.executeButton &&
+          config.executeButton.isVisible !== false &&
+          (() => {
+            const eb = config.executeButton;
+            const hasFiles = (config.files.selectedFiles?.length ?? 0) > 0;
+            // Compute the disabled reason from structured fields; explicit disabledReason wins if set.
+            const effectiveDisabledReason: ExecuteDisabledReason =
+              eb.disabledReason !== undefined
+                ? eb.disabledReason
+                : eb.endpointEnabled === false
+                  ? "endpointUnavailable"
+                  : !hasFiles
+                    ? "noFiles"
+                    : eb.paramsValid === false
+                      ? "invalidParams"
+                      : null;
+            return (
+              <>
+                <ScopedOperationButton
+                  selectedFiles={config.files.selectedFiles ?? []}
+                  disableScopeHints={eb.disableScopeHints}
+                  onClick={eb.onClick}
+                  isLoading={config.review.operation.isLoading}
+                  disabled={eb.disabled}
+                  disabledReason={effectiveDisabledReason}
+                  loadingText={eb.loadingText}
+                  submitText={eb.text}
+                  showCloudBadge={eb.showCloudBadge ?? config.review.operation.willUseCloud ?? false}
+                  data-testid={eb.testId}
+                  data-tour="run-button"
+                />
+                {config.belowExecuteButton}
+              </>
+            );
+          })()}
 
         {/* Review Step */}
         {steps.createReviewStep({
@@ -157,7 +168,7 @@ export function createToolFlow<TParams = unknown>(config: ToolFlowConfig<TParams
           operation: config.review.operation,
           title: config.review.title,
           onFileClick: config.review.onFileClick,
-          onUndo: config.review.onUndo
+          onUndo: config.review.onUndo,
         })}
       </ToolStepProvider>
     </Stack>

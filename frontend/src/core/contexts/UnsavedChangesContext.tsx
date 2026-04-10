@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { Modal, Text, Button, Group, Stack } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { Modal, Text, Button, Group, Stack } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 interface UnsavedChangesContextType {
   isDirty: boolean;
@@ -62,21 +62,21 @@ export function UnsavedChangesProvider({ children }: UnsavedChangesProviderProps
       <Modal
         opened={modalOpen}
         onClose={handleCancel}
-        title={t('admin.settings.unsavedChanges.title', 'Unsaved Changes')}
+        title={t("admin.settings.unsavedChanges.title", "Unsaved Changes")}
         centered
         size="sm"
         zIndex={1500}
       >
         <Stack gap="md">
           <Text size="sm">
-            {t('admin.settings.unsavedChanges.message', 'You have unsaved changes. Do you want to discard them?')}
+            {t("admin.settings.unsavedChanges.message", "You have unsaved changes. Do you want to discard them?")}
           </Text>
           <Group justify="flex-end" gap="sm">
             <Button variant="default" onClick={handleCancel}>
-              {t('admin.settings.unsavedChanges.cancel', 'Keep Editing')}
+              {t("admin.settings.unsavedChanges.cancel", "Keep Editing")}
             </Button>
             <Button color="red" onClick={handleDiscard}>
-              {t('admin.settings.unsavedChanges.discard', 'Discard Changes')}
+              {t("admin.settings.unsavedChanges.discard", "Discard Changes")}
             </Button>
           </Group>
         </Stack>
@@ -88,8 +88,7 @@ export function UnsavedChangesProvider({ children }: UnsavedChangesProviderProps
 export function useUnsavedChanges(): UnsavedChangesContextType {
   const context = useContext(UnsavedChangesContext);
   if (!context) {
-    throw new Error('useUnsavedChanges must be used within an UnsavedChangesProvider');
+    throw new Error("useUnsavedChanges must be used within an UnsavedChangesProvider");
   }
   return context;
 }
-

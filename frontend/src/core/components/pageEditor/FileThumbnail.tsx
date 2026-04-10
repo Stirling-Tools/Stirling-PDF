@@ -1,20 +1,20 @@
-import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import { ActionIcon, CheckboxIndicator } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import PushPinIcon from '@mui/icons-material/PushPin';
-import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import React, { useState, useCallback, useRef, useMemo, useEffect } from "react";
+import { ActionIcon, CheckboxIndicator } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import PushPinIcon from "@mui/icons-material/PushPin";
+import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
+import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 
-import styles from '@app/components/pageEditor/PageEditor.module.css';
-import { useFileContext } from '@app/contexts/FileContext';
-import { FileId } from '@app/types/file';
-import { PrivateContent } from '@app/components/shared/PrivateContent';
-import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
-import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
-import { downloadFile } from '@app/services/downloadService';
+import styles from "@app/components/pageEditor/PageEditor.module.css";
+import { useFileContext } from "@app/contexts/FileContext";
+import { FileId } from "@app/types/file";
+import { PrivateContent } from "@app/components/shared/PrivateContent";
+import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
+import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
+import { downloadFile } from "@app/services/downloadService";
 
 interface FileItem {
   id: FileId;
@@ -66,13 +66,13 @@ const FileThumbnail = ({
 
   // Resolve the actual File object for pin/unpin operations
   const actualFile = useMemo(() => {
-    return activeFiles.find(f => f.fileId === file.id);
+    return activeFiles.find((f) => f.fileId === file.id);
   }, [activeFiles, file.id]);
   const isPinned = actualFile ? isFilePinned(actualFile) : false;
 
   const downloadSelectedFile = useCallback(() => {
     // Prefer parent-provided handler if available
-    if (typeof onDownloadFile === 'function') {
+    if (typeof onDownloadFile === "function") {
       onDownloadFile(file.id);
       return;
     }
@@ -80,7 +80,7 @@ const FileThumbnail = ({
     // Fallback: attempt to download using the File object if provided
     const maybeFile = (file as unknown as { file?: File }).file;
     if (maybeFile instanceof File) {
-      void downloadFile({ data: maybeFile, filename: maybeFile.name || file.name || 'download' });
+      void downloadFile({ data: maybeFile, filename: maybeFile.name || file.name || "download" });
       return;
     }
 
@@ -93,52 +93,55 @@ const FileThumbnail = ({
   const isSelected = selectedFiles.includes(file.id);
 
   // ---- Drag & drop wiring ----
-  const fileElementRef = useCallback((element: HTMLDivElement | null) => {
-    if (!element) return;
+  const fileElementRef = useCallback(
+    (element: HTMLDivElement | null) => {
+      if (!element) return;
 
-    dragElementRef.current = element;
+      dragElementRef.current = element;
 
-    const dragCleanup = draggable({
-      element,
-      getInitialData: () => ({
-        type: 'file',
-        fileId: file.id,
-        fileName: file.name,
-        selectedFiles: [file.id]  // Always drag only this file, ignore selection state
-      }),
-      onDragStart: () => {
-        setIsDragging(true);
-      },
-      onDrop: () => {
-        setIsDragging(false);
-      }
-    });
+      const dragCleanup = draggable({
+        element,
+        getInitialData: () => ({
+          type: "file",
+          fileId: file.id,
+          fileName: file.name,
+          selectedFiles: [file.id], // Always drag only this file, ignore selection state
+        }),
+        onDragStart: () => {
+          setIsDragging(true);
+        },
+        onDrop: () => {
+          setIsDragging(false);
+        },
+      });
 
-    const dropCleanup = dropTargetForElements({
-      element,
-      getData: () => ({
-        type: 'file',
-        fileId: file.id
-      }),
-      canDrop: ({ source }) => {
-        const sourceData = source.data;
-        return sourceData.type === 'file' && sourceData.fileId !== file.id;
-      },
-      onDrop: ({ source }) => {
-        const sourceData = source.data;
-        if (sourceData.type === 'file' && onReorderFiles) {
-          const sourceFileId = sourceData.fileId as FileId;
-          const selectedFileIds = sourceData.selectedFiles as FileId[];
-          onReorderFiles(sourceFileId, file.id, selectedFileIds);
-        }
-      }
-    });
+      const dropCleanup = dropTargetForElements({
+        element,
+        getData: () => ({
+          type: "file",
+          fileId: file.id,
+        }),
+        canDrop: ({ source }) => {
+          const sourceData = source.data;
+          return sourceData.type === "file" && sourceData.fileId !== file.id;
+        },
+        onDrop: ({ source }) => {
+          const sourceData = source.data;
+          if (sourceData.type === "file" && onReorderFiles) {
+            const sourceFileId = sourceData.fileId as FileId;
+            const selectedFileIds = sourceData.selectedFiles as FileId[];
+            onReorderFiles(sourceFileId, file.id, selectedFileIds);
+          }
+        },
+      });
 
-    return () => {
-      dragCleanup();
-      dropCleanup();
-    };
-  }, [file.id, file.name, selectedFiles, onReorderFiles]);
+      return () => {
+        dragCleanup();
+        dropCleanup();
+      };
+    },
+    [file.id, file.name, selectedFiles, onReorderFiles],
+  );
 
   // Update dropdown width on resize
   useEffect(() => {
@@ -146,8 +149,8 @@ const FileThumbnail = ({
       if (dragElementRef.current) setActionsWidth(dragElementRef.current.offsetWidth);
     };
     update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, []);
 
   // Close the actions dropdown when hovering outside this file card (and its dropdown)
@@ -173,11 +176,11 @@ const FileThumbnail = ({
       }
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("touchstart", handleTouchStart, { passive: true });
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("touchstart", handleTouchStart);
     };
   }, [showActions]);
 
@@ -186,7 +189,6 @@ const FileThumbnail = ({
     if (!isSupported) return;
     onToggleFile(file.id);
   };
-
 
   return (
     <div
@@ -198,7 +200,7 @@ const FileThumbnail = ({
       className={`${styles.card} w-[18rem] h-[22rem] select-none flex flex-col shadow-sm transition-all relative`}
       style={{
         opacity: isSupported ? (isDragging ? 0.9 : 1) : 0.5,
-        filter: isSupported ? 'none' : 'grayscale(50%)',
+        filter: isSupported ? "none" : "grayscale(50%)",
       }}
       tabIndex={0}
       role="listitem"
@@ -206,11 +208,7 @@ const FileThumbnail = ({
       onClick={handleCardClick}
     >
       {/* Header bar */}
-      <div
-        className={`${styles.header} ${
-          isSelected ? styles.headerSelected : styles.headerResting
-        }`}
-      >
+      <div className={`${styles.header} ${isSelected ? styles.headerSelected : styles.headerResting}`}>
         {/* Logo/checkbox area */}
         <div className={styles.logoMark}>
           {isSupported ? (
@@ -221,9 +219,7 @@ const FileThumbnail = ({
             />
           ) : (
             <div className={styles.unsupportedPill}>
-              <span>
-                {t('unsupported', 'Unsupported')}
-              </span>
+              <span>{t("unsupported", "Unsupported")}</span>
             </div>
           )}
         </div>
@@ -235,7 +231,7 @@ const FileThumbnail = ({
 
         {/* Kebab menu */}
         <ActionIcon
-          aria-label={t('moreOptions', 'More options')}
+          aria-label={t("moreOptions", "More options")}
           variant="subtle"
           className={styles.kebab}
           onClick={(e) => {
@@ -249,11 +245,7 @@ const FileThumbnail = ({
 
       {/* Actions overlay */}
       {showActions && (
-        <div
-          className={styles.actionsOverlay}
-          style={{ width: actionsWidth }}
-          onClick={(e) => e.stopPropagation()}
-        >
+        <div className={styles.actionsOverlay} style={{ width: actionsWidth }} onClick={(e) => e.stopPropagation()}>
           <button
             className={styles.actionRow}
             onClick={() => {
@@ -270,12 +262,15 @@ const FileThumbnail = ({
             }}
           >
             {isPinned ? <PushPinIcon fontSize="small" /> : <PushPinOutlinedIcon fontSize="small" />}
-            <span>{isPinned ? t('unpin', 'Unpin') : t('pin', 'Pin')}</span>
+            <span>{isPinned ? t("unpin", "Unpin") : t("pin", "Pin")}</span>
           </button>
 
           <button
             className={styles.actionRow}
-            onClick={() => { downloadSelectedFile(); setShowActions(false); }}
+            onClick={() => {
+              downloadSelectedFile();
+              setShowActions(false);
+            }}
           >
             <DownloadOutlinedIcon fontSize="small" />
             <span>{terminology.download}</span>
@@ -292,7 +287,7 @@ const FileThumbnail = ({
             }}
           >
             <DeleteOutlineIcon fontSize="small" />
-            <span>{t('delete', 'Delete')}</span>
+            <span>{t("delete", "Delete")}</span>
           </button>
         </div>
       )}
@@ -302,17 +297,17 @@ const FileThumbnail = ({
         {/* Stacked file effect - multiple shadows to simulate pages */}
         <div
           style={{
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'var(--mantine-color-gray-1)',
+            width: "100%",
+            height: "100%",
+            backgroundColor: "var(--mantine-color-gray-1)",
             borderRadius: 6,
-            border: '1px solid var(--mantine-color-gray-3)',
+            border: "1px solid var(--mantine-color-gray-3)",
             padding: 4,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
-            boxShadow: '2px 2px 0 rgba(0,0,0,0.1), 4px 4px 0 rgba(0,0,0,0.05)'
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "relative",
+            boxShadow: "2px 2px 0 rgba(0,0,0,0.1), 4px 4px 0 rgba(0,0,0,0.05)",
           }}
         >
           {file.thumbnail && (
@@ -324,21 +319,21 @@ const FileThumbnail = ({
                 onError={(e) => {
                   // Hide broken image if blob URL was revoked
                   const img = e.target as HTMLImageElement;
-                  img.style.display = 'none';
+                  img.style.display = "none";
                 }}
-              style={{
-                maxWidth: '80%',
-                maxHeight: '80%',
-                objectFit: 'contain',
-                borderRadius: 0,
-                background: '#ffffff',
-                border: '1px solid var(--border-default)',
-                display: 'block',
-                marginLeft: 'auto',
-                marginRight: 'auto',
-                alignSelf: 'start'
-              }}
-            />
+                style={{
+                  maxWidth: "80%",
+                  maxHeight: "80%",
+                  objectFit: "contain",
+                  borderRadius: 0,
+                  background: "#ffffff",
+                  border: "1px solid var(--border-default)",
+                  display: "block",
+                  marginLeft: "auto",
+                  marginRight: "auto",
+                  alignSelf: "start",
+                }}
+              />
             </PrivateContent>
           )}
         </div>

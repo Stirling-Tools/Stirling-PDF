@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useDocumentManagerCapability } from '@embedpdf/plugin-document-manager/react';
+import { useState, useEffect } from "react";
+import { useDocumentManagerCapability } from "@embedpdf/plugin-document-manager/react";
 
 /**
  * useDocumentReady - Custom hook to track whether a PDF document is fully loaded
@@ -54,10 +54,10 @@ export function useDocumentReady() {
 
     return () => {
       mounted = false;
-      if (typeof unsubOpen === 'function') {
+      if (typeof unsubOpen === "function") {
         unsubOpen();
       }
-      if (typeof unsubClose === 'function') {
+      if (typeof unsubClose === "function") {
         unsubClose();
       }
     };

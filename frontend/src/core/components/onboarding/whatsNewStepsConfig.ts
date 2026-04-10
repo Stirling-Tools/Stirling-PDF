@@ -1,8 +1,8 @@
-import type { StepType } from '@reactour/tour';
-import type { TFunction } from 'i18next';
+import type { StepType } from "@reactour/tour";
+import type { TFunction } from "i18next";
 
 async function waitForElement(selector: string, timeoutMs = 7000, intervalMs = 100): Promise<void> {
-  if (typeof document === 'undefined') return;
+  if (typeof document === "undefined") return;
   const start = Date.now();
   // Immediate hit
   if (document.querySelector(selector)) return;
@@ -20,7 +20,7 @@ async function waitForElement(selector: string, timeoutMs = 7000, intervalMs = 1
 }
 
 async function waitForHighlightable(selector: string, timeoutMs = 7000, intervalMs = 500): Promise<void> {
-  if (typeof document === 'undefined') return;
+  if (typeof document === "undefined") return;
   const start = Date.now();
 
   return new Promise((resolve) => {
@@ -29,8 +29,8 @@ async function waitForHighlightable(selector: string, timeoutMs = 7000, interval
       const isVisible = !!el && el.getClientRects().length > 0;
       if (isVisible || Date.now() - start >= timeoutMs) {
         // Nudge Reactour to recalc positions in case layout shifted
-        window.dispatchEvent(new Event('resize'));
-        requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+        window.dispatchEvent(new Event("resize"));
+        requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
         resolve();
         return;
       }
@@ -85,10 +85,10 @@ export function createWhatsNewStepsConfig({ t, actions }: CreateWhatsNewStepsCon
     [WhatsNewTourStep.QUICK_ACCESS]: {
       selector: '[data-tour="quick-access-bar"]',
       content: t(
-        'onboarding.whatsNew.quickAccess',
-        'Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours.'
+        "onboarding.whatsNew.quickAccess",
+        "Start at the <strong>Quick Access</strong> rail to jump between Reader, Automate, your files, and all the tours.",
       ),
-      position: 'right',
+      position: "right",
       padding: 10,
       action: () => {
         saveWorkbenchState();
@@ -99,19 +99,19 @@ export function createWhatsNewStepsConfig({ t, actions }: CreateWhatsNewStepsCon
     [WhatsNewTourStep.LEFT_PANEL]: {
       selector: '[data-tour="tool-panel"]',
       content: t(
-        'onboarding.whatsNew.leftPanel',
-        'The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly.'
+        "onboarding.whatsNew.leftPanel",
+        "The left <strong>Tools</strong> panel lists everything you can do. Browse categories or search to find a tool quickly.",
       ),
-      position: 'center',
+      position: "center",
       padding: 0,
     },
     [WhatsNewTourStep.FILE_UPLOAD]: {
       selector: '[data-tour="files-button"]',
       content: t(
-        'onboarding.whatsNew.fileUpload',
-        'Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace.'
+        "onboarding.whatsNew.fileUpload",
+        "Use the <strong>Files</strong> button to upload or pick a recent PDF. We will load a sample so you can see the workspace.",
       ),
-      position: 'right',
+      position: "right",
       padding: 10,
       action: async () => {
         openFilesModal();
@@ -130,10 +130,10 @@ export function createWhatsNewStepsConfig({ t, actions }: CreateWhatsNewStepsCon
       selector: '[data-tour="right-rail-controls"]',
       highlightedSelectors: ['[data-tour="right-rail-controls"]', '[data-tour="right-rail-settings"]'],
       content: t(
-        'onboarding.whatsNew.rightRail',
-        'The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results.'
+        "onboarding.whatsNew.rightRail",
+        "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results.",
       ),
-      position: 'left',
+      position: "left",
       padding: 10,
       action: async () => {
         await waitForElement('[data-tour="right-rail-controls"]', 7000, 100);
@@ -143,10 +143,10 @@ export function createWhatsNewStepsConfig({ t, actions }: CreateWhatsNewStepsCon
     [WhatsNewTourStep.TOP_BAR]: {
       selector: '[data-tour="view-switcher"]',
       content: t(
-        'onboarding.whatsNew.topBar',
-        'The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>.'
+        "onboarding.whatsNew.topBar",
+        "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>.",
       ),
-      position: 'bottom',
+      position: "bottom",
       padding: 8,
       // Ensure the switcher has mounted before this step renders
       action: async () => {
@@ -157,11 +157,8 @@ export function createWhatsNewStepsConfig({ t, actions }: CreateWhatsNewStepsCon
     },
     [WhatsNewTourStep.PAGE_EDITOR_VIEW]: {
       selector: '[data-tour="view-switcher"]',
-      content: t(
-        'onboarding.whatsNew.pageEditorView',
-        'Switch to the Page Editor to reorder, rotate, or delete pages.'
-      ),
-      position: 'bottom',
+      content: t("onboarding.whatsNew.pageEditorView", "Switch to the Page Editor to reorder, rotate, or delete pages."),
+      position: "bottom",
       padding: 8,
       action: async () => {
         switchToPageEditor();
@@ -172,10 +169,10 @@ export function createWhatsNewStepsConfig({ t, actions }: CreateWhatsNewStepsCon
     [WhatsNewTourStep.ACTIVE_FILES_VIEW]: {
       selector: '[data-tour="view-switcher"]',
       content: t(
-        'onboarding.whatsNew.activeFilesView',
-        'Use Active Files to see everything you have open and pick what to work on.'
+        "onboarding.whatsNew.activeFilesView",
+        "Use Active Files to see everything you have open and pick what to work on.",
       ),
-      position: 'bottom',
+      position: "bottom",
       padding: 8,
       action: async () => {
         switchToActiveFiles();
@@ -186,12 +183,11 @@ export function createWhatsNewStepsConfig({ t, actions }: CreateWhatsNewStepsCon
     [WhatsNewTourStep.WRAP_UP]: {
       selector: '[data-tour="help-button"]',
       content: t(
-        'onboarding.whatsNew.wrapUp',
-        'That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour.'
+        "onboarding.whatsNew.wrapUp",
+        "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour.",
       ),
-      position: 'right',
+      position: "right",
       padding: 10,
     },
   };
 }
-

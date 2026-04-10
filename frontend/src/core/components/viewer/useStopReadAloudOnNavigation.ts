@@ -1,15 +1,12 @@
-import { useEffect, useRef } from 'react';
-import { useNavigationState } from '@app/contexts/NavigationContext';
-import { useViewer } from '@app/contexts/ViewerContext';
+import { useEffect, useRef } from "react";
+import { useNavigationState } from "@app/contexts/NavigationContext";
+import { useViewer } from "@app/contexts/ViewerContext";
 
 /**
  * Hook that automatically stops read-aloud when navigating away from the viewer.
  * Monitors: workbench changes and active file changes.
  */
-export function useStopReadAloudOnNavigation(
-  isReadingAloud: boolean,
-  onStop: () => void
-) {
+export function useStopReadAloudOnNavigation(isReadingAloud: boolean, onStop: () => void) {
   const { workbench } = useNavigationState();
   const viewer = useViewer();
 
@@ -46,7 +43,7 @@ export function useStopReadAloudOnNavigation(
       onStop();
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isReadingAloud, onStop]);
 }

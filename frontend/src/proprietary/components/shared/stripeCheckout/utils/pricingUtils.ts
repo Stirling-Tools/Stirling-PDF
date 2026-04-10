@@ -18,11 +18,7 @@ export function calculateMonthlyEquivalent(yearlyPrice: number): number {
 /**
  * Calculate total price including seats
  */
-export function calculateTotalWithSeats(
-  basePrice: number,
-  seatPrice: number | undefined,
-  seatCount: number
-): number {
+export function calculateTotalWithSeats(basePrice: number, seatPrice: number | undefined, seatCount: number): number {
   if (seatPrice === undefined) return basePrice;
   return basePrice + seatPrice * seatCount;
 }
@@ -40,14 +36,14 @@ export function formatPrice(amount: number, currency: string, decimals: number =
  */
 export function calculateDisplayPricing(
   monthly?: { price: number; seatPrice?: number; currency: string },
-  yearly?: { price: number; seatPrice?: number; currency: string }
+  yearly?: { price: number; seatPrice?: number; currency: string },
 ): PriceCalculation {
   // Default to monthly if no yearly exists
   if (!yearly) {
     return {
       displayPrice: monthly?.price || 0,
       displaySeatPrice: monthly?.seatPrice,
-      displayCurrency: monthly?.currency || '£',
+      displayCurrency: monthly?.currency || "£",
     };
   }
 

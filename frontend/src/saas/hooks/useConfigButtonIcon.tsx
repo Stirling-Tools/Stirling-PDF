@@ -1,5 +1,5 @@
-import { Avatar } from '@mantine/core';
-import { useAuth } from '@app/auth/UseSession';
+import { Avatar } from "@mantine/core";
+import { useAuth } from "@app/auth/UseSession";
 
 export function useConfigButtonIcon(): React.ReactNode {
   const { profilePictureUrl } = useAuth();

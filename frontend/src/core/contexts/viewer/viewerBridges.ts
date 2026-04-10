@@ -1,5 +1,5 @@
-import { SpreadMode } from '@embedpdf/plugin-spread/react';
-import { PdfBookmarkObject, PdfAttachmentObject } from '@embedpdf/models';
+import { SpreadMode } from "@embedpdf/plugin-spread/react";
+import { PdfBookmarkObject, PdfAttachmentObject } from "@embedpdf/models";
 
 export enum PdfPermissionFlag {
   Print = 0x0004,
@@ -86,7 +86,10 @@ export interface PrintAPIWrapper {
 }
 
 export interface ThumbnailAPIWrapper {
-  renderThumb: (pageIndex: number, scale: number) => {
+  renderThumb: (
+    pageIndex: number,
+    scale: number,
+  ) => {
     toPromise: () => Promise<Blob>;
   };
 }
@@ -226,7 +229,7 @@ export const createBridgeRegistry = (): ViewerBridgeRegistry => ({
 export function registerBridge<K extends BridgeKey>(
   registry: ViewerBridgeRegistry,
   type: K,
-  ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]> | null
+  ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]> | null,
 ): void {
   registry[type] = ref as ViewerBridgeRegistry[K];
 }
@@ -234,14 +237,11 @@ export function registerBridge<K extends BridgeKey>(
 export function getBridgeState<K extends BridgeKey>(
   registry: ViewerBridgeRegistry,
   type: K,
-  fallback: BridgeStateMap[K]
+  fallback: BridgeStateMap[K],
 ): BridgeStateMap[K] {
   return registry[type]?.state ?? fallback;
 }
 
-export function getBridgeApi<K extends BridgeKey>(
-  registry: ViewerBridgeRegistry,
-  type: K
-): BridgeApiMap[K] | null {
+export function getBridgeApi<K extends BridgeKey>(registry: ViewerBridgeRegistry, type: K): BridgeApiMap[K] | null {
   return registry[type]?.api ?? null;
 }

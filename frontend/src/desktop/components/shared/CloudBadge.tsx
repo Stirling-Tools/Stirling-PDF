@@ -1,6 +1,6 @@
-import { Badge, Tooltip } from '@mantine/core';
-import CloudOutlinedIcon from '@mui/icons-material/CloudOutlined';
-import { useTranslation } from 'react-i18next';
+import { Badge, Tooltip } from "@mantine/core";
+import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
+import { useTranslation } from "react-i18next";
 
 interface CloudBadgeProps {
   className?: string;
@@ -15,19 +15,14 @@ export function CloudBadge({ className }: CloudBadgeProps) {
   const { t } = useTranslation();
 
   return (
-    <Tooltip
-      label={t('cloudBadge.tooltip', 'This operation will use your cloud credits')}
-      position="top"
-      withArrow
-    >
+    <Tooltip label={t("cloudBadge.tooltip", "This operation will use your cloud credits")} position="top" withArrow>
       <Badge
         className={className}
         leftSection={<CloudOutlinedIcon sx={{ fontSize: 12 }} />}
         variant="light"
         color="blue"
         size="xs"
-      >
-      </Badge>
+      ></Badge>
     </Tooltip>
   );
 }

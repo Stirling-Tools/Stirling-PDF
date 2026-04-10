@@ -11,12 +11,7 @@ const AdjustPageScale = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const adjustPageScaleTips = useAdjustPageScaleTips();
 
-  const base = useBaseTool(
-    'adjustPageScale',
-    useAdjustPageScaleParameters,
-    useAdjustPageScaleOperation,
-    props
-  );
+  const base = useBaseTool("adjustPageScale", useAdjustPageScaleParameters, useAdjustPageScaleOperation, props);
 
   return createToolFlow({
     files: {

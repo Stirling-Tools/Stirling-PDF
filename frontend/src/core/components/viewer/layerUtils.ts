@@ -10,13 +10,10 @@ export interface LayerInfo {
  * Returns a flat list of all OCG groups with their names and default visibility.
  */
 export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
-  const { getDocument, GlobalWorkerOptions } = await import('pdfjs-dist/legacy/build/pdf.mjs');
+  const { getDocument, GlobalWorkerOptions } = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
   if (!GlobalWorkerOptions.workerSrc) {
-    GlobalWorkerOptions.workerSrc = new URL(
-      'pdfjs-dist/legacy/build/pdf.worker.min.mjs',
-      import.meta.url
-    ).toString();
+    GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/legacy/build/pdf.worker.min.mjs", import.meta.url).toString();
   }
 
   const arrayBuffer = await file.arrayBuffer();
@@ -65,15 +62,11 @@ export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
  *  - { name: string, order: any[] }: a named group with children
  *  - array: a nested group
  */
-function buildLayerTree(
-  order: any[],
-  groups: Record<string, any>,
-  visited = new Set<string>()
-): LayerInfo[] {
+function buildLayerTree(order: any[], groups: Record<string, any>, visited = new Set<string>()): LayerInfo[] {
   const result: LayerInfo[] = [];
 
   for (const item of order) {
-    if (typeof item === 'string') {
+    if (typeof item === "string") {
       // It's an OCG id
       if (visited.has(item)) continue;
       visited.add(item);
@@ -89,7 +82,7 @@ function buildLayerTree(
       // Nested group (unlabeled)
       const children = buildLayerTree(item, groups, visited);
       result.push(...children);
-    } else if (item && typeof item === 'object') {
+    } else if (item && typeof item === "object") {
       // Named group with nested items
       const { name, order: subOrder } = item as { name?: string; order?: any[] };
       const children = subOrder ? buildLayerTree(subOrder, groups, visited) : [];
@@ -98,7 +91,7 @@ function buildLayerTree(
         result.push({
           id: `group-${name}`,
           name: name,
-          visible: children.every(c => c.visible),
+          visible: children.every((c) => c.visible),
           children,
         });
       } else {
@@ -121,10 +114,9 @@ function buildLayerTree(
  */
 export async function applyOCGVisibilityToPdf(
   pdfBytes: ArrayBuffer,
-  layerVisibility: Record<string, boolean>
+  layerVisibility: Record<string, boolean>,
 ): Promise<Uint8Array> {
-  const { PDFDocument, PDFDict, PDFName, PDFArray, PDFString, PDFHexString } =
-    await import('@cantoo/pdf-lib');
+  const { PDFDocument, PDFDict, PDFName, PDFArray, PDFString, PDFHexString } = await import("@cantoo/pdf-lib");
 
   const doc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
   const context = doc.context;
@@ -134,7 +126,7 @@ export async function applyOCGVisibilityToPdf(
   const catalog = context.lookup(catalogRef) as unknown as typeof PDFDict.prototype;
 
   // Get OCProperties dict (may be a direct dict or an indirect reference)
-  const ocPropsRaw = (catalog as any).lookup(PDFName.of('OCProperties'));
+  const ocPropsRaw = (catalog as any).lookup(PDFName.of("OCProperties"));
   if (!ocPropsRaw) {
     return doc.save();
   }
@@ -143,20 +135,18 @@ export async function applyOCGVisibilityToPdf(
     : context.lookup(ocPropsRaw)) as unknown as typeof PDFDict.prototype;
 
   // Get the /OCGs array
-  const ocgsRaw = (ocProps as any).lookup(PDFName.of('OCGs'));
+  const ocgsRaw = (ocProps as any).lookup(PDFName.of("OCGs"));
   if (!(ocgsRaw instanceof PDFArray)) {
     return doc.save();
   }
   const ocgsArray = ocgsRaw as unknown as typeof PDFArray.prototype;
 
   // Get or create the /D (default config) dict
-  const dRaw = (ocProps as any).lookup(PDFName.of('D'));
+  const dRaw = (ocProps as any).lookup(PDFName.of("D"));
   if (!dRaw) {
     return doc.save();
   }
-  const dDict = (dRaw instanceof PDFDict
-    ? dRaw
-    : context.lookup(dRaw)) as unknown as typeof PDFDict.prototype;
+  const dDict = (dRaw instanceof PDFDict ? dRaw : context.lookup(dRaw)) as unknown as typeof PDFDict.prototype;
 
   // Collect OCG refs for ON vs OFF based on user visibility settings
   const onRefs: any[] = [];
@@ -169,10 +159,10 @@ export async function applyOCGVisibilityToPdf(
     if (!ocgDict) continue;
 
     // Get the OCG name
-    const nameRaw = (ocgDict as any).lookup(PDFName.of('Name'));
-    let ocgName = '';
+    const nameRaw = (ocgDict as any).lookup(PDFName.of("Name"));
+    let ocgName = "";
     if (nameRaw instanceof PDFString || nameRaw instanceof PDFHexString) {
-      ocgName = (nameRaw as any).decodeText?.() ?? (nameRaw as any).asString?.() ?? '';
+      ocgName = (nameRaw as any).decodeText?.() ?? (nameRaw as any).asString?.() ?? "";
     } else if (nameRaw) {
       ocgName = String(nameRaw);
     }
@@ -189,25 +179,25 @@ export async function applyOCGVisibilityToPdf(
 
   // Set /BaseState to /OFF so all layers start hidden, then /ON lists visible ones.
   // This is unambiguous and avoids conflicts between /BaseState and /ON//OFF.
-  (dDict as any).set(PDFName.of('BaseState'), PDFName.of('OFF'));
+  (dDict as any).set(PDFName.of("BaseState"), PDFName.of("OFF"));
 
   // Set /ON to only the visible layers
   if (onRefs.length > 0) {
-    (dDict as any).set(PDFName.of('ON'), context.obj(onRefs));
+    (dDict as any).set(PDFName.of("ON"), context.obj(onRefs));
   } else {
-    (dDict as any).delete?.(PDFName.of('ON'));
+    (dDict as any).delete?.(PDFName.of("ON"));
   }
 
   // Set /OFF to only the hidden layers (for viewers that check it)
   if (offRefs.length > 0) {
-    (dDict as any).set(PDFName.of('OFF'), context.obj(offRefs));
+    (dDict as any).set(PDFName.of("OFF"), context.obj(offRefs));
   } else {
-    (dDict as any).delete?.(PDFName.of('OFF'));
+    (dDict as any).delete?.(PDFName.of("OFF"));
   }
 
   // Remove /AS (auto-state) array — it can contain usage-based overrides
   // (e.g., print vs view) that conflict with our explicit visibility settings.
-  (dDict as any).delete?.(PDFName.of('AS'));
+  (dDict as any).delete?.(PDFName.of("AS"));
 
   return doc.save();
 }

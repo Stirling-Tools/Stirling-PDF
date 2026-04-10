@@ -1,9 +1,9 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef, useMemo } from 'react';
-import { saasBillingService, BillingStatus, PlanPrice } from '@app/services/saasBillingService';
-import { authService } from '@app/services/authService';
-import { connectionModeService } from '@app/services/connectionModeService';
-import { useSaaSTeam } from '@app/contexts/SaaSTeamContext';
-import type { TierLevel } from '@app/types/billing';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef, useMemo } from "react";
+import { saasBillingService, BillingStatus, PlanPrice } from "@app/services/saasBillingService";
+import { authService } from "@app/services/authService";
+import { connectionModeService } from "@app/services/connectionModeService";
+import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
+import type { TierLevel } from "@app/types/billing";
 
 // How long plan pricing is considered fresh. Lives at module level so both the
 // provider and usePlanPricing (the consumer hook) can reference it.
@@ -26,8 +26,8 @@ interface SaasBillingContextType {
   // Billing Status
   billingStatus: BillingStatus | null;
   tier: TierLevel;
-  subscription: BillingStatus['subscription'];
-  usage: BillingStatus['meterUsage'];
+  subscription: BillingStatus["subscription"];
+  usage: BillingStatus["meterUsage"];
   isTrialing: boolean;
   trialDaysRemaining?: number;
   price?: number;
@@ -57,7 +57,7 @@ interface SaasBillingContextType {
 
 const SaasBillingContext = createContext<SaasBillingContextType>({
   billingStatus: null,
-  tier: 'free',
+  tier: "free",
   subscription: null,
   usage: null,
   isTrialing: false,
@@ -84,7 +84,7 @@ export function SaasBillingProvider({ children }: { children: ReactNode }) {
   const [plans, setPlans] = useState<Map<string, PlanPrice>>(new Map());
   const [plansLoading, setPlansLoading] = useState(false);
   const [plansError, setPlansError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);  // Start false (lazy load)
+  const [loading, setLoading] = useState(false); // Start false (lazy load)
   const [error, setError] = useState<string | null>(null);
   // lastFetchTimeRef is the source of truth for cache logic (always current, no stale closure).
   // lastFetchTimeValue mirrors it as state purely to drive re-renders and expose through context.
@@ -113,7 +113,7 @@ export function SaasBillingProvider({ children }: { children: ReactNode }) {
     const checkAccess = async () => {
       const mode = await connectionModeService.getCurrentMode();
       const auth = await authService.isAuthenticated();
-      setIsSaasMode(mode === 'saas');
+      setIsSaasMode(mode === "saas");
       setIsAuthenticated(auth);
     };
 
@@ -127,7 +127,7 @@ export function SaasBillingProvider({ children }: { children: ReactNode }) {
   // Subscribe to auth changes
   useEffect(() => {
     const unsubscribe = authService.subscribeToAuth((status) => {
-      setIsAuthenticated(status === 'authenticated');
+      setIsAuthenticated(status === "authenticated");
     });
     return unsubscribe;
   }, []);
@@ -151,7 +151,7 @@ export function SaasBillingProvider({ children }: { children: ReactNode }) {
 
     // Cache check: Skip if fresh data exists (<5 min old)
     const now = Date.now();
-    if (billingStatusRef.current && lastFetchTimeRef.current && (now - lastFetchTimeRef.current) < 300000) {
+    if (billingStatusRef.current && lastFetchTimeRef.current && now - lastFetchTimeRef.current < 300000) {
       return;
     }
 
@@ -168,8 +168,8 @@ export function SaasBillingProvider({ children }: { children: ReactNode }) {
       setLastFetchTimeValue(now);
       setError(null);
     } catch (err) {
-      console.error('[SaasBillingContext] Failed to fetch billing:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch billing');
+      console.error("[SaasBillingContext] Failed to fetch billing:", err);
+      setError(err instanceof Error ? err.message : "Failed to fetch billing");
       // Don't clear billing status on error (preserve existing data)
     } finally {
       setLoading(false);
@@ -192,14 +192,14 @@ export function SaasBillingProvider({ children }: { children: ReactNode }) {
     setPlansError(null);
 
     try {
-      const priceMap = await saasBillingService.getAvailablePlans('usd');
+      const priceMap = await saasBillingService.getAvailablePlans("usd");
       setPlans(priceMap);
       const now = Date.now();
       plansLastFetchTimeRef.current = now;
       setPlansLastFetchTimeValue(now);
     } catch (err) {
-      console.error('[SaasBillingContext] Failed to fetch plans:', err);
-      setPlansError(err instanceof Error ? err.message : 'Failed to fetch plans');
+      console.error("[SaasBillingContext] Failed to fetch plans:", err);
+      setPlansError(err instanceof Error ? err.message : "Failed to fetch plans");
     } finally {
       plansFetchInProgressRef.current = false;
       setPlansLoading(false);
@@ -272,7 +272,7 @@ export function SaasBillingProvider({ children }: { children: ReactNode }) {
       const customEvent = e as CustomEvent<{ creditsRemaining: number }>;
       const newBalance = customEvent.detail?.creditsRemaining;
 
-      if (typeof newBalance === 'number' && billingStatus) {
+      if (typeof newBalance === "number" && billingStatus) {
         // Update credit balance in billing status without full refresh
         const updated = { ...billingStatus, creditBalance: newBalance };
         billingStatusRef.current = updated;
@@ -280,68 +280,76 @@ export function SaasBillingProvider({ children }: { children: ReactNode }) {
 
         // Dispatch exhausted event if credits hit 0
         if (newBalance <= 0 && (billingStatus.creditBalance ?? 0) > 0) {
-          window.dispatchEvent(new CustomEvent('credits:exhausted', {
-            detail: { previousBalance: billingStatus.creditBalance ?? 0, currentBalance: newBalance }
-          }));
+          window.dispatchEvent(
+            new CustomEvent("credits:exhausted", {
+              detail: { previousBalance: billingStatus.creditBalance ?? 0, currentBalance: newBalance },
+            }),
+          );
         }
       }
     };
 
-    window.addEventListener('credits:updated', handleCreditsUpdated);
+    window.addEventListener("credits:updated", handleCreditsUpdated);
     return () => {
-      window.removeEventListener('credits:updated', handleCreditsUpdated);
+      window.removeEventListener("credits:updated", handleCreditsUpdated);
     };
   }, [billingStatus]);
 
-  const contextValue = useMemo(() => ({
-    billingStatus,
-    tier: isManagedTeamMember ? 'team' : (billingStatus?.tier ?? 'free'),
-    subscription: billingStatus?.subscription ?? null,
-    usage: billingStatus?.meterUsage ?? null,
-    isTrialing: billingStatus?.isTrialing ?? false,
-    trialDaysRemaining: billingStatus?.trialDaysRemaining,
-    price: plans.get('team')?.price,
-    currency: plans.get('team')?.currency,
-    creditBalance: billingStatus?.creditBalance ?? 0,
-    plans,
-    plansLoading,
-    plansError,
-    plansLastFetchTime: plansLastFetchTimeValue,
-    isManagedTeamMember,
-    loading: loading || teamLoading,
-    error,
-    lastFetchTime: lastFetchTimeValue,
-    refreshBilling,
-    refreshCredits: refreshBilling,
-    refreshPlans,
-    openBillingPortal,
-  }), [
-    billingStatus, isManagedTeamMember, plans, plansLoading, plansError,
-    plansLastFetchTimeValue, loading, teamLoading, error, lastFetchTimeValue,
-    refreshBilling, refreshPlans, openBillingPortal,
-  ]);
-
-  return (
-    <SaasBillingContext.Provider value={contextValue}>
-      {children}
-    </SaasBillingContext.Provider>
+  const contextValue = useMemo(
+    () => ({
+      billingStatus,
+      tier: isManagedTeamMember ? "team" : (billingStatus?.tier ?? "free"),
+      subscription: billingStatus?.subscription ?? null,
+      usage: billingStatus?.meterUsage ?? null,
+      isTrialing: billingStatus?.isTrialing ?? false,
+      trialDaysRemaining: billingStatus?.trialDaysRemaining,
+      price: plans.get("team")?.price,
+      currency: plans.get("team")?.currency,
+      creditBalance: billingStatus?.creditBalance ?? 0,
+      plans,
+      plansLoading,
+      plansError,
+      plansLastFetchTime: plansLastFetchTimeValue,
+      isManagedTeamMember,
+      loading: loading || teamLoading,
+      error,
+      lastFetchTime: lastFetchTimeValue,
+      refreshBilling,
+      refreshCredits: refreshBilling,
+      refreshPlans,
+      openBillingPortal,
+    }),
+    [
+      billingStatus,
+      isManagedTeamMember,
+      plans,
+      plansLoading,
+      plansError,
+      plansLastFetchTimeValue,
+      loading,
+      teamLoading,
+      error,
+      lastFetchTimeValue,
+      refreshBilling,
+      refreshPlans,
+      openBillingPortal,
+    ],
   );
+
+  return <SaasBillingContext.Provider value={contextValue}>{children}</SaasBillingContext.Provider>;
 }
 
 export function useSaaSBilling() {
   const context = useContext(SaasBillingContext);
   if (context === undefined) {
-    throw new Error('useSaaSBilling must be used within SaasBillingProvider');
+    throw new Error("useSaaSBilling must be used within SaasBillingProvider");
   }
 
   // Lazy fetch: Trigger fetch on first access (after team context loads)
   // Note: context.loading includes teamLoading, so this waits for team to load
   useEffect(() => {
     const needsFetch =
-      context.billingStatus === null &&
-      context.lastFetchTime === null &&
-      !context.loading &&
-      !context.isManagedTeamMember; // Managed members don't need billing data
+      context.billingStatus === null && context.lastFetchTime === null && !context.loading && !context.isManagedTeamMember; // Managed members don't need billing data
 
     if (needsFetch) {
       context.refreshBilling();
@@ -360,9 +368,7 @@ export function usePlanPricing() {
   const { plans, plansLoading, plansError, plansLastFetchTime, refreshPlans } = useContext(SaasBillingContext);
 
   useEffect(() => {
-    const isFresh =
-      plansLastFetchTime !== null &&
-      Date.now() - plansLastFetchTime < PLANS_CACHE_TTL_MS;
+    const isFresh = plansLastFetchTime !== null && Date.now() - plansLastFetchTime < PLANS_CACHE_TTL_MS;
 
     if (!isFresh) {
       refreshPlans();

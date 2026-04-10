@@ -1,7 +1,7 @@
-import { ProcessedFile, ProcessingState, PDFPage } from '@app/types/processing';
-import { ProcessingCache } from '@app/services/processingCache';
-import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
-import { createQuickKey } from '@app/types/fileContext';
+import { ProcessedFile, ProcessingState, PDFPage } from "@app/types/processing";
+import { ProcessingCache } from "@app/services/processingCache";
+import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import { createQuickKey } from "@app/types/fileContext";
 
 export class PDFProcessingService {
   private static instance: PDFProcessingService;
@@ -24,13 +24,13 @@ export class PDFProcessingService {
     // Check cache first
     const cached = this.cache.get(fileKey);
     if (cached) {
-      console.log('Cache hit for:', file.name);
+      console.log("Cache hit for:", file.name);
       return cached;
     }
 
     // Check if already processing
     if (this.processing.has(fileKey)) {
-      console.log('Already processing:', file.name);
+      console.log("Already processing:", file.name);
       return null; // Will be available when processing completes
     }
 
@@ -44,10 +44,10 @@ export class PDFProcessingService {
     const state: ProcessingState = {
       fileKey,
       fileName: file.name,
-      status: 'processing',
+      status: "processing",
       progress: 0,
       startedAt: Date.now(),
-      strategy: 'immediate_full'
+      strategy: "immediate_full",
     };
 
     this.processing.set(fileKey, state);
@@ -64,7 +64,7 @@ export class PDFProcessingService {
       this.cache.set(fileKey, processedFile);
 
       // Update state to completed
-      state.status = 'completed';
+      state.status = "completed";
       state.progress = 100;
       state.completedAt = Date.now();
       this.notifyListeners();
@@ -74,11 +74,10 @@ export class PDFProcessingService {
         this.processing.delete(fileKey);
         this.notifyListeners();
       }, 2000);
-
     } catch (error) {
-      console.error('Processing failed for', file.name, ':', error);
-      state.status = 'error';
-      state.error = (error instanceof Error ? error.message : 'Unknown error') as any;
+      console.error("Processing failed for", file.name, ":", error);
+      state.status = "error";
+      state.error = (error instanceof Error ? error.message : "Unknown error") as any;
       this.notifyListeners();
 
       // Remove failed processing after delay
@@ -89,10 +88,7 @@ export class PDFProcessingService {
     }
   }
 
-  private async processFileWithProgress(
-    file: File,
-    onProgress: (progress: number) => void
-  ): Promise<ProcessedFile> {
+  private async processFileWithProgress(file: File, onProgress: (progress: number) => void): Promise<ProcessedFile> {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
     const totalPages = pdf.numPages;
@@ -104,11 +100,11 @@ export class PDFProcessingService {
     for (let i = 1; i <= totalPages; i++) {
       const page = await pdf.getPage(i);
       const viewport = page.getViewport({ scale: 0.5 });
-      const canvas = document.createElement('canvas');
+      const canvas = document.createElement("canvas");
       canvas.width = viewport.width;
       canvas.height = viewport.height;
 
-      const context = canvas.getContext('2d');
+      const context = canvas.getContext("2d");
       if (context) {
         await page.render({ canvasContext: context, viewport, canvas }).promise;
         const thumbnail = canvas.toDataURL();
@@ -118,7 +114,7 @@ export class PDFProcessingService {
           pageNumber: i,
           thumbnail,
           rotation: 0,
-          selected: false
+          selected: false,
         });
       }
 
@@ -137,8 +133,8 @@ export class PDFProcessingService {
       metadata: {
         title: file.name,
         createdAt: new Date().toISOString(),
-        modifiedAt: new Date().toISOString()
-      }
+        modifiedAt: new Date().toISOString(),
+      },
     };
   }
 
@@ -153,7 +149,7 @@ export class PDFProcessingService {
   }
 
   private notifyListeners(): void {
-    this.processingListeners.forEach(callback => callback(this.processing));
+    this.processingListeners.forEach((callback) => callback(this.processing));
   }
 
   generateFileKey(file: File): string {
@@ -162,7 +158,7 @@ export class PDFProcessingService {
 
   // Cleanup method for activeFiles changes
   cleanup(removedFiles: File[]): void {
-    removedFiles.forEach(file => {
+    removedFiles.forEach((file) => {
       const key = this.generateFileKey(file);
       this.cache.delete(key);
       this.processing.delete(key);

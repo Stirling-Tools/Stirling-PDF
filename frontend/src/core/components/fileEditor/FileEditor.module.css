@@ -6,7 +6,10 @@
   background: var(--file-card-bg);
   border-radius: 0.0625rem;
   cursor: pointer;
-  transition: box-shadow 0.18s ease, outline-color 0.18s ease, transform 0.18s ease;
+  transition:
+    box-shadow 0.18s ease,
+    outline-color 0.18s ease,
+    transform 0.18s ease;
   max-width: 100%;
   max-height: 100%;
   overflow: visible;
@@ -45,8 +48,8 @@
 }
 
 .headerResting {
-  background: #3B4B6E; /* dark blue for unselected in light mode */
-  color: #FFFFFF;
+  background: #3b4b6e; /* dark blue for unselected in light mode */
+  color: #ffffff;
   border-bottom: 1px solid var(--border-default);
 }
 
@@ -66,7 +69,7 @@
 /* Unsupported (but not errored) header appearance */
 .headerUnsupported {
   background: var(--unsupported-bar-bg); /* neutral gray */
-  color: #FFFFFF;
+  color: #ffffff;
   border-bottom: 1px solid var(--unsupported-bar-border);
 }
 
@@ -103,7 +106,7 @@
 }
 
 .headerIconButton {
-  color: #FFFFFF !important;
+  color: #ffffff !important;
 }
 
 /* Menu dropdown */
@@ -226,14 +229,13 @@
 }
 
 .pinned {
-  color: #FFC107 !important;
+  color: #ffc107 !important;
 }
-
 
 /* Unsupported file indicator */
 .unsupportedPill {
   margin-left: 1.75rem;
-  background: #6B7280;
+  background: #6b7280;
   color: white;
   padding: 4px 8px;
   border-radius: 12px;
@@ -264,7 +266,8 @@
 
 /* Animations */
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -288,15 +291,15 @@
    DARK MODE OVERRIDES
    ========================= */
 :global([data-mantine-color-scheme="dark"]) .card {
-  outline-color: #3A4047; /* deselected stroke */
+  outline-color: #3a4047; /* deselected stroke */
 }
 
 :global([data-mantine-color-scheme="dark"]) .card[data-selected="true"] {
-  outline-color: #4B525A; /* selected stroke (subtle grey) */
+  outline-color: #4b525a; /* selected stroke (subtle grey) */
 }
 
 :global([data-mantine-color-scheme="dark"]) .headerResting {
-  background: #1F2329; /* requested default unselected color */
+  background: #1f2329; /* requested default unselected color */
   color: var(--tool-header-text); /* #D0D6DC */
   border-bottom-color: var(--tool-header-border); /* #3A4047 */
 }
@@ -308,16 +311,16 @@
 }
 
 :global([data-mantine-color-scheme="dark"]) .title {
-  color: #D0D6DC; /* title text */
+  color: #d0d6dc; /* title text */
 }
 
 :global([data-mantine-color-scheme="dark"]) .meta {
-  color: #6B7280; /* subtitle text */
+  color: #6b7280; /* subtitle text */
 }
 
 /* Light mode selected header stroke override */
 :global([data-mantine-color-scheme="light"]) .card[data-selected="true"] {
-  outline-color: #3B4B6E;
+  outline-color: #3b4b6e;
 }
 
 /* =========================

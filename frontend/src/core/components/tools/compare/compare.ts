@@ -1,11 +1,11 @@
-import type { TokenBoundingBox, WordHighlightEntry } from '@app/types/compare';
-import type { FileId } from '@app/types/file';
-import type { StirlingFile, StirlingFileStub } from '@app/types/fileContext';
-import type { PagePreview } from '@app/types/compare';
+import type { TokenBoundingBox, WordHighlightEntry } from "@app/types/compare";
+import type { FileId } from "@app/types/file";
+import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
+import type { PagePreview } from "@app/types/compare";
 
 /** Convert hex color (#rrggbb) to rgba() string with alpha; falls back to input if invalid. */
 export const toRgba = (hexColor: string, alpha: number): string => {
-  const hex = hexColor.replace('#', '');
+  const hex = hexColor.replace("#", "");
   if (hex.length !== 6) return hexColor;
   const r = parseInt(hex.slice(0, 2), 16);
   const g = parseInt(hex.slice(2, 4), 16);
@@ -15,7 +15,7 @@ export const toRgba = (hexColor: string, alpha: number): string => {
 
 /** Normalize rotation to [0, 360). */
 export const normalizeRotation = (deg: number | undefined | null): number => {
-  const n = ((deg ?? 0) % 360 + 360) % 360;
+  const n = (((deg ?? 0) % 360) + 360) % 360;
   return n;
 };
 
@@ -26,9 +26,7 @@ export const normalizeRotation = (deg: number | undefined | null): number => {
 export const mergeConnectedRects = (rects: TokenBoundingBox[]): TokenBoundingBox[] => {
   if (rects.length === 0) return rects;
   const EPS = 0.004; // small tolerance in normalized page coords
-  const sorted = rects
-    .slice()
-    .sort((a, b) => (a.top !== b.top ? a.top - b.top : a.left - b.left));
+  const sorted = rects.slice().sort((a, b) => (a.top !== b.top ? a.top - b.top : a.left - b.left));
   const merged: TokenBoundingBox[] = [];
 
   const overlapsOrTouches = (a: TokenBoundingBox, b: TokenBoundingBox) => {
@@ -67,7 +65,7 @@ export const mergeConnectedRects = (rects: TokenBoundingBox[]): TokenBoundingBox
 export const groupWordRects = (
   wordRects: WordHighlightEntry[],
   metaIndexToGroupId: Map<number, string>,
-  pane: 'base' | 'comparison'
+  pane: "base" | "comparison",
 ): Map<string, TokenBoundingBox[]> => {
   const groupedRects = new Map<string, TokenBoundingBox[]>();
   for (const { rect, metaIndex } of wordRects) {
@@ -83,7 +81,7 @@ export const groupWordRects = (
 export const computePageLayoutMetrics = (args: {
   page: PagePreview;
   peerPage?: PagePreview | null;
-  layout: 'side-by-side' | 'stacked';
+  layout: "side-by-side" | "stacked";
   isMobileViewport: boolean;
   scrollRefWidth: number | null;
   viewportWidth: number;
@@ -96,7 +94,7 @@ export const computePageLayoutMetrics = (args: {
   const highlightOffset = offsetPixels / page.height;
   const rotationNorm = normalizeRotation(page.rotation);
   const isPortrait = rotationNorm === 0 || rotationNorm === 180;
-  const isStackedPortrait = layout === 'stacked' && isPortrait;
+  const isStackedPortrait = layout === "stacked" && isPortrait;
 
   const containerW = scrollRefWidth ?? viewportWidth;
   const stackedWidth = isMobileViewport
@@ -135,10 +133,7 @@ export const computePageLayoutMetrics = (args: {
     innerScale = 1;
   }
 
-  const containerWidth = Math.max(
-    MIN_CONTAINER_WIDTH,
-    Math.min(containerMaxW, Math.round(baseWidth * containerScale))
-  );
+  const containerWidth = Math.max(MIN_CONTAINER_WIDTH, Math.min(containerMaxW, Math.round(baseWidth * containerScale)));
   const containerHeight = Math.round(baseHeight * (containerWidth / Math.max(1, baseWidth)));
 
   return {
@@ -158,15 +153,14 @@ export const computePageLayoutMetrics = (args: {
 };
 
 /** Map changes to dropdown options tuple. */
-export const mapChangesForDropdown = (
-  changes: Array<{ value: string; label: string; pageNumber: number }>
-) => changes.map(({ value, label, pageNumber }) => ({ value, label, pageNumber }));
+export const mapChangesForDropdown = (changes: Array<{ value: string; label: string; pageNumber: number }>) =>
+  changes.map(({ value, label, pageNumber }) => ({ value, label, pageNumber }));
 
 /** File selection helpers */
 export const getFileFromSelection = (
   explicit: StirlingFile | null | undefined,
   fileId: FileId | null,
-  selectors: { getFile: (id: FileId) => StirlingFile | undefined | null }
+  selectors: { getFile: (id: FileId) => StirlingFile | undefined | null },
 ): StirlingFile | null => {
   if (explicit) return explicit;
   if (!fileId) return null;
@@ -175,7 +169,7 @@ export const getFileFromSelection = (
 
 export const getStubFromSelection = (
   fileId: FileId | null,
-  selectors: { getStirlingFileStub: (id: FileId) => StirlingFileStub | undefined }
+  selectors: { getStirlingFileStub: (id: FileId) => StirlingFileStub | undefined },
 ): StirlingFileStub | null => {
   if (!fileId) return null;
   const stub = selectors.getStirlingFileStub(fileId);
@@ -189,7 +183,7 @@ export const computeShowProgressBanner = (
   compTotal: number | null | undefined,
   baseLoading: boolean,
   compLoading: boolean,
-  threshold: number = 400
+  threshold: number = 400,
 ): boolean => {
   if (!totalsKnown) return false;
   const totals = [baseTotal ?? 0, compTotal ?? 0];
@@ -201,13 +195,11 @@ export const computeProgressPct = (
   baseTotal: number | null | undefined,
   compTotal: number | null | undefined,
   baseRendered: number,
-  compRendered: number
+  compRendered: number,
 ): number => {
-  const totalCombined = totalsKnown ? ((baseTotal ?? 0) + (compTotal ?? 0)) : 0;
+  const totalCombined = totalsKnown ? (baseTotal ?? 0) + (compTotal ?? 0) : 0;
   const renderedCombined = baseRendered + compRendered;
-  return totalsKnown && totalCombined > 0
-    ? Math.min(100, Math.round((renderedCombined / totalCombined) * 100))
-    : 0;
+  return totalsKnown && totalCombined > 0 ? Math.min(100, Math.round((renderedCombined / totalCombined) * 100)) : 0;
 };
 
 export const computeCountsText = (
@@ -216,7 +208,7 @@ export const computeCountsText = (
   baseLength: number,
   compRendered: number,
   compTotal: number | null | undefined,
-  compLength: number
+  compLength: number,
 ): string => {
   const baseTotalShown = baseTotal || baseLength;
   const compTotalShown = compTotal || compLength;
@@ -227,7 +219,7 @@ export const computeMaxSharedPages = (
   baseTotal: number | null | undefined,
   compTotal: number | null | undefined,
   baseLen: number,
-  compLen: number
+  compLen: number,
 ): number => {
   const baseMax = baseTotal || baseLen || 0;
   const compMax = compTotal || compLen || 0;
@@ -235,5 +227,3 @@ export const computeMaxSharedPages = (
   if (!Number.isFinite(minKnown)) return 0;
   return Math.max(0, minKnown);
 };
-
-

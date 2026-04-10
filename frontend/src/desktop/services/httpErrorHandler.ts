@@ -1,4 +1,4 @@
-import { handleHttpError as coreHandleHttpError } from '@core/services/httpErrorHandler';
+import { handleHttpError as coreHandleHttpError } from "@core/services/httpErrorHandler";
 
 /**
  * Desktop override of handleHttpError.

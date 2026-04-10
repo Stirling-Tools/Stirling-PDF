@@ -28,7 +28,9 @@
   padding: 0.375rem 0.65rem;
   border-radius: 0.5rem;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
   background: transparent;
   border: 1px solid transparent;
   width: 100%;

@@ -1,29 +1,29 @@
-import { useEffect } from 'react';
-import '@app/routes/authShared/auth.css';
-import { useTranslation } from 'react-i18next';
-import { Checkbox, TextInput, PasswordInput, Button } from '@mantine/core';
-import { SignupFieldErrors } from '@app/routes/signup/SignupFormValidation';
+import { useEffect } from "react";
+import "@app/routes/authShared/auth.css";
+import { useTranslation } from "react-i18next";
+import { Checkbox, TextInput, PasswordInput, Button } from "@mantine/core";
+import { SignupFieldErrors } from "@app/routes/signup/SignupFormValidation";
 
 interface SignupFormProps {
-  name?: string
-  email: string
-  password: string
-  confirmPassword: string
-  agree?: boolean
-  setName?: (name: string) => void
-  setEmail: (email: string) => void
-  setPassword: (password: string) => void
-  setConfirmPassword: (password: string) => void
-  setAgree?: (agree: boolean) => void
-  onSubmit: () => void
-  isSubmitting: boolean
-  fieldErrors?: SignupFieldErrors
-  showName?: boolean
-  showTerms?: boolean
+  name?: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  agree?: boolean;
+  setName?: (name: string) => void;
+  setEmail: (email: string) => void;
+  setPassword: (password: string) => void;
+  setConfirmPassword: (password: string) => void;
+  setAgree?: (agree: boolean) => void;
+  onSubmit: () => void;
+  isSubmitting: boolean;
+  fieldErrors?: SignupFieldErrors;
+  showName?: boolean;
+  showTerms?: boolean;
 }
 
 export default function SignupForm({
-  name = '',
+  name = "",
   email,
   password,
   confirmPassword,
@@ -37,14 +37,14 @@ export default function SignupForm({
   isSubmitting,
   fieldErrors = {},
   showName = false,
-  showTerms = false
+  showTerms = false,
 }: SignupFormProps) {
   const { t } = useTranslation();
   const showConfirm = password.length >= 4;
 
   useEffect(() => {
     if (!showConfirm && confirmPassword) {
-      setConfirmPassword('');
+      setConfirmPassword("");
     }
   }, [showConfirm, confirmPassword, setConfirmPassword]);
 
@@ -55,14 +55,14 @@ export default function SignupForm({
           <div className="auth-field">
             <TextInput
               id="name"
-              label={t('signup.name')}
+              label={t("signup.name")}
               name="name"
               autoComplete="name"
-              placeholder={t('signup.enterName')}
+              placeholder={t("signup.enterName")}
               value={name}
               onChange={(e) => setName?.(e.target.value)}
               error={fieldErrors.name}
-              classNames={{ label: 'auth-label' }}
+              classNames={{ label: "auth-label" }}
             />
           </div>
         )}
@@ -70,31 +70,31 @@ export default function SignupForm({
         <div className="auth-field">
           <TextInput
             id="email"
-            label={t('signup.email')}
+            label={t("signup.email")}
             type="email"
             name="email"
             autoComplete="email"
-            placeholder={t('signup.enterEmail')}
+            placeholder={t("signup.enterEmail")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !isSubmitting && onSubmit()}
+            onKeyDown={(e) => e.key === "Enter" && !isSubmitting && onSubmit()}
             error={fieldErrors.email}
-            classNames={{ label: 'auth-label' }}
+            classNames={{ label: "auth-label" }}
           />
         </div>
 
         <div className="auth-field">
           <PasswordInput
             id="password"
-            label={t('signup.password')}
+            label={t("signup.password")}
             name="new-password"
             autoComplete="new-password"
-            placeholder={t('signup.enterPassword')}
+            placeholder={t("signup.enterPassword")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !isSubmitting && onSubmit()}
+            onKeyDown={(e) => e.key === "Enter" && !isSubmitting && onSubmit()}
             error={fieldErrors.password}
-            classNames={{ label: 'auth-label' }}
+            classNames={{ label: "auth-label" }}
           />
         </div>
 
@@ -106,15 +106,15 @@ export default function SignupForm({
           <div className="auth-field">
             <PasswordInput
               id="confirmPassword"
-              label={t('signup.confirmPassword')}
+              label={t("signup.confirmPassword")}
               name="new-password"
               autoComplete="new-password"
-              placeholder={t('signup.confirmPasswordPlaceholder')}
+              placeholder={t("signup.confirmPasswordPlaceholder")}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !isSubmitting && onSubmit()}
+              onKeyDown={(e) => e.key === "Enter" && !isSubmitting && onSubmit()}
               error={fieldErrors.confirmPassword}
-              classNames={{ label: 'auth-label' }}
+              classNames={{ label: "auth-label" }}
             />
           </div>
         </div>
@@ -130,9 +130,9 @@ export default function SignupForm({
             className="auth-checkbox"
             label={
               <span className="auth-terms-label">
-                {t("legal.iAgreeToThe", 'I agree to all of the')}{' '}
+                {t("legal.iAgreeToThe", "I agree to all of the")}{" "}
                 <a href="https://www.stirlingpdf.com/terms" target="_blank" rel="noopener noreferrer">
-                  {t('legal.terms', 'Terms and Conditions')}
+                  {t("legal.terms", "Terms and Conditions")}
                 </a>
               </span>
             }
@@ -148,7 +148,7 @@ export default function SignupForm({
         fullWidth
         loading={isSubmitting}
       >
-        {isSubmitting ? t('signup.creatingAccount') : t('signup.signUp')}
+        {isSubmitting ? t("signup.creatingAccount") : t("signup.signUp")}
       </Button>
     </>
   );

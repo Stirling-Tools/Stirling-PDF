@@ -19,7 +19,7 @@ interface AddPageNumbersAutomationSettingsProps {
 const AddPageNumbersAutomationSettings = ({
   parameters,
   onParameterChange,
-  disabled = false
+  disabled = false,
 }: AddPageNumbersAutomationSettingsProps) => {
   const { t } = useTranslation();
 
@@ -27,7 +27,9 @@ const AddPageNumbersAutomationSettings = ({
     <Stack gap="lg">
       {/* Position & Pages Section */}
       <Stack gap="md">
-        <Text size="sm" fw={600}>{t("addPageNumbers.positionAndPages", "Position & Pages")}</Text>
+        <Text size="sm" fw={600}>
+          {t("addPageNumbers.positionAndPages", "Position & Pages")}
+        </Text>
         <AddPageNumbersPositionSettings
           parameters={parameters}
           onParameterChange={onParameterChange}
@@ -41,12 +43,10 @@ const AddPageNumbersAutomationSettings = ({
 
       {/* Appearance Section */}
       <Stack gap="md">
-        <Text size="sm" fw={600}>{t("addPageNumbers.customize", "Customize Appearance")}</Text>
-        <AddPageNumbersAppearanceSettings
-          parameters={parameters}
-          onParameterChange={onParameterChange}
-          disabled={disabled}
-        />
+        <Text size="sm" fw={600}>
+          {t("addPageNumbers.customize", "Customize Appearance")}
+        </Text>
+        <AddPageNumbersAppearanceSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
       </Stack>
     </Stack>
   );

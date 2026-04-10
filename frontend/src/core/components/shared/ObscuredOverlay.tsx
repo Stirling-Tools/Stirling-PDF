@@ -1,5 +1,5 @@
-import React from 'react';
-import styles from '@app/components/shared/ObscuredOverlay/ObscuredOverlay.module.css';
+import React from "react";
+import styles from "@app/components/shared/ObscuredOverlay/ObscuredOverlay.module.css";
 
 type ObscuredOverlayProps = {
   obscured: boolean;
@@ -30,11 +30,7 @@ export default function ObscuredOverlay({
           }}
         >
           <div className={styles.overlayContent}>
-            {overlayMessage && (
-              <div className={styles.overlayMessage}>
-                {overlayMessage}
-              </div>
-            )}
+            {overlayMessage && <div className={styles.overlayMessage}>{overlayMessage}</div>}
             {buttonText && onButtonClick && (
               <button type="button" onClick={onButtonClick} className={styles.overlayButton}>
                 {buttonText}
@@ -46,5 +42,3 @@ export default function ObscuredOverlay({
     </div>
   );
 }
-
-

@@ -1,20 +1,20 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import apiClient from '@app/services/apiClient';
-import { useFileContext } from '@app/contexts/file/fileHooks';
-import { ToolOperationHook } from '@app/hooks/tools/shared/useToolOperation';
-import type { StirlingFile } from '@app/types/fileContext';
-import { extractErrorMessage } from '@app/utils/toolErrorHandler';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import apiClient from "@app/services/apiClient";
+import { useFileContext } from "@app/contexts/file/fileHooks";
+import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
+import type { StirlingFile } from "@app/types/fileContext";
+import { extractErrorMessage } from "@app/utils/toolErrorHandler";
 import {
   SignatureValidationBackendResult,
   SignatureValidationFileResult,
   SignatureValidationReportEntry,
-} from '@app/types/validateSignature';
-import { ValidateSignatureParameters } from '@app/hooks/tools/validateSignature/useValidateSignatureParameters';
-import { buildReportEntries } from '@app/hooks/tools/validateSignature/utils/signatureReportBuilder';
-import { createReportPdf } from '@app/hooks/tools/validateSignature/signatureReportPdf';
-import { createCsvFile as buildCsvFile } from '@app/hooks/tools/validateSignature/utils/signatureCsv';
-import { normalizeBackendResult, RESULT_JSON_FILENAME } from '@app/hooks/tools/validateSignature/utils/signatureUtils';
+} from "@app/types/validateSignature";
+import { ValidateSignatureParameters } from "@app/hooks/tools/validateSignature/useValidateSignatureParameters";
+import { buildReportEntries } from "@app/hooks/tools/validateSignature/utils/signatureReportBuilder";
+import { createReportPdf } from "@app/hooks/tools/validateSignature/signatureReportPdf";
+import { createCsvFile as buildCsvFile } from "@app/hooks/tools/validateSignature/utils/signatureCsv";
+import { normalizeBackendResult, RESULT_JSON_FILENAME } from "@app/hooks/tools/validateSignature/utils/signatureUtils";
 
 export interface ValidateSignatureOperationHook extends ToolOperationHook<ValidateSignatureParameters> {
   results: SignatureValidationReportEntry[];
@@ -24,11 +24,11 @@ export const useValidateSignatureOperation = (): ValidateSignatureOperationHook 
   const { t } = useTranslation();
   const { selectors } = useFileContext();
   const [isLoading, setIsLoading] = useState(false);
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
-  const [downloadFilename, setDownloadFilename] = useState('');
+  const [downloadFilename, setDownloadFilename] = useState("");
   const [results, setResults] = useState<SignatureValidationReportEntry[]>([]);
 
   const cancelRequested = useRef(false);
@@ -47,8 +47,8 @@ export const useValidateSignatureOperation = (): ValidateSignatureOperationHook 
     setFiles([]);
     cleanupDownloadUrl();
     setDownloadUrl(null);
-    setDownloadFilename('');
-    setStatus('');
+    setDownloadFilename("");
+    setStatus("");
     setErrorMessage(null);
   }, [cleanupDownloadUrl]);
 
@@ -59,19 +59,19 @@ export const useValidateSignatureOperation = (): ValidateSignatureOperationHook 
   const executeOperation = useCallback(
     async (params: ValidateSignatureParameters, selectedFiles: StirlingFile[]) => {
       if (selectedFiles.length === 0) {
-        setErrorMessage(t('noFileSelected', 'No files selected'));
+        setErrorMessage(t("noFileSelected", "No files selected"));
         return;
       }
 
       cancelRequested.current = false;
       setIsLoading(true);
-      setStatus(t('validateSignature.processing', 'Validating signatures...'));
+      setStatus(t("validateSignature.processing", "Validating signatures..."));
       setErrorMessage(null);
       setResults([]);
       setFiles([]);
       cleanupDownloadUrl();
       setDownloadUrl(null);
-      setDownloadFilename('');
+      setDownloadFilename("");
 
       try {
         const aggregated: SignatureValidationFileResult[] = [];
@@ -82,19 +82,17 @@ export const useValidateSignatureOperation = (): ValidateSignatureOperationHook 
           }
 
           const formData = new FormData();
-          formData.append('fileInput', file);
+          formData.append("fileInput", file);
           if (params.certFile) {
-            formData.append('certFile', params.certFile);
+            formData.append("certFile", params.certFile);
           }
 
           try {
-            const response = await apiClient.post('/api/v1/security/validate-signature', formData, {
-              headers: { 'Content-Type': 'multipart/form-data' },
+            const response = await apiClient.post("/api/v1/security/validate-signature", formData, {
+              headers: { "Content-Type": "multipart/form-data" },
             });
 
-            const data = Array.isArray(response.data)
-              ? (response.data as SignatureValidationBackendResult[])
-              : [];
+            const data = Array.isArray(response.data) ? (response.data as SignatureValidationBackendResult[]) : [];
             const signatures = data.map((item, index) => normalizeBackendResult(item, file, index));
 
             aggregated.push({
@@ -130,7 +128,7 @@ export const useValidateSignatureOperation = (): ValidateSignatureOperationHook 
 
           if (enrichedEntries.length > 0) {
             const json = JSON.stringify(enrichedEntries, null, 2);
-            const resultFile = new File([json], RESULT_JSON_FILENAME, { type: 'application/json' });
+            const resultFile = new File([json], RESULT_JSON_FILENAME, { type: "application/json" });
             const csvFile = buildCsvFile(enrichedEntries);
 
             setFiles([resultFile, csvFile]);
@@ -138,20 +136,21 @@ export const useValidateSignatureOperation = (): ValidateSignatureOperationHook 
             (async () => {
               try {
                 const pdfFile = await createReportPdf(enrichedEntries, t);
-                setFiles((prev) => [pdfFile, ...prev.filter((f) => !f.name.toLowerCase().endsWith('.pdf'))]);
+                setFiles((prev) => [pdfFile, ...prev.filter((f) => !f.name.toLowerCase().endsWith(".pdf"))]);
                 setDownloadFilename(pdfFile.name);
                 cleanupDownloadUrl();
                 const blobUrl = URL.createObjectURL(pdfFile);
                 previousUrl.current = blobUrl;
                 setDownloadUrl(blobUrl);
               } catch (err) {
-                console.warn('[validateSignature] PDF report generation failed', err);
-                setErrorMessage((prev) =>
-                  prev ??
-                  t(
-                    'validateSignature.error.reportGeneration',
-                    'Could not generate the PDF report. JSON and CSV are available.'
-                  )
+                console.warn("[validateSignature] PDF report generation failed", err);
+                setErrorMessage(
+                  (prev) =>
+                    prev ??
+                    t(
+                      "validateSignature.error.reportGeneration",
+                      "Could not generate the PDF report. JSON and CSV are available.",
+                    ),
                 );
               }
             })();
@@ -161,28 +160,28 @@ export const useValidateSignatureOperation = (): ValidateSignatureOperationHook 
           const anySuccess = aggregated.some((item) => item.signatures.length > 0);
 
           if (anyError && !anySuccess) {
-            setErrorMessage(t('validateSignature.error.allFailed', 'Unable to validate the selected files.'));
+            setErrorMessage(t("validateSignature.error.allFailed", "Unable to validate the selected files."));
           } else if (anyError) {
-            setErrorMessage(t('validateSignature.error.partial', 'Some files could not be validated.'));
+            setErrorMessage(t("validateSignature.error.partial", "Some files could not be validated."));
           }
 
-          setStatus(t('validateSignature.status.complete', 'Validation complete'));
+          setStatus(t("validateSignature.status.complete", "Validation complete"));
         }
       } catch (e) {
-        console.error('[validateSignature] unexpected failure', e);
-        setErrorMessage(t('validateSignature.error.unexpected', 'Unexpected error during validation.'));
+        console.error("[validateSignature] unexpected failure", e);
+        setErrorMessage(t("validateSignature.error.unexpected", "Unexpected error during validation."));
       } finally {
         setIsLoading(false);
       }
     },
-    [cleanupDownloadUrl, selectors, t]
+    [cleanupDownloadUrl, selectors, t],
   );
 
   const cancelOperation = useCallback(() => {
     if (isLoading) {
       cancelRequested.current = true;
       setIsLoading(false);
-      setStatus(t('operationCancelled', 'Operation cancelled'));
+      setStatus(t("operationCancelled", "Operation cancelled"));
     }
   }, [isLoading, t]);
 
@@ -226,6 +225,6 @@ export const useValidateSignatureOperation = (): ValidateSignatureOperationHook 
       resetResults,
       results,
       status,
-    ]
+    ],
   );
 };

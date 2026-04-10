@@ -1,4 +1,4 @@
-import { supabase } from '@app/auth/supabase';
+import { supabase } from "@app/auth/supabase";
 
 interface DeleteAccountOptions {
   notifyUser?: boolean;
@@ -12,7 +12,7 @@ interface DeleteUserResponse {
 }
 
 export async function deleteCurrentAccount(options?: DeleteAccountOptions): Promise<void> {
-  const { data, error } = await supabase.functions.invoke<DeleteUserResponse>('delete-user', {
+  const { data, error } = await supabase.functions.invoke<DeleteUserResponse>("delete-user", {
     body: {
       notify_user: options?.notifyUser ?? true,
     },
@@ -20,7 +20,7 @@ export async function deleteCurrentAccount(options?: DeleteAccountOptions): Prom
 
   if (error || !data?.success) {
     const serverMessage = data?.error;
-    const errorMessage = serverMessage || error?.message || 'Failed to delete account';
+    const errorMessage = serverMessage || error?.message || "Failed to delete account";
     throw new Error(errorMessage);
   }
 }

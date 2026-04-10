@@ -1,4 +1,4 @@
-import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 export interface SharingEnabledResult {
   sharingEnabled: boolean;

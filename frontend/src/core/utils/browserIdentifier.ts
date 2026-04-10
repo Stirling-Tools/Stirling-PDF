@@ -3,7 +3,7 @@
  * Generates and persists a unique UUID in localStorage for WAU tracking
  */
 
-const BROWSER_ID_KEY = 'stirling_browser_id';
+const BROWSER_ID_KEY = "stirling_browser_id";
 
 /**
  * Gets or creates a unique browser identifier
@@ -23,7 +23,7 @@ export function getBrowserId(): string {
     return browserId;
   } catch (error) {
     // Fallback to session-based ID if localStorage is unavailable
-    console.warn('localStorage unavailable, using session-based ID', error);
+    console.warn("localStorage unavailable, using session-based ID", error);
     return `session_${generateUUID()}`;
   }
 }
@@ -33,14 +33,14 @@ export function getBrowserId(): string {
  */
 function generateUUID(): string {
   // Use crypto.randomUUID if available (modern browsers)
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
     return crypto.randomUUID();
   }
 
   // Fallback to manual UUID generation
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 }

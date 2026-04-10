@@ -1,6 +1,6 @@
-import { SPLIT_METHODS, ENDPOINTS, type SplitMethod } from '@app/constants/splitConstants';
-import { BaseParameters } from '@app/types/parameters';
-import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
+import { SPLIT_METHODS, ENDPOINTS, type SplitMethod } from "@app/constants/splitConstants";
+import { BaseParameters } from "@app/types/parameters";
+import { useBaseParameters, BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
 
 export interface SplitParameters extends BaseParameters {
   method: SplitMethod | null;
@@ -25,35 +25,35 @@ export type SplitParametersHook = BaseParametersHook<SplitParameters>;
 
 export const defaultParameters: SplitParameters = {
   method: null,
-  pages: '',
-  hDiv: '2',
-  vDiv: '2',
+  pages: "",
+  hDiv: "2",
+  vDiv: "2",
   merge: false,
-  splitValue: '',
-  bookmarkLevel: '1',
+  splitValue: "",
+  bookmarkLevel: "1",
   includeMetadata: false,
   allowDuplicates: false,
   duplexMode: false,
-  splitMode: 'SPLIT_ALL',
-  customPages: '',
-  pageSize: 'A4',
-  xFactor: '2',
-  yFactor: '2',
+  splitMode: "SPLIT_ALL",
+  customPages: "",
+  pageSize: "A4",
+  xFactor: "2",
+  yFactor: "2",
   rightToLeft: false,
 };
 
 export const useSplitParameters = (): SplitParametersHook => {
   return useBaseParameters({
     defaultParameters,
-    endpointName: (params) => params.method ? ENDPOINTS[params.method] : ENDPOINTS[SPLIT_METHODS.BY_PAGES],
+    endpointName: (params) => (params.method ? ENDPOINTS[params.method] : ENDPOINTS[SPLIT_METHODS.BY_PAGES]),
     validateFn: (params) => {
       switch (params.method) {
         case SPLIT_METHODS.BY_PAGES:
           return params.pages.trim() !== "";
         case SPLIT_METHODS.BY_SECTIONS:
           if (params.hDiv === "" || params.vDiv === "") return false;
-          if (params.splitMode === 'CUSTOM') {
-            return (params.customPages || '').trim() !== "";
+          if (params.splitMode === "CUSTOM") {
+            return (params.customPages || "").trim() !== "";
           }
           return true;
         case SPLIT_METHODS.BY_SIZE:

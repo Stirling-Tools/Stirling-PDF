@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
-import { usePreferences } from '@app/contexts/PreferencesContext';
-import { useOnboarding } from '@app/contexts/OnboardingContext';
-import { useAuth } from '@app/auth/UseSession';
-import SaasOnboardingModal from '@app/components/onboarding/SaasOnboardingModal';
+import { useEffect, useState } from "react";
+import { usePreferences } from "@app/contexts/PreferencesContext";
+import { useOnboarding } from "@app/contexts/OnboardingContext";
+import { useAuth } from "@app/auth/UseSession";
+import SaasOnboardingModal from "@app/components/onboarding/SaasOnboardingModal";
 
-const STORAGE_KEY = 'saas_onboarding_seen';
-const ONBOARDING_SESSION_BLOCK_KEY = 'stirling-onboarding-session-active';
+const STORAGE_KEY = "saas_onboarding_seen";
+const ONBOARDING_SESSION_BLOCK_KEY = "stirling-onboarding-session-active";
 
 /**
  * SaaS-only bootstrap to clear deferred tour requests, mark tool panel prompt as completed,
@@ -21,10 +21,10 @@ export default function OnboardingBootstrap() {
 
   // Start polling when user logs in
   useEffect(() => {
-    const hasSeenOnboarding = localStorage.getItem(STORAGE_KEY) === 'true';
+    const hasSeenOnboarding = localStorage.getItem(STORAGE_KEY) === "true";
 
     if (user && !hasSeenOnboarding && !loading && !isPolling && !showModal) {
-      console.debug('[Onboarding] Starting poll for trial data');
+      console.debug("[Onboarding] Starting poll for trial data");
       setIsPolling(true);
       setPollAttempts(0);
     }
@@ -38,7 +38,7 @@ export default function OnboardingBootstrap() {
 
     const timer = setTimeout(async () => {
       const newAttempts = pollAttempts + 1;
-      console.debug('[Onboarding] Polling for trial data, attempt:', newAttempts);
+      console.debug("[Onboarding] Polling for trial data, attempt:", newAttempts);
 
       await refreshTrialStatus();
       setPollAttempts(newAttempts);
@@ -58,12 +58,12 @@ export default function OnboardingBootstrap() {
     const maxAttempts = 10;
 
     if (hasData || pollAttempts >= maxAttempts) {
-      console.debug('[Onboarding] Trial data ready or timeout, showing modal', {
+      console.debug("[Onboarding] Trial data ready or timeout, showing modal", {
         hasData,
         hasProStatus,
         attempts: pollAttempts,
         trialStatus,
-        isPro
+        isPro,
       });
       setIsPolling(false);
       setShowModal(true);
@@ -71,7 +71,7 @@ export default function OnboardingBootstrap() {
   }, [isPolling, trialStatus, isPro, pollAttempts]);
 
   const handleClose = () => {
-    localStorage.setItem(STORAGE_KEY, 'true');
+    localStorage.setItem(STORAGE_KEY, "true");
     setShowModal(false);
   };
 
@@ -79,8 +79,8 @@ export default function OnboardingBootstrap() {
   useEffect(() => {
     // Ensure tool panel preference is set so tours are never deferred.
     if (!preferences.toolPanelModePromptSeen || !preferences.hasSelectedToolPanelMode) {
-      updatePreference('toolPanelModePromptSeen', true);
-      updatePreference('hasSelectedToolPanelMode', true);
+      updatePreference("toolPanelModePromptSeen", true);
+      updatePreference("hasSelectedToolPanelMode", true);
     }
 
     // Clear any lingering deferred tour requests.
@@ -89,15 +89,15 @@ export default function OnboardingBootstrap() {
 
     // In SaaS, skip the core intro onboarding entirely.
     if (!preferences.hasSeenIntroOnboarding) {
-      updatePreference('hasSeenIntroOnboarding', true);
+      updatePreference("hasSeenIntroOnboarding", true);
     }
     // Also mark completed to avoid follow-up banners/modals.
     if (!preferences.hasCompletedOnboarding) {
-      updatePreference('hasCompletedOnboarding', true);
+      updatePreference("hasCompletedOnboarding", true);
     }
 
     // Also clear any session flag that might mark onboarding as active.
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       window.sessionStorage.removeItem(ONBOARDING_SESSION_BLOCK_KEY);
     }
   }, [

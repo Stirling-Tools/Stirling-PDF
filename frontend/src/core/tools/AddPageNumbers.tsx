@@ -39,9 +39,9 @@ const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
   const hasResults = operation.files.length > 0 || operation.downloadUrl !== null;
 
   enum AddPageNumbersStep {
-    NONE = 'none',
-    POSITION_AND_PAGES = 'position_and_pages',
-    CUSTOMIZE = 'customize'
+    NONE = "none",
+    POSITION_AND_PAGES = "position_and_pages",
+    CUSTOMIZE = "customize",
   }
 
   const accordion = useAccordionSteps<AddPageNumbersStep>({
@@ -49,12 +49,12 @@ const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
     initialStep: AddPageNumbersStep.POSITION_AND_PAGES,
     stateConditions: {
       hasFiles,
-      hasResults
+      hasResults,
     },
     afterResults: () => {
       operation.resetResults();
       onPreviewFile?.(null);
-    }
+    },
   });
 
   const getSteps = () => {
@@ -102,9 +102,9 @@ const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
     },
     steps: getSteps(),
     executeButton: {
-      text: t('addPageNumbers.submit', 'Add Page Numbers'),
+      text: t("addPageNumbers.submit", "Add Page Numbers"),
       isVisible: !hasResults,
-      loadingText: t('loading'),
+      loadingText: t("loading"),
       onClick: handleExecute,
       endpointEnabled: endpointEnabled,
       paramsValid: params.validateParameters(),
@@ -112,7 +112,7 @@ const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
     review: {
       isVisible: hasResults,
       operation: operation,
-      title: t('addPageNumbers.results.title', 'Page Number Results'),
+      title: t("addPageNumbers.results.title", "Page Number Results"),
       onFileClick: (file) => onPreviewFile?.(file),
       onUndo: async () => {
         await operation.undoOperation();

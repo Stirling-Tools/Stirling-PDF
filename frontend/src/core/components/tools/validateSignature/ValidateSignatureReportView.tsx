@@ -1,22 +1,22 @@
-import React, { useMemo } from 'react';
-import { Badge, Group, Stack, Text, Divider } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import type { SignatureValidationReportData } from '@app/types/validateSignature';
-import '@app/components/tools/validateSignature/reportView/styles.css';
-import ThumbnailPreview from '@app/components/tools/validateSignature/reportView/ThumbnailPreview';
-import FileSummaryHeader from '@app/components/tools/validateSignature/reportView/FileSummaryHeader';
-import SignatureSection from '@app/components/tools/validateSignature/reportView/SignatureSection';
+import React, { useMemo } from "react";
+import { Badge, Group, Stack, Text, Divider } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import type { SignatureValidationReportData } from "@app/types/validateSignature";
+import "@app/components/tools/validateSignature/reportView/styles.css";
+import ThumbnailPreview from "@app/components/tools/validateSignature/reportView/ThumbnailPreview";
+import FileSummaryHeader from "@app/components/tools/validateSignature/reportView/FileSummaryHeader";
+import SignatureSection from "@app/components/tools/validateSignature/reportView/SignatureSection";
 
 interface ValidateSignatureReportViewProps {
   data: SignatureValidationReportData;
 }
 
 const NoSignatureSection = ({ message, label }: { message: string; label: string }) => (
-  <Stack align="center" justify="center" gap="xs" style={{ minHeight: 360, width: '100%' }}>
-    <Badge color="gray" variant="light" size="lg" style={{ textTransform: 'uppercase' }}>
+  <Stack align="center" justify="center" gap="xs" style={{ minHeight: 360, width: "100%" }}>
+    <Badge color="gray" variant="light" size="lg" style={{ textTransform: "uppercase" }}>
       {label}
     </Badge>
-    <Text size="sm" c="dimmed" style={{ textAlign: 'center' }}>
+    <Text size="sm" c="dimmed" style={{ textAlign: "center" }}>
       {message}
     </Text>
   </Stack>
@@ -24,11 +24,11 @@ const NoSignatureSection = ({ message, label }: { message: string; label: string
 
 const ValidateSignatureReportView: React.FC<ValidateSignatureReportViewProps> = ({ data }) => {
   const { t } = useTranslation();
-  const noSignaturesLabel = t('validateSignature.noSignaturesShort', 'No signatures');
+  const noSignaturesLabel = t("validateSignature.noSignaturesShort", "No signatures");
 
   const pages = useMemo(() => {
     const result: Array<{
-      entry: SignatureValidationReportData['entries'][number];
+      entry: SignatureValidationReportData["entries"][number];
       signatureIndex: number | null;
       includeSummary: boolean;
     }> = [];
@@ -56,11 +56,10 @@ const ValidateSignatureReportView: React.FC<ValidateSignatureReportViewProps> = 
       <Stack gap="xl" align="center">
         <Stack gap="xs" align="center">
           <Badge size="lg" color="blue" variant="light">
-            {t('validateSignature.report.title', 'Signature Validation Report')}
+            {t("validateSignature.report.title", "Signature Validation Report")}
           </Badge>
           <Text size="sm" c="dimmed">
-            {t('validateSignature.report.generatedAt', 'Generated')}{' '}
-            {new Date(data.generatedAt).toLocaleString()}
+            {t("validateSignature.report.generatedAt", "Generated")} {new Date(data.generatedAt).toLocaleString()}
           </Text>
         </Stack>
 
@@ -70,10 +69,7 @@ const ValidateSignatureReportView: React.FC<ValidateSignatureReportViewProps> = 
               {pageDef.includeSummary && (
                 <>
                   <Group align="flex-start" gap="lg">
-                    <ThumbnailPreview
-                      thumbnailUrl={pageDef.entry.thumbnailUrl}
-                      fileName={pageDef.entry.fileName}
-                    />
+                    <ThumbnailPreview thumbnailUrl={pageDef.entry.thumbnailUrl} fileName={pageDef.entry.fileName} />
                     <Stack gap="sm" style={{ flex: 1 }}>
                       <Group justify="space-between" align="flex-start">
                         <div>
@@ -81,11 +77,11 @@ const ValidateSignatureReportView: React.FC<ValidateSignatureReportViewProps> = 
                             {pageDef.entry.fileName}
                           </Text>
                           <Text size="sm" c="dimmed">
-                            {t('validateSignature.report.entryLabel', 'Signature Summary')}
+                            {t("validateSignature.report.entryLabel", "Signature Summary")}
                           </Text>
                         </div>
                         <Badge color="gray" variant="light">
-                          {t('validateSignature.report.page', 'Page')} {index + 1}
+                          {t("validateSignature.report.page", "Page")} {index + 1}
                         </Badge>
                       </Group>
 
@@ -103,16 +99,10 @@ const ValidateSignatureReportView: React.FC<ValidateSignatureReportViewProps> = 
               )}
 
               {pageDef.entry.error ? (
-                <NoSignatureSection
-                  message={pageDef.entry.error}
-                  label={t('validateSignature.status.invalid', 'Invalid')}
-                />
+                <NoSignatureSection message={pageDef.entry.error} label={t("validateSignature.status.invalid", "Invalid")} />
               ) : pageDef.entry.signatures.length === 0 ? (
                 <NoSignatureSection
-                  message={t(
-                    'validateSignature.noSignatures',
-                    'No digital signatures found in this document'
-                  )}
+                  message={t("validateSignature.noSignatures", "No digital signatures found in this document")}
                   label={noSignaturesLabel}
                 />
               ) : (
@@ -129,10 +119,10 @@ const ValidateSignatureReportView: React.FC<ValidateSignatureReportViewProps> = 
 
             <Group justify="space-between" align="center" mt="auto" pt="md">
               <Text size="xs" c="dimmed">
-                {t('validateSignature.report.footer', 'Validated via Stirling PDF')}
+                {t("validateSignature.report.footer", "Validated via Stirling PDF")}
               </Text>
               <Text size="xs" c="dimmed">
-                {t('validateSignature.report.page', 'Page')} {index + 1} / {pages.length}
+                {t("validateSignature.report.page", "Page")} {index + 1} / {pages.length}
               </Text>
             </Group>
           </div>

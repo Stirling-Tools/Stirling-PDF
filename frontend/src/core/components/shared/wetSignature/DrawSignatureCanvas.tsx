@@ -1,7 +1,7 @@
-import { useRef, useEffect, useState } from 'react';
-import { Stack, Button, Group, ColorPicker, Slider, Text } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { useRef, useEffect, useState } from "react";
+import { Stack, Button, Group, ColorPicker, Slider, Text } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 interface DrawSignatureCanvasProps {
   signature: string | null;
@@ -9,21 +9,17 @@ interface DrawSignatureCanvasProps {
   disabled?: boolean;
 }
 
-export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
-  signature,
-  onChange,
-  disabled = false,
-}) => {
+export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({ signature, onChange, disabled = false }) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [penColor, setPenColor] = useState('#000000');
+  const [penColor, setPenColor] = useState("#000000");
   const [penSize, setPenSize] = useState(2);
 
   useEffect(() => {
     if (!canvasRef.current) return;
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     // Clear canvas
@@ -48,7 +44,7 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.beginPath();
     ctx.moveTo(x, y);
@@ -62,12 +58,12 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.lineTo(x, y);
     ctx.strokeStyle = penColor;
     ctx.lineWidth = penSize;
-    ctx.lineCap = 'round';
+    ctx.lineCap = "round";
     ctx.stroke();
   };
 
@@ -78,14 +74,14 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
     if (!canvas) return;
 
     // Convert canvas to base64 and save
-    const dataUrl = canvas.toDataURL('image/png');
+    const dataUrl = canvas.toDataURL("image/png");
     onChange(dataUrl);
   };
 
   const clearCanvas = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     onChange(null);
@@ -94,7 +90,7 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
   return (
     <Stack gap="sm">
       <Text size="sm" c="dimmed">
-        {t('certSign.collab.signRequest.drawSignature', 'Draw your signature below')}
+        {t("certSign.collab.signRequest.drawSignature", "Draw your signature below")}
       </Text>
 
       <canvas
@@ -106,30 +102,25 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
         onMouseUp={stopDrawing}
         onMouseLeave={stopDrawing}
         style={{
-          border: '1px solid var(--mantine-color-default-border)',
-          borderRadius: 'var(--mantine-radius-default)',
-          cursor: disabled ? 'not-allowed' : 'crosshair',
-          width: '100%',
-          maxWidth: '400px',
-          backgroundColor: 'white',
+          border: "1px solid var(--mantine-color-default-border)",
+          borderRadius: "var(--mantine-radius-default)",
+          cursor: disabled ? "not-allowed" : "crosshair",
+          width: "100%",
+          maxWidth: "400px",
+          backgroundColor: "white",
         }}
       />
 
       <Group gap="sm">
         <div style={{ flex: 1 }}>
           <Text size="xs" mb={4}>
-            {t('certSign.collab.signRequest.penColor', 'Pen Color')}
+            {t("certSign.collab.signRequest.penColor", "Pen Color")}
           </Text>
-          <ColorPicker
-            value={penColor}
-            onChange={setPenColor}
-            format="hex"
-            size="xs"
-          />
+          <ColorPicker value={penColor} onChange={setPenColor} format="hex" size="xs" />
         </div>
         <div style={{ flex: 2 }}>
           <Text size="xs" mb={4}>
-            {t('certSign.collab.signRequest.penSize', 'Pen Size: {{size}}px', { size: penSize })}
+            {t("certSign.collab.signRequest.penSize", "Pen Size: {{size}}px", { size: penSize })}
           </Text>
           <Slider
             value={penSize}
@@ -139,9 +130,9 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
             step={1}
             disabled={disabled}
             marks={[
-              { value: 1, label: '1' },
-              { value: 5, label: '5' },
-              { value: 10, label: '10' },
+              { value: 1, label: "1" },
+              { value: 5, label: "5" },
+              { value: 10, label: "10" },
             ]}
           />
         </div>
@@ -155,7 +146,7 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
         disabled={disabled || !signature}
         fullWidth
       >
-        {t('certSign.collab.signRequest.clearSignature', 'Clear Signature')}
+        {t("certSign.collab.signRequest.clearSignature", "Clear Signature")}
       </Button>
     </Stack>
   );

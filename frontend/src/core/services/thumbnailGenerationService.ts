@@ -2,9 +2,9 @@
  * High-performance thumbnail generation service using main thread processing
  */
 
-import { FileId } from '@app/types/file';
-import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
-import { PDFDocumentProxy } from 'pdfjs-dist';
+import { FileId } from "@app/types/file";
+import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import { PDFDocumentProxy } from "pdfjs-dist";
 
 interface ThumbnailResult {
   pageNumber: number;
@@ -66,13 +66,13 @@ export class ThumbnailGenerationService {
     const pdf = await pdfWorkerManager.createDocument(pdfArrayBuffer, {
       disableAutoFetch: true,
       disableStream: true,
-      stopAtErrors: false
+      stopAtErrors: false,
     });
 
     this.pdfDocumentCache.set(fileId, {
       pdf,
       lastUsed: Date.now(),
-      refCount: 1
+      refCount: 1,
     });
 
     return pdf;
@@ -117,25 +117,22 @@ export class ThumbnailGenerationService {
     pdfArrayBuffer: ArrayBuffer,
     pageNumbers: number[],
     options: ThumbnailGenerationOptions = {},
-    onProgress?: (progress: { completed: number; total: number; thumbnails: ThumbnailResult[] }) => void
+    onProgress?: (progress: { completed: number; total: number; thumbnails: ThumbnailResult[] }) => void,
   ): Promise<ThumbnailResult[]> {
     // Input validation
-    if (!fileId || typeof fileId !== 'string' || fileId.trim() === '') {
-      throw new Error('generateThumbnails: fileId must be a non-empty string');
+    if (!fileId || typeof fileId !== "string" || fileId.trim() === "") {
+      throw new Error("generateThumbnails: fileId must be a non-empty string");
     }
 
     if (!pdfArrayBuffer || pdfArrayBuffer.byteLength === 0) {
-      throw new Error('generateThumbnails: pdfArrayBuffer must not be empty');
+      throw new Error("generateThumbnails: pdfArrayBuffer must not be empty");
     }
 
     if (!pageNumbers || pageNumbers.length === 0) {
-      throw new Error('generateThumbnails: pageNumbers must not be empty');
+      throw new Error("generateThumbnails: pageNumbers must not be empty");
     }
 
-    const {
-      scale = 0.2,
-      quality = 0.8
-    } = options;
+    const { scale = 0.2, quality = 0.8 } = options;
 
     return await this.generateThumbnailsMainThread(fileId, pdfArrayBuffer, pageNumbers, scale, quality, onProgress);
   }
@@ -149,7 +146,7 @@ export class ThumbnailGenerationService {
     pageNumbers: number[],
     scale: number,
     quality: number,
-    onProgress?: (progress: { completed: number; total: number; thumbnails: ThumbnailResult[] }) => void
+    onProgress?: (progress: { completed: number; total: number; thumbnails: ThumbnailResult[] }) => void,
   ): Promise<ThumbnailResult[]> {
     const pdf = await this.getCachedPDFDocument(fileId, pdfArrayBuffer);
 
@@ -167,27 +164,26 @@ export class ThumbnailGenerationService {
           const page = await pdf.getPage(pageNumber);
           const viewport = page.getViewport({ scale, rotation: 0 });
 
-          const canvas = document.createElement('canvas');
+          const canvas = document.createElement("canvas");
           canvas.width = viewport.width;
           canvas.height = viewport.height;
 
-          const context = canvas.getContext('2d');
+          const context = canvas.getContext("2d");
           if (!context) {
-            throw new Error('Could not get canvas context');
+            throw new Error("Could not get canvas context");
           }
 
           await page.render({ canvasContext: context, viewport }).promise;
-          const thumbnail = canvas.toDataURL('image/jpeg', quality);
+          const thumbnail = canvas.toDataURL("image/jpeg", quality);
 
           allResults.push({ pageNumber, thumbnail, success: true });
-
         } catch (error) {
           console.error(`Failed to generate thumbnail for page ${pageNumber}:`, error);
           allResults.push({
             pageNumber,
-            thumbnail: '',
+            thumbnail: "",
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: error instanceof Error ? error.message : "Unknown error",
           });
         }
       }
@@ -199,12 +195,12 @@ export class ThumbnailGenerationService {
         onProgress({
           completed,
           total: pageNumbers.length,
-          thumbnails: allResults.slice(-batch.length).filter(r => r.success)
+          thumbnails: allResults.slice(-batch.length).filter((r) => r.success),
         });
       }
 
       // Yield control to prevent UI blocking
-      await new Promise(resolve => setTimeout(resolve, 1));
+      await new Promise((resolve) => setTimeout(resolve, 1));
     }
 
     // Release reference to PDF document (don't destroy - keep in cache)
@@ -238,7 +234,7 @@ export class ThumbnailGenerationService {
     this.thumbnailCache.set(pageId, {
       thumbnail,
       lastUsed: Date.now(),
-      sizeBytes
+      sizeBytes,
     });
 
     this.currentCacheSize += sizeBytes;
@@ -265,7 +261,7 @@ export class ThumbnailGenerationService {
     return {
       size: this.thumbnailCache.size,
       sizeBytes: this.currentCacheSize,
-      maxSizeBytes: this.maxCacheSizeBytes
+      maxSizeBytes: this.maxCacheSizeBytes,
     };
   }
 

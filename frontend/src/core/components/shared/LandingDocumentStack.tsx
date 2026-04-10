@@ -19,9 +19,9 @@ export function LandingDocumentStack() {
 
       <div className="landing-sheet landing-sheet--front">
         <div className="landing-sheet-header">
-          <div className="landing-sheet-dot" style={{ backgroundColor: 'rgba(255,255,255,0.35)' }} />
-          <div className="landing-sheet-dot" style={{ backgroundColor: 'rgba(255,255,255,0.25)' }} />
-          <div className="landing-sheet-dot" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }} />
+          <div className="landing-sheet-dot" style={{ backgroundColor: "rgba(255,255,255,0.35)" }} />
+          <div className="landing-sheet-dot" style={{ backgroundColor: "rgba(255,255,255,0.25)" }} />
+          <div className="landing-sheet-dot" style={{ backgroundColor: "rgba(255,255,255,0.15)" }} />
         </div>
         <div className="landing-sheet-body">
           <div className="landing-bar landing-bar--strong" style={bar(100, 10, 10)} />

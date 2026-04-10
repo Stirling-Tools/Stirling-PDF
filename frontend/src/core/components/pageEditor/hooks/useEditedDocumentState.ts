@@ -89,8 +89,7 @@ export const useEditedDocumentState = ({
     const currentEditedDocument = editedDocumentRef.current;
     if (!mergedPdfDocument || !currentEditedDocument) return;
 
-    const signatureChanged =
-      mergedDocSignature !== lastSyncedSignatureRef.current;
+    const signatureChanged = mergedDocSignature !== lastSyncedSignatureRef.current;
     const metadataChanged =
       currentEditedDocument.id !== mergedPdfDocument.id ||
       currentEditedDocument.file !== mergedPdfDocument.file ||
@@ -118,8 +117,7 @@ export const useEditedDocumentState = ({
         }
 
         const hasAdditions = newPages.length > 0;
-        const isEphemeralPage = (page: PDFPage) =>
-          Boolean(page.isBlankPage || page.isPlaceholder);
+        const isEphemeralPage = (page: PDFPage) => Boolean(page.isBlankPage || page.isPlaceholder);
 
         let hasRemovals = false;
         for (const page of prev.pages) {
@@ -144,16 +142,12 @@ export const useEditedDocumentState = ({
           const nextInsertIndexByFile = new Map(placeholderPositions);
 
           if (hasRemovals) {
-            pages = pages.filter(
-              (page) => sourceIds.has(page.id) || isEphemeralPage(page)
-            );
+            pages = pages.filter((page) => sourceIds.has(page.id) || isEphemeralPage(page));
           }
 
           if (hasAdditions) {
             const mergedIndexMap = new Map<string, number>();
-            sourcePages.forEach((page, index) =>
-              mergedIndexMap.set(page.id, index)
-            );
+            sourcePages.forEach((page, index) => mergedIndexMap.set(page.id, index));
 
             const additions = newPages
               .map((page) => ({
@@ -176,10 +170,7 @@ export const useEditedDocumentState = ({
 
               let insertIndex: number;
               const originalFileId = page.originalFileId;
-              const placeholderIndex =
-                originalFileId !== undefined
-                  ? nextInsertIndexByFile.get(originalFileId)
-                  : undefined;
+              const placeholderIndex = originalFileId !== undefined ? nextInsertIndexByFile.get(originalFileId) : undefined;
 
               if (originalFileId && placeholderIndex !== undefined) {
                 insertIndex = Math.min(placeholderIndex, pages.length);
@@ -203,7 +194,6 @@ export const useEditedDocumentState = ({
               pages.splice(insertIndex, 0, clonedPage);
             });
           }
-
         }
 
         if (shouldResetToMerged || hasAdditions || hasRemovals) {
@@ -240,10 +230,7 @@ export const useEditedDocumentState = ({
 
   const displayDocument = editedDocument || initialDocument;
 
-  const getEditedDocument = useCallback(
-    () => editedDocumentRef.current,
-    []
-  );
+  const getEditedDocument = useCallback(() => editedDocumentRef.current, []);
 
   useEffect(() => {
     updateCurrentPages(displayDocument?.pages ?? null);
@@ -257,6 +244,4 @@ export const useEditedDocumentState = ({
   };
 };
 
-export type UseEditedDocumentStateReturn = ReturnType<
-  typeof useEditedDocumentState
->;
+export type UseEditedDocumentStateReturn = ReturnType<typeof useEditedDocumentState>;

@@ -4,14 +4,7 @@ export interface AnnotationRect {
 }
 
 export interface SignatureAPI {
-  addImageSignature: (
-    signatureData: string,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    pageIndex: number
-  ) => void;
+  addImageSignature: (signatureData: string, x: number, y: number, width: number, height: number, pageIndex: number) => void;
   activateDrawMode: () => void;
   activateSignaturePlacementMode: () => void;
   activateDeleteMode: () => void;
@@ -62,31 +55,31 @@ export interface HistoryAPI {
 }
 
 export type AnnotationToolId =
-  | 'select'
-  | 'highlight'
-  | 'underline'
-  | 'strikeout'
-  | 'squiggly'
-  | 'ink'
-  | 'inkHighlighter'
-  | 'text'
-  | 'note'
-  | 'textComment'
-  | 'insertText'
-  | 'replaceText'
-  | 'square'
-  | 'circle'
-  | 'line'
-  | 'lineArrow'
-  | 'polyline'
-  | 'polygon'
-  | 'stamp'
-  | 'signatureStamp'
-  | 'signatureInk';
+  | "select"
+  | "highlight"
+  | "underline"
+  | "strikeout"
+  | "squiggly"
+  | "ink"
+  | "inkHighlighter"
+  | "text"
+  | "note"
+  | "textComment"
+  | "insertText"
+  | "replaceText"
+  | "square"
+  | "circle"
+  | "line"
+  | "lineArrow"
+  | "polyline"
+  | "polygon"
+  | "stamp"
+  | "signatureStamp"
+  | "signatureInk";
 
 // Import for internal use within this file, and re-export for external consumers
-import type { AnnotationEvent } from '@embedpdf/plugin-annotation';
-export type { AnnotationEvent } from '@embedpdf/plugin-annotation';
+import type { AnnotationEvent } from "@embedpdf/plugin-annotation";
+export type { AnnotationEvent } from "@embedpdf/plugin-annotation";
 
 export type AnnotationPatch = Record<string, unknown>;
 
@@ -141,8 +134,8 @@ export interface AnnotationToolOptions {
   textAlign?: number; // 0 = Left, 1 = Center, 2 = Right
   imageSrc?: string;
   imageSize?: { width: number; height: number };
-  icon?: 'Comment' | 'Key' | 'Note' | 'Help' | 'NewParagraph' | 'Paragraph' | 'Insert';
+  icon?: "Comment" | "Key" | "Note" | "Help" | "NewParagraph" | "Paragraph" | "Insert";
   contents?: string;
   customData?: Record<string, unknown>;
-  flags?: ('invisible' | 'hidden' | 'print' | 'noZoom' | 'noRotate' | 'noView' | 'readOnly' | 'locked' | 'toggleNoView')[];
+  flags?: ("invisible" | "hidden" | "print" | "noZoom" | "noRotate" | "noView" | "readOnly" | "locked" | "toggleNoView")[];
 }

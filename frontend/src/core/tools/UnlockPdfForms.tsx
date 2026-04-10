@@ -8,12 +8,7 @@ import { BaseToolProps, ToolComponent } from "@app/types/tool";
 const UnlockPdfForms = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
-  const base = useBaseTool(
-    'unlockPdfForms',
-    useUnlockPdfFormsParameters,
-    useUnlockPdfFormsOperation,
-    props
-  );
+  const base = useBaseTool("unlockPdfForms", useUnlockPdfFormsParameters, useUnlockPdfFormsOperation, props);
 
   return createToolFlow({
     files: {

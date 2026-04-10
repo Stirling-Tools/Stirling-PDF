@@ -4,7 +4,7 @@
  * Helper functions for IndexedDB-based file history management.
  * Handles file history operations and lineage tracking.
  */
-import { StirlingFileStub } from '@app/types/fileContext';
+import { StirlingFileStub } from "@app/types/fileContext";
 
 /**
  * Group files by processing branches - each branch ends in a leaf file
@@ -21,14 +21,14 @@ export function groupFilesByOriginal(StirlingFileStubs: StirlingFileStub[]): Map
 
   // Find leaf files (files that are not parents of any other files AND have version history)
   // Original files (v0) should only be leaves if they have no processed versions at all
-  const leafFiles = StirlingFileStubs.filter(stub => {
-    const isParentOfOthers = StirlingFileStubs.some(otherStub => otherStub.parentFileId === stub.id);
-    const isOriginalOfOthers = StirlingFileStubs.some(otherStub => otherStub.originalFileId === stub.id);
+  const leafFiles = StirlingFileStubs.filter((stub) => {
+    const isParentOfOthers = StirlingFileStubs.some((otherStub) => otherStub.parentFileId === stub.id);
+    const isOriginalOfOthers = StirlingFileStubs.some((otherStub) => otherStub.originalFileId === stub.id);
 
     // A file is a leaf if:
     // 1. It's not a parent of any other files, AND
     // 2. It has processing history (versionNumber > 0) OR it's not referenced as original by others
-    return !isParentOfOthers && (stub.versionNumber && stub.versionNumber > 0 || !isOriginalOfOthers);
+    return !isParentOfOthers && ((stub.versionNumber && stub.versionNumber > 0) || !isOriginalOfOthers);
   });
 
   // For each leaf file, build its complete lineage path back to original
@@ -51,7 +51,7 @@ export function groupFilesByOriginal(StirlingFileStubs: StirlingFileStub[]): Map
       }
 
       // Check for infinite loops before moving to next
-      if (nextFile && lineagePath.some(file => file.id === nextFile!.id)) {
+      if (nextFile && lineagePath.some((file) => file.id === nextFile!.id)) {
         break;
       }
 
@@ -74,5 +74,3 @@ export function groupFilesByOriginal(StirlingFileStubs: StirlingFileStub[]): Map
 export function hasVersionHistory(fileStub: StirlingFileStub): boolean {
   return !!(fileStub.originalFileId && fileStub.versionNumber && fileStub.versionNumber > 0);
 }
-
-

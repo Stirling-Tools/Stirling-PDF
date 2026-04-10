@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
-import { BASE_PATH } from '@app/constants/app';
-import { getLogoFolder } from '@app/constants/logo';
-import { useLogoVariant } from '@app/hooks/useLogoVariant';
+import { useMemo } from "react";
+import { BASE_PATH } from "@app/constants/app";
+import { getLogoFolder } from "@app/constants/logo";
+import { useLogoVariant } from "@app/hooks/useLogoVariant";
 
 export function useLogoAssets() {
   const logoVariant = useLogoVariant();
@@ -25,10 +25,7 @@ export function useLogoAssets() {
         black: `${folderPath}/StirlingPDFLogoBlackText.svg`,
         grey: `${folderPath}/StirlingPDFLogoGreyText.svg`,
       },
-      manifestHref: logoVariant === 'classic'
-        ? `${BASE_PATH}/manifest-classic.json`
-        : `${BASE_PATH}/manifest.json`,
+      manifestHref: logoVariant === "classic" ? `${BASE_PATH}/manifest-classic.json` : `${BASE_PATH}/manifest.json`,
     };
   }, [logoVariant]);
 }
-

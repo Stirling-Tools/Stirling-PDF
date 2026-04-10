@@ -6,13 +6,13 @@ import {
   importPages,
   setPageRotation,
   addNewPage,
-} from '@app/services/pdfiumService';
-import { downloadFile } from '@app/services/downloadService';
-import { PDFDocument, PDFPage } from '@app/types/pageEditor';
+} from "@app/services/pdfiumService";
+import { downloadFile } from "@app/services/downloadService";
+import { PDFDocument, PDFPage } from "@app/types/pageEditor";
 
 // A4 dimensions in PDF points (72 dpi)
 const A4_WIDTH = 595.276;
-const A4_HEIGHT = 841.890;
+const A4_HEIGHT = 841.89;
 
 export interface ExportOptions {
   selectedOnly?: boolean;
@@ -26,17 +26,18 @@ export class PDFExportService {
   async exportPDF(
     pdfDocument: PDFDocument,
     selectedPageIds: string[] = [],
-    options: ExportOptions = {}
+    options: ExportOptions = {},
   ): Promise<{ blob: Blob; filename: string }> {
     const { selectedOnly = false, filename } = options;
 
     try {
-      const pagesToExport = selectedOnly && selectedPageIds.length > 0
-        ? pdfDocument.pages.filter(page => selectedPageIds.includes(page.id))
-        : pdfDocument.pages;
+      const pagesToExport =
+        selectedOnly && selectedPageIds.length > 0
+          ? pdfDocument.pages.filter((page) => selectedPageIds.includes(page.id))
+          : pdfDocument.pages;
 
       if (pagesToExport.length === 0) {
-        throw new Error('No pages to export');
+        throw new Error("No pages to export");
       }
 
       const originalPDFBytes = await pdfDocument.file.arrayBuffer();
@@ -45,11 +46,8 @@ export class PDFExportService {
 
       return { blob, filename: exportFilename };
     } catch (error) {
-      console.error('PDF export error:', error);
-      throw new Error(
-        `Failed to export PDF: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        { cause: error }
-      );
+      console.error("PDF export error:", error);
+      throw new Error(`Failed to export PDF: ${error instanceof Error ? error.message : "Unknown error"}`, { cause: error });
     }
   }
 
@@ -60,17 +58,18 @@ export class PDFExportService {
     pdfDocument: PDFDocument,
     sourceFiles: Map<string, File>,
     selectedPageIds: string[] = [],
-    options: ExportOptions = {}
+    options: ExportOptions = {},
   ): Promise<{ blob: Blob; filename: string }> {
     const { selectedOnly = false, filename } = options;
 
     try {
-      const pagesToExport = selectedOnly && selectedPageIds.length > 0
-        ? pdfDocument.pages.filter(page => selectedPageIds.includes(page.id))
-        : pdfDocument.pages;
+      const pagesToExport =
+        selectedOnly && selectedPageIds.length > 0
+          ? pdfDocument.pages.filter((page) => selectedPageIds.includes(page.id))
+          : pdfDocument.pages;
 
       if (pagesToExport.length === 0) {
-        throw new Error('No pages to export');
+        throw new Error("No pages to export");
       }
 
       const blob = await this.createMultiSourceDocument(sourceFiles, pagesToExport);
@@ -78,26 +77,20 @@ export class PDFExportService {
 
       return { blob, filename: exportFilename };
     } catch (error) {
-      console.error('Multi-file PDF export error:', error);
-      throw new Error(
-        `Failed to export PDF: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        { cause: error }
-      );
+      console.error("Multi-file PDF export error:", error);
+      throw new Error(`Failed to export PDF: ${error instanceof Error ? error.message : "Unknown error"}`, { cause: error });
     }
   }
 
   /**
    * Create a PDF document from multiple source files using PDFium WASM.
    */
-  private async createMultiSourceDocument(
-    sourceFiles: Map<string, File>,
-    pages: PDFPage[]
-  ): Promise<Blob> {
+  private async createMultiSourceDocument(sourceFiles: Map<string, File>, pages: PDFPage[]): Promise<Blob> {
     const m = await getPdfiumModule();
 
     // Create destination document
     const destDocPtr = m.FPDF_CreateNewDocument();
-    if (!destDocPtr) throw new Error('PDFium: failed to create destination document');
+    if (!destDocPtr) throw new Error("PDFium: failed to create destination document");
 
     // Load all source documents once and cache them
     const loadedDocs = new Map<string, number>();
@@ -153,7 +146,7 @@ export class PDFExportService {
 
       // Save the assembled document
       const resultBuf = await saveRawDocument(destDocPtr);
-      return new Blob([resultBuf], { type: 'application/pdf' });
+      return new Blob([resultBuf], { type: "application/pdf" });
     } finally {
       // Cleanup all loaded source documents
       for (const docPtr of loadedDocs.values()) {
@@ -166,10 +159,7 @@ export class PDFExportService {
   /**
    * Create a single PDF document with all operations applied (single source) using PDFium.
    */
-  private async createSingleDocument(
-    sourceData: ArrayBuffer,
-    pages: PDFPage[]
-  ): Promise<Blob> {
+  private async createSingleDocument(sourceData: ArrayBuffer, pages: PDFPage[]): Promise<Blob> {
     const m = await getPdfiumModule();
 
     // Open source document
@@ -177,7 +167,7 @@ export class PDFExportService {
     const destDocPtr = m.FPDF_CreateNewDocument();
     if (!destDocPtr) {
       await closeRawDocument(srcDocPtr);
-      throw new Error('PDFium: failed to create destination document');
+      throw new Error("PDFium: failed to create destination document");
     }
 
     try {
@@ -214,7 +204,7 @@ export class PDFExportService {
       }
 
       const resultBuf = await saveRawDocument(destDocPtr);
-      return new Blob([resultBuf], { type: 'application/pdf' });
+      return new Blob([resultBuf], { type: "application/pdf" });
     } finally {
       await closeRawDocument(srcDocPtr);
       m.FPDF_CloseDocument(destDocPtr);
@@ -225,7 +215,7 @@ export class PDFExportService {
    * Generate appropriate filename for export
    */
   private generateFilename(originalName: string): string {
-    const baseName = originalName.replace(/\.pdf$/i, '');
+    const baseName = originalName.replace(/\.pdf$/i, "");
     return `${baseName}.pdf`;
   }
 
@@ -254,19 +244,19 @@ export class PDFExportService {
     const errors: string[] = [];
 
     if (selectedOnly && selectedPageIds.length === 0) {
-      errors.push('No pages selected for export');
+      errors.push("No pages selected for export");
     }
 
     if (pdfDocument.pages.length === 0) {
-      errors.push('No pages available to export');
+      errors.push("No pages available to export");
     }
 
     const pagesToExport = selectedOnly
-      ? pdfDocument.pages.filter(page => selectedPageIds.includes(page.id))
+      ? pdfDocument.pages.filter((page) => selectedPageIds.includes(page.id))
       : pdfDocument.pages;
 
     if (pagesToExport.length === 0) {
-      errors.push('No valid pages to export after applying filters');
+      errors.push("No valid pages to export after applying filters");
     }
 
     return errors;
@@ -275,13 +265,17 @@ export class PDFExportService {
   /**
    * Get export preview information
    */
-  getExportInfo(pdfDocument: PDFDocument, selectedPageIds: string[], selectedOnly: boolean): {
+  getExportInfo(
+    pdfDocument: PDFDocument,
+    selectedPageIds: string[],
+    selectedOnly: boolean,
+  ): {
     pageCount: number;
     splitCount: number;
     estimatedSize: string;
   } {
     const pagesToExport = selectedOnly
-      ? pdfDocument.pages.filter(page => selectedPageIds.includes(page.id))
+      ? pdfDocument.pages.filter((page) => selectedPageIds.includes(page.id))
       : pdfDocument.pages;
 
     const splitCount = pagesToExport.reduce((count, page) => {
@@ -295,7 +289,7 @@ export class PDFExportService {
     return {
       pageCount: pagesToExport.length,
       splitCount,
-      estimatedSize
+      estimatedSize,
     };
   }
 
@@ -303,11 +297,11 @@ export class PDFExportService {
    * Format file size for display
    */
   private formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) return "0 B";
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   }
 }
 
@@ -317,10 +311,14 @@ export class PDFExportService {
 function degreesToPdfiumRotation(degrees: number): number {
   const normalized = ((degrees % 360) + 360) % 360;
   switch (normalized) {
-    case 90: return 1;
-    case 180: return 2;
-    case 270: return 3;
-    default: return 0;
+    case 90:
+      return 1;
+    case 180:
+      return 2;
+    case 270:
+      return 3;
+    default:
+      return 0;
   }
 }
 
