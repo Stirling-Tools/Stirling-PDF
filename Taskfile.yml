@@ -76,18 +76,22 @@ tasks:
   # ============================================================
 
   lint:
-    desc: "Run all linters and format checks"
+    desc: "Run all linters"
     cmds:
-      - task: backend:format:check
       - task: frontend:lint
       - task: engine:lint
-      - task: engine:format:check
 
   format:
     desc: "Auto-fix formatting across all components"
     cmds:
       - task: backend:format
       - task: engine:format
+
+  format:check:
+    desc: "Check formatting across all components"
+    cmds:
+      - task: backend:format:check
+      - task: engine:format:check
 
   # ============================================================
   # Quality Gate
