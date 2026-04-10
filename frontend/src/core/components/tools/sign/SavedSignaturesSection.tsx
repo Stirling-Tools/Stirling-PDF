@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { ActionIcon, Alert, Badge, Box, Card, Group, Stack, Text, TextInput, Tooltip } from '@mantine/core';
-import { LocalIcon } from '@app/components/shared/LocalIcon';
-import { SavedSignature, SavedSignatureType } from '@app/hooks/tools/sign/useSavedSignatures';
-import type { StorageType } from '@app/services/signatureStorageService';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { ActionIcon, Alert, Badge, Box, Card, Group, Stack, Text, TextInput, Tooltip } from "@mantine/core";
+import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { SavedSignature, SavedSignatureType } from "@app/hooks/tools/sign/useSavedSignatures";
+import type { StorageType } from "@app/services/signatureStorageService";
 
 interface SavedSignaturesSectionProps {
   signatures: SavedSignature[];
@@ -19,9 +19,9 @@ interface SavedSignaturesSectionProps {
 }
 
 const typeBadgeColor: Record<SavedSignatureType, string> = {
-  canvas: 'indigo',
-  image: 'teal',
-  text: 'grape',
+  canvas: "indigo",
+  image: "teal",
+  text: "grape",
 };
 
 export const SavedSignaturesSection = ({
@@ -34,21 +34,21 @@ export const SavedSignaturesSection = ({
   onUseSignature,
   onDeleteSignature,
   onRenameSignature,
-  translationScope = 'sign',
+  translationScope = "sign",
 }: SavedSignaturesSectionProps) => {
   const { t } = useTranslation();
   const translate = useCallback(
     (key: string, defaultValue: string, options?: Record<string, unknown>) =>
       t(`${translationScope}.${key}`, { defaultValue, ...options }),
-    [t, translationScope]
+    [t, translationScope],
   );
   const [labelDrafts, setLabelDrafts] = useState<Record<string, string>>({});
 
   // Group signatures by scope
   const groupedSignatures = useMemo(() => {
-    const personal = signatures.filter(sig => sig.scope === 'personal');
-    const shared = signatures.filter(sig => sig.scope === 'shared');
-    const localStorage = signatures.filter(sig => sig.scope === 'localStorage');
+    const personal = signatures.filter((sig) => sig.scope === "personal");
+    const shared = signatures.filter((sig) => sig.scope === "shared");
+    const localStorage = signatures.filter((sig) => sig.scope === "localStorage");
     return { personal, shared, localStorage };
   }, [signatures]);
 
@@ -68,10 +68,10 @@ export const SavedSignaturesSection = ({
   }, [onUseSignature]);
 
   useEffect(() => {
-    setLabelDrafts(prev => {
+    setLabelDrafts((prev) => {
       const nextDrafts: Record<string, string> = {};
-      signatures.forEach(sig => {
-        nextDrafts[sig.id] = prev[sig.id] ?? sig.label ?? '';
+      signatures.forEach((sig) => {
+        nextDrafts[sig.id] = prev[sig.id] ?? sig.label ?? "";
       });
       return nextDrafts;
     });
@@ -79,19 +79,19 @@ export const SavedSignaturesSection = ({
 
   // Reset carousel indices when categories change
   useEffect(() => {
-    setActivePersonalIndex(prev => Math.min(prev, Math.max(groupedSignatures.personal.length - 1, 0)));
+    setActivePersonalIndex((prev) => Math.min(prev, Math.max(groupedSignatures.personal.length - 1, 0)));
   }, [groupedSignatures.personal.length]);
 
   useEffect(() => {
-    setActiveSharedIndex(prev => Math.min(prev, Math.max(groupedSignatures.shared.length - 1, 0)));
+    setActiveSharedIndex((prev) => Math.min(prev, Math.max(groupedSignatures.shared.length - 1, 0)));
   }, [groupedSignatures.shared.length]);
 
   useEffect(() => {
-    setActiveLocalStorageIndex(prev => Math.min(prev, Math.max(groupedSignatures.localStorage.length - 1, 0)));
+    setActiveLocalStorageIndex((prev) => Math.min(prev, Math.max(groupedSignatures.localStorage.length - 1, 0)));
   }, [groupedSignatures.localStorage.length]);
 
   const renderPreview = (signature: SavedSignature) => {
-    if (signature.type === 'text') {
+    if (signature.type === "text") {
       return (
         <Box
           component="div"
@@ -99,15 +99,15 @@ export const SavedSignaturesSection = ({
             fontFamily: signature.fontFamily,
             fontSize: `${signature.fontSize}px`,
             color: signature.textColor,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '120px',
-            borderRadius: '0.5rem',
-            backgroundColor: '#ffffff',
-            padding: '0.5rem',
-            textAlign: 'center',
-            overflow: 'hidden',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "120px",
+            borderRadius: "0.5rem",
+            backgroundColor: "#ffffff",
+            padding: "0.5rem",
+            textAlign: "center",
+            overflow: "hidden",
           }}
         >
           <Text
@@ -115,7 +115,7 @@ export const SavedSignaturesSection = ({
             style={{
               fontFamily: signature.fontFamily,
               color: signature.textColor,
-              whiteSpace: 'nowrap',
+              whiteSpace: "nowrap",
             }}
           >
             {signature.signerName}
@@ -128,13 +128,13 @@ export const SavedSignaturesSection = ({
       <Box
         component="div"
         style={{
-          backgroundColor: '#ffffff',
-          borderRadius: '0.5rem',
-          height: '120px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '0.5rem',
+          backgroundColor: "#ffffff",
+          borderRadius: "0.5rem",
+          height: "120px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "0.5rem",
         }}
       >
         <Box
@@ -142,9 +142,9 @@ export const SavedSignaturesSection = ({
           src={signature.dataUrl}
           alt={signature.label}
           style={{
-            maxWidth: '100%',
-            maxHeight: '100%',
-            objectFit: 'contain',
+            maxWidth: "100%",
+            maxHeight: "100%",
+            objectFit: "contain",
           }}
         />
       </Box>
@@ -154,12 +154,12 @@ export const SavedSignaturesSection = ({
   const emptyState = (
     <Card withBorder>
       <Stack gap="xs">
-        <Text fw={500}>{translate('saved.emptyTitle', 'No saved signatures yet')}</Text>
+        <Text fw={500}>{translate("saved.emptyTitle", "No saved signatures yet")}</Text>
         <Text size="sm" c="dimmed">
           {translate(
-            'saved.emptyDescription',
+            "saved.emptyDescription",
             'Draw, upload, or type a signature above, then use "Save to library" to keep up to {{max}} favourites ready to use.',
-            { max: maxLimit }
+            { max: maxLimit },
           )}
         </Text>
       </Stack>
@@ -168,21 +168,21 @@ export const SavedSignaturesSection = ({
 
   const typeLabel = (type: SavedSignatureType) => {
     switch (type) {
-      case 'canvas':
-        return translate('saved.type.canvas', 'Drawing');
-      case 'image':
-        return translate('saved.type.image', 'Upload');
-      case 'text':
-        return translate('saved.type.text', 'Text');
+      case "canvas":
+        return translate("saved.type.canvas", "Drawing");
+      case "image":
+        return translate("saved.type.image", "Upload");
+      case "text":
+        return translate("saved.type.text", "Text");
       default:
         return type;
     }
   };
 
   const handleLabelBlur = (signature: SavedSignature) => {
-    const nextValue = labelDrafts[signature.id]?.trim() ?? '';
+    const nextValue = labelDrafts[signature.id]?.trim() ?? "";
     if (!nextValue || nextValue === signature.label) {
-      setLabelDrafts(prev => ({ ...prev, [signature.id]: signature.label }));
+      setLabelDrafts((prev) => ({ ...prev, [signature.id]: signature.label }));
       return;
     }
     onRenameSignature(signature.id, nextValue);
@@ -190,15 +190,15 @@ export const SavedSignaturesSection = ({
 
   const handleLabelChange = (event: React.ChangeEvent<HTMLInputElement>, signature: SavedSignature) => {
     const { value } = event.currentTarget;
-    setLabelDrafts(prev => ({ ...prev, [signature.id]: value }));
+    setLabelDrafts((prev) => ({ ...prev, [signature.id]: value }));
   };
 
   const handleLabelKeyDown = (event: React.KeyboardEvent<HTMLInputElement>, signature: SavedSignature) => {
-    if (event.key === 'Enter') {
+    if (event.key === "Enter") {
       event.currentTarget.blur();
     }
-    if (event.key === 'Escape') {
-      setLabelDrafts(prev => ({ ...prev, [signature.id]: signature.label }));
+    if (event.key === "Escape") {
+      setLabelDrafts((prev) => ({ ...prev, [signature.id]: signature.label }));
       event.currentTarget.blur();
     }
   };
@@ -208,18 +208,18 @@ export const SavedSignaturesSection = ({
       <Group justify="space-between" align="flex-start">
         <Stack gap={0}>
           <Text fw={600} size="md">
-            {translate('saved.heading', 'Saved signatures')}
+            {translate("saved.heading", "Saved signatures")}
           </Text>
           <Text size="sm" c="dimmed">
-            {translate('saved.description', 'Reuse saved signatures at any time.')}
+            {translate("saved.description", "Reuse saved signatures at any time.")}
           </Text>
         </Stack>
       </Group>
 
       {isAtCapacity && (
-        <Alert color="yellow" title={translate('saved.limitTitle', 'Limit reached')}>
+        <Alert color="yellow" title={translate("saved.limitTitle", "Limit reached")}>
           <Text size="sm">
-            {translate('saved.limitDescription', 'Remove a saved signature before adding new ones (max {{max}}).', {
+            {translate("saved.limitDescription", "Remove a saved signature before adding new ones (max {{max}}).", {
               max: maxLimit,
             })}
           </Text>
@@ -236,16 +236,16 @@ export const SavedSignaturesSection = ({
               <Group gap="xs">
                 <LocalIcon icon="person-rounded" width={18} height={18} />
                 <Text fw={600} size="sm">
-                  {translate('saved.personalHeading', 'Personal Signatures')}
+                  {translate("saved.personalHeading", "Personal Signatures")}
                 </Text>
               </Group>
               <Text size="xs" c="dimmed">
-                {translate('saved.personalDescription', 'Only you can see these signatures.')}
+                {translate("saved.personalDescription", "Only you can see these signatures.")}
               </Text>
 
               <Group justify="space-between" align="center">
                 <Text size="sm" c="dimmed">
-                  {translate('saved.carouselPosition', '{{current}} of {{total}}', {
+                  {translate("saved.carouselPosition", "{{current}} of {{total}}", {
                     current: activePersonalIndex + 1,
                     total: groupedSignatures.personal.length,
                   })}
@@ -253,16 +253,16 @@ export const SavedSignaturesSection = ({
                 <Group gap={4}>
                   <ActionIcon
                     variant="light"
-                    aria-label={translate('saved.prev', 'Previous')}
-                    onClick={() => setActivePersonalIndex(prev => Math.max(0, prev - 1))}
+                    aria-label={translate("saved.prev", "Previous")}
+                    onClick={() => setActivePersonalIndex((prev) => Math.max(0, prev - 1))}
                     disabled={disabled || activePersonalIndex === 0}
                   >
                     <LocalIcon icon="chevron-left-rounded" width={18} height={18} />
                   </ActionIcon>
                   <ActionIcon
                     variant="light"
-                    aria-label={translate('saved.next', 'Next')}
-                    onClick={() => setActivePersonalIndex(prev => Math.min(groupedSignatures.personal.length - 1, prev + 1))}
+                    aria-label={translate("saved.next", "Next")}
+                    onClick={() => setActivePersonalIndex((prev) => Math.min(groupedSignatures.personal.length - 1, prev + 1))}
                     disabled={disabled || activePersonalIndex >= groupedSignatures.personal.length - 1}
                   >
                     <LocalIcon icon="chevron-right-rounded" width={18} height={18} />
@@ -286,11 +286,11 @@ export const SavedSignaturesSection = ({
                       >
                         <LocalIcon icon="check-circle-outline-rounded" width={18} height={18} />
                       </ActionIcon>
-                      <Tooltip label={translate('saved.delete', 'Remove')}>
+                      <Tooltip label={translate("saved.delete", "Remove")}>
                         <ActionIcon
                           variant="subtle"
                           color="red"
-                          aria-label={translate('saved.delete', 'Remove')}
+                          aria-label={translate("saved.delete", "Remove")}
                           onClick={() => onDeleteSignature(activePersonalSignature)}
                           disabled={disabled}
                         >
@@ -301,11 +301,11 @@ export const SavedSignaturesSection = ({
                   </Group>
                   {renderPreview(activePersonalSignature)}
                   <TextInput
-                    label={translate('saved.label', 'Label')}
+                    label={translate("saved.label", "Label")}
                     value={labelDrafts[activePersonalSignature.id] ?? activePersonalSignature.label}
-                    onChange={event => handleLabelChange(event, activePersonalSignature)}
+                    onChange={(event) => handleLabelChange(event, activePersonalSignature)}
                     onBlur={() => handleLabelBlur(activePersonalSignature)}
-                    onKeyDown={event => handleLabelKeyDown(event, activePersonalSignature)}
+                    onKeyDown={(event) => handleLabelKeyDown(event, activePersonalSignature)}
                     disabled={disabled}
                   />
                 </Stack>
@@ -319,16 +319,16 @@ export const SavedSignaturesSection = ({
               <Group gap="xs">
                 <LocalIcon icon="groups-rounded" width={18} height={18} />
                 <Text fw={600} size="sm">
-                  {translate('saved.sharedHeading', 'Shared Signatures')}
+                  {translate("saved.sharedHeading", "Shared Signatures")}
                 </Text>
               </Group>
               <Text size="xs" c="dimmed">
-                {translate('saved.sharedDescription', 'All users can see and use these signatures.')}
+                {translate("saved.sharedDescription", "All users can see and use these signatures.")}
               </Text>
 
               <Group justify="space-between" align="center">
                 <Text size="sm" c="dimmed">
-                  {translate('saved.carouselPosition', '{{current}} of {{total}}', {
+                  {translate("saved.carouselPosition", "{{current}} of {{total}}", {
                     current: activeSharedIndex + 1,
                     total: groupedSignatures.shared.length,
                   })}
@@ -336,16 +336,16 @@ export const SavedSignaturesSection = ({
                 <Group gap={4}>
                   <ActionIcon
                     variant="light"
-                    aria-label={translate('saved.prev', 'Previous')}
-                    onClick={() => setActiveSharedIndex(prev => Math.max(0, prev - 1))}
+                    aria-label={translate("saved.prev", "Previous")}
+                    onClick={() => setActiveSharedIndex((prev) => Math.max(0, prev - 1))}
                     disabled={disabled || activeSharedIndex === 0}
                   >
                     <LocalIcon icon="chevron-left-rounded" width={18} height={18} />
                   </ActionIcon>
                   <ActionIcon
                     variant="light"
-                    aria-label={translate('saved.next', 'Next')}
-                    onClick={() => setActiveSharedIndex(prev => Math.min(groupedSignatures.shared.length - 1, prev + 1))}
+                    aria-label={translate("saved.next", "Next")}
+                    onClick={() => setActiveSharedIndex((prev) => Math.min(groupedSignatures.shared.length - 1, prev + 1))}
                     disabled={disabled || activeSharedIndex >= groupedSignatures.shared.length - 1}
                   >
                     <LocalIcon icon="chevron-right-rounded" width={18} height={18} />
@@ -370,11 +370,11 @@ export const SavedSignaturesSection = ({
                         <LocalIcon icon="check-circle-outline-rounded" width={18} height={18} />
                       </ActionIcon>
                       {isAdmin && (
-                        <Tooltip label={translate('saved.delete', 'Remove')}>
+                        <Tooltip label={translate("saved.delete", "Remove")}>
                           <ActionIcon
                             variant="subtle"
                             color="red"
-                            aria-label={translate('saved.delete', 'Remove')}
+                            aria-label={translate("saved.delete", "Remove")}
                             onClick={() => onDeleteSignature(activeSharedSignature)}
                             disabled={disabled}
                           >
@@ -386,11 +386,11 @@ export const SavedSignaturesSection = ({
                   </Group>
                   {renderPreview(activeSharedSignature)}
                   <TextInput
-                    label={translate('saved.label', 'Label')}
+                    label={translate("saved.label", "Label")}
                     value={labelDrafts[activeSharedSignature.id] ?? activeSharedSignature.label}
-                    onChange={event => handleLabelChange(event, activeSharedSignature)}
+                    onChange={(event) => handleLabelChange(event, activeSharedSignature)}
                     onBlur={() => handleLabelBlur(activeSharedSignature)}
-                    onKeyDown={event => handleLabelKeyDown(event, activeSharedSignature)}
+                    onKeyDown={(event) => handleLabelKeyDown(event, activeSharedSignature)}
                     disabled={disabled}
                   />
                 </Stack>
@@ -401,18 +401,18 @@ export const SavedSignaturesSection = ({
           {/* Browser Storage (localStorage) - Temporary */}
           {groupedSignatures.localStorage.length > 0 && activeLocalStorageSignature && (
             <Stack gap="xs">
-              <Alert color="blue" title={translate('saved.tempStorageTitle', 'Temporary browser storage')}>
+              <Alert color="blue" title={translate("saved.tempStorageTitle", "Temporary browser storage")}>
                 <Text size="xs">
                   {translate(
-                    'saved.tempStorageDescription',
-                    'Signatures are stored in your browser only. They will be lost if you clear browser data or switch browsers.'
+                    "saved.tempStorageDescription",
+                    "Signatures are stored in your browser only. They will be lost if you clear browser data or switch browsers.",
                   )}
                 </Text>
               </Alert>
 
               <Group justify="space-between" align="center">
                 <Text size="sm" c="dimmed">
-                  {translate('saved.carouselPosition', '{{current}} of {{total}}', {
+                  {translate("saved.carouselPosition", "{{current}} of {{total}}", {
                     current: activeLocalStorageIndex + 1,
                     total: groupedSignatures.localStorage.length,
                   })}
@@ -420,16 +420,18 @@ export const SavedSignaturesSection = ({
                 <Group gap={4}>
                   <ActionIcon
                     variant="light"
-                    aria-label={translate('saved.prev', 'Previous')}
-                    onClick={() => setActiveLocalStorageIndex(prev => Math.max(0, prev - 1))}
+                    aria-label={translate("saved.prev", "Previous")}
+                    onClick={() => setActiveLocalStorageIndex((prev) => Math.max(0, prev - 1))}
                     disabled={disabled || activeLocalStorageIndex === 0}
                   >
                     <LocalIcon icon="chevron-left-rounded" width={18} height={18} />
                   </ActionIcon>
                   <ActionIcon
                     variant="light"
-                    aria-label={translate('saved.next', 'Next')}
-                    onClick={() => setActiveLocalStorageIndex(prev => Math.min(groupedSignatures.localStorage.length - 1, prev + 1))}
+                    aria-label={translate("saved.next", "Next")}
+                    onClick={() =>
+                      setActiveLocalStorageIndex((prev) => Math.min(groupedSignatures.localStorage.length - 1, prev + 1))
+                    }
                     disabled={disabled || activeLocalStorageIndex >= groupedSignatures.localStorage.length - 1}
                   >
                     <LocalIcon icon="chevron-right-rounded" width={18} height={18} />
@@ -453,11 +455,11 @@ export const SavedSignaturesSection = ({
                       >
                         <LocalIcon icon="check-circle-outline-rounded" width={18} height={18} />
                       </ActionIcon>
-                      <Tooltip label={translate('saved.delete', 'Remove')}>
+                      <Tooltip label={translate("saved.delete", "Remove")}>
                         <ActionIcon
                           variant="subtle"
                           color="red"
-                          aria-label={translate('saved.delete', 'Remove')}
+                          aria-label={translate("saved.delete", "Remove")}
                           onClick={() => onDeleteSignature(activeLocalStorageSignature)}
                           disabled={disabled}
                         >
@@ -468,11 +470,11 @@ export const SavedSignaturesSection = ({
                   </Group>
                   {renderPreview(activeLocalStorageSignature)}
                   <TextInput
-                    label={translate('saved.label', 'Label')}
+                    label={translate("saved.label", "Label")}
                     value={labelDrafts[activeLocalStorageSignature.id] ?? activeLocalStorageSignature.label}
-                    onChange={event => handleLabelChange(event, activeLocalStorageSignature)}
+                    onChange={(event) => handleLabelChange(event, activeLocalStorageSignature)}
                     onBlur={() => handleLabelBlur(activeLocalStorageSignature)}
-                    onKeyDown={event => handleLabelKeyDown(event, activeLocalStorageSignature)}
+                    onKeyDown={(event) => handleLabelKeyDown(event, activeLocalStorageSignature)}
                     disabled={disabled}
                   />
                 </Stack>

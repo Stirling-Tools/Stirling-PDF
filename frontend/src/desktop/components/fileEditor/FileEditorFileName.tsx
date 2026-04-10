@@ -1,8 +1,8 @@
-import React from 'react';
-import { Tooltip } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { StirlingFileStub } from '@app/types/fileContext';
-import { PrivateContent } from '@app/components/shared/PrivateContent';
+import React from "react";
+import { Tooltip } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { StirlingFileStub } from "@app/types/fileContext";
+import { PrivateContent } from "@app/components/shared/PrivateContent";
 
 interface FileEditorFileNameProps {
   file: StirlingFileStub;
@@ -15,47 +15,47 @@ const FileEditorFileName = ({ file }: FileEditorFileNameProps) => {
     <>
       <PrivateContent>{file.name}</PrivateContent>
       {!file.localFilePath && (
-        <Tooltip label={t('fileNotSavedToDisk', 'Not saved to disk')}>
+        <Tooltip label={t("fileNotSavedToDisk", "Not saved to disk")}>
           <span
             style={{
-              display: 'inline-block',
-              width: '6px',
-              height: '6px',
-              borderRadius: '50%',
-              backgroundColor: 'var(--mantine-color-red-6)',
-              flexShrink: 0
+              display: "inline-block",
+              width: "6px",
+              height: "6px",
+              borderRadius: "50%",
+              backgroundColor: "var(--mantine-color-red-6)",
+              flexShrink: 0,
             }}
-            aria-label={t('fileNotSavedToDisk', 'Not saved to disk')}
+            aria-label={t("fileNotSavedToDisk", "Not saved to disk")}
           />
         </Tooltip>
       )}
       {file.localFilePath && file.isDirty && (
-        <Tooltip label={t('unsavedChanges', 'Unsaved changes')}>
+        <Tooltip label={t("unsavedChanges", "Unsaved changes")}>
           <span
             style={{
-              display: 'inline-block',
-              width: '6px',
-              height: '6px',
-              borderRadius: '50%',
-              backgroundColor: 'var(--mantine-color-yellow-6)',
-              flexShrink: 0
+              display: "inline-block",
+              width: "6px",
+              height: "6px",
+              borderRadius: "50%",
+              backgroundColor: "var(--mantine-color-yellow-6)",
+              flexShrink: 0,
             }}
-            aria-label={t('unsavedChanges', 'Unsaved changes')}
+            aria-label={t("unsavedChanges", "Unsaved changes")}
           />
         </Tooltip>
       )}
       {file.localFilePath && !file.isDirty && (
-        <Tooltip label={t('fileSavedToDisk', 'File saved to disk')}>
+        <Tooltip label={t("fileSavedToDisk", "File saved to disk")}>
           <span
             style={{
-              display: 'inline-block',
-              width: '6px',
-              height: '6px',
-              borderRadius: '50%',
-              backgroundColor: 'var(--mantine-color-green-6)',
-              flexShrink: 0
+              display: "inline-block",
+              width: "6px",
+              height: "6px",
+              borderRadius: "50%",
+              backgroundColor: "var(--mantine-color-green-6)",
+              flexShrink: 0,
             }}
-            aria-label={t('fileSavedToDisk', 'File saved to disk')}
+            aria-label={t("fileSavedToDisk", "File saved to disk")}
           />
         </Tooltip>
       )}

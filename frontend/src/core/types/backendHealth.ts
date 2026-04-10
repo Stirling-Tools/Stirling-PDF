@@ -1,4 +1,4 @@
-export type BackendStatus = 'stopped' | 'starting' | 'healthy' | 'unhealthy';
+export type BackendStatus = "stopped" | "starting" | "healthy" | "unhealthy";
 
 export interface BackendHealthState {
   status: BackendStatus;

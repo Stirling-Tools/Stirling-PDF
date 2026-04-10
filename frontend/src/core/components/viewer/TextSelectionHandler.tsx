@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
-import { useSelectionPlugin, useSelectionCapability, glyphAt } from '@embedpdf/plugin-selection/react';
-import { useInteractionManagerCapability } from '@embedpdf/plugin-interaction-manager/react';
-import type { Position, PdfPageGeometry, PdfRun } from '@embedpdf/models';
+import { useEffect, useRef } from "react";
+import { useSelectionPlugin, useSelectionCapability, glyphAt } from "@embedpdf/plugin-selection/react";
+import { useInteractionManagerCapability } from "@embedpdf/plugin-interaction-manager/react";
+import type { Position, PdfPageGeometry, PdfRun } from "@embedpdf/models";
 
 interface TextSelectionHandlerProps {
   documentId: string;
@@ -106,13 +106,7 @@ function findLineBoundaries(geo: PdfPageGeometry, glyphIndex: number): { start: 
   };
 }
 
-function setSelectionRange(
-  selPlugin: any,
-  documentId: string,
-  pageIndex: number,
-  startIndex: number,
-  endIndex: number
-): void {
+function setSelectionRange(selPlugin: any, documentId: string, pageIndex: number, startIndex: number, endIndex: number): void {
   selPlugin.clearSelection(documentId);
   selPlugin.beginSelection(documentId, pageIndex, startIndex);
   selPlugin.updateSelection(documentId, pageIndex, endIndex);
@@ -160,27 +154,36 @@ export function TextSelectionHandler({ documentId, pageIndex }: TextSelectionHan
           const coreDoc = plugin.getCoreDocument(documentId);
           if (!coreDoc?.document) return;
 
-          const task = plugin.engine.getTextSlices(coreDoc.document, [{
-            pageIndex,
-            charIndex: run.charStart,
-            charCount: run.glyphs.length,
-          }]);
+          const task = plugin.engine.getTextSlices(coreDoc.document, [
+            {
+              pageIndex,
+              charIndex: run.charStart,
+              charCount: run.glyphs.length,
+            },
+          ]);
 
-          task.wait((texts: string[]) => {
-            const text = texts[0];
-            if (!text) return;
+          task.wait(
+            (texts: string[]) => {
+              const text = texts[0];
+              if (!text) return;
 
-            const boundaries = findWordBoundariesInText(text, localIndex);
-            if (!boundaries) return;
+              const boundaries = findWordBoundariesInText(text, localIndex);
+              if (!boundaries) return;
 
-            lastDblClickRef.current = { time: Date.now(), x: pos.x, y: pos.y };
+              lastDblClickRef.current = { time: Date.now(), x: pos.x, y: pos.y };
 
-            setSelectionRange(
-              selPlugin, documentId, pageIndex,
-              run.charStart + boundaries.start,
-              run.charStart + boundaries.end
-            );
-          }, () => { /* ignore errors */ });
+              setSelectionRange(
+                selPlugin,
+                documentId,
+                pageIndex,
+                run.charStart + boundaries.start,
+                run.charStart + boundaries.end,
+              );
+            },
+            () => {
+              /* ignore errors */
+            },
+          );
         } catch {
           // Engine access failed - silently ignore
         }
@@ -222,7 +225,7 @@ export function TextSelectionHandler({ documentId, pageIndex }: TextSelectionHan
     };
 
     return imCapability.registerAlways({
-      scope: { type: 'page', documentId, pageIndex },
+      scope: { type: "page", documentId, pageIndex },
       handlers,
     });
   }, [selPlugin, selCapability, imCapability, documentId, pageIndex]);

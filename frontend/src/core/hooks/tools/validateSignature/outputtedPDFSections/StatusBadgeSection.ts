@@ -1,4 +1,4 @@
-import { PdfiumFont, PdfiumPage, rgb } from '@app/services/pdfiumDocBuilder';
+import { PdfiumFont, PdfiumPage, rgb } from "@app/services/pdfiumDocBuilder";
 
 interface StatusBadgeOptions {
   page: PdfiumPage;

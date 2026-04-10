@@ -18,9 +18,9 @@ export function buildOAuthCallbackHtml({
   isError = false,
   errorPlaceholder = false,
 }: OAuthCallbackHtmlOptions): string {
-  const iconColor = isError ? '#d32f2f' : '#2e7d32';
-  const iconColorDark = isError ? '#ef5350' : '#66bb6a';
-  const icon = isError ? '✗' : '✓';
+  const iconColor = isError ? "#d32f2f" : "#2e7d32";
+  const iconColorDark = isError ? "#ef5350" : "#66bb6a";
+  const icon = isError ? "✗" : "✓";
 
   return `<!DOCTYPE html>
 <html>
@@ -74,7 +74,9 @@ export function buildOAuthCallbackHtml({
       font-size: 15px;
     }
 
-    ${errorPlaceholder ? `
+    ${
+      errorPlaceholder
+        ? `
     .error-details {
       background: #ffebee;
       border: 1px solid #ffcdd2;
@@ -87,7 +89,9 @@ export function buildOAuthCallbackHtml({
       text-align: left;
       line-height: 1.5;
     }
-    ` : ''}
+    `
+        : ""
+    }
 
     /* Dark mode support */
     @media (prefers-color-scheme: dark) {
@@ -113,13 +117,17 @@ export function buildOAuthCallbackHtml({
         color: #b0b0b0;
       }
 
-      ${errorPlaceholder ? `
+      ${
+        errorPlaceholder
+          ? `
       .error-details {
         background: #3d2020;
         border: 1px solid #5d3030;
         color: #ef9a9a;
       }
-      ` : ''}
+      `
+          : ""
+      }
     }
 
     /* Mobile responsive */
@@ -147,7 +155,7 @@ export function buildOAuthCallbackHtml({
     <div class="icon">${icon}</div>
     <h1>${title}</h1>
     <p>${message}</p>
-    ${errorPlaceholder ? '<div class="error-details">{error}</div>' : ''}
+    ${errorPlaceholder ? '<div class="error-details">{error}</div>' : ""}
   </div>
 </body>
 </html>`;

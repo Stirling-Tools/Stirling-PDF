@@ -1,7 +1,7 @@
-import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolType } from '@app/hooks/tools/shared/useToolOperation';
-import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
-import { RotateParameters, defaultParameters, normalizeAngle } from '@app/hooks/tools/rotate/useRotateParameters';
+import { useTranslation } from "react-i18next";
+import { useToolOperation, ToolType } from "@app/hooks/tools/shared/useToolOperation";
+import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+import { RotateParameters, defaultParameters, normalizeAngle } from "@app/hooks/tools/rotate/useRotateParameters";
 
 // Static configuration that can be used by both the hook and automation executor
 export const buildRotateFormData = (parameters: RotateParameters, file: File): FormData => {
@@ -16,8 +16,8 @@ export const buildRotateFormData = (parameters: RotateParameters, file: File): F
 export const rotateOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildRotateFormData,
-  operationType: 'rotate',
-  endpoint: '/api/v1/general/rotate-pdf',
+  operationType: "rotate",
+  endpoint: "/api/v1/general/rotate-pdf",
   defaultParameters,
 } as const;
 
@@ -26,6 +26,6 @@ export const useRotateOperation = () => {
 
   return useToolOperation<RotateParameters>({
     ...rotateOperationConfig,
-    getErrorMessage: createStandardErrorHandler(t('rotate.error.failed', 'An error occurred while rotating the PDF.'))
+    getErrorMessage: createStandardErrorHandler(t("rotate.error.failed", "An error occurred while rotating the PDF.")),
   });
 };

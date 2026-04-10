@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
-import { Box, Text, Stack } from '@mantine/core';
-import { useSaaSBilling } from '@app/contexts/SaasBillingContext';
-import { BILLING_CONFIG } from '@app/config/billing';
-import { connectionModeService } from '@app/services/connectionModeService';
-import { authService } from '@app/services/authService';
-import { CREDIT_EVENTS } from '@app/constants/creditEvents';
+import { useEffect, useState } from "react";
+import { Box, Text, Stack } from "@mantine/core";
+import { useSaaSBilling } from "@app/contexts/SaasBillingContext";
+import { BILLING_CONFIG } from "@app/config/billing";
+import { connectionModeService } from "@app/services/connectionModeService";
+import { authService } from "@app/services/authService";
+import { CREDIT_EVENTS } from "@app/constants/creditEvents";
 
 /**
  * Desktop credit counter displayed in QuickAccessBar footer
@@ -25,7 +25,7 @@ export function QuickAccessBarFooterExtensions({ className }: QuickAccessBarFoot
     const checkMode = async () => {
       const mode = await connectionModeService.getCurrentMode();
       const auth = await authService.isAuthenticated();
-      setIsSaasMode(mode === 'saas');
+      setIsSaasMode(mode === "saas");
       setIsAuthenticated(auth);
     };
 
@@ -39,7 +39,7 @@ export function QuickAccessBarFooterExtensions({ className }: QuickAccessBarFoot
   // Subscribe to auth changes
   useEffect(() => {
     const unsubscribe = authService.subscribeToAuth((status) => {
-      setIsAuthenticated(status === 'authenticated');
+      setIsAuthenticated(status === "authenticated");
     });
     return unsubscribe;
   }, []);
@@ -50,24 +50,32 @@ export function QuickAccessBarFooterExtensions({ className }: QuickAccessBarFoot
   // - Still loading billing data
   // - User is a managed team member (unlimited credits)
   // - Credits >= 20 (only show when low)
-  if (!isSaasMode || !isAuthenticated || loading || isManagedTeamMember || creditBalance >= BILLING_CONFIG.PLAN_PRICING_PRELOAD_THRESHOLD) {
+  if (
+    !isSaasMode ||
+    !isAuthenticated ||
+    loading ||
+    isManagedTeamMember ||
+    creditBalance >= BILLING_CONFIG.PLAN_PRICING_PRELOAD_THRESHOLD
+  ) {
     return null;
   }
 
   const handleClick = () => {
     // Dispatch low credits event to open upgrade modal
-    window.dispatchEvent(new CustomEvent(CREDIT_EVENTS.EXHAUSTED, {
-      detail: { source: 'quickAccessBar' }
-    }));
+    window.dispatchEvent(
+      new CustomEvent(CREDIT_EVENTS.EXHAUSTED, {
+        detail: { source: "quickAccessBar" },
+      }),
+    );
   };
 
   return (
-    <Box className={className} style={{ padding: '0.5rem', cursor: 'pointer' }} onClick={handleClick}>
+    <Box className={className} style={{ padding: "0.5rem", cursor: "pointer" }} onClick={handleClick}>
       <Stack gap={2} align="center">
         <Text size="xs" c="dimmed" fw={500}>
-          {creditBalance} {creditBalance === 1 ? 'credit' : 'credits'}
+          {creditBalance} {creditBalance === 1 ? "credit" : "credits"}
         </Text>
-        <Text size="xs" c="dimmed" style={{ textDecoration: 'underline' }}>
+        <Text size="xs" c="dimmed" style={{ textDecoration: "underline" }}>
           Upgrade
         </Text>
       </Stack>

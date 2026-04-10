@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
-import apiClient from '@app/services/apiClient';
-import { mergePendingSettings, isFieldPending, hasPendingChanges } from '@app/utils/settingsPendingHelper';
+import { useState, useCallback } from "react";
+import apiClient from "@app/services/apiClient";
+import { mergePendingSettings, isFieldPending, hasPendingChanges } from "@app/utils/settingsPendingHelper";
 
 interface UseAdminSettingsOptions<T> {
   sectionName: string;
@@ -40,9 +40,7 @@ interface UseAdminSettingsReturn<T> {
  *   sectionName: 'legal'
  * });
  */
-export function useAdminSettings<T = any>(
-  options: UseAdminSettingsOptions<T>
-): UseAdminSettingsReturn<T> {
+export function useAdminSettings<T = any>(options: UseAdminSettingsOptions<T>): UseAdminSettingsReturn<T> {
   const { sectionName, fetchTransformer, saveTransformer } = options;
 
   const [settings, setSettings] = useState<T>({} as T);
@@ -78,7 +76,10 @@ export function useAdminSettings<T = any>(
       // Store merged settings as original for delta comparison
       // This ensures we compare against what the user SAW (with pending), not raw active values
       setOriginalSettings(mergedSettings as T);
-      console.log(`[useAdminSettings:${sectionName}] Original settings (for comparison):`, JSON.stringify(mergedSettings, null, 2));
+      console.log(
+        `[useAdminSettings:${sectionName}] Original settings (for comparison):`,
+        JSON.stringify(mergedSettings, null, 2),
+      );
 
       setSettings(mergedSettings as T);
     } catch (error) {
@@ -122,7 +123,7 @@ export function useAdminSettings<T = any>(
 
           console.log(`[useAdminSettings:${sectionName}] Comparing deltaSettings:`, {
             original: originalDeltaSettings,
-            current: deltaSettings
+            current: deltaSettings,
           });
 
           // Compare current vs original deltaSettings (both have same backend paths)
@@ -135,14 +136,14 @@ export function useAdminSettings<T = any>(
               changedDeltaSettings[key] = value;
               console.log(`[useAdminSettings:${sectionName}] Delta field changed: ${key}`, {
                 original: originalValue,
-                new: value
+                new: value,
               });
             }
           }
 
           if (Object.keys(changedDeltaSettings).length > 0) {
             console.log(`[useAdminSettings:${sectionName}] Sending delta settings:`, changedDeltaSettings);
-            await apiClient.put('/api/v1/admin/settings', { settings: changedDeltaSettings });
+            await apiClient.put("/api/v1/admin/settings", { settings: changedDeltaSettings });
           } else {
             console.log(`[useAdminSettings:${sectionName}] No delta settings changed, skipping`);
           }
@@ -214,9 +215,5 @@ function computeDelta(original: any, current: any): any {
  * Check if value is a plain object (not array, not null, not Date, etc.)
  */
 function isPlainObject(value: any): boolean {
-  return (
-    value !== null &&
-    typeof value === 'object' &&
-    value.constructor === Object
-  );
+  return value !== null && typeof value === "object" && value.constructor === Object;
 }

@@ -9,12 +9,7 @@ import { BaseToolProps, ToolComponent } from "@app/types/tool";
 const Sanitize = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
-  const base = useBaseTool(
-    'sanitize',
-    useSanitizeParameters,
-    useSanitizeOperation,
-    props
-  );
+  const base = useBaseTool("sanitize", useSanitizeParameters, useSanitizeOperation, props);
 
   return createToolFlow({
     files: {

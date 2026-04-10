@@ -1,8 +1,8 @@
-import type { BackendHealthState } from '@app/types/backendHealth';
+import type { BackendHealthState } from "@app/types/backendHealth";
 
 export function useBackendHealth(): BackendHealthState {
   return {
-    status: 'healthy',
+    status: "healthy",
     message: null,
     error: null,
     isOnline: true,

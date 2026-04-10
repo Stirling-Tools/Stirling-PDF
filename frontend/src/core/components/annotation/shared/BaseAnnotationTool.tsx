@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Stack, Alert, Text } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { DrawingControls } from '@app/components/annotation/shared/DrawingControls';
-import { ColorPicker } from '@app/components/annotation/shared/ColorPicker';
-import { usePDFAnnotation } from '@app/components/annotation/providers/PDFAnnotationProvider';
-import { useSignature } from '@app/contexts/SignatureContext';
+import React, { useEffect, useState } from "react";
+import { Stack, Alert, Text } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { DrawingControls } from "@app/components/annotation/shared/DrawingControls";
+import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
+import { usePDFAnnotation } from "@app/components/annotation/providers/PDFAnnotationProvider";
+import { useSignature } from "@app/contexts/SignatureContext";
 
 export interface AnnotationToolConfig {
   enableDrawing?: boolean;
@@ -25,17 +25,13 @@ export const BaseAnnotationTool: React.FC<BaseAnnotationToolProps> = ({
   config,
   children,
   onSignatureDataChange,
-  disabled = false
+  disabled = false,
 }) => {
   const { t } = useTranslation();
-  const {
-    activateSignaturePlacementMode,
-    undo,
-    redo
-  } = usePDFAnnotation();
+  const { activateSignaturePlacementMode, undo, redo } = usePDFAnnotation();
   const { historyApiRef } = useSignature();
 
-  const [selectedColor, setSelectedColor] = useState('#000000');
+  const [selectedColor, setSelectedColor] = useState("#000000");
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [historyAvailability, setHistoryAvailability] = useState({ canUndo: false, canRedo: false });
@@ -94,14 +90,12 @@ export const BaseAnnotationTool: React.FC<BaseAnnotationToolProps> = ({
         signatureData,
         onSignatureDataChange: handleSignatureDataChange,
         onColorSwatchClick: () => setIsColorPickerOpen(true),
-        disabled
+        disabled,
       })}
 
       {/* Instructions for placing signature */}
-      <Alert color="blue" title={t('sign.instructions.title', 'How to add signature')}>
-        <Text size="sm">
-          Click anywhere on the PDF to place your annotation.
-        </Text>
+      <Alert color="blue" title={t("sign.instructions.title", "How to add signature")}>
+        <Text size="sm">Click anywhere on the PDF to place your annotation.</Text>
       </Alert>
 
       {/* Color Picker Modal */}
