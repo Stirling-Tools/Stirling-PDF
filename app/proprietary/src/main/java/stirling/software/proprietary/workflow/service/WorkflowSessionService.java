@@ -8,11 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -62,6 +64,9 @@ public class WorkflowSessionService {
     private final ApplicationProperties applicationProperties;
     private final MetadataEncryptionService metadataEncryptionService;
     private final CertificateSubmissionValidator certificateSubmissionValidator;
+
+    @Autowired(required = false)
+    private stirling.software.proprietary.security.service.EmailService emailService;
 
     public void ensureSigningEnabled() {
         if (!applicationProperties.getStorage().isEnabled()
@@ -230,6 +235,62 @@ public class WorkflowSessionService {
 
             session.addParticipant(participant);
             participant = workflowParticipantRepository.save(participant);
+
+            // Send signing invitation email to external/guest participants
+            if (request.getEmail() != null
+                    && request.getUserId() == null
+                    && emailService != null
+                    && (request.isSendNotification())) {
+                try {
+                    String signingUrl = buildSigningUrl(participant.getShareToken());
+                    String ownerName =
+                            session.getOwnerEmail() != null
+                                    ? session.getOwnerEmail()
+                                    : "A Stirling PDF user";
+                    String expiresAt =
+                            participant.getExpiresAt() != null
+                                    ? participant.getExpiresAt().toString()
+                                    : null;
+                    emailService.sendSigningInvitationEmail(
+                            participant.getEmail(),
+                            ownerName,
+                            session.getDocumentName(),
+                            signingUrl,
+                            expiresAt,
+                            session.getMessage());
+                    participant.setStatus(ParticipantStatus.NOTIFIED);
+                    workflowParticipantRepository.save(participant);
+                    log.info(
+                            "Sent signing invitation to external participant (domain: {})",
+                            emailDomain(participant.getEmail()));
+                } catch (Exception e) {
+                    log.warn(
+                            "Failed to send signing invitation email (domain: {}): {}",
+                            emailDomain(participant.getEmail()),
+                            e.getMessage());
+                }
+            }
+        }
+    }
+
+    /** Returns only the domain portion of an email for privacy-safe logging. */
+    private static String emailDomain(String email) {
+        if (email == null) return "<null>";
+        int at = email.indexOf('@');
+        return at >= 0 ? email.substring(at) : "<no-domain>";
+    }
+
+    /** Builds the guest signing URL for a share token using the current request context. */
+    private String buildSigningUrl(String shareToken) {
+        try {
+            return ServletUriComponentsBuilder.fromCurrentContextPath()
+                    .path("/sign/")
+                    .path(shareToken)
+                    .toUriString();
+        } catch (Exception e) {
+            // Fallback if called outside of a request context (e.g. in tests)
+            log.debug("Could not determine base URL from request context, using relative path");
+            return "/sign/" + shareToken;
         }
     }
 

@@ -72,6 +72,9 @@ public class SigningFinalizationService {
     @Autowired(required = false)
     private final UserServerCertificateService userServerCertificateService;
 
+    @Autowired(required = false)
+    private final GuestCertificateService guestCertificateService;
+
     // ===== PUBLIC API =====
 
     /**
@@ -891,6 +894,28 @@ public class SigningFinalizationService {
                             "Failed to generate or retrieve user certificate: " + e.getMessage());
                 }
 
+            case "GUEST_CERT":
+                if (guestCertificateService == null) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST, "Guest certificate service is not available");
+                }
+                if (participant.getEmail() == null || participant.getEmail().isBlank()) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Guest certificate requires participant email address");
+                }
+                try {
+                    return guestCertificateService.generateGuestKeyStore(participant.getEmail());
+                } catch (Exception e) {
+                    log.error(
+                            "Failed to generate guest certificate for {}: {}",
+                            participant.getEmail(),
+                            e.getMessage());
+                    throw new ResponseStatusException(
+                            HttpStatus.INTERNAL_SERVER_ERROR,
+                            "Failed to generate guest certificate: " + e.getMessage());
+                }
+
             default:
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST, "Invalid certificate type: " + certType);
@@ -941,6 +966,12 @@ public class SigningFinalizationService {
                 log.error("Failed to get user certificate password", e);
                 return null;
             }
+        }
+
+        if ("GUEST_CERT".equalsIgnoreCase(certType)
+                && guestCertificateService != null
+                && participant.getEmail() != null) {
+            return guestCertificateService.generateGuestPassword(participant.getEmail());
         }
 
         return submission.getPassword();

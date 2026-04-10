@@ -13,6 +13,7 @@ import InviteAccept from "@app/routes/InviteAccept";
 import ShareLinkPage from "@app/routes/ShareLinkPage";
 import ParticipantView from "@app/components/workflow/ParticipantView";
 import MobileScannerPage from "@app/pages/MobileScannerPage";
+import GuestSignPage from "@app/routes/GuestSignPage";
 import Onboarding from "@app/components/onboarding/Onboarding";
 
 // Import global styles
@@ -42,6 +43,17 @@ function ParticipantViewPage() {
   return <ParticipantView token={token} />;
 }
 
+// Minimal providers for guest signing - token-based, no authentication required
+function GuestSigningProviders({ children }: { children: React.ReactNode }) {
+  return (
+    <PreferencesProvider>
+      <RainbowThemeProvider>
+        {children}
+      </RainbowThemeProvider>
+    </PreferencesProvider>
+  );
+}
+
 export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
@@ -63,6 +75,16 @@ export default function App() {
             <MobileScannerProviders>
               <ParticipantViewPage />
             </MobileScannerProviders>
+          }
+        />
+
+        {/* Guest signing route - token-based, no authentication required */}
+        <Route
+          path="/sign/:token"
+          element={
+            <GuestSigningProviders>
+              <GuestSignPage />
+            </GuestSigningProviders>
           }
         />
 

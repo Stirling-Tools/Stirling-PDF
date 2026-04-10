@@ -164,4 +164,110 @@ public class EmailServiceTest {
             assertEquals("Invalid Addresses", e.getMessage());
         }
     }
+
+    @Test
+    void sendSigningInvitationEmail_sendsEmailWithDocumentNameInSubject()
+            throws MessagingException {
+        when(applicationProperties.getMail()).thenReturn(mailProperties);
+        when(mailProperties.getFrom()).thenReturn("no-reply@stirling-software.com");
+        MimeMessage mimeMessage = mock(MimeMessage.class);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+
+        emailService.sendSigningInvitationEmail(
+                "guest@example.com",
+                "Alice Owner",
+                "Contract 2025.pdf",
+                "https://example.com/sign/abc-token",
+                "2025-12-31",
+                "Please review and sign");
+
+        verify(mailSender).send(mimeMessage);
+    }
+
+    @Test
+    void sendSigningInvitationEmail_throwsForBlankRecipient() {
+        assertThrows(
+                MessagingException.class,
+                () ->
+                        emailService.sendSigningInvitationEmail(
+                                "",
+                                "Owner",
+                                "Doc.pdf",
+                                "https://example.com/sign/tok",
+                                null,
+                                null));
+    }
+
+    // ── HTML injection / URL guard tests ──────────────────────────────────
+
+    @Test
+    void sendSigningInvitationEmail_doesNotThrowForHtmlInDocumentName() throws MessagingException {
+        when(applicationProperties.getMail()).thenReturn(mailProperties);
+        when(mailProperties.getFrom()).thenReturn("no-reply@stirling.com");
+        MimeMessage mimeMessage = mock(MimeMessage.class);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+
+        // Document name with injected HTML — must not cause an exception
+        emailService.sendSigningInvitationEmail(
+                "guest@example.com",
+                "Alice",
+                "<script>alert('xss')</script>Contract.pdf",
+                "https://example.com/sign/tok",
+                null,
+                null);
+
+        verify(mailSender).send(mimeMessage);
+    }
+
+    @Test
+    void sendSigningInvitationEmail_doesNotThrowForHtmlInMessage() throws MessagingException {
+        when(applicationProperties.getMail()).thenReturn(mailProperties);
+        when(mailProperties.getFrom()).thenReturn("no-reply@stirling.com");
+        MimeMessage mimeMessage = mock(MimeMessage.class);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+
+        // Personal message with HTML injection
+        emailService.sendSigningInvitationEmail(
+                "guest@example.com",
+                "Bob <b>Owner</b>",
+                "Contract.pdf",
+                "https://example.com/sign/tok",
+                "2026-12-31",
+                "<img src=x onerror=alert(1)> Please sign");
+
+        verify(mailSender).send(mimeMessage);
+    }
+
+    @Test
+    void sendSigningInvitationEmail_doesNotThrowForJavascriptUrl() throws MessagingException {
+        when(applicationProperties.getMail()).thenReturn(mailProperties);
+        when(mailProperties.getFrom()).thenReturn("no-reply@stirling.com");
+        MimeMessage mimeMessage = mock(MimeMessage.class);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+
+        // javascript: URL — must be replaced with '#', not thrown into email
+        emailService.sendSigningInvitationEmail(
+                "guest@example.com",
+                "Owner",
+                "Contract.pdf",
+                "javascript:alert(document.cookie)",
+                null,
+                null);
+
+        verify(mailSender).send(mimeMessage);
+    }
+
+    @Test
+    void sendSigningInvitationEmail_acceptsNullOptionalParams() throws MessagingException {
+        when(applicationProperties.getMail()).thenReturn(mailProperties);
+        when(mailProperties.getFrom()).thenReturn("no-reply@stirling.com");
+        MimeMessage mimeMessage = mock(MimeMessage.class);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+
+        // expiresAt and message are optional — null values must not cause NPE
+        emailService.sendSigningInvitationEmail(
+                "guest@example.com", null, null, "https://example.com/sign/tok", null, null);
+
+        verify(mailSender).send(mimeMessage);
+    }
 }

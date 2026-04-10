@@ -6,6 +6,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.HtmlUtils;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -256,6 +257,111 @@ public class EmailService {
                 </body></html>
                 """
                         .formatted(inviteUrl, inviteUrl, expiresAt);
+
+        sendPlainEmail(to, subject, body, true);
+    }
+
+    /**
+     * Sends a document signing invitation to an external/guest user.
+     *
+     * @param to the recipient email address
+     * @param ownerName the display name of the session owner
+     * @param documentName the name of the document to be signed
+     * @param signingUrl the full URL of the guest signing page
+     * @param expiresAt human-readable expiry date/time string
+     * @param message optional personal message from the owner (may be null)
+     * @throws MessagingException if sending fails
+     */
+    @Async
+    public void sendSigningInvitationEmail(
+            String to,
+            String ownerName,
+            String documentName,
+            String signingUrl,
+            String expiresAt,
+            String message)
+            throws MessagingException {
+        // Escape all user-supplied values before embedding in HTML
+        String safeOwner = HtmlUtils.htmlEscape(ownerName != null ? ownerName : "");
+        String safeDoc = HtmlUtils.htmlEscape(documentName != null ? documentName : "");
+        // Only allow http/https URLs in the signing link to prevent javascript: injection
+        String safeUrl =
+                (signingUrl != null
+                                && (signingUrl.startsWith("https://")
+                                        || signingUrl.startsWith("http://")))
+                        ? signingUrl
+                        : "#";
+        String safeUrlText = HtmlUtils.htmlEscape(safeUrl);
+
+        String subject = "Please sign: " + (documentName != null ? documentName : "");
+
+        String messageSection =
+                (message != null && !message.isBlank())
+                        ? """
+                          <div style="background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                            <p style="margin: 0; font-style: italic; color: #555;">"%s"</p>
+                          </div>
+                        """
+                                .formatted(HtmlUtils.htmlEscape(message))
+                        : "";
+
+        String expirySection =
+                (expiresAt != null && !expiresAt.isBlank())
+                        ? """
+                          <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                            <p style="margin: 0; color: #856404; font-size: 14px;"><strong>&#9888; Important:</strong> This signing link will expire on %s.</p>
+                          </div>
+                        """
+                                .formatted(HtmlUtils.htmlEscape(expiresAt))
+                        : "";
+
+        String body =
+                """
+                <html><body style="margin: 0; padding: 0;">
+                <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 20px;">
+                  <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0;">
+                    <!-- Logo -->
+                    <div style="text-align: center; padding: 20px; background-color: #222;">
+                      <img src="https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/docs/stirling-transparent.svg" alt="Stirling PDF" style="max-height: 60px;">
+                    </div>
+                    <!-- Content -->
+                    <div style="padding: 30px; color: #333;">
+                      <h2 style="color: #222; margin-top: 0;">You have been asked to sign a document</h2>
+                      <p>Hi there,</p>
+                      <p><strong>%s</strong> has requested your signature on:</p>
+                      <!-- Document Name Box -->
+                      <div style="background-color: #f8f9fa; border-left: 4px solid #007bff; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                        <p style="margin: 0; font-size: 16px;"><strong>&#128196; %s</strong></p>
+                      </div>
+                      %s
+                      <!-- CTA Button -->
+                      <div style="text-align: center; margin: 30px 0;">
+                        <a href="%s" style="display: inline-block; background-color: #007bff; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 5px; font-weight: bold;">Review and Sign Document</a>
+                      </div>
+                      <p style="font-size: 14px; color: #666;">Or copy and paste this link in your browser:</p>
+                      <div style="background-color: #f8f9fa; padding: 12px; margin: 15px 0; border-radius: 4px; word-break: break-all; font-size: 13px; color: #555;">
+                        %s
+                      </div>
+                      %s
+                      <p style="font-size: 13px; color: #888;">No account is required. Click the button above to review the document and apply your signature.</p>
+                      <p>If you did not expect this request, you can safely ignore this email.</p>
+                      <p style="margin-bottom: 0;">&#8212; The Stirling PDF Team</p>
+                    </div>
+                    <!-- Footer -->
+                    <div style="text-align: center; padding: 15px; font-size: 12px; color: #777; background-color: #f0f0f0;">
+                      &copy; 2025 Stirling PDF. All rights reserved.
+                    </div>
+                  </div>
+                </div>
+                </body></html>
+                """
+                        .formatted(
+                                safeOwner,
+                                safeDoc,
+                                messageSection,
+                                safeUrl,
+                                safeUrlText,
+                                expirySection);
 
         sendPlainEmail(to, subject, body, true);
     }
