@@ -23,10 +23,11 @@ const LS_TAB = 'filePicker.tab';
 const LS_SORT = 'filePicker.sort';
 const LS_SORT_DIR = 'filePicker.sortDir';
 
-function lsGet<T extends string>(key: string, fallback: T, valid: T[]): T {
+function lsGet<const T extends readonly string[]>(key: string, fallback: T[number], valid: T): T[number] {
   try {
     const v = localStorage.getItem(key);
-    if (v && valid.includes(v as T)) return v as T;
+    const allowed = valid as readonly string[];
+    if (v && allowed.includes(v)) return v as T[number];
   } catch { /* ignore */ }
   return fallback;
 }
@@ -35,10 +36,6 @@ function lsSet(key: string, value: string) {
   try { localStorage.setItem(key, value); } catch { /* ignore */ }
 }
 
-// Persists choices across picker instances and page reloads
-let lastPickerTab: 'workbench' | 'saved' = lsGet(LS_TAB, 'saved', ['workbench', 'saved']);
-let lastPickerSort: 'date' | 'name' = lsGet(LS_SORT, 'date', ['date', 'name']);
-let lastPickerSortDir: 'asc' | 'desc' = lsGet(LS_SORT_DIR, 'desc', ['asc', 'desc']);
 
 function formatBytes(bytes: number): string {
   if (!bytes) return '';
@@ -88,9 +85,9 @@ export function FileSelectorPicker({
 }: FileSelectorPickerProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'workbench' | 'saved'>(() => lastPickerTab);
-  const [sortBy, setSortBy] = useState<'date' | 'name'>(lastPickerSort);
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>(lastPickerSortDir);
+  const [activeTab, setActiveTab] = useState<'workbench' | 'saved'>(() => lsGet(LS_TAB, 'saved', ['workbench', 'saved']));
+  const [sortBy, setSortBy] = useState<'date' | 'name'>(() => lsGet(LS_SORT, 'date', ['date', 'name']));
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>(() => lsGet(LS_SORT_DIR, 'desc', ['asc', 'desc']));
   const [savedStubs, setSavedStubs] = useState<StirlingFileStub[]>([]);
   const [savedLoading, setSavedLoading] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -101,7 +98,6 @@ export function FileSelectorPicker({
   const { loadRecentFiles } = useFileManager();
 
   const handleTabChange = useCallback((tab: 'workbench' | 'saved') => {
-    lastPickerTab = tab;
     lsSet(LS_TAB, tab);
     setActiveTab(tab);
   }, []);
@@ -109,13 +105,10 @@ export function FileSelectorPicker({
   const handleSortChange = useCallback((sort: 'date' | 'name') => {
     if (sort === sortBy) {
       const newDir = sortDir === 'asc' ? 'desc' : 'asc';
-      lastPickerSortDir = newDir;
       lsSet(LS_SORT_DIR, newDir);
       setSortDir(newDir);
     } else {
       const defaultDir: 'asc' | 'desc' = sort === 'name' ? 'asc' : 'desc';
-      lastPickerSort = sort;
-      lastPickerSortDir = defaultDir;
       lsSet(LS_SORT, sort);
       lsSet(LS_SORT_DIR, defaultDir);
       setSortBy(sort);
@@ -123,15 +116,15 @@ export function FileSelectorPicker({
     }
   }, [sortBy, sortDir]);
 
-  // Sync tab/sort from shared module state whenever this picker opens.
+  // Sync tab/sort from localStorage whenever this picker opens.
   // Both slot pickers mount simultaneously so their useState initialisers run at
-  // the same time — a tab change in one picker updates lastPickerTab but the
-  // other picker's state is stale. Reading on open fixes that.
+  // the same time — a tab change in one picker writes to localStorage but the
+  // other picker's React state is stale. Re-reading on open fixes that.
   useEffect(() => {
     if (!isOpen) return;
-    setActiveTab(lastPickerTab);
-    setSortBy(lastPickerSort);
-    setSortDir(lastPickerSortDir);
+    setActiveTab(lsGet(LS_TAB, 'saved', ['workbench', 'saved']));
+    setSortBy(lsGet(LS_SORT, 'date', ['date', 'name']));
+    setSortDir(lsGet(LS_SORT_DIR, 'desc', ['asc', 'desc']));
   }, [isOpen]);
 
   // Load saved files when the saved tab is active and the picker is open
@@ -241,7 +234,7 @@ export function FileSelectorPicker({
           // Non-fatal — thumbnail simply won't show
         }
         await fileStorage.storeStirlingFile(stirlingFile, stub);
-        lastPickerTab = 'saved';
+        lsSet(LS_TAB, 'saved');
         setActiveTab('saved');
         const refreshed = await loadRecentFiles();
         setSavedStubs(refreshed);
