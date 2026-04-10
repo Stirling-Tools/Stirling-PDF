@@ -138,10 +138,12 @@ class OrchestratorAgent:
     async def math_auditor_agent(self, ctx: RunContext[OrchestratorDeps]) -> EditPlanResponse:
         return EditPlanResponse(
             summary="Validate mathematical calculations in the document.",
-            steps=[ToolOperationStep(
-                tool=OperationId.MATH_AUDITOR_AGENT,
-                parameters=MathAuditorAgentParams(),
-            )],
+            steps=[
+                ToolOperationStep(
+                    tool=OperationId.MATH_AUDITOR_AGENT,
+                    parameters=MathAuditorAgentParams(),
+                )
+            ],
         )
 
     async def unsupported_capability(

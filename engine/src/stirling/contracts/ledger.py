@@ -22,7 +22,7 @@ from stirling.models import ApiModel
 class FolioType(StrEnum):
     """How Java classifies each page after a cheap PDFBox scan."""
 
-    TEXT = "text"    # selectable text layer present
+    TEXT = "text"  # selectable text layer present
     IMAGE = "image"  # image-only, will need OCR
     MIXED = "mixed"  # partial text layer + embedded images
 
@@ -37,9 +37,7 @@ class FolioManifest(ApiModel):
 
     session_id: str = Field(description="Opaque handle Java uses to find the PDF on disk.")
     page_count: int = Field(ge=1)
-    folio_types: list[FolioType] = Field(
-        description="One entry per page (0-indexed). len(folio_types) == page_count."
-    )
+    folio_types: list[FolioType] = Field(description="One entry per page (0-indexed). len(folio_types) == page_count.")
     round: int = Field(default=1, ge=1, le=3, description="Which negotiation round this is.")
 
 
@@ -69,9 +67,7 @@ class Requisition(ApiModel):
         default_factory=list,
         description="0-indexed page numbers. Java runs OCRmyPDF on these.",
     )
-    rationale: str = Field(
-        description="Plain-language reason, written for log readability, not the client."
-    )
+    rationale: str = Field(description="Plain-language reason, written for log readability, not the client.")
 
 
 # ---------------------------------------------------------------------------
@@ -87,9 +83,7 @@ class Folio(ApiModel):
 
     page: int = Field(ge=0, description="0-indexed page number.")
     text: str | None = Field(default=None, description="PDFBox plain-text extraction.")
-    tables: list[str] | None = Field(
-        default=None, description="Tabula CSV strings, one per table found on the page."
-    )
+    tables: list[str] | None = Field(default=None, description="Tabula CSV strings, one per table found on the page.")
     ocr_text: str | None = Field(default=None, description="OCRmyPDF output text.")
     ocr_confidence: float | None = Field(
         default=None, ge=0.0, le=1.0, description="Mean character confidence from OCRmyPDF."
@@ -132,14 +126,14 @@ class Evidence(ApiModel):
 
 
 class DiscrepancyKind(StrEnum):
-    TALLY = "tally"            # a row/column sum is wrong
+    TALLY = "tally"  # a row/column sum is wrong
     ARITHMETIC = "arithmetic"  # an inline calculation is wrong
     CONSISTENCY = "consistency"  # the same figure is stated differently elsewhere
-    STATEMENT = "statement"    # a prose claim contradicts the numbers
+    STATEMENT = "statement"  # a prose claim contradicts the numbers
 
 
 class Severity(StrEnum):
-    ERROR = "error"      # definite arithmetic mistake
+    ERROR = "error"  # definite arithmetic mistake
     WARNING = "warning"  # possible rounding or ambiguity
 
 
@@ -172,16 +166,10 @@ class Verdict(ApiModel):
     type: Literal["verdict"] = "verdict"
     session_id: str
     discrepancies: list[Discrepancy] = Field(default_factory=list)
-    pages_examined: list[int] = Field(
-        description="0-indexed page numbers the auditor actually inspected."
-    )
+    pages_examined: list[int] = Field(description="0-indexed page numbers the auditor actually inspected.")
     rounds_taken: int = Field(ge=1, le=3)
-    summary: str = Field(
-        description="One or two sentences summarising the audit outcome for the client."
-    )
-    clean: bool = Field(
-        description="True iff no errors were found (warnings are tolerated)."
-    )
+    summary: str = Field(description="One or two sentences summarising the audit outcome for the client.")
+    clean: bool = Field(description="True iff no errors were found (warnings are tolerated).")
     unauditable_pages: list[int] = Field(
         default_factory=list,
         description=(
@@ -199,5 +187,3 @@ class Verdict(ApiModel):
     @property
     def warning_count(self) -> int:
         return sum(1 for d in self.discrepancies if d.severity == Severity.WARNING)
-
-

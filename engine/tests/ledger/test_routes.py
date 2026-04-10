@@ -156,7 +156,9 @@ class TestExamineEndpoint:
         assert "rationale" in body
 
     def test_examine_called_with_parsed_manifest(
-        self, client: TestClient, stub_agent: StubLedgerAgent,
+        self,
+        client: TestClient,
+        stub_agent: StubLedgerAgent,
     ) -> None:
         client.post("/api/v1/ai/math-auditor-agent/examine", json=_manifest_body(sessionId="my-session", pageCount=3))
         assert len(stub_agent.examine_calls) == 1
@@ -208,7 +210,9 @@ class TestDeliberateEndpoint:
         assert discrepancies[0]["expected"] == "300"
 
     def test_tolerance_query_param_forwarded(
-        self, client: TestClient, stub_agent: StubLedgerAgent,
+        self,
+        client: TestClient,
+        stub_agent: StubLedgerAgent,
     ) -> None:
         client.post("/api/v1/ai/math-auditor-agent/deliberate?tolerance=0.05", json=_evidence_body())
         assert len(stub_agent.audit_calls) == 1
@@ -216,20 +220,26 @@ class TestDeliberateEndpoint:
         assert tolerance == Decimal("0.05")
 
     def test_default_tolerance_when_omitted(
-        self, client: TestClient, stub_agent: StubLedgerAgent,
+        self,
+        client: TestClient,
+        stub_agent: StubLedgerAgent,
     ) -> None:
         client.post("/api/v1/ai/math-auditor-agent/deliberate", json=_evidence_body())
         _, tolerance = stub_agent.audit_calls[0]
         assert tolerance == Decimal("0.01")
 
     def test_invalid_tolerance_returns_400(
-        self, client: TestClient, stub_agent: StubLedgerAgent,
+        self,
+        client: TestClient,
+        stub_agent: StubLedgerAgent,
     ) -> None:
         resp = client.post("/api/v1/ai/math-auditor-agent/deliberate?tolerance=notanumber", json=_evidence_body())
         assert resp.status_code == 400
 
     def test_final_round_flag_parsed(
-        self, client: TestClient, stub_agent: StubLedgerAgent,
+        self,
+        client: TestClient,
+        stub_agent: StubLedgerAgent,
     ) -> None:
         client.post("/api/v1/ai/math-auditor-agent/deliberate", json=_evidence_body(finalRound=True))
         evidence, _ = stub_agent.audit_calls[0]

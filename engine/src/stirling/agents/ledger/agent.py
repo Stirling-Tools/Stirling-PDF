@@ -59,6 +59,7 @@ logger = logging.getLogger(__name__)
 
 class ExtractedFigure(BaseModel):
     """A single named figure found on a page."""
+
     label: str = Field(description="Normalised name, e.g. 'Total Revenue', 'VAT'.")
     value: str = Field(description="Numeric value as a string, e.g. '1200.00'.")
     raw: str = Field(description="Original text from the document, e.g. '£1,200.00'.")
@@ -66,11 +67,13 @@ class ExtractedFigure(BaseModel):
 
 class FigureExtractionResult(BaseModel):
     """All named figures found on a single page."""
+
     figures: list[ExtractedFigure] = Field(default_factory=list)
 
 
 class FormulaCheck(BaseModel):
     """One verifiable mathematical relationship in a table."""
+
     description: str = Field(description="Human-readable, e.g. 'Line Total = Qty × Unit Price'")
     formula: str = Field(description="Expression: 'col3 = col1 * col2' or 'cell(4,3) = sum(col3, 1-3)'")
     scope: str = Field(description="'each_row' | 'column_total' | 'single_cell'")
@@ -81,11 +84,13 @@ class FormulaCheck(BaseModel):
 
 class TableFormulas(BaseModel):
     """All verifiable formulas found in one table."""
+
     formulas: list[FormulaCheck] = Field(default_factory=list)
 
 
 class StatementCheck(BaseModel):
     """One prose claim and its verification result."""
+
     claim: str = Field(description="The exact text of the claim")
     verification: str = Field(description="Type: percentage_change, comparison, ratio, trend, average, other")
     values_referenced: list[str] = Field(default_factory=list, description="Numbers used in the check")
@@ -97,6 +102,7 @@ class StatementCheck(BaseModel):
 
 class StatementsResult(BaseModel):
     """All verifiable prose claims found on a page."""
+
     statements: list[StatementCheck] = Field(default_factory=list)
 
 
@@ -161,13 +167,12 @@ class MathAuditorAgent:
         with SessionLogger(manifest.session_id, ai_log_level=self._ai_log_level, log_path=self._log_path) as slog:
             logger.info(
                 "[math-auditor-agent] session=%s round=%d examining %d folios",
-                manifest.session_id, manifest.round, manifest.page_count,
+                manifest.session_id,
+                manifest.round,
+                manifest.page_count,
             )
 
-            user_prompt = (
-                "Examine this folio manifest and declare your requisition:\n"
-                + manifest.model_dump_json()
-            )
+            user_prompt = "Examine this folio manifest and declare your requisition:\n" + manifest.model_dump_json()
             slog.request("examine", body={"user_prompt": user_prompt})
 
             result = await self._examiner.run(user_prompt, deps=manifest)
@@ -176,7 +181,10 @@ class MathAuditorAgent:
             slog.response("examine", body=req.model_dump())
             logger.info(
                 "[math-auditor-agent] session=%s requisition: text=%s tables=%s ocr=%s",
-                manifest.session_id, req.need_text, req.need_tables, req.need_ocr,
+                manifest.session_id,
+                req.need_text,
+                req.need_tables,
+                req.need_ocr,
             )
             return req
 
@@ -198,12 +206,17 @@ class MathAuditorAgent:
             return await self._audit_inner(evidence, tolerance, slog)
 
     async def _audit_inner(
-        self, evidence: Evidence, tolerance: Decimal, slog: SessionLogger,
+        self,
+        evidence: Evidence,
+        tolerance: Decimal,
+        slog: SessionLogger,
     ) -> Verdict:
         logger.info(
             "[math-auditor-agent] session=%s round=%d auditing %d folios (final=%s)",
-            evidence.session_id, evidence.round,
-            len(evidence.folios), evidence.final_round,
+            evidence.session_id,
+            evidence.round,
+            len(evidence.folios),
+            evidence.final_round,
         )
 
         all_discrepancies: list[Discrepancy] = []
@@ -219,10 +232,14 @@ class MathAuditorAgent:
                 results = arithmetic_scanner.scan(folio.page, text)
                 all_discrepancies.extend(results)
                 if slog:
-                    slog.tool_call("scan_arithmetic", args={
-                        "page": folio.page,
-                        "text_length": len(text),
-                    }, result=[d.model_dump() for d in results])
+                    slog.tool_call(
+                        "scan_arithmetic",
+                        args={
+                            "page": folio.page,
+                            "text_length": len(text),
+                        },
+                        result=[d.model_dump() for d in results],
+                    )
 
         # Step 2: Parallel LLM calls — formula inference + figure extraction
         # These are independent per-page so we fire them all concurrently.
@@ -238,7 +255,9 @@ class MathAuditorAgent:
 
         logger.info(
             "[math-auditor-agent] session=%s step 2: %d formula + %d figure LLM calls (parallel)",
-            evidence.session_id, len(table_tasks), len(folios_with_text),
+            evidence.session_id,
+            len(table_tasks),
+            len(folios_with_text),
         )
 
         # Fire all LLM calls concurrently (bounded by _llm_semaphore)
@@ -246,7 +265,9 @@ class MathAuditorAgent:
         figure_coros = [self._throttled(self._extract_figures_for_page(f, slog)) for f in folios_with_text]
         statement_coros = [self._throttled(self._verify_statements(f, slog)) for f in folios_with_text]
         all_results = await asyncio.gather(
-            *formula_coros, *figure_coros, *statement_coros,
+            *formula_coros,
+            *figure_coros,
+            *statement_coros,
             return_exceptions=True,
         )
 
@@ -276,12 +297,16 @@ class MathAuditorAgent:
                 )
                 all_discrepancies.extend(checked)
                 if slog:
-                    slog.tool_call("check_formula", args={
-                        "page": page,
-                        "formula": fc.formula,
-                        "scope": fc.scope,
-                        "description": fc.description,
-                    }, result=[d.model_dump() for d in checked])
+                    slog.tool_call(
+                        "check_formula",
+                        args={
+                            "page": page,
+                            "formula": fc.formula,
+                            "scope": fc.scope,
+                            "description": fc.description,
+                        },
+                        result=[d.model_dump() for d in checked],
+                    )
 
         # Process figure results
         for i, folio in enumerate(folios_with_text):
@@ -295,7 +320,9 @@ class MathAuditorAgent:
                 except (InvalidOperation, ValueError):
                     logger.warning(
                         "[math-auditor-agent] skipping figure %r on page %d: non-numeric value %r",
-                        fig.label, page, fig.value,
+                        fig.label,
+                        page,
+                        fig.value,
                     )
                     continue
                 figure_tracker.record(
@@ -314,43 +341,49 @@ class MathAuditorAgent:
             stmts: StatementsResult = result
             for sc in stmts.statements:
                 if not sc.is_valid:
-                    all_discrepancies.append(Discrepancy(
-                        page=folio.page,
-                        kind=DiscrepancyKind.STATEMENT,
-                        severity=Severity.ERROR,
-                        description=f"{sc.claim}: {sc.explanation}",
-                        stated=sc.actual_claim,
-                        expected=sc.expected_result,
-                        context=sc.claim,
-                    ))
+                    all_discrepancies.append(
+                        Discrepancy(
+                            page=folio.page,
+                            kind=DiscrepancyKind.STATEMENT,
+                            severity=Severity.ERROR,
+                            description=f"{sc.claim}: {sc.explanation}",
+                            stated=sc.actual_claim,
+                            expected=sc.expected_result,
+                            context=sc.claim,
+                        )
+                    )
                 if slog:
-                    slog.tool_call("verify_statement", args={
-                        "page": folio.page,
-                        "claim": sc.claim,
-                    }, result=sc.model_dump())
+                    slog.tool_call(
+                        "verify_statement",
+                        args={
+                            "page": folio.page,
+                            "claim": sc.claim,
+                        },
+                        result=sc.model_dump(),
+                    )
 
         logger.info(
             "[math-auditor-agent] session=%s step 2 complete: %d figures registered",
-            evidence.session_id, figure_tracker.entry_count,
+            evidence.session_id,
+            figure_tracker.entry_count,
         )
 
         # Step 3: Cross-page consistency — deterministic
         consistency_discrepancies = figure_tracker.conflicts()
         all_discrepancies.extend(consistency_discrepancies)
         if slog and consistency_discrepancies:
-            slog.tool_call("check_figure_consistency",
-                            result=[d.model_dump() for d in consistency_discrepancies])
+            slog.tool_call("check_figure_consistency", result=[d.model_dump() for d in consistency_discrepancies])
 
         # Step 4: Summary — fast model, small payload
         # Collect verification stats for the summary
         total_tables = sum(len(f.tables) for f in evidence.folios if f.tables)
         total_formulas_checked = sum(
-            len(r.formulas) for r in all_results[:n_formulas]
-            if not isinstance(r, Exception) and hasattr(r, 'formulas')
+            len(r.formulas) for r in all_results[:n_formulas] if not isinstance(r, Exception) and hasattr(r, "formulas")
         )
         total_statements_checked = sum(
-            len(r.statements) for r in all_results[n_formulas + n_figures:]
-            if not isinstance(r, Exception) and hasattr(r, 'statements')
+            len(r.statements)
+            for r in all_results[n_formulas + n_figures :]
+            if not isinstance(r, Exception) and hasattr(r, "statements")
         )
         verification_stats = (
             f"Verified: {len(pages_examined)} pages, {total_tables} tables "
@@ -361,12 +394,16 @@ class MathAuditorAgent:
 
         logger.info(
             "[math-auditor-agent] session=%s step 4: generating summary (%d discrepancies)",
-            evidence.session_id, len(all_discrepancies),
+            evidence.session_id,
+            len(all_discrepancies),
         )
         pages_examined.sort()
         summary = await self._generate_summary(
-            all_discrepancies, pages_examined, evidence.unauditable_pages,
-            verification_stats, slog,
+            all_discrepancies,
+            pages_examined,
+            evidence.unauditable_pages,
+            verification_stats,
+            slog,
         )
 
         # Step 5: Assemble Verdict
@@ -384,7 +421,10 @@ class MathAuditorAgent:
         slog.response("deliberate", body=verdict.model_dump())
         logger.info(
             "[math-auditor-agent] session=%s verdict: %d errors, %d warnings, clean=%s",
-            evidence.session_id, verdict.error_count, verdict.warning_count, verdict.clean,
+            evidence.session_id,
+            verdict.error_count,
+            verdict.warning_count,
+            verdict.clean,
         )
         return verdict
 
@@ -407,13 +447,19 @@ class MathAuditorAgent:
             formulas = TableFormulas(formulas=[])
 
         if slog:
-            slog.tool_call("infer_formulas", args={
-                "table_csv": table_csv[:300],
-            }, result=formulas.model_dump())
+            slog.tool_call(
+                "infer_formulas",
+                args={
+                    "table_csv": table_csv[:300],
+                },
+                result=formulas.model_dump(),
+            )
         return formulas
 
     async def _verify_statements(
-        self, folio: Folio, slog: SessionLogger | None,
+        self,
+        folio: Folio,
+        slog: SessionLogger | None,
     ) -> StatementsResult:
         """Ask the fast model to find and verify prose claims on a page."""
         text = folio.readable_text
@@ -435,15 +481,21 @@ class MathAuditorAgent:
             stmts = StatementsResult(statements=[])
 
         if slog and stmts.statements:
-            slog.tool_call("verify_statements", args={
-                "page": folio.page,
-                "text_length": len(text),
-                "n_tables": len(folio.tables) if folio.tables else 0,
-            }, result=[s.model_dump() for s in stmts.statements])
+            slog.tool_call(
+                "verify_statements",
+                args={
+                    "page": folio.page,
+                    "text_length": len(text),
+                    "n_tables": len(folio.tables) if folio.tables else 0,
+                },
+                result=[s.model_dump() for s in stmts.statements],
+            )
         return stmts
 
     async def _extract_figures_for_page(
-        self, folio: Folio, slog: SessionLogger | None,
+        self,
+        folio: Folio,
+        slog: SessionLogger | None,
     ) -> list[tuple[ExtractedFigure, int]]:
         text = folio.readable_text
         if not text or not text.strip():
@@ -457,14 +509,20 @@ class MathAuditorAgent:
         except Exception:
             logger.warning(
                 "[math-auditor-agent] figure extraction failed for page %d, skipping",
-                folio.page, exc_info=True,
+                folio.page,
+                exc_info=True,
             )
             figures = []
 
         if slog:
-            slog.tool_call("extract_figures", args={
-                "page": folio.page, "text_length": len(text),
-            }, result=[f.model_dump() for f in figures])
+            slog.tool_call(
+                "extract_figures",
+                args={
+                    "page": folio.page,
+                    "text_length": len(text),
+                },
+                result=[f.model_dump() for f in figures],
+            )
 
         return [(fig, folio.page) for fig in figures]
 
@@ -503,8 +561,10 @@ class MathAuditorAgent:
 
     @staticmethod
     def _fallback_summary(
-        error_count: int, warning_count: int,
-        pages_examined: list[int], unauditable_pages: list[int],
+        error_count: int,
+        warning_count: int,
+        pages_examined: list[int],
+        unauditable_pages: list[int],
     ) -> str:
         parts = []
         if error_count == 0 and warning_count == 0:
@@ -516,7 +576,6 @@ class MathAuditorAgent:
                 parts.append(f"Found {warning_count} warning{'s' if warning_count != 1 else ''}.")
         if unauditable_pages:
             parts.append(
-                f"Pages {', '.join(str(p + 1) for p in unauditable_pages)} "
-                "could not be audited (OCR unavailable)."
+                f"Pages {', '.join(str(p + 1) for p in unauditable_pages)} could not be audited (OCR unavailable)."
             )
         return " ".join(parts)

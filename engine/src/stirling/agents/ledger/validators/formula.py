@@ -66,8 +66,12 @@ class FormulaEvaluator:
             return []
 
     def _check_each_row(
-        self, page: int, rows: list[list[str]], formula: str,
-        description: str, row_range: list[int] | None,
+        self,
+        page: int,
+        rows: list[list[str]],
+        formula: str,
+        description: str,
+        row_range: list[int] | None,
     ) -> list[Discrepancy]:
         """Verify formula holds for each data row."""
         discrepancies: list[Discrepancy] = []
@@ -99,21 +103,28 @@ class FormulaEvaluator:
                 continue
 
             if abs(stated - computed) > self.tolerance:
-                discrepancies.append(Discrepancy(
-                    page=page,
-                    kind=DiscrepancyKind.TALLY,
-                    severity=Severity.ERROR,
-                    description=f"{description}: row {row_idx} — stated {stated}, expected {computed}",
-                    stated=str(stated),
-                    expected=str(computed),
-                    context=f"row {row_idx}, {formula}",
-                ))
+                discrepancies.append(
+                    Discrepancy(
+                        page=page,
+                        kind=DiscrepancyKind.TALLY,
+                        severity=Severity.ERROR,
+                        description=f"{description}: row {row_idx} — stated {stated}, expected {computed}",
+                        stated=str(stated),
+                        expected=str(computed),
+                        context=f"row {row_idx}, {formula}",
+                    )
+                )
 
         return discrepancies
 
     def _check_column_total(
-        self, page: int, rows: list[list[str]], formula: str,
-        description: str, target_row: int | None, target_col: int | None,
+        self,
+        page: int,
+        rows: list[list[str]],
+        formula: str,
+        description: str,
+        target_row: int | None,
+        target_col: int | None,
     ) -> list[Discrepancy]:
         """Verify that a total row contains correct column sums."""
         if target_row is None or target_row >= len(rows):
@@ -152,21 +163,28 @@ class FormulaEvaluator:
                 continue
 
             if abs(stated - computed) > self.tolerance:
-                discrepancies.append(Discrepancy(
-                    page=page,
-                    kind=DiscrepancyKind.TALLY,
-                    severity=Severity.ERROR,
-                    description=f"{description}: column {col} — stated {stated}, expected {computed}",
-                    stated=str(stated),
-                    expected=str(computed),
-                    context=f"column {col}, total row {target_row}",
-                ))
+                discrepancies.append(
+                    Discrepancy(
+                        page=page,
+                        kind=DiscrepancyKind.TALLY,
+                        severity=Severity.ERROR,
+                        description=f"{description}: column {col} — stated {stated}, expected {computed}",
+                        stated=str(stated),
+                        expected=str(computed),
+                        context=f"column {col}, total row {target_row}",
+                    )
+                )
 
         return discrepancies
 
     def _check_single_cell(
-        self, page: int, rows: list[list[str]], formula: str,
-        description: str, target_row: int | None, target_col: int | None,
+        self,
+        page: int,
+        rows: list[list[str]],
+        formula: str,
+        description: str,
+        target_row: int | None,
+        target_col: int | None,
     ) -> list[Discrepancy]:
         """Verify a single cell formula (e.g. Grand Total = Subtotal + Tax)."""
         parts = formula.split("=", 1)
@@ -196,15 +214,17 @@ class FormulaEvaluator:
             return []
 
         if abs(stated - computed) > self.tolerance:
-            return [Discrepancy(
-                page=page,
-                kind=DiscrepancyKind.TALLY,
-                severity=Severity.ERROR,
-                description=f"{description}: stated {stated}, expected {computed}",
-                stated=str(stated),
-                expected=str(computed),
-                context=f"cell({target_row},{target_col}), {formula}",
-            )]
+            return [
+                Discrepancy(
+                    page=page,
+                    kind=DiscrepancyKind.TALLY,
+                    severity=Severity.ERROR,
+                    description=f"{description}: stated {stated}, expected {computed}",
+                    stated=str(stated),
+                    expected=str(computed),
+                    context=f"cell({target_row},{target_col}), {formula}",
+                )
+            ]
         return []
 
     # ------------------------------------------------------------------

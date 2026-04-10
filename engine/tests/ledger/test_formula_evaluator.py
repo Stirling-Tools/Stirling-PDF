@@ -82,7 +82,7 @@ def test_safe_eval_decimal_numbers(evaluator: FormulaEvaluator) -> None:
 
 def test_col1_does_not_corrupt_col12(evaluator: FormulaEvaluator) -> None:
     """col1 replacement must not alter col12."""
-    csv = "a,b,c,d,e,f,g,h,i,j,k,l,m\n" "0,10,0,0,0,0,0,0,0,0,0,0,120\n"
+    csv = "a,b,c,d,e,f,g,h,i,j,k,l,m\n0,10,0,0,0,0,0,0,0,0,0,0,120\n"
     # col1=10, col12=120 → col12 - col1 should be 110
     result = evaluator.evaluate(
         page=0,
@@ -98,10 +98,7 @@ def test_col1_does_not_corrupt_col12(evaluator: FormulaEvaluator) -> None:
 
 def test_col_replacement_adjacent_columns(evaluator: FormulaEvaluator) -> None:
     """col1 and col10 should both be replaced correctly."""
-    csv = (
-        "a,b,c,d,e,f,g,h,i,j,k\n"
-        "55,5,0,0,0,0,0,0,0,0,50\n"
-    )
+    csv = "a,b,c,d,e,f,g,h,i,j,k\n55,5,0,0,0,0,0,0,0,0,50\n"
     # col0=55, col1=5, col10=50 → col1 + col10 = 55
     result = evaluator.evaluate(
         page=0,

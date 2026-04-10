@@ -46,9 +46,7 @@ class FigureTracker:
     def record(self, label: str, value: Decimal, page: int, raw: str) -> None:
         """Register a named figure sighting."""
         key = _normalise_label(label)
-        self._ledger.setdefault(key, []).append(
-            FigureRecord(label=key, value=value, page=page, raw=raw)
-        )
+        self._ledger.setdefault(key, []).append(FigureRecord(label=key, value=value, page=page, raw=raw))
 
     def conflicts(self) -> list[Discrepancy]:
         """
@@ -77,10 +75,7 @@ class FigureTracker:
                             ),
                             stated=other.raw,
                             expected=canonical.raw,
-                            context=(
-                                f"First seen: page {canonical.page + 1}"
-                                f" | Later: page {other.page + 1}"
-                            ),
+                            context=(f"First seen: page {canonical.page + 1} | Later: page {other.page + 1}"),
                         )
                     )
 

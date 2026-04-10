@@ -5,7 +5,6 @@ These tests confirm the wire contract: models round-trip through JSON
 correctly and their helper properties behave as documented.
 """
 
-
 import pytest
 from pydantic import ValidationError
 
@@ -101,10 +100,22 @@ def test_verdict_clean_flag() -> None:
 
 def test_verdict_error_and_warning_counts() -> None:
     discrepancies = [
-        Discrepancy(page=0, kind=DiscrepancyKind.TALLY, severity=Severity.ERROR,
-                    description="bad sum", stated="100", expected="110"),
-        Discrepancy(page=1, kind=DiscrepancyKind.CONSISTENCY, severity=Severity.WARNING,
-                    description="mismatched figure", stated="500", expected="550"),
+        Discrepancy(
+            page=0,
+            kind=DiscrepancyKind.TALLY,
+            severity=Severity.ERROR,
+            description="bad sum",
+            stated="100",
+            expected="110",
+        ),
+        Discrepancy(
+            page=1,
+            kind=DiscrepancyKind.CONSISTENCY,
+            severity=Severity.WARNING,
+            description="mismatched figure",
+            stated="500",
+            expected="550",
+        ),
     ]
     verdict = Verdict(
         session_id="s1",
