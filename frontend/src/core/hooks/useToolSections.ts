@@ -1,12 +1,12 @@
-import { useMemo } from 'react';
+import { useMemo } from "react";
 
-import { SUBCATEGORY_ORDER, SubcategoryId, ToolCategoryId, ToolRegistryEntry } from '@app/data/toolsTaxonomy';
-import { useTranslation } from 'react-i18next';
+import { SUBCATEGORY_ORDER, SubcategoryId, ToolCategoryId, ToolRegistryEntry } from "@app/data/toolsTaxonomy";
+import { useTranslation } from "react-i18next";
 import { ToolId } from "@app/types/toolId";
 
 type SubcategoryIdMap = {
   [subcategoryId in SubcategoryId]: Array<{ id: ToolId; tool: ToolRegistryEntry }>;
-}
+};
 
 type GroupedTools = {
   [categoryId in ToolCategoryId]: SubcategoryIdMap;
@@ -18,19 +18,19 @@ export interface SubcategoryGroup {
     id: ToolId;
     tool: ToolRegistryEntry;
   }[];
-};
+}
 
-export type ToolSectionKey = 'quick' | 'all';
+export type ToolSectionKey = "quick" | "all";
 
 export interface ToolSection {
   key: ToolSectionKey;
   title: string;
   subcategories: SubcategoryGroup[];
-};
+}
 
 export function useToolSections(
   filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>,
-  searchQuery?: string
+  searchQuery?: string,
 ) {
   const { t } = useTranslation();
 
@@ -78,8 +78,8 @@ export function useToolSections(
           if (!quick[subcategoryId]) quick[subcategoryId] = [];
           // Only include ready tools (have a component or external link) in Quick Access
           // Special case: read and multiTool are navigational tools that don't need components
-          const readyTools = tools.filter(({ tool, id }) =>
-            tool.component !== null || !!tool.link || id === 'read' || id === 'multiTool'
+          const readyTools = tools.filter(
+            ({ tool, id }) => tool.component !== null || !!tool.link || id === "read" || id === "multiTool",
           );
           quick[subcategoryId].push(...readyTools);
         });
@@ -96,14 +96,14 @@ export function useToolSections(
           if (ai !== bi) return ai - bi;
           return aId.localeCompare(bId);
         })
-        .map(([subcategoryId, tools]) => ({ subcategoryId, tools } as SubcategoryGroup));
+        .map(([subcategoryId, tools]) => ({ subcategoryId, tools }) as SubcategoryGroup);
 
     const built: ToolSection[] = [
-      { key: 'quick', title: t('toolPicker.quickAccess', 'QUICK ACCESS'), subcategories: sortSubs(quick) },
-      { key: 'all', title: t('toolPicker.allTools', 'ALL TOOLS'), subcategories: sortSubs(all) }
+      { key: "quick", title: t("toolPicker.quickAccess", "QUICK ACCESS"), subcategories: sortSubs(quick) },
+      { key: "all", title: t("toolPicker.allTools", "ALL TOOLS"), subcategories: sortSubs(all) },
     ];
 
-    return built.filter(section => section.subcategories.some(sc => sc.tools.length > 0));
+    return built.filter((section) => section.subcategories.some((sc) => sc.tools.length > 0));
   }, [groupedTools]);
 
   const searchGroups: SubcategoryGroup[] = useMemo(() => {
@@ -138,16 +138,14 @@ export function useToolSections(
           if (ai !== bi) return ai - bi;
           return (a as SubcategoryId).localeCompare(b as SubcategoryId);
         })
-        .map(([subcategoryId, tools]) => ({ subcategoryId, tools } as SubcategoryGroup));
+        .map(([subcategoryId, tools]) => ({ subcategoryId, tools }) as SubcategoryGroup);
     }
 
     // No search: alphabetical subcategory ordering
     return entries
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([subcategoryId, tools]) => ({ subcategoryId, tools } as SubcategoryGroup));
+      .map(([subcategoryId, tools]) => ({ subcategoryId, tools }) as SubcategoryGroup);
   }, [filteredTools, searchQuery]);
 
   return { sections, searchGroups };
 }
-
-

@@ -6,7 +6,7 @@ export interface AppConfig {
   appNameNavbar?: string;
   languages?: string[];
   defaultLocale?: string;
-  logoStyle?: 'modern' | 'classic';
+  logoStyle?: "modern" | "classic";
   enableLogin?: boolean;
   showSettingsWhenNoLogin?: boolean;
   enableEmailInvites?: boolean;
@@ -60,4 +60,4 @@ export interface AppConfig {
   timestampTsaPresets?: { label: string; url: string }[];
 }
 
-export type AppConfigBootstrapMode = 'blocking' | 'non-blocking';
+export type AppConfigBootstrapMode = "blocking" | "non-blocking";

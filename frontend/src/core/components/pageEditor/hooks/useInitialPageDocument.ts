@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
-import { usePageDocument } from '@app/components/pageEditor/hooks/usePageDocument';
-import { PDFDocument } from '@app/types/pageEditor';
+import { useState, useEffect, useRef } from "react";
+import { usePageDocument } from "@app/components/pageEditor/hooks/usePageDocument";
+import { PDFDocument } from "@app/types/pageEditor";
 
 /**
  * Hook that calls usePageDocument but only returns the FIRST non-null result
@@ -30,7 +30,7 @@ export function useInitialPageDocument(): PDFDocument | null {
       return;
     }
 
-    console.log('📄 useInitialPageDocument: Captured initial document with', liveDocument.pages.length, 'pages');
+    console.log("📄 useInitialPageDocument: Captured initial document with", liveDocument.pages.length, "pages");
     setInitialDocument(liveDocument);
   }, [liveDocument, initialDocument]);
 

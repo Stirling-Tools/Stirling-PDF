@@ -38,7 +38,7 @@ const SplitAutomationSettings = ({ parameters, onParameterChange, disabled = fal
         label={t("split.steps.chooseMethod", "Choose Method")}
         placeholder={t("split.selectMethod", "Select a split method")}
         value={parameters.method}
-        onChange={(value) => onParameterChange('method', value as SplitMethod | null)}
+        onChange={(value) => onParameterChange("method", value as SplitMethod | null)}
         data={methodSelectOptions}
         disabled={disabled}
         comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
@@ -50,11 +50,7 @@ const SplitAutomationSettings = ({ parameters, onParameterChange, disabled = fal
           <Text size="sm" fw={500}>
             {t("split.steps.settings", "Settings")}
           </Text>
-          <SplitSettings
-            parameters={parameters}
-            onParameterChange={onParameterChange}
-            disabled={disabled}
-          />
+          <SplitSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
         </>
       )}
     </Stack>

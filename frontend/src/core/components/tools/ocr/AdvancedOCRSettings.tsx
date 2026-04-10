@@ -1,7 +1,7 @@
-import React from 'react';
-import { Stack, Text, Checkbox } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { OCRParameters } from '@app/hooks/tools/ocr/useOCRParameters';
+import React from "react";
+import { Stack, Text, Checkbox } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { OCRParameters } from "@app/hooks/tools/ocr/useOCRParameters";
 
 export interface AdvancedOCRParameters {
   advancedOptions: string[];
@@ -22,43 +22,43 @@ interface AdvancedOCRSettingsProps {
 
 const AdvancedOCRSettings: React.FC<AdvancedOCRSettingsProps> = ({
   advancedOptions,
-  ocrRenderType = 'hocr',
+  ocrRenderType = "hocr",
   onParameterChange,
-  disabled = false
+  disabled = false,
 }) => {
   const { t } = useTranslation();
 
   // Define the advanced options available
   const advancedOptionsData: AdvancedOption[] = [
-    { value: 'compatibilityMode', label: t('ocr.settings.compatibilityMode.label', 'Compatibility Mode'), isSpecial: true },
-    { value: 'sidecar', label: t('ocr.settings.advancedOptions.sidecar', 'Create a text file'), isSpecial: false },
-    { value: 'deskew', label: t('ocr.settings.advancedOptions.deskew', 'Deskew pages'), isSpecial: false },
-    { value: 'clean', label: t('ocr.settings.advancedOptions.clean', 'Clean input file'), isSpecial: false },
-    { value: 'cleanFinal', label: t('ocr.settings.advancedOptions.cleanFinal', 'Clean final output'), isSpecial: false },
+    { value: "compatibilityMode", label: t("ocr.settings.compatibilityMode.label", "Compatibility Mode"), isSpecial: true },
+    { value: "sidecar", label: t("ocr.settings.advancedOptions.sidecar", "Create a text file"), isSpecial: false },
+    { value: "deskew", label: t("ocr.settings.advancedOptions.deskew", "Deskew pages"), isSpecial: false },
+    { value: "clean", label: t("ocr.settings.advancedOptions.clean", "Clean input file"), isSpecial: false },
+    { value: "cleanFinal", label: t("ocr.settings.advancedOptions.cleanFinal", "Clean final output"), isSpecial: false },
   ];
 
   // Handle individual checkbox changes
   const handleCheckboxChange = (optionValue: string, checked: boolean) => {
-    const option = advancedOptionsData.find(opt => opt.value === optionValue);
+    const option = advancedOptionsData.find((opt) => opt.value === optionValue);
 
     if (option?.isSpecial) {
       // Handle special options (like compatibility mode) differently
-      if (optionValue === 'compatibilityMode') {
-        onParameterChange('ocrRenderType', checked ? 'sandwich' : 'hocr');
+      if (optionValue === "compatibilityMode") {
+        onParameterChange("ocrRenderType", checked ? "sandwich" : "hocr");
       }
     } else {
       // Handle regular advanced options
       const newOptions = checked
         ? [...advancedOptions, optionValue]
-        : advancedOptions.filter(option => option !== optionValue);
-      onParameterChange('additionalOptions', newOptions);
+        : advancedOptions.filter((option) => option !== optionValue);
+      onParameterChange("additionalOptions", newOptions);
     }
   };
 
   // Check if a special option is selected
   const isSpecialOptionSelected = (optionValue: string) => {
-    if (optionValue === 'compatibilityMode') {
-      return ocrRenderType === 'sandwich';
+    if (optionValue === "compatibilityMode") {
+      return ocrRenderType === "sandwich";
     }
     return false;
   };
@@ -67,7 +67,7 @@ const AdvancedOCRSettings: React.FC<AdvancedOCRSettingsProps> = ({
     <Stack gap="md">
       <div>
         <Text size="sm" fw={500} mb="md">
-          {t('ocr.settings.advancedOptions.label', 'Processing Options')}
+          {t("ocr.settings.advancedOptions.label", "Processing Options")}
         </Text>
 
         <Stack gap="sm">

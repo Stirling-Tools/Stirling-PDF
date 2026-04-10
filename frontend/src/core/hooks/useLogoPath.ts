@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
-import { useMantineColorScheme } from '@mantine/core';
-import { useLogoAssets } from '@app/hooks/useLogoAssets';
+import { useMemo } from "react";
+import { useMantineColorScheme } from "@mantine/core";
+import { useLogoAssets } from "@app/hooks/useLogoAssets";
 
 /**
  * Hook to get the correct logo path based on app config (logo style) and theme (light/dark)
@@ -16,7 +16,7 @@ export function useLogoPath(): string {
   const { folderPath } = useLogoAssets();
 
   return useMemo(() => {
-    const themeSuffix = colorScheme === 'dark' ? 'Dark' : 'Light';
+    const themeSuffix = colorScheme === "dark" ? "Dark" : "Light";
     return `${folderPath}/StirlingPDFLogoNoText${themeSuffix}.svg`;
   }, [colorScheme, folderPath]);
 }

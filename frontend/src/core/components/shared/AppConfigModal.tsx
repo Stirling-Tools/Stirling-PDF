@@ -1,16 +1,16 @@
-import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
-import { Badge, Modal, Text, ActionIcon, Tooltip, Group } from '@mantine/core';
-import { useNavigate, useLocation } from 'react-router-dom';
-import LocalIcon from '@app/components/shared/LocalIcon';
-import { useConfigNavSections } from '@app/components/shared/config/configNavSections';
-import { NavKey, VALID_NAV_KEYS } from '@app/components/shared/config/types';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
-import '@app/components/shared/AppConfigModal.css';
-import { useIsMobile } from '@app/hooks/useIsMobile';
-import { Z_INDEX_CONFIG_MODAL, Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
-import { useLicenseAlert } from '@app/hooks/useLicenseAlert';
-import { UnsavedChangesProvider, useUnsavedChanges } from '@app/contexts/UnsavedChangesContext';
-import { SettingsSearchBar } from '@app/components/shared/config/SettingsSearchBar';
+import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { Badge, Modal, Text, ActionIcon, Tooltip, Group } from "@mantine/core";
+import { useNavigate, useLocation } from "react-router-dom";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import { useConfigNavSections } from "@app/components/shared/config/configNavSections";
+import { NavKey, VALID_NAV_KEYS } from "@app/components/shared/config/types";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import "@app/components/shared/AppConfigModal.css";
+import { useIsMobile } from "@app/hooks/useIsMobile";
+import { Z_INDEX_CONFIG_MODAL, Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
+import { UnsavedChangesProvider, useUnsavedChanges } from "@app/contexts/UnsavedChangesContext";
+import { SettingsSearchBar } from "@app/components/shared/config/SettingsSearchBar";
 
 interface AppConfigModalProps {
   opened: boolean;
@@ -18,7 +18,7 @@ interface AppConfigModalProps {
 }
 
 const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
-  const [active, setActive] = useState<NavKey>('general');
+  const [active, setActive] = useState<NavKey>("general");
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
@@ -42,9 +42,9 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
     const section = getSectionFromPath(location.pathname);
     if (opened && section) {
       setActive(section);
-    } else if (opened && location.pathname.startsWith('/settings') && !section) {
+    } else if (opened && location.pathname.startsWith("/settings") && !section) {
       // If at /settings without a section, redirect to general
-      navigate('/settings/general', { replace: true });
+      navigate("/settings/general", { replace: true });
     }
   }, [location.pathname, opened, navigate]);
 
@@ -63,19 +63,22 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
         navigate(`/settings/${detail.key}`);
       }
     };
-    window.addEventListener('appConfig:navigate', handler as EventListener);
-    return () => window.removeEventListener('appConfig:navigate', handler as EventListener);
+    window.addEventListener("appConfig:navigate", handler as EventListener);
+    return () => window.removeEventListener("appConfig:navigate", handler as EventListener);
   }, [navigate]);
 
-  const colors = useMemo(() => ({
-    navBg: 'var(--modal-nav-bg)',
-    sectionTitle: 'var(--modal-nav-section-title)',
-    navItem: 'var(--modal-nav-item)',
-    navItemActive: 'var(--modal-nav-item-active)',
-    navItemActiveBg: 'var(--modal-nav-item-active-bg)',
-    contentBg: 'var(--modal-content-bg)',
-    headerBorder: 'var(--modal-header-border)',
-  }), []);
+  const colors = useMemo(
+    () => ({
+      navBg: "var(--modal-nav-bg)",
+      sectionTitle: "var(--modal-nav-section-title)",
+      navItem: "var(--modal-nav-item)",
+      navItemActive: "var(--modal-nav-item-active)",
+      navItemActiveBg: "var(--modal-nav-item-active-bg)",
+      contentBg: "var(--modal-content-bg)",
+      headerBorder: "var(--modal-header-border)",
+    }),
+    [],
+  );
 
   // Get isAdmin and runningEE from app config
   const isAdmin = config?.isAdmin ?? false;
@@ -83,23 +86,19 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
   const loginEnabled = config?.enableLogin ?? false;
 
   // Left navigation structure and icons
-  const configNavSections = useConfigNavSections(
-    isAdmin,
-    runningEE,
-    loginEnabled
-  );
+  const configNavSections = useConfigNavSections(isAdmin, runningEE, loginEnabled);
 
   const activeLabel = useMemo(() => {
     for (const section of configNavSections) {
-      const found = section.items.find(i => i.key === active);
+      const found = section.items.find((i) => i.key === active);
       if (found) return found.label;
     }
-    return '';
+    return "";
   }, [configNavSections, active]);
 
   const activeComponent = useMemo(() => {
     for (const section of configNavSections) {
-      const found = section.items.find(i => i.key === active);
+      const found = section.items.find((i) => i.key === active);
       if (found) return found.component;
     }
     return null;
@@ -108,19 +107,22 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
   const handleClose = useCallback(async () => {
     const canProceed = await confirmIfDirty();
     if (!canProceed) return;
-    
+
     // Navigate back to home when closing modal
-    navigate('/', { replace: true });
+    navigate("/", { replace: true });
     onClose();
   }, [confirmIfDirty, navigate, onClose]);
 
-  const handleNavigation = useCallback(async (key: NavKey) => {
-    const canProceed = await confirmIfDirty();
-    if (!canProceed) return;
+  const handleNavigation = useCallback(
+    async (key: NavKey) => {
+      const canProceed = await confirmIfDirty();
+      if (!canProceed) return;
 
-    setActive(key);
-    navigate(`/settings/${key}`);
-  }, [confirmIfDirty, navigate]);
+      setActive(key);
+      navigate(`/settings/${key}`);
+    },
+    [confirmIfDirty, navigate],
+  );
 
   return (
     <Modal
@@ -139,30 +141,28 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
       <div className="modal-container">
         {/* Left navigation */}
         <div
-          className={`modal-nav ${isMobile ? 'mobile' : ''}`}
+          className={`modal-nav ${isMobile ? "mobile" : ""}`}
           style={{
             background: colors.navBg,
             borderRight: `1px solid ${colors.headerBorder}`,
           }}
         >
           <div className="modal-nav-scroll">
-            {configNavSections.map(section => (
+            {configNavSections.map((section) => (
               <div key={section.title} className="modal-nav-section">
                 {!isMobile && (
-                  <Text size="xs" fw={600} c={colors.sectionTitle} style={{ textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                  <Text size="xs" fw={600} c={colors.sectionTitle} style={{ textTransform: "uppercase", letterSpacing: 0.4 }}>
                     {section.title}
                   </Text>
                 )}
                 <div className="modal-nav-section-items">
-                  {section.items.map(item => {
+                  {section.items.map((item) => {
                     const isActive = active === item.key;
                     const isDisabled = item.disabled ?? false;
                     const color = isActive ? colors.navItemActive : colors.navItem;
                     const iconSize = isMobile ? 28 : 18;
                     const showPlanWarning =
-                      item.key === 'adminPlan' &&
-                      licenseAlert.active &&
-                      licenseAlert.audience === 'admin';
+                      item.key === "adminPlan" && licenseAlert.active && licenseAlert.audience === "admin";
 
                     const navItemContent = (
                       <div
@@ -172,11 +172,11 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
                             handleNavigation(item.key);
                           }
                         }}
-                        className={`modal-nav-item ${isMobile ? 'mobile' : ''}`}
+                        className={`modal-nav-item ${isMobile ? "mobile" : ""}`}
                         style={{
-                          background: isActive ? colors.navItemActiveBg : 'transparent',
+                          background: isActive ? colors.navItemActiveBg : "transparent",
                           opacity: isDisabled ? 0.6 : 1,
-                          cursor: isDisabled ? 'not-allowed' : 'pointer',
+                          cursor: isDisabled ? "not-allowed" : "pointer",
                         }}
                         data-tour={`admin-${item.key}-nav`}
                       >
@@ -187,7 +187,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
                               {item.label}
                             </Text>
                             {item.badge && (
-                              <Badge size="xs" variant="light" color={item.badgeColor ?? 'orange'} style={{ flexShrink: 0 }}>
+                              <Badge size="xs" variant="light" color={item.badgeColor ?? "orange"} style={{ flexShrink: 0 }}>
                                 {item.badge}
                               </Badge>
                             )}
@@ -196,7 +196,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
                                 icon="warning-rounded"
                                 width={14}
                                 height={14}
-                                style={{ color: 'var(--mantine-color-orange-7)' }}
+                                style={{ color: "var(--mantine-color-orange-7)" }}
                               />
                             )}
                           </Group>
@@ -235,27 +235,17 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({ opened, onClose })
                 borderBottom: `1px solid ${colors.headerBorder}`,
               }}
             >
-              <Text fw={700} size="lg">{activeLabel}</Text>
+              <Text fw={700} size="lg">
+                {activeLabel}
+              </Text>
               <Group gap="xs" wrap="nowrap">
-                <SettingsSearchBar
-                  configNavSections={configNavSections}
-                  onNavigate={handleNavigation}
-                  isMobile={isMobile}
-                />
-                <ActionIcon
-                  ref={closeButtonRef}
-                  variant="subtle"
-                  onClick={handleClose}
-                  aria-label="Close"
-                  data-autofocus
-                >
+                <SettingsSearchBar configNavSections={configNavSections} onNavigate={handleNavigation} isMobile={isMobile} />
+                <ActionIcon ref={closeButtonRef} variant="subtle" onClick={handleClose} aria-label="Close" data-autofocus>
                   <LocalIcon icon="close-rounded" width={18} height={18} />
                 </ActionIcon>
               </Group>
             </div>
-            <div className="modal-body">
-              {activeComponent}
-            </div>
+            <div className="modal-body">{activeComponent}</div>
           </div>
         </div>
       </div>

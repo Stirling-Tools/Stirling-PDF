@@ -25,7 +25,7 @@ export function addEventListenerWithCleanup(
   target: EventTarget,
   event: string,
   handler: EventListener,
-  options?: boolean | AddEventListenerOptions
+  options?: boolean | AddEventListenerOptions,
 ): () => void {
   target.addEventListener(event, handler, options);
   return () => target.removeEventListener(event, handler, options);

@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
-import Userback from '@userback/widget';
-import { useAuth } from '@app/auth/UseSession';
+import { useEffect, useRef } from "react";
+import Userback from "@userback/widget";
+import { useAuth } from "@app/auth/UseSession";
 
 interface UserbackWidgetProps {
   token: string;
@@ -30,14 +30,13 @@ export default function UserbackWidget({ token }: UserbackWidgetProps) {
         const options = {
           user_data: {
             id: user.id,
-            info: userInfo
-          }
+            info: userInfo,
+          },
         };
 
         // Initialize Userback
         userbackRef.current = await Userback(token, options);
-      }
-     finally {
+      } finally {
         initializingRef.current = false;
       }
     };
@@ -46,7 +45,7 @@ export default function UserbackWidget({ token }: UserbackWidgetProps) {
 
     // Cleanup function
     return () => {
-      if (userbackRef.current && typeof userbackRef.current.destroy === 'function') {
+      if (userbackRef.current && typeof userbackRef.current.destroy === "function") {
         userbackRef.current.destroy();
       }
       initializingRef.current = false;
