@@ -20,6 +20,7 @@ import stirling.software.common.util.ExceptionUtils;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowOutcome;
+import stirling.software.proprietary.model.api.ai.AiWorkflowProgressEvent;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
 import stirling.software.proprietary.service.PdfContentExtractor.LoadedFile;
@@ -38,6 +39,13 @@ public class AiWorkflowService {
     private final PdfContentExtractor pdfContentExtractor;
     private final ObjectMapper objectMapper;
 
+    @FunctionalInterface
+    public interface ProgressListener {
+        void onProgress(AiWorkflowProgressEvent event);
+    }
+
+    private static final ProgressListener NOOP_LISTENER = event -> {};
+
     private sealed interface WorkflowState {
         record Pending(WorkflowTurnRequest request) implements WorkflowState {}
 
@@ -45,6 +53,11 @@ public class AiWorkflowService {
     }
 
     public AiWorkflowResponse orchestrate(AiWorkflowRequest request) throws IOException {
+        return orchestrate(request, NOOP_LISTENER);
+    }
+
+    public AiWorkflowResponse orchestrate(AiWorkflowRequest request, ProgressListener listener)
+            throws IOException {
         validateRequest(request);
 
         Map<String, MultipartFile> filesByName = new LinkedHashMap<>();
@@ -57,19 +70,32 @@ public class AiWorkflowService {
         initialRequest.setUserMessage(request.getUserMessage().trim());
         initialRequest.setFileNames(new ArrayList<>(filesByName.keySet()));
 
+        listener.onProgress(
+                AiWorkflowProgressEvent.of("analyzing", "Analyzing your request...", 0));
+
+        int turn = 0;
         WorkflowState state = new WorkflowState.Pending(initialRequest);
         while (state instanceof WorkflowState.Pending pending) {
-            state = advance(pending.request(), filesByName);
+            turn++;
+            state = advance(pending.request(), filesByName, listener, turn);
         }
         return ((WorkflowState.Terminal) state).response();
     }
 
     private WorkflowState advance(
-            WorkflowTurnRequest request, Map<String, MultipartFile> filesByName)
+            WorkflowTurnRequest request,
+            Map<String, MultipartFile> filesByName,
+            ProgressListener listener,
+            int turn)
             throws IOException {
+        listener.onProgress(
+                AiWorkflowProgressEvent.of(
+                        "calling_engine",
+                        turn == 1 ? "AI is thinking..." : "AI is thinking... (turn " + turn + ")",
+                        turn));
         AiWorkflowResponse response = invokeOrchestrator(request);
         return switch (response.getOutcome()) {
-            case NEED_CONTENT -> onNeedContent(response, filesByName, request);
+            case NEED_CONTENT -> onNeedContent(response, filesByName, request, listener, turn);
             case ANSWER,
                     NOT_FOUND,
                     PLAN,
@@ -86,7 +112,9 @@ public class AiWorkflowService {
     private WorkflowState onNeedContent(
             AiWorkflowResponse response,
             Map<String, MultipartFile> filesByName,
-            WorkflowTurnRequest request)
+            WorkflowTurnRequest request,
+            ProgressListener listener,
+            int turn)
             throws IOException {
         if (!request.getArtifacts().isEmpty()) {
             return new WorkflowState.Terminal(
@@ -119,6 +147,10 @@ public class AiWorkflowService {
                                         Collectors.toMap(
                                                 AiWorkflowFileRequest::getFileName, r -> r));
 
+        listener.onProgress(
+                AiWorkflowProgressEvent.of(
+                        "extracting_content", "Extracting content from your documents...", turn));
+
         List<LoadedFile> loadedFiles = new ArrayList<>();
         try {
             for (String fileName : fileNamesToLoad) {
@@ -132,6 +164,10 @@ public class AiWorkflowService {
                             requestedByName,
                             response.getMaxPages(),
                             response.getMaxCharacters());
+
+            listener.onProgress(
+                    AiWorkflowProgressEvent.of(
+                            "processing", "Processing extracted content...", turn));
 
             WorkflowTurnRequest nextRequest = new WorkflowTurnRequest();
             nextRequest.setUserMessage(request.getUserMessage());

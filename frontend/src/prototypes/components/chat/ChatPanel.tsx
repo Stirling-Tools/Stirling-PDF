@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, type KeyboardEvent } from "react";
-import { ActionIcon, ScrollArea, TextInput, Stack, Text, Paper, Box, Transition } from "@mantine/core";
+import { ActionIcon, ScrollArea, TextInput, Stack, Text, Paper, Box, Transition, Loader, Group } from "@mantine/core";
 import SendIcon from "@mui/icons-material/Send";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import CloseIcon from "@mui/icons-material/Close";
@@ -9,17 +9,19 @@ import "@app/components/chat/ChatPanel.css";
 function ChatMessageBubble({ role, content }: { role: "user" | "assistant"; content: string }) {
   return (
     <div className={`chat-message chat-message-${role}`}>
-      <Paper className={`chat-bubble chat-bubble-${role}`} p="xs" radius="md">
-        <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
-          {content}
-        </Text>
+      <Paper
+        className={`chat-bubble chat-bubble-${role}`}
+        p="xs"
+        radius="md"
+      >
+        <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>{content}</Text>
       </Paper>
     </div>
   );
 }
 
 export function ChatPanel() {
-  const { messages, isOpen, isLoading, toggleOpen, sendMessage } = useChat();
+  const { messages, isOpen, isLoading, progressMessage, toggleOpen, sendMessage } = useChat();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -73,9 +75,7 @@ export function ChatPanel() {
           <Box className="chat-panel" style={styles}>
             {/* Header */}
             <div className="chat-panel-header">
-              <Text fw={600} size="sm">
-                AI Assistant
-              </Text>
+              <Text fw={600} size="sm">AI Assistant</Text>
               <ActionIcon variant="subtle" size="sm" onClick={toggleOpen} aria-label="Close chat">
                 <CloseIcon sx={{ fontSize: 16 }} />
               </ActionIcon>
@@ -95,9 +95,10 @@ export function ChatPanel() {
                 {isLoading && (
                   <div className="chat-message chat-message-assistant">
                     <Paper className="chat-bubble chat-bubble-assistant" p="xs" radius="md">
-                      <Text size="sm" c="dimmed">
-                        Thinking...
-                      </Text>
+                      <Group gap="xs" wrap="nowrap">
+                        <Loader size="xs" type="dots" />
+                        <Text size="sm" c="dimmed">{progressMessage || "Thinking..."}</Text>
+                      </Group>
                     </Paper>
                   </div>
                 )}
