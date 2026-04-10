@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { Text, Center, Box, LoadingOverlay, Stack } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
-import { useFileSelection, useFileState, useFileManagement, useFileActions, useFileContext } from "@app/contexts/FileContext";
+import { useFileSelection, useFileState, useFileManagement, useFileActions } from "@app/contexts/FileContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { zipFileService } from "@app/services/zipFileService";
@@ -91,37 +91,6 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
   const handleCloseAllFiles = useCallback(() => {
     void removeFiles(activeStirlingFileStubs.map((r) => r.id), false);
   }, [activeStirlingFileStubs, removeFiles]);
-
-  const handleSelectAllFiles = useCallback(() => {
-    // Respect maxAllowed: if limited, select the last N files
-    const allIds = state.files.ids;
-    const idsToSelect = Number.isFinite(maxAllowed) ? allIds.slice(-maxAllowed) : allIds;
-    setSelectedFiles(idsToSelect);
-    try {
-      fileActions.clearAllFileErrors();
-    } catch (error) {
-      if (process.env.NODE_ENV === "development") {
-        console.warn("Failed to clear file errors on select all:", error);
-      }
-    }
-  }, [state.files.ids, setSelectedFiles, fileActions.clearAllFileErrors, maxAllowed]);
-
-  const handleDeselectAllFiles = useCallback(() => {
-    setSelectedFiles([]);
-    try {
-      fileActions.clearAllFileErrors();
-    } catch (error) {
-      if (process.env.NODE_ENV === "development") {
-        console.warn("Failed to clear file errors on deselect:", error);
-      }
-    }
-  }, [setSelectedFiles, fileActions.clearAllFileErrors]);
-
-  const handleCloseSelectedFiles = useCallback(() => {
-    if (selectedFileIds.length === 0) return;
-    void removeFiles(selectedFileIds, false);
-    setSelectedFiles([]);
-  }, [selectedFileIds, removeFiles, setSelectedFiles]);
 
   useFileEditorRightRailButtons({
     totalItems: activeStirlingFileStubs.length,
