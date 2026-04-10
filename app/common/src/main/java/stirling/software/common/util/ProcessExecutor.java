@@ -109,6 +109,11 @@ public class ProcessExecutor {
                                                 .getSessionLimit()
                                                 .getOcrMyPdfSessionLimit();
                                 case CFF_CONVERTER -> 1;
+                                case PDFIUM_REDACTOR ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getSessionLimit()
+                                                .getPdfiumRedactorSessionLimit();
                                 case FFMPEG ->
                                         applicationProperties
                                                 .getProcessExecutor()
@@ -173,6 +178,11 @@ public class ProcessExecutor {
                                                 .getProcessExecutor()
                                                 .getTimeoutMinutes()
                                                 .getOcrMyPdfTimeoutMinutes();
+                                case PDFIUM_REDACTOR ->
+                                        applicationProperties
+                                                .getProcessExecutor()
+                                                .getTimeoutMinutes()
+                                                .getPdfiumRedactorTimeoutMinutes();
                                 case CFF_CONVERTER -> 5L;
                                 case FFMPEG ->
                                         applicationProperties
@@ -539,6 +549,7 @@ public class ProcessExecutor {
         QPDF,
         GHOSTSCRIPT,
         OCR_MY_PDF,
+        PDFIUM_REDACTOR,
         CFF_CONVERTER,
         FFMPEG
     }
