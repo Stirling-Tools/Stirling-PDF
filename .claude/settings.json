@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(xargs grep:*)",
-      "Read(//c/SourceCode/stirling/stirling-pdf-math-agent/length > 79 {printf \"\"\"\"%d: %s/**)",
-      "Read(//c/SourceCode/stirling/stirling-pdf-math-agent/length > 79 {printf \"\"\"\"\"\"\"\"%d: %s/**)"
-    ]
-  }
-}
