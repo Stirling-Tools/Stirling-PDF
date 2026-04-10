@@ -5,7 +5,7 @@ import { SlideConfig } from "@app/types/types";
 import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
 import { accountService } from "@app/services/accountService";
 import { useAccountLogout } from '@app/extensions/accountLogout';
-import { useAuth } from "@app/auth/UseSession";
+import { useAuth } from "@app/auth/useAuth";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { BASE_PATH } from "@app/constants/app";
 import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";

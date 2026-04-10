@@ -1,68 +1,16 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react'
+import { useState, useEffect, ReactNode, useCallback } from 'react'
 import { supabase } from '@app/auth/supabase'
-import type { Session, User as SupabaseUser, AuthError } from '@supabase/supabase-js'
-import { CreditSummary, SubscriptionInfo, CreditCheckResult, ApiCredits } from '@app/types/credits'
+import type { Session, AuthError } from '@supabase/supabase-js'
+import { CreditSummary, SubscriptionInfo, ApiCredits } from '@app/types/credits'
 import apiClient, { setGlobalCreditUpdateCallback } from '@app/services/apiClient'
 import { synchronizeUserUpgrade } from '@app/services/userService'
 import { syncOAuthAvatar, getProfilePictureMetadata, type ProfilePictureMetadata } from '@app/services/avatarSyncService'
+import { AuthContext } from '@app/auth/authContext'
+import type { AuthContextType, TrialStatus } from '@app/auth/authContext'
+import type { CreditCheckResult } from '@app/types/credits'
 
-// Extend Supabase User to include optional username for compatibility
-export type User = SupabaseUser & { username?: string };
-
-export interface TrialStatus {
-  isTrialing: boolean
-  trialEnd: string
-  daysRemaining: number
-  hasPaymentMethod: boolean
-  hasScheduledSub: boolean
-  status: string
-}
-
-interface AuthContextType {
-  session: Session | null
-  user: User | null
-  loading: boolean
-  error: AuthError | null
-  creditBalance: number | null
-  subscription: SubscriptionInfo | null
-  creditSummary: CreditSummary | null
-  isPro: boolean | null
-  trialStatus: TrialStatus | null
-  profilePictureUrl: string | null
-  profilePictureMetadata: ProfilePictureMetadata | null
-  signOut: () => Promise<void>
-  refreshSession: () => Promise<void>
-  hasSufficientCredits: (requiredCredits: number) => CreditCheckResult
-  updateCredits: (newBalance: number) => void
-  refreshCredits: () => Promise<void>
-  refreshProStatus: () => Promise<void>
-  refreshTrialStatus: () => Promise<void>
-  refreshProfilePicture: () => Promise<void>
-  refreshProfilePictureMetadata: () => Promise<void>
-}
-
-const AuthContext = createContext<AuthContextType>({
-  session: null,
-  user: null,
-  loading: true,
-  error: null,
-  creditBalance: null,
-  subscription: null,
-  creditSummary: null,
-  isPro: null,
-  trialStatus: null,
-  profilePictureUrl: null,
-  profilePictureMetadata: null,
-  signOut: async () => {},
-  refreshSession: async () => {},
-  hasSufficientCredits: () => ({ hasSufficientCredits: false, currentBalance: 0, requiredCredits: 0 }),
-  updateCredits: () => {},
-  refreshCredits: async () => {},
-  refreshProStatus: async () => {},
-  refreshTrialStatus: async () => {},
-  refreshProfilePicture: async () => {},
-  refreshProfilePictureMetadata: async () => {}
-})
+export type { User } from '@app/auth/authContext'
+export type { TrialStatus } from '@app/auth/authContext'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
@@ -553,31 +501,3 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext)
-
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-
-  return context
-}
-
-// Debug hook to expose auth state for debugging
-export function useAuthDebug() {
-  const auth = useAuth()
-
-  useEffect(() => {
-    console.debug('[Auth Debug] Current auth state:', {
-      hasSession: !!auth.session,
-      hasUser: !!auth.user,
-      loading: auth.loading,
-      hasError: !!auth.error,
-      userId: auth.user?.id,
-      email: auth.user?.email,
-      provider: auth.user?.app_metadata?.provider
-    })
-  }, [auth.session, auth.user, auth.loading, auth.error])
-
-  return auth
-}

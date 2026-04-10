@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import apiClient from "@app/services/apiClient";
-import { useAuth } from "@app/auth/UseSession";
+import { useAuth } from "@app/auth/useAuth";
 import { ApiCredits } from "@app/types/credits";
 import { isUserAnonymous } from "@app/auth/supabase";
 

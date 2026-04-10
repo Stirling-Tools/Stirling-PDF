@@ -1,6 +1,6 @@
 import { Text, Button } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 import { useNavigate } from 'react-router-dom';
 
 export function OverviewHeader() {

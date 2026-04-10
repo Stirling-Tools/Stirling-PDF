@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 import { TrialExpiredModal } from '@app/components/shared/TrialExpiredModal';
 import StripeCheckout from '@app/components/shared/StripeCheckoutSaas';
 

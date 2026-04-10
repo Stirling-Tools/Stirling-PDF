@@ -4,6 +4,7 @@ import eslint from '@eslint/js';
 import globals from 'globals';
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
+import reactRefresh from 'eslint-plugin-react-refresh';
 
 const srcGlobs = [
   'src/**/*.{js,mjs,jsx,ts,tsx}',
@@ -80,6 +81,12 @@ export default defineConfig(
         },
       ],
     },
+  },
+  // React Fast Refresh - ensures component files only export components.
+  // Opted in folder by folder as context files are split into provider (.tsx) + hook/context (.ts) files.
+  {
+    ...reactRefresh.configs.vite,
+    files: ['src/saas/**/*.{jsx,tsx}'],
   },
   // Folders that have been cleaned up and are now conformant - stricter rules enforced here
   {

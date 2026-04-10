@@ -3,14 +3,6 @@ import { useTranslation } from '@app/hooks/useTranslation'
 import { Tooltip } from '@app/components/shared/Tooltip'
 import { withBasePath } from '@app/constants/app'
 
-// Exports for compatibility with proprietary code
-export const DEBUG_SHOW_ALL_PROVIDERS = false;
-export const oauthProviderConfig = {
-  google: { label: 'Google', file: 'google.svg' },
-  github: { label: 'GitHub', file: 'github.svg' },
-  apple: { label: 'Apple', file: 'apple.svg' },
-  azure: { label: 'Microsoft', file: 'microsoft.svg' },
-};
 
 interface OAuthButtonsProps {
   onProviderClick: (provider: 'github' | 'google') => void

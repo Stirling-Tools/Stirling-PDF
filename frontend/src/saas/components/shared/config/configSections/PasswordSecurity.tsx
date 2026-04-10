@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, PasswordInput, Group, Alert, LoadingOverlay, Modal, Divider } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 import { supabase } from '@app/auth/supabase';
 import { Z_INDEX_OVER_SETTINGS_MODAL } from '@app/styles/zIndex';
 

@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { useAuth } from '@app/auth/UseSession'
+import { useAuth } from '@app/auth/useAuth'
 import { useAutoAnonymousAuth } from '@app/hooks/useAutoAnonymousAuth'
 
 interface RequireAuthProps {

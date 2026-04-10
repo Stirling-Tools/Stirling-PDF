@@ -3,7 +3,7 @@ import { Alert, Button, Box, Group, Modal, Paper, PasswordInput, Stack, Text, Te
 import { useTranslation } from 'react-i18next';
 import LocalIcon from '@app/components/shared/LocalIcon';
 import { alert as showToast } from '@app/components/toast';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 import { accountService } from '@app/services/accountService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
 import { QRCodeSVG } from 'qrcode.react';

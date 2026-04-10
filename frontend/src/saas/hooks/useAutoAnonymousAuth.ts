@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
-import { useAuth } from '@app/auth/UseSession'
+import { useAuth } from '@app/auth/useAuth'
 import { signInAnonymously, supabase } from '@app/auth/supabase'
 import { isAuthRoute, isHomeRoute, isToolRoute } from '@app/utils/pathUtils'
 

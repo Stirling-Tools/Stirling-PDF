@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '@app/auth/UseSession'
+import { useAuth } from '@app/auth/useAuth'
 import { useAppConfig } from '@app/contexts/AppConfigContext'
 import HomePage from '@app/pages/HomePage'
 import { useBackendProbe } from '@app/hooks/useBackendProbe'

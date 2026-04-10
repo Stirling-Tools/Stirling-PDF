@@ -7,7 +7,7 @@ import { useCredits } from "@app/components/shared/config/configSections/apiKeys
 import useApiKey from "@app/components/shared/config/configSections/apiKeys/hooks/useApiKey";
 import SkeletonLoader from "@app/components/shared/SkeletonLoader";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@app/auth/UseSession";
+import { useAuth } from "@app/auth/useAuth";
 import { isUserAnonymous } from "@app/auth/supabase";
 
 export default function ApiKeys() {

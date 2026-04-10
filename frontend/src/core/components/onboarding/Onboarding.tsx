@@ -27,7 +27,7 @@ import { useAppConfig } from '@app/contexts/AppConfigContext';
 import apiClient from '@app/services/apiClient';
 import '@app/components/onboarding/OnboardingTour.css';
 import { useAccountLogout } from '@app/extensions/accountLogout';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 
 export default function Onboarding() {
   const { t } = useTranslation();

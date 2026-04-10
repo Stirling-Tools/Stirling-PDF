@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useCallback, useId } from 'react';
 import { Group, Loader, Text } from '@mantine/core';
 import * as d3 from 'd3';
 import { StackedBarChartProps, TooltipData, FractionData } from '@app/types/charts';
-import { generateTooltipHTML } from '@app/components/shared/charts/stackedBarChart/StackedBarTooltip';
+import { generateTooltipHTML } from '@app/components/shared/charts/stackedBarChart/stackedBarTooltipUtils';
 import { detectTheme, getChartThemeVars } from '@app/components/shared/charts/utils/themeUtils';
 import { createTooltipPositioner } from '@app/components/shared/charts/utils/tooltipUtils';
 import { createRoundedRectPath, createScale } from '@app/components/shared/charts/utils/d3Utils';

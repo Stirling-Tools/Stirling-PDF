@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { alert } from '@app/components/toast';
 import { UserSummary } from '@app/types/signingSession';
 import apiClient from '@app/services/apiClient';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from '@app/styles/zIndex';
 
 interface UserSelectorProps {

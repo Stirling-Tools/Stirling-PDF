@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, signInAnonymously } from '@app/auth/supabase'
-import { useAuth } from '@app/auth/UseSession'
+import { useAuth } from '@app/auth/useAuth'
 import { useTranslation } from '@app/hooks/useTranslation'
 import { useDocumentMeta } from '@app/hooks/useDocumentMeta'
 import AuthLayout from '@app/routes/authShared/AuthLayout'

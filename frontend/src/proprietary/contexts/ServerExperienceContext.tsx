@@ -10,7 +10,7 @@ import {
 import apiClient from '@app/services/apiClient';
 import { isAxiosError } from 'axios';
 import { useAppConfig } from '@app/contexts/AppConfigContext';
-import { useAuth } from '@app/auth/UseSession';
+import { useAuth } from '@app/auth/useAuth';
 import { useLicense } from '@app/contexts/LicenseContext';
 import {
   getSimulatedAdminUsage,
