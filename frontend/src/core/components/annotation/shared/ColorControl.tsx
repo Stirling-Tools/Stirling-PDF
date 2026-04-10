@@ -1,15 +1,15 @@
-import { ActionIcon, Tooltip, Popover, Stack, ColorSwatch, ColorPicker as MantineColorPicker, Group } from '@mantine/core';
-import { useState, useCallback, useEffect } from 'react';
-import ColorizeIcon from '@mui/icons-material/Colorize';
+import { ActionIcon, Tooltip, Popover, Stack, ColorSwatch, ColorPicker as MantineColorPicker, Group } from "@mantine/core";
+import { useState, useCallback, useEffect } from "react";
+import ColorizeIcon from "@mui/icons-material/Colorize";
 
 // safari and firefox do not support the eye dropper API, only edge, chrome and opera do.
 // the button is hidden in the UI if the API is not supported.
-const supportsEyeDropper = typeof window !== 'undefined' && 'EyeDropper' in window;
+const supportsEyeDropper = typeof window !== "undefined" && "EyeDropper" in window;
 
 interface EyeDropper {
   open(): Promise<{ sRGBHex: string }>;
 }
-declare const EyeDropper: { new(): EyeDropper };
+declare const EyeDropper: { new (): EyeDropper };
 
 interface ColorControlProps {
   value: string;
@@ -24,7 +24,9 @@ export function ColorControl({ value, onChange, label, disabled = false }: Color
   // Only propagate to the parent (which triggers expensive annotation updates)
   // on onChangeEnd (mouse-up / swatch click), preventing infinite re-render loops.
   const [localColor, setLocalColor] = useState(value);
-  useEffect(() => { setLocalColor(value); }, [value]);
+  useEffect(() => {
+    setLocalColor(value);
+  }, [value]);
 
   const handleEyeDropper = useCallback(async () => {
     if (!supportsEyeDropper) return;
@@ -50,13 +52,13 @@ export function ColorControl({ value, onChange, label, disabled = false }: Color
             styles={{
               root: {
                 flexShrink: 0,
-                backgroundColor: 'var(--bg-raised)',
-                border: '1px solid var(--border-default)',
-                color: 'var(--text-secondary)',
-                '&:hover': {
-                  backgroundColor: 'var(--hover-bg)',
-                  borderColor: 'var(--border-strong)',
-                  color: 'var(--text-primary)',
+                backgroundColor: "var(--bg-raised)",
+                border: "1px solid var(--border-default)",
+                color: "var(--text-secondary)",
+                "&:hover": {
+                  backgroundColor: "var(--hover-bg)",
+                  borderColor: "var(--border-strong)",
+                  color: "var(--text-primary)",
                 },
               },
             }}
@@ -73,8 +75,16 @@ export function ColorControl({ value, onChange, label, disabled = false }: Color
             onChange={setLocalColor}
             onChangeEnd={onChange}
             swatches={[
-              '#000000', '#ffffff', '#ff0000', '#00ff00', '#0000ff',
-              '#ffff00', '#ff00ff', '#00ffff', '#ffa500', 'transparent'
+              "#000000",
+              "#ffffff",
+              "#ff0000",
+              "#00ff00",
+              "#0000ff",
+              "#ffff00",
+              "#ff00ff",
+              "#00ffff",
+              "#ffa500",
+              "transparent",
             ]}
             swatchesPerRow={5}
             size="sm"
@@ -82,7 +92,13 @@ export function ColorControl({ value, onChange, label, disabled = false }: Color
           {supportsEyeDropper && (
             <Group justify="flex-end">
               <Tooltip label="Pick colour from screen">
-                <ActionIcon variant="subtle" color="gray" size="sm" onClick={handleEyeDropper} style={{ color: 'var(--text-primary)' }}>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="sm"
+                  onClick={handleEyeDropper}
+                  style={{ color: "var(--text-primary)" }}
+                >
                   <ColorizeIcon style={{ fontSize: 16 }} />
                 </ActionIcon>
               </Tooltip>

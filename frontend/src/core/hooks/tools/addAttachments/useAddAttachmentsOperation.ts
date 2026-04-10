@@ -1,7 +1,7 @@
-import { useTranslation } from 'react-i18next';
-import { useToolOperation, ToolOperationConfig, ToolType } from '@app/hooks/tools/shared/useToolOperation';
-import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
-import { AddAttachmentsParameters } from '@app/hooks/tools/addAttachments/useAddAttachmentsParameters';
+import { useTranslation } from "react-i18next";
+import { useToolOperation, ToolOperationConfig, ToolType } from "@app/hooks/tools/shared/useToolOperation";
+import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+import { AddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
 
 const buildFormData = (parameters: AddAttachmentsParameters, file: File): FormData => {
   const formData = new FormData();
@@ -25,8 +25,8 @@ const buildFormData = (parameters: AddAttachmentsParameters, file: File): FormDa
 export const addAttachmentsOperationConfig: ToolOperationConfig<AddAttachmentsParameters> = {
   toolType: ToolType.singleFile,
   buildFormData,
-  operationType: 'addAttachments',
-  endpoint: '/api/v1/misc/add-attachments',
+  operationType: "addAttachments",
+  endpoint: "/api/v1/misc/add-attachments",
 };
 
 export const useAddAttachmentsOperation = () => {
@@ -34,6 +34,8 @@ export const useAddAttachmentsOperation = () => {
 
   return useToolOperation<AddAttachmentsParameters>({
     ...addAttachmentsOperationConfig,
-    getErrorMessage: createStandardErrorHandler(t('addAttachments.error.failed', 'An error occurred while adding attachments to the PDF.'))
+    getErrorMessage: createStandardErrorHandler(
+      t("addAttachments.error.failed", "An error occurred while adding attachments to the PDF."),
+    ),
   });
 };

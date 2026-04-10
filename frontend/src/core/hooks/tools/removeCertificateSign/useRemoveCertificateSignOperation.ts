@@ -1,7 +1,10 @@
-import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
-import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
-import { RemoveCertificateSignParameters, defaultParameters } from '@app/hooks/tools/removeCertificateSign/useRemoveCertificateSignParameters';
+import { useTranslation } from "react-i18next";
+import { ToolType, useToolOperation } from "@app/hooks/tools/shared/useToolOperation";
+import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+import {
+  RemoveCertificateSignParameters,
+  defaultParameters,
+} from "@app/hooks/tools/removeCertificateSign/useRemoveCertificateSignParameters";
 
 // Static function that can be used by both the hook and automation executor
 export const buildRemoveCertificateSignFormData = (_parameters: RemoveCertificateSignParameters, file: File): FormData => {
@@ -14,8 +17,8 @@ export const buildRemoveCertificateSignFormData = (_parameters: RemoveCertificat
 export const removeCertificateSignOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildRemoveCertificateSignFormData,
-  operationType: 'removeCertSign',
-  endpoint: '/api/v1/security/remove-cert-sign',
+  operationType: "removeCertSign",
+  endpoint: "/api/v1/security/remove-cert-sign",
   defaultParameters,
 } as const;
 
@@ -24,6 +27,8 @@ export const useRemoveCertificateSignOperation = () => {
 
   return useToolOperation<RemoveCertificateSignParameters>({
     ...removeCertificateSignOperationConfig,
-    getErrorMessage: createStandardErrorHandler(t('removeCertSign.error.failed', 'An error occurred while removing certificate signatures.'))
+    getErrorMessage: createStandardErrorHandler(
+      t("removeCertSign.error.failed", "An error occurred while removing certificate signatures."),
+    ),
   });
 };

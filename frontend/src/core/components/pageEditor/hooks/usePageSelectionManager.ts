@@ -36,7 +36,7 @@ export const usePageSelectionManager = ({
         })
         .filter((num) => num > 0);
     },
-    [displayDocument]
+    [displayDocument],
   );
 
   const getPageIdsFromNumbers = useCallback(
@@ -49,15 +49,11 @@ export const usePageSelectionManager = ({
         })
         .filter((id) => id !== "");
     },
-    [displayDocument]
+    [displayDocument],
   );
 
   useEffect(() => {
-    if (
-      displayDocument &&
-      displayDocument.pages.length > 0 &&
-      !hasInitializedSelection.current
-    ) {
+    if (displayDocument && displayDocument.pages.length > 0 && !hasInitializedSelection.current) {
       const allPageIds = displayDocument.pages.map((page) => page.id);
       setSelectedPageIds(allPageIds);
       setSelectionMode(true);
@@ -107,7 +103,7 @@ export const usePageSelectionManager = ({
       const pageIds = getPageIdsFromNumbers(pageNumbers);
       setSelectedPageIds(pageIds);
     },
-    [getPageIdsFromNumbers, setSelectedPageIds]
+    [getPageIdsFromNumbers, setSelectedPageIds],
   );
 
   const updatePagesFromCSV = useCallback(
@@ -116,7 +112,7 @@ export const usePageSelectionManager = ({
       const normalized = parseSelection(override ?? csvInput, totalPages);
       handleSetSelectedPages(normalized);
     },
-    [csvInput, totalPages, handleSetSelectedPages]
+    [csvInput, totalPages, handleSetSelectedPages],
   );
 
   return {
@@ -132,6 +128,4 @@ export const usePageSelectionManager = ({
   };
 };
 
-export type UsePageSelectionManagerReturn = ReturnType<
-  typeof usePageSelectionManager
->;
+export type UsePageSelectionManagerReturn = ReturnType<typeof usePageSelectionManager>;

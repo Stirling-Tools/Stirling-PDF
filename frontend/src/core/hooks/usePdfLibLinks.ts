@@ -1,9 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import {
-  PdfLibLink,
-  extractLinksFromPage,
-} from '@app/utils/pdfLinkUtils';
-
+import { useState, useEffect, useRef } from "react";
+import { PdfLibLink, extractLinksFromPage } from "@app/utils/pdfLinkUtils";
 
 export type { PdfLibLink };
 
@@ -59,12 +55,7 @@ function releaseDocument(url: string): void {
   });
 }
 
-
-
-export function usePdfLibLinks(
-  pdfUrl: string | null,
-  pageIndex: number,
-): PdfLibLinksResult {
+export function usePdfLibLinks(pdfUrl: string | null, pageIndex: number): PdfLibLinksResult {
   const [result, setResult] = useState<PdfLibLinksResult>({
     links: [],
     pdfPageWidth: 0,
@@ -108,10 +99,7 @@ export function usePdfLibLinks(
         let pageData = cached.pageLinks.get(pageIndex);
         if (!pageData) {
           try {
-            const { links, pdfPageWidth, pdfPageHeight } = await extractLinksFromPage(
-              cached.data,
-              pageIndex,
-            );
+            const { links, pdfPageWidth, pdfPageHeight } = await extractLinksFromPage(cached.data, pageIndex);
             pageData = { links, width: pdfPageWidth, height: pdfPageHeight };
             cached.pageLinks.set(pageIndex, pageData);
           } catch (pageError) {
@@ -132,7 +120,7 @@ export function usePdfLibLinks(
 
         releaseDocument(url);
       } catch (error) {
-        console.warn('[usePdfLibLinks] Failed to extract links:', error);
+        console.warn("[usePdfLibLinks] Failed to extract links:", error);
         if (!cancelled && mountedRef.current) {
           setResult({ links: [], pdfPageWidth: 0, pdfPageHeight: 0, loading: false });
         }

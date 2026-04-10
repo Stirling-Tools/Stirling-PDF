@@ -12,4 +12,4 @@ export const STIRLING_SAAS_BACKEND_API_URL: string = import.meta.env.VITE_SAAS_B
 export const SUPABASE_KEY: string = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 
 // Desktop deep link callback for Supabase email confirmations
-export const DESKTOP_DEEP_LINK_CALLBACK = 'stirlingpdf://auth/callback';
+export const DESKTOP_DEEP_LINK_CALLBACK = "stirlingpdf://auth/callback";

@@ -1,13 +1,13 @@
-import { PdfiumDocument, PdfiumPage, StandardFonts } from '@app/services/pdfiumDocBuilder';
-import type { TFunction } from 'i18next';
-import { SignatureValidationReportEntry } from '@app/types/validateSignature';
-import { REPORT_PDF_FILENAME } from '@app/hooks/tools/validateSignature/utils/signatureUtils';
-import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalette';
-import { startReportPage, createThumbnailLoader } from '@app/hooks/tools/validateSignature/utils/pdfPageHelpers';
-import { deriveEntryStatus } from '@app/hooks/tools/validateSignature/utils/reportStatus';
-import { drawCenteredMessage } from '@app/hooks/tools/validateSignature/outputtedPDFSections/CenteredMessageSection';
-import { drawSummarySection } from '@app/hooks/tools/validateSignature/outputtedPDFSections/SummarySection';
-import { drawSignatureSection } from '@app/hooks/tools/validateSignature/outputtedPDFSections/SignatureSection';
+import { PdfiumDocument, PdfiumPage, StandardFonts } from "@app/services/pdfiumDocBuilder";
+import type { TFunction } from "i18next";
+import { SignatureValidationReportEntry } from "@app/types/validateSignature";
+import { REPORT_PDF_FILENAME } from "@app/hooks/tools/validateSignature/utils/signatureUtils";
+import { colorPalette } from "@app/hooks/tools/validateSignature/utils/pdfPalette";
+import { startReportPage, createThumbnailLoader } from "@app/hooks/tools/validateSignature/utils/pdfPageHelpers";
+import { deriveEntryStatus } from "@app/hooks/tools/validateSignature/utils/reportStatus";
+import { drawCenteredMessage } from "@app/hooks/tools/validateSignature/outputtedPDFSections/CenteredMessageSection";
+import { drawSummarySection } from "@app/hooks/tools/validateSignature/outputtedPDFSections/SummarySection";
+import { drawSignatureSection } from "@app/hooks/tools/validateSignature/outputtedPDFSections/SignatureSection";
 
 const PAGE_WIDTH = 612;
 const PAGE_HEIGHT = 792;
@@ -27,7 +27,7 @@ const drawDivider = (page: PdfiumPage, marginX: number, contentWidth: number, y:
 
 export const createReportPdf = async (
   entries: SignatureValidationReportEntry[],
-  t: TFunction<'translation'>
+  t: TFunction<"translation">,
 ): Promise<File> => {
   const doc = await PdfiumDocument.create();
   const font = await doc.embedFont(StandardFonts.Helvetica);
@@ -75,7 +75,7 @@ export const createReportPdf = async (
         page,
         font,
         fontBold,
-        text: t('validateSignature.status.invalid', 'Invalid'),
+        text: t("validateSignature.status.invalid", "Invalid"),
         description: entry.error,
         marginX: MARGIN_X,
         contentWidth: CONTENT_WIDTH,
@@ -90,8 +90,8 @@ export const createReportPdf = async (
         page,
         font,
         fontBold,
-        text: t('validateSignature.noSignaturesShort', 'No signatures'),
-        description: t('validateSignature.noSignatures', 'No digital signatures found in this document'),
+        text: t("validateSignature.noSignaturesShort", "No signatures"),
+        description: t("validateSignature.noSignatures", "No digital signatures found in this document"),
         marginX: MARGIN_X,
         contentWidth: CONTENT_WIDTH,
         cursorY,
@@ -134,5 +134,5 @@ export const createReportPdf = async (
 
   const pdfBytes = await doc.save();
   const copy = pdfBytes.slice();
-  return new File([copy.buffer], REPORT_PDF_FILENAME, { type: 'application/pdf' });
+  return new File([copy.buffer], REPORT_PDF_FILENAME, { type: "application/pdf" });
 };

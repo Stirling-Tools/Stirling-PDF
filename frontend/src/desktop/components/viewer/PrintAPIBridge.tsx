@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
-import { usePrintCapability } from '@embedpdf/plugin-print/react';
-import { useViewer } from '@app/contexts/ViewerContext';
-import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
-import { printPdfNatively } from '@app/services/nativePrintService';
-import { DesktopOs, getDesktopOs } from '@app/services/platformService';
+import { useEffect } from "react";
+import { usePrintCapability } from "@embedpdf/plugin-print/react";
+import { useViewer } from "@app/contexts/ViewerContext";
+import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { printPdfNatively } from "@app/services/nativePrintService";
+import { DesktopOs, getDesktopOs } from "@app/services/platformService";
 import { PrintAPIBridgeProps } from "@core/components/viewer/PrintAPIBridge";
 
 export function PrintAPIBridge({ file, url, fileName }: PrintAPIBridgeProps) {
@@ -13,7 +13,7 @@ export function PrintAPIBridge({ file, url, fileName }: PrintAPIBridgeProps) {
 
   useEffect(() => {
     if (documentReady) {
-      registerBridge('print', {
+      registerBridge("print", {
         state: {},
         api: {
           print: () => {
@@ -28,15 +28,15 @@ export function PrintAPIBridge({ file, url, fileName }: PrintAPIBridgeProps) {
 
               print?.print?.();
             })().catch((error) => {
-              console.error('[Desktop Print] Print failed', error);
+              console.error("[Desktop Print] Print failed", error);
             });
           },
-        }
+        },
       });
     }
 
     return () => {
-      registerBridge('print', null);
+      registerBridge("print", null);
     };
   }, [documentReady, file, fileName, print, registerBridge, url]);
 

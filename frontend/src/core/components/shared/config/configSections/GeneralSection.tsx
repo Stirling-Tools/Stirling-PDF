@@ -36,7 +36,11 @@ interface GeneralSectionProps {
   hideAdminBanner?: boolean;
 }
 
-const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hideUpdateSection = false, hideAdminBanner = false }) => {
+const GeneralSection: React.FC<GeneralSectionProps> = ({
+  hideTitle = false,
+  hideUpdateSection = false,
+  hideAdminBanner = false,
+}) => {
   const { t } = useTranslation();
   const { preferences, updatePreference } = usePreferences();
   const { config } = useAppConfig();

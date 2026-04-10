@@ -13,24 +13,22 @@ const ExtractPagesSettings = ({ parameters, onParameterChange, disabled = false 
   const { t } = useTranslation();
 
   const handleChange = (value: string) => {
-    onParameterChange('pageNumbers', value);
+    onParameterChange("pageNumbers", value);
   };
 
   return (
     <Stack gap="md">
       <TextInput
-        label={t('extractPages.pageNumbers.label', 'Pages to Extract')}
-        value={parameters.pageNumbers || ''}
+        label={t("extractPages.pageNumbers.label", "Pages to Extract")}
+        value={parameters.pageNumbers || ""}
         onChange={(event) => handleChange(event.currentTarget.value)}
-        placeholder={t('extractPages.pageNumbers.placeholder', 'e.g., 1,3,5-8 or odd & 1-10')}
+        placeholder={t("extractPages.pageNumbers.placeholder", "e.g., 1,3,5-8 or odd & 1-10")}
         disabled={disabled}
         required
       />
-      <PageSelectionSyntaxHint input={parameters.pageNumbers || ''} variant="compact" />
+      <PageSelectionSyntaxHint input={parameters.pageNumbers || ""} variant="compact" />
     </Stack>
   );
 };
 
 export default ExtractPagesSettings;
-
-

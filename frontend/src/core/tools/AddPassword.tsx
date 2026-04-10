@@ -28,8 +28,6 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   // Endpoint validation
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(addPasswordParams.getEndpointName());
 
-
-
   useEffect(() => {
     addPasswordOperation.resetResults();
     onPreviewFile?.(null);

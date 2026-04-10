@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface OnboardingStepperProps {
   totalSteps: number;
@@ -17,18 +17,16 @@ export function OnboardingStepper({ totalSteps, activeStep, className }: Onboard
     <div
       className={className}
       style={{
-        display: 'flex',
+        display: "flex",
         gap: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
       {items.map((index) => {
         const isActive = index === activeStep;
         const baseStyles: React.CSSProperties = {
-          background: isActive
-            ? 'var(--onboarding-step-active)'
-            : 'var(--onboarding-step-inactive)',
+          background: isActive ? "var(--onboarding-step-active)" : "var(--onboarding-step-inactive)",
         };
 
         return (
@@ -48,5 +46,3 @@ export function OnboardingStepper({ totalSteps, activeStep, className }: Onboard
 }
 
 export default OnboardingStepper;
-
-

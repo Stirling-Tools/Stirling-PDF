@@ -11,12 +11,7 @@ const ReplaceColor = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const replaceColorTips = useReplaceColorTips();
 
-  const base = useBaseTool(
-    'replaceColor',
-    useReplaceColorParameters,
-    useReplaceColorOperation,
-    props
-  );
+  const base = useBaseTool("replaceColor", useReplaceColorParameters, useReplaceColorOperation, props);
 
   return createToolFlow({
     files: {

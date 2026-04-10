@@ -19,11 +19,11 @@ interface CropAutomationSettingsProps {
 const CropAutomationSettings = ({ parameters, onParameterChange, disabled = false }: CropAutomationSettingsProps) => {
   // Handle coordinate changes
   const handleCoordinateChange = (field: keyof Rectangle, value: number | string) => {
-    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    const numValue = typeof value === "string" ? parseFloat(value) : value;
     if (isNaN(numValue)) return;
 
     const newCropArea = { ...parameters.cropArea, [field]: numValue };
-    onParameterChange('cropArea', newCropArea);
+    onParameterChange("cropArea", newCropArea);
   };
 
   return (

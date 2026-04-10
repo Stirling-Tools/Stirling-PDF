@@ -4,16 +4,16 @@
  * Bypasses CORS restrictions by using native HTTP instead of browser fetch
  */
 
-import type { AxiosInstance } from 'axios';
-import { create } from '@app/services/tauriHttpClient';
-import { handleHttpError } from '@app/services/httpErrorHandler';
-import { setupApiInterceptors } from '@app/services/apiClientSetup';
-import { getApiBaseUrl } from '@app/services/apiClientConfig';
+import type { AxiosInstance } from "axios";
+import { create } from "@app/services/tauriHttpClient";
+import { handleHttpError } from "@app/services/httpErrorHandler";
+import { setupApiInterceptors } from "@app/services/apiClientSetup";
+import { getApiBaseUrl } from "@app/services/apiClientConfig";
 
 // Create Tauri HTTP client with default config
 const apiClient = create({
   baseURL: getApiBaseUrl(),
-  responseType: 'json',
+  responseType: "json",
   withCredentials: false, // Desktop doesn't need credentials
 });
 
@@ -27,7 +27,7 @@ apiClient.interceptors.response.use(
   async (error) => {
     await handleHttpError(error); // Handle error (shows toast unless suppressed)
     return Promise.reject(error);
-  }
+  },
 );
 
 // ---------- Exports ----------

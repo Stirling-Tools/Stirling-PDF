@@ -40,8 +40,8 @@ const AddAttachments = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
   const hasResults = operation.files.length > 0 || operation.downloadUrl !== null;
 
   enum AddAttachmentsStep {
-    NONE = 'none',
-    ATTACHMENTS = 'attachments'
+    NONE = "none",
+    ATTACHMENTS = "attachments",
   }
 
   const accordion = useAccordionSteps<AddAttachmentsStep>({
@@ -49,12 +49,12 @@ const AddAttachments = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
     initialStep: AddAttachmentsStep.ATTACHMENTS,
     stateConditions: {
       hasFiles,
-      hasResults: false // Don't collapse when there are results for add attachments
+      hasResults: false, // Don't collapse when there are results for add attachments
     },
     afterResults: () => {
       operation.resetResults();
       onPreviewFile?.(null);
-    }
+    },
   });
 
   const getSteps = () => {
@@ -86,9 +86,9 @@ const AddAttachments = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
     },
     steps: getSteps(),
     executeButton: {
-      text: t('AddAttachmentsRequest.submit', 'Add Attachments'),
+      text: t("AddAttachmentsRequest.submit", "Add Attachments"),
       isVisible: !hasResults,
-      loadingText: t('loading'),
+      loadingText: t("loading"),
       onClick: handleExecute,
       endpointEnabled: endpointEnabled,
       paramsValid: params.validateParameters(),
@@ -96,7 +96,7 @@ const AddAttachments = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
     review: {
       isVisible: hasResults,
       operation: operation,
-      title: t('AddAttachmentsRequest.results.title', 'Attachment Results'),
+      title: t("AddAttachmentsRequest.results.title", "Attachment Results"),
       onFileClick: (file) => onPreviewFile?.(file),
       onUndo: async () => {
         await operation.undoOperation();

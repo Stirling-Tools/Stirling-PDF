@@ -1,15 +1,14 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { isAxiosError } from 'axios';
-import { useTranslation } from 'react-i18next';
-import apiClient from '@app/services/apiClient';
-import { tauriBackendService } from '@app/services/tauriBackendService';
-import { selfHostedServerMonitor } from '@app/services/selfHostedServerMonitor';
-import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
-import { isBackendNotReadyError } from '@app/constants/backendErrors';
-import type { EndpointAvailabilityDetails } from '@app/types/endpointAvailability';
-import { connectionModeService } from '@app/services/connectionModeService';
-import type { AppConfig } from '@app/contexts/AppConfigContext';
-
+import { useState, useEffect, useCallback, useRef } from "react";
+import { isAxiosError } from "axios";
+import { useTranslation } from "react-i18next";
+import apiClient from "@app/services/apiClient";
+import { tauriBackendService } from "@app/services/tauriBackendService";
+import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
+import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
+import { isBackendNotReadyError } from "@app/constants/backendErrors";
+import type { EndpointAvailabilityDetails } from "@app/types/endpointAvailability";
+import { connectionModeService } from "@app/services/connectionModeService";
+import type { AppConfig } from "@app/contexts/AppConfigContext";
 
 interface EndpointConfig {
   backendUrl: string;
@@ -18,34 +17,31 @@ interface EndpointConfig {
 const RETRY_DELAY_MS = 2500;
 
 function isSelfHostedOffline(): boolean {
-  return (
-    selfHostedServerMonitor.getSnapshot().status === 'offline' &&
-    !!tauriBackendService.getBackendUrl()
-  );
+  return selfHostedServerMonitor.getSnapshot().status === "offline" && !!tauriBackendService.getBackendUrl();
 }
 
 function getErrorMessage(err: unknown): string {
   if (isAxiosError(err)) {
     const data = err.response?.data as { message?: string } | undefined;
-    if (typeof data?.message === 'string') {
+    if (typeof data?.message === "string") {
       return data.message;
     }
-    return err.message || 'Unknown error occurred';
+    return err.message || "Unknown error occurred";
   }
   if (err instanceof Error) {
     return err.message;
   }
-  return 'Unknown error occurred';
+  return "Unknown error occurred";
 }
 
 async function checkDependenciesReady(): Promise<boolean> {
   try {
-    const response = await apiClient.get<AppConfig>('/api/v1/config/app-config', {
+    const response = await apiClient.get<AppConfig>("/api/v1/config/app-config", {
       suppressErrorToast: true,
     });
     return response.data?.dependenciesReady ?? false;
   } catch (error) {
-    console.debug('[useEndpointConfig] Dependencies not ready yet:', error);
+    console.debug("[useEndpointConfig] Dependencies not ready yet:", error);
     return false;
   }
 }
@@ -100,9 +96,12 @@ export function useEndpointEnabled(endpoint: string): {
     try {
       setError(null);
 
-      const response = await apiClient.get<boolean>(`/api/v1/config/endpoint-enabled?endpoint=${encodeURIComponent(endpoint)}`, {
-        suppressErrorToast: true,
-      });
+      const response = await apiClient.get<boolean>(
+        `/api/v1/config/endpoint-enabled?endpoint=${encodeURIComponent(endpoint)}`,
+        {
+          suppressErrorToast: true,
+        },
+      );
 
       const locallyEnabled = response.data;
 
@@ -110,7 +109,7 @@ export function useEndpointEnabled(endpoint: string): {
         const mode = await connectionModeService.getCurrentMode();
         // DESKTOP ENHANCEMENT: In SaaS mode, assume all endpoints are available
         // Even if not supported locally, they will route to SaaS backend
-        if (mode === 'saas') {
+        if (mode === "saas") {
           console.debug(`[useEndpointEnabled] Endpoint ${endpoint} not supported locally but available via SaaS routing`);
           setEnabled(true);
           return;
@@ -123,7 +122,7 @@ export function useEndpointEnabled(endpoint: string): {
       const message = getErrorMessage(err);
 
       if (isBackendStarting) {
-        setError(t('backendHealth.starting', 'Backend starting up...'));
+        setError(t("backendHealth.starting", "Backend starting up..."));
         if (!retryTimeoutRef.current) {
           retryTimeoutRef.current = setTimeout(() => {
             retryTimeoutRef.current = null;
@@ -133,7 +132,7 @@ export function useEndpointEnabled(endpoint: string): {
       } else {
         // DESKTOP ENHANCEMENT: In SaaS mode, assume available even on check failure
         const mode = await connectionModeService.getCurrentMode();
-        if (mode === 'saas') {
+        if (mode === "saas") {
           console.debug(`[useEndpointEnabled] Endpoint ${endpoint} check failed but available via SaaS routing`);
           setEnabled(true); // Available via SaaS
           setError(null);
@@ -174,7 +173,7 @@ export function useEndpointEnabled(endpoint: string): {
     }
 
     const unsubscribe = tauriBackendService.subscribeToStatus((status) => {
-      if (status === 'healthy') {
+      if (status === "healthy") {
         fetchEndpointStatus();
       }
     });
@@ -234,7 +233,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
     // checkDependenciesReady() would fail here since it hits the offline remote server.
     const { status: serverStatus } = selfHostedServerMonitor.getSnapshot();
     const localUrl = tauriBackendService.getBackendUrl();
-    if (serverStatus === 'offline' && localUrl) {
+    if (serverStatus === "offline" && localUrl) {
       const results = await Promise.all(
         [...new Set(endpoints)].map(async (ep) => {
           try {
@@ -243,17 +242,17 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
           } catch {
             return { ep, supported: false };
           }
-        })
+        }),
       );
       if (!isMountedRef.current) return;
       const statusMap: Record<string, boolean> = {};
       const details: Record<string, EndpointAvailabilityDetails> = {};
       for (const { ep, supported } of results) {
         statusMap[ep] = supported;
-        details[ep] = { enabled: supported, reason: supported ? null : 'NOT_SUPPORTED_LOCALLY' };
+        details[ep] = { enabled: supported, reason: supported ? null : "NOT_SUPPORTED_LOCALLY" };
       }
-      setEndpointDetails(prev => ({ ...prev, ...details }));
-      setEndpointStatus(prev => ({ ...prev, ...statusMap }));
+      setEndpointDetails((prev) => ({ ...prev, ...details }));
+      setEndpointStatus((prev) => ({ ...prev, ...statusMap }));
       setLoading(false);
       return;
     }
@@ -271,60 +270,66 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
       // "large query reduction" change and still require the parameter.
       let response: Awaited<ReturnType<typeof apiClient.get<Record<string, EndpointAvailabilityDetails>>>>;
       try {
-        response = await apiClient.get<Record<string, EndpointAvailabilityDetails>>(
-          `/api/v1/config/endpoints-availability`,
-          { suppressErrorToast: true }
-        );
+        response = await apiClient.get<Record<string, EndpointAvailabilityDetails>>(`/api/v1/config/endpoints-availability`, {
+          suppressErrorToast: true,
+        });
       } catch (innerErr) {
         if (isAxiosError(innerErr) && innerErr.response?.status === 400) {
           // Old server — requires explicit endpoints query param
-          console.debug('[useMultipleEndpointsEnabled] Server requires endpoints param, retrying with legacy format');
-          const endpointsParam = endpoints.join(',');
+          console.debug("[useMultipleEndpointsEnabled] Server requires endpoints param, retrying with legacy format");
+          const endpointsParam = endpoints.join(",");
           response = await apiClient.get<Record<string, EndpointAvailabilityDetails>>(
             `/api/v1/config/endpoints-availability?endpoints=${encodeURIComponent(endpointsParam)}`,
-            { suppressErrorToast: true }
+            { suppressErrorToast: true },
           );
         } else {
           throw innerErr;
         }
       }
 
-      const details = Object.entries(response.data).reduce((acc, [endpointName, detail]) => {
-        acc[endpointName] = {
-          enabled: detail?.enabled ?? false,
-          reason: detail?.reason ?? null,
-        };
-        return acc;
-      }, {} as Record<string, EndpointAvailabilityDetails>);
+      const details = Object.entries(response.data).reduce(
+        (acc, [endpointName, detail]) => {
+          acc[endpointName] = {
+            enabled: detail?.enabled ?? false,
+            reason: detail?.reason ?? null,
+          };
+          return acc;
+        },
+        {} as Record<string, EndpointAvailabilityDetails>,
+      );
 
-      const statusMap = Object.keys(details).reduce((acc, key) => {
-        acc[key] = details[key].enabled;
-        return acc;
-      }, {} as Record<string, boolean>);
+      const statusMap = Object.keys(details).reduce(
+        (acc, key) => {
+          acc[key] = details[key].enabled;
+          return acc;
+        },
+        {} as Record<string, boolean>,
+      );
 
       const mode = await connectionModeService.getCurrentMode();
 
       // DESKTOP ENHANCEMENT: In SaaS mode, mark all disabled endpoints as available
       // They will route to SaaS backend
-      if (mode === 'saas') {
-        const disabledEndpoints = Object.keys(details).filter(key => !details[key].enabled);
+      if (mode === "saas") {
+        const disabledEndpoints = Object.keys(details).filter((key) => !details[key].enabled);
 
         for (const endpoint of disabledEndpoints) {
-          console.debug(`[useMultipleEndpointsEnabled] Endpoint ${endpoint} not supported locally but available via SaaS routing`);
+          console.debug(
+            `[useMultipleEndpointsEnabled] Endpoint ${endpoint} not supported locally but available via SaaS routing`,
+          );
           statusMap[endpoint] = true; // Mark as enabled via SaaS
           details[endpoint] = { enabled: true, reason: null };
         }
       }
 
-
-      setEndpointDetails(prev => ({ ...prev, ...details }));
-      setEndpointStatus(prev => ({ ...prev, ...statusMap }));
+      setEndpointDetails((prev) => ({ ...prev, ...details }));
+      setEndpointStatus((prev) => ({ ...prev, ...statusMap }));
     } catch (err: unknown) {
       const isBackendStarting = isBackendNotReadyError(err);
       const message = getErrorMessage(err);
 
       if (isBackendStarting) {
-        setError(t('backendHealth.starting', 'Backend starting up...'));
+        setError(t("backendHealth.starting", "Backend starting up..."));
         if (!retryTimeoutRef.current) {
           retryTimeoutRef.current = setTimeout(() => {
             retryTimeoutRef.current = null;
@@ -333,16 +338,19 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
         }
       } else {
         setError(message);
-        const fallbackStatus = endpoints.reduce((acc, endpointName) => {
-          const fallbackDetail: EndpointAvailabilityDetails = { enabled: false, reason: 'UNKNOWN' };
-          acc.status[endpointName] = false;
-          acc.details[endpointName] = fallbackDetail;
-          return acc;
-        }, { status: {} as Record<string, boolean>, details: {} as Record<string, EndpointAvailabilityDetails> });
+        const fallbackStatus = endpoints.reduce(
+          (acc, endpointName) => {
+            const fallbackDetail: EndpointAvailabilityDetails = { enabled: false, reason: "UNKNOWN" };
+            acc.status[endpointName] = false;
+            acc.details[endpointName] = fallbackDetail;
+            return acc;
+          },
+          { status: {} as Record<string, boolean>, details: {} as Record<string, EndpointAvailabilityDetails> },
+        );
 
         // DESKTOP ENHANCEMENT: In SaaS mode, mark all endpoints as available
         const mode = await connectionModeService.getCurrentMode();
-        if (mode === 'saas') {
+        if (mode === "saas") {
           for (const endpoint of endpoints) {
             console.debug(`[useMultipleEndpointsEnabled] Endpoint ${endpoint} check failed but available via SaaS routing`);
             fallbackStatus.status[endpoint] = true;
@@ -351,7 +359,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
         }
 
         setEndpointStatus(fallbackStatus.status);
-        setEndpointDetails(prev => ({ ...prev, ...fallbackStatus.details }));
+        setEndpointDetails((prev) => ({ ...prev, ...fallbackStatus.details }));
       }
     } finally {
       setLoading(false);
@@ -381,7 +389,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
     }
 
     const unsubscribe = tauriBackendService.subscribeToStatus((status) => {
-      if (status === 'healthy') {
+      if (status === "healthy") {
         fetchAllEndpointStatuses();
       }
     });
@@ -401,9 +409,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
 }
 
 // Default backend URL from environment variables
-const DEFAULT_BACKEND_URL =
-  import.meta.env.VITE_DESKTOP_BACKEND_URL
-  || import.meta.env.VITE_API_BASE_URL;
+const DEFAULT_BACKEND_URL = import.meta.env.VITE_DESKTOP_BACKEND_URL || import.meta.env.VITE_API_BASE_URL;
 
 /**
  * Desktop override exposing the backend URL based on connection mode.
@@ -414,9 +420,10 @@ export function useEndpointConfig(): EndpointConfig {
   const [backendUrl, setBackendUrl] = useState<string>(DEFAULT_BACKEND_URL);
 
   useEffect(() => {
-    connectionModeService.getCurrentConfig()
+    connectionModeService
+      .getCurrentConfig()
       .then((config) => {
-        if (config.mode === 'selfhosted' && config.server_config?.url) {
+        if (config.mode === "selfhosted" && config.server_config?.url) {
           setBackendUrl(config.server_config.url);
         } else {
           // SaaS mode - use default from env vars (local backend)
@@ -424,7 +431,7 @@ export function useEndpointConfig(): EndpointConfig {
         }
       })
       .catch((err) => {
-        console.error('Failed to get connection config:', err);
+        console.error("Failed to get connection config:", err);
         // Keep current URL on error
       });
   }, []);

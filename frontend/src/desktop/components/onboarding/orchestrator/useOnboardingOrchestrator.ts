@@ -8,14 +8,14 @@
 import {
   useOnboardingOrchestrator as useCoreOnboardingOrchestrator,
   type UseOnboardingOrchestratorResult,
-} from '@core/components/onboarding/orchestrator/useOnboardingOrchestrator';
-import { DEFAULT_RUNTIME_STATE } from '@app/components/onboarding/orchestrator/onboardingConfig';
+} from "@core/components/onboarding/orchestrator/useOnboardingOrchestrator";
+import { DEFAULT_RUNTIME_STATE } from "@app/components/onboarding/orchestrator/onboardingConfig";
 
 export type {
   OnboardingOrchestratorState,
   OnboardingOrchestratorActions,
   UseOnboardingOrchestratorResult,
-} from '@core/components/onboarding/orchestrator/useOnboardingOrchestrator';
+} from "@core/components/onboarding/orchestrator/useOnboardingOrchestrator";
 
 export function useOnboardingOrchestrator(): UseOnboardingOrchestratorResult {
   return useCoreOnboardingOrchestrator({ defaultRuntimeState: DEFAULT_RUNTIME_STATE });

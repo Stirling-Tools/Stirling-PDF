@@ -14,14 +14,9 @@ import { BaseToolProps, ToolComponent } from "@app/types/tool";
 
 const CertSign = (props: BaseToolProps) => {
   const { t } = useTranslation();
-  
-  const base = useBaseTool(
-    'certSign',
-    useCertSignParameters,
-    useCertSignOperation,
-    props
-  );
-  
+
+  const base = useBaseTool("certSign", useCertSignParameters, useCertSignOperation, props);
+
   const certTypeTips = useCertificateTypeTips();
   const appearanceTips = useSignatureAppearanceTips();
   const signModeTips = useSignModeTips();
@@ -29,20 +24,20 @@ const CertSign = (props: BaseToolProps) => {
   // Check if certificate files are configured for appearance step
   const areCertFilesConfigured = () => {
     const params = base.params.parameters;
-    
+
     // Auto mode (server certificate) - always configured
-    if (params.signMode === 'AUTO') {
+    if (params.signMode === "AUTO") {
       return true;
     }
-    
+
     // Manual mode - check for required files based on cert type
     switch (params.certType) {
-      case 'PEM':
+      case "PEM":
         return !!(params.privateKeyFile && params.certFile);
-      case 'PKCS12':
-      case 'PFX':
+      case "PKCS12":
+      case "PFX":
         return !!params.p12File;
-      case 'JKS':
+      case "JKS":
         return !!params.jksFile;
       default:
         return false;
@@ -69,35 +64,43 @@ const CertSign = (props: BaseToolProps) => {
           />
         ),
       },
-      ...(base.params.parameters.signMode === 'MANUAL' ? [{
-        title: t("certSign.certTypeStep.stepTitle", "Certificate Format"),
-        isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
-        tooltip: certTypeTips,
-        content: (
-          <CertificateFormatSettings
-            parameters={base.params.parameters}
-            onParameterChange={base.params.updateParameter}
-            disabled={base.endpointLoading}
-          />
-        ),
-      }] : []),
-      ...(base.params.parameters.signMode === 'MANUAL' ? [{
-        title: t("certSign.certFiles.stepTitle", "Certificate Files"),
-        isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
-        content: (
-          <CertificateFilesSettings
-            parameters={base.params.parameters}
-            onParameterChange={base.params.updateParameter}
-            disabled={base.endpointLoading}
-          />
-        ),
-      }] : []),
+      ...(base.params.parameters.signMode === "MANUAL"
+        ? [
+            {
+              title: t("certSign.certTypeStep.stepTitle", "Certificate Format"),
+              isCollapsed: base.settingsCollapsed,
+              onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+              tooltip: certTypeTips,
+              content: (
+                <CertificateFormatSettings
+                  parameters={base.params.parameters}
+                  onParameterChange={base.params.updateParameter}
+                  disabled={base.endpointLoading}
+                />
+              ),
+            },
+          ]
+        : []),
+      ...(base.params.parameters.signMode === "MANUAL"
+        ? [
+            {
+              title: t("certSign.certFiles.stepTitle", "Certificate Files"),
+              isCollapsed: base.settingsCollapsed,
+              onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+              content: (
+                <CertificateFilesSettings
+                  parameters={base.params.parameters}
+                  onParameterChange={base.params.updateParameter}
+                  disabled={base.endpointLoading}
+                />
+              ),
+            },
+          ]
+        : []),
       {
         title: t("certSign.appearance.stepTitle", "Signature Appearance"),
         isCollapsed: base.settingsCollapsed || !areCertFilesConfigured(),
-        onCollapsedClick: (base.settingsCollapsed || !areCertFilesConfigured()) ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed || !areCertFilesConfigured() ? base.handleSettingsReset : undefined,
         tooltip: appearanceTips,
         content: (
           <SignatureAppearanceSettings

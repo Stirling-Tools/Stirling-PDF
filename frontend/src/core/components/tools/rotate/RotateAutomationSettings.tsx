@@ -27,7 +27,7 @@ const RotateAutomationSettings = ({ parameters, onParameterChange, disabled = fa
 
       <ButtonSelector
         value={parameters.angle}
-        onChange={(value: number) => onParameterChange('angle', value)}
+        onChange={(value: number) => onParameterChange("angle", value)}
         options={[
           { value: 0, label: "0°" },
           { value: 90, label: "90°" },

@@ -7,10 +7,10 @@
  * @param contentDisposition - Content-Disposition header value
  * @returns Filename if found, null otherwise
  */
-export const getFilenameFromHeaders = (contentDisposition: string = ''): string | null => {
+export const getFilenameFromHeaders = (contentDisposition: string = ""): string | null => {
   const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
   if (match && match[1]) {
-    const filename = match[1].replace(/['"]/g, '');
+    const filename = match[1].replace(/['"]/g, "");
 
     // Decode URL-encoded characters (e.g., %20 -> space)
     try {
@@ -30,13 +30,9 @@ export const getFilenameFromHeaders = (contentDisposition: string = ''): string 
  * @param fallbackFilename - Filename to use if none provided in headers
  * @returns File object
  */
-export const createFileFromApiResponse = (
-  responseData: any,
-  headers: any,
-  fallbackFilename: string
-): File => {
-  const contentType = headers?.['content-type'] || 'application/octet-stream';
-  const contentDisposition = headers?.['content-disposition'] || '';
+export const createFileFromApiResponse = (responseData: any, headers: any, fallbackFilename: string): File => {
+  const contentType = headers?.["content-type"] || "application/octet-stream";
+  const contentDisposition = headers?.["content-disposition"] || "";
 
   const filename = getFilenameFromHeaders(contentDisposition) || fallbackFilename;
   const blob = new Blob([responseData], { type: contentType });

@@ -1,9 +1,6 @@
 import { Dispatch, SetStateAction, useCallback } from "react";
 
-import type {
-  useFileActions,
-  useFileState,
-} from "@app/contexts/FileContext";
+import type { useFileActions, useFileState } from "@app/contexts/FileContext";
 import { documentManipulationService } from "@app/services/documentManipulationService";
 import { pdfExportService } from "@app/services/pdfExportService";
 import { exportProcessedDocumentsToFiles } from "@app/services/pdfExportHelpers";
@@ -46,13 +43,9 @@ const removePlaceholderPages = (document: PDFDocument): PDFDocument => {
   };
 };
 
-const normalizeProcessedDocuments = (
-  processed: PDFDocument | PDFDocument[]
-): PDFDocument | PDFDocument[] => {
+const normalizeProcessedDocuments = (processed: PDFDocument | PDFDocument[]): PDFDocument | PDFDocument[] => {
   if (Array.isArray(processed)) {
-    const normalized = processed
-      .map(removePlaceholderPages)
-      .filter((doc) => doc.pages.length > 0);
+    const normalized = processed.map(removePlaceholderPages).filter((doc) => doc.pages.length > 0);
     return normalized;
   }
   return removePlaceholderPages(processed);
@@ -111,17 +104,14 @@ export const usePageEditorExport = ({
 
     setExportLoading(true);
     try {
-      const processedDocuments =
-        documentManipulationService.applyDOMChangesToDocument(
-          displayDocument,
-          displayDocument,
-          splitPositions
-        );
+      const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
+        displayDocument,
+        displayDocument,
+        splitPositions,
+      );
 
       const normalizedDocuments = normalizeProcessedDocuments(processedDocuments);
-      const documentWithDOMState = Array.isArray(normalizedDocuments)
-        ? normalizedDocuments[0]
-        : normalizedDocuments;
+      const documentWithDOMState = Array.isArray(normalizedDocuments) ? normalizedDocuments[0] : normalizedDocuments;
 
       if (!documentWithDOMState || documentWithDOMState.pages.length === 0) {
         console.warn("Export skipped: no concrete pages available after filtering placeholders.");
@@ -130,23 +120,20 @@ export const usePageEditorExport = ({
       }
 
       const validSelectedPageIds = selectedPageIds.filter((pageId) =>
-        documentWithDOMState.pages.some((page) => page.id === pageId)
+        documentWithDOMState.pages.some((page) => page.id === pageId),
       );
 
       const sourceFiles = getSourceFiles();
       const exportFilename = getExportFilename();
       const result = sourceFiles
-        ? await pdfExportService.exportPDFMultiFile(
-            documentWithDOMState,
-            sourceFiles,
-            validSelectedPageIds,
-            { selectedOnly: true, filename: exportFilename }
-          )
-        : await pdfExportService.exportPDF(
-            documentWithDOMState,
-            validSelectedPageIds,
-            { selectedOnly: true, filename: exportFilename }
-          );
+        ? await pdfExportService.exportPDFMultiFile(documentWithDOMState, sourceFiles, validSelectedPageIds, {
+            selectedOnly: true,
+            filename: exportFilename,
+          })
+        : await pdfExportService.exportPDF(documentWithDOMState, validSelectedPageIds, {
+            selectedOnly: true,
+            filename: exportFilename,
+          });
 
       pdfExportService.downloadFile(result.blob, result.filename);
       setHasUnsavedChanges(false);
@@ -171,12 +158,11 @@ export const usePageEditorExport = ({
 
     setExportLoading(true);
     try {
-      const processedDocuments =
-        documentManipulationService.applyDOMChangesToDocument(
-          displayDocument,
-          displayDocument,
-          splitPositions
-        );
+      const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
+        displayDocument,
+        displayDocument,
+        splitPositions,
+      );
 
       const normalizedDocuments = normalizeProcessedDocuments(processedDocuments);
 
@@ -191,11 +177,7 @@ export const usePageEditorExport = ({
 
       const sourceFiles = getSourceFiles();
       const exportFilename = getExportFilename();
-      const files = await exportProcessedDocumentsToFiles(
-        normalizedDocuments,
-        sourceFiles,
-        exportFilename
-      );
+      const files = await exportProcessedDocumentsToFiles(normalizedDocuments, sourceFiles, exportFilename);
 
       if (files.length > 1) {
         const JSZip = await import("jszip");
@@ -221,26 +203,18 @@ export const usePageEditorExport = ({
       console.error("Export failed:", error);
       setExportLoading(false);
     }
-  }, [
-    displayDocument,
-    splitPositions,
-    getSourceFiles,
-    getExportFilename,
-    setHasUnsavedChanges,
-    setExportLoading,
-  ]);
+  }, [displayDocument, splitPositions, getSourceFiles, getExportFilename, setHasUnsavedChanges, setExportLoading]);
 
   const applyChanges = useCallback(async () => {
     if (!displayDocument) return;
 
     setExportLoading(true);
     try {
-      const processedDocuments =
-        documentManipulationService.applyDOMChangesToDocument(
-          displayDocument,
-          displayDocument,
-          splitPositions
-        );
+      const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
+        displayDocument,
+        displayDocument,
+        splitPositions,
+      );
 
       const normalizedDocuments = normalizeProcessedDocuments(processedDocuments);
 
@@ -255,14 +229,10 @@ export const usePageEditorExport = ({
 
       const sourceFiles = getSourceFiles();
       const exportFilename = getExportFilename();
-      const files = await exportProcessedDocumentsToFiles(
-        normalizedDocuments,
-        sourceFiles,
-        exportFilename
-      );
+      const files = await exportProcessedDocumentsToFiles(normalizedDocuments, sourceFiles, exportFilename);
 
       // Add "_multitool" suffix to filenames
-      const renamedFiles = files.map(file => {
+      const renamedFiles = files.map((file) => {
         const nameParts = file.name.match(/^(.+?)(\.pdf)$/i);
         if (nameParts) {
           const baseName = nameParts[1];
@@ -300,7 +270,7 @@ export const usePageEditorExport = ({
         if (sourceStub?.localFilePath) {
           actions.updateStirlingFileStub(newStirlingFiles[0].fileId, {
             localFilePath: sourceStub.localFilePath,
-            isDirty: true
+            isDirty: true,
           });
         }
       }

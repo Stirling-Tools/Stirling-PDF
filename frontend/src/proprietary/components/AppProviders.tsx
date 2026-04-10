@@ -8,10 +8,7 @@ import { UpdateSeatsProvider } from "@app/contexts/UpdateSeatsContext";
 
 export function AppProviders({ children, appConfigRetryOptions, appConfigProviderProps }: AppProvidersProps) {
   return (
-    <CoreAppProviders
-      appConfigRetryOptions={appConfigRetryOptions}
-      appConfigProviderProps={appConfigProviderProps}
-    >
+    <CoreAppProviders appConfigRetryOptions={appConfigRetryOptions} appConfigProviderProps={appConfigProviderProps}>
       <AuthProvider>
         <LicenseProvider>
           <UpdateSeatsProvider>

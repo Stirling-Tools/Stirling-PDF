@@ -20,7 +20,11 @@ interface AddWatermarkSingleStepSettingsProps {
   disabled?: boolean;
 }
 
-const AddWatermarkSingleStepSettings = ({ parameters, onParameterChange, disabled = false }: AddWatermarkSingleStepSettingsProps) => {
+const AddWatermarkSingleStepSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: AddWatermarkSingleStepSettingsProps) => {
   return (
     <Stack gap="lg">
       {/* Watermark Type Selection */}
@@ -33,34 +37,18 @@ const AddWatermarkSingleStepSettings = ({ parameters, onParameterChange, disable
       {/* Conditional settings based on watermark type */}
       {parameters.watermarkType === "text" && (
         <>
-          <WatermarkWording
-            parameters={parameters}
-            onParameterChange={onParameterChange}
-            disabled={disabled}
-          />
-          <WatermarkTextStyle
-            parameters={parameters}
-            onParameterChange={onParameterChange}
-            disabled={disabled}
-          />
+          <WatermarkWording parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
+          <WatermarkTextStyle parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
         </>
       )}
 
       {parameters.watermarkType === "image" && (
-        <WatermarkImageFile
-          parameters={parameters}
-          onParameterChange={onParameterChange}
-          disabled={disabled}
-        />
+        <WatermarkImageFile parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
       )}
 
       {/* Formatting settings for both text and image */}
       {parameters.watermarkType && (
-        <WatermarkFormatting
-          parameters={parameters}
-          onParameterChange={onParameterChange}
-          disabled={disabled}
-        />
+        <WatermarkFormatting parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
       )}
     </Stack>
   );

@@ -1,10 +1,10 @@
-import React from 'react';
-import { ToolOperationHook } from '@app/hooks/tools/shared/toolOperationTypes';
+import React from "react";
+import { ToolOperationHook } from "@app/hooks/tools/shared/toolOperationTypes";
 
 export type MaxFiles = number; // 1=single, >1=limited, -1=unlimited
-export type ToolCategory = 'manipulation' | 'conversion' | 'analysis' | 'utility' | 'optimization' | 'security';
-export type ToolDefinition = Omit<Tool, 'name'>;
-export type ToolStepType = 'files' | 'settings' | 'results';
+export type ToolCategory = "manipulation" | "conversion" | "analysis" | "utility" | "optimization" | "security";
+export type ToolDefinition = Omit<Tool, "name">;
+export type ToolStepType = "files" | "settings" | "results";
 
 export interface BaseToolProps {
   onComplete?: (results: File[]) => void;
@@ -77,4 +77,3 @@ export interface Tool {
 }
 
 export type ToolRegistry = Record<string, Tool>;
-

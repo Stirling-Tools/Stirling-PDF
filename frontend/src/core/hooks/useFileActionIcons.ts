@@ -1,5 +1,5 @@
-import UploadIcon from '@mui/icons-material/Upload';
-import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
+import UploadIcon from "@mui/icons-material/Upload";
+import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 
 /**
  * File action icons for web builds.
@@ -10,8 +10,8 @@ export function useFileActionIcons() {
   return {
     upload: UploadIcon,
     download: DownloadOutlinedIcon,
-    uploadIconName: 'upload' as const,
-    downloadIconName: 'download' as const,
+    uploadIconName: "upload" as const,
+    downloadIconName: "download" as const,
     // Web builds do not expose a Save As icon — the button is hidden when this is undefined.
     // Desktop builds override this file and return a real icon name.
     saveAsIconName: undefined as string | undefined,

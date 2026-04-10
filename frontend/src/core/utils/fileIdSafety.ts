@@ -2,7 +2,7 @@
  * Runtime validation utilities for FileId safety
  */
 
-import { FileId } from '@app/types/fileContext';
+import { FileId } from "@app/types/fileContext";
 
 // Validate that a string is a proper FileId (has UUID format)
 export function isValidFileId(id: string): id is FileId {
@@ -10,5 +10,3 @@ export function isValidFileId(id: string): id is FileId {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   return uuidRegex.test(id);
 }
-
-

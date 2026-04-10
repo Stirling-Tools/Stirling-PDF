@@ -1,7 +1,7 @@
-import { Stack } from '@mantine/core';
-import { AdjustContrastParameters } from '@app/hooks/tools/adjustContrast/useAdjustContrastParameters';
-import AdjustContrastBasicSettings from '@app/components/tools/adjustContrast/AdjustContrastBasicSettings';
-import AdjustContrastColorSettings from '@app/components/tools/adjustContrast/AdjustContrastColorSettings';
+import { Stack } from "@mantine/core";
+import { AdjustContrastParameters } from "@app/hooks/tools/adjustContrast/useAdjustContrastParameters";
+import AdjustContrastBasicSettings from "@app/components/tools/adjustContrast/AdjustContrastBasicSettings";
+import AdjustContrastColorSettings from "@app/components/tools/adjustContrast/AdjustContrastColorSettings";
 
 interface Props {
   parameters: AdjustContrastParameters;
@@ -13,18 +13,8 @@ interface Props {
 export default function AdjustContrastSingleStepSettings({ parameters, onParameterChange, disabled }: Props) {
   return (
     <Stack gap="lg">
-      <AdjustContrastBasicSettings
-        parameters={parameters}
-        onParameterChange={onParameterChange}
-        disabled={disabled}
-      />
-      <AdjustContrastColorSettings
-        parameters={parameters}
-        onParameterChange={onParameterChange}
-        disabled={disabled}
-      />
+      <AdjustContrastBasicSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
+      <AdjustContrastColorSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
     </Stack>
   );
 }
-
-

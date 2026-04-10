@@ -21,7 +21,7 @@ const SanitizeSettings = ({ parameters, onParameterChange, disabled = false }: S
   return (
     <Stack gap="md">
       <Text size="sm" fw={500}>
-        {t('sanitize.options.title', 'Sanitization Options')}
+        {t("sanitize.options.title", "Sanitization Options")}
       </Text>
 
       <Stack gap="sm">
@@ -34,7 +34,9 @@ const SanitizeSettings = ({ parameters, onParameterChange, disabled = false }: S
             label={
               <div>
                 <Text size="sm">{option.label}</Text>
-                <Text size="xs" c="dimmed">{option.description}</Text>
+                <Text size="xs" c="dimmed">
+                  {option.description}
+                </Text>
               </div>
             }
           />
@@ -42,7 +44,10 @@ const SanitizeSettings = ({ parameters, onParameterChange, disabled = false }: S
       </Stack>
 
       <Text size="xs" c="dimmed">
-        {t('sanitize.options.note', 'Select the elements you want to remove from the PDF. At least one option must be selected.')}
+        {t(
+          "sanitize.options.note",
+          "Select the elements you want to remove from the PDF. At least one option must be selected.",
+        )}
       </Text>
     </Stack>
   );

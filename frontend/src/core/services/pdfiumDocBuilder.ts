@@ -8,9 +8,9 @@
  *
  * Used by the signature validation report system.
  */
-import { getPdfiumModule, writeUtf16, saveRawDocument } from '@app/services/pdfiumService';
-import { embedBitmapImageOnPage } from '@app/utils/pdfiumBitmapUtils';
-import type { WrappedPdfiumModule } from '@embedpdf/pdfium';
+import { getPdfiumModule, writeUtf16, saveRawDocument } from "@app/services/pdfiumService";
+import { embedBitmapImageOnPage } from "@app/utils/pdfiumBitmapUtils";
+import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 
 // ---------------------------------------------------------------------------
 // Color type (replaces pdf-lib's `rgb()`)
@@ -39,14 +39,14 @@ function colorToRGBA(c: PdfiumColor): [number, number, number, number] {
 
 /** Standard PDF font names matching pdf-lib's StandardFonts enum. */
 export const StandardFonts = {
-  Helvetica: 'Helvetica',
-  HelveticaBold: 'Helvetica-Bold',
-  HelveticaOblique: 'Helvetica-Oblique',
-  HelveticaBoldOblique: 'Helvetica-BoldOblique',
-  Courier: 'Courier',
-  CourierBold: 'Courier-Bold',
-  TimesRoman: 'Times-Roman',
-  TimesBold: 'Times-Bold',
+  Helvetica: "Helvetica",
+  HelveticaBold: "Helvetica-Bold",
+  HelveticaOblique: "Helvetica-Oblique",
+  HelveticaBoldOblique: "Helvetica-BoldOblique",
+  Courier: "Courier",
+  CourierBold: "Courier-Bold",
+  TimesRoman: "Times-Roman",
+  TimesBold: "Times-Bold",
 } as const;
 
 export class PdfiumFont {
@@ -77,20 +77,20 @@ export class PdfiumFont {
 
   /** Map PDF font name to a CSS font-family for canvas measurement. */
   private _cssFontFamily(): string {
-    if (this.name.startsWith('Helvetica')) return 'Helvetica, Arial, sans-serif';
-    if (this.name.startsWith('Courier')) return 'Courier, monospace';
-    if (this.name.startsWith('Times')) return 'Times New Roman, serif';
-    return 'sans-serif';
+    if (this.name.startsWith("Helvetica")) return "Helvetica, Arial, sans-serif";
+    if (this.name.startsWith("Courier")) return "Courier, monospace";
+    if (this.name.startsWith("Times")) return "Times New Roman, serif";
+    return "sans-serif";
   }
 
   private _getCtx(): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D {
     if (this._ctx) return this._ctx;
-    if (typeof OffscreenCanvas !== 'undefined') {
+    if (typeof OffscreenCanvas !== "undefined") {
       this._canvas = new OffscreenCanvas(1, 1);
-      this._ctx = this._canvas.getContext('2d')!;
+      this._ctx = this._canvas.getContext("2d")!;
     } else {
-      this._canvas = document.createElement('canvas');
-      this._ctx = this._canvas.getContext('2d')!;
+      this._canvas = document.createElement("canvas");
+      this._ctx = this._canvas.getContext("2d")!;
     }
     return this._ctx;
   }
@@ -182,7 +182,7 @@ export class PdfiumPage {
   drawText(text: string, options: DrawTextOptions): void {
     const { x, y, size, font, color } = options;
     const m = this._m;
-    const fontName = font?.name ?? 'Helvetica';
+    const fontName = font?.name ?? "Helvetica";
 
     const textObjPtr = m.FPDFPageObj_NewTextObj(this._docPtr, fontName, size);
     if (!textObjPtr) return;
@@ -274,9 +274,14 @@ export class PdfiumPage {
   drawImage(image: PdfiumImage, options: DrawImageOptions): void {
     const { x, y, width, height } = options;
     embedBitmapImageOnPage(
-      this._m, this._docPtr, this._pagePtr,
+      this._m,
+      this._docPtr,
+      this._pagePtr,
       { rgba: image._rgba, width: image.width, height: image.height },
-      x, y, width, height,
+      x,
+      y,
+      width,
+      height,
     );
   }
 
@@ -310,7 +315,7 @@ export class PdfiumDocument {
   static async create(): Promise<PdfiumDocument> {
     const m = await getPdfiumModule();
     const docPtr = m.FPDF_CreateNewDocument();
-    if (!docPtr) throw new Error('PDFium: failed to create document');
+    if (!docPtr) throw new Error("PDFium: failed to create document");
     return new PdfiumDocument(m, docPtr);
   }
 
@@ -319,7 +324,7 @@ export class PdfiumDocument {
     const [width, height] = dimensions;
     const insertIdx = this._pages.length;
     const pagePtr = this._m.FPDFPage_New(this._docPtr, insertIdx, width, height);
-    if (!pagePtr) throw new Error('PDFium: failed to create page');
+    if (!pagePtr) throw new Error("PDFium: failed to create page");
     const page = new PdfiumPage(this._m, this._docPtr, pagePtr, width, height);
     this._pages.push(page);
     return page;
@@ -335,12 +340,12 @@ export class PdfiumDocument {
 
   /** Embed a PNG image from raw bytes. */
   async embedPng(bytes: Uint8Array | ArrayBuffer): Promise<PdfiumImage> {
-    return this._decodeImage(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes), 'image/png');
+    return this._decodeImage(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes), "image/png");
   }
 
   /** Embed a JPEG image from raw bytes. */
   async embedJpg(bytes: Uint8Array | ArrayBuffer): Promise<PdfiumImage> {
-    return this._decodeImage(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes), 'image/jpeg');
+    return this._decodeImage(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes), "image/jpeg");
   }
 
   /** Get the number of pages. */
@@ -377,13 +382,13 @@ export class PdfiumDocument {
       const img = new Image();
       img.onload = () => {
         try {
-          const canvas = document.createElement('canvas');
+          const canvas = document.createElement("canvas");
           canvas.width = img.width;
           canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
+          const ctx = canvas.getContext("2d");
           if (!ctx) {
             URL.revokeObjectURL(url);
-            reject(new Error('Canvas 2D context unavailable'));
+            reject(new Error("Canvas 2D context unavailable"));
             return;
           }
           ctx.drawImage(img, 0, 0);
@@ -397,7 +402,7 @@ export class PdfiumDocument {
       };
       img.onerror = () => {
         URL.revokeObjectURL(url);
-        reject(new Error('Failed to decode image'));
+        reject(new Error("Failed to decode image"));
       };
       img.src = url;
     });

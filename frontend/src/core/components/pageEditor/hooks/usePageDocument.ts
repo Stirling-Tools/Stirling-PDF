@@ -1,9 +1,9 @@
-import { useMemo, useEffect, useRef, useState } from 'react';
-import { useFileState } from '@app/contexts/FileContext';
-import { usePageEditor } from '@app/contexts/PageEditorContext';
-import { PDFDocument, PDFPage } from '@app/types/pageEditor';
-import { FileId } from '@app/types/file';
-import { FileAnalyzer } from '@app/services/fileAnalyzer';
+import { useMemo, useEffect, useRef, useState } from "react";
+import { useFileState } from "@app/contexts/FileContext";
+import { usePageEditor } from "@app/contexts/PageEditorContext";
+import { PDFDocument, PDFPage } from "@app/types/pageEditor";
+import { FileId } from "@app/types/file";
+import { FileAnalyzer } from "@app/services/fileAnalyzer";
 
 export interface PageDocumentHook {
   document: PDFDocument | null;
@@ -26,15 +26,15 @@ export function usePageDocument(): PageDocumentHook {
   // Derive selected file IDs directly from FileContext (single source of truth)
   // Filter to only include PDF files (PageEditor only supports PDFs)
   // Use stable string keys to prevent infinite loops
-  const allFileIdsKey = allFileIds.join(',');
-  const selectedFileIdsKey = [...state.ui.selectedFileIds].sort().join(',');
+  const allFileIdsKey = allFileIds.join(",");
+  const selectedFileIdsKey = [...state.ui.selectedFileIds].sort().join(",");
   const activeFilesSignature = selectors.getFilesSignature();
 
   // Get ALL PDF files (selected or not) for document building with placeholders
   const activeFileIds = useMemo(() => {
-    return allFileIds.filter(id => {
+    return allFileIds.filter((id) => {
       const stub = selectors.getStirlingFileStub(id);
-      return stub?.name?.toLowerCase().endsWith('.pdf') ?? false;
+      return stub?.name?.toLowerCase().endsWith(".pdf") ?? false;
     });
   }, [allFileIdsKey, activeFilesSignature, selectors]);
 
@@ -65,20 +65,20 @@ export function usePageDocument(): PageDocumentHook {
   useEffect(() => {
     if (!primaryFileId) {
       placeholderDocumentRef.current = null;
-      setPlaceholderVersion(v => v + 1);
+      setPlaceholderVersion((v) => v + 1);
       return;
     }
 
     if (primaryStirlingFileStub?.processedFile) {
       placeholderDocumentRef.current = null;
-      setPlaceholderVersion(v => v + 1);
+      setPlaceholderVersion((v) => v + 1);
       return;
     }
 
     const file = selectors.getFile(primaryFileId);
     if (!file) {
       placeholderDocumentRef.current = null;
-      setPlaceholderVersion(v => v + 1);
+      setPlaceholderVersion((v) => v + 1);
       return;
     }
 
@@ -107,12 +107,12 @@ export function usePageDocument(): PageDocumentHook {
             pages,
             totalPages,
           };
-          setPlaceholderVersion(v => v + 1);
+          setPlaceholderVersion((v) => v + 1);
         }
       } catch {
         if (!canceled) {
           placeholderDocumentRef.current = null;
-          setPlaceholderVersion(v => v + 1);
+          setPlaceholderVersion((v) => v + 1);
         }
       }
     };
@@ -126,11 +126,11 @@ export function usePageDocument(): PageDocumentHook {
 
   // Compute merged document with stable signature (prevents infinite loops)
   const currentPagesSignature = useMemo(() => {
-    return currentPages ? currentPages.map(page => page.id).join(',') : '';
+    return currentPages ? currentPages.map((page) => page.id).join(",") : "";
   }, [currentPages]);
 
   const mergedPdfDocument = useMemo((): PDFDocument | null => {
-    console.log('[usePageDocument] Building document:', {
+    console.log("[usePageDocument] Building document:", {
       activeFileIds: activeFileIds.length,
       selectedActiveFileIds: selectedActiveFileIds.length,
       hasPersistedDoc: !!persistedDocument,
@@ -140,42 +140,42 @@ export function usePageDocument(): PageDocumentHook {
     });
 
     if (activeFileIds.length === 0) {
-      console.log('[usePageDocument] No active files, returning null');
+      console.log("[usePageDocument] No active files, returning null");
       return null;
     }
 
-  // Check if persisted document is still valid
-  // Must match signature AND have the same number of source files
-  const persistedFileIds = persistedDocument
-    ? Array.from(new Set(persistedDocument.pages.map(p => p.originalFileId).filter(Boolean)))
-    : [];
-  const persistedIsValid =
-    persistedDocument &&
-    persistedDocumentSignature &&
-    persistedDocumentSignature === currentPagesSignature &&
-    currentPagesSignature.length > 0 &&
-    persistedFileIds.length === activeFileIds.length; // Ensure file count matches
+    // Check if persisted document is still valid
+    // Must match signature AND have the same number of source files
+    const persistedFileIds = persistedDocument
+      ? Array.from(new Set(persistedDocument.pages.map((p) => p.originalFileId).filter(Boolean)))
+      : [];
+    const persistedIsValid =
+      persistedDocument &&
+      persistedDocumentSignature &&
+      persistedDocumentSignature === currentPagesSignature &&
+      currentPagesSignature.length > 0 &&
+      persistedFileIds.length === activeFileIds.length; // Ensure file count matches
 
-  if (persistedIsValid) {
-    console.log('[usePageDocument] Using persisted document');
-    return persistedDocument;
-  } else if (persistedDocument) {
-    console.log('[usePageDocument] Persisted document invalid - rebuilding:', {
-      sigMatch: persistedDocumentSignature === currentPagesSignature,
-      persistedFiles: persistedFileIds.length,
-      activeFiles: activeFileIds.length,
-    });
-  }
+    if (persistedIsValid) {
+      console.log("[usePageDocument] Using persisted document");
+      return persistedDocument;
+    } else if (persistedDocument) {
+      console.log("[usePageDocument] Persisted document invalid - rebuilding:", {
+        sigMatch: persistedDocumentSignature === currentPagesSignature,
+        persistedFiles: persistedFileIds.length,
+        activeFiles: activeFileIds.length,
+      });
+    }
 
-  if (!primaryStirlingFileStub?.processedFile && placeholderDocumentRef.current) {
-    return placeholderDocumentRef.current;
-  }
+    if (!primaryStirlingFileStub?.processedFile && placeholderDocumentRef.current) {
+      return placeholderDocumentRef.current;
+    }
 
-  const primaryFile = primaryFileId ? selectors.getFile(primaryFileId) : null;
+    const primaryFile = primaryFileId ? selectors.getFile(primaryFileId) : null;
 
     // If we have file IDs but no file record, something is wrong - return null to show loading
     if (!primaryStirlingFileStub) {
-      console.log('🎬 PageEditor: No primary file record found, showing loading');
+      console.log("🎬 PageEditor: No primary file record found, showing loading");
       return null;
     }
 
@@ -183,21 +183,19 @@ export function usePageDocument(): PageDocumentHook {
 
     const name =
       namingFileIds.length <= 1
-        ? (namingFileIds[0]
-            ? selectors.getStirlingFileStub(namingFileIds[0])?.name ?? 'document.pdf'
-            : 'document.pdf')
-        : namingFileIds
-            .map(id => (selectors.getStirlingFileStub(id)?.name ?? 'file').replace(/\.pdf$/i, ''))
-            .join(' + ');
+        ? namingFileIds[0]
+          ? (selectors.getStirlingFileStub(namingFileIds[0])?.name ?? "document.pdf")
+          : "document.pdf"
+        : namingFileIds.map((id) => (selectors.getStirlingFileStub(id)?.name ?? "file").replace(/\.pdf$/i, "")).join(" + ");
 
     // Build page insertion map from files with insertion positions
     const insertionMap = new Map<string, FileId[]>(); // insertAfterPageId -> fileIds
     const originalFileIds: FileId[] = [];
 
-    activeFileIds.forEach(fileId => {
+    activeFileIds.forEach((fileId) => {
       const record = selectors.getStirlingFileStub(fileId);
       if (record?.insertAfterPageId !== undefined) {
-        console.log('[usePageDocument] File has insertAfterPageId:', {
+        console.log("[usePageDocument] File has insertAfterPageId:", {
           fileId,
           insertAfterPageId: record.insertAfterPageId,
         });
@@ -210,7 +208,7 @@ export function usePageDocument(): PageDocumentHook {
       }
     });
 
-    console.log('[usePageDocument] File categorization:', {
+    console.log("[usePageDocument] File categorization:", {
       originalFiles: originalFileIds.length,
       filesToInsert: insertionMap.size,
       totalActive: activeFileIds.length,
@@ -228,17 +226,19 @@ export function usePageDocument(): PageDocumentHook {
 
       // If file is deselected, create a single placeholder page
       if (!isSelected) {
-        return [{
-          id: `${fileId}-placeholder`,
-          pageNumber: startPageNumber,
-          originalPageNumber: 1,
-          originalFileId: fileId,
-          rotation: 0,
-          thumbnail: null,
-          selected: false,
-          splitAfter: false,
-          isPlaceholder: true,
-        }];
+        return [
+          {
+            id: `${fileId}-placeholder`,
+            pageNumber: startPageNumber,
+            originalPageNumber: 1,
+            originalFileId: fileId,
+            rotation: 0,
+            thumbnail: null,
+            selected: false,
+            splitAfter: false,
+            isPlaceholder: true,
+          },
+        ];
       }
 
       const processedFile = stirlingFileStub.processedFile;
@@ -277,17 +277,19 @@ export function usePageDocument(): PageDocumentHook {
 
       // No processedFile yet - create a single loading placeholder
       // This will be replaced when processing completes
-      return [{
-        id: `${fileId}-loading`,
-        pageNumber: startPageNumber,
-        originalPageNumber: 1,
-        originalFileId: fileId,
-        rotation: 0,
-        thumbnail: null,
-        selected: false,
-        splitAfter: false,
-        isPlaceholder: true,
-      }];
+      return [
+        {
+          id: `${fileId}-loading`,
+          pageNumber: startPageNumber,
+          originalPageNumber: 1,
+          originalFileId: fileId,
+          rotation: 0,
+          thumbnail: null,
+          selected: false,
+          splitAfter: false,
+          isPlaceholder: true,
+        },
+      ];
     };
 
     // Collect all pages from original files, respecting their previous positions
@@ -304,7 +306,7 @@ export function usePageDocument(): PageDocumentHook {
     });
 
     const originalFilePages: PDFPage[] = [];
-    sortedOriginalFileIds.forEach(fileId => {
+    sortedOriginalFileIds.forEach((fileId) => {
       const isSelected = selectedFileIdsSet.has(fileId);
       const filePages = createPagesFromFile(fileId, 1, isSelected); // Temporary numbering
       originalFilePages.push(...filePages);
@@ -313,18 +315,18 @@ export function usePageDocument(): PageDocumentHook {
     // Start with all original pages numbered sequentially
     pages = originalFilePages.map((page, index) => ({
       ...page,
-      pageNumber: index + 1
+      pageNumber: index + 1,
     }));
 
     // Process each insertion by finding the page ID and inserting after it
     for (const [insertAfterPageId, fileIds] of insertionMap.entries()) {
-      const targetPageIndex = pages.findIndex(p => p.id === insertAfterPageId);
+      const targetPageIndex = pages.findIndex((p) => p.id === insertAfterPageId);
 
       if (targetPageIndex === -1) continue;
 
       // Collect all pages to insert
       const allNewPages: PDFPage[] = [];
-      fileIds.forEach(fileId => {
+      fileIds.forEach((fileId) => {
         const isSelected = selectedFileIdsSet.has(fileId);
         const insertedPages = createPagesFromFile(fileId, 1, isSelected);
         allNewPages.push(...insertedPages);
@@ -350,11 +352,11 @@ export function usePageDocument(): PageDocumentHook {
       pageNumber: index + 1,
     }));
 
-    const currentPagesSet = currentPages ? new Set(currentPages.map(page => page.id)) : null;
+    const currentPagesSet = currentPages ? new Set(currentPages.map((page) => page.id)) : null;
     if (currentPagesSet && currentPages && currentPagesSet.size === pages.length) {
-      const sameIds = pages.every(page => currentPagesSet.has(page.id));
+      const sameIds = pages.every((page) => currentPagesSet.has(page.id));
       if (sameIds) {
-        const mergedById = new Map(pages.map(page => [page.id, page]));
+        const mergedById = new Map(pages.map((page) => [page.id, page]));
         pages = currentPages.map((currentPage, index) => {
           const source = mergedById.get(currentPage.id);
           const mergedPage = source ? { ...source, ...currentPage } : currentPage;
@@ -367,7 +369,7 @@ export function usePageDocument(): PageDocumentHook {
     }
 
     const mergedDoc: PDFDocument = {
-      id: activeFileIds.join('-'),
+      id: activeFileIds.join("-"),
       name,
       file: primaryFile!,
       pages,
@@ -406,6 +408,6 @@ export function usePageDocument(): PageDocumentHook {
   return {
     document: mergedPdfDocument,
     isVeryLargeDocument,
-    isLoading
+    isLoading,
   };
 }

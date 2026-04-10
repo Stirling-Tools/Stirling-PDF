@@ -15,9 +15,9 @@ interface ZipWarningModalProps {
 
 const WARNING_ICON_STYLE: CSSProperties = {
   fontSize: 36,
-  display: 'block',
-  margin: '0 auto 8px',
-  color: 'var(--mantine-color-blue-6)'
+  display: "block",
+  margin: "0 auto 8px",
+  color: "var(--mantine-color-blue-6)",
 };
 
 const ZipWarningModal = ({ opened, onConfirm, onCancel, fileCount, zipFileName }: ZipWarningModalProps) => {
@@ -41,7 +41,7 @@ const ZipWarningModal = ({ opened, onConfirm, onCancel, fileCount, zipFileName }
         <Text size="lg" fw={500}>
           {t("zipWarning.message", {
             count: fileCount,
-            defaultValue: "This ZIP contains {{count}} files. Extract anyway?"
+            defaultValue: "This ZIP contains {{count}} files. Extract anyway?",
           })}
         </Text>
       </Stack>

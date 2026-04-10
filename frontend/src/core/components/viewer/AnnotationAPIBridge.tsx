@@ -1,6 +1,6 @@
-import { useImperativeHandle, forwardRef, useCallback } from 'react';
-import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
-import { PdfAnnotationSubtype, PdfAnnotationIcon } from '@embedpdf/models';
+import { useImperativeHandle, forwardRef, useCallback } from "react";
+import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
+import { PdfAnnotationSubtype, PdfAnnotationIcon } from "@embedpdf/models";
 import type {
   AnnotationToolId,
   AnnotationToolOptions,
@@ -9,10 +9,10 @@ import type {
   AnnotationPatch,
   AnnotationRect,
   AnnotationSelection,
-} from '@app/components/viewer/viewerTypes';
-import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
+} from "@app/components/viewer/viewerTypes";
+import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
 
-type NoteIcon = NonNullable<AnnotationToolOptions['icon']>;
+type NoteIcon = NonNullable<AnnotationToolOptions["icon"]>;
 
 type AnnotationDefaults =
   | {
@@ -125,23 +125,22 @@ const NOTE_ICON_MAP: Record<NoteIcon, PdfAnnotationIcon> = {
 };
 
 const DEFAULTS = {
-  highlight: '#ffd54f',
-  underline: '#ffb300',
-  strikeout: '#e53935',
-  squiggly: '#00acc1',
-  ink: '#1f2933',
-  inkHighlighter: '#ffd54f',
-  text: '#111111',
-  note: '#ffd54f',
-  shapeFill: '#0000ff',
-  shapeStroke: '#cf5b5b',
+  highlight: "#ffd54f",
+  underline: "#ffb300",
+  strikeout: "#e53935",
+  squiggly: "#00acc1",
+  ink: "#1f2933",
+  inkHighlighter: "#ffd54f",
+  text: "#111111",
+  note: "#ffd54f",
+  shapeFill: "#0000ff",
+  shapeStroke: "#cf5b5b",
   shapeOpacity: 0.5,
 };
 
-const withCustomData = (options?: AnnotationToolOptions) =>
-  options?.customData ? { customData: options.customData } : {};
+const withCustomData = (options?: AnnotationToolOptions) => (options?.customData ? { customData: options.customData } : {});
 
-const getIconEnum = (icon?: NoteIcon) => NOTE_ICON_MAP[icon ?? 'Comment'] ?? PdfAnnotationIcon.Comment;
+const getIconEnum = (icon?: NoteIcon) => NOTE_ICON_MAP[icon ?? "Comment"] ?? PdfAnnotationIcon.Comment;
 
 const buildStampDefaults: ToolDefaultsBuilder = (options) => ({
   type: PdfAnnotationSubtype.STAMP,
@@ -212,7 +211,7 @@ const TOOL_DEFAULT_BUILDERS: Record<AnnotationToolId, ToolDefaultsBuilder> = {
     type: PdfAnnotationSubtype.FREETEXT,
     fontColor: options?.color ?? DEFAULTS.text,
     fontSize: options?.fontSize ?? 14,
-    fontFamily: options?.fontFamily ?? 'Helvetica',
+    fontFamily: options?.fontFamily ?? "Helvetica",
     textAlign: options?.textAlign ?? 0,
     opacity: options?.opacity ?? 1,
     borderWidth: options?.thickness ?? 1,
@@ -225,14 +224,14 @@ const TOOL_DEFAULT_BUILDERS: Record<AnnotationToolId, ToolDefaultsBuilder> = {
     return {
       type: PdfAnnotationSubtype.FREETEXT,
       fontColor,
-      fontFamily: options?.fontFamily ?? 'Helvetica',
+      fontFamily: options?.fontFamily ?? "Helvetica",
       textAlign: options?.textAlign ?? 0,
       fontSize: options?.fontSize ?? 12,
       opacity: options?.opacity ?? 1,
       color: bgColor,
       interiorColor: bgColor,
       borderWidth: options?.thickness ?? 0,
-      contents: options?.contents ?? 'Note',
+      contents: options?.contents ?? "Note",
       icon: getIconEnum(options?.icon),
       ...withCustomData(options),
     };
@@ -263,8 +262,8 @@ const TOOL_DEFAULT_BUILDERS: Record<AnnotationToolId, ToolDefaultsBuilder> = {
   }),
   line: (options) => ({
     type: PdfAnnotationSubtype.LINE,
-    color: options?.color ?? '#1565c0',
-    strokeColor: options?.color ?? '#1565c0',
+    color: options?.color ?? "#1565c0",
+    strokeColor: options?.color ?? "#1565c0",
     opacity: options?.opacity ?? 1,
     borderWidth: options?.borderWidth ?? 2,
     strokeWidth: options?.borderWidth ?? 2,
@@ -273,20 +272,20 @@ const TOOL_DEFAULT_BUILDERS: Record<AnnotationToolId, ToolDefaultsBuilder> = {
   }),
   lineArrow: (options) => ({
     type: PdfAnnotationSubtype.LINE,
-    color: options?.color ?? '#1565c0',
-    strokeColor: options?.color ?? '#1565c0',
+    color: options?.color ?? "#1565c0",
+    strokeColor: options?.color ?? "#1565c0",
     opacity: options?.opacity ?? 1,
     borderWidth: options?.borderWidth ?? 2,
     strokeWidth: options?.borderWidth ?? 2,
     lineWidth: options?.borderWidth ?? 2,
-    startStyle: 'None',
-    endStyle: 'ClosedArrow',
-    lineEndingStyles: { start: 'None', end: 'ClosedArrow' },
+    startStyle: "None",
+    endStyle: "ClosedArrow",
+    lineEndingStyles: { start: "None", end: "ClosedArrow" },
     ...withCustomData(options),
   }),
   polyline: (options) => ({
     type: PdfAnnotationSubtype.POLYLINE,
-    color: options?.color ?? '#1565c0',
+    color: options?.color ?? "#1565c0",
     opacity: options?.opacity ?? 1,
     borderWidth: options?.borderWidth ?? 2,
     ...withCustomData(options),
@@ -314,13 +313,13 @@ const TOOL_DEFAULT_BUILDERS: Record<AnnotationToolId, ToolDefaultsBuilder> = {
   }),
   insertText: (options) => ({
     type: PdfAnnotationSubtype.CARET,
-    strokeColor: options?.color ?? '#E44234',
+    strokeColor: options?.color ?? "#E44234",
     opacity: options?.opacity ?? 1,
     ...withCustomData(options),
   }),
   replaceText: (options) => ({
     type: PdfAnnotationSubtype.CARET,
-    strokeColor: options?.color ?? '#E44234',
+    strokeColor: options?.color ?? "#E44234",
     opacity: options?.opacity ?? 1,
     ...withCustomData(options),
   }),
@@ -332,9 +331,8 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function Annotation
   const documentReady = useDocumentReady();
 
   const buildAnnotationDefaults = useCallback(
-    (toolId: AnnotationToolId, options?: AnnotationToolOptions) =>
-      TOOL_DEFAULT_BUILDERS[toolId]?.(options) ?? null,
-    []
+    (toolId: AnnotationToolId, options?: AnnotationToolOptions) => TOOL_DEFAULT_BUILDERS[toolId]?.(options) ?? null,
+    [],
   );
 
   const configureAnnotationTool = useCallback(
@@ -346,7 +344,7 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function Annotation
 
       // Reset tool first, then activate (like SignatureAPIBridge does)
       api.setActiveTool(null);
-      api.setActiveTool(toolId === 'select' ? null : toolId);
+      api.setActiveTool(toolId === "select" ? null : toolId);
 
       // Verify tool was activated before setting defaults (like SignatureAPIBridge does)
       const activeTool = api.getActiveTool?.();
@@ -354,7 +352,7 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function Annotation
         api.setToolDefaults?.(toolId, defaults);
       }
     },
-    [annotationApi, buildAnnotationDefaults]
+    [annotationApi, buildAnnotationDefaults],
   );
 
   useImperativeHandle(
@@ -385,8 +383,8 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function Annotation
           // instead of crashing the entire annotations tool.
           // Only log unexpected errors - "No active document" is a common expected state during init
           const errorMessage = error instanceof Error ? error.message : String(error);
-          if (!errorMessage.includes('No active document')) {
-            console.error('[AnnotationAPIBridge] getSelectedAnnotation failed:', error);
+          if (!errorMessage.includes("No active document")) {
+            console.error("[AnnotationAPIBridge] getSelectedAnnotation failed:", error);
           }
           return null;
         }
@@ -445,7 +443,7 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function Annotation
         api?.moveAnnotation?.(pageIndex, annotationId, newRect);
       },
     }),
-    [annotationApi, configureAnnotationTool, buildAnnotationDefaults]
+    [annotationApi, configureAnnotationTool, buildAnnotationDefaults],
   );
 
   return null;

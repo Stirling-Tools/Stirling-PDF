@@ -14,15 +14,15 @@ import {
   useDeleteAllTips,
   useStandardMetadataTips,
   useDocumentDatesTips,
-  useAdvancedOptionsTips
+  useAdvancedOptionsTips,
 } from "@app/components/tooltips/useChangeMetadataTips";
 
 enum MetadataStep {
-  NONE = 'none',
-  DELETE_ALL = 'deleteAll',
-  STANDARD_METADATA = 'standardMetadata',
-  DOCUMENT_DATES = 'documentDates',
-  ADVANCED_OPTIONS = 'advancedOptions'
+  NONE = "none",
+  DELETE_ALL = "deleteAll",
+  STANDARD_METADATA = "standardMetadata",
+  DOCUMENT_DATES = "documentDates",
+  ADVANCED_OPTIONS = "advancedOptions",
 }
 
 const ChangeMetadata = (props: BaseToolProps) => {
@@ -34,12 +34,7 @@ const ChangeMetadata = (props: BaseToolProps) => {
   const documentDatesTips = useDocumentDatesTips();
   const advancedOptionsTips = useAdvancedOptionsTips();
 
-  const base = useBaseTool(
-    'changeMetadata',
-    useChangeMetadataParameters,
-    useChangeMetadataOperation,
-    props,
-  );
+  const base = useBaseTool("changeMetadata", useChangeMetadataParameters, useChangeMetadataOperation, props);
 
   // Extract metadata from uploaded files
   const { isExtractingMetadata } = useMetadataExtraction(base.params);
@@ -50,7 +45,7 @@ const ChangeMetadata = (props: BaseToolProps) => {
     initialStep: MetadataStep.DELETE_ALL,
     stateConditions: {
       hasFiles: base.hasFiles,
-      hasResults: base.hasResults
+      hasResults: base.hasResults,
     },
     afterResults: base.handleSettingsReset,
   });
@@ -120,11 +115,7 @@ const ChangeMetadata = (props: BaseToolProps) => {
     ];
 
     if (!base.params.parameters.deleteAll) {
-      steps.push(
-        createStandardMetadataStep(),
-        createDocumentDatesStep(),
-        createAdvancedOptionsStep()
-      );
+      steps.push(createStandardMetadataStep(), createDocumentDatesStep(), createAdvancedOptionsStep());
     }
 
     return steps;

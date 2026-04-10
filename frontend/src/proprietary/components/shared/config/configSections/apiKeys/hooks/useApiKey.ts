@@ -78,38 +78,42 @@ export function useApiKey() {
   const refresh = useCallback(async () => {
     setIsRefreshing(true);
     setError(null);
-    await apiClient.post("/api/v1/user/update-api-key", undefined, {
-      responseType: "json",
-      suppressErrorToast: true,
-    }).then((res) => {
-      const value = typeof res.data === "string" ? res.data : res.data?.apiKey;
-      if (typeof value === "string") {
-        alert({
-          alertType: "success",
-          title: t("config.apiKeys.alert.apiKeyRefreshed", "API Key Refreshed"),
-          body: t("config.apiKeys.alert.apiKeyRefreshedBody", "Your API key has been successfully refreshed."),
-          isPersistentPopup: false,
-        });
-        setApiKey(value);
-      } else {
+    await apiClient
+      .post("/api/v1/user/update-api-key", undefined, {
+        responseType: "json",
+        suppressErrorToast: true,
+      })
+      .then((res) => {
+        const value = typeof res.data === "string" ? res.data : res.data?.apiKey;
+        if (typeof value === "string") {
+          alert({
+            alertType: "success",
+            title: t("config.apiKeys.alert.apiKeyRefreshed", "API Key Refreshed"),
+            body: t("config.apiKeys.alert.apiKeyRefreshedBody", "Your API key has been successfully refreshed."),
+            isPersistentPopup: false,
+          });
+          setApiKey(value);
+        } else {
+          alert({
+            alertType: "error",
+            title: t("config.apiKeys.alert.apiKeyErrorTitle", "API Key Error"),
+            body: t("config.apiKeys.alert.failedToRefreshApiKey", "Failed to refresh API key."),
+            isPersistentPopup: false,
+          });
+        }
+      })
+      .catch((e) => {
         alert({
           alertType: "error",
           title: t("config.apiKeys.alert.apiKeyErrorTitle", "API Key Error"),
           body: t("config.apiKeys.alert.failedToRefreshApiKey", "Failed to refresh API key."),
           isPersistentPopup: false,
         });
-      }
-    }).catch((e) => {
-      alert({
-        alertType: "error",
-        title: t("config.apiKeys.alert.apiKeyErrorTitle", "API Key Error"),
-        body: t("config.apiKeys.alert.failedToRefreshApiKey", "Failed to refresh API key."),
-          isPersistentPopup: false,
+        setError(e);
+      })
+      .finally(() => {
+        setIsRefreshing(false);
       });
-      setError(e);
-    }).finally(() => {
-      setIsRefreshing(false);
-    });
   }, []);
 
   useEffect(() => {

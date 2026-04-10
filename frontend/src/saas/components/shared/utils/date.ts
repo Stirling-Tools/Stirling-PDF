@@ -10,5 +10,3 @@ export function formatUTC(iso: string, withTime: boolean): string {
   }).format(date);
   return withTime ? `${formatted} UTC` : formatted;
 }
-
-

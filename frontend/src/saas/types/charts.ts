@@ -7,7 +7,7 @@ export interface FractionData {
   color: string;
 }
 
-export type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
+export type TooltipPosition = "top" | "bottom" | "left" | "right";
 
 export interface StackedBarChartProps {
   fractions: FractionData[];
@@ -26,5 +26,3 @@ export interface TooltipData {
   fractions: FractionData[];
   isDark: boolean;
 }
-
-

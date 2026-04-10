@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode, useCallback, useRef } from 'react';
-import { SignParameters } from '@app/hooks/tools/sign/useSignParameters';
-import type { SignatureAPI, HistoryAPI, AnnotationAPI } from '@app/components/viewer/viewerTypes';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useRef } from "react";
+import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
+import type { SignatureAPI, HistoryAPI, AnnotationAPI } from "@app/components/viewer/viewerTypes";
 
 // Signature state interface
 interface SignatureState {
@@ -59,14 +59,14 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   // Actions
   const setSignatureConfig = useCallback((config: SignParameters | null) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       signatureConfig: config,
     }));
   }, []);
 
   const setPlacementMode = useCallback((enabled: boolean) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       isPlacementMode: enabled,
     }));
@@ -127,14 +127,14 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, []);
 
   const setSignaturesApplied = useCallback((applied: boolean) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       signaturesApplied: applied,
     }));
   }, []);
 
   const setPlacementPreviewSize = useCallback((size: { width: number; height: number } | null) => {
-    setState(prev => {
+    setState((prev) => {
       const prevSize = prev.placementPreviewSize;
       const same =
         (prevSize === null && size === null) ||
@@ -176,18 +176,14 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({ children 
     setPlacementPreviewSize,
   };
 
-  return (
-    <SignatureContext.Provider value={contextValue}>
-      {children}
-    </SignatureContext.Provider>
-  );
+  return <SignatureContext.Provider value={contextValue}>{children}</SignatureContext.Provider>;
 };
 
 // Hook to use signature context
 export const useSignature = (): SignatureContextValue => {
   const context = useContext(SignatureContext);
   if (context === undefined) {
-    throw new Error('useSignature must be used within a SignatureProvider');
+    throw new Error("useSignature must be used within a SignatureProvider");
   }
   return context;
 };

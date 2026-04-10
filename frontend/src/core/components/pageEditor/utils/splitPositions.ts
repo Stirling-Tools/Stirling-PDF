@@ -1,4 +1,4 @@
-import { PDFDocument } from '@app/types/pageEditor';
+import { PDFDocument } from "@app/types/pageEditor";
 
 /**
  * Build a map from page ID to its index in the provided document.

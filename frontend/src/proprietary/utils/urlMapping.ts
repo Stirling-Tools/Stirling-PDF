@@ -4,8 +4,8 @@
  * to add proprietary-specific URL mappings.
  */
 
-import { ToolId } from '@app/types/toolId';
-import { URL_TO_TOOL_MAP as CORE_URL_TO_TOOL_MAP } from '@core/utils/urlMapping';
+import { ToolId } from "@app/types/toolId";
+import { URL_TO_TOOL_MAP as CORE_URL_TO_TOOL_MAP } from "@core/utils/urlMapping";
 
 // Proprietary URL mappings
 const PROPRIETARY_URL_MAPPINGS: Record<string, ToolId> = {};

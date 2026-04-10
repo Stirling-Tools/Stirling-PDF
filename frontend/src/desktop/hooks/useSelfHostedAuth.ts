@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
-import { useAppConfig } from '@app/contexts/AppConfigContext';
-import { authService } from '@app/services/authService';
-import { connectionModeService } from '@app/services/connectionModeService';
+import { useState, useEffect, useRef } from "react";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { authService } from "@app/services/authService";
+import { connectionModeService } from "@app/services/connectionModeService";
 
 export interface SelfHostedAuthState {
   isSelfHosted: boolean;
@@ -21,13 +21,13 @@ export function useSelfHostedAuth(): SelfHostedAuthState {
   const wasSelfHosted = useRef(false);
 
   useEffect(() => {
-    void connectionModeService.getCurrentMode().then(mode => setIsSelfHosted(mode === 'selfhosted'));
-    return connectionModeService.subscribeToModeChanges(cfg => setIsSelfHosted(cfg.mode === 'selfhosted'));
+    void connectionModeService.getCurrentMode().then((mode) => setIsSelfHosted(mode === "selfhosted"));
+    return connectionModeService.subscribeToModeChanges((cfg) => setIsSelfHosted(cfg.mode === "selfhosted"));
   }, []);
 
   useEffect(() => {
     void authService.isAuthenticated().then(setIsAuthenticated);
-    return authService.subscribeToAuth(status => setIsAuthenticated(status === 'authenticated'));
+    return authService.subscribeToAuth((status) => setIsAuthenticated(status === "authenticated"));
   }, []);
 
   useEffect(() => {

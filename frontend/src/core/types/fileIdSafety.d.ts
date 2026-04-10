@@ -2,7 +2,7 @@
  * Type safety declarations to prevent file.name/UUID confusion
  */
 
-import { FileId, StirlingFile } from '@app/types/fileContext';
+import { FileId, StirlingFile } from "@app/types/fileContext";
 
 declare global {
   namespace FileIdSafety {
@@ -31,7 +31,7 @@ declare global {
 }
 
 // Augment FileContext types to prevent bypassing StirlingFile
-declare module '../contexts/FileContext' {
+declare module "../contexts/FileContext" {
   export interface StrictFileContextActions {
     pinFile: (file: StirlingFile) => void; // Must be StirlingFile
     unpinFile: (file: StirlingFile) => void; // Must be StirlingFile

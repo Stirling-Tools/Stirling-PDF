@@ -1,6 +1,6 @@
-import type { FileId } from '@app/types/fileContext';
-import type { OperationSaveContext } from '@core/services/operationResultsSaveService';
-import { downloadFile, downloadFromUrl, DownloadResult } from '@app/services/downloadService';
+import type { FileId } from "@app/types/fileContext";
+import type { OperationSaveContext } from "@core/services/operationResultsSaveService";
+import { downloadFile, downloadFromUrl, DownloadResult } from "@app/services/downloadService";
 
 export type { OperationSaveContext };
 
@@ -16,7 +16,7 @@ export async function saveOperationResults(context: OperationSaveContext): Promi
       const result = await downloadFile({
         data: file,
         filename: file.name,
-        localPath: stub?.localFilePath
+        localPath: stub?.localFilePath,
       });
 
       if (result.savedPath) {
@@ -28,8 +28,8 @@ export async function saveOperationResults(context: OperationSaveContext): Promi
 
   const result = await downloadFromUrl(
     context.downloadUrl,
-    context.downloadFilename || 'download',
-    context.downloadLocalPath || undefined
+    context.downloadFilename || "download",
+    context.downloadLocalPath || undefined,
   );
 
   if (context.outputFileIds && result.savedPath) {

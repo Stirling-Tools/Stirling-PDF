@@ -25,11 +25,7 @@ export async function downloadFile(request: DownloadRequest): Promise<DownloadRe
   return { savedPath: savePath };
 }
 
-export async function downloadFromUrl(
-  url: string,
-  filename: string,
-  localPath?: string
-): Promise<DownloadResult> {
+export async function downloadFromUrl(url: string, filename: string, localPath?: string): Promise<DownloadResult> {
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Download failed (${response.status})`);

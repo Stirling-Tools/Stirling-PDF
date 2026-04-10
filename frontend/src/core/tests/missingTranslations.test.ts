@@ -1,23 +1,15 @@
-import fs from 'fs';
-import path from 'path';
-import ts from 'typescript';
-import { describe, expect, test } from 'vitest';
-import { parse } from 'smol-toml';
+import fs from "fs";
+import path from "path";
+import ts from "typescript";
+import { describe, expect, test } from "vitest";
+import { parse } from "smol-toml";
 
-const REPO_ROOT = path.join(__dirname, '../../../..');
-const SRC_ROOT = path.join(__dirname, '../..');
-const EN_GB_FILE = path.join(__dirname, '../../../public/locales/en-GB/translation.toml');
+const REPO_ROOT = path.join(__dirname, "../../../..");
+const SRC_ROOT = path.join(__dirname, "../..");
+const EN_GB_FILE = path.join(__dirname, "../../../public/locales/en-GB/translation.toml");
 
-const IGNORED_DIRS = new Set([
-  'tests',
-  '__mocks__',
-]);
-const IGNORED_FILE_PATTERNS = [
-  /\.d\.ts$/,
-  /\.test\./,
-  /\.spec\./,
-  /\.stories\./,
-];
+const IGNORED_DIRS = new Set(["tests", "__mocks__"]);
+const IGNORED_FILE_PATTERNS = [/\.d\.ts$/, /\.test\./, /\.spec\./, /\.stories\./];
 const IGNORED_KEYS = new Set<string>([
   // If the script has found a false-positive that shouldn't be in the translations, include it here
 ]);
@@ -30,8 +22,8 @@ type FoundKey = {
   column: number;
 };
 
-const flattenKeys = (node: unknown, prefix = '', acc = new Set<string>()): Set<string> => {
-  if (!node || typeof node !== 'object' || Array.isArray(node)) {
+const flattenKeys = (node: unknown, prefix = "", acc = new Set<string>()): Set<string> => {
+  if (!node || typeof node !== "object" || Array.isArray(node)) {
     if (prefix) {
       acc.add(prefix);
     }
@@ -47,9 +39,7 @@ const flattenKeys = (node: unknown, prefix = '', acc = new Set<string>()): Set<s
 };
 
 const listSourceFiles = (): string[] => {
-  const files = ts.sys.readDirectory(SRC_ROOT, ['.ts', '.tsx', '.js', '.jsx'], undefined, [
-    '**/*',
-  ]);
+  const files = ts.sys.readDirectory(SRC_ROOT, [".ts", ".tsx", ".js", ".jsx"], undefined, ["**/*"]);
 
   return files
     .filter((file) => !file.split(path.sep).some((segment) => IGNORED_DIRS.has(segment)))
@@ -57,15 +47,15 @@ const listSourceFiles = (): string[] => {
 };
 
 const getScriptKind = (file: string): ts.ScriptKind => {
-  if (file.endsWith('.tsx')) {
+  if (file.endsWith(".tsx")) {
     return ts.ScriptKind.TSX;
   }
 
-  if (file.endsWith('.ts')) {
+  if (file.endsWith(".ts")) {
     return ts.ScriptKind.TS;
   }
 
-  if (file.endsWith('.jsx')) {
+  if (file.endsWith(".jsx")) {
     return ts.ScriptKind.JSX;
   }
 
@@ -77,14 +67,8 @@ const getScriptKind = (file: string): ts.ScriptKind => {
  * Ignores dynamic strings because we can't know what the actual translation key will be.
  */
 const extractKeys = (file: string): FoundKey[] => {
-  const code = fs.readFileSync(file, 'utf8');
-  const sourceFile = ts.createSourceFile(
-    file,
-    code,
-    ts.ScriptTarget.Latest,
-    true,
-    getScriptKind(file),
-  );
+  const code = fs.readFileSync(file, "utf8");
+  const sourceFile = ts.createSourceFile(file, code, ts.ScriptTarget.Latest, true, getScriptKind(file));
 
   const found: FoundKey[] = [];
 
@@ -100,8 +84,8 @@ const extractKeys = (file: string): FoundKey[] => {
       const arg1 = node.arguments.at(1);
 
       const isT =
-        (ts.isIdentifier(callee) && callee.text === 't') ||
-        (ts.isPropertyAccessExpression(callee) && callee.name.text === 't');
+        (ts.isIdentifier(callee) && callee.text === "t") ||
+        (ts.isPropertyAccessExpression(callee) && callee.name.text === "t");
 
       if (isT && arg0 && (ts.isStringLiteral(arg0) || ts.isNoSubstitutionTemplateLiteral(arg0))) {
         let arg1Text: string = "";
@@ -114,11 +98,7 @@ const extractKeys = (file: string): FoundKey[] => {
 
     if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
       for (const attr of node.attributes.properties) {
-        if (
-          !ts.isJsxAttribute(attr) ||
-          attr.name.getText(sourceFile) !== 'i18nKey' ||
-          !attr.initializer
-        ) {
+        if (!ts.isJsxAttribute(attr) || attr.name.getText(sourceFile) !== "i18nKey" || !attr.initializer) {
           continue;
         }
 
@@ -129,11 +109,7 @@ const extractKeys = (file: string): FoundKey[] => {
           continue;
         }
 
-        if (
-          ts.isJsxExpression(init) &&
-          init.expression &&
-          ts.isStringLiteral(init.expression)
-        ) {
+        if (ts.isJsxExpression(init) && init.expression && ts.isStringLiteral(init.expression)) {
           record(init.expression, init.expression.text);
         }
       }
@@ -146,11 +122,11 @@ const extractKeys = (file: string): FoundKey[] => {
   return found;
 };
 
-describe('Missing translation coverage', () => {
-  test('fails if any en-GB translation key used in source is missing', { timeout: 10000 }, () => {
+describe("Missing translation coverage", () => {
+  test("fails if any en-GB translation key used in source is missing", { timeout: 10000 }, () => {
     expect(fs.existsSync(EN_GB_FILE)).toBe(true);
 
-    const localeContent = fs.readFileSync(EN_GB_FILE, 'utf8');
+    const localeContent = fs.readFileSync(EN_GB_FILE, "utf8");
     const enGb = parse(localeContent);
     const availableKeys = flattenKeys(enGb);
 
@@ -163,7 +139,7 @@ describe('Missing translation coverage', () => {
 
     const annotations = missingKeys.map(({ key, fallback, file, line, column }) => {
       const workspaceRelativeRaw = path.relative(REPO_ROOT, file);
-      const workspaceRelativeFile = workspaceRelativeRaw.replace(/\\/g, '/');
+      const workspaceRelativeFile = workspaceRelativeRaw.replace(/\\/g, "/");
 
       return {
         key,
@@ -186,7 +162,7 @@ describe('Missing translation coverage', () => {
         key,
         fallback,
         location: `${file}:${line}:${column}`,
-      }
+      };
     });
 
     expect(neatened).toEqual([]);
