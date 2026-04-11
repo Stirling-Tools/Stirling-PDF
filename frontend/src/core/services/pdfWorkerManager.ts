@@ -141,9 +141,18 @@ class PDFWorkerManager {
    * Wait for a worker to become available
    */
   private async waitForAvailableWorker(): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      const timeoutMs = 30_000;
+      const timer = setTimeout(() => {
+        console.warn(
+          `[PDFWorkerManager] Timed out waiting for available worker after ${timeoutMs}ms. Active: ${this.activeDocuments.size}/${this.maxWorkers}`,
+        );
+        reject(new Error("PDF worker pool exhausted — timed out waiting for available worker"));
+      }, timeoutMs);
+
       const checkAvailability = () => {
         if (this.activeDocuments.size < this.maxWorkers) {
+          clearTimeout(timer);
           resolve();
         } else {
           setTimeout(checkAvailability, 100);

@@ -450,6 +450,7 @@ export const useToolOperation = <TParams>(config: ToolOperationConfig<TParams>):
       } finally {
         window.removeEventListener(FILE_EVENTS.markError, errorListener as EventListener);
         actions.setLoading(false);
+        actions.setGeneratingThumbnails(false);
         actions.setProgress(null);
       }
     },
