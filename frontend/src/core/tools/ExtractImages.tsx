@@ -9,12 +9,7 @@ import { BaseToolProps, ToolComponent } from "@app/types/tool";
 const ExtractImages = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
-  const base = useBaseTool(
-    'extractImages',
-    useExtractImagesParameters,
-    useExtractImagesOperation,
-    props
-  );
+  const base = useBaseTool("extractImages", useExtractImagesParameters, useExtractImagesOperation, props);
 
   return createToolFlow({
     files: {

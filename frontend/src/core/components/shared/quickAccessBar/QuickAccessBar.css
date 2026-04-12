@@ -23,7 +23,9 @@
   justify-content: center;
   width: 1.5rem;
   height: 1.5rem;
-  transition: width 0.2s, height 0.2s;
+  transition:
+    width 0.2s,
+    height 0.2s;
 }
 
 /* Action icon styles */
@@ -64,8 +66,8 @@
 }
 
 /* RTL adjustments keep the bar on-screen and separated from content */
-:root[dir='rtl'] .quick-access-bar-main,
-:root[dir='rtl'] .quick-access-bar-main.rainbow-mode {
+:root[dir="rtl"] .quick-access-bar-main,
+:root[dir="rtl"] .quick-access-bar-main.rainbow-mode {
   border-right: none;
   border-left: 1px solid var(--border-default);
 }
@@ -75,7 +77,7 @@
   padding: 1rem 0.25rem 0.5rem 0.25rem;
 }
 
-.nav-header { 
+.nav-header {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -224,7 +226,9 @@
   overflow: hidden;
   max-height: 0;
   opacity: 0;
-  transition: max-height 450ms ease-out, opacity 300ms ease-out;
+  transition:
+    max-height 450ms ease-out,
+    opacity 300ms ease-out;
 }
 
 .current-tool-enter {
@@ -274,7 +278,9 @@
   opacity: 0;
   pointer-events: none;
   transform: translateX(-8px) scale(0.98);
-  transition: opacity 160ms ease, transform 200ms ease;
+  transition:
+    opacity 160ms ease,
+    transform 200ms ease;
 }
 
 .quick-access-popout.is-open {
@@ -709,7 +715,9 @@
   font-size: 0.78rem;
   font-weight: 500;
   color: var(--text-primary);
-  transition: background 120ms, border-color 120ms;
+  transition:
+    background 120ms,
+    border-color 120ms;
   white-space: nowrap;
 }
 
@@ -736,7 +744,9 @@
   font-size: 0.85rem;
   color: var(--text-muted);
   border-bottom: 2px solid transparent;
-  transition: color 150ms, border-color 150ms;
+  transition:
+    color 150ms,
+    border-color 150ms;
 }
 
 .quick-access-popout__tab-button.active {
@@ -809,7 +819,10 @@
   border-radius: 5px;
   color: var(--accent-interactive, var(--mantine-color-blue-6, #228be6));
   cursor: pointer;
-  transition: background 120ms, border-color 120ms, color 120ms;
+  transition:
+    background 120ms,
+    border-color 120ms,
+    color 120ms;
   flex-shrink: 0;
 }
 
@@ -883,7 +896,10 @@
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  transition: background 120ms, border-color 120ms, color 120ms;
+  transition:
+    background 120ms,
+    border-color 120ms,
+    color 120ms;
   white-space: nowrap;
 }
 

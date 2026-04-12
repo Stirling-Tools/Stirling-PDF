@@ -1,4 +1,4 @@
-import { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from "axios";
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -8,43 +8,43 @@ let failedQueue: Array<{
 
 function getJwtTokenFromStorage(): string | null {
   try {
-    return localStorage.getItem('stirling_jwt');
+    return localStorage.getItem("stirling_jwt");
   } catch (error) {
-    console.error('[API Client] Failed to read JWT from localStorage:', error);
+    console.error("[API Client] Failed to read JWT from localStorage:", error);
     return null;
   }
 }
 
 function setJwtTokenInStorage(token: string): void {
   try {
-    localStorage.setItem('stirling_jwt', token);
-    console.debug('[API Client] Stored new JWT token in localStorage');
+    localStorage.setItem("stirling_jwt", token);
+    console.debug("[API Client] Stored new JWT token in localStorage");
   } catch (error) {
-    console.error('[API Client] Failed to store JWT in localStorage:', error);
+    console.error("[API Client] Failed to store JWT in localStorage:", error);
   }
 }
 
 function clearJwtTokenFromStorage(): void {
   try {
-    localStorage.removeItem('stirling_jwt');
-    console.debug('[API Client] Cleared JWT token from localStorage');
+    localStorage.removeItem("stirling_jwt");
+    console.debug("[API Client] Cleared JWT token from localStorage");
   } catch (error) {
-    console.error('[API Client] Failed to clear JWT from localStorage:', error);
+    console.error("[API Client] Failed to clear JWT from localStorage:", error);
   }
 }
 
 function getXsrfToken(): string | null {
   try {
-    const cookies = document.cookie.split(';');
+    const cookies = document.cookie.split(";");
     for (const cookie of cookies) {
-      const [name, value] = cookie.trim().split('=');
-      if (name === 'XSRF-TOKEN') {
+      const [name, value] = cookie.trim().split("=");
+      if (name === "XSRF-TOKEN") {
         return decodeURIComponent(value);
       }
     }
     return null;
   } catch (error) {
-    console.error('[API Client] Failed to read XSRF token from cookies:', error);
+    console.error("[API Client] Failed to read XSRF token from cookies:", error);
     return null;
   }
 }
@@ -61,30 +61,34 @@ function processQueue(error: Error | null, token: string | null = null): void {
 }
 
 async function refreshAuthToken(client: AxiosInstance): Promise<string> {
-  console.log('[API Client] Refreshing expired JWT token...');
+  console.log("[API Client] Refreshing expired JWT token...");
 
   try {
-    const response = await client.post('/api/v1/auth/refresh', {}, {
-      // Don't retry refresh requests to avoid infinite loops
-      headers: { 'X-Skip-Auth-Refresh': 'true' }
-    });
+    const response = await client.post(
+      "/api/v1/auth/refresh",
+      {},
+      {
+        // Don't retry refresh requests to avoid infinite loops
+        headers: { "X-Skip-Auth-Refresh": "true" },
+      },
+    );
 
     const newToken = response.data?.session?.access_token;
     if (!newToken) {
-      throw new Error('No access token in refresh response');
+      throw new Error("No access token in refresh response");
     }
 
     setJwtTokenInStorage(newToken);
-    console.log('[API Client] ✅ Token refreshed successfully');
+    console.log("[API Client] ✅ Token refreshed successfully");
     return newToken;
   } catch (error) {
-    console.error('[API Client] ❌ Token refresh failed:', error);
+    console.error("[API Client] ❌ Token refresh failed:", error);
     clearJwtTokenFromStorage();
 
     // Redirect to login
-    if (window.location.pathname !== '/login') {
-      console.log('[API Client] Redirecting to login page...');
-      window.location.href = '/login';
+    if (window.location.pathname !== "/login") {
+      console.log("[API Client] Redirecting to login page...");
+      window.location.href = "/login";
     }
 
     throw error;
@@ -100,18 +104,18 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
       if (jwtToken && !config.headers.Authorization) {
         config.headers.Authorization = `Bearer ${jwtToken}`;
-        console.debug('[API Client] Added JWT token from localStorage to Authorization header');
+        console.debug("[API Client] Added JWT token from localStorage to Authorization header");
       }
 
-      if (xsrfToken && !config.headers['X-XSRF-TOKEN']) {
-        config.headers['X-XSRF-TOKEN'] = xsrfToken;
+      if (xsrfToken && !config.headers["X-XSRF-TOKEN"]) {
+        config.headers["X-XSRF-TOKEN"] = xsrfToken;
       }
 
       return config;
     },
     (error) => {
       return Promise.reject(error);
-    }
+    },
   );
 
   // Install response interceptor to handle 401 and auto-refresh token
@@ -124,8 +128,8 @@ export function setupApiInterceptors(client: AxiosInstance): void {
       // Exception: /auth/me should trigger refresh (used by getSession)
       if (
         !originalRequest ||
-        (originalRequest.url?.includes('/api/v1/auth/') && !originalRequest.url?.includes('/api/v1/auth/me')) ||
-        originalRequest.headers?.['X-Skip-Auth-Refresh'] ||
+        (originalRequest.url?.includes("/api/v1/auth/") && !originalRequest.url?.includes("/api/v1/auth/me")) ||
+        originalRequest.headers?.["X-Skip-Auth-Refresh"] ||
         originalRequest._retry
       ) {
         return Promise.reject(error);
@@ -133,7 +137,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
       // Handle 401 errors by attempting token refresh
       if (error.response?.status === 401 && getJwtTokenFromStorage()) {
-        console.warn('[API Client] Received 401 error, attempting token refresh...');
+        console.warn("[API Client] Received 401 error, attempting token refresh...");
 
         if (isRefreshing) {
           // Already refreshing - queue this request
@@ -168,6 +172,6 @@ export function setupApiInterceptors(client: AxiosInstance): void {
       }
 
       return Promise.reject(error);
-    }
+    },
   );
 }

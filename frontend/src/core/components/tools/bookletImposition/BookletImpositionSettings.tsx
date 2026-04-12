@@ -16,8 +16,7 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
 
   return (
     <Stack gap="md">
-      <Divider ml='-md'></Divider>
-
+      <Divider ml="-md"></Divider>
 
       {/* Double Sided */}
       <Stack gap="sm">
@@ -25,20 +24,22 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
           checked={parameters.doubleSided}
           onChange={(event) => {
             const isDoubleSided = event.currentTarget.checked;
-            onParameterChange('doubleSided', isDoubleSided);
+            onParameterChange("doubleSided", isDoubleSided);
             // Reset to BOTH when turning double-sided back on
             if (isDoubleSided) {
-              onParameterChange('duplexPass', 'BOTH');
+              onParameterChange("duplexPass", "BOTH");
             } else {
               // Default to FIRST pass when going to manual duplex
-              onParameterChange('duplexPass', 'FIRST');
+              onParameterChange("duplexPass", "FIRST");
             }
           }}
           disabled={disabled}
           label={
             <div>
-              <Text size="sm">{t('bookletImposition.doubleSided.label', 'Double-sided printing')}</Text>
-              <Text size="xs" c="dimmed">{t('bookletImposition.doubleSided.tooltip', 'Creates both front and back sides for proper booklet printing')}</Text>
+              <Text size="sm">{t("bookletImposition.doubleSided.label", "Double-sided printing")}</Text>
+              <Text size="xs" c="dimmed">
+                {t("bookletImposition.doubleSided.tooltip", "Creates both front and back sides for proper booklet printing")}
+              </Text>
             </div>
           }
         />
@@ -47,28 +48,33 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
         {!parameters.doubleSided && (
           <Stack gap="xs" ml="lg">
             <Text size="sm" fw={500} c="orange">
-              {t('bookletImposition.manualDuplex.title', 'Manual Duplex Mode')}
+              {t("bookletImposition.manualDuplex.title", "Manual Duplex Mode")}
             </Text>
             <Text size="xs" c="dimmed">
-              {t('bookletImposition.manualDuplex.instructions', 'For printers without automatic duplex. You\'ll need to run this twice:')}
+              {t(
+                "bookletImposition.manualDuplex.instructions",
+                "For printers without automatic duplex. You'll need to run this twice:",
+              )}
             </Text>
 
             <ButtonSelector
-              label={t('bookletImposition.duplexPass.label', 'Print Pass')}
+              label={t("bookletImposition.duplexPass.label", "Print Pass")}
               value={parameters.duplexPass}
-              onChange={(value) => onParameterChange('duplexPass', value)}
+              onChange={(value) => onParameterChange("duplexPass", value)}
               options={[
-                { value: 'FIRST', label: t('bookletImposition.duplexPass.first', '1st Pass') },
-                { value: 'SECOND', label: t('bookletImposition.duplexPass.second', '2nd Pass') }
+                { value: "FIRST", label: t("bookletImposition.duplexPass.first", "1st Pass") },
+                { value: "SECOND", label: t("bookletImposition.duplexPass.second", "2nd Pass") },
               ]}
               disabled={disabled}
             />
 
             <Text size="xs" c="blue" fs="italic">
-              {parameters.duplexPass === 'FIRST'
-                ? t('bookletImposition.duplexPass.firstInstructions', 'Prints front sides → stack face-down → run again with 2nd Pass')
-                : t('bookletImposition.duplexPass.secondInstructions', 'Load printed stack face-down → prints back sides')
-              }
+              {parameters.duplexPass === "FIRST"
+                ? t(
+                    "bookletImposition.duplexPass.firstInstructions",
+                    "Prints front sides → stack face-down → run again with 2nd Pass",
+                  )
+                : t("bookletImposition.duplexPass.secondInstructions", "Load printed stack face-down → prints back sides")}
             </Text>
           </Stack>
         )}
@@ -78,25 +84,23 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
 
       {/* Advanced Options */}
       <Stack gap="sm">
-        <Button
-          variant="subtle"
-          onClick={() => setAdvancedOpen(!advancedOpen)}
-          disabled={disabled}
-        >
-          {t('bookletImposition.advanced.toggle', 'Advanced Options')} {advancedOpen ? '▲' : '▼'}
+        <Button variant="subtle" onClick={() => setAdvancedOpen(!advancedOpen)} disabled={disabled}>
+          {t("bookletImposition.advanced.toggle", "Advanced Options")} {advancedOpen ? "▲" : "▼"}
         </Button>
 
         <Collapse in={advancedOpen}>
           <Stack gap="md" mt="md">
             {/* Right-to-Left Binding */}
             <Checkbox
-              checked={parameters.spineLocation === 'RIGHT'}
-              onChange={(event) => onParameterChange('spineLocation', event.currentTarget.checked ? 'RIGHT' : 'LEFT')}
+              checked={parameters.spineLocation === "RIGHT"}
+              onChange={(event) => onParameterChange("spineLocation", event.currentTarget.checked ? "RIGHT" : "LEFT")}
               disabled={disabled}
               label={
                 <div>
-                  <Text size="sm">{t('bookletImposition.rtlBinding.label', 'Right-to-left binding')}</Text>
-                  <Text size="xs" c="dimmed">{t('bookletImposition.rtlBinding.tooltip', 'For Arabic, Hebrew, or other right-to-left languages')}</Text>
+                  <Text size="sm">{t("bookletImposition.rtlBinding.label", "Right-to-left binding")}</Text>
+                  <Text size="xs" c="dimmed">
+                    {t("bookletImposition.rtlBinding.tooltip", "For Arabic, Hebrew, or other right-to-left languages")}
+                  </Text>
                 </div>
               }
             />
@@ -104,12 +108,17 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
             {/* Add Border Option */}
             <Checkbox
               checked={parameters.addBorder}
-              onChange={(event) => onParameterChange('addBorder', event.currentTarget.checked)}
+              onChange={(event) => onParameterChange("addBorder", event.currentTarget.checked)}
               disabled={disabled}
               label={
                 <div>
-                  <Text size="sm">{t('bookletImposition.addBorder.label', 'Add borders around pages')}</Text>
-                  <Text size="xs" c="dimmed">{t('bookletImposition.addBorder.tooltip', 'Adds borders around each page section to help with cutting and alignment')}</Text>
+                  <Text size="sm">{t("bookletImposition.addBorder.label", "Add borders around pages")}</Text>
+                  <Text size="xs" c="dimmed">
+                    {t(
+                      "bookletImposition.addBorder.tooltip",
+                      "Adds borders around each page section to help with cutting and alignment",
+                    )}
+                  </Text>
                 </div>
               }
             />
@@ -118,21 +127,23 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
             <Stack gap="xs">
               <Checkbox
                 checked={parameters.addGutter}
-                onChange={(event) => onParameterChange('addGutter', event.currentTarget.checked)}
+                onChange={(event) => onParameterChange("addGutter", event.currentTarget.checked)}
                 disabled={disabled}
                 label={
                   <div>
-                    <Text size="sm">{t('bookletImposition.addGutter.label', 'Add gutter margin')}</Text>
-                    <Text size="xs" c="dimmed">{t('bookletImposition.addGutter.tooltip', 'Adds inner margin space for binding')}</Text>
+                    <Text size="sm">{t("bookletImposition.addGutter.label", "Add gutter margin")}</Text>
+                    <Text size="xs" c="dimmed">
+                      {t("bookletImposition.addGutter.tooltip", "Adds inner margin space for binding")}
+                    </Text>
                   </div>
                 }
               />
 
               {parameters.addGutter && (
                 <NumberInput
-                  label={t('bookletImposition.gutterSize.label', 'Gutter size (points)')}
+                  label={t("bookletImposition.gutterSize.label", "Gutter size (points)")}
                   value={parameters.gutterSize}
-                  onChange={(value) => onParameterChange('gutterSize', value || 12)}
+                  onChange={(value) => onParameterChange("gutterSize", value || 12)}
                   min={6}
                   max={72}
                   step={6}
@@ -145,18 +156,23 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
             {/* Flip on Short Edge */}
             <Checkbox
               checked={parameters.flipOnShortEdge}
-              onChange={(event) => onParameterChange('flipOnShortEdge', event.currentTarget.checked)}
+              onChange={(event) => onParameterChange("flipOnShortEdge", event.currentTarget.checked)}
               disabled={disabled || !parameters.doubleSided}
               label={
                 <div>
                   <Text size="sm" c={!parameters.doubleSided ? "dimmed" : undefined}>
-                    {t('bookletImposition.flipOnShortEdge.label', 'Flip on short edge')}
+                    {t("bookletImposition.flipOnShortEdge.label", "Flip on short edge")}
                   </Text>
                   <Text size="xs" c="dimmed">
                     {!parameters.doubleSided
-                      ? t('bookletImposition.flipOnShortEdge.manualNote', 'Not needed in manual mode - you flip the stack yourself')
-                      : t('bookletImposition.flipOnShortEdge.tooltip', 'Enable for short-edge duplex printing (automatic duplex only - ignored in manual mode)')
-                    }
+                      ? t(
+                          "bookletImposition.flipOnShortEdge.manualNote",
+                          "Not needed in manual mode - you flip the stack yourself",
+                        )
+                      : t(
+                          "bookletImposition.flipOnShortEdge.tooltip",
+                          "Enable for short-edge duplex printing (automatic duplex only - ignored in manual mode)",
+                        )}
                   </Text>
                 </div>
               }
@@ -164,7 +180,7 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
 
             {/* Paper Size Note */}
             <Text size="xs" c="dimmed" fs="italic">
-              {t('bookletImposition.paperSizeNote', 'Paper size is automatically derived from your first page.')}
+              {t("bookletImposition.paperSizeNote", "Paper size is automatically derived from your first page.")}
             </Text>
           </Stack>
         </Collapse>

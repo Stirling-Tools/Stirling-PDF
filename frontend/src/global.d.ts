@@ -1,8 +1,8 @@
 declare module "*.js";
-declare module '*.module.css';
+declare module "*.module.css";
 
 // Auto-generated icon set JSON import
-declare module 'assets/material-symbols-icons.json' {
+declare module "assets/material-symbols-icons.json" {
   const value: {
     prefix: string;
     icons: Record<string, any>;
@@ -18,7 +18,7 @@ declare global {
   }
 }
 
-declare module 'axios' {
+declare module "axios" {
   export interface AxiosRequestConfig<_D = unknown> {
     suppressErrorToast?: boolean;
     skipAuthRedirect?: boolean;
@@ -32,4 +32,4 @@ declare module 'axios' {
   }
 }
 
-export { };
+export {};

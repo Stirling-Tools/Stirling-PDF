@@ -1,16 +1,16 @@
-import { FileAnalysis, ProcessingStrategy } from '@app/types/processing';
-import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
+import { FileAnalysis, ProcessingStrategy } from "@app/types/processing";
+import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 
 export class FileAnalyzer {
   private static readonly SIZE_THRESHOLDS = {
-    SMALL: 10 * 1024 * 1024,  // 10MB
+    SMALL: 10 * 1024 * 1024, // 10MB
     MEDIUM: 50 * 1024 * 1024, // 50MB
     LARGE: 200 * 1024 * 1024, // 200MB
   };
 
   private static readonly PAGE_THRESHOLDS = {
-    FEW: 10,    // < 10 pages - immediate full processing
-    MANY: 50,   // < 50 pages - priority pages
+    FEW: 10, // < 10 pages - immediate full processing
+    MANY: 50, // < 50 pages - priority pages
     MASSIVE: 100, // < 100 pages - progressive chunked
     // >100 pages = metadata only
   };
@@ -23,7 +23,7 @@ export class FileAnalyzer {
       fileSize: file.size,
       isEncrypted: false,
       isCorrupted: false,
-      recommendedStrategy: 'metadata_only',
+      recommendedStrategy: "metadata_only",
       estimatedProcessingTime: 0,
     };
 
@@ -41,13 +41,12 @@ export class FileAnalyzer {
       analysis.estimatedProcessingTime = this.estimateProcessingTime(
         file.size,
         quickAnalysis.pageCount,
-        analysis.recommendedStrategy
+        analysis.recommendedStrategy,
       );
-
     } catch (error) {
-      console.error('File analysis failed:', error);
+      console.error("File analysis failed:", error);
       analysis.isCorrupted = true;
-      analysis.recommendedStrategy = 'metadata_only';
+      analysis.recommendedStrategy = "metadata_only";
     }
 
     return analysis;
@@ -68,7 +67,7 @@ export class FileAnalyzer {
 
       const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
         stopAtErrors: false, // Don't stop at minor errors
-        verbosity: 0 // Suppress PDF.js warnings
+        verbosity: 0, // Suppress PDF.js warnings
       });
 
       const pageCount = pdf.numPages;
@@ -81,21 +80,18 @@ export class FileAnalyzer {
       // flag isEncrypted when pdf.js *fails* to open the file (caught below).
       return {
         pageCount,
-        isEncrypted: false,
-        isCorrupted: false
+        isEncrypted,
+        isCorrupted: false,
       };
-
     } catch (error) {
       // Try to determine if it's corruption vs encryption
-      const errorMessage = (error && typeof error === 'object' && 'message' in error)
-        ? String((error as any).message).toLowerCase()
-        : '';
-      const isEncrypted = errorMessage.includes('password') || errorMessage.includes('encrypted');
+      const errorMessage = error instanceof Error ? error.message.toLowerCase() : "";
+      const isEncrypted = errorMessage.includes("password") || errorMessage.includes("encrypted");
 
       return {
         pageCount: 0,
         isEncrypted,
-        isCorrupted: !isEncrypted // If not encrypted, probably corrupted
+        isCorrupted: !isEncrypted, // If not encrypted, probably corrupted
       };
     }
   }
@@ -106,59 +102,55 @@ export class FileAnalyzer {
   private static determineStrategy(fileSize: number, pageCount?: number): ProcessingStrategy {
     // Handle corrupted or encrypted files
     if (!pageCount || pageCount === 0) {
-      return 'metadata_only';
+      return "metadata_only";
     }
 
     // Small files with few pages - process everything immediately
     if (fileSize <= this.SIZE_THRESHOLDS.SMALL && pageCount <= this.PAGE_THRESHOLDS.FEW) {
-      return 'immediate_full';
+      return "immediate_full";
     }
 
     // Medium files or many pages - priority pages first, then progressive
     if (fileSize <= this.SIZE_THRESHOLDS.MEDIUM && pageCount <= this.PAGE_THRESHOLDS.MANY) {
-      return 'priority_pages';
+      return "priority_pages";
     }
 
     // Large files or massive page counts - chunked processing
     if (fileSize <= this.SIZE_THRESHOLDS.LARGE && pageCount <= this.PAGE_THRESHOLDS.MASSIVE) {
-      return 'progressive_chunked';
+      return "progressive_chunked";
     }
 
     // Very large files - metadata only
-    return 'metadata_only';
+    return "metadata_only";
   }
 
   /**
    * Estimate processing time based on file characteristics and strategy
    */
-  private static estimateProcessingTime(
-    _fileSize: number,
-    pageCount: number = 0,
-    strategy: ProcessingStrategy
-  ): number {
+  private static estimateProcessingTime(_fileSize: number, pageCount: number = 0, strategy: ProcessingStrategy): number {
     const baseTimes = {
-      immediate_full: 200,      // 200ms per page
-      priority_pages: 150,     // 150ms per page (optimized)
+      immediate_full: 200, // 200ms per page
+      priority_pages: 150, // 150ms per page (optimized)
       progressive_chunked: 100, // 100ms per page (chunked)
-      metadata_only: 50        // 50ms total
+      metadata_only: 50, // 50ms total
     };
 
     const baseTime = baseTimes[strategy];
 
     switch (strategy) {
-      case 'metadata_only':
+      case "metadata_only":
         return baseTime;
 
-      case 'immediate_full':
+      case "immediate_full":
         return pageCount * baseTime;
 
-      case 'priority_pages': {
+      case "priority_pages": {
         // Estimate time for priority pages (first 10)
         const priorityPages = Math.min(pageCount, 10);
         return priorityPages * baseTime;
       }
 
-      case 'progressive_chunked': {
+      case "progressive_chunked": {
         // Estimate time for first chunk (20 pages)
         const firstChunk = Math.min(pageCount, 20);
         return firstChunk * baseTime;
@@ -200,7 +192,7 @@ export class FileAnalyzer {
       totalEstimatedTime,
       suggestedBatchSize: this.calculateBatchSize(files.length, totalSize),
       shouldUseWebWorker: totalPages > 100 || totalSize > this.SIZE_THRESHOLDS.MEDIUM,
-      memoryWarning: totalSize > this.SIZE_THRESHOLDS.LARGE || totalPages > this.PAGE_THRESHOLDS.MASSIVE
+      memoryWarning: totalSize > this.SIZE_THRESHOLDS.LARGE || totalPages > this.PAGE_THRESHOLDS.MASSIVE,
     };
 
     return { analyses, recommendations };
@@ -227,7 +219,7 @@ export class FileAnalyzer {
    * Check if a file appears to be a valid PDF
    */
   static async isValidPDF(file: File): Promise<boolean> {
-    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
       return false;
     }
 
@@ -237,7 +229,7 @@ export class FileAnalyzer {
       const headerBytes = new Uint8Array(await header.arrayBuffer());
       const headerString = String.fromCharCode(...headerBytes);
 
-      return headerString.startsWith('%PDF-');
+      return headerString.startsWith("%PDF-");
     } catch {
       return false;
     }

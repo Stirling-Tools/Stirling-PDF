@@ -1,8 +1,8 @@
-import { useCallback, useMemo } from 'react';
-import { Alert, Button, Group, Loader, Stack, Text } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import type { GetPdfInfoOperationHook } from '@app/hooks/tools/getPdfInfo/useGetPdfInfoOperation';
-import { downloadFile } from '@app/services/downloadService';
+import { useCallback, useMemo } from "react";
+import { Alert, Button, Group, Loader, Stack, Text } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import type { GetPdfInfoOperationHook } from "@app/hooks/tools/getPdfInfo/useGetPdfInfoOperation";
+import { downloadFile } from "@app/services/downloadService";
 
 interface GetPdfInfoResultsProps {
   operation: GetPdfInfoOperationHook;
@@ -17,9 +17,9 @@ const findFileByExtension = (files: File[], extension: string) => {
 const GetPdfInfoResults = ({ operation, isLoading, errorMessage }: GetPdfInfoResultsProps) => {
   const { t } = useTranslation();
 
-  const jsonFile = useMemo(() => findFileByExtension(operation.files, '.json'), [operation.files]);
+  const jsonFile = useMemo(() => findFileByExtension(operation.files, ".json"), [operation.files]);
   const selectedFile = useMemo(() => jsonFile ?? null, [jsonFile]);
-  const selectedDownloadLabel = useMemo(() => t('getPdfInfo.downloadJson', 'Download JSON'), [t]);
+  const selectedDownloadLabel = useMemo(() => t("getPdfInfo.downloadJson", "Download JSON"), [t]);
 
   const handleDownload = useCallback((file: File) => {
     void downloadFile({ data: file, filename: file.name });
@@ -29,15 +29,15 @@ const GetPdfInfoResults = ({ operation, isLoading, errorMessage }: GetPdfInfoRes
     return (
       <Group justify="center" gap="sm" py="md">
         <Loader size="sm" />
-        <Text>{t('getPdfInfo.processing', 'Extracting information...')}</Text>
+        <Text>{t("getPdfInfo.processing", "Extracting information...")}</Text>
       </Group>
     );
   }
 
   if (!isLoading && operation.results.length === 0) {
     return (
-      <Alert color="gray" variant="light" title={t('getPdfInfo.results', 'Results')}>
-        <Text size="sm">{t('getPdfInfo.noResults', 'Run the tool to generate a report.')}</Text>
+      <Alert color="gray" variant="light" title={t("getPdfInfo.results", "Results")}>
+        <Text size="sm">{t("getPdfInfo.noResults", "Run the tool to generate a report.")}</Text>
       </Alert>
     );
   }
@@ -53,14 +53,9 @@ const GetPdfInfoResults = ({ operation, isLoading, errorMessage }: GetPdfInfoRes
 
       <Stack gap="xs">
         <Text size="sm" fw={600}>
-          {t('getPdfInfo.downloads', 'Downloads')}
+          {t("getPdfInfo.downloads", "Downloads")}
         </Text>
-        <Button
-          color="blue"
-          onClick={() => selectedFile && handleDownload(selectedFile)}
-          disabled={!selectedFile}
-          fullWidth
-        >
+        <Button color="blue" onClick={() => selectedFile && handleDownload(selectedFile)} disabled={!selectedFile} fullWidth>
           {selectedDownloadLabel}
         </Button>
       </Stack>
@@ -69,4 +64,3 @@ const GetPdfInfoResults = ({ operation, isLoading, errorMessage }: GetPdfInfoRes
 };
 
 export default GetPdfInfoResults;
-

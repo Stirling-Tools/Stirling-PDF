@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import auditService, { AuditFilters } from '@app/services/auditService';
+import { useState, useEffect } from "react";
+import auditService, { AuditFilters } from "@app/services/auditService";
 
 /**
  * Shared hook for managing audit filters across components
@@ -19,14 +19,11 @@ export function useAuditFilters(initialFilters: Partial<AuditFilters> = {}, logi
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
-        const [types, usersList] = await Promise.all([
-          auditService.getEventTypes(),
-          auditService.getUsers(),
-        ]);
+        const [types, usersList] = await Promise.all([auditService.getEventTypes(), auditService.getUsers()]);
         setEventTypes(types);
         setUsers(usersList);
       } catch (err) {
-        console.error('Failed to fetch audit metadata:', err);
+        console.error("Failed to fetch audit metadata:", err);
       }
     };
 

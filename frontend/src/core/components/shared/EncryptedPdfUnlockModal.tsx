@@ -1,7 +1,7 @@
-import { Modal, Stack, Text, Button, PasswordInput, Group } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { type KeyboardEventHandler } from 'react';
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from '@app/styles/zIndex';
+import { Modal, Stack, Text, Button, PasswordInput, Group } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { type KeyboardEventHandler } from "react";
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
 
 interface EncryptedPdfUnlockModalProps {
   opened: boolean;
@@ -31,7 +31,7 @@ const EncryptedPdfUnlockModal = ({
   const { t } = useTranslation();
 
   const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
-    if (event.key === 'Enter' && !isProcessing && password.trim().length > 0) {
+    if (event.key === "Enter" && !isProcessing && password.trim().length > 0) {
       onUnlock();
     }
   };
@@ -40,7 +40,7 @@ const EncryptedPdfUnlockModal = ({
     <Modal
       opened={opened}
       onClose={onSkip}
-      title={t('encryptedPdfUnlock.title', 'Remove password to continue')}
+      title={t("encryptedPdfUnlock.title", "Remove password to continue")}
       centered
       size="md"
       closeOnClickOutside={!isProcessing}
@@ -48,18 +48,20 @@ const EncryptedPdfUnlockModal = ({
       zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
     >
       <Stack gap="md">
-        <Text fw={600} ta="center">{fileName}</Text>
+        <Text fw={600} ta="center">
+          {fileName}
+        </Text>
         <Text c="dimmed" ta="center">
           {t(
-            'encryptedPdfUnlock.description',
-            'This PDF is password protected. Enter the password so you can continue working with it.'
+            "encryptedPdfUnlock.description",
+            "This PDF is password protected. Enter the password so you can continue working with it.",
           )}
         </Text>
 
         <Stack gap={4}>
           <PasswordInput
-            label={t('encryptedPdfUnlock.password.label', 'PDF password')}
-            placeholder={t('encryptedPdfUnlock.password.placeholder', 'Enter the PDF password')}
+            label={t("encryptedPdfUnlock.password.label", "PDF password")}
+            placeholder={t("encryptedPdfUnlock.password.placeholder", "Enter the PDF password")}
             value={password}
             onChange={(event) => onPasswordChange(event.currentTarget.value)}
             onKeyDown={handleKeyDown}
@@ -75,23 +77,11 @@ const EncryptedPdfUnlockModal = ({
 
         <Group justify="space-between">
           <Button variant="light" color="var(--mantine-color-gray-8)" onClick={onSkip} disabled={isProcessing}>
-            {t('encryptedPdfUnlock.skip', 'Skip for now')}
+            {t("encryptedPdfUnlock.skip", "Skip for now")}
           </Button>
-          <Group gap="xs">
-            {remainingCount > 0 && (
-              <Button
-                variant="light"
-                onClick={onUnlockAll}
-                loading={isProcessing}
-                disabled={password.trim().length === 0}
-              >
-                {t('encryptedPdfUnlock.unlockAll', 'Use for all ({{count}})', { count: remainingCount + 1 })}
-              </Button>
-            )}
-            <Button onClick={onUnlock} loading={isProcessing} disabled={password.trim().length === 0}>
-              {t('encryptedPdfUnlock.unlock', 'Unlock & Continue')}
-            </Button>
-          </Group>
+          <Button onClick={onUnlock} loading={isProcessing} disabled={password.trim().length === 0}>
+            {t("encryptedPdfUnlock.unlock", "Unlock & Continue")}
+          </Button>
         </Group>
       </Stack>
     </Modal>

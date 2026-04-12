@@ -23,36 +23,20 @@ const CertSignAutomationSettings = ({ parameters, onParameterChange, disabled = 
   return (
     <Stack gap="lg">
       {/* Sign Mode Selection (Manual vs Auto) */}
-      <CertificateTypeSettings
-        parameters={parameters}
-        onParameterChange={onParameterChange}
-        disabled={disabled}
-      />
+      <CertificateTypeSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
 
       {/* Certificate Format - only show for Manual mode */}
-      {parameters.signMode === 'MANUAL' && (
-        <CertificateFormatSettings
-          parameters={parameters}
-          onParameterChange={onParameterChange}
-          disabled={disabled}
-        />
+      {parameters.signMode === "MANUAL" && (
+        <CertificateFormatSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
       )}
 
       {/* Certificate Files - only show for Manual mode */}
-      {parameters.signMode === 'MANUAL' && (
-        <CertificateFilesSettings
-          parameters={parameters}
-          onParameterChange={onParameterChange}
-          disabled={disabled}
-        />
+      {parameters.signMode === "MANUAL" && (
+        <CertificateFilesSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
       )}
 
       {/* Signature Appearance Settings */}
-      <SignatureAppearanceSettings
-        parameters={parameters}
-        onParameterChange={onParameterChange}
-        disabled={disabled}
-      />
+      <SignatureAppearanceSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
     </Stack>
   );
 };

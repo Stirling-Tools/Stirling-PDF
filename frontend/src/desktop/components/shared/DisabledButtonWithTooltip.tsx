@@ -1,5 +1,5 @@
-import React from 'react';
-import '@app/components/shared/DisabledButtonWithTooltip.css';
+import React from "react";
+import "@app/components/shared/DisabledButtonWithTooltip.css";
 
 interface DisabledButtonWithTooltipProps {
   /** Tooltip text shown on hover */
@@ -17,12 +17,8 @@ interface DisabledButtonWithTooltipProps {
 export function DisabledButtonWithTooltip({ tooltip, children, className, style }: DisabledButtonWithTooltipProps) {
   const [hovered, setHovered] = React.useState(false);
   return (
-    <div
-      className="relative w-full"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div className={`locked-button${className ? ` ${className}` : ''}`} style={style}>
+    <div className="relative w-full" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+      <div className={`locked-button${className ? ` ${className}` : ""}`} style={style}>
         {children}
       </div>
       {hovered && (

@@ -1,15 +1,15 @@
-import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
-import { appendWord as sharedAppendWord } from '@app/utils/textDiff';
-import { PARAGRAPH_SENTINEL } from '@app/types/compare';
-import type { StirlingFile } from '@app/types/fileContext';
-import type { PDFPageProxy, TextContent, TextItem } from 'pdfjs-dist/types/src/display/api';
+import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import { appendWord as sharedAppendWord } from "@app/utils/textDiff";
+import { PARAGRAPH_SENTINEL } from "@app/types/compare";
+import type { StirlingFile } from "@app/types/fileContext";
+import type { PDFPageProxy, TextContent, TextItem } from "pdfjs-dist/types/src/display/api";
 import type {
   CompareChange,
   CompareDiffToken,
   CompareResultData,
   TokenBoundingBox,
   CompareParagraph,
-} from '@app/types/compare';
+} from "@app/types/compare";
 
 export interface TokenMetadata {
   page: number;
@@ -24,10 +24,10 @@ export interface ExtractedContent {
   paragraphs: CompareParagraph[];
 }
 
-const measurementCanvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
-const measurementContext = measurementCanvas ? measurementCanvas.getContext('2d') : null;
+const measurementCanvas = typeof document !== "undefined" ? document.createElement("canvas") : null;
+const measurementContext = measurementCanvas ? measurementCanvas.getContext("2d") : null;
 const textMeasurementCache: Map<string, number> | null = measurementContext ? new Map() : null;
-let lastMeasurementFont = '';
+let lastMeasurementFont = "";
 
 const DEFAULT_CHAR_WIDTH = 1;
 const DEFAULT_SPACE_WIDTH = 0.33;
@@ -35,7 +35,7 @@ const DEFAULT_SPACE_WIDTH = 0.33;
 export const measureTextWidth = (fontSpec: string, text: string): number => {
   if (!measurementContext) {
     if (!text) return 0;
-    if (text === ' ') return DEFAULT_SPACE_WIDTH;
+    if (text === " ") return DEFAULT_SPACE_WIDTH;
     return text.length * DEFAULT_CHAR_WIDTH;
   }
 
@@ -57,7 +57,7 @@ export const measureTextWidth = (fontSpec: string, text: string): number => {
 
 export const appendWord = (existing: string, word: string) => {
   if (!existing) {
-    return sharedAppendWord('', word);
+    return sharedAppendWord("", word);
   }
   return sharedAppendWord(existing, word);
 };
@@ -65,14 +65,15 @@ export const appendWord = (existing: string, word: string) => {
 export const aggregateTotals = (tokens: CompareDiffToken[]) => {
   return tokens.reduce(
     (totals, token) => {
-      if (token.text === '\uE000PARA') { // PARAGRAPH_SENTINEL safeguard if serialized
+      if (token.text === "\uE000PARA") {
+        // PARAGRAPH_SENTINEL safeguard if serialized
         return totals;
       }
       switch (token.type) {
-        case 'added':
+        case "added":
           totals.added += 1;
           break;
-        case 'removed':
+        case "removed":
           totals.removed += 1;
           break;
         default:
@@ -80,14 +81,14 @@ export const aggregateTotals = (tokens: CompareDiffToken[]) => {
       }
       return totals;
     },
-    { added: 0, removed: 0, unchanged: 0 }
+    { added: 0, removed: 0, unchanged: 0 },
   );
 };
 
 export const buildChanges = (
   tokens: CompareDiffToken[],
   baseMetadata: TokenMetadata[],
-  comparisonMetadata: TokenMetadata[]
+  comparisonMetadata: TokenMetadata[],
 ): CompareChange[] => {
   const changes: CompareChange[] = [];
   let baseIndex = 0;
@@ -116,7 +117,10 @@ export const buildChanges = (
         current.comparison.text = current.comparison.text.trim();
       }
 
-      if ((current.base?.text && current.base.text.length > 0) || (current.comparison?.text && current.comparison.text.length > 0)) {
+      if (
+        (current.base?.text && current.base.text.length > 0) ||
+        (current.comparison?.text && current.comparison.text.length > 0)
+      ) {
         changes.push(current);
       }
     }
@@ -126,7 +130,7 @@ export const buildChanges = (
   };
 
   for (const token of tokens) {
-    if (token.type === 'removed') {
+    if (token.type === "removed") {
       const meta = baseMetadata[baseIndex] ?? null;
       const active = ensureCurrent();
       const paragraph = meta?.paragraph ?? null;
@@ -170,7 +174,7 @@ export const buildChanges = (
       continue;
     }
 
-    if (token.type === 'added') {
+    if (token.type === "added") {
       const meta = comparisonMetadata[comparisonIndex] ?? null;
       const active = ensureCurrent();
       const paragraph = meta?.paragraph ?? null;
@@ -253,15 +257,15 @@ export const createSummaryFile = (result: CompareResultData): File => {
     warnings: result.warnings,
   };
 
-  const filename = `compare-summary-${new Date(result.totals.processedAt).toISOString().replace(/[:.]/g, '-')}.json`;
-  return new File([JSON.stringify(exportPayload, null, 2)], filename, { type: 'application/json' });
+  const filename = `compare-summary-${new Date(result.totals.processedAt).toISOString().replace(/[:.]/g, "-")}.json`;
+  return new File([JSON.stringify(exportPayload, null, 2)], filename, { type: "application/json" });
 };
 
 export const clamp = (value: number): number => Math.min(1, Math.max(0, value));
 
-export const getWorkerErrorCode = (value: unknown): 'EMPTY_TEXT' | 'TOO_LARGE' | 'TOO_DISSIMILAR' | undefined => {
-  if (typeof value === 'object' && value !== null && 'code' in value) {
-    const potentialCode = (value as { code?: 'EMPTY_TEXT' | 'TOO_LARGE' | 'TOO_DISSIMILAR' }).code;
+export const getWorkerErrorCode = (value: unknown): "EMPTY_TEXT" | "TOO_LARGE" | "TOO_DISSIMILAR" | undefined => {
+  if (typeof value === "object" && value !== null && "code" in value) {
+    const potentialCode = (value as { code?: "EMPTY_TEXT" | "TOO_LARGE" | "TOO_DISSIMILAR" }).code;
     return potentialCode;
   }
   return undefined;
@@ -278,7 +282,7 @@ export const filterTokensForDiff = (
   const map: number[] = [];
   for (let i = 0; i < tokens.length; i += 1) {
     const t = tokens[i];
-    const isPara = t === PARAGRAPH_SENTINEL || t.startsWith('\uE000') || t.includes('PARA');
+    const isPara = t === PARAGRAPH_SENTINEL || t.startsWith("\uE000") || t.includes("PARA");
     if (!isPara) {
       outTokens.push(t);
       if (metadata[i]) outMeta.push(metadata[i]);
@@ -305,28 +309,28 @@ export const extractContentFromPdf = async (file: StirlingFile): Promise<Extract
       const viewport = page.getViewport({ scale: 1 });
       const content: TextContent = await page.getTextContent({
         disableCombineTextItems: true,
-      } as Parameters<PDFPageProxy['getTextContent']>[0]);
+      } as Parameters<PDFPageProxy["getTextContent"]>[0]);
       const styles: Record<string, { fontFamily?: string; ascent?: number; descent?: number }> = content.styles ?? {};
 
       let paragraphIndex = 1;
-      let paragraphBuffer = '';
+      let paragraphBuffer = "";
       let prevItem: TextItem | null = null;
 
       pageSizes.push({ width: viewport.width, height: viewport.height });
 
       const normalizeToken = (s: string) =>
         s
-          .normalize('NFKC')
-          .replace(/[\u00AD\u200B-\u200F\u202A-\u202E]/g, '')
+          .normalize("NFKC")
+          .replace(/[\u00AD\u200B-\u200F\u202A-\u202E]/g, "")
           .replace(/[“”]/g, '"')
           .replace(/[‘’]/g, "'")
-          .replace(/[–—]/g, '-')
-          .replace(/\u00A0/g, ' ')
-          .replace(/\s+/g, ' ')
+          .replace(/[–—]/g, "-")
+          .replace(/\u00A0/g, " ")
+          .replace(/\s+/g, " ")
           .trim();
 
       const isParagraphBreak = (curr: TextItem, prev: TextItem | null) => {
-        const hasHardBreak = 'hasEOL' in curr && (curr as TextItem).hasEOL;
+        const hasHardBreak = "hasEOL" in curr && (curr as TextItem).hasEOL;
         if (hasHardBreak) return true;
         if (!prev) return false;
         const prevY = prev.transform[5];
@@ -391,26 +395,26 @@ export const extractContentFromPdf = async (file: StirlingFile): Promise<Extract
         const rawText = item.str;
         const totalLen = Math.max(rawText.length, 1);
         const textStyle = item.fontName ? styles[item.fontName] : undefined;
-        const fontFamily = textStyle?.fontFamily ?? 'sans-serif';
+        const fontFamily = textStyle?.fontFamily ?? "sans-serif";
         const fontScale = Math.max(0.5, Math.hypot(item.transform[0], item.transform[1]) || 0);
         const fontSpec = `${fontScale}px ${fontFamily}`;
 
         const weights: number[] = new Array(totalLen);
-        let runningText = '';
+        let runningText = "";
         let previousAdvance = 0;
         for (let i = 0; i < totalLen; i += 1) {
           runningText += rawText[i];
           const advance = measureTextWidth(fontSpec, runningText);
           let width = advance - previousAdvance;
           if (!Number.isFinite(width) || width <= 0) {
-            width = rawText[i] === ' ' ? DEFAULT_SPACE_WIDTH : DEFAULT_CHAR_WIDTH;
+            width = rawText[i] === " " ? DEFAULT_SPACE_WIDTH : DEFAULT_CHAR_WIDTH;
           }
           weights[i] = width;
           previousAdvance = advance;
         }
         if (!Number.isFinite(previousAdvance) || previousAdvance <= 0) {
           for (let i = 0; i < totalLen; i += 1) {
-            weights[i] = rawText[i] === ' ' ? DEFAULT_SPACE_WIDTH : DEFAULT_CHAR_WIDTH;
+            weights[i] = rawText[i] === " " ? DEFAULT_SPACE_WIDTH : DEFAULT_CHAR_WIDTH;
           }
         }
         const prefix: number[] = new Array(totalLen + 1);
@@ -439,21 +443,15 @@ export const extractContentFromPdf = async (file: StirlingFile): Promise<Extract
         }
 
         const [baselineStart, baselineEnd, verticalEnd] = transformed;
-        const baselineVector: [number, number] = [
-          baselineEnd[0] - baselineStart[0],
-          baselineEnd[1] - baselineStart[1],
-        ];
-        const verticalVector: [number, number] = [
-          verticalEnd[0] - baselineStart[0],
-          verticalEnd[1] - baselineStart[1],
-        ];
+        const baselineVector: [number, number] = [baselineEnd[0] - baselineStart[0], baselineEnd[1] - baselineStart[1]];
+        const verticalVector: [number, number] = [verticalEnd[0] - baselineStart[0], verticalEnd[1] - baselineStart[1]];
         const baselineMagnitude = Math.hypot(baselineVector[0], baselineVector[1]);
         const verticalMagnitude = Math.hypot(verticalVector[0], verticalVector[1]);
         const hasOrientationVectors = baselineMagnitude > 1e-6 && verticalMagnitude > 1e-6;
 
         const font = item.fontName ? styles[item.fontName] : undefined;
-        const ascent = typeof font?.ascent === 'number' ? Math.max(0.7, Math.min(1.1, font.ascent)) : 0.9;
-        const descent = typeof font?.descent === 'number' ? Math.max(0.0, Math.min(0.5, Math.abs(font.descent))) : 0.2;
+        const ascent = typeof font?.ascent === "number" ? Math.max(0.7, Math.min(1.1, font.ascent)) : 0.9;
+        const descent = typeof font?.descent === "number" ? Math.max(0.0, Math.min(0.5, Math.abs(font.descent))) : 0.2;
         const verticalScale = Math.min(1, Math.max(0.75, ascent + descent));
 
         const wordRegex = /[A-Za-z0-9]+|[^\sA-Za-z0-9]/g;
@@ -541,9 +539,9 @@ export const extractContentFromPdf = async (file: StirlingFile): Promise<Extract
         if (isParagraphBreak(item as TextItem, prevItem)) {
           if (paragraphBuffer.trim().length > 0) {
             paragraphs.push({ page: pageIndex, paragraph: paragraphIndex, text: paragraphBuffer.trim() });
-            paragraphBuffer = '';
+            paragraphBuffer = "";
           }
-          tokens.push('\uE000PARA');
+          tokens.push("\uE000PARA");
           metadata.push({ page: pageIndex, paragraph: paragraphIndex, bbox: null });
           paragraphIndex += 1;
         }
@@ -552,8 +550,8 @@ export const extractContentFromPdf = async (file: StirlingFile): Promise<Extract
 
       if (paragraphBuffer.trim().length > 0) {
         paragraphs.push({ page: pageIndex, paragraph: paragraphIndex, text: paragraphBuffer.trim() });
-        paragraphBuffer = '';
-        tokens.push('\uE000PARA');
+        paragraphBuffer = "";
+        tokens.push("\uE000PARA");
         metadata.push({ page: pageIndex, paragraph: paragraphIndex, bbox: null });
       }
     }
@@ -562,5 +560,3 @@ export const extractContentFromPdf = async (file: StirlingFile): Promise<Extract
     pdfWorkerManager.destroyDocument(pdfDoc);
   }
 };
-
-

@@ -11,12 +11,7 @@ const RemoveAnnotations = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const removeAnnotationsTips = useRemoveAnnotationsTips();
 
-  const base = useBaseTool(
-    'removeAnnotations',
-    useRemoveAnnotationsParameters,
-    useRemoveAnnotationsOperation,
-    props
-  );
+  const base = useBaseTool("removeAnnotations", useRemoveAnnotationsParameters, useRemoveAnnotationsOperation, props);
 
   return createToolFlow({
     files: {
