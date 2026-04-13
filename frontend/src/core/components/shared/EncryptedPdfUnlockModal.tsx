@@ -79,9 +79,16 @@ const EncryptedPdfUnlockModal = ({
           <Button variant="light" color="var(--mantine-color-gray-8)" onClick={onSkip} disabled={isProcessing}>
             {t("encryptedPdfUnlock.skip", "Skip for now")}
           </Button>
-          <Button onClick={onUnlock} loading={isProcessing} disabled={password.trim().length === 0}>
-            {t("encryptedPdfUnlock.unlock", "Unlock & Continue")}
-          </Button>
+          <Group gap="xs">
+            {remainingCount > 0 && (
+              <Button variant="light" onClick={onUnlockAll} loading={isProcessing} disabled={password.trim().length === 0}>
+                {t("encryptedPdfUnlock.unlockAll", "Use for all ({{count}})", { count: remainingCount + 1 })}
+              </Button>
+            )}
+            <Button onClick={onUnlock} loading={isProcessing} disabled={password.trim().length === 0}>
+              {t("encryptedPdfUnlock.unlock", "Unlock & Continue")}
+            </Button>
+          </Group>
         </Group>
       </Stack>
     </Modal>
