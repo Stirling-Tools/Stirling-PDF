@@ -64,7 +64,10 @@ tasks:
     env:
       DISABLE_ADDITIONAL_FEATURES: "true"
     cmds:
-      - ./gradlew bootJar --no-daemon
+      - cmd: cmd /c gradlew.bat bootJar --no-daemon
+        platforms: [windows]
+      - cmd: ./gradlew bootJar --no-daemon
+        platforms: [linux, darwin]
       - mkdir -p frontend/src-tauri/libs
       - cp app/core/build/libs/stirling-pdf-*.jar frontend/src-tauri/libs/
     status:
