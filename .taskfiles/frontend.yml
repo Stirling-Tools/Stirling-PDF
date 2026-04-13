@@ -14,7 +14,7 @@ tasks:
     env:
       CI: '{{ .CI | default "false" }}'
 
-  prep:env:
+  prepare:env:
     desc: "Generate .env from example if missing"
     deps: [install]
     cmds:
@@ -25,7 +25,7 @@ tasks:
     generates:
       - .env
 
-  prep:env:saas:
+  prepare:env:saas:
     desc: "Generate .env and .env.saas from examples if missing"
     deps: [install]
     cmds:
@@ -38,7 +38,7 @@ tasks:
       - .env
       - .env.saas
 
-  prep:env:desktop:
+  prepare:env:desktop:
     desc: "Generate .env and .env.desktop from examples if missing"
     deps: [install]
     cmds:
@@ -51,23 +51,23 @@ tasks:
       - .env
       - .env.desktop
 
-  prep:icons:
+  prepare:icons:
     desc: "Generate icon bundle from source references"
     deps: [install]
     cmds:
       - node scripts/generate-icons.js
 
-  prep:
+  prepare:
     desc: "Set up dev environment"
-    deps: [prep:env, prep:icons]
+    deps: [prepare:env, prepare:icons]
 
-  prep:saas:
-    desc: "Prep for SaaS mode"
-    deps: [prep:env:saas, prep:icons]
+  prepare:saas:
+    desc: "Prepare for SaaS mode"
+    deps: [prepare:env:saas, prepare:icons]
 
-  prep:desktop:
-    desc: "Prep for desktop mode"
-    deps: [prep:env:desktop, prep:icons]
+  prepare:desktop:
+    desc: "Prepare for desktop mode"
+    deps: [prepare:env:desktop, prepare:icons]
 
   # ============================================================
   # Development
@@ -75,42 +75,42 @@ tasks:
 
   dev:
     desc: "Start frontend dev server"
-    deps: [prep]
+    deps: [prepare]
     ignore_error: true
     cmds:
       - npx vite
 
   dev:core:
     desc: "Start frontend dev server in core mode"
-    deps: [prep]
+    deps: [prepare]
     ignore_error: true
     cmds:
       - npx vite --mode core
 
   dev:proprietary:
     desc: "Start frontend dev server in proprietary mode"
-    deps: [prep]
+    deps: [prepare]
     ignore_error: true
     cmds:
       - npx vite --mode proprietary
 
   dev:saas:
     desc: "Start frontend dev server in SaaS mode"
-    deps: [prep:saas]
+    deps: [prepare:saas]
     ignore_error: true
     cmds:
       - npx vite --mode saas
 
   dev:desktop:
     desc: "Start frontend dev server in desktop mode"
-    deps: [prep:desktop]
+    deps: [prepare:desktop]
     ignore_error: true
     cmds:
       - npx vite --mode desktop
 
   dev:prototypes:
     desc: "Start frontend dev server in prototypes mode"
-    deps: [prep]
+    deps: [prepare]
     ignore_error: true
     cmds:
       - npx vite --mode prototypes
@@ -121,37 +121,37 @@ tasks:
 
   build:
     desc: "Production build (default mode)"
-    deps: [prep]
+    deps: [prepare]
     cmds:
       - npx vite build
 
   build:core:
     desc: "Build for core mode"
-    deps: [prep]
+    deps: [prepare]
     cmds:
       - npx vite build --mode core
 
   build:proprietary:
     desc: "Build for proprietary mode"
-    deps: [prep]
+    deps: [prepare]
     cmds:
       - npx vite build --mode proprietary
 
   build:saas:
     desc: "Build for SaaS mode"
-    deps: [prep:saas]
+    deps: [prepare:saas]
     cmds:
       - npx vite build --mode saas
 
   build:desktop:
     desc: "Build for desktop mode"
-    deps: [prep:desktop]
+    deps: [prepare:desktop]
     cmds:
       - npx vite build --mode desktop
 
   build:prototypes:
     desc: "Build for prototypes mode"
-    deps: [prep]
+    deps: [prepare]
     cmds:
       - npx vite build --mode prototypes
 
@@ -197,37 +197,37 @@ tasks:
 
   typecheck:core:
     desc: "Typecheck core build variant"
-    deps: [install]
+    deps: [prepare]
     cmds:
       - npx tsc --noEmit --project src/core/tsconfig.json
 
   typecheck:proprietary:
     desc: "Typecheck proprietary build variant"
-    deps: [install]
+    deps: [prepare]
     cmds:
       - npx tsc --noEmit --project src/proprietary/tsconfig.json
 
   typecheck:saas:
     desc: "Typecheck SaaS build variant"
-    deps: [install]
+    deps: [prepare:saas]
     cmds:
       - npx tsc --noEmit --project src/saas/tsconfig.json
 
   typecheck:desktop:
     desc: "Typecheck desktop build variant"
-    deps: [install]
+    deps: [prepare:desktop]
     cmds:
       - npx tsc --noEmit --project src/desktop/tsconfig.json
 
   typecheck:scripts:
     desc: "Typecheck scripts"
-    deps: [install]
+    deps: [prepare]
     cmds:
       - npx tsc --noEmit --project scripts/tsconfig.json
 
   typecheck:prototypes:
     desc: "Typecheck prototypes build variant"
-    deps: [install]
+    deps: [prepare]
     cmds:
       - npx tsc --noEmit --project src/prototypes/tsconfig.json
 
@@ -285,7 +285,7 @@ tasks:
 
   test:e2e:
     desc: "Run E2E tests"
-    deps: [prep]
+    deps: [prepare]
     cmds:
       - npx playwright test {{.CLI_ARGS}}
 
