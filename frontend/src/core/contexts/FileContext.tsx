@@ -87,7 +87,7 @@ function FileContextInner({ children, enablePersistence = true }: FileContextPro
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const dismissedEncryptedFilesRef = useRef<Set<FileId>>(new Set());
-  const enqueuedEncryptedIdsRef = useRef<Set<FileId>>(new Set());
+  const observedFileIdsRef = useRef<Set<FileId>>(new Set());
 
   const enqueueEncryptedFiles = useCallback(
     (fileIds: FileId[]) => {
@@ -109,14 +109,16 @@ function FileContextInner({ children, enablePersistence = true }: FileContextPro
   );
 
   useEffect(() => {
+    const previousIds = observedFileIdsRef.current;
+    const nextIds = new Set<FileId>(state.files.ids);
     const newEncryptedIds: FileId[] = [];
 
     for (const id of state.files.ids) {
-      if (enqueuedEncryptedIdsRef.current.has(id)) continue;
-      const stub = state.files.byId[id];
-      if ((stub?.versionNumber ?? 1) <= 1 && stub?.processedFile?.isEncrypted) {
-        newEncryptedIds.push(id);
-        enqueuedEncryptedIdsRef.current.add(id);
+      if (!previousIds.has(id)) {
+        const stub = state.files.byId[id];
+        if ((stub?.versionNumber ?? 1) <= 1 && stub?.processedFile?.isEncrypted) {
+          newEncryptedIds.push(id);
+        }
       }
     }
 
@@ -124,12 +126,7 @@ function FileContextInner({ children, enablePersistence = true }: FileContextPro
       enqueueEncryptedFiles(newEncryptedIds);
     }
 
-    // Clean up ids no longer in state
-    for (const id of enqueuedEncryptedIdsRef.current) {
-      if (!state.files.byId[id]) {
-        enqueuedEncryptedIdsRef.current.delete(id);
-      }
-    }
+    observedFileIdsRef.current = nextIds;
   }, [state.files.ids, state.files.byId, enqueueEncryptedFiles]);
 
   useEffect(() => {
