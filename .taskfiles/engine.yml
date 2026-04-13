@@ -112,13 +112,13 @@ tasks:
     cmds:
       - rm -rf .venv data logs output
 
-  # On Windows, use PowerShell as bash failed to delete some dependencies 
+  # On Windows, use PowerShell as bash failed to delete some dependencies
   clean-windows:
     internal: true
     desc: "Clean build artifacts"
     ignore_error: true
     cmds:
-      - powershell rm -Recurse -Force -ErrorAction SilentlyContinue .venv 
-      - powershell rm -Recurse -Force -ErrorAction SilentlyContinue data 
-      - powershell rm -Recurse -Force -ErrorAction SilentlyContinue logs 
+      - powershell rm -Recurse -Force -ErrorAction SilentlyContinue .venv
+      - powershell rm -Recurse -Force -ErrorAction SilentlyContinue data
+      - powershell rm -Recurse -Force -ErrorAction SilentlyContinue logs
       - powershell rm -Recurse -Force -ErrorAction SilentlyContinue output

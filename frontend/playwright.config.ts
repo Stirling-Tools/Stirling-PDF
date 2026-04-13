@@ -68,7 +68,7 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: "task frontend:dev",
+    command: "npx vite",
     url: "http://localhost:5173",
     reuseExistingServer: !process.env.CI,
   },

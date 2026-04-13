@@ -16,6 +16,7 @@ tasks:
 
   prepare:env:
     desc: "Generate .env from example if missing"
+    run: once
     deps: [install]
     cmds:
       - npx tsx scripts/setup-env.ts
@@ -27,6 +28,7 @@ tasks:
 
   prepare:env:saas:
     desc: "Generate .env and .env.saas from examples if missing"
+    run: once
     deps: [install]
     cmds:
       - npx tsx scripts/setup-env.ts --saas
@@ -40,6 +42,7 @@ tasks:
 
   prepare:env:desktop:
     desc: "Generate .env and .env.desktop from examples if missing"
+    run: once
     deps: [install]
     cmds:
       - npx tsx scripts/setup-env.ts --desktop
@@ -53,20 +56,24 @@ tasks:
 
   prepare:icons:
     desc: "Generate icon bundle from source references"
+    run: once
     deps: [install]
     cmds:
       - node scripts/generate-icons.js
 
   prepare:
     desc: "Set up dev environment"
+    run: once
     deps: [prepare:env, prepare:icons]
 
   prepare:saas:
     desc: "Prepare for SaaS mode"
+    run: once
     deps: [prepare:env:saas, prepare:icons]
 
   prepare:desktop:
     desc: "Prepare for desktop mode"
+    run: once
     deps: [prepare:env:desktop, prepare:icons]
 
   # ============================================================

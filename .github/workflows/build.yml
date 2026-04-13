@@ -264,7 +264,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
         uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
-      - name: Check and build frontend
+      - name: Quality-check frontend
         id: frontend-check
         run: task frontend:check:all
         continue-on-error: true
@@ -277,6 +277,8 @@ jobs:
             const body = [
               marker,
               '### Frontend Check Failed',
+              '',
+              'There are issues with your frontend code that will need to be fixed before they can be merged in.',
               '',
               'Run `task frontend:fix` to auto-fix what can be fixed automatically, then run `task frontend:check:all` to see what still needs fixing manually.',
             ].join('\n');
