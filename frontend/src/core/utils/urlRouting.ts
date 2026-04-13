@@ -2,13 +2,13 @@
  * URL routing utilities for tool navigation with registry support
  */
 
-import { ToolRoute } from '@app/types/navigation';
-import { ToolId, isValidToolId } from '@app/types/toolId';
-import { getDefaultWorkbench } from '@app/types/workbench';
-import { ToolRegistry, getToolWorkbench, getToolUrlPath } from '@app/data/toolsTaxonomy';
-import { firePixel } from '@app/utils/scarfTracking';
-import { URL_TO_TOOL_MAP } from '@app/utils/urlMapping';
-import { BASE_PATH, withBasePath } from '@app/constants/app';
+import { ToolRoute } from "@app/types/navigation";
+import { ToolId, isValidToolId } from "@app/types/toolId";
+import { getDefaultWorkbench } from "@app/types/workbench";
+import { ToolRegistry, getToolWorkbench, getToolUrlPath } from "@app/data/toolsTaxonomy";
+import { firePixel } from "@app/utils/scarfTracking";
+import { URL_TO_TOOL_MAP } from "@app/utils/urlMapping";
+import { BASE_PATH, withBasePath } from "@app/constants/app";
 
 /**
  * Parse the current URL to extract tool routing information
@@ -16,9 +16,7 @@ import { BASE_PATH, withBasePath } from '@app/constants/app';
 export function parseToolRoute(registry: ToolRegistry): ToolRoute {
   const fullPath = window.location.pathname;
   // Remove base path to get app-relative path
-  const path = BASE_PATH && fullPath.startsWith(BASE_PATH)
-    ? fullPath.slice(BASE_PATH.length) || '/'
-    : fullPath;
+  const path = BASE_PATH && fullPath.startsWith(BASE_PATH) ? fullPath.slice(BASE_PATH.length) || "/" : fullPath;
   const searchParams = new URLSearchParams(window.location.search);
 
   // First, check URL mapping for multiple URL aliases
@@ -27,7 +25,7 @@ export function parseToolRoute(registry: ToolRegistry): ToolRoute {
     const tool = registry[mappedToolId];
     return {
       workbench: getToolWorkbench(tool),
-      toolId: mappedToolId
+      toolId: mappedToolId,
     };
   }
 
@@ -37,25 +35,25 @@ export function parseToolRoute(registry: ToolRegistry): ToolRoute {
     if (path === toolUrlPath && isValidToolId(toolId)) {
       return {
         workbench: getToolWorkbench(tool),
-        toolId
+        toolId,
       };
     }
   }
 
   // Check for query parameter fallback (e.g., ?tool=split)
-  const toolParam = searchParams.get('tool');
+  const toolParam = searchParams.get("tool");
   if (toolParam && isValidToolId(toolParam) && registry[toolParam]) {
     const tool = registry[toolParam];
     return {
       workbench: getToolWorkbench(tool),
-      toolId: toolParam
+      toolId: toolParam,
     };
   }
 
   // Default to fileEditor workbench for home page
   return {
     workbench: getDefaultWorkbench(),
-    toolId: null
+    toolId: null,
   };
 }
 
@@ -65,14 +63,14 @@ export function parseToolRoute(registry: ToolRegistry): ToolRoute {
 function updateUrl(newPath: string, searchParams: URLSearchParams, replace: boolean = false): void {
   const currentPath = window.location.pathname;
   const queryString = searchParams.toString();
-  const fullUrl = newPath + (queryString ? `?${queryString}` : '');
+  const fullUrl = newPath + (queryString ? `?${queryString}` : "");
 
   // Only update URL and fire pixel if something actually changed
-  if (currentPath !== newPath || window.location.search !== (queryString ? `?${queryString}` : '')) {
+  if (currentPath !== newPath || window.location.search !== (queryString ? `?${queryString}` : "")) {
     if (replace) {
-      window.history.replaceState(null, '', fullUrl);
+      window.history.replaceState(null, "", fullUrl);
     } else {
-      window.history.pushState(null, '', fullUrl);
+      window.history.pushState(null, "", fullUrl);
     }
     firePixel(newPath);
   }
@@ -93,7 +91,7 @@ export function updateToolRoute(toolId: ToolId, registry: ToolRegistry, replace:
   const searchParams = new URLSearchParams(window.location.search);
 
   // Remove tool query parameter since we're using path-based routing
-  searchParams.delete('tool');
+  searchParams.delete("tool");
 
   updateUrl(newPath, searchParams, replace);
 }
@@ -103,9 +101,9 @@ export function updateToolRoute(toolId: ToolId, registry: ToolRegistry, replace:
  */
 export function clearToolRoute(replace: boolean = false): void {
   const searchParams = new URLSearchParams(window.location.search);
-  searchParams.delete('tool');
+  searchParams.delete("tool");
 
-  updateUrl(withBasePath('/'), searchParams, replace);
+  updateUrl(withBasePath("/"), searchParams, replace);
 }
 
 /**

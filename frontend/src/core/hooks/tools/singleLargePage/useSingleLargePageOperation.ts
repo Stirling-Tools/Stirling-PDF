@@ -1,7 +1,7 @@
-import { useTranslation } from 'react-i18next';
-import { ToolType, useToolOperation } from '@app/hooks/tools/shared/useToolOperation';
-import { createStandardErrorHandler } from '@app/utils/toolErrorHandler';
-import { SingleLargePageParameters, defaultParameters } from '@app/hooks/tools/singleLargePage/useSingleLargePageParameters';
+import { useTranslation } from "react-i18next";
+import { ToolType, useToolOperation } from "@app/hooks/tools/shared/useToolOperation";
+import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+import { SingleLargePageParameters, defaultParameters } from "@app/hooks/tools/singleLargePage/useSingleLargePageParameters";
 
 // Static function that can be used by both the hook and automation executor
 export const buildSingleLargePageFormData = (_parameters: SingleLargePageParameters, file: File): FormData => {
@@ -14,8 +14,8 @@ export const buildSingleLargePageFormData = (_parameters: SingleLargePageParamet
 export const singleLargePageOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildSingleLargePageFormData,
-  operationType: 'pdfToSinglePage',
-  endpoint: '/api/v1/general/pdf-to-single-page',
+  operationType: "pdfToSinglePage",
+  endpoint: "/api/v1/general/pdf-to-single-page",
   defaultParameters,
 } as const;
 
@@ -24,6 +24,8 @@ export const useSingleLargePageOperation = () => {
 
   return useToolOperation<SingleLargePageParameters>({
     ...singleLargePageOperationConfig,
-    getErrorMessage: createStandardErrorHandler(t('pdfToSinglePage.error.failed', 'An error occurred while converting to single page.'))
+    getErrorMessage: createStandardErrorHandler(
+      t("pdfToSinglePage.error.failed", "An error occurred while converting to single page."),
+    ),
   });
 };

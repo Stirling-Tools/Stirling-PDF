@@ -11,12 +11,7 @@ const ScannerImageSplit = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const scannerImageSplitTips = useScannerImageSplitTips();
 
-  const base = useBaseTool(
-    'scannerImageSplit',
-    useScannerImageSplitParameters,
-    useScannerImageSplitOperation,
-    props
-  );
+  const base = useBaseTool("scannerImageSplit", useScannerImageSplitParameters, useScannerImageSplitOperation, props);
 
   return createToolFlow({
     files: {

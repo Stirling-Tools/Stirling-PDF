@@ -15,10 +15,10 @@ const RemovePasswordSettings = ({ parameters, onParameterChange, disabled = fals
     <Stack gap="md">
       <Stack gap="sm">
         <PasswordInput
-          label={t('removePassword.password.label', 'Current Password')}
-          placeholder={t('removePassword.password.placeholder', 'Enter current password')}
+          label={t("removePassword.password.label", "Current Password")}
+          placeholder={t("removePassword.password.placeholder", "Enter current password")}
           value={parameters.password}
-          onChange={(e) => onParameterChange('password', e.target.value)}
+          onChange={(e) => onParameterChange("password", e.target.value)}
           disabled={disabled}
           required
         />

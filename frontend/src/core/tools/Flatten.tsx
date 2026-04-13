@@ -11,12 +11,7 @@ const Flatten = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const flattenTips = useFlattenTips();
 
-  const base = useBaseTool(
-    'flatten',
-    useFlattenParameters,
-    useFlattenOperation,
-    props
-  );
+  const base = useBaseTool("flatten", useFlattenParameters, useFlattenOperation, props);
 
   return createToolFlow({
     files: {

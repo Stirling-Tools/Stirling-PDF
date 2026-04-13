@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Stack, Button, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import LocalIcon from '@app/components/shared/LocalIcon';
+import LocalIcon from "@app/components/shared/LocalIcon";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { TextInput } from "@app/components/shared/TextInput";
 import "@app/components/tools/toolPicker/ToolPicker.css";
@@ -45,7 +45,7 @@ const ToolSearch = ({
       ([key]) => idToWords(key),
       ([, v]) => v.name,
       ([, v]) => v.description,
-      ([, v]) => v.synonyms?.join(' ') || '',
+      ([, v]) => v.synonyms?.join(" ") || "",
     ]).slice(0, 6);
     return ranked.map(({ item: [id, tool] }) => ({ id, tool }));
   }, [value, toolRegistry, mode, selectedToolKey]);
@@ -82,17 +82,17 @@ const ToolSearch = ({
   }, [autoFocus]);
 
   const searchInput = (
-      <TextInput
-        id="tool-search-input"
-        name="tool-search-input"
-        ref={searchRef}
-        value={value}
-        onChange={handleSearchChange}
-        placeholder={placeholder || t("toolPicker.searchPlaceholder", "Search tools...")}
-        icon={hideIcon ? undefined : <LocalIcon icon="search-rounded" width="1.5rem" height="1.5rem" />}
-        autoComplete="off"
-        onFocus={onFocus}
-      />
+    <TextInput
+      id="tool-search-input"
+      name="tool-search-input"
+      ref={searchRef}
+      value={value}
+      onChange={handleSearchChange}
+      placeholder={placeholder || t("toolPicker.searchPlaceholder", "Search tools...")}
+      icon={hideIcon ? undefined : <LocalIcon icon="search-rounded" width="1.5rem" height="1.5rem" />}
+      autoComplete="off"
+      onFocus={onFocus}
+    />
   );
 
   if (mode === "filter") {

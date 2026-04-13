@@ -19,24 +19,18 @@ const FileUploadButton = ({
   disabled = false,
   placeholder,
   variant = "outline",
-  fullWidth = true
+  fullWidth = true,
 }: FileUploadButtonProps) => {
   const { t } = useTranslation();
   const resetRef = useRef<() => void>(null);
 
-  const defaultPlaceholder = t('chooseFile', 'Choose File');
+  const defaultPlaceholder = t("chooseFile", "Choose File");
 
   return (
-    <FileButton
-      resetRef={resetRef}
-      onChange={onChange}
-      accept={accept}
-      disabled={disabled}
-
-    >
+    <FileButton resetRef={resetRef} onChange={onChange} accept={accept} disabled={disabled}>
       {(props) => (
         <Button {...props} variant={variant} fullWidth={fullWidth} color="blue">
-          {file ? file.name : (placeholder || defaultPlaceholder)}
+          {file ? file.name : placeholder || defaultPlaceholder}
         </Button>
       )}
     </FileButton>

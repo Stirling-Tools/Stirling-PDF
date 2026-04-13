@@ -1,8 +1,8 @@
-import React, { useCallback, useState, useMemo, useRef } from 'react';
-import { useDocumentState } from '@embedpdf/core/react';
-import { useScroll } from '@embedpdf/plugin-scroll/react';
-import { useAnnotation } from '@embedpdf/plugin-annotation/react';
-import { PdfAnnotationSubtype, PdfActionType, type PdfLinkAnnoObject } from '@embedpdf/models';
+import React, { useCallback, useState, useMemo, useRef } from "react";
+import { useDocumentState } from "@embedpdf/core/react";
+import { useScroll } from "@embedpdf/plugin-scroll/react";
+import { useAnnotation } from "@embedpdf/plugin-annotation/react";
+import { PdfAnnotationSubtype, PdfActionType, type PdfLinkAnnoObject } from "@embedpdf/models";
 
 // ---------------------------------------------------------------------------
 // Inline SVG icons (thin-stroke, modern)
@@ -41,13 +41,7 @@ const PageIcon: React.FC<{ size?: number }> = ({ size = 12 }) => (
       strokeLinecap="round"
       strokeLinejoin="round"
     />
-    <path
-      d="M6 2.5v2h2"
-      stroke="currentColor"
-      strokeWidth="1.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
+    <path d="M6 2.5v2h2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -58,32 +52,32 @@ const PageIcon: React.FC<{ size?: number }> = ({ size = 12 }) => (
 function truncateUrl(url: string, maxLen = 32): string {
   try {
     const u = new URL(url);
-    const display = u.hostname + (u.pathname !== '/' ? u.pathname : '');
-    return display.length > maxLen ? display.slice(0, maxLen) + '\u2026' : display;
+    const display = u.hostname + (u.pathname !== "/" ? u.pathname : "");
+    return display.length > maxLen ? display.slice(0, maxLen) + "\u2026" : display;
   } catch {
-    return url.length > maxLen ? url.slice(0, maxLen) + '\u2026' : url;
+    return url.length > maxLen ? url.slice(0, maxLen) + "\u2026" : url;
   }
 }
 
 function getLinkLabel(annotationLink: PdfLinkAnnoObject): string {
-  if (!annotationLink.target) return 'Open Link';
+  if (!annotationLink.target) return "Open Link";
 
-  if (annotationLink.target.type === 'action') {
+  if (annotationLink.target.type === "action") {
     const action = annotationLink.target.action;
     if (action.type === PdfActionType.URI) return truncateUrl(action.uri);
     if (action.type === PdfActionType.Goto) return `Page ${action.destination.pageIndex + 1}`;
     if (action.type === PdfActionType.RemoteGoto) return `Page ${action.destination.pageIndex + 1}`;
-  } else if (annotationLink.target.type === 'destination') {
+  } else if (annotationLink.target.type === "destination") {
     return `Page ${annotationLink.target.destination.pageIndex + 1}`;
   }
 
-  return 'Open Link';
+  return "Open Link";
 }
 
 function isInternalLink(annotationLink: PdfLinkAnnoObject): boolean {
   if (!annotationLink.target) return false;
-  if (annotationLink.target.type === 'destination') return true;
-  if (annotationLink.target.type === 'action') {
+  if (annotationLink.target.type === "destination") return true;
+  if (annotationLink.target.type === "action") {
     const { type } = annotationLink.target.action;
     return type === PdfActionType.Goto || type === PdfActionType.RemoteGoto;
   }
@@ -119,7 +113,7 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
 
     return (
       <div
-        className={`pdf-link-toolbar${flipped ? ' pdf-link-toolbar--below' : ''}`}
+        className={`pdf-link-toolbar${flipped ? " pdf-link-toolbar--below" : ""}`}
         style={{ left: `${centerX}px`, top: `${topY}px` }}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
@@ -148,7 +142,11 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
             e.stopPropagation();
             onNavigate(annotationLink);
           }}
-          aria-label={internal ? `Go to page ${annotationLink.target?.type === 'destination' ? annotationLink.target.destination.pageIndex + 1 : ''}` : 'Open link'}
+          aria-label={
+            internal
+              ? `Go to page ${annotationLink.target?.type === "destination" ? annotationLink.target.destination.pageIndex + 1 : ""}`
+              : "Open link"
+          }
           title={label}
         >
           {internal ? <PageIcon /> : <ExternalLinkIcon />}
@@ -159,7 +157,7 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
   },
 );
 
-LinkToolbar.displayName = 'LinkToolbar';
+LinkToolbar.displayName = "LinkToolbar";
 
 // ---------------------------------------------------------------------------
 // LinkLayer
@@ -185,11 +183,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({ documentId, pageIndex }) =
     const result: PdfLinkAnnoObject[] = [];
     for (const uid of uids) {
       const ta = state.byUid[uid];
-      if (
-        ta &&
-        ta.commitState !== 'deleted' &&
-        ta.object.type === PdfAnnotationSubtype.LINK
-      ) {
+      if (ta && ta.commitState !== "deleted" && ta.object.type === PdfAnnotationSubtype.LINK) {
         const annotationLink = ta.object as PdfLinkAnnoObject;
         if (annotationLink.rect.size.width > 0 && annotationLink.rect.size.height > 0) {
           result.push(annotationLink);
@@ -243,34 +237,34 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({ documentId, pageIndex }) =
         return;
       }
 
-      if (annotationLink.target.type === 'destination' && scroll) {
+      if (annotationLink.target.type === "destination" && scroll) {
         scroll.scrollToPage({
           pageNumber: annotationLink.target.destination.pageIndex + 1,
-          behavior: 'smooth',
+          behavior: "smooth",
         });
-      } else if (annotationLink.target.type === 'action') {
+      } else if (annotationLink.target.type === "action") {
         const action = annotationLink.target.action;
         if (action.type === PdfActionType.Goto && scroll) {
           scroll.scrollToPage({
             pageNumber: action.destination.pageIndex + 1,
-            behavior: 'smooth',
+            behavior: "smooth",
           });
         } else if (action.type === PdfActionType.RemoteGoto && scroll) {
           scroll.scrollToPage({
             pageNumber: action.destination.pageIndex + 1,
-            behavior: 'smooth',
+            behavior: "smooth",
           });
         } else if (action.type === PdfActionType.URI) {
           const uri = action.uri;
           try {
             const url = new URL(uri, window.location.href);
-            if (['http:', 'https:', 'mailto:'].includes(url.protocol)) {
-              window.open(uri, '_blank', 'noopener,noreferrer');
+            if (["http:", "https:", "mailto:"].includes(url.protocol)) {
+              window.open(uri, "_blank", "noopener,noreferrer");
             } else {
-              console.warn('[LinkLayer] Blocked unsafe URL protocol:', url.protocol);
+              console.warn("[LinkLayer] Blocked unsafe URL protocol:", url.protocol);
             }
           } catch {
-            window.open(uri, '_blank', 'noopener,noreferrer');
+            window.open(uri, "_blank", "noopener,noreferrer");
           }
         }
       }
@@ -292,10 +286,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({ documentId, pageIndex }) =
   if (linkAnnotations.length === 0) return null;
 
   return (
-    <div
-      className="absolute inset-0"
-      style={{ pointerEvents: 'none', zIndex: 10 }}
-    >
+    <div className="absolute inset-0" style={{ pointerEvents: "none", zIndex: 10 }}>
       {linkAnnotations.map((annotationLink) => {
         const isHovered = hoveredLinkId === annotationLink.id;
         const left = annotationLink.rect.origin.x * scale;
@@ -319,14 +310,14 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({ documentId, pageIndex }) =
               onMouseDown={(e) => e.stopPropagation()}
               onMouseEnter={() => handleLinkMouseEnter(annotationLink.id)}
               onMouseLeave={handleLinkMouseLeave}
-              className={`pdf-link-overlay${isHovered ? ' pdf-link-overlay--active' : ''}`}
+              className={`pdf-link-overlay${isHovered ? " pdf-link-overlay--active" : ""}`}
               style={{
                 left: `${left}px`,
                 top: `${top}px`,
                 width: `${width}px`,
                 height: `${height}px`,
-                minWidth: '6px',
-                minHeight: '6px',
+                minWidth: "6px",
+                minHeight: "6px",
               }}
               role="link"
               tabIndex={0}

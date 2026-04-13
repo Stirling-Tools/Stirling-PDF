@@ -23,11 +23,11 @@ export interface SettingsWithPending<T = any> {
  * @param settings Settings object from backend (may contain _pending block)
  * @returns Merged settings with pending values applied
  */
-export function mergePendingSettings<T extends SettingsWithPending>(settings: T): Omit<T, '_pending'> {
+export function mergePendingSettings<T extends SettingsWithPending>(settings: T): Omit<T, "_pending"> {
   if (!settings || !settings._pending) {
     // No pending changes, return as-is (without _pending property)
     const { _pending, ...rest } = settings || {};
-    return rest as Omit<T, '_pending'>;
+    return rest as Omit<T, "_pending">;
   }
 
   // Deep merge pending changes
@@ -35,7 +35,7 @@ export function mergePendingSettings<T extends SettingsWithPending>(settings: T)
 
   // Remove _pending from result
   const { _pending, ...result } = merged;
-  return result as Omit<T, '_pending'>;
+  return result as Omit<T, "_pending">;
 }
 
 /**
@@ -45,10 +45,7 @@ export function mergePendingSettings<T extends SettingsWithPending>(settings: T)
  * @param fieldPath Dot-notation path to the field (e.g., "oauth2.clientSecret")
  * @returns True if field has pending changes
  */
-export function isFieldPending<T extends SettingsWithPending>(
-  settings: T | null | undefined,
-  fieldPath: string
-): boolean {
+export function isFieldPending<T extends SettingsWithPending>(settings: T | null | undefined, fieldPath: string): boolean {
   if (!settings?._pending) {
     console.log(`[isFieldPending] No _pending block found for field: ${fieldPath}`);
     return false;
@@ -71,9 +68,7 @@ export function isFieldPending<T extends SettingsWithPending>(
  * @param settings Settings object from backend
  * @returns True if there are any pending changes
  */
-export function hasPendingChanges<T extends SettingsWithPending>(
-  settings: T | null | undefined
-): boolean {
+export function hasPendingChanges<T extends SettingsWithPending>(settings: T | null | undefined): boolean {
   return settings?._pending !== undefined && Object.keys(settings._pending).length > 0;
 }
 
@@ -84,10 +79,7 @@ export function hasPendingChanges<T extends SettingsWithPending>(
  * @param fieldPath Dot-notation path to the field
  * @returns Pending value or undefined
  */
-export function getPendingValue<T extends SettingsWithPending>(
-  settings: T | null | undefined,
-  fieldPath: string
-): any {
+export function getPendingValue<T extends SettingsWithPending>(settings: T | null | undefined, fieldPath: string): any {
   if (!settings?._pending) {
     return undefined;
   }
@@ -102,10 +94,7 @@ export function getPendingValue<T extends SettingsWithPending>(
  * @param fieldPath Dot-notation path to the field
  * @returns Current active value
  */
-export function getCurrentValue<T extends SettingsWithPending>(
-  settings: T | null | undefined,
-  fieldPath: string
-): any {
+export function getCurrentValue<T extends SettingsWithPending>(settings: T | null | undefined, fieldPath: string): any {
   if (!settings) {
     return undefined;
   }
@@ -148,7 +137,7 @@ function deepMerge(target: any, source: any): any {
 function getNestedValue(obj: any, path: string): any {
   if (!obj || !path) return undefined;
 
-  const parts = path.split('.');
+  const parts = path.split(".");
   let current = obj;
 
   for (const part of parts) {
@@ -165,9 +154,5 @@ function getNestedValue(obj: any, path: string): any {
  * Check if value is a plain object (not array, not null, not Date, etc.)
  */
 function isPlainObject(value: any): boolean {
-  return (
-    value !== null &&
-    typeof value === 'object' &&
-    value.constructor === Object
-  );
+  return value !== null && typeof value === "object" && value.constructor === Object;
 }

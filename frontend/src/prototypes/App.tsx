@@ -27,9 +27,7 @@ import "@app/utils/fileIdSafety";
 function MinimalProviders({ children }: { children: React.ReactNode }) {
   return (
     <PreferencesProvider>
-      <RainbowThemeProvider>
-        {children}
-      </RainbowThemeProvider>
+      <RainbowThemeProvider>{children}</RainbowThemeProvider>
     </PreferencesProvider>
   );
 }

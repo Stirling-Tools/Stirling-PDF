@@ -11,12 +11,7 @@ const RemovePassword = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const removePasswordTips = useRemovePasswordTips();
 
-  const base = useBaseTool(
-    'removePassword',
-    useRemovePasswordParameters,
-    useRemovePasswordOperation,
-    props
-  );
+  const base = useBaseTool("removePassword", useRemovePasswordParameters, useRemovePasswordOperation, props);
 
   return createToolFlow({
     files: {

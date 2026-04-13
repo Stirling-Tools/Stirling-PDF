@@ -22,7 +22,17 @@ interface FileCardProps {
   isSupported?: boolean; // Whether the file format is supported by the current tool
 }
 
-const FileCard = ({ file, fileStub, onRemove, onDoubleClick, onView, onEdit, isSelected, onSelect, isSupported = true }: FileCardProps) => {
+const FileCard = ({
+  file,
+  fileStub,
+  onRemove,
+  onDoubleClick,
+  onView,
+  onEdit,
+  isSelected,
+  onSelect,
+  isSupported = true,
+}: FileCardProps) => {
   const { t } = useTranslation();
   // Use record thumbnail if available, otherwise fall back to IndexedDB lookup
   const { thumbnail: indexedDBThumb, isGenerating } = useIndexedDBThumbnail(fileStub);
@@ -30,7 +40,7 @@ const FileCard = ({ file, fileStub, onRemove, onDoubleClick, onView, onEdit, isS
   const [isHovered, setIsHovered] = useState(false);
 
   // Show loading state during hydration: PDF file without thumbnail yet
-  const isPdf = file.type === 'application/pdf';
+  const isPdf = file.type === "application/pdf";
   const isHydrating = isPdf && !thumb && !isGenerating;
 
   return (
@@ -44,11 +54,11 @@ const FileCard = ({ file, fileStub, onRemove, onDoubleClick, onView, onEdit, isS
         minWidth: 180,
         maxWidth: 260,
         cursor: onDoubleClick && isSupported ? "pointer" : undefined,
-        position: 'relative',
-        border: isSelected ? '2px solid var(--mantine-color-blue-6)' : undefined,
-        backgroundColor: isSelected ? 'var(--mantine-color-blue-0)' : undefined,
+        position: "relative",
+        border: isSelected ? "2px solid var(--mantine-color-blue-6)" : undefined,
+        backgroundColor: isSelected ? "var(--mantine-color-blue-0)" : undefined,
         opacity: isSupported ? 1 : 0.5,
-        filter: isSupported ? 'none' : 'grayscale(50%)'
+        filter: isSupported ? "none" : "grayscale(50%)",
       }}
       onDoubleClick={onDoubleClick}
       onMouseEnter={() => setIsHovered(true)}
@@ -69,22 +79,22 @@ const FileCard = ({ file, fileStub, onRemove, onDoubleClick, onView, onEdit, isS
             justifyContent: "center",
             margin: "0 auto",
             background: "#fafbfc",
-            position: 'relative'
+            position: "relative",
           }}
         >
           {/* Hover action buttons */}
           {isHovered && (onView || onEdit) && (
             <div
               style={{
-                position: 'absolute',
+                position: "absolute",
                 top: 4,
                 right: 4,
-                display: 'flex',
+                display: "flex",
                 gap: 4,
                 zIndex: 10,
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                backgroundColor: "rgba(255, 255, 255, 0.9)",
                 borderRadius: 4,
-                padding: 2
+                padding: 2,
               }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -121,26 +131,23 @@ const FileCard = ({ file, fileStub, onRemove, onDoubleClick, onView, onEdit, isS
             </div>
           )}
           {thumb ? (
-            <Image
-              src={thumb}
-              alt="PDF thumbnail"
-              height={110}
-              width={80}
-              fit="contain"
-              radius="sm"
-            />
-          ) : (isGenerating || isHydrating) ? (
+            <Image src={thumb} alt="PDF thumbnail" height={110} width={80} fit="contain" radius="sm" />
+          ) : isGenerating || isHydrating ? (
             <Stack align="center" justify="center" gap="xs">
               <Loader size="sm" />
-              <Text size="xs" c="dimmed">Loading...</Text>
+              <Text size="xs" c="dimmed">
+                Loading...
+              </Text>
             </Stack>
           ) : (
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
               <ThemeIcon
                 variant="light"
                 color={file.size > 100 * 1024 * 1024 ? "orange" : "red"}
@@ -151,7 +158,9 @@ const FileCard = ({ file, fileStub, onRemove, onDoubleClick, onView, onEdit, isS
                 <PictureAsPdfIcon style={{ fontSize: 40 }} />
               </ThemeIcon>
               {file.size > 100 * 1024 * 1024 && (
-                <Text size="xs" c="dimmed" mt={4}>Large File</Text>
+                <Text size="xs" c="dimmed" mt={4}>
+                  Large File
+                </Text>
               )}
             </div>
           )}
@@ -169,12 +178,7 @@ const FileCard = ({ file, fileStub, onRemove, onDoubleClick, onView, onEdit, isS
             {getFileDate(file)}
           </Badge>
           {fileStub?.id && (
-            <Badge
-              color="green"
-              variant="light"
-              size="sm"
-              leftSection={<StorageIcon style={{ fontSize: 12 }} />}
-            >
+            <Badge color="green" variant="light" size="sm" leftSection={<StorageIcon style={{ fontSize: 12 }} />}>
               DB
             </Badge>
           )}

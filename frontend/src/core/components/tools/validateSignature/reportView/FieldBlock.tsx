@@ -1,10 +1,9 @@
-import React from 'react';
-import { Text } from '@mantine/core';
-import '@app/components/tools/validateSignature/reportView/styles.css';
+import React from "react";
+import { Text } from "@mantine/core";
+import "@app/components/tools/validateSignature/reportView/styles.css";
 
 const FieldBlock = (label: string, value: React.ReactNode) => {
-  const displayValue =
-    value === null || value === undefined || value === '' ? '-' : value;
+  const displayValue = value === null || value === undefined || value === "" ? "-" : value;
 
   return (
     <div className="field-container" key={label}>
@@ -12,7 +11,7 @@ const FieldBlock = (label: string, value: React.ReactNode) => {
         {label}
       </Text>
       <div className="field-value">
-        <Text size="sm" fw={500} style={{ lineHeight: 1.35, whiteSpace: 'pre-wrap' }}>
+        <Text size="sm" fw={500} style={{ lineHeight: 1.35, whiteSpace: "pre-wrap" }}>
           {displayValue}
         </Text>
       </div>

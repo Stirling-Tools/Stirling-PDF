@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { isAxiosError } from 'axios';
-import { useTranslation } from 'react-i18next';
+import { useState, useEffect } from "react";
+import { isAxiosError } from "axios";
+import { useTranslation } from "react-i18next";
 import {
   Stack,
   Text,
@@ -17,13 +17,13 @@ import {
   Menu,
   Avatar,
   Box,
-} from '@mantine/core';
-import LocalIcon from '@app/components/shared/LocalIcon';
-import { alert } from '@app/components/toast';
-import { teamService, Team } from '@app/services/teamService';
-import { User, userManagementService } from '@app/services/userManagementService';
-import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
-import ChangeUserPasswordModal from '@app/components/shared/ChangeUserPasswordModal';
+} from "@mantine/core";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import { alert } from "@app/components/toast";
+import { teamService, Team } from "@app/services/teamService";
+import { User, userManagementService } from "@app/services/userManagementService";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import ChangeUserPasswordModal from "@app/components/shared/ChangeUserPasswordModal";
 
 interface TeamDetailsSectionProps {
   teamId: number;
@@ -43,8 +43,8 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
   const [changePasswordModalOpened, setChangePasswordModalOpened] = useState(false);
   const [passwordUser, setPasswordUser] = useState<User | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [selectedUserId, setSelectedUserId] = useState<string>('');
-  const [selectedTeamId, setSelectedTeamId] = useState<string>('');
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [selectedTeamId, setSelectedTeamId] = useState<string>("");
   const [processing, setProcessing] = useState(false);
 
   // License information
@@ -64,11 +64,8 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
   const fetchTeamDetails = async () => {
     try {
       setLoading(true);
-      const [data, adminData] = await Promise.all([
-        teamService.getTeamDetails(teamId),
-        userManagementService.getUsers(),
-      ]);
-      console.log('[TeamDetailsSection] Raw data:', data);
+      const [data, adminData] = await Promise.all([teamService.getTeamDetails(teamId), userManagementService.getUsers()]);
+      console.log("[TeamDetailsSection] Raw data:", data);
       setTeam(data.team);
       setTeamUsers(Array.isArray(data.teamUsers) ? data.teamUsers : []);
       setAvailableUsers(Array.isArray(data.availableUsers) ? data.availableUsers : []);
@@ -81,8 +78,8 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       setMailEnabled(adminData.mailEnabled);
       setLockedUsers(adminData.lockedUsers || []);
     } catch (error) {
-      console.error('Failed to fetch team details:', error);
-      alert({ alertType: 'error', title: t('workspace.teams.loadError', 'Failed to load team details') });
+      console.error("Failed to fetch team details:", error);
+      alert({ alertType: "error", title: t("workspace.teams.loadError", "Failed to load team details") });
       onBack();
     } finally {
       setLoading(false);
@@ -94,65 +91,70 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       const teams = await teamService.getTeams();
       setAllTeams(teams);
     } catch (error) {
-      console.error('Failed to fetch teams:', error);
+      console.error("Failed to fetch teams:", error);
     }
   };
 
   const handleAddMember = async () => {
     if (!selectedUserId) {
-      alert({ alertType: 'error', title: t('workspace.teams.addMemberToTeam.selectUserRequired', 'Please select a user') });
+      alert({ alertType: "error", title: t("workspace.teams.addMemberToTeam.selectUserRequired", "Please select a user") });
       return;
     }
 
     try {
       setProcessing(true);
       await teamService.addUserToTeam(teamId, parseInt(selectedUserId));
-      alert({ alertType: 'success', title: t('workspace.teams.addMemberToTeam.success', 'User added to team successfully') });
+      alert({ alertType: "success", title: t("workspace.teams.addMemberToTeam.success", "User added to team successfully") });
       setAddMemberModalOpened(false);
-      setSelectedUserId('');
+      setSelectedUserId("");
       fetchTeamDetails();
     } catch (error: unknown) {
-      console.error('Failed to add member:', error);
+      console.error("Failed to add member:", error);
       const errorMessage = isAxiosError(error)
-        ? (error.response?.data?.message || error.response?.data?.error || error.message)
-        : (error instanceof Error ? error.message : undefined) || t('workspace.teams.addMemberToTeam.error', 'Failed to add user to team');
-      alert({ alertType: 'error', title: errorMessage });
+        ? error.response?.data?.message || error.response?.data?.error || error.message
+        : (error instanceof Error ? error.message : undefined) ||
+          t("workspace.teams.addMemberToTeam.error", "Failed to add user to team");
+      alert({ alertType: "error", title: errorMessage });
     } finally {
       setProcessing(false);
     }
   };
 
   const handleRemoveMember = async (user: User) => {
-    if (!window.confirm(t('workspace.teams.confirmRemove', `Remove ${user.username} from this team?`))) {
+    if (!window.confirm(t("workspace.teams.confirmRemove", `Remove ${user.username} from this team?`))) {
       return;
     }
 
     try {
       setProcessing(true);
       // Find the Default team ID
-      const defaultTeam = allTeams.find(t => t.name === 'Default');
+      const defaultTeam = allTeams.find((t) => t.name === "Default");
 
       if (!defaultTeam) {
-        throw new Error('Default team not found');
+        throw new Error("Default team not found");
       }
 
       // Move user to Default team by updating their role with the Default team ID
-      await teamService.moveUserToTeam(user.username, user.rolesAsString || 'ROLE_USER', defaultTeam.id);
-      alert({ alertType: 'success', title: t('workspace.teams.removeMemberSuccess', 'User removed from team') });
+      await teamService.moveUserToTeam(user.username, user.rolesAsString || "ROLE_USER", defaultTeam.id);
+      alert({ alertType: "success", title: t("workspace.teams.removeMemberSuccess", "User removed from team") });
       fetchTeamDetails();
     } catch (error: unknown) {
-      console.error('Failed to remove member:', error);
+      console.error("Failed to remove member:", error);
       const errorMessage = isAxiosError(error)
-        ? (error.response?.data?.message || error.response?.data?.error || error.message)
-        : (error instanceof Error ? error.message : undefined) || t('workspace.teams.removeMemberError', 'Failed to remove user from team');
-      alert({ alertType: 'error', title: errorMessage });
+        ? error.response?.data?.message || error.response?.data?.error || error.message
+        : (error instanceof Error ? error.message : undefined) ||
+          t("workspace.teams.removeMemberError", "Failed to remove user from team");
+      alert({ alertType: "error", title: errorMessage });
     } finally {
       setProcessing(false);
     }
   };
 
   const handleDeleteUser = async (user: User) => {
-    const confirmMessage = t('workspace.people.confirmDelete', 'Are you sure you want to delete this user? This action cannot be undone.');
+    const confirmMessage = t(
+      "workspace.people.confirmDelete",
+      "Are you sure you want to delete this user? This action cannot be undone.",
+    );
     if (!window.confirm(`${confirmMessage}\n\nUser: ${user.username}`)) {
       return;
     }
@@ -160,42 +162,43 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
     try {
       setProcessing(true);
       await userManagementService.deleteUser(user.username);
-      alert({ alertType: 'success', title: t('workspace.people.deleteUserSuccess', 'User deleted successfully') });
+      alert({ alertType: "success", title: t("workspace.people.deleteUserSuccess", "User deleted successfully") });
       fetchTeamDetails();
     } catch (error: unknown) {
-      console.error('Failed to delete user:', error);
+      console.error("Failed to delete user:", error);
       const errorMessage = isAxiosError(error)
-        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        ? error.response?.data?.message || error.response?.data?.error || error.message
         : (error instanceof Error ? error.message : undefined) ||
-        t('workspace.people.deleteUserError', 'Failed to delete user');
-      alert({ alertType: 'error', title: errorMessage });
+          t("workspace.people.deleteUserError", "Failed to delete user");
+      alert({ alertType: "error", title: errorMessage });
     } finally {
       setProcessing(false);
     }
   };
 
   const handleUnlockUser = async (user: User) => {
-    const confirmMessage = t('workspace.people.confirmUnlock', 'Are you sure you want to unlock this user account?');
+    const confirmMessage = t("workspace.people.confirmUnlock", "Are you sure you want to unlock this user account?");
     if (!window.confirm(`${confirmMessage}\n\nUser: ${user.username}`)) {
       return;
     }
 
     try {
       await userManagementService.unlockUser(user.username);
-      alert({ alertType: 'success', title: t('workspace.people.unlockUserSuccess', 'User account unlocked successfully') });
+      alert({ alertType: "success", title: t("workspace.people.unlockUserSuccess", "User account unlocked successfully") });
       fetchTeamDetails();
     } catch (error: unknown) {
-      console.error('[TeamDetailsSection] Failed to unlock user:', error);
+      console.error("[TeamDetailsSection] Failed to unlock user:", error);
       const errorMessage = isAxiosError(error)
-        ? (error.response?.data?.message || error.response?.data?.error || error.message)
-        : (error instanceof Error ? error.message : undefined) || t('workspace.people.unlockUserError', 'Failed to unlock user account');
-      alert({ alertType: 'error', title: errorMessage });
+        ? error.response?.data?.message || error.response?.data?.error || error.message
+        : (error instanceof Error ? error.message : undefined) ||
+          t("workspace.people.unlockUserError", "Failed to unlock user account");
+      alert({ alertType: "error", title: errorMessage });
     }
   };
 
   const openChangeTeamModal = (user: User) => {
     setSelectedUser(user);
-    setSelectedTeamId(user.team?.id?.toString() || '');
+    setSelectedTeamId(user.team?.id?.toString() || "");
     setChangeTeamModalOpened(true);
   };
 
@@ -211,25 +214,29 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
 
   const handleChangeTeam = async () => {
     if (!selectedUser || !selectedTeamId) {
-      alert({ alertType: 'error', title: t('workspace.teams.changeTeam.selectTeamRequired', 'Please select a team') });
+      alert({ alertType: "error", title: t("workspace.teams.changeTeam.selectTeamRequired", "Please select a team") });
       return;
     }
 
     try {
       setProcessing(true);
-      await teamService.moveUserToTeam(selectedUser.username, selectedUser.rolesAsString || 'ROLE_USER', parseInt(selectedTeamId));
-      alert({ alertType: 'success', title: t('workspace.teams.changeTeam.success', 'Team changed successfully') });
+      await teamService.moveUserToTeam(
+        selectedUser.username,
+        selectedUser.rolesAsString || "ROLE_USER",
+        parseInt(selectedTeamId),
+      );
+      alert({ alertType: "success", title: t("workspace.teams.changeTeam.success", "Team changed successfully") });
       setChangeTeamModalOpened(false);
       setSelectedUser(null);
-      setSelectedTeamId('');
+      setSelectedTeamId("");
       fetchTeamDetails();
     } catch (error: unknown) {
-      console.error('Failed to change team:', error);
+      console.error("Failed to change team:", error);
       const errorMessage = isAxiosError(error)
-        ? (error.response?.data?.message || error.response?.data?.error || error.message)
+        ? error.response?.data?.message || error.response?.data?.error || error.message
         : (error instanceof Error ? error.message : undefined) ||
-        t('workspace.teams.changeTeam.error', 'Failed to change team');
-      alert({ alertType: 'error', title: errorMessage });
+          t("workspace.teams.changeTeam.error", "Failed to change team");
+      alert({ alertType: "error", title: errorMessage });
     } finally {
       setProcessing(false);
     }
@@ -240,7 +247,7 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       <Stack align="center" py="xl">
         <Loader size="sm" />
         <Text size="sm" c="dimmed">
-          {t('workspace.teams.loadingDetails', 'Loading team details...')}
+          {t("workspace.teams.loadingDetails", "Loading team details...")}
         </Text>
       </Stack>
     );
@@ -250,10 +257,10 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
     return (
       <Stack align="center" py="xl">
         <Text size="sm" c="red">
-          {t('workspace.teams.teamNotFound', 'Team not found')}
+          {t("workspace.teams.teamNotFound", "Team not found")}
         </Text>
         <Button variant="light" onClick={onBack}>
-          {t('workspace.teams.backToTeams', 'Back to Teams')}
+          {t("workspace.teams.backToTeams", "Back to Teams")}
         </Button>
       </Stack>
     );
@@ -271,7 +278,7 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
             {team.name}
           </Text>
           <Text size="sm" c="dimmed">
-            {t('workspace.teams.memberCount', { count: teamUsers.length })} {teamUsers.length === 1 ? 'member' : 'members'}
+            {t("workspace.teams.memberCount", { count: teamUsers.length })} {teamUsers.length === 1 ? "member" : "members"}
           </Text>
         </div>
       </Group>
@@ -279,7 +286,7 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
       {/* Add Member Button */}
       <Group justify="flex-end">
         <Tooltip
-          label={t('workspace.people.license.noSlotsAvailable', 'No user slots available')}
+          label={t("workspace.people.license.noSlotsAvailable", "No user slots available")}
           disabled={!licenseInfo || licenseInfo.availableSlots > 0}
           position="bottom"
           withArrow
@@ -288,9 +295,9 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
           <Button
             leftSection={<LocalIcon icon="person-add" width="1rem" height="1rem" />}
             onClick={() => setAddMemberModalOpened(true)}
-            disabled={team.name === 'Internal' || (licenseInfo ? licenseInfo.availableSlots === 0 : false)}
+            disabled={team.name === "Internal" || (licenseInfo ? licenseInfo.availableSlots === 0 : false)}
           >
-            {t('workspace.teams.addMember')}
+            {t("workspace.teams.addMember")}
           </Button>
         </Tooltip>
       </Group>
@@ -300,105 +307,110 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
         horizontalSpacing="md"
         verticalSpacing="sm"
         withRowBorders
-        style={{
-          '--table-border-color': 'var(--mantine-color-gray-3)',
-        } as React.CSSProperties}
+        style={
+          {
+            "--table-border-color": "var(--mantine-color-gray-3)",
+          } as React.CSSProperties
+        }
       >
         <Table.Thead>
-          <Table.Tr style={{ backgroundColor: 'var(--mantine-color-gray-0)' }}>
-            <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm">
-              {t('workspace.people.user')}
+          <Table.Tr style={{ backgroundColor: "var(--mantine-color-gray-0)" }}>
+            <Table.Th style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)" }} fz="sm">
+              {t("workspace.people.user")}
             </Table.Th>
-            <Table.Th style={{ fontWeight: 600, color: 'var(--mantine-color-gray-7)' }} fz="sm" w={100}>
-              {t('workspace.people.role')}
+            <Table.Th style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)" }} fz="sm" w={100}>
+              {t("workspace.people.role")}
             </Table.Th>
             <Table.Th w={50}></Table.Th>
           </Table.Tr>
         </Table.Thead>
-          <Table.Tbody>
-            {teamUsers.length === 0 ? (
-              <Table.Tr>
-                <Table.Td colSpan={3}>
-                  <Text ta="center" c="dimmed" py="xl">
-                    {t('workspace.teams.noMembers', 'No members in this team')}
-                  </Text>
-                </Table.Td>
-              </Table.Tr>
-            ) : (
-              teamUsers.map((user) => {
-                const isActive = userLastRequest[user.username] &&
-                  (Date.now() - userLastRequest[user.username]) < 5 * 60 * 1000; // Active within last 5 minutes
+        <Table.Tbody>
+          {teamUsers.length === 0 ? (
+            <Table.Tr>
+              <Table.Td colSpan={3}>
+                <Text ta="center" c="dimmed" py="xl">
+                  {t("workspace.teams.noMembers", "No members in this team")}
+                </Text>
+              </Table.Td>
+            </Table.Tr>
+          ) : (
+            teamUsers.map((user) => {
+              const isActive = userLastRequest[user.username] && Date.now() - userLastRequest[user.username] < 5 * 60 * 1000; // Active within last 5 minutes
 
-                return (
-                  <Table.Tr key={user.id}>
-                    <Table.Td>
-                      <Group gap="xs" wrap="nowrap">
-                        <Tooltip
-                          label={
-                            !user.enabled
-                              ? t('workspace.people.disabled', 'Disabled')
-                              : isActive
-                                ? t('workspace.people.activeSession', 'Active session')
-                                : t('workspace.people.active', 'Active')
-                          }
-                          zIndex={Z_INDEX_OVER_CONFIG_MODAL}
-                        >
-                          <Avatar
-                            size={32}
-                            color={user.enabled ? 'blue' : 'gray'}
-                            styles={{
-                              root: {
-                                border: isActive ? '2px solid var(--mantine-color-green-6)' : 'none',
-                                opacity: user.enabled ? 1 : 0.5,
-                              }
-                            }}
-                          >
-                            {user.username.charAt(0).toUpperCase()}
-                          </Avatar>
-                        </Tooltip>
-                        <Box style={{ minWidth: 0, flex: 1 }}>
-                          <Group gap={6} wrap="nowrap" align="center">
-                            <Tooltip label={user.username} disabled={user.username.length <= 20} zIndex={Z_INDEX_OVER_CONFIG_MODAL}>
-                              <Text
-                                size="sm"
-                                fw={500}
-                                maw={200}
-                                style={{
-                                  lineHeight: 1.3,
-                                  opacity: user.enabled ? 1 : 0.6,
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap',
-                                }}
-                              >
-                                {user.username}
-                              </Text>
-                            </Tooltip>
-                            {isLockedUser(user) && (
-                              <Badge color="orange" variant="light" size="xs">
-                                {t('workspace.people.lockedBadge', 'Locked')}
-                              </Badge>
-                            )}
-                          </Group>
-                          {user.email && (
-                            <Text size="xs" c="dimmed" truncate style={{ lineHeight: 1.3 }}>
-                              {user.email}
-                            </Text>
-                          )}
-                        </Box>
-                      </Group>
-                    </Table.Td>
-                    <Table.Td w={100}>
-                      <Badge
-                        size="sm"
-                        color={(user.rolesAsString || '').includes('ROLE_ADMIN') ? 'blue' : 'cyan'}
-                        variant="light"
+              return (
+                <Table.Tr key={user.id}>
+                  <Table.Td>
+                    <Group gap="xs" wrap="nowrap">
+                      <Tooltip
+                        label={
+                          !user.enabled
+                            ? t("workspace.people.disabled", "Disabled")
+                            : isActive
+                              ? t("workspace.people.activeSession", "Active session")
+                              : t("workspace.people.active", "Active")
+                        }
+                        zIndex={Z_INDEX_OVER_CONFIG_MODAL}
                       >
-                        {(user.rolesAsString || '').includes('ROLE_ADMIN')
-                          ? t('workspace.people.admin')
-                          : t('workspace.people.member')}
-                      </Badge>
-                    </Table.Td>
+                        <Avatar
+                          size={32}
+                          color={user.enabled ? "blue" : "gray"}
+                          styles={{
+                            root: {
+                              border: isActive ? "2px solid var(--mantine-color-green-6)" : "none",
+                              opacity: user.enabled ? 1 : 0.5,
+                            },
+                          }}
+                        >
+                          {user.username.charAt(0).toUpperCase()}
+                        </Avatar>
+                      </Tooltip>
+                      <Box style={{ minWidth: 0, flex: 1 }}>
+                        <Group gap={6} wrap="nowrap" align="center">
+                          <Tooltip
+                            label={user.username}
+                            disabled={user.username.length <= 20}
+                            zIndex={Z_INDEX_OVER_CONFIG_MODAL}
+                          >
+                            <Text
+                              size="sm"
+                              fw={500}
+                              maw={200}
+                              style={{
+                                lineHeight: 1.3,
+                                opacity: user.enabled ? 1 : 0.6,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {user.username}
+                            </Text>
+                          </Tooltip>
+                          {isLockedUser(user) && (
+                            <Badge color="orange" variant="light" size="xs">
+                              {t("workspace.people.lockedBadge", "Locked")}
+                            </Badge>
+                          )}
+                        </Group>
+                        {user.email && (
+                          <Text size="xs" c="dimmed" truncate style={{ lineHeight: 1.3 }}>
+                            {user.email}
+                          </Text>
+                        )}
+                      </Box>
+                    </Group>
+                  </Table.Td>
+                  <Table.Td w={100}>
+                    <Badge
+                      size="sm"
+                      color={(user.rolesAsString || "").includes("ROLE_ADMIN") ? "blue" : "cyan"}
+                      variant="light"
+                    >
+                      {(user.rolesAsString || "").includes("ROLE_ADMIN")
+                        ? t("workspace.people.admin")
+                        : t("workspace.people.member")}
+                    </Badge>
+                  </Table.Td>
                   <Table.Td>
                     <Group gap="xs" wrap="nowrap">
                       {/* Info icon with tooltip */}
@@ -406,13 +418,13 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
                         label={
                           <div>
                             <Text size="xs" fw={500}>
-                              Authentication: {user.authenticationType || 'Unknown'}
+                              Authentication: {user.authenticationType || "Unknown"}
                             </Text>
                             <Text size="xs">
-                              Last Activity:{' '}
+                              Last Activity:{" "}
                               {userLastRequest[user.username]
                                 ? new Date(userLastRequest[user.username]).toLocaleString()
-                                : 'Never'}
+                                : "Never"}
                             </Text>
                           </div>
                         }
@@ -438,16 +450,16 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
                           <Menu.Item
                             leftSection={<LocalIcon icon="swap-horiz" width="1rem" height="1rem" />}
                             onClick={() => openChangeTeamModal(user)}
-                            disabled={processing || team.name === 'Internal'}
+                            disabled={processing || team.name === "Internal"}
                           >
-                            {t('workspace.teams.changeTeam.label', 'Change Team')}
+                            {t("workspace.teams.changeTeam.label", "Change Team")}
                           </Menu.Item>
                           <Menu.Item
                             leftSection={<LocalIcon icon="lock" width="1rem" height="1rem" />}
                             onClick={() => openChangePasswordModal(user)}
                             disabled={processing}
                           >
-                            {t('workspace.people.changePassword.action', 'Change password')}
+                            {t("workspace.people.changePassword.action", "Change password")}
                           </Menu.Item>
                           {isLockedUser(user) && (
                             <Menu.Item
@@ -455,16 +467,16 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
                               onClick={() => handleUnlockUser(user)}
                               disabled={processing}
                             >
-                              {t('workspace.people.unlockAccount', 'Unlock Account')}
+                              {t("workspace.people.unlockAccount", "Unlock Account")}
                             </Menu.Item>
                           )}
-                          {team.name !== 'Internal' && team.name !== 'Default' && (
+                          {team.name !== "Internal" && team.name !== "Default" && (
                             <Menu.Item
                               leftSection={<LocalIcon icon="person-remove" width="1rem" height="1rem" />}
                               onClick={() => handleRemoveMember(user)}
                               disabled={processing}
                             >
-                              {t('workspace.teams.removeMember', 'Remove from team')}
+                              {t("workspace.teams.removeMember", "Remove from team")}
                             </Menu.Item>
                           )}
                           <Menu.Divider />
@@ -472,19 +484,19 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
                             color="red"
                             leftSection={<LocalIcon icon="delete" width="1rem" height="1rem" />}
                             onClick={() => handleDeleteUser(user)}
-                            disabled={processing || team.name === 'Internal'}
+                            disabled={processing || team.name === "Internal"}
                           >
-                            {t('workspace.people.deleteUser', 'Delete User')}
+                            {t("workspace.people.deleteUser", "Delete User")}
                           </Menu.Item>
                         </Menu.Dropdown>
                       </Menu>
                     </Group>
                   </Table.Td>
                 </Table.Tr>
-                );
-              })
-            )}
-          </Table.Tbody>
+              );
+            })
+          )}
+        </Table.Tbody>
       </Table>
 
       <ChangeUserPasswordModal
@@ -505,12 +517,12 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
         padding="xl"
         withCloseButton={false}
       >
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: "relative" }}>
           <CloseButton
             onClick={() => setAddMemberModalOpened(false)}
             size="lg"
             style={{
-              position: 'absolute',
+              position: "absolute",
               top: -8,
               right: -8,
               zIndex: 1,
@@ -519,36 +531,36 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
-              <LocalIcon icon="person-add" width="3rem" height="3rem" style={{ color: 'var(--mantine-color-gray-6)' }} />
+              <LocalIcon icon="person-add" width="3rem" height="3rem" style={{ color: "var(--mantine-color-gray-6)" }} />
               <Text size="xl" fw={600} ta="center">
-                {t('workspace.teams.addMemberToTeam.title')}
+                {t("workspace.teams.addMemberToTeam.title")}
               </Text>
               <Text size="sm" c="dimmed" ta="center">
-                {t('workspace.teams.addMemberToTeam.addingTo')} <strong>{team.name}</strong>
+                {t("workspace.teams.addMemberToTeam.addingTo")} <strong>{team.name}</strong>
               </Text>
             </Stack>
 
             <Select
-              label={t('workspace.teams.addMemberToTeam.selectUser')}
-              placeholder={t('workspace.teams.addMemberToTeam.selectUserPlaceholder')}
+              label={t("workspace.teams.addMemberToTeam.selectUser")}
+              placeholder={t("workspace.teams.addMemberToTeam.selectUserPlaceholder")}
               data={availableUsers.map((user) => ({
                 value: user.id.toString(),
-                label: `${user.username}${user.team ? ` (${t('workspace.teams.addMemberToTeam.currentlyIn')} ${user.team.name})` : ''}`,
+                label: `${user.username}${user.team ? ` (${t("workspace.teams.addMemberToTeam.currentlyIn")} ${user.team.name})` : ""}`,
               }))}
               value={selectedUserId}
-              onChange={(value) => setSelectedUserId(value || '')}
+              onChange={(value) => setSelectedUserId(value || "")}
               searchable
               comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
             />
 
             {selectedUserId && availableUsers.find((u) => u.id.toString() === selectedUserId)?.team && (
               <Text size="xs" c="orange">
-                {t('workspace.teams.addMemberToTeam.willBeMoved')}
+                {t("workspace.teams.addMemberToTeam.willBeMoved")}
               </Text>
             )}
 
             <Button onClick={handleAddMember} loading={processing} fullWidth size="md" mt="md">
-              {t('workspace.teams.addMemberToTeam.submit')}
+              {t("workspace.teams.addMemberToTeam.submit")}
             </Button>
           </Stack>
         </div>
@@ -564,12 +576,12 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
         padding="xl"
         withCloseButton={false}
       >
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: "relative" }}>
           <CloseButton
             onClick={() => setChangeTeamModalOpened(false)}
             size="lg"
             style={{
-              position: 'absolute',
+              position: "absolute",
               top: -8,
               right: -8,
               zIndex: 1,
@@ -578,32 +590,32 @@ export default function TeamDetailsSection({ teamId, onBack }: TeamDetailsSectio
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
-              <LocalIcon icon="swap-horiz" width="3rem" height="3rem" style={{ color: 'var(--mantine-color-gray-6)' }} />
+              <LocalIcon icon="swap-horiz" width="3rem" height="3rem" style={{ color: "var(--mantine-color-gray-6)" }} />
               <Text size="xl" fw={600} ta="center">
-                {t('workspace.teams.changeTeam.title', 'Change Team')}
+                {t("workspace.teams.changeTeam.title", "Change Team")}
               </Text>
               <Text size="sm" c="dimmed" ta="center">
-                {t('workspace.teams.changeTeam.changing', 'Moving')} <strong>{selectedUser?.username}</strong>
+                {t("workspace.teams.changeTeam.changing", "Moving")} <strong>{selectedUser?.username}</strong>
               </Text>
             </Stack>
 
             <Select
-              label={t('workspace.teams.changeTeam.selectTeam', 'Select Team')}
-              placeholder={t('workspace.teams.changeTeam.selectTeamPlaceholder', 'Choose a team')}
+              label={t("workspace.teams.changeTeam.selectTeam", "Select Team")}
+              placeholder={t("workspace.teams.changeTeam.selectTeamPlaceholder", "Choose a team")}
               data={allTeams
-                .filter((t) => t.name !== 'Internal')
+                .filter((t) => t.name !== "Internal")
                 .map((team) => ({
                   value: team.id.toString(),
                   label: team.name,
                 }))}
               value={selectedTeamId}
-              onChange={(value) => setSelectedTeamId(value || '')}
+              onChange={(value) => setSelectedTeamId(value || "")}
               searchable
               comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
             />
 
             <Button onClick={handleChangeTeam} loading={processing} fullWidth size="md" mt="md">
-              {t('workspace.teams.changeTeam.submit', 'Change Team')}
+              {t("workspace.teams.changeTeam.submit", "Change Team")}
             </Button>
           </Stack>
         </div>
