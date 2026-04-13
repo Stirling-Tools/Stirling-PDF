@@ -116,6 +116,25 @@ export const useToolOperation = <TParams>(config: ToolOperationConfig<TParams>):
         return;
       }
 
+      // Block encrypted files from being sent to backend tools
+      const encryptedFiles = validFiles.filter((f) => {
+        const stub = selectors.getStirlingFileStub(f.fileId);
+        return stub?.processedFile?.isEncrypted === true;
+      });
+      if (encryptedFiles.length > 0) {
+        for (const ef of encryptedFiles) {
+          fileActions.openEncryptedUnlockPrompt(ef.fileId);
+        }
+        actions.setError(
+          encryptedFiles.length === 1
+            ? t("encryptedFileBlocked", "File is password-protected. Unlock it first.")
+            : t("encryptedFilesBlocked", "{{count}} files are password-protected. Unlock them first.", {
+                count: encryptedFiles.length,
+              }),
+        );
+        return;
+      }
+
       // Resolve the runtime endpoint from params (static string or function result).
       // Custom processors may omit endpoint entirely — result is undefined in that case.
       const runtimeEndpoint: string | undefined = config.endpoint

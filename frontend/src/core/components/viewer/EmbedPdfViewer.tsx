@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Box, Center, Text, ActionIcon } from "@mantine/core";
+import { Box, Center, Text, ActionIcon, Button, Stack } from "@mantine/core";
 import CloseIcon from "@mui/icons-material/Close";
+import LockIcon from "@mui/icons-material/Lock";
 
 import { useFileState, useFileActions } from "@app/contexts/FileContext";
 import { useFileWithUrl } from "@app/hooks/useFileWithUrl";
@@ -349,6 +350,13 @@ const EmbedPdfViewerContent = ({
       return fileWithUrl;
     }
   }, [previewFile, fileWithUrl]);
+
+  // Check if the current file is encrypted (gate the viewer to prevent PDFium crash)
+  const isCurrentFileEncrypted = React.useMemo(() => {
+    if (!currentFile || !isStirlingFile(currentFile)) return false;
+    const stub = selectors.getStirlingFileStub(currentFile.fileId);
+    return stub?.processedFile?.isEncrypted === true;
+  }, [currentFile, selectors]);
 
   const bookmarkCacheKey = React.useMemo(() => {
     if (currentFile && isStirlingFile(currentFile)) {
@@ -1045,7 +1053,7 @@ const EmbedPdfViewerContent = ({
       console.log("[FormFill] Fetching form fields for:", currentFileId);
       fetchFormFields(currentFile, currentFileId ?? undefined);
     }
-  }, [isFormFillToolActive, currentFile, currentFileId, fetchFormFields]);
+  }, [isFormFillToolActive, currentFile, currentFileId, fetchFormFields, isCurrentFileEncrypted]);
 
   const sidebarWidthRem = 15;
   const commentsSidebarWidthRem = 18;
@@ -1086,6 +1094,23 @@ const EmbedPdfViewerContent = ({
       {!effectiveFile ? (
         <Center style={{ flex: 1 }}>
           <Text c="red">Error: No file provided to viewer</Text>
+        </Center>
+      ) : isCurrentFileEncrypted ? (
+        <Center style={{ flex: 1 }}>
+          <Stack align="center" gap="md">
+            <LockIcon style={{ fontSize: 48, opacity: 0.5 }} />
+            <Text fw={500}>This PDF is password-protected</Text>
+            <Button
+              variant="filled"
+              onClick={() => {
+                if (currentFile && isStirlingFile(currentFile)) {
+                  actions.openEncryptedUnlockPrompt(currentFile.fileId);
+                }
+              }}
+            >
+              Unlock
+            </Button>
+          </Stack>
         </Center>
       ) : (
         <>
