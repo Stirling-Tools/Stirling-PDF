@@ -1,6 +1,6 @@
-import { Stack, Text, NumberInput, Slider } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { ConvertParameters } from '@app/hooks/tools/convert/useConvertParameters';
+import { Stack, Text, NumberInput, Slider } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 
 interface ConvertFromWebSettingsProps {
   parameters: ConvertParameters;
@@ -8,25 +8,27 @@ interface ConvertFromWebSettingsProps {
   disabled?: boolean;
 }
 
-const ConvertFromWebSettings = ({
-  parameters,
-  onParameterChange,
-  disabled = false
-}: ConvertFromWebSettingsProps) => {
+const ConvertFromWebSettings = ({ parameters, onParameterChange, disabled = false }: ConvertFromWebSettingsProps) => {
   const { t } = useTranslation();
 
   return (
     <Stack gap="sm" data-testid="web-settings">
-      <Text size="sm" fw={500}>{t("convert.webOptions", "Web to PDF Options")}:</Text>
+      <Text size="sm" fw={500}>
+        {t("convert.webOptions", "Web to PDF Options")}:
+      </Text>
 
       <Stack gap="xs">
-        <Text size="xs" fw={500}>{t("convert.zoomLevel", "Zoom Level")}:</Text>
+        <Text size="xs" fw={500}>
+          {t("convert.zoomLevel", "Zoom Level")}:
+        </Text>
         <NumberInput
           value={parameters.htmlOptions.zoomLevel}
-          onChange={(value) => onParameterChange('htmlOptions', {
-            ...parameters.htmlOptions,
-            zoomLevel: Number(value) || 1.0
-          })}
+          onChange={(value) =>
+            onParameterChange("htmlOptions", {
+              ...parameters.htmlOptions,
+              zoomLevel: Number(value) || 1.0,
+            })
+          }
           min={0.1}
           max={3.0}
           step={0.1}
@@ -35,10 +37,12 @@ const ConvertFromWebSettings = ({
         />
         <Slider
           value={parameters.htmlOptions.zoomLevel}
-          onChange={(value) => onParameterChange('htmlOptions', {
-            ...parameters.htmlOptions,
-            zoomLevel: value
-          })}
+          onChange={(value) =>
+            onParameterChange("htmlOptions", {
+              ...parameters.htmlOptions,
+              zoomLevel: value,
+            })
+          }
           min={0.1}
           max={3.0}
           step={0.1}

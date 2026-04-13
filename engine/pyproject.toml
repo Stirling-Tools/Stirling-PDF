@@ -42,9 +42,8 @@ select = [
     "W",
     "RUF100",
     "UP",
-]
-ignore = [
-    "E501", # Temporarily disable line length limit until codebase conformat
+    "PYI",    # flake8-pyi: flags deprecated typing constructs
+    "FA",     # flake8-future-annotations: flags missing future annotations imports
 ]
 
 [tool.pyright]
@@ -55,6 +54,7 @@ reportUnnecessaryCast = "warning"
 reportUnnecessaryTypeIgnoreComment = "warning"
 reportUnusedImport = "warning"
 reportUnknownParameterType = "warning"
+reportDeprecated = "warning"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

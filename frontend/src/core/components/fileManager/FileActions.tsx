@@ -30,9 +30,8 @@ const FileActions: React.FC = () => {
     onDownloadSelected,
     refreshRecentFiles,
     storageFilter,
-    onStorageFilterChange
-  } =
-    useFileManagerContext();
+    onStorageFilterChange,
+  } = useFileManagerContext();
   const uploadEnabled = config?.storageEnabled === true;
   const sharingEnabled = uploadEnabled && config?.storageSharingEnabled === true;
   const shareLinksEnabled = sharingEnabled && config?.storageShareLinksEnabled === true;
@@ -42,11 +41,11 @@ const FileActions: React.FC = () => {
         { value: "all", label: t("fileManager.filterAll", "All") },
         { value: "local", label: t("fileManager.filterLocal", "Local") },
         { value: "sharedWithMe", label: t("fileManager.filterSharedWithMe", "Shared with me") },
-        { value: "sharedByMe", label: t("fileManager.filterSharedByMe", "Shared by me") }
+        { value: "sharedByMe", label: t("fileManager.filterSharedByMe", "Shared by me") },
       ]
     : [
         { value: "all", label: t("fileManager.filterAll", "All") },
-        { value: "local", label: t("fileManager.filterLocal", "Local") }
+        { value: "local", label: t("fileManager.filterLocal", "Local") },
       ];
   useEffect(() => {
     if (!sharingEnabled && (storageFilter === "sharedWithMe" || storageFilter === "sharedByMe")) {
@@ -56,10 +55,8 @@ const FileActions: React.FC = () => {
   const hasSelection = selectedFileIds.length > 0;
   const hasOnlyOwnedSelection = selectedFiles.every((file) => file.remoteOwnedByCurrentUser !== false);
   const hasDownloadAccess = selectedFiles.every((file) => {
-    const role = (file.remoteOwnedByCurrentUser !== false
-      ? 'editor'
-      : (file.remoteAccessRole ?? 'viewer')).toLowerCase();
-    return role === 'editor' || role === 'commenter' || role === 'viewer';
+    const role = (file.remoteOwnedByCurrentUser !== false ? "editor" : (file.remoteAccessRole ?? "viewer")).toLowerCase();
+    return role === "editor" || role === "commenter" || role === "viewer";
   });
   const canBulkUpload = uploadEnabled && hasSelection && hasOnlyOwnedSelection;
   const canBulkShare = shareLinksEnabled && hasSelection && hasOnlyOwnedSelection;
@@ -79,7 +76,6 @@ const FileActions: React.FC = () => {
       onDownloadSelected();
     }
   };
-
 
   // Only show actions if there are files
   if (recentFiles.length === 0) {
@@ -120,9 +116,7 @@ const FileActions: React.FC = () => {
           <SegmentedControl
             size="xs"
             value={storageFilter}
-            onChange={(value) =>
-              onStorageFilterChange(value as "all" | "local" | "sharedWithMe" | "sharedByMe")
-            }
+            onChange={(value) => onStorageFilterChange(value as "all" | "local" | "sharedWithMe" | "sharedByMe")}
             data={storageFilterOptions}
           />
         )}

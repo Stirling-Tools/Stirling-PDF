@@ -2,8 +2,8 @@
  * React contexts for file state and actions
  */
 
-import { createContext } from 'react';
-import { FileContextStateValue, FileContextActionsValue } from '@app/types/fileContext';
+import { createContext } from "react";
+import { FileContextStateValue, FileContextActionsValue } from "@app/types/fileContext";
 
 // Split contexts for performance
 export const FileStateContext = createContext<FileContextStateValue | undefined>(undefined);

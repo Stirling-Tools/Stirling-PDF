@@ -1,40 +1,40 @@
-import React, { useCallback, useMemo } from 'react';
-import { ActionIcon, Divider } from '@mantine/core';
-import '@app/components/shared/rightRail/RightRail.css';
-import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import { useRightRail } from '@app/contexts/RightRailContext';
-import { useFileState, useFileSelection, useFileActions } from '@app/contexts/FileContext';
-import { isStirlingFile } from '@app/types/fileContext';
-import { useNavigationState } from '@app/contexts/NavigationContext';
-import { useTranslation } from 'react-i18next';
-import { useFileActionTerminology } from '@app/hooks/useFileActionTerminology';
-import { useFileActionIcons } from '@app/hooks/useFileActionIcons';
+import React, { useCallback, useMemo } from "react";
+import { ActionIcon, Divider } from "@mantine/core";
+import "@app/components/shared/rightRail/RightRail.css";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useRightRail } from "@app/contexts/RightRailContext";
+import { useFileState, useFileSelection, useFileActions } from "@app/contexts/FileContext";
+import { isStirlingFile } from "@app/types/fileContext";
+import { useNavigationState } from "@app/contexts/NavigationContext";
+import { useTranslation } from "react-i18next";
+import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
+import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 
-import LanguageSelector from '@app/components/shared/LanguageSelector';
-import { useRainbowThemeContext } from '@app/components/shared/RainbowThemeProvider';
-import { Tooltip } from '@app/components/shared/Tooltip';
-import { ViewerContext } from '@app/contexts/ViewerContext';
-import LocalIcon from '@app/components/shared/LocalIcon';
-import { RightRailFooterExtensions } from '@app/components/rightRail/RightRailFooterExtensions';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import LightModeIcon from '@mui/icons-material/LightMode';
+import LanguageSelector from "@app/components/shared/LanguageSelector";
+import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
+import { Tooltip } from "@app/components/shared/Tooltip";
+import { ViewerContext } from "@app/contexts/ViewerContext";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import { RightRailFooterExtensions } from "@app/components/rightRail/RightRailFooterExtensions";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import LightModeIcon from "@mui/icons-material/LightMode";
 
-import { useSidebarContext } from '@app/contexts/SidebarContext';
-import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from '@app/types/rightRail';
-import { useRightRailTooltipSide } from '@app/hooks/useRightRailTooltipSide';
-import { downloadFile } from '@app/services/downloadService';
+import { useSidebarContext } from "@app/contexts/SidebarContext";
+import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from "@app/types/rightRail";
+import { useRightRailTooltipSide } from "@app/hooks/useRightRailTooltipSide";
+import { downloadFile } from "@app/services/downloadService";
 
-const SECTION_ORDER: RightRailSection[] = ['top', 'middle', 'bottom'];
+const SECTION_ORDER: RightRailSection[] = ["top", "middle", "bottom"];
 
 function renderWithTooltip(
   node: React.ReactNode,
   tooltip: React.ReactNode | undefined,
-  position: 'left' | 'right',
-  offset: number
+  position: "left" | "right",
+  offset: number,
 ) {
   if (!tooltip) return node;
 
-  const portalTarget = typeof document !== 'undefined' ? document.body : undefined;
+  const portalTarget = typeof document !== "undefined" ? document.body : undefined;
 
   return (
     <Tooltip content={tooltip} position={position} offset={offset} arrow portalTarget={portalTarget}>
@@ -54,7 +54,7 @@ export default function RightRail() {
   const { buttons, actions, allButtonsDisabled } = useRightRail();
 
   const { pageEditorFunctions, toolPanelMode, leftPanelView } = useToolWorkflow();
-  const disableForFullscreen = toolPanelMode === 'fullscreen' && leftPanelView === 'toolPicker';
+  const disableForFullscreen = toolPanelMode === "fullscreen" && leftPanelView === "toolPicker";
 
   const { workbench: currentView } = useNavigationState();
 
@@ -66,24 +66,22 @@ export default function RightRail() {
   const pageEditorSelectedCount = pageEditorFunctions?.selectedPageIds?.length ?? 0;
 
   const totalItems = useMemo(() => {
-    if (currentView === 'pageEditor') return pageEditorTotalPages;
+    if (currentView === "pageEditor") return pageEditorTotalPages;
     return activeFiles.length;
   }, [currentView, pageEditorTotalPages, activeFiles.length]);
 
   const selectedCount = useMemo(() => {
-    if (currentView === 'pageEditor') {
+    if (currentView === "pageEditor") {
       return pageEditorSelectedCount;
     }
     return selectedFileIds.length;
   }, [currentView, pageEditorSelectedCount, selectedFileIds.length]);
 
   const sectionsWithButtons = useMemo(() => {
-    return SECTION_ORDER
-      .map(section => {
-        const sectionButtons = buttons.filter(btn => (btn.section ?? 'top') === section && (btn.visible ?? true));
-        return { section, buttons: sectionButtons };
-      })
-      .filter(entry => entry.buttons.length > 0);
+    return SECTION_ORDER.map((section) => {
+      const sectionButtons = buttons.filter((btn) => (btn.section ?? "top") === section && (btn.visible ?? true));
+      return { section, buttons: sectionButtons };
+    }).filter((entry) => entry.buttons.length > 0);
   }, [buttons]);
 
   const renderButton = useCallback(
@@ -110,20 +108,19 @@ export default function RightRail() {
 
       if (!btn.icon) return null;
 
-      const ariaLabel =
-        btn.ariaLabel || (typeof btn.tooltip === 'string' ? (btn.tooltip as string) : undefined);
-      const className = ['right-rail-icon', btn.className].filter(Boolean).join(' ');
+      const ariaLabel = btn.ariaLabel || (typeof btn.tooltip === "string" ? (btn.tooltip as string) : undefined);
+      const className = ["right-rail-icon", btn.className].filter(Boolean).join(" ");
       const buttonNode = (
         <ActionIcon
-          variant={isActive ? 'filled' : 'subtle'}
-          color={isActive ? 'blue' : undefined}
+          variant={isActive ? "filled" : "subtle"}
+          color={isActive ? "blue" : undefined}
           radius="md"
           className={className}
           onClick={triggerAction}
           disabled={disabled}
           aria-label={ariaLabel}
           aria-pressed={isActive ? true : undefined}
-          data-active={isActive ? 'true' : 'false'}
+          data-active={isActive ? "true" : "false"}
         >
           {btn.icon}
         </ActionIcon>
@@ -131,12 +128,12 @@ export default function RightRail() {
 
       return renderWithTooltip(buttonNode, btn.tooltip, tooltipPosition, tooltipOffset);
     },
-    [actions, allButtonsDisabled, disableForFullscreen, tooltipPosition, tooltipOffset]
+    [actions, allButtonsDisabled, disableForFullscreen, tooltipPosition, tooltipOffset],
   );
 
   const handleExportAll = useCallback(
     async (forceNewFile = false) => {
-      if (currentView === 'viewer') {
+      if (currentView === "viewer") {
         const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
         if (!buffer) return;
         const fileToExport = selectedFiles.length > 0 ? selectedFiles[0] : activeFiles[0];
@@ -144,7 +141,7 @@ export default function RightRail() {
         const stub = isStirlingFile(fileToExport) ? selectors.getStirlingFileStub(fileToExport.fileId) : undefined;
         try {
           const result = await downloadFile({
-            data: new Blob([buffer], { type: 'application/pdf' }),
+            data: new Blob([buffer], { type: "application/pdf" }),
             filename: fileToExport.name,
             localPath: forceNewFile ? undefined : stub?.localFilePath,
           });
@@ -155,12 +152,12 @@ export default function RightRail() {
             });
           }
         } catch (error) {
-          console.error('[RightRail] Failed to export viewer file:', error);
+          console.error("[RightRail] Failed to export viewer file:", error);
         }
         return;
       }
 
-      if (currentView === 'pageEditor') {
+      if (currentView === "pageEditor") {
         pageEditorFunctions?.onExportAll?.();
         return;
       }
@@ -184,27 +181,19 @@ export default function RightRail() {
               });
             }
           } catch (error) {
-            console.error('[RightRail] Failed to export file:', file.name, error);
+            console.error("[RightRail] Failed to export file:", file.name, error);
           }
         }
       }
     },
-    [
-      currentView,
-      selectedFiles,
-      activeFiles,
-      pageEditorFunctions,
-      viewerContext,
-      selectors,
-      fileActions,
-    ]
+    [currentView, selectedFiles, activeFiles, pageEditorFunctions, viewerContext, selectors, fileActions],
   );
 
   const downloadTooltip = useMemo(() => {
-    if (currentView === 'pageEditor') {
-      return t('rightRail.exportAll', 'Export PDF');
+    if (currentView === "pageEditor") {
+      return t("rightRail.exportAll", "Export PDF");
     }
-    if (currentView === 'viewer') {
+    if (currentView === "viewer") {
       return terminology.download;
     }
     if (selectedCount > 0) {
@@ -223,11 +212,7 @@ export default function RightRail() {
                 const content = renderButton(btn);
                 if (!content) return null;
                 return (
-                  <div
-                    key={btn.id}
-                    className="right-rail-button-wrapper"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
+                  <div key={btn.id} className="right-rail-button-wrapper" style={{ animationDelay: `${index * 50}ms` }}>
                     {content}
                   </div>
                 );
@@ -236,31 +221,24 @@ export default function RightRail() {
             <Divider className="right-rail-divider" />
           </React.Fragment>
         ))}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }} data-tour="right-rail-settings">
+        <div
+          style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}
+          data-tour="right-rail-settings"
+        >
           {renderWithTooltip(
-            <ActionIcon
-              variant="subtle"
-              radius="md"
-              className="right-rail-icon"
-              onClick={toggleTheme}
-            >
-              {themeMode === 'dark' ? (
-                <LightModeIcon sx={{ fontSize: '1.5rem' }} />
+            <ActionIcon variant="subtle" radius="md" className="right-rail-icon" onClick={toggleTheme}>
+              {themeMode === "dark" ? (
+                <LightModeIcon sx={{ fontSize: "1.5rem" }} />
               ) : (
-                <DarkModeIcon sx={{ fontSize: '1.5rem' }} />
+                <DarkModeIcon sx={{ fontSize: "1.5rem" }} />
               )}
             </ActionIcon>,
-            t('rightRail.toggleTheme', 'Toggle Theme'),
+            t("rightRail.toggleTheme", "Toggle Theme"),
             tooltipPosition,
-            tooltipOffset
+            tooltipOffset,
           )}
 
-          <LanguageSelector
-            position="left-start"
-            offset={6}
-            compact
-            tooltip={t('rightRail.language', 'Language')}
-          />
+          <LanguageSelector position="left-start" offset={6} compact tooltip={t("rightRail.language", "Language")} />
 
           {renderWithTooltip(
             <ActionIcon
@@ -268,16 +246,13 @@ export default function RightRail() {
               radius="md"
               className="right-rail-icon"
               onClick={() => handleExportAll()}
-              disabled={
-                disableForFullscreen ||
-                (currentView !== 'viewer' && (totalItems === 0 || allButtonsDisabled))
-              }
+              disabled={disableForFullscreen || (currentView !== "viewer" && (totalItems === 0 || allButtonsDisabled))}
             >
               <LocalIcon icon={icons.downloadIconName} width="1.5rem" height="1.5rem" />
             </ActionIcon>,
             downloadTooltip,
             tooltipPosition,
-            tooltipOffset
+            tooltipOffset,
           )}
           {icons.saveAsIconName &&
             renderWithTooltip(
@@ -286,16 +261,13 @@ export default function RightRail() {
                 radius="md"
                 className="right-rail-icon"
                 onClick={() => handleExportAll(true)}
-                disabled={
-                  disableForFullscreen ||
-                  (currentView !== 'viewer' && (totalItems === 0 || allButtonsDisabled))
-                }
+                disabled={disableForFullscreen || (currentView !== "viewer" && (totalItems === 0 || allButtonsDisabled))}
               >
                 <LocalIcon icon={icons.saveAsIconName} width="1.5rem" height="1.5rem" />
               </ActionIcon>,
-              t('rightRail.saveAs', 'Save As'),
+              t("rightRail.saveAs", "Save As"),
               tooltipPosition,
-              tooltipOffset
+              tooltipOffset,
             )}
         </div>
 

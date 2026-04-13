@@ -38,8 +38,8 @@ const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
   const hasResults = operation.files.length > 0 || operation.downloadUrl !== null;
 
   enum Step {
-    NONE = 'none',
-    SETTINGS = 'settings'
+    NONE = "none",
+    SETTINGS = "settings",
   }
 
   const accordion = useAccordionSteps<Step>({
@@ -47,12 +47,12 @@ const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
     initialStep: Step.SETTINGS,
     stateConditions: {
       hasFiles,
-      hasResults
+      hasResults,
     },
     afterResults: () => {
       operation.resetResults();
       onPreviewFile?.(null);
-    }
+    },
   });
 
   const steps = [
@@ -68,7 +68,7 @@ const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
           disabled={endpointLoading}
         />
       ),
-    }
+    },
   ];
 
   return createToolFlow({
@@ -78,9 +78,9 @@ const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
     },
     steps,
     executeButton: {
-      text: t('reorganizePages.submit', 'Reorganize Pages'),
+      text: t("reorganizePages.submit", "Reorganize Pages"),
       isVisible: !hasResults,
-      loadingText: t('loading'),
+      loadingText: t("loading"),
       onClick: handleExecute,
       endpointEnabled: endpointEnabled,
       paramsValid: params.validateParameters(),
@@ -88,7 +88,7 @@ const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
     review: {
       isVisible: hasResults,
       operation: operation,
-      title: t('reorganizePages.results.title', 'Pages Reorganized'),
+      title: t("reorganizePages.results.title", "Pages Reorganized"),
       onFileClick: (file) => onPreviewFile?.(file),
       onUndo: async () => {
         await operation.undoOperation();
@@ -101,5 +101,3 @@ const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
 (ReorganizePages as any).tool = () => useReorganizePagesOperation;
 
 export default ReorganizePages as ToolComponent;
-
-

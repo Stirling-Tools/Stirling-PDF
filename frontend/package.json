@@ -55,7 +55,7 @@
     "@tauri-apps/plugin-shell": "^2.3.5",
     "@userback/widget": "^0.3.12",
     "autoprefixer": "^10.4.21",
-    "axios": "^1.13.2",
+    "axios": "^1.15.0",
     "d3": "^7.9.0",
     "globals": "^17.1.0",
     "i18next": "^25.5.2",
@@ -79,6 +79,13 @@
     "web-vitals": "^5.1.0"
   },
   "scripts": {
+    "dev:prototypes": "npm run prep && vite --mode prototypes",
+    "fix": "npm run format && npm run lint:fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "build:prototypes": "npm run prep && vite build --mode prototypes",
+    "typecheck:prototypes": "tsc --noEmit --project src/prototypes/tsconfig.json",
+
     "update:minor": "npm outdated || npm update --before=$(date -v-7d +%Y-%m-%d) && (npm audit fix --before=$(date -v-7d +%Y-%m-%d) || true) && npm test",
     "update:major": "npx npm-check-updates -u && npm install",
     "update:interactive": "npx npm-check-updates -i",
@@ -128,6 +135,7 @@
     "postcss-cli": "^11.0.1",
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
+    "prettier": "^3.8.1",
     "puppeteer": "^24.25.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.2",

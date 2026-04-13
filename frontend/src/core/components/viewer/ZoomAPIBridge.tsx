@@ -1,17 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useZoom, ZoomMode } from '@embedpdf/plugin-zoom/react';
-import { useSpread, SpreadMode } from '@embedpdf/plugin-spread/react';
-import { useViewer } from '@app/contexts/ViewerContext';
-import { useActiveDocumentId } from '@app/components/viewer/useActiveDocumentId';
-import { useFileState } from '@app/contexts/FileContext';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useZoom, ZoomMode } from "@embedpdf/plugin-zoom/react";
+import { useSpread, SpreadMode } from "@embedpdf/plugin-spread/react";
+import { useViewer } from "@app/contexts/ViewerContext";
+import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
+import { useFileState } from "@app/contexts/FileContext";
 import {
   determineAutoZoom,
   DEFAULT_FALLBACK_ZOOM,
   DEFAULT_VISIBILITY_THRESHOLD,
   useFitWidthResize,
-} from '@app/utils/viewerZoom';
-import { getFirstPageAspectRatioFromStub } from '@app/utils/pageMetadata';
-import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
+} from "@app/utils/viewerZoom";
+import { getFirstPageAspectRatioFromStub } from "@app/utils/pageMetadata";
+import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { preferencesService, type ViewerZoomSetting } from "@app/services/preferencesService";
 
 /**
  * Connects the PDF zoom plugin to the shared ViewerContext.
@@ -89,23 +90,15 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
       lastSpreadMode.current = currentSpreadMode;
 
       const hadTrackedAutoZoom = lastAppliedZoom.current !== null;
-      if (
-        zoomLevel === ZoomMode.FitWidth ||
-        zoomLevel === ZoomMode.Automatic ||
-        hadTrackedAutoZoom
-      ) {
+      if (zoomLevel === ZoomMode.FitWidth || zoomLevel === ZoomMode.Automatic || hadTrackedAutoZoom) {
         requestFitWidth();
         scheduleAutoZoom();
       }
     }
   }, [spreadMode, zoomLevel, scheduleAutoZoom, requestFitWidth]);
 
-
   const isManagedZoom =
-    !!zoom &&
-    (zoomLevel === ZoomMode.FitWidth ||
-      zoomLevel === ZoomMode.Automatic ||
-      lastAppliedZoom.current !== null);
+    !!zoom && (zoomLevel === ZoomMode.FitWidth || zoomLevel === ZoomMode.Automatic || lastAppliedZoom.current !== null);
 
   useFitWidthResize({
     isManaged: isManagedZoom,
@@ -155,6 +148,21 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
         return;
       }
 
+      // Check user preference for default viewer zoom
+      const zoomPref: ViewerZoomSetting = preferencesService.getPreference("defaultViewerZoom");
+      if (zoomPref !== "auto") {
+        if (zoomPref === "fitWidth") {
+          applyTrackedZoom(ZoomMode.FitWidth, fitWidthZoom);
+        } else if (zoomPref === "fitPage") {
+          applyTrackedZoom(ZoomMode.FitPage, fitWidthZoom);
+        } else {
+          // Numeric zoom: '50', '75', '100', '125', '150', '200'
+          const numericZoom = parseInt(zoomPref, 10) / 100;
+          applyTrackedZoom(numericZoom, numericZoom);
+        }
+        return;
+      }
+
       const viewportWidth = window.innerWidth ?? 0;
       const viewportHeight = window.innerHeight ?? 0;
 
@@ -173,12 +181,12 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
         fallbackZoom: DEFAULT_FALLBACK_ZOOM,
       });
 
-      if (decision.type === 'fallback') {
+      if (decision.type === "fallback") {
         applyTrackedZoom(decision.zoom, decision.zoom);
         return;
       }
 
-      if (decision.type === 'fitWidth') {
+      if (decision.type === "fitWidth") {
         applyTrackedZoom(ZoomMode.FitWidth, fitWidthZoom);
         return;
       }
@@ -218,7 +226,7 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
     }
 
     zoomSubscriptionRef.current = zoom.onZoomChange((event: { newZoom?: number }) => {
-      if (typeof event?.newZoom !== 'number') {
+      if (typeof event?.newZoom !== "number") {
         return;
       }
       lastAppliedZoom.current = event.newZoom;
@@ -243,8 +251,7 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
       return;
     }
 
-    const currentZoomLevel =
-      lastAppliedZoom.current ?? zoomStateCurrentZoomLevel ?? 1;
+    const currentZoomLevel = lastAppliedZoom.current ?? zoomStateCurrentZoomLevel ?? 1;
 
     const newState = {
       currentZoom: currentZoomLevel,
@@ -253,7 +260,7 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
 
     triggerImmediateZoomUpdate(newState.zoomPercent);
 
-    registerBridge('zoom', {
+    registerBridge("zoom", {
       state: newState,
       api: currentZoom,
     });

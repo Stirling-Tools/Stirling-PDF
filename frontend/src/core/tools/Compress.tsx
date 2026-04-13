@@ -11,12 +11,7 @@ const Compress = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const compressTips = useCompressTips();
 
-  const base = useBaseTool(
-    'compress',
-    useCompressParameters,
-    useCompressOperation,
-    props
-  );
+  const base = useBaseTool("compress", useCompressParameters, useCompressOperation, props);
 
   return createToolFlow({
     files: {
@@ -55,6 +50,5 @@ const Compress = (props: BaseToolProps) => {
     },
   });
 };
-
 
 export default Compress as ToolComponent;

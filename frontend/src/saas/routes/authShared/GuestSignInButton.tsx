@@ -1,11 +1,11 @@
-import React from 'react'
-import '@app/routes/authShared/auth.css'
-import '@app/routes/authShared/saas-auth.css'
+import React from "react";
+import "@app/routes/authShared/auth.css";
+import "@app/routes/authShared/saas-auth.css";
 
 interface GuestSignInButtonProps {
-  label: string
-  onClick: () => void
-  disabled?: boolean
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
 }
 
 export default function GuestSignInButton({ label, onClick, disabled }: GuestSignInButtonProps) {
@@ -18,7 +18,5 @@ export default function GuestSignInButton({ label, onClick, disabled }: GuestSig
     >
       {label}
     </button>
-  )
+  );
 }
-
-

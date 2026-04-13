@@ -1,14 +1,14 @@
-import apiClient from '@app/services/apiClient';
-import { fileStorage } from '@app/services/fileStorage';
-import type { FileId } from '@app/types/file';
-import type { StirlingFile } from '@app/types/fileContext';
-import type { FileContextActions } from '@app/types/fileContext';
+import apiClient from "@app/services/apiClient";
+import { fileStorage } from "@app/services/fileStorage";
+import type { FileId } from "@app/types/file";
+import type { StirlingFile } from "@app/types/fileContext";
+import type { FileContextActions } from "@app/types/fileContext";
 import {
   getShareBundleEntryRootId,
   isZipBundle,
   loadShareBundleEntries,
   parseContentDispositionFilename,
-} from '@app/services/shareBundleUtils';
+} from "@app/services/shareBundleUtils";
 
 export interface ShareLinkMetadata {
   shareToken?: string;
@@ -22,10 +22,10 @@ export interface ShareLinkMetadata {
 }
 
 export async function fetchShareLinkMetadata(token: string): Promise<ShareLinkMetadata> {
-  const response = await apiClient.get<ShareLinkMetadata>(
-    `/api/v1/storage/share-links/${token}/metadata`,
-    { suppressErrorToast: true, skipAuthRedirect: true }
-  );
+  const response = await apiClient.get<ShareLinkMetadata>(`/api/v1/storage/share-links/${token}/metadata`, {
+    suppressErrorToast: true,
+    skipAuthRedirect: true,
+  });
   return response.data || {};
 }
 
@@ -35,18 +35,14 @@ export async function downloadShareLink(token: string): Promise<{
   contentType: string;
 }> {
   const response = await apiClient.get(`/api/v1/storage/share-links/${token}`, {
-    responseType: 'blob',
+    responseType: "blob",
     suppressErrorToast: true,
     skipAuthRedirect: true,
   });
-  const contentType =
-    (response.headers && (response.headers['content-type'] || response.headers['Content-Type'])) ||
-    '';
+  const contentType = (response.headers && (response.headers["content-type"] || response.headers["Content-Type"])) || "";
   const disposition =
-    (response.headers &&
-      (response.headers['content-disposition'] || response.headers['Content-Disposition'])) ||
-    '';
-  const filename = parseContentDispositionFilename(disposition) || 'shared-file';
+    (response.headers && (response.headers["content-disposition"] || response.headers["Content-Disposition"])) || "";
+  const filename = parseContentDispositionFilename(disposition) || "shared-file";
   const blob = response.data as Blob;
   const contentTypeValue = contentType || blob.type;
   return { blob, filename, contentType: contentTypeValue };
@@ -55,7 +51,7 @@ export async function downloadShareLink(token: string): Promise<{
 export async function importShareLinkToWorkbench(
   token: string,
   actions: FileContextActions,
-  shareMetadata?: ShareLinkMetadata | null
+  shareMetadata?: ShareLinkMetadata | null,
 ): Promise<FileId[]> {
   const { blob, filename, contentType } = await downloadShareLink(token);
   const contentTypeValue = contentType || blob.type;
@@ -97,13 +93,8 @@ export async function importShareLinkToWorkbench(
       for (const entry of sortedEntries) {
         const newId = idMap.get(entry.logicalId);
         if (!newId) continue;
-        const parentId = entry.parentLogicalId
-          ? idMap.get(entry.parentLogicalId)
-          : undefined;
-        const rootId =
-          rootIdMap.get(getShareBundleEntryRootId(manifest, entry)) ||
-          idMap.get(manifest.rootLogicalId) ||
-          newId;
+        const parentId = entry.parentLogicalId ? idMap.get(entry.parentLogicalId) : undefined;
+        const rootId = rootIdMap.get(getShareBundleEntryRootId(manifest, entry)) || idMap.get(manifest.rootLogicalId) || newId;
         const updates = {
           versionNumber: entry.versionNumber,
           originalFileId: rootId,
@@ -118,9 +109,7 @@ export async function importShareLinkToWorkbench(
 
       const selectedIds: FileId[] = [];
       for (const rootId of rootOrder) {
-        const rootEntries = sortedEntries.filter(
-          (entry) => getShareBundleEntryRootId(manifest, entry) === rootId
-        );
+        const rootEntries = sortedEntries.filter((entry) => getShareBundleEntryRootId(manifest, entry) === rootId);
         const latestEntry = rootEntries[rootEntries.length - 1];
         if (!latestEntry) {
           continue;

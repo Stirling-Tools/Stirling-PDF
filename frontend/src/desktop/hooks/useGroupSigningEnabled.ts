@@ -1,5 +1,5 @@
-import { useAppConfig } from '@app/contexts/AppConfigContext';
-import { useSelfHostedAuth } from '@app/hooks/useSelfHostedAuth';
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useSelfHostedAuth } from "@app/hooks/useSelfHostedAuth";
 
 /**
  * Desktop override: shared (group) signing requires self-hosted mode AND
