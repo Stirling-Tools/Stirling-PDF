@@ -89,7 +89,7 @@ const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({ opene
       <Stack gap="sm">
         <Text size="sm">{t("storageUpload.bulkDescription", "This uploads the selected files to your server storage.")}</Text>
         <Text size="sm" c="dimmed">
-          {t("storageUpload.fileCount", "{{count}} files selected", {
+          {t("storageUpload.fileCount", "{{count}} files", {
             count: files.length,
           })}
         </Text>

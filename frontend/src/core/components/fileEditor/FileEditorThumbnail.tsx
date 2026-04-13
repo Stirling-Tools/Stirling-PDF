@@ -352,26 +352,28 @@ const FileEditorThumbnail = ({
       onDoubleClick={handleCardDoubleClick}
     >
       <div className={styles.thumbInner}>
-        {/* Tool chain bar above thumbnail — visible on hover via CSS */}
-        {file.toolHistory && file.toolHistory.length > 0 && (
-          <div className={styles.toolChainBar}>
-            <ToolChain
-              toolChain={file.toolHistory}
-              displayStyle="text"
-              size="xs"
-              maxWidth="100%"
-              color="var(--mantine-color-gray-7)"
-            />
-          </div>
-        )}
-
         {/* Thumbnail area */}
         <div className={styles.thumbWrap}>
-          <div
-            className={styles.thumbContainer}
-            data-supported={isSupported}
-            style={{ "--thumb-aspect": thumbAspect } as React.CSSProperties}
-          >
+          {/* thumbUnit groups toolchain + card so they center together, keeping text tight above the card */}
+          <div className={styles.thumbUnit}>
+            {/* Tool chain bar — always rendered for consistent height, content only when history exists */}
+            <div className={styles.toolChainBar}>
+              {file.toolHistory && file.toolHistory.length > 0 && (
+                <ToolChain
+                  toolChain={file.toolHistory}
+                  displayStyle="text"
+                  size="xs"
+                  maxWidth="100%"
+                  color="var(--mantine-color-gray-7)"
+                />
+              )}
+            </div>
+
+            <div
+              className={styles.thumbContainer}
+              data-supported={isSupported}
+              style={{ "--thumb-aspect": thumbAspect } as React.CSSProperties}
+            >
             {/* Error overlay */}
             {hasError && (
               <div className={styles.errorOverlay}>
@@ -432,6 +434,8 @@ const FileEditorThumbnail = ({
               )}
             </div>
           </div>
+
+          </div>{/* end thumbUnit */}
 
           {/* Drag handle */}
           <span ref={handleRef} className={styles.dragHandle} aria-hidden>

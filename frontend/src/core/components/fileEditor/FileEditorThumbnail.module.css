@@ -26,18 +26,27 @@
   max-width: 100%;
 }
 
-/* ToolChain bar directly above the thumbnail, visible on card hover */
+/* Groups toolchain bar + thumbnail so they center together inside thumbWrap */
+.thumbUnit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-height: 100%;
+}
+
+/* ToolChain bar sits directly above the thumbnail card — always rendered for consistent sizing */
 .toolChainBar {
   flex-shrink: 0;
   width: 100%;
+  height: 22px;
   text-align: center;
   overflow: hidden;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.15s ease;
-  line-height: 16px;
-  margin-bottom: 6px;
+  line-height: 22px;
+  margin-bottom: 4px;
 }
 
 .card:hover .toolChainBar,

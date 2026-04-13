@@ -26,7 +26,6 @@ export function ScopedOperationButton({ selectedFiles, disableScopeHints, ...pro
   const { files: allFiles } = useAllFiles();
 
   const isViewerMode = workbench === "viewer";
-  const isFileEditorMode = workbench === "fileEditor";
   const hasMultipleFilesLoaded = allFiles.length > 1;
   const baseText = props.submitText ?? t("submit", "Submit");
 
@@ -46,19 +45,12 @@ export function ScopedOperationButton({ selectedFiles, disableScopeHints, ...pro
       ? allFiles[activeFileIndex]?.name
       : null;
 
-  const showSelectFilesHint = !disableScopeHints && isFileEditorMode && selectedFiles.length === 0;
-
   return (
     <>
       <OperationButton {...props} submitText={scopedText} />
       {viewerFileName && (
         <Text size="xs" c="dimmed" ta="center" mx="md" mt={2}>
           {t("tool.singleFileScope", "Only applying to: {{fileName}}", { fileName: viewerFileName })}
-        </Text>
-      )}
-      {showSelectFilesHint && (
-        <Text size="xs" c="dimmed" ta="center" mx="md" mt={2}>
-          {t("tool.selectFilesHint", "Select files in Active Files to run this tool")}
         </Text>
       )}
     </>

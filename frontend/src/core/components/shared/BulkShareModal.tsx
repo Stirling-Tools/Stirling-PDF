@@ -162,7 +162,7 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({ opened, onClose, files,
               {t("storageShare.bulkDescription", "Create one link to share all selected files with signed-in users.")}
             </Text>
             <Text size="sm" c="dimmed">
-              {t("storageShare.fileCount", "{{count}} files selected", {
+              {t("storageShare.fileCount", "{{count}} files", {
                 count: files.length,
               })}
             </Text>

@@ -26,11 +26,11 @@ const MultiSelectControls = ({
     <Box mb="md" p="md" style={{ backgroundColor: "var(--mantine-color-blue-0)", borderRadius: 8 }}>
       <Group justify="space-between">
         <Text size="sm">
-          {selectedCount} {t("fileManager.filesSelected", "files selected")}
+          {selectedCount} {t("fileManager.filesSelected", "files")}
         </Text>
         <Group>
           <Button size="xs" variant="light" onClick={onClearSelection}>
-            {t("fileManager.clearSelection", "Clear Selection")}
+            {t("fileManager.clearSelection", "Clear files")}
           </Button>
 
           {onAddToUpload && (

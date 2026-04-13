@@ -86,7 +86,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
         {/* File info */}
         <Box style={{ flex: 1, minWidth: 0 }}>
           <Text size="sm" fw={500} truncate>
-            <PrivateContent>{currentFile ? currentFile.name : "No file selected"}</PrivateContent>
+            <PrivateContent>{currentFile ? currentFile.name : "No file loaded"}</PrivateContent>
           </Text>
           <Text size="xs" c="dimmed">
             {currentFile ? getFileSize(currentFile) : ""}
