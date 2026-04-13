@@ -298,6 +298,7 @@ tasks:
 
   test:e2e:install:
     desc: "Install E2E test browsers"
+    deps: [install]
     cmds:
       - npx playwright install {{.CLI_ARGS}} --with-deps
 
