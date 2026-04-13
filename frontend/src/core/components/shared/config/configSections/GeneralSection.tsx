@@ -7,6 +7,7 @@ import {
   Tooltip,
   NumberInput,
   SegmentedControl,
+  Select,
   Code,
   Group,
   Anchor,
@@ -22,12 +23,32 @@ import type { ToolPanelMode } from "@app/constants/toolPanel";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { updateService, UpdateSummary } from "@app/services/updateService";
 import UpdateModal from "@app/components/shared/UpdateModal";
-import type { DesktopInstallState, DesktopInstallProgress, DesktopInstallActions } from "@app/components/shared/UpdateModal";
+import type {
+  DesktopInstallState,
+  DesktopInstallProgress,
+  DesktopInstallActions,
+  DesktopInstallCanInstall,
+} from "@app/components/shared/UpdateModal";
 import { useFrontendVersionInfo } from "@app/hooks/useFrontendVersionInfo";
 
 const DEFAULT_AUTO_UNZIP_FILE_LIMIT = 4;
 const BANNER_DISMISSED_KEY = "stirlingpdf_features_banner_dismissed";
 
+
+/**
+ * Desktop-only: user-facing update policy control, rendered inside the
+ * Software Updates section alongside the version info. Passed from the
+ * desktop GeneralSection override so this core component doesn't have to
+ * import any Tauri APIs directly.
+ */
+export interface DesktopUpdateModeControl {
+  /** Current mode. */
+  mode: 'prompt' | 'auto' | 'disabled';
+  /** `true` when the mode was written by a provisioning file — disables the control. */
+  locked: boolean;
+  /** Called when the user picks a new mode. Async: surface errors via toast. */
+  onChange: (mode: 'prompt' | 'auto' | 'disabled') => Promise<void> | void;
+}
 
 interface GeneralSectionProps {
   hideTitle?: boolean;
@@ -39,11 +60,16 @@ interface GeneralSectionProps {
     progress: DesktopInstallProgress | null;
     errorMessage: string | null;
     tauriInstallReady: boolean;
+    /** Result of the `can_install_updates` probe, used to show an inline
+     *  warning when msiexec would need UAC elevation this user doesn't have. */
+    canInstall?: DesktopInstallCanInstall | null;
     actions: DesktopInstallActions;
   };
+  /** Desktop-only: update-mode toggle (prompt/auto/disabled). */
+  desktopUpdateMode?: DesktopUpdateModeControl;
 }
 
-const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hideUpdateSection = false, hideAdminBanner = false, desktopInstall }) => {
+const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hideUpdateSection = false, hideAdminBanner = false, desktopInstall, desktopUpdateMode }) => {
   const { t } = useTranslation();
   const { preferences, updatePreference } = usePreferences();
   const { config } = useAppConfig();
@@ -102,6 +128,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
     state: desktopInstall.state,
     progress: desktopInstall.progress,
     errorMessage: desktopInstall.errorMessage,
+    canInstall: desktopInstall.canInstall,
     actions: desktopInstall.actions,
   } : undefined;
 
@@ -269,6 +296,71 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
                 )}
               </Group>
             </Group>
+
+            {/* Desktop-only: update behaviour selector (prompt / auto / disabled).
+                Rendered disabled with a "Managed by administrator" hint when the
+                mode was pinned by a provisioning file. */}
+            {desktopUpdateMode && (
+              <Stack gap="xs">
+                <Group gap="xs" align="center">
+                  <Text fw={600} size="sm">
+                    {t("settings.general.updates.updateBehavior", "Update behavior")}
+                  </Text>
+                  {desktopUpdateMode.locked && (
+                    // `color="gray" variant="light"` rendered as near-invisible
+                    // light-on-dark in dark mode. `blue light` has enough
+                    // contrast in both themes to read clearly without being
+                    // shouty.
+                    <Badge color="blue" variant="light" size="sm" radius="sm">
+                      {t("settings.general.updates.managedByAdmin", "Managed by administrator")}
+                    </Badge>
+                  )}
+                </Group>
+                <Text size="xs" c="dimmed">
+                  {desktopUpdateMode.locked
+                    ? t(
+                        "settings.general.updates.updateBehaviorLockedDescription",
+                        "Your administrator has configured how Stirling-PDF handles updates on this machine. Contact them to change this.",
+                      )
+                    : t(
+                        "settings.general.updates.updateBehaviorDescription",
+                        "Choose whether to prompt before installing updates, install them automatically, or skip update checks entirely.",
+                      )}
+                </Text>
+                <Select
+                  disabled={desktopUpdateMode.locked}
+                  value={desktopUpdateMode.mode}
+                  onChange={(value) => {
+                    if (!value) return;
+                    void desktopUpdateMode.onChange(value as 'prompt' | 'auto' | 'disabled');
+                  }}
+                  data={[
+                    {
+                      value: 'prompt',
+                      label: t(
+                        "settings.general.updates.modePrompt",
+                        "Ask me before installing updates",
+                      ),
+                    },
+                    {
+                      value: 'auto',
+                      label: t(
+                        "settings.general.updates.modeAuto",
+                        "Install updates automatically",
+                      ),
+                    },
+                    {
+                      value: 'disabled',
+                      label: t(
+                        "settings.general.updates.modeDisabled",
+                        "Don't check for updates",
+                      ),
+                    },
+                  ]}
+                  maw={360}
+                />
+              </Stack>
+            )}
 
             {updateSummary?.any_breaking && (
               <Alert

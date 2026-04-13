@@ -254,6 +254,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         state: popupState.state,
         progress: popupState.progress,
         errorMessage: popupState.errorMessage,
+        canInstall: popupState.canInstall,
         actions: popupActions,
       } : undefined}
     />

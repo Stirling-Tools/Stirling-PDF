@@ -19,6 +19,39 @@ export interface UpdateProgress {
   percent: number;
 }
 
+/**
+ * Headless-install update policy, set via the `updateMode` field of a
+ * `stirling-provisioning.json` file dropped by MDM / Intune tooling — or
+ * from the Settings → Software Updates panel by the user.
+ *
+ * * `prompt`   – default. Show the update popup and let the user decide.
+ * * `auto`     – silently download, install, and restart on startup.
+ * * `disabled` – never check for updates or surface update UI.
+ */
+export type UpdateMode = 'prompt' | 'auto' | 'disabled';
+
+/** Current [`UpdateMode`] plus whether the UI can change it. */
+export interface UpdateModeInfo {
+  mode: UpdateMode;
+  /**
+   * `true` when the mode was written by a provisioning file. The Settings
+   * control should render disabled with a "Managed by your administrator"
+   * hint; attempts to call [`setUpdateMode`] are rejected by the Rust
+   * command with an error so the UI can't quietly fall out of sync.
+   */
+  locked: boolean;
+}
+
+/** Shape returned by the `can_install_updates` Tauri command. */
+export interface CanInstallResult {
+  /** `true` when the current process can write to the install directory. */
+  canInstall: boolean;
+  /** Machine-readable reason when `canInstall` is `false`. */
+  reason: string | null;
+  /** The directory that was probed, for display in error messages. */
+  installDir: string | null;
+}
+
 // ─── localStorage keys ────────────────────────────────────────────────────────
 const KEY_PREFIX = 'stirling-pdf-updater:';
 const KEY_LAST_CHECKED = `${KEY_PREFIX}lastChecked`;
@@ -92,6 +125,60 @@ class DesktopUpdateService {
   /** Return the currently running app version string. */
   async getAppVersion(): Promise<string> {
     return invoke<string>('get_app_version');
+  }
+
+  /**
+   * Return the configured update mode plus whether it's locked by provisioning.
+   *
+   * Falls back to `{mode: 'prompt', locked: false}` if the Tauri command is
+   * unavailable (e.g. running in a browser dev environment) so non-managed
+   * installs always get the default interactive flow.
+   */
+  async getUpdateModeInfo(): Promise<UpdateModeInfo> {
+    try {
+      return await invoke<UpdateModeInfo>('get_update_mode');
+    } catch (error) {
+      console.warn(
+        '[DesktopUpdateService] get_update_mode failed, defaulting to prompt/unlocked:',
+        error,
+      );
+      return { mode: 'prompt', locked: false };
+    }
+  }
+
+  /** Convenience wrapper when callers only need the mode itself. */
+  async getUpdateMode(): Promise<UpdateMode> {
+    return (await this.getUpdateModeInfo()).mode;
+  }
+
+  /**
+   * Persist a user-chosen update mode. Throws when the mode is locked by
+   * provisioning — callers should not swallow that error; it should be
+   * surfaced as a UI toast or equivalent so the user knows why nothing
+   * changed.
+   */
+  async setUpdateMode(mode: UpdateMode): Promise<void> {
+    await invoke<void>('set_update_mode', { mode });
+  }
+
+  /**
+   * Check whether the Tauri updater is likely to be able to install a new
+   * version silently on this machine. See the Rust docstring on
+   * `can_install_updates` for the underlying write-probe heuristic.
+   *
+   * Returns an optimistic `{canInstall: true, ...}` if the Tauri command is
+   * unavailable so we don't block updates in non-Tauri dev environments.
+   */
+  async canInstallUpdates(): Promise<CanInstallResult> {
+    try {
+      return await invoke<CanInstallResult>('can_install_updates');
+    } catch (error) {
+      console.warn(
+        '[DesktopUpdateService] can_install_updates failed, assuming allowed:',
+        error,
+      );
+      return { canInstall: true, reason: null, installDir: null };
+    }
   }
 
   // ── Periodic checking ──────────────────────────────────────────────────────

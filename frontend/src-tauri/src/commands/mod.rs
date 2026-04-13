@@ -11,9 +11,11 @@ pub use backend::{cleanup_backend, get_backend_port, start_backend};
 pub use files::{add_opened_file, clear_opened_files, get_opened_files, pop_opened_files};
 pub use connection::{
     get_connection_config,
+    get_update_mode,
     is_first_launch,
     reset_setup_completion,
     set_connection_mode,
+    set_update_mode,
 };
 pub use auth::{
     clear_auth_token,
@@ -31,4 +33,7 @@ pub use auth::{
 pub use default_app::{is_default_pdf_handler, set_as_default_pdf_handler};
 pub use platform::get_desktop_os;
 pub use print::print_pdf_file_native;
-pub use updater::{check_for_update, download_and_install_update, get_app_version, restart_app};
+pub use updater::{
+    can_install_updates, check_for_update, download_and_install_update, get_app_version,
+    restart_app,
+};

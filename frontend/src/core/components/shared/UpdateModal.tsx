@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Stack, Text, Badge, Button, Group, Loader, Center, Box, Collapse, Progress, Alert, Divider, CloseButton } from '@mantine/core';
+import { Modal, Stack, Text, Badge, Button, Group, Loader, Center, Box, Collapse, Progress, Alert, Divider, CloseButton, Anchor } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { updateService, UpdateSummary, FullUpdateInfo, MachineInfo } from '@app/services/updateService';
 import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
@@ -28,6 +28,21 @@ export interface DesktopInstallActions {
   restartApp: () => Promise<void>;
 }
 
+/**
+ * Passed alongside the install state when the Tauri `can_install_updates`
+ * probe has run. When `canInstall` is `false` the UpdateModal shows an
+ * inline "admin permissions required" warning and disables the Install Now
+ * button so users can't trip themselves into a UAC prompt they can't satisfy.
+ */
+export interface DesktopInstallCanInstall {
+  canInstall: boolean;
+  reason: string | null;
+}
+
+/** Docs URL referenced from the blocked alert. */
+const WINDOWS_INSTALL_DOCS_URL =
+  'https://docs.stirlingpdf.com/Installation/Windows%20Installation/#automated-installation-msi-installer';
+
 interface UpdateModalProps {
   opened: boolean;
   onClose: () => void;
@@ -41,6 +56,13 @@ interface UpdateModalProps {
     progress: DesktopInstallProgress | null;
     errorMessage: string | null;
     actions: DesktopInstallActions;
+    /**
+     * Optional: result of the `can_install_updates` probe. When present
+     * with `canInstall: false` the modal shows an inline admin-permissions
+     * warning and disables the Install Now button. Absent or
+     * `canInstall: true` preserves the existing interactive flow.
+     */
+    canInstall?: DesktopInstallCanInstall | null;
   };
 }
 
@@ -69,7 +91,6 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
   const [fullUpdateInfo, setFullUpdateInfo] = useState<FullUpdateInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedVersions, setExpandedVersions] = useState<Set<number>>(new Set([0]));
-
 
   useEffect(() => {
     if (opened) {
@@ -108,6 +129,17 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
 
   const downloadUrl = updateService.getDownloadUrl(machineInfo);
   const canClose = !desktopInstall || desktopInstall.state === 'idle' || desktopInstall.state === 'error' || desktopInstall.state === 'ready-to-restart';
+
+  // When the install-probe reported that we cannot write to the install
+  // directory (non-admin on a per-machine install, Intune/MDM deploys, etc),
+  // surface an inline warning and disable the Install Now button. We only
+  // block the interactive flow — auto mode silently skips upstream in
+  // useDesktopUpdatePopup so the user is never prompted.
+  const installBlocked = Boolean(
+    desktopInstall &&
+      desktopInstall.canInstall &&
+      desktopInstall.canInstall.canInstall === false,
+  );
   const isStable = updateSummary.latest_stable_version === updateSummary.latest_version;
   const priorityColor = getPriorityColor(updateSummary.max_priority);
 
@@ -182,7 +214,11 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                 <Group gap="sm" align="center">
                   <Text fw={800} fz={32} c="blue" lh={1.1}>{updateSummary.latest_version}</Text>
                   {(isStable || updateSummary.latest_stable_version) && (
-                    <Badge color="green" variant="filled" size="sm" style={{ marginTop: 4 }}>{t('update.stable', 'STABLE')}</Badge>
+                    // `variant="filled" color="green"` produced an acid-green
+                    // pill that was noisy in light mode and oddly washed out
+                    // in dark mode. `light` gives a soft teal-ish chip that
+                    // reads well in both themes.
+                    <Badge color="teal" variant="light" size="sm" radius="sm" style={{ marginTop: 4 }}>{t('update.stable', 'STABLE')}</Badge>
                   )}
                 </Group>
               </Stack>
@@ -198,6 +234,41 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
               {updateSummary.recommended_action || t('update.defaultRecommendation', 'This update contains important fixes and improvements.')}
             </Text>
           </Group>
+
+          {/* Admin permissions required — shown when can_install_updates
+              reported that msiexec would need UAC elevation this user
+              can't satisfy. Placed right after the priority row so it's
+              the first thing users see when they open the modal and the
+              Install Now button (below) is disabled as a result. */}
+          {desktopInstall && installBlocked && (
+            <Alert
+              variant="light"
+              color="orange"
+              radius="md"
+              icon={<WarningAmberIcon style={{ fontSize: 18 }} />}
+              title={t(
+                'desktopUpdate.blocked.title',
+                'Administrator permissions required',
+              )}
+            >
+              <Text size="sm">
+                {t(
+                  'desktopUpdate.blocked.message',
+                  'Stirling-PDF does not have permission to update itself on this machine.',
+                )}{' '}
+                <Anchor
+                  href={WINDOWS_INSTALL_DOCS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t(
+                    'desktopUpdate.blocked.docsLink',
+                    'View installation documentation',
+                  )}
+                </Anchor>
+              </Text>
+            </Alert>
+          )}
 
           {/* What's New card */}
           <Box style={{
@@ -425,17 +496,33 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                   {t('desktopUpdate.restartNow', 'Restart Now')}
                 </Button>
               ) : desktopInstall.state === 'idle' || desktopInstall.state === 'error' ? (
-                <Button color="blue" radius="md" size="lg"
-                  leftSection={<DownloadIcon style={{ fontSize: 20 }} />}
-                  onClick={() => void desktopInstall.actions.startInstall()}
-                  styles={{ root: { paddingLeft: 16, paddingRight: 20 }, inner: { gap: 10 } }}>
-                  <Box>
-                    <Text size="sm" fw={700} lh={1.2}>{t('desktopUpdate.installNow', 'Install Now')}</Text>
-                    <Text size="xs" lh={1.2} style={{ opacity: 0.7 }}>{formatSize(downloadSizeBytes)}</Text>
-                  </Box>
-                </Button>
+                <>
+                  {/* When install is blocked (non-admin) or the tauri updater
+                      failed, the user still needs a way forward — show a
+                      "Download Latest" link to the GitHub release page as a
+                      fallback alongside the disabled Install Now button. */}
+                  {(installBlocked || desktopInstall.state === 'error') && downloadUrl && (
+                    <Button component="a" href={downloadUrl} target="_blank" variant="default" radius="md" size="md"
+                      leftSection={<DownloadIcon style={{ fontSize: 16 }} />}>
+                      {t('update.downloadLatest', 'Download Latest')}
+                    </Button>
+                  )}
+                  <Button color="blue" radius="md" size="lg"
+                    leftSection={<DownloadIcon style={{ fontSize: 20 }} />}
+                    onClick={() => void desktopInstall.actions.startInstall()}
+                    disabled={installBlocked}
+                    styles={{ root: { paddingLeft: 16, paddingRight: 20 }, inner: { gap: 10 } }}>
+                    <Box>
+                      <Text size="sm" fw={700} lh={1.2}>{t('desktopUpdate.installNow', 'Install Now')}</Text>
+                      <Text size="xs" lh={1.2} style={{ opacity: 0.7 }}>{formatSize(downloadSizeBytes)}</Text>
+                    </Box>
+                  </Button>
+                </>
               ) : null
             ) : (
+              // Tauri updater not available at all — only show the external
+              // download link. This is the fallback when latest.json is
+              // unreachable, the pubkey is wrong, signatures don't match, etc.
               downloadUrl && (
                 <Button component="a" href={downloadUrl} target="_blank" color="blue" radius="md" size="lg"
                   leftSection={<DownloadIcon style={{ fontSize: 20 }} />}>

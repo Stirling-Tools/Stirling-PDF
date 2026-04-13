@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
 use tauri_plugin_updater::UpdaterExt;
 
+use crate::commands::connection::{read_update_mode, UpdateMode};
 use crate::utils::add_log;
 
 /// Information about an available update.
@@ -36,6 +37,14 @@ pub struct UpdateProgress {
 /// internally so callers do not need to surface them to the user.
 #[tauri::command]
 pub async fn check_for_update(app: AppHandle) -> Result<Option<UpdateInfo>, String> {
+    // Managed deployments may have updates disabled — never hit the endpoint in
+    // that case so there's no network traffic and no way for the UI to discover
+    // an update that would go unused.
+    if read_update_mode(&app) == UpdateMode::Disabled {
+        add_log("🔕 Update check skipped — update mode is disabled".to_string());
+        return Ok(None);
+    }
+
     add_log("🔍 Checking for updates...".to_string());
 
     let current_version = app.package_info().version.to_string();
@@ -154,4 +163,89 @@ pub fn restart_app(app: AppHandle) {
 #[tauri::command]
 pub fn get_app_version(app: AppHandle) -> String {
     app.package_info().version.to_string()
+}
+
+/// Result of [`can_install_updates`] — does this process have the permissions
+/// needed to run the Tauri updater's MSI/NSIS installer without triggering
+/// UAC elevation (or another blocker)?
+#[derive(Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct CanInstallResult {
+    /// `true` when the install directory is writable from the current
+    /// process — the strongest signal that msiexec will succeed without
+    /// needing elevation. `false` means auto-install is very likely to
+    /// trigger a UAC prompt (or be blocked entirely) and should be
+    /// skipped in silent/auto mode.
+    pub can_install: bool,
+    /// Machine-readable reason when `can_install` is `false`. One of
+    /// `"install_dir_not_writable"`, `"install_dir_unknown"`. `None` when
+    /// `can_install` is `true`.
+    pub reason: Option<String>,
+    /// Path we probed so the frontend can include it in the "contact your
+    /// administrator" alert. Best-effort — may be empty on exotic layouts.
+    pub install_dir: Option<String>,
+}
+
+/// Check whether the Tauri updater is likely to be able to install a new
+/// version silently.
+///
+/// Tauri's Windows updater runs msiexec against the downloaded MSI, which on
+/// a per-machine install writes to `C:\Program Files\Stirling-PDF`. If the
+/// current user can write to that directory without elevation, msiexec will
+/// succeed silently (passive install mode). If they can't, the install
+/// triggers a UAC prompt that can't be auto-approved — and for a managed
+/// (Intune/MDM) deployment the user typically can't satisfy it at all.
+///
+/// We test this by writing (and immediately deleting) a zero-byte probe file
+/// next to the running executable. This avoids trying to reverse-engineer
+/// Windows token elevation state, which is surprisingly hard to do correctly
+/// on Windows when UAC filtered tokens are in play.
+#[tauri::command]
+pub fn can_install_updates() -> CanInstallResult {
+    let exe = match std::env::current_exe() {
+        Ok(p) => p,
+        Err(e) => {
+            add_log(format!("⚠️ can_install_updates: current_exe failed: {}", e));
+            return CanInstallResult {
+                can_install: false,
+                reason: Some("install_dir_unknown".to_string()),
+                install_dir: None,
+            };
+        }
+    };
+    let parent = match exe.parent() {
+        Some(p) => p.to_path_buf(),
+        None => {
+            return CanInstallResult {
+                can_install: false,
+                reason: Some("install_dir_unknown".to_string()),
+                install_dir: None,
+            };
+        }
+    };
+
+    let dir_display = parent.display().to_string();
+    let probe = parent.join(".stirling-auto-update-probe.tmp");
+    match std::fs::File::create(&probe) {
+        Ok(_) => {
+            let _ = std::fs::remove_file(&probe);
+            add_log(format!("✅ can_install_updates: writable: {}", dir_display));
+            CanInstallResult {
+                can_install: true,
+                reason: None,
+                install_dir: Some(dir_display),
+            }
+        }
+        Err(e) => {
+            add_log(format!(
+                "⚠️ can_install_updates: install dir not writable ({}): {}",
+                dir_display, e
+            ));
+            CanInstallResult {
+                can_install: false,
+                reason: Some("install_dir_not_writable".to_string()),
+                install_dir: Some(dir_display),
+            }
+        }
+    }
 }

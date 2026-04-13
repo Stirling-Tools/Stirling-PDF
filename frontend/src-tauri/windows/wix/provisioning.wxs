@@ -3,6 +3,13 @@
   <Fragment>
     <Property Id="STIRLING_SERVER_URL" Secure="yes" />
     <Property Id="STIRLING_LOCK_CONNECTION" Secure="yes" />
+    <!--
+      STIRLING_UPDATE_MODE — headless auto-update policy for MDM/Intune deploys.
+      Accepts "prompt" (default, user-interactive), "auto" (silent download+install on
+      startup), or "disabled" (never check). Leaving it unset preserves whatever was
+      configured on the previous install (or defaults to "prompt" on a fresh install).
+    -->
+    <Property Id="STIRLING_UPDATE_MODE" Secure="yes" />
 
     <DirectoryRef Id="TARGETDIR">
       <Directory Id="AppDataFolder" />
@@ -40,20 +47,24 @@
     <CustomAction
       Id="SetWriteProvisioningFilePerUser"
       Property="WriteProvisioningFilePerUser"
-      Value="--output &quot;[AppDataFolder]Stirling-PDF\stirling-provisioning.json&quot; --url &quot;[STIRLING_SERVER_URL]&quot; --lock &quot;[STIRLING_LOCK_CONNECTION]&quot;"
+      Value="--output &quot;[AppDataFolder]Stirling-PDF\stirling-provisioning.json&quot; --url &quot;[STIRLING_SERVER_URL]&quot; --lock &quot;[STIRLING_LOCK_CONNECTION]&quot; --update-mode &quot;[STIRLING_UPDATE_MODE]&quot;"
     />
 
     <CustomAction
       Id="SetWriteProvisioningFileAllUsers"
       Property="WriteProvisioningFileAllUsers"
-      Value="--output &quot;[CommonAppDataFolder]Stirling-PDF\stirling-provisioning.json&quot; --url &quot;[STIRLING_SERVER_URL]&quot; --lock &quot;[STIRLING_LOCK_CONNECTION]&quot;"
+      Value="--output &quot;[CommonAppDataFolder]Stirling-PDF\stirling-provisioning.json&quot; --url &quot;[STIRLING_SERVER_URL]&quot; --lock &quot;[STIRLING_LOCK_CONNECTION]&quot; --update-mode &quot;[STIRLING_UPDATE_MODE]&quot;"
     />
 
+    <!--
+      Run the provisioner when EITHER STIRLING_SERVER_URL or STIRLING_UPDATE_MODE is set.
+      The provisioner is a no-op if both values end up empty, so passing neither is safe.
+    -->
     <InstallExecuteSequence>
-      <Custom Action="SetWriteProvisioningFilePerUser" After="InstallFiles">STIRLING_SERVER_URL &lt;&gt; &quot;&quot; AND (NOT ALLUSERS OR ALLUSERS=0)</Custom>
-      <Custom Action="WriteProvisioningFilePerUser" After="SetWriteProvisioningFilePerUser">STIRLING_SERVER_URL &lt;&gt; &quot;&quot; AND (NOT ALLUSERS OR ALLUSERS=0)</Custom>
-      <Custom Action="SetWriteProvisioningFileAllUsers" After="InstallFiles">STIRLING_SERVER_URL &lt;&gt; &quot;&quot; AND (ALLUSERS=1 OR ALLUSERS=2)</Custom>
-      <Custom Action="WriteProvisioningFileAllUsers" After="SetWriteProvisioningFileAllUsers">STIRLING_SERVER_URL &lt;&gt; &quot;&quot; AND (ALLUSERS=1 OR ALLUSERS=2)</Custom>
+      <Custom Action="SetWriteProvisioningFilePerUser" After="InstallFiles">(STIRLING_SERVER_URL &lt;&gt; &quot;&quot; OR STIRLING_UPDATE_MODE &lt;&gt; &quot;&quot;) AND (NOT ALLUSERS OR ALLUSERS=0)</Custom>
+      <Custom Action="WriteProvisioningFilePerUser" After="SetWriteProvisioningFilePerUser">(STIRLING_SERVER_URL &lt;&gt; &quot;&quot; OR STIRLING_UPDATE_MODE &lt;&gt; &quot;&quot;) AND (NOT ALLUSERS OR ALLUSERS=0)</Custom>
+      <Custom Action="SetWriteProvisioningFileAllUsers" After="InstallFiles">(STIRLING_SERVER_URL &lt;&gt; &quot;&quot; OR STIRLING_UPDATE_MODE &lt;&gt; &quot;&quot;) AND (ALLUSERS=1 OR ALLUSERS=2)</Custom>
+      <Custom Action="WriteProvisioningFileAllUsers" After="SetWriteProvisioningFileAllUsers">(STIRLING_SERVER_URL &lt;&gt; &quot;&quot; OR STIRLING_UPDATE_MODE &lt;&gt; &quot;&quot;) AND (ALLUSERS=1 OR ALLUSERS=2)</Custom>
     </InstallExecuteSequence>
   </Fragment>
 </Wix>

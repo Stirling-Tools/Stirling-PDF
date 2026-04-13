@@ -15,7 +15,47 @@ const FIRST_LAUNCH_KEY: &str = "setup_completed";
 const CONNECTION_MODE_KEY: &str = "connection_mode";
 const SERVER_CONFIG_KEY: &str = "server_config";
 const LOCK_CONNECTION_KEY: &str = "lock_connection_mode";
+pub(crate) const UPDATE_MODE_KEY: &str = "update_mode";
+/// When `true` the update mode was written by a provisioning file and cannot
+/// be changed from the UI. Only another provisioning file (from MDM) can
+/// override it. We track this separately from `lock_connection_mode` because
+/// an admin may want to lock updates without locking the connection URL,
+/// or vice versa.
+pub(crate) const UPDATE_MODE_LOCKED_KEY: &str = "update_mode_locked";
 const PROVISIONING_FILE_NAME: &str = "stirling-provisioning.json";
+
+/// How the desktop auto-updater should behave on startup.
+///
+/// * `Prompt`   – default. Show the update popup when a new version is available
+///               and let the user decide whether to install.
+/// * `Auto`     – silently download and install updates on startup, then restart.
+///               Intended for managed deployments (Intune/MDM) where the user
+///               cannot (or should not) be prompted.
+/// * `Disabled` – never check for updates, never show the update UI. Administrators
+///                are expected to push updates through their normal packaging flow.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum UpdateMode {
+    Prompt,
+    Auto,
+    Disabled,
+}
+
+impl Default for UpdateMode {
+    fn default() -> Self {
+        UpdateMode::Prompt
+    }
+}
+
+/// Current update mode plus whether the UI is allowed to change it. Returned
+/// by [`get_update_mode`] so the settings page can show a "managed by
+/// administrator" hint instead of silently ignoring clicks.
+#[derive(Debug, Clone, Copy, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateModeInfo {
+    pub mode: UpdateMode,
+    pub locked: bool,
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ConnectionConfig {
@@ -142,6 +182,9 @@ pub async fn set_connection_mode(
 struct ProvisioningConfig {
     server_url: Option<String>,
     lock_connection_mode: Option<bool>,
+    /// Optional headless-install update policy (`"prompt"`, `"auto"`, `"disabled"`).
+    /// When omitted the existing stored mode is left unchanged.
+    update_mode: Option<UpdateMode>,
 }
 
 fn provisioning_file_paths() -> Vec<PathBuf> {
@@ -181,8 +224,10 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
         .map(|value| value.trim().to_string())
         .filter(|value| !value.is_empty());
 
-    if server_url.is_none() {
-        add_log("⚠️ Provisioning file missing serverUrl; skipping apply".to_string());
+    if server_url.is_none() && parsed.update_mode.is_none() {
+        add_log(
+            "⚠️ Provisioning file has neither serverUrl nor updateMode; skipping apply".to_string(),
+        );
         return Ok(());
     }
 
@@ -192,36 +237,60 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
         .store(STORE_FILE)
         .map_err(|e| format!("Failed to access store: {}", e))?;
 
-    store.set(
-        CONNECTION_MODE_KEY,
-        serde_json::to_value(&ConnectionMode::SelfHosted)
-            .map_err(|e| format!("Failed to serialize mode: {}", e))?,
-    );
+    // Apply server URL / connection settings only when a URL was supplied — a
+    // provisioning file containing just `updateMode` should be allowed to configure
+    // the headless update policy without forcing self-hosted mode.
+    let server_config = if let Some(url) = server_url {
+        store.set(
+            CONNECTION_MODE_KEY,
+            serde_json::to_value(&ConnectionMode::SelfHosted)
+                .map_err(|e| format!("Failed to serialize mode: {}", e))?,
+        );
 
-    let server_config = ServerConfig {
-        url: server_url.clone().unwrap(),
+        let cfg = ServerConfig { url };
+        store.set(
+            SERVER_CONFIG_KEY,
+            serde_json::to_value(&cfg)
+                .map_err(|e| format!("Failed to serialize config: {}", e))?,
+        );
+
+        store.set(
+            LOCK_CONNECTION_KEY,
+            serde_json::to_value(lock_flag)
+                .map_err(|e| format!("Failed to serialize lock flag: {}", e))?,
+        );
+
+        store.set(FIRST_LAUNCH_KEY, serde_json::json!(true));
+        Some(cfg)
+    } else {
+        None
     };
-    store.set(
-        SERVER_CONFIG_KEY,
-        serde_json::to_value(&server_config)
-            .map_err(|e| format!("Failed to serialize config: {}", e))?,
-    );
 
-    store.set(
-        LOCK_CONNECTION_KEY,
-        serde_json::to_value(lock_flag)
-            .map_err(|e| format!("Failed to serialize lock flag: {}", e))?,
-    );
-
-    store.set(FIRST_LAUNCH_KEY, serde_json::json!(true));
+    if let Some(mode) = parsed.update_mode {
+        store.set(
+            UPDATE_MODE_KEY,
+            serde_json::to_value(&mode)
+                .map_err(|e| format!("Failed to serialize update mode: {}", e))?,
+        );
+        // A provisioning file pinning the update mode also locks the UI so
+        // end users cannot flip it back — if IT wanted it to be user-editable
+        // they simply wouldn't include the field in their stirling-provisioning.json.
+        store.set(UPDATE_MODE_LOCKED_KEY, serde_json::json!(true));
+        add_log(format!(
+            "🧩 Provisioning set update mode to {:?} (locked)",
+            mode
+        ));
+    }
 
     store
         .save()
         .map_err(|e| format!("Failed to save store: {}", e))?;
 
-    if let Ok(mut conn_state) = app_handle.state::<AppConnectionState>().0.lock() {
+    if let (Some(cfg), Ok(mut conn_state)) =
+        (server_config.as_ref(), app_handle.state::<AppConnectionState>().0.lock())
+    {
         conn_state.mode = ConnectionMode::SelfHosted;
-        conn_state.server_config = Some(server_config);
+        conn_state.server_config = Some(cfg.clone());
         conn_state.lock_connection_mode = lock_flag;
     }
 
@@ -253,6 +322,78 @@ pub async fn is_first_launch(app_handle: AppHandle) -> Result<bool, String> {
         .unwrap_or(false);
 
     Ok(!setup_completed)
+}
+
+/// Read the configured update mode from the tauri store.
+///
+/// Returns [`UpdateMode::Prompt`] when the store is unavailable or no mode
+/// has been set — the prompt-the-user flow is the safe default for normal,
+/// non-managed installs.
+pub(crate) fn read_update_mode(app_handle: &AppHandle) -> UpdateMode {
+    read_update_mode_info(app_handle).mode
+}
+
+/// Read the configured update mode AND whether it's locked by provisioning.
+pub(crate) fn read_update_mode_info(app_handle: &AppHandle) -> UpdateModeInfo {
+    match app_handle.store(STORE_FILE) {
+        Ok(store) => {
+            let mode = store
+                .get(UPDATE_MODE_KEY)
+                .and_then(|v| serde_json::from_value(v.clone()).ok())
+                .unwrap_or_default();
+            let locked = store
+                .get(UPDATE_MODE_LOCKED_KEY)
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+            UpdateModeInfo { mode, locked }
+        }
+        Err(_) => UpdateModeInfo {
+            mode: UpdateMode::default(),
+            locked: false,
+        },
+    }
+}
+
+#[tauri::command]
+pub async fn get_update_mode(app_handle: AppHandle) -> Result<UpdateModeInfo, String> {
+    Ok(read_update_mode_info(&app_handle))
+}
+
+/// Update the stored update mode from the UI.
+///
+/// Refuses to overwrite a provisioned (locked) value so an MDM-managed
+/// deployment can't be subverted by a user clicking in Settings.
+#[tauri::command]
+pub async fn set_update_mode(
+    app_handle: AppHandle,
+    mode: UpdateMode,
+) -> Result<(), String> {
+    let store = app_handle
+        .store(STORE_FILE)
+        .map_err(|e| format!("Failed to access store: {}", e))?;
+
+    let locked = store
+        .get(UPDATE_MODE_LOCKED_KEY)
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    if locked {
+        add_log(format!(
+            "⚠️ set_update_mode({:?}) rejected — mode is locked by provisioning",
+            mode
+        ));
+        return Err("Update mode is locked by your administrator".to_string());
+    }
+
+    store.set(
+        UPDATE_MODE_KEY,
+        serde_json::to_value(&mode)
+            .map_err(|e| format!("Failed to serialize update mode: {}", e))?,
+    );
+    store
+        .save()
+        .map_err(|e| format!("Failed to save store: {}", e))?;
+    add_log(format!("⚙️ User set update mode to {:?}", mode));
+    Ok(())
 }
 
 #[tauri::command]
