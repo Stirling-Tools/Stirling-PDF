@@ -213,7 +213,9 @@ const FileEditorThumbnail = ({
       {
         id: "pin",
         icon: <PushPinIcon style={{ fontSize: 20 }} />,
-        label: isPinned ? t("unpin", "Unpin File (replace after tool run)") : t("pin", "Pin File (keep active after tool run)"),
+        label: isPinned
+          ? t("unpin", "Unpin File (replace after tool run)")
+          : t("pin", "Pin File (keep active after tool run)"),
         onClick: (e) => {
           e.stopPropagation();
           if (actualFile) {
@@ -450,7 +452,13 @@ const FileEditorThumbnail = ({
       </div>
 
       {/* Close Confirmation Modal */}
-      <Modal opened={showCloseModal} onClose={handleCancelClose} title={t("confirmClose", "Confirm Close")} centered size="auto">
+      <Modal
+        opened={showCloseModal}
+        onClose={handleCancelClose}
+        title={t("confirmClose", "Confirm Close")}
+        centered
+        size="auto"
+      >
         <Stack gap="md">
           {file.isDirty && file.localFilePath ? (
             <>
