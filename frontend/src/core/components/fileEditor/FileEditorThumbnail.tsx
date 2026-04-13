@@ -374,68 +374,68 @@ const FileEditorThumbnail = ({
               data-supported={isSupported}
               style={{ "--thumb-aspect": thumbAspect } as React.CSSProperties}
             >
-            {/* Error overlay */}
-            {hasError && (
-              <div className={styles.errorOverlay}>
-                <span className={styles.errorPill}>{t("error._value", "Error")}</span>
-              </div>
-            )}
-
-            {/* Thumbnail image or loading state */}
-            {file.thumbnailUrl ? (
-              <PrivateContent>
-                <img
-                  src={file.thumbnailUrl}
-                  alt={file.name}
-                  className={styles.thumbImage}
-                  draggable={false}
-                  loading="lazy"
-                  decoding="async"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
-              </PrivateContent>
-            ) : file.type?.startsWith("application/pdf") ? (
-              <Stack align="center" justify="center" gap="xs" style={{ height: "100%" }}>
-                <Loader size="sm" />
-                <Text size="xs" c="dimmed">
-                  Loading thumbnail...
-                </Text>
-              </Stack>
-            ) : null}
-
-            {/* Badges — visible on hover via CSS */}
-            <div className={styles.thumbBadges}>
-              <span className={styles.versionBadgeThumb}>v{file.versionNumber}</span>
-              {isPinned && (
-                <span className={styles.pinnedBadge}>
-                  <PushPinIcon style={{ fontSize: 12 }} />
-                </span>
+              {/* Error overlay */}
+              {hasError && (
+                <div className={styles.errorOverlay}>
+                  <span className={styles.errorPill}>{t("error._value", "Error")}</span>
+                </div>
               )}
-              {isSharedFile && !isOwnedOrLocal && (
-                <span className={styles.ownershipBadge}>{t("fileManager.sharedWithYou", "Shared")}</span>
-              )}
-              {isEncrypted && (
-                <Tooltip label={t("encryptedPdfUnlock.unlockPrompt", "Unlock PDF to continue")}>
-                  <ActionIcon
-                    size="xs"
-                    variant="filled"
-                    color="yellow"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openEncryptedUnlockPrompt(file.id);
+
+              {/* Thumbnail image or loading state */}
+              {file.thumbnailUrl ? (
+                <PrivateContent>
+                  <img
+                    src={file.thumbnailUrl}
+                    alt={file.name}
+                    className={styles.thumbImage}
+                    draggable={false}
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
                     }}
-                    style={{ pointerEvents: "auto" }}
-                  >
-                    <LockOpenIcon style={{ fontSize: 12 }} />
-                  </ActionIcon>
-                </Tooltip>
-              )}
+                  />
+                </PrivateContent>
+              ) : file.type?.startsWith("application/pdf") ? (
+                <Stack align="center" justify="center" gap="xs" style={{ height: "100%" }}>
+                  <Loader size="sm" />
+                  <Text size="xs" c="dimmed">
+                    Loading thumbnail...
+                  </Text>
+                </Stack>
+              ) : null}
+
+              {/* Badges — visible on hover via CSS */}
+              <div className={styles.thumbBadges}>
+                <span className={styles.versionBadgeThumb}>v{file.versionNumber}</span>
+                {isPinned && (
+                  <span className={styles.pinnedBadge}>
+                    <PushPinIcon style={{ fontSize: 12 }} />
+                  </span>
+                )}
+                {isSharedFile && !isOwnedOrLocal && (
+                  <span className={styles.ownershipBadge}>{t("fileManager.sharedWithYou", "Shared")}</span>
+                )}
+                {isEncrypted && (
+                  <Tooltip label={t("encryptedPdfUnlock.unlockPrompt", "Unlock PDF to continue")}>
+                    <ActionIcon
+                      size="xs"
+                      variant="filled"
+                      color="yellow"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEncryptedUnlockPrompt(file.id);
+                      }}
+                      style={{ pointerEvents: "auto" }}
+                    >
+                      <LockOpenIcon style={{ fontSize: 12 }} />
+                    </ActionIcon>
+                  </Tooltip>
+                )}
+              </div>
             </div>
           </div>
-
-          </div>{/* end thumbUnit */}
+          {/* end thumbUnit */}
 
           {/* Drag handle */}
           <span ref={handleRef} className={styles.dragHandle} aria-hidden>
