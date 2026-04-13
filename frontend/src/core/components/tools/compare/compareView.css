@@ -565,7 +565,9 @@
   color: var(--mantine-color-blue-filled);
   cursor: pointer;
   font: inherit;
-  transition: background 0.12s ease, border-color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
 }
 
 .compare-step-selection__swap:hover:not(:disabled) {

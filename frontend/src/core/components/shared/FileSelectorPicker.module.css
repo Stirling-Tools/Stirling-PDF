@@ -11,7 +11,9 @@
   align-items: center;
   gap: 0.5rem;
   user-select: none;
-  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
 }
 
 .trigger:hover:not(.triggerDisabled) {
@@ -87,7 +89,9 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: background 0.1s ease, color 0.1s ease;
+  transition:
+    background 0.1s ease,
+    color 0.1s ease;
 }
 
 .slimTab {
@@ -134,7 +138,6 @@
   cursor: not-allowed;
 }
 
-
 /* ── Sort button group ───────────────────────────── */
 .sortGroup {
   display: flex;
@@ -153,7 +156,9 @@
   background: transparent;
   color: var(--mantine-color-dimmed);
   line-height: 1.6;
-  transition: background 0.1s, color 0.1s;
+  transition:
+    background 0.1s,
+    color 0.1s;
   white-space: nowrap;
 }
 

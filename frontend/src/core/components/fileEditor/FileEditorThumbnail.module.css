@@ -63,7 +63,9 @@
   overflow: hidden;
   position: relative;
   background: var(--bg-surface);
-  transition: box-shadow 0.15s ease, transform 0.2s ease;
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.2s ease;
 }
 
 .thumbContainer[data-supported="false"] {
