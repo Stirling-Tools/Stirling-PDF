@@ -5,7 +5,7 @@ import { useDefaultApp } from "@app/hooks/useDefaultApp";
 
 export const DefaultAppSettings: React.FC = () => {
   const { t } = useTranslation();
-  const { isDefault, isLoading, handleSetDefault } = useDefaultApp();
+  const { isDefault, isLoading, isPromptSuppressed, handleSetDefault, resetPromptPreferences } = useDefaultApp();
 
   return (
     <Paper withBorder p="md" radius="md">
@@ -35,6 +35,19 @@ export const DefaultAppSettings: React.FC = () => {
             : t("settings.general.setAsDefault", "Set as Default")}
         </Button>
       </Group>
+      {isPromptSuppressed && isDefault === false && (
+        <Group justify="space-between" align="center" mt="sm">
+          <Text size="xs" c="dimmed">
+            {t(
+              "settings.general.defaultPdfEditorPromptSuppressed",
+              "The startup reminder is currently disabled on this device.",
+            )}
+          </Text>
+          <Button variant="subtle" size="xs" onClick={resetPromptPreferences}>
+            {t("settings.general.defaultPdfEditorPromptRestore", "Enable reminder again")}
+          </Button>
+        </Group>
+      )}
     </Paper>
   );
 };

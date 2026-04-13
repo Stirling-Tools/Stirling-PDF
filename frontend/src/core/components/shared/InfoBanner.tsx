@@ -37,6 +37,9 @@ interface InfoBannerProps {
   buttonText?: string;
   buttonIcon?: string;
   onButtonClick?: () => void;
+  secondaryButtonText?: string;
+  secondaryButtonIcon?: string;
+  onSecondaryButtonClick?: () => void;
   onDismiss?: () => void;
   dismissible?: boolean;
   loading?: boolean;
@@ -62,6 +65,9 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
   buttonText,
   buttonIcon = "check-circle-rounded",
   onButtonClick,
+  secondaryButtonText,
+  secondaryButtonIcon = "block-rounded",
+  onSecondaryButtonClick,
   onDismiss,
   dismissible = true,
   loading = false,
@@ -127,6 +133,17 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
               leftSection={<LocalIcon icon={buttonIcon} width="0.9rem" height="0.9rem" />}
             >
               {buttonText}
+            </Button>
+          )}
+          {secondaryButtonText && onSecondaryButtonClick && (
+            <Button
+              variant="subtle"
+              color={buttonColor ?? toneStyle.buttonColor}
+              size="xs"
+              onClick={onSecondaryButtonClick}
+              leftSection={<LocalIcon icon={secondaryButtonIcon} width="0.9rem" height="0.9rem" />}
+            >
+              {secondaryButtonText}
             </Button>
           )}
           {dismissible && (

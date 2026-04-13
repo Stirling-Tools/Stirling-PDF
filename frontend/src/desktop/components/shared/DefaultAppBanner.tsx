@@ -5,10 +5,16 @@ import { useDefaultApp } from "@app/hooks/useDefaultApp";
 
 export const DefaultAppBanner: React.FC = () => {
   const { t } = useTranslation();
-  const { isDefault, isLoading, handleSetDefault } = useDefaultApp();
+  const { isLoading, showPrompt, handleSetDefault, dismissPromptTemporarily, dismissPromptPermanently } = useDefaultApp();
   const [dismissed, setDismissed] = useState(false);
 
   const handleDismissPrompt = () => {
+    dismissPromptTemporarily();
+    setDismissed(true);
+  };
+
+  const handleDontAskAgain = () => {
+    dismissPromptPermanently();
     setDismissed(true);
   };
 
@@ -19,9 +25,12 @@ export const DefaultAppBanner: React.FC = () => {
       buttonText={t("defaultApp.setDefault", "Set Default")}
       buttonIcon="check-circle-rounded"
       onButtonClick={handleSetDefault}
+      secondaryButtonText={t("defaultApp.dontAskAgain", "Don't ask again")}
+      secondaryButtonIcon="block-rounded"
+      onSecondaryButtonClick={handleDontAskAgain}
       onDismiss={handleDismissPrompt}
       loading={isLoading}
-      show={!dismissed && isDefault === false}
+      show={!dismissed && showPrompt}
     />
   );
 };
