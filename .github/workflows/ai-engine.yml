@@ -21,7 +21,7 @@ jobs:
           enable-cache: true
 
       - name: Install Task
-        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
 
       - name: Run fixers
         # Ignore errors here because we're going to add comments for them in the following steps before actually failing
