@@ -174,7 +174,7 @@
   font-weight: 600;
 }
 
-/* Badges row pinned to top-left of thumbnail - visible on card hover */
+/* Badges row pinned to top-left of thumbnail - always visible */
 .thumbBadges {
   position: absolute;
   top: 6px;
@@ -184,13 +184,6 @@
   align-items: center;
   z-index: 3;
   pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-
-.card:hover .thumbBadges,
-.card:focus-within .thumbBadges {
-  opacity: 1;
 }
 
 .ownershipBadge {
@@ -223,4 +216,21 @@
   align-items: center;
   justify-content: center;
   line-height: 1;
+}
+
+.dragHandle {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  cursor: grab;
+  color: var(--text-secondary);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.card:hover .dragHandle,
+.card:focus-within .dragHandle {
+  opacity: 0.5;
+  pointer-events: auto;
 }

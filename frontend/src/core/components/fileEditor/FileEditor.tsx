@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { Text, Center, Box, LoadingOverlay, Stack } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
 import { useFileSelection, useFileState, useFileManagement, useFileActions } from "@app/contexts/FileContext";
@@ -58,8 +58,6 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
     alert({ alertType: "error", title: "Error", body: message, expandable: true });
   }, []);
 
-  const [selectionMode, setSelectionMode] = useState(toolMode);
-
   // Current tool (for enforcing maxFiles limits)
   const { selectedTool } = useToolWorkflow();
 
@@ -69,24 +67,7 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
     return !toolMode || rawMax == null || rawMax < 0 ? Infinity : rawMax;
   }, [selectedTool?.maxFiles, toolMode]);
 
-  // Enable selection mode automatically in tool mode
-  useEffect(() => {
-    if (toolMode) {
-      setSelectionMode(true);
-    }
-  }, [toolMode]);
-
   const [showFilePickerModal, setShowFilePickerModal] = useState(false);
-
-  // Get selected file IDs from context (defensive programming)
-  const contextSelectedIds = Array.isArray(selectedFileIds) ? selectedFileIds : [];
-
-  // Create refs for frequently changing values to stabilize callbacks
-  const contextSelectedIdsRef = useRef<FileId[]>([]);
-  contextSelectedIdsRef.current = contextSelectedIds;
-
-  // Use activeStirlingFileStubs directly - no conversion needed
-  const localSelectedIds = contextSelectedIds;
 
   const handleCloseAllFiles = useCallback(() => {
     void removeFiles(
@@ -130,46 +111,6 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
       }
     },
     [addFiles, showStatus, showError, selectors, maxAllowed, setSelectedFiles],
-  );
-
-  const toggleFile = useCallback(
-    (fileId: FileId) => {
-      const currentSelectedIds = contextSelectedIdsRef.current;
-
-      const targetRecord = activeStirlingFileStubs.find((r) => r.id === fileId);
-      if (!targetRecord) return;
-
-      const contextFileId = fileId; // No need to create a new ID
-      const isSelected = currentSelectedIds.includes(contextFileId);
-
-      let newSelection: FileId[];
-
-      if (isSelected) {
-        // Remove file from selection
-        newSelection = currentSelectedIds.filter((id) => id !== contextFileId);
-      } else {
-        // Add file to selection
-        // Determine max files allowed from the active tool (negative or undefined means unlimited)
-        const rawMax = selectedTool?.maxFiles;
-        const maxAllowed = !toolMode || rawMax == null || rawMax < 0 ? Infinity : rawMax;
-
-        if (maxAllowed === 1) {
-          // Only one file allowed -> replace selection with the new file
-          newSelection = [contextFileId];
-        } else {
-          // If at capacity, drop the oldest selected and append the new one
-          if (Number.isFinite(maxAllowed) && currentSelectedIds.length >= maxAllowed) {
-            newSelection = [...currentSelectedIds.slice(1), contextFileId];
-          } else {
-            newSelection = [...currentSelectedIds, contextFileId];
-          }
-        }
-      }
-
-      // Update context (this automatically updates tool selection since they use the same action)
-      setSelectedFiles(newSelection);
-    },
-    [setSelectedFiles, toolMode, _setStatus, activeStirlingFileStubs, selectedTool?.maxFiles],
   );
 
   // Enforce maxAllowed when tool changes or when an external action sets too many selected files
@@ -410,12 +351,8 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
                     file={record}
                     index={index}
                     totalFiles={activeStirlingFileStubs.length}
-                    selectedFiles={localSelectedIds}
-                    selectionMode={selectionMode}
-                    onToggleFile={toggleFile}
                     onCloseFile={handleCloseFile}
                     onViewFile={handleViewFile}
-                    _onSetStatus={showStatus}
                     onReorderFiles={handleReorderFiles}
                     onDownloadFile={handleDownloadFile}
                     onUnzipFile={handleUnzipFile}
