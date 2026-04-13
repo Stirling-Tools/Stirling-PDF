@@ -1,44 +1,62 @@
 version: '3'
 
-vars:
-  GRADLE: '{{if eq OS "windows"}}gradlew.bat{{else}}./gradlew{{end}}'
-
 tasks:
   dev:
     desc: "Start backend dev server"
     ignore_error: true
     cmds:
-      - '{{.GRADLE}} :stirling-pdf:bootRun'
+      - cmd: gradlew.bat :stirling-pdf:bootRun
+        platforms: [windows]
+      - cmd: ./gradlew :stirling-pdf:bootRun
+        platforms: [linux, darwin]
 
   build:
     desc: "Full backend build"
     cmds:
-      - '{{.GRADLE}} clean build'
+      - cmd: gradlew.bat clean build
+        platforms: [windows]
+      - cmd: ./gradlew clean build
+        platforms: [linux, darwin]
 
   build:fast:
     desc: "Build without tests"
     cmds:
-      - '{{.GRADLE}} clean build -x test'
+      - cmd: gradlew.bat clean build -x test
+        platforms: [windows]
+      - cmd: ./gradlew clean build -x test
+        platforms: [linux, darwin]
 
   build:ci:
     desc: "Build for CI (formatting checked separately)"
     cmds:
-      - '{{.GRADLE}} build -PnoSpotless'
+      - cmd: gradlew.bat build -PnoSpotless
+        platforms: [windows]
+      - cmd: ./gradlew build -PnoSpotless
+        platforms: [linux, darwin]
 
   test:
     desc: "Run backend tests"
     cmds:
-      - '{{.GRADLE}} test'
+      - cmd: gradlew.bat test
+        platforms: [windows]
+      - cmd: ./gradlew test
+        platforms: [linux, darwin]
 
   format:
     desc: "Auto-fix code formatting"
     cmds:
-      - '{{.GRADLE}} spotlessApply'
+      - cmd: gradlew.bat spotlessApply
+        platforms: [windows]
+      - cmd: ./gradlew spotlessApply
+        platforms: [linux, darwin]
 
   format:check:
     desc: "Check code formatting"
     cmds:
-      - '{{.GRADLE}} spotlessCheck'
+      - cmd: gradlew.bat spotlessCheck
+        platforms: [windows]
+      - cmd: ./gradlew spotlessCheck
+        platforms: [linux, darwin]
 
   fix:
     desc: "Auto-fix backend"
@@ -48,7 +66,10 @@ tasks:
   swagger:
     desc: "Generate OpenAPI docs"
     cmds:
-      - '{{.GRADLE}} :stirling-pdf:generateOpenApiDocs'
+      - cmd: gradlew.bat :stirling-pdf:generateOpenApiDocs
+        platforms: [windows]
+      - cmd: ./gradlew :stirling-pdf:generateOpenApiDocs
+        platforms: [linux, darwin]
 
   check:
     desc: "Backend quality gate"
@@ -60,19 +81,31 @@ tasks:
     desc: "Print project version"
     silent: true
     cmds:
-      - '{{.GRADLE}} printVersion --quiet | tail -1'
+      - cmd: gradlew.bat printVersion --quiet | tail -1
+        platforms: [windows]
+      - cmd: ./gradlew printVersion --quiet | tail -1
+        platforms: [linux, darwin]
 
   licenses:check:
     desc: "Check dependency licenses"
     cmds:
-      - '{{.GRADLE}} checkLicense --no-parallel'
+      - cmd: gradlew.bat checkLicense --no-parallel
+        platforms: [windows]
+      - cmd: ./gradlew checkLicense --no-parallel
+        platforms: [linux, darwin]
 
   licenses:generate:
     desc: "Check and generate dependency license report"
     cmds:
-      - '{{.GRADLE}} checkLicense generateLicenseReport --no-parallel'
+      - cmd: gradlew.bat checkLicense generateLicenseReport --no-parallel
+        platforms: [windows]
+      - cmd: ./gradlew checkLicense generateLicenseReport --no-parallel
+        platforms: [linux, darwin]
 
   clean:
     desc: "Clean build artifacts"
     cmds:
-      - '{{.GRADLE}} clean'
+      - cmd: gradlew.bat clean
+        platforms: [windows]
+      - cmd: ./gradlew clean
+        platforms: [linux, darwin]

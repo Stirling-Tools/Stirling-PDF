@@ -2,9 +2,6 @@ version: '3'
 
 output: prefixed
 
-vars:
-  GRADLE: '{{if eq OS "windows"}}gradlew.bat{{else}}./gradlew{{end}}'
-
 includes:
   backend:
     taskfile: .taskfiles/backend.yml
