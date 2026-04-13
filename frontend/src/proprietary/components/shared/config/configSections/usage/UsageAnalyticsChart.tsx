@@ -1,6 +1,6 @@
-import React from 'react';
-import { Card, Text, Stack, Group, Box } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
+import React from "react";
+import { Card, Text, Stack, Group, Box } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 interface SimpleBarChartProps {
   data: { label: string; value: number }[];
@@ -14,7 +14,7 @@ const SimpleBarChart: React.FC<SimpleBarChartProps> = ({ data, maxValue }) => {
     <Stack gap="sm">
       {data.length === 0 ? (
         <Text c="dimmed" ta="center" py="xl">
-          {t('usage.noData', 'No data available')}
+          {t("usage.noData", "No data available")}
         </Text>
       ) : (
         data.map((item, index) => (
@@ -25,9 +25,9 @@ const SimpleBarChart: React.FC<SimpleBarChartProps> = ({ data, maxValue }) => {
                 c="dimmed"
                 maw="60%"
                 style={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
                 }}
               >
                 {item.label}
@@ -43,19 +43,19 @@ const SimpleBarChart: React.FC<SimpleBarChartProps> = ({ data, maxValue }) => {
             </Group>
             <Box
               style={{
-                width: '100%',
-                height: '0.5rem',
-                backgroundColor: 'var(--mantine-color-gray-2)',
-                borderRadius: 'var(--mantine-radius-sm)',
-                overflow: 'hidden',
+                width: "100%",
+                height: "0.5rem",
+                backgroundColor: "var(--mantine-color-gray-2)",
+                borderRadius: "var(--mantine-radius-sm)",
+                overflow: "hidden",
               }}
             >
               <Box
                 style={{
                   width: `${(item.value / maxValue) * 100}%`,
-                  height: '100%',
-                  backgroundColor: 'var(--mantine-color-blue-6)',
-                  transition: 'width 0.3s ease',
+                  height: "100%",
+                  backgroundColor: "var(--mantine-color-blue-6)",
+                  transition: "width 0.3s ease",
                 }}
               />
             </Box>
@@ -83,7 +83,7 @@ const UsageAnalyticsChart: React.FC<UsageAnalyticsChartProps> = ({ data }) => {
     <Card padding="lg" radius="md" withBorder>
       <Stack gap="md">
         <Text size="lg" fw={600}>
-          {t('usage.chart.title', 'Endpoint Usage Chart')}
+          {t("usage.chart.title", "Endpoint Usage Chart")}
         </Text>
         <SimpleBarChart data={safeData} maxValue={safeMaxValue} />
       </Stack>

@@ -8,7 +8,12 @@ import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
 import { HotkeyProvider } from "@app/contexts/HotkeyContext";
 import { SidebarProvider } from "@app/contexts/SidebarContext";
 import { PreferencesProvider, usePreferences } from "@app/contexts/PreferencesContext";
-import { AppConfigProvider, AppConfigProviderProps, AppConfigRetryOptions, useAppConfig } from "@app/contexts/AppConfigContext";
+import {
+  AppConfigProvider,
+  AppConfigProviderProps,
+  AppConfigRetryOptions,
+  useAppConfig,
+} from "@app/contexts/AppConfigContext";
 import { RightRailProvider } from "@app/contexts/RightRailContext";
 import { ViewerProvider } from "@app/contexts/ViewerContext";
 import { SignatureProvider } from "@app/contexts/SignatureContext";
@@ -20,9 +25,9 @@ import { BannerProvider } from "@app/contexts/BannerContext";
 import ErrorBoundary from "@app/components/shared/ErrorBoundary";
 import { useScarfTracking } from "@app/hooks/useScarfTracking";
 import { useAppInitialization } from "@app/hooks/useAppInitialization";
-import { useLogoAssets } from '@app/hooks/useLogoAssets';
-import AppConfigLoader from '@app/components/shared/AppConfigLoader';
-import { UpdateStartupPopup } from '@app/components/shared/UpdateStartupPopup';
+import { useLogoAssets } from "@app/hooks/useLogoAssets";
+import AppConfigLoader from "@app/components/shared/AppConfigLoader";
+import { UpdateStartupPopup } from "@app/components/shared/UpdateStartupPopup";
 import { RedactionProvider } from "@app/contexts/RedactionContext";
 import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
 
@@ -42,14 +47,14 @@ function BrandingAssetManager() {
   const { favicon, logo192, manifestHref } = useLogoAssets();
 
   useEffect(() => {
-    if (typeof document === 'undefined') {
+    if (typeof document === "undefined") {
       return;
     }
 
     const setLinkHref = (selector: string, href: string) => {
       const link = document.querySelector<HTMLLinkElement>(selector);
-      if (link && link.getAttribute('href') !== href) {
-        link.setAttribute('href', href);
+      if (link && link.getAttribute("href") !== href) {
+        link.setAttribute("href", href);
       }
     };
 
@@ -63,7 +68,7 @@ function BrandingAssetManager() {
 }
 
 // Avoid requirement to have props which are required in app providers anyway
-type AppConfigProviderOverrides = Omit<AppConfigProviderProps, 'children' | 'retryOptions'>;
+type AppConfigProviderOverrides = Omit<AppConfigProviderProps, "children" | "retryOptions">;
 
 export interface AppProvidersProps {
   children: ReactNode;
@@ -99,52 +104,47 @@ export function AppProviders({ children, appConfigRetryOptions, appConfigProvide
       <RainbowThemeProvider>
         <ErrorBoundary>
           <BannerProvider>
-              <AppConfigProvider
-                retryOptions={appConfigRetryOptions}
-                {...appConfigProviderProps}
-              >
-                <ScarfTrackingInitializer />
-                <AppConfigLoader />
-                <ServerDefaultsSync />
-                {/* Auto-popup on startup when a newer Stirling-PDF release is available.
-                    No-ops inside Tauri — the desktop popup handles that flow. */}
-                <UpdateStartupPopup />
-                <FileContextProvider enableUrlSync={true} enablePersistence={true}>
-                  <AppInitializer />
-                  <BrandingAssetManager />
-                  <ToolRegistryProvider>
-                      <NavigationProvider>
-                        <FilesModalProvider>
-                          <ToolWorkflowProvider>
-                            <HotkeyProvider>
-                              <SidebarProvider>
-                                <ViewerProvider>
-                                  <PageEditorProvider>
-                                    <SignatureProvider>
-                                      <RedactionProvider>
-                                      <FormFillProvider>
+            <AppConfigProvider retryOptions={appConfigRetryOptions} {...appConfigProviderProps}>
+              <ScarfTrackingInitializer />
+              <AppConfigLoader />
+              <ServerDefaultsSync />
+              {/* Auto-popup on startup when a newer Stirling-PDF release is available.
+                  No-ops inside Tauri — the desktop popup handles that flow. */}
+              <UpdateStartupPopup />
+              <FileContextProvider enableUrlSync={true} enablePersistence={true}>
+                <AppInitializer />
+                <BrandingAssetManager />
+                <ToolRegistryProvider>
+                  <NavigationProvider>
+                    <FilesModalProvider>
+                      <ToolWorkflowProvider>
+                        <HotkeyProvider>
+                          <SidebarProvider>
+                            <ViewerProvider>
+                              <PageEditorProvider>
+                                <SignatureProvider>
+                                  <RedactionProvider>
+                                    <FormFillProvider>
                                       <AnnotationProvider>
                                         <RightRailProvider>
                                           <TourOrchestrationProvider>
-                                            <AdminTourOrchestrationProvider>
-                                              {children}
-                                            </AdminTourOrchestrationProvider>
+                                            <AdminTourOrchestrationProvider>{children}</AdminTourOrchestrationProvider>
                                           </TourOrchestrationProvider>
                                         </RightRailProvider>
                                       </AnnotationProvider>
-                                      </FormFillProvider>
-                                      </RedactionProvider>
-                                    </SignatureProvider>
-                                  </PageEditorProvider>
-                                </ViewerProvider>
-                              </SidebarProvider>
-                            </HotkeyProvider>
-                          </ToolWorkflowProvider>
-                        </FilesModalProvider>
-                      </NavigationProvider>
-                    </ToolRegistryProvider>
-                  </FileContextProvider>
-              </AppConfigProvider>
+                                    </FormFillProvider>
+                                  </RedactionProvider>
+                                </SignatureProvider>
+                              </PageEditorProvider>
+                            </ViewerProvider>
+                          </SidebarProvider>
+                        </HotkeyProvider>
+                      </ToolWorkflowProvider>
+                    </FilesModalProvider>
+                  </NavigationProvider>
+                </ToolRegistryProvider>
+              </FileContextProvider>
+            </AppConfigProvider>
           </BannerProvider>
         </ErrorBoundary>
       </RainbowThemeProvider>

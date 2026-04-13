@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { isAuthRoute } from '@core/constants/routes';
-import { useCheckout } from '@app/contexts/CheckoutContext';
-import { InfoBanner } from '@app/components/shared/InfoBanner';
+import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate, useLocation } from "react-router-dom";
+import { isAuthRoute } from "@core/constants/routes";
+import { useCheckout } from "@app/contexts/CheckoutContext";
+import { InfoBanner } from "@app/components/shared/InfoBanner";
 import {
   SERVER_LICENSE_REQUEST_EVENT,
   type ServerLicenseRequestPayload,
@@ -11,11 +11,11 @@ import {
   type UpgradeBannerTestPayload,
   type UpgradeBannerTestScenario,
   UPGRADE_BANNER_ALERT_EVENT,
-} from '@core/constants/events';
-import { useServerExperience } from '@app/hooks/useServerExperience';
-import { isOnboardingCompleted } from '@core/components/onboarding/orchestrator/onboardingStorage';
+} from "@core/constants/events";
+import { useServerExperience } from "@app/hooks/useServerExperience";
+import { isOnboardingCompleted } from "@core/components/onboarding/orchestrator/onboardingStorage";
 
-const FRIENDLY_LAST_SEEN_KEY = 'upgradeBannerFriendlyLastShownAt';
+const FRIENDLY_LAST_SEEN_KEY = "upgradeBannerFriendlyLastShownAt";
 const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
 const UpgradeBanner: React.FC = () => {
   const { t } = useTranslation();
@@ -40,7 +40,7 @@ const UpgradeBanner: React.FC = () => {
   } = useServerExperience();
   const onboardingComplete = isOnboardingCompleted();
   const [friendlyVisible, setFriendlyVisible] = useState(() => {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === "undefined") return false;
     const lastShownRaw = window.localStorage.getItem(FRIENDLY_LAST_SEEN_KEY);
     if (!lastShownRaw) return false;
     const lastShown = parseInt(lastShownRaw, 10);
@@ -51,7 +51,7 @@ const UpgradeBanner: React.FC = () => {
   const [testScenario, setTestScenario] = useState<UpgradeBannerTestScenario>(null);
 
   useEffect(() => {
-    if (!isDev || typeof window === 'undefined') {
+    if (!isDev || typeof window === "undefined") {
       return;
     }
 
@@ -59,7 +59,7 @@ const UpgradeBanner: React.FC = () => {
       const { detail } = event as CustomEvent<UpgradeBannerTestPayload>;
       setTestScenario(detail?.scenario ?? null);
 
-      if (detail?.scenario === 'friendly') {
+      if (detail?.scenario === "friendly") {
         setFriendlyVisible(true);
       } else if (!detail?.scenario) {
         setFriendlyVisible(false);
@@ -75,82 +75,52 @@ const UpgradeBanner: React.FC = () => {
   const isAdmin = configIsAdmin;
 
   const scenario = isDev ? testScenario : null;
-  const scenarioIsFriendly = scenario === 'friendly';
-  const scenarioIsUrgentUser = scenario === 'urgent-user';
+  const scenarioIsFriendly = scenario === "friendly";
+  const scenarioIsUrgentUser = scenario === "urgent-user";
 
-  const userCountKnown = typeof totalUsers === 'number';
+  const userCountKnown = typeof totalUsers === "number";
   const isUnderLimit = userCountKnown ? totalUsers < freeTierLimit : null;
   const isOverLimit = userCountKnown ? totalUsers > freeTierLimit : overFreeTierLimit;
   const baseTotalUsersLoaded = userCountResolved && !userCountLoading;
 
-  const scenarioProvidesInfo =
-    scenarioKey && scenarioKey !== 'unknown' && scenarioKey !== 'licensed';
-  const derivedIsAdmin = scenarioProvidesInfo
-    ? scenarioKey.includes('admin')
-    : isAdmin;
-  const derivedHasPaidLicense =
-    scenarioKey === 'licensed'
-      ? true
-      : scenarioKey === 'unknown'
-        ? hasPaidLicense
-        : false;
-  const derivedIsUnderLimit = scenarioProvidesInfo
-    ? scenarioKey.includes('under-limit')
-    : isUnderLimit === true;
-  const derivedIsOverLimit = scenarioProvidesInfo
-    ? scenarioKey.includes('over-limit')
-    : isOverLimit === true;
+  const scenarioProvidesInfo = scenarioKey && scenarioKey !== "unknown" && scenarioKey !== "licensed";
+  const derivedIsAdmin = scenarioProvidesInfo ? scenarioKey.includes("admin") : isAdmin;
+  const derivedHasPaidLicense = scenarioKey === "licensed" ? true : scenarioKey === "unknown" ? hasPaidLicense : false;
+  const derivedIsUnderLimit = scenarioProvidesInfo ? scenarioKey.includes("under-limit") : isUnderLimit === true;
+  const derivedIsOverLimit = scenarioProvidesInfo ? scenarioKey.includes("over-limit") : isOverLimit === true;
 
-  const effectiveIsAdmin = scenario
-    ? scenarioIsUrgentUser
-      ? false
-      : true
-    : derivedIsAdmin;
-  const effectiveTotalUsers =
-    scenario != null ? (scenarioIsFriendly ? 3 : 8) : totalUsers;
+  const effectiveIsAdmin = scenario ? (scenarioIsUrgentUser ? false : true) : derivedIsAdmin;
+  const effectiveTotalUsers = scenario != null ? (scenarioIsFriendly ? 3 : 8) : totalUsers;
   const effectiveTotalUsersLoaded = scenario != null ? true : baseTotalUsersLoaded;
   const effectiveHasPaidLicense = scenario != null ? false : derivedHasPaidLicense;
-  const effectiveIsUnderLimit =
-    scenario != null ? scenarioIsFriendly : derivedIsUnderLimit;
-  const effectiveIsOverLimit =
-    scenario != null ? !scenarioIsFriendly : derivedIsOverLimit;
+  const effectiveIsUnderLimit = scenario != null ? scenarioIsFriendly : derivedIsUnderLimit;
+  const effectiveIsOverLimit = scenario != null ? !scenarioIsFriendly : derivedIsOverLimit;
 
   const isDerivedAdmin = scenario
     ? !scenarioIsUrgentUser
-    : scenarioKey === 'login-user-over-limit-no-license'
+    : scenarioKey === "login-user-over-limit-no-license"
       ? false
       : effectiveIsAdmin;
 
   const shouldShowFriendlyBase = Boolean(
-    isDerivedAdmin &&
-      !effectiveHasPaidLicense &&
-      effectiveIsUnderLimit &&
-      effectiveTotalUsersLoaded,
+    isDerivedAdmin && !effectiveHasPaidLicense && effectiveIsUnderLimit && effectiveTotalUsersLoaded,
   );
   const shouldShowUrgentBase = Boolean(
     !effectiveHasPaidLicense &&
-      effectiveTotalUsersLoaded &&
-      (effectiveIsOverLimit || scenarioKey === 'login-user-over-limit-no-license'),
+    effectiveTotalUsersLoaded &&
+    (effectiveIsOverLimit || scenarioKey === "login-user-over-limit-no-license"),
   );
 
   const shouldEvaluateFriendly = scenario
     ? scenarioIsFriendly
-    : Boolean(
-        shouldShowFriendlyBase &&
-          !licenseLoading &&
-          effectiveTotalUsersLoaded &&
-          onboardingComplete,
-      );
+    : Boolean(shouldShowFriendlyBase && !licenseLoading && effectiveTotalUsersLoaded && onboardingComplete);
   // Urgent banner should always show when over-limit
   const shouldEvaluateUrgent = scenario
     ? Boolean(scenario && !scenarioIsFriendly)
-    : Boolean(
-        shouldShowUrgentBase &&
-          !licenseLoading,
-      );
+    : Boolean(shouldShowUrgentBase && !licenseLoading);
 
   useEffect(() => {
-    if (scenario === 'friendly') {
+    if (scenario === "friendly") {
       return;
     }
 
@@ -159,7 +129,7 @@ const UpgradeBanner: React.FC = () => {
       return;
     }
 
-    if (friendlyVisible || typeof window === 'undefined' || userCountLoading) {
+    if (friendlyVisible || typeof window === "undefined" || userCountLoading) {
       return;
     }
 
@@ -171,36 +141,32 @@ const UpgradeBanner: React.FC = () => {
   }, [scenario, shouldEvaluateFriendly, friendlyVisible, userCountLoading]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return;
     }
 
     const detail = shouldEvaluateUrgent
       ? {
           active: true,
-          audience: effectiveIsAdmin ? 'admin' : 'user',
+          audience: effectiveIsAdmin ? "admin" : "user",
           totalUsers: effectiveTotalUsers ?? null,
           freeTierLimit,
         }
       : { active: false };
 
-    window.dispatchEvent(
-      new CustomEvent(UPGRADE_BANNER_ALERT_EVENT, { detail }),
-    );
+    window.dispatchEvent(new CustomEvent(UPGRADE_BANNER_ALERT_EVENT, { detail }));
   }, [shouldEvaluateUrgent, effectiveIsAdmin, effectiveTotalUsers, scenario, freeTierLimit]);
 
   useEffect(() => {
     return () => {
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent(UPGRADE_BANNER_ALERT_EVENT, { detail: { active: false } }),
-        );
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent(UPGRADE_BANNER_ALERT_EVENT, { detail: { active: false } }));
       }
     };
   }, []);
 
   const recordFriendlyLastShown = useCallback(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return;
     }
     window.localStorage.setItem(FRIENDLY_LAST_SEEN_KEY, Date.now().toString());
@@ -211,12 +177,12 @@ const UpgradeBanner: React.FC = () => {
 
     const hideBanner = () => setFriendlyVisible(false);
     const navigateFallback = () => {
-      navigate('/settings/adminPlan');
+      navigate("/settings/adminPlan");
       hideBanner();
     };
 
     try {
-      openCheckout('server', {
+      openCheckout("server", {
         minimumSeats: 1,
         onSuccess: () => {
           hideBanner();
@@ -226,7 +192,7 @@ const UpgradeBanner: React.FC = () => {
         },
       });
     } catch (error) {
-      console.error('[UpgradeBanner] Failed to open checkout, redirecting instead', error);
+      console.error("[UpgradeBanner] Failed to open checkout, redirecting instead", error);
       navigateFallback();
       return;
     }
@@ -241,7 +207,7 @@ const UpgradeBanner: React.FC = () => {
   };
 
   const handleSeeInfo = () => {
-    if (typeof window === 'undefined' || !effectiveIsAdmin) {
+    if (typeof window === "undefined" || !effectiveIsAdmin) {
       return;
     }
 
@@ -255,9 +221,7 @@ const UpgradeBanner: React.FC = () => {
       deferUntilTourComplete: false,
     };
 
-    window.dispatchEvent(
-      new CustomEvent(SERVER_LICENSE_REQUEST_EVENT, { detail }),
-    );
+    window.dispatchEvent(new CustomEvent(SERVER_LICENSE_REQUEST_EVENT, { detail }));
   };
 
   const renderUrgentBanner = () => {
@@ -265,23 +229,17 @@ const UpgradeBanner: React.FC = () => {
       return null;
     }
 
-    const buttonText = effectiveIsAdmin ? t('upgradeBanner.seeInfo', 'See info') : undefined;
+    const buttonText = effectiveIsAdmin ? t("upgradeBanner.seeInfo", "See info") : undefined;
 
     const attentionMessage = effectiveIsAdmin
-      ? t(
-          'upgradeBanner.attentionBodyAdmin',
-          'Review the license requirements to keep this server compliant.',
-        )
-      : t(
-          'upgradeBanner.attentionBody',
-          'Your admin needs to sign in to see more info. Please contact them immediately.',
-        );
+      ? t("upgradeBanner.attentionBodyAdmin", "Review the license requirements to keep this server compliant.")
+      : t("upgradeBanner.attentionBody", "Your admin needs to sign in to see more info. Please contact them immediately.");
 
     return (
       <InfoBanner
         icon="warning-rounded"
         tone="warning"
-        title={t('upgradeBanner.attentionTitle', 'This server needs admin attention')}
+        title={t("upgradeBanner.attentionTitle", "This server needs admin attention")}
         message={attentionMessage}
         buttonText={buttonText}
         buttonIcon="info-rounded"
@@ -298,18 +256,12 @@ const UpgradeBanner: React.FC = () => {
     );
   };
 
-  const suppressForNoLogin =
-    !loginEnabled ||
-    (!loginEnabled && (weeklyActiveUsers ?? Number.POSITIVE_INFINITY) > 5);
+  const suppressForNoLogin = !loginEnabled || (!loginEnabled && (weeklyActiveUsers ?? Number.POSITIVE_INFINITY) > 5);
 
   // Don't show on auth routes or if neither banner type should show
   // Also suppress entirely for no-login servers (treat them as regular users only)
   // and, per request, never surface upgrade messaging there when WAU > 5.
-  if (
-    onAuthRoute ||
-    suppressForNoLogin ||
-    (!friendlyVisible && !shouldEvaluateUrgent)
-  ) {
+  if (onAuthRoute || suppressForNoLogin || (!friendlyVisible && !shouldEvaluateUrgent)) {
     return null;
   }
 
@@ -318,12 +270,9 @@ const UpgradeBanner: React.FC = () => {
       {friendlyVisible && (
         <InfoBanner
           icon="stars-rounded"
-          title={t('upgradeBanner.title', 'Upgrade to Server Plan')}
-          message={t(
-            'upgradeBanner.message',
-            'Get the most out of Stirling PDF with unlimited users and advanced features.',
-          )}
-          buttonText={t('upgradeBanner.upgradeButton', 'Upgrade Now')}
+          title={t("upgradeBanner.title", "Upgrade to Server Plan")}
+          message={t("upgradeBanner.message", "Get the most out of Stirling PDF with unlimited users and advanced features.")}
+          buttonText={t("upgradeBanner.upgradeButton", "Upgrade Now")}
           buttonIcon="upgrade-rounded"
           onButtonClick={handleUpgrade}
           onDismiss={handleFriendlyDismiss}

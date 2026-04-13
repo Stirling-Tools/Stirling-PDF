@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, Stack, Text, Badge, Button, Group, Loader, Center, Box, Collapse, Progress, Alert, Divider, CloseButton, Anchor } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { updateService, UpdateSummary, FullUpdateInfo, MachineInfo } from '@app/services/updateService';
-import { Z_INDEX_OVER_CONFIG_MODAL } from '@app/styles/zIndex';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import DownloadIcon from '@mui/icons-material/Download';
-import StarIcon from '@mui/icons-material/Star';
-import SystemUpdateAltIcon from '@mui/icons-material/SystemUpdateAlt';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import React, { useState, useEffect } from "react";
+import { Modal, Stack, Text, Badge, Button, Group, Loader, Center, Box, Collapse, Progress, Alert, Divider, CloseButton, Anchor } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { updateService, UpdateSummary, FullUpdateInfo, MachineInfo } from "@app/services/updateService";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import DownloadIcon from "@mui/icons-material/Download";
+import StarIcon from "@mui/icons-material/Star";
+import SystemUpdateAltIcon from "@mui/icons-material/SystemUpdateAlt";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
 export type DesktopInstallState = 'idle' | 'downloading' | 'installing' | 'ready-to-restart' | 'error';
 
@@ -124,7 +124,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
 
   const getPriorityLabel = (priority: string): string => {
     const key = priority?.toLowerCase();
-    return t(`update.priority.${key}`, priority || 'Normal');
+    return t(`update.priority.${key}`, priority || "Normal");
   };
 
   const downloadUrl = updateService.getDownloadUrl(machineInfo);

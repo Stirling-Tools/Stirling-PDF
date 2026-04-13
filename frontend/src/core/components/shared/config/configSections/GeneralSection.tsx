@@ -20,6 +20,8 @@ import { useTranslation } from "react-i18next";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import type { ToolPanelMode } from "@app/constants/toolPanel";
+import type { StartupView, ViewerZoomSetting } from "@app/services/preferencesService";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { updateService, UpdateSummary } from "@app/services/updateService";
 import UpdateModal from "@app/components/shared/UpdateModal";
@@ -69,7 +71,13 @@ interface GeneralSectionProps {
   desktopUpdateMode?: DesktopUpdateModeControl;
 }
 
-const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hideUpdateSection = false, hideAdminBanner = false, desktopInstall, desktopUpdateMode }) => {
+const GeneralSection: React.FC<GeneralSectionProps> = ({
+  hideTitle = false,
+  hideUpdateSection = false,
+  hideAdminBanner = false,
+  desktopInstall,
+  desktopUpdateMode,
+}) => {
   const { t } = useTranslation();
   const { preferences, updatePreference } = usePreferences();
   const { config } = useAppConfig();
@@ -403,6 +411,61 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
                 { label: t("settings.general.mode.sidebar", "Sidebar"), value: "sidebar" },
                 { label: t("settings.general.mode.fullscreen", "Fullscreen"), value: "fullscreen" },
               ]}
+            />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <Text fw={500} size="sm">
+                {t("settings.general.defaultStartupView", "Default view on launch")}
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t(
+                  "settings.general.defaultStartupViewDescription",
+                  "Choose which tab is active in the left column when the app starts",
+                )}
+              </Text>
+            </div>
+            <SegmentedControl
+              value={preferences.defaultStartupView}
+              onChange={(val: string) => updatePreference("defaultStartupView", val as StartupView)}
+              data={[
+                { label: t("settings.general.startupView.tools", "Tools"), value: "tools" },
+                { label: t("settings.general.startupView.read", "Reader"), value: "read" },
+                { label: t("settings.general.startupView.automate", "Automate"), value: "automate" },
+              ]}
+            />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <Text fw={500} size="sm">
+                {t("settings.general.defaultViewerZoom", "Default reader zoom")}
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t(
+                  "settings.general.defaultViewerZoomDescription",
+                  "Set the default zoom level when opening PDFs in the reader",
+                )}
+              </Text>
+            </div>
+            <Select
+              value={preferences.defaultViewerZoom}
+              onChange={(val: string | null) => {
+                if (val) updatePreference("defaultViewerZoom", val as ViewerZoomSetting);
+              }}
+              data={[
+                { label: t("settings.general.zoomLevel.auto", "Auto"), value: "auto" },
+                { label: t("settings.general.zoomLevel.fitWidth", "Fit width"), value: "fitWidth" },
+                { label: t("settings.general.zoomLevel.fitPage", "Fit page"), value: "fitPage" },
+                { label: "50%", value: "50" },
+                { label: "75%", value: "75" },
+                { label: "100%", value: "100" },
+                { label: "125%", value: "125" },
+                { label: "150%", value: "150" },
+                { label: "200%", value: "200" },
+              ]}
+              style={{ width: 140 }}
+              allowDeselect={false}
+              comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
             />
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>

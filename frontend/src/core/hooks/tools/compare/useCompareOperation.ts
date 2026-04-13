@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ADDITION_HIGHLIGHT,
   CompareDiffToken,
@@ -9,11 +9,11 @@ import {
   CompareWorkerResponse,
   CompareWorkerWarnings,
   REMOVAL_HIGHLIGHT,
-} from '@app/types/compare';
-import { CompareParameters } from '@app/hooks/tools/compare/useCompareParameters';
-import { ToolOperationHook } from '@app/hooks/tools/shared/useToolOperation';
-import type { StirlingFile } from '@app/types/fileContext';
-import { useFileContext } from '@app/contexts/file/fileHooks';
+} from "@app/types/compare";
+import { CompareParameters } from "@app/hooks/tools/compare/useCompareParameters";
+import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
+import type { StirlingFile } from "@app/types/fileContext";
+import { useFileContext } from "@app/contexts/file/fileHooks";
 import {
   aggregateTotals,
   buildChanges,
@@ -21,10 +21,10 @@ import {
   extractContentFromPdf,
   getWorkerErrorCode,
   filterTokensForDiff,
-} from '@app/hooks/tools/compare/operationUtils';
-import { alert, dismissToast } from '@app/components/toast';
-import type { ToastLocation } from '@app/components/toast/types';
-import CompareWorkerCtor from '@app/workers/compareWorker?worker';
+} from "@app/hooks/tools/compare/operationUtils";
+import { alert, dismissToast } from "@app/components/toast";
+import type { ToastLocation } from "@app/components/toast/types";
+import CompareWorkerCtor from "@app/workers/compareWorker?worker";
 const LONG_RUNNING_PAGE_THRESHOLD = 2000;
 
 export interface CompareOperationHook extends ToolOperationHook<CompareParameters> {
@@ -42,14 +42,14 @@ export const useCompareOperation = (): CompareOperationHook => {
   const activeRunIdRef = useRef(0);
   const cancelledRef = useRef(false);
 
-  type OperationStatus = 'idle' | 'extracting' | 'processing' | 'complete' | 'cancelled' | 'error';
+  type OperationStatus = "idle" | "extracting" | "processing" | "complete" | "cancelled" | "error";
   const [isLoading, setIsLoading] = useState(false);
-  const [statusState, setStatusState] = useState<OperationStatus>('idle');
+  const [statusState, setStatusState] = useState<OperationStatus>("idle");
   const [statusDetailMs, setStatusDetailMs] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
-  const [downloadFilename, setDownloadFilename] = useState('');
+  const [downloadFilename, setDownloadFilename] = useState("");
   const [result, setResult] = useState<CompareResultData | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const longRunningToastIdRef = useRef<string | null>(null);
@@ -76,8 +76,8 @@ export const useCompareOperation = (): CompareOperationHook => {
     setFiles([]);
     cleanupDownloadUrl();
     setDownloadUrl(null);
-    setDownloadFilename('');
-    setStatusState('idle');
+    setDownloadFilename("");
+    setStatusState("idle");
     setStatusDetailMs(null);
     setErrorMessage(null);
   }, [cleanupDownloadUrl]);
@@ -87,7 +87,12 @@ export const useCompareOperation = (): CompareOperationHook => {
   }, []);
 
   const runCompareWorker = useCallback(
-    async (baseTokens: string[], comparisonTokens: string[], warningMessages: CompareWorkerWarnings, onChunk?: (chunk: CompareDiffToken[]) => void) => {
+    async (
+      baseTokens: string[],
+      comparisonTokens: string[],
+      warningMessages: CompareWorkerWarnings,
+      onChunk?: (chunk: CompareDiffToken[]) => void,
+    ) => {
       const worker = ensureWorker();
 
       return await new Promise<{
@@ -101,7 +106,7 @@ export const useCompareOperation = (): CompareOperationHook => {
         const handleMessage = (event: MessageEvent<CompareWorkerResponse>) => {
           if (cancelledRef.current) {
             cleanup();
-            reject(Object.assign(new Error('Operation cancelled'), { code: 'CANCELLED' as const }));
+            reject(Object.assign(new Error("Operation cancelled"), { code: "CANCELLED" as const }));
             return;
           }
           const message = event.data;
@@ -110,14 +115,14 @@ export const useCompareOperation = (): CompareOperationHook => {
           }
 
           switch (message.type) {
-            case 'chunk': {
+            case "chunk": {
               if (message.tokens.length > 0) {
                 collectedTokens.push(...message.tokens);
                 onChunk?.(message.tokens);
               }
               break;
             }
-            case 'success':
+            case "success":
               cleanup();
               if (longRunningToastIdRef.current) {
                 dismissToast(longRunningToastIdRef.current);
@@ -129,16 +134,16 @@ export const useCompareOperation = (): CompareOperationHook => {
                 warnings: collectedWarnings,
               });
               break;
-            case 'warning':
+            case "warning":
               collectedWarnings.push(message.message);
               break;
-            case 'error': {
+            case "error": {
               cleanup();
               if (longRunningToastIdRef.current) {
                 dismissToast(longRunningToastIdRef.current);
                 longRunningToastIdRef.current = null;
               }
-              const error: Error & { code?: 'EMPTY_TEXT' | 'TOO_LARGE' | 'TOO_DISSIMILAR' } = new Error(message.message);
+              const error: Error & { code?: "EMPTY_TEXT" | "TOO_LARGE" | "TOO_DISSIMILAR" } = new Error(message.message);
               error.code = message.code;
               reject(error);
               break;
@@ -151,22 +156,22 @@ export const useCompareOperation = (): CompareOperationHook => {
         const handleError = (event: ErrorEvent) => {
           cleanup();
           if (cancelledRef.current) {
-            reject(Object.assign(new Error('Operation cancelled'), { code: 'CANCELLED' as const }));
+            reject(Object.assign(new Error("Operation cancelled"), { code: "CANCELLED" as const }));
           } else {
             reject(event.error ?? new Error(event.message));
           }
         };
 
         const cleanup = () => {
-          worker.removeEventListener('message', handleMessage as EventListener);
-          worker.removeEventListener('error', handleError as EventListener);
+          worker.removeEventListener("message", handleMessage as EventListener);
+          worker.removeEventListener("error", handleError as EventListener);
         };
 
-        worker.addEventListener('message', handleMessage as EventListener);
-        worker.addEventListener('error', handleError as EventListener);
+        worker.addEventListener("message", handleMessage as EventListener);
+        worker.addEventListener("error", handleError as EventListener);
 
         const request: CompareWorkerRequest = {
-          type: 'compare',
+          type: "compare",
           payload: {
             baseTokens,
             comparisonTokens,
@@ -183,7 +188,7 @@ export const useCompareOperation = (): CompareOperationHook => {
         worker.postMessage(request);
       });
     },
-    [ensureWorker]
+    [ensureWorker],
   );
 
   const executeOperation = useCallback(
@@ -192,22 +197,21 @@ export const useCompareOperation = (): CompareOperationHook => {
       const runId = ++activeRunIdRef.current;
       cancelledRef.current = false;
       if (!params.baseFileId || !params.comparisonFileId) {
-        setErrorMessage(t('compare.error.selectRequired', 'Select the original and edited document.'));
+        setErrorMessage(t("compare.error.selectRequired", "Select the original and edited document."));
         return;
       }
 
-      const baseFile = selectedFiles.find((file) => file.fileId === params.baseFileId)
-        ?? selectors.getFile(params.baseFileId);
-      const comparisonFile = selectedFiles.find((file) => file.fileId === params.comparisonFileId)
-        ?? selectors.getFile(params.comparisonFileId);
+      const baseFile = selectedFiles.find((file) => file.fileId === params.baseFileId) ?? selectors.getFile(params.baseFileId);
+      const comparisonFile =
+        selectedFiles.find((file) => file.fileId === params.comparisonFileId) ?? selectors.getFile(params.comparisonFileId);
 
       if (!baseFile || !comparisonFile) {
-        setErrorMessage(t('compare.error.filesMissing', 'Unable to locate the selected files. Please re-select them.'));
+        setErrorMessage(t("compare.error.filesMissing", "Unable to locate the selected files. Please re-select them."));
         return;
       }
 
       setIsLoading(true);
-      setStatusState('extracting');
+      setStatusState("extracting");
       setStatusDetailMs(null);
       setErrorMessage(null);
       setWarnings([]);
@@ -215,21 +219,21 @@ export const useCompareOperation = (): CompareOperationHook => {
       setFiles([]);
       cleanupDownloadUrl();
       setDownloadUrl(null);
-      setDownloadFilename('');
+      setDownloadFilename("");
 
       const warningMessages: CompareWorkerWarnings = {
         // No accuracy warning any more
         tooLargeMessage: t(
-          'compare.large.file.message',
-          'These documents are very large; comparison may take several minutes. Please keep this tab open.'
+          "compare.large.file.message",
+          "These documents are very large; comparison may take several minutes. Please keep this tab open.",
         ),
         emptyTextMessage: t(
-          'compare.no.text.message',
-          'One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison.'
+          "compare.no.text.message",
+          "One or both of the selected PDFs have no text content. Please choose PDFs with text for comparison.",
         ),
         tooDissimilarMessage: t(
-          'compare.too.dissimilar.message',
-          'These documents appear highly dissimilar. Comparison was stopped to save time.'
+          "compare.too.dissimilar.message",
+          "These documents appear highly dissimilar. Comparison was stopped to save time.",
         ),
       };
 
@@ -244,30 +248,23 @@ export const useCompareOperation = (): CompareOperationHook => {
         if (cancelledRef.current || activeRunIdRef.current !== runId) return;
 
         if (baseContent.tokens.length === 0 || comparisonContent.tokens.length === 0) {
-          throw Object.assign(new Error(warningMessages.emptyTextMessage), { code: 'EMPTY_TEXT' });
+          throw Object.assign(new Error(warningMessages.emptyTextMessage), { code: "EMPTY_TEXT" });
         }
 
-        setStatusState('processing');
+        setStatusState("processing");
 
         // Filter out paragraph sentinels before diffing to avoid large false-positive runs
         const baseFiltered = filterTokensForDiff(baseContent.tokens, baseContent.metadata);
         const comparisonFiltered = filterTokensForDiff(comparisonContent.tokens, comparisonContent.metadata);
 
-        const combinedPageCount =
-          (baseContent.pageSizes?.length ?? 0) + (comparisonContent.pageSizes?.length ?? 0);
+        const combinedPageCount = (baseContent.pageSizes?.length ?? 0) + (comparisonContent.pageSizes?.length ?? 0);
 
-        if (
-          combinedPageCount >= LONG_RUNNING_PAGE_THRESHOLD &&
-          !longRunningToastIdRef.current
-        ) {
+        if (combinedPageCount >= LONG_RUNNING_PAGE_THRESHOLD && !longRunningToastIdRef.current) {
           const toastId = alert({
-            alertType: 'neutral',
-            title: t('compare.longJob.title', 'Large comparison in progress'),
-            body: t(
-              'compare.longJob.body',
-              'These PDFs together exceed 2,000 pages. Processing can take several minutes.'
-            ),
-            location: 'bottom-right' as ToastLocation,
+            alertType: "neutral",
+            title: t("compare.longJob.title", "Large comparison in progress"),
+            body: t("compare.longJob.body", "These PDFs together exceed 2,000 pages. Processing can take several minutes."),
+            location: "bottom-right" as ToastLocation,
             isPersistentPopup: true,
             expandable: false,
           });
@@ -276,29 +273,33 @@ export const useCompareOperation = (): CompareOperationHook => {
 
         // Heuristic: surface an early warning toast when we observe a very high ratio of differences
         const EARLY_TOAST_MIN_TOKENS = 15000; // wait for some signal before warning
-        const EARLY_TOAST_DIFF_RATIO = 0.8;   // 80% added/removed vs unchanged
+        const EARLY_TOAST_DIFF_RATIO = 0.8; // 80% added/removed vs unchanged
         let observedAddedRemoved = 0;
         let observedUnchanged = 0;
 
         const handleEarlyDissimilarity = () => {
           if (dissimilarityToastShownRef.current || dissimilarityToastIdRef.current) return;
           const toastId = alert({
-            alertType: 'warning',
-            title: t('compare.earlyDissimilarity.title', 'These PDFs look highly different'),
+            alertType: "warning",
+            title: t("compare.earlyDissimilarity.title", "These PDFs look highly different"),
             body: t(
-              'compare.earlyDissimilarity.body',
-              "We're seeing very few similarities so far. You can stop the comparison if these aren't related documents."
+              "compare.earlyDissimilarity.body",
+              "We're seeing very few similarities so far. You can stop the comparison if these aren't related documents.",
             ),
-            location: 'bottom-right' as ToastLocation,
+            location: "bottom-right" as ToastLocation,
             isPersistentPopup: true,
             expandable: false,
-            buttonText: t('compare.earlyDissimilarity.stopButton', 'Stop comparison'),
+            buttonText: t("compare.earlyDissimilarity.stopButton", "Stop comparison"),
             buttonCallback: () => {
-              try { cancelOperation(); } catch {
-                console.error('Failed to cancel operation');
+              try {
+                cancelOperation();
+              } catch {
+                console.error("Failed to cancel operation");
               }
-              try { window.dispatchEvent(new CustomEvent('compare:clear-selected')); } catch {
-                console.error('Failed to dispatch clear selected event');
+              try {
+                window.dispatchEvent(new CustomEvent("compare:clear-selected"));
+              } catch {
+                console.error("Failed to dispatch clear selected event");
               }
               if (dissimilarityToastIdRef.current) {
                 dismissToast(dissimilarityToastIdRef.current);
@@ -310,26 +311,25 @@ export const useCompareOperation = (): CompareOperationHook => {
           dissimilarityToastShownRef.current = true;
         };
 
-        const { tokens, stats, warnings: workerWarnings } = await runCompareWorker(
-          baseFiltered.tokens,
-          comparisonFiltered.tokens,
-          warningMessages,
-          (chunk) => {
-            // Incremental ratio tracking for early warning
-            for (const tok of chunk) {
-              if (tok.type === 'unchanged') observedUnchanged += 1;
-              else observedAddedRemoved += 1;
-            }
-            const seen = observedAddedRemoved + observedUnchanged;
-            if (
-              !dissimilarityToastShownRef.current &&
-              seen >= EARLY_TOAST_MIN_TOKENS &&
-              observedAddedRemoved / Math.max(1, seen) >= EARLY_TOAST_DIFF_RATIO
-            ) {
-              handleEarlyDissimilarity();
-            }
+        const {
+          tokens,
+          stats,
+          warnings: workerWarnings,
+        } = await runCompareWorker(baseFiltered.tokens, comparisonFiltered.tokens, warningMessages, (chunk) => {
+          // Incremental ratio tracking for early warning
+          for (const tok of chunk) {
+            if (tok.type === "unchanged") observedUnchanged += 1;
+            else observedAddedRemoved += 1;
           }
-        );
+          const seen = observedAddedRemoved + observedUnchanged;
+          if (
+            !dissimilarityToastShownRef.current &&
+            seen >= EARLY_TOAST_MIN_TOKENS &&
+            observedAddedRemoved / Math.max(1, seen) >= EARLY_TOAST_DIFF_RATIO
+          ) {
+            handleEarlyDissimilarity();
+          }
+        });
 
         if (cancelledRef.current || activeRunIdRef.current !== runId) return;
 
@@ -339,12 +339,12 @@ export const useCompareOperation = (): CompareOperationHook => {
         let baseTokenPointer = 0;
         let comparisonTokenPointer = 0;
         for (const diffToken of tokens) {
-          if (diffToken.type === 'removed') {
+          if (diffToken.type === "removed") {
             if (baseTokenPointer < baseHasHighlight.length) {
               baseHasHighlight[baseTokenPointer] = true;
             }
             baseTokenPointer += 1;
-          } else if (diffToken.type === 'added') {
+          } else if (diffToken.type === "added") {
             if (comparisonTokenPointer < comparisonHasHighlight.length) {
               comparisonHasHighlight[comparisonTokenPointer] = true;
             }
@@ -362,7 +362,7 @@ export const useCompareOperation = (): CompareOperationHook => {
         const buildFilteredTokenData = (
           tokensList: typeof baseFiltered.tokens,
           metadataList: typeof baseFiltered.metadata,
-          highlightFlags: boolean[]
+          highlightFlags: boolean[],
         ): CompareFilteredTokenInfo[] =>
           tokensList.map((token, index) => {
             const meta = metadataList[index];
@@ -411,11 +411,7 @@ export const useCompareOperation = (): CompareOperationHook => {
           },
           filteredTokenData: {
             base: buildFilteredTokenData(baseFiltered.tokens, baseFiltered.metadata, baseHasHighlight),
-            comparison: buildFilteredTokenData(
-              comparisonFiltered.tokens,
-              comparisonFiltered.metadata,
-              comparisonHasHighlight
-            ),
+            comparison: buildFilteredTokenData(comparisonFiltered.tokens, comparisonFiltered.metadata, comparisonHasHighlight),
           },
           sourceTokens: {
             base: baseContent.tokens,
@@ -439,17 +435,17 @@ export const useCompareOperation = (): CompareOperationHook => {
         setDownloadUrl(blobUrl);
         setDownloadFilename(summaryFile.name);
 
-        setStatusState('complete');
+        setStatusState("complete");
       } catch (error: unknown) {
-        console.error('[compare] operation failed', error);
+        console.error("[compare] operation failed", error);
         const errorCode = getWorkerErrorCode(error);
-        if (errorCode === 'EMPTY_TEXT') {
-          setErrorMessage(warningMessages.emptyTextMessage ?? t('compare.error.generic', 'Unable to compare these files.'));
+        if (errorCode === "EMPTY_TEXT") {
+          setErrorMessage(warningMessages.emptyTextMessage ?? t("compare.error.generic", "Unable to compare these files."));
         } else {
-          const fallbackMessage = t('compare.error.generic', 'Unable to compare these files.');
+          const fallbackMessage = t("compare.error.generic", "Unable to compare these files.");
           if (error instanceof Error && error.message) {
             setErrorMessage(error.message);
-          } else if (typeof error === 'string' && error.trim().length > 0) {
+          } else if (typeof error === "string" && error.trim().length > 0) {
             setErrorMessage(error);
           } else {
             setErrorMessage(fallbackMessage);
@@ -470,18 +466,18 @@ export const useCompareOperation = (): CompareOperationHook => {
         dissimilarityToastShownRef.current = false;
       }
     },
-    [cleanupDownloadUrl, runCompareWorker, selectors, t]
+    [cleanupDownloadUrl, runCompareWorker, selectors, t],
   );
 
   const cancelOperation = useCallback(() => {
     if (!isLoading) return;
     cancelledRef.current = true;
     setIsLoading(false);
-    setStatusState('cancelled');
+    setStatusState("cancelled");
     if (workerRef.current) {
       try {
         workerRef.current.terminate();
-      // eslint-disable-next-line no-empty
+        // eslint-disable-next-line no-empty
       } catch {}
       workerRef.current = null;
     }
@@ -511,12 +507,17 @@ export const useCompareOperation = (): CompareOperationHook => {
 
   const status = useMemo(() => {
     const label =
-      statusState === 'idle' ? ''
-        : statusState === 'extracting' ? t('compare.status.extracting', 'Extracting text...')
-        : statusState === 'processing' ? t('compare.status.processing', 'Analyzing differences...')
-        : statusState === 'complete' ? t('compare.status.complete', 'Comparison ready')
-        : statusState === 'cancelled' ? t('operationCancelled', 'Operation cancelled')
-        : '';
+      statusState === "idle"
+        ? ""
+        : statusState === "extracting"
+          ? t("compare.status.extracting", "Extracting text...")
+          : statusState === "processing"
+            ? t("compare.status.processing", "Analyzing differences...")
+            : statusState === "complete"
+              ? t("compare.status.complete", "Comparison ready")
+              : statusState === "cancelled"
+                ? t("operationCancelled", "Operation cancelled")
+                : "";
     if (label && statusDetailMs != null) return `${label} (${statusDetailMs} ms)`;
     return label;
   }, [statusState, statusDetailMs, t]);
@@ -554,6 +555,6 @@ export const useCompareOperation = (): CompareOperationHook => {
       status,
       undoOperation,
       warnings,
-    ]
+    ],
   );
 };

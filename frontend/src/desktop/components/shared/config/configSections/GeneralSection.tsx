@@ -1,14 +1,14 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Stack, Alert } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import CoreGeneralSection from '@core/components/shared/config/configSections/GeneralSection';
-import { DefaultAppSettings } from '@app/components/shared/config/configSections/DefaultAppSettings';
-import { useDesktopInstall } from '@app/hooks/useDesktopInstall';
+import React, { useCallback, useEffect, useState } from "react";
+import { Stack, Alert } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import CoreGeneralSection from "@core/components/shared/config/configSections/GeneralSection";
+import { DefaultAppSettings } from "@app/components/shared/config/configSections/DefaultAppSettings";
+import { useDesktopInstall } from "@app/hooks/useDesktopInstall";
 import {
   desktopUpdateService,
   type UpdateMode,
   type UpdateModeInfo,
-} from '@app/services/desktopUpdateService';
+} from "@app/services/desktopUpdateService";
 
 /**
  * Desktop extension of GeneralSection.

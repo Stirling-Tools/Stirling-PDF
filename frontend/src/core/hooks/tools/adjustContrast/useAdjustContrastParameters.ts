@@ -1,4 +1,4 @@
-import { useBaseParameters, BaseParametersHook } from '@app/hooks/tools/shared/useBaseParameters';
+import { useBaseParameters, BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
 
 export interface AdjustContrastParameters {
   contrast: number; // 0-200 (%), 100 = neutral
@@ -23,8 +23,6 @@ export type AdjustContrastParametersHook = BaseParametersHook<AdjustContrastPara
 export const useAdjustContrastParameters = (): AdjustContrastParametersHook => {
   return useBaseParameters<AdjustContrastParameters>({
     defaultParameters,
-    endpointName: '',
+    endpointName: "",
   });
 };
-
-

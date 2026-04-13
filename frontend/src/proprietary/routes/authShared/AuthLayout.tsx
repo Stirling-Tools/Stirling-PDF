@@ -1,13 +1,13 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import LoginRightCarousel from '@app/components/shared/LoginRightCarousel';
-import buildLoginSlides from '@app/components/shared/loginSlides';
-import styles from '@app/routes/authShared/AuthLayout.module.css';
-import { useLogoVariant } from '@app/hooks/useLogoVariant';
-import Footer from '@app/components/shared/Footer';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import LoginRightCarousel from "@app/components/shared/LoginRightCarousel";
+import buildLoginSlides from "@app/components/shared/loginSlides";
+import styles from "@app/routes/authShared/AuthLayout.module.css";
+import { useLogoVariant } from "@app/hooks/useLogoVariant";
+import Footer from "@app/components/shared/Footer";
 
 interface AuthLayoutProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
@@ -20,15 +20,15 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   // Force light mode on auth pages
   useEffect(() => {
     const htmlElement = document.documentElement;
-    const previousColorScheme = htmlElement.getAttribute('data-mantine-color-scheme');
+    const previousColorScheme = htmlElement.getAttribute("data-mantine-color-scheme");
 
     // Set light mode
-    htmlElement.setAttribute('data-mantine-color-scheme', 'light');
+    htmlElement.setAttribute("data-mantine-color-scheme", "light");
 
     // Cleanup: restore previous theme when leaving auth pages
     return () => {
       if (previousColorScheme) {
-        htmlElement.setAttribute('data-mantine-color-scheme', previousColorScheme);
+        htmlElement.setAttribute("data-mantine-color-scheme", previousColorScheme);
       }
     };
   }, []);
@@ -45,30 +45,23 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       setHideRightPanel(tooNarrow || tooShort);
     };
     update();
-    window.addEventListener('resize', update);
-    window.addEventListener('orientationchange', update);
+    window.addEventListener("resize", update);
+    window.addEventListener("orientationchange", update);
     return () => {
-      window.removeEventListener('resize', update);
-      window.removeEventListener('orientationchange', update);
+      window.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", update);
     };
   }, []);
 
   return (
     <div className={styles.authContainer}>
-      <div
-        ref={cardRef}
-        className={`${styles.authCard} ${!hideRightPanel ? styles.authCardTwoColumns : ''}`}
-      >
+      <div ref={cardRef} className={`${styles.authCard} ${!hideRightPanel ? styles.authCardTwoColumns : ""}`}>
         <div className={styles.authLeftPanel}>
-          <div className={styles.authContent}>
-            {children}
-          </div>
+          <div className={styles.authContent}>{children}</div>
         </div>
-        {!hideRightPanel && (
-          <LoginRightCarousel imageSlides={imageSlides} initialSeconds={5} slideSeconds={8} />
-        )}
+        {!hideRightPanel && <LoginRightCarousel imageSlides={imageSlides} initialSeconds={5} slideSeconds={8} />}
       </div>
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, width: '100%', zIndex: 10 }}>
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, width: "100%", zIndex: 10 }}>
         <Footer forceLightMode={true} />
       </div>
     </div>

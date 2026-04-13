@@ -1,4 +1,4 @@
-import { useAppConfig } from '@app/contexts/AppConfigContext';
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 /**
  * Returns whether the shared (group) signing feature is available.

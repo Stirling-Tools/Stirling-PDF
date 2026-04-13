@@ -3,24 +3,10 @@
   "compilerOptions": {
     "baseUrl": "../../",
     "paths": {
-      "@app/*": [
-        "src/saas/*",
-        "src/proprietary/*",
-        "src/core/*"
-      ],
-      "@proprietary/*": [
-        "src/proprietary/*"
-      ],
-      "@core/*": [
-        "src/core/*"
-      ]
+      "@app/*": ["src/saas/*", "src/proprietary/*", "src/core/*"],
+      "@proprietary/*": ["src/proprietary/*"],
+      "@core/*": ["src/core/*"]
     }
   },
-  "include": [
-    "../global.d.ts",
-    "../*.js",
-    "../*.ts",
-    "../*.tsx",
-    "."
-  ]
+  "include": ["../global.d.ts", "../*.js", "../*.ts", "../*.tsx", "."]
 }

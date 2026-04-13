@@ -1,6 +1,6 @@
-import { PdfiumFont, PdfiumPage, rgb } from '@app/services/pdfiumDocBuilder';
-import { wrapText } from '@app/hooks/tools/validateSignature/utils/pdfText';
-import { colorPalette } from '@app/hooks/tools/validateSignature/utils/pdfPalette';
+import { PdfiumFont, PdfiumPage, rgb } from "@app/services/pdfiumDocBuilder";
+import { wrapText } from "@app/hooks/tools/validateSignature/utils/pdfText";
+import { colorPalette } from "@app/hooks/tools/validateSignature/utils/pdfPalette";
 
 interface DrawCenteredMessageOptions {
   page: PdfiumPage;

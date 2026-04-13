@@ -46,6 +46,8 @@ downloadUnavailable = "Download unavailable for this item"
 edit = "Edit"
 editSecret = "Edit this value"
 editYourNewFiles = "Edit your new file(s)"
+encryptedFileBlocked = "File is password-protected. Unlock it first."
+encryptedFilesBlocked = "{{count}} files are password-protected. Unlock them first."
 exportAndContinue = "Export & Continue"
 false = "False"
 fileNotSavedToDisk = "Not saved to disk"
@@ -3430,6 +3432,9 @@ successBodyWithName = "Password removed from {{fileName}}"
 successTitle = "Password removed"
 title = "Remove password to continue"
 unlock = "Unlock & Continue"
+unlockAll = "Use for all ({{count}})"
+unlockAllPartialFail = "Wrong password for: {{names}}"
+unlockAllSuccess = "Unlocked {{count}} file(s)."
 unlockPrompt = "Unlock PDF to continue"
 
 [encryptedPdfUnlock.password]
@@ -4376,6 +4381,8 @@ welcomeTitle = "You've been invited!"
 
 [landing]
 addFiles = "Add Files"
+heroSubtitle = "Drop in or add an existing PDF to get started."
+heroTitle = "Stirling PDF"
 mobileUpload = "Upload from Mobile"
 openFromComputer = "Open from computer"
 uploadFromComputer = "Upload from computer"
@@ -6710,8 +6717,12 @@ defaultPdfEditorActive = "Stirling PDF is your default PDF editor"
 defaultPdfEditorChecking = "Checking..."
 defaultPdfEditorInactive = "Another application is set as default"
 defaultPdfEditorSet = "Already Default"
+defaultStartupView = "Default view on launch"
+defaultStartupViewDescription = "Choose which tab is active in the left column when the app starts"
 defaultToolPickerMode = "Default tool picker mode"
 defaultToolPickerModeDescription = "Choose whether the tool picker opens in fullscreen or sidebar by default"
+defaultViewerZoom = "Default reader zoom"
+defaultViewerZoomDescription = "Set the default zoom level when opening PDFs in the reader"
 description = "Configure general application preferences."
 hideUnavailableConversions = "Hide unavailable conversions"
 hideUnavailableConversionsDescription = "Remove disabled conversion options in the Convert tool instead of showing them greyed out."
@@ -6734,6 +6745,11 @@ title = "For System Administrators"
 [settings.general.mode]
 fullscreen = "Fullscreen"
 sidebar = "Sidebar"
+
+[settings.general.startupView]
+automate = "Automate"
+read = "Reader"
+tools = "Tools"
 
 [settings.general.updates]
 checkForUpdates = "Check for Updates"
@@ -6761,6 +6777,11 @@ description = "Desktop and server version details"
 desktop = "Desktop Version"
 server = "Server Version"
 title = "Version Information"
+
+[settings.general.zoomLevel]
+auto = "Auto"
+fitPage = "Fit page"
+fitWidth = "Fit width"
 
 [settings.hotkeys]
 capturing = "Press keys… (Esc to cancel)"

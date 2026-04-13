@@ -1,11 +1,11 @@
-import { useImperativeHandle, forwardRef, useEffect, useRef } from 'react';
-import { useHistoryCapability } from '@embedpdf/plugin-history/react';
-import { useAnnotationCapability } from '@embedpdf/plugin-annotation/react';
-import { useSignature } from '@app/contexts/SignatureContext';
-import { uuidV4, PdfAnnotationSubtype } from '@embedpdf/models';
-import type { HistoryAPI } from '@app/components/viewer/viewerTypes';
-import { ANNOTATION_RECREATION_DELAY_MS, ANNOTATION_VERIFICATION_DELAY_MS } from '@app/constants/app';
-import { useDocumentReady } from '@app/components/viewer/hooks/useDocumentReady';
+import { useImperativeHandle, forwardRef, useEffect, useRef } from "react";
+import { useHistoryCapability } from "@embedpdf/plugin-history/react";
+import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
+import { useSignature } from "@app/contexts/SignatureContext";
+import { uuidV4, PdfAnnotationSubtype } from "@embedpdf/models";
+import type { HistoryAPI } from "@app/components/viewer/viewerTypes";
+import { ANNOTATION_RECREATION_DELAY_MS, ANNOTATION_VERIFICATION_DELAY_MS } from "@app/constants/app";
+import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
 
 /**
  * Connects the PDF history (undo/redo) plugin to the shared ViewerContext.
@@ -56,8 +56,8 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge
               annotationApi.createAnnotation(pageIndex, {
                 type: annotation.type,
                 rect,
-                author: annotation.author || 'Digital Signature',
-                subject: annotation.subject || 'Digital Signature',
+                author: annotation.author || "Digital Signature",
+                subject: annotation.subject || "Digital Signature",
                 pageIndex,
                 id: newId,
                 created: annotation.created || new Date(),
@@ -68,14 +68,14 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge
               });
             }, ANNOTATION_RECREATION_DELAY_MS);
           } catch (restoreError) {
-            console.error('HistoryAPI: Failed to restore cropped signature:', restoreError);
+            console.error("HistoryAPI: Failed to restore cropped signature:", restoreError);
           }
           return;
         }
       }
 
       // Handle annotation restoration after undo operations
-      if (event.type === 'create' && event.committed) {
+      if (event.type === "create" && event.committed) {
         // Check if this is a STAMP annotation (signature) that might need image data restoration
         if (annotation && annotation.type === PdfAnnotationSubtype.STAMP && annotation.id) {
           getImageData(annotation.id);
@@ -85,7 +85,6 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge
             const currentStoredData = getImageData(annotation.id);
             // Check if the annotation lacks image data but we have it stored
             if (currentStoredData && (!annotation.imageSrc || annotation.imageSrc !== currentStoredData)) {
-
               // Generate new ID to avoid React key conflicts
               const newId = uuidV4();
 
@@ -93,12 +92,12 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge
               const restoredData = {
                 type: annotation.type,
                 rect: annotation.rect,
-                author: annotation.author || 'Digital Signature',
-                subject: annotation.subject || 'Digital Signature',
+                author: annotation.author || "Digital Signature",
+                subject: annotation.subject || "Digital Signature",
                 pageIndex: event.pageIndex,
                 id: newId,
                 created: annotation.created || new Date(),
-                imageSrc: currentStoredData
+                imageSrc: currentStoredData,
               };
 
               // Update stored data to use new ID
@@ -112,7 +111,7 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge
                   annotationApi.createAnnotation(event.pageIndex, restoredData);
                 }, ANNOTATION_RECREATION_DELAY_MS);
               } catch (error) {
-                console.error('HistoryAPI: Failed to restore annotation:', error);
+                console.error("HistoryAPI: Failed to restore annotation:", error);
               }
             }
           }, ANNOTATION_VERIFICATION_DELAY_MS);
@@ -130,54 +129,57 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(function HistoryAPIBridge
     };
   }, [annotationApi, getImageData, storeImageData]);
 
+  useImperativeHandle(
+    ref,
+    () => ({
+      undo: () => {
+        if (historyApi) {
+          historyApi.undo();
+        }
+      },
 
-  useImperativeHandle(ref, () => ({
-    undo: () => {
-      if (historyApi) {
-        historyApi.undo();
-      }
-    },
+      redo: () => {
+        if (historyApi) {
+          historyApi.redo();
+        }
+      },
 
-    redo: () => {
-      if (historyApi) {
-        historyApi.redo();
-      }
-    },
+      canUndo: () => {
+        return historyApi ? historyApi.canUndo() : false;
+      },
 
-    canUndo: () => {
-      return historyApi ? historyApi.canUndo() : false;
-    },
+      canRedo: () => {
+        return historyApi ? historyApi.canRedo() : false;
+      },
 
-    canRedo: () => {
-      return historyApi ? historyApi.canRedo() : false;
-    },
+      isReady: () => !!historyApi && documentReady,
 
-    isReady: () => !!historyApi && documentReady,
+      purgeByMetadata: <T,>(predicate: (metadata: T | undefined) => boolean, topic?: string) => {
+        if (historyApi?.purgeByMetadata) {
+          return historyApi.purgeByMetadata(predicate, topic);
+        }
+        return 0;
+      },
 
-    purgeByMetadata: <T,>(predicate: (metadata: T | undefined) => boolean, topic?: string) => {
-      if (historyApi?.purgeByMetadata) {
-        return historyApi.purgeByMetadata(predicate, topic);
-      }
-      return 0;
-    },
+      subscribe: (listener: () => void) => {
+        if (!historyApi?.onHistoryChange) {
+          return () => {};
+        }
 
-    subscribe: (listener: () => void) => {
-      if (!historyApi?.onHistoryChange) {
+        const wrapped = () => listener();
+        const unsubscribe = historyApi.onHistoryChange(wrapped);
+        listener();
+
+        if (typeof unsubscribe === "function") {
+          return unsubscribe;
+        }
         return () => {};
-      }
-
-      const wrapped = () => listener();
-      const unsubscribe = historyApi.onHistoryChange(wrapped);
-      listener();
-
-      if (typeof unsubscribe === 'function') {
-        return unsubscribe;
-      }
-      return () => {};
-    },
-  }), [historyApi]);
+      },
+    }),
+    [historyApi],
+  );
 
   return null; // This is a bridge component with no UI
 });
 
-HistoryAPIBridge.displayName = 'HistoryAPIBridge';
+HistoryAPIBridge.displayName = "HistoryAPIBridge";

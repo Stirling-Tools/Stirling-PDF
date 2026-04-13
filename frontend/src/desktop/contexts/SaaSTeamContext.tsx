@@ -1,7 +1,7 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
-import apiClient from '@app/services/apiClient';
-import { authService } from '@app/services/authService';
-import { connectionModeService } from '@app/services/connectionModeService';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import apiClient from "@app/services/apiClient";
+import { authService } from "@app/services/authService";
+import { connectionModeService } from "@app/services/connectionModeService";
 
 /**
  * Desktop implementation of SaaS Team Context
@@ -91,7 +91,7 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
     const checkAccess = async () => {
       const mode = await connectionModeService.getCurrentMode();
       const auth = await authService.isAuthenticated();
-      setIsSaasMode(mode === 'saas');
+      setIsSaasMode(mode === "saas");
       setIsAuthenticated(auth);
     };
 
@@ -105,7 +105,7 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
   // Subscribe to auth changes
   useEffect(() => {
     const unsubscribe = authService.subscribeToAuth((status) => {
-      setIsAuthenticated(status === 'authenticated');
+      setIsAuthenticated(status === "authenticated");
     });
     return unsubscribe;
   }, []);
@@ -113,16 +113,16 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
   const fetchMyTeams = useCallback(async () => {
     // CRITICAL: Only fetch if in SaaS mode and authenticated
     if (!isSaasMode || !isAuthenticated) {
-      console.log('[SaaSTeamContext] Skipping team fetch - not in SaaS mode or not authenticated');
+      console.log("[SaaSTeamContext] Skipping team fetch - not in SaaS mode or not authenticated");
       return null;
     }
 
     try {
-      const response = await apiClient.get<Team[]>('/api/v1/team/my', { suppressErrorToast: true });
+      const response = await apiClient.get<Team[]>("/api/v1/team/my", { suppressErrorToast: true });
       setTeams(response.data);
 
       const activeTeam = response.data[0];
-      console.log('[SaaSTeamContext] Current team set:', {
+      console.log("[SaaSTeamContext] Current team set:", {
         teamId: activeTeam?.teamId,
         name: activeTeam?.name,
         isPersonal: activeTeam?.isPersonal,
@@ -131,39 +131,47 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
       setCurrentTeam(activeTeam || null);
       return activeTeam || null;
     } catch (error) {
-      console.error('[SaaSTeamContext] Failed to fetch teams:', error);
+      console.error("[SaaSTeamContext] Failed to fetch teams:", error);
       return null;
     }
   }, [isSaasMode, isAuthenticated]);
 
-  const fetchTeamMembers = useCallback(async (teamId: number) => {
-    // CRITICAL: Only fetch if in SaaS mode and authenticated
-    if (!isSaasMode || !isAuthenticated) {
-      console.log('[SaaSTeamContext] Skipping members fetch - not in SaaS mode or not authenticated');
-      return;
-    }
+  const fetchTeamMembers = useCallback(
+    async (teamId: number) => {
+      // CRITICAL: Only fetch if in SaaS mode and authenticated
+      if (!isSaasMode || !isAuthenticated) {
+        console.log("[SaaSTeamContext] Skipping members fetch - not in SaaS mode or not authenticated");
+        return;
+      }
 
-    try {
-      const response = await apiClient.get<TeamMember[]>(`/api/v1/team/${teamId}/members`, { suppressErrorToast: true });
-      setTeamMembers(response.data);
-    } catch (error) {
-      console.error('[SaaSTeamContext] Failed to fetch team members:', error);
-    }
-  }, [isSaasMode, isAuthenticated]);
+      try {
+        const response = await apiClient.get<TeamMember[]>(`/api/v1/team/${teamId}/members`, { suppressErrorToast: true });
+        setTeamMembers(response.data);
+      } catch (error) {
+        console.error("[SaaSTeamContext] Failed to fetch team members:", error);
+      }
+    },
+    [isSaasMode, isAuthenticated],
+  );
 
-  const fetchTeamInvitations = useCallback(async (teamId?: number) => {
-    // CRITICAL: Only fetch if in SaaS mode and authenticated
-    if (!isSaasMode || !isAuthenticated || !teamId) {
-      return;
-    }
+  const fetchTeamInvitations = useCallback(
+    async (teamId?: number) => {
+      // CRITICAL: Only fetch if in SaaS mode and authenticated
+      if (!isSaasMode || !isAuthenticated || !teamId) {
+        return;
+      }
 
-    try {
-      const response = await apiClient.get<TeamInvitation[]>(`/api/v1/team/${teamId}/invitations`, { suppressErrorToast: true });
-      setTeamInvitations(response.data);
-    } catch (error) {
-      console.error('[SaaSTeamContext] Failed to fetch team invitations:', error);
-    }
-  }, [isSaasMode, isAuthenticated]);
+      try {
+        const response = await apiClient.get<TeamInvitation[]>(`/api/v1/team/${teamId}/invitations`, {
+          suppressErrorToast: true,
+        });
+        setTeamInvitations(response.data);
+      } catch (error) {
+        console.error("[SaaSTeamContext] Failed to fetch team invitations:", error);
+      }
+    },
+    [isSaasMode, isAuthenticated],
+  );
 
   const fetchReceivedInvitations = useCallback(async () => {
     // CRITICAL: Only fetch if in SaaS mode and authenticated
@@ -171,14 +179,14 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    console.log('[SaaSTeamContext] Fetching received team invitations');
+    console.log("[SaaSTeamContext] Fetching received team invitations");
 
     try {
-      const response = await apiClient.get<TeamInvitation[]>('/api/v1/team/invitations/pending', { suppressErrorToast: true });
-      console.log('[SaaSTeamContext] Received invitations response:', response.data);
+      const response = await apiClient.get<TeamInvitation[]>("/api/v1/team/invitations/pending", { suppressErrorToast: true });
+      console.log("[SaaSTeamContext] Received invitations response:", response.data);
       setReceivedInvitations(response.data);
     } catch (error) {
-      console.error('[SaaSTeamContext] Failed to fetch received invitations:', error);
+      console.error("[SaaSTeamContext] Failed to fetch received invitations:", error);
     }
   }, [isSaasMode, isAuthenticated]);
 
@@ -214,18 +222,18 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
   }, [currentTeam, isSaasMode, isAuthenticated, fetchTeamMembers, fetchTeamInvitations]);
 
   const inviteUser = async (email: string) => {
-    if (!currentTeam) throw new Error('No current team');
-    if (!isSaasMode) throw new Error('Not in SaaS mode');
+    if (!currentTeam) throw new Error("No current team");
+    if (!isSaasMode) throw new Error("Not in SaaS mode");
 
-    await apiClient.post('/api/v1/team/invite', {
+    await apiClient.post("/api/v1/team/invite", {
       teamId: currentTeam.teamId,
-      email
+      email,
     });
     await fetchTeamInvitations(currentTeam.teamId);
   };
 
   const acceptInvitation = async (token: string) => {
-    if (!isSaasMode) throw new Error('Not in SaaS mode');
+    if (!isSaasMode) throw new Error("Not in SaaS mode");
 
     await apiClient.post(`/api/v1/team/invitations/${token}/accept`);
     await fetchReceivedInvitations();
@@ -234,14 +242,14 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
   };
 
   const rejectInvitation = async (token: string) => {
-    if (!isSaasMode) throw new Error('Not in SaaS mode');
+    if (!isSaasMode) throw new Error("Not in SaaS mode");
 
     await apiClient.post(`/api/v1/team/invitations/${token}/reject`);
     await fetchReceivedInvitations();
   };
 
   const cancelInvitation = async (invitationId: number) => {
-    if (!isSaasMode) throw new Error('Not in SaaS mode');
+    if (!isSaasMode) throw new Error("Not in SaaS mode");
 
     await apiClient.delete(`/api/v1/team/invitations/${invitationId}`);
     if (currentTeam) {
@@ -250,8 +258,8 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
   };
 
   const removeMember = async (memberId: number) => {
-    if (!currentTeam) throw new Error('No current team');
-    if (!isSaasMode) throw new Error('Not in SaaS mode');
+    if (!currentTeam) throw new Error("No current team");
+    if (!isSaasMode) throw new Error("Not in SaaS mode");
 
     await apiClient.delete(`/api/v1/team/${currentTeam.teamId}/members/${memberId}`);
     await refreshTeams();
@@ -259,8 +267,8 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
   };
 
   const leaveTeam = async () => {
-    if (!currentTeam) throw new Error('No current team');
-    if (!isSaasMode) throw new Error('Not in SaaS mode');
+    if (!currentTeam) throw new Error("No current team");
+    if (!isSaasMode) throw new Error("Not in SaaS mode");
 
     await apiClient.post(`/api/v1/team/${currentTeam.teamId}/leave`);
     await refreshTeams();
@@ -269,7 +277,7 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
 
   const refreshTeams = useCallback(async () => {
     if (!isSaasMode || !isAuthenticated) {
-      console.log('[SaaSTeamContext] Skipping refresh - not in SaaS mode or not authenticated');
+      console.log("[SaaSTeamContext] Skipping refresh - not in SaaS mode or not authenticated");
       return;
     }
 
@@ -288,23 +296,25 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
   const isPersonalTeam = currentTeam?.isPersonal ?? true;
 
   return (
-    <SaaSTeamContext.Provider value={{
-      currentTeam,
-      teams,
-      teamMembers,
-      teamInvitations,
-      receivedInvitations,
-      isTeamLeader,
-      isPersonalTeam,
-      loading,
-      inviteUser,
-      acceptInvitation,
-      rejectInvitation,
-      cancelInvitation,
-      removeMember,
-      leaveTeam,
-      refreshTeams
-    }}>
+    <SaaSTeamContext.Provider
+      value={{
+        currentTeam,
+        teams,
+        teamMembers,
+        teamInvitations,
+        receivedInvitations,
+        isTeamLeader,
+        isPersonalTeam,
+        loading,
+        inviteUser,
+        acceptInvitation,
+        rejectInvitation,
+        cancelInvitation,
+        removeMember,
+        leaveTeam,
+        refreshTeams,
+      }}
+    >
       {children}
     </SaaSTeamContext.Provider>
   );
@@ -313,7 +323,7 @@ export function SaaSTeamProvider({ children }: { children: ReactNode }) {
 export function useSaaSTeam() {
   const context = useContext(SaaSTeamContext);
   if (context === undefined) {
-    throw new Error('useSaaSTeam must be used within a SaaSTeamProvider');
+    throw new Error("useSaaSTeam must be used within a SaaSTeamProvider");
   }
   return context;
 }
