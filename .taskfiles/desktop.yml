@@ -4,41 +4,50 @@ vars:
   JLINK_MODULES: "java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
 
 tasks:
+  prepare:
+    desc: "Prepare desktop build dependencies"
+    deps: [jlink, ":frontend:prepare:desktop", provisioner]
+
+  provisioner:
+    desc: "Build installer provisioner"
+    platforms: [windows]
+    cmds:
+      - node scripts/build-provisioner.mjs
+
   dev:
     desc: "Start Tauri desktop dev mode"
-    deps: [jlink, ":frontend:prepare:desktop"]
+    deps: [prepare]
     ignore_error: true
     cmds:
       - npx tauri dev --no-watch
 
   build:
     desc: "Build Tauri desktop app (production)"
-    deps: [jlink, ":frontend:prepare:desktop"]
+    deps: [prepare]
     cmds:
-      - node scripts/build-provisioner.mjs
       - npx tauri build
 
   build:dev:
     desc: "Build Tauri desktop app (dev, no bundling)"
-    deps: [jlink, ":frontend:prepare:desktop"]
+    deps: [prepare]
     cmds:
       - npx tauri build --no-bundle
 
   build:dev:mac:
     desc: "Build Tauri desktop .app bundle (macOS)"
-    deps: [jlink, ":frontend:prepare:desktop"]
+    deps: [prepare]
     cmds:
       - npx tauri build --bundles app
 
   build:dev:windows:
     desc: "Build Tauri desktop NSIS installer (Windows)"
-    deps: [jlink, ":frontend:prepare:desktop"]
+    deps: [prepare]
     cmds:
       - npx tauri build --bundles nsis
 
   build:dev:linux:
     desc: "Build Tauri desktop AppImage (Linux)"
-    deps: [jlink, ":frontend:prepare:desktop"]
+    deps: [prepare]
     cmds:
       - npx tauri build --bundles appimage
 
