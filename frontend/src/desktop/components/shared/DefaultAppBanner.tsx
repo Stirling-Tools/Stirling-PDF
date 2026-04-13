@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { InfoBanner } from "@app/components/shared/InfoBanner";
 import { useDefaultApp } from "@app/hooks/useDefaultApp";
@@ -6,16 +6,13 @@ import { useDefaultApp } from "@app/hooks/useDefaultApp";
 export const DefaultAppBanner: React.FC = () => {
   const { t } = useTranslation();
   const { isLoading, showPrompt, handleSetDefault, dismissPromptTemporarily, dismissPromptPermanently } = useDefaultApp();
-  const [dismissed, setDismissed] = useState(false);
 
   const handleDismissPrompt = () => {
     dismissPromptTemporarily();
-    setDismissed(true);
   };
 
   const handleDontAskAgain = () => {
     dismissPromptPermanently();
-    setDismissed(true);
   };
 
   return (
@@ -30,7 +27,7 @@ export const DefaultAppBanner: React.FC = () => {
       onSecondaryButtonClick={handleDontAskAgain}
       onDismiss={handleDismissPrompt}
       loading={isLoading}
-      show={!dismissed && showPrompt}
+      show={showPrompt}
     />
   );
 };

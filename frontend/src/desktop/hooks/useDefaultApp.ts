@@ -18,7 +18,7 @@ export const useDefaultApp = () => {
     try {
       const status = await defaultAppService.isDefaultPdfHandler();
       setIsDefault(status);
-      const shouldShowPrompt = await defaultAppService.shouldShowPrompt();
+      const shouldShowPrompt = await defaultAppService.shouldShowPrompt(status);
       setShowPrompt(shouldShowPrompt);
       setIsPromptSuppressed(defaultAppService.isPromptSuppressed());
     } catch (error) {

@@ -140,8 +140,8 @@ export const defaultAppService = {
    * - After 30 days, shown once more
    * - After that second dismiss, hidden unless user re-enables in settings
    */
-  async shouldShowPrompt(): Promise<boolean> {
-    const isDefault = await this.isDefaultPdfHandler();
+  async shouldShowPrompt(currentDefaultStatus?: boolean): Promise<boolean> {
+    const isDefault = currentDefaultStatus ?? (await this.isDefaultPdfHandler());
     if (isDefault) {
       return false;
     }
@@ -160,7 +160,13 @@ export const defaultAppService = {
 
     const lastDismissedAt = this.getLastDismissedAt();
     if (lastDismissedAt === null) {
-      return true;
+      // Migrate legacy dismissed state created before we started storing dismissal timestamps.
+      try {
+        localStorage.setItem(DISMISSED_AT_KEY, Date.now().toString());
+      } catch (error) {
+        console.error("[DefaultApp] Failed to persist dismissal timestamp:", error);
+      }
+      return false;
     }
 
     return Date.now() - lastDismissedAt >= ONE_MONTH_MS;

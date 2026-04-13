@@ -141,6 +141,7 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
               color={buttonColor ?? toneStyle.buttonColor}
               size="xs"
               onClick={onSecondaryButtonClick}
+              disabled={loading}
               leftSection={<LocalIcon icon={secondaryButtonIcon} width="0.9rem" height="0.9rem" />}
             >
               {secondaryButtonText}
