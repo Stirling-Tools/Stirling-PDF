@@ -554,11 +554,8 @@ async function generatePDFThumbnail(arrayBuffer: ArrayBuffer, file: File, scale:
     pdfWorkerManager.destroyDocument(pdf);
     return thumbnail;
   } catch (error) {
-    if (error instanceof Error) {
-      // Check if PDF is encrypted
-      if (error.name === "PasswordException") {
-        return generateEncryptedPDFThumbnail(file);
-      }
+    if (error && typeof error === "object" && (error as any).name === "PasswordException") {
+      return generateEncryptedPDFThumbnail(file);
     }
     throw error; // Not an encryption issue, re-throw
   }
@@ -693,7 +690,7 @@ export async function generateThumbnailWithMetadata(
     pdfWorkerManager.destroyDocument(pdf);
     return { thumbnail, pageCount, pageRotations, pageDimensions };
   } catch (error) {
-    if (error instanceof Error && error.name === "PasswordException") {
+    if (error && typeof error === "object" && (error as any).name === "PasswordException") {
       // Handle encrypted PDFs
       const thumbnail = generateEncryptedPDFThumbnail(file);
       return { thumbnail, pageCount: 1, isEncrypted: true };
