@@ -4,11 +4,11 @@ import type { PDFDocumentProxy } from "pdfjs-dist";
 
 // Scan the last ~8KB of the PDF for an /Encrypt entry. The trailer lives near
 // the tail of the file, so this is enough in practice while staying cheap.
-// Returns true if the marker is found OR the file is too small to safely skip
-// (fall through to full parse).
+// For files smaller than the window, the whole file is scanned.
 function hasEncryptMarker(buffer: ArrayBuffer): boolean {
   const TAIL_BYTES = 8 * 1024;
-  const view = new Uint8Array(buffer, Math.max(0, buffer.byteLength - TAIL_BYTES));
+  const offset = Math.max(0, buffer.byteLength - TAIL_BYTES);
+  const view = new Uint8Array(buffer, offset);
   // "/Encrypt" as ASCII bytes
   const needle = [0x2f, 0x45, 0x6e, 0x63, 0x72, 0x79, 0x70, 0x74];
   outer: for (let i = 0; i <= view.length - needle.length; i++) {
