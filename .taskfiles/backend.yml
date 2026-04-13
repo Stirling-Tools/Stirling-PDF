@@ -5,58 +5,37 @@ tasks:
     desc: "Start backend dev server"
     ignore_error: true
     cmds:
-      - cmd: gradlew.bat :stirling-pdf:bootRun
-        platforms: [windows]
-      - cmd: ./gradlew :stirling-pdf:bootRun
-        platforms: [linux, darwin]
+      - ./gradlew :stirling-pdf:bootRun
 
   build:
     desc: "Full backend build"
     cmds:
-      - cmd: gradlew.bat clean build
-        platforms: [windows]
-      - cmd: ./gradlew clean build
-        platforms: [linux, darwin]
+      - ./gradlew clean build
 
   build:fast:
     desc: "Build without tests"
     cmds:
-      - cmd: gradlew.bat clean build -x test
-        platforms: [windows]
-      - cmd: ./gradlew clean build -x test
-        platforms: [linux, darwin]
+      - ./gradlew clean build -x test
 
   build:ci:
     desc: "Build for CI (formatting checked separately)"
     cmds:
-      - cmd: gradlew.bat build -PnoSpotless
-        platforms: [windows]
-      - cmd: ./gradlew build -PnoSpotless
-        platforms: [linux, darwin]
+      - ./gradlew build -PnoSpotless
 
   test:
     desc: "Run backend tests"
     cmds:
-      - cmd: gradlew.bat test
-        platforms: [windows]
-      - cmd: ./gradlew test
-        platforms: [linux, darwin]
+      - ./gradlew test
 
   format:
     desc: "Auto-fix code formatting"
     cmds:
-      - cmd: gradlew.bat spotlessApply
-        platforms: [windows]
-      - cmd: ./gradlew spotlessApply
-        platforms: [linux, darwin]
+      - ./gradlew spotlessApply
 
   format:check:
     desc: "Check code formatting"
     cmds:
-      - cmd: gradlew.bat spotlessCheck
-        platforms: [windows]
-      - cmd: ./gradlew spotlessCheck
-        platforms: [linux, darwin]
+      - ./gradlew spotlessCheck
 
   fix:
     desc: "Auto-fix backend"
@@ -66,10 +45,7 @@ tasks:
   swagger:
     desc: "Generate OpenAPI docs"
     cmds:
-      - cmd: gradlew.bat :stirling-pdf:generateOpenApiDocs
-        platforms: [windows]
-      - cmd: ./gradlew :stirling-pdf:generateOpenApiDocs
-        platforms: [linux, darwin]
+      - ./gradlew :stirling-pdf:generateOpenApiDocs
 
   check:
     desc: "Backend quality gate"
@@ -81,31 +57,19 @@ tasks:
     desc: "Print project version"
     silent: true
     cmds:
-      - cmd: gradlew.bat printVersion --quiet | tail -1
-        platforms: [windows]
-      - cmd: ./gradlew printVersion --quiet | tail -1
-        platforms: [linux, darwin]
+      - ./gradlew printVersion --quiet | tail -1
 
   licenses:check:
     desc: "Check dependency licenses"
     cmds:
-      - cmd: gradlew.bat checkLicense --no-parallel
-        platforms: [windows]
-      - cmd: ./gradlew checkLicense --no-parallel
-        platforms: [linux, darwin]
+      - ./gradlew checkLicense --no-parallel
 
   licenses:generate:
     desc: "Check and generate dependency license report"
     cmds:
-      - cmd: gradlew.bat checkLicense generateLicenseReport --no-parallel
-        platforms: [windows]
-      - cmd: ./gradlew checkLicense generateLicenseReport --no-parallel
-        platforms: [linux, darwin]
+      - ./gradlew checkLicense generateLicenseReport --no-parallel
 
   clean:
     desc: "Clean build artifacts"
     cmds:
-      - cmd: gradlew.bat clean
-        platforms: [windows]
-      - cmd: ./gradlew clean
-        platforms: [linux, darwin]
+      - ./gradlew clean
