@@ -1,5 +1,24 @@
 import { FileAnalysis, ProcessingStrategy } from "@app/types/processing";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import type { PDFDocumentProxy } from "pdfjs-dist";
+
+// Scan the last ~8KB of the PDF for an /Encrypt entry. The trailer lives near
+// the tail of the file, so this is enough in practice while staying cheap.
+// Returns true if the marker is found OR the file is too small to safely skip
+// (fall through to full parse).
+function hasEncryptMarker(buffer: ArrayBuffer): boolean {
+  const TAIL_BYTES = 8 * 1024;
+  const view = new Uint8Array(buffer, Math.max(0, buffer.byteLength - TAIL_BYTES));
+  // "/Encrypt" as ASCII bytes
+  const needle = [0x2f, 0x45, 0x6e, 0x63, 0x72, 0x79, 0x70, 0x74];
+  outer: for (let i = 0; i <= view.length - needle.length; i++) {
+    for (let j = 0; j < needle.length; j++) {
+      if (view[i + j] !== needle[j]) continue outer;
+    }
+    return true;
+  }
+  return false;
+}
 
 export class FileAnalyzer {
   private static readonly SIZE_THRESHOLDS = {
@@ -55,25 +74,52 @@ export class FileAnalyzer {
   /**
    * Quick PDF analysis without full processing
    */
+  /**
+   * Cheap encryption-only probe for the upload-time detection path.
+   *
+   * Looks for a /Encrypt entry in the last 8KB of the file (where the PDF
+   * trailer lives). If absent, the file is definitely not encrypted and we
+   * can skip a full pdf.js parse. If present, falls back to pdf.js so we can
+   * distinguish user-password (blocks open) from owner-password-only (opens
+   * fine) — only the former should prompt.
+   */
+  static async isPDFUserPasswordProtected(file: File): Promise<boolean> {
+    const arrayBuffer = await file.arrayBuffer();
+    if (!hasEncryptMarker(arrayBuffer)) return false;
+
+    let pdf: PDFDocumentProxy | undefined;
+    try {
+      pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
+        stopAtErrors: false,
+        verbosity: 0,
+      });
+      // pdf.js opened it — owner-password-only case, no prompt needed.
+      return false;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message.toLowerCase() : "";
+      return errorMessage.includes("password") || errorMessage.includes("encrypted");
+    } finally {
+      if (pdf) pdfWorkerManager.destroyDocument(pdf);
+    }
+  }
+
   static async quickPDFAnalysis(file: File): Promise<{
     pageCount: number;
     isEncrypted: boolean;
     isCorrupted: boolean;
   }> {
+    let pdf: PDFDocumentProxy | undefined;
     try {
       // For small files, read the whole file
       // For large files, try the whole file first (PDF.js needs the complete structure)
       const arrayBuffer = await file.arrayBuffer();
 
-      const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
+      pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
         stopAtErrors: false, // Don't stop at minor errors
         verbosity: 0, // Suppress PDF.js warnings
       });
 
       const pageCount = pdf.numPages;
-
-      // Clean up using worker manager
-      pdfWorkerManager.destroyDocument(pdf);
 
       // If pdf.js opened the document successfully, the user can view it — even if
       // the PDF carries encryption dictionaries (owner-password-only case).  We only
@@ -93,6 +139,8 @@ export class FileAnalyzer {
         isEncrypted,
         isCorrupted: !isEncrypted, // If not encrypted, probably corrupted
       };
+    } finally {
+      if (pdf) pdfWorkerManager.destroyDocument(pdf);
     }
   }
 

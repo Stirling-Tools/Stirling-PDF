@@ -333,13 +333,14 @@ export async function addFiles(
       // viewer gate and modal queue pick it up immediately instead of after hydration
       if (file.type === "application/pdf") {
         try {
-          const analysis = await FileAnalyzer.quickPDFAnalysis(file);
-          if (analysis.isEncrypted) {
+          if (await FileAnalyzer.isPDFUserPasswordProtected(file)) {
             fileStub.processedFile = (fileStub.processedFile || { pages: [] }) as any;
             fileStub.processedFile!.isEncrypted = true;
           }
-        } catch {
-          // Never block upload on analysis failure
+        } catch (error) {
+          // Never block upload on analysis failure — but log so it's debuggable
+          // if an unencrypted file later appears to "hang" during processing.
+          console.warn("[FileActions] Early encryption detection failed for", file.name, error);
         }
       }
 
