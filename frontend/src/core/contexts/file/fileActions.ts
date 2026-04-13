@@ -391,8 +391,15 @@ export async function addFiles(
         let thumbnail: string | undefined;
 
         if (targetFile.type.startsWith("application/pdf")) {
-          processedFileMetadata = await generateProcessedFileMetadata(targetFile);
-          thumbnail = processedFileMetadata?.thumbnailUrl;
+          if (fileStub.processedFile?.isEncrypted) {
+            // Pre-dispatch detection already flagged this PDF as encrypted; PDF.js
+            // can't produce thumbnails/metadata without the password, so re-parsing
+            // here would just duplicate work. Metadata is refreshed after unlock.
+            processedFileMetadata = fileStub.processedFile;
+          } else {
+            processedFileMetadata = await generateProcessedFileMetadata(targetFile);
+            thumbnail = processedFileMetadata?.thumbnailUrl;
+          }
         } else {
           try {
             const { generateThumbnailForFile } = await import("@app/utils/thumbnailUtils");
