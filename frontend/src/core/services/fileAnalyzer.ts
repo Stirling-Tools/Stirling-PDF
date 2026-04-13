@@ -80,7 +80,7 @@ export class FileAnalyzer {
       // flag isEncrypted when pdf.js *fails* to open the file (caught below).
       return {
         pageCount,
-        isEncrypted,
+        isEncrypted: false,
         isCorrupted: false,
       };
     } catch (error) {
