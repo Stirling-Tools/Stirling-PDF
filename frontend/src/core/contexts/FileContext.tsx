@@ -371,6 +371,66 @@ function FileContextInner({ children, enablePersistence = true }: FileContextPro
     }
   }, [activeEncryptedFileId, unlockPassword, runAutomaticPasswordRemoval, t]);
 
+  const handleUnlockAll = useCallback(async () => {
+    if (!activeEncryptedFileId) return;
+    const pw = unlockPassword.trim();
+    if (!pw) {
+      setUnlockError(t("encryptedPdfUnlock.required", "Enter the password to continue."));
+      return;
+    }
+
+    setIsUnlocking(true);
+    setUnlockError(null);
+
+    const allIds = [activeEncryptedFileId, ...encryptedQueue];
+    let successCount = 0;
+    const failedNames: string[] = [];
+
+    for (const fileId of allIds) {
+      try {
+        await runAutomaticPasswordRemoval(fileId, pw);
+        dismissedEncryptedFilesRef.current.delete(fileId);
+        successCount++;
+      } catch {
+        const name = stateRef.current.files.byId[fileId]?.name ?? fileId;
+        failedNames.push(name);
+      }
+    }
+
+    if (successCount > 0) {
+      alert({
+        alertType: "success",
+        title: t("encryptedPdfUnlock.successTitle", "Password removed"),
+        body: t("encryptedPdfUnlock.unlockAllSuccess", {
+          defaultValue: "Unlocked {{count}} file(s).",
+          count: successCount,
+        }),
+        expandable: false,
+        isPersistentPopup: false,
+      });
+    }
+
+    if (failedNames.length > 0) {
+      setUnlockError(
+        t("encryptedPdfUnlock.unlockAllPartialFail", {
+          defaultValue: "Wrong password for: {{names}}",
+          names: failedNames.join(", "),
+        }),
+      );
+      const failedIds = allIds.filter((id) => {
+        const name = stateRef.current.files.byId[id]?.name ?? id;
+        return failedNames.includes(name);
+      });
+      setEncryptedQueue(failedIds.slice(1));
+      setActiveEncryptedFileId(failedIds[0]);
+    } else {
+      setEncryptedQueue([]);
+      setActiveEncryptedFileId(null);
+    }
+
+    setIsUnlocking(false);
+  }, [activeEncryptedFileId, encryptedQueue, unlockPassword, runAutomaticPasswordRemoval, t]);
+
   const undoConsumeFilesWrapper = useCallback(
     async (inputFiles: File[], inputStirlingFileStubs: StirlingFileStub[], outputFileIds: FileId[]): Promise<void> => {
       return undoConsumeFiles(inputFiles, inputStirlingFileStubs, outputFileIds, filesRef, dispatch, indexedDB);

@@ -109,11 +109,13 @@ export const handlePasswordError = async (
       if (data instanceof Blob) {
         try {
           const text = await data.text();
-          return text.includes('pdf-password') || text.includes('passworded');
-        } catch { return false; }
+          return text.includes("pdf-password") || text.includes("passworded");
+        } catch {
+          return false;
+        }
       }
-      const type = data?.type ?? '';
-      return type.includes('pdf-password');
+      const type = data?.type ?? "";
+      return type.includes("pdf-password");
     })();
     if (isPasswordError) {
       return incorrectPasswordMessage;

@@ -19,6 +19,7 @@ import { buildQuickKeySet } from "@app/contexts/file/fileSelectors";
 import { StirlingFile } from "@app/types/fileContext";
 import { fileStorage } from "@app/services/fileStorage";
 import { zipFileService } from "@app/services/zipFileService";
+import { FileAnalyzer } from "@app/services/fileAnalyzer";
 const DEBUG = process.env.NODE_ENV === "development";
 const HYDRATION_CONCURRENCY = 2;
 let activeHydrations = 0;
@@ -327,6 +328,20 @@ export async function addFiles(
 
       // Create new filestub with minimal metadata; hydrate thumbnails/processedFile asynchronously
       const fileStub = createNewStirlingFileStub(file, fileId);
+
+      // Early encryption detection for PDFs — set the flag before dispatch so the
+      // viewer gate and modal queue pick it up immediately instead of after hydration
+      if (file.type === "application/pdf") {
+        try {
+          const analysis = await FileAnalyzer.quickPDFAnalysis(file);
+          if (analysis.isEncrypted) {
+            fileStub.processedFile = (fileStub.processedFile || { pages: [] }) as any;
+            fileStub.processedFile!.isEncrypted = true;
+          }
+        } catch {
+          // Never block upload on analysis failure
+        }
+      }
 
       // Check for pending file path mapping from Tauri file dialog (desktop only)
       try {
