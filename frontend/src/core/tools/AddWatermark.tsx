@@ -41,7 +41,6 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
   // Endpoint validation
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("add-watermark");
 
-
   useEffect(() => {
     watermarkOperation.resetResults();
     onPreviewFile?.(null);

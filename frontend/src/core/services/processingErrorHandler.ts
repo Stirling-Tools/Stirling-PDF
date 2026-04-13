@@ -1,4 +1,4 @@
-import { ProcessingError } from '@app/types/processing';
+import { ProcessingError } from "@app/types/processing";
 
 export class ProcessingErrorHandler {
   private static readonly DEFAULT_MAX_RETRIES = 3;
@@ -8,16 +8,16 @@ export class ProcessingErrorHandler {
    * Create a ProcessingError from an unknown error
    */
   static createProcessingError(
-    error: unknown, 
-    retryCount: number = 0, 
-    maxRetries: number = this.DEFAULT_MAX_RETRIES
+    error: unknown,
+    retryCount: number = 0,
+    maxRetries: number = this.DEFAULT_MAX_RETRIES,
   ): ProcessingError {
     const originalError = error instanceof Error ? error : new Error(String(error));
     const message = originalError.message;
 
     // Determine error type based on error message and properties
     const errorType = this.determineErrorType(originalError, message);
-    
+
     // Determine if error is recoverable
     const recoverable = this.isRecoverable(errorType, retryCount, maxRetries);
 
@@ -27,68 +27,62 @@ export class ProcessingErrorHandler {
       recoverable,
       retryCount,
       maxRetries,
-      originalError
+      originalError,
     };
   }
 
   /**
    * Determine the type of error based on error characteristics
    */
-  private static determineErrorType(error: Error, message: string): ProcessingError['type'] {
+  private static determineErrorType(error: Error, message: string): ProcessingError["type"] {
     const lowerMessage = message.toLowerCase();
 
     // Network-related errors
-    if (lowerMessage.includes('network') || 
-        lowerMessage.includes('fetch') ||
-        lowerMessage.includes('connection')) {
-      return 'network';
+    if (lowerMessage.includes("network") || lowerMessage.includes("fetch") || lowerMessage.includes("connection")) {
+      return "network";
     }
 
     // Memory-related errors
-    if (lowerMessage.includes('memory') ||
-        lowerMessage.includes('quota') ||
-        lowerMessage.includes('allocation') ||
-        error.name === 'QuotaExceededError') {
-      return 'memory';
+    if (
+      lowerMessage.includes("memory") ||
+      lowerMessage.includes("quota") ||
+      lowerMessage.includes("allocation") ||
+      error.name === "QuotaExceededError"
+    ) {
+      return "memory";
     }
 
     // Timeout errors
-    if (lowerMessage.includes('timeout') ||
-        lowerMessage.includes('aborted') ||
-        error.name === 'AbortError') {
-      return 'timeout';
+    if (lowerMessage.includes("timeout") || lowerMessage.includes("aborted") || error.name === "AbortError") {
+      return "timeout";
     }
 
     // Cancellation
-    if (lowerMessage.includes('cancel') ||
-        lowerMessage.includes('abort') ||
-        error.name === 'AbortError') {
-      return 'cancelled';
+    if (lowerMessage.includes("cancel") || lowerMessage.includes("abort") || error.name === "AbortError") {
+      return "cancelled";
     }
 
     // PDF corruption/parsing errors
-    if (lowerMessage.includes('pdf') ||
-        lowerMessage.includes('parse') ||
-        lowerMessage.includes('invalid') ||
-        lowerMessage.includes('corrupt') ||
-        lowerMessage.includes('malformed')) {
-      return 'corruption';
+    if (
+      lowerMessage.includes("pdf") ||
+      lowerMessage.includes("parse") ||
+      lowerMessage.includes("invalid") ||
+      lowerMessage.includes("corrupt") ||
+      lowerMessage.includes("malformed")
+    ) {
+      return "corruption";
     }
 
     // Default to parsing error
-    return 'parsing';
+    return "parsing";
   }
 
   /**
    * Determine if an error is recoverable based on type and retry count
    */
-  private static isRecoverable(
-    errorType: ProcessingError['type'], 
-    retryCount: number, 
-    maxRetries: number
-  ): boolean {
+  private static isRecoverable(errorType: ProcessingError["type"], retryCount: number, maxRetries: number): boolean {
     // Never recoverable
-    if (errorType === 'cancelled' || errorType === 'corruption') {
+    if (errorType === "cancelled" || errorType === "corruption") {
       return false;
     }
 
@@ -98,37 +92,37 @@ export class ProcessingErrorHandler {
     }
 
     // Memory errors are usually not recoverable
-    if (errorType === 'memory') {
+    if (errorType === "memory") {
       return retryCount < 1; // Only one retry for memory errors
     }
 
     // Network and timeout errors are usually recoverable
-    return errorType === 'network' || errorType === 'timeout' || errorType === 'parsing';
+    return errorType === "network" || errorType === "timeout" || errorType === "parsing";
   }
 
   /**
    * Format error message for user display
    */
-  private static formatErrorMessage(errorType: ProcessingError['type'], originalMessage: string): string {
+  private static formatErrorMessage(errorType: ProcessingError["type"], originalMessage: string): string {
     switch (errorType) {
-      case 'network':
-        return 'Network connection failed. Please check your internet connection and try again.';
-      
-      case 'memory':
-        return 'Insufficient memory to process this file. Try closing other applications or processing a smaller file.';
-      
-      case 'timeout':
-        return 'Processing timed out. This file may be too large or complex to process.';
-      
-      case 'cancelled':
-        return 'Processing was cancelled by user.';
-      
-      case 'corruption':
-        return 'This PDF file appears to be corrupted or encrypted. Please try a different file.';
-      
-      case 'parsing':
+      case "network":
+        return "Network connection failed. Please check your internet connection and try again.";
+
+      case "memory":
+        return "Insufficient memory to process this file. Try closing other applications or processing a smaller file.";
+
+      case "timeout":
+        return "Processing timed out. This file may be too large or complex to process.";
+
+      case "cancelled":
+        return "Processing was cancelled by user.";
+
+      case "corruption":
+        return "This PDF file appears to be corrupted or encrypted. Please try a different file.";
+
+      case "parsing":
         return `Failed to process PDF: ${originalMessage}`;
-      
+
       default:
         return `Processing failed: ${originalMessage}`;
     }
@@ -140,7 +134,7 @@ export class ProcessingErrorHandler {
   static async executeWithRetry<T>(
     operation: () => Promise<T>,
     onError?: (error: ProcessingError) => void,
-    maxRetries: number = this.DEFAULT_MAX_RETRIES
+    maxRetries: number = this.DEFAULT_MAX_RETRIES,
   ): Promise<T> {
     let lastError: ProcessingError | null = null;
 
@@ -149,7 +143,7 @@ export class ProcessingErrorHandler {
         return await operation();
       } catch (error) {
         lastError = this.createProcessingError(error, attempt, maxRetries);
-        
+
         // Notify error handler
         if (onError) {
           onError(lastError);
@@ -168,13 +162,13 @@ export class ProcessingErrorHandler {
         // Wait before retry with progressive backoff
         const delay = this.RETRY_DELAYS[Math.min(attempt, this.RETRY_DELAYS.length - 1)];
         await this.delay(delay);
-        
+
         console.log(`Retrying operation (attempt ${attempt + 2}/${maxRetries + 1}) after ${delay}ms delay`);
       }
     }
 
     // All retries exhausted
-    throw lastError || new Error('Operation failed after all retries');
+    throw lastError || new Error("Operation failed after all retries");
   }
 
   /**
@@ -183,7 +177,7 @@ export class ProcessingErrorHandler {
   static withTimeout<T>(
     operation: () => Promise<T>,
     timeoutMs: number,
-    timeoutMessage: string = 'Operation timed out'
+    timeoutMessage: string = "Operation timed out",
   ): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       const timeoutId = setTimeout(() => {
@@ -191,11 +185,11 @@ export class ProcessingErrorHandler {
       }, timeoutMs);
 
       operation()
-        .then(result => {
+        .then((result) => {
           clearTimeout(timeoutId);
           resolve(result);
         })
-        .catch(error => {
+        .catch((error) => {
           clearTimeout(timeoutId);
           reject(error);
         });
@@ -207,7 +201,7 @@ export class ProcessingErrorHandler {
    */
   static createTimeoutController(timeoutMs: number): AbortController {
     const controller = new AbortController();
-    
+
     setTimeout(() => {
       controller.abort();
     }, timeoutMs);
@@ -227,49 +221,37 @@ export class ProcessingErrorHandler {
    */
   static getErrorSuggestions(error: ProcessingError): string[] {
     switch (error.type) {
-      case 'network':
+      case "network":
+        return ["Check your internet connection", "Try refreshing the page", "Try again in a few moments"];
+
+      case "memory":
         return [
-          'Check your internet connection',
-          'Try refreshing the page',
-          'Try again in a few moments'
+          "Close other browser tabs or applications",
+          "Try processing a smaller file",
+          "Restart your browser",
+          "Use a device with more memory",
         ];
-      
-      case 'memory':
+
+      case "timeout":
         return [
-          'Close other browser tabs or applications',
-          'Try processing a smaller file',
-          'Restart your browser',
-          'Use a device with more memory'
+          "Try processing a smaller file",
+          "Break large files into smaller sections",
+          "Check your internet connection speed",
         ];
-      
-      case 'timeout':
+
+      case "corruption":
         return [
-          'Try processing a smaller file',
-          'Break large files into smaller sections',
-          'Check your internet connection speed'
+          "Verify the PDF file opens in other applications",
+          "Try re-downloading the file",
+          "Try a different PDF file",
+          "Contact the file creator if it appears corrupted",
         ];
-      
-      case 'corruption':
-        return [
-          'Verify the PDF file opens in other applications',
-          'Try re-downloading the file',
-          'Try a different PDF file',
-          'Contact the file creator if it appears corrupted'
-        ];
-      
-      case 'parsing':
-        return [
-          'Verify this is a valid PDF file',
-          'Try a different PDF file',
-          'Contact support if the problem persists'
-        ];
-      
+
+      case "parsing":
+        return ["Verify this is a valid PDF file", "Try a different PDF file", "Contact support if the problem persists"];
+
       default:
-        return [
-          'Try refreshing the page',
-          'Try again in a few moments',
-          'Contact support if the problem persists'
-        ];
+        return ["Try refreshing the page", "Try again in a few moments", "Contact support if the problem persists"];
     }
   }
 
@@ -277,6 +259,6 @@ export class ProcessingErrorHandler {
    * Utility function for delays
    */
   private static delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

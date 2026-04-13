@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-import { useBackendHealth } from '@app/hooks/useBackendHealth';
-import { useEndpointConfig } from '@app/hooks/useEndpointConfig';
-import { tauriBackendService } from '@app/services/tauriBackendService';
+import { useEffect } from "react";
+import { useBackendHealth } from "@app/hooks/useBackendHealth";
+import { useEndpointConfig } from "@app/hooks/useEndpointConfig";
+import { tauriBackendService } from "@app/services/tauriBackendService";
 
 /**
  * Hook to initialize backend and monitor health
@@ -32,12 +32,12 @@ export function useBackendInitializer(enabled = true) {
           void checkHealth();
         }, 500);
       } catch (error) {
-        console.error('[BackendInitializer] Failed to start backend:', error);
+        console.error("[BackendInitializer] Failed to start backend:", error);
       }
     };
 
     // Only start backend if it's not already starting/healthy
-    if (status !== 'healthy' && status !== 'starting') {
+    if (status !== "healthy" && status !== "starting") {
       void initializeBackend();
     }
   }, [enabled, status, backendUrl, checkHealth]);

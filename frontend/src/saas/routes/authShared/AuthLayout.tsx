@@ -1,15 +1,15 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import LoginRightCarousel from '@app/components/shared/LoginRightCarousel';
-import buildLoginSlides from '@app/components/shared/loginSlides';
-import styles from '@app/routes/authShared/AuthLayout.module.css';
-import { useLogoVariant } from '@app/hooks/useLogoVariant';
-import { useIsOverflowing } from '@app/hooks/useIsOverflowing';
-import Footer from '@app/components/shared/Footer';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import LoginRightCarousel from "@app/components/shared/LoginRightCarousel";
+import buildLoginSlides from "@app/components/shared/loginSlides";
+import styles from "@app/routes/authShared/AuthLayout.module.css";
+import { useLogoVariant } from "@app/hooks/useLogoVariant";
+import { useIsOverflowing } from "@app/hooks/useIsOverflowing";
+import Footer from "@app/components/shared/Footer";
 
 interface AuthLayoutProps {
-  children: React.ReactNode
-  isEmailFormExpanded?: boolean
+  children: React.ReactNode;
+  isEmailFormExpanded?: boolean;
 }
 
 export default function AuthLayout({ children, isEmailFormExpanded = false }: AuthLayoutProps) {
@@ -27,15 +27,15 @@ export default function AuthLayout({ children, isEmailFormExpanded = false }: Au
   // Force light mode on auth pages
   useEffect(() => {
     const htmlElement = document.documentElement;
-    const previousColorScheme = htmlElement.getAttribute('data-mantine-color-scheme');
+    const previousColorScheme = htmlElement.getAttribute("data-mantine-color-scheme");
 
     // Set light mode
-    htmlElement.setAttribute('data-mantine-color-scheme', 'light');
+    htmlElement.setAttribute("data-mantine-color-scheme", "light");
 
     // Cleanup: restore previous theme when leaving auth pages
     return () => {
       if (previousColorScheme) {
-        htmlElement.setAttribute('data-mantine-color-scheme', previousColorScheme);
+        htmlElement.setAttribute("data-mantine-color-scheme", previousColorScheme);
       }
     };
   }, []);
@@ -52,37 +52,30 @@ export default function AuthLayout({ children, isEmailFormExpanded = false }: Au
       setHideRightPanel(tooNarrow || tooShort);
     };
     update();
-    window.addEventListener('resize', update);
-    window.addEventListener('orientationchange', update);
+    window.addEventListener("resize", update);
+    window.addEventListener("orientationchange", update);
     return () => {
-      window.removeEventListener('resize', update);
-      window.removeEventListener('orientationchange', update);
+      window.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", update);
     };
   }, []);
 
   return (
     <div className={styles.authContainer}>
       <div className={styles.authMain}>
-        <div
-          ref={cardRef}
-          className={`${styles.authCard} ${!hideRightPanel ? styles.authCardTwoColumns : ''}`}
-        >
+        <div ref={cardRef} className={`${styles.authCard} ${!hideRightPanel ? styles.authCardTwoColumns : ""}`}>
           <div
             ref={leftPanelRef}
             className={`${styles.authLeftPanel} ${shouldBeScrollable ? styles.authLeftPanelScrollable : styles.authLeftPanelCentered}`}
           >
-            <div className={styles.authContent}>
-              {children}
-            </div>
+            <div className={styles.authContent}>{children}</div>
           </div>
-          {!hideRightPanel && (
-            <LoginRightCarousel imageSlides={imageSlides} initialSeconds={5} slideSeconds={8} />
-          )}
+          {!hideRightPanel && <LoginRightCarousel imageSlides={imageSlides} initialSeconds={5} slideSeconds={8} />}
         </div>
       </div>
-      <div style={{ width: '100vw', marginTop: 'auto', marginLeft: '-1.5rem', marginRight: '-1.5rem' }}>
+      <div style={{ width: "100vw", marginTop: "auto", marginLeft: "-1.5rem", marginRight: "-1.5rem" }}>
         <Footer forceLightMode={true} analyticsEnabled />
       </div>
     </div>
-  )
+  );
 }

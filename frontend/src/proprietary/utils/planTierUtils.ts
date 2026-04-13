@@ -2,12 +2,12 @@
  * Shared utilities for plan tier comparisons and button logic
  */
 
-export type PlanTier = 'free' | 'server' | 'enterprise';
+export type PlanTier = "free" | "server" | "enterprise";
 
 const TIER_HIERARCHY: Record<PlanTier, number> = {
-  'free': 1,
-  'server': 2,
-  'enterprise': 3,
+  free: 1,
+  server: 2,
+  enterprise: 3,
 };
 
 /**
@@ -35,6 +35,9 @@ export function isDowngrade(currentTier: PlanTier | string | null | undefined, t
 /**
  * Check if enterprise is blocked for free tier users
  */
-export function isEnterpriseBlockedForFree(currentTier: PlanTier | string | null | undefined, targetTier: PlanTier | string): boolean {
-  return currentTier === 'free' && targetTier === 'enterprise';
+export function isEnterpriseBlockedForFree(
+  currentTier: PlanTier | string | null | undefined,
+  targetTier: PlanTier | string,
+): boolean {
+  return currentTier === "free" && targetTier === "enterprise";
 }

@@ -78,7 +78,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '2.9.1'
+    version = '2.9.2'
 
     configurations.configureEach {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
@@ -110,11 +110,11 @@ tasks.register('syncAppVersion') {
         [new File(sim1Path), new File(sim2Path)].each { f ->
             if (f.exists()) {
                 def content = f.getText('UTF-8')
-                def matcher = (content =~ /(appVersion:\s*')([^']*)(')/)
+                def matcher = (content =~ /(appVersion:\s*(['"]))(.*?)(\2)/)
                 if (!matcher.find()) {
                     throw new GradleException("Could not locate appVersion in ${f} for synchronization")
                 }
-                def updatedContent = matcher.replaceFirst("${matcher.group(1)}${appVersionStr}${matcher.group(3)}")
+                def updatedContent = matcher.replaceFirst("${matcher.group(1)}${appVersionStr}${matcher.group(4)}")
                 if (content != updatedContent) {
                     f.write(updatedContent, 'UTF-8')
                 }

@@ -1,8 +1,17 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { HotkeyBinding, bindingEquals, bindingMatchesEvent, deserializeBindings, getDisplayParts, isMacLike, normalizeBinding, serializeBindings } from '@app/utils/hotkeys';
-import { useToolWorkflow } from '@app/contexts/ToolWorkflowContext';
-import { ToolId } from '@app/types/toolId';
-import { ToolCategoryId, ToolRegistryEntry } from '@app/data/toolsTaxonomy';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  HotkeyBinding,
+  bindingEquals,
+  bindingMatchesEvent,
+  deserializeBindings,
+  getDisplayParts,
+  isMacLike,
+  normalizeBinding,
+  serializeBindings,
+} from "@app/utils/hotkeys";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { ToolId } from "@app/types/toolId";
+import { ToolCategoryId, ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 
 type Bindings = Partial<Record<ToolId, HotkeyBinding>>;
 
@@ -21,7 +30,7 @@ interface HotkeyContextValue {
 
 const HotkeyContext = createContext<HotkeyContextValue | undefined>(undefined);
 
-const STORAGE_KEY = 'stirlingpdf.hotkeys';
+const STORAGE_KEY = "stirlingpdf.hotkeys";
 
 const generateDefaultHotkeys = (toolEntries: [ToolId, ToolRegistryEntry][], macLike: boolean): Bindings => {
   const defaults: Bindings = {};
@@ -33,7 +42,8 @@ const generateDefaultHotkeys = (toolEntries: [ToolId, ToolRegistryEntry][], macL
 
   // Assign Cmd+Option+Number (Mac) or Ctrl+Alt+Number (Windows) to Quick Access tools
   quickAccessTools.forEach((toolId, index) => {
-    if (index < 9) { // Limit to Digit1-9
+    if (index < 9) {
+      // Limit to Digit1-9
       const digitNumber = index + 1;
       defaults[toolId] = {
         code: `Digit${digitNumber}`,
@@ -61,7 +71,7 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const { toolRegistry, handleToolSelect } = useToolWorkflow();
   const isMac = useMemo(() => isMacLike(), []);
   const [customBindings, setCustomBindings] = useState<Bindings>(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return {};
     }
     return deserializeBindings(window.localStorage?.getItem(STORAGE_KEY));
@@ -74,7 +84,7 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Remove bindings for tools that are no longer present
   useEffect(() => {
-    setCustomBindings(prev => {
+    setCustomBindings((prev) => {
       const next: Bindings = {};
       let changed = false;
       (Object.entries(prev) as [ToolId, HotkeyBinding][]).forEach(([toolId, binding]) => {
@@ -106,38 +116,44 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [customBindings, defaults, toolEntries]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return;
     }
     window.localStorage.setItem(STORAGE_KEY, serializeBindings(customBindings));
   }, [customBindings]);
 
-  const isBindingAvailable = useCallback((binding: HotkeyBinding, excludeToolId?: ToolId) => {
-    const normalized = normalizeBinding(binding);
-    return Object.entries(resolved).every(([toolId, existing]) => {
-      if (toolId === excludeToolId) {
-        return true;
-      }
-      return !bindingEquals(existing, normalized);
-    });
-  }, [resolved]);
-
-  const updateHotkey = useCallback((toolId: ToolId, binding: HotkeyBinding) => {
-    setCustomBindings(prev => {
+  const isBindingAvailable = useCallback(
+    (binding: HotkeyBinding, excludeToolId?: ToolId) => {
       const normalized = normalizeBinding(binding);
-      const defaultsForTool = defaults[toolId];
-      const next = { ...prev };
-      if (defaultsForTool && bindingEquals(defaultsForTool, normalized)) {
-        delete next[toolId];
-      } else {
-        next[toolId] = normalized;
-      }
-      return next;
-    });
-  }, [defaults]);
+      return Object.entries(resolved).every(([toolId, existing]) => {
+        if (toolId === excludeToolId) {
+          return true;
+        }
+        return !bindingEquals(existing, normalized);
+      });
+    },
+    [resolved],
+  );
+
+  const updateHotkey = useCallback(
+    (toolId: ToolId, binding: HotkeyBinding) => {
+      setCustomBindings((prev) => {
+        const normalized = normalizeBinding(binding);
+        const defaultsForTool = defaults[toolId];
+        const next = { ...prev };
+        if (defaultsForTool && bindingEquals(defaultsForTool, normalized)) {
+          delete next[toolId];
+        } else {
+          next[toolId] = normalized;
+        }
+        return next;
+      });
+    },
+    [defaults],
+  );
 
   const resetHotkey = useCallback((toolId: ToolId) => {
-    setCustomBindings(prev => {
+    setCustomBindings((prev) => {
       if (!(toolId in prev)) {
         return prev;
       }
@@ -170,36 +186,35 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     };
 
-    window.addEventListener('keydown', handler, true);
+    window.addEventListener("keydown", handler, true);
     return () => {
-      window.removeEventListener('keydown', handler, true);
+      window.removeEventListener("keydown", handler, true);
     };
   }, [resolved, areHotkeysPaused, handleToolSelect]);
 
-  const contextValue = useMemo<HotkeyContextValue>(() => ({
-    hotkeys: resolved,
-    defaults,
-    isMac,
-    updateHotkey,
-    resetHotkey,
-    isBindingAvailable,
-    pauseHotkeys,
-    resumeHotkeys,
-    areHotkeysPaused,
-    getDisplayParts: (binding) => getDisplayParts(binding ?? null, isMac),
-  }), [resolved, defaults, isMac, updateHotkey, resetHotkey, isBindingAvailable, pauseHotkeys, resumeHotkeys, areHotkeysPaused]);
-
-  return (
-    <HotkeyContext.Provider value={contextValue}>
-      {children}
-    </HotkeyContext.Provider>
+  const contextValue = useMemo<HotkeyContextValue>(
+    () => ({
+      hotkeys: resolved,
+      defaults,
+      isMac,
+      updateHotkey,
+      resetHotkey,
+      isBindingAvailable,
+      pauseHotkeys,
+      resumeHotkeys,
+      areHotkeysPaused,
+      getDisplayParts: (binding) => getDisplayParts(binding ?? null, isMac),
+    }),
+    [resolved, defaults, isMac, updateHotkey, resetHotkey, isBindingAvailable, pauseHotkeys, resumeHotkeys, areHotkeysPaused],
   );
+
+  return <HotkeyContext.Provider value={contextValue}>{children}</HotkeyContext.Provider>;
 };
 
 export const useHotkeys = (): HotkeyContextValue => {
   const context = useContext(HotkeyContext);
   if (!context) {
-    throw new Error('useHotkeys must be used within a HotkeyProvider');
+    throw new Error("useHotkeys must be used within a HotkeyProvider");
   }
   return context;
 };

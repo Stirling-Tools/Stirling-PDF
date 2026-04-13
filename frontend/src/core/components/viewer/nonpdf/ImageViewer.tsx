@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Box } from '@mantine/core';
+import { useEffect, useState } from "react";
+import { Box } from "@mantine/core";
 
 interface ImageViewerProps {
   file: File;
@@ -19,11 +19,11 @@ export function ImageViewer({ file, fileName }: ImageViewerProps) {
     <Box
       style={{
         flex: 1,
-        overflow: 'hidden',
-        background: 'var(--mantine-color-gray-1)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        overflow: "hidden",
+        background: "var(--mantine-color-gray-1)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
       {objectUrl && (
@@ -32,10 +32,10 @@ export function ImageViewer({ file, fileName }: ImageViewerProps) {
           alt={fileName}
           draggable={false}
           style={{
-            maxWidth: '100%',
-            maxHeight: '100%',
-            objectFit: 'contain',
-            display: 'block',
+            maxWidth: "100%",
+            maxHeight: "100%",
+            objectFit: "contain",
+            display: "block",
           }}
         />
       )}
