@@ -40,6 +40,11 @@ tasks:
     cmds:
       - '{{.GRADLE}} spotlessCheck'
 
+  fix:
+    desc: "Auto-fix backend"
+    cmds:
+      - task: format
+
   swagger:
     desc: "Generate OpenAPI docs"
     cmds:

@@ -81,16 +81,25 @@ tasks:
       - task: frontend:lint
       - task: engine:lint
 
+  fix:
+    desc: "Auto-fix all components"
+    cmds:
+      - task: backend:fix
+      - task: frontend:fix
+      - task: engine:fix
+
   format:
     desc: "Auto-fix formatting across all components"
     cmds:
       - task: backend:format
+      - task: frontend:format
       - task: engine:format
 
   format:check:
     desc: "Check formatting across all components"
     cmds:
       - task: backend:format:check
+      - task: frontend:format:check
       - task: engine:format:check
 
   # ============================================================
