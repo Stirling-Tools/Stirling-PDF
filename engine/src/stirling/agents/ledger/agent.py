@@ -27,6 +27,7 @@ from typing import Any, TypeVar
 
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
+from pydantic_ai.exceptions import AgentRunError
 
 from stirling.contracts.ledger import (
     Discrepancy,
@@ -431,7 +432,7 @@ class MathAuditorAgent:
         try:
             result = await self._table_analyser.run(f"CSV table:\n{table_csv}")
             formulas = result.output
-        except Exception:
+        except AgentRunError:
             logger.warning("[math-auditor-agent] formula inference failed, skipping table", exc_info=True)
             formulas = TableFormulas(formulas=[])
 
@@ -461,7 +462,7 @@ class MathAuditorAgent:
         try:
             result = await self._statement_verifier.run(prompt)
             stmts = result.output
-        except Exception:
+        except AgentRunError:
             logger.warning("[math-auditor-agent] statement verification failed for page %d", folio.page, exc_info=True)
             stmts = StatementsResult(statements=[])
 
@@ -486,7 +487,7 @@ class MathAuditorAgent:
         try:
             result = await self._figure_extractor.run(prompt)
             figures = result.output.figures
-        except Exception:
+        except AgentRunError:
             logger.warning(
                 "[math-auditor-agent] figure extraction failed for page %d, skipping",
                 folio.page,
@@ -526,7 +527,7 @@ class MathAuditorAgent:
         try:
             result = await self._summary_agent.run(prompt)
             summary = result.output
-        except Exception:
+        except AgentRunError:
             logger.warning("[math-auditor-agent] summary generation failed, using fallback", exc_info=True)
             summary = self._fallback_summary(error_count, warning_count, pages_examined, unauditable_pages)
 
