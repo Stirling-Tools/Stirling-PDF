@@ -19,6 +19,10 @@ class AppSettings(BaseSettings):
     smart_model_max_tokens: int = Field(validation_alias="STIRLING_SMART_MODEL_MAX_TOKENS")
     fast_model_max_tokens: int = Field(validation_alias="STIRLING_FAST_MODEL_MAX_TOKENS")
 
+    posthog_enabled: bool = Field(validation_alias="STIRLING_POSTHOG_ENABLED")
+    posthog_api_key: str = Field(validation_alias="STIRLING_POSTHOG_API_KEY")
+    posthog_host: str = Field(validation_alias="STIRLING_POSTHOG_HOST")
+
 
 @lru_cache(maxsize=1)
 def load_settings() -> AppSettings:
