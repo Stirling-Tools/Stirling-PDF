@@ -35,7 +35,7 @@ export function useViewerRightRailButtons(isRulerActive?: boolean, setIsRulerAct
     isSearchInterfaceVisible,
     registerImmediatePanUpdate,
   } = viewer;
-  const [isPanning, setIsPanning] = useState<boolean>(() => viewer.getPanState()?.isPanning ?? false);
+  const [isPanning, setIsPanning] = useState<boolean>(false);
   const { sidebarRefs } = useSidebarContext();
   const { position: tooltipPosition } = useRightRailTooltipSide(sidebarRefs, 12);
   const { handleToolSelect, handleToolSelectForced, handleBackToTools } = useToolWorkflow();
@@ -194,9 +194,8 @@ export function useViewerRightRailButtons(isRulerActive?: boolean, setIsRulerAct
         onClick: () => {
           const next = !isRulerActive;
           setIsRulerActive?.(next);
-          if (next && viewer.getPanState()?.isPanning) {
-            viewer.panActions.togglePan();
-            setIsPanning(false);
+          if (next && isPanning) {
+            viewer.panActions.disablePan();
           }
         },
       },
