@@ -138,7 +138,19 @@ jobs:
 
       - name: Fail if Java formatting issues found
         if: steps.spotless-check.outcome == 'failure'
-        run: exit 1
+        run: |
+          echo "============================================"
+          echo "  Java Formatting Check Failed"
+          echo "============================================"
+          echo ""
+          echo "Your code has formatting issues."
+          echo "Run the following command to fix them:"
+          echo ""
+          echo "  ./gradlew spotlessApply"
+          echo ""
+          echo "Then commit and push the changes."
+          echo "============================================"
+          exit 1
 
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
         run: ./gradlew build -PnoSpotless
@@ -307,7 +319,19 @@ jobs:
             }
       - name: Fail if TypeScript formatting issues found
         if: steps.prettier-check.outcome == 'failure'
-        run: exit 1
+        run: |
+          echo "============================================"
+          echo "  TypeScript Formatting Check Failed"
+          echo "============================================"
+          echo ""
+          echo "Your code has formatting issues."
+          echo "Run the following command to fix them:"
+          echo ""
+          echo "  cd frontend && npm run fix"
+          echo ""
+          echo "Then commit and push the changes."
+          echo "============================================"
+          exit 1
       - name: Type-check frontend
         run: cd frontend && npm run prep && npm run typecheck:all
       - name: Lint frontend
