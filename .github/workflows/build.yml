@@ -99,6 +99,7 @@ jobs:
 
       - name: Comment on Java formatting failure
         if: steps.spotless-check.outcome == 'failure'
+        continue-on-error: true
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
@@ -139,7 +140,19 @@ jobs:
 
       - name: Fail if Java formatting issues found
         if: steps.spotless-check.outcome == 'failure'
-        run: exit 1
+        run: |
+          echo "============================================"
+          echo "  Java Formatting Check Failed"
+          echo "============================================"
+          echo ""
+          echo "Your code has formatting issues."
+          echo "Run the following command to fix them:"
+          echo ""
+          echo "  task backend:format"
+          echo ""
+          echo "Then commit and push the changes."
+          echo "============================================"
+          exit 1
 
       - name: Build with Gradle and spring security ${{ matrix.spring-security }}
         run: task backend:build:ci
@@ -270,6 +283,7 @@ jobs:
         continue-on-error: true
       - name: Comment on frontend check failure
         if: steps.frontend-check.outcome == 'failure'
+        continue-on-error: true
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
@@ -305,7 +319,19 @@ jobs:
             }
       - name: Fail if frontend check failed
         if: steps.frontend-check.outcome == 'failure'
-        run: exit 1
+        run: |
+          echo "============================================"
+          echo "  Frontend Check Failed"
+          echo "============================================"
+          echo ""
+          echo "There are issues with your frontend code that"
+          echo "will need to be fixed before they can be merged in."
+          echo ""
+          echo "Run 'task frontend:fix' to auto-fix what can be"
+          echo "fixed automatically, then run 'task frontend:check:all'"
+          echo "to see what still needs fixing manually."
+          echo "============================================"
+          exit 1
       - name: Upload frontend build artifacts
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
