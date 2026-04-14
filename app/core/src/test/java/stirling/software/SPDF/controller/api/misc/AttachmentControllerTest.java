@@ -19,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.misc.AddAttachmentRequest;
 import stirling.software.SPDF.service.AttachmentServiceInterface;
@@ -27,6 +28,16 @@ import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class AttachmentControllerTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
 
@@ -71,8 +82,8 @@ class AttachmentControllerTest {
         List<MultipartFile> attachments = List.of(attachment1, attachment2);
         request.setAttachments(attachments);
         request.setFileInput(pdfFile);
-        ResponseEntity<byte[]> expectedResponse =
-                ResponseEntity.ok("modified PDF content".getBytes());
+        ResponseEntity<StreamingResponseBody> expectedResponse =
+                streamingOk("modified PDF content".getBytes());
 
         when(pdfDocumentFactory.load(request, false)).thenReturn(mockDocument);
         when(pdfAttachmentService.addAttachment(mockDocument, attachments))
@@ -87,7 +98,8 @@ class AttachmentControllerTest {
                                             eq(mockDocument), eq("test_with_attachments.pdf")))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = attachmentController.addAttachments(request);
+            ResponseEntity<StreamingResponseBody> response =
+                    attachmentController.addAttachments(request);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -102,8 +114,8 @@ class AttachmentControllerTest {
         List<MultipartFile> attachments = List.of(attachment1);
         request.setAttachments(attachments);
         request.setFileInput(pdfFile);
-        ResponseEntity<byte[]> expectedResponse =
-                ResponseEntity.ok("modified PDF content".getBytes());
+        ResponseEntity<StreamingResponseBody> expectedResponse =
+                streamingOk("modified PDF content".getBytes());
 
         when(pdfDocumentFactory.load(request, false)).thenReturn(mockDocument);
         when(pdfAttachmentService.addAttachment(mockDocument, attachments))
@@ -118,7 +130,8 @@ class AttachmentControllerTest {
                                             eq(mockDocument), eq("test_with_attachments.pdf")))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = attachmentController.addAttachments(request);
+            ResponseEntity<StreamingResponseBody> response =
+                    attachmentController.addAttachments(request);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());

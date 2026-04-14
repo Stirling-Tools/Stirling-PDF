@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -28,6 +29,16 @@ import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ShowJavascriptTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
 
@@ -58,7 +69,8 @@ class ShowJavascriptTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok("no js".getBytes());
+            ResponseEntity<StreamingResponseBody> expectedResponse =
+                    streamingOk("no js".getBytes());
             mockedWebResponse
                     .when(
                             () ->
@@ -68,7 +80,7 @@ class ShowJavascriptTest {
                                             eq(MediaType.TEXT_PLAIN)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = showJavascript.extractHeader(request);
+            ResponseEntity<StreamingResponseBody> response = showJavascript.extractHeader(request);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -107,7 +119,8 @@ class ShowJavascriptTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok("js content".getBytes());
+            ResponseEntity<StreamingResponseBody> expectedResponse =
+                    streamingOk("js content".getBytes());
             mockedWebResponse
                     .when(
                             () ->
@@ -117,7 +130,7 @@ class ShowJavascriptTest {
                                             eq(MediaType.TEXT_PLAIN)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = showJavascript.extractHeader(request);
+            ResponseEntity<StreamingResponseBody> response = showJavascript.extractHeader(request);
 
             assertNotNull(response);
             // Verify the bytes passed contain the script content
@@ -144,7 +157,8 @@ class ShowJavascriptTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok("no js".getBytes());
+            ResponseEntity<StreamingResponseBody> expectedResponse =
+                    streamingOk("no js".getBytes());
             mockedWebResponse
                     .when(
                             () ->
@@ -154,7 +168,7 @@ class ShowJavascriptTest {
                                             eq(MediaType.TEXT_PLAIN)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = showJavascript.extractHeader(request);
+            ResponseEntity<StreamingResponseBody> response = showJavascript.extractHeader(request);
 
             assertNotNull(response);
             mockedWebResponse.verify(
@@ -191,7 +205,8 @@ class ShowJavascriptTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok("no js".getBytes());
+            ResponseEntity<StreamingResponseBody> expectedResponse =
+                    streamingOk("no js".getBytes());
             mockedWebResponse
                     .when(
                             () ->
@@ -201,7 +216,7 @@ class ShowJavascriptTest {
                                             eq(MediaType.TEXT_PLAIN)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = showJavascript.extractHeader(request);
+            ResponseEntity<StreamingResponseBody> response = showJavascript.extractHeader(request);
 
             assertNotNull(response);
             mockedWebResponse.verify(

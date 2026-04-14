@@ -26,12 +26,23 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.misc.FlattenRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @ExtendWith(MockitoExtension.class)
 class FlattenControllerTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     @TempDir Path tempDir;
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
@@ -65,10 +76,10 @@ class FlattenControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.flatten(request);
+        ResponseEntity<StreamingResponseBody> response = controller.flatten(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotEmpty();
+        assertThat(drainBody(response)).isNotEmpty();
     }
 
     @Test
@@ -85,7 +96,7 @@ class FlattenControllerTest {
         when(doc.getDocumentCatalog()).thenReturn(catalog);
         when(catalog.getAcroForm()).thenReturn(null);
 
-        ResponseEntity<byte[]> response = controller.flatten(request);
+        ResponseEntity<StreamingResponseBody> response = controller.flatten(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(doc).close();
@@ -105,7 +116,7 @@ class FlattenControllerTest {
         when(doc.getDocumentCatalog()).thenReturn(catalog);
         when(catalog.getAcroForm()).thenReturn(form);
 
-        ResponseEntity<byte[]> response = controller.flatten(request);
+        ResponseEntity<StreamingResponseBody> response = controller.flatten(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(form).flatten();
@@ -137,10 +148,10 @@ class FlattenControllerTest {
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc)).thenReturn(newDoc);
 
-        ResponseEntity<byte[]> response = controller.flatten(request);
+        ResponseEntity<StreamingResponseBody> response = controller.flatten(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotEmpty();
+        assertThat(drainBody(response)).isNotEmpty();
     }
 
     @Test
@@ -155,7 +166,7 @@ class FlattenControllerTest {
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc)).thenReturn(newDoc);
 
-        ResponseEntity<byte[]> response = controller.flatten(request);
+        ResponseEntity<StreamingResponseBody> response = controller.flatten(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
@@ -173,7 +184,7 @@ class FlattenControllerTest {
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc)).thenReturn(newDoc);
 
-        ResponseEntity<byte[]> response = controller.flatten(request);
+        ResponseEntity<StreamingResponseBody> response = controller.flatten(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
@@ -191,7 +202,7 @@ class FlattenControllerTest {
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc)).thenReturn(newDoc);
 
-        ResponseEntity<byte[]> response = controller.flatten(request);
+        ResponseEntity<StreamingResponseBody> response = controller.flatten(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }

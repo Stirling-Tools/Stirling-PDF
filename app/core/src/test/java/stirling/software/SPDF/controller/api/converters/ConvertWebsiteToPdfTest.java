@@ -34,6 +34,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -43,13 +44,25 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.ProcessExecutor.Processes;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 public class ConvertWebsiteToPdfTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     private static final Pattern PDF_FILENAME_PATTERN = Pattern.compile("[A-Za-z0-9_]+\\.pdf");
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private RuntimePathConfig runtimePathConfig;
+    @Mock private TempFileManager tempFileManager;
 
     private ApplicationProperties applicationProperties;
     private ConvertWebsiteToPDF sut;
@@ -68,7 +81,12 @@ public class ConvertWebsiteToPdfTest {
         when(pdfDocumentFactory.load(any(File.class))).thenReturn(new PDDocument());
 
         // Build SUT
-        sut = new ConvertWebsiteToPDF(pdfDocumentFactory, runtimePathConfig, applicationProperties);
+        sut =
+                new ConvertWebsiteToPDF(
+                        pdfDocumentFactory,
+                        runtimePathConfig,
+                        applicationProperties,
+                        tempFileManager);
 
         // Provide RequestContext for ServletUriComponentsBuilder
         MockHttpServletRequest req = new MockHttpServletRequest();
@@ -192,7 +210,7 @@ public class ConvertWebsiteToPdfTest {
             when(mockExec.runCommandWithOutputHandling(cmdCaptor.capture()))
                     .thenReturn(dummyResult);
 
-            ResponseEntity<byte[]> fakeResponse = ResponseEntity.ok(new byte[0]);
+            ResponseEntity<StreamingResponseBody> fakeResponse = streamingOk(new byte[0]);
 
             wr.when(
                             () ->
@@ -266,7 +284,7 @@ public class ConvertWebsiteToPdfTest {
             when(mockExec.runCommandWithOutputHandling(Mockito.<List>any())).thenReturn(dummy);
 
             // WebResponseUtils
-            ResponseEntity<byte[]> fakeResponse = ResponseEntity.ok(new byte[0]);
+            ResponseEntity<StreamingResponseBody> fakeResponse = streamingOk(new byte[0]);
             wr.when(
                             () ->
                                     WebResponseUtils.baosToWebResponse(

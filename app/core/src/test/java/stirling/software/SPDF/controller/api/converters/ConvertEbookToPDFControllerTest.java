@@ -29,6 +29,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.ConvertEbookToPdfRequest;
@@ -42,6 +43,16 @@ import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ConvertEbookToPDFControllerTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
@@ -113,7 +124,8 @@ class ConvertEbookToPDFControllerTest {
                                 return execResult;
                             });
 
-            ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok("result".getBytes());
+            ResponseEntity<StreamingResponseBody> expectedResponse =
+                    streamingOk("result".getBytes());
             wr.when(
                             () ->
                                     WebResponseUtils.pdfDocToWebResponse(
@@ -122,7 +134,7 @@ class ConvertEbookToPDFControllerTest {
             gu.when(() -> GeneralUtils.generateFilename("ebook.epub", "_convertedToPDF.pdf"))
                     .thenReturn("ebook_convertedToPDF.pdf");
 
-            ResponseEntity<byte[]> response = controller.convertEbookToPdf(request);
+            ResponseEntity<StreamingResponseBody> response = controller.convertEbookToPdf(request);
 
             assertSame(expectedResponse, response);
 
@@ -232,14 +244,14 @@ class ConvertEbookToPDFControllerTest {
             gu.when(() -> GeneralUtils.optimizePdfWithGhostscript(Mockito.any(byte[].class)))
                     .thenReturn(optimizedBytes);
 
-            ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(optimizedBytes);
+            ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(optimizedBytes);
             wr.when(
                             () ->
                                     WebResponseUtils.bytesToWebResponse(
                                             optimizedBytes, "ebook_convertedToPDF.pdf"))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = controller.convertEbookToPdf(request);
+            ResponseEntity<StreamingResponseBody> response = controller.convertEbookToPdf(request);
 
             assertSame(expectedResponse, response);
             gu.verify(() -> GeneralUtils.optimizePdfWithGhostscript(Mockito.any(byte[].class)));

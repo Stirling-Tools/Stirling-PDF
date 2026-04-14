@@ -26,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.controller.api.EditTableOfContentsController.BookmarkItem;
 import stirling.software.SPDF.model.api.EditTableOfContentsRequest;
@@ -237,7 +238,8 @@ class EditTableOfContentsControllerTest {
                 .save(any(ByteArrayOutputStream.class));
 
         // When
-        ResponseEntity<byte[]> result = editTableOfContentsController.editTableOfContents(request);
+        ResponseEntity<StreamingResponseBody> result =
+                editTableOfContentsController.editTableOfContents(request);
 
         // Then
         assertNotNull(result);
@@ -299,7 +301,8 @@ class EditTableOfContentsControllerTest {
                 .save(any(ByteArrayOutputStream.class));
 
         // When
-        ResponseEntity<byte[]> result = editTableOfContentsController.editTableOfContents(request);
+        ResponseEntity<StreamingResponseBody> result =
+                editTableOfContentsController.editTableOfContents(request);
 
         // Then
         assertNotNull(result);
@@ -351,7 +354,8 @@ class EditTableOfContentsControllerTest {
                 .save(any(ByteArrayOutputStream.class));
 
         // When
-        ResponseEntity<byte[]> result = editTableOfContentsController.editTableOfContents(request);
+        ResponseEntity<StreamingResponseBody> result =
+                editTableOfContentsController.editTableOfContents(request);
 
         // Then
         assertNotNull(result);

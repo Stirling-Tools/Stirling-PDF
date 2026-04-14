@@ -24,12 +24,23 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @ExtendWith(MockitoExtension.class)
 class DecompressPdfControllerTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     @TempDir Path tempDir;
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
@@ -64,12 +75,12 @@ class DecompressPdfControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.decompressPdf(request);
+        ResponseEntity<StreamingResponseBody> response = controller.decompressPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotEmpty();
+        assertThat(drainBody(response)).isNotEmpty();
         // Verify the result is a valid PDF
-        try (PDDocument result = Loader.loadPDF(response.getBody())) {
+        try (PDDocument result = Loader.loadPDF(drainBody(response))) {
             assertThat(result.getNumberOfPages()).isEqualTo(1);
         }
     }
@@ -83,10 +94,10 @@ class DecompressPdfControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.decompressPdf(request);
+        ResponseEntity<StreamingResponseBody> response = controller.decompressPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotEmpty();
+        assertThat(drainBody(response)).isNotEmpty();
     }
 
     @Test
@@ -114,7 +125,7 @@ class DecompressPdfControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.decompressPdf(request);
+        ResponseEntity<StreamingResponseBody> response = controller.decompressPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         String contentDisposition = response.getHeaders().getFirst("Content-Disposition");
@@ -150,10 +161,10 @@ class DecompressPdfControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.decompressPdf(request);
+        ResponseEntity<StreamingResponseBody> response = controller.decompressPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        try (PDDocument result = Loader.loadPDF(response.getBody())) {
+        try (PDDocument result = Loader.loadPDF(drainBody(response))) {
             assertThat(result.getNumberOfPages()).isEqualTo(3);
         }
     }
@@ -167,11 +178,11 @@ class DecompressPdfControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.decompressPdf(request);
+        ResponseEntity<StreamingResponseBody> response = controller.decompressPdf(request);
 
         assertThat(response.getBody()).isNotNull();
         // Decompressed PDF should generally be larger or equal to compressed
-        assertThat(response.getBody().length).isGreaterThan(0);
+        assertThat(drainBody(response).length).isGreaterThan(0);
     }
 
     @Test
@@ -183,7 +194,7 @@ class DecompressPdfControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.decompressPdf(request);
+        ResponseEntity<StreamingResponseBody> response = controller.decompressPdf(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }

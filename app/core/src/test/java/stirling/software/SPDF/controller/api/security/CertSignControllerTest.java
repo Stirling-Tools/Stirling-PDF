@@ -23,12 +23,23 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @ExtendWith(MockitoExtension.class)
 class CertSignControllerTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
 
@@ -137,10 +148,11 @@ class CertSignControllerTest {
         request.setPageNumber(1);
         request.setShowLogo(false);
 
-        ResponseEntity<byte[]> response = certSignController.signPDFWithCert(request);
+        ResponseEntity<StreamingResponseBody> response =
+                certSignController.signPDFWithCert(request);
 
         assertNotNull(response.getBody());
-        assertTrue(response.getBody().length > 0);
+        assertTrue(drainBody(response).length > 0);
     }
 
     @Test
@@ -163,10 +175,11 @@ class CertSignControllerTest {
         request.setPageNumber(1);
         request.setShowLogo(false);
 
-        ResponseEntity<byte[]> response = certSignController.signPDFWithCert(request);
+        ResponseEntity<StreamingResponseBody> response =
+                certSignController.signPDFWithCert(request);
 
         assertNotNull(response.getBody());
-        assertTrue(response.getBody().length > 0);
+        assertTrue(drainBody(response).length > 0);
     }
 
     @Test
@@ -215,10 +228,11 @@ class CertSignControllerTest {
         request.setPageNumber(1);
         request.setShowLogo(false);
 
-        ResponseEntity<byte[]> response = certSignController.signPDFWithCert(request);
+        ResponseEntity<StreamingResponseBody> response =
+                certSignController.signPDFWithCert(request);
 
         assertNotNull(response.getBody());
-        assertTrue(response.getBody().length > 0);
+        assertTrue(drainBody(response).length > 0);
     }
 
     @Test
@@ -246,10 +260,11 @@ class CertSignControllerTest {
         request.setPageNumber(1);
         request.setShowLogo(false);
 
-        ResponseEntity<byte[]> response = certSignController.signPDFWithCert(request);
+        ResponseEntity<StreamingResponseBody> response =
+                certSignController.signPDFWithCert(request);
 
         assertNotNull(response.getBody());
-        assertTrue(response.getBody().length > 0);
+        assertTrue(drainBody(response).length > 0);
     }
 
     @Test
@@ -277,10 +292,11 @@ class CertSignControllerTest {
         request.setPageNumber(1);
         request.setShowLogo(false);
 
-        ResponseEntity<byte[]> response = certSignController.signPDFWithCert(request);
+        ResponseEntity<StreamingResponseBody> response =
+                certSignController.signPDFWithCert(request);
 
         assertNotNull(response.getBody());
-        assertTrue(response.getBody().length > 0);
+        assertTrue(drainBody(response).length > 0);
     }
 
     @Test
@@ -308,10 +324,11 @@ class CertSignControllerTest {
         request.setPageNumber(1);
         request.setShowLogo(false);
 
-        ResponseEntity<byte[]> response = certSignController.signPDFWithCert(request);
+        ResponseEntity<StreamingResponseBody> response =
+                certSignController.signPDFWithCert(request);
 
         assertNotNull(response.getBody());
-        assertTrue(response.getBody().length > 0);
+        assertTrue(drainBody(response).length > 0);
     }
 
     @Test
@@ -339,9 +356,10 @@ class CertSignControllerTest {
         request.setPageNumber(1);
         request.setShowLogo(false);
 
-        ResponseEntity<byte[]> response = certSignController.signPDFWithCert(request);
+        ResponseEntity<StreamingResponseBody> response =
+                certSignController.signPDFWithCert(request);
 
         assertNotNull(response.getBody());
-        assertTrue(response.getBody().length > 0);
+        assertTrue(drainBody(response).length > 0);
     }
 }

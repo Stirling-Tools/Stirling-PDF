@@ -29,6 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.ConvertPdfToEpubRequest;
@@ -42,6 +43,16 @@ import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class ConvertPDFToEpubControllerTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     private static final MediaType EPUB_MEDIA_TYPE = MediaType.valueOf("application/epub+zip");
 
@@ -110,7 +121,7 @@ class ConvertPDFToEpubControllerTest {
 
             gu.when(() -> GeneralUtils.generateFilename("novel.pdf", "_convertedToEPUB.epub"))
                     .thenReturn("novel_convertedToEPUB.epub");
-            ResponseEntity<byte[]> response = controller.convertPdfToEpub(request);
+            ResponseEntity<StreamingResponseBody> response = controller.convertPdfToEpub(request);
 
             List<String> command = commandCaptor.getValue();
             assertEquals(13, command.size());
@@ -134,7 +145,7 @@ class ConvertPDFToEpubControllerTest {
             assertEquals(
                     "novel_convertedToEPUB.epub",
                     response.getHeaders().getContentDisposition().getFilename());
-            assertEquals("epub", new String(response.getBody(), StandardCharsets.UTF_8));
+            assertEquals("epub", new String(drainBody(response), StandardCharsets.UTF_8));
 
             verify(tempFileManager).deleteTempDirectory(workingDir);
             assertEquals(workingDir, deletedDir.get());
@@ -202,7 +213,7 @@ class ConvertPDFToEpubControllerTest {
 
             gu.when(() -> GeneralUtils.generateFilename("story.pdf", "_convertedToEPUB.epub"))
                     .thenReturn("story_convertedToEPUB.epub");
-            ResponseEntity<byte[]> response = controller.convertPdfToEpub(request);
+            ResponseEntity<StreamingResponseBody> response = controller.convertPdfToEpub(request);
 
             List<String> command = commandCaptor.getValue();
             assertTrue(command.stream().noneMatch(arg -> "--chapter".equals(arg)));
@@ -220,7 +231,7 @@ class ConvertPDFToEpubControllerTest {
             assertEquals(
                     "story_convertedToEPUB.epub",
                     response.getHeaders().getContentDisposition().getFilename());
-            assertEquals("epub", new String(response.getBody(), StandardCharsets.UTF_8));
+            assertEquals("epub", new String(drainBody(response), StandardCharsets.UTF_8));
         } finally {
             deleteIfExists(workingDir);
         }
@@ -287,7 +298,7 @@ class ConvertPDFToEpubControllerTest {
 
             gu.when(() -> GeneralUtils.generateFilename("book.pdf", "_convertedToAZW3.azw3"))
                     .thenReturn("book_convertedToAZW3.azw3");
-            ResponseEntity<byte[]> response = controller.convertPdfToEpub(request);
+            ResponseEntity<StreamingResponseBody> response = controller.convertPdfToEpub(request);
 
             List<String> command = commandCaptor.getValue();
             assertEquals("ebook-convert", command.get(0));
@@ -308,7 +319,7 @@ class ConvertPDFToEpubControllerTest {
             assertEquals(
                     "book_convertedToAZW3.azw3",
                     response.getHeaders().getContentDisposition().getFilename());
-            assertEquals("azw3", new String(response.getBody(), StandardCharsets.UTF_8));
+            assertEquals("azw3", new String(drainBody(response), StandardCharsets.UTF_8));
 
             verify(tempFileManager).deleteTempDirectory(workingDir);
         } finally {

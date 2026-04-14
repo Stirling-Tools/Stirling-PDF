@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
@@ -54,6 +55,16 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class RedactControllerTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     private static final Logger log = LoggerFactory.getLogger(RedactControllerTest.class);
 
@@ -298,7 +309,7 @@ class RedactControllerTest {
                     mock(org.apache.pdfbox.pdmodel.PDDocumentInformation.class);
             when(mockDocument.getDocumentInformation()).thenReturn(mockInfo);
 
-            ResponseEntity<byte[]> response = redactController.redactPdf(request);
+            ResponseEntity<StreamingResponseBody> response = redactController.redactPdf(request);
 
             assertNotNull(response);
             assertEquals(200, response.getStatusCode().value());
@@ -702,13 +713,13 @@ class RedactControllerTest {
         request.setConvertPDFToImage(convertToImage);
 
         try {
-            ResponseEntity<byte[]> response = redactController.redactPdf(request);
+            ResponseEntity<StreamingResponseBody> response = redactController.redactPdf(request);
 
             if (expectSuccess && response != null) {
                 assertNotNull(response);
                 assertEquals(200, response.getStatusCode().value());
                 assertNotNull(response.getBody());
-                assertTrue(response.getBody().length > 0);
+                assertTrue(drainBody(response).length > 0);
                 verify(mockDocument, times(1)).save(any(ByteArrayOutputStream.class));
                 verify(mockDocument, times(1)).close();
             }
@@ -727,7 +738,7 @@ class RedactControllerTest {
         request.setConvertPDFToImage(convertToImage);
 
         try {
-            ResponseEntity<byte[]> response = redactController.redactPDF(request);
+            ResponseEntity<StreamingResponseBody> response = redactController.redactPDF(request);
 
             if (response != null) {
                 assertNotNull(response);
@@ -918,7 +929,7 @@ class RedactControllerTest {
             request.setListOfText("test");
             request.setRedactColor(null);
 
-            ResponseEntity<byte[]> response = redactController.redactPdf(request);
+            ResponseEntity<StreamingResponseBody> response = redactController.redactPdf(request);
 
             assertNotNull(response);
             assertEquals(200, response.getStatusCode().value());
@@ -942,7 +953,7 @@ class RedactControllerTest {
             ManualRedactPdfRequest request = createManualRedactPdfRequest();
             request.setRedactions(null);
 
-            ResponseEntity<byte[]> response = redactController.redactPDF(request);
+            ResponseEntity<StreamingResponseBody> response = redactController.redactPDF(request);
 
             assertNotNull(response);
             assertEquals(200, response.getStatusCode().value());
@@ -954,7 +965,7 @@ class RedactControllerTest {
             ManualRedactPdfRequest request = createManualRedactPdfRequest();
             request.setPageNumbers("100-200");
 
-            ResponseEntity<byte[]> response = redactController.redactPDF(request);
+            ResponseEntity<StreamingResponseBody> response = redactController.redactPDF(request);
 
             assertNotNull(response);
             assertEquals(200, response.getStatusCode().value());
@@ -1419,12 +1430,12 @@ class RedactControllerTest {
             request.setUseRegex(false);
             request.setWholeWordSearch(false);
 
-            ResponseEntity<byte[]> response = redactController.redactPdf(request);
+            ResponseEntity<StreamingResponseBody> response = redactController.redactPdf(request);
 
             assertNotNull(response);
             assertEquals(200, response.getStatusCode().value());
             assertNotNull(response.getBody());
-            assertTrue(response.getBody().length > 0);
+            assertTrue(drainBody(response).length > 0);
         }
     }
 }

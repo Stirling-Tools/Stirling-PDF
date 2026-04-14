@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.GeneralFile;
@@ -30,6 +31,16 @@ import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ConvertMarkdownToPdfTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private RuntimePathConfig runtimePathConfig;
@@ -71,7 +82,7 @@ class ConvertMarkdownToPdfTest {
         when(pdfDocumentFactory.createNewBytesBasedOnOldDocument(any(byte[].class)))
                 .thenReturn(processedPdf);
 
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(processedPdf);
+        ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(processedPdf);
 
         try (MockedStatic<FileToPdf> ftpMock = Mockito.mockStatic(FileToPdf.class);
                 MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
@@ -95,7 +106,7 @@ class ConvertMarkdownToPdfTest {
             wrMock.when(() -> WebResponseUtils.bytesToWebResponse(processedPdf, "readme.pdf"))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = controller.markdownToPdf(generalFile);
+            ResponseEntity<StreamingResponseBody> response = controller.markdownToPdf(generalFile);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }

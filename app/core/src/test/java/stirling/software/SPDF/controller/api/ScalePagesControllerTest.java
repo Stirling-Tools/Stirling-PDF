@@ -21,12 +21,23 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.general.ScalePagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @ExtendWith(MockitoExtension.class)
 class ScalePagesControllerTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     @TempDir Path tempDir;
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
@@ -68,12 +79,12 @@ class ScalePagesControllerTest {
 
         setupFactory();
 
-        ResponseEntity<byte[]> response = controller.scalePages(request);
+        ResponseEntity<StreamingResponseBody> response = controller.scalePages(request);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
-        assertTrue(response.getBody().length > 0);
+        assertTrue(drainBody(response).length > 0);
     }
 
     @Test
@@ -90,7 +101,7 @@ class ScalePagesControllerTest {
 
         setupFactory();
 
-        ResponseEntity<byte[]> response = controller.scalePages(request);
+        ResponseEntity<StreamingResponseBody> response = controller.scalePages(request);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -110,7 +121,7 @@ class ScalePagesControllerTest {
 
         setupFactory();
 
-        ResponseEntity<byte[]> response = controller.scalePages(request);
+        ResponseEntity<StreamingResponseBody> response = controller.scalePages(request);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -130,7 +141,7 @@ class ScalePagesControllerTest {
 
         setupFactory();
 
-        ResponseEntity<byte[]> response = controller.scalePages(request);
+        ResponseEntity<StreamingResponseBody> response = controller.scalePages(request);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -150,7 +161,7 @@ class ScalePagesControllerTest {
 
         setupFactory();
 
-        ResponseEntity<byte[]> response = controller.scalePages(request);
+        ResponseEntity<StreamingResponseBody> response = controller.scalePages(request);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -187,7 +198,7 @@ class ScalePagesControllerTest {
 
         setupFactory();
 
-        ResponseEntity<byte[]> response = controller.scalePages(request);
+        ResponseEntity<StreamingResponseBody> response = controller.scalePages(request);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -207,7 +218,7 @@ class ScalePagesControllerTest {
 
         setupFactory();
 
-        ResponseEntity<byte[]> response = controller.scalePages(request);
+        ResponseEntity<StreamingResponseBody> response = controller.scalePages(request);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -248,7 +259,7 @@ class ScalePagesControllerTest {
 
         setupFactory();
 
-        ResponseEntity<byte[]> response = controller.scalePages(request);
+        ResponseEntity<StreamingResponseBody> response = controller.scalePages(request);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());

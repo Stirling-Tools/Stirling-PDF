@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -55,7 +56,7 @@ class ConvertPDFToExcelControllerTest {
                                             Mockito.eq(true)))
                     .thenReturn(List.of(1));
 
-            ResponseEntity<byte[]> response = controller.pdfToExcel(request);
+            ResponseEntity<StreamingResponseBody> response = controller.pdfToExcel(request);
 
             // tabula may or may not find tables in an empty page
             assertNotNull(response);

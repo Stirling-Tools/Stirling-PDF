@@ -9,6 +9,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,6 +30,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.ZipSecurity;
 
@@ -68,6 +70,12 @@ class PDFToFileTest {
         pdfToFile = new PDFToFile(mockTempFileManager, mockRuntimePathConfig);
     }
 
+    private static byte[] drain(ResponseEntity<StreamingResponseBody> response) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
+
     @Test
     void testProcessPdfToMarkdown_InvalidContentType() throws IOException, InterruptedException {
         // Prepare
@@ -79,7 +87,7 @@ class PDFToFileTest {
                         "This is not a PDF".getBytes());
 
         // Execute
-        ResponseEntity<byte[]> response = pdfToFile.processPdfToMarkdown(nonPdfFile);
+        ResponseEntity<StreamingResponseBody> response = pdfToFile.processPdfToMarkdown(nonPdfFile);
 
         // Verify
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -96,7 +104,7 @@ class PDFToFileTest {
                         "This is not a PDF".getBytes());
 
         // Execute
-        ResponseEntity<byte[]> response = pdfToFile.processPdfToHtml(nonPdfFile);
+        ResponseEntity<StreamingResponseBody> response = pdfToFile.processPdfToHtml(nonPdfFile);
 
         // Verify
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -114,7 +122,7 @@ class PDFToFileTest {
                         "This is not a PDF".getBytes());
 
         // Execute
-        ResponseEntity<byte[]> response =
+        ResponseEntity<StreamingResponseBody> response =
                 pdfToFile.processPdfToOfficeFormat(nonPdfFile, "docx", "draw_pdf_import");
 
         // Verify
@@ -133,7 +141,7 @@ class PDFToFileTest {
                         "Fake PDF content".getBytes());
 
         // Execute with invalid format
-        ResponseEntity<byte[]> response =
+        ResponseEntity<StreamingResponseBody> response =
                 pdfToFile.processPdfToOfficeFormat(pdfFile, "invalid_format", "draw_pdf_import");
 
         // Verify
@@ -184,12 +192,14 @@ class PDFToFileTest {
                             });
 
             // Execute the method
-            ResponseEntity<byte[]> response = pdfToFile.processPdfToMarkdown(pdfFile);
+            ResponseEntity<StreamingResponseBody> response =
+                    pdfToFile.processPdfToMarkdown(pdfFile);
 
             // Verify - should now return a ZIP file instead of plain markdown
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertTrue(response.getBody().length > 0);
+            byte[] bodyBytes = drain(response);
+            assertNotNull(bodyBytes);
+            assertTrue(bodyBytes.length > 0);
 
             // Verify content disposition indicates a ZIP file
             assertTrue(
@@ -201,7 +211,7 @@ class PDFToFileTest {
             // Verify the content by unzipping it
             try (ZipInputStream zipStream =
                     ZipSecurity.createHardenedInputStream(
-                            new java.io.ByteArrayInputStream(response.getBody()))) {
+                            new java.io.ByteArrayInputStream(bodyBytes))) {
                 ZipEntry entry;
                 boolean foundMdFile = false;
                 boolean foundImageInFolder = false;
@@ -275,12 +285,14 @@ class PDFToFileTest {
                             });
 
             // Execute the method
-            ResponseEntity<byte[]> response = pdfToFile.processPdfToMarkdown(pdfFile);
+            ResponseEntity<StreamingResponseBody> response =
+                    pdfToFile.processPdfToMarkdown(pdfFile);
 
             // Verify
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertTrue(response.getBody().length > 0);
+            byte[] bodyBytes = drain(response);
+            assertNotNull(bodyBytes);
+            assertTrue(bodyBytes.length > 0);
 
             // Verify content disposition indicates a zip file
             assertTrue(
@@ -292,7 +304,7 @@ class PDFToFileTest {
             // Verify the content by unzipping it
             try (ZipInputStream zipStream =
                     ZipSecurity.createHardenedInputStream(
-                            new java.io.ByteArrayInputStream(response.getBody()))) {
+                            new java.io.ByteArrayInputStream(bodyBytes))) {
                 ZipEntry entry;
                 boolean foundMdFiles = false;
                 boolean foundImage = false;
@@ -352,12 +364,13 @@ class PDFToFileTest {
                             });
 
             // Execute the method
-            ResponseEntity<byte[]> response = pdfToFile.processPdfToHtml(pdfFile);
+            ResponseEntity<StreamingResponseBody> response = pdfToFile.processPdfToHtml(pdfFile);
 
             // Verify
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertTrue(response.getBody().length > 0);
+            byte[] bodyBytes = drain(response);
+            assertNotNull(bodyBytes);
+            assertTrue(bodyBytes.length > 0);
 
             // Verify content disposition indicates a zip file
             assertTrue(
@@ -369,7 +382,7 @@ class PDFToFileTest {
             // Verify the content by unzipping it
             try (ZipInputStream zipStream =
                     ZipSecurity.createHardenedInputStream(
-                            new java.io.ByteArrayInputStream(response.getBody()))) {
+                            new java.io.ByteArrayInputStream(bodyBytes))) {
                 ZipEntry entry;
                 boolean foundMainHtml = false;
                 boolean foundIndexHtml = false;
@@ -437,13 +450,14 @@ class PDFToFileTest {
                             });
 
             // Execute the method with docx format
-            ResponseEntity<byte[]> response =
+            ResponseEntity<StreamingResponseBody> response =
                     pdfToFile.processPdfToOfficeFormat(pdfFile, "docx", "draw_pdf_import");
 
             // Verify
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertTrue(response.getBody().length > 0);
+            byte[] bodyBytes = drain(response);
+            assertNotNull(bodyBytes);
+            assertTrue(bodyBytes.length > 0);
 
             // Verify content disposition has correct filename
             assertTrue(
@@ -508,13 +522,14 @@ class PDFToFileTest {
                             });
 
             // Execute the method with ODP format
-            ResponseEntity<byte[]> response =
+            ResponseEntity<StreamingResponseBody> response =
                     pdfToFile.processPdfToOfficeFormat(pdfFile, "odp", "draw_pdf_import");
 
             // Verify
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertTrue(response.getBody().length > 0);
+            byte[] bodyBytes = drain(response);
+            assertNotNull(bodyBytes);
+            assertTrue(bodyBytes.length > 0);
 
             // Verify content disposition for zip file
             assertTrue(
@@ -526,7 +541,7 @@ class PDFToFileTest {
             // Verify the content by unzipping it
             try (ZipInputStream zipStream =
                     ZipSecurity.createHardenedInputStream(
-                            new java.io.ByteArrayInputStream(response.getBody()))) {
+                            new java.io.ByteArrayInputStream(bodyBytes))) {
                 ZipEntry entry;
                 boolean foundMainFile = false;
                 boolean foundMediaFiles = false;
@@ -592,13 +607,14 @@ class PDFToFileTest {
                             });
 
             // Execute the method with text format
-            ResponseEntity<byte[]> response =
+            ResponseEntity<StreamingResponseBody> response =
                     pdfToFile.processPdfToOfficeFormat(pdfFile, "txt:Text", "draw_pdf_import");
 
             // Verify
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertTrue(response.getBody().length > 0);
+            byte[] bodyBytes = drain(response);
+            assertNotNull(bodyBytes);
+            assertTrue(bodyBytes.length > 0);
 
             // Verify content disposition has txt extension
             assertTrue(
@@ -650,13 +666,14 @@ class PDFToFileTest {
                             });
 
             // Execute the method
-            ResponseEntity<byte[]> response =
+            ResponseEntity<StreamingResponseBody> response =
                     pdfToFile.processPdfToOfficeFormat(pdfFile, "docx", "draw_pdf_import");
 
             // Verify
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertTrue(response.getBody().length > 0);
+            byte[] bodyBytes = drain(response);
+            assertNotNull(bodyBytes);
+            assertTrue(bodyBytes.length > 0);
 
             // Verify content disposition contains output.docx
             assertTrue(
@@ -696,12 +713,13 @@ class PDFToFileTest {
                                 return mockExecutorResult;
                             });
 
-            ResponseEntity<byte[]> response =
+            ResponseEntity<StreamingResponseBody> response =
                     pdfToFileWithUno.processPdfToOfficeFormat(pdfFile, "docx", "writer_pdf_import");
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertTrue(response.getBody().length > 0);
+            byte[] bodyBytes = drain(response);
+            assertNotNull(bodyBytes);
+            assertTrue(bodyBytes.length > 0);
             assertTrue(
                     response.getHeaders()
                             .getContentDisposition()
@@ -759,12 +777,13 @@ class PDFToFileTest {
                                 return mockExecutorResult;
                             });
 
-            ResponseEntity<byte[]> response =
+            ResponseEntity<StreamingResponseBody> response =
                     pdfToFileWithUno.processPdfToOfficeFormat(pdfFile, "docx", "writer_pdf_import");
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertTrue(response.getBody().length > 0);
+            byte[] bodyBytes = drain(response);
+            assertNotNull(bodyBytes);
+            assertTrue(bodyBytes.length > 0);
             assertTrue(
                     response.getHeaders()
                             .getContentDisposition()

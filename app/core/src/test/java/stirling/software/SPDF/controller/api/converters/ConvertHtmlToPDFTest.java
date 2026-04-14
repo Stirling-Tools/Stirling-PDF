@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.converters.HTMLToPdfRequest;
@@ -28,6 +29,16 @@ import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ConvertHtmlToPDFTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private RuntimePathConfig runtimePathConfig;
@@ -69,7 +80,7 @@ class ConvertHtmlToPDFTest {
         when(pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes))
                 .thenReturn(processedPdf);
 
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(processedPdf);
+        ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(processedPdf);
 
         try (MockedStatic<FileToPdf> ftpMock = Mockito.mockStatic(FileToPdf.class);
                 MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
@@ -93,7 +104,7 @@ class ConvertHtmlToPDFTest {
             wrMock.when(() -> WebResponseUtils.bytesToWebResponse(processedPdf, "test.pdf"))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = controller.HtmlToPdf(request);
+            ResponseEntity<StreamingResponseBody> response = controller.HtmlToPdf(request);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }
@@ -114,7 +125,7 @@ class ConvertHtmlToPDFTest {
         when(pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes))
                 .thenReturn(processedPdf);
 
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(processedPdf);
+        ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(processedPdf);
 
         try (MockedStatic<FileToPdf> ftpMock = Mockito.mockStatic(FileToPdf.class);
                 MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
@@ -138,7 +149,7 @@ class ConvertHtmlToPDFTest {
             wrMock.when(() -> WebResponseUtils.bytesToWebResponse(processedPdf, "archive.pdf"))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = controller.HtmlToPdf(request);
+            ResponseEntity<StreamingResponseBody> response = controller.HtmlToPdf(request);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }
