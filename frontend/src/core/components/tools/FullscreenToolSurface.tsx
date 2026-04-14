@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { ActionIcon, ScrollArea, Switch, useMantineColorScheme } from "@mantine/core";
+import { ActionIcon, ScrollArea, Switch } from "@mantine/core";
 import DoubleArrowIcon from "@mui/icons-material/DoubleArrow";
 import { useTranslation } from "react-i18next";
 import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
@@ -44,7 +44,6 @@ const FullscreenToolSurface = ({
   geometry,
 }: FullscreenToolSurfaceProps) => {
   const { t } = useTranslation();
-  const { colorScheme } = useMantineColorScheme();
   const [isExiting, setIsExiting] = useState(false);
   const surfaceRef = useRef<HTMLDivElement>(null);
   const isRTL = typeof document !== "undefined" && document.documentElement.dir === "rtl";
@@ -53,9 +52,8 @@ const FullscreenToolSurface = ({
   useFocusTrap(surfaceRef, !isExiting);
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
-  const brandIconSrc = useLogoPath();
+  const logoPaths = useLogoPath();
   const { wordmark } = useLogoAssets();
-  const brandTextSrc = colorScheme === "dark" ? wordmark.white : wordmark.black;
 
   const handleExit = () => {
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -104,8 +102,10 @@ const FullscreenToolSurface = ({
       >
         <header className="tool-panel__fullscreen-header">
           <div className="tool-panel__fullscreen-brand">
-            <img src={brandIconSrc} alt="" className="tool-panel__fullscreen-brand-icon" />
-            <img src={brandTextSrc} alt={brandAltText} className="tool-panel__fullscreen-brand-text" />
+            <img src={logoPaths.light} alt="" className="tool-panel__fullscreen-brand-icon theme-img-light-only" />
+            <img src={logoPaths.dark} alt="" className="tool-panel__fullscreen-brand-icon theme-img-dark-only" />
+            <img src={wordmark.black} alt={brandAltText} className="tool-panel__fullscreen-brand-text theme-img-light-only" />
+            <img src={wordmark.white} alt={brandAltText} className="tool-panel__fullscreen-brand-text theme-img-dark-only" />
           </div>
           <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
             <Tooltip

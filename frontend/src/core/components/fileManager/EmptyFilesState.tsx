@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, Group, Text, Stack, useMantineColorScheme } from "@mantine/core";
+import { Button, Group, Text, Stack } from "@mantine/core";
 import HistoryIcon from "@mui/icons-material/History";
 import { useTranslation } from "react-i18next";
 import { useFileManagerContext } from "@app/contexts/FileManagerContext";
@@ -10,7 +10,6 @@ import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 
 const EmptyFilesState: React.FC = () => {
   const { t } = useTranslation();
-  const { colorScheme } = useMantineColorScheme();
   const { onLocalFileClick } = useFileManagerContext();
   const [isUploadHover, setIsUploadHover] = useState(false);
   const { wordmark } = useLogoAssets();
@@ -57,11 +56,8 @@ const EmptyFilesState: React.FC = () => {
 
         {/* Stirling PDF Logo */}
         <Group gap="xs" align="center">
-          <img
-            src={colorScheme === "dark" ? wordmark.white : wordmark.grey}
-            alt="Stirling PDF"
-            style={{ height: "2.2rem", width: "auto" }}
-          />
+          <img src={wordmark.grey} alt="Stirling PDF" className="theme-img-light-only" style={{ height: "2.2rem", width: "auto" }} />
+          <img src={wordmark.white} alt="Stirling PDF" className="theme-img-dark-only" style={{ height: "2.2rem", width: "auto" }} />
         </Group>
 
         {/* Upload Button */}

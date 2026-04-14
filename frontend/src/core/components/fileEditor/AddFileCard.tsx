@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Button, Group, useMantineColorScheme } from "@mantine/core";
+import { Button, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import AddIcon from "@mui/icons-material/Add";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
@@ -20,7 +20,6 @@ const AddFileCard = ({ onFileSelect, accept, multiple = true }: AddFileCardProps
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { openFilesModal } = useFilesModalContext();
-  const { colorScheme } = useMantineColorScheme();
   const [isUploadHover, setIsUploadHover] = useState(false);
   const { wordmark } = useLogoAssets();
   const terminology = useFileActionTerminology();
@@ -93,8 +92,15 @@ const AddFileCard = ({ onFileSelect, accept, multiple = true }: AddFileCardProps
           {/* Stirling PDF Branding */}
           <Group gap="xs" align="center">
             <img
-              src={colorScheme === "dark" ? wordmark.white : wordmark.grey}
+              src={wordmark.grey}
               alt="Stirling PDF"
+              className="theme-img-light-only"
+              style={{ height: "2.2rem", width: "auto" }}
+            />
+            <img
+              src={wordmark.white}
+              alt="Stirling PDF"
+              className="theme-img-dark-only"
               style={{ height: "2.2rem", width: "auto" }}
             />
           </Group>

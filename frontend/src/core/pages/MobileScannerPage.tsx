@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Box, Button, Stack, Text, Group, Alert, Progress, Switch, Card, useMantineColorScheme } from "@mantine/core";
+import { Box, Button, Stack, Text, Group, Alert, Progress, Switch, Card } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useLogoPath } from "@app/hooks/useLogoPath";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
@@ -30,10 +30,8 @@ export default function MobileScannerPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const sessionId = searchParams.get("session");
-  const { colorScheme } = useMantineColorScheme();
-  const brandIconSrc = useLogoPath();
+  const logoPaths = useLogoPath();
   const { wordmark } = useLogoAssets();
-  const brandTextSrc = colorScheme === "dark" ? wordmark.white : wordmark.black;
 
   const [mode, setMode] = useState<"choice" | "camera" | "file" | null>("choice");
   const [capturedImages, setCapturedImages] = useState<string[]>([]);
@@ -826,12 +824,10 @@ export default function MobileScannerPage() {
         }}
       >
         <Group gap="sm" align="center">
-          <img
-            src={brandIconSrc}
-            alt={t("home.mobile.brandAlt", "Stirling PDF logo")}
-            style={{ height: "32px", width: "32px" }}
-          />
-          <img src={brandTextSrc} alt="Stirling PDF" style={{ height: "24px" }} />
+          <img src={logoPaths.light} alt={t("home.mobile.brandAlt", "Stirling PDF logo")} className="theme-img-light-only" style={{ height: "32px", width: "32px" }} />
+          <img src={logoPaths.dark} alt={t("home.mobile.brandAlt", "Stirling PDF logo")} className="theme-img-dark-only" style={{ height: "32px", width: "32px" }} />
+          <img src={wordmark.black} alt="Stirling PDF" className="theme-img-light-only" style={{ height: "24px" }} />
+          <img src={wordmark.white} alt="Stirling PDF" className="theme-img-dark-only" style={{ height: "24px" }} />
         </Group>
       </Box>
 
