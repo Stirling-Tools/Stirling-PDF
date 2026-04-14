@@ -45,22 +45,32 @@ export function useDesktopInstall() {
    * current platform, and if so probe whether we can actually install it
    * without needing UAC elevation.
    */
-  const checkTauriUpdate = useCallback(async () => {
+  /**
+   * Check whether the Tauri updater has a downloadable build for the
+   * current platform, and if so probe whether we can actually install it
+   * without needing UAC elevation.
+   *
+   * Returns `true` when an in-app install is available — callers MUST use
+   * the return value instead of reading `tauriInstallReady` from the hook's
+   * state, because React state updates are async and won't be visible
+   * until the next render.
+   */
+  const checkTauriUpdate = useCallback(async (): Promise<boolean> => {
     try {
       const result = await invoke<{ version: string } | null>('check_for_update');
-      setTauriInstallReady(!!result);
+      const ready = !!result;
+      setTauriInstallReady(ready);
       if (result) {
-        // Only probe write access once we know there's something worth
-        // installing — the probe is cheap but still hits the filesystem,
-        // so skipping it when the app is up to date is nicer to the disk.
         const ci = await desktopUpdateService.canInstallUpdates();
         setCanInstall(ci);
       } else {
         setCanInstall(null);
       }
+      return ready;
     } catch {
       setTauriInstallReady(false);
       setCanInstall(null);
+      return false;
     }
   }, []);
 

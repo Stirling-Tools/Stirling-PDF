@@ -82,7 +82,11 @@ export function useDesktopUpdatePopup() {
         const version = await getVersion();
         setCurrentVersion(version);
 
-        const machineInfo = { machineType: 'Client-win', activeSecurity: false, licenseType: 'NORMAL' };
+        const platform = navigator.platform?.toLowerCase() ?? '';
+        const machineType = platform.includes('mac') ? 'Client-mac'
+          : platform.includes('linux') ? 'Client-unix'
+          : 'Client-win';
+        const machineInfo = { machineType, activeSecurity: false, licenseType: 'NORMAL' };
         const summary = await updateService.getUpdateSummary(version, machineInfo);
         if (!summary?.latest_version || updateService.compareVersions(summary.latest_version, version) <= 0) return;
 
@@ -92,10 +96,11 @@ export function useDesktopUpdatePopup() {
         // Latest" instead of "Install Now". The Supabase summary above is
         // the source of truth for "is there a newer version at all"; the
         // Tauri endpoint is only about "can we install it in-process".
-        // checkTauriUpdate drives both tauriInstallReady and canInstall
-        // inside the install hook, which flow into the modal's footer
-        // via the desktopInstall prop.
-        await installRef.current.checkTauriUpdate();
+        //
+        // IMPORTANT: use the RETURN VALUE, not installRef.current.tauriInstallReady.
+        // React state updates are async — the ref would still hold the
+        // stale pre-check value at this point in the microtask.
+        const tauriReady = await installRef.current.checkTauriUpdate();
 
         if (mode === 'auto') {
           // Auto mode requires a working Tauri updater — we can't headless-
@@ -103,7 +108,7 @@ export function useDesktopUpdatePopup() {
           // is broken, or the user can't install, silently skip. The
           // interactive flow will still show the "Download Latest" fallback
           // if they ever open the popup manually.
-          if (!installRef.current.tauriInstallReady) {
+          if (!tauriReady) {
             console.warn(
               '[DesktopUpdatePopup] auto-update skipped: tauri updater not available (pubkey/endpoint/signature issue?)',
             );

@@ -251,7 +251,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
       onRemindLater={popupActions.remindLater}
       currentVersion={popupState.currentVersion}
       updateSummary={popupState.updateSummary}
-      machineInfo={{ machineType: 'Client-win', activeSecurity: false, licenseType: 'NORMAL' }}
+      machineInfo={{
+        machineType: navigator.platform?.toLowerCase().includes('mac') ? 'Client-mac'
+          : navigator.platform?.toLowerCase().includes('linux') ? 'Client-unix'
+          : 'Client-win',
+        activeSecurity: false,
+        licenseType: 'NORMAL',
+      }}
       desktopInstall={popupState.tauriInstallReady ? {
         state: popupState.state,
         progress: popupState.progress,
