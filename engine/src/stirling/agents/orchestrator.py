@@ -25,7 +25,7 @@ from stirling.contracts import (
     UnsupportedCapabilityResponse,
 )
 from stirling.contracts.pdf_edit import EditPlanResponse
-from stirling.models.tool_models import MathAuditorAgentParams, OperationId
+from stirling.models.agent_tool_models import AgentToolId, MathAuditorAgentParams
 from stirling.services import AppRuntime
 
 
@@ -140,7 +140,7 @@ class OrchestratorAgent:
             summary="Validate mathematical calculations in the document.",
             steps=[
                 ToolOperationStep(
-                    tool=OperationId.MATH_AUDITOR_AGENT,
+                    tool=AgentToolId.MATH_AUDITOR_AGENT,
                     parameters=MathAuditorAgentParams(),
                 )
             ],
