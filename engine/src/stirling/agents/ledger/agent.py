@@ -39,7 +39,7 @@ from stirling.contracts.ledger import (
     Severity,
     Verdict,
 )
-from stirling.logging import Pretty, session_trace, trace_logger
+from stirling.logging import Pretty
 from stirling.services import AppRuntime
 
 from .prompts import (
@@ -52,7 +52,6 @@ from .prompts import (
 from .validators import ArithmeticScanner, FigureTracker, FormulaEvaluator
 
 logger = logging.getLogger(__name__)
-_trace = trace_logger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -126,7 +125,6 @@ class MathAuditorAgent:
         fast_model = runtime.fast_model
         model_settings = runtime.fast_model_settings
         self._runtime = runtime
-        self._ai_trace = runtime.settings.ai_trace
         self._examiner = Agent(
             model=fast_model,
             deps_type=FolioManifest,
@@ -166,29 +164,28 @@ class MathAuditorAgent:
 
     async def examine(self, manifest: FolioManifest) -> Requisition:
         """Inspect a FolioManifest and declare the Requisition."""
-        with session_trace(_trace, manifest.session_id, enabled=self._ai_trace):
-            logger.info(
-                "[math-auditor-agent] session=%s round=%d examining %d folios",
-                manifest.session_id,
-                manifest.round,
-                manifest.page_count,
-            )
+        logger.info(
+            "[math-auditor-agent] session=%s round=%d examining %d folios",
+            manifest.session_id,
+            manifest.round,
+            manifest.page_count,
+        )
 
-            user_prompt = "Examine this folio manifest and declare your requisition:\n" + manifest.model_dump_json()
-            _trace.debug("REQUEST (examine)\n%s", Pretty({"user_prompt": user_prompt}))
+        user_prompt = "Examine this folio manifest and declare your requisition:\n" + manifest.model_dump_json()
+        logger.debug("REQUEST (examine)\n%s", Pretty({"user_prompt": user_prompt}))
 
-            result = await self._examiner.run(user_prompt, deps=manifest)
-            req = result.output
+        result = await self._examiner.run(user_prompt, deps=manifest)
+        req = result.output
 
-            _trace.debug("RESPONSE (examine)\n%s", Pretty(req.model_dump()))
-            logger.info(
-                "[math-auditor-agent] session=%s requisition: text=%s tables=%s ocr=%s",
-                manifest.session_id,
-                req.need_text,
-                req.need_tables,
-                req.need_ocr,
-            )
-            return req
+        logger.debug("RESPONSE (examine)\n%s", Pretty(req.model_dump()))
+        logger.info(
+            "[math-auditor-agent] session=%s requisition: text=%s tables=%s ocr=%s",
+            manifest.session_id,
+            req.need_text,
+            req.need_tables,
+            req.need_ocr,
+        )
+        return req
 
     # ------------------------------------------------------------------
     # Round 2: Deliberate (deterministic-first pipeline)
@@ -204,8 +201,7 @@ class MathAuditorAgent:
         4. Generate human summary with fast model
         5. Assemble Verdict
         """
-        with session_trace(_trace, evidence.session_id, enabled=self._ai_trace):
-            return await self._audit_inner(evidence, tolerance)
+        return await self._audit_inner(evidence, tolerance)
 
     async def _audit_inner(
         self,
@@ -232,7 +228,7 @@ class MathAuditorAgent:
             if text and text.strip():
                 results = arithmetic_scanner.scan(folio.page, text)
                 all_discrepancies.extend(results)
-                _trace.debug(
+                logger.debug(
                     "TOOL (scan_arithmetic)\nArgs: %s\nResult: %s",
                     Pretty({"page": folio.page, "text_length": len(text)}),
                     Pretty([d.model_dump() for d in results]),
@@ -294,7 +290,7 @@ class MathAuditorAgent:
                     target_col=fc.target_col,
                 )
                 all_discrepancies.extend(checked)
-                _trace.debug(
+                logger.debug(
                     "TOOL (check_formula)\nArgs: %s\nResult: %s",
                     Pretty({"page": page, "formula": fc.formula, "scope": fc.scope, "description": fc.description}),
                     Pretty([d.model_dump() for d in checked]),
@@ -346,7 +342,7 @@ class MathAuditorAgent:
                             context=sc.claim,
                         )
                     )
-                _trace.debug(
+                logger.debug(
                     "TOOL (verify_statement)\nArgs: %s\nResult: %s",
                     Pretty({"page": folio.page, "claim": sc.claim}),
                     Pretty(sc.model_dump()),
@@ -362,7 +358,7 @@ class MathAuditorAgent:
         consistency_discrepancies = figure_tracker.conflicts()
         all_discrepancies.extend(consistency_discrepancies)
         if consistency_discrepancies:
-            _trace.debug(
+            logger.debug(
                 "TOOL (check_figure_consistency)\nResult: %s",
                 Pretty([d.model_dump() for d in consistency_discrepancies]),
             )
@@ -406,7 +402,7 @@ class MathAuditorAgent:
             unauditable_pages=evidence.unauditable_pages,
         )
 
-        _trace.debug("RESPONSE (deliberate)\n%s", Pretty(verdict.model_dump()))
+        logger.debug("RESPONSE (deliberate)\n%s", Pretty(verdict.model_dump()))
         logger.info(
             "[math-auditor-agent] session=%s verdict: %d errors, %d warnings, clean=%s",
             evidence.session_id,
@@ -436,7 +432,7 @@ class MathAuditorAgent:
             logger.warning("[math-auditor-agent] formula inference failed, skipping table", exc_info=True)
             formulas = TableFormulas(formulas=[])
 
-        _trace.debug(
+        logger.debug(
             "TOOL (infer_formulas)\nArgs: %s\nResult: %s",
             Pretty({"table_csv": table_csv[:300]}),
             Pretty(formulas.model_dump()),
@@ -467,7 +463,7 @@ class MathAuditorAgent:
             stmts = StatementsResult(statements=[])
 
         if stmts.statements:
-            _trace.debug(
+            logger.debug(
                 "TOOL (verify_statements)\nArgs: %s\nResult: %s",
                 Pretty({"page": folio.page, "text_length": len(text), "n_tables": len(folio.tables or [])}),
                 Pretty([s.model_dump() for s in stmts.statements]),
@@ -495,7 +491,7 @@ class MathAuditorAgent:
             )
             figures = []
 
-        _trace.debug(
+        logger.debug(
             "TOOL (extract_figures)\nArgs: %s\nResult: %s",
             Pretty({"page": folio.page, "text_length": len(text)}),
             Pretty([f.model_dump() for f in figures]),
@@ -531,7 +527,7 @@ class MathAuditorAgent:
             logger.warning("[math-auditor-agent] summary generation failed, using fallback", exc_info=True)
             summary = self._fallback_summary(error_count, warning_count, pages_examined, unauditable_pages)
 
-        _trace.debug("RESPONSE (summary)\n%s", Pretty({"summary": summary}))
+        logger.debug("RESPONSE (summary)\n%s", Pretty({"summary": summary}))
         return summary
 
     @staticmethod
