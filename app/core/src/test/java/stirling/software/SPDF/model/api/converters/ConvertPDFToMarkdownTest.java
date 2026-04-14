@@ -1,5 +1,6 @@
 package stirling.software.SPDF.model.api.converters;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -72,7 +73,11 @@ class ConvertPDFToMarkdownTest {
             mvc.perform(multipart("/api/v1/convert/pdf/markdown").file(file))
                     .andExpect(status().isOk())
                     .andExpect(header().string("Content-Type", "text/markdown"))
-                    .andExpect(content().bytes(md));
+                    .andExpect(
+                            result -> {
+                                byte[] actual = result.getResponse().getContentAsByteArray();
+                                assertArrayEquals(md, actual);
+                            });
 
             // Verify that exactly one instance was created
             assert construction.constructed().size() == 1;
