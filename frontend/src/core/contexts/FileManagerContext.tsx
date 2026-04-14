@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { Button, Group, Modal, Stack, Text } from "@mantine/core";
 import { fileStorage } from "@app/services/fileStorage";
-import { useFileActions } from "@app/contexts/FileContext";
+import { useFileActions, useFileManagement } from "@app/contexts/FileContext";
 import { zipFileService } from "@app/services/zipFileService";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { downloadFiles } from "@app/utils/downloadUtils";
@@ -100,7 +100,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
 }) => {
   const [activeSource, setActiveSource] = useState<"recent" | "local" | "drive">("recent");
   const [storageFilter, setStorageFilter] = useState<"all" | "local" | "sharedWithMe" | "sharedByMe">("all");
-  const [selectedFileIds, setSelectedFileIds] = useState<FileId[]>([]);
+  const [selectedFileIds, setSelectedFileIds] = useState<FileId[]>(() => activeFileIds);
   const [searchTerm, setSearchTerm] = useState("");
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
   const [expandedFileIds, setExpandedFileIds] = useState<Set<FileId>>(new Set());
@@ -110,6 +110,14 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const deletePromptResolveRef = useRef<((choice: RemoteDeleteChoice) => void) | null>(null);
   const { t } = useTranslation();
   const { actions } = useFileActions();
+  const { removeFiles } = useFileManagement();
+
+  // Re-seed selection with active file IDs each time the modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedFileIds(activeFileIds);
+    }
+  }, [isOpen]);
 
   // Track blob URLs for cleanup
   const createdBlobUrls = useRef<Set<string>>(new Set());
@@ -558,11 +566,20 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   );
 
   const handleOpenFiles = useCallback(() => {
-    if (selectedFiles.length > 0) {
-      onRecentFilesSelected(selectedFiles);
-      onClose();
+    // Remove active files that were unchecked
+    const uncheckedActiveIds = activeFileIds.filter((id) => !selectedFilesSet.has(id));
+    if (uncheckedActiveIds.length > 0) {
+      removeFiles(uncheckedActiveIds, false);
     }
-  }, [selectedFiles, onRecentFilesSelected, onClose]);
+
+    // Add newly checked files (not already active)
+    const newlySelected = selectedFiles.filter((f) => !activeFileIds.includes(f.id));
+    if (newlySelected.length > 0) {
+      onRecentFilesSelected(newlySelected);
+    }
+
+    onClose();
+  }, [selectedFiles, selectedFilesSet, activeFileIds, removeFiles, onRecentFilesSelected, onClose]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchTerm(value);
