@@ -92,7 +92,7 @@ public class PdfOverlayController {
                 tempOut = null; // ownership transferred to StreamingResponseBody
                 return WebResponseUtils.pdfFileToWebResponse(out, outputFilename);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             if (tempOut != null) {
                 tempOut.close();
             }

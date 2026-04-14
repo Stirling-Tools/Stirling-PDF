@@ -472,17 +472,9 @@ public class JobExecutorService {
 
     private static String extractResponseFilename(ResponseEntity<?> response) {
         if (response.getHeaders().getContentDisposition() != null) {
-            String disposition = response.getHeaders().getContentDisposition().toString();
-            if (disposition.contains("filename=")) {
-                try {
-                    int start = disposition.indexOf("filename=") + 9;
-                    int end = disposition.lastIndexOf('"');
-                    if (end > start) {
-                        return disposition.substring(start, end);
-                    }
-                } catch (IndexOutOfBoundsException e) {
-                    log.debug("Could not parse filename from disposition: {}", disposition);
-                }
+            String filename = response.getHeaders().getContentDisposition().getFilename();
+            if (filename != null && !filename.isEmpty()) {
+                return filename;
             }
         }
         return "result.pdf";
