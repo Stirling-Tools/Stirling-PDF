@@ -1,55 +1,59 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Box, Center, Text, ActionIcon } from '@mantine/core';
-import CloseIcon from '@mui/icons-material/Close';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Box, Center, Text, ActionIcon, Button, Stack } from "@mantine/core";
+import CloseIcon from "@mui/icons-material/Close";
+import LockIcon from "@mui/icons-material/Lock";
 
 import { useFileState, useFileActions } from "@app/contexts/FileContext";
 import { useFileWithUrl } from "@app/hooks/useFileWithUrl";
 import { useViewer } from "@app/contexts/ViewerContext";
-import { LocalEmbedPDF } from '@app/components/viewer/LocalEmbedPDF';
-import { PdfViewerToolbar } from '@app/components/viewer/PdfViewerToolbar';
-import { ThumbnailSidebar } from '@app/components/viewer/ThumbnailSidebar';
-import { BookmarkSidebar } from '@app/components/viewer/BookmarkSidebar';
-import { AttachmentSidebar } from '@app/components/viewer/AttachmentSidebar';
-import { LayerSidebar } from '@app/components/viewer/LayerSidebar';
-import { useNavigationGuard, useNavigationState } from '@app/contexts/NavigationContext';
-import { useSignature } from '@app/contexts/SignatureContext';
-import { useRedaction } from '@app/contexts/RedactionContext';
-import type { RedactionPendingTrackerAPI } from '@app/components/viewer/RedactionPendingTracker';
-import { createStirlingFilesAndStubs } from '@app/services/fileStubHelpers';
-import { isStirlingFile, getFormFillFileId } from '@app/types/fileContext';
-import { useViewerRightRailButtons } from '@app/components/viewer/useViewerRightRailButtons';
-import { StampPlacementOverlay } from '@app/components/viewer/StampPlacementOverlay';
-import { RulerOverlay, type PageMeasureScales, type PageScaleInfo, type ViewportScale } from '@app/components/viewer/RulerOverlay';
-import type { PDFDict, PDFNumber } from '@cantoo/pdf-lib';
-import { useWheelZoom } from '@app/hooks/useWheelZoom';
-import { useFormFill } from '@app/tools/formFill/FormFillContext';
-import { FormSaveBar } from '@app/tools/formFill/FormSaveBar';
-import { useViewerKeyCommand } from '@app/hooks/useViewerKeyCommand';
+import { LocalEmbedPDF } from "@app/components/viewer/LocalEmbedPDF";
+import { PdfViewerToolbar } from "@app/components/viewer/PdfViewerToolbar";
+import { ThumbnailSidebar } from "@app/components/viewer/ThumbnailSidebar";
+import { BookmarkSidebar } from "@app/components/viewer/BookmarkSidebar";
+import { AttachmentSidebar } from "@app/components/viewer/AttachmentSidebar";
+import { LayerSidebar } from "@app/components/viewer/LayerSidebar";
+import { useNavigationGuard, useNavigationState } from "@app/contexts/NavigationContext";
+import { useSignature } from "@app/contexts/SignatureContext";
+import { useRedaction } from "@app/contexts/RedactionContext";
+import type { RedactionPendingTrackerAPI } from "@app/components/viewer/RedactionPendingTracker";
+import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
+import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
+import { useViewerRightRailButtons } from "@app/components/viewer/useViewerRightRailButtons";
+import { StampPlacementOverlay } from "@app/components/viewer/StampPlacementOverlay";
+import {
+  RulerOverlay,
+  type PageMeasureScales,
+  type PageScaleInfo,
+  type ViewportScale,
+} from "@app/components/viewer/RulerOverlay";
+import type { PDFDict, PDFNumber } from "@cantoo/pdf-lib";
+import { useWheelZoom } from "@app/hooks/useWheelZoom";
+import { useFormFill } from "@app/tools/formFill/FormFillContext";
+import { FormSaveBar } from "@app/tools/formFill/FormSaveBar";
+import { useViewerKeyCommand } from "@app/hooks/useViewerKeyCommand";
 
 // ─── Measure dictionary extraction ────────────────────────────────────────────
 
 async function extractPageMeasureScales(file: Blob): Promise<PageMeasureScales | null> {
   try {
-    const { PDFDocument, PDFDict, PDFName, PDFArray, PDFNumber, PDFString, PDFHexString } = await import('@cantoo/pdf-lib');
+    const { PDFDocument, PDFDict, PDFName, PDFArray, PDFNumber, PDFString, PDFHexString } = await import("@cantoo/pdf-lib");
     const pdfDoc = await PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
 
     // Parse a Measure dict into a MeasureScale, or return null if malformed.
     const parseScale = (measureObj: unknown) => {
       if (!(measureObj instanceof PDFDict)) return null;
-      const rObj = measureObj.lookup(PDFName.of('R'));
-      const ratioLabel = (rObj instanceof PDFString || rObj instanceof PDFHexString)
-              ? rObj.decodeText() : '';
+      const rObj = measureObj.lookup(PDFName.of("R"));
+      const ratioLabel = rObj instanceof PDFString || rObj instanceof PDFHexString ? rObj.decodeText() : "";
       // D = distance array, X = x-axis fallback
-      let fmtArray = measureObj.lookup(PDFName.of('D'));
-      if (!(fmtArray instanceof PDFArray)) fmtArray = measureObj.lookup(PDFName.of('X'));
+      let fmtArray = measureObj.lookup(PDFName.of("D"));
+      if (!(fmtArray instanceof PDFArray)) fmtArray = measureObj.lookup(PDFName.of("X"));
       if (!(fmtArray instanceof PDFArray)) return null;
       const firstFmt = fmtArray.lookup(0);
       if (!(firstFmt instanceof PDFDict)) return null;
-      const cObj = firstFmt.lookup(PDFName.of('C'));
-      const uObj = firstFmt.lookup(PDFName.of('U'));
+      const cObj = firstFmt.lookup(PDFName.of("C"));
+      const uObj = firstFmt.lookup(PDFName.of("U"));
       if (!(cObj instanceof PDFNumber) || cObj.asNumber() <= 0) return null;
-      const unit = (uObj instanceof PDFString || uObj instanceof PDFHexString)
-        ? uObj.decodeText() : 'units';
+      const unit = uObj instanceof PDFString || uObj instanceof PDFHexString ? uObj.decodeText() : "units";
       return { factor: cObj.asNumber(), unit, ratioLabel };
     };
 
@@ -62,15 +66,15 @@ async function extractPageMeasureScales(file: Blob): Promise<PageMeasureScales |
       const viewports: ViewportScale[] = [];
 
       // Spec-conformant: /VP array — each viewport can have its own scale and BBox
-      const vpObj = pageNode.lookup(PDFName.of('VP'));
+      const vpObj = pageNode.lookup(PDFName.of("VP"));
       if (vpObj instanceof PDFArray) {
         for (let j = 0; j < vpObj.size(); j++) {
           const vpEntry = vpObj.lookup(j);
           if (!(vpEntry instanceof PDFDict)) continue;
-          const scale = parseScale(vpEntry.lookup(PDFName.of('Measure')));
+          const scale = parseScale(vpEntry.lookup(PDFName.of("Measure")));
           if (!scale) continue;
-          let bbox: ViewportScale['bbox'] = null;
-          const bboxObj = vpEntry.lookup(PDFName.of('BBox'));
+          let bbox: ViewportScale["bbox"] = null;
+          const bboxObj = vpEntry.lookup(PDFName.of("BBox"));
           if (bboxObj instanceof PDFArray && bboxObj.size() >= 4) {
             bbox = [
               (bboxObj.lookup(0) as PDFNumber).asNumber(),
@@ -85,7 +89,7 @@ async function extractPageMeasureScales(file: Blob): Promise<PageMeasureScales |
 
       // Fallback: /Measure directly on page (non-conforming but seen in the wild)
       if (viewports.length === 0) {
-        const scale = parseScale(pageNode.lookup(PDFName.of('Measure')));
+        const scale = parseScale(pageNode.lookup(PDFName.of("Measure")));
         if (scale) viewports.push({ bbox: null, scale });
       }
 
@@ -191,29 +195,36 @@ const EmbedPdfViewerContent = ({
   const activeFiles = selectors.getFiles();
   const activeFilesRef = useRef(activeFiles);
   activeFilesRef.current = activeFiles;
-  const activeFileIds = activeFiles.map(f => f.fileId);
+  const activeFileIds = activeFiles.map((f) => f.fileId);
 
   // Navigation guard for unsaved changes
-  const { setHasUnsavedChanges, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker, registerNavigationWarningHandlers, unregisterNavigationWarningHandlers } = useNavigationGuard();
+  const {
+    setHasUnsavedChanges,
+    registerUnsavedChangesChecker,
+    unregisterUnsavedChangesChecker,
+    registerNavigationWarningHandlers,
+    unregisterNavigationWarningHandlers,
+  } = useNavigationGuard();
 
   const { selectedTool } = useNavigationState();
 
   // Form fill context
   const { fetchFields: fetchFormFields, setProviderMode } = useFormFill();
 
-  const isInAnnotationTool = selectedTool === 'sign' || selectedTool === 'addText' || selectedTool === 'addImage' || selectedTool === 'annotate';
+  const isInAnnotationTool =
+    selectedTool === "sign" || selectedTool === "addText" || selectedTool === "addImage" || selectedTool === "annotate";
   const isSignatureMode = isInAnnotationTool;
-  const isManualRedactMode = selectedTool === 'redact';
+  const isManualRedactMode = selectedTool === "redact";
 
   // Enable annotations when annotation tool is selected OR when annotations are visible
   // (so users can interact with existing comment annotations in reader/viewer mode)
-  const shouldEnableAnnotations = selectedTool === 'annotate' || isSignatureMode || isAnnotationsVisible;
+  const shouldEnableAnnotations = selectedTool === "annotate" || isSignatureMode || isAnnotationsVisible;
 
   // Enable redaction only when redaction tool is selected
-  const shouldEnableRedaction = selectedTool === 'redact';
+  const shouldEnableRedaction = selectedTool === "redact";
 
   // FormFill tool mode — uses PDFBox backend for full-fidelity form handling
-  const isFormFillToolActive = (selectedTool as string) === 'formFill';
+  const isFormFillToolActive = (selectedTool as string) === "formFill";
 
   // Form overlays are shown in BOTH modes:
   // - Normal viewer: form overlays visible (PDFium WASM, frontend-only)
@@ -222,7 +233,7 @@ const EmbedPdfViewerContent = ({
 
   // Switch the provider when the tool mode changes
   useEffect(() => {
-    setProviderMode(isFormFillToolActive ? 'pdfbox' : 'pdflib');
+    setProviderMode(isFormFillToolActive ? "pdfbox" : "pdflib");
   }, [isFormFillToolActive, setProviderMode]);
 
   // Track previous annotation/redaction state to detect tool switches
@@ -268,9 +279,7 @@ const EmbedPdfViewerContent = ({
       setAnnotationMode(true);
     }
   }, [isInAnnotationTool, setAnnotationMode]);
-  const isPlacementOverlayActive = Boolean(
-    isInAnnotationTool && isPlacementMode && signatureConfig
-  );
+  const isPlacementOverlayActive = Boolean(isInAnnotationTool && isPlacementMode && signatureConfig);
 
   // Track which file tab is active
   const [internalActiveFileIndex, setInternalActiveFileIndex] = useState(0);
@@ -284,12 +293,12 @@ const EmbedPdfViewerContent = ({
   // Stable string key representing the current file list order.
   // Using a joined ID string avoids depending on the activeFiles array reference,
   // which is a new object every render and would cause an infinite effect loop.
-  const fileIdsKey = activeFiles.map(f => f.fileId).join(',');
+  const fileIdsKey = activeFiles.map((f) => f.fileId).join(",");
 
   // When the file list actually changes, re-derive activeFileIndex from the stable activeFileId.
   useEffect(() => {
     if (!activeFileId || activeFiles.length === 0) return;
-    const newIndex = activeFiles.findIndex(f => f.fileId === activeFileId);
+    const newIndex = activeFiles.findIndex((f) => f.fileId === activeFileId);
     if (newIndex !== -1 && newIndex !== activeFileIndex) {
       setActiveFileIndex(newIndex);
     }
@@ -342,13 +351,20 @@ const EmbedPdfViewerContent = ({
     }
   }, [previewFile, fileWithUrl]);
 
+  // Check if the current file is encrypted (gate the viewer to prevent PDFium crash)
+  const isCurrentFileEncrypted = React.useMemo(() => {
+    if (!currentFile || !isStirlingFile(currentFile)) return false;
+    const stub = selectors.getStirlingFileStub(currentFile.fileId);
+    return stub?.processedFile?.isEncrypted === true;
+  }, [currentFile, selectors]);
+
   const bookmarkCacheKey = React.useMemo(() => {
     if (currentFile && isStirlingFile(currentFile)) {
       return currentFile.fileId;
     }
 
     if (previewFile) {
-      const uniquePreviewId = `${previewFile.name}-${previewFile.size}-${previewFile.lastModified ?? 'na'}`;
+      const uniquePreviewId = `${previewFile.name}-${previewFile.size}-${previewFile.lastModified ?? "na"}`;
       return `preview-${uniquePreviewId}`;
     }
 
@@ -358,7 +374,7 @@ const EmbedPdfViewerContent = ({
 
     if (effectiveFile?.file instanceof File) {
       const fileObj = effectiveFile.file;
-      return `file-${fileObj.name}-${fileObj.size}-${fileObj.lastModified ?? 'na'}`;
+      return `file-${fileObj.name}-${fileObj.size}-${fileObj.lastModified ?? "na"}`;
     }
 
     return undefined;
@@ -370,12 +386,14 @@ const EmbedPdfViewerContent = ({
       return [bookmarkCacheKey].filter(Boolean) as string[];
     }
 
-    return activeFiles.map(file => {
-      if (isStirlingFile(file)) {
-        return file.fileId;
-      }
-      return undefined;
-    }).filter(Boolean) as string[];
+    return activeFiles
+      .map((file) => {
+        if (isStirlingFile(file)) {
+          return file.fileId;
+        }
+        return undefined;
+      })
+      .filter(Boolean) as string[];
   }, [activeFiles, previewFile, bookmarkCacheKey]);
 
   useWheelZoom({
@@ -400,16 +418,14 @@ const EmbedPdfViewerContent = ({
       if (mod) {
         const target = event.target as Element;
         const isInTextInput =
-          target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          (target as HTMLElement).isContentEditable;
+          target.tagName === "INPUT" || target.tagName === "TEXTAREA" || (target as HTMLElement).isContentEditable;
 
         if (!isInTextInput) {
-          const wasOverridden = viewerKeyCommand(event)
-          if (!wasOverridden){
+          const wasOverridden = viewerKeyCommand(event);
+          if (!wasOverridden) {
             switch (event.key) {
-              case 'p':
-              case 'P':
+              case "p":
+              case "P":
                 event.preventDefault();
                 printActions.print();
                 return;
@@ -426,37 +442,37 @@ const EmbedPdfViewerContent = ({
       // Modifier key shortcuts (Ctrl/Cmd + key)
       if (mod) {
         switch (event.key) {
-          case '=':
-          case '+':
+          case "=":
+          case "+":
             event.preventDefault();
             zoomActions.zoomIn();
             return;
-          case '-':
-          case '_':
+          case "-":
+          case "_":
             event.preventDefault();
             zoomActions.zoomOut();
             return;
-          case '0':
+          case "0":
             // Ctrl+0: Reset zoom to fit width
             event.preventDefault();
-            zoomActions.requestZoom('fit-width');
+            zoomActions.requestZoom("fit-width");
             return;
-          case 'a':
-          case 'A':
+          case "a":
+          case "A":
             // Ctrl+A: Prevent browser from selecting all UI text
             event.preventDefault();
             return;
-          case 'f':
-          case 'F':
+          case "f":
+          case "F":
             event.preventDefault();
             if (isSearchInterfaceVisible) {
-              window.dispatchEvent(new CustomEvent('refocus-search-input'));
+              window.dispatchEvent(new CustomEvent("refocus-search-input"));
             } else {
               searchInterfaceActions.open();
             }
             return;
-          case 's':
-          case 'S':
+          case "s":
+          case "S":
             // Ctrl+S: Save/apply changes
             if (!event.shiftKey) {
               event.preventDefault();
@@ -466,8 +482,8 @@ const EmbedPdfViewerContent = ({
             }
             return;
 
-          case 'z':
-          case 'Z':
+          case "z":
+          case "Z":
             // Ctrl+Z: Undo; Ctrl+Shift+Z: Redo
             event.preventDefault();
             if (event.shiftKey) {
@@ -476,8 +492,8 @@ const EmbedPdfViewerContent = ({
               historyApiRef.current?.undo?.();
             }
             return;
-          case 'y':
-          case 'Y':
+          case "y":
+          case "Y":
             // Ctrl+Y: Redo
             event.preventDefault();
             historyApiRef.current?.redo?.();
@@ -488,23 +504,23 @@ const EmbedPdfViewerContent = ({
 
       // Non-modifier shortcuts
       switch (event.key) {
-        case 'Home':
+        case "Home":
           event.preventDefault();
           scrollActions.scrollToFirstPage();
           return;
-        case 'End':
+        case "End":
           event.preventDefault();
           scrollActions.scrollToLastPage();
           return;
-        case 'PageUp':
+        case "PageUp":
           event.preventDefault();
           scrollActions.scrollToPreviousPage();
           return;
-        case 'PageDown':
+        case "PageDown":
           event.preventDefault();
           scrollActions.scrollToNextPage();
           return;
-        case 'Escape':
+        case "Escape":
           if (isSearchInterfaceVisible) {
             event.preventDefault();
             searchInterfaceActions.close();
@@ -513,14 +529,23 @@ const EmbedPdfViewerContent = ({
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [
-    isViewerHovered, isSearchInterfaceVisible, zoomActions, searchInterfaceActions,
-    scrollActions, printActions, exportActions, rotationActions, historyApiRef,
-    viewerApplyChanges, cyclePdfRenderMode, viewerKeyCommand,
+    isViewerHovered,
+    isSearchInterfaceVisible,
+    zoomActions,
+    searchInterfaceActions,
+    scrollActions,
+    printActions,
+    exportActions,
+    rotationActions,
+    historyApiRef,
+    viewerApplyChanges,
+    cyclePdfRenderMode,
+    viewerKeyCommand,
   ]);
 
   // Watch the annotation history API to detect when the document becomes "dirty".
@@ -542,7 +567,7 @@ const EmbedPdfViewerContent = ({
 
     const unsubscribe = historyApi.subscribe(updateHasChanges);
     return () => {
-      if (typeof unsubscribe === 'function') {
+      if (typeof unsubscribe === "function") {
         unsubscribe();
       }
     };
@@ -572,14 +597,21 @@ const EmbedPdfViewerContent = ({
     return () => {
       unregisterUnsavedChangesChecker();
     };
-  }, [historyApiRef, previewFile, registerUnsavedChangesChecker, unregisterUnsavedChangesChecker, isManualRedactMode, redactionsApplied]);
+  }, [
+    historyApiRef,
+    previewFile,
+    registerUnsavedChangesChecker,
+    unregisterUnsavedChangesChecker,
+    isManualRedactMode,
+    redactionsApplied,
+  ]);
 
   // Save changes - save annotations and redactions to file (overwrites active file)
   const applyChanges = useCallback(async () => {
     if (!currentFile || activeFileIds.length === 0) return;
 
     try {
-      console.log('[Viewer] Applying changes - exporting PDF with annotations/redactions');
+      console.log("[Viewer] Applying changes - exporting PDF with annotations/redactions");
 
       // Use the continuously tracked scroll position - more reliable than reading at this moment
       const pageToRestore = lastKnownScrollPageRef.current;
@@ -597,32 +629,32 @@ const EmbedPdfViewerContent = ({
       }
 
       if (hadPendingRedactions) {
-        console.log('[Viewer] Committing pending redactions before export');
+        console.log("[Viewer] Committing pending redactions before export");
         redactionTrackerRef.current?.commitAllPending();
         // Give a small delay for the commit to process
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       // Step 1: Export PDF with annotations using EmbedPDF
       const arrayBuffer = await exportActions.saveAsCopy();
       if (!arrayBuffer) {
-        throw new Error('Failed to export PDF');
+        throw new Error("Failed to export PDF");
       }
 
       // Step 2: Convert ArrayBuffer to File
-      const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
-      const filename = currentFile.name || 'document.pdf';
-      const file = new File([blob], filename, { type: 'application/pdf' });
+      const blob = new Blob([arrayBuffer], { type: "application/pdf" });
+      const filename = currentFile.name || "document.pdf";
+      const file = new File([blob], filename, { type: "application/pdf" });
 
       // Step 3: Create StirlingFiles and stubs for version history
       // Only consume the current file, not all active files
       const currentFileId = activeFiles[activeFileIndex]?.fileId;
-      if (!currentFileId) throw new Error('Current file ID not found');
+      if (!currentFileId) throw new Error("Current file ID not found");
 
       const parentStub = selectors.getStirlingFileStub(currentFileId);
-      if (!parentStub) throw new Error('Parent stub not found');
+      if (!parentStub) throw new Error("Parent stub not found");
 
-      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, selectedTool ?? 'multiTool');
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, selectedTool ?? "multiTool");
 
       // Store the page to restore after file replacement triggers re-render
       pendingScrollRestoreRef.current = pageToRestore;
@@ -643,61 +675,74 @@ const EmbedPdfViewerContent = ({
       setHasUnsavedChanges(false);
       setRedactionsApplied(false);
     } catch (error) {
-      console.error('Apply changes failed:', error);
+      console.error("Apply changes failed:", error);
     }
-  }, [currentFile, activeFiles, activeFileIndex, exportActions, actions, selectors, setHasUnsavedChanges, setRedactionsApplied, rotationState.rotation]);
+  }, [
+    currentFile,
+    activeFiles,
+    activeFileIndex,
+    exportActions,
+    actions,
+    selectors,
+    setHasUnsavedChanges,
+    setRedactionsApplied,
+    rotationState.rotation,
+  ]);
 
   // Apply form fill changes - reload the filled PDF into the viewer
-  const handleFormApply = useCallback(async (filledBlob: Blob) => {
-    if (formApplyInProgressRef.current) return;
-    if (!currentFile || activeFileIds.length === 0) return;
+  const handleFormApply = useCallback(
+    async (filledBlob: Blob) => {
+      if (formApplyInProgressRef.current) return;
+      if (!currentFile || activeFileIds.length === 0) return;
 
-    formApplyInProgressRef.current = true;
-    try {
-      console.log('[Viewer] Applying form fill changes - reloading filled PDF');
+      formApplyInProgressRef.current = true;
+      try {
+        console.log("[Viewer] Applying form fill changes - reloading filled PDF");
 
-      // Use the continuously tracked scroll position
-      const pageToRestore = lastKnownScrollPageRef.current;
+        // Use the continuously tracked scroll position
+        const pageToRestore = lastKnownScrollPageRef.current;
 
-      // Save the current rotation to restore after reload
-      const currentRotation = rotationState.rotation ?? 0;
+        // Save the current rotation to restore after reload
+        const currentRotation = rotationState.rotation ?? 0;
 
-      // Convert Blob to File
-      const filename = currentFile.name || 'document.pdf';
-      const file = new File([filledBlob], filename, { type: 'application/pdf' });
+        // Convert Blob to File
+        const filename = currentFile.name || "document.pdf";
+        const file = new File([filledBlob], filename, { type: "application/pdf" });
 
-      // Get current file info for creating the updated version
-      const currentFileId = activeFiles[activeFileIndex]?.fileId;
-      if (!currentFileId) throw new Error('Current file ID not found');
+        // Get current file info for creating the updated version
+        const currentFileId = activeFiles[activeFileIndex]?.fileId;
+        if (!currentFileId) throw new Error("Current file ID not found");
 
-      const parentStub = selectors.getStirlingFileStub(currentFileId);
-      if (!parentStub) throw new Error('Parent stub not found');
+        const parentStub = selectors.getStirlingFileStub(currentFileId);
+        if (!parentStub) throw new Error("Parent stub not found");
 
-      // Create StirlingFiles and stubs for version history
-      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, selectedTool ?? 'multiTool');
+        // Create StirlingFiles and stubs for version history
+        const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, selectedTool ?? "multiTool");
 
-      // Store the page to restore after file replacement
-      pendingScrollRestoreRef.current = pageToRestore;
-      scrollRestoreAttemptsRef.current = 0;
+        // Store the page to restore after file replacement
+        pendingScrollRestoreRef.current = pageToRestore;
+        scrollRestoreAttemptsRef.current = 0;
 
-      // Store the rotation to restore after file replacement
-      pendingRotationRestoreRef.current = currentRotation;
-      rotationRestoreAttemptsRef.current = 0;
+        // Store the rotation to restore after file replacement
+        pendingRotationRestoreRef.current = currentRotation;
+        rotationRestoreAttemptsRef.current = 0;
 
-      // Track the new file ID so the viewer follows it after the list reorders
-      const newFileId = stubs[0]?.id;
-      if (newFileId) setActiveFileId(newFileId);
+        // Track the new file ID so the viewer follows it after the list reorders
+        const newFileId = stubs[0]?.id;
+        if (newFileId) setActiveFileId(newFileId);
 
-      // Replace the current file in context
-      await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
+        // Replace the current file in context
+        await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
 
-      console.log('[Viewer] Form fill changes applied successfully');
-    } catch (error) {
-      console.error('[Viewer] Apply form changes failed:', error);
-    } finally {
-      formApplyInProgressRef.current = false;
-    }
-  }, [currentFile, activeFiles, activeFileIndex, actions, selectors, activeFileIds.length, rotationState.rotation]);
+        console.log("[Viewer] Form fill changes applied successfully");
+      } catch (error) {
+        console.error("[Viewer] Apply form changes failed:", error);
+      } finally {
+        formApplyInProgressRef.current = false;
+      }
+    },
+    [currentFile, activeFiles, activeFileIndex, actions, selectors, activeFileIds.length, rotationState.rotation],
+  );
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -706,47 +751,50 @@ const EmbedPdfViewerContent = ({
         handleFormApply(blob);
       }
     };
-    window.addEventListener('formfill:apply', handler);
-    return () => window.removeEventListener('formfill:apply', handler);
+    window.addEventListener("formfill:apply", handler);
+    return () => window.removeEventListener("formfill:apply", handler);
   }, [handleFormApply]);
 
   // Apply layer visibility changes - reload the modified PDF into the viewer
   const layerApplyInProgressRef = useRef(false);
-  const handleLayerApply = useCallback(async (modifiedBlob: Blob) => {
-    if (layerApplyInProgressRef.current) return;
-    if (!currentFile || activeFileIds.length === 0) return;
+  const handleLayerApply = useCallback(
+    async (modifiedBlob: Blob) => {
+      if (layerApplyInProgressRef.current) return;
+      if (!currentFile || activeFileIds.length === 0) return;
 
-    layerApplyInProgressRef.current = true;
-    try {
-      const pageToRestore = lastKnownScrollPageRef.current;
-      const currentRotation = rotationState.rotation ?? 0;
+      layerApplyInProgressRef.current = true;
+      try {
+        const pageToRestore = lastKnownScrollPageRef.current;
+        const currentRotation = rotationState.rotation ?? 0;
 
-      const filename = currentFile.name || 'document.pdf';
-      const file = new File([modifiedBlob], filename, { type: 'application/pdf' });
+        const filename = currentFile.name || "document.pdf";
+        const file = new File([modifiedBlob], filename, { type: "application/pdf" });
 
-      const currentFileId = activeFiles[activeFileIndex]?.fileId;
-      if (!currentFileId) throw new Error('Current file ID not found');
+        const currentFileId = activeFiles[activeFileIndex]?.fileId;
+        if (!currentFileId) throw new Error("Current file ID not found");
 
-      const parentStub = selectors.getStirlingFileStub(currentFileId);
-      if (!parentStub) throw new Error('Parent stub not found');
+        const parentStub = selectors.getStirlingFileStub(currentFileId);
+        if (!parentStub) throw new Error("Parent stub not found");
 
-      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, selectedTool ?? 'multiTool');
+        const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, selectedTool ?? "multiTool");
 
-      pendingScrollRestoreRef.current = pageToRestore;
-      scrollRestoreAttemptsRef.current = 0;
-      pendingRotationRestoreRef.current = currentRotation;
-      rotationRestoreAttemptsRef.current = 0;
+        pendingScrollRestoreRef.current = pageToRestore;
+        scrollRestoreAttemptsRef.current = 0;
+        pendingRotationRestoreRef.current = currentRotation;
+        rotationRestoreAttemptsRef.current = 0;
 
-      const newFileId = stubs[0]?.id;
-      if (newFileId) setActiveFileId(newFileId);
+        const newFileId = stubs[0]?.id;
+        if (newFileId) setActiveFileId(newFileId);
 
-      await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
-    } catch (error) {
-      console.error('[Viewer] Apply layer changes failed:', error);
-    } finally {
-      layerApplyInProgressRef.current = false;
-    }
-  }, [currentFile, activeFiles, activeFileIndex, actions, selectors, activeFileIds.length, rotationState.rotation]);
+        await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
+      } catch (error) {
+        console.error("[Viewer] Apply layer changes failed:", error);
+      } finally {
+        layerApplyInProgressRef.current = false;
+      }
+    },
+    [currentFile, activeFiles, activeFileIndex, actions, selectors, activeFileIds.length, rotationState.rotation],
+  );
 
   // Discard pending redactions but save already-applied ones
   // This is called when user clicks "Discard & Leave" - we want to:
@@ -759,7 +807,7 @@ const EmbedPdfViewerContent = ({
     }
 
     try {
-      console.log('[Viewer] Discarding pending marks but saving applied redactions');
+      console.log("[Viewer] Discarding pending marks but saving applied redactions");
 
       // Save current view state to restore after file replacement
       const pageToRestore = lastKnownScrollPageRef.current;
@@ -768,22 +816,22 @@ const EmbedPdfViewerContent = ({
       // Export PDF WITHOUT committing pending marks - this saves only applied redactions
       const arrayBuffer = await exportActions.saveAsCopy();
       if (!arrayBuffer) {
-        throw new Error('Failed to export PDF');
+        throw new Error("Failed to export PDF");
       }
 
       // Convert ArrayBuffer to File
-      const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
-      const filename = currentFile.name || 'document.pdf';
-      const file = new File([blob], filename, { type: 'application/pdf' });
+      const blob = new Blob([arrayBuffer], { type: "application/pdf" });
+      const filename = currentFile.name || "document.pdf";
+      const file = new File([blob], filename, { type: "application/pdf" });
 
       // Create StirlingFiles and stubs for version history
       const currentFileId = activeFiles[activeFileIndex]?.fileId;
-      if (!currentFileId) throw new Error('Current file ID not found');
+      if (!currentFileId) throw new Error("Current file ID not found");
 
       const parentStub = selectors.getStirlingFileStub(currentFileId);
-      if (!parentStub) throw new Error('Parent stub not found');
+      if (!parentStub) throw new Error("Parent stub not found");
 
-      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, selectedTool ?? 'multiTool');
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs([file], parentStub, selectedTool ?? "multiTool");
 
       // Store view state to restore after file replacement
       pendingScrollRestoreRef.current = pageToRestore;
@@ -798,11 +846,22 @@ const EmbedPdfViewerContent = ({
       hasAnnotationChangesRef.current = false;
       setRedactionsApplied(false);
 
-      console.log('[Viewer] Applied redactions saved, pending marks discarded');
+      console.log("[Viewer] Applied redactions saved, pending marks discarded");
     } catch (error) {
-      console.error('Failed to save applied redactions:', error);
+      console.error("Failed to save applied redactions:", error);
     }
-  }, [redactionsApplied, currentFile, activeFiles, activeFileIndex, activeFileIds.length, exportActions, actions, selectors, setRedactionsApplied, rotationState.rotation]);
+  }, [
+    redactionsApplied,
+    currentFile,
+    activeFiles,
+    activeFileIndex,
+    activeFileIds.length,
+    exportActions,
+    actions,
+    selectors,
+    setRedactionsApplied,
+    rotationState.rotation,
+  ]);
 
   // Register navigation warning handlers so the global modal can call our save/discard logic
   useEffect(() => {
@@ -824,7 +883,13 @@ const EmbedPdfViewerContent = ({
       },
     });
     return () => unregisterNavigationWarningHandlers();
-  }, [previewFile, applyChanges, discardAndSaveApplied, registerNavigationWarningHandlers, unregisterNavigationWarningHandlers]);
+  }, [
+    previewFile,
+    applyChanges,
+    discardAndSaveApplied,
+    registerNavigationWarningHandlers,
+    unregisterNavigationWarningHandlers,
+  ]);
 
   // Restore scroll position after file replacement or tool switch
   // Uses polling with retries to ensure the scroll succeeds
@@ -841,7 +906,7 @@ const EmbedPdfViewerContent = ({
 
       // Only attempt if we have valid state (totalPages > 0 means PDF is loaded)
       if (currentState.totalPages > 0 && targetPage > 0) {
-        scrollActions.scrollToPage(targetPage, 'instant');
+        scrollActions.scrollToPage(targetPage, "instant");
 
         // Check if scroll succeeded after a brief delay
         setTimeout(() => {
@@ -943,10 +1008,17 @@ const EmbedPdfViewerContent = ({
 
   useEffect(() => {
     const file = effectiveFile?.file;
-    if (!file) { setPageMeasureScales(null); return; }
+    if (!file) {
+      setPageMeasureScales(null);
+      return;
+    }
     let cancelled = false;
-    extractPageMeasureScales(file).then(scales => { if (!cancelled) setPageMeasureScales(scales); });
-    return () => { cancelled = true; };
+    extractPageMeasureScales(file).then((scales) => {
+      if (!cancelled) setPageMeasureScales(scales);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [effectiveFile]);
 
   // Register viewer right-rail buttons
@@ -969,7 +1041,7 @@ const EmbedPdfViewerContent = ({
     formFillProviderRef.current = isFormFillToolActive;
 
     if (fileChanged) {
-      console.log('[FormFill] File changed. Old:', formFillFileIdRef.current, 'New:', currentFileId);
+      console.log("[FormFill] File changed. Old:", formFillFileIdRef.current, "New:", currentFileId);
       formFillFileIdRef.current = currentFileId;
       // NOTE: Don't call resetFormFill() here — fetchFormFields() handles
       // clearing old state internally. Calling reset() before fetch() would
@@ -978,10 +1050,10 @@ const EmbedPdfViewerContent = ({
     }
 
     if (currentFile && (fileChanged || providerChanged)) {
-      console.log('[FormFill] Fetching form fields for:', currentFileId);
+      console.log("[FormFill] Fetching form fields for:", currentFileId);
       fetchFormFields(currentFile, currentFileId ?? undefined);
     }
-  }, [isFormFillToolActive, currentFile, currentFileId, fetchFormFields]);
+  }, [isFormFillToolActive, currentFile, currentFileId, fetchFormFields, isCurrentFileEncrypted]);
 
   const sidebarWidthRem = 15;
   const commentsSidebarWidthRem = 18;
@@ -998,20 +1070,21 @@ const EmbedPdfViewerContent = ({
       onMouseEnter={() => setIsViewerHovered(true)}
       onMouseLeave={() => setIsViewerHovered(false)}
       style={{
-        position: 'relative',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        contain: 'layout style paint'
-      }}>
+        position: "relative",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        contain: "layout style paint",
+      }}
+    >
       {/* Close Button - Only show in preview mode */}
       {onClose && previewFile && (
         <ActionIcon
           variant="filled"
           color="gray"
           size="lg"
-          style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 1000, borderRadius: '50%' }}
+          style={{ position: "absolute", top: "1rem", right: "1rem", zIndex: 1000, borderRadius: "50%" }}
           onClick={onClose}
         >
           <CloseIcon />
@@ -1022,32 +1095,54 @@ const EmbedPdfViewerContent = ({
         <Center style={{ flex: 1 }}>
           <Text c="red">Error: No file provided to viewer</Text>
         </Center>
+      ) : isCurrentFileEncrypted ? (
+        <Center style={{ flex: 1 }}>
+          <Stack align="center" gap="md">
+            <LockIcon style={{ fontSize: 48, opacity: 0.5 }} />
+            <Text fw={500}>This PDF is password-protected</Text>
+            <Button
+              variant="filled"
+              onClick={() => {
+                if (currentFile && isStirlingFile(currentFile)) {
+                  actions.openEncryptedUnlockPrompt(currentFile.fileId);
+                }
+              }}
+            >
+              Unlock
+            </Button>
+          </Stack>
+        </Center>
       ) : (
         <>
           {/* EmbedPDF Viewer */}
           <Box
             ref={pdfContainerRef}
             style={{
-              position: 'relative',
+              position: "relative",
               flex: 1,
-              overflow: 'hidden',
+              overflow: "hidden",
               minHeight: 0,
               minWidth: 0,
               marginRight: `${totalRightMargin}rem`,
-              transition: 'margin-right 0.3s ease'
-            }}>
+              transition: "margin-right 0.3s ease",
+            }}
+          >
             <LocalEmbedPDF
-              key={currentFileId || 'no-file'}
+              key={currentFileId || "no-file"}
               pdfRenderMode={pdfRenderMode}
               file={effectiveFile.file}
               url={effectiveFile.url}
               fileName={
-                previewFile ? previewFile.name :
-                (currentFile && isStirlingFile(currentFile) ? currentFile.name :
-                (effectiveFile?.file instanceof File ? effectiveFile.file.name : undefined))
+                previewFile
+                  ? previewFile.name
+                  : currentFile && isStirlingFile(currentFile)
+                    ? currentFile.name
+                    : effectiveFile?.file instanceof File
+                      ? effectiveFile.file.name
+                      : undefined
               }
               enableAnnotations={shouldEnableAnnotations}
-              isSignMode={selectedTool === 'sign'}
+              isSignMode={selectedTool === "sign"}
               showBakedAnnotations={isAnnotationsVisible}
               enableRedaction={shouldEnableRedaction}
               enableFormFill={shouldEnableFormFill}
@@ -1065,21 +1160,13 @@ const EmbedPdfViewerContent = ({
               }}
             />
             {/* Floating save bar for form-filled PDFs (like Chrome/Firefox PDF viewers) */}
-            <FormSaveBar
-              file={currentFile ?? null}
-              isFormFillToolActive={isFormFillToolActive}
-              onApply={handleFormApply}
-            />
+            <FormSaveBar file={currentFile ?? null} isFormFillToolActive={isFormFillToolActive} onApply={handleFormApply} />
             <StampPlacementOverlay
               containerRef={pdfContainerRef}
               isActive={isPlacementOverlayActive}
               signatureConfig={signatureConfig}
             />
-            <RulerOverlay
-              containerRef={pdfContainerRef}
-              isActive={isRulerActive}
-              pageMeasureScales={pageMeasureScales}
-            />
+            <RulerOverlay containerRef={pdfContainerRef} isActive={isRulerActive} pageMeasureScales={pageMeasureScales} />
           </Box>
         </>
       )}
@@ -1100,14 +1187,10 @@ const EmbedPdfViewerContent = ({
           }}
         >
           <div style={{ pointerEvents: "auto" }}>
-            <PdfViewerToolbar
-              currentPage={scrollState.currentPage}
-              totalPages={scrollState.totalPages}
-            />
+            <PdfViewerToolbar currentPage={scrollState.currentPage} totalPages={scrollState.totalPages} />
           </div>
         </div>
       )}
-
 
       {/* Thumbnail Sidebar */}
       <ThumbnailSidebar
@@ -1140,15 +1223,12 @@ const EmbedPdfViewerContent = ({
         onApplyLayers={handleLayerApply}
         onLayersDetected={setHasLayers}
       />
-
     </Box>
   );
 };
 
 const EmbedPdfViewer = (props: EmbedPdfViewerProps) => {
-  return (
-    <EmbedPdfViewerContent {...props} />
-  );
+  return <EmbedPdfViewerContent {...props} />;
 };
 
 export default EmbedPdfViewer;

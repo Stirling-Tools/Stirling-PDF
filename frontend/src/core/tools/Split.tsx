@@ -15,12 +15,7 @@ import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
 const Split = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
-  const base = useBaseTool(
-    'split',
-    useSplitParameters,
-    useSplitOperation,
-    props
-  );
+  const base = useBaseTool("split", useSplitParameters, useSplitOperation, props);
 
   // Check which split endpoints are available
   const allSplitEndpoints = useMemo(() => Object.values(ENDPOINTS), []);
@@ -28,7 +23,7 @@ const Split = (props: BaseToolProps) => {
 
   // Filter METHOD_OPTIONS to only show methods with enabled endpoints
   const availableMethodOptions = useMemo(() => {
-    return METHOD_OPTIONS.filter(option => {
+    return METHOD_OPTIONS.filter((option) => {
       const endpoint = ENDPOINTS[option.value];
       // If endpoint status is not loaded yet, show all options (optimistic)
       // If endpoint is explicitly disabled (false), hide the option
@@ -43,7 +38,7 @@ const Split = (props: BaseToolProps) => {
   const getSettingsTitle = () => {
     if (!base.params.parameters.method) return t("split.steps.settings", "Settings");
 
-    const methodOption = METHOD_OPTIONS.find(option => option.value === base.params.parameters.method);
+    const methodOption = METHOD_OPTIONS.find((option) => option.value === base.params.parameters.method);
     if (!methodOption) return t("split.steps.settings", "Settings");
 
     const prefix = t(methodOption.prefixKey, "Split by");
@@ -60,12 +55,12 @@ const Split = (props: BaseToolProps) => {
       {
         title: t("split.steps.chooseMethod", "Choose Method"),
         isCollapsed: !!base.params.parameters.method, // Collapse when method is selected
-        onCollapsedClick: () => base.params.updateParameter('method', null),
+        onCollapsedClick: () => base.params.updateParameter("method", null),
         tooltip: methodTips,
         content: (
           <CardSelector<SplitMethod, MethodOption>
             options={availableMethodOptions}
-            onSelect={(method) => base.params.updateParameter('method', method)}
+            onSelect={(method) => base.params.updateParameter("method", method)}
             disabled={base.endpointLoading}
           />
         ),

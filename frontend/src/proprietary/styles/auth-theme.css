@@ -11,7 +11,7 @@
   --auth-input-text-light-only: #111827;
   --auth-border-focus-light-only: #3b82f6;
   --auth-focus-ring-light-only: rgba(59, 130, 246, 0.1);
-  --auth-button-bg-light-only: #AF3434;
+  --auth-button-bg-light-only: #af3434;
   --auth-button-text-light-only: #ffffff;
   --auth-magic-button-bg-light-only: #e5e7eb;
   --auth-magic-button-text-light-only: #374151;
@@ -33,7 +33,7 @@
   --auth-input-text-light-only: var(--text-primary);
   --auth-border-focus-light-only: #3b82f6;
   --auth-focus-ring-light-only: rgba(59, 130, 246, 0.2);
-  --auth-button-bg-light-only: #AF3434;
+  --auth-button-bg-light-only: #af3434;
   --auth-button-text-light-only: #ffffff;
   --auth-magic-button-bg-light-only: var(--bg-raised);
   --auth-magic-button-text-light-only: var(--text-primary);

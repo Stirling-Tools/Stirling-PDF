@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useDocumentManagerPlugin } from '@embedpdf/plugin-document-manager/react';
+import React, { useState, useEffect } from "react";
+import { useDocumentManagerPlugin } from "@embedpdf/plugin-document-manager/react";
 
 interface DocumentReadyWrapperProps {
   children: (documentId: string) => React.ReactNode;
@@ -38,7 +38,7 @@ export function DocumentReadyWrapper({ children, fallback = null }: DocumentRead
       });
 
       return () => {
-        if (typeof unsubscribe === 'function') {
+        if (typeof unsubscribe === "function") {
           unsubscribe();
         }
       };

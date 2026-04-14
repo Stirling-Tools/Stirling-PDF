@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { springAuth } from '@app/auth/springAuthClient';
-import { handleAuthCallbackSuccess } from '@app/extensions/authCallback';
-import styles from '@app/routes/AuthCallback.module.css';
+import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { springAuth } from "@app/auth/springAuthClient";
+import { handleAuthCallbackSuccess } from "@app/extensions/authCallback";
+import styles from "@app/routes/AuthCallback.module.css";
 
 /**
  * OAuth Callback Handler
@@ -35,11 +35,11 @@ export default function AuthCallback() {
       console.log(`[AuthCallback:${executionId}] Hash: ${window.location.hash}`);
       console.log(`[AuthCallback:${executionId}] Document readyState: ${document.readyState}`);
 
-      if (typeof window !== 'undefined' && window.sessionStorage.getItem('stirling_sso_auto_login_logged_out') === '1') {
+      if (typeof window !== "undefined" && window.sessionStorage.getItem("stirling_sso_auto_login_logged_out") === "1") {
         console.warn(`[AuthCallback:${executionId}] ⚠️  Logout block active, skipping token processing`);
-        navigate('/login', {
+        navigate("/login", {
           replace: true,
-          state: { error: 'You have been signed out. Please sign in again.' }
+          state: { error: "You have been signed out. Please sign in again." },
         });
         return;
       }
@@ -58,13 +58,13 @@ export default function AuthCallback() {
         // Extract JWT from URL fragment (#access_token=...)
         const hash = window.location.hash.substring(1); // Remove '#'
         const params = new URLSearchParams(hash);
-        const token = params.get('access_token');
+        const token = params.get("access_token");
 
         if (!token) {
           console.error(`[AuthCallback:${executionId}] ❌ No access_token in URL fragment`);
-          navigate('/login', {
+          navigate("/login", {
             replace: true,
-            state: { error: 'OAuth login failed - no token received.' }
+            state: { error: "OAuth login failed - no token received." },
           });
           return;
         }
@@ -73,14 +73,16 @@ export default function AuthCallback() {
         console.log(`[AuthCallback:${executionId}] Step 2: Storing JWT in localStorage`);
 
         // Store JWT in localStorage
-        localStorage.setItem('stirling_jwt', token);
+        localStorage.setItem("stirling_jwt", token);
         console.log(`[AuthCallback:${executionId}] ✓ JWT stored in localStorage`);
 
         console.log(`[AuthCallback:${executionId}] Step 3: Dispatching 'jwt-available' event`);
         // Dispatch custom event for other components to react to JWT availability
-        window.dispatchEvent(new CustomEvent('jwt-available'));
+        window.dispatchEvent(new CustomEvent("jwt-available"));
         console.log(`[AuthCallback:${executionId}] ✓ Event dispatched`);
-        console.log(`[AuthCallback:${executionId}] Elapsed after jwt-available: ${(performance.now() - startTime).toFixed(2)}ms`);
+        console.log(
+          `[AuthCallback:${executionId}] Elapsed after jwt-available: ${(performance.now() - startTime).toFixed(2)}ms`,
+        );
 
         console.log(`[AuthCallback:${executionId}] Step 4: Validating token with backend`);
         // Validate the token and load user info
@@ -89,10 +91,10 @@ export default function AuthCallback() {
 
         if (error || !data.session) {
           console.error(`[AuthCallback:${executionId}] ❌ Failed to validate token:`, error);
-          localStorage.removeItem('stirling_jwt');
-          navigate('/login', {
+          localStorage.removeItem("stirling_jwt");
+          navigate("/login", {
             replace: true,
-            state: { error: 'OAuth login failed - invalid token.' }
+            state: { error: "OAuth login failed - invalid token." },
           });
           return;
         }
@@ -107,13 +109,15 @@ export default function AuthCallback() {
 
         // Wait for all context providers to process jwt-available event
         // This prevents infinite render loop when coming from cross-domain SAML redirect
-        await new Promise(resolve => setTimeout(resolve, 100));
-        console.log(`[AuthCallback:${executionId}] Elapsed after stabilization wait: ${(performance.now() - startTime).toFixed(2)}ms`);
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        console.log(
+          `[AuthCallback:${executionId}] Elapsed after stabilization wait: ${(performance.now() - startTime).toFixed(2)}ms`,
+        );
 
         console.log(`[AuthCallback:${executionId}] Step 7: Navigating to home page`);
 
         // Clear the hash from URL and redirect to home page
-        navigate('/', { replace: true });
+        navigate("/", { replace: true });
 
         const duration = performance.now() - startTime;
         console.log(`[AuthCallback:${executionId}] ✓ Authentication complete (${duration.toFixed(2)}ms)`);
@@ -128,9 +132,9 @@ export default function AuthCallback() {
         console.error(`[AuthCallback:${executionId}] Error stack:`, (error as Error)?.stack);
         console.error(`[AuthCallback:${executionId}] Duration before failure: ${duration.toFixed(2)}ms`);
         console.error(`[AuthCallback:${executionId}] ════════════════════════════════════`);
-        navigate('/login', {
+        navigate("/login", {
           replace: true,
-          state: { error: 'OAuth login failed. Please try again.' }
+          state: { error: "OAuth login failed. Please try again." },
         });
       }
     };

@@ -3,17 +3,17 @@
  * Custom providers are also supported - the backend determines availability.
  */
 export const KNOWN_OAUTH_PROVIDERS = [
-  'github',
-  'google',
-  'apple',
-  'azure',
-  'keycloak',
-  'cloudron',
-  'authentik',
-  'oidc',
+  "github",
+  "google",
+  "apple",
+  "azure",
+  "keycloak",
+  "cloudron",
+  "authentik",
+  "oidc",
 ] as const;
 
-export type KnownOAuthProvider = typeof KNOWN_OAUTH_PROVIDERS[number];
+export type KnownOAuthProvider = (typeof KNOWN_OAUTH_PROVIDERS)[number];
 
 /**
  * OAuth provider ID - can be any known provider or custom string.

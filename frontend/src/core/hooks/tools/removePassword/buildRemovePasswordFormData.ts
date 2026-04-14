@@ -1,4 +1,4 @@
-import { RemovePasswordParameters } from '@app/hooks/tools/removePassword/useRemovePasswordParameters';
+import { RemovePasswordParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
 
 /**
  * Builds FormData for remove password API request.

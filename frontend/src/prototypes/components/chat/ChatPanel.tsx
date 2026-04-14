@@ -9,12 +9,10 @@ import "@app/components/chat/ChatPanel.css";
 function ChatMessageBubble({ role, content }: { role: "user" | "assistant"; content: string }) {
   return (
     <div className={`chat-message chat-message-${role}`}>
-      <Paper
-        className={`chat-bubble chat-bubble-${role}`}
-        p="xs"
-        radius="md"
-      >
-        <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>{content}</Text>
+      <Paper className={`chat-bubble chat-bubble-${role}`} p="xs" radius="md">
+        <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+          {content}
+        </Text>
       </Paper>
     </div>
   );
@@ -75,7 +73,9 @@ export function ChatPanel() {
           <Box className="chat-panel" style={styles}>
             {/* Header */}
             <div className="chat-panel-header">
-              <Text fw={600} size="sm">AI Assistant</Text>
+              <Text fw={600} size="sm">
+                AI Assistant
+              </Text>
               <ActionIcon variant="subtle" size="sm" onClick={toggleOpen} aria-label="Close chat">
                 <CloseIcon sx={{ fontSize: 16 }} />
               </ActionIcon>
@@ -95,7 +95,9 @@ export function ChatPanel() {
                 {isLoading && (
                   <div className="chat-message chat-message-assistant">
                     <Paper className="chat-bubble chat-bubble-assistant" p="xs" radius="md">
-                      <Text size="sm" c="dimmed">Thinking...</Text>
+                      <Text size="sm" c="dimmed">
+                        Thinking...
+                      </Text>
                     </Paper>
                   </div>
                 )}

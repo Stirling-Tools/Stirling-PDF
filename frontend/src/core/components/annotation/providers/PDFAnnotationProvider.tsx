@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode } from "react";
 
 interface PDFAnnotationContextValue {
   // Drawing mode management
@@ -58,7 +58,7 @@ export const PDFAnnotationProvider: React.FC<PDFAnnotationProviderProps> = ({
   getImageData,
   isPlacementMode,
   signatureConfig,
-  setSignatureConfig
+  setSignatureConfig,
 }) => {
   const contextValue: PDFAnnotationContextValue = {
     activateDrawMode,
@@ -72,20 +72,16 @@ export const PDFAnnotationProvider: React.FC<PDFAnnotationProviderProps> = ({
     getImageData,
     isPlacementMode,
     signatureConfig,
-    setSignatureConfig
+    setSignatureConfig,
   };
 
-  return (
-    <PDFAnnotationContext.Provider value={contextValue}>
-      {children}
-    </PDFAnnotationContext.Provider>
-  );
+  return <PDFAnnotationContext.Provider value={contextValue}>{children}</PDFAnnotationContext.Provider>;
 };
 
 export const usePDFAnnotation = (): PDFAnnotationContextValue => {
   const context = useContext(PDFAnnotationContext);
   if (context === undefined) {
-    throw new Error('usePDFAnnotation must be used within a PDFAnnotationProvider');
+    throw new Error("usePDFAnnotation must be used within a PDFAnnotationProvider");
   }
   return context;
 };

@@ -70,38 +70,38 @@
   cursor: not-allowed;
 }
 
-:global([data-mantine-color-scheme='dark']) .operatorChip {
+:global([data-mantine-color-scheme="dark"]) .operatorChip {
   background-color: var(--bulk-card-bg);
   border-color: var(--bulk-card-border);
   color: var(--text-primary);
 }
 
-:global([data-mantine-color-scheme='dark']) .operatorChip:hover:not(:disabled) {
+:global([data-mantine-color-scheme="dark"]) .operatorChip:hover:not(:disabled) {
   background-color: var(--hover-bg);
   border-color: var(--bulk-card-hover-border);
   color: var(--text-primary);
 }
- 
- .dropdownHeader {
-   display: flex;
-   justify-content: space-between;
-   align-items: center;
-   padding: 0.75rem;
-   border-bottom: 0.0625rem solid var(--border-default);
-   margin-bottom: 0.5rem;
- }
- 
- .closeButton {
-   min-width: 1.5rem;
-   height: 1.5rem;
-   padding: 0;
-   font-size: 1.25rem;
-   font-weight: bold;
-   border-radius: 50%;
-   display: flex;
-   align-items: center;
-   justify-content: center;
- }
+
+.dropdownHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-bottom: 0.0625rem solid var(--border-default);
+  margin-bottom: 0.5rem;
+}
+
+.closeButton {
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  font-size: 1.25rem;
+  font-weight: bold;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 .menuItemRow {
   display: flex;
@@ -143,7 +143,7 @@
   transition: background-color 150ms ease;
 }
 
-:global([data-mantine-color-scheme='dark']) .menuItemCloseHover {
+:global([data-mantine-color-scheme="dark"]) .menuItemCloseHover {
   background-color: var(--text-brand-accent);
   opacity: 0.2;
 }
@@ -196,7 +196,7 @@
   background-color: var(--hover-bg);
 }
 
-:global([data-mantine-color-scheme='dark']) .advancedItem:hover {
+:global([data-mantine-color-scheme="dark"]) .advancedItem:hover {
   background-color: var(--hover-bg);
 }
 
@@ -211,7 +211,7 @@
   color: var(--text-primary);
 }
 
-:global([data-mantine-color-scheme='dark']) .advancedCard {
+:global([data-mantine-color-scheme="dark"]) .advancedCard {
   background-color: var(--bulk-card-bg);
 }
 
@@ -272,7 +272,7 @@
 }
 
 /* Dark-mode adjustments */
-:global([data-mantine-color-scheme='dark']) .selectedList {
+:global([data-mantine-color-scheme="dark"]) .selectedList {
   background-color: var(--bg-raised);
 }
 
@@ -311,4 +311,3 @@
   outline: none !important;
   box-shadow: none !important;
 }
-

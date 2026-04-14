@@ -2,9 +2,9 @@
  * Comprehensive conversion status data
  */
 export interface ConversionStatus {
-  availability: Record<string, boolean>;   // Available on local OR SaaS?
-  cloudStatus: Record<string, boolean>;    // Will use cloud?
-  localOnly: Record<string, boolean>;      // Available ONLY locally (not on SaaS)?
+  availability: Record<string, boolean>; // Available on local OR SaaS?
+  cloudStatus: Record<string, boolean>; // Will use cloud?
+  localOnly: Record<string, boolean>; // Available ONLY locally (not on SaaS)?
 }
 
 /**

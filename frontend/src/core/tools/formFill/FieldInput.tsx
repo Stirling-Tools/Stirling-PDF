@@ -5,18 +5,10 @@
  * Each instance subscribes to its own field value via useFieldValue(),
  * so only the active widget re-renders when its value changes.
  */
-import React, { useCallback, memo } from 'react';
-import {
-  TextInput,
-  Textarea,
-  Checkbox,
-  Radio,
-  Select,
-  MultiSelect,
-  Stack,
-} from '@mantine/core';
-import { useFieldValue } from '@app/tools/formFill/FormFillContext';
-import type { FormField } from '@app/tools/formFill/types';
+import React, { useCallback, memo } from "react";
+import { TextInput, Textarea, Checkbox, Radio, Select, MultiSelect, Stack } from "@mantine/core";
+import { useFieldValue } from "@app/tools/formFill/FormFillContext";
+import type { FormField } from "@app/tools/formFill/types";
 
 function FieldInputInner({
   field,
@@ -27,13 +19,10 @@ function FieldInputInner({
   value: string;
   onValueChange: (fieldName: string, value: string) => void;
 }) {
-  const onChange = useCallback(
-    (v: string) => onValueChange(field.name, v),
-    [onValueChange, field.name]
-  );
+  const onChange = useCallback((v: string) => onValueChange(field.name, v), [onValueChange, field.name]);
 
   switch (field.type) {
-    case 'text':
+    case "text":
       if (field.multiline) {
         return (
           <Textarea
@@ -45,7 +34,7 @@ function FieldInputInner({
             autosize
             minRows={2}
             maxRows={5}
-            styles={{ input: { fontSize: '0.8125rem' } }}
+            styles={{ input: { fontSize: "0.8125rem" } }}
           />
         );
       }
@@ -56,25 +45,25 @@ function FieldInputInner({
           onChange={(e) => onChange(e.currentTarget.value)}
           placeholder={field.tooltip || `Enter ${field.label}`}
           disabled={field.readOnly}
-          styles={{ input: { fontSize: '0.8125rem' } }}
+          styles={{ input: { fontSize: "0.8125rem" } }}
         />
       );
 
-    case 'checkbox': {
-      const isChecked = !!value && value !== 'Off';
-      const onValue = (field.widgets && field.widgets[0]?.exportValue) || 'Yes';
+    case "checkbox": {
+      const isChecked = !!value && value !== "Off";
+      const onValue = (field.widgets && field.widgets[0]?.exportValue) || "Yes";
       return (
         <Checkbox
           size="xs"
           checked={isChecked}
-          onChange={(e) => onChange(e.currentTarget.checked ? onValue : 'Off')}
+          onChange={(e) => onChange(e.currentTarget.checked ? onValue : "Off")}
           label={field.label}
           disabled={field.readOnly}
         />
       );
     }
 
-    case 'combobox': {
+    case "combobox": {
       const comboData = (field.options || []).map((opt, idx) => ({
         value: opt,
         label: (field.displayOptions && field.displayOptions[idx]) || opt,
@@ -84,37 +73,37 @@ function FieldInputInner({
           size="xs"
           data={comboData}
           value={value || null}
-          onChange={(v) => onChange(v || '')}
+          onChange={(v) => onChange(v || "")}
           placeholder={`Select ${field.label}`}
           clearable
           searchable
           disabled={field.readOnly}
           aria-label={field.label || field.name}
           aria-required={field.required}
-          styles={{ input: { fontSize: '0.8125rem' } }}
+          styles={{ input: { fontSize: "0.8125rem" } }}
         />
       );
     }
 
-    case 'listbox': {
+    case "listbox": {
       const listData = (field.options || []).map((opt, idx) => ({
         value: opt,
         label: (field.displayOptions && field.displayOptions[idx]) || opt,
       }));
       if (field.multiSelect) {
-        const selectedValues = value ? value.split(',').filter(Boolean) : [];
+        const selectedValues = value ? value.split(",").filter(Boolean) : [];
         return (
           <MultiSelect
             size="xs"
             data={listData}
             value={selectedValues}
-            onChange={(vals) => onChange(vals.join(','))}
+            onChange={(vals) => onChange(vals.join(","))}
             placeholder={`Select ${field.label}`}
             searchable
             disabled={field.readOnly}
             aria-label={field.label || field.name}
             aria-required={field.required}
-            styles={{ input: { fontSize: '0.8125rem' } }}
+            styles={{ input: { fontSize: "0.8125rem" } }}
           />
         );
       }
@@ -123,19 +112,19 @@ function FieldInputInner({
           size="xs"
           data={listData}
           value={value || null}
-          onChange={(v) => onChange(v || '')}
+          onChange={(v) => onChange(v || "")}
           placeholder={`Select ${field.label}`}
           clearable
           searchable
           disabled={field.readOnly}
           aria-label={field.label || field.name}
           aria-required={field.required}
-          styles={{ input: { fontSize: '0.8125rem' } }}
+          styles={{ input: { fontSize: "0.8125rem" } }}
         />
       );
     }
 
-    case 'radio': {
+    case "radio": {
       const radioOptions: { value: string; label: string }[] = [];
       if (field.widgets && field.widgets.length > 0) {
         for (let i = 0; i < field.widgets.length; i++) {
@@ -146,21 +135,10 @@ function FieldInputInner({
         }
       }
       return (
-        <Radio.Group
-          value={value}
-          onChange={onChange}
-          aria-label={field.label || field.name}
-          aria-required={field.required}
-        >
+        <Radio.Group value={value} onChange={onChange} aria-label={field.label || field.name} aria-required={field.required}>
           <Stack gap={4} mt={4}>
             {radioOptions.map((opt) => (
-              <Radio
-                key={opt.value}
-                size="xs"
-                value={opt.value}
-                label={opt.label}
-                disabled={field.readOnly}
-              />
+              <Radio key={opt.value} size="xs" value={opt.value} label={opt.label} disabled={field.readOnly} />
             ))}
           </Stack>
         </Radio.Group>
@@ -176,7 +154,7 @@ function FieldInputInner({
           disabled={field.readOnly}
           aria-label={field.label || field.name}
           aria-required={field.required}
-          styles={{ input: { fontSize: '0.8125rem' } }}
+          styles={{ input: { fontSize: "0.8125rem" } }}
         />
       );
   }
