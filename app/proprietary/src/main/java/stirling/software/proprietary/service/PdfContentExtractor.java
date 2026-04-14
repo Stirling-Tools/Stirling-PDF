@@ -1,7 +1,9 @@
 package stirling.software.proprietary.service;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +11,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.QuoteMode;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
@@ -20,9 +24,17 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.PdfUtils;
 import stirling.software.proprietary.model.api.ai.AiPdfContentType;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowTextSelection;
+import stirling.software.proprietary.model.api.ai.FolioType;
+import stirling.software.proprietary.pdf.FlexibleCSVWriter;
+
+import technology.tabula.ObjectExtractor;
+import technology.tabula.Page;
+import technology.tabula.Table;
+import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 
 @Slf4j
 @Service
@@ -30,7 +42,83 @@ public class PdfContentExtractor {
 
     private static final int MAX_CHARACTERS_PER_PAGE = 4_000;
 
+    private static final int TEXT_PRESENCE_THRESHOLD = 20;
+
     record LoadedFile(String fileName, PDDocument document) {}
+
+    // -----------------------------------------------------------------------
+    // Low-level extraction methods (usable by any agent)
+    // -----------------------------------------------------------------------
+
+    /**
+     * Classify a single page as TEXT, IMAGE, or MIXED.
+     *
+     * @param document the open PDF
+     * @param pageNumber 1-based page number
+     */
+    public FolioType classifyPage(PDDocument document, int pageNumber) throws IOException {
+        PDFTextStripper stripper = new PDFTextStripper();
+        stripper.setStartPage(pageNumber);
+        stripper.setEndPage(pageNumber);
+        String text = stripper.getText(document).trim();
+
+        boolean hasText = text.length() > TEXT_PRESENCE_THRESHOLD;
+        boolean hasImages = PdfUtils.hasImagesOnPage(document.getPage(pageNumber - 1));
+
+        if (hasText && hasImages) {
+            return FolioType.MIXED;
+        } else if (hasText) {
+            return FolioType.TEXT;
+        } else {
+            return FolioType.IMAGE;
+        }
+    }
+
+    /**
+     * Extract plain text from a single page, clipped to {@link #MAX_CHARACTERS_PER_PAGE}.
+     *
+     * @param document the open PDF
+     * @param pageNumber 1-based page number
+     * @return trimmed text, or empty string if the page has no extractable text
+     */
+    public String extractPageTextRaw(PDDocument document, int pageNumber) throws IOException {
+        PDFTextStripper stripper = new PDFTextStripper();
+        stripper.setStartPage(pageNumber);
+        stripper.setEndPage(pageNumber);
+        String text = stripper.getText(document).trim();
+        return clip(text, MAX_CHARACTERS_PER_PAGE);
+    }
+
+    /**
+     * Extract all tables from a single page as CSV strings.
+     *
+     * @param document the open PDF
+     * @param pageNumber 1-based page number
+     * @return list of CSV strings (one per table), empty if no tables found
+     */
+    public List<String> extractTablesAsCsv(PDDocument document, int pageNumber) throws IOException {
+        SpreadsheetExtractionAlgorithm sea = new SpreadsheetExtractionAlgorithm();
+        CSVFormat format =
+                CSVFormat.EXCEL.builder().setEscape('"').setQuoteMode(QuoteMode.ALL).build();
+        List<String> csvStrings = new ArrayList<>();
+
+        try (ObjectExtractor extractor = new ObjectExtractor(document)) {
+            Page tabulaPage = extractor.extract(pageNumber);
+            List<Table> tables = sea.extract(tabulaPage);
+
+            for (Table table : tables) {
+                StringWriter sw = new StringWriter();
+                FlexibleCSVWriter csvWriter = new FlexibleCSVWriter(format);
+                csvWriter.write(sw, Collections.singletonList(table));
+                csvStrings.add(sw.toString());
+            }
+        }
+        return csvStrings;
+    }
+
+    // -----------------------------------------------------------------------
+    // Workflow extraction (used by AiWorkflowService)
+    // -----------------------------------------------------------------------
 
     /**
      * Extracts content from the loaded files according to the requested content types and budget

@@ -1,17 +1,13 @@
 package stirling.software.proprietary.service;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.QuoteMode;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,12 +21,7 @@ import stirling.software.proprietary.model.api.ai.FolioManifest;
 import stirling.software.proprietary.model.api.ai.FolioType;
 import stirling.software.proprietary.model.api.ai.Requisition;
 import stirling.software.proprietary.model.api.ai.Verdict;
-import stirling.software.proprietary.pdf.FlexibleCSVWriter;
 
-import technology.tabula.ObjectExtractor;
-import technology.tabula.Page;
-import technology.tabula.Table;
-import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 import tools.jackson.databind.ObjectMapper;
 
 /**
@@ -57,6 +48,7 @@ public class MathAuditorOrchestrator {
 
     private final AiEngineClient aiEngineClient;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final PdfContentExtractor pdfContentExtractor;
     private final ObjectMapper objectMapper;
 
     /**
@@ -66,7 +58,7 @@ public class MathAuditorOrchestrator {
      * @param tolerance Arithmetic tolerance — differences smaller than this are ignored.
      * @return The Auditor's final Verdict.
      */
-    public Verdict audit(MultipartFile pdfFile, BigDecimal tolerance) throws Exception {
+    public Verdict audit(MultipartFile pdfFile, BigDecimal tolerance) throws IOException {
         String sessionId = UUID.randomUUID().toString();
         log.info(
                 "[math-auditor-agent] audit started session={} file={} tolerance={}",
@@ -139,33 +131,11 @@ public class MathAuditorOrchestrator {
     // Page classification
     // -----------------------------------------------------------------------
 
-    private List<FolioType> classifyPages(PDDocument document) throws Exception {
+    private List<FolioType> classifyPages(PDDocument document) throws IOException {
         List<FolioType> types = new ArrayList<>();
-        PDFTextStripper stripper = new PDFTextStripper();
-
-        for (int pageNum = 1; pageNum <= document.getNumberOfPages(); pageNum++) {
-            stripper.setStartPage(pageNum);
-            stripper.setEndPage(pageNum);
-            String text = stripper.getText(document).strip();
-
-            boolean hasText = text.length() > 20;
-            boolean hasImages =
-                    document.getPage(pageNum - 1).getResources().getXObjectNames() != null
-                            && document.getPage(pageNum - 1)
-                                    .getResources()
-                                    .getXObjectNames()
-                                    .iterator()
-                                    .hasNext();
-
-            if (hasText && hasImages) {
-                types.add(FolioType.MIXED);
-            } else if (hasText) {
-                types.add(FolioType.TEXT);
-            } else {
-                types.add(FolioType.IMAGE);
-            }
+        for (int page = 1; page <= document.getNumberOfPages(); page++) {
+            types.add(pdfContentExtractor.classifyPage(document, page));
         }
-
         return types;
     }
 
@@ -179,7 +149,7 @@ public class MathAuditorOrchestrator {
             Requisition requisition,
             int round,
             boolean finalRound)
-            throws Exception {
+            throws IOException {
 
         List<Integer> allPages =
                 union(requisition.needText(), requisition.needTables(), requisition.needOcr());
@@ -193,34 +163,30 @@ public class MathAuditorOrchestrator {
         List<Folio> folios = new ArrayList<>();
         List<Integer> unauditablePages = new ArrayList<>();
 
-        boolean needsTableExtraction =
-                requisition.needTables() != null && !requisition.needTables().isEmpty();
+        for (int page : allPages) {
+            // Page indices from Python are 0-based; PdfContentExtractor uses 1-based
+            int pageNumber = page + 1;
+            String text = null;
+            List<String> tables = null;
+            String ocrText = null;
 
-        try (ObjectExtractor tabulaExtractor =
-                needsTableExtraction ? new ObjectExtractor(document) : null) {
-            for (int page : allPages) {
-                String text = null;
-                List<String> tables = null;
-                String ocrText = null;
+            if (contains(requisition.needText(), page)) {
+                text = pdfContentExtractor.extractPageTextRaw(document, pageNumber);
+            }
+            if (contains(requisition.needTables(), page)) {
+                tables = pdfContentExtractor.extractTablesAsCsv(document, pageNumber);
+            }
+            if (contains(requisition.needOcr(), page)) {
+                log.warn(
+                        "[math-auditor-agent] session={} OCR requested for page {} but not yet"
+                                + " wired - marking unauditable",
+                        sessionId,
+                        page);
+                unauditablePages.add(page);
+            }
 
-                if (contains(requisition.needText(), page)) {
-                    text = extractText(document, page);
-                }
-                if (contains(requisition.needTables(), page) && tabulaExtractor != null) {
-                    tables = extractTables(tabulaExtractor, page);
-                }
-                if (contains(requisition.needOcr(), page)) {
-                    log.warn(
-                            "[math-auditor-agent] session={} OCR requested for page {} but not yet"
-                                    + " wired — marking unauditable",
-                            sessionId,
-                            page);
-                    unauditablePages.add(page);
-                }
-
-                if (text != null || tables != null) {
-                    folios.add(new Folio(page, text, tables, ocrText, null));
-                }
+            if (text != null || tables != null) {
+                folios.add(new Folio(page, text, tables, ocrText, null));
             }
         }
 
@@ -232,32 +198,6 @@ public class MathAuditorOrchestrator {
                 folios.size(),
                 unauditablePages.size());
         return new Evidence(sessionId, folios, round, finalRound, unauditablePages);
-    }
-
-    private String extractText(PDDocument document, int page) throws Exception {
-        PDFTextStripper stripper = new PDFTextStripper();
-        stripper.setStartPage(page + 1);
-        stripper.setEndPage(page + 1);
-        return stripper.getText(document).strip();
-    }
-
-    private List<String> extractTables(ObjectExtractor extractor, int page) throws Exception {
-        SpreadsheetExtractionAlgorithm sea = new SpreadsheetExtractionAlgorithm();
-        CSVFormat format =
-                CSVFormat.EXCEL.builder().setEscape('"').setQuoteMode(QuoteMode.ALL).build();
-        List<String> csvStrings = new ArrayList<>();
-
-        Page tabulaPage = extractor.extract(page + 1);
-        List<Table> tables = sea.extract(tabulaPage);
-
-        for (Table table : tables) {
-            StringWriter sw = new StringWriter();
-            FlexibleCSVWriter csvWriter = new FlexibleCSVWriter(format);
-            csvWriter.write(sw, Collections.singletonList(table));
-            csvStrings.add(sw.toString());
-        }
-
-        return csvStrings;
     }
 
     // -----------------------------------------------------------------------
