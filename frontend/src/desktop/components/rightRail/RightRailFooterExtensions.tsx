@@ -64,7 +64,6 @@ function ConnectionStatusDot() {
       offset={12}
       withArrow
       withinPortal
-      color="dark"
     >
       <Box
         component="span"

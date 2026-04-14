@@ -51,7 +51,6 @@ export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({ 
       offset={12}
       withArrow
       withinPortal
-      color="dark"
     >
       <Box
         component="span"
