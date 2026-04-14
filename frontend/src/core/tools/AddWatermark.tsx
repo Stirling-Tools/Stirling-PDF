@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useFileSelection } from "@app/contexts/FileContext";
+import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 
@@ -24,7 +24,7 @@ import { BaseToolProps, ToolComponent } from "@app/types/tool";
 
 const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { selectedFiles } = useFileSelection();
+  const selectedFiles = useViewScopedFiles();
 
   const [collapsedType, setCollapsedType] = useState(false);
   const [collapsedStyle, setCollapsedStyle] = useState(true);
@@ -40,7 +40,6 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
 
   // Endpoint validation
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("add-watermark");
-
 
   useEffect(() => {
     watermarkOperation.resetResults();
@@ -199,7 +198,8 @@ const AddWatermark = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => 
       isVisible: !hasResults,
       loadingText: t("loading"),
       onClick: handleAddWatermark,
-      disabled: !watermarkParams.validateParameters() || !hasFiles || !endpointEnabled,
+      endpointEnabled: endpointEnabled,
+      paramsValid: watermarkParams.validateParameters(),
     },
     review: {
       isVisible: hasResults,

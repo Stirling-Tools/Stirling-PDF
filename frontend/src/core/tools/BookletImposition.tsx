@@ -10,12 +10,7 @@ import { BaseToolProps, ToolComponent } from "@app/types/tool";
 const BookletImposition = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
-  const base = useBaseTool(
-    'bookletImposition',
-    useBookletImpositionParameters,
-    useBookletImpositionOperation,
-    props
-  );
+  const base = useBaseTool("bookletImposition", useBookletImpositionParameters, useBookletImpositionOperation, props);
 
   const bookletTips = useBookletImpositionTips();
 
@@ -44,7 +39,8 @@ const BookletImposition = (props: BaseToolProps) => {
       isVisible: !base.hasResults,
       loadingText: t("loading"),
       onClick: base.handleExecute,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+      endpointEnabled: base.endpointEnabled,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,

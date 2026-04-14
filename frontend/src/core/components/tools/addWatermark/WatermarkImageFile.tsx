@@ -16,10 +16,10 @@ const WatermarkImageFile = ({ parameters, onParameterChange, disabled = false }:
     <Stack gap="sm">
       <FileUploadButton
         file={parameters.watermarkImage}
-        onChange={(file) => onParameterChange('watermarkImage', file || undefined)}
+        onChange={(file) => onParameterChange("watermarkImage", file || undefined)}
         accept="image/*"
         disabled={disabled}
-        placeholder={t('watermark.settings.image.choose', 'Choose Image')}
+        placeholder={t("watermark.settings.image.choose", "Choose Image")}
       />
     </Stack>
   );

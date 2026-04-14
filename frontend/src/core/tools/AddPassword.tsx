@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useFileSelection } from "@app/contexts/FileContext";
+import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 
@@ -16,7 +16,7 @@ import { BaseToolProps, ToolComponent } from "@app/types/tool";
 
 const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { selectedFiles } = useFileSelection();
+  const selectedFiles = useViewScopedFiles();
 
   const [collapsedPermissions, setCollapsedPermissions] = useState(true);
 
@@ -27,8 +27,6 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   // Endpoint validation
   const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(addPasswordParams.getEndpointName());
-
-
 
   useEffect(() => {
     addPasswordOperation.resetResults();
@@ -106,7 +104,8 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       isVisible: !hasResults,
       loadingText: t("loading"),
       onClick: handleAddPassword,
-      disabled: !addPasswordParams.validateParameters() || !hasFiles || !endpointEnabled,
+      endpointEnabled: endpointEnabled,
+      paramsValid: addPasswordParams.validateParameters(),
     },
     review: {
       isVisible: hasResults,

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
-import { useFileSelection } from "@app/contexts/FileContext";
+import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 
@@ -16,7 +16,7 @@ import { useAdvancedOCRTips } from "@app/components/tooltips/useAdvancedOCRTips"
 
 const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { selectedFiles } = useFileSelection();
+  const selectedFiles = useViewScopedFiles();
 
   const ocrParams = useOCRParameters();
   const ocrOperation = useOCROperation();
@@ -128,8 +128,9 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       text: t("ocr.operation.submit", "Process OCR and Review"),
       loadingText: t("loading"),
       onClick: handleOCR,
-      isVisible: hasValidSettings && !hasResults,
-      disabled: !ocrParams.validateParameters() || !hasFiles || !endpointEnabled,
+      isVisible: !hasResults,
+      endpointEnabled: endpointEnabled,
+      paramsValid: hasValidSettings,
     },
     review: {
       isVisible: hasResults,

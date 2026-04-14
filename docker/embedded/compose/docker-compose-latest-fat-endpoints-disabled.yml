@@ -3,12 +3,15 @@ services:
   stirling-pdf:
     container_name: Stirling-PDF-Fat-Disable-Endpoints
     image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat
+    build:
+      context: ../../../
+      dockerfile: docker/embedded/Dockerfile.fat
     deploy:
       resources:
         limits:
           memory: 4G
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP'"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080$${SYSTEM_ROOTURIPATH:-''}/api/v1/info/status | grep -q 'UP'"]
       interval: 5s
       timeout: 10s
       retries: 16

@@ -1,5 +1,5 @@
-import { MfaSetupResponse } from '@app/responses/Mfa/MfaResponse';
-import apiClient from '@app/services/apiClient';
+import { MfaSetupResponse } from "@app/responses/Mfa/MfaResponse";
+import apiClient from "@app/services/apiClient";
 
 export interface AccountData {
   username: string;
@@ -28,7 +28,7 @@ export const accountService = {
    * This is a public endpoint - doesn't require authentication
    */
   async getLoginPageData(): Promise<LoginPageData> {
-    const response = await apiClient.get<LoginPageData>('/api/v1/proprietary/ui-data/login');
+    const response = await apiClient.get<LoginPageData>("/api/v1/proprietary/ui-data/login");
     return response.data;
   },
 
@@ -36,7 +36,7 @@ export const accountService = {
    * Get current user account data
    */
   async getAccountData(): Promise<AccountData> {
-    const response = await apiClient.get<AccountData>('/api/v1/proprietary/ui-data/account');
+    const response = await apiClient.get<AccountData>("/api/v1/proprietary/ui-data/account", { suppressErrorToast: true });
     return response.data;
   },
 
@@ -45,9 +45,9 @@ export const accountService = {
    */
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
     const formData = new FormData();
-    formData.append('currentPassword', currentPassword);
-    formData.append('newPassword', newPassword);
-    await apiClient.post('/api/v1/user/change-password', formData);
+    formData.append("currentPassword", currentPassword);
+    formData.append("newPassword", newPassword);
+    await apiClient.post("/api/v1/user/change-password", formData);
   },
 
   /**
@@ -55,10 +55,10 @@ export const accountService = {
    */
   async changePasswordOnLogin(currentPassword: string, newPassword: string, confirmPassword: string): Promise<void> {
     const formData = new FormData();
-    formData.append('currentPassword', currentPassword);
-    formData.append('newPassword', newPassword);
-    formData.append('confirmPassword', confirmPassword);
-    await apiClient.post('/api/v1/user/change-password-on-login', formData, { responseType: 'json'});
+    formData.append("currentPassword", currentPassword);
+    formData.append("newPassword", newPassword);
+    formData.append("confirmPassword", confirmPassword);
+    await apiClient.post("/api/v1/user/change-password-on-login", formData, { responseType: "json" });
   },
 
   /**
@@ -66,25 +66,25 @@ export const accountService = {
    */
   async changeUsername(newUsername: string, currentPassword: string): Promise<void> {
     const formData = new FormData();
-    formData.append('currentPasswordChangeUsername', currentPassword);
-    formData.append('newUsername', newUsername);
-    await apiClient.post('/api/v1/user/change-username', formData);
+    formData.append("currentPasswordChangeUsername", currentPassword);
+    formData.append("newUsername", newUsername);
+    await apiClient.post("/api/v1/user/change-username", formData);
   },
 
   async requestMfaSetup(): Promise<MfaSetupResponse> {
-    const response = await apiClient.get<MfaSetupResponse>('/api/v1/auth/mfa/setup', { suppressErrorToast: true });
+    const response = await apiClient.get<MfaSetupResponse>("/api/v1/auth/mfa/setup", { suppressErrorToast: true });
     return response.data;
   },
 
   async enableMfa(code: string): Promise<void> {
-    await apiClient.post('/api/v1/auth/mfa/enable', { code }, { skipAuthRedirect: true });
+    await apiClient.post("/api/v1/auth/mfa/enable", { code }, { skipAuthRedirect: true });
   },
 
   async disableMfa(code: string): Promise<void> {
-    await apiClient.post('/api/v1/auth/mfa/disable', { code }, { skipAuthRedirect: true });
+    await apiClient.post("/api/v1/auth/mfa/disable", { code }, { skipAuthRedirect: true });
   },
 
   async cancelMfaSetup(): Promise<void> {
-    await apiClient.post('/api/v1/auth/mfa/setup/cancel', undefined, { suppressErrorToast: true });
+    await apiClient.post("/api/v1/auth/mfa/setup/cancel", undefined, { suppressErrorToast: true });
   },
 };

@@ -11,12 +11,7 @@ const ReplaceColor = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const replaceColorTips = useReplaceColorTips();
 
-  const base = useBaseTool(
-    'replaceColor',
-    useReplaceColorParameters,
-    useReplaceColorOperation,
-    props
-  );
+  const base = useBaseTool("replaceColor", useReplaceColorParameters, useReplaceColorOperation, props);
 
   return createToolFlow({
     files: {
@@ -43,7 +38,8 @@ const ReplaceColor = (props: BaseToolProps) => {
       isVisible: !base.hasResults,
       loadingText: t("loading"),
       onClick: base.handleExecute,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+      endpointEnabled: base.endpointEnabled,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,

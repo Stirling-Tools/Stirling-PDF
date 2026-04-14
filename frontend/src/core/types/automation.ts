@@ -25,7 +25,8 @@ export interface AutomationTool {
   parameters?: Record<string, any>;
 }
 
-export type AutomationStep = typeof import('@app/constants/automation').AUTOMATION_STEPS[keyof typeof import('@app/constants/automation').AUTOMATION_STEPS];
+export type AutomationStep =
+  (typeof import("@app/constants/automation").AUTOMATION_STEPS)[keyof typeof import("@app/constants/automation").AUTOMATION_STEPS];
 
 export interface AutomationStepData {
   step: AutomationStep;
@@ -37,7 +38,7 @@ export interface ExecutionStep {
   id: string;
   operation: string;
   name: string;
-  status: 'pending' | 'running' | 'completed' | 'error';
+  status: "pending" | "running" | "completed" | "error";
   error?: string;
 }
 
@@ -52,9 +53,9 @@ export interface AutomateParameters extends AutomationExecutionCallbacks {
 }
 
 export enum AutomationMode {
-  CREATE = 'create',
-  EDIT = 'edit',
-  SUGGESTED = 'suggested'
+  CREATE = "create",
+  EDIT = "edit",
+  SUGGESTED = "suggested",
 }
 
 export interface SuggestedAutomation {

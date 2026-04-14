@@ -11,12 +11,7 @@ const RemoveBlanks = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const tooltipContent = useRemoveBlanksTips();
 
-  const base = useBaseTool(
-    'remove-blanks',
-    useRemoveBlanksParameters,
-    useRemoveBlanksOperation,
-    props
-  );
+  const base = useBaseTool("remove-blanks", useRemoveBlanksParameters, useRemoveBlanksOperation, props);
 
   const settingsContent = (
     <RemoveBlanksSettings
@@ -51,7 +46,8 @@ const RemoveBlanks = (props: BaseToolProps) => {
       loadingText: t("loading"),
       onClick: base.handleExecute,
       isVisible: !base.hasResults,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+      endpointEnabled: base.endpointEnabled,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,
@@ -66,5 +62,3 @@ const RemoveBlanks = (props: BaseToolProps) => {
 RemoveBlanks.tool = () => useRemoveBlanksOperation;
 
 export default RemoveBlanks as ToolComponent;
-
-

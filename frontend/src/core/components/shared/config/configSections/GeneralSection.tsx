@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Paper,
   Stack,
@@ -7,6 +7,7 @@ import {
   Tooltip,
   NumberInput,
   SegmentedControl,
+  Select,
   Code,
   Group,
   Anchor,
@@ -19,11 +20,12 @@ import { useTranslation } from "react-i18next";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import type { ToolPanelMode } from "@app/constants/toolPanel";
+import type { StartupView, ViewerZoomSetting } from "@app/services/preferencesService";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { updateService, UpdateSummary } from "@app/services/updateService";
 import UpdateModal from "@app/components/shared/UpdateModal";
-import { getVersion } from "@tauri-apps/api/app";
-import { isTauri } from "@tauri-apps/api/core";
+import { useFrontendVersionInfo } from "@app/hooks/useFrontendVersionInfo";
 
 const DEFAULT_AUTO_UNZIP_FILE_LIMIT = 4;
 const BANNER_DISMISSED_KEY = "stirlingpdf_features_banner_dismissed";
@@ -34,7 +36,11 @@ interface GeneralSectionProps {
   hideAdminBanner?: boolean;
 }
 
-const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hideUpdateSection = false, hideAdminBanner = false }) => {
+const GeneralSection: React.FC<GeneralSectionProps> = ({
+  hideTitle = false,
+  hideUpdateSection = false,
+  hideAdminBanner = false,
+}) => {
   const { t } = useTranslation();
   const { preferences, updatePreference } = usePreferences();
   const { config } = useAppConfig();
@@ -46,10 +52,8 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
   const [updateSummary, setUpdateSummary] = useState<UpdateSummary | null>(null);
   const [updateModalOpened, setUpdateModalOpened] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
-  const [mismatchVersion, setMismatchVersion] = useState(false);
-  const isTauriApp = useMemo(() => isTauri(), []);
-  const [appVersion, setAppVersion] = useState<string | null>(null);
-  const frontendVersionLabel = appVersion ?? t("common.loading", "Loading...");
+  const { appVersion, mismatchVersion } = useFrontendVersionInfo(config?.appVersion);
+  const frontendVersionLabel = appVersion ?? t("common.loading", "Loading..."); // null = loading, shown only when appVersion !== undefined
 
   // Sync local state with preference changes
   useEffect(() => {
@@ -90,52 +94,6 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
     }
     setCheckingUpdate(false);
   };
-
-  useEffect(() => {
-    if (!isTauriApp) {
-      setMismatchVersion(false);
-      return;
-    }
-
-    let cancelled = false;
-    const fetchFrontendVersion = async () => {
-      try {
-        const frontendVersion = await getVersion();
-        if (!cancelled) {
-          setAppVersion(frontendVersion);
-        }
-      } catch (error) {
-        console.error("[GeneralSection] Failed to fetch frontend version:", error);
-      }
-    };
-
-    fetchFrontendVersion();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isTauriApp]);
-
-  useEffect(() => {
-    if (!isTauriApp) {
-      return;
-    }
-
-    if (!appVersion || !config?.appVersion) {
-      setMismatchVersion(false);
-      return;
-    }
-
-    if (appVersion !== config.appVersion) {
-      console.warn("[GeneralSection] Mismatch between Tauri version and AppConfig version:", {
-        backendVersion: config.appVersion,
-        frontendVersion: appVersion,
-      });
-      setMismatchVersion(true);
-    } else {
-      setMismatchVersion(false);
-    }
-  }, [isTauriApp, appVersion, config?.appVersion]);
 
   // Check if login is disabled
   const loginDisabled = !config?.enableLogin;
@@ -239,7 +197,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
                 )}
               </Group>
             </div>
-            {isTauriApp && (
+            {appVersion !== undefined && (
               <Group justify="space-between" align="center">
                 <div>
                   <Text size="sm" c="dimmed">
@@ -340,6 +298,61 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({ hideTitle = false, hide
                 { label: t("settings.general.mode.sidebar", "Sidebar"), value: "sidebar" },
                 { label: t("settings.general.mode.fullscreen", "Fullscreen"), value: "fullscreen" },
               ]}
+            />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <Text fw={500} size="sm">
+                {t("settings.general.defaultStartupView", "Default view on launch")}
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t(
+                  "settings.general.defaultStartupViewDescription",
+                  "Choose which tab is active in the left column when the app starts",
+                )}
+              </Text>
+            </div>
+            <SegmentedControl
+              value={preferences.defaultStartupView}
+              onChange={(val: string) => updatePreference("defaultStartupView", val as StartupView)}
+              data={[
+                { label: t("settings.general.startupView.tools", "Tools"), value: "tools" },
+                { label: t("settings.general.startupView.read", "Reader"), value: "read" },
+                { label: t("settings.general.startupView.automate", "Automate"), value: "automate" },
+              ]}
+            />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <Text fw={500} size="sm">
+                {t("settings.general.defaultViewerZoom", "Default reader zoom")}
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                {t(
+                  "settings.general.defaultViewerZoomDescription",
+                  "Set the default zoom level when opening PDFs in the reader",
+                )}
+              </Text>
+            </div>
+            <Select
+              value={preferences.defaultViewerZoom}
+              onChange={(val: string | null) => {
+                if (val) updatePreference("defaultViewerZoom", val as ViewerZoomSetting);
+              }}
+              data={[
+                { label: t("settings.general.zoomLevel.auto", "Auto"), value: "auto" },
+                { label: t("settings.general.zoomLevel.fitWidth", "Fit width"), value: "fitWidth" },
+                { label: t("settings.general.zoomLevel.fitPage", "Fit page"), value: "fitPage" },
+                { label: "50%", value: "50" },
+                { label: "75%", value: "75" },
+                { label: "100%", value: "100" },
+                { label: "125%", value: "125" },
+                { label: "150%", value: "150" },
+                { label: "200%", value: "200" },
+              ]}
+              style={{ width: 140 }}
+              allowDeselect={false}
+              comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
             />
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>

@@ -11,12 +11,7 @@ const RemoveAnnotations = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const removeAnnotationsTips = useRemoveAnnotationsTips();
 
-  const base = useBaseTool(
-    'removeAnnotations',
-    useRemoveAnnotationsParameters,
-    useRemoveAnnotationsOperation,
-    props
-  );
+  const base = useBaseTool("removeAnnotations", useRemoveAnnotationsParameters, useRemoveAnnotationsOperation, props);
 
   return createToolFlow({
     files: {
@@ -37,7 +32,7 @@ const RemoveAnnotations = (props: BaseToolProps) => {
       isVisible: !base.hasResults,
       loadingText: t("loading", "Processing..."),
       onClick: base.handleExecute,
-      disabled: !base.params.validateParameters() || !base.hasFiles,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,

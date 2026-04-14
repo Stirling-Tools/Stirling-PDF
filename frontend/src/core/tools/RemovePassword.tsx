@@ -11,12 +11,7 @@ const RemovePassword = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const removePasswordTips = useRemovePasswordTips();
 
-  const base = useBaseTool(
-    'removePassword',
-    useRemovePasswordParameters,
-    useRemovePasswordOperation,
-    props
-  );
+  const base = useBaseTool("removePassword", useRemovePasswordParameters, useRemovePasswordOperation, props);
 
   return createToolFlow({
     files: {
@@ -43,7 +38,8 @@ const RemovePassword = (props: BaseToolProps) => {
       isVisible: !base.hasResults,
       loadingText: t("loading"),
       onClick: base.handleExecute,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+      endpointEnabled: base.endpointEnabled,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,

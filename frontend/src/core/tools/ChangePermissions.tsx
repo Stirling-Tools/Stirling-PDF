@@ -11,12 +11,7 @@ const ChangePermissions = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const changePermissionsTips = useChangePermissionsTips();
 
-  const base = useBaseTool(
-    'changePermissions',
-    useChangePermissionsParameters,
-    useChangePermissionsOperation,
-    props
-  );
+  const base = useBaseTool("changePermissions", useChangePermissionsParameters, useChangePermissionsOperation, props);
 
   return createToolFlow({
     files: {
@@ -43,7 +38,8 @@ const ChangePermissions = (props: BaseToolProps) => {
       isVisible: !base.hasResults,
       loadingText: t("loading"),
       onClick: base.handleExecute,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+      endpointEnabled: base.endpointEnabled,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,

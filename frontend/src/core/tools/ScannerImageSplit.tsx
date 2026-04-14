@@ -11,12 +11,7 @@ const ScannerImageSplit = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const scannerImageSplitTips = useScannerImageSplitTips();
 
-  const base = useBaseTool(
-    'scannerImageSplit',
-    useScannerImageSplitParameters,
-    useScannerImageSplitOperation,
-    props
-  );
+  const base = useBaseTool("scannerImageSplit", useScannerImageSplitParameters, useScannerImageSplitOperation, props);
 
   return createToolFlow({
     files: {
@@ -43,7 +38,8 @@ const ScannerImageSplit = (props: BaseToolProps) => {
       isVisible: !base.hasResults,
       loadingText: t("loading"),
       onClick: base.handleExecute,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+      endpointEnabled: base.endpointEnabled,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,

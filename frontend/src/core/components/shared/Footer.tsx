@@ -1,7 +1,7 @@
-import { Flex } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { useCookieConsent } from '@app/hooks/useCookieConsent';
-import { useFooterInfo } from '@app/hooks/useFooterInfo';
+import { Flex } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { useCookieConsent } from "@app/hooks/useCookieConsent";
+import { useFooterInfo } from "@app/hooks/useFooterInfo";
 
 interface FooterProps {
   privacyPolicy?: string;
@@ -20,7 +20,7 @@ export default function Footer({
   cookiePolicy,
   impressum,
   analyticsEnabled,
-  forceLightMode = false
+  forceLightMode = false,
 }: FooterProps) {
   const { t } = useTranslation();
   const { footerInfo } = useFooterInfo();
@@ -49,101 +49,71 @@ export default function Footer({
   const isValidLink = (link?: string) => link && link.trim().length > 0;
 
   return (
-    <div style={{
-      height: 'var(--footer-height)',
-      backgroundColor: forceLightMode ? '#f1f3f5' : 'var(--mantine-color-gray-1)',
-      borderTop: forceLightMode ? '1px solid #e9ecef' : '1px solid var(--mantine-color-gray-2)',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-    }}>
-        <Flex gap="md"
-          justify="center"
-          align="center"
-          direction="row"
-          style={{
-            fontSize: '0.75rem',
-            color: forceLightMode ? '#495057' : undefined
-          }}>
-          <a
-            className="footer-link px-3"
-            id="survey"
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://stirlingpdf.info/s/cm28y3niq000o56dv7liv8wsu"
-          >
-            {t('survey.nav', 'Survey')}
+    <div
+      style={{
+        height: "var(--footer-height)",
+        backgroundColor: forceLightMode ? "#f1f3f5" : "var(--mantine-color-gray-1)",
+        borderTop: forceLightMode ? "1px solid #e9ecef" : "1px solid var(--mantine-color-gray-2)",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+      }}
+    >
+      <Flex
+        gap="md"
+        justify="center"
+        align="center"
+        direction="row"
+        style={{
+          fontSize: "0.75rem",
+          color: forceLightMode ? "#495057" : undefined,
+        }}
+      >
+        <a
+          className="footer-link px-3"
+          id="survey"
+          target="_blank"
+          rel="noopener noreferrer"
+          href="https://stirlingpdf.info/s/cm28y3niq000o56dv7liv8wsu"
+        >
+          {t("survey.nav", "Survey")}
+        </a>
+        <a className="footer-link px-3" target="_blank" rel="noopener noreferrer" href={finalPrivacyUrl}>
+          {t("legal.privacy", "Privacy Policy")}
+        </a>
+        <a className="footer-link px-3" target="_blank" rel="noopener noreferrer" href={finalTermsUrl}>
+          {t("legal.terms", "Terms and Conditions")}
+        </a>
+        <a className="footer-link px-3" target="_blank" rel="noopener noreferrer" href="https://discord.gg/Cn8pWhQRxZ">
+          {t("footer.discord", "Discord")}
+        </a>
+        <a
+          className="footer-link px-3"
+          target="_blank"
+          rel="noopener noreferrer"
+          href="https://github.com/Stirling-Tools/Stirling-PDF"
+        >
+          {t("footer.issues", "GitHub")}
+        </a>
+        <a className="footer-link px-3" target="_blank" rel="noopener noreferrer" href={finalAccessibilityUrl}>
+          {t("legal.accessibility", "Accessibility")}
+        </a>
+        {isValidLink(finalCookiePolicy) && (
+          <a className="footer-link px-3" target="_blank" rel="noopener noreferrer" href={finalCookiePolicy}>
+            {t("legal.cookie", "Cookie Policy")}
           </a>
-          <a
-            className="footer-link px-3"
-            target="_blank"
-            rel="noopener noreferrer"
-            href={finalPrivacyUrl}
-          >
-            {t('legal.privacy', 'Privacy Policy')}
+        )}
+        {isValidLink(finalImpressum) && (
+          <a className="footer-link px-3" target="_blank" rel="noopener noreferrer" href={finalImpressum}>
+            {t("legal.impressum", "Impressum")}
           </a>
-          <a
-            className="footer-link px-3"
-            target="_blank"
-            rel="noopener noreferrer"
-            href={finalTermsUrl}
-          >
-            {t('legal.terms', 'Terms and Conditions')}
-          </a>
-          <a
-            className="footer-link px-3"
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://discord.gg/Cn8pWhQRxZ"
-          >
-            {t('footer.discord', 'Discord')}
-          </a>
-          <a
-            className="footer-link px-3"
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://github.com/Stirling-Tools/Stirling-PDF"
-          >
-            {t('footer.issues', 'GitHub')}
-          </a>
-          <a
-            className="footer-link px-3"
-            target="_blank"
-            rel="noopener noreferrer"
-            href={finalAccessibilityUrl}
-          >
-            {t('legal.accessibility', 'Accessibility')}
-          </a>
-          {isValidLink(finalCookiePolicy) && (
-            <a
-              className="footer-link px-3"
-              target="_blank"
-              rel="noopener noreferrer"
-              href={finalCookiePolicy}
-            >
-              {t('legal.cookie', 'Cookie Policy')}
-            </a>
-          )}
-          {isValidLink(finalImpressum) && (
-            <a
-              className="footer-link px-3"
-              target="_blank"
-              rel="noopener noreferrer"
-              href={finalImpressum}
-            >
-              {t('legal.impressum', 'Impressum')}
-            </a>
-          )}
-          {finalAnalyticsEnabled && (
-            <button
-              className="footer-link px-3"
-              id="cookieBanner"
-              onClick={showCookiePreferences}
-            >
-              {t('legal.showCookieBanner', 'Cookie Preferences')}
-            </button>
-          )}
-        </Flex>
+        )}
+        {finalAnalyticsEnabled && (
+          <button className="footer-link px-3" id="cookieBanner" onClick={showCookiePreferences}>
+            {t("legal.showCookieBanner", "Cookie Preferences")}
+          </button>
+        )}
+      </Flex>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useFileSelection } from "@app/contexts/FileContext";
+import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
@@ -12,7 +12,7 @@ import AddPageNumbersAppearanceSettings from "@app/components/tools/addPageNumbe
 
 const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { selectedFiles } = useFileSelection();
+  const selectedFiles = useViewScopedFiles();
 
   const params = useAddPageNumbersParameters();
   const operation = useAddPageNumbersOperation();
@@ -39,9 +39,9 @@ const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
   const hasResults = operation.files.length > 0 || operation.downloadUrl !== null;
 
   enum AddPageNumbersStep {
-    NONE = 'none',
-    POSITION_AND_PAGES = 'position_and_pages',
-    CUSTOMIZE = 'customize'
+    NONE = "none",
+    POSITION_AND_PAGES = "position_and_pages",
+    CUSTOMIZE = "customize",
   }
 
   const accordion = useAccordionSteps<AddPageNumbersStep>({
@@ -49,12 +49,12 @@ const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
     initialStep: AddPageNumbersStep.POSITION_AND_PAGES,
     stateConditions: {
       hasFiles,
-      hasResults
+      hasResults,
     },
     afterResults: () => {
       operation.resetResults();
       onPreviewFile?.(null);
-    }
+    },
   });
 
   const getSteps = () => {
@@ -102,16 +102,17 @@ const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
     },
     steps: getSteps(),
     executeButton: {
-      text: t('addPageNumbers.submit', 'Add Page Numbers'),
+      text: t("addPageNumbers.submit", "Add Page Numbers"),
       isVisible: !hasResults,
-      loadingText: t('loading'),
+      loadingText: t("loading"),
       onClick: handleExecute,
-      disabled: !params.validateParameters() || !hasFiles || !endpointEnabled,
+      endpointEnabled: endpointEnabled,
+      paramsValid: params.validateParameters(),
     },
     review: {
       isVisible: hasResults,
       operation: operation,
-      title: t('addPageNumbers.results.title', 'Page Number Results'),
+      title: t("addPageNumbers.results.title", "Page Number Results"),
       onFileClick: (file) => onPreviewFile?.(file),
       onUndo: async () => {
         await operation.undoOperation();

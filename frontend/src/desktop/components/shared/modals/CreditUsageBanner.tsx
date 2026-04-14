@@ -1,5 +1,5 @@
-import { Divider, Group, Text, Progress, Stack } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
+import { Divider, Group, Text, Progress, Stack } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 interface CreditUsageBannerProps {
   currentCredits: number;
@@ -20,10 +20,10 @@ export function CreditUsageBanner({ currentCredits, totalCredits }: CreditUsageB
       <Stack gap="xs" pr="md" pl="md">
         <Group gap="xs" justify="space-between" align="center">
           <Text size="md" fw={400} c="dimmed">
-            {t('credits.modal.creditsThisMonth', 'Monthly credits')}
+            {t("credits.modal.creditsThisMonth", "Monthly credits")}
           </Text>
-          <Text size="md" fw={600} style={{ color: 'var(--text-primary)' }}>
-            {t('credits.modal.creditsRemaining', '{{current}} of {{total}} remaining', {
+          <Text size="md" fw={600} style={{ color: "var(--text-primary)" }}>
+            {t("credits.modal.creditsRemaining", "{{current}} of {{total}} remaining", {
               current: currentCredits,
               total: totalCredits,
             })}
@@ -35,7 +35,7 @@ export function CreditUsageBanner({ currentCredits, totalCredits }: CreditUsageB
           radius="xl"
           color="blue"
           styles={{
-            root: { backgroundColor: 'var(--bg-raised)' },
+            root: { backgroundColor: "var(--bg-raised)" },
           }}
         />
       </Stack>

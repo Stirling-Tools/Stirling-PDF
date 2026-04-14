@@ -1,7 +1,7 @@
-import { StirlingFile } from '@app/types/fileContext';
-import type { ResponseHandler } from '@app/utils/toolResponseProcessor';
-import { ToolId } from '@app/types/toolId';
-import type { ProcessingProgress } from '@app/hooks/tools/shared/useToolState';
+import { StirlingFile } from "@app/types/fileContext";
+import type { ResponseHandler } from "@app/utils/toolResponseProcessor";
+import { ToolId } from "@app/types/toolId";
+import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
 
 export type { ProcessingProgress, ResponseHandler };
 
@@ -10,6 +10,12 @@ export enum ToolType {
   multiFile,
   custom,
 }
+
+/**
+ * Reason the execute button is disabled. Resolved to a translated tooltip by OperationButton.
+ * null means the button is enabled.
+ */
+export type ExecuteDisabledReason = "endpointUnavailable" | "noFiles" | "invalidParams" | "viewerMode" | null;
 
 /**
  * Result from custom processor with optional metadata about input consumption.
@@ -72,7 +78,7 @@ export interface SingleFileToolOperationConfig<TParams> extends BaseToolOperatio
   toolType: ToolType.singleFile;
 
   /** Builds FormData for API request. */
-  buildFormData: ((params: TParams, file: File) => FormData);
+  buildFormData: (params: TParams, file: File) => FormData;
 
   /** API endpoint for the operation. Can be static string or function for dynamic routing. */
   endpoint: string | ((params: TParams) => string);
@@ -88,7 +94,7 @@ export interface MultiFileToolOperationConfig<TParams> extends BaseToolOperation
   filePrefix: string;
 
   /** Builds FormData for API request. */
-  buildFormData: ((params: TParams, files: File[]) => FormData);
+  buildFormData: (params: TParams, files: File[]) => FormData;
 
   /** API endpoint for the operation. Can be static string or function for dynamic routing. */
   endpoint: string | ((params: TParams) => string);

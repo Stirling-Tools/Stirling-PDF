@@ -41,7 +41,8 @@ print_versions() {
   command_exists unoserver && unoserver --version 2>&1 | head -n 1 | log
   command_exists tesseract && tesseract --version | head -n 1 | log
   command_exists gs && gs --version | printf "Ghostscript %s\n" "$(cat)" | log
-  command_exists ffmpeg && ffmpeg -version | head -n 1 | log
+  # ffmpeg disabled due to raised CVEs
+  # command_exists ffmpeg && ffmpeg -version | head -n 1 | log
   command_exists pdfinfo && pdfinfo -v 2>&1 | head -n 1 | log
   command_exists fontforge && fontforge --version 2>&1 | head -n 1 | log
   command_exists unpaper && unpaper --version 2>&1 | head -n 1 | log
@@ -176,13 +177,6 @@ UNOSERVER_PIDS=()
 UNOSERVER_PORTS=()
 UNOSERVER_UNO_PORTS=()
 
-SU_EXEC_BIN=""
-if command_exists su-exec; then
-  SU_EXEC_BIN="su-exec"
-elif command_exists gosu; then
-  SU_EXEC_BIN="gosu"
-fi
-
 CURRENT_USER="$(id -un)"
 CURRENT_UID="$(id -u)"
 SWITCH_USER_WARNING_EMITTED=false
@@ -197,8 +191,12 @@ warn_switch_user_once() {
 run_as_runtime_user() {
   if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
     "$@"
-  elif [ "$CURRENT_UID" -eq 0 ] && [ -n "$SU_EXEC_BIN" ]; then
-    "$SU_EXEC_BIN" "$RUNTIME_USER" "$@"
+  elif [ "$CURRENT_UID" -eq 0 ] && command_exists setpriv; then
+    # Set HOME/USER/LOGNAME to match gosu behavior (setpriv does not touch env vars)
+    env HOME="$(getent passwd "$RUNTIME_USER" | cut -d: -f6)" \
+        USER="$RUNTIME_USER" \
+        LOGNAME="$RUNTIME_USER" \
+      setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "$@"
   else
     warn_switch_user_once
     "$@"
@@ -294,10 +292,20 @@ start_unoserver_watchdog() {
 
         if [ "$needs_restart" = true ]; then
           log "Restarting unoserver on 127.0.0.1:${port} (uno-port ${uno_port})"
-          # Kill the old process if it exists
+          # Kill the old process and its children (soffice) if it exists.
+          # Capture child PIDs first, then send TERM to children before parent
+          # so the PPID relationship is still visible. After sleep, use the
+          # saved PIDs for SIGKILL since the parent may have already exited
+          # and children would be reparented to init.
           if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+            local child_pids
+            child_pids=$(pgrep -P "$pid" 2>/dev/null || true)
+            pkill -TERM -P "$pid" 2>/dev/null || true
             kill -TERM "$pid" 2>/dev/null || true
-            sleep 1
+            sleep 3
+            if [ -n "$child_pids" ]; then
+              kill -KILL $child_pids 2>/dev/null || true
+            fi
             kill -KILL "$pid" 2>/dev/null || true
           fi
           start_unoserver_instance "$port" "$uno_port"
@@ -864,6 +872,21 @@ for p in "${CHOWN_PATHS[@]}"; do
   fi
 done
 
+# Verify write access to critical directories; repair if chown failed on bind mounts
+CRITICAL_DIRS=("/configs" "/logs" "/customFiles" "/pipeline")
+for dir in "${CRITICAL_DIRS[@]}"; do
+  if [ -d "$dir" ]; then
+    # Test write access as the runtime user
+    if ! run_as_runtime_user test -w "$dir" 2>/dev/null; then
+      log "WARNING: ${RUNTIME_USER} cannot write to $dir — attempting to fix permissions"
+      # Try adding group-write and world-write as fallbacks
+      chmod -R o+rwX "$dir" 2>/dev/null \
+        || chmod -R a+rwX "$dir" 2>/dev/null \
+        || log "ERROR: Could not grant ${RUNTIME_USER} write access to $dir. Check your volume mount permissions (e.g. set PUID/PGID or fix host directory ownership)."
+    fi
+  fi
+done
+
 # ---------- Xvfb ----------
 # Start a virtual framebuffer for GUI-based LibreOffice interactions.
 if command_exists Xvfb; then
@@ -915,8 +938,12 @@ fi
 
 if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
   "${JAVA_CMD[@]}" &
-elif [ "$CURRENT_UID" -eq 0 ] && [ -n "$SU_EXEC_BIN" ]; then
-  "$SU_EXEC_BIN" "$RUNTIME_USER" "${JAVA_CMD[@]}" &
+elif [ "$CURRENT_UID" -eq 0 ] && command_exists setpriv; then
+  # Set HOME/USER/LOGNAME to match gosu behavior (setpriv does not touch env vars)
+  env HOME="$(getent passwd "$RUNTIME_USER" | cut -d: -f6)" \
+      USER="$RUNTIME_USER" \
+      LOGNAME="$RUNTIME_USER" \
+    setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "${JAVA_CMD[@]}" &
 else
   warn_switch_user_once
   "${JAVA_CMD[@]}" &

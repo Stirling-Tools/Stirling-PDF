@@ -8,6 +8,7 @@ black = "Zwart"
 blue = "Blauw"
 bored = "Verveeld met wachten?"
 cancel = "Annuleren"
+confirm = "Bevestigen"
 changedCredsMessage = "Inloggegevens gewijzigd!"
 chooseFile = "Bestand kiezen"
 close = "Sluiten"
@@ -142,6 +143,11 @@ welcome = "Welkom"
 white = "Wit"
 WorkInProgess = "Werk in uitvoering. Werkt mogelijk niet of bevat fouten. Meld eventuele problemen!"
 yes = "Ja"
+insufficientCredits = "Onvoldoende credits. Vereist: {{requiredCredits}}, Beschikbaar: {{currentBalance}}, Tekort: {{shortfall}}"
+loadingCredits = "Credits controleren..."
+loadingProStatus = "Abonnementsstatus controleren..."
+noticeTopUpOrPlan = "Onvoldoende credits, vul aan of upgrade naar een abonnement"
+accessInvite = "Uitnodigen"
 
 [account]
 accountSettings = "Account instellingen"
@@ -1423,6 +1429,34 @@ title = "Processing"
 description = "Maximum time to wait for a processing job before reporting an error."
 label = "Processing Timeout (seconds)"
 
+[admin.settings.storage]
+description = "Serveropslag en deelopties beheren."
+title = "Bestandsopslag en delen"
+
+[admin.settings.storage.enabled]
+description = "Gebruikers toestaan bestanden op de server op te slaan."
+label = "Serverbestandsopslag inschakelen"
+
+[admin.settings.storage.sharing.email]
+description = "Delen met e-mailadressen toestaan."
+label = "E-mail delen inschakelen"
+mailLink = "E-mailinstellingen configureren"
+mailNote = "Vereist e-mailconfiguratie. "
+
+[admin.settings.storage.sharing.enabled]
+description = "Gebruikers toestaan opgeslagen bestanden te delen."
+label = "Delen inschakelen"
+
+[admin.settings.storage.sharing.links]
+description = "Delen via aangemelde links toestaan."
+frontendUrlLink = "Configureren in Systeeminstellingen"
+frontendUrlNote = "Vereist een Frontend URL. "
+label = "Koppelingen voor delen inschakelen"
+
+[admin.settings.storage.signing.enabled]
+description = "Gebruikers toestaan ondertekeningssessies met meerdere deelnemers te maken. Vereist dat serverbestandsopslag is ingeschakeld."
+label = "Groepsondertekenen inschakelen (Alpha)"
+
 [admin.settings.unsavedChanges]
 cancel = "Verder bewerken"
 discard = "Wijzigingen verwerpen"
@@ -1513,6 +1547,7 @@ editStampHint = "Om de afbeelding te wijzigen; verwijder deze stempel en voeg ee
 editSwitchToSelect = "Schakel over op Selecten & Bewerken om deze annotatie te bewerken."
 editText = "Tekstkader bewerken"
 editTextMarkup = "Tekstannotatie bewerken"
+annotationStyle = "Annotatiestijl"
 ellipse = "Ellips"
 exit = "Annotatiemodus sluiten"
 fillColor = "Vulkleur"
@@ -1523,13 +1558,19 @@ highlight = "Markeren"
 imagePreview = "Voorbeeld"
 inkHighlighter = "Vrije hand marker"
 line = "Lijn"
+lineArrow = "Pijl"
 noBackground = "Geen achtergrond"
 note = "Notitie"
+comment = "Opmerking"
+comments = "Opmerkingen"
+insertText = "Tekst invoegen"
+replaceText = "Tekst vervangen"
 noteIcon = "Notitiepictogram"
 notesStamps = "Notities & Stempels"
 opacity = "Dekking"
 pen = "Pen"
 polygon = "Veelhoek"
+polyline = "Polylijn"
 properties = "Eigenschappen"
 rectangle = "Rechthoek"
 redo = "Opnieuw uitvoeren"
@@ -2048,7 +2089,19 @@ numbers = "Cijfers/reeksen: 5, 10-20"
 progressions = "Voortgangen: 3n, 4n+1"
 
 [certSign]
+allSigned = "Alle deelnemers hebben getekend. Klaar om te finaliseren."
+awaitingSignatures = "In afwachting van handtekeningen"
+signatureProgress = "{{signedCount}}/{{totalCount}} handtekeningen"
 chooseCertificate = "Certificaatbestand kiezen"
+declined = "Geweigerd"
+fetchFailed = "Ondertekeningsgegevens laden mislukt"
+finalized = "Gefinaliseerd"
+notified = "In afwachting"
+partialNote = "U kunt vroegtijdig finaliseren met de huidige handtekeningen. Niet-ondertekende deelnemers worden uitgesloten."
+pending = "In afwachting"
+readyToFinalize = "Klaar om te finaliseren"
+signed = "Ondertekend"
+viewed = "Bekeken"
 chooseJksFile = "JKS-bestand kiezen"
 chooseP12File = "PKCS12-bestand kiezen"
 choosePfxFile = "PFX-bestand kiezen"
@@ -2071,6 +2124,7 @@ title = "Certificaat ondertekening"
 invisible = "Onzichtbaar"
 stepTitle = "Weergave van handtekening"
 visible = "Zichtbaar"
+visibility = "Zichtbaarheid"
 
 [certSign.appearance.options]
 title = "Handtekeningdetails"
@@ -2176,6 +2230,252 @@ bullet3 = "Controleert of het document na ondertekening is gewijzigd"
 bullet4 = "Kan aangepaste certificaten gebruiken voor verificatie"
 text = "Wanneer u handtekeningen controleert, geeft de tool aan of ze geldig zijn, wie het document heeft ondertekend, wanneer het is ondertekend en of het document na ondertekening is gewijzigd."
 title = "Handtekeningen controleren"
+
+[certSign.collab.finalize]
+button = "Finaliseren en ondertekende PDF laden"
+early = "Finaliseren met huidige handtekeningen"
+
+[certSign.collab.sessionDetail]
+addButton = "Deelnemers toevoegen"
+addParticipants = "Deelnemers toevoegen"
+addParticipantsError = "Deelnemers toevoegen mislukt"
+backToList = "Terug naar sessies"
+deleteConfirm = "Weet u het zeker? Dit kan niet ongedaan worden gemaakt."
+deleteError = "Sessie verwijderen mislukt"
+deleted = "Sessie verwijderd"
+deleteSession = "Sessie verwijderen"
+dueDate = "Vervaldatum"
+finalizeError = "Sessie finaliseren mislukt"
+loadPdfError = "Ondertekende PDF laden mislukt"
+loadSignedPdf = "Ondertekende PDF laden in actieve bestanden"
+messageLabel = "Bericht"
+noAdditionalInfo = "Geen aanvullende informatie"
+owner = "Eigenaar"
+participantRemoved = "Deelnemer verwijderd"
+participants = "Deelnemers"
+participantsAdded = "Deelnemers succesvol toegevoegd"
+removeParticipant = "Verwijderen"
+removeParticipantError = "Deelnemer verwijderen mislukt"
+selectUsers = "Gebruikers selecteren..."
+sessionInfo = "Sessie-informatie"
+workbenchTitle = "Sessiebeheer"
+
+[certSign.collab.signRequest]
+addedToFiles = "Document toegevoegd aan actieve bestanden"
+addSignature = "Uw handtekening toevoegen"
+addToFiles = "Toevoegen aan actieve bestanden"
+advancedSettings = "Geavanceerde instellingen"
+backToList = "Terug naar ondertekeningsverzoeken"
+certificateChoice = "Selecteer een certificaat om mee te ondertekenen"
+changeSignature = "Handtekening wijzigen"
+clearSignature = "Handtekening wissen"
+completeAndSign = "Voltooien en ondertekenen"
+createNewSignature = "Nieuwe handtekening maken"
+declineButton = "Weigeren"
+decline = "Verzoek weigeren"
+deleteSelected = "Geselecteerde handtekening verwijderen"
+drawSignature = "Teken hieronder uw handtekening"
+dueDate = "Vervaldatum"
+fileTooLarge = "Bestandsgrootte moet kleiner zijn dan 5MB"
+fontFamily = "Lettertype"
+fontSize = "Lettergrootte: {{size}}px"
+fontSizePlaceholder = "Grootte"
+from = "Van"
+invalidCertFile = "Selecteer een P12- of PFX-certificaatbestand"
+invalidFileType = "Selecteer een afbeeldingsbestand"
+location = "Locatie (optioneel)"
+locationPlaceholder = "Vanwaar ondertekent u?"
+message = "Bericht"
+noCertificate = "Selecteer een certificaatbestand"
+noSignatures = "Plaats ten minste één handtekening op de PDF"
+p12File = "P12/PFX-certificaatbestand"
+password = "Certificaatwachtwoord"
+passwordPlaceholder = "Voer wachtwoord in..."
+penColor = "Penkleur"
+penSize = "Penmaat: {{size}}px"
+placementActive = "Klik op de PDF om te plaatsen"
+placeSignatureButton = "Handtekening op PDF plaatsen"
+reason = "Reden (optioneel)"
+reasonPlaceholder = "Waarom ondertekent u?"
+removeImage = "Afbeelding verwijderen"
+removeCertFile = "Bestand verwijderen"
+savedSignatures = "Opgeslagen handtekeningen"
+selectFile = "Afbeeldingsbestand selecteren"
+selectSignatureTitle = "Handtekening selecteren of maken"
+signButton = "Document ondertekenen"
+signatureInfo = "Deze instellingen zijn geconfigureerd door de documenteigenaar"
+signaturePlaced = "Handtekening geplaatst op pagina"
+signatureSettings = "Handtekeninginstellingen"
+signatureText = "Handtekeningtekst"
+signatureTextPlaceholder = "Voer uw naam in..."
+signatureTypeLabel = "Handtekeningtype"
+signingTitle = "Ondertekenen"
+textColor = "Tekstkleur"
+typeSignature = "Typ uw naam om een handtekening te maken"
+uploadCert = "Aangepast certificaat"
+uploadCertDesc = "Gebruik uw eigen P12/PFX-certificaat"
+uploadSignature = "Upload uw handtekeningafbeelding"
+usePersonalCert = "Persoonlijk certificaat"
+usePersonalCertDesc = "Automatisch gegenereerd voor uw account"
+useServerCert = "Organisatiecertificaat"
+useServerCertDesc = "Gedeeld organisatiecertificaat"
+workbenchTitle = "Ondertekeningsverzoek"
+
+[certSign.collab.signRequest.canvas]
+colorPickerTitle = "Kies lijnkleur"
+continue = "Doorgaan"
+
+[certSign.collab.signRequest.certModal]
+description = "U hebt {{count}} handtekening(en) geplaatst. Kies uw certificaat om het ondertekenen te voltooien."
+sign = "Document ondertekenen"
+certValidating = "Certificaat wordt gevalideerd..."
+certValidUntil = "Certificaat geldig tot {{date}}"
+certInvalid = "Certificaat ongeldig: {{error}}"
+certInvalidFallback = "Ongeldig certificaat"
+certNetworkError = "Certificaat kon niet worden gevalideerd"
+title = "Certificaat configureren"
+
+[certSign.collab.signRequest.image]
+hint = "Upload een PNG- of JPG-afbeelding van uw handtekening"
+
+[certSign.collab.signRequest.mode]
+move = "Handtekening verplaatsen"
+place = "Handtekening plaatsen"
+title = "Modus ondertekenen of verplaatsen"
+
+[certSign.collab.signRequest.modeTabs]
+draw = "Tekenen"
+image = "Uploaden"
+text = "Typen"
+
+[certSign.collab.signRequest.placeSignature]
+message = "Klik op de PDF om uw handtekening te plaatsen"
+title = "Handtekening plaatsen"
+
+[certSign.collab.signRequest.preview]
+imageAlt = "Geselecteerde handtekening"
+missing = "Geen voorbeeld"
+textFallback = "Handtekening"
+
+[certSign.collab.signRequest.saved]
+defaultCanvasLabel = "Getekende handtekening"
+defaultImageLabel = "Geüploade handtekening"
+defaultLabel = "Handtekening"
+defaultTextLabel = "Getypte handtekening"
+delete = "Handtekening verwijderen"
+none = "Geen opgeslagen handtekeningen"
+
+[certSign.collab.signRequest.signatureType]
+draw = "Tekenen"
+type = "Typen"
+upload = "Uploaden"
+
+[certSign.collab.signRequest.steps]
+back = "Terug"
+cancelPlacement = "Plaatsing annuleren"
+certificate = "Certificaat"
+clickMultipleTimes = "Klik meerdere keren op de PDF om handtekeningen te plaatsen. Sleep een handtekening om te verplaatsen of te schalen."
+clickToPlace = "Klik op de PDF waar u uw handtekening wilt laten verschijnen."
+continue = "Doorgaan naar certificaatkeuze"
+continueToPlacement = "Doorgaan naar plaatsing"
+continueToReview = "Doorgaan naar controle"
+createSignature = "Handtekening maken"
+invisible = "Onzichtbaar"
+location = "Locatie:"
+multipleSignatures = "{{count}} handtekeningen worden toegepast op de PDF"
+oneSignature = "1 handtekening wordt toegepast op de PDF"
+placeOnPdf = "Plaatsen op PDF"
+reason = "Reden:"
+reviewTitle = "Controleren vóór ondertekenen"
+signaturePlaced = "Handtekening geplaatst op pagina {{page}}. U kunt de positie aanpassen door opnieuw te klikken of doorgaan naar controle."
+visible = "Zichtbaar"
+visibility = "Zichtbaarheid:"
+yourSignatures = "Uw handtekeningen ({{count}})"
+
+[certSign.collab.signRequest.text]
+colorLabel = "Kleur"
+fontLabel = "Lettertype"
+fontSizeLabel = "Grootte"
+fontSizePlaceholder = "16"
+label = "Handtekeningtekst"
+modalHint = "Voer uw naam in en klik vervolgens op Doorgaan om deze op de PDF te plaatsen."
+placeholder = "Voer uw naam in..."
+
+[certSign.collab.participant]
+certValidating = "Certificaat wordt gevalideerd..."
+certValid = "✓ Certificaat geldig"
+certValidUntil = " tot {{date}}"
+certInvalid = "✗ {{error}}"
+certInvalidFallback = "Ongeldig certificaat"
+certNetworkError = "Certificaat kon niet worden gevalideerd"
+
+[certSign.collab.addParticipants]
+add = "{{count}} deelnemer(s) toevoegen"
+back = "Terug"
+configureSignatures = "Handtekeninginstellingen configureren"
+continue = "Doorgaan naar handtekeninginstellingen"
+reasonHelp = "Stel vooraf een ondertekeningsreden in voor deze deelnemers (optioneel; ze kunnen dit aanpassen bij het ondertekenen)"
+reasonPlaceholder = "bijv. Goedkeuring, Review..."
+selectUsers = "Gebruikers selecteren"
+
+[certSign.collab.sessionCreation]
+includeSummaryPage = "Pagina met handtekeningoverzicht opnemen"
+includeSummaryPageHelp = "Aan het einde wordt een overzichtspagina toegevoegd met alle handtekeningmetadata. De digitale certificaathandtekeningvakken op afzonderlijke pagina's worden onderdrukt (natte handtekeningen blijven onaangetast)."
+
+[certSign.collab.sessionList]
+active = "Actief"
+finalized = "Gefinaliseerd"
+
+[certSign.collab.signatureSettings]
+description = "Configureer hoe handtekeningen voor alle deelnemers worden weergegeven"
+title = "Weergave van handtekening"
+
+[certSign.collab.userSelector]
+inviteUsers = "Gebruikers toevoegen"
+loadError = "Gebruikers laden mislukt"
+noTeam = "Geen team"
+noUsers = "Geen andere gebruikers gevonden."
+placeholder = "Gebruikers selecteren..."
+
+[certSign.mobile]
+panelActions = "Acties"
+panelDocument = "Document"
+panelPeople = "Personen"
+
+[certSign.sessions]
+deleted = "Sessie verwijderd"
+fetchFailed = "Sessiegegevens laden mislukt"
+finalized = "Sessie gefinaliseerd"
+loaded = "Ondertekende PDF geladen"
+pdfNotReady = "PDF niet gereed"
+pdfNotReadyDesc = "De ondertekende PDF wordt gegenereerd. Probeer het zo meteen opnieuw."
+
+[certificateChoice.tooltip]
+header = "Certificaattypen"
+
+[certificateChoice.tooltip.organization]
+bullet1 = "Beheerd door systeembeheerders"
+bullet2 = "Gedeeld met geautoriseerde gebruikers"
+bullet3 = "Vertegenwoordigt bedrijfsidentiteit, niet individueel"
+bullet4 = "Beste voor: Officiële documenten, teamhandtekeningen"
+description = "Een gedeeld certificaat dat door uw organisatie wordt geleverd. Gebruikt voor organisatiebrede ondertekeningsbevoegdheid."
+title = "Organisatiecertificaat"
+
+[certificateChoice.tooltip.personal]
+bullet1 = "Automatisch gegenereerd bij eerste gebruik"
+bullet2 = "Gekoppeld aan uw gebruikersaccount"
+bullet3 = "Kan niet met andere gebruikers worden gedeeld"
+bullet4 = "Beste voor: Persoonlijke documenten, individuele verantwoordelijkheid"
+description = "Een automatisch gegenereerd certificaat dat uniek is voor uw gebruikersaccount. Geschikt voor individuele handtekeningen."
+title = "Persoonlijk certificaat"
+
+[certificateChoice.tooltip.upload]
+bullet1 = "Vereist P12/PFX-bestand en wachtwoord"
+bullet2 = "Kan worden uitgegeven door externe certificaatautoriteiten"
+bullet3 = "Hoger vertrouwensniveau voor juridische documenten"
+bullet4 = "Beste voor: Juridisch bindende contracten, externe validatie"
+description = "Gebruik uw eigen PKCS#12-certificaatbestand. Biedt volledige controle over certificaateigenschappen."
+title = "Aangepaste P12 uploaden"
 
 [changeCreds]
 changePassword = "U gebruikt de standaard inloggegevens. Voer alstublieft een nieuw wachtwoord in"
@@ -2574,10 +2874,48 @@ title = "Kwaliteitsaanpassing"
 [compressPdfs]
 tags = "comprimeren,klein"
 
+[config]
+plan = "Abonnement"
+
 [config.account.overview]
+confirmDelete = "Mijn account verwijderen"
+deleteAccount = "Account verwijderen"
+deleteAccountTitle = "Account verwijderen"
+deleteFailed = "Kan account niet verwijderen."
+deleteFailedTitle = "Account verwijderen mislukt"
+deleteWarning = "Deze actie is permanent en kan niet ongedaan worden gemaakt. Al je gegevens worden verwijderd."
+enterEmailConfirm = "Typ ter bevestiging hieronder je e-mailadres ({{email}}):"
 guestDescription = "U bent aangemeld als gast. Overweeg uw account hierboven op te waarderen."
+label = "Overzicht"
 manageAccountPreferences = "Accountvoorkeuren beheren"
+signedInAs = "Aangemeld als"
 title = "Accountinstellingen"
+
+[config.account.profilePicture]
+description = "Upload een afbeelding om je account te personaliseren."
+help = "PNG, JPG of WebP tot 2MB."
+remove = "Verwijderen"
+sizeError = "Selecteer een afbeelding die kleiner is dan 2MB."
+switchedToCustom = "Er is overgeschakeld naar een aangepaste afbeelding. Je kunt nu je eigen afbeelding uploaden."
+title = "Profielfoto"
+upload = "Uploaden"
+useCustom = "Aangepaste afbeelding gebruiken"
+usingProvider = "Profielfoto van {{provider}} wordt gebruikt"
+
+[config.account.profilePicture.cropper]
+cropError = "Bijsnijden van afbeelding mislukt. Probeer het opnieuw."
+invalidImage = "Ongeldig afbeeldingsbestand. Selecteer een geldige PNG-, JPG- of WebP-afbeelding."
+processing = "Bijsnijden wordt verwerkt..."
+save = "Bijsneden afbeelding opslaan"
+sizeErrorAfterCrop = "Bijsneden afbeelding is te groot. Zoom uit of snijd een kleiner gebied bij."
+title = "Profielfoto bijsnijden"
+zoom = "Zoom"
+
+[config.account.security]
+changePassword = "Wachtwoord wijzigen"
+description = "Beheer je wachtwoord en beveiligingsinstellingen."
+title = "Wachtwoorden en beveiliging"
+update = "Wachtwoord bijwerken"
 
 [config.account.upgrade]
 description = "Koppel uw account om uw geschiedenis te behouden en toegang te krijgen tot meer functies!"
@@ -2595,6 +2933,7 @@ upgradeButton = "Account opwaarderen"
 [config.apiKeys]
 chartAriaLabel = "Creditsgebruik: inbegrepen {{includedUsed}} van {{includedTotal}}, aangekocht {{purchasedUsed}} van {{purchasedTotal}}"
 copyKeyAriaLabel = "API-sleutel kopiëren"
+creditsRemaining = "Resterende credits"
 description = "Uw API-sleutel voor toegang tot Stirling's suite van PDF-tools. Kopieer hem naar uw project of vernieuw om een nieuwe te genereren."
 docsDescription = "Leer meer over integreren met Stirling PDF:"
 docsLink = "API-documentatie"
@@ -2643,6 +2982,14 @@ basic = "Basisconfiguratie"
 integration = "Integratieconfiguratie"
 security = "Beveiligingsconfiguratie"
 system = "Systeemconfiguratie"
+
+[connectionMode.status]
+localOffline = "Offline-modus actief"
+localOnline = "Offline-modus actief"
+saas = "Verbonden met Stirling Cloud"
+selfhostedChecking = "Verbonden met zelfgehoste server (controleren...)"
+selfhostedOffline = "Zelfgehoste server onbereikbaar"
+selfhostedOnline = "Verbonden met zelfgehoste server"
 
 [convert]
 autoRotate = "Automatisch roteren"
@@ -2728,6 +3075,15 @@ webOptions = "Web-naar-PDF-opties"
 wordDoc = "Word-document"
 wordDocExt = "Word-document (.docx)"
 zoomLevel = "Zoomniveau"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "eBook → PDF"
+emlToPdf = "E-mail → PDF"
+fileToPdf = "Office/Document → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "eBook-naar-PDF-opties"
@@ -3175,6 +3531,46 @@ totalSelected = "Totaal geselecteerd"
 unsupported = "Niet ondersteund"
 unzip = "Uitpakken"
 uploadError = "Uploaden van sommige bestanden is mislukt."
+copyCreated = "Kopie opgeslagen op dit apparaat."
+copyFailed = "Kopie kon niet worden gemaakt."
+leaveShare = "Verwijderen uit mijn lijst"
+leaveShareFailed = "Het gedeelde bestand kon niet worden verwijderd."
+leaveShareSuccess = "Verwijderd uit uw gedeelde lijst."
+removeBoth = "Uit beide verwijderen"
+removeFilePrompt = "Dit bestand is opgeslagen op dit apparaat en op uw server. Van waar wilt u het verwijderen?"
+removeFileTitle = "Bestand verwijderen"
+removeLocalOnly = "Alleen dit apparaat"
+removeServerFailed = "Het bestand kon niet van de server worden verwijderd."
+removeServerOnly = "Alleen server"
+removeServerOnlyPrompt = "Dit bestand is alleen op uw server opgeslagen. Wilt u het van de server verwijderen?"
+removeServerSuccess = "Van server verwijderd."
+removeSharedPrompt = "Dit bestand is met u gedeeld. U kunt het verwijderen van dit apparaat of uit uw gedeelde lijst."
+removeSharedServerOnlyBlockedPrompt = "Dit bestand is met u gedeeld en alleen op de server opgeslagen."
+removeSharedServerOnlyPrompt = "Dit bestand is met u gedeeld en alleen op de server opgeslagen. Verwijderen uit uw lijst?"
+changesNotUploaded = "Wijzigingen niet geüpload"
+cloudFile = "Cloudbestand"
+filterAll = "Alles"
+filterLocal = "Lokaal"
+filterSharedByMe = "Door mij gedeeld"
+filterSharedWithMe = "Met mij gedeeld"
+lastSynced = "Laatst gesynchroniseerd"
+localOnly = "Alleen lokaal"
+makeCopy = "Kopie maken"
+owner = "Eigenaar"
+ownerUnknown = "Onbekend"
+share = "Delen"
+shareSelected = "Geselecteerde delen"
+sharedByYou = "Door u gedeeld"
+sharedEditNoticeBody = "U hebt geen bewerkingsrechten op de serverversie van dit bestand. Eventuele bewerkingen worden als lokale kopie opgeslagen."
+sharedEditNoticeConfirm = "Begrepen"
+sharedEditNoticeTitle = "Alleen-lezen serverkopie"
+sharedWithYou = "Met u gedeeld"
+sharing = "Delen"
+storageState = "Opslag"
+synced = "Gesynchroniseerd"
+updateOnServer = "Bijwerken op server"
+uploadSelected = "Geselecteerde uploaden"
+uploadToServer = "Uploaden naar server"
 
 [files]
 addFiles = "Bestanden toevoegen"
@@ -3299,6 +3695,77 @@ title = "Over PDF's afvlakken"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[groupSigning.tooltip]
+header = "Over groepsondertekenen"
+
+[groupSigning.tooltip.finalization]
+bullet1 = "Alle handtekeningen worden toegepast in de door u opgegeven deelnemersvolgorde"
+bullet2 = "U kunt indien nodig met gedeeltelijke handtekeningen finaliseren"
+bullet3 = "Na finalisatie kan de sessie niet meer worden gewijzigd"
+description = "Zodra alle deelnemers hebben getekend (of u ervoor kiest eerder te finaliseren), kunt u de definitieve ondertekende PDF genereren."
+title = "Finalisatieproces"
+
+[groupSigning.tooltip.roles]
+bullet1 = "Eigenaar (u): Maakt sessie, configureert standaard handtekeningen, finaliseert document"
+bullet2 = "Deelnemers: Maken hun handtekening, kiezen certificaat, plaatsen op PDF"
+bullet3 = "Deelnemers kunnen zichtbaarheid, reden of locatie-instellingen niet wijzigen"
+description = "U beheert de instellingen voor de handtekeningweergave voor alle deelnemers."
+title = "Rollen van deelnemers"
+
+[groupSigning.tooltip.sequential]
+bullet1 = "Eerste deelnemer moet tekenen voordat de tweede toegang krijgt tot het document"
+bullet2 = "Zorgt voor juiste ondertekeningsvolgorde voor juridische naleving"
+bullet3 = "U kunt deelnemers herschikken door ze in de lijst te slepen"
+description = "Deelnemers ondertekenen documenten in de door u opgegeven volgorde. Elke ondertekenaar ontvangt een melding wanneer hij/zij aan de beurt is."
+title = "Sequentieel ondertekenen"
+
+[groupSigning.steps]
+back = "Terug"
+completed = "Voltooid"
+current = "Huidig"
+stepLabel = "Stap {{number}}"
+
+[groupSigning.steps.configureDefaults]
+continue = "Doorgaan naar controle"
+invisible = "Handtekeningen zijn onzichtbaar (alleen metadata)"
+locationLabel = "Locatie:"
+preview = "Voorbeeld"
+reasonLabel = "Reden:"
+title = "Handtekeninginstellingen configureren"
+visible = "Handtekeningen zijn zichtbaar op pagina {{page}}"
+
+[groupSigning.steps.review]
+document = "Document"
+dueDate = "Vervaldatum (optioneel)"
+dueDatePlaceholder = "Vervaldatum selecteren..."
+invisible = "Onzichtbaar (alleen metadata)"
+location = "Locatie:"
+logo = "Logo:"
+logoHidden = "Geen logo"
+logoShown = "Stirling PDF-logo weergegeven"
+participants = "Deelnemers"
+reason = "Reden:"
+send = "Ondertekeningsverzoeken verzenden"
+signatureSettings = "Handtekeninginstellingen"
+title = "Sessiedetails controleren"
+titleShort = "Controleren en verzenden"
+visibility = "Zichtbaarheid:"
+visible = "Zichtbaar op pagina {{page}}"
+participantCount = "{{count}} deelnemer(s) tekenen in volgorde"
+
+[groupSigning.steps.selectDocument]
+continue = "Doorgaan naar deelnemersselectie"
+noFile = "Selecteer één PDF-bestand uit uw actieve bestanden om een ondertekeningssessie te maken."
+selectedFile = "Geselecteerd document"
+title = "Document selecteren"
+
+[groupSigning.steps.selectParticipants]
+continue = "Doorgaan naar handtekeninginstellingen"
+count = "{{count}} deelnemer(s) geselecteerd"
+label = "Deelnemers selecteren"
+placeholder = "Deelnemers kiezen om te ondertekenen..."
+title = "Deelnemers kiezen"
 
 [getPdfInfo]
 downloadJson = "JSON downloaden"
@@ -3718,6 +4185,11 @@ desc = "Voegt handtekening toe aan PDF via tekenen, tekst of afbeelding"
 tags = "handtekening,ondertekenen"
 title = "Ondertekenen"
 
+[home.timestampPdf]
+desc = "Voeg een RFC 3161-documenttijdstempel toe om te bewijzen wanneer je PDF bestond"
+tags = "tijdstempel,RFC 3161,TSA,time stamp authority,documenttijdstempel,bestaansbewijs,tijdstempeltoken,vertrouwde tijdstempel,tijdstempel ondertekenen,notariseren"
+title = "PDF tijdstempelen"
+
 [home.split]
 desc = "Splits PDF's in meerdere documenten"
 tags = "splitsen,scheiden,opdelen"
@@ -3854,6 +4326,7 @@ version = "Versie"
 accountCreatedSuccess = "Account succesvol aangemaakt! U kunt nu inloggen."
 alreadyLoggedIn = "U zit reeds ingelogd bij"
 alreadyLoggedIn2 = "apparaten. U moet u a.u.b. uitloggen van de apparaten en opnieuw proberen."
+backToSignIn = "Terug naar inloggen"
 cancel = "Annuleren"
 changePasswordWarning = "Wijzig uw wachtwoord nadat u voor het eerst bent ingelogd"
 credentialsUpdated = "Uw inloggegevens zijn bijgewerkt. Log opnieuw in."
@@ -3895,16 +4368,21 @@ or = "Of"
 password = "Wachtwoord"
 passwordChangedSuccess = "Wachtwoord succesvol gewijzigd! Log in met uw nieuwe wachtwoord."
 passwordResetSent = "Link voor wachtwoordherstel verzonden naar {{email}}! Controleer uw e-mail en volg de instructies."
+passwordUpdatedSuccess = "Je wachtwoord is succesvol bijgewerkt."
 pleaseEnterBoth = "Voer zowel e-mail als wachtwoord in"
 pleaseEnterEmail = "Voer uw e-mailadres in"
 relyingPartyRegistrationNotFound = "Geen relying party-registratie gevonden"
 rememberme = "Onthoud mij"
+resetHelp = "Voer je e-mailadres in om een beveiligde link te ontvangen om je wachtwoord te resetten. Als de link is verlopen, vraag dan een nieuwe aan."
+resetYourPassword = "Reset je wachtwoord"
 saml2RequiresLicense = "SAML-inloggen vereist een betaalde licentie (Server of Enterprise). Neem contact op met de beheerder om uw abonnement te upgraden."
 sending = "Verzenden..."
 sendMagicLink = "Magic link verzenden"
+sendResetLink = "Resetlink verzenden"
 sessionExpired = "Uw sessie is verlopen. Log alstublieft opnieuw in."
 signin = "Inloggen"
 signInAnonymously = "Als gast aanmelden"
+subtitle = "Log opnieuw in bij Stirling PDF"
 signingIn = "Inloggen..."
 signinTitle = "Gelieve in te loggen"
 signInWith = "Inloggen met"
@@ -3913,6 +4391,7 @@ ssoSignIn = "Inloggen via Single Sign-on"
 title = "Inloggen"
 toManySessions = "U heeft te veel actieve sessies"
 unexpectedError = "Onverwachte fout: {{message}}"
+updatePassword = "Wachtwoord bijwerken"
 useEmailInstead = "Inloggen met e-mail"
 useMagicLink = "Gebruik in plaats daarvan een magic link"
 userIsDisabled = "De gebruiker is gedesactiveerd, inloggen is momenteel geblokkeerd voor deze gebruikersnaam. Neem contact op met de beheerder."
@@ -4222,6 +4701,15 @@ viewSwitcher = "Gebruik deze bedieningselementen om te kiezen hoe u uw PDF's wil
 workbench = "Dit is de <strong>Werkbank</strong> - het hoofdgebied waar u uw PDF's bekijkt en bewerkt."
 wrapUp = "U bent er klaar voor! U kent de belangrijkste onderdelen van de app en hoe u ze gebruikt. Klik wanneer u wilt op de knop <strong>Help</strong> om deze rondleiding opnieuw te zien."
 
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "Na afloop van je proefperiode ga je door met ons gratis niveau. Voeg een betaalmethode toe om Pro-toegang te behouden."
+afterTrialWithPayment = "Je Pro-abonnement start automatisch wanneer de proefperiode eindigt."
+body = "Je hebt tijdens je proefperiode volledige toegang tot de Pro-functies van Stirling PDF. Geniet van onbeperkte conversies, grotere bestandsgroottes en prioriteitsverwerking."
+daysRemaining = "Nog {{days}} dagen resterend"
+daysRemainingSingular = "Nog {{days}} dag resterend"
+title = "Je 30-daagse Pro-proefperiode"
+trialEnds = "Proefperiode eindigt op {{date}}"
+
 [onboarding.buttons]
 back = "Terug"
 download = "Downloaden →"
@@ -4372,7 +4860,10 @@ zoomOut = "Uitzoomen"
 
 [viewer]
 cannotPreviewFile = "Kan voorbeeld van bestand niet weergeven"
+disableColorFilter = "Kleurfilter uitschakelen"
 dualPageView = "Dubbele paginaweergave"
+enableDarkFilter = "Donkerfilter inschakelen"
+enableSepiaFilter = "Sepiafilter inschakelen"
 firstPage = "Eerste pagina"
 lastPage = "Laatste pagina"
 nextPage = "Volgende pagina"
@@ -4382,6 +4873,22 @@ singlePageView = "Enkele paginaweergave"
 unknownFile = "Onbekend bestand"
 zoomIn = "Inzoomen"
 zoomOut = "Uitzoomen"
+resetZoom = "Zoom resetten"
+
+[viewer.nonPdf]
+fileTypeBadge = "{{type}}-bestand"
+convertToPdf = "Converteren naar PDF"
+loading = "Laden..."
+emptyFile = "Leeg bestand"
+csvStats = "{{rows}} rijen · {{columns}} kolommen · {{size}}"
+sortedBy = "Gesorteerd op: {{column}}"
+columnDefault = "Kolom {{index}}"
+htmlPreviewWarning = "HTML-voorbeeld — externe bronnen worden mogelijk niet geladen · {{size}}"
+htmlPreview = "HTML-voorbeeld"
+invalidJson = "Ongeldige JSON — ruwe inhoud wordt weergegeven"
+textStats = "{{lines}} regels · {{size}}"
+lineNumbers = "Regelnummers"
+renderMarkdown = "Markdown renderen"
 
 [viewer.attachments]
 title = "Bijlagen"
@@ -4391,6 +4898,31 @@ noDocument = "Open een PDF om de bijlagen te bekijken."
 loading = "Bijlagen laden..."
 empty = "Geen bijlagen in dit document"
 noMatch = "Geen bijlagen komen overeen met uw zoekopdracht"
+
+[viewer.comments]
+title = "Opmerkingen"
+hint = "Plaats opmerkingen met de tools Opmerking, Tekst invoegen of Tekst vervangen. Ze verschijnen hier per pagina."
+placeholder = "Typ je opmerking..."
+pageLabel = "Pagina {{page}}"
+oneComment = "1 opmerking"
+nComments = "{{count}} opmerkingen"
+addCommentPlaceholder = "Opmerking toevoegen..."
+addLink = "Link toevoegen"
+goToLink = "Naar link gaan"
+addComment = "Opmerking toevoegen"
+viewComment = "Opmerking bekijken"
+addReplyPlaceholder = "Antwoord toevoegen..."
+saveReply = "Antwoord opslaan"
+send = "Verzenden"
+moreActions = "Meer acties"
+typeComment = "Opmerking"
+typeInsertText = "Tekst invoegen"
+typeReplaceText = "Tekst vervangen"
+locateAnnotation = "Zoeken in document"
+deleteTitle = "Annotatie uit opmerkingen verwijderen?"
+deleteDescription = "Deze annotatie heeft een opmerking gekoppeld. Je kunt alleen de opmerking uit de zijbalk verwijderen en de annotatie behouden, of alles verwijderen."
+removeCommentOnly = "Alleen opmerking verwijderen"
+deleteAnnotationAndComment = "Annotatie en opmerking verwijderen"
 
 [viewer.formBar]
 title = "Formuliervelden"
@@ -4418,6 +4950,7 @@ toggleAttachments = "Bijlagen tonen/verbergen"
 toggleTheme = "Thema wisselen"
 language = "Taal"
 toggleAnnotations = "Annotaties tonen/verbergen"
+toggleLayers = "Lagen in-/uitschakelen"
 search = "PDF doorzoeken"
 panMode = "Pan-modus"
 applyRedactionsFirst = "Apply redactions first"
@@ -4425,14 +4958,20 @@ rotateLeft = "Linksom draaien"
 rotateRight = "Rechtsom draaien"
 toggleSidebar = "Zijbalk tonen/verbergen"
 toggleBookmarks = "Bladwijzers tonen/verbergen"
+toggleComments = "Opmerkingen"
 print = "PDF afdrukken"
 ruler = "Liniaal / Meten"
+readAloud = "Voorlezen"
+readAloudSpeed = "Snelheid"
+readAloudLanguage = "Taal"
+selectLanguage = "Selecteer taal"
 draw = "Draw"
 redact = "Redact"
 exitRedaction = "Exit Redaction Mode"
 save = "Save"
 downloadAll = "Alles downloaden"
 saveAll = "Alles opslaan"
+saveAs = "Opslaan als"
 
 [textAlign]
 left = "Links"
@@ -4447,21 +4986,132 @@ title = "Pagina's extraheren"
 
 [pageLayout]
 addBorder = "Randen toevoegen"
+borderWidth = "Randdikte"
+bottom = "Ondermarge"
+cols = "Kolommen"
 header = "Meerdere pagina indeling"
+innerMargin = "Binnenmarge"
+left = "Linkermarge"
 pagesPerSheet = "Pagina's per vel:"
+right = "Rechtermarge"
+rows = "Rijen"
 submit = "Indienen"
 tags = "samenvoegen,composiet,enkel-zicht,organiseren"
 title = "Meerdere pagina indeling"
+top = "Bovenmarge"
+
+[pageLayout.mode]
+default = "Standaard"
+custom = "Aangepast"
+label = "Modus:"
+
+[pageLayout.arrangement]
+byColumns = "Op kolommen"
+byRows = "Op rijen"
+label = "Paginavolgorde:"
 
 [pageLayout.desc]
 16 = "Plaats 16 pagina's op één vel (4 × 4 raster)."
 2 = "Plaats 2 pagina's naast elkaar op één vel."
-3 = "Plaats 3 pagina's op één rij op één vel."
 4 = "Plaats 4 pagina's op één vel (2 × 2 raster)."
 9 = "Plaats 9 pagina's op één vel (3 × 3 raster)."
 
 [pageLayout.error]
 failed = "Er is een fout opgetreden bij het maken van de multi-pagina-indeling."
+outerVerticalMarginsTooLarge = "Boven-/ondermarges zijn te groot voor dit paginaformaat."
+outerHorizontalMarginsTooLarge = "Links-/rechtermarges zijn te groot voor dit paginaformaat."
+innerMarginTooLarge = "Binnenmarge is te groot voor de geselecteerde lay-out."
+
+[pageLayout.orientation]
+landscape = "Liggend"
+portrait = "Staand"
+label = "Oriëntatie:"
+
+[pageLayout.readingDirection]
+ltr = "Links naar rechts"
+rtl = "Rechts naar links"
+label = "Leesrichting:"
+
+[pageLayout.tooltip.header]
+title = "Handleiding pagina-indeling"
+
+[pageLayout.tooltip.overview]
+title = "Wat is pagina-indeling?"
+text = "Plaats meerdere pagina's op één vel voor hand-outs of om papier te besparen."
+
+[pageLayout.tooltip.mode]
+title = "Modus"
+text = "Kies hoe het raster wordt geconfigureerd:"
+bullet1 = "Standaard: Kies een voorinstelling en het raster wordt automatisch berekend."
+bullet2 = "Aangepast: Stel rijen en kolommen handmatig in."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Pagina's per vel (standaardmodus)"
+text = "Kies hoeveel pagina's per vel (bijv. 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Rijen en kolommen (aangepaste modus)"
+text = "Stel de exacte rasterafmetingen in. Totaal pagina's per vel = rijen × kolommen."
+
+[pageLayout.tooltip.orientation]
+title = "Oriëntatie"
+text = "Stelt de oriëntatie van het uitvoervel in:"
+bullet1 = "Staand: Hoger dan breed."
+bullet2 = "Liggend: Breder dan hoog."
+
+[pageLayout.tooltip.arrangement]
+title = "Paginavolgorde"
+text = "Bepaalt in welke volgorde pagina's het raster vullen:"
+bullet1 = "Op rijen: Vul rij voor rij (links-naar-rechts of rechts-naar-links)."
+bullet2 = "Op kolommen: Vul van boven naar beneden, kolom per kolom."
+
+[pageLayout.tooltip.readingDirection]
+title = "Leesrichting"
+text = "Bepaalt de horizontale volgorde van pagina's:"
+bullet1 = "LTR: Links naar rechts."
+bullet2 = "RTL: Rechts naar links."
+
+[pageLayout.tooltip.addBorder]
+title = "Randen toevoegen"
+text = "Tekent randlijnen rond elke paginacel voor snijhulplijnen of visuele scheiding."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Marges en randen"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Marges"
+text = "Gebruik boven-, onder-, linker- en rechtermarges om de ruimte rond het volledige uitvoervel te bepalen."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Binnenmarge"
+text = "Binnenmarge voegt ruimte toe tussen cellen in het paginaraster voor betere scheiding en leesbaarheid."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Randen toevoegen"
+text = "Schakel randen in om lijnen rond elke geplaatste pagina te tekenen. Dit kan helpen bij visuele scheiding of bij het afsnijden."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Randdikte"
+text = "Randdikte wordt alleen toegepast wanneer randen zijn ingeschakeld. Hogere waarden geven dikkere lijnen."
+
+[pageLayout.advanced.tooltip.header]
+title = "Geavanceerde indelingsopties"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Oriëntatie"
+text = "Kies de richting van het uiteindelijke vel. Staand werkt beter voor hoge inhoud, terwijl liggend breder opgezette lay-outs beter past."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Paginavolgorde"
+text = "Bepaalt of pagina's het raster rij-voor-rij of kolom-voor-kolom vullen."
+bullet1 = "Op rijen: Elke rij eerst vullen."
+bullet2 = "Op kolommen: Elke kolom eerst vullen."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Leesrichting"
+text = "Stelt de horizontale volgorde in het raster in, handig voor links-naar-rechts en rechts-naar-links documentconventies."
+bullet1 = "LTR: Links-naar-rechts volgorde."
+bullet2 = "RTL: Rechts-naar-links volgorde."
 
 [pageRemover]
 header = "PDF pagina verwijderaar"
@@ -4977,7 +5627,10 @@ perMonth = "/maand"
 perSeat = "/plaats"
 popular = "Populair"
 selectPlan = "Abonnement selecteren"
+selectCredits = "Selecteer het aantal credits"
 showComparison = "Alle functies vergelijken"
+purchase = "Kopen"
+totalCost = "Totale kosten"
 upgrade = "Upgraden"
 withServer = "+ Server-abonnement"
 
@@ -5069,6 +5722,30 @@ successMessage = "Uw licentie is met succes geactiveerd. U kunt dit venster nu s
 name = "Team"
 siteLicense = "Site-licentie"
 
+[plan.api]
+large = "5,000 Credits"
+medium = "1,000 Credits"
+small = "500 Credits"
+xsmall = "100 Credits"
+
+[plan.apiPackages]
+subtitle = "Koop API-credits voor je applicaties"
+title = "API-creditpakketten"
+
+[plan.trial]
+badge = "Proef"
+continueWithFree = "Doorgaan met gratis niveau"
+daysRemaining = "Je proefperiode eindigt over {{days}} dagen"
+endDate = "Verloopt: {{date}}"
+expired = "Je proefperiode is verlopen"
+expiredMessage = "Je 30-daagse Pro-proefperiode is verlopen. Neem een Pro-abonnement om premiumfuncties te blijven gebruiken of ga door met ons gratis niveau."
+freeTierLimitations = "Gratis niveau bevat basis-PDF-tools met gebruikslimieten."
+message = ""
+subscribe = "Abonneer je op Pro"
+subscribeToPro = "Abonneer je op Pro"
+subscriptionScheduled = "Abonnement gepland - start op {{date}}"
+title = "Gratis proefperiode actief"
+
 [credits]
 enableOverageBilling = "Overschrijdingsfacturering inschakelen"
 maybeLater = "Misschien later"
@@ -5150,20 +5827,72 @@ title = "Print bestand"
 2 = "Voer printernaam in"
 
 [quickAccess]
+access = "Toegang"
+accessAddPerson = "Nog een persoon toevoegen"
+accessBack = "Terug"
+accessCopyLink = "Link kopiëren"
+accessEmail = "E-mailadres"
+accessEmailPlaceholder = "naam@bedrijf.com"
+accessFileLabel = "Bestand"
+accessGeneral = "Algemene toegang"
+accessInviteTitle = "Personen uitnodigen"
+accessOwner = "Eigenaar"
+accessPanel = "Documenttoegang"
+accessPeople = "Personen met toegang"
+accessRemove = "Verwijderen"
+accessRestricted = "Beperkt"
+accessRestrictedHint = "Alleen personen met toegang kunnen openen"
+accessRole = "Rol"
+accessRoleCommenter = "Opmerkinggever"
+accessRoleEditor = "Bewerker"
+accessRoleViewer = "Lezer"
+accessSelectedFile = "Geselecteerd bestand"
+accessSendInvite = "Uitnodiging verzenden"
+accessTitle = "Documenttoegang"
+accessYou = "U"
 account = "Account"
+activeSessions = "Actieve sessies"
+activeTab = "Actief"
 activity = "Logboek"
 adminSettings = "Beheer"
+allSessions = "Alle sessies"
 allTools = "Tools"
 automate = "Automatiseren"
+back = "Terug"
+certSign = "Met certificaat ondertekenen"
+completedSessions = "Voltooide sessies"
+completedTab = "Voltooid"
 config = "Configuratie"
+createNew = "Nieuw verzoek maken"
+createSession = "Ondertekeningsverzoek maken"
+dueDate = "Vervaldatum (optioneel)"
 files = "Bestand"
 help = "Hulp"
+noActiveSessions = "Geen openstaande ondertekeningsverzoeken of actieve sessies"
+noCompletedSessions = "Geen voltooide sessies"
+noFile = "Geen bestand geselecteerd"
 read = "Lezen"
 reader = "Lezer"
+refresh = "Vernieuwen"
+requestSignatures = "Handtekeningen aanvragen"
+selectSingleFileToRequest = "Selecteer één PDF-bestand om handtekeningen aan te vragen"
+selectedFile = "Geselecteerd bestand"
+selectUsers = "Gebruikers selecteren om te ondertekenen"
+selectUsersPlaceholder = "Deelnemers kiezen..."
+sendingRequest = "Verzenden..."
 settings = "Opties"
 showMeAround = "Leid me rond"
 sign = "Teken"
+signatureRequests = "Ondertekeningsverzoeken"
+signYourself = "Zelf ondertekenen"
+newRequest = "Nieuw verzoek"
 tours = "Rondleidingen"
+wetSign = "Handtekening toevoegen"
+filterMine = "Van mij"
+filterOverdue = "Achterstallig"
+filterSigned = "Ondertekend"
+filterDeclined = "Geweigerd"
+searchDocuments = "Documenten zoeken…"
 
 [quickAccess.helpMenu]
 adminTour = "Rondleiding voor beheer"
@@ -5631,6 +6360,32 @@ text = "Draai uw PDF-pagina's met de klok mee of tegen de klok in in stappen van
 [rotate.tooltip.header]
 title = "Overzicht rotatie-instellingen"
 
+[timestampPdf]
+completed = "PDF succesvol van tijdstempel voorzien"
+desc = "Voeg een RFC 3161-documenttijdstempel toe aan je PDF met een vertrouwde Time Stamp Authority (TSA)-server."
+filenamePrefix = "tijdgestempeld"
+results = "Tijdstempelresultaten"
+submit = "Tijdstempel toepassen"
+title = "PDF tijdstempelen"
+
+[timestampPdf.error]
+failed = "Er is een fout opgetreden bij het tijdstempelen van de PDF."
+generic = "Tijdstempelen mislukt"
+
+[timestampPdf.files]
+placeholder = "Selecteer een PDF-bestand in de hoofdweergave om te beginnen"
+
+[timestampPdf.options]
+note = "Alleen een SHA-256-hash van je document wordt naar de TSA-server gestuurd; het PDF-bestand zelf wordt nooit naar de TSA-server verzonden."
+title = "Tijdstempelserver (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Kies een vertrouwde Time Stamp Authority"
+label = "Selecteer een TSA-server"
+
+[timestampPdf.steps]
+settings = "Instellingen"
+
 [sanitize]
 completed = "Opschonen succesvol voltooid"
 desc = "Verwijder mogelijk schadelijke elementen uit PDF-bestanden."
@@ -5755,25 +6510,100 @@ placeholder = "Voer zoekterm in..."
 searching = "Zoeken..."
 title = "PDF doorzoeken"
 
+[selfHosted.offline]
+hideTools = "Niet-beschikbare tools verbergen ▴"
+messageNoFallback = "Tools zijn niet beschikbaar totdat je server weer online is."
+messageWithFallback = "Sommige tools vereisen een serververbinding."
+showTools = "Niet-beschikbare tools bekijken ▾"
+title = "Je Stirling-PDF-server is onbereikbaar"
+toolNotAvailableLocally = "Je Stirling-PDF-server is offline en \"{{endpoint}}\" is niet beschikbaar op de lokale backend."
+
 [session]
 expired = "Uw sessie is verlopen. Voer de pagina opnieuw in en probeer het opnieuw."
 refreshPage = "Pagina vernieuwen"
+
+[sessionManagement.tooltip]
+header = "Ondertekeningssessies beheren"
+
+[sessionManagement.tooltip.addParticipants]
+bullet1 = "Nieuwe deelnemers worden aan het einde van de ondertekeningsvolgorde toegevoegd"
+bullet2 = "Kan geen deelnemers toevoegen nadat sessie is gefinaliseerd"
+bullet3 = "Elke deelnemer ontvangt een melding wanneer hij/zij aan de beurt is"
+description = "U kunt op elk moment vóór de finalisatie meer deelnemers aan een actieve sessie toevoegen."
+title = "Deelnemers toevoegen"
+
+[sessionManagement.tooltip.finalization]
+bullet1 = "<b>Volledige finalisatie</b>: Alle deelnemers hebben getekend"
+bullet2 = "<b>Gedeeltelijke finalisatie</b>: Sommige deelnemers hebben nog niet getekend"
+bullet3 = "Niet-ondertekende deelnemers worden uitgesloten van het definitieve document"
+bullet4 = "Na finalisatie kunt u de ondertekende PDF laden in actieve bestanden"
+description = "Finalisatie combineert alle handtekeningen in één ondertekende PDF. Deze actie kan niet ongedaan worden gemaakt."
+title = "Sessie-finalisatie"
+
+[sessionManagement.tooltip.participantRemoval]
+bullet1 = "Kan geen deelnemers verwijderen die al hebben getekend"
+bullet2 = "Verwijderde deelnemers ontvangen geen meldingen meer"
+bullet3 = "Ondertekeningsvolgorde wordt automatisch aangepast"
+description = "Deelnemers kunnen vóór het tekenen uit sessies worden verwijderd."
+title = "Deelnemers verwijderen"
+
+[sessionManagement.tooltip.signatureOrder]
+bullet1 = "Elke handtekening wordt sequentieel op de PDF toegepast"
+bullet2 = "Latere ondertekenaars kunnen eerdere handtekeningen zien"
+bullet3 = "Cruciaal voor goedkeuringsworkflows en juridische ketens van bewaring"
+description = "De volgorde die u bij het maken van de sessie opgeeft, bepaalt wie als eerste tekent."
+title = "Ondertekeningsvolgorde"
+
+[signatureSettings.tooltip]
+header = "Instellingen voor handtekeningweergave"
+
+[signatureSettings.tooltip.location]
+bullet1 = "Voorbeelden: \"New York, USA\", \"London Office\", \"Remote\""
+bullet2 = "Niet hetzelfde als paginapositie"
+bullet3 = "Kan vereist zijn voor bepaalde rechtsgebieden"
+description = "Optionele geografische locatie waar de handtekening is toegepast. Opgeslagen in certificaatmetadata."
+title = "Handtekeninglocatie"
+
+[signatureSettings.tooltip.logo]
+bullet1 = "Weergegeven naast handtekening en tekst"
+bullet2 = "Ondersteunt PNG-, JPG-indelingen"
+bullet3 = "Verbetert professionele uitstraling"
+description = "Voeg een bedrijfslogo toe aan zichtbare handtekeningen voor branding en authenticiteit."
+title = "Bedrijfslogo"
+
+[signatureSettings.tooltip.reason]
+bullet1 = "Voorbeelden: \"Goedkeuring\", \"Contractovereenkomst\", \"Review voltooid\""
+bullet2 = "Zichtbaar in PDF-handtekeningseigenschappen"
+bullet3 = "Handig voor audittrails en naleving"
+description = "Optionele tekst die uitlegt waarom het document wordt ondertekend. Opgeslagen in certificaatmetadata."
+title = "Reden voor handtekening"
+
+[signatureSettings.tooltip.visibility]
+bullet1 = "<b>Zichtbaar</b>: Handtekening verschijnt op PDF met aangepaste weergave"
+bullet2 = "<b>Onzichtbaar</b>: Certificaat ingesloten zonder visuele markering"
+bullet3 = "Onzichtbare handtekeningen bieden nog steeds cryptografische validatie"
+description = "Bepaalt of de handtekening zichtbaar is op het document of onzichtbaar wordt ingesloten."
+title = "Zichtbaarheid van handtekening"
 
 [settings.configuration]
 advanced = "Geavanceerd"
 database = "Database"
 endpoints = "Eindpunten"
 features = "Functies"
+storageSharing = "Bestandsopslag en delen"
 systemSettings = "Systeeminstellingen"
 title = "Configuratie"
 
 [settings.connection]
+localDescription = "Je gebruikt de lokale backend zonder een account. Sommige tools die cloudverwerking of een zelfgehoste server vereisen, zijn niet beschikbaar."
 logout = "Uitloggen"
 server = "Server"
+signIn = "Inloggen"
 title = "Verbindingsmodus"
 user = "Ingelogd als"
 
 [settings.connection.mode]
+local = "Alleen lokaal"
 saas = "Stirling Cloud"
 selfhosted = "Self-hosted"
 
@@ -5931,6 +6761,9 @@ title = "Beleid & Privacy"
 [settings.preferences]
 title = "Voorkeuren"
 
+[settings.search]
+placeholder = "Instellingen doorzoeken..."
+
 [settings.security]
 description = "Werk uw wachtwoord bij om uw account veilig te houden."
 title = "Beveiliging"
@@ -5968,6 +6801,18 @@ title = "Werkruimte"
 [settings.team]
 title = "Team"
 
+[localMode]
+toolUnavailable = "Deze tool vereist een account. Log in bij Stirling Cloud of verbind met een zelfgehoste server om deze te gebruiken."
+
+[localMode.banner]
+message = "Log in om alle tools te ontgrendelen."
+signIn = "Inloggen"
+title = "Lokaal actief"
+
+[localMode.toolPicker]
+message = "Log in om alle tools te ontgrendelen."
+signIn = "Inloggen"
+
 [setup]
 description = "Begin door te kiezen hoe u Stirling PDF wilt gebruiken"
 welcome = "Welkom bij Stirling PDF"
@@ -5975,6 +6820,7 @@ welcome = "Welkom bij Stirling PDF"
 [setup.login]
 connectingTo = "Verbinden met:"
 hideInstructions = "Instructies verbergen"
+skipSignIn = "Doorgaan zonder in te loggen"
 instructions = "Om inloggen op uw Stirling PDF-server in te schakelen:"
 instructionsEnvVar = "Stel de omgevingsvariabele in:"
 instructionsOrYml = "Of in settings.yml:"
@@ -6022,7 +6868,17 @@ title = "Inloggen bij Stirling"
 [setup.selfhosted]
 link = "of maak verbinding met een zelfgehost account"
 subtitle = "Vul uw servergegevens in"
+changeServerLocked = "Uw organisatie heeft deze app beperkt tot een specifieke server"
+switchToLocal = "In plaats daarvan lokale tools gebruiken"
 title = "Inloggen bij server"
+
+[setup.selfhosted.unreachable]
+changeServer = "Verbinden met een andere server"
+changeServerLocked = "Uw organisatie heeft deze app beperkt tot een specifieke server"
+continueOffline = "In plaats daarvan lokale tools gebruiken"
+message = "Kon {{url}} niet bereiken. Controleer of de server actief en toegankelijk is."
+retry = "Opnieuw proberen"
+title = "Kan geen verbinding maken met server"
 
 [setup.server]
 subtitle = "Vul de URL van uw self-hosted server in"
@@ -6032,6 +6888,7 @@ useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "Ophalen van serverconfiguratie mislukt. Controleer de URL en probeer het opnieuw."
+configFetchError = "Kan serverconfiguratie niet ophalen: {{error}}"
 emptyUrl = "Voer een server-URL in"
 invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
 testFailed = "Verbindingstest mislukt"
@@ -6210,6 +7067,15 @@ image = "Afbeelding"
 saved = "Opgeslagen"
 text = "Tekst"
 title = "Type handtekening"
+
+[signRequest]
+declined = "Ondertekeningsverzoek geweigerd"
+fetchFailed = "Ondertekeningsverzoek laden mislukt"
+signed = "Document succesvol ondertekend"
+
+[signSession]
+createFailed = "Ondertekeningsverzoek maken mislukt"
+created = "Ondertekeningsverzoek verzonden"
 
 [signup]
 accountCreatedSuccessfully = "Account succesvol aangemaakt! U kunt nu inloggen."
@@ -6489,6 +7355,106 @@ title = "PDF splits op hoofdstukken"
 [splitPdfByChapters]
 tags = "splitsen, hoofdstukken, bookmarks, organiseren"
 
+[storageShare]
+accessed = "Geopend"
+accessDenied = "U hebt geen toegang tot dit gedeelde bestand. Vraag de eigenaar om het met u te delen."
+accessFailed = "Kan activiteit niet laden."
+accessDeniedBody = "U hebt geen toegang tot dit bestand. Vraag de eigenaar om het met u te delen."
+accessDeniedTitle = "Geen toegang"
+accessLimitedCommenter = "Opmerkingentoegang komt binnenkort. Vraag de eigenaar om bewerkersrechten als u wilt downloaden."
+accessLimitedTitle = "Beperkte toegang"
+accessLimitedViewer = "Deze link is alleen-lezen. Vraag de eigenaar om bewerkersrechten als u wilt downloaden."
+createdAt = "Gemaakt"
+download = "Downloaden"
+downloadFailed = "Dit bestand kan niet worden gedownload."
+expiredBody = "Deze deellink is ongeldig of verlopen."
+expiredTitle = "Link verlopen"
+goToLogin = "Naar inloggen"
+loadFailed = "Gedeeld bestand kan niet worden geopend."
+loading = "Deellink laden..."
+loginPrompt = "Meld u aan om toegang te krijgen tot dit gedeelde bestand."
+loginRequired = "Inloggen vereist"
+openInApp = "Openen in Stirling PDF"
+ownerLabel = "Eigenaar"
+ownerUnknown = "Onbekend"
+requiresLogin = "Dit gedeelde bestand vereist inloggen."
+roleCommenter = "Opmerkinggever"
+roleEditor = "Bewerker"
+roleViewer = "Lezer"
+shareHeading = "Gedeeld bestand"
+titleDefault = "Gedeeld bestand"
+tryAgain = "Probeer het later opnieuw."
+addUser = "Toevoegen"
+commenterHint = "Reageren komt binnenkort."
+copied = "Link gekopieerd naar klembord"
+copy = "Kopiëren"
+copyFailed = "Kopiëren mislukt"
+description = "Maak een deellink voor dit bestand. Aangemelde gebruikers met de link hebben er toegang toe."
+downloadsCount = "Downloads: {{count}}"
+emailWarningBody = "Dit lijkt op een e-mailadres. Als deze persoon nog geen Stirling PDF-gebruiker is, kan hij/zij geen toegang krijgen tot het bestand."
+emailWarningConfirm = "Toch delen"
+emailWarningTitle = "E-mailadres"
+errorTitle = "Delen mislukt"
+failure = "Kan geen deellink genereren. Probeer het opnieuw."
+fileLabel = "Bestand"
+generate = "Link genereren"
+generated = "Deellink gegenereerd"
+hideActivity = "Activiteit verbergen"
+invalidUsername = "Voer een geldige gebruikersnaam of e-mailadres in."
+lastAccessed = "Laatst geopend"
+linkAccessTitle = "Toegang via deellink"
+linkLabel = "Deellink"
+linksDisabled = "Deellinks zijn uitgeschakeld."
+linksDisabledBody = "Deellinks zijn uitgeschakeld door uw serverinstellingen."
+manage = "Delen beheren"
+manageDescription = "Maak en beheer links om dit bestand te delen."
+manageLoadFailed = "Deellinks kunnen niet worden geladen."
+manageTitle = "Delen beheren"
+noActivity = "Nog geen activiteit."
+noLinks = "Nog geen actieve deellinks."
+noSharedUsers = "Nog geen gebruikers met toegang."
+removeLink = "Link verwijderen"
+removeUser = "Verwijderen"
+revokeFailed = "Kan de deellink niet verwijderen."
+revoked = "Deellink verwijderd"
+roleLabel = "Rol"
+sharingDisabled = "Delen is uitgeschakeld."
+sharingDisabledBody = "Delen is uitgeschakeld door uw serverinstellingen."
+sharedUsersTitle = "Gedeelde gebruikers"
+title = "Bestand delen"
+unknownUser = "Onbekende gebruiker"
+userAddFailed = "Kan niet met die gebruiker delen."
+userAdded = "Gebruiker toegevoegd aan lijst met gedeelde gebruikers."
+usernameLabel = "Gebruikersnaam of e-mail"
+usernamePlaceholder = "Voer een gebruikersnaam of e-mail in"
+userRemoveFailed = "Kan die gebruiker niet verwijderen."
+userRemoved = "Gebruiker uit de lijst met gedeelde gebruikers verwijderd."
+viewActivity = "Activiteit bekijken"
+viewed = "Bekeken"
+viewsCount = "Weergaven: {{count}}"
+downloaded = "Gedownload"
+bulkDescription = "Maak één link om alle geselecteerde bestanden te delen met ingelogde gebruikers."
+bulkTitle = "Geselecteerde bestanden delen"
+copyLink = "Deellink kopiëren"
+fileCount = "{{count}} bestanden geselecteerd"
+ownerOnly = "Alleen de eigenaar kan het delen beheren."
+selectSingleFile = "Selecteer één bestand om het delen te beheren."
+
+[storageUpload]
+description = "Dit uploadt het huidige bestand naar serveropslag voor uw eigen toegang."
+errorTitle = "Upload mislukt"
+failure = "Upload mislukt. Controleer uw inlog- en opslaginstellingen."
+fileLabel = "Bestand"
+hint = "Openbare links en toegangsmodi worden beheerd door uw serverinstellingen."
+success = "Geüpload naar server"
+title = "Uploaden naar server"
+updateButton = "Bijwerken op server"
+uploadButton = "Uploaden naar server"
+bulkDescription = "Dit uploadt de geselecteerde bestanden naar uw serveropslag."
+bulkTitle = "Geselecteerde bestanden uploaden"
+fileCount = "{{count}} bestanden geselecteerd"
+more = " +{{count}} meer"
+
 [storage]
 approximateSize = "Geschatte grootte"
 fileTooLarge = "Bestand te groot. Maximale grootte per bestand is"
@@ -6557,6 +7523,7 @@ favorites = "Favorieten"
 heading = "Alle tools (volledig scherm)"
 noResults = "Pas uw zoekopdracht aan of schakel beschrijvingen om te vinden wat u nodig hebt."
 recommended = "Aanbevolen"
+selfHostedOffline = "Vereist je Stirling-PDF-server (momenteel offline):"
 showDetails = "Details weergeven"
 unavailable = "Uitgeschakeld door serverbeheerder:"
 unavailableDependency = "Niet beschikbaar - vereiste tool ontbreekt op server:"
@@ -6601,6 +7568,12 @@ pageFormatting = "Pagina-opmaak"
 removal = "Verwijdering"
 signing = "Ondertekenen"
 verification = "Verificatie"
+
+[tool]
+endpointUnavailable = "Deze tool is niet beschikbaar op je server."
+endpointUnavailableClickable = "Niet beschikbaar in deze modus. Klik om in te loggen."
+invalidParams = "Vul de vereiste instellingen in."
+noFiles = "Voeg een bestand toe om te beginnen."
 
 [tools]
 noSearchResults = "Geen tools gevonden"
@@ -6828,6 +7801,30 @@ title = "PDF bekijken/bewerken"
 [warning]
 tooltipTitle = "Waarschuwing"
 
+[wetSignature.tooltip]
+header = "Methoden voor het maken van een handtekening"
+
+[wetSignature.tooltip.draw]
+bullet1 = "Pas penkleur en -dikte aan"
+bullet2 = "Wissen en opnieuw tekenen tot u tevreden bent"
+bullet3 = "Werkt op aanraakapparaten (tablets, telefoons)"
+description = "Maak een handgeschreven handtekening met uw muis of touchscreen. Het best voor persoonlijke, authentieke handtekeningen."
+title = "Handtekening tekenen"
+
+[wetSignature.tooltip.type]
+bullet1 = "Kies uit meerdere lettertypen"
+bullet2 = "Pas tekstgrootte en -kleur aan"
+bullet3 = "Perfect voor gestandaardiseerde handtekeningen"
+description = "Genereer een handtekening vanuit getypte tekst. Snel en consistent, geschikt voor zakelijke documenten."
+title = "Handtekening typen"
+
+[wetSignature.tooltip.upload]
+bullet1 = "Ondersteunt PNG, JPG en andere afbeeldingsformaten"
+bullet2 = "Transparante achtergronden aanbevolen voor de beste resultaten"
+bullet3 = "Afbeelding wordt geschaald naar het handtekeninggebied"
+description = "Upload een vooraf gemaakte handtekeningafbeelding. Ideaal als u een gescande handtekening of bedrijfslogo heeft."
+title = "Handtekeningafbeelding uploaden"
+
 [watermark]
 completed = "Watermerk toegevoegd"
 desc = "Voeg tekst- of afbeeldingswatermerken toe aan PDF-bestanden"
@@ -7008,6 +8005,7 @@ activeSession = "Actieve sessie"
 addMembers = "Leden toevoegen"
 admin = "Beheerder"
 confirmDelete = "Weet u zeker dat u deze gebruiker wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+confirmUnlock = "Weet u zeker dat u dit gebruikersaccount wilt ontgrendelen?"
 deleteUser = "Gebruiker verwijderen"
 deleteUserError = "Gebruiker verwijderen is mislukt"
 deleteUserSuccess = "Gebruiker succesvol verwijderd"
@@ -7016,6 +8014,8 @@ disable = "Uitschakelen"
 disabled = "Uitgeschakeld"
 editRole = "Rol bewerken"
 enable = "Inschakelen"
+locked = "vergrendeld"
+lockedBadge = "Vergrendeld"
 loading = "Personen laden..."
 loginRequired = "Schakel eerst de loginmodus in"
 member = "Lid"
@@ -7025,6 +8025,9 @@ searchMembers = "Leden zoeken..."
 status = "Status"
 team = "Team"
 title = "Personen"
+unlockAccount = "Account ontgrendelen"
+unlockUserError = "Gebruikersaccount ontgrendelen mislukt"
+unlockUserSuccess = "Gebruikersaccount succesvol ontgrendeld"
 user = "Gebruiker"
 
 [workspace.people.actions]

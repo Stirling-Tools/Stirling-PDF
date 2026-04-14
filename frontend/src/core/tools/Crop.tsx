@@ -10,12 +10,7 @@ import { BaseToolProps, ToolComponent } from "@app/types/tool";
 const Crop = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
-  const base = useBaseTool(
-    'crop',
-    useCropParameters,
-    useCropOperation,
-    props
-  );
+  const base = useBaseTool("crop", useCropParameters, useCropOperation, props);
 
   const tooltips = useCropTooltips();
 
@@ -31,12 +26,7 @@ const Crop = (props: BaseToolProps) => {
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.hasResults ? base.handleSettingsReset : undefined,
         tooltip: tooltips,
-        content: (
-          <CropSettings
-            parameters={base.params}
-            disabled={base.endpointLoading}
-          />
-        ),
+        content: <CropSettings parameters={base.params} disabled={base.endpointLoading} />,
       },
     ],
     executeButton: {
@@ -44,7 +34,8 @@ const Crop = (props: BaseToolProps) => {
       loadingText: t("loading"),
       onClick: base.handleExecute,
       isVisible: !base.hasResults,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+      endpointEnabled: base.endpointEnabled,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,

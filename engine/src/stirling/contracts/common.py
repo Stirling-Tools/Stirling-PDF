@@ -1,0 +1,114 @@
+from __future__ import annotations
+
+from enum import StrEnum
+from typing import Literal
+
+from pydantic import Field, model_validator
+
+from stirling.models import OPERATIONS, ApiModel, OperationId, ParamToolModel
+
+
+class PdfContentType(StrEnum):
+    """Types of content that can be extracted from a PDF and sent to the AI.
+
+    Java counterpart: AiPdfContentType.java - values must stay in sync.
+    """
+
+    # Document-level structured data
+    PAGE_LAYOUT = "page_layout"
+    DOCUMENT_METADATA = "document_metadata"
+    ENCRYPTION_INFO = "encryption_info"
+    BOOKMARKS = "bookmarks"
+    LAYERS = "layers"
+    EMBEDDED_FILES = "embedded_files"
+    JAVASCRIPT = "javascript"
+    LINKS = "links"
+    IMAGE_INFO = "image_info"
+    FONTS = "fonts"
+
+    # Text and content
+    PAGE_TEXT = "page_text"
+    FULL_TEXT = "full_text"
+    FORM_FIELDS = "form_fields"
+    ANNOTATIONS = "annotations"
+    SIGNATURES = "signatures"
+    STRUCTURE_TREE = "structure_tree"
+    XMP_METADATA = "xmp_metadata"
+
+    # Heavy content
+    COMPLIANCE = "compliance"
+    IMAGES = "images"
+
+
+class WorkflowOutcome(StrEnum):
+    """Discriminator values for all workflow response unions (outcome field).
+
+    Java counterpart: AiWorkflowOutcome.java - values must stay in sync.
+    """
+
+    ANSWER = "answer"
+    NEED_CONTENT = "need_content"
+    NOT_FOUND = "not_found"
+    PLAN = "plan"
+    NEED_CLARIFICATION = "need_clarification"
+    CANNOT_DO = "cannot_do"
+    DRAFT = "draft"
+    TOOL_CALL = "tool_call"
+    COMPLETED = "completed"
+    CANNOT_CONTINUE = "cannot_continue"
+    UNSUPPORTED_CAPABILITY = "unsupported_capability"
+
+
+class ArtifactKind(StrEnum):
+    """Discriminator values for WorkflowArtifact unions (kind field).
+
+    Java counterpart: PdfContentExtractor.ArtifactKind - values must stay in sync.
+    """
+
+    EXTRACTED_TEXT = "extracted_text"
+
+
+class StepKind(StrEnum):
+    """Discriminator values for AgentSpecStep unions (kind field)."""
+
+    TOOL = "tool"
+    AI_TOOL = "ai_tool"
+
+
+class SupportedCapability(StrEnum):
+    ORCHESTRATE = "orchestrate"
+    PDF_EDIT = "pdf_edit"
+    PDF_QUESTION = "pdf_question"
+    AGENT_DRAFT = "agent_draft"
+    AGENT_REVISE = "agent_revise"
+    AGENT_NEXT_ACTION = "agent_next_action"
+
+
+class ConversationMessage(ApiModel):
+    role: str
+    content: str
+
+
+class PdfTextSelection(ApiModel):
+    page_number: int | None = None
+    text: str
+
+
+class ExtractedFileText(ApiModel):
+    file_name: str
+    pages: list[PdfTextSelection] = Field(default_factory=list)
+
+
+class ToolOperationStep(ApiModel):
+    kind: Literal[StepKind.TOOL] = StepKind.TOOL
+    tool: OperationId
+    parameters: ParamToolModel
+
+    @model_validator(mode="after")
+    def validate_tool_parameter_pairing(self) -> ToolOperationStep:
+        expected_type = OPERATIONS[self.tool]
+        if not isinstance(self.parameters, expected_type):
+            actual_type = type(self.parameters).__name__
+            expected_type_name = expected_type.__name__
+            raise ValueError(f"Parameters for tool {self.tool.value} must be {expected_type_name}, got {actual_type}.")
+        return self

@@ -83,8 +83,6 @@
   background-color: var(--mantine-color-dark-5);
 }
 
-
-
 /* Additional helper classes for the component */
 .languagePickerTarget {
   width: 100%;
@@ -123,4 +121,4 @@
 /* Dark mode link */
 [data-mantine-color-scheme="dark"] .languagePickerLink {
   color: var(--mantine-color-blue-4);
-} 
+}

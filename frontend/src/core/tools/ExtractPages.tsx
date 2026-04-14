@@ -11,12 +11,7 @@ const ExtractPages = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const tooltipContent = useExtractPagesTips();
 
-  const base = useBaseTool(
-    'extract-pages',
-    useExtractPagesParameters,
-    useExtractPagesOperation,
-    props
-  );
+  const base = useBaseTool("extract-pages", useExtractPagesParameters, useExtractPagesOperation, props);
 
   const settingsContent = (
     <ExtractPagesSettings
@@ -45,7 +40,8 @@ const ExtractPages = (props: BaseToolProps) => {
       loadingText: t("loading"),
       onClick: base.handleExecute,
       isVisible: !base.hasResults,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+      endpointEnabled: base.endpointEnabled,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,
@@ -58,5 +54,3 @@ const ExtractPages = (props: BaseToolProps) => {
 };
 
 export default ExtractPages as ToolComponent;
-
-

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useFileSelection } from "@app/contexts/FileContext";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
+import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 import { useAddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
 import { useAddStampOperation } from "@app/components/tools/addStamp/useAddStampOperation";
 import { Stack, Text } from "@mantine/core";
@@ -17,7 +17,7 @@ import StampPositionFormattingSettings from "@app/components/tools/addStamp/Stam
 
 const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const { t } = useTranslation();
-  const { selectedFiles } = useFileSelection();
+  const selectedFiles = useViewScopedFiles();
 
   const [quickPositionModeSelected, setQuickPositionModeSelected] = useState(false);
   const [customPositionModeSelected, setCustomPositionModeSelected] = useState(true);
@@ -31,7 +31,6 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     operation.resetResults();
     onPreviewFile?.(null);
   }, [params.parameters]);
-
 
   const handleExecute = async () => {
     try {
@@ -48,9 +47,9 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const hasResults = operation.files.length > 0 || operation.downloadUrl !== null;
 
   enum AddStampStep {
-    NONE = 'none',
-    STAMP_SETUP = 'stampSetup',
-    POSITION_FORMATTING = 'positionFormatting'
+    NONE = "none",
+    STAMP_SETUP = "stampSetup",
+    POSITION_FORMATTING = "positionFormatting",
   }
 
   const accordion = useAccordionSteps<AddStampStep>({
@@ -58,12 +57,12 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     initialStep: AddStampStep.STAMP_SETUP,
     stateConditions: {
       hasFiles,
-      hasResults
+      hasResults,
     },
     afterResults: () => {
       operation.resetResults();
       onPreviewFile?.(null);
-    }
+    },
   });
 
   const getSteps = () => {
@@ -94,17 +93,17 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       content: (
         <Stack gap="md" justify="space-between">
           {/* Mode toggle: Quick grid vs Custom drag - only show for image stamps */}
-          {params.parameters.stampType === 'image' && (
+          {params.parameters.stampType === "image" && (
             <ButtonSelector
-              value={quickPositionModeSelected ? 'quick' : 'custom'}
-              onChange={(v: 'quick' | 'custom') => {
-                const isQuick = v === 'quick';
+              value={quickPositionModeSelected ? "quick" : "custom"}
+              onChange={(v: "quick" | "custom") => {
+                const isQuick = v === "quick";
                 setQuickPositionModeSelected(isQuick);
                 setCustomPositionModeSelected(!isQuick);
               }}
               options={[
-                { value: 'quick', label: t('quickPosition', 'Quick Position') },
-                { value: 'custom', label: t('customPosition', 'Custom Position') },
+                { value: "quick", label: t("quickPosition", "Quick Position") },
+                { value: "custom", label: t("customPosition", "Custom Position") },
               ]}
               disabled={endpointLoading}
               buttonClassName={styles.modeToggleButton}
@@ -112,14 +111,18 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
             />
           )}
 
-          {params.parameters.stampType === 'image' && customPositionModeSelected && (
+          {params.parameters.stampType === "image" && customPositionModeSelected && (
             <div className={styles.informationContainer}>
-              <Text className={styles.informationText}>{t('AddStampRequest.customPosition', 'Drag the stamp to the desired location in the preview window.')}</Text>
+              <Text className={styles.informationText}>
+                {t("AddStampRequest.customPosition", "Drag the stamp to the desired location in the preview window.")}
+              </Text>
             </div>
           )}
-          {params.parameters.stampType === 'image' && !customPositionModeSelected && (
+          {params.parameters.stampType === "image" && !customPositionModeSelected && (
             <div className={styles.informationContainer}>
-              <Text className={styles.informationText}>{t('AddStampRequest.quickPosition', 'Select a position on the page to place the stamp.')}</Text>
+              <Text className={styles.informationText}>
+                {t("AddStampRequest.quickPosition", "Select a position on the page to place the stamp.")}
+              </Text>
             </div>
           )}
 
@@ -133,12 +136,12 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           <ObscuredOverlay
             obscured={
               accordion.currentStep === AddStampStep.POSITION_FORMATTING &&
-              ((params.parameters.stampType === 'text' && params.parameters.stampText.trim().length === 0) ||
-               (params.parameters.stampType === 'image' && !params.parameters.stampImage))
+              ((params.parameters.stampType === "text" && params.parameters.stampText.trim().length === 0) ||
+                (params.parameters.stampType === "image" && !params.parameters.stampImage))
             }
             overlayMessage={
               <Text size="sm" c="white" fw={600}>
-                {t('AddStampRequest.noStampSelected', 'No stamp selected. Return to Step 1.')}
+                {t("AddStampRequest.noStampSelected", "No stamp selected. Return to Step 1.")}
               </Text>
             }
           >
@@ -146,7 +149,7 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
               parameters={params.parameters}
               onParameterChange={params.updateParameter}
               file={selectedFiles[0] || null}
-              showQuickGrid={params.parameters.stampType === 'text' ? true : quickPositionModeSelected}
+              showQuickGrid={params.parameters.stampType === "text" ? true : quickPositionModeSelected}
             />
           </ObscuredOverlay>
         </Stack>
@@ -163,16 +166,17 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
     },
     steps: getSteps(),
     executeButton: {
-      text: t('AddStampRequest.submit', 'Add Stamp'),
+      text: t("AddStampRequest.submit", "Add Stamp"),
       isVisible: !hasResults,
-      loadingText: t('loading'),
+      loadingText: t("loading"),
       onClick: handleExecute,
-      disabled: !params.validateParameters() || !hasFiles || !endpointEnabled,
+      endpointEnabled: endpointEnabled,
+      paramsValid: params.validateParameters(),
     },
     review: {
       isVisible: hasResults,
       operation: operation,
-      title: t('AddStampRequest.results.title', 'Stamp Results'),
+      title: t("AddStampRequest.results.title", "Stamp Results"),
       onFileClick: (file) => onPreviewFile?.(file),
       onUndo: async () => {
         await operation.undoOperation();
@@ -185,5 +189,3 @@ const AddStamp = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 AddStamp.tool = () => useAddStampOperation;
 
 export default AddStamp as ToolComponent;
-
-

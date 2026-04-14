@@ -8,6 +8,7 @@ black = "Svart"
 blue = "Blå"
 bored = "Lei av å vente?"
 cancel = "Avbryt"
+confirm = "Bekreft"
 changedCredsMessage = "Legitimasjon endret!"
 chooseFile = "Velg fil"
 close = "Lukk"
@@ -142,6 +143,11 @@ welcome = "Velkommen"
 white = "Hvit"
 WorkInProgess = "Arbeid pågår, Kan være feil eller buggy, Vennligst rapporter eventuelle problemer!"
 yes = "Ja"
+insufficientCredits = "Ikke nok kreditter. Påkrevd: {{requiredCredits}}, Tilgjengelig: {{currentBalance}}, Mangler: {{shortfall}}"
+loadingCredits = "Sjekker kreditter..."
+loadingProStatus = "Sjekker abonnementsstatus..."
+noticeTopUpOrPlan = "Ikke nok kreditter, fyll på eller oppgrader til et abonnement"
+accessInvite = "Inviter"
 
 [account]
 accountSettings = "Kontoinnstillinger"
@@ -1423,6 +1429,34 @@ title = "Behandling"
 description = "Maksimal tid å vente på en behandlingsjobb før en feil rapporteres."
 label = "Behandlingstidsavbrudd (sekunder)"
 
+[admin.settings.storage]
+description = "Kontroller serverlagring og delingsalternativer."
+title = "Fil-lagring og deling"
+
+[admin.settings.storage.enabled]
+description = "Tillat brukere å lagre filer på serveren."
+label = "Aktiver fillagring på server"
+
+[admin.settings.storage.sharing.email]
+description = "Tillat deling med e-postadresser."
+label = "Aktiver deling via e-post"
+mailLink = "Konfigurer e-postinnstillinger"
+mailNote = "Krever e-postkonfigurasjon. "
+
+[admin.settings.storage.sharing.enabled]
+description = "Tillat brukere å dele lagrede filer."
+label = "Aktiver deling"
+
+[admin.settings.storage.sharing.links]
+description = "Tillat deling via påloggede lenker."
+frontendUrlLink = "Konfigurer i systeminnstillinger"
+frontendUrlNote = "Krever en Frontend URL. "
+label = "Aktiver delingslenker"
+
+[admin.settings.storage.signing.enabled]
+description = "Tillat brukere å opprette signeringsøkter med flere deltakere. Krever at fillagring på serveren er aktivert."
+label = "Aktiver gruppesignering (Alpha)"
+
 [admin.settings.unsavedChanges]
 cancel = "Fortsett redigering"
 discard = "Forkast endringer"
@@ -1513,6 +1547,7 @@ editStampHint = "For å endre bildet, slett dette stempelet og legg til et nytt.
 editSwitchToSelect = "Bytt til Velg og rediger for å redigere denne merknaden."
 editText = "Rediger tekstboks"
 editTextMarkup = "Rediger tekstmarkering"
+annotationStyle = "Merknadsstil"
 ellipse = "Ellipse"
 exit = "Avslutt annotasjonsmodus"
 fillColor = "Fyllfarge"
@@ -1523,13 +1558,19 @@ highlight = "Uthev"
 imagePreview = "Forhåndsvisning"
 inkHighlighter = "Frihåndsmarkering"
 line = "Linje"
+lineArrow = "Pil"
 noBackground = "Ingen bakgrunn"
 note = "Notat"
+comment = "Kommentar"
+comments = "Kommentarer"
+insertText = "Sett inn tekst"
+replaceText = "Erstatt tekst"
 noteIcon = "Notat-ikon"
 notesStamps = "Notater og stempler"
 opacity = "Opasitet"
 pen = "Penn"
 polygon = "Polygon"
+polyline = "Polylinje"
 properties = "Egenskaper"
 rectangle = "Rektangel"
 redo = "Gjør om"
@@ -2048,7 +2089,19 @@ numbers = "Tall/intervaller: 5, 10-20"
 progressions = "Progresjoner: 3n, 4n+1"
 
 [certSign]
+allSigned = "Alle deltakere har signert. Klar til å ferdigstille."
+awaitingSignatures = "Avventer signaturer"
+signatureProgress = "{{signedCount}}/{{totalCount}} signaturer"
 chooseCertificate = "Velg sertifikatfil"
+declined = "Avslått"
+fetchFailed = "Kunne ikke laste signeringsdata"
+finalized = "Ferdigstilt"
+notified = "Avventer"
+partialNote = "Du kan ferdigstille tidlig med gjeldende signaturer. Usignerte deltakere blir ekskludert."
+pending = "Avventer"
+readyToFinalize = "Klar til å ferdigstille"
+signed = "Signert"
+viewed = "Vist"
 chooseJksFile = "Velg JKS-fil"
 chooseP12File = "Velg PKCS12-fil"
 choosePfxFile = "Velg PFX-fil"
@@ -2071,6 +2124,7 @@ title = "Sertifikatsignering"
 invisible = "Usynlig"
 stepTitle = "Signaturutseende"
 visible = "Synlig"
+visibility = "Synlighet"
 
 [certSign.appearance.options]
 title = "Signaturdetaljer"
@@ -2176,6 +2230,252 @@ bullet3 = "Sjekker om dokumentet ble endret etter signering"
 bullet4 = "Kan bruke egendefinerte sertifikater for verifisering"
 text = "Når du sjekker signaturer, forteller verktøyet deg om de er gyldige, hvem som signerte dokumentet, når det ble signert, og om dokumentet er endret siden signering."
 title = "Kontroll av signaturer"
+
+[certSign.collab.finalize]
+button = "Ferdigstill og last inn signert PDF"
+early = "Ferdigstill med nåværende signaturer"
+
+[certSign.collab.sessionDetail]
+addButton = "Legg til deltakere"
+addParticipants = "Legg til deltakere"
+addParticipantsError = "Kunne ikke legge til deltakere"
+backToList = "Tilbake til økter"
+deleteConfirm = "Er du sikker? Dette kan ikke angres."
+deleteError = "Kunne ikke slette økt"
+deleted = "Økt slettet"
+deleteSession = "Slett økt"
+dueDate = "Frist"
+finalizeError = "Kunne ikke ferdigstille økt"
+loadPdfError = "Kunne ikke laste signert PDF"
+loadSignedPdf = "Last inn signert PDF i aktive filer"
+messageLabel = "Melding"
+noAdditionalInfo = "Ingen tilleggsinformasjon"
+owner = "Eier"
+participantRemoved = "Deltaker fjernet"
+participants = "Deltakere"
+participantsAdded = "Deltakere lagt til"
+removeParticipant = "Fjern"
+removeParticipantError = "Kunne ikke fjerne deltaker"
+selectUsers = "Velg brukere ..."
+sessionInfo = "Øktinformasjon"
+workbenchTitle = "Øktadministrasjon"
+
+[certSign.collab.signRequest]
+addedToFiles = "Dokument lagt til i aktive filer"
+addSignature = "Legg til signaturen din"
+addToFiles = "Legg til i aktive filer"
+advancedSettings = "Avanserte innstillinger"
+backToList = "Tilbake til signeringsforespørsler"
+certificateChoice = "Velg et sertifikat å signere med"
+changeSignature = "Endre signatur"
+clearSignature = "Fjern signatur"
+completeAndSign = "Fullfør og signer"
+createNewSignature = "Opprett ny signatur"
+declineButton = "Avslå"
+decline = "Avslå forespørsel"
+deleteSelected = "Slett valgt signatur"
+drawSignature = "Tegn signaturen din nedenfor"
+dueDate = "Frist"
+fileTooLarge = "Filstørrelsen må være mindre enn 5MB"
+fontFamily = "Skrifttype"
+fontSize = "Skriftstørrelse: {{size}}px"
+fontSizePlaceholder = "Størrelse"
+from = "Fra"
+invalidCertFile = "Velg en P12- eller PFX-sertifikatfil"
+invalidFileType = "Velg en bildefil"
+location = "Sted (valgfritt)"
+locationPlaceholder = "Hvor signerer du fra?"
+message = "Melding"
+noCertificate = "Velg en sertifikatfil"
+noSignatures = "Plasser minst én signatur på PDF-en"
+p12File = "P12/PFX-sertifikatfil"
+password = "Sertifikatpassord"
+passwordPlaceholder = "Angi passord ..."
+penColor = "Pennfarge"
+penSize = "Pennstørrelse: {{size}}px"
+placementActive = "Klikk på PDF-en for å plassere"
+placeSignatureButton = "Plasser signatur på PDF"
+reason = "Årsak (valgfritt)"
+reasonPlaceholder = "Hvorfor signerer du?"
+removeImage = "Fjern bilde"
+removeCertFile = "Fjern fil"
+savedSignatures = "Lagrede signaturer"
+selectFile = "Velg bildefil"
+selectSignatureTitle = "Velg eller opprett signatur"
+signButton = "Signer dokument"
+signatureInfo = "Disse innstillingene er konfigurert av dokumenteieren"
+signaturePlaced = "Signatur plassert på side"
+signatureSettings = "Signaturinnstillinger"
+signatureText = "Signaturtekst"
+signatureTextPlaceholder = "Skriv inn navnet ditt ..."
+signatureTypeLabel = "Signaturtype"
+signingTitle = "Signering"
+textColor = "Tekstfarge"
+typeSignature = "Skriv inn navnet ditt for å opprette en signatur"
+uploadCert = "Egendefinert sertifikat"
+uploadCertDesc = "Bruk ditt eget P12/PFX-sertifikat"
+uploadSignature = "Last opp signaturbildet ditt"
+usePersonalCert = "Personlig sertifikat"
+usePersonalCertDesc = "Genereres automatisk for kontoen din"
+useServerCert = "Organisasjonssertifikat"
+useServerCertDesc = "Delt organisasjonssertifikat"
+workbenchTitle = "Signeringsforespørsel"
+
+[certSign.collab.signRequest.canvas]
+colorPickerTitle = "Velg strekfarge"
+continue = "Fortsett"
+
+[certSign.collab.signRequest.certModal]
+description = "Du har plassert {{count}} signatur(er). Velg sertifikatet ditt for å fullføre signeringen."
+sign = "Signer dokument"
+certValidating = "Validerer sertifikat ..."
+certValidUntil = "Sertifikat gyldig til {{date}}"
+certInvalid = "Ugyldig sertifikat: {{error}}"
+certInvalidFallback = "Ugyldig sertifikat"
+certNetworkError = "Kunne ikke validere sertifikat"
+title = "Konfigurer sertifikat"
+
+[certSign.collab.signRequest.image]
+hint = "Last opp et PNG- eller JPG-bilde av signaturen din"
+
+[certSign.collab.signRequest.mode]
+move = "Flytt signatur"
+place = "Plasser signatur"
+title = "Signerings- eller flyttemodus"
+
+[certSign.collab.signRequest.modeTabs]
+draw = "Tegn"
+image = "Last opp"
+text = "Skriv"
+
+[certSign.collab.signRequest.placeSignature]
+message = "Klikk på PDF-en for å plassere signaturen din"
+title = "Plasser signatur"
+
+[certSign.collab.signRequest.preview]
+imageAlt = "Valgt signatur"
+missing = "Ingen forhåndsvisning"
+textFallback = "Signatur"
+
+[certSign.collab.signRequest.saved]
+defaultCanvasLabel = "Tegnet signatur"
+defaultImageLabel = "Opplastet signatur"
+defaultLabel = "Signatur"
+defaultTextLabel = "Skrevet signatur"
+delete = "Slett signatur"
+none = "Ingen lagrede signaturer"
+
+[certSign.collab.signRequest.signatureType]
+draw = "Tegn"
+type = "Skriv"
+upload = "Last opp"
+
+[certSign.collab.signRequest.steps]
+back = "Tilbake"
+cancelPlacement = "Avbryt plassering"
+certificate = "Sertifikat"
+clickMultipleTimes = "Klikk flere ganger på PDF-en for å plassere signaturer. Dra en signatur for å flytte eller endre størrelse."
+clickToPlace = "Klikk på PDF-en der du vil at signaturen skal vises."
+continue = "Fortsett til valg av sertifikat"
+continueToPlacement = "Fortsett til plassering"
+continueToReview = "Fortsett til gjennomgang"
+createSignature = "Opprett signatur"
+invisible = "Usynlig"
+location = "Sted:"
+multipleSignatures = "{{count}} signaturer vil bli lagt til PDF-en"
+oneSignature = "1 signatur vil bli lagt til PDF-en"
+placeOnPdf = "Plasser på PDF"
+reason = "Årsak:"
+reviewTitle = "Gjennomgå før signering"
+signaturePlaced = "Signatur plassert på side {{page}}. Du kan justere plasseringen ved å klikke igjen, eller fortsette til gjennomgang."
+visible = "Synlig"
+visibility = "Synlighet:"
+yourSignatures = "Dine signaturer ({{count}})"
+
+[certSign.collab.signRequest.text]
+colorLabel = "Farge"
+fontLabel = "Skrift"
+fontSizeLabel = "Størrelse"
+fontSizePlaceholder = "16"
+label = "Signaturtekst"
+modalHint = "Skriv inn navnet ditt, og klikk deretter Fortsett for å plassere det på PDF-en."
+placeholder = "Skriv inn navnet ditt ..."
+
+[certSign.collab.participant]
+certValidating = "Validerer sertifikat ..."
+certValid = "✓ Sertifikat gyldig"
+certValidUntil = " til {{date}}"
+certInvalid = "✗ {{error}}"
+certInvalidFallback = "Ugyldig sertifikat"
+certNetworkError = "Kunne ikke validere sertifikat"
+
+[certSign.collab.addParticipants]
+add = "Legg til {{count}} deltakere"
+back = "Tilbake"
+configureSignatures = "Konfigurer signaturinnstillinger"
+continue = "Fortsett til signaturinnstillinger"
+reasonHelp = "Forhåndsangi en signeringsårsak for disse deltakerne (valgfritt, de kan overstyre ved signering)"
+reasonPlaceholder = "f.eks. Godkjenning, Gjennomgang ..."
+selectUsers = "Velg brukere"
+
+[certSign.collab.sessionCreation]
+includeSummaryPage = "Inkluder side med signaturoppsummering"
+includeSummaryPageHelp = "En oppsummeringsside legges til på slutten med all signaturmetadata. Signaturfeltene for digitale sertifikater på enkeltsider blir undertrykt (våte signaturer påvirkes ikke)."
+
+[certSign.collab.sessionList]
+active = "Aktiv"
+finalized = "Ferdigstilt"
+
+[certSign.collab.signatureSettings]
+description = "Konfigurer hvordan signaturer skal vises for alle deltakere"
+title = "Signaturutforming"
+
+[certSign.collab.userSelector]
+inviteUsers = "Legg til brukere"
+loadError = "Kunne ikke laste brukere"
+noTeam = "Ingen team"
+noUsers = "Ingen andre brukere funnet."
+placeholder = "Velg brukere ..."
+
+[certSign.mobile]
+panelActions = "Handlinger"
+panelDocument = "Dokument"
+panelPeople = "Personer"
+
+[certSign.sessions]
+deleted = "Økt slettet"
+fetchFailed = "Kunne ikke laste øktdetaljer"
+finalized = "Økt ferdigstilt"
+loaded = "Signert PDF lastet inn"
+pdfNotReady = "PDF ikke klar"
+pdfNotReadyDesc = "Den signerte PDF-en genereres. Prøv igjen om et øyeblikk."
+
+[certificateChoice.tooltip]
+header = "Sertifikatyper"
+
+[certificateChoice.tooltip.organization]
+bullet1 = "Administreres av systemadministratorer"
+bullet2 = "Deles på tvers av autoriserte brukere"
+bullet3 = "Representerer virksomhetens identitet, ikke individet"
+bullet4 = "Best for: Offisielle dokumenter, teamsignaturer"
+description = "Et delt sertifikat levert av organisasjonen din. Brukes for signeringsmyndighet på tvers av selskapet."
+title = "Organisasjonssertifikat"
+
+[certificateChoice.tooltip.personal]
+bullet1 = "Genereres automatisk ved første bruk"
+bullet2 = "Knyttet til brukerkontoen din"
+bullet3 = "Kan ikke deles med andre brukere"
+bullet4 = "Best for: Personlige dokumenter, individuell ansvarlighet"
+description = "Et autogenerert sertifikat unikt for brukerkontoen din. Egnet for individuelle signaturer."
+title = "Personlig sertifikat"
+
+[certificateChoice.tooltip.upload]
+bullet1 = "Krever P12/PFX-fil og passord"
+bullet2 = "Kan utstedes av eksterne sertifikatutstedere"
+bullet3 = "Høyere tillitsnivå for juridiske dokumenter"
+bullet4 = "Best for: Rettslig bindende kontrakter, ekstern validering"
+description = "Bruk din egen PKCS#12-sertifikatfil. Gir full kontroll over sertifikategenskaper."
+title = "Last opp egendefinert P12"
 
 [changeCreds]
 changePassword = "Du bruker standard påloggingsdetaljer. Vennligst skriv inn et nytt passord"
@@ -2574,10 +2874,48 @@ title = "Kvalitetsjustering"
 [compressPdfs]
 tags = "komprimer,liten,tiny"
 
+[config]
+plan = "Abonnement"
+
 [config.account.overview]
+confirmDelete = "Slett kontoen min"
+deleteAccount = "Slett konto"
+deleteAccountTitle = "Slett konto"
+deleteFailed = "Kunne ikke slette konto."
+deleteFailedTitle = "Kan ikke slette konto"
+deleteWarning = "Denne handlingen er permanent og kan ikke angres. Alle dataene dine blir slettet."
+enterEmailConfirm = "For å bekrefte sletting, skriv inn e-postadressen din ({{email}}) nedenfor:"
 guestDescription = "Du er logget inn som gjest. Vurder å oppgradere kontoen din ovenfor."
+label = "Oversikt"
 manageAccountPreferences = "Administrer kontoinnstillingene dine"
+signedInAs = "Innlogget som"
 title = "Kontoinnstillinger"
+
+[config.account.profilePicture]
+description = "Last opp et bilde for å tilpasse kontoen din."
+help = "PNG, JPG eller WebP opptil 2 MB."
+remove = "Fjern"
+sizeError = "Velg et bilde som er mindre enn 2 MB."
+switchedToCustom = "Byttet til egendefinert bilde. Du kan nå laste opp ditt eget."
+title = "Profilbilde"
+upload = "Last opp"
+useCustom = "Bruk egendefinert bilde"
+usingProvider = "Bruker profilbilde fra {{provider}}"
+
+[config.account.profilePicture.cropper]
+cropError = "Kunne ikke beskjære bilde. Prøv igjen."
+invalidImage = "Ugyldig bildefil. Velg en gyldig PNG-, JPG- eller WebP-fil."
+processing = "Behandler beskjæring..."
+save = "Lagre beskåret bilde"
+sizeErrorAfterCrop = "Det beskårne bildet er for stort. Zoom ut eller beskjær et mindre område."
+title = "Beskjær profilbilde"
+zoom = "Zoom"
+
+[config.account.security]
+changePassword = "Endre passord"
+description = "Administrer passord og sikkerhetsinnstillinger."
+title = "Passord og sikkerhet"
+update = "Oppdater passord"
 
 [config.account.upgrade]
 description = "Koble kontoen din for å bevare historikken og få tilgang til flere funksjoner!"
@@ -2595,6 +2933,7 @@ upgradeButton = "Oppgrader konto"
 [config.apiKeys]
 chartAriaLabel = "Kredittbruk: inkludert {{includedUsed}} av {{includedTotal}}, kjøpt {{purchasedUsed}} av {{purchasedTotal}}"
 copyKeyAriaLabel = "Kopier API-nøkkel"
+creditsRemaining = "Gjenstående kreditter"
 description = "API-nøkkelen din for tilgang til Stirlings pakke med PDF-verktøy. Kopier den til prosjektet ditt eller oppdater for å generere en ny."
 docsDescription = "Lær mer om integrasjon med Stirling PDF:"
 docsLink = "API-dokumentasjon"
@@ -2643,6 +2982,14 @@ basic = "Grunnleggende konfigurasjon"
 integration = "Integrasjonskonfigurasjon"
 security = "Sikkerhetskonfigurasjon"
 system = "Systemkonfigurasjon"
+
+[connectionMode.status]
+localOffline = "Frakoblet modus aktiv"
+localOnline = "Frakoblet modus aktiv"
+saas = "Tilkoblet Stirling Cloud"
+selfhostedChecking = "Tilkoblet selvhostet server (sjekker...)"
+selfhostedOffline = "Selvhostet server kan ikke nås"
+selfhostedOnline = "Tilkoblet selvhostet server"
 
 [convert]
 autoRotate = "Roter automatisk"
@@ -2728,6 +3075,15 @@ webOptions = "Alternativer for web til PDF"
 wordDoc = "Word-dokument"
 wordDocExt = "Word-dokument (.docx)"
 zoomLevel = "Zoomnivå"
+cbrToPdf = "CBR → PDF"
+cbzToPdf = "CBZ → PDF"
+ebookToPdf = "E-bok → PDF"
+emlToPdf = "E-post → PDF"
+fileToPdf = "Office/Dokument → PDF"
+pdfToCbr = "PDF → CBR"
+pdfToCbz = "PDF → CBZ"
+pdfToEpub = "PDF → EPUB"
+svgToPdf = "SVG → PDF"
 
 [convert.ebookOptions]
 ebookOptions = "Alternativer for eBook til PDF"
@@ -3175,6 +3531,46 @@ totalSelected = "Totalt valgt"
 unsupported = "Ikke støttet"
 unzip = "Pakk ut"
 uploadError = "Noen filer kunne ikke lastes opp."
+copyCreated = "Kopi lagret på denne enheten."
+copyFailed = "Kunne ikke opprette en kopi."
+leaveShare = "Fjern fra listen min"
+leaveShareFailed = "Kunne ikke fjerne den delte filen."
+leaveShareSuccess = "Fjernet fra din delte liste."
+removeBoth = "Fjern fra begge"
+removeFilePrompt = "Denne filen er lagret på denne enheten og på serveren. Hvor vil du fjerne den fra?"
+removeFileTitle = "Fjern fil"
+removeLocalOnly = "Kun denne enheten"
+removeServerFailed = "Kunne ikke fjerne filen fra serveren."
+removeServerOnly = "Kun server"
+removeServerOnlyPrompt = "Denne filen er lagret kun på serveren. Vil du fjerne den fra serveren?"
+removeServerSuccess = "Fjernet fra server."
+removeSharedPrompt = "Denne filen er delt med deg. Du kan fjerne den fra denne enheten eller fra din delte liste."
+removeSharedServerOnlyBlockedPrompt = "Denne filen er delt med deg og lagret kun på serveren."
+removeSharedServerOnlyPrompt = "Denne filen er delt med deg og lagret kun på serveren. Fjern den fra listen din?"
+changesNotUploaded = "Endringer ikke lastet opp"
+cloudFile = "Skyfil"
+filterAll = "Alle"
+filterLocal = "Lokal"
+filterSharedByMe = "Delt av meg"
+filterSharedWithMe = "Delt med meg"
+lastSynced = "Sist synkronisert"
+localOnly = "Kun lokalt"
+makeCopy = "Lag en kopi"
+owner = "Eier"
+ownerUnknown = "Ukjent"
+share = "Del"
+shareSelected = "Del valgte"
+sharedByYou = "Delt av deg"
+sharedEditNoticeBody = "Du har ikke redigeringsrettigheter til serverversjonen av denne filen. Eventuelle endringer du gjør, lagres som en lokal kopi."
+sharedEditNoticeConfirm = "Forstått"
+sharedEditNoticeTitle = "Skrivebeskyttet serverkopi"
+sharedWithYou = "Delt med deg"
+sharing = "Deling"
+storageState = "Lagring"
+synced = "Synkronisert"
+updateOnServer = "Oppdater på serveren"
+uploadSelected = "Last opp valgte"
+uploadToServer = "Last opp til serveren"
 
 [files]
 addFiles = "Legg til filer"
@@ -3299,6 +3695,77 @@ title = "Om utflating av PDF-er"
 [footer]
 discord = "Discord"
 issues = "GitHub"
+
+[groupSigning.tooltip]
+header = "Om gruppesignering"
+
+[groupSigning.tooltip.finalization]
+bullet1 = "Alle signaturer legges til i den deltakerrekkefølgen du spesifiserte"
+bullet2 = "Du kan ferdigstille med delvise signaturer ved behov"
+bullet3 = "Når ferdigstilt, kan ikke økten endres"
+description = "Når alle deltakere har signert (eller du velger å ferdigstille tidlig), kan du generere den endelige signerte PDF-en."
+title = "Ferdigstillingsprosess"
+
+[groupSigning.tooltip.roles]
+bullet1 = "Eier (deg): Oppretter økt, konfigurerer signaturstandarder, ferdigstiller dokument"
+bullet2 = "Deltakere: Oppretter sin signatur, velger sertifikat, plasserer på PDF"
+bullet3 = "Deltakere kan ikke endre innstillinger for synlighet, årsak eller sted"
+description = "Du kontrollerer innstillingene for signaturutforming for alle deltakere."
+title = "Deltakerroller"
+
+[groupSigning.tooltip.sequential]
+bullet1 = "Første deltaker må signere før den neste får tilgang til dokumentet"
+bullet2 = "Sikrer korrekt signeringsrekkefølge for juridisk etterlevelse"
+bullet3 = "Du kan endre rekkefølgen ved å dra deltakere i listen"
+description = "Deltakere signerer dokumenter i den rekkefølgen du angir. Hver signerer får et varsel når det er deres tur."
+title = "Sekvensiell signering"
+
+[groupSigning.steps]
+back = "Tilbake"
+completed = "Fullført"
+current = "Gjeldende"
+stepLabel = "Trinn {{number}}"
+
+[groupSigning.steps.configureDefaults]
+continue = "Fortsett til gjennomgang"
+invisible = "Signaturer vil være usynlige (kun metadata)"
+locationLabel = "Sted:"
+preview = "Forhåndsvisning"
+reasonLabel = "Årsak:"
+title = "Konfigurer signaturinnstillinger"
+visible = "Signaturer vil være synlige på side {{page}}"
+
+[groupSigning.steps.review]
+document = "Dokument"
+dueDate = "Frist (valgfritt)"
+dueDatePlaceholder = "Velg frist ..."
+invisible = "Usynlig (kun metadata)"
+location = "Sted:"
+logo = "Logo:"
+logoHidden = "Ingen logo"
+logoShown = "Stirling PDF-logo vises"
+participants = "Deltakere"
+reason = "Årsak:"
+send = "Send signeringsforespørsler"
+signatureSettings = "Signaturinnstillinger"
+title = "Gjennomgå øktsdetaljer"
+titleShort = "Gjennomgå og send"
+visibility = "Synlighet:"
+visible = "Synlig på side {{page}}"
+participantCount = "{{count}} deltakere vil signere i rekkefølge"
+
+[groupSigning.steps.selectDocument]
+continue = "Fortsett til valg av deltakere"
+noFile = "Velg én PDF-fil fra dine aktive filer for å opprette en signeringsøkt."
+selectedFile = "Valgt dokument"
+title = "Velg dokument"
+
+[groupSigning.steps.selectParticipants]
+continue = "Fortsett til signaturinnstillinger"
+count = "{{count}} deltakere valgt"
+label = "Velg deltakere"
+placeholder = "Velg deltakere som skal signere ..."
+title = "Velg deltakere"
 
 [getPdfInfo]
 downloadJson = "Last ned JSON"
@@ -3718,6 +4185,11 @@ desc = "Legger til signatur i PDF ved tegning, tekst eller bilde"
 tags = "signatur,autograf"
 title = "Signer"
 
+[home.timestampPdf]
+desc = "Legg til et RFC 3161-dokumenttidsstempel for å bevise når PDF-en din eksisterte"
+tags = "tidsstempel,RFC 3161,TSA,time stamp authority,dokumenttidsstempel,eksistensbevis,tidsstempel-token,pålitelig tidsstempel,signer tidsstempel,notarisere"
+title = "Tidsstemple PDF"
+
 [home.split]
 desc = "Del PDF-er i flere dokumenter"
 tags = "del,skill,del opp"
@@ -3854,6 +4326,7 @@ version = "Versjon"
 accountCreatedSuccess = "Konto opprettet! Du kan nå logge inn."
 alreadyLoggedIn = "Du er allerede innlogget på"
 alreadyLoggedIn2 = "enheter. Logg ut og forsøk igjen"
+backToSignIn = "Tilbake til innlogging"
 cancel = "Avbryt"
 changePasswordWarning = "Endre passordet ditt etter at du har logget inn for første gang"
 credentialsUpdated = "Innloggingsinformasjonen din er oppdatert. Logg inn på nytt."
@@ -3895,16 +4368,21 @@ or = "Eller"
 password = "Passord"
 passwordChangedSuccess = "Passord endret! Logg inn med det nye passordet."
 passwordResetSent = "Lenke for tilbakestilling av passord sendt til {{email}}! Sjekk e-posten din og følg instruksjonene."
+passwordUpdatedSuccess = "Passordet ditt er oppdatert."
 pleaseEnterBoth = "Vennligst oppgi både e-post og passord"
 pleaseEnterEmail = "Vennligst oppgi e-postadressen din"
 relyingPartyRegistrationNotFound = "Ingen konfigurasjon funnet for Relying Party\""
 rememberme = "Husk meg"
+resetHelp = "Skriv inn e-posten din for å motta en sikker lenke for å tilbakestille passordet. Hvis lenken er utløpt, be om en ny."
+resetYourPassword = "Tilbakestill passordet ditt"
 saml2RequiresLicense = "SAML-pålogging krever en betalt lisens (Server eller Enterprise). Kontakt administratoren for å oppgradere planen din."
 sending = "Sender…"
 sendMagicLink = "Send magisk lenke"
+sendResetLink = "Send tilbakestillingslenke"
 sessionExpired = "Økten din har utløpt. Logg inn på nytt."
 signin = "Logg inn"
 signInAnonymously = "Registrer deg som gjest"
+subtitle = "Logg inn igjen på Stirling PDF"
 signingIn = "Logger inn..."
 signinTitle = "Vennligst logg inn"
 signInWith = "Logg inn med"
@@ -3913,6 +4391,7 @@ ssoSignIn = "Logg inn via Enkel Pålogging"
 title = "Logg inn"
 toManySessions = "Du har for mange aktive økter"
 unexpectedError = "Uventet feil: {{message}}"
+updatePassword = "Oppdater passord"
 useEmailInstead = "Logg inn med e-post"
 useMagicLink = "Bruk magisk lenke i stedet"
 userIsDisabled = "Bruker er deaktivert, innlogging er for øyeblikket blokkert med dette brukernavnet. Vennligst kontakt administrator"
@@ -4222,6 +4701,15 @@ viewSwitcher = "Bruk disse kontrollene for å velge hvordan du vil vise PDF-ene 
 workbench = "Dette er <strong>Arbeidsbenken</strong> - hovedområdet der du viser og redigerer PDF-ene dine."
 wrapUp = "Da er du klar! Du har lært om hovedområdene i appen og hvordan du bruker dem. Klikk på <strong>Hjelp</strong>-knappen når som helst for å se denne omvisningen igjen."
 
+[onboarding.freeTrial]
+afterTrialWithoutPayment = "Når prøveperioden avsluttes, fortsetter du med gratisnivået vårt. Legg til en betalingsmetode for å beholde Pro-tilgang."
+afterTrialWithPayment = "Pro-abonnementet ditt begynner automatisk når prøveperioden slutter."
+body = "Du har full tilgang til Stirling PDF Pro-funksjoner under prøveperioden. Nyt ubegrensede konverteringer, større filstørrelser og prioritert behandling."
+daysRemaining = "{{days}} dager igjen"
+daysRemainingSingular = "{{days}} dag igjen"
+title = "Din 30-dagers Pro-prøveperiode"
+trialEnds = "Prøveperioden slutter {{date}}"
+
 [onboarding.buttons]
 back = "Tilbake"
 download = "Last ned →"
@@ -4372,7 +4860,10 @@ zoomOut = "Zoom ut"
 
 [viewer]
 cannotPreviewFile = "Kan ikke forhåndsvise fil"
+disableColorFilter = "Deaktiver fargefilter"
 dualPageView = "Dobbelsidevisning"
+enableDarkFilter = "Aktiver mørkt filter"
+enableSepiaFilter = "Aktiver sepiafilter"
 firstPage = "Første side"
 lastPage = "Siste side"
 nextPage = "Neste side"
@@ -4382,6 +4873,22 @@ singlePageView = "Enkeltsidevisning"
 unknownFile = "Ukjent fil"
 zoomIn = "Zoom inn"
 zoomOut = "Zoom ut"
+resetZoom = "Tilbakestill zoom"
+
+[viewer.nonPdf]
+fileTypeBadge = "{{type}}-fil"
+convertToPdf = "Konverter til PDF"
+loading = "Laster ..."
+emptyFile = "Tom fil"
+csvStats = "{{rows}} rader · {{columns}} kolonner · {{size}}"
+sortedBy = "Sortert etter: {{column}}"
+columnDefault = "Kolonne {{index}}"
+htmlPreviewWarning = "HTML-forhåndsvisning — eksterne ressurser kan hende ikke lastes · {{size}}"
+htmlPreview = "HTML-forhåndsvisning"
+invalidJson = "Ugyldig JSON — viser rått innhold"
+textStats = "{{lines}} linjer · {{size}}"
+lineNumbers = "Linjenumre"
+renderMarkdown = "Gjengi Markdown"
 
 [viewer.attachments]
 title = "Vedlegg"
@@ -4391,6 +4898,31 @@ noDocument = "Åpne en PDF for å se vedleggene."
 loading = "Laster vedlegg..."
 empty = "Ingen vedlegg i dette dokumentet"
 noMatch = "Ingen vedlegg samsvarer med søket ditt"
+
+[viewer.comments]
+title = "Kommentarer"
+hint = "Plasser kommentarer med verktøyene Kommentar, Sett inn tekst eller Erstatt tekst. De vises her per side."
+placeholder = "Skriv kommentaren din..."
+pageLabel = "Side {{page}}"
+oneComment = "1 kommentar"
+nComments = "{{count}} kommentarer"
+addCommentPlaceholder = "Legg til kommentar..."
+addLink = "Legg til lenke"
+goToLink = "Gå til lenke"
+addComment = "Legg til kommentar"
+viewComment = "Vis kommentar"
+addReplyPlaceholder = "Legg til svar..."
+saveReply = "Lagre svar"
+send = "Send"
+moreActions = "Flere handlinger"
+typeComment = "Kommentar"
+typeInsertText = "Sett inn tekst"
+typeReplaceText = "Erstatt tekst"
+locateAnnotation = "Finn i dokument"
+deleteTitle = "Fjerne merknad fra kommentarer?"
+deleteDescription = "Denne merknaden har en kommentar tilknyttet. Du kan fjerne bare kommentaren fra sidepanelet og beholde merknaden, eller slette alt."
+removeCommentOnly = "Fjern bare kommentaren"
+deleteAnnotationAndComment = "Slett merknad og kommentar"
 
 [viewer.formBar]
 title = "Skjemafelter"
@@ -4418,6 +4950,7 @@ toggleAttachments = "Vis/skjul vedlegg"
 toggleTheme = "Bytt tema"
 language = "Språk"
 toggleAnnotations = "Vis/skjul merknader"
+toggleLayers = "Veksle lag"
 search = "Søk i PDF"
 panMode = "Panoreringsmodus"
 applyRedactionsFirst = "Bruk sladding først"
@@ -4425,14 +4958,20 @@ rotateLeft = "Roter til venstre"
 rotateRight = "Roter til høyre"
 toggleSidebar = "Vis/skjul sidepanel"
 toggleBookmarks = "Veksle bokmerker"
+toggleComments = "Kommentarer"
 print = "Skriv ut PDF"
 ruler = "Linjal / Måling"
+readAloud = "Opplesing"
+readAloudSpeed = "Hastighet"
+readAloudLanguage = "Språk"
+selectLanguage = "Velg språk"
 draw = "Tegn"
 redact = "Sladd"
 exitRedaction = "Avslutt sladdemodus"
 save = "Lagre"
 downloadAll = "Last ned alle"
 saveAll = "Lagre alle"
+saveAs = "Lagre som"
 
 [textAlign]
 left = "Venstre"
@@ -4447,21 +4986,132 @@ title = "Trekk ut Sider"
 
 [pageLayout]
 addBorder = "Legg til rammer"
+borderWidth = "Kanttykkelse"
+bottom = "Nedre marg"
+cols = "Kolonner"
 header = "Flersideoppsett"
+innerMargin = "Indre marg"
+left = "Venstre marg"
 pagesPerSheet = "Sider per ark:"
+right = "Høyre marg"
+rows = "Rader"
 submit = "Send inn"
 tags = "slå sammen,kompositt,enkel-visning,organisere"
 title = "Flersideoppsett"
+top = "Øvre marg"
+
+[pageLayout.mode]
+default = "Standard"
+custom = "Egendefinert"
+label = "Modus:"
+
+[pageLayout.arrangement]
+byColumns = "Etter kolonner"
+byRows = "Etter rader"
+label = "Sidearrangement:"
 
 [pageLayout.desc]
 16 = "Plasser 16 sider på ett ark (4 × 4 rutenett)."
 2 = "Plasser 2 sider side om side på ett ark."
-3 = "Plasser 3 sider på ett ark i én rad."
 4 = "Plasser 4 sider på ett ark (2 × 2 rutenett)."
 9 = "Plasser 9 sider på ett ark (3 × 3 rutenett)."
 
 [pageLayout.error]
 failed = "Det oppstod en feil under oppretting av flersidelayout."
+outerVerticalMarginsTooLarge = "Øvre/nedre marger er for store for denne sidestørrelsen."
+outerHorizontalMarginsTooLarge = "Venstre/høyre marger er for store for denne sidestørrelsen."
+innerMarginTooLarge = "Indre marg er for stor for det valgte oppsettet."
+
+[pageLayout.orientation]
+landscape = "Liggende"
+portrait = "Stående"
+label = "Retning:"
+
+[pageLayout.readingDirection]
+ltr = "Venstre til høyre"
+rtl = "Høyre til venstre"
+label = "Leseretning:"
+
+[pageLayout.tooltip.header]
+title = "Veiledning for sideoppsett"
+
+[pageLayout.tooltip.overview]
+title = "Hva er sideoppsett?"
+text = "Plasser flere sider på ett ark for utdelinger eller for å spare papir."
+
+[pageLayout.tooltip.mode]
+title = "Modus"
+text = "Velg hvordan rutenettet konfigureres:"
+bullet1 = "Standard: Velg en forhåndsinnstilling, så beregnes rutenettet automatisk."
+bullet2 = "Egendefinert: Angi rader og kolonner manuelt."
+
+[pageLayout.tooltip.pagesPerSheet]
+title = "Sider per ark (standardmodus)"
+text = "Velg hvor mange sider per ark (f.eks. 4 → 2×2, 9 → 3×3)."
+
+[pageLayout.tooltip.rowsCols]
+title = "Rader og kolonner (egendefinert modus)"
+text = "Angi nøyaktige rutenettmål. Totalt sider per ark = rader × kolonner."
+
+[pageLayout.tooltip.orientation]
+title = "Retning"
+text = "Angir retningen på utdataarket:"
+bullet1 = "Stående: Høyere enn bred."
+bullet2 = "Liggende: Bredere enn høyt."
+
+[pageLayout.tooltip.arrangement]
+title = "Sidearrangement"
+text = "Styrer rekkefølgen sidene fyller rutenettet:"
+bullet1 = "Etter rader: Fyll rad for rad (venstre-til-høyre eller høyre-til-venstre)."
+bullet2 = "Etter kolonner: Fyll ovenfra og ned, kolonne for kolonne."
+
+[pageLayout.tooltip.readingDirection]
+title = "Leseretning"
+text = "Styrer den horisontale rekkefølgen på sider:"
+bullet1 = "LTR: Venstre til høyre."
+bullet2 = "RTL: Høyre til venstre."
+
+[pageLayout.tooltip.addBorder]
+title = "Legg til kanter"
+text = "Tegner kantlinjer rundt hver siderute for skjæreguider eller visuell separasjon."
+
+[pageLayout.marginsBorders.tooltip.header]
+title = "Marger og kanter"
+
+[pageLayout.marginsBorders.tooltip.margins]
+title = "Marger"
+text = "Bruk øvre, nedre, venstre og høyre marger til å styre avstanden rundt hele arket."
+
+[pageLayout.marginsBorders.tooltip.innerMargin]
+title = "Indre marg"
+text = "Indre marg legger til mellomrom mellom rutene i siderutenettet for bedre separasjon og lesbarhet."
+
+[pageLayout.marginsBorders.tooltip.borders]
+title = "Legg til kanter"
+text = "Aktiver kanter for å tegne linjer rundt hver plassert side. Dette kan hjelpe med visuell separasjon eller beskjæring."
+
+[pageLayout.marginsBorders.tooltip.borderWidth]
+title = "Kanttykkelse"
+text = "Kanttykkelse brukes bare når kanter er aktivert. Høyere verdier gir tykkere linjer."
+
+[pageLayout.advanced.tooltip.header]
+title = "Avanserte oppsettvalg"
+
+[pageLayout.advanced.tooltip.orientation]
+title = "Retning"
+text = "Velg endelig arkretning. Stående fungerer bedre for høyt innhold, mens liggende passer for bredere oppsett."
+
+[pageLayout.advanced.tooltip.arrangement]
+title = "Sidearrangement"
+text = "Styrer om sider fyller rutenettet rad-for-rad eller kolonne-for-kolonne."
+bullet1 = "Etter rader: Fyll hver rad først."
+bullet2 = "Etter kolonner: Fyll hver kolonne først."
+
+[pageLayout.advanced.tooltip.readingDirection]
+title = "Leseretning"
+text = "Angir horisontal rekkefølge i rutenettet, nyttig for venstre-til-høyre og høyre-til-venstre-dokumenter."
+bullet1 = "LTR: Venstre til høyre-rekkefølge."
+bullet2 = "RTL: Høyre til venstre-rekkefølge."
 
 [pageRemover]
 header = "PDF-sidefjerner"
@@ -4977,7 +5627,10 @@ perMonth = "/måned"
 perSeat = "/plass"
 popular = "Populær"
 selectPlan = "Velg plan"
+selectCredits = "Velg kreditbeløp"
 showComparison = "Sammenlign alle funksjoner"
+purchase = "Kjøp"
+totalCost = "Totalkostnad"
 upgrade = "Oppgrader"
 withServer = "+ Server-plan"
 
@@ -5069,6 +5722,30 @@ successMessage = "Lisensen din er aktivert. Du kan nå lukke dette vinduet."
 name = "Team"
 siteLicense = "Site-lisens"
 
+[plan.api]
+large = "5,000 kreditter"
+medium = "1,000 kreditter"
+small = "500 kreditter"
+xsmall = "100 kreditter"
+
+[plan.apiPackages]
+subtitle = "Kjøp API-kreditter for applikasjonene dine"
+title = "API-kredittpakker"
+
+[plan.trial]
+badge = "Prøve"
+continueWithFree = "Fortsett med gratis"
+daysRemaining = "Prøveperioden slutter om {{days}} dager"
+endDate = "Utløper: {{date}}"
+expired = "Din prøveperiode er avsluttet"
+expiredMessage = "Din 30-dagers Pro-prøveperiode er utløpt. Abonner på Pro for å fortsette å bruke premiumfunksjoner, eller fortsett med gratisnivået."
+freeTierLimitations = "Gratisnivået inkluderer grunnleggende PDF-verktøy med bruksbegrensninger."
+message = ""
+subscribe = "Abonner på Pro"
+subscribeToPro = "Abonner på Pro"
+subscriptionScheduled = "Abonnement planlagt – starter {{date}}"
+title = "Prøveperiode aktiv"
+
 [credits]
 enableOverageBilling = "Aktiver overforbruksfakturering"
 maybeLater = "Kanskje senere"
@@ -5150,20 +5827,72 @@ title = "Skriv ut fil"
 2 = "Skriv inn skrivernavn"
 
 [quickAccess]
+access = "Tilgang"
+accessAddPerson = "Legg til en person til"
+accessBack = "Tilbake"
+accessCopyLink = "Kopier lenke"
+accessEmail = "E-postadresse"
+accessEmailPlaceholder = "name@company.com"
+accessFileLabel = "Fil"
+accessGeneral = "Generell tilgang"
+accessInviteTitle = "Inviter personer"
+accessOwner = "Eier"
+accessPanel = "Dokumenttilgang"
+accessPeople = "Personer med tilgang"
+accessRemove = "Fjern"
+accessRestricted = "Begrenset"
+accessRestrictedHint = "Bare personer med tilgang kan åpne"
+accessRole = "Rolle"
+accessRoleCommenter = "Kommentator"
+accessRoleEditor = "Redaktør"
+accessRoleViewer = "Leser"
+accessSelectedFile = "Valgt fil"
+accessSendInvite = "Send invitasjon"
+accessTitle = "Dokumenttilgang"
+accessYou = "Deg"
 account = "Konto"
+activeSessions = "Aktive økter"
+activeTab = "Aktive"
 activity = "Logg"
 adminSettings = "Admin Innst."
+allSessions = "Alle økter"
 allTools = "All Tools"
 automate = "Auto"
+back = "Tilbake"
+certSign = "Signer med sertifikat"
+completedSessions = "Fullførte økter"
+completedTab = "Fullført"
 config = "Oppsett"
+createNew = "Opprett ny forespørsel"
+createSession = "Opprett signeringsforespørsel"
+dueDate = "Frist (valgfritt)"
 files = "Filer"
 help = "Hjelp"
+noActiveSessions = "Ingen ventende signeringsforespørsler eller aktive økter"
+noCompletedSessions = "Ingen fullførte økter"
+noFile = "Ingen fil valgt"
 read = "Les"
 reader = "Leser"
+refresh = "Oppdater"
+requestSignatures = "Be om signaturer"
+selectSingleFileToRequest = "Velg én PDF-fil for å be om signaturer"
+selectedFile = "Valgt fil"
+selectUsers = "Velg brukere som skal signere"
+selectUsersPlaceholder = "Velg deltakere ..."
+sendingRequest = "Sender ..."
 settings = "Innst."
 showMeAround = "Vis meg rundt"
 sign = "Signer"
+signatureRequests = "Signeringsforespørsler"
+signYourself = "Signer selv"
+newRequest = "Ny forespørsel"
 tours = "Omvisninger"
+wetSign = "Legg til signatur"
+filterMine = "Mine"
+filterOverdue = "Forfalt"
+filterSigned = "Signert"
+filterDeclined = "Avslått"
+searchDocuments = "Søk i dokumenter…"
 
 [quickAccess.helpMenu]
 adminTour = "Admin-omvisning"
@@ -5631,6 +6360,32 @@ text = "Roter PDF-sidene med eller mot klokken i 90-graders trinn. Alle sider i 
 [rotate.tooltip.header]
 title = "Oversikt over rotasjonsinnstillinger"
 
+[timestampPdf]
+completed = "PDF er tidsstemplet"
+desc = "Legg til et RFC 3161-tidsstempel i PDF-en din ved hjelp av en pålitelig Time Stamp Authority (TSA)-server."
+filenamePrefix = "tidsstemplet"
+results = "Tidsstempelresultater"
+submit = "Bruk tidsstempel"
+title = "Tidsstemple PDF"
+
+[timestampPdf.error]
+failed = "Det oppsto en feil under tidsstempling av PDF-en."
+generic = "Tidsstempling mislyktes"
+
+[timestampPdf.files]
+placeholder = "Velg en PDF i hovedvisningen for å komme i gang"
+
+[timestampPdf.options]
+note = "Bare en SHA-256-hash av dokumentet ditt sendes til TSA-serveren; selve PDF-filen sendes aldri til TSA-serveren."
+title = "Tidsstempelserver (TSA)"
+
+[timestampPdf.options.tsaUrl]
+desc = "Velg en pålitelig Time Stamp Authority"
+label = "Velg en TSA-server"
+
+[timestampPdf.steps]
+settings = "Innstillinger"
+
 [sanitize]
 completed = "Sanitering fullført"
 desc = "Fjern potensielt skadelige elementer fra PDF-filer."
@@ -5755,25 +6510,100 @@ placeholder = "Skriv inn søkeord..."
 searching = "Søker..."
 title = "Søk i PDF"
 
+[selfHosted.offline]
+hideTools = "Skjul utilgjengelige verktøy ▴"
+messageNoFallback = "Verktøy er utilgjengelige til serveren din er tilbake på nett."
+messageWithFallback = "Noen verktøy krever servertilkobling."
+showTools = "Vis utilgjengelige verktøy ▾"
+title = "Stirling-PDF-serveren din kan ikke nås"
+toolNotAvailableLocally = "Stirling-PDF-serveren din er frakoblet og \"{{endpoint}}\" er ikke tilgjengelig på det lokale backend."
+
 [session]
 expired = "Økten din har utløpt. Vennligst oppdater siden og prøv igjen."
 refreshPage = "Oppdater Side"
+
+[sessionManagement.tooltip]
+header = "Administrere signeringsøkter"
+
+[sessionManagement.tooltip.addParticipants]
+bullet1 = "Nye deltakere legges til på slutten av signeringsrekkefølgen"
+bullet2 = "Kan ikke legge til deltakere etter at økten er ferdigstilt"
+bullet3 = "Hver deltaker mottar et varsel når det er deres tur"
+description = "Du kan legge til flere deltakere i en aktiv økt når som helst før ferdigstilling."
+title = "Legge til deltakere"
+
+[sessionManagement.tooltip.finalization]
+bullet1 = "<b>Full ferdigstillelse</b>: Alle deltakere har signert"
+bullet2 = "<b>Delvis ferdigstillelse</b>: Noen deltakere har ikke signert ennå"
+bullet3 = "Usignerte deltakere blir utelatt fra det endelige dokumentet"
+bullet4 = "Når ferdigstilt, kan du laste inn den signerte PDF-en i aktive filer"
+description = "Ferdigstilling kombinerer alle signaturer i én signert PDF. Denne handlingen kan ikke angres."
+title = "Ferdigstilling av økt"
+
+[sessionManagement.tooltip.participantRemoval]
+bullet1 = "Kan ikke fjerne deltakere som allerede har signert"
+bullet2 = "Fjernede deltakere mottar ikke lenger varsler"
+bullet3 = "Signeringsrekkefølgen justeres automatisk"
+description = "Deltakere kan fjernes fra økter før de signerer."
+title = "Fjerne deltakere"
+
+[sessionManagement.tooltip.signatureOrder]
+bullet1 = "Hver signatur legges til sekvensielt på PDF-en"
+bullet2 = "Senere signerer kan se tidligere signaturer"
+bullet3 = "Kritisk for godkjenningsflyter og juridisk sporbarhet"
+description = "Rekkefølgen du angir når du oppretter økten bestemmer hvem som signerer først."
+title = "Signeringsrekkefølge"
+
+[signatureSettings.tooltip]
+header = "Innstillinger for signaturutforming"
+
+[signatureSettings.tooltip.location]
+bullet1 = "Eksempler: \"New York, USA\", \"London Office\", \"Remote\""
+bullet2 = "Ikke det samme som plassering på siden"
+bullet3 = "Kan være påkrevd i enkelte jurisdiksjoner"
+description = "Valgfritt geografisk sted der signaturen ble påført. Lagres i sertifikatmetadata."
+title = "Signatursted"
+
+[signatureSettings.tooltip.logo]
+bullet1 = "Vises sammen med signatur og tekst"
+bullet2 = "Støtter PNG, JPG-formater"
+bullet3 = "Forbedrer profesjonelt uttrykk"
+description = "Legg til en firmalogo på synlige signaturer for profilering og ekthet."
+title = "Firmalogo"
+
+[signatureSettings.tooltip.reason]
+bullet1 = "Eksempler: \"Godkjenning\", \"Kontrakt\", \"Gjennomgang fullført\""
+bullet2 = "Synlig i PDF-signaturegenskaper"
+bullet3 = "Nyttig for sporbarhet og etterlevelse"
+description = "Valgfri tekst som forklarer hvorfor dokumentet signeres. Lagres i sertifikatmetadata."
+title = "Signeringsårsak"
+
+[signatureSettings.tooltip.visibility]
+bullet1 = "<b>Synlig</b>: Signatur vises på PDF med tilpasset utseende"
+bullet2 = "<b>Usynlig</b>: Sertifikat innebygd uten visuelt merke"
+bullet3 = "Usynlige signaturer gir fortsatt kryptografisk validering"
+description = "Styrer om signaturen er synlig på dokumentet eller innebygd usynlig."
+title = "Signatursynlighet"
 
 [settings.configuration]
 advanced = "Avansert"
 database = "Database"
 endpoints = "Endepunkter"
 features = "Funksjoner"
+storageSharing = "Fil-lagring og deling"
 systemSettings = "Systeminnstillinger"
 title = "Konfigurasjon"
 
 [settings.connection]
+localDescription = "Du bruker den lokale backend-en uten en konto. Noen verktøy som krever skybehandling eller en selvhostet server er utilgjengelige."
 logout = "Logg ut"
 server = "Server"
+signIn = "Logg inn"
 title = "Tilkoblingsmodus"
 user = "Logget inn som"
 
 [settings.connection.mode]
+local = "Kun lokalt"
 saas = "Stirling Cloud"
 selfhosted = "Selvhostet"
 
@@ -5931,6 +6761,9 @@ title = "Retningslinjer og personvern"
 [settings.preferences]
 title = "Preferanser"
 
+[settings.search]
+placeholder = "Søk i innstillingssider..."
+
 [settings.security]
 description = "Oppdater passordet ditt for å holde kontoen sikker."
 title = "Sikkerhet"
@@ -5968,6 +6801,18 @@ title = "Arbeidsområde"
 [settings.team]
 title = "Team"
 
+[localMode]
+toolUnavailable = "Dette verktøyet krever en konto. Logg inn på Stirling Cloud eller koble til en selvhostet server for å bruke det."
+
+[localMode.banner]
+message = "Logg inn for å låse opp alle verktøy."
+signIn = "Logg inn"
+title = "Kjører lokalt"
+
+[localMode.toolPicker]
+message = "Logg inn for å låse opp alle verktøy."
+signIn = "Logg inn"
+
 [setup]
 description = "Kom i gang ved å velge hvordan du vil bruke Stirling PDF"
 welcome = "Velkommen til Stirling PDF"
@@ -5975,6 +6820,7 @@ welcome = "Velkommen til Stirling PDF"
 [setup.login]
 connectingTo = "Kobler til:"
 hideInstructions = "Skjul instruksjoner"
+skipSignIn = "Fortsett uten å logge inn"
 instructions = "Slik aktiverer du pålogging på din Stirling PDF-server:"
 instructionsEnvVar = "Sett miljøvariabelen:"
 instructionsOrYml = "Eller i settings.yml:"
@@ -6022,7 +6868,17 @@ title = "Logg inn i Stirling"
 [setup.selfhosted]
 link = "eller koble til en selvhostet konto"
 subtitle = "Oppgi serverlegitimasjonen din"
+changeServerLocked = "Organisasjonen din har begrenset denne appen til en bestemt server"
+switchToLocal = "Bruk lokale verktøy i stedet"
 title = "Logg inn på server"
+
+[setup.selfhosted.unreachable]
+changeServer = "Koble til en annen server"
+changeServerLocked = "Organisasjonen din har begrenset denne appen til en bestemt server"
+continueOffline = "Bruk lokale verktøy i stedet"
+message = "Kunne ikke nå {{url}}. Kontroller at serveren kjører og er tilgjengelig."
+retry = "Prøv igjen"
+title = "Kan ikke koble til server"
 
 [setup.server]
 subtitle = "Skriv inn URL-en til din selvhostede server"
@@ -6032,6 +6888,7 @@ useLast = "Last used server: {{serverUrl}}"
 
 [setup.server.error]
 configFetch = "Kunne ikke hente serverkonfigurasjon. Kontroller URL-en og prøv igjen."
+configFetchError = "Kunne ikke hente serverkonfigurasjon: {{error}}"
 emptyUrl = "Skriv inn en server-URL"
 invalidUrl = "Ugyldig URL-format. Angi en gyldig URL som https://your-server.com"
 testFailed = "Tilkoblingstest mislyktes"
@@ -6210,6 +7067,15 @@ image = "Bilde"
 saved = "Lagret"
 text = "Tekst"
 title = "Signaturtype"
+
+[signRequest]
+declined = "Signeringsforespørsel avslått"
+fetchFailed = "Kunne ikke laste signeringsforespørsel"
+signed = "Dokument signert"
+
+[signSession]
+createFailed = "Kunne ikke opprette signeringsforespørsel"
+created = "Signeringsforespørsel sendt"
 
 [signup]
 accountCreatedSuccessfully = "Konto opprettet! Du kan nå logge inn."
@@ -6489,6 +7355,106 @@ title = "Del PDF etter kapitler"
 [splitPdfByChapters]
 tags = "del,kapitler,bokmerker,organiser"
 
+[storageShare]
+accessed = "Åpnet"
+accessDenied = "Du har ikke tilgang til denne delte filen. Be eieren dele den med deg."
+accessFailed = "Kan ikke laste aktivitet."
+accessDeniedBody = "Du har ikke tilgang til denne filen. Be eieren dele den med deg."
+accessDeniedTitle = "Ingen tilgang"
+accessLimitedCommenter = "Kommentartilgang kommer snart. Be eieren om redaktørtilgang hvis du trenger å laste ned."
+accessLimitedTitle = "Begrenset tilgang"
+accessLimitedViewer = "Denne lenken er kun for visning. Be eieren om redaktørtilgang hvis du trenger å laste ned."
+createdAt = "Opprettet"
+download = "Last ned"
+downloadFailed = "Kan ikke laste ned denne filen."
+expiredBody = "Denne delingslenken er ugyldig eller har utløpt."
+expiredTitle = "Lenke utløpt"
+goToLogin = "Gå til innlogging"
+loadFailed = "Kan ikke åpne delt fil."
+loading = "Laster delingslenke ..."
+loginPrompt = "Logg inn for å få tilgang til denne delte filen."
+loginRequired = "Innlogging kreves"
+openInApp = "Åpne i Stirling PDF"
+ownerLabel = "Eier"
+ownerUnknown = "Ukjent"
+requiresLogin = "Denne delte filen krever innlogging."
+roleCommenter = "Kommentator"
+roleEditor = "Redaktør"
+roleViewer = "Leser"
+shareHeading = "Delt fil"
+titleDefault = "Delt fil"
+tryAgain = "Prøv igjen senere."
+addUser = "Legg til"
+commenterHint = "Kommentartilgang kommer snart."
+copied = "Lenke kopiert til utklippstavlen"
+copy = "Kopier"
+copyFailed = "Kopiering mislyktes"
+description = "Opprett en delingslenke for denne filen. Innloggede brukere med lenken kan få tilgang."
+downloadsCount = "Nedlastinger: {{count}}"
+emailWarningBody = "Dette ser ut som en e-postadresse. Hvis denne personen ikke allerede er Stirling PDF-bruker, vil vedkommende ikke kunne få tilgang til filen."
+emailWarningConfirm = "Del likevel"
+emailWarningTitle = "E-postadresse"
+errorTitle = "Deling mislyktes"
+failure = "Kunne ikke generere en delingslenke. Prøv igjen."
+fileLabel = "Fil"
+generate = "Generer lenke"
+generated = "Delingslenke opprettet"
+hideActivity = "Skjul aktivitet"
+invalidUsername = "Angi et gyldig brukernavn eller e-postadresse."
+lastAccessed = "Sist åpnet"
+linkAccessTitle = "Tilgang via delingslenke"
+linkLabel = "Delingslenke"
+linksDisabled = "Delingslenker er deaktivert."
+linksDisabledBody = "Delingslenker er deaktivert av serverinnstillingene dine."
+manage = "Administrer deling"
+manageDescription = "Opprett og administrer lenker for å dele denne filen."
+manageLoadFailed = "Kunne ikke laste delingslenker."
+manageTitle = "Administrer deling"
+noActivity = "Ingen aktivitet ennå."
+noLinks = "Ingen aktive delingslenker ennå."
+noSharedUsers = "Ingen brukere har tilgang ennå."
+removeLink = "Fjern lenke"
+removeUser = "Fjern"
+revokeFailed = "Kunne ikke fjerne delingslenken."
+revoked = "Delingslenke fjernet"
+roleLabel = "Rolle"
+sharingDisabled = "Deling er deaktivert."
+sharingDisabledBody = "Deling har blitt deaktivert av serverinnstillingene dine."
+sharedUsersTitle = "Brukere som har tilgang"
+title = "Del fil"
+unknownUser = "Ukjent bruker"
+userAddFailed = "Kan ikke dele med denne brukeren."
+userAdded = "Bruker lagt til i delingslisten."
+usernameLabel = "Brukernavn eller e-post"
+usernamePlaceholder = "Skriv inn et brukernavn eller en e-post"
+userRemoveFailed = "Kan ikke fjerne denne brukeren."
+userRemoved = "Bruker fjernet fra delingslisten."
+viewActivity = "Vis aktivitet"
+viewed = "Vist"
+viewsCount = "Visninger: {{count}}"
+downloaded = "Lastet ned"
+bulkDescription = "Opprett én lenke for å dele alle valgte filer med påloggede brukere."
+bulkTitle = "Del valgte filer"
+copyLink = "Kopier delingslenke"
+fileCount = "{{count}} filer valgt"
+ownerOnly = "Bare eieren kan administrere deling."
+selectSingleFile = "Velg én fil for å administrere deling."
+
+[storageUpload]
+description = "Dette laster opp gjeldende fil til serverlagring for din egen tilgang."
+errorTitle = "Opplasting mislyktes"
+failure = "Opplasting mislyktes. Kontroller påloggingen og lagringsinnstillingene dine."
+fileLabel = "Fil"
+hint = "Offentlige lenker og tilgangsmoduser styres av serverinnstillingene dine."
+success = "Lastet opp til serveren"
+title = "Last opp til server"
+updateButton = "Oppdater på server"
+uploadButton = "Last opp til server"
+bulkDescription = "Dette laster opp de valgte filene til serverlagringen din."
+bulkTitle = "Last opp valgte filer"
+fileCount = "{{count}} filer valgt"
+more = " +{{count}} til"
+
 [storage]
 approximateSize = "Omtrentlig størrelse"
 fileTooLarge = "Filen er for stor. Maksimal størrelse per fil er"
@@ -6557,6 +7523,7 @@ favorites = "Favoritter"
 heading = "Alle verktøy (fullskjermsvisning)"
 noResults = "Prøv å justere søket eller slå av/på beskrivelser for å finne det du trenger."
 recommended = "Anbefalt"
+selfHostedOffline = "Krever Stirling-PDF-serveren din (for øyeblikket frakoblet):"
 showDetails = "Vis detaljer"
 unavailable = "Deaktivert av serveradministrator:"
 unavailableDependency = "Utilgjengelig – nødvendig verktøy mangler på serveren:"
@@ -6601,6 +7568,12 @@ pageFormatting = "Sideformatering"
 removal = "Fjerning"
 signing = "Signering"
 verification = "Verifisering"
+
+[tool]
+endpointUnavailable = "Dette verktøyet er ikke tilgjengelig på serveren din."
+endpointUnavailableClickable = "Ikke tilgjengelig i denne modusen. Klikk for å logge inn."
+invalidParams = "Fyll inn de nødvendige innstillingene."
+noFiles = "Legg til en fil for å komme i gang."
 
 [tools]
 noSearchResults = "Ingen verktøy funnet"
@@ -6828,6 +7801,30 @@ title = "Vis/Rediger PDF"
 [warning]
 tooltipTitle = "Advarsel"
 
+[wetSignature.tooltip]
+header = "Metoder for oppretting av signatur"
+
+[wetSignature.tooltip.draw]
+bullet1 = "Tilpass pennens farge og tykkelse"
+bullet2 = "Slett og tegn på nytt til du er fornøyd"
+bullet3 = "Fungerer på berøringsenheter (nettbrett, telefoner)"
+description = "Lag en håndskrevet signatur med musen eller berøringsskjermen. Best for personlige, autentiske signaturer."
+title = "Tegn signatur"
+
+[wetSignature.tooltip.type]
+bullet1 = "Velg mellom flere skrifttyper"
+bullet2 = "Tilpass tekststørrelse og -farge"
+bullet3 = "Perfekt for standardiserte signaturer"
+description = "Generer en signatur fra skrevet tekst. Rask og konsistent, egnet for forretningsdokumenter."
+title = "Skriv signatur"
+
+[wetSignature.tooltip.upload]
+bullet1 = "Støtter PNG, JPG og andre bildeformater"
+bullet2 = "Gjennomsiktige bakgrunner anbefales for best resultat"
+bullet3 = "Bildet vil størrelsestilpasses for å passe signaturområdet"
+description = "Last opp et forhåndslaget signaturbilde. Ideelt hvis du har en skannet signatur eller firmalogo."
+title = "Last opp signaturbilde"
+
 [watermark]
 completed = "Vannmerke lagt til"
 desc = "Legg til tekst- eller bildevannmerker i PDF-filer"
@@ -7008,6 +8005,7 @@ activeSession = "Aktiv økt"
 addMembers = "Legg til medlemmer"
 admin = "Admin"
 confirmDelete = "Er du sikker på at du vil slette denne brukeren? Denne handlingen kan ikke angres."
+confirmUnlock = "Er du sikker på at du vil låse opp denne brukerkontoen?"
 deleteUser = "Slett bruker"
 deleteUserError = "Kunne ikke slette bruker"
 deleteUserSuccess = "Bruker slettet"
@@ -7016,6 +8014,8 @@ disable = "Deaktiver"
 disabled = "Deaktivert"
 editRole = "Rediger rolle"
 enable = "Aktiver"
+locked = "låst"
+lockedBadge = "Låst"
 loading = "Laster personer..."
 loginRequired = "Aktiver innloggingsmodus først"
 member = "Medlem"
@@ -7025,6 +8025,9 @@ searchMembers = "Søk i medlemmer..."
 status = "Status"
 team = "Team"
 title = "Personer"
+unlockAccount = "Lås opp konto"
+unlockUserError = "Kunne ikke låse opp brukerkonto"
+unlockUserSuccess = "Brukerkonto låst opp"
 user = "Bruker"
 
 [workspace.people.actions]

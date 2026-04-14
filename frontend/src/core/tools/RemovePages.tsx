@@ -11,13 +11,7 @@ const RemovePages = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const tooltipContent = useRemovePagesTips();
 
-  const base = useBaseTool(
-    'remove-pages',
-    useRemovePagesParameters,
-    useRemovePagesOperation,
-    props
-  );
-
+  const base = useBaseTool("remove-pages", useRemovePagesParameters, useRemovePagesOperation, props);
 
   const settingsContent = (
     <RemovePagesSettings
@@ -46,7 +40,8 @@ const RemovePages = (props: BaseToolProps) => {
       loadingText: t("loading"),
       onClick: base.handleExecute,
       isVisible: !base.hasResults,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+      endpointEnabled: base.endpointEnabled,
+      paramsValid: base.params.validateParameters(),
     },
     review: {
       isVisible: base.hasResults,

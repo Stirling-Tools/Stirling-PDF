@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { pdfWorkerManager } from '@app/services/pdfWorkerManager';
-import type { PagePreview } from '@app/types/compare';
+import { useEffect, useRef, useState } from "react";
+import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import type { PagePreview } from "@app/types/compare";
 
 const DISPLAY_SCALE = 1;
 
-const getDevicePixelRatio = () => (typeof window !== 'undefined' ? window.devicePixelRatio : 1);
+const getDevicePixelRatio = () => (typeof window !== "undefined" ? window.devicePixelRatio : 1);
 
 // Observable preview cache so rendering progress can resume across remounts and view switches
 type CacheEntry = { pages: PagePreview[]; total: number; subscribers: Set<() => void> };
@@ -22,7 +22,11 @@ const getOrCreateEntry = (key: string): CacheEntry => {
 
 const notify = (entry: CacheEntry) => {
   entry.subscribers.forEach((fn) => {
-    try { fn(); } catch { /* no-op */ }
+    try {
+      fn();
+    } catch {
+      /* no-op */
+    }
   });
 };
 
@@ -37,10 +41,11 @@ const appendBatchToCache = (key: string, batch: PagePreview[], provisionalTotal?
   const next = entry.pages.slice();
   for (const p of batch) {
     const idx = next.findIndex((x) => x.pageNumber > p.pageNumber);
-    if (idx === -1) next.push(p); else next.splice(idx, 0, p);
+    if (idx === -1) next.push(p);
+    else next.splice(idx, 0, p);
   }
   entry.pages = next;
-  if (typeof provisionalTotal === 'number' && entry.total === 0) entry.total = provisionalTotal;
+  if (typeof provisionalTotal === "number" && entry.total === 0) entry.total = provisionalTotal;
   notify(entry);
 };
 
@@ -53,10 +58,9 @@ const setTotalInCache = (key: string, total: number) => {
 const replacePagesInCache = (key: string, pages: PagePreview[], total?: number) => {
   const entry = getOrCreateEntry(key);
   entry.pages = pages.slice();
-  if (typeof total === 'number') entry.total = total;
+  if (typeof total === "number") entry.total = total;
   notify(entry);
 };
-
 
 const renderPdfDocumentToImages = async (
   file: File,
@@ -86,8 +90,8 @@ const renderPdfDocumentToImages = async (
       const page = await pdf.getPage(pageNumber);
       const displayViewport = page.getViewport({ scale: DISPLAY_SCALE });
       const renderViewport = page.getViewport({ scale: renderScale });
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
 
       canvas.width = Math.round(renderViewport.width);
       canvas.height = Math.round(renderViewport.height);
@@ -138,11 +142,7 @@ interface UseComparePagePreviewsOptions {
   cacheKey: number | null;
 }
 
-export const useComparePagePreviews = ({
-  file,
-  enabled,
-  cacheKey,
-}: UseComparePagePreviewsOptions) => {
+export const useComparePagePreviews = ({ file, enabled, cacheKey }: UseComparePagePreviewsOptions) => {
   const [pages, setPages] = useState<PagePreview[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalPages, setTotalPages] = useState(0);
@@ -160,11 +160,11 @@ export const useComparePagePreviews = ({
       };
     }
 
-    const key = `${file.name || 'file'}:${file.size || 0}:${cacheKey ?? 'none'}`;
+    const key = `${file.name || "file"}:${file.size || 0}:${cacheKey ?? "none"}`;
     const refreshVersion = Symbol(key);
     latestVersionMap.set(key, refreshVersion);
     const entry = getOrCreateEntry(key);
-    const cachedTotal = entry.total ?? (entry.pages.length ?? 0);
+    const cachedTotal = entry.total ?? entry.pages.length ?? 0;
     let lastKnownTotal = cachedTotal;
     const isFullyCached = Boolean(entry.pages.length > 0 && cachedTotal > 0 && entry.pages.length >= cachedTotal);
 
@@ -212,7 +212,7 @@ export const useComparePagePreviews = ({
             }
           },
           startAt,
-          () => cancelled || current !== inFlightRef.current
+          () => cancelled || current !== inFlightRef.current,
         );
         if (!cancelled && current === inFlightRef.current) {
           const stillLatest = latestVersionMap.get(key) === refreshVersion;
@@ -228,7 +228,7 @@ export const useComparePagePreviews = ({
           replacePagesInCache(key, finalPages, finalTotal);
         }
       } catch (error) {
-        console.error('[compare] failed to render document preview', error);
+        console.error("[compare] failed to render document preview", error);
         if (!cancelled) {
           setPages([]);
         }

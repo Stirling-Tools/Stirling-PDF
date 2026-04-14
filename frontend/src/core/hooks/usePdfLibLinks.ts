@@ -1,12 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import {
-  PDFDocument,
-} from '@cantoo/pdf-lib';
-import {
-  PdfLibLink,
-  extractLinksFromPage,
-} from '@app/utils/pdfLinkUtils';
-
+import { useState, useEffect, useRef } from "react";
+import { PdfLibLink, extractLinksFromPage } from "@app/utils/pdfLinkUtils";
 
 export type { PdfLibLink };
 
@@ -20,14 +13,14 @@ export interface PdfLibLinksResult {
 }
 
 interface CachedDoc {
-  doc: PDFDocument;
+  data: ArrayBuffer;
   /** Number of active consumers (hook instances) holding this entry. */
   refCount: number;
   /** Per-page extracted links (lazy, filled on first request). */
   pageLinks: Map<number, { links: PdfLibLink[]; width: number; height: number }>;
-  /** Set to true when the PDF catalog/pages tree is invalid, so we
+  /** Set to true when the PDF is invalid, so we
    *  skip link extraction on all subsequent calls without retrying. */
-  invalidCatalog?: boolean;
+  invalidDocument?: boolean;
 }
 
 const docCache = new Map<string, Promise<CachedDoc>>();
@@ -37,13 +30,8 @@ async function acquireDocument(url: string): Promise<CachedDoc> {
     const promise = (async (): Promise<CachedDoc> => {
       const response = await fetch(url);
       const buffer = await response.arrayBuffer();
-      const doc = await PDFDocument.load(new Uint8Array(buffer), {
-        ignoreEncryption: true,
-        updateMetadata: false,
-        throwOnInvalidObject: false,
-      });
 
-      return { doc, refCount: 0, pageLinks: new Map() };
+      return { data: buffer, refCount: 0, pageLinks: new Map() };
     })();
     docCache.set(url, promise);
 
@@ -67,12 +55,7 @@ function releaseDocument(url: string): void {
   });
 }
 
-
-
-export function usePdfLibLinks(
-  pdfUrl: string | null,
-  pageIndex: number,
-): PdfLibLinksResult {
+export function usePdfLibLinks(pdfUrl: string | null, pageIndex: number): PdfLibLinksResult {
   const [result, setResult] = useState<PdfLibLinksResult>({
     links: [],
     pdfPageWidth: 0,
@@ -107,7 +90,7 @@ export function usePdfLibLinks(
           return;
         }
 
-        if (cached.invalidCatalog) {
+        if (cached.invalidDocument) {
           setResult({ links: [], pdfPageWidth: 0, pdfPageHeight: 0, loading: false });
           releaseDocument(url);
           return;
@@ -115,27 +98,9 @@ export function usePdfLibLinks(
 
         let pageData = cached.pageLinks.get(pageIndex);
         if (!pageData) {
-          let pageCount: number;
           try {
-            pageCount = cached.doc.getPageCount();
-          } catch {
-            cached.invalidCatalog = true;
-            setResult({ links: [], pdfPageWidth: 0, pdfPageHeight: 0, loading: false });
-            releaseDocument(url);
-            return;
-          }
-
-          if (pageIndex < 0 || pageIndex >= pageCount) {
-            setResult({ links: [], pdfPageWidth: 0, pdfPageHeight: 0, loading: false });
-            releaseDocument(url);
-            return;
-          }
-
-          try {
-            const page = cached.doc.getPage(pageIndex);
-            const { width, height } = page.getSize();
-            const links = extractLinksFromPage(cached.doc, page, pageIndex);
-            pageData = { links, width, height };
+            const { links, pdfPageWidth, pdfPageHeight } = await extractLinksFromPage(cached.data, pageIndex);
+            pageData = { links, width: pdfPageWidth, height: pdfPageHeight };
             cached.pageLinks.set(pageIndex, pageData);
           } catch (pageError) {
             console.warn(`[usePdfLibLinks] Failed to read page ${pageIndex}:`, pageError);
@@ -155,7 +120,7 @@ export function usePdfLibLinks(
 
         releaseDocument(url);
       } catch (error) {
-        console.warn('[usePdfLibLinks] Failed to extract links:', error);
+        console.warn("[usePdfLibLinks] Failed to extract links:", error);
         if (!cancelled && mountedRef.current) {
           setResult({ links: [], pdfPageWidth: 0, pdfPageHeight: 0, loading: false });
         }

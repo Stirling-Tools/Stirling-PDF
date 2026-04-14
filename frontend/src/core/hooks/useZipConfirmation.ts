@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from "react";
 
 interface ZipConfirmationState {
   opened: boolean;
@@ -15,7 +15,7 @@ export const useZipConfirmation = () => {
   const [confirmationState, setConfirmationState] = useState<ZipConfirmationState>({
     opened: false,
     fileCount: 0,
-    fileName: '',
+    fileName: "",
   });
 
   // Store resolve function in ref to avoid callback recreation
@@ -47,7 +47,7 @@ export const useZipConfirmation = () => {
     setConfirmationState({
       opened: false,
       fileCount: 0,
-      fileName: '',
+      fileName: "",
     });
   }, []); // No dependencies - uses ref
 
@@ -62,7 +62,7 @@ export const useZipConfirmation = () => {
     setConfirmationState({
       opened: false,
       fileCount: 0,
-      fileName: '',
+      fileName: "",
     });
   }, []); // No dependencies - uses ref
 

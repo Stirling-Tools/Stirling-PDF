@@ -6,7 +6,7 @@
 import { ToolId } from "@app/types/toolId";
 
 declare const tag: unique symbol;
-export type FileId = string & { readonly [tag]: 'FileId' };
+export type FileId = string & { readonly [tag]: "FileId" };
 
 /**
  * Tool operation metadata for history tracking
@@ -35,4 +35,23 @@ export interface BaseFileMetadata {
   versionNumber: number; // Version number in chain
   parentFileId?: FileId; // Immediate parent file ID
   toolHistory?: ToolOperation[]; // Tool chain for history tracking
+
+  // Remote storage tracking
+  remoteStorageId?: number; // Server-side storage ID for this file chain
+  remoteStorageUpdatedAt?: number; // Timestamp when chain was last uploaded
+  remoteOwnerUsername?: string; // Server-side owner username (if known)
+  remoteOwnedByCurrentUser?: boolean; // Ownership flag for server files
+  remoteAccessRole?: string; // Access role for shared server files
+  remoteSharedViaLink?: boolean; // True when imported from a share link
+  remoteHasShareLinks?: boolean; // True when owner has shared this file
+  remoteShareToken?: string; // Share token when file is from a share link
+}
+
+/**
+ * Minimal file shape used by signing workflow components.
+ * Both StirlingFile (extends File) and StirlingFileStub are assignable to this.
+ */
+export interface FileState {
+  name: string;
+  size: number;
 }

@@ -5,8 +5,7 @@
 FROM gradle:9.3.1-jdk25 AS build
 
 # Install Node.js and npm for frontend build
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
@@ -30,15 +29,13 @@ ENV JDK_JAVA_OPTIONS="--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNN
   --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED \
   --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
 
-RUN --mount=type=cache,target=/home/gradle/.gradle/caches \
-    ./gradlew dependencies --no-daemon || true
+RUN ./gradlew dependencies --no-daemon || true
 
 # Copy entire project
 COPY . .
 
 # Build ultra-lite JAR with embedded frontend (minimal features)
-RUN --mount=type=cache,target=/home/gradle/.gradle/caches \
-    DISABLE_ADDITIONAL_FEATURES=true \
+RUN DISABLE_ADDITIONAL_FEATURES=true \
     ./gradlew clean build \
       -PbuildWithFrontend=true \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
@@ -96,7 +93,7 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     bash \
     curl \
     shadow \
-    su-exec && \
+    util-linux && \
     mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps && \
     mkdir -p /usr/share/fonts/opentype/noto && \
     # User permissions
