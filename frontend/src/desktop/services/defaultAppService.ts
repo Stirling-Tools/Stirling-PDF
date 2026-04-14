@@ -116,21 +116,6 @@ export const defaultAppService = {
     }
   },
 
-  resetPromptPreferences(): void {
-    try {
-      localStorage.removeItem(DISMISSED_KEY);
-      localStorage.removeItem(DISMISSED_AT_KEY);
-      localStorage.removeItem(MONTHLY_REMINDER_SHOWN_KEY);
-      localStorage.removeItem(NEVER_REMIND_KEY);
-    } catch (error) {
-      console.error("[DefaultApp] Failed to reset prompt preferences:", error);
-    }
-  },
-
-  isPromptSuppressed(): boolean {
-    return this.hasNeverRemindPreference() || this.hasUserDismissedPrompt();
-  },
-
   /**
    * Check if we should show the default app prompt.
    * Flow:
@@ -138,7 +123,7 @@ export const defaultAppService = {
    * - Hidden permanently when user chose "Don't remind me again"
    * - After first dismiss, hidden for 30 days
    * - After 30 days, shown once more
-   * - After that second dismiss, hidden unless user re-enables in settings
+   * - After that second dismiss, hidden
    */
   async shouldShowPrompt(currentDefaultStatus?: boolean): Promise<boolean> {
     const isDefault = currentDefaultStatus ?? (await this.isDefaultPdfHandler());

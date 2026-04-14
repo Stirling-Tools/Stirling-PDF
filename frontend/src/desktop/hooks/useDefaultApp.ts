@@ -7,7 +7,6 @@ export const useDefaultApp = () => {
   const { t } = useTranslation();
   const [isDefault, setIsDefault] = useState<boolean | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
-  const [isPromptSuppressed, setIsPromptSuppressed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -20,7 +19,6 @@ export const useDefaultApp = () => {
       setIsDefault(status);
       const shouldShowPrompt = await defaultAppService.shouldShowPrompt(status);
       setShowPrompt(shouldShowPrompt);
-      setIsPromptSuppressed(defaultAppService.isPromptSuppressed());
     } catch (error) {
       console.error("Failed to check default status:", error);
     }
@@ -61,29 +59,20 @@ export const useDefaultApp = () => {
   const dismissPromptTemporarily = () => {
     defaultAppService.dismissPromptTemporarily();
     setShowPrompt(false);
-    setIsPromptSuppressed(true);
   };
 
   const dismissPromptPermanently = () => {
     defaultAppService.dismissPromptPermanently();
     setShowPrompt(false);
-    setIsPromptSuppressed(true);
-  };
-
-  const resetPromptPreferences = async () => {
-    defaultAppService.resetPromptPreferences();
-    await checkDefaultStatus();
   };
 
   return {
     isDefault,
     isLoading,
     showPrompt,
-    isPromptSuppressed,
     checkDefaultStatus,
     handleSetDefault,
     dismissPromptTemporarily,
     dismissPromptPermanently,
-    resetPromptPreferences,
   };
 };
