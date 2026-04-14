@@ -36,8 +36,8 @@ export default function Footer({
   const { showCookiePreferences } = useCookieConsent({ analyticsEnabled: finalAnalyticsEnabled, forceLightMode });
 
   // Default URLs
-  const defaultTermsUrl = "https://www.stirling.com/legal/terms-of-service";
-  const defaultPrivacyUrl = "https://www.stirling.com/legal/privacy-policy";
+  const defaultTermsUrl = "https://www.stirling.com/terms";
+  const defaultPrivacyUrl = "https://www.stirling.com/privacy";
   const defaultAccessibilityUrl = "https://www.stirling.com/accessibility";
 
   // Use provided URLs or fall back to defaults
