@@ -15,7 +15,6 @@ import { downloadFile } from "@app/services/downloadService";
 import { ViewerInlineControls } from "@app/components/shared/ViewerInlineControls";
 import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from "@app/types/rightRail";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import GridViewIcon from "@mui/icons-material/GridView";
 import FolderIcon from "@mui/icons-material/Folder";
 import ShareIcon from "@mui/icons-material/Share";
 import CloseIcon from "@mui/icons-material/Close";
@@ -39,7 +38,13 @@ interface WorkbenchBarProps {
 function renderWithTooltip(node: React.ReactNode, tooltip: React.ReactNode | undefined) {
   if (!tooltip) return node;
   return (
-    <Tooltip content={tooltip} position="bottom" offset={6} arrow portalTarget={typeof document !== "undefined" ? document.body : undefined}>
+    <Tooltip
+      content={tooltip}
+      position="bottom"
+      offset={6}
+      arrow
+      portalTarget={typeof document !== "undefined" ? document.body : undefined}
+    >
       <div className="workbench-bar-tooltip-wrapper">{node}</div>
     </Tooltip>
   );
@@ -174,7 +179,9 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
     }
 
     if (fileToShare && navigator.canShare) {
-      const shareFile = fileToShare instanceof File ? fileToShare : new File([fileToShare], fileToShare.name, { type: "application/pdf" });
+      const shareFile = isStirlingFile(fileToShare)
+        ? new File([fileToShare], fileToShare.name, { type: "application/pdf" })
+        : fileToShare;
       if (navigator.canShare({ files: [shareFile] })) {
         try {
           await navigator.share({ files: [shareFile], title: fileToShare.name });
@@ -321,16 +328,12 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
             onClick={handleClose}
             disabled={totalItems === 0 || allButtonsDisabled || disableForFullscreen}
             aria-label={
-              currentView === "fileEditor"
-                ? t("rightRail.closeAll", "Close All")
-                : t("rightRail.closePdf", "Close PDF")
+              currentView === "fileEditor" ? t("rightRail.closeAll", "Close All") : t("rightRail.closePdf", "Close PDF")
             }
           >
             <CloseIcon sx={{ fontSize: "1rem" }} />
           </ActionIcon>,
-          currentView === "fileEditor"
-            ? t("rightRail.closeAll", "Close All")
-            : t("rightRail.closePdf", "Close PDF"),
+          currentView === "fileEditor" ? t("rightRail.closeAll", "Close All") : t("rightRail.closePdf", "Close PDF"),
         )}
 
         {/* Download */}

@@ -151,10 +151,9 @@ export function LocalEmbedPDF({
     } else if (url) {
       setPdfUrl(url);
     }
-  // `url` is intentionally omitted: when `file` is present we create our own blob URL
-  // and `url` is irrelevant; when only `url` is provided, LocalEmbedPDF is keyed such
-  // that it remounts on URL changes anyway (fileStableKey handles that case via null→value).
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // `url` is intentionally omitted: when `file` is present we create our own blob URL
+    // and `url` is irrelevant; when only `url` is provided, LocalEmbedPDF is keyed such
+    // that it remounts on URL changes anyway (fileStableKey handles that case via null→value).
   }, [fileStableKey]);
 
   // Compute export filename stably — keyed by fileStableKey so that new StirlingFile
@@ -164,7 +163,7 @@ export function LocalEmbedPDF({
     if (file && "name" in file) return (file as File).name;
     if (url) return url.split("/").pop()?.split("?")[0] || "document.pdf";
     return "document.pdf";
-  }, [fileStableKey, fileName, url]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fileStableKey, fileName, url]);
 
   // Create plugins configuration
   const plugins = useMemo(() => {
@@ -270,7 +269,7 @@ export function LocalEmbedPDF({
       // Register print plugin for printing PDFs
       createPluginRegistration(PrintPluginPackage),
     ];
-  }, [pdfUrl, enableAnnotations, exportFileName]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pdfUrl, enableAnnotations, exportFileName]);
 
   // Initialize the engine with the React hook - use local WASM for offline support
   const { engine, isLoading, error } = usePdfiumEngine({

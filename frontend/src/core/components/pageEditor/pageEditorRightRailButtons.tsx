@@ -18,8 +18,6 @@ interface PageEditorRightRailButtonsParams {
   onExportSelected: () => void;
   onSaveChanges: () => void;
   exportLoading: boolean;
-  activeFileCount: number;
-  closePdf: () => void;
 }
 
 export function usePageEditorRightRailButtons(params: PageEditorRightRailButtonsParams) {
@@ -37,8 +35,6 @@ export function usePageEditorRightRailButtons(params: PageEditorRightRailButtons
     onExportSelected,
     onSaveChanges,
     exportLoading,
-    activeFileCount,
-    closePdf,
   } = params;
 
   const { t, i18n } = useTranslation();

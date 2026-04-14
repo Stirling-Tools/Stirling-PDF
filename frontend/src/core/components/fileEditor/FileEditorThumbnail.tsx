@@ -70,10 +70,18 @@ const FileEditorThumbnail = ({
   const pageCount = file.processedFile?.totalPages || 0;
   const isEncrypted = Boolean(file.processedFile?.isEncrypted);
 
-  // Flip aspect ratio for 90°/270° rotated PDFs so the card shape matches the page orientation
-  const firstPageRotation = file.processedFile?.pages?.[0]?.rotation ?? 0;
+  // Derive aspect ratio from actual page dimensions when available, falling back to letter
+  const firstPage = file.processedFile?.pages?.[0];
+  const firstPageRotation = firstPage?.rotation ?? 0;
   const isLandscape = firstPageRotation === 90 || firstPageRotation === 270;
-  const thumbAspect = isLandscape ? "11 / 8.5" : "8.5 / 11";
+  const thumbAspect = (() => {
+    const w = firstPage?.width;
+    const h = firstPage?.height;
+    if (w && h && w > 0 && h > 0) {
+      return isLandscape ? `${h} / ${w}` : `${w} / ${h}`;
+    }
+    return isLandscape ? "11 / 8.5" : "8.5 / 11";
+  })();
 
   const handleRef = useRef<HTMLSpanElement | null>(null);
   const dragElementRef = useRef<HTMLDivElement | null>(null);
@@ -333,9 +341,7 @@ const FileEditorThumbnail = ({
     onViewFile(file.id);
   };
 
-  const metaLine = [dateLabel, extUpper ? `${extUpper} file` : "", pageLabel]
-    .filter(Boolean)
-    .join(" - ");
+  const metaLine = [dateLabel, extUpper ? `${extUpper} file` : "", pageLabel].filter(Boolean).join(" - ");
 
   return (
     <div

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Box, Center, Text, ActionIcon, Button, Stack } from "@mantine/core";
 import CloseIcon from "@mui/icons-material/Close";
 import LockIcon from "@mui/icons-material/Lock";
@@ -117,6 +118,7 @@ const EmbedPdfViewerContent = ({
   onClose,
   previewFile,
 }: EmbedPdfViewerProps) => {
+  const { t } = useTranslation();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [isViewerHovered, setIsViewerHovered] = React.useState(false);
@@ -146,8 +148,8 @@ const EmbedPdfViewerContent = ({
     pdfRenderMode,
     cyclePdfRenderMode,
     activeFileIndex,
-    setActiveFileIndex,
-    activeFileId,
+    setActiveFileIndex: _setActiveFileIndex,
+    activeFileId: _activeFileId,
     setActiveFileId,
   } = useViewer();
 
@@ -1013,7 +1015,7 @@ const EmbedPdfViewerContent = ({
       // the effect re-fires before the async fetch completes.
     }
 
-    if (currentFile && (fileChanged || providerChanged)) {
+    if (currentFile && !isCurrentFileEncrypted && (fileChanged || providerChanged)) {
       console.log("[FormFill] Fetching form fields for:", currentFileId);
       fetchFormFields(currentFile, currentFileId ?? undefined);
     }
@@ -1063,7 +1065,7 @@ const EmbedPdfViewerContent = ({
         <Center style={{ flex: 1 }}>
           <Stack align="center" gap="md">
             <LockIcon style={{ fontSize: 48, opacity: 0.5 }} />
-            <Text fw={500}>This PDF is password-protected</Text>
+            <Text fw={500}>{t("encryptedPdfUnlock.viewerLocked", "This PDF is password-protected")}</Text>
             <Button
               variant="filled"
               onClick={() => {
@@ -1072,7 +1074,7 @@ const EmbedPdfViewerContent = ({
                 }
               }}
             >
-              Unlock
+              {t("encryptedPdfUnlock.viewerUnlock", "Unlock")}
             </Button>
           </Stack>
         </Center>

@@ -35,7 +35,9 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
   white-space: nowrap;
 }
 
@@ -46,7 +48,7 @@
 
 .workbench-bar-view-btn.active {
   background-color: var(--mantine-color-blue-light, rgba(59, 130, 246, 0.12));
-  color: var(--mantine-color-blue-6, #3B82F6);
+  color: var(--mantine-color-blue-6, #3b82f6);
 }
 
 .workbench-bar-view-btn svg {

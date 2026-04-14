@@ -3350,6 +3350,8 @@ unlockAll = "Use for all ({{count}})"
 unlockAllPartialFail = "Wrong password for: {{names}}"
 unlockAllSuccess = "Unlocked {{count}} file(s)."
 unlockPrompt = "Unlock PDF to continue"
+viewerLocked = "This PDF is password-protected"
+viewerUnlock = "Unlock"
 
 [encryptedPdfUnlock.password]
 label = "PDF password"

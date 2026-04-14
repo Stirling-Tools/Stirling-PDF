@@ -30,9 +30,8 @@ export function useFileWithUrl(
       console.error("useFileWithUrl: Failed to create object URL:", error, file);
       return null;
     }
-  // When stableKey is provided, only recreate when the file identity changes — not
-  // when getFiles() returns a new object reference for the same underlying file.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // When stableKey is provided, only recreate when the file identity changes — not
+    // when getFiles() returns a new object reference for the same underlying file.
   }, [stableKey !== undefined ? stableKey : file]);
 
   useEffect(() => {

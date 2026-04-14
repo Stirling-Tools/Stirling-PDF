@@ -313,7 +313,11 @@ export function useViewerRightRailButtons(isRulerActive?: boolean, setIsRulerAct
                     onClick={handleReadAloud}
                     color={isReadingAloud ? "blue" : undefined}
                   >
-                    {isReadingAloud ? <StopIcon sx={{ fontSize: "1.25rem" }} /> : <VolumeUpIcon sx={{ fontSize: "1.25rem" }} />}
+                    {isReadingAloud ? (
+                      <StopIcon sx={{ fontSize: "1.25rem" }} />
+                    ) : (
+                      <VolumeUpIcon sx={{ fontSize: "1.25rem" }} />
+                    )}
                   </ActionIcon>
                 </Tooltip>
               </div>

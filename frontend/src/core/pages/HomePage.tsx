@@ -307,12 +307,15 @@ export default function HomePage() {
       ) : (
         <Group align="flex-start" gap={0} h="100%" className="flex-nowrap flex">
           <FileSidebar
+            ref={quickAccessRef}
             collapsed={fileSidebarCollapsed}
             onToggleCollapse={() => setFileSidebarCollapsed((c) => !c)}
+            onOpenSettings={() => setConfigModalOpen(true)}
           />
           <Workbench />
           {!hideToolPanel && <ToolPanel />}
           <FileManager selectedTool={selectedTool as any /* FIX ME */} />
+          <AppConfigModal opened={configModalOpen} onClose={() => setConfigModalOpen(false)} />
         </Group>
       )}
     </div>

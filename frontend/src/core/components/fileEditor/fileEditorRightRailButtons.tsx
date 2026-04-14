@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useRightRailButtons, RightRailButtonWithAction } from "@app/hooks/useRightRailButtons";
-import LocalIcon from "@app/components/shared/LocalIcon";
 
 interface FileEditorRightRailButtonsParams {
   totalItems: number;
@@ -11,10 +10,7 @@ interface FileEditorRightRailButtonsParams {
 export function useFileEditorRightRailButtons({ totalItems, onCloseAll }: FileEditorRightRailButtonsParams) {
   const { t, i18n } = useTranslation();
 
-  const buttons = useMemo<RightRailButtonWithAction[]>(
-    () => [],
-    [t, i18n.language, totalItems, onCloseAll],
-  );
+  const buttons = useMemo<RightRailButtonWithAction[]>(() => [], [t, i18n.language, totalItems, onCloseAll]);
 
   useRightRailButtons(buttons);
 }

@@ -543,7 +543,7 @@
 
 @keyframes tool-panel-fullscreen-slide-in {
   from {
-    transform: translateX(-6%) scaleX(0.85);
+    transform: translateX(6%) scaleX(0.85);
     opacity: 0;
   }
   to {
@@ -558,14 +558,14 @@
     opacity: 1;
   }
   to {
-    transform: translateX(-6%) scaleX(0.85);
+    transform: translateX(6%) scaleX(0.85);
     opacity: 0;
   }
 }
 
 @keyframes tool-panel-fullscreen-slide-in-rtl {
   from {
-    transform: translateX(6%) scaleX(0.85);
+    transform: translateX(-6%) scaleX(0.85);
     opacity: 0;
   }
   to {
@@ -580,7 +580,7 @@
     opacity: 1;
   }
   to {
-    transform: translateX(6%) scaleX(0.85);
+    transform: translateX(-6%) scaleX(0.85);
     opacity: 0;
   }
 }

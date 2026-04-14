@@ -1,7 +1,6 @@
 import React, { useRef, useState } from "react";
 import { Button, Group, useMantineColorScheme } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import AddIcon from "@mui/icons-material/Add";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";

@@ -2,34 +2,17 @@ import React, { useState, useEffect } from "react";
 import { ActionIcon, Slider } from "@mantine/core";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useNavigationState } from "@app/contexts/NavigationContext";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 
 /**
- * Compact page navigation and zoom controls rendered inline in the WorkbenchBar
- * when the current workbench is "viewer".
+ * Compact zoom controls rendered inline in the WorkbenchBar when the current workbench is "viewer".
  */
 export function ViewerInlineControls() {
   const { workbench } = useNavigationState();
   const viewer = useViewer();
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [zoomPercent, setZoomPercent] = useState(100);
-
-  useEffect(() => {
-    const scrollState = viewer.getScrollState();
-    setCurrentPage(scrollState.currentPage || 1);
-    setTotalPages(scrollState.totalPages || 1);
-
-    const unregister = viewer.registerImmediateScrollUpdate((page, total) => {
-      setCurrentPage(page);
-      setTotalPages(total);
-    });
-    return () => unregister?.();
-  }, [viewer.registerImmediateScrollUpdate]);
 
   useEffect(() => {
     const zoomState = viewer.getZoomState();
@@ -42,13 +25,6 @@ export function ViewerInlineControls() {
   }, [viewer.registerImmediateZoomUpdate]);
 
   if (workbench !== "viewer") return null;
-
-  const handlePrev = () => {
-    if (currentPage > 1) viewer.scrollActions.scrollToPage(currentPage - 1);
-  };
-  const handleNext = () => {
-    if (currentPage < totalPages) viewer.scrollActions.scrollToPage(currentPage + 1);
-  };
 
   const sliderValue = Math.min(Math.max(zoomPercent, 20), 500);
 
@@ -97,9 +73,7 @@ export function ViewerInlineControls() {
         <ZoomInIcon sx={{ fontSize: "1rem" }} />
       </ActionIcon>
 
-      <span className="viewer-inline-controls__zoom-pct">
-        {Math.round(zoomPercent)}%
-      </span>
+      <span className="viewer-inline-controls__zoom-pct">{Math.round(zoomPercent)}%</span>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect, forwardRef } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useFileState, useFileActions } from "@app/contexts/file/fileHooks";
@@ -9,6 +9,7 @@ import { useNavigationState, useNavigationActions } from "@app/contexts/Navigati
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
+import { accountService } from "@app/services/accountService";
 import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -17,6 +18,7 @@ import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import SettingsIcon from "@mui/icons-material/Settings";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import type { FileId } from "@app/types/file";
@@ -127,7 +129,17 @@ interface FileItemProps {
   onEyeClick: (fileId: FileId, e: React.MouseEvent) => void;
 }
 
-function FileItem({ fileId, name, lastModified, isSelected, isActive, isViewedInViewer, thumbnailUrl, onClick, onEyeClick }: FileItemProps) {
+function FileItem({
+  fileId,
+  name,
+  lastModified,
+  isSelected,
+  isActive,
+  isViewedInViewer,
+  thumbnailUrl,
+  onClick,
+  onEyeClick,
+}: FileItemProps) {
   const ext = getFileExtension(name);
   const isPdf = ext === "pdf";
   const dateLabel = lastModified ? formatFileDate(lastModified) : "";
@@ -165,9 +177,15 @@ function FileItem({ fileId, name, lastModified, isSelected, isActive, isViewedIn
             <>
               <div className="file-sidebar-file-checkbox-hover" />
               {isPdf ? (
-                <FilePdfIcon className="file-sidebar-file-icon file-sidebar-file-icon-hover-hide" style={{ color: "#3B82F6" }} />
+                <FilePdfIcon
+                  className="file-sidebar-file-icon file-sidebar-file-icon-hover-hide"
+                  style={{ color: "#3B82F6" }}
+                />
               ) : (
-                <FileGenericIcon className="file-sidebar-file-icon file-sidebar-file-icon-hover-hide" style={{ color: "#71717A" }} />
+                <FileGenericIcon
+                  className="file-sidebar-file-icon file-sidebar-file-icon-hover-hide"
+                  style={{ color: "#71717A" }}
+                />
               )}
             </>
           )}
@@ -182,7 +200,10 @@ function FileItem({ fileId, name, lastModified, isSelected, isActive, isViewedIn
         </div>
         <button
           className="file-sidebar-eye-btn"
-          onClick={(e) => { e.stopPropagation(); onEyeClick(fileId, e); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onEyeClick(fileId, e);
+          }}
           tabIndex={-1}
           type="button"
           aria-label={isViewedInViewer ? "Close viewer" : "Open in viewer"}
@@ -192,15 +213,14 @@ function FileItem({ fileId, name, lastModified, isSelected, isActive, isViewedIn
         </button>
       </div>
 
-      {thumbPos && thumbnailUrl && createPortal(
-        <div
-          className="file-sidebar-thumb-tooltip"
-          style={{ top: thumbPos.top, left: thumbPos.left }}
-        >
-          <img src={thumbnailUrl} alt="" className="file-sidebar-thumb-img" />
-        </div>,
-        document.body,
-      )}
+      {thumbPos &&
+        thumbnailUrl &&
+        createPortal(
+          <div className="file-sidebar-thumb-tooltip" style={{ top: thumbPos.top, left: thumbPos.left }}>
+            <img src={thumbnailUrl} alt="" className="file-sidebar-thumb-img" />
+          </div>,
+          document.body,
+        )}
     </>
   );
 }
@@ -208,9 +228,13 @@ function FileItem({ fileId, name, lastModified, isSelected, isActive, isViewedIn
 export interface FileSidebarProps {
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  onOpenSettings?: () => void;
 }
 
-export default function FileSidebar({ collapsed = false, onToggleCollapse }: FileSidebarProps) {
+const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSidebar(
+  { collapsed = false, onToggleCollapse, onOpenSettings },
+  ref,
+) {
   const { t } = useTranslation();
   const [searchActive, setSearchActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -227,6 +251,19 @@ export default function FileSidebar({ collapsed = false, onToggleCollapse }: Fil
   const { activeFileIndex, setActiveFileIndex } = useViewer();
   const { addFiles } = useFileHandler();
   const indexedDB = useIndexedDB();
+  const [displayName, setDisplayName] = useState<string>("Guest");
+
+  useEffect(() => {
+    if (!config?.enableLogin) return;
+    accountService
+      .getAccountData()
+      .then((data) => {
+        if (data?.username) setDisplayName(data.username);
+      })
+      .catch(() => {
+        /* not logged in or security disabled */
+      });
+  }, [config?.enableLogin]);
 
   // All files ever stored in IndexedDB (leaf files = user-visible, not intermediate tool outputs)
   const [allFileStubs, setAllFileStubs] = useState<StirlingFileStub[]>([]);
@@ -312,9 +349,7 @@ export default function FileSidebar({ collapsed = false, onToggleCollapse }: Fil
       if (!stub) return;
 
       // Find the workbench entry by quickKey (fileId may differ after re-adding)
-      const workbenchFileId = state.files.ids.find(
-        (id) => state.files.byId[id]?.quickKey === stub.quickKey,
-      );
+      const workbenchFileId = state.files.ids.find((id) => state.files.byId[id]?.quickKey === stub.quickKey);
 
       if (workbenchFileId) {
         // Remove from workbench, keep in IndexedDB
@@ -362,9 +397,7 @@ export default function FileSidebar({ collapsed = false, onToggleCollapse }: Fil
       }
 
       // Find if file is already in workbench
-      const workbenchFileId = state.files.ids.find(
-        (id) => state.files.byId[id]?.quickKey === stub.quickKey,
-      );
+      const workbenchFileId = state.files.ids.find((id) => state.files.byId[id]?.quickKey === stub.quickKey);
 
       if (workbenchFileId) {
         // Already loaded — just switch to viewer and set active index
@@ -404,6 +437,7 @@ export default function FileSidebar({ collapsed = false, onToggleCollapse }: Fil
 
   return (
     <div
+      ref={ref}
       className="file-sidebar"
       style={{ width, minWidth: width, maxWidth: width }}
       data-collapsed={collapsed}
@@ -430,9 +464,7 @@ export default function FileSidebar({ collapsed = false, onToggleCollapse }: Fil
           ) : (
             <MenuIcon className="file-sidebar-menu-icon" />
           )}
-          {!collapsed && (
-            <span className="file-sidebar-brand-text sidebar-content-fade">Stirling PDF</span>
-          )}
+          {!collapsed && <span className="file-sidebar-brand-text sidebar-content-fade">Stirling PDF</span>}
         </div>
 
         {/* Search row */}
@@ -444,8 +476,8 @@ export default function FileSidebar({ collapsed = false, onToggleCollapse }: Fil
           onKeyDown={!searchActive ? (e) => e.key === "Enter" && handleSearchClick() : undefined}
         >
           <SearchIcon className="file-sidebar-search-icon" />
-          {!collapsed && (
-            searchActive ? (
+          {!collapsed &&
+            (searchActive ? (
               <input
                 ref={searchInputRef}
                 className="file-sidebar-search-input sidebar-content-fade"
@@ -455,11 +487,8 @@ export default function FileSidebar({ collapsed = false, onToggleCollapse }: Fil
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (
-              <span className="file-sidebar-search-label sidebar-content-fade">
-                {t("fileSidebar.search", "Search")}
-              </span>
-            )
-          )}
+              <span className="file-sidebar-search-label sidebar-content-fade">{t("fileSidebar.search", "Search")}</span>
+            ))}
         </div>
 
         {/* Scrollable content */}
@@ -500,16 +529,8 @@ export default function FileSidebar({ collapsed = false, onToggleCollapse }: Fil
               }
             >
               <div className="file-sidebar-cloud-icon-wrapper">
-                <GoogleDriveIcon
-                  className="file-sidebar-cloud-icon-gray"
-                  style={{ color: "var(--text-secondary)" }}
-                />
-                {isGoogleDriveEnabled && (
-                  <GoogleDriveIcon
-                    colored
-                    className="file-sidebar-cloud-icon-color"
-                  />
-                )}
+                <GoogleDriveIcon className="file-sidebar-cloud-icon-gray" style={{ color: "var(--text-secondary)" }} />
+                {isGoogleDriveEnabled && <GoogleDriveIcon colored className="file-sidebar-cloud-icon-color" />}
               </div>
               {!collapsed && (
                 <span className="file-sidebar-action-label sidebar-content-fade">
@@ -523,9 +544,7 @@ export default function FileSidebar({ collapsed = false, onToggleCollapse }: Fil
           {!collapsed && (
             <div className="file-sidebar-files-section sidebar-content-fade">
               <div className="file-sidebar-section-header">
-                <span className="file-sidebar-section-label">
-                  {t("fileSidebar.files", "Files")}
-                </span>
+                <span className="file-sidebar-section-label">{t("fileSidebar.files", "Files")}</span>
                 <button
                   className="file-sidebar-section-btn file-sidebar-section-btn-external"
                   onClick={() => openFilesModal()}
@@ -556,17 +575,14 @@ export default function FileSidebar({ collapsed = false, onToggleCollapse }: Fil
                 <div className="file-sidebar-file-list">
                   {filteredFileStubs.map((stub) => {
                     const isInWorkbench = !!(stub.quickKey && workbenchQuickKeySet.has(stub.quickKey));
-                    const workbenchFileId = state.files.ids.find(
-                      (id) => state.files.byId[id]?.quickKey === stub.quickKey,
-                    );
+                    const workbenchFileId = state.files.ids.find((id) => state.files.byId[id]?.quickKey === stub.quickKey);
                     const workbenchIdx = workbenchFileId ? state.files.ids.indexOf(workbenchFileId) : -1;
                     const isActive = isInWorkbench && workbenchIdx === activeFileIndex;
                     const isViewedInViewer = !!(stub.quickKey && stub.quickKey === viewedQuickKey);
                     // Prefer in-memory thumbnail (set after async hydration) over IndexedDB stub
                     // because addFiles saves thumbnails to state but not back to IndexedDB immediately.
                     const thumbnailUrl =
-                      (workbenchFileId ? state.files.byId[workbenchFileId]?.thumbnailUrl : undefined) ||
-                      stub.thumbnailUrl;
+                      (workbenchFileId ? state.files.byId[workbenchFileId]?.thumbnailUrl : undefined) || stub.thumbnailUrl;
                     return (
                       <FileItem
                         key={stub.id}
@@ -587,9 +603,7 @@ export default function FileSidebar({ collapsed = false, onToggleCollapse }: Fil
                 !searchActive && (
                   <div className="file-sidebar-empty">
                     <p className="file-sidebar-empty-text">{t("fileSidebar.noFiles", "No files yet")}</p>
-                    <p className="file-sidebar-empty-hint">
-                      {t("fileSidebar.dropHint", "Open files to get started")}
-                    </p>
+                    <p className="file-sidebar-empty-hint">{t("fileSidebar.dropHint", "Open files to get started")}</p>
                   </div>
                 )
               )}
@@ -597,6 +611,32 @@ export default function FileSidebar({ collapsed = false, onToggleCollapse }: Fil
           )}
         </div>
       </div>
+
+      {/* Bottom bar: user name + settings */}
+      <div
+        className="file-sidebar-bottom-bar"
+        onClick={onOpenSettings}
+        role={onOpenSettings ? "button" : undefined}
+        tabIndex={onOpenSettings ? 0 : undefined}
+        onKeyDown={onOpenSettings ? (e) => e.key === "Enter" && onOpenSettings() : undefined}
+        aria-label={onOpenSettings ? t("fileSidebar.openSettings", "Open settings") : undefined}
+        title={onOpenSettings ? t("fileSidebar.openSettings", "Open settings") : undefined}
+        style={onOpenSettings ? { cursor: "pointer" } : undefined}
+      >
+        {!collapsed && (
+          <div className="file-sidebar-bottom-avatar" title={displayName}>
+            {displayName.charAt(0).toUpperCase()}
+          </div>
+        )}
+        {!collapsed && <span className="file-sidebar-bottom-name sidebar-content-fade">{displayName}</span>}
+        {onOpenSettings && (
+          <div className="file-sidebar-bottom-settings">
+            <SettingsIcon sx={{ fontSize: "1.1rem" }} />
+          </div>
+        )}
+      </div>
     </div>
   );
-}
+});
+
+export default FileSidebar;

@@ -8,16 +8,18 @@
   height: 100vh;
   position: relative;
   z-index: 10;
-  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
-              min-width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
-              max-width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    min-width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    max-width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
 }
 
 .file-sidebar-inner {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -51,7 +53,7 @@
 }
 
 .file-sidebar-brand-text {
-  font-family: 'Alumni Sans', sans-serif;
+  font-family: "Alumni Sans", sans-serif;
   font-weight: 700;
   font-size: 18px;
   letter-spacing: 0.3px;
@@ -275,11 +277,14 @@
   color: var(--text-muted);
   padding: 0;
   outline: none;
-  transition: background-color 0.12s ease, color 0.12s ease, opacity 0.12s ease;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease,
+    opacity 0.12s ease;
 }
 
 .file-sidebar-section-btn:focus-visible {
-  outline: 2px solid #3B82F6;
+  outline: 2px solid #3b82f6;
   outline-offset: 1px;
 }
 
@@ -354,7 +359,7 @@
   width: 20px;
   height: 20px;
   border-radius: 5px;
-  border: 1.5px solid var(--border-hover, #52525B);
+  border: 1.5px solid var(--border-hover, #52525b);
 }
 
 .file-sidebar-file-item:hover .file-sidebar-file-checkbox-hover {
@@ -375,7 +380,7 @@
   width: 20px;
   height: 20px;
   border-radius: 5px;
-  background-color: #3B82F6;
+  background-color: #3b82f6;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -404,7 +409,7 @@
 }
 
 .file-sidebar-file-item.selected .file-sidebar-file-name {
-  color: #3B82F6;
+  color: #3b82f6;
 }
 
 .file-sidebar-file-meta {
@@ -429,7 +434,9 @@
   color: var(--text-muted);
   padding: 0;
   opacity: 0;
-  transition: opacity 0.12s ease, color 0.12s ease;
+  transition:
+    opacity 0.12s ease,
+    color 0.12s ease;
 }
 
 /* Show eye on hover (for any non-viewed file) */
@@ -440,7 +447,7 @@
 /* Always show eye for the currently viewed file */
 .file-sidebar-file-item.viewed .file-sidebar-eye-btn {
   opacity: 1;
-  color: #3B82F6;
+  color: #3b82f6;
 }
 
 .file-sidebar-eye-btn:hover {
@@ -505,8 +512,14 @@
 }
 
 @keyframes file-sidebar-thumb-in {
-  from { opacity: 0; transform: translateY(-50%) scale(0.94); }
-  to   { opacity: 1; transform: translateY(-50%) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(-50%) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
 }
 
 /* ---- Sidebar content fade (for collapsed state) ---- */
@@ -517,4 +530,73 @@
 .file-sidebar[data-collapsed="true"] .sidebar-content-fade {
   opacity: 0;
   pointer-events: none;
+}
+
+/* ---- Bottom bar (user + settings) ---- */
+.file-sidebar-bottom-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  min-height: 48px;
+}
+
+.file-sidebar[data-collapsed="true"] .file-sidebar-bottom-bar {
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.file-sidebar-bottom-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: var(--mantine-color-blue-6, #3b82f6);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.file-sidebar-bottom-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.file-sidebar-bottom-bar[role="button"]:hover {
+  background-color: var(--bg-hover);
+}
+
+.file-sidebar-bottom-bar[role="button"]:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+.file-sidebar-bottom-settings {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.file-sidebar[data-collapsed="true"] .file-sidebar-bottom-settings {
+  width: 32px;
+  height: 32px;
+  margin: 0 auto;
 }

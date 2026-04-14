@@ -63,44 +63,47 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     if (DEBUG) console.log(`🗂️ Evicted ${toRemove.length} LRU cache entries`);
   }, []);
 
-  const saveFile = useCallback(async (file: File, fileId: FileId, existingThumbnail?: string): Promise<StirlingFileStub> => {
-    // Use existing thumbnail or generate new one if none provided
-    const thumbnail = existingThumbnail || (await generateThumbnailForFile(file));
+  const saveFile = useCallback(
+    async (file: File, fileId: FileId, existingThumbnail?: string): Promise<StirlingFileStub> => {
+      // Use existing thumbnail or generate new one if none provided
+      const thumbnail = existingThumbnail || (await generateThumbnailForFile(file));
 
-    // Store in IndexedDB (no history data - that's handled by direct fileStorage calls now)
-    const stirlingFile = createStirlingFile(file, fileId);
+      // Store in IndexedDB (no history data - that's handled by direct fileStorage calls now)
+      const stirlingFile = createStirlingFile(file, fileId);
 
-    // Create minimal stub for storage
-    const stub: StirlingFileStub = {
-      id: fileId,
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      lastModified: file.lastModified,
-      quickKey: createQuickKey(file),
-      thumbnailUrl: thumbnail,
-      isLeaf: true,
-      createdAt: Date.now(),
-      versionNumber: 1,
-      originalFileId: fileId,
-      toolHistory: [],
-    };
+      // Create minimal stub for storage
+      const stub: StirlingFileStub = {
+        id: fileId,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified,
+        quickKey: createQuickKey(file),
+        thumbnailUrl: thumbnail,
+        isLeaf: true,
+        createdAt: Date.now(),
+        versionNumber: 1,
+        originalFileId: fileId,
+        toolHistory: [],
+      };
 
-    await fileStorage.storeStirlingFile(stirlingFile, stub);
-    const storedFile = await fileStorage.getStirlingFileStub(fileId);
+      await fileStorage.storeStirlingFile(stirlingFile, stub);
+      const storedFile = await fileStorage.getStirlingFileStub(fileId);
 
-    // Cache the file object for immediate reuse
-    fileCache.current.set(fileId, { file, lastAccessed: Date.now() });
-    evictLRUEntries();
+      // Cache the file object for immediate reuse
+      fileCache.current.set(fileId, { file, lastAccessed: Date.now() });
+      evictLRUEntries();
 
-    // Return StirlingFileStub from the stored file (no conversion needed)
-    if (!storedFile) {
-      throw new Error(`Failed to retrieve stored file after saving: ${file.name}`);
-    }
+      // Return StirlingFileStub from the stored file (no conversion needed)
+      if (!storedFile) {
+        throw new Error(`Failed to retrieve stored file after saving: ${file.name}`);
+      }
 
-    bumpRevision();
-    return storedFile;
-  }, [bumpRevision]);
+      bumpRevision();
+      return storedFile;
+    },
+    [bumpRevision],
+  );
 
   const loadFile = useCallback(
     async (fileId: FileId): Promise<File | null> => {
@@ -133,14 +136,17 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     return await fileStorage.getStirlingFileStub(fileId);
   }, []);
 
-  const deleteFile = useCallback(async (fileId: FileId): Promise<void> => {
-    // Remove from cache
-    fileCache.current.delete(fileId);
+  const deleteFile = useCallback(
+    async (fileId: FileId): Promise<void> => {
+      // Remove from cache
+      fileCache.current.delete(fileId);
 
-    // Remove from IndexedDB
-    await fileStorage.deleteStirlingFile(fileId);
-    bumpRevision();
-  }, [bumpRevision]);
+      // Remove from IndexedDB
+      await fileStorage.deleteStirlingFile(fileId);
+      bumpRevision();
+    },
+    [bumpRevision],
+  );
 
   const loadLeafMetadata = useCallback(async (): Promise<StirlingFileStub[]> => {
     const metadata = await fileStorage.getLeafStirlingFileStubs(); // Only get leaf files
@@ -156,14 +162,17 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     return metadata;
   }, []);
 
-  const deleteMultiple = useCallback(async (fileIds: FileId[]): Promise<void> => {
-    // Remove from cache
-    fileIds.forEach((id) => fileCache.current.delete(id));
+  const deleteMultiple = useCallback(
+    async (fileIds: FileId[]): Promise<void> => {
+      // Remove from cache
+      fileIds.forEach((id) => fileCache.current.delete(id));
 
-    // Remove from IndexedDB in parallel
-    await Promise.all(fileIds.map((id) => fileStorage.deleteStirlingFile(id)));
-    bumpRevision();
-  }, [bumpRevision]);
+      // Remove from IndexedDB in parallel
+      await Promise.all(fileIds.map((id) => fileStorage.deleteStirlingFile(id)));
+      bumpRevision();
+    },
+    [bumpRevision],
+  );
 
   const clearAll = useCallback(async (): Promise<void> => {
     // Clear cache

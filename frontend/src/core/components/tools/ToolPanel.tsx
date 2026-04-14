@@ -57,7 +57,6 @@ export default function ToolPanel() {
   const isFullscreenMode = toolPanelMode === "fullscreen";
   const toolPickerVisible = !readerMode;
   const fullscreenExpanded = isFullscreenMode && leftPanelView === "toolPicker" && !isMobile && toolPickerVisible;
-  const isRTL = typeof document !== "undefined" && document.documentElement.dir === "rtl";
 
   // Disable right rail buttons when fullscreen mode is active
   useEffect(() => {
@@ -74,15 +73,6 @@ export default function ToolPanel() {
   const toggleLabel = isFullscreenMode
     ? t("toolPanel.toggle.sidebar", "Switch to sidebar mode")
     : t("toolPanel.toggle.fullscreen", "Switch to fullscreen mode");
-
-  const handleModeToggle = () => {
-    const nextMode = isFullscreenMode ? "sidebar" : "fullscreen";
-    setToolPanelMode(nextMode);
-
-    if (nextMode === "fullscreen" && leftPanelView !== "toolPicker") {
-      setLeftPanelView("toolPicker");
-    }
-  };
 
   const handleExpand = () => {
     if (readerMode) setReaderMode(false);
