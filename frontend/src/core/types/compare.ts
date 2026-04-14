@@ -65,7 +65,43 @@ export interface CompareChange {
   comparison: CompareChangeSide | null;
 }
 
+export type CompareMode = "text" | "pixel";
+
+export interface ComparePixelPageResult {
+  pageNumber: number;
+  width: number;
+  height: number;
+  baseImageUrl: string;
+  comparisonImageUrl: string;
+  diffImageUrl: string;
+  diffPixels: number;
+  totalPixels: number;
+  diffRatio: number;
+  sizeMismatch: boolean;
+}
+
+export interface CompareResultPixelData {
+  mode: "pixel";
+  base: { fileId: string; fileName: string };
+  comparison: { fileId: string; fileName: string };
+  pages: ComparePixelPageResult[];
+  totals: {
+    diffPixels: number;
+    totalPixels: number;
+    diffRatio: number;
+    pagesWithChanges: number;
+    durationMs: number;
+    processedAt: number;
+  };
+  warnings: string[];
+  settings: {
+    dpi: number;
+    threshold: number;
+  };
+}
+
 export interface CompareResultData {
+  mode: "text";
   base: CompareDocumentInfo;
   comparison: CompareDocumentInfo;
   totals: {
@@ -145,6 +181,28 @@ export type CompareWorkerResponse =
       message: string;
       code?: "EMPTY_TEXT" | "TOO_LARGE" | "TOO_DISSIMILAR";
     };
+
+export interface PixelCompareWorkerRequest {
+  type: "pixel-compare";
+  payload: {
+    baseBuffer: ArrayBuffer;
+    comparisonBuffer: ArrayBuffer;
+    baseFileName: string;
+    comparisonFileName: string;
+    dpi: number;
+    threshold: number;
+  };
+}
+
+export type PixelCompareWorkerResponse =
+  | { type: "progress"; pageNumber: number; totalPages: number }
+  | { type: "page"; page: ComparePixelPageResult }
+  | {
+      type: "success";
+      totals: CompareResultPixelData["totals"];
+      warnings: string[];
+    }
+  | { type: "error"; message: string };
 
 export interface CompareDocumentPaneProps {
   pane: "base" | "comparison";
@@ -296,8 +354,10 @@ export interface WordHighlightEntry {
 
 // Removed legacy upload section types; upload flow now uses the standard active files workbench
 
+export type CompareAnyResult = CompareResultData | CompareResultPixelData;
+
 export interface CompareWorkbenchData {
-  result: CompareResultData | null;
+  result: CompareAnyResult | null;
   baseFileId: FileId | null;
   comparisonFileId: FileId | null;
   onSelectBase?: (fileId: FileId | null) => void;

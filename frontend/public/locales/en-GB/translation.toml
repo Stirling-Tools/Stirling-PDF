@@ -2791,6 +2791,24 @@ confirmTitle = "Re-run comparison?"
 unlinkedBody = "Tip: Arrow Up/Down scroll both panes; panning only moves the active pane."
 unlinkedTitle = "Independent scroll & pan enabled"
 
+[compare.mode]
+pixel = "Pixel diff"
+text = "Text diff"
+
+[compare.pixel]
+base = "Original"
+changed = "changed"
+comparison = "Edited"
+diff = "Differences"
+diffOnly = "Diff only"
+overall = "overall"
+overlay = "Overlay"
+pageLabel = "Page"
+pagesChanged = "pages changed"
+sideBySide = "Side-by-side"
+sizeMismatch = "Size mismatch"
+summaryTitle = "Pixel comparison"
+
 [compare.too.dissimilar]
 message = "These documents appear highly dissimilar. Comparison was stopped to save time."
 
