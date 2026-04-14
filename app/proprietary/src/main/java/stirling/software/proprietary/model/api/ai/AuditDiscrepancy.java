@@ -4,9 +4,8 @@ package stirling.software.proprietary.model.api.ai;
  * A single mathematical error found by the Python Auditor.
  *
  * @param page 0-indexed page number where the discrepancy appears.
- * @param kind Category: {@code "tally"}, {@code "arithmetic"}, {@code "consistency"}, or {@code
- *     "statement"}.
- * @param severity {@code "error"} (definite mistake) or {@code "warning"} (possible ambiguity).
+ * @param kind Category of the discrepancy.
+ * @param severity Whether this is a definite mistake or a possible ambiguity.
  * @param description Human-readable explanation of the error.
  * @param stated The value as it appears in the document.
  * @param expected The value the Auditor calculated.
@@ -14,8 +13,8 @@ package stirling.software.proprietary.model.api.ai;
  */
 public record AuditDiscrepancy(
         int page,
-        String kind,
-        String severity,
+        DiscrepancyKind kind,
+        AuditSeverity severity,
         String description,
         String stated,
         String expected,

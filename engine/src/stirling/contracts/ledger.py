@@ -20,7 +20,10 @@ from stirling.models import ApiModel
 
 
 class FolioType(StrEnum):
-    """How Java classifies each page after a cheap PDFBox scan."""
+    """How Java classifies each page after a cheap PDFBox scan.
+
+    Java counterpart: FolioType.java - values must stay in sync.
+    """
 
     TEXT = "text"  # selectable text layer present
     IMAGE = "image"  # image-only, will need OCR
@@ -126,6 +129,8 @@ class Evidence(ApiModel):
 
 
 class DiscrepancyKind(StrEnum):
+    """Java counterpart: DiscrepancyKind.java - values must stay in sync."""
+
     TALLY = "tally"  # a row/column sum is wrong
     ARITHMETIC = "arithmetic"  # an inline calculation is wrong
     CONSISTENCY = "consistency"  # the same figure is stated differently elsewhere
@@ -133,6 +138,8 @@ class DiscrepancyKind(StrEnum):
 
 
 class Severity(StrEnum):
+    """Java counterpart: AuditSeverity.java - values must stay in sync."""
+
     ERROR = "error"  # definite arithmetic mistake
     WARNING = "warning"  # possible rounding or ambiguity
 
