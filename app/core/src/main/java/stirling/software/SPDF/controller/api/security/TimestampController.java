@@ -170,7 +170,8 @@ public class TimestampController {
             TimeStampRequest tsaRequest = generator.generate(digestAlgorithm, hash, nonce);
             byte[] requestBytes = tsaRequest.getEncoded();
 
-            // Contact the TSA server (redirects disabled to prevent SSRF via redirect)
+            // Contact the TSA server — tsaUrl is validated against an allowlist above,
+            // and redirects are disabled below to prevent SSRF via redirect.
             connection = (HttpURLConnection) URI.create(tsaUrl).toURL().openConnection();
             connection.setInstanceFollowRedirects(false);
             connection.setDoOutput(true);
