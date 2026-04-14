@@ -16,7 +16,7 @@ repos:
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=thirdParty,tabEl,tabEls,Sie,ist
+          - --ignore-words-list=thirdParty,tabEl,tabEls,Sie,ist,fulfilment
           - --skip="./.*,*.csv,*.json,*.ambr"
           - --quiet-level=2
         files: \.(html|css|js|py|md)$
