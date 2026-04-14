@@ -272,8 +272,19 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
     const stubs = await indexedDB.loadLeafMetadata();
     const workbenchIdSet = new Set(state.files.ids);
 
+    // Merge in workbench files that aren't persisted to IndexedDB yet
+    const idbQuickKeys = new Set(stubs.map((s) => s.quickKey).filter(Boolean) as string[]);
+    const pendingStubs = state.files.ids
+      .map((id) => state.files.byId[id])
+      .filter(
+        (stub): stub is NonNullable<typeof stub> =>
+          !!stub && stub.isLeaf !== false && (!stub.quickKey || !idbQuickKeys.has(stub.quickKey)),
+      );
+
+    const allStubs = [...stubs, ...pendingStubs];
+
     // Sort: workbench entries first (keep those on dedup collision), then newest first
-    const sorted = [...stubs].sort((a, b) => {
+    const sorted = [...allStubs].sort((a, b) => {
       const aW = workbenchIdSet.has(a.id) ? 1 : 0;
       const bW = workbenchIdSet.has(b.id) ? 1 : 0;
       if (bW !== aW) return bW - aW;
@@ -298,7 +309,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
     }
 
     setAllFileStubs(deduped.sort((a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0)));
-  }, [indexedDB, state.files.ids]);
+  }, [indexedDB, state.files.ids, state.files.byId]);
 
   // Load on mount, whenever workbench file count changes, or IndexedDB is mutated externally
   useEffect(() => {

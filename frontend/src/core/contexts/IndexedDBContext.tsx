@@ -187,13 +187,23 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
     return await fileStorage.getStorageStats();
   }, []);
 
-  const updateThumbnail = useCallback(async (fileId: FileId, thumbnail: string): Promise<boolean> => {
-    return await fileStorage.updateThumbnail(fileId, thumbnail);
-  }, []);
+  const updateThumbnail = useCallback(
+    async (fileId: FileId, thumbnail: string): Promise<boolean> => {
+      const result = await fileStorage.updateThumbnail(fileId, thumbnail);
+      if (result) bumpRevision();
+      return result;
+    },
+    [bumpRevision],
+  );
 
-  const markFileAsProcessed = useCallback(async (fileId: FileId): Promise<boolean> => {
-    return await fileStorage.markFileAsProcessed(fileId);
-  }, []);
+  const markFileAsProcessed = useCallback(
+    async (fileId: FileId): Promise<boolean> => {
+      const result = await fileStorage.markFileAsProcessed(fileId);
+      if (result) bumpRevision();
+      return result;
+    },
+    [bumpRevision],
+  );
 
   const value: IndexedDBContextValue = {
     saveFile,
