@@ -65,7 +65,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
       });
   }, [config?.enableLogin]);
 
-  // All files ever stored in IndexedDB (leaf files = user-visible, not intermediate tool outputs)
+  // Leaf files = user-visible files (excludes intermediate tool outputs)
   const [allFileStubs, setAllFileStubs] = useState<StirlingFileStub[]>([]);
 
   const refreshStubs = useCallback(async () => {
@@ -111,12 +111,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
     setAllFileStubs(deduped.sort((a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0)));
   }, [indexedDB, state.files.ids, state.files.byId]);
 
-  // Load on mount, whenever workbench file count changes, or IndexedDB is mutated externally
+  // Refresh on mount, workbench changes, or external IndexedDB writes
   useEffect(() => {
     refreshStubs();
   }, [refreshStubs, state.files.ids.length, indexedDB.revision]);
 
-  // Match by quickKey so re-added files (which get new fileIds) are still detected as in-workbench
+  // quickKey is stable across re-adds (fileId changes, quickKey doesn't)
   const workbenchQuickKeySet = new Set(
     state.files.ids.map((id) => state.files.byId[id]?.quickKey).filter(Boolean) as string[],
   );
@@ -390,8 +390,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
                     const workbenchIdx = workbenchFileId ? state.files.ids.indexOf(workbenchFileId) : -1;
                     const isActive = isInWorkbench && workbenchIdx === activeFileIndex;
                     const isViewedInViewer = !!(stub.quickKey && stub.quickKey === viewedQuickKey);
-                    // Prefer in-memory thumbnail (set after async hydration) over IndexedDB stub
-                    // because addFiles saves thumbnails to state but not back to IndexedDB immediately.
+                    // In-memory thumbnail may be fresher than the IndexedDB stub.
                     const thumbnailUrl =
                       (workbenchFileId ? state.files.byId[workbenchFileId]?.thumbnailUrl : undefined) || stub.thumbnailUrl;
                     return (

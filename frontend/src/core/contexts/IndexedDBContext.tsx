@@ -68,7 +68,7 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
       // Use existing thumbnail or generate new one if none provided
       const thumbnail = existingThumbnail || (await generateThumbnailForFile(file));
 
-      // Store in IndexedDB (no history data - that's handled by direct fileStorage calls now)
+      // History is handled via direct fileStorage calls, not here
       const stirlingFile = createStirlingFile(file, fileId);
 
       // Create minimal stub for storage

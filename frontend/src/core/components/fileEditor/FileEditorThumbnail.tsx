@@ -70,7 +70,7 @@ const FileEditorThumbnail = ({
   const pageCount = file.processedFile?.totalPages || 0;
   const isEncrypted = Boolean(file.processedFile?.isEncrypted);
 
-  // Derive aspect ratio from actual page dimensions when available, falling back to letter
+  // Aspect ratio from page dimensions, falling back to letter size
   const firstPage = file.processedFile?.pages?.[0];
   const firstPageRotation = firstPage?.rotation ?? 0;
   const isLandscape = firstPageRotation === 90 || firstPageRotation === 270;

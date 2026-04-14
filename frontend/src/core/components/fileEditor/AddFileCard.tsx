@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Button, Group, useMantineColorScheme } from "@mantine/core";
+import { Button, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -19,7 +19,6 @@ const AddFileCard = ({ onFileSelect, accept, multiple = true }: AddFileCardProps
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { openFilesModal } = useFilesModalContext();
-  const { colorScheme } = useMantineColorScheme();
   const [isUploadHover, setIsUploadHover] = useState(false);
   const { wordmark } = useLogoAssets();
   const terminology = useFileActionTerminology();
@@ -82,11 +81,8 @@ const AddFileCard = ({ onFileSelect, accept, multiple = true }: AddFileCardProps
         <div className={styles.addFileContent}>
           {/* Stirling PDF Branding */}
           <Group gap="xs" align="center">
-            <img
-              src={colorScheme === "dark" ? wordmark.white : wordmark.grey}
-              alt="Stirling PDF"
-              style={{ height: "2.2rem", width: "auto" }}
-            />
+            <img src={wordmark.grey} alt="Stirling PDF" className="wordmark-light-only" style={{ height: "2.2rem", width: "auto" }} />
+            <img src={wordmark.white} alt="Stirling PDF" className="wordmark-dark-only" style={{ height: "2.2rem", width: "auto" }} />
           </Group>
 
           {/* Add Files + Native Upload Buttons - styled like LandingPage */}

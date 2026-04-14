@@ -283,9 +283,6 @@ const EmbedPdfViewerContent = ({
   }, [isInAnnotationTool, setAnnotationMode]);
   const isPlacementOverlayActive = Boolean(isInAnnotationTool && isPlacementMode && signatureConfig);
 
-  // activeFileIndex and activeFileId come from ViewerContext where activeFileIndex is
-  // derived directly from activeFileId — no sync effects needed here.
-
   // Determine which file to display
   const currentFile = React.useMemo(() => {
     if (previewFile) {
@@ -296,12 +293,8 @@ const EmbedPdfViewerContent = ({
     return null;
   }, [previewFile, activeFiles, activeFileIndex]);
 
-  // Stable file identity key — fileId is a constant string per file, unlike the currentFile
-  // object reference which is recreated on every FileContext render by getFiles()/createStirlingFile().
+  // Stable id — avoids blob URL churn when FileContext recreates file objects each render.
   const currentFileStableId = currentFile && isStirlingFile(currentFile) ? currentFile.fileId : null;
-
-  // Get file with URL for rendering. Pass stableKey so the blob URL is only recreated
-  // when the file identity actually changes, not on every FileContext re-render.
   const fileWithUrl = useFileWithUrl(currentFile, currentFileStableId);
 
   // Determine the effective file to display

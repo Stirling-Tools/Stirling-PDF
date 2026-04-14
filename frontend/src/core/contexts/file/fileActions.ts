@@ -435,7 +435,7 @@ export async function addFiles(
           try {
             await fileStorage.updateThumbnail(fileId, primaryThumbnail);
           } catch {
-            // Non-critical — thumbnail will be regenerated next time via useIndexedDBThumbnail
+            // Non-critical — regenerated next session via useIndexedDBThumbnail
           }
         }
       });

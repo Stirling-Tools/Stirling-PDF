@@ -135,13 +135,8 @@ export function LocalEmbedPDF({
       });
   }, [config?.enableLogin]);
 
-  // Convert File to URL if needed.
-  // Use fileId as the stable key when available — getFiles() calls createStirlingFile()
-  // on every render, producing new object references for the same file content.
-  // Depending on the file reference directly causes pdfUrl to change, which recreates
-  // the EmbedPDF plugin config and crashes the ViewportPlugin ("Viewport state not found").
-  // LocalEmbedPDF is already keyed by currentFileId in EmbedPdfViewer, so within a single
-  // mount fileId is constant. Content changes (tool outputs) produce a new fileId → remount.
+  // Stable key — avoids recreating the blob URL (and crashing ViewportPlugin) when
+  // FileContext produces new File object references for the same file content.
   const fileStableKey = fileId ?? (file ? `${(file as File).name}-${file.size}` : null);
   useEffect(() => {
     if (file) {
@@ -151,13 +146,11 @@ export function LocalEmbedPDF({
     } else if (url) {
       setPdfUrl(url);
     }
-    // `url` is intentionally omitted: when `file` is present we create our own blob URL
-    // and `url` is irrelevant; when only `url` is provided, LocalEmbedPDF is keyed such
-    // that it remounts on URL changes anyway (fileStableKey handles that case via null→value).
+    // `url` omitted intentionally — file presence takes priority; URL changes trigger
+    // remount via fileStableKey anyway.
   }, [fileStableKey]);
 
-  // Compute export filename stably — keyed by fileStableKey so that new StirlingFile
-  // object references (produced by getFiles() on every render) don't cause this to change.
+  // Keyed by fileStableKey to avoid recomputing on every FileContext re-render.
   const exportFileName = useMemo(() => {
     if (fileName) return fileName;
     if (file && "name" in file) return (file as File).name;

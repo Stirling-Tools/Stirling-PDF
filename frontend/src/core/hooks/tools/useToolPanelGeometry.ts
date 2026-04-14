@@ -45,11 +45,11 @@ export function useToolPanelGeometry({ enabled, toolPanelRef, quickAccessRef, ri
       let left: number;
 
       if (isRTL) {
-        // In RTL, tool panel is on the left; expand rightward to the right edge of the viewport minus right rail
+        // RTL: panel is on the left, expands rightward
         width = Math.max(360, window.innerWidth - rect.right - rightOffset);
         left = rect.right;
       } else {
-        // In LTR, tool panel is on the right; expand leftward from its right edge to the file sidebar
+        // LTR: panel is on the right, expands leftward to the file sidebar
         const quickAccessRect = quickAccessRef.current?.getBoundingClientRect();
         const leftOffset = quickAccessRect ? quickAccessRect.right : 0;
         width = Math.max(360, rect.right - leftOffset);

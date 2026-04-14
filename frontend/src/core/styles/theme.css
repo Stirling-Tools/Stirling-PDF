@@ -236,6 +236,7 @@
 
   /* Placeholder text colors */
   --search-text-and-icon-color: #6b7382;
+  --input-bg: #ffffff;
 
   /* Tool panel search bar background colors */
   --tool-panel-search-bg: #eff1f4;
@@ -581,6 +582,7 @@
 
   /* Placeholder text colors (dark mode) */
   --search-text-and-icon-color: #ffffff !important;
+  --input-bg: #4b525a;
 
   /* Tool panel search bar background colors (dark mode) */
   --tool-panel-search-bg: #1f2329;
@@ -922,3 +924,8 @@
 [data-theme="dark"] {
   --shadow-color: rgba(0, 0, 0, 0.75);
 }
+
+/* ---- Wordmark light/dark switching (use instead of JS colorScheme checks) ---- */
+.wordmark-dark-only { display: none; }
+[data-mantine-color-scheme="dark"] .wordmark-light-only { display: none; }
+[data-mantine-color-scheme="dark"] .wordmark-dark-only { display: block; }
