@@ -895,7 +895,7 @@ main() {
             # These indicate Spring Security re-running on async dispatches
             # (e.g. StreamingResponseBody completion) which can corrupt responses.
             local committed_errors
-            committed_errors=$(grep -c "response is already committed" "$REPORT_DIR/cucumber-docker-context.log" 2>/dev/null || echo "0")
+            committed_errors=$(grep -c "response is already committed" "$REPORT_DIR/cucumber-docker-context.log" 2>/dev/null) || committed_errors=0
             if [ "$committed_errors" -gt 0 ]; then
                 echo "ERROR: Found $committed_errors 'response is already committed' errors in docker logs."
                 echo "This usually means a StreamingResponseBody endpoint is triggering a Spring Security"
