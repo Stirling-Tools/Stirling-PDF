@@ -1,5 +1,12 @@
 package stirling.software.SPDF.controller.api;
 
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+
+import java.io.File;
+import java.nio.file.Files;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.Assertions;
@@ -19,6 +26,8 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import stirling.software.SPDF.model.api.general.MergeMultiplePagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class MultiPageLayoutControllerTest {
@@ -34,6 +43,7 @@ class MultiPageLayoutControllerTest {
     }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private TempFileManager tempFileManager;
 
     @InjectMocks private MultiPageLayoutController controller;
 
@@ -41,7 +51,19 @@ class MultiPageLayoutControllerTest {
     private MockMultipartFile fileNoExt;
 
     @BeforeEach
-    void setup() {
+    void setup() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
         fileWithExt =
                 new MockMultipartFile(
                         "fileInput", "test.pdf", "application/pdf", new byte[] {1, 2, 3});

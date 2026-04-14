@@ -62,6 +62,19 @@ class PDFToFileTest {
                         invocation ->
                                 Files.createTempFile("test", invocation.getArgument(0)).toFile());
         lenient()
+                .when(mockTempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        invocation -> {
+                            File f =
+                                    Files.createTempFile("test", invocation.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = org.mockito.Mockito.mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            lenient().when(tf.getAbsolutePath()).thenReturn(f.getAbsolutePath());
+                            return tf;
+                        });
+        lenient()
                 .when(mockTempFileManager.createTempDirectory())
                 .thenAnswer(invocation -> Files.createTempDirectory("test"));
 

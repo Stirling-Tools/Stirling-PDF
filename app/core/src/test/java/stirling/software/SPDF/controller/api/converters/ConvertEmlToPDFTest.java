@@ -4,12 +4,18 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,6 +34,7 @@ import stirling.software.common.model.api.converters.EmlToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.EmlToPdf;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -50,6 +57,22 @@ class ConvertEmlToPDFTest {
     @Mock private CustomHtmlSanitizer customHtmlSanitizer;
 
     @InjectMocks private ConvertEmlToPDF controller;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
+    }
 
     @Test
     void convertEmlToPdf_emptyFileReturnsBadRequest() throws java.io.IOException {
@@ -143,8 +166,8 @@ class ConvertEmlToPDFTest {
 
             wrMock.when(
                             () ->
-                                    WebResponseUtils.bytesToWebResponse(
-                                            pdfBytes, "test.eml.pdf", MediaType.APPLICATION_PDF))
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
@@ -182,10 +205,8 @@ class ConvertEmlToPDFTest {
 
             wrMock.when(
                             () ->
-                                    WebResponseUtils.bytesToWebResponse(
-                                            htmlContent.getBytes(StandardCharsets.UTF_8),
-                                            "test.eml.html",
-                                            MediaType.TEXT_HTML))
+                                    WebResponseUtils.fileToWebResponse(
+                                            any(TempFile.class), anyString(), any(MediaType.class)))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
@@ -280,10 +301,8 @@ class ConvertEmlToPDFTest {
 
             wrMock.when(
                             () ->
-                                    WebResponseUtils.bytesToWebResponse(
-                                            any(byte[].class),
-                                            any(String.class),
-                                            any(MediaType.class)))
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);

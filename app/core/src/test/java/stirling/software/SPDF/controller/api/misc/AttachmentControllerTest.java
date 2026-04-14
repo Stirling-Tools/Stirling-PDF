@@ -1,9 +1,12 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -24,6 +27,8 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import stirling.software.SPDF.model.api.misc.AddAttachmentRequest;
 import stirling.software.SPDF.service.AttachmentServiceInterface;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,6 +47,7 @@ class AttachmentControllerTest {
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
 
     @Mock private AttachmentServiceInterface pdfAttachmentService;
+    @Mock private TempFileManager tempFileManager;
 
     @InjectMocks private AttachmentController attachmentController;
 
@@ -53,7 +59,19 @@ class AttachmentControllerTest {
     private PDDocument modifiedMockDocument;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
         pdfFile =
                 new MockMultipartFile(
                         "fileInput",
@@ -95,7 +113,9 @@ class AttachmentControllerTest {
                     .when(
                             () ->
                                     WebResponseUtils.pdfDocToWebResponse(
-                                            eq(mockDocument), eq("test_with_attachments.pdf")))
+                                            any(PDDocument.class),
+                                            anyString(),
+                                            any(TempFileManager.class)))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<StreamingResponseBody> response =
@@ -127,7 +147,9 @@ class AttachmentControllerTest {
                     .when(
                             () ->
                                     WebResponseUtils.pdfDocToWebResponse(
-                                            eq(mockDocument), eq("test_with_attachments.pdf")))
+                                            any(PDDocument.class),
+                                            anyString(),
+                                            any(TempFileManager.class)))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<StreamingResponseBody> response =

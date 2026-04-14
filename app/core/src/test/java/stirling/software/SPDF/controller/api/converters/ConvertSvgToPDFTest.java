@@ -3,11 +3,17 @@ package stirling.software.SPDF.controller.api.converters;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -16,7 +22,6 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
@@ -26,6 +31,7 @@ import stirling.software.SPDF.utils.SvgToPdf;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.SvgSanitizer;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -47,6 +53,22 @@ class ConvertSvgToPDFTest {
     @Mock private TempFileManager tempFileManager;
 
     @InjectMocks private ConvertSvgToPDF controller;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
+    }
 
     @Test
     void convertSvgToPdf_nullFilesReturnsBadRequest() throws java.io.IOException {
@@ -133,8 +155,8 @@ class ConvertSvgToPDFTest {
 
             wrMock.when(
                             () ->
-                                    WebResponseUtils.bytesToWebResponse(
-                                            processedPdf, "drawing.pdf", MediaType.APPLICATION_PDF))
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<StreamingResponseBody> response = controller.convertSvgToPdf(request);
@@ -180,10 +202,8 @@ class ConvertSvgToPDFTest {
 
             wrMock.when(
                             () ->
-                                    WebResponseUtils.bytesToWebResponse(
-                                            processedPdf,
-                                            "a_combined.pdf",
-                                            MediaType.APPLICATION_PDF))
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<StreamingResponseBody> response = controller.convertSvgToPdf(request);

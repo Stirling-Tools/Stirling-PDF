@@ -2,11 +2,14 @@ package stirling.software.SPDF.controller.api.misc;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 import javax.imageio.ImageIO;
 
@@ -28,6 +31,8 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import stirling.software.SPDF.model.api.misc.OverlayImageRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,6 +49,7 @@ class OverlayImageControllerTest {
     }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private TempFileManager tempFileManager;
 
     @InjectMocks private OverlayImageController controller;
 
@@ -52,6 +58,18 @@ class OverlayImageControllerTest {
 
     @BeforeEach
     void setUp() throws IOException {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
         pdfFile =
                 new MockMultipartFile(
                         "fileInput",
@@ -93,7 +111,10 @@ class OverlayImageControllerTest {
             ResponseEntity<StreamingResponseBody> expectedResponse =
                     streamingOk("result".getBytes());
             mockedWebResponse
-                    .when(() -> WebResponseUtils.bytesToWebResponse(any(byte[].class), anyString()))
+                    .when(
+                            () ->
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<StreamingResponseBody> response = controller.overlayImage(request);
@@ -139,7 +160,10 @@ class OverlayImageControllerTest {
             ResponseEntity<StreamingResponseBody> expectedResponse =
                     streamingOk("result".getBytes());
             mockedWebResponse
-                    .when(() -> WebResponseUtils.bytesToWebResponse(any(byte[].class), anyString()))
+                    .when(
+                            () ->
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<StreamingResponseBody> response = controller.overlayImage(request);
@@ -168,7 +192,10 @@ class OverlayImageControllerTest {
             ResponseEntity<StreamingResponseBody> expectedResponse =
                     streamingOk("result".getBytes());
             mockedWebResponse
-                    .when(() -> WebResponseUtils.bytesToWebResponse(any(byte[].class), anyString()))
+                    .when(
+                            () ->
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<StreamingResponseBody> response = controller.overlayImage(request);
@@ -197,7 +224,10 @@ class OverlayImageControllerTest {
             ResponseEntity<StreamingResponseBody> expectedResponse =
                     streamingOk("result".getBytes());
             mockedWebResponse
-                    .when(() -> WebResponseUtils.bytesToWebResponse(any(byte[].class), anyString()))
+                    .when(
+                            () ->
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             // Should not throw - coordinates are passed to contentStream.drawImage

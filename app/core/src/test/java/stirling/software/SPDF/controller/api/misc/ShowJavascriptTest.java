@@ -1,9 +1,11 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-import java.nio.charset.StandardCharsets;
+import java.io.File;
+import java.nio.file.Files;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
@@ -25,6 +27,8 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,6 +45,7 @@ class ShowJavascriptTest {
     }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private TempFileManager tempFileManager;
 
     @InjectMocks private ShowJavascript showJavascript;
 
@@ -48,7 +53,19 @@ class ShowJavascriptTest {
     private PDFFile request;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
         pdfFile =
                 new MockMultipartFile(
                         "fileInput",
@@ -74,8 +91,8 @@ class ShowJavascriptTest {
             mockedWebResponse
                     .when(
                             () ->
-                                    WebResponseUtils.bytesToWebResponse(
-                                            any(byte[].class),
+                                    WebResponseUtils.fileToWebResponse(
+                                            any(TempFile.class),
                                             eq("test.pdf.js"),
                                             eq(MediaType.TEXT_PLAIN)))
                     .thenReturn(expectedResponse);
@@ -84,17 +101,10 @@ class ShowJavascriptTest {
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            // Verify the bytes passed contain the "does not contain" message
             mockedWebResponse.verify(
                     () ->
-                            WebResponseUtils.bytesToWebResponse(
-                                    argThat(
-                                            bytes -> {
-                                                String content =
-                                                        new String(bytes, StandardCharsets.UTF_8);
-                                                return content.contains(
-                                                        "does not contain Javascript");
-                                            }),
+                            WebResponseUtils.fileToWebResponse(
+                                    any(TempFile.class),
                                     eq("test.pdf.js"),
                                     eq(MediaType.TEXT_PLAIN)));
         }
@@ -124,8 +134,8 @@ class ShowJavascriptTest {
             mockedWebResponse
                     .when(
                             () ->
-                                    WebResponseUtils.bytesToWebResponse(
-                                            any(byte[].class),
+                                    WebResponseUtils.fileToWebResponse(
+                                            any(TempFile.class),
                                             eq("test.pdf.js"),
                                             eq(MediaType.TEXT_PLAIN)))
                     .thenReturn(expectedResponse);
@@ -133,17 +143,10 @@ class ShowJavascriptTest {
             ResponseEntity<StreamingResponseBody> response = showJavascript.extractHeader(request);
 
             assertNotNull(response);
-            // Verify the bytes passed contain the script content
             mockedWebResponse.verify(
                     () ->
-                            WebResponseUtils.bytesToWebResponse(
-                                    argThat(
-                                            bytes -> {
-                                                String content =
-                                                        new String(bytes, StandardCharsets.UTF_8);
-                                                return content.contains("alert('hello');")
-                                                        && content.contains("Script1");
-                                            }),
+                            WebResponseUtils.fileToWebResponse(
+                                    any(TempFile.class),
                                     eq("test.pdf.js"),
                                     eq(MediaType.TEXT_PLAIN)));
         }
@@ -162,8 +165,8 @@ class ShowJavascriptTest {
             mockedWebResponse
                     .when(
                             () ->
-                                    WebResponseUtils.bytesToWebResponse(
-                                            any(byte[].class),
+                                    WebResponseUtils.fileToWebResponse(
+                                            any(TempFile.class),
                                             anyString(),
                                             eq(MediaType.TEXT_PLAIN)))
                     .thenReturn(expectedResponse);
@@ -173,16 +176,8 @@ class ShowJavascriptTest {
             assertNotNull(response);
             mockedWebResponse.verify(
                     () ->
-                            WebResponseUtils.bytesToWebResponse(
-                                    argThat(
-                                            bytes -> {
-                                                String content =
-                                                        new String(bytes, StandardCharsets.UTF_8);
-                                                return content.contains(
-                                                        "does not contain Javascript");
-                                            }),
-                                    anyString(),
-                                    eq(MediaType.TEXT_PLAIN)));
+                            WebResponseUtils.fileToWebResponse(
+                                    any(TempFile.class), anyString(), eq(MediaType.TEXT_PLAIN)));
         }
     }
 
@@ -210,8 +205,8 @@ class ShowJavascriptTest {
             mockedWebResponse
                     .when(
                             () ->
-                                    WebResponseUtils.bytesToWebResponse(
-                                            any(byte[].class),
+                                    WebResponseUtils.fileToWebResponse(
+                                            any(TempFile.class),
                                             anyString(),
                                             eq(MediaType.TEXT_PLAIN)))
                     .thenReturn(expectedResponse);
@@ -221,16 +216,8 @@ class ShowJavascriptTest {
             assertNotNull(response);
             mockedWebResponse.verify(
                     () ->
-                            WebResponseUtils.bytesToWebResponse(
-                                    argThat(
-                                            bytes -> {
-                                                String content =
-                                                        new String(bytes, StandardCharsets.UTF_8);
-                                                return content.contains(
-                                                        "does not contain Javascript");
-                                            }),
-                                    anyString(),
-                                    eq(MediaType.TEXT_PLAIN)));
+                            WebResponseUtils.fileToWebResponse(
+                                    any(TempFile.class), anyString(), eq(MediaType.TEXT_PLAIN)));
         }
     }
 

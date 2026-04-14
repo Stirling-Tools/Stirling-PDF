@@ -3,9 +3,16 @@ package stirling.software.SPDF.controller.api.converters;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+import java.nio.file.Files;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,6 +31,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.FileToPdf;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -46,6 +54,22 @@ class ConvertHtmlToPDFTest {
     @Mock private CustomHtmlSanitizer customHtmlSanitizer;
 
     @InjectMocks private ConvertHtmlToPDF controller;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
+    }
 
     @Test
     void htmlToPdf_nullFileInputThrows() {
@@ -101,7 +125,10 @@ class ConvertHtmlToPDFTest {
             guMock.when(() -> GeneralUtils.generateFilename("test.html", ".pdf"))
                     .thenReturn("test.pdf");
 
-            wrMock.when(() -> WebResponseUtils.bytesToWebResponse(processedPdf, "test.pdf"))
+            wrMock.when(
+                            () ->
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<StreamingResponseBody> response = controller.HtmlToPdf(request);
@@ -146,7 +173,10 @@ class ConvertHtmlToPDFTest {
             guMock.when(() -> GeneralUtils.generateFilename("archive.zip", ".pdf"))
                     .thenReturn("archive.pdf");
 
-            wrMock.when(() -> WebResponseUtils.bytesToWebResponse(processedPdf, "archive.pdf"))
+            wrMock.when(
+                            () ->
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<StreamingResponseBody> response = controller.HtmlToPdf(request);

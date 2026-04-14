@@ -5,7 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
@@ -19,6 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -38,6 +42,7 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.ProcessExecutor.Processes;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -59,6 +64,22 @@ class ConvertEbookToPDFControllerTest {
     @Mock private EndpointConfiguration endpointConfiguration;
 
     @InjectMocks private ConvertEbookToPDFController controller;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
+    }
 
     @Test
     void convertEbookToPdf_buildsCalibreCommandAndCleansUp() throws Exception {
@@ -126,10 +147,7 @@ class ConvertEbookToPDFControllerTest {
 
             ResponseEntity<StreamingResponseBody> expectedResponse =
                     streamingOk("result".getBytes());
-            wr.when(
-                            () ->
-                                    WebResponseUtils.pdfDocToWebResponse(
-                                            mockDocument, "ebook_convertedToPDF.pdf"))
+            wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
             gu.when(() -> GeneralUtils.generateFilename("ebook.epub", "_convertedToPDF.pdf"))
                     .thenReturn("ebook_convertedToPDF.pdf");
@@ -245,10 +263,7 @@ class ConvertEbookToPDFControllerTest {
                     .thenReturn(optimizedBytes);
 
             ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(optimizedBytes);
-            wr.when(
-                            () ->
-                                    WebResponseUtils.bytesToWebResponse(
-                                            optimizedBytes, "ebook_convertedToPDF.pdf"))
+            wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<StreamingResponseBody> response = controller.convertEbookToPdf(request);

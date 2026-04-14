@@ -4,10 +4,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+import java.nio.file.Files;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,6 +34,7 @@ import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PDFToFile;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -49,6 +56,22 @@ class ConvertPDFToOfficeTest {
     @Mock private RuntimePathConfig runtimePathConfig;
 
     @InjectMocks private ConvertPDFToOffice controller;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
+    }
 
     private MockMultipartFile createPdfFile() {
         return new MockMultipartFile(
@@ -104,10 +127,8 @@ class ConvertPDFToOfficeTest {
 
             wrMock.when(
                             () ->
-                                    WebResponseUtils.bytesToWebResponse(
-                                            any(byte[].class),
-                                            eq("document.txt"),
-                                            eq(MediaType.TEXT_PLAIN)))
+                                    WebResponseUtils.fileToWebResponse(
+                                            any(TempFile.class), anyString(), any(MediaType.class)))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<StreamingResponseBody> response =

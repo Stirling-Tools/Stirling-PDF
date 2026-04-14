@@ -2,10 +2,13 @@ package stirling.software.SPDF.controller.api.misc;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +28,8 @@ import stirling.software.SPDF.model.api.misc.ReplaceAndInvertColorRequest;
 import stirling.software.SPDF.service.misc.ReplaceAndInvertColorService;
 import stirling.software.common.model.api.misc.HighContrastColorCombination;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,6 +46,7 @@ class ReplaceAndInvertColorControllerTest {
     }
 
     @Mock private ReplaceAndInvertColorService replaceAndInvertColorService;
+    @Mock private TempFileManager tempFileManager;
 
     @InjectMocks private ReplaceAndInvertColorController controller;
 
@@ -48,7 +54,19 @@ class ReplaceAndInvertColorControllerTest {
     private ReplaceAndInvertColorRequest request;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
         pdfFile =
                 new MockMultipartFile(
                         "fileInput",
@@ -82,10 +100,8 @@ class ReplaceAndInvertColorControllerTest {
             mockedWebResponse
                     .when(
                             () ->
-                                    WebResponseUtils.bytesToWebResponse(
-                                            any(byte[].class),
-                                            anyString(),
-                                            eq(MediaType.APPLICATION_PDF)))
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<StreamingResponseBody> response =
@@ -120,10 +136,8 @@ class ReplaceAndInvertColorControllerTest {
             mockedWebResponse
                     .when(
                             () ->
-                                    WebResponseUtils.bytesToWebResponse(
-                                            any(byte[].class),
-                                            anyString(),
-                                            eq(MediaType.APPLICATION_PDF)))
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<StreamingResponseBody> response =
@@ -156,10 +170,8 @@ class ReplaceAndInvertColorControllerTest {
             mockedWebResponse
                     .when(
                             () ->
-                                    WebResponseUtils.bytesToWebResponse(
-                                            any(byte[].class),
-                                            anyString(),
-                                            eq(MediaType.APPLICATION_PDF)))
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             ResponseEntity<StreamingResponseBody> response =
@@ -197,20 +209,14 @@ class ReplaceAndInvertColorControllerTest {
             mockedWebResponse
                     .when(
                             () ->
-                                    WebResponseUtils.bytesToWebResponse(
-                                            any(byte[].class),
-                                            contains("_inverted.pdf"),
-                                            eq(MediaType.APPLICATION_PDF)))
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             controller.replaceAndInvertColor(request);
 
             mockedWebResponse.verify(
-                    () ->
-                            WebResponseUtils.bytesToWebResponse(
-                                    any(byte[].class),
-                                    contains("_inverted.pdf"),
-                                    eq(MediaType.APPLICATION_PDF)));
+                    () -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()));
         }
     }
 }

@@ -4,9 +4,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -44,6 +45,7 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.ProcessExecutor.Processes;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
@@ -71,6 +73,18 @@ public class ConvertWebsiteToPdfTest {
     @BeforeEach
     void setUp() throws Exception {
         mocks = MockitoAnnotations.openMocks(this);
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
 
         // Enable feature (adjust structure for your project if necessary)
         applicationProperties = new ApplicationProperties();
@@ -212,10 +226,7 @@ public class ConvertWebsiteToPdfTest {
 
             ResponseEntity<StreamingResponseBody> fakeResponse = streamingOk(new byte[0]);
 
-            wr.when(
-                            () ->
-                                    WebResponseUtils.baosToWebResponse(
-                                            any(ByteArrayOutputStream.class), any()))
+            wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                     .thenReturn(fakeResponse);
 
             // Act
@@ -265,6 +276,8 @@ public class ConvertWebsiteToPdfTest {
             // Force temp files + provoke delete error
             files.when(() -> Files.createTempFile("url_input_", ".html")).thenReturn(htmlTemp);
             files.when(() -> Files.createTempFile("output_", ".pdf")).thenReturn(preCreatedTemp);
+            files.when(() -> Files.createTempFile(eq("test"), anyString()))
+                    .thenReturn(preCreatedTemp);
             files.when(
                             () ->
                                     Files.writeString(
@@ -285,10 +298,7 @@ public class ConvertWebsiteToPdfTest {
 
             // WebResponseUtils
             ResponseEntity<StreamingResponseBody> fakeResponse = streamingOk(new byte[0]);
-            wr.when(
-                            () ->
-                                    WebResponseUtils.baosToWebResponse(
-                                            any(ByteArrayOutputStream.class), any()))
+            wr.when(() -> WebResponseUtils.pdfFileToWebResponse(any(TempFile.class), anyString()))
                     .thenReturn(fakeResponse);
 
             // Act: should not throw and should return a Response
