@@ -20,7 +20,7 @@ interface FileManagerProps {
 }
 
 const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
-  const { isFilesModalOpen, closeFilesModal, onFileUpload, onRecentFileSelect } = useFilesModalContext();
+  const { isFilesModalOpen, closeFilesModal, onFileUpload, onRecentFileSelect, maxSelectable } = useFilesModalContext();
   const { config } = useAppConfig();
   const [recentFiles, setRecentFiles] = useState<StirlingFileStub[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -196,6 +196,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
             onClose={closeFilesModal}
             isFileSupported={isFileSupported}
             isOpen={isFilesModalOpen}
+            maxSelectable={maxSelectable}
             onFileRemove={handleRemoveFileByIndex}
             modalHeight={modalHeight}
             refreshRecentFiles={refreshRecentFiles}

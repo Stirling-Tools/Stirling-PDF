@@ -56,9 +56,9 @@ const FileStatusIndicator = ({ selectedFiles = [], minFiles = 1 }: FileStatusInd
 
   const getPlaceholder = () => {
     if (minFiles === undefined || minFiles === 1) {
-      return t("files.selectFromWorkbench", "Select files from the workbench or ");
+      return t("files.selectFromWorkbench", "Add files to the workbench or ");
     } else {
-      return t("files.selectMultipleFromWorkbench", "Select at least {{count}} files from the workbench or ", {
+      return t("files.selectMultipleFromWorkbench", "Add at least {{count}} files to the workbench or ", {
         count: minFiles,
       });
     }
@@ -136,9 +136,9 @@ const FileStatusIndicator = ({ selectedFiles = [], minFiles = 1 }: FileStatusInd
     <Text size="sm" c="dimmed" style={{ wordBreak: "break-word", whiteSpace: "normal" }}>
       ✓{" "}
       {selectedFiles.length === 1 ? (
-        <PrivateContent>{t("fileSelected", "Selected: {{filename}}", { filename: selectedFiles[0]?.name })}</PrivateContent>
+        <PrivateContent>{t("fileSelected", "{{filename}}", { filename: selectedFiles[0]?.name })}</PrivateContent>
       ) : (
-        t("filesSelected", "{{count}} files selected", { count: selectedFiles.length })
+        t("filesSelected", "{{count}} files", { count: selectedFiles.length })
       )}
     </Text>
   );

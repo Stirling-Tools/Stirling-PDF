@@ -99,7 +99,7 @@ export function NonPdfViewerWrapper(props: ViewerProps) {
     return (
       <Center style={{ flex: 1 }}>
         <Text c="dimmed" size="sm">
-          No file selected
+          No file loaded
         </Text>
       </Center>
     );

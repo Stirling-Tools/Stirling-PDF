@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { Button, Group, Modal, Stack, Text } from "@mantine/core";
 import { fileStorage } from "@app/services/fileStorage";
-import { useFileActions } from "@app/contexts/FileContext";
+import { useFileActions, useFileManagement } from "@app/contexts/FileContext";
 import { zipFileService } from "@app/services/zipFileService";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { downloadFiles } from "@app/utils/downloadUtils";
@@ -78,6 +78,7 @@ interface FileManagerProviderProps {
   refreshRecentFiles: () => Promise<void>;
   isLoading: boolean;
   activeFileIds: FileId[];
+  maxSelectable?: number | null;
 }
 
 type RemoteDeleteChoice = "local" | "server" | "both" | "leave" | "cancel";
@@ -95,10 +96,11 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   refreshRecentFiles,
   isLoading,
   activeFileIds,
+  maxSelectable = null,
 }) => {
   const [activeSource, setActiveSource] = useState<"recent" | "local" | "drive">("recent");
   const [storageFilter, setStorageFilter] = useState<"all" | "local" | "sharedWithMe" | "sharedByMe">("all");
-  const [selectedFileIds, setSelectedFileIds] = useState<FileId[]>([]);
+  const [selectedFileIds, setSelectedFileIds] = useState<FileId[]>(() => activeFileIds);
   const [searchTerm, setSearchTerm] = useState("");
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
   const [expandedFileIds, setExpandedFileIds] = useState<Set<FileId>>(new Set());
@@ -108,6 +110,14 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   const deletePromptResolveRef = useRef<((choice: RemoteDeleteChoice) => void) | null>(null);
   const { t } = useTranslation();
   const { actions } = useFileActions();
+  const { removeFiles } = useFileManagement();
+
+  // Re-seed selection with active file IDs each time the modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedFileIds(activeFileIds);
+    }
+  }, [isOpen]);
 
   // Track blob URLs for cleanup
   const createdBlobUrls = useRef<Set<string>>(new Set());
@@ -234,6 +244,11 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
             selectedSet.delete(fileId);
           } else {
             selectedSet.add(fileId);
+            // Enforce maxSelectable: drop the oldest selection if over the limit
+            if (maxSelectable != null && selectedSet.size > maxSelectable) {
+              const [oldest] = selectedSet;
+              selectedSet.delete(oldest);
+            }
           }
 
           return Array.from(selectedSet);
@@ -243,7 +258,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
         setLastClickedIndex(currentIndex);
       }
     },
-    [filteredFiles, lastClickedIndex],
+    [filteredFiles, lastClickedIndex, maxSelectable],
   );
 
   // Helper function to safely determine which files can be deleted
@@ -551,11 +566,20 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   );
 
   const handleOpenFiles = useCallback(() => {
-    if (selectedFiles.length > 0) {
-      onRecentFilesSelected(selectedFiles);
-      onClose();
+    // Remove active files that were unchecked
+    const uncheckedActiveIds = activeFileIds.filter((id) => !selectedFilesSet.has(id));
+    if (uncheckedActiveIds.length > 0) {
+      removeFiles(uncheckedActiveIds, false);
     }
-  }, [selectedFiles, onRecentFilesSelected, onClose]);
+
+    // Add newly checked files (not already active)
+    const newlySelected = selectedFiles.filter((f) => !activeFileIds.includes(f.id));
+    if (newlySelected.length > 0) {
+      onRecentFilesSelected(newlySelected);
+    }
+
+    onClose();
+  }, [selectedFiles, selectedFilesSet, activeFileIds, removeFiles, onRecentFilesSelected, onClose]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchTerm(value);
@@ -586,11 +610,12 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       setSelectedFileIds([]);
       setLastClickedIndex(null);
     } else {
-      // Select all filtered files
-      setSelectedFileIds(filteredFiles.map((file) => file.id).filter(Boolean));
+      // Select all filtered files, capped at maxSelectable
+      const allIds = filteredFiles.map((file) => file.id).filter(Boolean) as FileId[];
+      setSelectedFileIds(maxSelectable != null ? allIds.slice(0, maxSelectable) : allIds);
       setLastClickedIndex(null);
     }
-  }, [filteredFiles, selectedFileIds]);
+  }, [filteredFiles, selectedFileIds, maxSelectable]);
 
   const handleDeleteSelected = useCallback(async () => {
     if (selectedFileIds.length === 0) return;

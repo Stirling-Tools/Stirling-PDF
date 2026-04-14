@@ -59,7 +59,7 @@ export const useValidateSignatureOperation = (): ValidateSignatureOperationHook 
   const executeOperation = useCallback(
     async (params: ValidateSignatureParameters, selectedFiles: StirlingFile[]) => {
       if (selectedFiles.length === 0) {
-        setErrorMessage(t("noFileSelected", "No files selected"));
+        setErrorMessage(t("noFileSelected", "No file loaded"));
         return;
       }
 

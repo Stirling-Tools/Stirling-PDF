@@ -1,5 +1,7 @@
 dist/
 node_modules/
+src-tauri/target/
+src-tauri/gen/
 public/vendor/
 public/pdfjs*/
 public/js/thirdParty/

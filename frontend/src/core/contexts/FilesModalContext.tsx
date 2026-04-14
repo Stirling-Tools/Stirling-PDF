@@ -20,8 +20,10 @@ interface FilesModalContextType {
   openFilesModal: (options?: {
     insertAfterPage?: number;
     customHandler?: (files: File[], insertAfterPage?: number) => void;
+    maxSelectable?: number | null;
   }) => void;
   closeFilesModal: () => void;
+  maxSelectable: number | null;
   onFileUpload: (files: File[]) => void;
   onRecentFileSelect: (stirlingFileStubs: StirlingFileStub[]) => void;
   onModalClose?: () => void;
@@ -38,6 +40,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [onModalClose, setOnModalClose] = useState<(() => void) | undefined>();
   const [insertAfterPage, setInsertAfterPage] = useState<number | undefined>();
   const [customHandler, setCustomHandler] = useState<((files: File[], insertAfterPage?: number) => void) | undefined>();
+  const [maxSelectable, setMaxSelectable] = useState<number | null>(null);
 
   const importBundleToWorkbench = useCallback(
     async (
@@ -172,9 +175,14 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, []);
 
   const openFilesModal = useCallback(
-    (options?: { insertAfterPage?: number; customHandler?: (files: File[], insertAfterPage?: number) => void }) => {
+    (options?: {
+      insertAfterPage?: number;
+      customHandler?: (files: File[], insertAfterPage?: number) => void;
+      maxSelectable?: number | null;
+    }) => {
       setInsertAfterPage(options?.insertAfterPage);
       setCustomHandler(() => options?.customHandler);
+      setMaxSelectable(options?.maxSelectable ?? null);
       setIsFilesModalOpen(true);
     },
     [],
@@ -336,6 +344,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       onRecentFileSelect: handleRecentFileSelect,
       onModalClose,
       setOnModalClose: setModalCloseCallback,
+      maxSelectable,
     }),
     [
       isFilesModalOpen,
@@ -345,6 +354,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       handleRecentFileSelect,
       onModalClose,
       setModalCloseCallback,
+      maxSelectable,
     ],
   );
 
