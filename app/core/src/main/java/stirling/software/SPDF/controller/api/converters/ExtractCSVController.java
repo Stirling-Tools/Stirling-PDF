@@ -1,9 +1,10 @@
 package stirling.software.SPDF.controller.api.converters;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -19,6 +20,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -32,6 +34,9 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.WebResponseUtils;
 
 import technology.tabula.ObjectExtractor;
 import technology.tabula.Page;
@@ -44,6 +49,7 @@ import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 public class ExtractCSVController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(value = "/pdf/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @CsvConversionResponse
@@ -89,26 +95,23 @@ public class ExtractCSVController {
         }
     }
 
-    private ResponseEntity<byte[]> createZipResponse(List<CsvEntry> entries, String baseName)
-            throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (ZipOutputStream zipOut = new ZipOutputStream(baos)) {
+    private ResponseEntity<StreamingResponseBody> createZipResponse(
+            List<CsvEntry> entries, String baseName) throws IOException {
+        TempFile tempZip = tempFileManager.createManagedTempFile(".zip");
+        try (OutputStream fos = Files.newOutputStream(tempZip.getPath());
+                ZipOutputStream zipOut = new ZipOutputStream(fos)) {
             for (CsvEntry entry : entries) {
                 ZipEntry zipEntry = new ZipEntry(entry.filename());
                 zipOut.putNextEntry(zipEntry);
                 zipOut.write(entry.content().getBytes(StandardCharsets.UTF_8));
                 zipOut.closeEntry();
             }
+        } catch (IOException e) {
+            tempZip.close();
+            throw e;
         }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentDisposition(
-                ContentDisposition.builder("attachment")
-                        .filename(baseName + "_extracted.zip")
-                        .build());
-        headers.setContentType(MediaType.parseMediaType("application/zip"));
-
-        return ResponseEntity.ok().headers(headers).body(baos.toByteArray());
+        return WebResponseUtils.zipFileToWebResponse(tempZip, baseName + "_extracted.zip");
     }
 
     private ResponseEntity<String> createCsvResponse(CsvEntry entry, String baseName) {
