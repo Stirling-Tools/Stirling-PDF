@@ -662,8 +662,9 @@ jobs:
   pr-comment:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && needs.build.result == 'success'
+    if: github.event_name == 'pull_request' && needs.build.result == 'success' && !github.event.pull_request.head.repo.fork
     permissions:
+      issues: write
       pull-requests: write
     steps:
       - name: Harden the runner
