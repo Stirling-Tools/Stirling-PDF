@@ -6,15 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
-import java.nio.file.Files;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,48 +20,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.service.PdfJsonConversionService;
 import stirling.software.common.model.api.GeneralFile;
 import stirling.software.common.model.api.PDFFile;
-import stirling.software.common.util.TempFile;
-import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ConvertPdfJsonControllerTest {
-    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(out -> out.write(bytes));
-    }
-
-    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
-            throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        response.getBody().writeTo(baos);
-        return baos.toByteArray();
-    }
 
     @Mock private PdfJsonConversionService pdfJsonConversionService;
-    @Mock private TempFileManager tempFileManager;
 
     @InjectMocks private ConvertPdfJsonController controller;
-
-    @BeforeEach
-    void setUp() throws Exception {
-        lenient()
-                .when(tempFileManager.createManagedTempFile(anyString()))
-                .thenAnswer(
-                        inv -> {
-                            File f =
-                                    Files.createTempFile("test", inv.<String>getArgument(0))
-                                            .toFile();
-                            TempFile tf = mock(TempFile.class);
-                            lenient().when(tf.getFile()).thenReturn(f);
-                            lenient().when(tf.getPath()).thenReturn(f.toPath());
-                            return tf;
-                        });
-    }
 
     @Test
     void convertPdfToJson_nullFileInputThrows() {
@@ -88,17 +52,16 @@ class ConvertPdfJsonControllerTest {
 
         when(pdfJsonConversionService.convertPdfToJson(pdfFile, false)).thenReturn(jsonBytes);
 
-        ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(jsonBytes);
+        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(jsonBytes);
 
         try (MockedStatic<WebResponseUtils> wrMock = Mockito.mockStatic(WebResponseUtils.class)) {
             wrMock.when(
                             () ->
-                                    WebResponseUtils.fileToWebResponse(
-                                            any(TempFile.class), anyString(), any(MediaType.class)))
+                                    WebResponseUtils.bytesToWebResponse(
+                                            any(byte[].class), anyString(), any(MediaType.class)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<StreamingResponseBody> response =
-                    controller.convertPdfToJson(request, false);
+            ResponseEntity<byte[]> response = controller.convertPdfToJson(request, false);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }
@@ -115,17 +78,16 @@ class ConvertPdfJsonControllerTest {
 
         when(pdfJsonConversionService.convertPdfToJson(pdfFile, true)).thenReturn(jsonBytes);
 
-        ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(jsonBytes);
+        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(jsonBytes);
 
         try (MockedStatic<WebResponseUtils> wrMock = Mockito.mockStatic(WebResponseUtils.class)) {
             wrMock.when(
                             () ->
-                                    WebResponseUtils.fileToWebResponse(
-                                            any(TempFile.class), anyString(), any(MediaType.class)))
+                                    WebResponseUtils.bytesToWebResponse(
+                                            any(byte[].class), anyString(), any(MediaType.class)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<StreamingResponseBody> response =
-                    controller.convertPdfToJson(request, true);
+            ResponseEntity<byte[]> response = controller.convertPdfToJson(request, true);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             verify(pdfJsonConversionService).convertPdfToJson(pdfFile, true);
@@ -151,16 +113,13 @@ class ConvertPdfJsonControllerTest {
 
         when(pdfJsonConversionService.convertJsonToPdf(jsonFile)).thenReturn(pdfBytes);
 
-        ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(pdfBytes);
+        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(pdfBytes);
 
         try (MockedStatic<WebResponseUtils> wrMock = Mockito.mockStatic(WebResponseUtils.class)) {
-            wrMock.when(
-                            () ->
-                                    WebResponseUtils.pdfFileToWebResponse(
-                                            any(TempFile.class), anyString()))
+            wrMock.when(() -> WebResponseUtils.bytesToWebResponse(any(byte[].class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<StreamingResponseBody> response = controller.convertJsonToPdf(request);
+            ResponseEntity<byte[]> response = controller.convertJsonToPdf(request);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }
@@ -186,7 +145,7 @@ class ConvertPdfJsonControllerTest {
         when(pdfJsonConversionService.extractDocumentMetadata(eq(pdfFile), any(String.class)))
                 .thenReturn(jsonBytes);
 
-        ResponseEntity<StreamingResponseBody> response = controller.extractPdfMetadata(request);
+        ResponseEntity<byte[]> response = controller.extractPdfMetadata(request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(MediaType.APPLICATION_JSON, response.getHeaders().getContentType());
@@ -210,16 +169,16 @@ class ConvertPdfJsonControllerTest {
 
         when(pdfJsonConversionService.extractSinglePage(jobId, 1)).thenReturn(jsonBytes);
 
-        ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(jsonBytes);
+        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(jsonBytes);
 
         try (MockedStatic<WebResponseUtils> wrMock = Mockito.mockStatic(WebResponseUtils.class)) {
             wrMock.when(
                             () ->
-                                    WebResponseUtils.fileToWebResponse(
-                                            any(TempFile.class), anyString(), any(MediaType.class)))
+                                    WebResponseUtils.bytesToWebResponse(
+                                            any(byte[].class), anyString(), any(MediaType.class)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<StreamingResponseBody> response = controller.extractSinglePage(jobId, 1);
+            ResponseEntity<byte[]> response = controller.extractSinglePage(jobId, 1);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }
@@ -232,16 +191,16 @@ class ConvertPdfJsonControllerTest {
 
         when(pdfJsonConversionService.extractPageFonts(jobId, 1)).thenReturn(jsonBytes);
 
-        ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(jsonBytes);
+        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(jsonBytes);
 
         try (MockedStatic<WebResponseUtils> wrMock = Mockito.mockStatic(WebResponseUtils.class)) {
             wrMock.when(
                             () ->
-                                    WebResponseUtils.fileToWebResponse(
-                                            any(TempFile.class), anyString(), any(MediaType.class)))
+                                    WebResponseUtils.bytesToWebResponse(
+                                            any(byte[].class), anyString(), any(MediaType.class)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<StreamingResponseBody> response = controller.extractPageFonts(jobId, 1);
+            ResponseEntity<byte[]> response = controller.extractPageFonts(jobId, 1);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }
