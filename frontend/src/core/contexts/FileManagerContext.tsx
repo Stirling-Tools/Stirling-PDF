@@ -117,7 +117,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
     if (isOpen) {
       setSelectedFileIds(activeFileIds);
     }
-  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isOpen]); 
 
   // Track blob URLs for cleanup
   const createdBlobUrls = useRef<Set<string>>(new Set());
