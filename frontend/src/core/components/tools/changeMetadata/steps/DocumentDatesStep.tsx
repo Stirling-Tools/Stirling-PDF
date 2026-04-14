@@ -9,29 +9,25 @@ interface DocumentDatesStepProps {
   disabled?: boolean;
 }
 
-const DocumentDatesStep = ({
-  parameters,
-  onParameterChange,
-  disabled = false
-}: DocumentDatesStepProps) => {
+const DocumentDatesStep = ({ parameters, onParameterChange, disabled = false }: DocumentDatesStepProps) => {
   const { t } = useTranslation();
 
   return (
     <Stack gap="md">
       <DateTimePicker
-        label={t('changeMetadata.creationDate.label', 'Creation Date')}
-        placeholder={t('changeMetadata.creationDate.placeholder', 'Creation date')}
+        label={t("changeMetadata.creationDate.label", "Creation Date")}
+        placeholder={t("changeMetadata.creationDate.placeholder", "Creation date")}
         value={parameters.creationDate}
-        onChange={(date) => onParameterChange('creationDate', date ? new Date(date) : null)}
+        onChange={(date) => onParameterChange("creationDate", date ? new Date(date) : null)}
         disabled={disabled}
         clearable
       />
 
       <DateTimePicker
-        label={t('changeMetadata.modificationDate.label', 'Modification Date')}
-        placeholder={t('changeMetadata.modificationDate.placeholder', 'Modification date')}
+        label={t("changeMetadata.modificationDate.label", "Modification Date")}
+        placeholder={t("changeMetadata.modificationDate.placeholder", "Modification date")}
         value={parameters.modificationDate}
-        onChange={(date) => onParameterChange('modificationDate', date ? new Date(date) : null)}
+        onChange={(date) => onParameterChange("modificationDate", date ? new Date(date) : null)}
         disabled={disabled}
         clearable
       />

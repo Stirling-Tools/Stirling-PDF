@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { Group, Text, Button } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { connectionModeService, type ConnectionMode } from '@app/services/connectionModeService';
-import { OPEN_SIGN_IN_EVENT } from '@app/constants/signInEvents';
+import { useState, useEffect } from "react";
+import { Group, Text, Button } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { connectionModeService, type ConnectionMode } from "@app/services/connectionModeService";
+import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
 
 /**
  * Desktop-only footer shown at the bottom of the tool list.
@@ -21,7 +21,7 @@ export function ToolPickerFooterExtensions() {
     return unsubscribe;
   }, []);
 
-  if (connectionMode !== 'local') return null;
+  if (connectionMode !== "local") return null;
 
   return (
     <Group
@@ -32,13 +32,13 @@ export function ToolPickerFooterExtensions() {
       px="sm"
       py={10}
       style={{
-        borderTop: '1px solid var(--border-default)',
-        background: 'var(--bg-toolbar)',
+        borderTop: "1px solid var(--border-default)",
+        background: "var(--bg-toolbar)",
         flexShrink: 0,
       }}
     >
       <Text size="xs" c="dimmed" style={{ flex: 1, minWidth: 0 }}>
-        {t('localMode.toolPicker.message', 'Sign in to unlock all tools.')}
+        {t("localMode.toolPicker.message", "Sign in to unlock all tools.")}
       </Text>
       <Button
         size="compact-xs"
@@ -47,7 +47,7 @@ export function ToolPickerFooterExtensions() {
         style={{ flexShrink: 0 }}
         onClick={() => window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT))}
       >
-        {t('localMode.toolPicker.signIn', 'Sign In')}
+        {t("localMode.toolPicker.signIn", "Sign In")}
       </Button>
     </Group>
   );

@@ -1,40 +1,40 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { AppProviders as ProprietaryAppProviders } from "@proprietary/components/AppProviders";
-import { DesktopConfigSync } from '@app/components/DesktopConfigSync';
-import { DesktopBannerInitializer } from '@app/components/DesktopBannerInitializer';
-import { SaveShortcutListener } from '@app/components/SaveShortcutListener';
-import { DesktopOnboardingModal } from '@app/components/DesktopOnboardingModal';
-import { SignInModal } from '@app/components/SignInModal';
-import { OPEN_SIGN_IN_EVENT } from '@app/constants/signInEvents';
-import { ToolActionsContext } from '@app/contexts/ToolActionsContext';
-import { useFirstLaunchCheck } from '@app/hooks/useFirstLaunchCheck';
-import { useBackendInitializer } from '@app/hooks/useBackendInitializer';
-import { DESKTOP_DEFAULT_APP_CONFIG } from '@app/config/defaultAppConfig';
-import { connectionModeService, JWT_EXPIRED_PROMPTED_KEY } from '@app/services/connectionModeService';
-import { STIRLING_SAAS_URL } from '@app/constants/connection';
-import { tauriBackendService } from '@app/services/tauriBackendService';
-import { selfHostedServerMonitor } from '@app/services/selfHostedServerMonitor';
-import { authService } from '@app/services/authService';
-import { endpointAvailabilityService } from '@app/services/endpointAvailabilityService';
-import { getCurrentWindow } from '@tauri-apps/api/window';
-import { isTauri } from '@tauri-apps/api/core';
-import { SaaSTeamProvider } from '@app/contexts/SaaSTeamContext';
-import { SaasBillingProvider } from '@app/contexts/SaasBillingContext';
-import { SaaSCheckoutProvider } from '@app/contexts/SaaSCheckoutContext';
-import { CreditModalBootstrap } from '@app/components/shared/modals/CreditModalBootstrap';
+import { DesktopConfigSync } from "@app/components/DesktopConfigSync";
+import { DesktopBannerInitializer } from "@app/components/DesktopBannerInitializer";
+import { SaveShortcutListener } from "@app/components/SaveShortcutListener";
+import { DesktopOnboardingModal } from "@app/components/DesktopOnboardingModal";
+import { SignInModal } from "@app/components/SignInModal";
+import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
+import { ToolActionsContext } from "@app/contexts/ToolActionsContext";
+import { useFirstLaunchCheck } from "@app/hooks/useFirstLaunchCheck";
+import { useBackendInitializer } from "@app/hooks/useBackendInitializer";
+import { DESKTOP_DEFAULT_APP_CONFIG } from "@app/config/defaultAppConfig";
+import { connectionModeService, JWT_EXPIRED_PROMPTED_KEY } from "@app/services/connectionModeService";
+import { STIRLING_SAAS_URL } from "@app/constants/connection";
+import { tauriBackendService } from "@app/services/tauriBackendService";
+import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
+import { authService } from "@app/services/authService";
+import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { isTauri } from "@tauri-apps/api/core";
+import { SaaSTeamProvider } from "@app/contexts/SaaSTeamContext";
+import { SaasBillingProvider } from "@app/contexts/SaasBillingContext";
+import { SaaSCheckoutProvider } from "@app/contexts/SaaSCheckoutContext";
+import { CreditModalBootstrap } from "@app/components/shared/modals/CreditModalBootstrap";
 
 // Common tool endpoints to preload for faster first-use
 const COMMON_TOOL_ENDPOINTS = [
-  '/api/v1/misc/compress-pdf',
-  '/api/v1/general/merge-pdfs',
-  '/api/v1/general/split-pages',
-  '/api/v1/convert/pdf/img',
-  '/api/v1/convert/img/pdf',
-  '/api/v1/general/rotate-pdf',
-  '/api/v1/misc/add-watermark',
-  '/api/v1/security/add-password',
-  '/api/v1/security/remove-password',
-  '/api/v1/general/extract-pages',
+  "/api/v1/misc/compress-pdf",
+  "/api/v1/general/merge-pdfs",
+  "/api/v1/general/split-pages",
+  "/api/v1/convert/pdf/img",
+  "/api/v1/convert/img/pdf",
+  "/api/v1/general/rotate-pdf",
+  "/api/v1/misc/add-watermark",
+  "/api/v1/security/add-password",
+  "/api/v1/security/remove-password",
+  "/api/v1/general/extract-pages",
 ];
 
 /**
@@ -45,7 +45,7 @@ const COMMON_TOOL_ENDPOINTS = [
  */
 export function AppProviders({ children }: { children: ReactNode }) {
   const { isFirstLaunch, setupComplete } = useFirstLaunchCheck();
-  const [connectionMode, setConnectionMode] = useState<'saas' | 'selfhosted' | 'local' | null>(null);
+  const [connectionMode, setConnectionMode] = useState<"saas" | "selfhosted" | "local" | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [pendingSignIn, setPendingSignIn] = useState(false);
   // Prevent first-launch setup from running twice when connectionMode state update re-triggers the effect
@@ -71,8 +71,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
       // SaaS providers and remounting mid-wizard resets authChecked, navigating away.
       // Switching FROM selfhosted TO saas DOES trigger a remount (mode !== 'selfhosted')
       // which is intentional — the SaaS provider tree needs fresh state after login.
-      if (hasLoadedInitialMode.current && config.mode !== 'selfhosted') {
-        setAppKey(k => k + 1);
+      if (hasLoadedInitialMode.current && config.mode !== "selfhosted") {
+        setAppKey((k) => k + 1);
       }
     });
     return unsub;
@@ -83,33 +83,35 @@ export function AppProviders({ children }: { children: ReactNode }) {
     if (connectionMode === null) return;
 
     if (!isFirstLaunch && setupComplete) {
-      if (connectionMode === 'local') {
+      if (connectionMode === "local") {
         // Even in local mode, check for a valid JWT — on Windows, the OAuth callback
         // can complete without switchToSaaS() being called (race condition), leaving
         // LOCAL_MODE_STORAGE_KEY set while the user has a valid session. Upgrade to
         // SaaS mode automatically so credits/billing/team features work correctly.
-        authService.isAuthenticated()
+        authService
+          .isAuthenticated()
           .then(async (isAuth) => {
             if (isAuth) {
               await connectionModeService.switchToSaaS(STIRLING_SAAS_URL).catch(console.error);
-              setConnectionMode('saas');
+              setConnectionMode("saas");
             }
           })
           .finally(() => setAuthChecked(true));
       } else {
-        authService.isAuthenticated()
+        authService
+          .isAuthenticated()
           .then(async (isAuth) => {
             if (!isAuth) {
               const cfg = await connectionModeService.getCurrentConfig().catch(() => null);
               if (!cfg?.lock_connection_mode) {
                 // JWT expired — fall back to local so local tools still work.
                 await connectionModeService.switchToLocal().catch(console.error);
-                setConnectionMode('local');
+                setConnectionMode("local");
                 // Show sign-in modal once per expiry cycle. If the user dismisses
                 // without signing in the flag stays set and we won't prompt again
                 // until they successfully sign in (which clears the flag).
                 if (!localStorage.getItem(JWT_EXPIRED_PROMPTED_KEY)) {
-                  localStorage.setItem(JWT_EXPIRED_PROMPTED_KEY, 'true');
+                  localStorage.setItem(JWT_EXPIRED_PROMPTED_KEY, "true");
                   setPendingSignIn(true);
                 }
               }
@@ -121,9 +123,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
             const cfg = await connectionModeService.getCurrentConfig().catch(() => null);
             if (!cfg?.lock_connection_mode) {
               await connectionModeService.switchToLocal().catch(console.error);
-              setConnectionMode('local');
+              setConnectionMode("local");
               if (!localStorage.getItem(JWT_EXPIRED_PROMPTED_KEY)) {
-                localStorage.setItem(JWT_EXPIRED_PROMPTED_KEY, 'true');
+                localStorage.setItem(JWT_EXPIRED_PROMPTED_KEY, "true");
                 setPendingSignIn(true);
               }
             }
@@ -134,20 +136,21 @@ export function AppProviders({ children }: { children: ReactNode }) {
       // Guard against re-running when setConnectionMode triggers this effect.
       if (firstLaunchInitiated.current) return;
       firstLaunchInitiated.current = true;
-      connectionModeService.getCurrentConfig()
+      connectionModeService
+        .getCurrentConfig()
         .then(async (cfg) => {
           if (cfg.lock_connection_mode && cfg.server_config?.url) {
             // Locked provisioned deployment — do NOT switch to local (would clear server_config
             // from the store). Show onboarding normally; the sign-in slide handles locked auth.
             // Still start the local backend so local tools work while the user signs in.
             await tauriBackendService.startBackend().catch(console.error);
-            setConnectionMode('selfhosted');
+            setConnectionMode("selfhosted");
           } else {
             // Normal first launch — auto-enter local mode.
             // The onboarding carousel + sign-in slide will be shown inside the main app.
             await connectionModeService.switchToLocal();
             await tauriBackendService.startBackend();
-            setConnectionMode('local');
+            setConnectionMode("local");
           }
         })
         .catch(console.error)
@@ -157,14 +160,14 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   // Initialize backend health monitoring for self-hosted mode
   useEffect(() => {
-    if (connectionMode !== 'selfhosted') {
+    if (connectionMode !== "selfhosted") {
       // Stop the monitor whenever we leave selfhosted mode so the dot resets.
       selfHostedServerMonitor.stop();
       return;
     }
     if (setupComplete && !isFirstLaunch) {
       void tauriBackendService.initializeExternalBackend();
-      connectionModeService.getServerConfig().then(cfg => {
+      connectionModeService.getServerConfig().then((cfg) => {
         if (cfg?.url) {
           selfHostedServerMonitor.start(cfg.url);
         }
@@ -177,7 +180,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   // Initialize monitoring for bundled backend (already started in Rust)
   // This sets up port detection and health checks
-  const shouldMonitorBackend = setupComplete && !isFirstLaunch && (connectionMode === 'saas' || connectionMode === 'local');
+  const shouldMonitorBackend = setupComplete && !isFirstLaunch && (connectionMode === "saas" || connectionMode === "local");
   useBackendInitializer(shouldMonitorBackend);
 
   // Preload endpoint availability for the local bundled backend.
@@ -186,9 +189,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
   //   (so useSelfHostedToolAvailability can use the cache instead of making
   //   individual requests per-tool when the remote server goes offline).
   const shouldPreloadLocalEndpoints =
-    (setupComplete && !isFirstLaunch && connectionMode === 'saas') ||
-    (setupComplete && !isFirstLaunch && connectionMode === 'local') ||
-    (setupComplete && !isFirstLaunch && connectionMode === 'selfhosted');
+    (setupComplete && !isFirstLaunch && connectionMode === "saas") ||
+    (setupComplete && !isFirstLaunch && connectionMode === "local") ||
+    (setupComplete && !isFirstLaunch && connectionMode === "selfhosted");
   useEffect(() => {
     if (!shouldPreloadLocalEndpoints) return;
 
@@ -198,7 +201,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
       // tauriBackendService.isOnline now always reflects the local backend.
       // Wait for it to be healthy before preloading in both modes.
       if (!tauriBackendService.isOnline) return;
-      console.debug('[AppProviders] Preloading common tool endpoints for local backend');
+      console.debug("[AppProviders] Preloading common tool endpoints for local backend");
       void endpointAvailabilityService.preloadEndpoints(COMMON_TOOL_ENDPOINTS, backendUrl);
     };
 
@@ -206,7 +209,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
     tryPreload();
     return unsubscribe;
   }, [shouldPreloadLocalEndpoints, connectionMode]);
-
 
   // Dispatch sign-in modal after authChecked so SignInModal's listener is registered.
   // (Child effects run before parent effects, so this fires after SignInModal mounts.)
@@ -246,11 +248,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
         }}
         appConfigProviderProps={{
           initialConfig: DESKTOP_DEFAULT_APP_CONFIG,
-          bootstrapMode: 'non-blocking',
+          bootstrapMode: "non-blocking",
           autoFetch: false,
         }}
       >
-        <div style={{ minHeight: '100vh' }} />
+        <div style={{ minHeight: "100vh" }} />
       </ProprietaryAppProviders>
     );
   }
@@ -264,13 +266,15 @@ export function AppProviders({ children }: { children: ReactNode }) {
       }}
       appConfigProviderProps={{
         initialConfig: DESKTOP_DEFAULT_APP_CONFIG,
-        bootstrapMode: 'non-blocking',
+        bootstrapMode: "non-blocking",
         autoFetch: false,
       }}
     >
-      <ToolActionsContext.Provider value={{
-        onEndpointUnavailableClick: () => window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT)),
-      }}>
+      <ToolActionsContext.Provider
+        value={{
+          onEndpointUnavailableClick: () => window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT)),
+        }}
+      >
         <SaaSTeamProvider key={appKey}>
           <SaasBillingProvider>
             <SaaSCheckoutProvider>

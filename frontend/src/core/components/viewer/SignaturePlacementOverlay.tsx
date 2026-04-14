@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Box } from '@mantine/core';
-import type { SignParameters } from '@app/hooks/tools/sign/useSignParameters';
-import { buildSignaturePreview, SignaturePreview } from '@app/utils/signaturePreview';
-import { useSignature } from '@app/contexts/SignatureContext';
+import React, { useEffect, useMemo, useState } from "react";
+import { Box } from "@mantine/core";
+import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
+import { buildSignaturePreview, SignaturePreview } from "@app/utils/signaturePreview";
+import { useSignature } from "@app/contexts/SignatureContext";
 import {
   MAX_PREVIEW_WIDTH_RATIO,
   MAX_PREVIEW_HEIGHT_RATIO,
@@ -10,7 +10,7 @@ import {
   MAX_PREVIEW_HEIGHT_REM,
   MIN_SIGNATURE_DIMENSION_REM,
   OVERLAY_EDGE_PADDING_REM,
-} from '@app/constants/signConstants';
+} from "@app/constants/signConstants";
 
 // Convert rem to pixels using browser's base font size (typically 16px)
 const remToPx = (rem: number) => rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
@@ -40,7 +40,7 @@ export const SignaturePlacementOverlay: React.FC<SignaturePlacementOverlayProps>
           setPreview(value);
         }
       } catch (error) {
-        console.error('Failed to build signature preview:', error);
+        console.error("Failed to build signature preview:", error);
         if (!cancelled) {
           setPreview(null);
         }
@@ -71,12 +71,12 @@ export const SignaturePlacementOverlay: React.FC<SignaturePlacementOverlayProps>
 
     const handleLeave = () => setCursor(null);
 
-    element.addEventListener('mousemove', handleMove);
-    element.addEventListener('mouseleave', handleLeave);
+    element.addEventListener("mousemove", handleMove);
+    element.addEventListener("mouseleave", handleLeave);
 
     return () => {
-      element.removeEventListener('mousemove', handleMove);
-      element.removeEventListener('mouseleave', handleLeave);
+      element.removeEventListener("mousemove", handleMove);
+      element.removeEventListener("mouseleave", handleLeave);
     };
   }, [containerRef, isActive]);
 
@@ -92,11 +92,7 @@ export const SignaturePlacementOverlay: React.FC<SignaturePlacementOverlayProps>
     const maxWidth = Math.min(containerWidth * MAX_PREVIEW_WIDTH_RATIO, remToPx(MAX_PREVIEW_WIDTH_REM));
     const maxHeight = Math.min(containerHeight * MAX_PREVIEW_HEIGHT_RATIO, remToPx(MAX_PREVIEW_HEIGHT_REM));
 
-    const scale = Math.min(
-      1,
-      maxWidth / Math.max(preview.width, 1),
-      maxHeight / Math.max(preview.height, 1)
-    );
+    const scale = Math.min(1, maxWidth / Math.max(preview.width, 1), maxHeight / Math.max(preview.height, 1));
 
     return {
       width: Math.max(remToPx(MIN_SIGNATURE_DIMENSION_REM), preview.width * scale),
@@ -150,20 +146,20 @@ export const SignaturePlacementOverlay: React.FC<SignaturePlacementOverlayProps>
   return (
     <Box
       style={{
-        position: 'absolute',
-        pointerEvents: 'none',
+        position: "absolute",
+        pointerEvents: "none",
         left: `${display.left}px`,
         top: `${display.top}px`,
         width: `${display.width}px`,
         height: `${display.height}px`,
         backgroundImage: `url(${display.dataUrl})`,
-        backgroundSize: '100% 100%',
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center',
-        boxShadow: '0 0 0 1px rgba(30, 136, 229, 0.55), 0 6px 18px rgba(30, 136, 229, 0.25)',
-        borderRadius: '4px',
-        transition: 'transform 70ms ease-out',
-        transform: 'translateZ(0)',
+        backgroundSize: "100% 100%",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+        boxShadow: "0 0 0 1px rgba(30, 136, 229, 0.55), 0 6px 18px rgba(30, 136, 229, 0.25)",
+        borderRadius: "4px",
+        transition: "transform 70ms ease-out",
+        transform: "translateZ(0)",
         opacity: 0.6,
       }}
     />

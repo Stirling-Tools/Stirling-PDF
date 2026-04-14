@@ -1,13 +1,6 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  ReactNode,
-  useRef,
-  useCallback,
-} from 'react';
-import { useNavigation } from '@app/contexts/NavigationContext';
-import { preferencesService, type PdfRenderMode } from '@app/services/preferencesService';
+import React, { createContext, useContext, useState, ReactNode, useRef, useCallback } from "react";
+import { useNavigation } from "@app/contexts/NavigationContext";
+import { preferencesService, type PdfRenderMode } from "@app/services/preferencesService";
 import {
   createViewerActions,
   ScrollActions,
@@ -21,7 +14,7 @@ import {
   BookmarkActions,
   AttachmentActions,
   PrintActions,
-} from '@app/contexts/viewer/viewerActions';
+} from "@app/contexts/viewer/viewerActions";
 import {
   BridgeRef,
   BridgeApiMap,
@@ -43,8 +36,8 @@ import {
   AttachmentState,
   DocumentPermissionsState,
   PdfPermissionFlag,
-} from '@app/contexts/viewer/viewerBridges';
-import { SpreadMode } from '@embedpdf/plugin-spread/react';
+} from "@app/contexts/viewer/viewerBridges";
+import { SpreadMode } from "@embedpdf/plugin-spread/react";
 
 function useImmediateNotifier<Args extends unknown[]>() {
   const callbacksRef = useRef(new Set<(...args: Args) => void>());
@@ -57,11 +50,11 @@ function useImmediateNotifier<Args extends unknown[]>() {
   }, []);
 
   const trigger = useCallback((...args: Args) => {
-    callbacksRef.current.forEach(cb => {
+    callbacksRef.current.forEach((cb) => {
       try {
         cb(...args);
       } catch (error) {
-        console.error('Immediate callback error:', error);
+        console.error("Immediate callback error:", error);
       }
     });
   }, []);
@@ -99,7 +92,7 @@ export interface ViewerContextType {
     documentId: string;
     pageIndex: number;
     annotationId: string;
-    action: 'focus' | 'highlight';
+    action: "focus" | "highlight";
   } | null;
   requestCommentFocus: (documentId: string, pageIndex: number, annotationId: string, hasContent: boolean) => void;
   clearHighlightCommentRequest: () => void;
@@ -169,10 +162,7 @@ export interface ViewerContextType {
   printActions: PrintActions;
 
   // Bridge registration - internal use by bridges
-  registerBridge: <K extends BridgeKey>(
-    type: K,
-    ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]> | null
-  ) => void;
+  registerBridge: <K extends BridgeKey>(type: K, ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]> | null) => void;
 
   // Save changes function - registered by EmbedPdfViewer
   applyChanges: (() => Promise<void>) | null;
@@ -201,15 +191,15 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     documentId: string;
     pageIndex: number;
     annotationId: string;
-    action: 'focus' | 'highlight';
+    action: "focus" | "highlight";
   } | null>(null);
   const [isSearchInterfaceVisible, setSearchInterfaceVisible] = useState(false);
   const [isAnnotationsVisible, setIsAnnotationsVisible] = useState(true);
   const [isAnnotationMode, setIsAnnotationModeState] = useState(false);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [activeFileIndex, setActiveFileIndex] = useState(0);
-  const [pdfRenderMode, setPdfRenderModeState] = useState<PdfRenderMode>(
-    () => preferencesService.getPreference('pdfRenderMode')
+  const [pdfRenderMode, setPdfRenderModeState] = useState<PdfRenderMode>(() =>
+    preferencesService.getPreference("pdfRenderMode"),
   );
 
   // Get current navigation state to check if we're in sign mode
@@ -231,75 +221,62 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const {
-    register: registerImmediateZoomUpdate,
-    trigger: triggerImmediateZoomInternal,
-  } = useImmediateNotifier<[number]>();
-  const {
-    register: registerImmediateScrollUpdate,
-    trigger: triggerImmediateScrollInternal,
-  } = useImmediateNotifier<[number, number]>();
-  const {
-    register: registerImmediateSpreadUpdate,
-    trigger: triggerImmediateSpreadInternal,
-  } = useImmediateNotifier<[SpreadMode, boolean]>();
-  const {
-    register: registerImmediatePanUpdate,
-    trigger: triggerImmediatePanInternal,
-  } = useImmediateNotifier<[boolean]>();
+  const { register: registerImmediateZoomUpdate, trigger: triggerImmediateZoomInternal } = useImmediateNotifier<[number]>();
+  const { register: registerImmediateScrollUpdate, trigger: triggerImmediateScrollInternal } =
+    useImmediateNotifier<[number, number]>();
+  const { register: registerImmediateSpreadUpdate, trigger: triggerImmediateSpreadInternal } =
+    useImmediateNotifier<[SpreadMode, boolean]>();
+  const { register: registerImmediatePanUpdate, trigger: triggerImmediatePanInternal } = useImmediateNotifier<[boolean]>();
 
   const triggerImmediateZoomUpdate = useCallback(
     (percent: number) => {
       triggerImmediateZoomInternal(percent);
     },
-    [triggerImmediateZoomInternal]
+    [triggerImmediateZoomInternal],
   );
 
   const triggerImmediateScrollUpdate = useCallback(
     (currentPage: number, totalPages: number) => {
       triggerImmediateScrollInternal(currentPage, totalPages);
     },
-    [triggerImmediateScrollInternal]
+    [triggerImmediateScrollInternal],
   );
 
   const triggerImmediateSpreadUpdate = useCallback(
     (mode: SpreadMode, isDualPage: boolean = mode !== SpreadMode.None) => {
       triggerImmediateSpreadInternal(mode, isDualPage);
     },
-    [triggerImmediateSpreadInternal]
+    [triggerImmediateSpreadInternal],
   );
 
   const triggerImmediatePanUpdate = useCallback(
     (isPanning: boolean) => {
       triggerImmediatePanInternal(isPanning);
     },
-    [triggerImmediatePanInternal]
+    [triggerImmediatePanInternal],
   );
 
   const registerBridge = useCallback(
-    <K extends BridgeKey>(
-      type: K,
-      ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]> | null
-    ) => {
+    <K extends BridgeKey>(type: K, ref: BridgeRef<BridgeStateMap[K], BridgeApiMap[K]> | null) => {
       setBridgeRef(bridgeRefs.current, type, ref);
     },
-    []
+    [],
   );
 
   const toggleThumbnailSidebar = () => {
-    setIsThumbnailSidebarVisible(prev => !prev);
+    setIsThumbnailSidebarVisible((prev) => !prev);
   };
 
   const toggleBookmarkSidebar = () => {
-    setIsBookmarkSidebarVisible(prev => !prev);
+    setIsBookmarkSidebarVisible((prev) => !prev);
   };
 
   const toggleAttachmentSidebar = () => {
-    setIsAttachmentSidebarVisible(prev => !prev);
+    setIsAttachmentSidebarVisible((prev) => !prev);
   };
 
   const toggleLayerSidebar = () => {
-    setIsLayerSidebarVisible(prev => !prev);
+    setIsLayerSidebarVisible((prev) => !prev);
   };
 
   const setCommentsSidebarVisible = (visible: boolean) => {
@@ -307,7 +284,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   };
 
   const toggleCommentsSidebar = () => {
-    setIsCommentsSidebarVisible(prev => !prev);
+    setIsCommentsSidebarVisible((prev) => !prev);
   };
 
   const requestCommentFocus = useCallback(
@@ -317,10 +294,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
         documentId,
         pageIndex,
         annotationId,
-        action: hasContent ? 'highlight' : 'focus',
+        action: hasContent ? "highlight" : "focus",
       });
     },
-    []
+    [],
   );
 
   const clearHighlightCommentRequest = useCallback(() => {
@@ -330,11 +307,11 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const searchInterfaceActions = {
     open: () => setSearchInterfaceVisible(true),
     close: () => setSearchInterfaceVisible(false),
-    toggle: () => setSearchInterfaceVisible(prev => !prev),
+    toggle: () => setSearchInterfaceVisible((prev) => !prev),
   };
 
   const toggleAnnotationsVisibility = () => {
-    setIsAnnotationsVisible(prev => !prev);
+    setIsAnnotationsVisible((prev) => !prev);
   };
 
   const setAnnotationMode = (enabled: boolean) => {
@@ -342,10 +319,9 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   };
 
   const cyclePdfRenderMode = useCallback(() => {
-    setPdfRenderModeState(prev => {
-      const next: PdfRenderMode =
-        prev === 'normal' ? 'dark' : prev === 'dark' ? 'sepia' : 'normal';
-      preferencesService.setPreference('pdfRenderMode', next);
+    setPdfRenderModeState((prev) => {
+      const next: PdfRenderMode = prev === "normal" ? "dark" : prev === "dark" ? "sepia" : "normal";
+      preferencesService.setPreference("pdfRenderMode", next);
       return next;
     });
   }, []);
@@ -412,19 +388,21 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const hasAttachmentSupport = () => Boolean(bridgeRefs.current.attachment);
 
   const getDocumentPermissions = (): DocumentPermissionsState => {
-    return bridgeRefs.current.permissions?.state || {
-      isEncrypted: false,
-      isOwnerUnlocked: false,
-      permissions: PdfPermissionFlag.AllowAll,
-      canPrint: true,
-      canModifyContents: true,
-      canCopyContents: true,
-      canModifyAnnotations: true,
-      canFillForms: true,
-      canExtractForAccessibility: true,
-      canAssembleDocument: true,
-      canPrintHighQuality: true,
-    };
+    return (
+      bridgeRefs.current.permissions?.state || {
+        isEncrypted: false,
+        isOwnerUnlocked: false,
+        permissions: PdfPermissionFlag.AllowAll,
+        canPrint: true,
+        canModifyContents: true,
+        canCopyContents: true,
+        canModifyAnnotations: true,
+        canFillForms: true,
+        canExtractForAccessibility: true,
+        canAssembleDocument: true,
+        canPrintHighQuality: true,
+      }
+    );
   };
 
   const hasPermission = (flag: PdfPermissionFlag): boolean => {
@@ -433,8 +411,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       return api.hasPermission(flag);
     }
     // Default: allow all permissions - warn in development
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('[ViewerContext] Permissions API not available, defaulting to allow');
+    if (process.env.NODE_ENV === "development") {
+      console.warn("[ViewerContext] Permissions API not available, defaulting to allow");
     }
     return true;
   };
@@ -546,17 +524,13 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     cyclePdfRenderMode,
   };
 
-  return (
-    <ViewerContext.Provider value={value}>
-      {children}
-    </ViewerContext.Provider>
-  );
+  return <ViewerContext.Provider value={value}>{children}</ViewerContext.Provider>;
 };
 
 export const useViewer = (): ViewerContextType => {
   const context = useContext(ViewerContext);
   if (!context) {
-    throw new Error('useViewer must be used within a ViewerProvider');
+    throw new Error("useViewer must be used within a ViewerProvider");
   }
   return context;
 };

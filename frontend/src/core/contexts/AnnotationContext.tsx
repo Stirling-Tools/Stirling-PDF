@@ -1,5 +1,5 @@
-import React, { createContext, useContext, ReactNode, useRef } from 'react';
-import type { AnnotationAPI } from '@app/components/viewer/viewerTypes';
+import React, { createContext, useContext, ReactNode, useRef } from "react";
+import type { AnnotationAPI } from "@app/components/viewer/viewerTypes";
 
 interface AnnotationContextValue {
   annotationApiRef: React.RefObject<AnnotationAPI | null>;
@@ -20,7 +20,7 @@ export const AnnotationProvider: React.FC<{ children: ReactNode }> = ({ children
 export const useAnnotation = (): AnnotationContextValue => {
   const context = useContext(AnnotationContext);
   if (!context) {
-    throw new Error('useAnnotation must be used within an AnnotationProvider');
+    throw new Error("useAnnotation must be used within an AnnotationProvider");
   }
   return context;
 };

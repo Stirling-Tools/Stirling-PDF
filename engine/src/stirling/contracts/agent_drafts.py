@@ -7,12 +7,12 @@ from pydantic import Field
 from stirling.models import ApiModel
 
 from .agent_specs import AgentSpecStep
-from .common import ConversationMessage
+from .common import ConversationMessage, StepKind, WorkflowOutcome
 from .pdf_edit import EditCannotDoResponse, EditClarificationRequest
 
 
 class AgentDraftStep(ApiModel):
-    kind: Literal["tool", "ai_tool"]
+    kind: Literal[StepKind.TOOL, StepKind.AI_TOOL]
     title: str
     description: str
 
@@ -30,7 +30,7 @@ class AgentDraftRequest(ApiModel):
 
 
 class AgentDraftResponse(ApiModel):
-    outcome: Literal["draft"] = "draft"
+    outcome: Literal[WorkflowOutcome.DRAFT] = WorkflowOutcome.DRAFT
     draft: AgentDraft
 
 
@@ -41,7 +41,7 @@ class AgentRevisionRequest(ApiModel):
 
 
 class AgentRevisionResponse(ApiModel):
-    outcome: Literal["draft"] = "draft"
+    outcome: Literal[WorkflowOutcome.DRAFT] = WorkflowOutcome.DRAFT
     draft: AgentDraft
 
 

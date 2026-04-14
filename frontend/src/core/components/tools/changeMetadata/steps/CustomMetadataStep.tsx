@@ -16,7 +16,7 @@ const CustomMetadataStep = ({
   disabled = false,
   addCustomMetadata,
   removeCustomMetadata,
-  updateCustomMetadata
+  updateCustomMetadata,
 }: CustomMetadataStepProps) => {
   const { t } = useTranslation();
 
@@ -24,46 +24,35 @@ const CustomMetadataStep = ({
     <Stack gap="sm">
       <Group justify="space-between" align="center">
         <Text size="sm" fw={500}>
-          {t('changeMetadata.customFields.title', 'Custom Metadata')}
+          {t("changeMetadata.customFields.title", "Custom Metadata")}
         </Text>
-        <Button
-          size="xs"
-          variant="light"
-          onClick={() => addCustomMetadata()}
-          disabled={disabled}
-        >
-          {t('changeMetadata.customFields.add', 'Add Field')}
+        <Button size="xs" variant="light" onClick={() => addCustomMetadata()} disabled={disabled}>
+          {t("changeMetadata.customFields.add", "Add Field")}
         </Button>
       </Group>
 
       {parameters.customMetadata.length > 0 && (
         <Text size="xs" c="dimmed">
-          {t('changeMetadata.customFields.description', 'Add custom metadata fields to the document')}
+          {t("changeMetadata.customFields.description", "Add custom metadata fields to the document")}
         </Text>
       )}
 
       {parameters.customMetadata.map((entry) => (
         <Stack key={entry.id} gap="xs">
           <TextInput
-            placeholder={t('changeMetadata.customFields.keyPlaceholder', 'Custom key')}
+            placeholder={t("changeMetadata.customFields.keyPlaceholder", "Custom key")}
             value={entry.key}
             onChange={(e) => updateCustomMetadata(entry.id, e.target.value, entry.value)}
             disabled={disabled}
           />
           <TextInput
-            placeholder={t('changeMetadata.customFields.valuePlaceholder', 'Custom value')}
+            placeholder={t("changeMetadata.customFields.valuePlaceholder", "Custom value")}
             value={entry.value}
             onChange={(e) => updateCustomMetadata(entry.id, entry.key, e.target.value)}
             disabled={disabled}
           />
-          <Button
-            size="xs"
-            variant="light"
-            color="red"
-            onClick={() => removeCustomMetadata(entry.id)}
-            disabled={disabled}
-          >
-            {t('changeMetadata.customFields.remove', 'Remove')}
+          <Button size="xs" variant="light" color="red" onClick={() => removeCustomMetadata(entry.id)} disabled={disabled}>
+            {t("changeMetadata.customFields.remove", "Remove")}
           </Button>
         </Stack>
       ))}

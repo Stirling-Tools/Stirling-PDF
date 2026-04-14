@@ -24,11 +24,7 @@ export async function downloadFile(request: DownloadRequest): Promise<DownloadRe
   return { savedPath: request.localPath };
 }
 
-export async function downloadFromUrl(
-  url: string,
-  filename: string,
-  localPath?: string
-): Promise<DownloadResult> {
+export async function downloadFromUrl(url: string, filename: string, localPath?: string): Promise<DownloadResult> {
   const link = document.createElement("a");
   link.href = url;
   link.download = filename;

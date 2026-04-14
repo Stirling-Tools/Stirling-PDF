@@ -1,9 +1,9 @@
-import { Button, Stack } from '@mantine/core';
-import { useTranslation } from 'react-i18next';
-import { SignatureTypeSelector, SignatureType } from '@app/components/shared/wetSignature/SignatureTypeSelector';
-import { DrawSignatureCanvas } from '@app/components/shared/wetSignature/DrawSignatureCanvas';
-import { UploadSignatureImage } from '@app/components/shared/wetSignature/UploadSignatureImage';
-import { TypeSignatureText } from '@app/components/shared/wetSignature/TypeSignatureText';
+import { Button, Stack } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { SignatureTypeSelector, SignatureType } from "@app/components/shared/wetSignature/SignatureTypeSelector";
+import { DrawSignatureCanvas } from "@app/components/shared/wetSignature/DrawSignatureCanvas";
+import { UploadSignatureImage } from "@app/components/shared/wetSignature/UploadSignatureImage";
+import { TypeSignatureText } from "@app/components/shared/wetSignature/TypeSignatureText";
 
 interface SignatureCreationStepProps {
   signatureType: SignatureType;
@@ -42,35 +42,23 @@ export const SignatureCreationStep: React.FC<SignatureCreationStepProps> = ({
   const { t } = useTranslation();
 
   const hasSignature =
-    (signatureType === 'draw' && signature) ||
-    (signatureType === 'upload' && signature) ||
-    (signatureType === 'type' && signatureText && signature);
+    (signatureType === "draw" && signature) ||
+    (signatureType === "upload" && signature) ||
+    (signatureType === "type" && signatureText && signature);
 
   return (
     <Stack gap="md">
-      <SignatureTypeSelector
-        value={signatureType}
-        onChange={onSignatureTypeChange}
-        disabled={disabled}
-      />
+      <SignatureTypeSelector value={signatureType} onChange={onSignatureTypeChange} disabled={disabled} />
 
-      {signatureType === 'draw' && (
-        <DrawSignatureCanvas
-          signature={signature}
-          onChange={onSignatureChange}
-          disabled={disabled}
-        />
+      {signatureType === "draw" && (
+        <DrawSignatureCanvas signature={signature} onChange={onSignatureChange} disabled={disabled} />
       )}
 
-      {signatureType === 'upload' && (
-        <UploadSignatureImage
-          signature={signature}
-          onChange={onSignatureChange}
-          disabled={disabled}
-        />
+      {signatureType === "upload" && (
+        <UploadSignatureImage signature={signature} onChange={onSignatureChange} disabled={disabled} />
       )}
 
-      {signatureType === 'type' && (
+      {signatureType === "type" && (
         <TypeSignatureText
           text={signatureText}
           fontFamily={fontFamily}
@@ -86,7 +74,7 @@ export const SignatureCreationStep: React.FC<SignatureCreationStepProps> = ({
       )}
 
       <Button onClick={onNext} disabled={!hasSignature || disabled} fullWidth>
-        {t('certSign.collab.signRequest.steps.continue', 'Continue to Certificate Selection')}
+        {t("certSign.collab.signRequest.steps.continue", "Continue to Certificate Selection")}
       </Button>
     </Stack>
   );

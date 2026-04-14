@@ -1,25 +1,38 @@
-from collections.abc import Iterator
-
-import pytest
-
-from stirling.config import AppSettings, load_settings
+from stirling.config import AppSettings
 from stirling.contracts import (
     AgentExecutionRequest,
     AgentSpec,
     AgentSpecStep,
     EditPlanResponse,
     ExecutionContext,
+    ExtractedFileText,
+    ExtractedTextArtifact,
     OrchestratorRequest,
     PdfQuestionAnswerResponse,
+    PdfTextSelection,
     ToolOperationStep,
 )
 from stirling.models.tool_models import OperationId, RotateParams
 
 
 def test_orchestrator_request_accepts_user_message() -> None:
-    request = OrchestratorRequest(user_message="Rotate the PDF")
+    request = OrchestratorRequest(
+        user_message="Rotate the PDF",
+        file_names=["test.pdf"],
+        artifacts=[
+            ExtractedTextArtifact(
+                files=[
+                    ExtractedFileText(
+                        file_name="test.pdf",
+                        pages=[PdfTextSelection(page_number=1, text="Hello")],
+                    )
+                ]
+            )
+        ],
+    )
 
     assert request.user_message == "Rotate the PDF"
+    assert len(request.artifacts) == 1
 
 
 def test_agent_execution_request_uses_typed_agent_spec() -> None:
@@ -59,19 +72,15 @@ def test_pdf_question_answer_defaults_evidence_list() -> None:
     assert response.evidence == []
 
 
-@pytest.fixture(autouse=True)
-def clear_settings_cache() -> Iterator[None]:
-    load_settings.cache_clear()
-    yield
-    load_settings.cache_clear()
-
-
 def test_app_settings_accepts_model_configuration() -> None:
     settings = AppSettings(
         smart_model_name="claude-sonnet-4-5-20250929",
         fast_model_name="claude-haiku-4-5-20251001",
         smart_model_max_tokens=8192,
         fast_model_max_tokens=2048,
+        posthog_enabled=False,
+        posthog_api_key="",
+        posthog_host="https://eu.i.posthog.com",
     )
 
     assert settings.smart_model_name

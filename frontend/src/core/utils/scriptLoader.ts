@@ -30,7 +30,7 @@ export function loadScript({ src, id, async = true, defer = false, onLoad }: Scr
     }
 
     // Create and append script
-    const script = document.createElement('script');
+    const script = document.createElement("script");
     script.src = src;
     if (id) script.id = id;
     script.async = async;
