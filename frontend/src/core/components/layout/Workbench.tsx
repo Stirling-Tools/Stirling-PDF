@@ -11,7 +11,7 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { FileId } from "@app/types/file";
 import styles from "@app/components/layout/Workbench.module.css";
 
-import TopControls from "@app/components/shared/TopControls";
+import WorkbenchBar from "@app/components/shared/WorkbenchBar";
 import FileEditor from "@app/components/fileEditor/FileEditor";
 import PageEditor from "@app/components/pageEditor/PageEditor";
 import PageEditorControls from "@app/components/pageEditor/PageEditorControls";
@@ -138,8 +138,6 @@ export default function Workbench() {
             setSidebarsVisible={setSidebarsVisible}
             previewFile={previewFile}
             onClose={handlePreviewClose}
-            activeFileIndex={activeFileIndex}
-            setActiveFileIndex={setActiveFileIndex}
           />
         );
 
@@ -189,19 +187,12 @@ export default function Workbench() {
           : { backgroundColor: "var(--bg-background)" }
       }
     >
-      {/* Top Controls */}
-      {activeFiles.length > 0 && !customWorkbenchViews.find((v) => v.workbenchId === currentView)?.hideTopControls && (
-        <TopControls
+      {/* Workbench Bar - replaces TopControls and includes RightRail action buttons */}
+      {!customWorkbenchViews.find((v) => v.workbenchId === currentView)?.hideTopControls && (
+        <WorkbenchBar
           currentView={currentView}
           setCurrentView={setCurrentView}
-          customViews={customWorkbenchViews}
-          activeFiles={activeFiles.map((f) => {
-            const stub = selectors.getStirlingFileStub(f.fileId);
-            return { fileId: f.fileId, name: f.name, versionNumber: stub?.versionNumber };
-          })}
-          currentFileIndex={activeFileIndex}
-          onFileSelect={handleFileSelect}
-          onFileRemove={handleFileRemove}
+          hasFiles={activeFiles.length > 0}
         />
       )}
 

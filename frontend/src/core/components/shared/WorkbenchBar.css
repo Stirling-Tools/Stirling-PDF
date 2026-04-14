@@ -1,0 +1,147 @@
+/* ========== WORKBENCH BAR ========== */
+/* Horizontal toolbar at the top of the workbench area.
+   Replaces TopControls (view switcher) and RightRail (action buttons). */
+
+.workbench-bar {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  padding: 4px 8px;
+  background-color: var(--bg-toolbar);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  z-index: 50;
+  gap: 4px;
+  position: relative;
+}
+
+/* ---- View switcher (left) ---- */
+.workbench-bar-views {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.workbench-bar-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.workbench-bar-view-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.workbench-bar-view-btn.active {
+  background-color: var(--mantine-color-blue-light, rgba(59, 130, 246, 0.12));
+  color: var(--mantine-color-blue-6, #3B82F6);
+}
+
+.workbench-bar-view-btn svg {
+  font-size: 16px !important;
+  width: 16px;
+  height: 16px;
+}
+
+.workbench-bar-view-label {
+  line-height: 1;
+}
+
+/* ---- Center: registered tool buttons (absolutely centered in bar) ---- */
+.workbench-bar-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  pointer-events: auto;
+}
+
+/* ---- Right: global buttons (theme / language / download) ---- */
+.workbench-bar-globals {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* Shared action icon style — applies to both center and global buttons */
+.workbench-bar-action-icon {
+  color: var(--text-secondary) !important;
+  width: 28px !important;
+  height: 28px !important;
+  background: transparent !important;
+}
+
+.workbench-bar-action-icon svg,
+.workbench-bar-action-icon img {
+  color: inherit !important;
+  fill: currentColor;
+}
+
+.workbench-bar-action-icon:hover {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-hover) !important;
+}
+
+.workbench-bar-action-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.workbench-bar-tooltip-wrapper {
+  display: inline-flex;
+  align-items: center;
+}
+
+.workbench-bar-divider {
+  width: 1px;
+  height: 16px;
+  background-color: var(--border-subtle);
+  margin: 0 4px;
+}
+
+/* ---- Inline viewer controls (page nav + zoom) ---- */
+.viewer-inline-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.viewer-inline-controls__page {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  min-width: 3rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.viewer-inline-controls__slider-wrap {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.viewer-inline-controls__zoom-pct {
+  font-size: 12px;
+  color: var(--text-muted);
+  min-width: 2.5rem;
+  text-align: right;
+  white-space: nowrap;
+}

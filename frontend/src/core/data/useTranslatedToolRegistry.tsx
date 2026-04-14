@@ -173,7 +173,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         versionStatus: "alpha",
       },
       multiTool: {
-        icon: <LocalIcon icon="dashboard-customize-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="dashboard-customize-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.multiTool.title", "Multi-Tool"),
         component: null,
         workbench: "pageEditor",
@@ -187,7 +187,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       merge: {
-        icon: <LocalIcon icon="library-add-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="library-add-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.merge.title", "Merge"),
         component: Merge,
         description: t("home.merge.desc", "Merge multiple PDFs into a single document"),
@@ -201,7 +201,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       // Signing
       certSign: {
-        icon: <LocalIcon icon="workspace-premium-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="workspace-premium-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.certSign.title", "Certificate Sign"),
         component: CertSign,
         description: t("home.certSign.desc", "Sign PDF documents using digital certificates"),
@@ -214,7 +214,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: CertSignAutomationSettings,
       },
       timestampPdf: {
-        icon: <LocalIcon icon="schedule-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="schedule-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.timestampPdf.title", "Timestamp PDF"),
         component: TimestampPdf,
         description: t("home.timestampPdf.desc", "Add an RFC 3161 document timestamp to prove when your PDF existed"),
@@ -253,7 +253,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         supportsAutomate: false,
       },
       addImage: {
-        icon: <LocalIcon icon="image-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="image-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.addImage.title", "Add Image"),
         component: AddImage,
         description: t("home.addImage.desc", "Add images anywhere in your PDF"),
@@ -266,7 +266,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         supportsAutomate: false,
       },
       annotate: {
-        icon: <LocalIcon icon="edit" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="edit-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.annotate.title", "Annotate"),
         component: Annotate,
         description: t("home.annotate.desc", "Highlight, draw, add notes, and shapes directly in the viewer"),
@@ -309,7 +309,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "watermark"),
       },
       addStamp: {
-        icon: <LocalIcon icon="approval-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="approval-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.addStamp.title", "Add Stamp to PDF"),
         component: AddStamp,
         description: t("home.addStamp.desc", "Add text or add image stamps at set locations"),
@@ -335,7 +335,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "sanitize"),
       },
       flatten: {
-        icon: <LocalIcon icon="layers-clear-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="layers-clear-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.flatten.title", "Flatten"),
         component: Flatten,
         description: t("home.flatten.desc", "Remove all interactive elements and forms from a PDF"),
@@ -387,7 +387,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "changePermissions"),
       },
       getPdfInfo: {
-        icon: <LocalIcon icon="fact-check-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="fact-check-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.getPdfInfo.title", "Get ALL Info on PDF"),
         component: GetPdfInfo,
         description: t("home.getPdfInfo.desc", "Grabs any and all information possible on PDFs"),
@@ -400,7 +400,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         maxFiles: 1,
       },
       validateSignature: {
-        icon: <LocalIcon icon="verified-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="verified-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.validateSignature.title", "Validate PDF Signature"),
         component: ValidateSignature,
         description: t("home.validateSignature.desc", "Verify digital signatures and certificates in PDF documents"),
@@ -415,7 +415,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Document Review
 
       read: {
-        icon: <LocalIcon icon="article-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="article-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.read.title", "Read"),
         component: null,
         workbench: "viewer",
@@ -431,7 +431,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       changeMetadata: {
-        icon: <LocalIcon icon="assignment-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="assignment-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.changeMetadata.title", "Change Metadata"),
         component: ChangeMetadata,
         description: t("home.changeMetadata.desc", "Change/Remove/Add metadata from a PDF document"),
@@ -538,7 +538,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "addPageNumbers"),
       },
       pageLayout: {
-        icon: <LocalIcon icon="dashboard-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="dashboard-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.pageLayout.title", "Multi-Page Layout"),
         component: PageLayout,
         description: t("home.pageLayout.desc", "Merge multiple pages of a PDF document into a single page"),
@@ -550,7 +550,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "pageLayout"),
       },
       bookletImposition: {
-        icon: <LocalIcon icon="menu-book-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="menu-book-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.bookletImposition.title", "Booklet Imposition"),
         component: BookletImposition,
         operationConfig: bookletImpositionOperationConfig,
@@ -606,7 +606,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         endpoints: ["rearrange-pages"],
       },
       extractImages: {
-        icon: <LocalIcon icon="photo-library-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="photo-library-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.extractImages.title", "Extract Images"),
         component: ExtractImages,
         description: t("home.extractImages.desc", "Extract images from PDF documents"),
@@ -635,7 +635,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: RemovePagesSettings,
       },
       removeBlanks: {
-        icon: <LocalIcon icon="scan-delete-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="scan-delete-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.removeBlanks.title", "Remove Blank Pages"),
         component: RemoveBlanks,
         description: t("home.removeBlanks.desc", "Remove blank pages from PDF documents"),
@@ -735,7 +735,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Advanced Formatting
 
       adjustContrast: {
-        icon: <LocalIcon icon="palette" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="palette-outline" width="1.5rem" height="1.5rem" />,
         name: t("home.adjustContrast.title", "Adjust Colors/Contrast"),
         component: AdjustContrast,
         description: t("home.adjustContrast.desc", "Adjust colors and contrast of PDF documents"),
@@ -761,7 +761,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       scannerImageSplit: {
-        icon: <LocalIcon icon="scanner-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="scanner-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.scannerImageSplit.title", "Detect & Split Scanned Photos"),
         component: ScannerImageSplit,
         description: t("home.scannerImageSplit.desc", "Detect and split scanned photos into separate pages"),
@@ -774,7 +774,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "ScannerImageSplit"),
       },
       overlayPdfs: {
-        icon: <LocalIcon icon="layers-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="layers-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.overlay-pdfs.title", "Overlay PDFs"),
         component: OverlayPdfs,
         description: t("home.overlay-pdfs.desc", "Overlay one PDF on top of another"),
@@ -799,7 +799,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "replaceColor"),
       },
       scannerEffect: {
-        icon: <LocalIcon icon="scanner-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="scanner-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.scannerEffect.title", "Scanner Effect"),
         component: null,
         description: t("home.scannerEffect.desc", "Create a PDF that looks like it was scanned"),
@@ -953,7 +953,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "ocr"),
       },
       redact: {
-        icon: <LocalIcon icon="visibility-off-rounded" width="1.5rem" height="1.5rem" />,
+        icon: <LocalIcon icon="visibility-off-outline-rounded" width="1.5rem" height="1.5rem" />,
         name: t("home.redact.title", "Redact"),
         component: Redact,
         description: t("home.redact.desc", "Permanently remove sensitive information from PDF documents"),

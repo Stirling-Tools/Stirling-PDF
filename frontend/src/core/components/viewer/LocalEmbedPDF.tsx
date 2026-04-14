@@ -135,7 +135,14 @@ export function LocalEmbedPDF({
       });
   }, [config?.enableLogin]);
 
-  // Convert File to URL if needed
+  // Convert File to URL if needed.
+  // Use fileId as the stable key when available — getFiles() calls createStirlingFile()
+  // on every render, producing new object references for the same file content.
+  // Depending on the file reference directly causes pdfUrl to change, which recreates
+  // the EmbedPDF plugin config and crashes the ViewportPlugin ("Viewport state not found").
+  // LocalEmbedPDF is already keyed by currentFileId in EmbedPdfViewer, so within a single
+  // mount fileId is constant. Content changes (tool outputs) produce a new fileId → remount.
+  const fileStableKey = fileId ?? (file ? `${(file as File).name}-${file.size}` : null);
   useEffect(() => {
     if (file) {
       const objectUrl = URL.createObjectURL(file);
@@ -144,7 +151,20 @@ export function LocalEmbedPDF({
     } else if (url) {
       setPdfUrl(url);
     }
-  }, [file, url]);
+  // `url` is intentionally omitted: when `file` is present we create our own blob URL
+  // and `url` is irrelevant; when only `url` is provided, LocalEmbedPDF is keyed such
+  // that it remounts on URL changes anyway (fileStableKey handles that case via null→value).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fileStableKey]);
+
+  // Compute export filename stably — keyed by fileStableKey so that new StirlingFile
+  // object references (produced by getFiles() on every render) don't cause this to change.
+  const exportFileName = useMemo(() => {
+    if (fileName) return fileName;
+    if (file && "name" in file) return (file as File).name;
+    if (url) return url.split("/").pop()?.split("?")[0] || "document.pdf";
+    return "document.pdf";
+  }, [fileStableKey, fileName, url]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Create plugins configuration
   const plugins = useMemo(() => {
@@ -153,17 +173,6 @@ export function LocalEmbedPDF({
     // Calculate 3.5rem in pixels dynamically based on root font size
     const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
     const viewportGap = rootFontSize * 3.5;
-
-    // Determine export filename - use provided fileName, or extract from file/url
-    let exportFileName = "document.pdf";
-    if (fileName) {
-      exportFileName = fileName;
-    } else if (file && "name" in file) {
-      exportFileName = file.name;
-    } else if (url) {
-      const urlPath = url.split("/").pop() || "document.pdf";
-      exportFileName = urlPath.split("?")[0]; // Remove query params
-    }
 
     return [
       createPluginRegistration(DocumentManagerPluginPackage, {
@@ -261,7 +270,7 @@ export function LocalEmbedPDF({
       // Register print plugin for printing PDFs
       createPluginRegistration(PrintPluginPackage),
     ];
-  }, [pdfUrl, enableAnnotations, fileName, file, url]);
+  }, [pdfUrl, enableAnnotations, exportFileName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Initialize the engine with the React hook - use local WASM for offline support
   const { engine, isLoading, error } = usePdfiumEngine({

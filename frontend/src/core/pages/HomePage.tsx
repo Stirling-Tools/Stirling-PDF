@@ -16,8 +16,8 @@ import AppsIcon from "@mui/icons-material/AppsRounded";
 
 import ToolPanel from "@app/components/tools/ToolPanel";
 import Workbench from "@app/components/layout/Workbench";
-import QuickAccessBar from "@app/components/shared/QuickAccessBar";
 import RightRail from "@app/components/shared/RightRail";
+import FileSidebar from "@app/components/shared/FileSidebar";
 import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
@@ -54,6 +54,7 @@ export default function HomePage() {
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(false);
 
   const { activeFiles } = useFileContext();
   const navigationState = useNavigationState();
@@ -305,10 +306,12 @@ export default function HomePage() {
         </div>
       ) : (
         <Group align="flex-start" gap={0} h="100%" className="flex-nowrap flex">
-          <QuickAccessBar ref={quickAccessRef} />
-          {!hideToolPanel && <ToolPanel />}
+          <FileSidebar
+            collapsed={fileSidebarCollapsed}
+            onToggleCollapse={() => setFileSidebarCollapsed((c) => !c)}
+          />
           <Workbench />
-          <RightRail />
+          {!hideToolPanel && <ToolPanel />}
           <FileManager selectedTool={selectedTool as any /* FIX ME */} />
         </Group>
       )}

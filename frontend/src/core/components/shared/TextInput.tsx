@@ -37,6 +37,8 @@ export interface TextInputProps {
   "aria-label"?: string;
   /** Focus event handler */
   onFocus?: () => void;
+  /** Allow the icon to receive pointer events (e.g. when icon is a clickable button) */
+  iconClickable?: boolean;
 }
 
 export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
@@ -57,6 +59,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
       readOnly = false,
       "aria-label": ariaLabel,
       onFocus,
+      iconClickable = false,
       ...props
     },
     ref,
@@ -76,7 +79,14 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
     return (
       <div className={`${styles.container} ${className}`} style={style}>
         {icon && (
-          <span className={styles.icon} style={{ color: colorScheme === "dark" ? "#FFFFFF" : "#6B7382" }}>
+          <span
+            className={styles.icon}
+            style={{
+              color: colorScheme === "dark" ? "#FFFFFF" : "#6B7382",
+              pointerEvents: iconClickable ? "auto" : "none",
+              left: iconClickable ? "4px" : "12px",
+            }}
+          >
             {icon}
           </span>
         )}
@@ -98,7 +108,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
             backgroundColor: colorScheme === "dark" ? "#4B525A" : "#FFFFFF",
             color: colorScheme === "dark" ? "#FFFFFF" : "#6B7382",
             paddingRight: shouldShowClearButton ? "40px" : "12px",
-            paddingLeft: icon ? "40px" : "12px",
+            paddingLeft: icon ? (iconClickable ? "36px" : "40px") : "12px",
           }}
           {...props}
         />

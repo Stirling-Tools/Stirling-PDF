@@ -153,6 +153,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       href={navProps.href}
       onClick={navProps.onClick}
       variant={isSelected ? "filled" : "subtle"}
+      color={isSelected ? "gray" : undefined}
       size="sm"
       radius="md"
       fullWidth
@@ -179,6 +180,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       rel="noopener noreferrer"
       onClick={handleExternalClick}
       variant={isSelected ? "filled" : "subtle"}
+      color={isSelected ? "gray" : undefined}
       size="sm"
       radius="md"
       fullWidth
@@ -200,6 +202,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
     // For unavailable tools, use regular button
     <Button
       variant={isSelected ? "filled" : "subtle"}
+      color={isSelected ? "gray" : undefined}
       onClick={() => handleClick(id)}
       size="sm"
       radius="md"
@@ -230,7 +233,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   return (
     <div className="tool-button-container">
       {star}
-      <Tooltip content={tooltipContent} position="right" arrow={true} delay={500}>
+      <Tooltip content={tooltipContent} position="left" arrow={true} delay={500}>
         {buttonElement}
       </Tooltip>
     </div>

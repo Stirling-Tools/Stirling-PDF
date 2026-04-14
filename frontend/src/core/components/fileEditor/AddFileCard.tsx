@@ -67,7 +67,7 @@ const AddFileCard = ({ onFileSelect, accept, multiple = true }: AddFileCardProps
       />
 
       <div
-        className={`${styles.addFileCard} w-[18rem] h-[22rem] select-none flex flex-col shadow-sm transition-all relative cursor-pointer`}
+        className={`${styles.addFileCard} w-[21rem] h-[26rem] select-none flex flex-col shadow-sm transition-all relative cursor-pointer`}
         tabIndex={0}
         role="button"
         aria-label={t("fileEditor.addFiles", "Add files")}
@@ -79,15 +79,6 @@ const AddFileCard = ({ onFileSelect, accept, multiple = true }: AddFileCardProps
           }
         }}
       >
-        {/* Header bar - matches FileEditorThumbnail structure */}
-        <div className={`${styles.header} ${styles.addFileHeader}`}>
-          <div className={styles.logoMark}>
-            <AddIcon sx={{ color: "inherit", fontSize: "1.5rem" }} />
-          </div>
-          <div className={styles.headerIndex}>{t("fileEditor.addFiles", "Add Files")}</div>
-          <div className={styles.kebab} />
-        </div>
-
         {/* Main content area */}
         <div className={styles.addFileContent}>
           {/* Stirling PDF Branding */}

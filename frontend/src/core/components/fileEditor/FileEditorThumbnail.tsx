@@ -333,7 +333,7 @@ const FileEditorThumbnail = ({
     onViewFile(file.id);
   };
 
-  const metaLine = [`v${file.versionNumber}`, dateLabel, extUpper ? `${extUpper} file` : "", pageLabel]
+  const metaLine = [dateLabel, extUpper ? `${extUpper} file` : "", pageLabel]
     .filter(Boolean)
     .join(" - ");
 

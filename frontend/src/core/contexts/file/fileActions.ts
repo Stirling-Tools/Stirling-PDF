@@ -420,6 +420,17 @@ export async function addFiles(
         if (Object.keys(updates).length > 0) {
           lifecycleManager.updateStirlingFileStub(fileId, updates, stateRef);
         }
+
+        // Persist the thumbnail to IndexedDB so it's available in future sessions.
+        // The file was stored before hydration ran, so it had no thumbnail yet.
+        // Skip blob URLs — they're session-only and won't be valid after reload.
+        if (primaryThumbnail && enablePersistence && !primaryThumbnail.startsWith("blob:")) {
+          try {
+            await fileStorage.updateThumbnail(fileId, primaryThumbnail);
+          } catch {
+            // Non-critical — thumbnail will be regenerated next time via useIndexedDBThumbnail
+          }
+        }
       });
     }
 

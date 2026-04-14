@@ -109,8 +109,6 @@ export interface EmbedPdfViewerProps {
   setSidebarsVisible: (v: boolean) => void;
   onClose?: () => void;
   previewFile?: File | null;
-  activeFileIndex?: number;
-  setActiveFileIndex?: (index: number) => void;
 }
 
 const EmbedPdfViewerContent = ({
@@ -118,8 +116,6 @@ const EmbedPdfViewerContent = ({
   setSidebarsVisible: _setSidebarsVisible,
   onClose,
   previewFile,
-  activeFileIndex: externalActiveFileIndex,
-  setActiveFileIndex: externalSetActiveFileIndex,
 }: EmbedPdfViewerProps) => {
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
@@ -149,6 +145,10 @@ const EmbedPdfViewerContent = ({
     applyChanges: viewerApplyChanges,
     pdfRenderMode,
     cyclePdfRenderMode,
+    activeFileIndex,
+    setActiveFileIndex,
+    activeFileId,
+    setActiveFileId,
   } = useViewer();
 
   const scrollState = getScrollState();
@@ -281,49 +281,8 @@ const EmbedPdfViewerContent = ({
   }, [isInAnnotationTool, setAnnotationMode]);
   const isPlacementOverlayActive = Boolean(isInAnnotationTool && isPlacementMode && signatureConfig);
 
-  // Track which file tab is active
-  const [internalActiveFileIndex, setInternalActiveFileIndex] = useState(0);
-  const activeFileIndex = externalActiveFileIndex ?? internalActiveFileIndex;
-  const setActiveFileIndex = externalSetActiveFileIndex ?? setInternalActiveFileIndex;
-
-  // activeFileId (from ViewerContext) is the stable source of truth.
-  // We derive activeFileIndex from it so reorders after tool operations don't lose the viewed file.
-  const { activeFileId, setActiveFileId } = useViewer();
-
-  // Stable string key representing the current file list order.
-  // Using a joined ID string avoids depending on the activeFiles array reference,
-  // which is a new object every render and would cause an infinite effect loop.
-  const fileIdsKey = activeFiles.map((f) => f.fileId).join(",");
-
-  // When the file list actually changes, re-derive activeFileIndex from the stable activeFileId.
-  useEffect(() => {
-    if (!activeFileId || activeFiles.length === 0) return;
-    const newIndex = activeFiles.findIndex((f) => f.fileId === activeFileId);
-    if (newIndex !== -1 && newIndex !== activeFileIndex) {
-      setActiveFileIndex(newIndex);
-    }
-  }, [fileIdsKey, activeFileId]); // stable primitives — no infinite loop
-
-  // When the user manually switches file tabs, keep activeFileId in sync.
-  // Skips the initial mount to avoid overwriting an activeFileId set by handleViewFile.
-  const activeFileIndexMountedRef = useRef(false);
-  useEffect(() => {
-    if (!activeFileIndexMountedRef.current) {
-      activeFileIndexMountedRef.current = true;
-      return;
-    }
-    const fileId = activeFilesRef.current[activeFileIndex]?.fileId;
-    if (fileId && fileId !== activeFileId) {
-      setActiveFileId(fileId);
-    }
-  }, [activeFileIndex]);
-
-  // Reset active tab if it's out of bounds (safety net)
-  useEffect(() => {
-    if (activeFileIndex >= activeFiles.length && activeFiles.length > 0) {
-      setActiveFileIndex(0);
-    }
-  }, [activeFiles.length, activeFileIndex]);
+  // activeFileIndex and activeFileId come from ViewerContext where activeFileIndex is
+  // derived directly from activeFileId — no sync effects needed here.
 
   // Determine which file to display
   const currentFile = React.useMemo(() => {
@@ -335,8 +294,13 @@ const EmbedPdfViewerContent = ({
     return null;
   }, [previewFile, activeFiles, activeFileIndex]);
 
-  // Get file with URL for rendering
-  const fileWithUrl = useFileWithUrl(currentFile);
+  // Stable file identity key — fileId is a constant string per file, unlike the currentFile
+  // object reference which is recreated on every FileContext render by getFiles()/createStirlingFile().
+  const currentFileStableId = currentFile && isStirlingFile(currentFile) ? currentFile.fileId : null;
+
+  // Get file with URL for rendering. Pass stableKey so the blob URL is only recreated
+  // when the file identity actually changes, not on every FileContext re-render.
+  const fileWithUrl = useFileWithUrl(currentFile, currentFileStableId);
 
   // Determine the effective file to display
   const effectiveFile = React.useMemo(() => {

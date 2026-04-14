@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import EmbedPdfViewer from "@app/components/viewer/EmbedPdfViewer";
 import { NonPdfViewerWrapper, type ViewerProps } from "@app/components/viewer/NonPdfViewer";
 import { useFileState } from "@app/contexts/FileContext";
+import { useViewer } from "@app/contexts/ViewerContext";
 import { isPdfFile } from "@app/utils/fileUtils";
 
 export type { ViewerProps };
@@ -9,7 +10,7 @@ export type { ViewerProps };
 const Viewer = (props: ViewerProps) => {
   const { selectors } = useFileState();
   const activeFiles = selectors.getFiles();
-  const activeFileIndex = props.activeFileIndex ?? 0;
+  const { activeFileIndex } = useViewer();
 
   // Determine the active file — previewFile takes priority
   const activeFile = useMemo(() => {
