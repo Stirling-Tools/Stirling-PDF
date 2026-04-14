@@ -56,8 +56,18 @@ const EmptyFilesState: React.FC = () => {
 
         {/* Stirling PDF Logo */}
         <Group gap="xs" align="center">
-          <img src={wordmark.grey} alt="Stirling PDF" className="theme-img-light-only" style={{ height: "2.2rem", width: "auto" }} />
-          <img src={wordmark.white} alt="Stirling PDF" className="theme-img-dark-only" style={{ height: "2.2rem", width: "auto" }} />
+          <img
+            src={wordmark.grey}
+            alt="Stirling PDF"
+            className="theme-img-light-only"
+            style={{ height: "2.2rem", width: "auto" }}
+          />
+          <img
+            src={wordmark.white}
+            alt="Stirling PDF"
+            className="theme-img-dark-only"
+            style={{ height: "2.2rem", width: "auto" }}
+          />
         </Group>
 
         {/* Upload Button */}

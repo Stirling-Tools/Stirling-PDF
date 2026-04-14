@@ -58,13 +58,7 @@ function ConnectionStatusDot() {
   }, [connectionMode, selfHostedState, isOnline, t]);
 
   return (
-    <Tooltip
-      label={label}
-      position="left"
-      offset={12}
-      withArrow
-      withinPortal
-    >
+    <Tooltip label={label} position="left" offset={12} withArrow withinPortal>
       <Box
         component="span"
         role="status"

@@ -964,7 +964,15 @@
 /* Theme-aware image display utilities */
 /* Use .theme-img-light-only for images to show in light mode only */
 /* Use .theme-img-dark-only for images to show in dark mode only */
-.theme-img-light-only { display: inline; }
-.theme-img-dark-only { display: none; }
-[data-mantine-color-scheme="dark"] .theme-img-light-only { display: none; }
-[data-mantine-color-scheme="dark"] .theme-img-dark-only { display: inline; }
+.theme-img-light-only {
+  display: inline;
+}
+.theme-img-dark-only {
+  display: none;
+}
+[data-mantine-color-scheme="dark"] .theme-img-light-only {
+  display: none;
+}
+[data-mantine-color-scheme="dark"] .theme-img-dark-only {
+  display: inline;
+}

@@ -824,8 +824,18 @@ export default function MobileScannerPage() {
         }}
       >
         <Group gap="sm" align="center">
-          <img src={logoPaths.light} alt={t("home.mobile.brandAlt", "Stirling PDF logo")} className="theme-img-light-only" style={{ height: "32px", width: "32px" }} />
-          <img src={logoPaths.dark} alt={t("home.mobile.brandAlt", "Stirling PDF logo")} className="theme-img-dark-only" style={{ height: "32px", width: "32px" }} />
+          <img
+            src={logoPaths.light}
+            alt={t("home.mobile.brandAlt", "Stirling PDF logo")}
+            className="theme-img-light-only"
+            style={{ height: "32px", width: "32px" }}
+          />
+          <img
+            src={logoPaths.dark}
+            alt={t("home.mobile.brandAlt", "Stirling PDF logo")}
+            className="theme-img-dark-only"
+            style={{ height: "32px", width: "32px" }}
+          />
           <img src={wordmark.black} alt="Stirling PDF" className="theme-img-light-only" style={{ height: "24px" }} />
           <img src={wordmark.white} alt="Stirling PDF" className="theme-img-dark-only" style={{ height: "24px" }} />
         </Group>

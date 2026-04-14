@@ -45,13 +45,7 @@ export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({ 
   );
 
   return (
-    <Tooltip
-      label={label}
-      position="left"
-      offset={12}
-      withArrow
-      withinPortal
-    >
+    <Tooltip label={label} position="left" offset={12} withArrow withinPortal>
       <Box
         component="span"
         className={className ? `${className}` : undefined}

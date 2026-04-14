@@ -41,8 +41,18 @@ export default function LoggedInState() {
       >
         <div style={{ textAlign: "center", marginBottom: "24px" }}>
           <div style={{ marginBottom: "16px", display: "flex", justifyContent: "center" }}>
-            <img src={logoPaths.light} alt="Stirling PDF Logo" className="theme-img-light-only" style={{ width: "64px", height: "64px", objectFit: "contain" }} />
-            <img src={logoPaths.dark} alt="Stirling PDF Logo" className="theme-img-dark-only" style={{ width: "64px", height: "64px", objectFit: "contain" }} />
+            <img
+              src={logoPaths.light}
+              alt="Stirling PDF Logo"
+              className="theme-img-light-only"
+              style={{ width: "64px", height: "64px", objectFit: "contain" }}
+            />
+            <img
+              src={logoPaths.dark}
+              alt="Stirling PDF Logo"
+              className="theme-img-dark-only"
+              style={{ width: "64px", height: "64px", objectFit: "contain" }}
+            />
           </div>
           <h1 style={{ fontSize: "24px", fontWeight: "bold", color: "#059669", marginBottom: "8px" }}>
             {t("login.youAreLoggedIn")}
