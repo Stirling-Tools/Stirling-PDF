@@ -65,6 +65,8 @@ public class ConvertPdfJsonController {
             throw ExceptionUtils.createNullArgumentException("fileInput");
         }
 
+        // TODO: Refactor PdfJsonConversionService to write directly to an OutputStream
+        // instead of returning byte[], avoiding the intermediate heap allocation + temp file write
         byte[] jsonBytes = pdfJsonConversionService.convertPdfToJson(inputFile, lightweight);
         logJsonResponse("pdf/text-editor", jsonBytes);
         String originalName = inputFile.getOriginalFilename();
