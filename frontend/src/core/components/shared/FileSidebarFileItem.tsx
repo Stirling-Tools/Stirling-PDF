@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import type { FileId } from "@app/types/file";
-import "./FileSidebarFileItem.css";
+import "@app/components/shared/FileSidebarFileItem.css";
 
 export function getFileExtension(name: string): string {
   const parts = name.split(".");

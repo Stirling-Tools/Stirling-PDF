@@ -926,6 +926,12 @@
 }
 
 /* ---- Wordmark light/dark switching (use instead of JS colorScheme checks) ---- */
-.wordmark-dark-only { display: none; }
-[data-mantine-color-scheme="dark"] .wordmark-light-only { display: none; }
-[data-mantine-color-scheme="dark"] .wordmark-dark-only { display: block; }
+.wordmark-dark-only {
+  display: none;
+}
+[data-mantine-color-scheme="dark"] .wordmark-light-only {
+  display: none;
+}
+[data-mantine-color-scheme="dark"] .wordmark-dark-only {
+  display: block;
+}

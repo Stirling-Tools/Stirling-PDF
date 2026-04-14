@@ -81,8 +81,18 @@ const AddFileCard = ({ onFileSelect, accept, multiple = true }: AddFileCardProps
         <div className={styles.addFileContent}>
           {/* Stirling PDF Branding */}
           <Group gap="xs" align="center">
-            <img src={wordmark.grey} alt="Stirling PDF" className="wordmark-light-only" style={{ height: "2.2rem", width: "auto" }} />
-            <img src={wordmark.white} alt="Stirling PDF" className="wordmark-dark-only" style={{ height: "2.2rem", width: "auto" }} />
+            <img
+              src={wordmark.grey}
+              alt="Stirling PDF"
+              className="wordmark-light-only"
+              style={{ height: "2.2rem", width: "auto" }}
+            />
+            <img
+              src={wordmark.white}
+              alt="Stirling PDF"
+              className="wordmark-dark-only"
+              style={{ height: "2.2rem", width: "auto" }}
+            />
           </Group>
 
           {/* Add Files + Native Upload Buttons - styled like LandingPage */}

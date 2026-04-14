@@ -3604,6 +3604,21 @@ saved = "Saved files"
 workbench = "Workbench"
 upload = "Upload"
 
+[fileSidebar]
+addFiles = "Add files"
+collapse = "Collapse sidebar"
+dropHint = "Open files to get started"
+expand = "Expand sidebar"
+files = "Files"
+googleDrive = "Google Drive"
+googleDriveDisabled = "Google Drive is not configured"
+noFiles = "No files yet"
+openFileManager = "Open file manager"
+openFromComputer = "Open from computer"
+openSettings = "Open settings"
+search = "Search"
+searchPlaceholder = "Search files..."
+
 [fileToPDF]
 credit = "This service uses LibreOffice and Unoconv for file conversion."
 header = "Convert any file to PDF"
@@ -4956,6 +4971,7 @@ save = "Save"
 downloadAll = "Download All"
 saveAll = "Save All"
 saveAs = "Save As"
+share = "Share"
 
 [textAlign]
 left = "Left"
@@ -6685,8 +6701,14 @@ hideUnavailableConversions = "Hide unavailable conversions"
 hideUnavailableConversionsDescription = "Remove disabled conversion options in the Convert tool instead of showing them greyed out."
 hideUnavailableTools = "Hide unavailable tools"
 hideUnavailableToolsDescription = "Remove tools that have been disabled by your server instead of showing them greyed out."
+language = "Language"
+languageDescription = "Choose the display language"
 logout = "Log out"
 setAsDefault = "Set as Default"
+theme = "Theme"
+themeDark = "Dark"
+themeDescription = "Switch between light and dark mode"
+themeLight = "Light"
 title = "General"
 user = "User"
 
@@ -7513,9 +7535,13 @@ toggle = "Toggle Theme"
 
 [toolPanel]
 alpha = "Alpha"
+backToTools = "Back to tools"
+collapse = "Collapse panel"
 comingSoon = "Coming soon:"
+expand = "Expand panel"
 placeholder = "Choose a tool to get started"
 premiumFeature = "Premium feature:"
+search = "Search tools"
 
 [toolPanel.fullscreen]
 comingSoon = "Coming soon:"
@@ -8043,6 +8069,10 @@ title = "Watermark Text"
 [watermark.watermarkType]
 image = "Image"
 text = "Text"
+
+[workbenchBar]
+activeFiles = "Active Files"
+viewer = "Viewer"
 
 [workspace]
 title = "Workspace"
