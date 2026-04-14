@@ -10,6 +10,8 @@ dependencies = [
     "pydantic-settings>=2.0.0",
     "python-dotenv>=1.2.1",
     "uvicorn>=0.35.0",
+    "opentelemetry-sdk>=1.39.0",
+    "posthog>=3.0.0",
 ]
 
 [dependency-groups]

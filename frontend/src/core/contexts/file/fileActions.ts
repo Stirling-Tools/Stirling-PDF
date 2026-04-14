@@ -19,6 +19,7 @@ import { buildQuickKeySet } from "@app/contexts/file/fileSelectors";
 import { StirlingFile } from "@app/types/fileContext";
 import { fileStorage } from "@app/services/fileStorage";
 import { zipFileService } from "@app/services/zipFileService";
+import { FileAnalyzer } from "@app/services/fileAnalyzer";
 const DEBUG = process.env.NODE_ENV === "development";
 const HYDRATION_CONCURRENCY = 2;
 let activeHydrations = 0;
@@ -328,6 +329,21 @@ export async function addFiles(
       // Create new filestub with minimal metadata; hydrate thumbnails/processedFile asynchronously
       const fileStub = createNewStirlingFileStub(file, fileId);
 
+      // Early encryption detection for PDFs — set the flag before dispatch so the
+      // viewer gate and modal queue pick it up immediately instead of after hydration
+      if (file.type === "application/pdf") {
+        try {
+          if (await FileAnalyzer.isPDFUserPasswordProtected(file)) {
+            fileStub.processedFile = (fileStub.processedFile || { pages: [] }) as any;
+            fileStub.processedFile!.isEncrypted = true;
+          }
+        } catch (error) {
+          // Never block upload on analysis failure — but log so it's debuggable
+          // if an unencrypted file later appears to "hang" during processing.
+          console.warn("[FileActions] Early encryption detection failed for", file.name, error);
+        }
+      }
+
       // Check for pending file path mapping from Tauri file dialog (desktop only)
       try {
         const { pendingFilePathMappings } = await import("@app/services/pendingFilePathMappings");
@@ -375,8 +391,15 @@ export async function addFiles(
         let thumbnail: string | undefined;
 
         if (targetFile.type.startsWith("application/pdf")) {
-          processedFileMetadata = await generateProcessedFileMetadata(targetFile);
-          thumbnail = processedFileMetadata?.thumbnailUrl;
+          if (fileStub.processedFile?.isEncrypted) {
+            // Pre-dispatch detection already flagged this PDF as encrypted; PDF.js
+            // can't produce thumbnails/metadata without the password, so re-parsing
+            // here would just duplicate work. Metadata is refreshed after unlock.
+            processedFileMetadata = fileStub.processedFile;
+          } else {
+            processedFileMetadata = await generateProcessedFileMetadata(targetFile);
+            thumbnail = processedFileMetadata?.thumbnailUrl;
+          }
         } else {
           try {
             const { generateThumbnailForFile } = await import("@app/utils/thumbnailUtils");

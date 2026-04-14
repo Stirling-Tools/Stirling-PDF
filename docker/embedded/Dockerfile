@@ -119,7 +119,7 @@ EXPOSE 8080/tcp
 STOPSIGNAL SIGTERM
 
 HEALTHCHECK --interval=30s --timeout=15s --start-period=120s --retries=5 \
-  CMD curl -fs --max-time 10 http://localhost:8080/api/v1/info/status || exit 1
+  CMD curl -fs --max-time 10 http://localhost:8080${SYSTEM_ROOTURIPATH:-''}/api/v1/info/status || exit 1
 
 ENTRYPOINT ["tini", "--", "/scripts/init.sh"]
 CMD []
