@@ -398,6 +398,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
                         key={stub.id}
                         fileId={stub.id}
                         name={stub.name}
+                        size={stub.size}
                         lastModified={stub.lastModified}
                         isSelected={isInWorkbench}
                         isActive={isActive}

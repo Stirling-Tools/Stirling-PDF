@@ -1,9 +1,50 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import type { FileId } from "@app/types/file";
+import { useIndexedDB } from "@app/contexts/IndexedDBContext";
+import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
 import "@app/components/shared/FileSidebarFileItem.css";
+
+const THUMBNAIL_SIZE_LIMIT = 100 * 1024 * 1024; // 100MB
+
+/** Generate + persist a thumbnail for a sidebar file that doesn't have one yet. */
+function useLazyThumbnail(fileId: FileId, size: number, thumbnailUrl?: string): string | undefined {
+  const [thumb, setThumb] = useState<string | undefined>(thumbnailUrl);
+  const attempted = useRef(false);
+  const indexedDB = useIndexedDB();
+
+  // Sync prop changes (e.g. thumbnail arrives after TTL bump)
+  useEffect(() => {
+    if (thumbnailUrl) setThumb(thumbnailUrl);
+  }, [thumbnailUrl]);
+
+  useEffect(() => {
+    if (thumbnailUrl || attempted.current || size >= THUMBNAIL_SIZE_LIMIT) return;
+    attempted.current = true;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const file = await indexedDB.loadFile(fileId);
+        if (!file || cancelled) return;
+        const thumbnail = await generateThumbnailForFile(file);
+        if (cancelled || !thumbnail) return;
+        setThumb(thumbnail);
+        void indexedDB.updateThumbnail(fileId, thumbnail);
+      } catch {
+        // non-critical
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fileId, size, thumbnailUrl, indexedDB]);
+
+  return thumb;
+}
 
 export function getFileExtension(name: string): string {
   const parts = name.split(".");
@@ -98,6 +139,7 @@ function CheckIcon({ className, style }: { className?: string; style?: React.CSS
 export interface FileItemProps {
   fileId: FileId;
   name: string;
+  size?: number;
   lastModified?: number;
   isSelected: boolean;
   isActive: boolean;
@@ -110,6 +152,7 @@ export interface FileItemProps {
 export function FileItem({
   fileId,
   name,
+  size,
   lastModified,
   isSelected,
   isActive,
@@ -123,16 +166,22 @@ export function FileItem({
   const dateLabel = lastModified ? formatFileDate(lastModified) : "";
   const typeLabel = ext ? ext.toUpperCase() : "File";
 
+  const resolvedThumbnail = useLazyThumbnail(fileId, size ?? 0, thumbnailUrl);
+
   const itemRef = useRef<HTMLDivElement>(null);
-  const [thumbPos, setThumbPos] = useState<{ top: number; left: number } | null>(null);
+  const [hoverRect, setHoverRect] = useState<DOMRect | null>(null);
 
   const handleMouseEnter = useCallback(() => {
-    if (!thumbnailUrl) return;
-    const rect = itemRef.current?.getBoundingClientRect();
-    if (rect) setThumbPos({ top: rect.top + rect.height / 2, left: rect.right + 10 });
-  }, [thumbnailUrl]);
+    setHoverRect(itemRef.current?.getBoundingClientRect() ?? null);
+  }, []);
 
-  const handleMouseLeave = useCallback(() => setThumbPos(null), []);
+  const handleMouseLeave = useCallback(() => setHoverRect(null), []);
+
+  // Reactive: tooltip appears as soon as both hover rect and thumbnail are ready
+  const thumbPos =
+    hoverRect && resolvedThumbnail
+      ? { top: hoverRect.top + hoverRect.height / 2, left: hoverRect.right + 10 }
+      : null;
 
   return (
     <>
@@ -192,10 +241,10 @@ export function FileItem({
       </div>
 
       {thumbPos &&
-        thumbnailUrl &&
+        resolvedThumbnail &&
         createPortal(
           <div className="file-sidebar-thumb-tooltip" style={{ top: thumbPos.top, left: thumbPos.left }}>
-            <img src={thumbnailUrl} alt="" className="file-sidebar-thumb-img" />
+            <img src={resolvedThumbnail} alt="" className="file-sidebar-thumb-img" />
           </div>,
           document.body,
         )}
