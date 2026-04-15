@@ -18,12 +18,10 @@ Adaptive text component that automatically scales font size down so the content 
 ## Basic Usage
 
 ```tsx
-import FitText from '@/components/shared/FitText';
+import FitText from "@/components/shared/FitText";
 
 export function CardTitle({ title }: { title: string }) {
-  return (
-    <FitText text={title} />
-  );
+    return <FitText text={title} />;
 }
 ```
 
@@ -31,17 +29,18 @@ export function CardTitle({ title }: { title: string }) {
 
 ### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `text` | `string` | — | The string to render and fit |
-| `fontSize` | `number` | computed | Maximum starting font size in rem (e.g., 1.2, 0.9) |
-| `minimumFontScale` | `number` | `0.8` | Smallest scale relative to the max (0..1) |
-| `lines` | `number` | `1` | Maximum number of lines to display and fit |
-| `className` | `string` | — | Optional class on the rendered element |
-| `style` | `CSSProperties` | — | Inline styles (merged with internal clamp styles) |
-| `as` | `'span' | 'div'` | `'span'` | HTML tag to render |
+| Prop               | Type            | Default  | Description                                        |
+| ------------------ | --------------- | -------- | -------------------------------------------------- | ------------------ |
+| `text`             | `string`        | —        | The string to render and fit                       |
+| `fontSize`         | `number`        | computed | Maximum starting font size in rem (e.g., 1.2, 0.9) |
+| `minimumFontScale` | `number`        | `0.8`    | Smallest scale relative to the max (0..1)          |
+| `lines`            | `number`        | `1`      | Maximum number of lines to display and fit         |
+| `className`        | `string`        | —        | Optional class on the rendered element             |
+| `style`            | `CSSProperties` | —        | Inline styles (merged with internal clamp styles)  |
+| `as`               | `'span'         | 'div'`   | `'span'`                                           | HTML tag to render |
 
 Notes:
+
 - For multi-line, the component applies WebKit line clamping (with reasonable fallbacks) and fits within that height.
 - The component only scales down; if the content already fits, it keeps the starting size.
 
@@ -57,10 +56,10 @@ Notes:
 
 ```tsx
 <FitText
-  text="This label can wrap up to three lines and will shrink so it fits nicely"
-  lines={3}
-  minimumFontScale={0.6}
-  className="my-multiline-label"
+    text="This label can wrap up to three lines and will shrink so it fits nicely"
+    lines={3}
+    minimumFontScale={0.6}
+    className="my-multiline-label"
 />
 ```
 
@@ -81,24 +80,24 @@ Notes:
 If you need to control your own element, you can use the underlying hook directly.
 
 ```tsx
-import React, { useRef } from 'react';
-import { useAdjustFontSizeToFit } from '@/components/shared/fitText/textFit';
+import React, { useRef } from "react";
+import { useAdjustFontSizeToFit } from "@/components/shared/fitText/textFit";
 
 export function CustomFit() {
-  const ref = useRef<HTMLSpanElement | null>(null);
+    const ref = useRef<HTMLSpanElement | null>(null);
 
-  useAdjustFontSizeToFit(ref as any, {
-    maxFontSizePx: 20,
-    minFontScale: 0.6,
-    maxLines: 2,
-    singleLine: false,
-  });
+    useAdjustFontSizeToFit(ref as any, {
+        maxFontSizePx: 20,
+        minFontScale: 0.6,
+        maxLines: 2,
+        singleLine: false,
+    });
 
-  return (
-    <span ref={ref} style={{ display: 'inline-block', maxWidth: 240 }}>
-      Arbitrary text that will scale to fit two lines.
-    </span>
-  );
+    return (
+        <span ref={ref} style={{ display: "inline-block", maxWidth: 240 }}>
+            Arbitrary text that will scale to fit two lines.
+        </span>
+    );
 }
 ```
 
@@ -108,5 +107,3 @@ export function CustomFit() {
 - Avoid animating width while fitting; update after animation completes for best results.
 - When you need more control of typography, pass `fontSize` to define the starting ceiling.
 - **Important**: The `fontSize` prop expects `rem` values (e.g., 1.2, 0.9) to ensure text scales with global font size changes.
-
-

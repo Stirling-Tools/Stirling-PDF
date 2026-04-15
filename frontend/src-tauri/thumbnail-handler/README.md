@@ -19,16 +19,16 @@ All COM methods are wrapped in `catch_unwind` so a malformed PDF cannot crash Ex
 
 ## Technical details
 
-| | |
-|---|---|
-| **Language** | Rust (cdylib) |
-| **DLL size** | ~156 KB |
-| **External deps** | None — uses only Windows built-in APIs |
-| **PDF renderer** | `Windows.Data.Pdf` (WinRT, Windows 10+) |
-| **Image decode** | WIC (`IWICImagingFactory`) with BGRA32 format conversion |
-| **COM CLSID** | `{2D2FBE3A-9A88-4308-A52E-7EF63CA7CF48}` |
-| **Threading model** | Apartment (STA — standard for shell extensions) |
-| **Min Windows** | Windows 10 |
+|                     |                                                          |
+| ------------------- | -------------------------------------------------------- |
+| **Language**        | Rust (cdylib)                                            |
+| **DLL size**        | ~156 KB                                                  |
+| **External deps**   | None — uses only Windows built-in APIs                   |
+| **PDF renderer**    | `Windows.Data.Pdf` (WinRT, Windows 10+)                  |
+| **Image decode**    | WIC (`IWICImagingFactory`) with BGRA32 format conversion |
+| **COM CLSID**       | `{2D2FBE3A-9A88-4308-A52E-7EF63CA7CF48}`                 |
+| **Threading model** | Apartment (STA — standard for shell extensions)          |
+| **Min Windows**     | Windows 10                                               |
 
 ## Registry entries (managed by MSI)
 

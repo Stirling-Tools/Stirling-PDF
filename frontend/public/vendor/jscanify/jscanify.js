@@ -20,7 +20,7 @@
   }
 
   class jscanify {
-    constructor() { }
+    constructor() {}
 
     /**
      * Finds the contour of the paper within the image
@@ -32,34 +32,15 @@
       cv.Canny(img, imgGray, 50, 200);
 
       const imgBlur = new cv.Mat();
-      cv.GaussianBlur(
-        imgGray,
-        imgBlur,
-        new cv.Size(3, 3),
-        0,
-        0,
-        cv.BORDER_DEFAULT
-      );
+      cv.GaussianBlur(imgGray, imgBlur, new cv.Size(3, 3), 0, 0, cv.BORDER_DEFAULT);
 
       const imgThresh = new cv.Mat();
-      cv.threshold(
-        imgBlur,
-        imgThresh,
-        0,
-        255,
-        cv.THRESH_OTSU
-      );
+      cv.threshold(imgBlur, imgThresh, 0, 255, cv.THRESH_OTSU);
 
       let contours = new cv.MatVector();
       let hierarchy = new cv.Mat();
 
-      cv.findContours(
-        imgThresh,
-        contours,
-        hierarchy,
-        cv.RETR_CCOMP,
-        cv.CHAIN_APPROX_SIMPLE
-      );
+      cv.findContours(imgThresh, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
 
       let maxArea = 0;
       let maxContourIndex = -1;
@@ -71,10 +52,7 @@
         }
       }
 
-      const maxContour =
-        maxContourIndex >= 0 ?
-          contours.get(maxContourIndex) :
-          null;
+      const maxContour = maxContourIndex >= 0 ? contours.get(maxContourIndex) : null;
 
       imgGray.delete();
       imgBlur.delete();
@@ -101,19 +79,9 @@
       const maxContour = this.findPaperContour(img);
       cv.imshow(canvas, img);
       if (maxContour) {
-        const {
-          topLeftCorner,
-          topRightCorner,
-          bottomLeftCorner,
-          bottomRightCorner,
-        } = this.getCornerPoints(maxContour, img);
+        const { topLeftCorner, topRightCorner, bottomLeftCorner, bottomRightCorner } = this.getCornerPoints(maxContour, img);
 
-        if (
-          topLeftCorner &&
-          topRightCorner &&
-          bottomLeftCorner &&
-          bottomRightCorner
-        ) {
+        if (topLeftCorner && topRightCorner && bottomLeftCorner && bottomRightCorner) {
           ctx.strokeStyle = options.color;
           ctx.lineWidth = options.thickness;
           ctx.beginPath();
@@ -135,7 +103,7 @@
      *
      * Returns `null` if no paper is detected.
      *
-    * @param {*} image image to process
+     * @param {*} image image to process
      * @param {*} resultWidth desired result paper width
      * @param {*} resultHeight desired result paper height
      * @param {*} cornerPoints optional custom corner points, in case automatic corner points are incorrect
@@ -146,16 +114,12 @@
       const img = cv.imread(image);
       const maxContour = cornerPoints ? null : this.findPaperContour(img);
 
-      if(maxContour == null && cornerPoints === undefined){
+      if (maxContour == null && cornerPoints === undefined) {
         return null;
       }
 
-      const {
-        topLeftCorner,
-        topRightCorner,
-        bottomLeftCorner,
-        bottomRightCorner,
-      } = cornerPoints || this.getCornerPoints(maxContour, img);
+      const { topLeftCorner, topRightCorner, bottomLeftCorner, bottomRightCorner } =
+        cornerPoints || this.getCornerPoints(maxContour, img);
       let warpedDst = new cv.Mat();
 
       let dsize = new cv.Size(resultWidth, resultHeight);
@@ -170,32 +134,15 @@
         bottomRightCorner.y,
       ]);
 
-      let dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
-        0,
-        0,
-        resultWidth,
-        0,
-        0,
-        resultHeight,
-        resultWidth,
-        resultHeight,
-      ]);
+      let dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [0, 0, resultWidth, 0, 0, resultHeight, resultWidth, resultHeight]);
 
       let M = cv.getPerspectiveTransform(srcTri, dstTri);
-      cv.warpPerspective(
-        img,
-        warpedDst,
-        M,
-        dsize,
-        cv.INTER_LINEAR,
-        cv.BORDER_CONSTANT,
-        new cv.Scalar()
-      );
+      cv.warpPerspective(img, warpedDst, M, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
 
       cv.imshow(canvas, warpedDst);
 
-      img.delete()
-      warpedDst.delete()
+      img.delete();
+      warpedDst.delete();
       return canvas;
     }
 

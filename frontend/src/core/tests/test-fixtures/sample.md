@@ -5,14 +5,14 @@ This is a **test** markdown file for testing the markdown to PDF conversion func
 ## Features Being Tested
 
 - **Bold text**
-- *Italic text*
+- _Italic text_
 - [Links](https://example.com)
 - Lists and formatting
 
 ### Code Block
 
 ```javascript
-console.log('Hello, world!');
+console.log("Hello, world!");
 function testFunction() {
     return "This is a test";
 }
@@ -21,20 +21,22 @@ function testFunction() {
 ### Table
 
 | Column 1 | Column 2 | Column 3 |
-|----------|----------|----------|
+| -------- | -------- | -------- |
 | Data 1   | Data 2   | Data 3   |
 | Test A   | Test B   | Test C   |
 
 ## Lists
 
 ### Unordered List
+
 - Item 1
 - Item 2
-  - Nested item
-  - Another nested item
+    - Nested item
+    - Another nested item
 - Item 3
 
 ### Ordered List
+
 1. First item
 2. Second item
 3. Third item
