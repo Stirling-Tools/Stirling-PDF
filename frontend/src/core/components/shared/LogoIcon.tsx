@@ -46,10 +46,7 @@ function ClassicLogoIcon({ alt, className = "", ...props }: LogoIconProps) {
           d="M63.269 8.04043V57.5772L77.1561 43.9962L76.7681 11.7192C76.7403 8.44358 73.3864 6.02469 69.8661 6.7302L63.269 8.04043Z"
           className="logo-icon-classic__flap"
         />
-        <path
-          d="M33.0873 84.4375L70.2189 75.6383L77.1569 43.9963L33.0873 84.4375Z"
-          className="logo-icon-classic__triangle"
-        />
+        <path d="M33.0873 84.4375L70.2189 75.6383L77.1569 43.9963L33.0873 84.4375Z" className="logo-icon-classic__triangle" />
         <path
           d="M44.1432 35.3049C44.1432 35.3049 39.9022 30.2907 36.77 28.9301C34.7743 28.0734 31.8084 27.7459 29.48 28.8041C26.0429 30.3663 25.6826 34.7506 28.8425 36.4891C29.5909 36.9175 30.5888 37.2702 31.8915 37.5474C38.8767 39.0088 50.4076 42.0324 48.994 54.2024C48.994 54.2024 48.1901 65.6166 34.9683 66.9268C32.6399 67.1536 30.2839 67.0024 28.0109 66.5236C24.8787 65.8937 19.335 64.6087 16.6185 63.0717L16.1196 50.045H17.4501C17.4501 50.045 20.0834 55.8402 27.5674 58.6371C28.9534 59.141 30.4779 59.3426 31.947 59.141C33.8041 58.889 35.9939 57.982 36.8809 55.2355C36.8809 55.2355 38.3777 51.2292 30.6165 49.0371C24.4075 47.2733 18.5589 45.4592 16.1473 39.5127C15.0109 36.6907 14.8168 33.5663 15.593 30.5679C16.6185 26.6624 19.5567 21.1695 27.8723 18.801C27.8723 18.801 38.7935 16.105 46.2776 19.7585L45.9449 35.3049H44.1432Z"
           className="logo-icon-classic__s"
@@ -66,22 +63,42 @@ function ClassicLogoIcon({ alt, className = "", ...props }: LogoIconProps) {
           colorInterpolationFilters="sRGB"
         >
           <feFlood floodOpacity="0" result="BackgroundImageFix" />
-          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+          <feColorMatrix
+            in="SourceAlpha"
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+            result="hardAlpha"
+          />
           <feOffset dy="0.4375" />
           <feGaussianBlur stdDeviation="0.4375" />
           <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0" />
           <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow" />
-          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+          <feColorMatrix
+            in="SourceAlpha"
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+            result="hardAlpha"
+          />
           <feOffset dx="0.4375" dy="1.3125" />
           <feGaussianBlur stdDeviation="0.656251" />
           <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.09 0" />
           <feBlend mode="normal" in2="effect1_dropShadow" result="effect2_dropShadow" />
-          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+          <feColorMatrix
+            in="SourceAlpha"
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+            result="hardAlpha"
+          />
           <feOffset dx="0.875001" dy="3.0625" />
           <feGaussianBlur stdDeviation="0.875001" />
           <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0" />
           <feBlend mode="normal" in2="effect2_dropShadow" result="effect3_dropShadow" />
-          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+          <feColorMatrix
+            in="SourceAlpha"
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+            result="hardAlpha"
+          />
           <feOffset dx="1.75" dy="5.25" />
           <feGaussianBlur stdDeviation="1.09375" />
           <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.01 0" />

@@ -978,27 +978,69 @@
 }
 
 /* Modern logo icon */
-.logo-icon-modern__path1 { fill: #ACACAC; fill-opacity: 0.3; }
-.logo-icon-modern__path2 { fill: #FC9999; fill-opacity: 0.5; }
-[data-mantine-color-scheme="dark"] .logo-icon-modern__path1 { fill: #E6E6E6; fill-opacity: 0.4; }
-[data-mantine-color-scheme="dark"] .logo-icon-modern__path2 { fill: #E6E6E6; fill-opacity: 0.7; }
+.logo-icon-modern__path1 {
+  fill: #acacac;
+  fill-opacity: 0.3;
+}
+.logo-icon-modern__path2 {
+  fill: #fc9999;
+  fill-opacity: 0.5;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-modern__path1 {
+  fill: #e6e6e6;
+  fill-opacity: 0.4;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-modern__path2 {
+  fill: #e6e6e6;
+  fill-opacity: 0.7;
+}
 
 /* Classic logo icon — single path structure, colors change per theme */
-.logo-icon-classic__group { opacity: 0.2; }
-.logo-icon-classic__body { fill: #FF4B4B; }
-.logo-icon-classic__flap { fill: #545454; }
-.logo-icon-classic__triangle { fill: #D0DBDC; }
-.logo-icon-classic__s { fill: white; }
-[data-mantine-color-scheme="dark"] .logo-icon-classic__group { opacity: 1; }
-[data-mantine-color-scheme="dark"] .logo-icon-classic__body { fill: white; }
-[data-mantine-color-scheme="dark"] .logo-icon-classic__flap { fill: #D3D3D3; }
-[data-mantine-color-scheme="dark"] .logo-icon-classic__triangle { fill: #D0DBDC; }
-[data-mantine-color-scheme="dark"] .logo-icon-classic__s { fill: var(--mantine-color-body); }
+.logo-icon-classic__group {
+  opacity: 0.2;
+}
+.logo-icon-classic__body {
+  fill: #ff4b4b;
+}
+.logo-icon-classic__flap {
+  fill: #545454;
+}
+.logo-icon-classic__triangle {
+  fill: #d0dbdc;
+}
+.logo-icon-classic__s {
+  fill: white;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-classic__group {
+  opacity: 1;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-classic__body {
+  fill: white;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-classic__flap {
+  fill: #d3d3d3;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-classic__triangle {
+  fill: #d0dbdc;
+}
+[data-mantine-color-scheme="dark"] .logo-icon-classic__s {
+  fill: var(--mantine-color-body);
+}
 
 /* Wordmark muted variant (used in empty/placeholder states) */
 /* Stirling text: 30% opacity in light mode, full opacity in dark */
-.wordmark__text--muted { fill-opacity: 0.3; }
-[data-mantine-color-scheme="dark"] .wordmark__text--muted { fill-opacity: 1; }
+.wordmark__text--muted {
+  fill-opacity: 0.3;
+}
+[data-mantine-color-scheme="dark"] .wordmark__text--muted {
+  fill-opacity: 1;
+}
 /* PDF text: dimmed red in light mode, standard red in dark */
-.wordmark__pdf--muted { fill: #D62626; fill-opacity: 0.7; }
-[data-mantine-color-scheme="dark"] .wordmark__pdf--muted { fill: #C56565; fill-opacity: 1; }
+.wordmark__pdf--muted {
+  fill: #d62626;
+  fill-opacity: 0.7;
+}
+[data-mantine-color-scheme="dark"] .wordmark__pdf--muted {
+  fill: #c56565;
+  fill-opacity: 1;
+}
