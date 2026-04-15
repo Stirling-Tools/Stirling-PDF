@@ -20,8 +20,13 @@ class AppSettings(BaseSettings):
     fast_model_name: str = Field(validation_alias="STIRLING_FAST_MODEL")
     smart_model_max_tokens: int = Field(validation_alias="STIRLING_SMART_MODEL_MAX_TOKENS")
     fast_model_max_tokens: int = Field(validation_alias="STIRLING_FAST_MODEL_MAX_TOKENS")
+
     log_level: str = Field(default="INFO", validation_alias="STIRLING_LOG_LEVEL")
     log_file: str = Field(default="", validation_alias="STIRLING_LOG_FILE")
+
+    posthog_enabled: bool = Field(validation_alias="STIRLING_POSTHOG_ENABLED")
+    posthog_api_key: str = Field(validation_alias="STIRLING_POSTHOG_API_KEY")
+    posthog_host: str = Field(validation_alias="STIRLING_POSTHOG_HOST")
 
 
 def _configure_logging(level_name: str, log_file: str) -> None:
