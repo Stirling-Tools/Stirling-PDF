@@ -1,8 +1,4 @@
-from collections.abc import Iterator
-
-import pytest
-
-from stirling.config import AppSettings, load_settings
+from stirling.config import AppSettings
 from stirling.contracts import (
     AgentExecutionRequest,
     AgentSpec,
@@ -76,19 +72,15 @@ def test_pdf_question_answer_defaults_evidence_list() -> None:
     assert response.evidence == []
 
 
-@pytest.fixture(autouse=True)
-def clear_settings_cache() -> Iterator[None]:
-    load_settings.cache_clear()
-    yield
-    load_settings.cache_clear()
-
-
 def test_app_settings_accepts_model_configuration() -> None:
     settings = AppSettings(
         smart_model_name="claude-sonnet-4-5-20250929",
         fast_model_name="claude-haiku-4-5-20251001",
         smart_model_max_tokens=8192,
         fast_model_max_tokens=2048,
+        posthog_enabled=False,
+        posthog_api_key="",
+        posthog_host="https://eu.i.posthog.com",
     )
 
     assert settings.smart_model_name
