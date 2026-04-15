@@ -5848,6 +5848,8 @@ filterMine = "Mine"
 filterOverdue = "Overdue"
 filterSigned = "Signed"
 filterDeclined = "Declined"
+login = "Login"
+logout = "Logout"
 searchDocuments = "Search documents…"
 
 [quickAccess.helpMenu]
