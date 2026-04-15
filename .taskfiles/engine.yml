@@ -95,7 +95,7 @@ tasks:
       - task: test
 
   tool-models:
-    desc: "Generate tool_models.py from frontend TypeScript defs"
+    desc: "Generate tool_models.py from Java OpenAPI spec (SwaggerDoc.json)"
     deps: [install]
     cmds:
       - uv run python scripts/generate_tool_models.py --output src/stirling/models/tool_models.py

@@ -44,6 +44,23 @@ public class AiWorkflowResponse {
     @Schema(description = "Structured tool steps when the workflow returns a plan")
     private List<Map<String, Object>> steps = new ArrayList<>();
 
+    @Schema(
+            description =
+                    "Tool endpoint path for tool_call outcomes (e.g. /api/v1/misc/compress-pdf)")
+    private String tool;
+
+    @Schema(description = "Tool parameters for tool_call outcomes")
+    private Map<String, Object> parameters;
+
+    @Schema(description = "Result file ID after tool execution completes")
+    private String fileId;
+
+    @Schema(description = "Result filename after tool execution completes")
+    private String fileName;
+
+    @Schema(description = "Result MIME type after tool execution completes")
+    private String contentType;
+
     @Schema(description = "Per-file text extraction requests from the AI engine")
     private List<AiWorkflowFileRequest> files = new ArrayList<>();
 

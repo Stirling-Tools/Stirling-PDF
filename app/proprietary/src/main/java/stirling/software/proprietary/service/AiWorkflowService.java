@@ -1,6 +1,7 @@
 package stirling.software.proprietary.service;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -8,14 +9,24 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.FileStorage;
+import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
@@ -39,6 +50,8 @@ public class AiWorkflowService {
     private final AiEngineClient aiEngineClient;
     private final PdfContentExtractor pdfContentExtractor;
     private final ObjectMapper objectMapper;
+    private final InternalApiClient internalApiClient;
+    private final FileStorage fileStorage;
 
     @FunctionalInterface
     public interface ProgressListener {
@@ -89,12 +102,12 @@ public class AiWorkflowService {
         AiWorkflowResponse response = invokeOrchestrator(request);
         return switch (response.getOutcome()) {
             case NEED_CONTENT -> onNeedContent(response, filesByName, request, listener);
+            case TOOL_CALL -> onToolCall(response, filesByName);
+            case PLAN -> onPlan(response, filesByName);
             case ANSWER,
                     NOT_FOUND,
-                    PLAN,
                     NEED_CLARIFICATION,
                     CANNOT_DO,
-                    TOOL_CALL,
                     COMPLETED,
                     UNSUPPORTED_CAPABILITY,
                     CANNOT_CONTINUE ->
@@ -172,6 +185,147 @@ public class AiWorkflowService {
                 }
             }
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private WorkflowState onToolCall(
+            AiWorkflowResponse response, Map<String, MultipartFile> filesByName) {
+        String endpointPath = response.getTool();
+        Map<String, Object> parameters = response.getParameters();
+        if (endpointPath == null || endpointPath.isBlank()) {
+            return new WorkflowState.Terminal(
+                    cannotContinue("AI engine returned tool_call without a tool endpoint."));
+        }
+        if (parameters == null) {
+            parameters = Map.of();
+        }
+
+        try {
+            // Use the first file as input (single-file tool call)
+            MultipartFile inputFile = filesByName.values().iterator().next();
+            Resource resultResource = executeTool(endpointPath, parameters, inputFile);
+            return new WorkflowState.Terminal(
+                    buildCompletedResponse(response.getRationale(), resultResource));
+        } catch (Exception e) {
+            log.error("Failed to execute tool {}: {}", endpointPath, e.getMessage(), e);
+            return new WorkflowState.Terminal(
+                    cannotContinue("Tool execution failed: " + e.getMessage()));
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private WorkflowState onPlan(
+            AiWorkflowResponse response, Map<String, MultipartFile> filesByName) {
+        List<Map<String, Object>> steps = response.getSteps();
+        if (steps == null || steps.isEmpty()) {
+            return new WorkflowState.Terminal(
+                    cannotContinue("AI engine returned a plan with no steps."));
+        }
+
+        try {
+            // Start with the first input file
+            MultipartFile inputFile = filesByName.values().iterator().next();
+            Resource currentResource = toResource(inputFile);
+
+            for (int i = 0; i < steps.size(); i++) {
+                Map<String, Object> step = steps.get(i);
+                String endpointPath = (String) step.get("tool");
+                Map<String, Object> parameters =
+                        step.containsKey("parameters")
+                                ? (Map<String, Object>) step.get("parameters")
+                                : Map.of();
+
+                if (endpointPath == null || endpointPath.isBlank()) {
+                    return new WorkflowState.Terminal(
+                            cannotContinue("Plan step " + (i + 1) + " has no tool endpoint."));
+                }
+
+                MultiValueMap<String, Object> body = buildRequestBody(currentResource, parameters);
+                ResponseEntity<Resource> toolResponse = internalApiClient.post(endpointPath, body);
+
+                if (!HttpStatus.OK.equals(toolResponse.getStatusCode())
+                        || toolResponse.getBody() == null) {
+                    return new WorkflowState.Terminal(
+                            cannotContinue(
+                                    "Tool execution failed at step "
+                                            + (i + 1)
+                                            + " ("
+                                            + endpointPath
+                                            + "): HTTP "
+                                            + toolResponse.getStatusCode()));
+                }
+
+                currentResource = toolResponse.getBody();
+            }
+
+            return new WorkflowState.Terminal(
+                    buildCompletedResponse(response.getSummary(), currentResource));
+        } catch (Exception e) {
+            log.error("Failed to execute plan: {}", e.getMessage(), e);
+            return new WorkflowState.Terminal(
+                    cannotContinue("Plan execution failed: " + e.getMessage()));
+        }
+    }
+
+    private Resource executeTool(
+            String endpointPath, Map<String, Object> parameters, MultipartFile inputFile)
+            throws IOException {
+        Resource fileResource = toResource(inputFile);
+        MultiValueMap<String, Object> body = buildRequestBody(fileResource, parameters);
+        ResponseEntity<Resource> response = internalApiClient.post(endpointPath, body);
+
+        if (!HttpStatus.OK.equals(response.getStatusCode()) || response.getBody() == null) {
+            throw new IOException(
+                    "Tool returned HTTP " + response.getStatusCode() + " for " + endpointPath);
+        }
+        return response.getBody();
+    }
+
+    private MultiValueMap<String, Object> buildRequestBody(
+            Resource fileResource, Map<String, Object> parameters) {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("fileInput", fileResource);
+        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+            if (entry.getValue() instanceof List<?> list) {
+                for (Object item : list) {
+                    body.add(entry.getKey(), item);
+                }
+            } else {
+                body.add(entry.getKey(), entry.getValue());
+            }
+        }
+        return body;
+    }
+
+    private Resource toResource(MultipartFile file) throws IOException {
+        java.nio.file.Path tempPath = Files.createTempFile("ai-workflow-", ".tmp");
+        file.transferTo(tempPath);
+        final String originalName = Filenames.toSimpleFileName(file.getOriginalFilename());
+        return new FileSystemResource(tempPath.toFile()) {
+            @Override
+            public String getFilename() {
+                return originalName;
+            }
+        };
+    }
+
+    private AiWorkflowResponse buildCompletedResponse(String summary, Resource resultResource)
+            throws IOException {
+        byte[] resultBytes = Files.readAllBytes(resultResource.getFile().toPath());
+        String resultFileName =
+                resultResource.getFilename() != null ? resultResource.getFilename() : "result.pdf";
+        String storedFileId = fileStorage.storeBytes(resultBytes, resultFileName);
+
+        // Extract filename from Content-Disposition if available, otherwise use resource filename
+        String contentType = "application/pdf";
+
+        AiWorkflowResponse completed = new AiWorkflowResponse();
+        completed.setOutcome(AiWorkflowOutcome.COMPLETED);
+        completed.setSummary(summary);
+        completed.setFileId(storedFileId);
+        completed.setFileName(resultFileName);
+        completed.setContentType(contentType);
+        return completed;
     }
 
     private void validateRequest(AiWorkflowRequest request) {

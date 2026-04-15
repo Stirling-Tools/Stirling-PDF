@@ -437,3 +437,9 @@ OPERATIONS: dict[OperationId, ParamToolModelType] = {
     OperationId.UNLOCK_PDFFORMS: UnlockPdfformsParams,
     OperationId.WATERMARK: WatermarkParams,
 }
+
+# Forward-compatible alias — new code should use ToolEndpoint.
+# When tool_models.py is regenerated from the Java OpenAPI spec,
+# ToolEndpoint becomes the primary class (values are endpoint paths)
+# and OperationId becomes the alias.
+ToolEndpoint = OperationId
