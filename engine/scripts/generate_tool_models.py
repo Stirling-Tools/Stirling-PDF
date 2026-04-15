@@ -1,13 +1,22 @@
 #!/usr/bin/env python3
-"""Generate Python tool models from the Java backend's OpenAPI spec (SwaggerDoc.json)."""
+"""Generate Python tool models from the Java backend's OpenAPI spec (SwaggerDoc.json).
+
+Uses datamodel-code-generator to convert OpenAPI request schemas to Pydantic models.
+Run via:
+    task engine:tool-models
+or directly:
+    python engine/scripts/generate_tool_models.py --spec SwaggerDoc.json
+"""
 from __future__ import annotations
 
 import argparse
 import json
-import keyword
 import re
 from pathlib import Path
 from typing import Any
+
+from datamodel_code_generator import DataModelType, PythonVersion, generate
+from datamodel_code_generator.format import DatetimeClassType
 
 TOOL_MODELS_HEADER = """\
 # AUTO-GENERATED FILE. DO NOT EDIT.
@@ -28,8 +37,9 @@ BASE_CLASS_FIELDS = frozenset({"fileInput", "fileId"})
 
 
 # ---------------------------------------------------------------------------
-# OpenAPI spec parsing
+# OpenAPI helpers
 # ---------------------------------------------------------------------------
+
 
 def _is_tool_endpoint(path: str) -> bool:
     return any(path.startswith(prefix) for prefix in ALLOWED_PATH_PREFIXES)
@@ -38,253 +48,218 @@ def _is_tool_endpoint(path: str) -> bool:
 def _resolve_ref(spec: dict[str, Any], ref: str) -> dict[str, Any]:
     """Resolve a $ref pointer like '#/components/schemas/Foo'."""
     parts = ref.lstrip("#/").split("/")
-    node = spec
+    node: Any = spec
     for part in parts:
         node = node[part]
     return node
 
 
-def _extract_properties(
-    spec: dict[str, Any], schema: dict[str, Any]
-) -> dict[str, dict[str, Any]]:
-    """Extract property schemas from a request body schema, resolving $ref and allOf."""
+def _collect_properties(spec: dict[str, Any], schema: dict[str, Any]) -> dict[str, Any]:
+    """Recursively collect properties from a schema, resolving $ref and allOf."""
     if "$ref" in schema:
         schema = _resolve_ref(spec, schema["$ref"])
-
-    # Handle allOf (common when extending PDFFile)
     if "allOf" in schema:
-        merged: dict[str, dict[str, Any]] = {}
-        for sub_schema in schema["allOf"]:
-            merged.update(_extract_properties(spec, sub_schema))
+        merged: dict[str, Any] = {}
+        for sub in schema["allOf"]:
+            merged.update(_collect_properties(spec, sub))
         return merged
+    return dict(schema.get("properties", {}))
 
-    return schema.get("properties", {})
 
-
-def _get_request_schema(
-    spec: dict[str, Any], path_item: dict[str, Any]
-) -> dict[str, Any] | None:
-    """Get the request body schema for a POST endpoint."""
+def _get_request_schema(spec: dict[str, Any], path_item: dict[str, Any]) -> dict[str, Any] | None:
     post = path_item.get("post")
     if not post:
         return None
-
-    request_body = post.get("requestBody", {})
-    content = request_body.get("content", {})
-
-    # Try multipart/form-data first, then application/json
+    content = post.get("requestBody", {}).get("content", {})
     for media_type in ("multipart/form-data", "application/json"):
         if media_type in content:
             return content[media_type].get("schema")
-
     return None
 
 
 # ---------------------------------------------------------------------------
-# OpenAPI type → Python type mapping
+# Naming
 # ---------------------------------------------------------------------------
 
-def _openapi_type_to_python(prop: dict[str, Any], spec: dict[str, Any]) -> tuple[str, str | None]:
-    """Convert an OpenAPI property schema to (python_type, default_value_repr).
-
-    Returns e.g. ("int", "5") or ("str", "'hello'") or ("bool", "False").
-    """
-    if "$ref" in prop:
-        prop = _resolve_ref(spec, prop["$ref"])
-
-    # Handle enum
-    if "enum" in prop:
-        values = prop["enum"]
-        literal_values = ", ".join(repr(v) for v in values)
-        py_type = f"Literal[{literal_values}]"
-        default = repr(prop.get("default")) if "default" in prop else repr(values[0])
-        return py_type, default
-
-    prop_type = prop.get("type", "string")
-    prop_format = prop.get("format")
-
-    if prop_type == "integer":
-        py_type = "int"
-        # Handle allowableValues (rendered as enum by springdoc)
-        default = repr(prop["default"]) if "default" in prop else None
-    elif prop_type == "number":
-        py_type = "float"
-        default = repr(prop["default"]) if "default" in prop else None
-    elif prop_type == "boolean":
-        py_type = "bool"
-        default = repr(prop.get("default", False))
-    elif prop_type == "string":
-        if prop_format == "binary":
-            return "Any", "None"  # file upload — skip
-        py_type = "str"
-        default = repr(prop["default"]) if "default" in prop else repr("")
-    elif prop_type == "array":
-        items = prop.get("items", {})
-        inner_type, _ = _openapi_type_to_python(items, spec)
-        py_type = f"list[{inner_type}]"
-        default = "[]"
-    elif prop_type == "object":
-        additional = prop.get("additionalProperties")
-        if additional and isinstance(additional, dict):
-            inner_type, _ = _openapi_type_to_python(additional, spec)
-            py_type = f"dict[str, {inner_type}]"
-        else:
-            py_type = "dict[str, Any]"
-        default = "{}"
-    else:
-        py_type = "Any"
-        default = "None"
-
-    return py_type, default
-
-
-# ---------------------------------------------------------------------------
-# Naming helpers
-# ---------------------------------------------------------------------------
 
 def _path_to_enum_name(path: str) -> str:
-    """Convert '/api/v1/misc/compress-pdf' → 'COMPRESS_PDF'."""
-    # Take the last path segment
+    """'/api/v1/misc/compress-pdf' → 'COMPRESS_PDF'."""
     segment = path.rstrip("/").rsplit("/", 1)[-1]
-    # Replace hyphens with underscores and uppercase
     return segment.replace("-", "_").upper()
 
 
 def _path_to_class_name(path: str) -> str:
-    """Convert '/api/v1/misc/compress-pdf' → 'CompressPdfParams'."""
+    """'/api/v1/misc/compress-pdf' → 'CompressPdfParams'."""
     segment = path.rstrip("/").rsplit("/", 1)[-1]
     parts = segment.split("-")
-    return "".join(part.capitalize() for part in parts) + "Params"
-
-
-def _to_snake_case(name: str) -> str:
-    """Convert camelCase to snake_case."""
-    snake = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", name)
-    snake = re.sub(r"[^A-Za-z0-9]+", "_", snake).strip("_").lower()
-    if not snake:
-        snake = "param"
-    if snake[0].isdigit():
-        snake = f"param_{snake}"
-    if keyword.iskeyword(snake):
-        snake = f"{snake}_"
-    return snake
+    return "".join(p.capitalize() for p in parts) + "Params"
 
 
 # ---------------------------------------------------------------------------
-# Tool spec extraction
+# Per-endpoint schema → Pydantic code via datamodel-code-generator
 # ---------------------------------------------------------------------------
+
+
+def _build_json_schema_for_endpoint(
+    spec: dict[str, Any],
+    properties: dict[str, Any],
+    class_name: str,
+) -> dict[str, Any]:
+    """Build a standalone JSON Schema object for one endpoint's parameters."""
+    # Resolve any $ref in individual properties and strip file fields
+    clean_props: dict[str, Any] = {}
+    for name, prop in properties.items():
+        if name in BASE_CLASS_FIELDS:
+            continue
+        resolved = prop
+        if "$ref" in resolved:
+            resolved = _resolve_ref(spec, resolved["$ref"])
+        # Skip binary/file upload fields
+        if resolved.get("type") == "string" and resolved.get("format") == "binary":
+            continue
+        clean_props[name] = resolved
+
+    return {
+        "title": class_name,
+        "type": "object",
+        "properties": clean_props,
+    }
+
+
+def _generate_model_code(schema: dict[str, Any], class_name: str) -> str:
+    """Use datamodel-code-generator to produce a Pydantic model from a JSON Schema."""
+    schema_json = json.dumps(schema)
+    code = generate(
+        input_=schema_json,
+        input_file_type="jsonschema",
+        output_model_type=DataModelType.PydanticV2BaseModel,
+        target_python_version=PythonVersion.PY_313,
+        snake_case_field=True,
+        use_annotated=True,
+        use_field_description=False,
+        use_schema_description=False,
+        class_name=class_name,
+        base_class="stirling.models.base.ApiModel",
+        use_default=True,
+        datetime_class=DatetimeClassType.Datetime,
+    )
+    return code or ""
+
+
+# ---------------------------------------------------------------------------
+# Extraction and assembly
+# ---------------------------------------------------------------------------
+
 
 class ToolSpec:
-    def __init__(self, path: str, enum_name: str, class_name: str):
+    def __init__(self, path: str, enum_name: str, class_name: str, model_code: str):
         self.path = path
         self.enum_name = enum_name
         self.class_name = class_name
-        self.fields: list[tuple[str, str, str]] = []  # (field_name, py_type, default_repr)
+        self.model_code = model_code
 
 
-def extract_tool_specs(spec: dict[str, Any]) -> list[ToolSpec]:
-    """Parse the OpenAPI spec and extract tool specifications."""
+def extract_tools(spec: dict[str, Any]) -> list[ToolSpec]:
     tools: list[ToolSpec] = []
-    paths = spec.get("paths", {})
+    used_enum: set[str] = set()
+    used_class: set[str] = set()
 
-    # Track enum names to avoid collisions
-    used_enum_names: set[str] = set()
-    used_class_names: set[str] = set()
-
-    for path, path_item in sorted(paths.items()):
+    for path, path_item in sorted(spec.get("paths", {}).items()):
         if not _is_tool_endpoint(path):
             continue
-
         schema = _get_request_schema(spec, path_item)
         if schema is None:
             continue
-
-        properties = _extract_properties(spec, schema)
+        properties = _collect_properties(spec, schema)
         if not properties:
             continue
-
-        # Filter out base class fields and binary (file upload) fields
-        tool_properties: dict[str, dict[str, Any]] = {}
-        for prop_name, prop_schema in properties.items():
-            if prop_name in BASE_CLASS_FIELDS:
-                continue
-            resolved = prop_schema
-            if "$ref" in resolved:
-                resolved = _resolve_ref(spec, resolved["$ref"])
-            # Skip binary/file fields
-            if resolved.get("type") == "string" and resolved.get("format") == "binary":
-                continue
-            tool_properties[prop_name] = prop_schema
 
         enum_name = _path_to_enum_name(path)
         class_name = _path_to_class_name(path)
 
-        # Deduplicate
-        base_enum = enum_name
-        suffix = 2
-        while enum_name in used_enum_names:
-            enum_name = f"{base_enum}_{suffix}"
-            suffix += 1
-        used_enum_names.add(enum_name)
+        # Deduplicate names
+        base = enum_name
+        n = 2
+        while enum_name in used_enum:
+            enum_name = f"{base}_{n}"
+            n += 1
+        used_enum.add(enum_name)
 
-        base_class = class_name
-        suffix = 2
-        while class_name in used_class_names:
-            class_name = f"{base_class[:-6]}{suffix}Params"
-            suffix += 1
-        used_class_names.add(class_name)
+        base = class_name
+        n = 2
+        while class_name in used_class:
+            class_name = f"{base[:-6]}{n}Params"
+            n += 1
+        used_class.add(class_name)
 
-        tool = ToolSpec(path, enum_name, class_name)
+        json_schema = _build_json_schema_for_endpoint(spec, properties, class_name)
 
-        for prop_name, prop_schema in sorted(tool_properties.items()):
-            field_name = _to_snake_case(prop_name)
-            resolved_prop = prop_schema
-            if "$ref" in resolved_prop:
-                resolved_prop = _resolve_ref(spec, resolved_prop["$ref"])
-            py_type, default_repr = _openapi_type_to_python(resolved_prop, spec)
+        # Skip endpoints that have no tool parameters after filtering
+        if not json_schema["properties"]:
+            continue
 
-            if default_repr is None:
-                # No default — make it optional
-                if "| None" not in py_type:
-                    py_type = f"{py_type} | None"
-                default_repr = "None"
-
-            tool.fields.append((field_name, py_type, default_repr))
-
-        tools.append(tool)
+        model_code = _generate_model_code(json_schema, class_name)
+        tools.append(ToolSpec(path, enum_name, class_name, model_code))
 
     return tools
 
 
-# ---------------------------------------------------------------------------
-# Code generation
-# ---------------------------------------------------------------------------
+def _extract_class_body(code: str, class_name: str) -> str:
+    """Extract just the class body (fields) from generated code, skipping imports/base."""
+    # Find the class definition
+    pattern = rf"^class {re.escape(class_name)}\(.*?\):\n((?:(?:    .+|)\n)*)"
+    match = re.search(pattern, code, re.MULTILINE)
+    if match:
+        body = match.group(1).rstrip("\n")
+        if body.strip():
+            return body
+    return "    pass"
+
 
 def write_models_module(out_path: Path, tools: list[ToolSpec]) -> None:
-    """Write the tool_models.py file."""
-    lines: list[str] = [
-        TOOL_MODELS_HEADER,
-        "from __future__ import annotations\n\n",
-        "from enum import StrEnum\n",
-        "from typing import Any, Literal\n\n",
-        "from stirling.models.base import ApiModel\n\n",
-    ]
+    lines: list[str] = [TOOL_MODELS_HEADER]
+    lines.append("from __future__ import annotations\n\n")
+    lines.append("from enum import StrEnum\n")
+    lines.append("from typing import Any, Literal\n\n")
 
-    # Parameter model classes
-    for tool in tools:
-        lines.append(f"\nclass {tool.class_name}(ApiModel):\n")
-        if not tool.fields:
-            lines.append("    pass\n")
-            continue
-        for field_name, py_type, default_repr in tool.fields:
-            lines.append(f"    {field_name}: {py_type} = {default_repr}\n")
+    # Scan generated code for additional imports we need (e.g. Annotated, Field)
+    all_code = "\n".join(t.model_code for t in tools)
+    extra_imports: list[str] = []
+    if "Annotated" in all_code:
+        extra_imports.append("Annotated")
+    if "from pydantic import" in all_code:
+        pydantic_imports = set()
+        for line in all_code.splitlines():
+            m = re.match(r"from pydantic import (.+)", line)
+            if m:
+                for name in m.group(1).split(","):
+                    name = name.strip()
+                    if name:
+                        pydantic_imports.add(name)
+        if pydantic_imports:
+            extra_imports.append(f"from pydantic import {', '.join(sorted(pydantic_imports))}")
+
+    lines.append("from stirling.models.base import ApiModel\n")
+
+    # Add any pydantic imports the generated code needs
+    for imp in extra_imports:
+        if imp.startswith("from "):
+            lines.append(f"{imp}\n")
 
     lines.append("\n")
 
-    # ParamToolModel union type
+    # Model classes
+    for tool in tools:
+        body = _extract_class_body(tool.model_code, tool.class_name)
+        lines.append(f"\nclass {tool.class_name}(ApiModel):\n")
+        lines.append(body + "\n")
+
+    lines.append("\n")
+
+    # ParamToolModel union
     if tools:
-        union_members = " | ".join(tool.class_name for tool in tools)
-        lines.append(f"\ntype ParamToolModel = {union_members}\n")
+        union = " | ".join(t.class_name for t in tools)
+        lines.append(f"\ntype ParamToolModel = {union}\n")
         lines.append("type ParamToolModelType = type[ParamToolModel]\n")
     else:
         lines.append("\ntype ParamToolModel = ApiModel\n")
@@ -292,18 +267,13 @@ def write_models_module(out_path: Path, tools: list[ToolSpec]) -> None:
 
     lines.append("\n")
 
-    # ToolEndpoint enum (values are endpoint paths)
+    # ToolEndpoint enum
     lines.append("\nclass ToolEndpoint(StrEnum):\n")
     for tool in tools:
         lines.append(f"    {tool.enum_name} = {tool.path!r}\n")
 
-    lines.append("\n")
-
-    # Backward-compatible alias
-    lines.append("\n# Backward-compatible alias\n")
-    lines.append("OperationId = ToolEndpoint\n")
-
-    lines.append("\n")
+    lines.append("\n\n# Backward-compatible alias\n")
+    lines.append("OperationId = ToolEndpoint\n\n")
 
     # OPERATIONS dict
     lines.append("\nOPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {\n")
@@ -318,24 +288,15 @@ def write_models_module(out_path: Path, tools: list[ToolSpec]) -> None:
 # Main
 # ---------------------------------------------------------------------------
 
+
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Generate Python tool models from Java OpenAPI spec"
-    )
-    parser.add_argument(
-        "--spec",
-        default="",
-        help="Path to SwaggerDoc.json (default: repo root SwaggerDoc.json)",
-    )
-    parser.add_argument(
-        "--output",
-        default="",
-        help="Path to output tool_models.py",
-    )
+    parser = argparse.ArgumentParser(description="Generate Python tool models from Java OpenAPI spec")
+    parser.add_argument("--spec", default="", help="Path to SwaggerDoc.json")
+    parser.add_argument("--output", default="", help="Path to output tool_models.py")
     args = parser.parse_args()
 
     repo_root = Path(__file__).resolve().parents[1]  # engine/
-    project_root = repo_root.parent  # repo root
+    project_root = repo_root.parent
 
     spec_path = Path(args.spec) if args.spec else project_root / "SwaggerDoc.json"
     if not spec_path.exists():
@@ -343,20 +304,16 @@ def main() -> None:
         print("Run './gradlew generateOpenApiDocs' first to generate SwaggerDoc.json")
         raise SystemExit(1)
 
-    output_path = (
-        Path(args.output)
-        if args.output
-        else repo_root / "src/stirling/models/tool_models.py"
-    )
+    output_path = Path(args.output) if args.output else repo_root / "src/stirling/models/tool_models.py"
 
     with open(spec_path) as f:
         spec = json.load(f)
 
-    tools = extract_tool_specs(spec)
+    tools = extract_tools(spec)
     write_models_module(output_path, tools)
     print(f"Generated {len(tools)} tool models from {spec_path.name}")
     for tool in tools:
-        print(f"  {tool.enum_name}: {tool.path} → {tool.class_name} ({len(tool.fields)} fields)")
+        print(f"  {tool.enum_name}: {tool.path} → {tool.class_name}")
 
 
 if __name__ == "__main__":
