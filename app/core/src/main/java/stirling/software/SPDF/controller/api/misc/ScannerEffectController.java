@@ -6,7 +6,6 @@ import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -35,6 +34,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -51,6 +51,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
@@ -59,6 +60,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class ScannerEffectController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
     private static final int MAX_IMAGE_WIDTH = 8192;
     private static final int MAX_IMAGE_HEIGHT = 8192;
     private static final long MAX_IMAGE_PIXELS = 16_777_216; // 4096x4096
@@ -562,8 +564,8 @@ public class ScannerEffectController {
             summary = "Apply scanner effect to PDF",
             description =
                     "Applies various effects to simulate a scanned document, including rotation, noise, and edge softening. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> scannerEffect(@Valid @ModelAttribute ScannerEffectRequest request)
-            throws IOException {
+    public ResponseEntity<StreamingResponseBody> scannerEffect(
+            @Valid @ModelAttribute ScannerEffectRequest request) throws IOException {
         MultipartFile file = request.getFileInput();
 
         List<Path> tempFiles = new ArrayList<>();
@@ -624,8 +626,7 @@ public class ScannerEffectController {
                             sharedPdfBytes != null
                                     ? pdfDocumentFactory.load(sharedPdfBytes)
                                     : pdfDocumentFactory.load(processingInput);
-                    PDDocument outputDocument = new PDDocument();
-                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+                    PDDocument outputDocument = new PDDocument()) {
 
                 int totalPages = document.getNumberOfPages();
                 if (totalPages == 0) {
@@ -708,12 +709,11 @@ public class ScannerEffectController {
 
                     writeProcessedPagesToDocument(processedPages, outputDocument);
 
-                    outputDocument.save(outputStream);
-
-                    return WebResponseUtils.bytesToWebResponse(
-                            outputStream.toByteArray(),
+                    return WebResponseUtils.pdfDocToWebResponse(
+                            outputDocument,
                             GeneralUtils.generateFilename(
-                                    file.getOriginalFilename(), "_scanner_effect.pdf"));
+                                    file.getOriginalFilename(), "_scanner_effect.pdf"),
+                            tempFileManager);
                 }
             }
         } finally {
