@@ -7,8 +7,8 @@ import FullscreenToolList from "@app/components/tools/FullscreenToolList";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { ToolId } from "@app/types/toolId";
 import { useFocusTrap } from "@app/hooks/useFocusTrap";
-import { useLogoPath } from "@app/hooks/useLogoPath";
-import { useLogoAssets } from "@app/hooks/useLogoAssets";
+import { Wordmark } from "@app/components/shared/Wordmark";
+import { LogoIcon } from "@app/components/shared/LogoIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import "@app/components/tools/ToolPanel.css";
 import { ToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
@@ -52,9 +52,6 @@ const FullscreenToolSurface = ({
   useFocusTrap(surfaceRef, !isExiting);
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
-  const logoPaths = useLogoPath();
-  const { wordmark } = useLogoAssets();
-
   const handleExit = () => {
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -102,10 +99,8 @@ const FullscreenToolSurface = ({
       >
         <header className="tool-panel__fullscreen-header">
           <div className="tool-panel__fullscreen-brand">
-            <img src={logoPaths.light} alt="" className="tool-panel__fullscreen-brand-icon theme-img-light-only" />
-            <img src={logoPaths.dark} alt="" className="tool-panel__fullscreen-brand-icon theme-img-dark-only" />
-            <img src={wordmark.black} alt={brandAltText} className="tool-panel__fullscreen-brand-text theme-img-light-only" />
-            <img src={wordmark.white} alt={brandAltText} className="tool-panel__fullscreen-brand-text theme-img-dark-only" />
+            <LogoIcon className="tool-panel__fullscreen-brand-icon" />
+            <Wordmark alt={brandAltText} className="tool-panel__fullscreen-brand-text" />
           </div>
           <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
             <Tooltip

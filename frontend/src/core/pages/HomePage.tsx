@@ -7,8 +7,6 @@ import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { useBaseUrl } from "@app/hooks/useBaseUrl";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useLogoPath } from "@app/hooks/useLogoPath";
-import { useLogoAssets } from "@app/hooks/useLogoAssets";
 import { useFileContext } from "@app/contexts/file/fileHooks";
 import { useNavigationState, useNavigationActions } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -24,6 +22,8 @@ import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import AppConfigModal from "@app/components/shared/AppConfigModal";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
+import { LogoIcon } from "@app/components/shared/LogoIcon";
+import { Wordmark } from "@app/components/shared/Wordmark";
 
 import "@app/pages/HomePage.css";
 
@@ -94,8 +94,6 @@ export default function HomePage() {
   const hideToolPanel = customWorkbenchViews.find((v) => v.workbenchId === navigationState.workbench)?.hideToolPanel ?? false;
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
-  const logoPaths = useLogoPath();
-  const { wordmark } = useLogoAssets();
 
   const handleSelectMobileView = useCallback((view: MobileView) => {
     setActiveMobileView(view);
@@ -207,10 +205,8 @@ export default function HomePage() {
           <div className="mobile-toggle">
             <div className="mobile-header">
               <div className="mobile-brand">
-                <img src={logoPaths.light} alt="" aria-hidden="true" className="mobile-brand-icon theme-img-light-only" />
-                <img src={logoPaths.dark} alt="" aria-hidden="true" className="mobile-brand-icon theme-img-dark-only" />
-                <img src={wordmark.black} alt={brandAltText} className="mobile-brand-text theme-img-light-only" />
-                <img src={wordmark.white} alt={brandAltText} className="mobile-brand-text theme-img-dark-only" />
+                <LogoIcon className="mobile-brand-icon" />
+                <Wordmark alt={brandAltText} className="mobile-brand-text" />
               </div>
             </div>
             <div

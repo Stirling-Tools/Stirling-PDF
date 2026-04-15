@@ -2,8 +2,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Box, Button, Stack, Text, Group, Alert, Progress, Switch, Card } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useLogoPath } from "@app/hooks/useLogoPath";
-import { useLogoAssets } from "@app/hooks/useLogoAssets";
+import { Wordmark } from "@app/components/shared/Wordmark";
+import { LogoIcon } from "@app/components/shared/LogoIcon";
 import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import PhotoCameraRoundedIcon from "@mui/icons-material/PhotoCameraRounded";
@@ -30,8 +30,6 @@ export default function MobileScannerPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const sessionId = searchParams.get("session");
-  const logoPaths = useLogoPath();
-  const { wordmark } = useLogoAssets();
 
   const [mode, setMode] = useState<"choice" | "camera" | "file" | null>("choice");
   const [capturedImages, setCapturedImages] = useState<string[]>([]);
@@ -824,20 +822,8 @@ export default function MobileScannerPage() {
         }}
       >
         <Group gap="sm" align="center">
-          <img
-            src={logoPaths.light}
-            alt={t("home.mobile.brandAlt", "Stirling PDF logo")}
-            className="theme-img-light-only"
-            style={{ height: "32px", width: "32px" }}
-          />
-          <img
-            src={logoPaths.dark}
-            alt={t("home.mobile.brandAlt", "Stirling PDF logo")}
-            className="theme-img-dark-only"
-            style={{ height: "32px", width: "32px" }}
-          />
-          <img src={wordmark.black} alt="Stirling PDF" className="theme-img-light-only" style={{ height: "24px" }} />
-          <img src={wordmark.white} alt="Stirling PDF" className="theme-img-dark-only" style={{ height: "24px" }} />
+          <LogoIcon alt={t("home.mobile.brandAlt", "Stirling PDF logo")} style={{ height: "32px", width: "32px" }} />
+          <Wordmark alt="Stirling PDF" style={{ height: "24px" }} />
         </Group>
       </Box>
 

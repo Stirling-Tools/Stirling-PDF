@@ -20,11 +20,6 @@ export function useLogoAssets() {
       favicon: `${folderPath}/favicon.ico`,
       logo192: `${folderPath}/logo192.png`,
       logo512: `${folderPath}/logo512.png`,
-      wordmark: {
-        white: `${folderPath}/StirlingPDFLogoWhiteText.svg`,
-        black: `${folderPath}/StirlingPDFLogoBlackText.svg`,
-        grey: `${folderPath}/StirlingPDFLogoGreyText.svg`,
-      },
       manifestHref: logoVariant === "classic" ? `${BASE_PATH}/manifest-classic.json` : `${BASE_PATH}/manifest.json`,
     };
   }, [logoVariant]);
