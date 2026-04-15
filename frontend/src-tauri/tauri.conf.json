@@ -83,7 +83,7 @@
         "https://github.com/Stirling-Tools/Stirling-PDF/releases/latest/download/latest.json"
       ],
       "dialog": false,
-      "pubkey": "REPLACE_WITH_TAURI_PUBLIC_KEY",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDZEREM2QTgwNjdGNzdCOUQKUldTZGUvZG5nR3JjYmZ4TlZ3YVpHTVIzd2hBT2c4c000RDNIN2tLZENEblE4ZXFhU3J5V0lQanEK",
       "windows": {
         "installMode": "passive"
       }
