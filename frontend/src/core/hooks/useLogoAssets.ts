@@ -15,6 +15,11 @@ export function useLogoAssets() {
       folder,
       folderPath,
       getAssetPath: (name: string) => `${folderPath}/${name}`,
+      wordmark: {
+        black: `${folderPath}/StirlingPDFLogoBlackText.svg`,
+        grey: `${folderPath}/StirlingPDFLogoGreyText.svg`,
+        white: `${folderPath}/StirlingPDFLogoWhiteText.svg`,
+      },
       tooltipLogo: `${folderPath}/logo-tooltip.svg`,
       firstPage: `${folderPath}/Firstpage.png`,
       favicon: `${folderPath}/favicon.ico`,
