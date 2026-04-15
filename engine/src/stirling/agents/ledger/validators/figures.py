@@ -16,9 +16,21 @@ import logging
 import re
 from decimal import Decimal
 
-from ..models import Discrepancy, DiscrepancyKind, FigureRecord, Severity
+from pydantic import BaseModel
+
+from stirling.contracts.ledger import Discrepancy, DiscrepancyKind, Severity
 
 logger = logging.getLogger(__name__)
+
+
+class FigureRecord(BaseModel):
+    """A named numeric figure seen on a specific page."""
+
+    label: str
+    value: Decimal
+    page: int
+    raw: str
+
 
 # Strip punctuation that varies between contexts ("revenue:" vs "revenue —")
 _LABEL_NOISE = re.compile(r"[:\-—\s]+")

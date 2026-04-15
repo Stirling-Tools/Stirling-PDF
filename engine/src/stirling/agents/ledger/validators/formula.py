@@ -16,7 +16,8 @@ import logging
 import re
 from decimal import Decimal, InvalidOperation
 
-from ..models import Discrepancy, DiscrepancyKind, Severity
+from stirling.contracts.ledger import Discrepancy, DiscrepancyKind, Severity
+
 from ._parsing import parse_csv as _parse_csv
 from ._parsing import to_decimal as _to_decimal
 

@@ -16,7 +16,8 @@ import logging
 import re
 from decimal import Decimal
 
-from ..models import Discrepancy, DiscrepancyKind, Severity
+from stirling.contracts.ledger import Discrepancy, DiscrepancyKind, Severity
+
 from ._parsing import STRIP_PATTERN as _STRIP
 from ._parsing import to_decimal as _to_decimal
 
