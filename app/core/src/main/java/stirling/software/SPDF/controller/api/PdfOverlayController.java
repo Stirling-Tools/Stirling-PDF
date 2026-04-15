@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -28,6 +28,8 @@ import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
@@ -35,6 +37,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class PdfOverlayController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(value = "/overlay-pdfs", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @StandardPdfResponse
@@ -43,8 +46,8 @@ public class PdfOverlayController {
             description =
                     "Overlay PDF files onto a base PDF with different modes: Sequential,"
                             + " Interleaved, or Fixed Repeat. Input:PDF Output:PDF Type:MIMO")
-    public ResponseEntity<byte[]> overlayPdfs(@ModelAttribute OverlayPdfsRequest request)
-            throws IOException {
+    public ResponseEntity<StreamingResponseBody> overlayPdfs(
+            @ModelAttribute OverlayPdfsRequest request) throws IOException {
         MultipartFile baseFile = request.getFileInput();
         int overlayPos = request.getOverlayPosition();
 
@@ -52,6 +55,7 @@ public class PdfOverlayController {
         File[] overlayPdfFiles = new File[overlayFiles.length];
         List<File> tempFiles = new ArrayList<>(); // List to keep track of temporary files
 
+        TempFile tempOut = null;
         try {
             for (int i = 0; i < overlayFiles.length; i++) {
                 overlayPdfFiles[i] = GeneralUtils.multipartToFile(overlayFiles[i]);
@@ -62,8 +66,7 @@ public class PdfOverlayController {
             int[] counts = request.getCounts(); // Used for FixedRepeatOverlay mode
 
             try (PDDocument basePdf = pdfDocumentFactory.load(baseFile);
-                    Overlay overlay = new Overlay();
-                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+                    Overlay overlay = new Overlay()) {
                 Map<Integer, String> overlayGuide =
                         prepareOverlayGuide(
                                 basePdf.getNumberOfPages(),
@@ -79,15 +82,21 @@ public class PdfOverlayController {
                     overlay.setOverlayPosition(Overlay.Position.BACKGROUND);
                 }
 
-                overlay.overlay(overlayGuide).save(outputStream);
-                byte[] data = outputStream.toByteArray();
+                tempOut = tempFileManager.createManagedTempFile(".pdf");
+                overlay.overlay(overlayGuide).save(tempOut.getFile());
                 String outputFilename =
                         GeneralUtils.generateFilename(
                                 baseFile.getOriginalFilename(), "_overlayed.pdf");
 
-                return WebResponseUtils.bytesToWebResponse(
-                        data, outputFilename, MediaType.APPLICATION_PDF);
+                TempFile out = tempOut;
+                tempOut = null; // ownership transferred to StreamingResponseBody
+                return WebResponseUtils.pdfFileToWebResponse(out, outputFilename);
             }
+        } catch (Exception e) {
+            if (tempOut != null) {
+                tempOut.close();
+            }
+            throw e;
         } finally {
             for (File overlayPdfFile : overlayPdfFiles) {
                 if (overlayPdfFile != null) {

@@ -73,6 +73,19 @@ public class WebResponseUtils {
         return baosToWebResponse(baos, docName);
     }
 
+    public static ResponseEntity<StreamingResponseBody> pdfDocToWebResponse(
+            PDDocument document, String docName, TempFileManager tempFileManager)
+            throws IOException {
+        TempFile tempFile = tempFileManager.createManagedTempFile(".pdf");
+        try {
+            document.save(tempFile.getFile());
+        } catch (IOException e) {
+            tempFile.close();
+            throw e;
+        }
+        return pdfFileToWebResponse(tempFile, docName);
+    }
+
     /**
      * Convert a File to a web response (PDF default).
      *
@@ -108,23 +121,37 @@ public class WebResponseUtils {
     public static ResponseEntity<StreamingResponseBody> fileToWebResponse(
             TempFile outputTempFile, String docName, MediaType mediaType) throws IOException {
 
-        Path path = outputTempFile.getFile().toPath().normalize();
-        long len = Files.size(path);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(mediaType);
-        headers.setContentLength(len);
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + docName + "\"");
+        try {
+            Path path = outputTempFile.getFile().toPath().normalize();
+            long len = Files.size(path);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(mediaType);
+            headers.setContentLength(len);
+            String encodedDocName =
+                    RegexPatternUtils.getInstance()
+                            .getPlusSignPattern()
+                            .matcher(URLEncoder.encode(docName, StandardCharsets.UTF_8))
+                            .replaceAll("%20");
+            headers.setContentDispositionFormData("attachment", encodedDocName);
 
-        StreamingResponseBody body =
-                os -> {
-                    try (os) {
-                        Files.copy(path, os);
-                        os.flush();
-                    } finally {
-                        outputTempFile.close();
-                    }
-                };
+            StreamingResponseBody body =
+                    os -> {
+                        try (os) {
+                            Files.copy(path, os);
+                            os.flush();
+                        } finally {
+                            outputTempFile.close();
+                        }
+                    };
 
-        return new ResponseEntity<>(body, headers, HttpStatus.OK);
+            return new ResponseEntity<>(body, headers, HttpStatus.OK);
+        } catch (IOException | RuntimeException e) {
+            try {
+                outputTempFile.close();
+            } catch (Exception closeEx) {
+                e.addSuppressed(closeEx);
+            }
+            throw e;
+        }
     }
 }

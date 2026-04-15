@@ -38,6 +38,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -328,7 +329,8 @@ public class CompressController {
                                     + "_"
                                     + image.getBitsPerComponent();
 
-                    return bytesToHexString(generateMD5(enhancedData.getBytes()));
+                    return bytesToHexString(
+                            generateMD5(enhancedData.getBytes(StandardCharsets.UTF_8)));
                 }
                 return "empty-stream";
             }
@@ -727,7 +729,8 @@ public class CompressController {
                 params.append("_").append(image.getDecode().toString());
             }
 
-            return bytesToHexString(generateMD5(params.toString().getBytes()));
+            return bytesToHexString(
+                    generateMD5(params.toString().getBytes(StandardCharsets.UTF_8)));
         } catch (Exception e) {
             return "fallback-decode-" + System.identityHashCode(image);
         }
@@ -798,7 +801,8 @@ public class CompressController {
                     metadata.append("_softmask");
                 }
 
-                return bytesToHexString(generateMD5(metadata.toString().getBytes()));
+                return bytesToHexString(
+                        generateMD5(metadata.toString().getBytes(StandardCharsets.UTF_8)));
             } catch (Exception e) {
                 return "fallback-meta-" + System.identityHashCode(image);
             }
@@ -924,8 +928,8 @@ public class CompressController {
             description =
                     "This endpoint accepts a PDF file and optimizes it based on the provided"
                             + " parameters. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> optimizePdf(@ModelAttribute OptimizePdfRequest request)
-            throws Exception {
+    public ResponseEntity<StreamingResponseBody> optimizePdf(
+            @ModelAttribute OptimizePdfRequest request) throws Exception {
         MultipartFile inputFile = request.getFileInput();
 
         // Validate input file
@@ -1097,7 +1101,8 @@ public class CompressController {
 
             try {
                 try (PDDocument document = pdfDocumentFactory.load(currentFile.toFile())) {
-                    return WebResponseUtils.pdfDocToWebResponse(document, outputFilename);
+                    return WebResponseUtils.pdfDocToWebResponse(
+                            document, outputFilename, tempFileManager);
                 }
             } catch (IOException e) {
                 throw ExceptionUtils.handlePdfException(e, "PDF optimization");
