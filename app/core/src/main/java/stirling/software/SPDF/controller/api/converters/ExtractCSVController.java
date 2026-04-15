@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -32,6 +31,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.WebResponseUtils;
 
 import technology.tabula.ObjectExtractor;
 import technology.tabula.Page;
@@ -90,7 +90,7 @@ public class ExtractCSVController {
     }
 
     private ResponseEntity<byte[]> createZipResponse(List<CsvEntry> entries, String baseName)
-            throws IOException {
+            throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ZipOutputStream zipOut = new ZipOutputStream(baos)) {
             for (CsvEntry entry : entries) {
@@ -101,14 +101,10 @@ public class ExtractCSVController {
             }
         }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentDisposition(
-                ContentDisposition.builder("attachment")
-                        .filename(baseName + "_extracted.zip")
-                        .build());
-        headers.setContentType(MediaType.parseMediaType("application/zip"));
-
-        return ResponseEntity.ok().headers(headers).body(baos.toByteArray());
+        return WebResponseUtils.bytesToWebResponse(
+                baos.toByteArray(),
+                baseName + "_extracted.zip",
+                MediaType.APPLICATION_OCTET_STREAM);
     }
 
     private ResponseEntity<String> createCsvResponse(CsvEntry entry, String baseName) {
