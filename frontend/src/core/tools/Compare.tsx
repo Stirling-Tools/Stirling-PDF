@@ -462,9 +462,7 @@ const Compare = (props: BaseToolProps) => {
                 fullWidth
                 size="xs"
                 value={params.mode}
-                onChange={(value) =>
-                  base.params.setParameters((prev) => ({ ...prev, mode: value as "text" | "pixel" }))
-                }
+                onChange={(value) => base.params.setParameters((prev) => ({ ...prev, mode: value as "text" | "pixel" }))}
                 data={[
                   { value: "text", label: t("compare.mode.text", "Text Comparison") },
                   { value: "pixel", label: t("compare.mode.pixel", "Pixel Comparison") },

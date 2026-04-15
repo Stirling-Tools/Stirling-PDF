@@ -1,11 +1,6 @@
 /// <reference lib="webworker" />
 
-import {
-  GlobalWorkerOptions,
-  getDocument,
-  type PDFDocumentProxy,
-  type PDFPageProxy,
-} from "pdfjs-dist/legacy/build/pdf.mjs";
+import { GlobalWorkerOptions, getDocument, type PDFDocumentProxy, type PDFPageProxy } from "pdfjs-dist/legacy/build/pdf.mjs";
 import pixelmatch from "pixelmatch";
 
 import type {
@@ -17,10 +12,7 @@ import type {
 
 declare const self: DedicatedWorkerGlobalScope;
 
-GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
-  import.meta.url,
-).toString();
+GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/legacy/build/pdf.worker.min.mjs", import.meta.url).toString();
 
 // PDF.js' default canvas factory assumes a DOM (`document.createElement('canvas')`).
 // Inside a Web Worker there's no DOM, so we provide an OffscreenCanvas-based factory.
@@ -73,12 +65,24 @@ class NoopFilterFactory {
   constructor(_opts?: { docId?: string; ownerDocument?: unknown }) {
     /* noop */
   }
-  addFilter() { return "none"; }
-  addHCMFilter() { return "none"; }
-  addAlphaFilter() { return "none"; }
-  addLuminosityFilter() { return "none"; }
-  addHighlightHCMFilter() { return "none"; }
-  destroy(_keepHCM?: boolean) { /* noop */ }
+  addFilter() {
+    return "none";
+  }
+  addHCMFilter() {
+    return "none";
+  }
+  addAlphaFilter() {
+    return "none";
+  }
+  addLuminosityFilter() {
+    return "none";
+  }
+  addHighlightHCMFilter() {
+    return "none";
+  }
+  destroy(_keepHCM?: boolean) {
+    /* noop */
+  }
 }
 
 const CSS_DPI = 72;
@@ -126,12 +130,7 @@ const renderPageToBitmap = async (
 
 const ENCODE_OPTS: ImageEncodeOptions = { type: "image/webp", quality: 0.85 };
 
-const bitmapToBlob = async (
-  bitmap: ImageBitmap,
-  width: number,
-  height: number,
-  errorStrings: ErrorStrings,
-): Promise<Blob> => {
+const bitmapToBlob = async (bitmap: ImageBitmap, width: number, height: number, errorStrings: ErrorStrings): Promise<Blob> => {
   const canvas = new OffscreenCanvas(width, height);
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error(errorStrings.canvasContextUnavailable);
@@ -140,12 +139,7 @@ const bitmapToBlob = async (
   return await canvas.convertToBlob(ENCODE_OPTS);
 };
 
-const diffDataToBlob = async (
-  diff: ImageData,
-  width: number,
-  height: number,
-  errorStrings: ErrorStrings,
-): Promise<Blob> => {
+const diffDataToBlob = async (diff: ImageData, width: number, height: number, errorStrings: ErrorStrings): Promise<Blob> => {
   const canvas = new OffscreenCanvas(width, height);
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error(errorStrings.canvasContextUnavailable);
@@ -208,10 +202,7 @@ const processPage = async (
 
     const refWidth = baseViewport?.width ?? compViewport?.width ?? 1;
     const refHeight = baseViewport?.height ?? compViewport?.height ?? 1;
-    const targetWidth = Math.max(
-      1,
-      Math.round(Math.max(baseViewport?.width ?? refWidth, compViewport?.width ?? refWidth)),
-    );
+    const targetWidth = Math.max(1, Math.round(Math.max(baseViewport?.width ?? refWidth, compViewport?.width ?? refWidth)));
     const targetHeight = Math.max(
       1,
       Math.round(Math.max(baseViewport?.height ?? refHeight, compViewport?.height ?? refHeight)),
@@ -232,20 +223,13 @@ const processPage = async (
     ]);
 
     const diffImage = new ImageData(targetWidth, targetHeight);
-    const diffCount = pixelmatch(
-      base.imageData.data,
-      comp.imageData.data,
-      diffImage.data,
-      targetWidth,
-      targetHeight,
-      {
-        threshold,
-        includeAA: true,
-        alpha: 0.3,
-        diffColor: colours.diffColor,
-        ...(colours.diffColorAlt ? { diffColorAlt: colours.diffColorAlt } : {}),
-      },
-    );
+    const diffCount = pixelmatch(base.imageData.data, comp.imageData.data, diffImage.data, targetWidth, targetHeight, {
+      threshold,
+      includeAA: true,
+      alpha: 0.3,
+      diffColor: colours.diffColor,
+      ...(colours.diffColorAlt ? { diffColorAlt: colours.diffColorAlt } : {}),
+    });
 
     const [baseBlob, comparisonBlob, diffBlob] = await Promise.all([
       bitmapToBlob(base.bitmap, targetWidth, targetHeight, errorStrings),
@@ -355,12 +339,9 @@ self.addEventListener("message", async (event: MessageEvent<PixelCompareWorkerRe
         disableFontFace: true,
         useSystemFonts: false,
         isEvalSupported: false,
-      } as unknown as Parameters<typeof getDocument>[0]);
+      }) as unknown as Parameters<typeof getDocument>[0];
 
-    const [baseBuffer, comparisonBuffer] = await Promise.all([
-      baseFile.arrayBuffer(),
-      comparisonFile.arrayBuffer(),
-    ]);
+    const [baseBuffer, comparisonBuffer] = await Promise.all([baseFile.arrayBuffer(), comparisonFile.arrayBuffer()]);
 
     [baseDoc, compDoc] = await Promise.all([
       getDocument(loaderOpts(baseBuffer)).promise,
