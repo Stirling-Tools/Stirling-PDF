@@ -23,7 +23,7 @@ import asyncio
 import logging
 from collections.abc import Coroutine
 from decimal import Decimal, InvalidOperation
-from typing import Any, TypeVar
+from typing import Any
 
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
@@ -416,9 +416,7 @@ class MathAuditorAgent:
     # Internal helpers
     # ------------------------------------------------------------------
 
-    _T = TypeVar("_T")
-
-    async def _throttled(self, coro: Coroutine[Any, Any, _T]) -> _T:
+    async def _throttled[T](self, coro: Coroutine[Any, Any, T]) -> T:
         """Wrap a coroutine with the LLM concurrency semaphore."""
         async with self._llm_semaphore:
             return await coro
