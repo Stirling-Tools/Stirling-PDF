@@ -95,9 +95,8 @@ public class UIDataController {
         Resource resource = new ClassPathResource("static/3rdPartyLicenses.json");
 
         try (InputStream is = resource.getInputStream()) {
-            String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             Map<String, List<Dependency>> licenseData =
-                    objectMapper.readValue(json, new TypeReference<>() {});
+                    objectMapper.readValue(is, new TypeReference<>() {});
             data.setDependencies(licenseData.get("dependencies"));
         } catch (IOException e) {
             log.error("Failed to load licenses data", e);

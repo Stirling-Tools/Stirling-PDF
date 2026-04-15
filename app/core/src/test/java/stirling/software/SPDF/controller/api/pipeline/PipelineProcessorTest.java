@@ -49,7 +49,7 @@ class PipelineProcessorTest {
     PipelineProcessor pipelineProcessor;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         pipelineProcessor =
                 spy(
                         new PipelineProcessor(

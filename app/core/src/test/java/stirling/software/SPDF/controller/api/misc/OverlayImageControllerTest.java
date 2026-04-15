@@ -2,11 +2,14 @@ package stirling.software.SPDF.controller.api.misc;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 import javax.imageio.ImageIO;
 
@@ -24,15 +27,29 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.misc.OverlayImageRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class OverlayImageControllerTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private TempFileManager tempFileManager;
 
     @InjectMocks private OverlayImageController controller;
 
@@ -41,6 +58,18 @@ class OverlayImageControllerTest {
 
     @BeforeEach
     void setUp() throws IOException {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
         pdfFile =
                 new MockMultipartFile(
                         "fileInput",
@@ -79,12 +108,16 @@ class OverlayImageControllerTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok("result".getBytes());
+            ResponseEntity<StreamingResponseBody> expectedResponse =
+                    streamingOk("result".getBytes());
             mockedWebResponse
-                    .when(() -> WebResponseUtils.bytesToWebResponse(any(byte[].class), anyString()))
+                    .when(
+                            () ->
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = controller.overlayImage(request);
+            ResponseEntity<StreamingResponseBody> response = controller.overlayImage(request);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -103,7 +136,7 @@ class OverlayImageControllerTest {
 
         when(pdfDocumentFactory.load(any(byte[].class))).thenThrow(new IOException("bad PDF"));
 
-        ResponseEntity<byte[]> response = controller.overlayImage(request);
+        ResponseEntity<StreamingResponseBody> response = controller.overlayImage(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
@@ -124,12 +157,16 @@ class OverlayImageControllerTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok("result".getBytes());
+            ResponseEntity<StreamingResponseBody> expectedResponse =
+                    streamingOk("result".getBytes());
             mockedWebResponse
-                    .when(() -> WebResponseUtils.bytesToWebResponse(any(byte[].class), anyString()))
+                    .when(
+                            () ->
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = controller.overlayImage(request);
+            ResponseEntity<StreamingResponseBody> response = controller.overlayImage(request);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -152,12 +189,16 @@ class OverlayImageControllerTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok("result".getBytes());
+            ResponseEntity<StreamingResponseBody> expectedResponse =
+                    streamingOk("result".getBytes());
             mockedWebResponse
-                    .when(() -> WebResponseUtils.bytesToWebResponse(any(byte[].class), anyString()))
+                    .when(
+                            () ->
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = controller.overlayImage(request);
+            ResponseEntity<StreamingResponseBody> response = controller.overlayImage(request);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -180,13 +221,17 @@ class OverlayImageControllerTest {
 
         try (MockedStatic<WebResponseUtils> mockedWebResponse =
                 mockStatic(WebResponseUtils.class)) {
-            ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok("result".getBytes());
+            ResponseEntity<StreamingResponseBody> expectedResponse =
+                    streamingOk("result".getBytes());
             mockedWebResponse
-                    .when(() -> WebResponseUtils.bytesToWebResponse(any(byte[].class), anyString()))
+                    .when(
+                            () ->
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
             // Should not throw - coordinates are passed to contentStream.drawImage
-            ResponseEntity<byte[]> response = controller.overlayImage(request);
+            ResponseEntity<StreamingResponseBody> response = controller.overlayImage(request);
 
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());

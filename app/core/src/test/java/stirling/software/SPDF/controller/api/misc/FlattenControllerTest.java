@@ -1,8 +1,10 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,6 +18,7 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -26,16 +29,46 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.misc.FlattenRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class FlattenControllerTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     @TempDir Path tempDir;
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private TempFileManager tempFileManager;
     @InjectMocks private FlattenController controller;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
+    }
 
     private MockMultipartFile createPdf() throws IOException {
         Path path = tempDir.resolve("test.pdf");
@@ -65,10 +98,10 @@ class FlattenControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.flatten(request);
+        ResponseEntity<StreamingResponseBody> response = controller.flatten(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotEmpty();
+        assertThat(drainBody(response)).isNotEmpty();
     }
 
     @Test
@@ -85,7 +118,7 @@ class FlattenControllerTest {
         when(doc.getDocumentCatalog()).thenReturn(catalog);
         when(catalog.getAcroForm()).thenReturn(null);
 
-        ResponseEntity<byte[]> response = controller.flatten(request);
+        ResponseEntity<StreamingResponseBody> response = controller.flatten(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(doc).close();
@@ -105,7 +138,7 @@ class FlattenControllerTest {
         when(doc.getDocumentCatalog()).thenReturn(catalog);
         when(catalog.getAcroForm()).thenReturn(form);
 
-        ResponseEntity<byte[]> response = controller.flatten(request);
+        ResponseEntity<StreamingResponseBody> response = controller.flatten(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(form).flatten();
@@ -137,10 +170,10 @@ class FlattenControllerTest {
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc)).thenReturn(newDoc);
 
-        ResponseEntity<byte[]> response = controller.flatten(request);
+        ResponseEntity<StreamingResponseBody> response = controller.flatten(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotEmpty();
+        assertThat(drainBody(response)).isNotEmpty();
     }
 
     @Test
@@ -155,7 +188,7 @@ class FlattenControllerTest {
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc)).thenReturn(newDoc);
 
-        ResponseEntity<byte[]> response = controller.flatten(request);
+        ResponseEntity<StreamingResponseBody> response = controller.flatten(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
@@ -173,7 +206,7 @@ class FlattenControllerTest {
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc)).thenReturn(newDoc);
 
-        ResponseEntity<byte[]> response = controller.flatten(request);
+        ResponseEntity<StreamingResponseBody> response = controller.flatten(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
@@ -191,7 +224,7 @@ class FlattenControllerTest {
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc)).thenReturn(newDoc);
 
-        ResponseEntity<byte[]> response = controller.flatten(request);
+        ResponseEntity<StreamingResponseBody> response = controller.flatten(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }

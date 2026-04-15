@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -27,6 +28,7 @@ import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
@@ -35,6 +37,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class RearrangePagesPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/remove-pages")
     @StandardPdfResponse
@@ -44,8 +47,8 @@ public class RearrangePagesPDFController {
                     "This endpoint removes specified pages from a given PDF file. Users can provide"
                             + " a comma-separated list of page numbers or ranges to delete. Input:PDF"
                             + " Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> deletePages(@ModelAttribute PDFWithPageNums request)
-            throws IOException {
+    public ResponseEntity<StreamingResponseBody> deletePages(
+            @ModelAttribute PDFWithPageNums request) throws IOException {
 
         MultipartFile pdfFile = request.getFileInput();
         String pagesToDelete = request.getPageNumbers();
@@ -67,7 +70,8 @@ public class RearrangePagesPDFController {
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
                     GeneralUtils.generateFilename(
-                            pdfFile.getOriginalFilename(), "_removed_pages.pdf"));
+                            pdfFile.getOriginalFilename(), "_removed_pages.pdf"),
+                    tempFileManager);
         }
     }
 
@@ -224,8 +228,8 @@ public class RearrangePagesPDFController {
                             + " order or custom mode. Users can provide a page order as a"
                             + " comma-separated list of page numbers or page ranges, or a custom mode."
                             + " Input:PDF Output:PDF")
-    public ResponseEntity<byte[]> rearrangePages(@ModelAttribute RearrangePagesRequest request)
-            throws IOException {
+    public ResponseEntity<StreamingResponseBody> rearrangePages(
+            @ModelAttribute RearrangePagesRequest request) throws IOException {
         MultipartFile pdfFile = request.getFileInput();
         String pageOrder = request.getPageNumbers();
         String sortType = request.getCustomMode();
@@ -264,7 +268,8 @@ public class RearrangePagesPDFController {
                     return WebResponseUtils.pdfDocToWebResponse(
                             rearrangedDocument,
                             GeneralUtils.generateFilename(
-                                    pdfFile.getOriginalFilename(), "_rearranged.pdf"));
+                                    pdfFile.getOriginalFilename(), "_rearranged.pdf"),
+                            tempFileManager);
                 }
             }
         } catch (IOException e) {

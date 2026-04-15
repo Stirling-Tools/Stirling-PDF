@@ -1,8 +1,9 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -19,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,6 +37,8 @@ import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
@@ -43,6 +47,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class BlankPageController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     public static boolean isBlankImage(
             BufferedImage image, int threshold, double whitePercent, int blurSize) {
@@ -83,7 +88,8 @@ public class BlankPageController {
                     "This endpoint removes blank pages from a given PDF file. Users can specify the"
                             + " threshold and white percentage to tune the detection of blank pages."
                             + " Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> removeBlankPages(@ModelAttribute RemoveBlankPagesRequest request)
+    public ResponseEntity<StreamingResponseBody> removeBlankPages(
+            @ModelAttribute RemoveBlankPagesRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         int threshold = request.getThreshold();
@@ -149,28 +155,29 @@ public class BlankPageController {
                 pageIndex++;
             }
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ZipOutputStream zos = new ZipOutputStream(baos);
-
             String filename =
                     GeneralUtils.removeExtension(
                             Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
 
-            if (!nonBlankPages.isEmpty()) {
-                createZipEntry(zos, nonBlankPages, filename + "_nonBlankPages.pdf");
-            } else {
-                createZipEntry(zos, blankPages, filename + "_allBlankPages.pdf");
-            }
+            TempFile tempOut = tempFileManager.createManagedTempFile(".zip");
+            try (OutputStream fos = Files.newOutputStream(tempOut.getFile().toPath());
+                    ZipOutputStream zos = new ZipOutputStream(fos)) {
+                if (!nonBlankPages.isEmpty()) {
+                    createZipEntry(zos, nonBlankPages, filename + "_nonBlankPages.pdf");
+                } else {
+                    createZipEntry(zos, blankPages, filename + "_allBlankPages.pdf");
+                }
 
-            if (!nonBlankPages.isEmpty() && !blankPages.isEmpty()) {
-                createZipEntry(zos, blankPages, filename + "_blankPages.pdf");
+                if (!nonBlankPages.isEmpty() && !blankPages.isEmpty()) {
+                    createZipEntry(zos, blankPages, filename + "_blankPages.pdf");
+                }
+            } catch (IOException e) {
+                tempOut.close();
+                throw e;
             }
-
-            zos.close();
 
             log.info("Returning ZIP file: {}", filename + "_processed.zip");
-            return WebResponseUtils.baosToWebResponse(
-                    baos, filename + "_processed.zip", MediaType.APPLICATION_OCTET_STREAM);
+            return WebResponseUtils.zipFileToWebResponse(tempOut, filename + "_processed.zip");
 
         } catch (ExceptionUtils.OutOfMemoryDpiException e) {
             throw e;
