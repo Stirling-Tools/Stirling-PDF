@@ -243,9 +243,8 @@ tasks.register('npmBuild', Exec) {
     enabled = buildWithFrontend
     group = 'frontend'
     description = 'Build frontend application'
-    workingDir frontendDir
-    commandLine = Os.isFamily(Os.FAMILY_WINDOWS) ? ['cmd', '/c', 'npm', 'run', 'build'] : ['npm', 'run', 'build']
-    dependsOn npmInstall
+    workingDir file('../..')
+    commandLine = ['task', 'frontend:build']
     inputs.dir(new File(frontendDir, 'src'))
     inputs.dir(new File(frontendDir, 'public'))
     inputs.file(new File(frontendDir, 'package.json'))
