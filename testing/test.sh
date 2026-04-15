@@ -891,6 +891,25 @@ main() {
             # Save docker logs produced during the behave run
             docker logs "$CONTAINER_NAME" 2>&1 | tail -n +"$((DOCKER_LOG_BEFORE + 1))" > "$REPORT_DIR/cucumber-docker-context.log" 2>/dev/null || true
 
+            # Check for "response is already committed" errors in docker logs.
+            # These indicate Spring Security re-running on async dispatches
+            # (e.g. StreamingResponseBody completion) which can corrupt responses.
+            local committed_errors
+            committed_errors=$(grep -c "response is already committed" "$REPORT_DIR/cucumber-docker-context.log" 2>/dev/null) || committed_errors=0
+            if [ "$committed_errors" -gt 0 ]; then
+                echo "ERROR: Found $committed_errors 'response is already committed' errors in docker logs."
+                echo "This usually means a StreamingResponseBody endpoint is triggering a Spring Security"
+                echo "re-authorization on the async dispatch. Check spring.security.filter.dispatcher-types"
+                echo "in application.properties."
+                grep -B2 "response is already committed" "$REPORT_DIR/cucumber-docker-context.log" | head -30
+                local committed_log="$REPORT_DIR/response-committed-errors.log"
+                grep -B5 "response is already committed" "$REPORT_DIR/cucumber-docker-context.log" > "$committed_log"
+                test_failure_logs["Response-Already-Committed"]="$committed_log"
+                failed_tests+=("Response-Already-Committed")
+            else
+                echo "No 'response is already committed' errors found in docker logs."
+            fi
+
             echo "Waiting 5 seconds for any file operations to complete..."
             sleep 5
 

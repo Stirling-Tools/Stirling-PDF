@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api;
 
 import java.awt.geom.AffineTransform;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.pdfbox.multipdf.LayerUtility;
@@ -12,6 +11,7 @@ import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -23,6 +23,7 @@ import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
@@ -30,6 +31,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class ToSinglePageController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -42,7 +44,7 @@ public class ToSinglePageController {
                             + " document. The width of the single page will be same as the input's"
                             + " width, but the height will be the sum of all the pages' heights."
                             + " Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> pdfToSinglePage(@ModelAttribute PDFFile request)
+    public ResponseEntity<StreamingResponseBody> pdfToSinglePage(@ModelAttribute PDFFile request)
             throws IOException {
 
         // Load the source document
@@ -85,14 +87,11 @@ public class ToSinglePageController {
                     pageIndex++;
                 }
 
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                newDocument.save(baos);
-
-                byte[] result = baos.toByteArray();
-                return WebResponseUtils.bytesToWebResponse(
-                        result,
+                return WebResponseUtils.pdfDocToWebResponse(
+                        newDocument,
                         GeneralUtils.generateFilename(
-                                request.getFileInput().getOriginalFilename(), "_singlePage.pdf"));
+                                request.getFileInput().getOriginalFilename(), "_singlePage.pdf"),
+                        tempFileManager);
             }
         }
     }

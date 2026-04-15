@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.proprietary.security.model.User;
@@ -38,6 +40,9 @@ import stirling.software.proprietary.storage.service.FileStorageService;
 @RestController
 @RequestMapping("/api/v1/storage")
 @RequiredArgsConstructor
+@Tag(
+        name = "File Storage",
+        description = "Stored file management, sharing, and share link operations")
 public class FileStorageController {
 
     private final FileStorageService fileStorageService;
