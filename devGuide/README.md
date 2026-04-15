@@ -5,7 +5,8 @@ This directory contains all development-related documentation for Stirling PDF.
 ## 📚 Documentation Index
 
 ### Core Development
-- **[DeveloperGuide.md](./DeveloperGuide.md)** - Main developer setup and architecture guide
+- **[DeveloperGuide.md](../DeveloperGuide.md)** - Main developer setup and architecture guide (in repo root)
+- **[Taskfile.yml](../Taskfile.yml)** - Unified task runner for all build/dev/test/lint commands
 - **[EXCEPTION_HANDLING_GUIDE.md](./EXCEPTION_HANDLING_GUIDE.md)** - Exception handling patterns and i18n best practices
 - **[HowToAddNewLanguage.md](./HowToAddNewLanguage.md)** - Internationalization and translation guide
 

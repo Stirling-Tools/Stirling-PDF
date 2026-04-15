@@ -1,8 +1,10 @@
 package stirling.software.common.service;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -10,6 +12,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -141,6 +144,24 @@ public class FileStorage {
         long size = Files.copy(inputStream, filePath);
         log.debug("Stored input stream with ID: {}", fileId);
         return new StoredFile(fileId, size);
+    }
+
+    public String storeFromStreamingBody(StreamingResponseBody body, String originalName)
+            throws IOException {
+        String fileId = generateFileId();
+        Path filePath = getFilePath(fileId);
+        Files.createDirectories(filePath.getParent());
+        boolean success = false;
+        try (OutputStream os = new BufferedOutputStream(Files.newOutputStream(filePath))) {
+            body.writeTo(os);
+            success = true;
+        } finally {
+            if (!success) {
+                Files.deleteIfExists(filePath);
+            }
+        }
+        log.debug("Stored StreamingResponseBody with ID: {}", fileId);
+        return fileId;
     }
 
     /**
