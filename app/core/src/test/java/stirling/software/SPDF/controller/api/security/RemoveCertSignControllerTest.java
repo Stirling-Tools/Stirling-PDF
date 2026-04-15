@@ -2,10 +2,15 @@ package stirling.software.SPDF.controller.api.security;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -27,16 +32,30 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 
 @DisplayName("RemoveCertSignController Tests")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class RemoveCertSignControllerTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private TempFileManager tempFileManager;
 
     @InjectMocks private RemoveCertSignController removeCertSignController;
 
@@ -44,6 +63,18 @@ class RemoveCertSignControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
         try (PDDocument doc = new PDDocument()) {
             doc.addPage(new PDPage());
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -72,10 +103,11 @@ class RemoveCertSignControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<byte[]> response = removeCertSignController.removeCertSignPDF(request);
+            ResponseEntity<StreamingResponseBody> response =
+                    removeCertSignController.removeCertSignPDF(request);
 
             assertNotNull(response.getBody());
-            assertTrue(response.getBody().length > 0);
+            assertTrue(drainBody(response).length > 0);
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }
 
@@ -95,7 +127,8 @@ class RemoveCertSignControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<byte[]> response = removeCertSignController.removeCertSignPDF(request);
+            ResponseEntity<StreamingResponseBody> response =
+                    removeCertSignController.removeCertSignPDF(request);
 
             assertNotNull(response.getBody());
         }
@@ -126,7 +159,8 @@ class RemoveCertSignControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class)))
                     .thenAnswer(inv -> Loader.loadPDF(pdfWithAcroForm));
 
-            ResponseEntity<byte[]> response = removeCertSignController.removeCertSignPDF(request);
+            ResponseEntity<StreamingResponseBody> response =
+                    removeCertSignController.removeCertSignPDF(request);
             assertNotNull(response.getBody());
         }
 
@@ -156,7 +190,8 @@ class RemoveCertSignControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class)))
                     .thenAnswer(inv -> Loader.loadPDF(pdfWithSig));
 
-            ResponseEntity<byte[]> response = removeCertSignController.removeCertSignPDF(request);
+            ResponseEntity<StreamingResponseBody> response =
+                    removeCertSignController.removeCertSignPDF(request);
             assertNotNull(response.getBody());
         }
 
@@ -176,7 +211,8 @@ class RemoveCertSignControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<byte[]> response = removeCertSignController.removeCertSignPDF(request);
+            ResponseEntity<StreamingResponseBody> response =
+                    removeCertSignController.removeCertSignPDF(request);
             assertNotNull(response);
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }
@@ -194,7 +230,8 @@ class RemoveCertSignControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class)))
                     .thenAnswer(inv -> Loader.loadPDF(simplePdfBytes));
 
-            ResponseEntity<byte[]> response = removeCertSignController.removeCertSignPDF(request);
+            ResponseEntity<StreamingResponseBody> response =
+                    removeCertSignController.removeCertSignPDF(request);
             assertNotNull(response.getBody());
         }
 
@@ -224,7 +261,8 @@ class RemoveCertSignControllerTest {
             when(pdfDocumentFactory.load(any(MultipartFile.class)))
                     .thenAnswer(inv -> Loader.loadPDF(multiPagePdf));
 
-            ResponseEntity<byte[]> response = removeCertSignController.removeCertSignPDF(request);
+            ResponseEntity<StreamingResponseBody> response =
+                    removeCertSignController.removeCertSignPDF(request);
             assertNotNull(response.getBody());
         }
 

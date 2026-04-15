@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -22,6 +23,7 @@ import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @SecurityApi
@@ -29,6 +31,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class RemoveCertSignController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/remove-cert-sign")
     @StandardPdfResponse
@@ -37,7 +40,7 @@ public class RemoveCertSignController {
             description =
                     "This endpoint accepts a PDF file and returns the PDF file without the digital"
                             + " signature. Input:PDF, Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> removeCertSignPDF(@ModelAttribute PDFFile request)
+    public ResponseEntity<StreamingResponseBody> removeCertSignPDF(@ModelAttribute PDFFile request)
             throws Exception {
         MultipartFile pdf = request.getFileInput();
 
@@ -63,7 +66,8 @@ public class RemoveCertSignController {
             // Return the modified PDF as a response
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
-                    GeneralUtils.generateFilename(pdf.getOriginalFilename(), "_unsigned.pdf"));
+                    GeneralUtils.generateFilename(pdf.getOriginalFilename(), "_unsigned.pdf"),
+                    tempFileManager);
         }
     }
 }

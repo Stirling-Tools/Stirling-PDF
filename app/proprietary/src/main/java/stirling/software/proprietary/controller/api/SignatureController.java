@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,6 +39,9 @@ import stirling.software.proprietary.service.SignatureService;
 @RestController
 @RequestMapping("/api/v1/proprietary/signatures")
 @RequiredArgsConstructor
+@Tag(
+        name = "Saved Signatures",
+        description = "Manage saved signature templates for authenticated users")
 public class SignatureController {
 
     private final SignatureService signatureService;

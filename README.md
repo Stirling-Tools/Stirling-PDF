@@ -60,7 +60,7 @@ For full installation options (including desktop and Kubernetes), see our [Docum
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-For development setup, see the [Developer Guide](DeveloperGuide.md).
+This project uses [Task](https://taskfile.dev/) as a unified command runner for all build, dev, and test commands. Run `task install` to get started, or see the [Developer Guide](DeveloperGuide.md) for full details.
 
 For adding translations, see the [Translation Guide](devGuide/HowToAddNewLanguage.md).
 

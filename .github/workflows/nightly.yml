@@ -32,17 +32,13 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Install frontend dependencies
-        run: cd frontend && npm ci
-
-      - name: Generate icons
-        run: cd frontend && node scripts/generate-icons.js
-
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
       - name: Install all Playwright browsers
-        run: cd frontend && npx playwright install --with-deps
+        run: task frontend:test:e2e:install
 
       - name: Run E2E tests (all browsers)
-        run: cd frontend && npx playwright test
+        run: task frontend:test:e2e
 
       - name: Upload Playwright report
         if: always()
