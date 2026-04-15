@@ -254,6 +254,19 @@ export const useCompareOperation = (): CompareOperationHook => {
               if (activeRunIdRef.current === runId) setPixelProgress({ current, total });
             },
             signal: pixelSignalRef.current,
+            warnings: {
+              pageCountMismatch: t(
+                "compare.pixel.warnings.pageCountMismatch",
+                "Page count mismatch: original has {{base}} page(s), edited has {{comparison}}. Extra pages are shown one-sided and marked as fully removed/added.",
+              ),
+              noPages: t("compare.pixel.warnings.noPages", "One or both documents have no pages."),
+            },
+            errors: {
+              canvasContextUnavailable: t(
+                "compare.pixel.errors.canvasContextUnavailable",
+                "Unable to acquire 2D canvas context for pixel comparison.",
+              ),
+            },
           });
           if (cancelledRef.current || activeRunIdRef.current !== runId) {
             revokePixelResult(pixelResult);

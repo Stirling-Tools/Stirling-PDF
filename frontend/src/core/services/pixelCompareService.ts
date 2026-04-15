@@ -1,69 +1,35 @@
-import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist/legacy/build/pdf.mjs";
-import pixelmatch from "pixelmatch";
+import PixelCompareWorkerCtor from "@app/workers/pixelCompareWorker?worker";
+import {
+  ADDITION_HIGHLIGHT,
+  REMOVAL_HIGHLIGHT,
+  type ComparePixelPageResult,
+  type CompareResultPixelData,
+  type PixelCompareWorkerErrors,
+  type PixelCompareWorkerRequest,
+  type PixelCompareWorkerResponse,
+  type PixelCompareWorkerWarnings,
+  type PixelRgb,
+} from "@app/types/compare";
 
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
-import type { ComparePixelPageResult, CompareResultPixelData } from "@app/types/compare";
-
-const CSS_DPI = 72;
-
-interface ReusableCanvas {
-  canvas: HTMLCanvasElement;
-  ctx: CanvasRenderingContext2D;
-}
-
-const createCanvas = (width: number, height: number): ReusableCanvas => {
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.max(1, width);
-  canvas.height = Math.max(1, height);
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) throw new Error("Unable to acquire 2D canvas context.");
-  return { canvas, ctx };
+const hexToRgb = (hex: string): PixelRgb => {
+  const normalised = hex.replace("#", "");
+  const value = parseInt(
+    normalised.length === 3
+      ? normalised
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : normalised,
+    16,
+  );
+  return [(value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff];
 };
 
-const ensureSize = (rc: ReusableCanvas, width: number, height: number) => {
-  if (rc.canvas.width !== width) rc.canvas.width = width;
-  if (rc.canvas.height !== height) rc.canvas.height = height;
-};
-
-const releaseCanvas = (rc: ReusableCanvas) => {
-  rc.canvas.width = 0;
-  rc.canvas.height = 0;
-};
-
-const renderPageOntoTarget = async (
-  page: PDFPageProxy,
-  scale: number,
-  target: ReusableCanvas,
-  targetWidth: number,
-  targetHeight: number,
-): Promise<void> => {
-  const viewport = page.getViewport({ scale });
-  const renderedW = Math.max(1, Math.round(viewport.width));
-  const renderedH = Math.max(1, Math.round(viewport.height));
-
-  ensureSize(target, targetWidth, targetHeight);
-  target.ctx.fillStyle = "#ffffff";
-  target.ctx.fillRect(0, 0, targetWidth, targetHeight);
-
-  const offsetX = Math.round((targetWidth - renderedW) / 2);
-  const offsetY = Math.round((targetHeight - renderedH) / 2);
-
-  target.ctx.save();
-  target.ctx.translate(offsetX, offsetY);
-  await page.render({ canvas: target.canvas, canvasContext: target.ctx, viewport }).promise;
-  target.ctx.restore();
-};
-
-const canvasToBlobUrl = (canvas: HTMLCanvasElement): Promise<string> =>
-  new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        reject(new Error("Failed to encode canvas to PNG."));
-        return;
-      }
-      resolve(URL.createObjectURL(blob));
-    }, "image/png");
-  });
+// Keep pixel mode visually consistent with text mode:
+// - removed (content in base, not in comparison) → REMOVAL_HIGHLIGHT (red)
+// - added   (content in comparison, not in base) → ADDITION_HIGHLIGHT (green)
+const DEFAULT_DIFF_COLOR: PixelRgb = hexToRgb(REMOVAL_HIGHLIGHT);
+const DEFAULT_DIFF_COLOR_ALT: PixelRgb = hexToRgb(ADDITION_HIGHLIGHT);
 
 export const revokePixelResult = (result: CompareResultPixelData | null | undefined): void => {
   if (!result) return;
@@ -82,7 +48,16 @@ export interface RunPixelCompareArgs {
   dpi: number;
   threshold: number;
   onProgress?: (pageNumber: number, totalPages: number) => void;
+  onPageReady?: (page: ComparePixelPageResult) => void;
   signal?: { cancelled: boolean };
+  warnings: PixelCompareWorkerWarnings;
+  errors: PixelCompareWorkerErrors;
+  // Max in-flight pages processed in parallel inside the worker.
+  concurrency?: number;
+  // Override diff highlight colours. Defaults to REMOVAL_HIGHLIGHT / ADDITION_HIGHLIGHT
+  // so pixel mode matches text mode (removed = red, added = green).
+  diffColor?: PixelRgb;
+  diffColorAlt?: PixelRgb;
 }
 
 export const runPixelCompare = async ({
@@ -93,141 +68,122 @@ export const runPixelCompare = async ({
   dpi,
   threshold,
   onProgress,
+  onPageReady,
   signal,
+  warnings,
+  errors,
+  concurrency,
+  diffColor = DEFAULT_DIFF_COLOR,
+  diffColorAlt = DEFAULT_DIFF_COLOR_ALT,
 }: RunPixelCompareArgs): Promise<CompareResultPixelData> => {
-  const start = performance.now();
-  const warnings: string[] = [];
-  const scale = Math.max(0.5, dpi / CSS_DPI);
+  if (signal?.cancelled) throw new Error("CANCELLED");
 
-  const [baseBuffer, comparisonBuffer] = await Promise.all([baseFile.arrayBuffer(), comparisonFile.arrayBuffer()]);
-
-  let baseDoc: PDFDocumentProxy | null = null;
-  let compDoc: PDFDocumentProxy | null = null;
-
-  const baseCanvas = createCanvas(1, 1);
-  const compCanvas = createCanvas(1, 1);
-  const diffCanvas = createCanvas(1, 1);
+  const worker = new PixelCompareWorkerCtor();
   const emittedUrls: string[] = [];
+  const pages: ComparePixelPageResult[] = [];
 
   const cleanupOnFailure = () => {
     for (const url of emittedUrls) URL.revokeObjectURL(url);
   };
 
-  try {
-    [baseDoc, compDoc] = await Promise.all([
-      pdfWorkerManager.createDocument(baseBuffer),
-      pdfWorkerManager.createDocument(comparisonBuffer),
-    ]);
-
-    const basePages = baseDoc.numPages;
-    const compPages = compDoc.numPages;
-    const sharedPages = Math.min(basePages, compPages);
-
-    if (basePages !== compPages) {
-      warnings.push(
-        `Page count mismatch: base has ${basePages} page(s), comparison has ${compPages}. Comparing first ${sharedPages}.`,
-      );
-    }
-    if (sharedPages === 0) throw new Error("One or both documents have no pages.");
-
-    const pages: ComparePixelPageResult[] = [];
-    let totalDiffPixels = 0;
-    let totalPixelsCount = 0;
-    let pagesWithChanges = 0;
-
-    for (let pageNumber = 1; pageNumber <= sharedPages; pageNumber += 1) {
-      if (signal?.cancelled) throw new Error("CANCELLED");
-      onProgress?.(pageNumber, sharedPages);
-
-      const [basePage, compPage] = await Promise.all([baseDoc.getPage(pageNumber), compDoc.getPage(pageNumber)]);
-      try {
-        const baseViewport = basePage.getViewport({ scale });
-        const compViewport = compPage.getViewport({ scale });
-
-        const targetWidth = Math.max(1, Math.round(Math.max(baseViewport.width, compViewport.width)));
-        const targetHeight = Math.max(1, Math.round(Math.max(baseViewport.height, compViewport.height)));
-        const sizeMismatch =
-          Math.round(baseViewport.width) !== Math.round(compViewport.width) ||
-          Math.round(baseViewport.height) !== Math.round(compViewport.height);
-
-        await renderPageOntoTarget(basePage, scale, baseCanvas, targetWidth, targetHeight);
-        await renderPageOntoTarget(compPage, scale, compCanvas, targetWidth, targetHeight);
-
-        const baseImage = baseCanvas.ctx.getImageData(0, 0, targetWidth, targetHeight);
-        const compImage = compCanvas.ctx.getImageData(0, 0, targetWidth, targetHeight);
-
-        ensureSize(diffCanvas, targetWidth, targetHeight);
-        diffCanvas.ctx.fillStyle = "#ffffff";
-        diffCanvas.ctx.fillRect(0, 0, targetWidth, targetHeight);
-        const diffImage = diffCanvas.ctx.getImageData(0, 0, targetWidth, targetHeight);
-
-        const diffCount = pixelmatch(
-          baseImage.data,
-          compImage.data,
-          diffImage.data,
-          targetWidth,
-          targetHeight,
-          { threshold, includeAA: true, alpha: 0.3 },
-        );
-
-        diffCanvas.ctx.putImageData(diffImage, 0, 0);
-
-        const [baseUrl, compUrl, diffUrl] = await Promise.all([
-          canvasToBlobUrl(baseCanvas.canvas),
-          canvasToBlobUrl(compCanvas.canvas),
-          canvasToBlobUrl(diffCanvas.canvas),
-        ]);
-        emittedUrls.push(baseUrl, compUrl, diffUrl);
-
-        const totalPixels = targetWidth * targetHeight;
-        totalDiffPixels += diffCount;
-        totalPixelsCount += totalPixels;
-        if (diffCount > 0) pagesWithChanges += 1;
-
-        pages.push({
-          pageNumber,
-          width: targetWidth,
-          height: targetHeight,
-          baseImageUrl: baseUrl,
-          comparisonImageUrl: compUrl,
-          diffImageUrl: diffUrl,
-          diffPixels: diffCount,
-          totalPixels,
-          diffRatio: totalPixels > 0 ? diffCount / totalPixels : 0,
-          sizeMismatch,
-        });
-      } finally {
-        basePage.cleanup();
-        compPage.cleanup();
+  return await new Promise<CompareResultPixelData>((resolve, reject) => {
+    const handleMessage = (event: MessageEvent<PixelCompareWorkerResponse>) => {
+      const message = event.data;
+      if (!message) return;
+      if (signal?.cancelled) {
+        terminateWorker();
+        cleanupOnFailure();
+        reject(new Error("CANCELLED"));
+        return;
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    }
-
-    return {
-      mode: "pixel",
-      base: { fileId: baseFileId, fileName: baseFile.name },
-      comparison: { fileId: comparisonFileId, fileName: comparisonFile.name },
-      pages,
-      totals: {
-        diffPixels: totalDiffPixels,
-        totalPixels: totalPixelsCount,
-        diffRatio: totalPixelsCount > 0 ? totalDiffPixels / totalPixelsCount : 0,
-        pagesWithChanges,
-        durationMs: performance.now() - start,
-        processedAt: Date.now(),
-      },
-      warnings,
-      settings: { dpi, threshold },
+      switch (message.type) {
+        case "progress": {
+          onProgress?.(message.pageNumber, message.totalPages);
+          break;
+        }
+        case "page": {
+          const payload = message.page;
+          const baseUrl = URL.createObjectURL(payload.baseBlob);
+          const comparisonUrl = URL.createObjectURL(payload.comparisonBlob);
+          const diffUrl = URL.createObjectURL(payload.diffBlob);
+          emittedUrls.push(baseUrl, comparisonUrl, diffUrl);
+          const pageResult: ComparePixelPageResult = {
+            pageNumber: payload.pageNumber,
+            width: payload.width,
+            height: payload.height,
+            baseImageUrl: baseUrl,
+            comparisonImageUrl: comparisonUrl,
+            diffImageUrl: diffUrl,
+            diffPixels: payload.diffPixels,
+            totalPixels: payload.totalPixels,
+            diffRatio: payload.diffRatio,
+            sizeMismatch: payload.sizeMismatch,
+          };
+          pages.push(pageResult);
+          onPageReady?.(pageResult);
+          break;
+        }
+        case "success": {
+          pages.sort((a, b) => a.pageNumber - b.pageNumber);
+          terminateWorker();
+          resolve({
+            mode: "pixel",
+            base: { fileId: baseFileId, fileName: baseFile.name },
+            comparison: { fileId: comparisonFileId, fileName: comparisonFile.name },
+            pages,
+            totals: {
+              ...message.totals,
+              processedAt: Date.now(),
+            },
+            warnings: message.warnings,
+            settings: { dpi, threshold },
+          });
+          break;
+        }
+        case "error": {
+          terminateWorker();
+          cleanupOnFailure();
+          reject(new Error(message.message));
+          break;
+        }
+      }
     };
-  } catch (err) {
-    cleanupOnFailure();
-    throw err;
-  } finally {
-    releaseCanvas(baseCanvas);
-    releaseCanvas(compCanvas);
-    releaseCanvas(diffCanvas);
-    if (baseDoc) pdfWorkerManager.destroyDocument(baseDoc);
-    if (compDoc) pdfWorkerManager.destroyDocument(compDoc);
-  }
+
+    const handleError = (event: ErrorEvent) => {
+      terminateWorker();
+      cleanupOnFailure();
+      reject(event.error ?? new Error(event.message || "Pixel compare worker error"));
+    };
+
+    const terminateWorker = () => {
+      worker.removeEventListener("message", handleMessage as EventListener);
+      worker.removeEventListener("error", handleError as EventListener);
+      try {
+        worker.terminate();
+      } catch {
+        /* swallow */
+      }
+    };
+
+    worker.addEventListener("message", handleMessage as EventListener);
+    worker.addEventListener("error", handleError as EventListener);
+
+    const request: PixelCompareWorkerRequest = {
+      type: "pixel-compare",
+      payload: {
+        baseFile,
+        comparisonFile,
+        dpi,
+        threshold,
+        concurrency,
+        warnings,
+        errors,
+        diffColor,
+        diffColorAlt,
+      },
+    };
+
+    worker.postMessage(request);
+  });
 };

@@ -78,6 +78,11 @@ export interface ComparePixelPageResult {
   totalPixels: number;
   diffRatio: number;
   sizeMismatch: boolean;
+  // One side of the comparison had no corresponding page (the other PDF was shorter).
+  // The missing side is rendered as a blank white canvas and the entire opposite page
+  // is marked as diff.
+  missingBase?: boolean;
+  missingComparison?: boolean;
 }
 
 export interface CompareResultPixelData {
@@ -182,24 +187,59 @@ export type CompareWorkerResponse =
       code?: "EMPTY_TEXT" | "TOO_LARGE" | "TOO_DISSIMILAR";
     };
 
+export interface PixelCompareWorkerWarnings {
+  pageCountMismatch: string; // supports {{base}}, {{comparison}}, {{shared}}
+  noPages: string;
+}
+
+export interface PixelCompareWorkerErrors {
+  canvasContextUnavailable: string;
+}
+
+export type PixelRgb = [number, number, number];
+
 export interface PixelCompareWorkerRequest {
   type: "pixel-compare";
   payload: {
-    baseBuffer: ArrayBuffer;
-    comparisonBuffer: ArrayBuffer;
-    baseFileName: string;
-    comparisonFileName: string;
+    // File objects (not ArrayBuffers): structured-cloning a File is O(1) since
+    // the underlying blob storage is reference-counted, so we avoid reading
+    // the whole PDF into memory on the main thread before posting.
+    baseFile: File;
+    comparisonFile: File;
     dpi: number;
     threshold: number;
+    concurrency?: number;
+    warnings: PixelCompareWorkerWarnings;
+    errors: PixelCompareWorkerErrors;
+    // Colour for pixels removed from the base (content in base, missing in comparison).
+    diffColor: PixelRgb;
+    // Colour for pixels added in the comparison (content in comparison, missing in base).
+    // When null/undefined, pixelmatch falls back to diffColor for all diffs.
+    diffColorAlt?: PixelRgb;
   };
+}
+
+export interface PixelCompareWorkerPagePayload {
+  pageNumber: number;
+  width: number;
+  height: number;
+  baseBlob: Blob;
+  comparisonBlob: Blob;
+  diffBlob: Blob;
+  diffPixels: number;
+  totalPixels: number;
+  diffRatio: number;
+  sizeMismatch: boolean;
+  missingBase?: boolean;
+  missingComparison?: boolean;
 }
 
 export type PixelCompareWorkerResponse =
   | { type: "progress"; pageNumber: number; totalPages: number }
-  | { type: "page"; page: ComparePixelPageResult }
+  | { type: "page"; page: PixelCompareWorkerPagePayload }
   | {
       type: "success";
-      totals: CompareResultPixelData["totals"];
+      totals: Omit<CompareResultPixelData["totals"], "processedAt">;
       warnings: string[];
     }
   | { type: "error"; message: string };

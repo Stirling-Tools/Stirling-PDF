@@ -28,6 +28,16 @@ const PixelPageCard = ({ page, viewMode, t }: { page: ComparePixelPageResult; vi
           {t("compare.pixel.pageLabel", "Page")} {page.pageNumber}
         </Text>
         <Group gap="xs">
+          {page.missingBase && (
+            <Badge size="xs" color="red" variant="light">
+              {t("compare.pixel.missingInBase", "Missing in original")}
+            </Badge>
+          )}
+          {page.missingComparison && (
+            <Badge size="xs" color="red" variant="light">
+              {t("compare.pixel.missingInComparison", "Missing in edited")}
+            </Badge>
+          )}
           {page.sizeMismatch && (
             <Badge size="xs" color="yellow" variant="light">
               {t("compare.pixel.sizeMismatch", "Size mismatch")}
@@ -42,15 +52,33 @@ const PixelPageCard = ({ page, viewMode, t }: { page: ComparePixelPageResult; vi
       {viewMode === "side-by-side" && (
         <div className="compare-pixel-triptych">
           <figure>
-            <img src={page.baseImageUrl} alt="base" style={{ aspectRatio, width: "100%" }} />
+            <img
+              src={page.baseImageUrl}
+              alt={t("compare.pixel.base", "Original")}
+              loading="lazy"
+              decoding="async"
+              style={{ aspectRatio, width: "100%" }}
+            />
             <figcaption>{t("compare.pixel.base", "Original")}</figcaption>
           </figure>
           <figure>
-            <img src={page.diffImageUrl} alt="diff" style={{ aspectRatio, width: "100%" }} />
+            <img
+              src={page.diffImageUrl}
+              alt={t("compare.pixel.diff", "Differences")}
+              loading="lazy"
+              decoding="async"
+              style={{ aspectRatio, width: "100%" }}
+            />
             <figcaption>{t("compare.pixel.diff", "Differences")}</figcaption>
           </figure>
           <figure>
-            <img src={page.comparisonImageUrl} alt="comparison" style={{ aspectRatio, width: "100%" }} />
+            <img
+              src={page.comparisonImageUrl}
+              alt={t("compare.pixel.comparison", "Edited")}
+              loading="lazy"
+              decoding="async"
+              style={{ aspectRatio, width: "100%" }}
+            />
             <figcaption>{t("compare.pixel.comparison", "Edited")}</figcaption>
           </figure>
         </div>
@@ -58,14 +86,32 @@ const PixelPageCard = ({ page, viewMode, t }: { page: ComparePixelPageResult; vi
 
       {viewMode === "diff-only" && (
         <figure>
-          <img src={page.diffImageUrl} alt="diff" style={{ aspectRatio, width: "100%" }} />
+          <img
+            src={page.diffImageUrl}
+            alt={t("compare.pixel.diff", "Differences")}
+            loading="lazy"
+            decoding="async"
+            style={{ aspectRatio, width: "100%" }}
+          />
         </figure>
       )}
 
       {viewMode === "overlay" && (
         <div className="compare-pixel-overlay" style={{ aspectRatio }}>
-          <img src={page.baseImageUrl} alt="base" className="compare-pixel-overlay-img" />
-          <img src={page.diffImageUrl} alt="diff-overlay" className="compare-pixel-overlay-img compare-pixel-overlay-top" />
+          <img
+            src={page.baseImageUrl}
+            alt={t("compare.pixel.base", "Original")}
+            loading="lazy"
+            decoding="async"
+            className="compare-pixel-overlay-img"
+          />
+          <img
+            src={page.diffImageUrl}
+            alt={t("compare.pixel.diff", "Differences")}
+            loading="lazy"
+            decoding="async"
+            className="compare-pixel-overlay-img compare-pixel-overlay-top"
+          />
         </div>
       )}
     </Stack>

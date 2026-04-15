@@ -466,8 +466,8 @@ const Compare = (props: BaseToolProps) => {
                   base.params.setParameters((prev) => ({ ...prev, mode: value as "text" | "pixel" }))
                 }
                 data={[
-                  { value: "text", label: t("compare.mode.text", "Text diff") },
-                  { value: "pixel", label: t("compare.mode.pixel", "Pixel diff") },
+                  { value: "text", label: t("compare.mode.text", "Text Comparison") },
+                  { value: "pixel", label: t("compare.mode.pixel", "Pixel Comparison") },
                 ]}
               />
             </Box>

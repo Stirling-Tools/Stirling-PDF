@@ -2794,8 +2794,8 @@ unlinkedBody = "Tip: Arrow Up/Down scroll both panes; panning only moves the act
 unlinkedTitle = "Independent scroll & pan enabled"
 
 [compare.mode]
-pixel = "Pixel diff"
-text = "Text diff"
+pixel = "Pixel Comparison"
+text = "Text Comparison"
 
 [compare.pixel]
 base = "Original"
@@ -2803,6 +2803,8 @@ changed = "changed"
 comparison = "Edited"
 diff = "Differences"
 diffOnly = "Diff only"
+missingInBase = "Missing in original"
+missingInComparison = "Missing in edited"
 overall = "overall"
 overlay = "Overlay"
 pageLabel = "Page"
@@ -2810,6 +2812,13 @@ pagesChanged = "pages changed"
 sideBySide = "Side-by-side"
 sizeMismatch = "Size mismatch"
 summaryTitle = "Pixel comparison"
+
+[compare.pixel.warnings]
+noPages = "One or both documents have no pages."
+pageCountMismatch = "Page count mismatch: original has {{base}} page(s), edited has {{comparison}}. Extra pages are shown one-sided and marked as fully removed/added."
+
+[compare.pixel.errors]
+canvasContextUnavailable = "Unable to acquire 2D canvas context for pixel comparison."
 
 [compare.too.dissimilar]
 message = "These documents appear highly dissimilar. Comparison was stopped to save time."
