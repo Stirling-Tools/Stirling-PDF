@@ -13,24 +13,24 @@ A dynamic vertical toolbar on the right side of the application that supports bo
 ### For Tools (Recommended)
 
 ```tsx
-import { useRightRailButtons } from "../hooks/useRightRailButtons";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import { useRightRailButtons } from '../hooks/useRightRailButtons';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 
 function MyTool() {
-    const handleAction = useCallback(() => {
-        // Your action here
-    }, []);
+  const handleAction = useCallback(() => {
+    // Your action here
+  }, []);
 
-    useRightRailButtons([
-        {
-            id: "my-action",
-            icon: <PlayArrowIcon />,
-            tooltip: "Execute Action",
-            onClick: handleAction,
-        },
-    ]);
+  useRightRailButtons([
+    {
+      id: 'my-action',
+      icon: <PlayArrowIcon />,
+      tooltip: 'Execute Action',
+      onClick: handleAction,
+    },
+  ]);
 
-    return <div>My Tool</div>;
+  return <div>My Tool</div>;
 }
 ```
 
@@ -38,20 +38,20 @@ function MyTool() {
 
 ```tsx
 useRightRailButtons([
-    {
-        id: "primary",
-        icon: <StarIcon />,
-        tooltip: "Primary Action",
-        order: 1,
-        onClick: handlePrimary,
-    },
-    {
-        id: "secondary",
-        icon: <SettingsIcon />,
-        tooltip: "Secondary Action",
-        order: 2,
-        onClick: handleSecondary,
-    },
+  {
+    id: 'primary',
+    icon: <StarIcon />,
+    tooltip: 'Primary Action',
+    order: 1,
+    onClick: handlePrimary,
+  },
+  {
+    id: 'secondary',
+    icon: <SettingsIcon />,
+    tooltip: 'Secondary Action',
+    order: 2,
+    onClick: handleSecondary,
+  },
 ]);
 ```
 
@@ -59,25 +59,21 @@ useRightRailButtons([
 
 ```tsx
 useRightRailButtons([
-    // Always show
-    {
-        id: "process",
-        icon: <PlayArrowIcon />,
-        tooltip: "Process",
-        disabled: isProcessing,
-        onClick: handleProcess,
-    },
-    // Only show when condition met
-    ...(hasResults
-        ? [
-              {
-                  id: "export",
-                  icon: <DownloadIcon />,
-                  tooltip: "Export",
-                  onClick: handleExport,
-              },
-          ]
-        : []),
+  // Always show
+  {
+    id: 'process',
+    icon: <PlayArrowIcon />,
+    tooltip: 'Process',
+    disabled: isProcessing,
+    onClick: handleProcess,
+  },
+  // Only show when condition met
+  ...(hasResults ? [{
+    id: 'export',
+    icon: <DownloadIcon />,
+    tooltip: 'Export',
+    onClick: handleExport,
+  }] : []),
 ]);
 ```
 
@@ -87,25 +83,25 @@ useRightRailButtons([
 
 ```typescript
 interface RightRailButtonWithAction {
-    id: string; // Unique identifier
-    icon?: React.ReactNode; // Icon component (omit when using render)
-    tooltip?: React.ReactNode; // Hover tooltip / description
-    active?: boolean; // Optional active state for highlight
-    section?: "top" | "middle" | "bottom"; // Section (default: 'top')
-    order?: number; // Sort order (default: 0)
-    disabled?: boolean; // Disabled state (default: false)
-    visible?: boolean; // Visibility (default: true)
-    render?: (ctx: RightRailRenderContext) => React.ReactNode; // Custom renderer
-    onClick?: () => void; // Click handler (optional if using render)
+  id: string;                    // Unique identifier
+  icon?: React.ReactNode;        // Icon component (omit when using render)
+  tooltip?: React.ReactNode;     // Hover tooltip / description
+  active?: boolean;              // Optional active state for highlight
+  section?: 'top' | 'middle' | 'bottom'; // Section (default: 'top')
+  order?: number;                // Sort order (default: 0)
+  disabled?: boolean;            // Disabled state (default: false)
+  visible?: boolean;             // Visibility (default: true)
+  render?: (ctx: RightRailRenderContext) => React.ReactNode; // Custom renderer
+  onClick?: () => void;          // Click handler (optional if using render)
 }
 
 interface RightRailRenderContext {
-    id: string;
-    disabled: boolean;
-    allButtonsDisabled: boolean;
-    action?: () => void;
-    triggerAction: () => void;
-    active: boolean;
+  id: string;
+  disabled: boolean;
+  allButtonsDisabled: boolean;
+  action?: () => void;
+  triggerAction: () => void;
+  active: boolean;
 }
 ```
 
@@ -113,24 +109,24 @@ interface RightRailRenderContext {
 
 ```tsx
 useRightRailButtons([
-    {
-        id: "viewer-search",
-        tooltip: t("rightRail.search", "Search PDF"),
-        render: ({ disabled }) => (
-            <Tooltip content={t("rightRail.search", "Search PDF")}>
-                <Popover position="left">
-                    <Popover.Target>
-                        <ActionIcon disabled={disabled}>
-                            <SearchIcon />
-                        </ActionIcon>
-                    </Popover.Target>
-                    <Popover.Dropdown>
-                        <SearchInterface />
-                    </Popover.Dropdown>
-                </Popover>
-            </Tooltip>
-        ),
-    },
+  {
+    id: 'viewer-search',
+    tooltip: t('rightRail.search', 'Search PDF'),
+    render: ({ disabled }) => (
+      <Tooltip content={t('rightRail.search', 'Search PDF')}>
+        <Popover position="left">
+          <Popover.Target>
+            <ActionIcon disabled={disabled}>
+              <SearchIcon />
+            </ActionIcon>
+          </Popover.Target>
+          <Popover.Dropdown>
+            <SearchInterface />
+          </Popover.Dropdown>
+        </Popover>
+      </Tooltip>
+    ),
+  },
 ]);
 ```
 

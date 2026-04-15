@@ -21,26 +21,25 @@ You can still use the original CSV format. For example, `1,2,3,4,5` (first five 
 - NOT (complement within 1..max): `!term` or `!(group)` or the word `not term` / `not (group)`
 
 Operator precedence (from highest to lowest):
-
-1. `!` (NOT)
-2. `&` / `and` (AND)
-3. `,` / `|` / `or` (OR)
+1) `!` (NOT)
+2) `&` / `and` (AND)
+3) `,` / `|` / `or` (OR)
 
 Use parentheses `(...)` to override precedence where needed.
 
 ### Keywords and progressions
 
 - Keywords (case-insensitive):
-    - `even`: all even pages (2, 4, 6, ...)
-    - `odd`: all odd pages (1, 3, 5, ...)
+  - `even`: all even pages (2, 4, 6, ...)
+  - `odd`: all odd pages (1, 3, 5, ...)
 
 - Arithmetic progressions: `k n ± c`, e.g. `2n`, `3n+1`, `4n-1`
-    - `n` starts at 0 (CSS-style: `:nth-child`), then increases by 1 (n = 0,1,2,...). Non-positive results are discarded.
-    - `k` must be a positive integer (≥ 1). `c` can be any integer (including negative).
-    - Examples:
-        - `2n` → 0,2,4,6,... → becomes 2,4,6,... after discarding non-positive
-        - `2n-1` → -1,1,3,5,... → becomes 1,3,5,... (odd)
-        - `3n+1` → 1,4,7,10,13,...
+  - `n` starts at 0 (CSS-style: `:nth-child`), then increases by 1 (n = 0,1,2,...). Non-positive results are discarded.
+  - `k` must be a positive integer (≥ 1). `c` can be any integer (including negative).
+  - Examples:
+    - `2n` → 0,2,4,6,... → becomes 2,4,6,... after discarding non-positive
+    - `2n-1` → -1,1,3,5,... → becomes 1,3,5,... (odd)
+    - `3n+1` → 1,4,7,10,13,...
 
 All selections are automatically limited to the current document's valid page numbers `[1..maxPages]`.
 
@@ -48,10 +47,10 @@ All selections are automatically limited to the current document's valid page nu
 
 - Group with parentheses to control evaluation order and combine NOT with groups.
 - Examples:
-    - `1-10 & (even, 15)` → even pages 2,4,6,8,10 (15 is outside 1-10)
-    - `!(1-5, odd)` → remove pages 1..5 and all odd pages; for a 10-page doc this yields 6,8,10
-    - `!(10-20 & !2n)` → complement of odd pages from 11..19 inside 10..20
-    - `(2n | 3n+1) & 1-20` → union of even numbers and 3n+1 numbers, intersected with 1..20
+  - `1-10 & (even, 15)` → even pages 2,4,6,8,10 (15 is outside 1-10)
+  - `!(1-5, odd)` → remove pages 1..5 and all odd pages; for a 10-page doc this yields 6,8,10
+  - `!(10-20 & !2n)` → complement of odd pages from 11..19 inside 10..20
+  - `(2n | 3n+1) & 1-20` → union of even numbers and 3n+1 numbers, intersected with 1..20
 
 ### Whitespace and case
 

@@ -1,5 +1,4 @@
 # Frontend
-
 ## Environment Variables
 
 The frontend requires environment variables to be set before running. `npm run dev` will create a `.env` file for you automatically on first run using the defaults from `config/.env.example` - for most development work this is all you need.
@@ -79,8 +78,8 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
 
-## Tauri
 
+## Tauri
 In order to run Tauri, you first have to build the Java backend for Tauri to use.
 
 **macOS/Linux:**
@@ -106,13 +105,11 @@ scripts\build-tauri-jlink.bat
 Before building the full Tauri app, you can test the bundled runtime:
 
 **macOS/Linux:**
-
 ```bash
 ./frontend/src-tauri/runtime/launch-stirling.sh
 ```
 
 **Windows:**
-
 ```cmd
 frontend\src-tauri\runtime\launch-stirling.bat
 ```
@@ -120,7 +117,6 @@ frontend\src-tauri\runtime\launch-stirling.bat
 This will start Stirling-PDF using the bundled JRE, accessible at http://localhost:8080
 
 ### Dev
-
 To run Tauri in development. Use the command in the `frontend` folder:
 
 ```bash
@@ -135,7 +131,6 @@ This will run the gradle runboot command and the tauri dev command concurrently,
 > above - `npm run tauri-dev` will set these up automatically from `config/.env.desktop.example` on first run.
 
 ### Build
-
 To build a deployment of the Tauri app. Use this command in the `frontend` folder:
 
 ```bash

@@ -18,43 +18,29 @@ For example:
 
 ```ts
 // core/file1.ts
-function f1() {
-    /* ... */
-}
-function f2() {
-    /* ... */
-} // Needs to be overridden in desktop
-function f3() {
-    /* ... */
-}
+function f1() { /* ... */ }
+function f2() { /* ... */ } // Needs to be overridden in desktop
+function f3() { /* ... */ }
 ```
 
 In cases like this, instead of duplicating the entire file, create a new extension module for the core app and override _that_ in the desktop app.
 
 ```ts
 // core/file1.ts
-import { f2 } from "@app/file1Extensions";
+import { f2 } from '@app/file1Extensions';
 
-function f1() {
-    /* ... */
-}
-function f3() {
-    /* ... */
-}
+function f1() { /* ... */ }
+function f3() { /* ... */ }
 ```
 
 ```ts
 // core/file1Extensions.ts
-export function f2() {
-    /* ... */
-} // Original core implementation
+export function f2() { /* ... */ } // Original core implementation
 ```
 
 ```ts
 // desktop/file1Extensions.ts
-export function f2() {
-    /* ... */
-} // Custom desktop implementation
+export function f2() { /* ... */ } // Custom desktop implementation
 ```
 
 Building with this pattern minimises the duplicated code in the system and greatly reduces the chances that changing the core app will break the desktop app.
@@ -67,22 +53,16 @@ Core code must never reference build targets (desktop, saas, etc.) by name — i
 ```ts
 // ✅ CORRECT - named after the behaviour, not the build
 // core/useFrontendVersionInfo.ts
-export function useFrontendVersionInfo() {
-    /* stub */
-}
+export function useFrontendVersionInfo() { /* stub */ }
 
 // desktop/useFrontendVersionInfo.ts
-export function useFrontendVersionInfo() {
-    /* real Tauri implementation */
-}
+export function useFrontendVersionInfo() { /* real Tauri implementation */ }
 ```
 
 ```ts
 // ❌ WRONG - core code reveals knowledge of the desktop layer
 // core/useDesktopVersionInfo.ts
-export function useDesktopVersionInfo() {
-    /* stub */
-}
+export function useDesktopVersionInfo() { /* stub */ }
 ```
 
 Similarly, core code should never contain conditionals that check which build is active (e.g. `if (isDesktop)`).
@@ -99,60 +79,43 @@ Core defines the function to return an empty list; the extension build overrides
 ```ts
 // core/toolbarExtensions.ts
 export interface ToolbarButton {
-    label: string;
-    onClick: () => void;
+  label: string;
+  onClick: () => void;
 }
 
 export function getToolbarButtons(): ToolbarButton[] {
-    return [];
+  return [];
 }
 ```
 
 ```ts
 // desktop/toolbarExtensions.ts
-import { type ToolbarButton } from "@core/toolbarExtensions";
+import { type ToolbarButton } from '@core/toolbarExtensions';
 export { type ToolbarButton };
 
 export function getToolbarButtons(): ToolbarButton[] {
-    return [
-        {
-            label: "Open folder",
-            onClick: () => {
-                /* ... */
-            },
-        },
-    ];
+  return [
+    { label: 'Open folder', onClick: () => { /* ... */ } },
+  ];
 }
 ```
 
 ```tsx
 // core/Toolbar.tsx
-import { getToolbarButtons } from "@app/toolbarExtensions";
+import { getToolbarButtons } from '@app/toolbarExtensions';
 
 export function Toolbar() {
-    return (
-        <div>
-            <button
-                onClick={() => {
-                    /* ... */
-                }}
-            >
-                Download
-            </button>
-            <button
-                onClick={() => {
-                    /* ... */
-                }}
-            >
-                Print
-            </button>
-            {getToolbarButtons().map((button) => (
-                <button key={button.label} onClick={button.onClick}>
-                    {button.label}
-                </button>
-            ))}
-        </div>
-    );
+  return (
+    <div>
+      <button onClick={() => { /* ... */ }}>Download</button>
+      <button onClick={() => { /* ... */ }}>Print</button>
+      {getToolbarButtons().map((button) => (
+        <button key={button.label} onClick={button.onClick}>
+          {button.label}
+        </button>
+      ))}
+    </div>
+  );
 }
 ```
 
@@ -167,21 +130,17 @@ The only time that it is beneficial to import via a specific folder (e.g. `@core
 // core/file2.ts
 
 export interface MyProps {
-    // Lots of properties that we don't want to duplicate
+  // Lots of properties that we don't want to duplicate
 }
 
-export function f1(props: MyProps) {
-    /* ... */
-} // Original core implementation
+export function f1(props: MyProps) { /* ... */ } // Original core implementation
 ```
 
 ```ts
 // desktop/file2.ts
 
-import { type MyProps } from "@core/file2";
+import { type MyProps } from '@core/file2';
 export { type MyProps }; // Re-export so anything importing file2 can still access MyProps
 
-export function f1(props: MyProps) {
-    /* ... */
-} // Custom desktop implementation
+export function f1(props: MyProps) { /* ... */ } // Custom desktop implementation
 ```
