@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import AddIcon from "@mui/icons-material/Add";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { useLogoAssets } from "@app/hooks/useLogoAssets";
+import { Wordmark } from "@app/components/shared/Wordmark";
 import styles from "@app/components/fileEditor/FileEditor.module.css";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
@@ -21,7 +21,6 @@ const AddFileCard = ({ onFileSelect, accept, multiple = true }: AddFileCardProps
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { openFilesModal } = useFilesModalContext();
   const [isUploadHover, setIsUploadHover] = useState(false);
-  const { wordmark } = useLogoAssets();
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
 
@@ -91,18 +90,7 @@ const AddFileCard = ({ onFileSelect, accept, multiple = true }: AddFileCardProps
         <div className={styles.addFileContent}>
           {/* Stirling PDF Branding */}
           <Group gap="xs" align="center">
-            <img
-              src={wordmark.grey}
-              alt="Stirling PDF"
-              className="theme-img-light-only"
-              style={{ height: "2.2rem", width: "auto" }}
-            />
-            <img
-              src={wordmark.white}
-              alt="Stirling PDF"
-              className="theme-img-dark-only"
-              style={{ height: "2.2rem", width: "auto" }}
-            />
+            <Wordmark alt="Stirling PDF" muted style={{ height: "2.2rem", width: "auto" }} />
           </Group>
 
           {/* Add Files + Native Upload Buttons - styled like LandingPage */}
