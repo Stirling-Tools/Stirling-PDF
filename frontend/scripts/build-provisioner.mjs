@@ -22,3 +22,15 @@ mkdirSync(wixDir, { recursive: true });
 
 const destExe = join(wixDir, "stirling-provision.exe");
 copyFileSync(provisionerExe, destExe);
+
+// --- Thumbnail handler DLL ---
+const thumbManifest = join(tauriDir, "thumbnail-handler", "Cargo.toml");
+
+execFileSync("cargo", ["build", "--release", "--manifest-path", thumbManifest], { stdio: "inherit" });
+
+const thumbDll = join(tauriDir, "thumbnail-handler", "target", "release", "stirling_thumbnail_handler.dll");
+if (!existsSync(thumbDll)) {
+  throw new Error(`Thumbnail handler DLL not found at ${thumbDll}`);
+}
+
+copyFileSync(thumbDll, join(wixDir, "stirling_thumbnail_handler.dll"));
