@@ -59,8 +59,10 @@ class OrchestratorAgent:
                 ToolOutput(
                     self.math_auditor_agent,
                     name="math_auditor_agent",
-                    description="Delegate requests to check arithmetic, validate table totals, "
-                    "audit financial calculations, or verify mathematical accuracy in PDFs.",
+                    description=(
+                        "Delegate requests to check arithmetic, validate table totals, "
+                        "audit financial calculations, or verify mathematical accuracy in PDFs."
+                    ),
                 ),
                 ToolOutput(
                     self.unsupported_capability,
