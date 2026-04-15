@@ -46,8 +46,7 @@ frontend: &frontend
   - testing/**
   - docker/**
   - scripts/translations/*.py
-  - scripts/build-tauri-jlink.bat
-  - scripts/build-tauri-jlink.sh
+  - .taskfiles/desktop.yml
   - scripts/convert_cff_to_ttf.py
   - scripts/harvest_type3_fonts.py
   - scripts/ignore_translation.toml
