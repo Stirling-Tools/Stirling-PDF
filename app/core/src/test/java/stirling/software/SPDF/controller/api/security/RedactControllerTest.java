@@ -1,13 +1,16 @@
 package stirling.software.SPDF.controller.api.security;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -44,20 +47,34 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 
 @DisplayName("PDF Redaction Controller tests")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class RedactControllerTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     private static final Logger log = LoggerFactory.getLogger(RedactControllerTest.class);
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private TempFileManager tempFileManager;
 
     @InjectMocks private RedactController redactController;
 
@@ -112,6 +129,18 @@ class RedactControllerTest {
 
     @BeforeEach
     void setUp() throws IOException {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
         mockPdfFile =
                 new MockMultipartFile(
                         "fileInput",
@@ -159,14 +188,15 @@ class RedactControllerTest {
         when(mockCOSStream.createOutputStream()).thenReturn(mockOutputStream);
         when(mockCOSStream.createOutputStream(any())).thenReturn(mockOutputStream);
 
-        doAnswer(
-                        invocation -> {
-                            ByteArrayOutputStream baos = invocation.getArgument(0);
-                            baos.write("Mock PDF Content".getBytes());
+        lenient()
+                .doAnswer(
+                        inv -> {
+                            File f = inv.getArgument(0);
+                            java.nio.file.Files.write(f.toPath(), "mock pdf".getBytes());
                             return null;
                         })
                 .when(mockDocument)
-                .save(any(ByteArrayOutputStream.class));
+                .save(any(File.class));
         doNothing().when(mockDocument).close();
 
         // Initialize a real document for unit tests
@@ -298,12 +328,12 @@ class RedactControllerTest {
                     mock(org.apache.pdfbox.pdmodel.PDDocumentInformation.class);
             when(mockDocument.getDocumentInformation()).thenReturn(mockInfo);
 
-            ResponseEntity<byte[]> response = redactController.redactPdf(request);
+            ResponseEntity<StreamingResponseBody> response = redactController.redactPdf(request);
 
             assertNotNull(response);
             assertEquals(200, response.getStatusCode().value());
 
-            verify(mockDocument).save(any(ByteArrayOutputStream.class));
+            verify(mockDocument).save(any(File.class));
             verify(mockDocument).close();
         }
     }
@@ -702,14 +732,14 @@ class RedactControllerTest {
         request.setConvertPDFToImage(convertToImage);
 
         try {
-            ResponseEntity<byte[]> response = redactController.redactPdf(request);
+            ResponseEntity<StreamingResponseBody> response = redactController.redactPdf(request);
 
             if (expectSuccess && response != null) {
                 assertNotNull(response);
                 assertEquals(200, response.getStatusCode().value());
                 assertNotNull(response.getBody());
-                assertTrue(response.getBody().length > 0);
-                verify(mockDocument, times(1)).save(any(ByteArrayOutputStream.class));
+                assertTrue(drainBody(response).length > 0);
+                verify(mockDocument, times(1)).save(any(File.class));
                 verify(mockDocument, times(1)).close();
             }
         } catch (Exception e) {
@@ -727,12 +757,12 @@ class RedactControllerTest {
         request.setConvertPDFToImage(convertToImage);
 
         try {
-            ResponseEntity<byte[]> response = redactController.redactPDF(request);
+            ResponseEntity<StreamingResponseBody> response = redactController.redactPDF(request);
 
             if (response != null) {
                 assertNotNull(response);
                 assertEquals(200, response.getStatusCode().value());
-                verify(mockDocument, times(1)).save(any(ByteArrayOutputStream.class));
+                verify(mockDocument, times(1)).save(any(File.class));
             }
         } catch (Exception e) {
             log.info("Manual redaction test completed with graceful handling: {}", e.getMessage());
@@ -918,7 +948,7 @@ class RedactControllerTest {
             request.setListOfText("test");
             request.setRedactColor(null);
 
-            ResponseEntity<byte[]> response = redactController.redactPdf(request);
+            ResponseEntity<StreamingResponseBody> response = redactController.redactPdf(request);
 
             assertNotNull(response);
             assertEquals(200, response.getStatusCode().value());
@@ -942,7 +972,7 @@ class RedactControllerTest {
             ManualRedactPdfRequest request = createManualRedactPdfRequest();
             request.setRedactions(null);
 
-            ResponseEntity<byte[]> response = redactController.redactPDF(request);
+            ResponseEntity<StreamingResponseBody> response = redactController.redactPDF(request);
 
             assertNotNull(response);
             assertEquals(200, response.getStatusCode().value());
@@ -954,7 +984,7 @@ class RedactControllerTest {
             ManualRedactPdfRequest request = createManualRedactPdfRequest();
             request.setPageNumbers("100-200");
 
-            ResponseEntity<byte[]> response = redactController.redactPDF(request);
+            ResponseEntity<StreamingResponseBody> response = redactController.redactPDF(request);
 
             assertNotNull(response);
             assertEquals(200, response.getStatusCode().value());
@@ -1419,12 +1449,12 @@ class RedactControllerTest {
             request.setUseRegex(false);
             request.setWholeWordSearch(false);
 
-            ResponseEntity<byte[]> response = redactController.redactPdf(request);
+            ResponseEntity<StreamingResponseBody> response = redactController.redactPdf(request);
 
             assertNotNull(response);
             assertEquals(200, response.getStatusCode().value());
             assertNotNull(response.getBody());
-            assertTrue(response.getBody().length > 0);
+            assertTrue(drainBody(response).length > 0);
         }
     }
 }
