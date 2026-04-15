@@ -236,7 +236,9 @@ public class PipelineDirectoryProcessor {
                 operation.getOperation(),
                 inputExtensions);
 
-        boolean allowAllFiles = inputExtensions.contains("ALL");
+        // If inputExtensions is null, the API doc has no specific input type constraint,
+        // so allow all file types (e.g. /api/v1/convert/file/pdf accepts many office formats).
+        boolean allowAllFiles = inputExtensions == null || inputExtensions.contains("ALL");
 
         try (Stream<Path> paths = Files.list(dir)) {
             File[] files =
