@@ -63,11 +63,11 @@ jobs:
         with:
           gradle-version: 9.3.1
 
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
       - name: Get version number
         id: versionNumber
         run: |
-          echo "Running gradlew printVersion..."
-          ./gradlew printVersion --quiet
           VERSION=$(./gradlew printVersion --quiet | tail -1)
           echo "Extracted version: $VERSION"
           echo "versionNumber=$VERSION" >> $GITHUB_OUTPUT
@@ -295,8 +295,7 @@ jobs:
           DISABLE_ADDITIONAL_FEATURES: true
 
       - name: Install frontend dependencies
-        working-directory: ./frontend
-        run: npm ci
+        run: task frontend:install
 
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
