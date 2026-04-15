@@ -4,6 +4,7 @@ import org.apache.commons.csv.CSVFormat;
 
 import technology.tabula.writers.CSVWriter;
 
+/** Exposes Tabula's protected {@link CSVWriter#CSVWriter(CSVFormat)} constructor. */
 public class FlexibleCSVWriter extends CSVWriter {
 
     public FlexibleCSVWriter() {

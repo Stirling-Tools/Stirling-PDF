@@ -27,7 +27,7 @@ import tools.jackson.databind.ObjectMapper;
 /**
  * Orchestrator for the Math Auditor Agent (mathAuditorAgent).
  *
- * <p>Manages a two-step Java-Python protocol:
+ * <p>Manages a four-step Java-Python protocol:
  *
  * <ol>
  *   <li>Classify all pages cheaply with PDFBox (no OCR or Tabula yet).
