@@ -119,6 +119,8 @@ export const runPixelCompare = async ({
             totalPixels: payload.totalPixels,
             diffRatio: payload.diffRatio,
             sizeMismatch: payload.sizeMismatch,
+            ...(payload.missingBase ? { missingBase: true } : {}),
+            ...(payload.missingComparison ? { missingComparison: true } : {}),
           };
           pages.push(pageResult);
           onPageReady?.(pageResult);

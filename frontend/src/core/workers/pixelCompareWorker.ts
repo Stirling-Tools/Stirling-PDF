@@ -29,33 +29,42 @@ interface CanvasAndContext {
   context: OffscreenCanvasRenderingContext2D;
 }
 
-// pdfjs-dist 5.x expects CanvasFactory and FilterFactory to be **class constructors**
-// (it does `new CanvasFactory({ ownerDocument, enableHWA })` internally), so we export
-// the classes themselves rather than instances.
-class OffscreenCanvasFactory {
-  constructor(_opts?: { ownerDocument?: unknown; enableHWA?: boolean }) {
-    /* ownerDocument/enableHWA ignored — we always use OffscreenCanvas */
-  }
-
-  create(width: number, height: number): CanvasAndContext {
-    const canvas = new OffscreenCanvas(Math.max(1, width), Math.max(1, height));
-    const context = canvas.getContext("2d", { willReadFrequently: true });
-    if (!context) throw new Error(errorStrings.canvasContextUnavailable);
-    return { canvas, context };
-  }
-
-  reset(canvasAndContext: CanvasAndContext, width: number, height: number): void {
-    canvasAndContext.canvas.width = Math.max(1, width);
-    canvasAndContext.canvas.height = Math.max(1, height);
-  }
-
-  destroy(canvasAndContext: CanvasAndContext): void {
-    canvasAndContext.canvas.width = 0;
-    canvasAndContext.canvas.height = 0;
-    (canvasAndContext as { canvas: OffscreenCanvas | null }).canvas = null;
-    (canvasAndContext as { context: OffscreenCanvasRenderingContext2D | null }).context = null;
-  }
+interface ErrorStrings {
+  canvasContextUnavailable: string;
 }
+
+const DEFAULT_ERRORS: ErrorStrings = {
+  canvasContextUnavailable: "Unable to acquire 2D canvas context.",
+};
+
+// pdfjs-dist 5.x expects CanvasFactory and FilterFactory to be **class constructors**
+// (it does `new CanvasFactory({ ownerDocument, enableHWA })` internally), so we build
+// the class on demand with request-scoped error strings captured in its closure.
+const createOffscreenCanvasFactory = (errorStrings: ErrorStrings) =>
+  class OffscreenCanvasFactory {
+    constructor(_opts?: { ownerDocument?: unknown; enableHWA?: boolean }) {
+      /* ownerDocument/enableHWA ignored — we always use OffscreenCanvas */
+    }
+
+    create(width: number, height: number): CanvasAndContext {
+      const canvas = new OffscreenCanvas(Math.max(1, width), Math.max(1, height));
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      if (!context) throw new Error(errorStrings.canvasContextUnavailable);
+      return { canvas, context };
+    }
+
+    reset(canvasAndContext: CanvasAndContext, width: number, height: number): void {
+      canvasAndContext.canvas.width = Math.max(1, width);
+      canvasAndContext.canvas.height = Math.max(1, height);
+    }
+
+    destroy(canvasAndContext: CanvasAndContext): void {
+      canvasAndContext.canvas.width = 0;
+      canvasAndContext.canvas.height = 0;
+      (canvasAndContext as { canvas: OffscreenCanvas | null }).canvas = null;
+      (canvasAndContext as { context: OffscreenCanvasRenderingContext2D | null }).context = null;
+    }
+  };
 
 // BaseFilterFactory's defaults already return "none" for every filter, which is what
 // we want in a worker (no DOM, no SVG). Re-declare the same no-op class so pdfjs can
@@ -72,11 +81,6 @@ class NoopFilterFactory {
   destroy(_keepHCM?: boolean) { /* noop */ }
 }
 
-// Error strings are set by the main thread (i18n) at the start of each run.
-let errorStrings = {
-  canvasContextUnavailable: "Unable to acquire 2D canvas context.",
-};
-
 const CSS_DPI = 72;
 
 const post = (message: PixelCompareWorkerResponse, transfer: Transferable[] = []) => {
@@ -91,6 +95,7 @@ const renderPageToBitmap = async (
   scale: number,
   targetWidth: number,
   targetHeight: number,
+  errorStrings: ErrorStrings,
 ): Promise<{ imageData: ImageData; bitmap: ImageBitmap }> => {
   const viewport = page.getViewport({ scale });
   const renderedW = Math.max(1, Math.round(viewport.width));
@@ -121,7 +126,12 @@ const renderPageToBitmap = async (
 
 const ENCODE_OPTS: ImageEncodeOptions = { type: "image/webp", quality: 0.85 };
 
-const bitmapToBlob = async (bitmap: ImageBitmap, width: number, height: number): Promise<Blob> => {
+const bitmapToBlob = async (
+  bitmap: ImageBitmap,
+  width: number,
+  height: number,
+  errorStrings: ErrorStrings,
+): Promise<Blob> => {
   const canvas = new OffscreenCanvas(width, height);
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error(errorStrings.canvasContextUnavailable);
@@ -130,7 +140,12 @@ const bitmapToBlob = async (bitmap: ImageBitmap, width: number, height: number):
   return await canvas.convertToBlob(ENCODE_OPTS);
 };
 
-const diffDataToBlob = async (diff: ImageData, width: number, height: number): Promise<Blob> => {
+const diffDataToBlob = async (
+  diff: ImageData,
+  width: number,
+  height: number,
+  errorStrings: ErrorStrings,
+): Promise<Blob> => {
   const canvas = new OffscreenCanvas(width, height);
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error(errorStrings.canvasContextUnavailable);
@@ -156,6 +171,7 @@ interface PixelMatchColours {
 const createBlankRender = async (
   width: number,
   height: number,
+  errorStrings: ErrorStrings,
 ): Promise<{ imageData: ImageData; bitmap: ImageBitmap }> => {
   const canvas = new OffscreenCanvas(width, height);
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
@@ -176,6 +192,7 @@ const processPage = async (
   scale: number,
   threshold: number,
   colours: PixelMatchColours,
+  errorStrings: ErrorStrings,
 ): Promise<{ payload: PixelCompareWorkerPagePayload; totals: PageTotals }> => {
   const missingBase = pageNumber > basePages;
   const missingComparison = pageNumber > compPages;
@@ -207,11 +224,11 @@ const processPage = async (
 
     const [base, comp] = await Promise.all([
       basePage && baseViewport
-        ? renderPageToBitmap(basePage, scale, targetWidth, targetHeight)
-        : createBlankRender(targetWidth, targetHeight),
+        ? renderPageToBitmap(basePage, scale, targetWidth, targetHeight, errorStrings)
+        : createBlankRender(targetWidth, targetHeight, errorStrings),
       compPage && compViewport
-        ? renderPageToBitmap(compPage, scale, targetWidth, targetHeight)
-        : createBlankRender(targetWidth, targetHeight),
+        ? renderPageToBitmap(compPage, scale, targetWidth, targetHeight, errorStrings)
+        : createBlankRender(targetWidth, targetHeight, errorStrings),
     ]);
 
     const diffImage = new ImageData(targetWidth, targetHeight);
@@ -231,9 +248,9 @@ const processPage = async (
     );
 
     const [baseBlob, comparisonBlob, diffBlob] = await Promise.all([
-      bitmapToBlob(base.bitmap, targetWidth, targetHeight),
-      bitmapToBlob(comp.bitmap, targetWidth, targetHeight),
-      diffDataToBlob(diffImage, targetWidth, targetHeight),
+      bitmapToBlob(base.bitmap, targetWidth, targetHeight, errorStrings),
+      bitmapToBlob(comp.bitmap, targetWidth, targetHeight, errorStrings),
+      diffDataToBlob(diffImage, targetWidth, targetHeight, errorStrings),
     ]);
 
     const totalPixels = targetWidth * targetHeight;
@@ -307,7 +324,8 @@ self.addEventListener("message", async (event: MessageEvent<PixelCompareWorkerRe
     diffColor,
     diffColorAlt,
   } = message.payload;
-  errorStrings = errorTemplates;
+  const errorStrings: ErrorStrings = { ...DEFAULT_ERRORS, ...errorTemplates };
+  const OffscreenCanvasFactory = createOffscreenCanvasFactory(errorStrings);
   const colours: PixelMatchColours = { diffColor, diffColorAlt };
   const warnings: string[] = [];
   const scale = Math.max(0.5, dpi / CSS_DPI);
@@ -393,6 +411,7 @@ self.addEventListener("message", async (event: MessageEvent<PixelCompareWorkerRe
           scale,
           threshold,
           colours,
+          errorStrings,
         );
       },
       (_pageNumber, value) => {
