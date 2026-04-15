@@ -7,11 +7,16 @@ ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:${BASE_VERSION}
 # Stage 1: Build the Java application and frontend
 FROM gradle:9.3.1-jdk25 AS app-build
 
+ARG TASK_VERSION=3.49.1
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates \
     && update-ca-certificates \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
+    && ARCH=$(dpkg --print-architecture) \
+    && curl -fsSL "https://github.com/go-task/task/releases/download/v${TASK_VERSION}/task_${TASK_VERSION}_linux_${ARCH}.deb" -o /tmp/task.deb \
+    && dpkg -i /tmp/task.deb \
+    && rm /tmp/task.deb \
     && rm -rf /var/lib/apt/lists/*
 
 # JDK 25+: --add-exports is no longer accepted via JAVA_TOOL_OPTIONS; use JDK_JAVA_OPTIONS instead

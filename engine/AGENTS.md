@@ -4,9 +4,23 @@ This file is for AI agents working in `engine/`.
 
 The engine is a Python reasoning service for Stirling. It plans and interprets work, but it does not own durable state, and it does not execute Stirling PDF operations directly. Keep the service narrow: typed contracts in, typed contracts out, with AI only where it adds reasoning value.
 
+## Commands
+
+All engine commands can be run from the repository root using Task:
+
+- `task engine:check` — run all checks (typecheck + lint + format-check + test)
+- `task engine:fix` — auto-fix lint + formatting
+- `task engine:install` — install Python dependencies via uv
+- `task engine:dev` — start FastAPI with hot reload (localhost:5001)
+- `task engine:test` — run pytest
+- `task engine:lint` — run ruff linting
+- `task engine:typecheck` — run pyright
+- `task engine:format` — format code with ruff
+- `task engine:tool-models` — generate tool_models.py from frontend TypeScript defs
+
 ## Code Style
 
-- Keep `make check` passing.
+- Keep `task engine:check` passing.
 - Use modern Python when it improves clarity.
 - Prefer explicit names to cleverness.
 - Avoid nested functions and nested classes unless the language construct requires them.
