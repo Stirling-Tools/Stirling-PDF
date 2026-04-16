@@ -46,50 +46,53 @@ jobs:
           fi
 
       - name: Run fixers
-        # Ignore errors here because we're going to add comments for them in the following steps before actually failing
-        run: task engine:fix || true
+        run: task engine:fix
 
-      - name: Check for fixer changes
+      - name: Verify fixes are committed
         id: fixer_changes
         run: |
-          if git diff --quiet; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
+          if ! git diff --quiet; then
+            git --no-pager diff --stat
+            echo "::error::There are issues with your Python code that will need to be fixed before they can be merged in. Run 'task engine:fix' to auto-fix what can be fixed automatically, then run 'task engine:check' to see what still needs fixing manually."
+            exit 1
           fi
 
-      - name: Post fixer suggestions
-        if: steps.fixer_changes.outputs.changed == 'true' && github.event_name == 'pull_request'
-        uses: reviewdog/action-suggester@v1
+      - name: Comment on fixer failures
+        if: steps.fixer_changes.outcome == 'failure' && github.event_name == 'pull_request'
         continue-on-error: true
-        with:
-          tool_name: engine-make-fix
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          filter_mode: file
-          fail_level: any
-          level: info
-
-      - name: Comment on fixer suggestions
-        if: steps.fixer_changes.outputs.changed == 'true' && github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
-            await github.rest.issues.createComment({
+            const marker = '<!-- engine-check -->';
+            const body = [
+              marker,
+              '### Engine Check Failed',
+              '',
+              'There are issues with your Python code that will need to be fixed before they can be merged in.',
+              '',
+              'Run `task engine:fix` to auto-fix what can be fixed automatically, then run `task engine:check` to see what still needs fixing manually.',
+            ].join('\n');
+            const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: "The Python code in your PR has formatting/linting issues. Consider running `task engine:fix` locally or setting up your editor's Ruff integration to auto-format and lint your files as you go, or commit the suggested changes on this PR.",
             });
-
-      - name: Verify fixer changes are committed
-        if: steps.fixer_changes.outputs.changed == 'true'
-        run: |
-          if ! git diff --exit-code; then
-            echo "Fixes are out of date."
-            echo "Apply the reviewdog suggestions or run 'task engine:fix' from the repo root and commit the updated files."
-            git --no-pager diff --stat
-            exit 1
-          fi
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
 
       - name: Run linting
         run: task engine:lint
