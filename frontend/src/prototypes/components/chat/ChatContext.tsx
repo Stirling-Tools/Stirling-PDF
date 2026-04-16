@@ -1,5 +1,6 @@
 import { createContext, useContext, useReducer, useCallback, useRef, type ReactNode } from "react";
 import { useAllFiles } from "@app/contexts/FileContext";
+import { getAuthHeaders } from "@app/services/apiClientSetup";
 
 export interface ChatMessage {
   id: string;
@@ -206,6 +207,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         const response = await fetch("/api/v1/ai/orchestrate/stream", {
           method: "POST",
           body: formData,
+          headers: getAuthHeaders(),
+          credentials: "include",
           signal: controller.signal,
         });
 
