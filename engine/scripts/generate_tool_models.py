@@ -4,8 +4,6 @@
 Uses datamodel-code-generator to convert OpenAPI request schemas to Pydantic models.
 Run via:
     task engine:tool-models
-or directly:
-    python engine/scripts/generate_tool_models.py --spec SwaggerDoc.json
 """
 
 from __future__ import annotations
