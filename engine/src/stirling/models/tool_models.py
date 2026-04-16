@@ -223,15 +223,15 @@ class BookletImpositionParams(ApiModel):
     spine_location: SpineLocation | None = Field(SpineLocation.left, description="The spine location for the booklet.")
 
 
-class CbrParams(ApiModel):
-    dpi: int | None = Field(
-        None, description="The DPI (Dots Per Inch) for rendering PDF pages as images", examples=[150]
+class CbrToPdfParams(ApiModel):
+    optimize_for_ebook: bool | None = Field(
+        False, description="Optimize the output PDF for ebook reading using Ghostscript"
     )
 
 
-class CbzParams(ApiModel):
-    dpi: int | None = Field(
-        None, description="The DPI (Dots Per Inch) for rendering PDF pages as images", examples=[150]
+class CbzToPdfParams(ApiModel):
+    optimize_for_ebook: bool | None = Field(
+        False, description="Optimize the output PDF for ebook reading using Ghostscript"
     )
 
 
@@ -311,15 +311,44 @@ class CropParams(ApiModel):
     y: float | None = Field(None, description="The y-coordinate of the top-left corner of the crop area")
 
 
-class CsvParams(ApiModel):
-    page_numbers: str | None = Field(
-        "all",
-        description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
-    )
-
-
 class DeleteAttachmentParams(ApiModel):
     attachment_name: str | None = Field(None, description="The name of the attachment to delete")
+
+
+class EmbedAllFonts(Enum):
+    boolean_true = True
+    boolean_false = False
+
+
+class IncludePageNumbers(Enum):
+    boolean_true = True
+    boolean_false = False
+
+
+class IncludeTableOfContents(Enum):
+    boolean_true = True
+    boolean_false = False
+
+
+class OptimizeForEbook(Enum):
+    boolean_true = True
+    boolean_false = False
+
+
+class EbookToPdfParams(ApiModel):
+    embed_all_fonts: EmbedAllFonts | None = Field(
+        EmbedAllFonts.boolean_false, description="Embed all fonts from the eBook into the generated PDF"
+    )
+    include_page_numbers: IncludePageNumbers | None = Field(
+        IncludePageNumbers.boolean_false, description="Add page numbers to the generated PDF"
+    )
+    include_table_of_contents: IncludeTableOfContents | None = Field(
+        IncludeTableOfContents.boolean_false, description="Add a generated table of contents to the resulting PDF"
+    )
+    optimize_for_ebook: OptimizeForEbook | None = Field(
+        OptimizeForEbook.boolean_false,
+        description="Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)",
+    )
 
 
 class EditTableOfContentsParams(ApiModel):
@@ -335,32 +364,22 @@ class EditTableOfContentsParams(ApiModel):
     )
 
 
-class DetectChapters(Enum):
-    boolean_true = True
-    boolean_false = False
-
-
-class OutputFormat(StrEnum):
-    epub = "EPUB"
-    azw3 = "AZW3"
-    epub_1 = "EPUB"
-    azw3_1 = "AZW3"
-
-
-class TargetDevice(StrEnum):
-    tablet_phone_images = "TABLET_PHONE_IMAGES"
-    kindle_eink_text = "KINDLE_EINK_TEXT"
-    tablet_phone_images_1 = "TABLET_PHONE_IMAGES"
-    kindle_eink_text_1 = "KINDLE_EINK_TEXT"
-
-
-class EpubParams(ApiModel):
-    detect_chapters: DetectChapters | None = Field(
-        DetectChapters.boolean_true, description="Detect headings that look like chapters and insert EPUB page breaks."
+class EmlToPdfParams(ApiModel):
+    download_html: bool | None = Field(
+        None, description="Download HTML intermediate file instead of PDF", examples=[False]
     )
-    output_format: OutputFormat | None = Field(OutputFormat.epub, description="Choose the output format for the ebook.")
-    target_device: TargetDevice | None = Field(
-        TargetDevice.tablet_phone_images, description="Choose an output profile optimized for the reader device."
+    include_all_recipients: bool | None = Field(
+        None, description="Include CC and BCC recipients in header (if available)", examples=[True]
+    )
+    include_attachments: bool | None = Field(
+        None, description="Include email attachments in the PDF output", examples=[False]
+    )
+    max_attachment_size_mb: int | None = Field(
+        None,
+        description="Maximum attachment size in MB to include (default 10MB, range: 1-100)",
+        examples=[10],
+        ge=1,
+        le=100,
     )
 
 
@@ -391,39 +410,29 @@ class FlattenParams(ApiModel):
     )
 
 
+class HtmlToPdfParams(ApiModel):
+    zoom: float | None = Field(1, description="Zoom level for displaying the website. Default is '1'.")
+
+
 class ColorType(StrEnum):
     color = "color"
     greyscale = "greyscale"
     blackwhite = "blackwhite"
 
 
-class ImageFormat(StrEnum):
-    png = "png"
-    jpeg = "jpeg"
-    jpg = "jpg"
-    gif = "gif"
-    webp = "webp"
+class FitOption(StrEnum):
+    fill_page = "fillPage"
+    fit_document_to_image = "fitDocumentToImage"
+    maintain_aspect_ratio = "maintainAspectRatio"
 
 
-class SingleOrMultiple(StrEnum):
-    single = "single"
-    multiple = "multiple"
-
-
-class ImgParams(ApiModel):
+class ImgToPdfParams(ApiModel):
+    auto_rotate: bool | None = Field(
+        False, description="Whether to automatically rotate the images to better fit the PDF page"
+    )
     color_type: ColorType | None = Field(ColorType.color, description="The color type of the output image(s)")
-    dpi: int | None = Field(300, description="The DPI (dots per inch) for the output image(s)")
-    image_format: ImageFormat | None = Field(ImageFormat.png, description="The output image format")
-    include_annotations: bool | None = Field(
-        False, description="Include annotations such as comments in the output image(s)"
-    )
-    page_numbers: str | None = Field(
-        "all",
-        description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
-    )
-    single_or_multiple: SingleOrMultiple | None = Field(
-        SingleOrMultiple.multiple,
-        description="Choose between a single image containing all pages or separate images for each page",
+    fit_option: FitOption | None = Field(
+        FitOption.fill_page, description="Option to determine how the image will fit onto the page"
     )
 
 
@@ -575,99 +584,121 @@ class OverlayPdfsParams(ApiModel):
     )
 
 
-class Pdf2Params(ApiModel):
-    optimize_for_ebook: bool | None = Field(
-        False, description="Optimize the output PDF for ebook reading using Ghostscript"
+class PdfToCbrParams(ApiModel):
+    dpi: int | None = Field(
+        None, description="The DPI (Dots Per Inch) for rendering PDF pages as images", examples=[150]
     )
 
 
-class EmbedAllFonts(Enum):
+class PdfToCbzParams(ApiModel):
+    dpi: int | None = Field(
+        None, description="The DPI (Dots Per Inch) for rendering PDF pages as images", examples=[150]
+    )
+
+
+class PdfToCsvParams(ApiModel):
+    page_numbers: str | None = Field(
+        "all",
+        description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
+    )
+
+
+class DetectChapters(Enum):
     boolean_true = True
     boolean_false = False
 
 
-class IncludePageNumbers(Enum):
-    boolean_true = True
-    boolean_false = False
+class OutputFormat(StrEnum):
+    epub = "EPUB"
+    azw3 = "AZW3"
+    epub_1 = "EPUB"
+    azw3_1 = "AZW3"
 
 
-class IncludeTableOfContents(Enum):
-    boolean_true = True
-    boolean_false = False
+class TargetDevice(StrEnum):
+    tablet_phone_images = "TABLET_PHONE_IMAGES"
+    kindle_eink_text = "KINDLE_EINK_TEXT"
+    tablet_phone_images_1 = "TABLET_PHONE_IMAGES"
+    kindle_eink_text_1 = "KINDLE_EINK_TEXT"
 
 
-class OptimizeForEbook(Enum):
-    boolean_true = True
-    boolean_false = False
-
-
-class Pdf3Params(ApiModel):
-    embed_all_fonts: EmbedAllFonts | None = Field(
-        EmbedAllFonts.boolean_false, description="Embed all fonts from the eBook into the generated PDF"
+class PdfToEpubParams(ApiModel):
+    detect_chapters: DetectChapters | None = Field(
+        DetectChapters.boolean_true, description="Detect headings that look like chapters and insert EPUB page breaks."
     )
-    include_page_numbers: IncludePageNumbers | None = Field(
-        IncludePageNumbers.boolean_false, description="Add page numbers to the generated PDF"
-    )
-    include_table_of_contents: IncludeTableOfContents | None = Field(
-        IncludeTableOfContents.boolean_false, description="Add a generated table of contents to the resulting PDF"
-    )
-    optimize_for_ebook: OptimizeForEbook | None = Field(
-        OptimizeForEbook.boolean_false,
-        description="Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)",
+    output_format: OutputFormat | None = Field(OutputFormat.epub, description="Choose the output format for the ebook.")
+    target_device: TargetDevice | None = Field(
+        TargetDevice.tablet_phone_images, description="Choose an output profile optimized for the reader device."
     )
 
 
-class Pdf4Params(ApiModel):
-    download_html: bool | None = Field(
-        None, description="Download HTML intermediate file instead of PDF", examples=[False]
-    )
-    include_all_recipients: bool | None = Field(
-        None, description="Include CC and BCC recipients in header (if available)", examples=[True]
-    )
-    include_attachments: bool | None = Field(
-        None, description="Include email attachments in the PDF output", examples=[False]
-    )
-    max_attachment_size_mb: int | None = Field(
-        None,
-        description="Maximum attachment size in MB to include (default 10MB, range: 1-100)",
-        examples=[10],
-        ge=1,
-        le=100,
-    )
+class ImageFormat(StrEnum):
+    png = "png"
+    jpeg = "jpeg"
+    jpg = "jpg"
+    gif = "gif"
+    webp = "webp"
 
 
-class Pdf5Params(ApiModel):
-    zoom: float | None = Field(1, description="Zoom level for displaying the website. Default is '1'.")
+class SingleOrMultiple(StrEnum):
+    single = "single"
+    multiple = "multiple"
 
 
-class FitOption(StrEnum):
-    fill_page = "fillPage"
-    fit_document_to_image = "fitDocumentToImage"
-    maintain_aspect_ratio = "maintainAspectRatio"
-
-
-class Pdf6Params(ApiModel):
-    auto_rotate: bool | None = Field(
-        False, description="Whether to automatically rotate the images to better fit the PDF page"
-    )
+class PdfToImgParams(ApiModel):
     color_type: ColorType | None = Field(ColorType.color, description="The color type of the output image(s)")
-    fit_option: FitOption | None = Field(
-        FitOption.fill_page, description="Option to determine how the image will fit onto the page"
+    dpi: int | None = Field(300, description="The DPI (dots per inch) for the output image(s)")
+    image_format: ImageFormat | None = Field(ImageFormat.png, description="The output image format")
+    include_annotations: bool | None = Field(
+        False, description="Include annotations such as comments in the output image(s)"
     )
-
-
-class Pdf7Params(ApiModel):
-    combine_into_single_pdf: bool | None = Field(
-        False,
-        description="Whether to combine all SVG files into a single PDF (each SVG as a separate page) or create separate PDF files for each SVG.",
+    page_numbers: str | None = Field(
+        "all",
+        description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
     )
-
-
-class Pdf8Params(ApiModel):
-    url_input: str | None = Field(None, description="The input URL to be converted to a PDF file")
+    single_or_multiple: SingleOrMultiple | None = Field(
+        SingleOrMultiple.multiple,
+        description="Choose between a single image containing all pages or separate images for each page",
+    )
 
 
 class OutputFormat1(StrEnum):
+    pdfa = "pdfa"
+    pdfa_1 = "pdfa-1"
+    pdfa_2 = "pdfa-2"
+    pdfa_2b = "pdfa-2b"
+    pdfa_3 = "pdfa-3"
+    pdfa_3b = "pdfa-3b"
+    pdfx = "pdfx"
+
+
+class PdfToPdfaParams(ApiModel):
+    output_format: OutputFormat1 | None = Field(None, description="The output format type (PDF/A or PDF/X)")
+    strict: bool | None = Field(
+        None, description="If true, the conversion will fail if the output is not perfectly compliant"
+    )
+
+
+class OutputFormat2(StrEnum):
+    ppt = "ppt"
+    pptx = "pptx"
+    odp = "odp"
+
+
+class PdfToPresentationParams(ApiModel):
+    output_format: OutputFormat2 | None = Field(None, description="The output Presentation format")
+
+
+class OutputFormat3(StrEnum):
+    rtf = "rtf"
+    txt = "txt"
+
+
+class PdfToTextParams(ApiModel):
+    output_format: OutputFormat3 | None = Field(None, description="The output Text or RTF format")
+
+
+class OutputFormat4(StrEnum):
     eps = "eps"
     ps = "ps"
     pcl = "pcl"
@@ -679,42 +710,26 @@ class Prepress(Enum):
     boolean_false = False
 
 
-class Pdf9Params(ApiModel):
-    output_format: OutputFormat1 | None = Field(OutputFormat1.eps, description="Target vector format extension")
+class PdfToVectorParams(ApiModel):
+    output_format: OutputFormat4 | None = Field(OutputFormat4.eps, description="Target vector format extension")
     prepress: Prepress | None = Field(Prepress.boolean_false, description="Apply Ghostscript prepress settings")
 
 
-class PdfParams(ApiModel):
-    optimize_for_ebook: bool | None = Field(
-        False, description="Optimize the output PDF for ebook reading using Ghostscript"
+class OutputFormat5(StrEnum):
+    doc = "doc"
+    docx = "docx"
+    odt = "odt"
+
+
+class PdfToWordParams(ApiModel):
+    output_format: OutputFormat5 | None = Field(None, description="The output Word document format")
+
+
+class PdfToXlsxParams(ApiModel):
+    page_numbers: str | None = Field(
+        "all",
+        description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
     )
-
-
-class OutputFormat2(StrEnum):
-    pdfa = "pdfa"
-    pdfa_1 = "pdfa-1"
-    pdfa_2 = "pdfa-2"
-    pdfa_2b = "pdfa-2b"
-    pdfa_3 = "pdfa-3"
-    pdfa_3b = "pdfa-3b"
-    pdfx = "pdfx"
-
-
-class PdfaParams(ApiModel):
-    output_format: OutputFormat2 | None = Field(None, description="The output format type (PDF/A or PDF/X)")
-    strict: bool | None = Field(
-        None, description="If true, the conversion will fail if the output is not perfectly compliant"
-    )
-
-
-class OutputFormat3(StrEnum):
-    ppt = "ppt"
-    pptx = "pptx"
-    odp = "odp"
-
-
-class PresentationParams(ApiModel):
-    output_format: OutputFormat3 | None = Field(None, description="The output Presentation format")
 
 
 class CustomMode(StrEnum):
@@ -965,13 +980,11 @@ class SplitPdfBySectionsParams(ApiModel):
     vertical_divisions: int | None = Field(1, description="Number of vertical divisions for each PDF page", ge=0, le=50)
 
 
-class OutputFormat4(StrEnum):
-    rtf = "rtf"
-    txt = "txt"
-
-
-class TextParams(ApiModel):
-    output_format: OutputFormat4 | None = Field(None, description="The output Text or RTF format")
+class SvgToPdfParams(ApiModel):
+    combine_into_single_pdf: bool | None = Field(
+        False,
+        description="Whether to combine all SVG files into a single PDF (each SVG as a separate page) or create separate PDF files for each SVG.",
+    )
 
 
 class TimestampPdfParams(ApiModel):
@@ -1012,33 +1025,20 @@ class UpdateMetadataParams(ApiModel):
     trapped: Trapped | None = Field(Trapped.false, description="The trapped status of the document")
 
 
-class OutputFormat5(StrEnum):
+class UrlToPdfParams(ApiModel):
+    url_input: str | None = Field(None, description="The input URL to be converted to a PDF file")
+
+
+class OutputFormat6(StrEnum):
     eps = "eps"
     ps = "ps"
     pcl = "pcl"
     xps = "xps"
 
 
-class VectorParams(ApiModel):
-    output_format: OutputFormat5 | None = Field(OutputFormat5.eps, description="Target vector format extension")
+class VectorToPdfParams(ApiModel):
+    output_format: OutputFormat6 | None = Field(OutputFormat6.eps, description="Target vector format extension")
     prepress: Prepress | None = Field(Prepress.boolean_false, description="Apply Ghostscript prepress settings")
-
-
-class OutputFormat6(StrEnum):
-    doc = "doc"
-    docx = "docx"
-    odt = "odt"
-
-
-class WordParams(ApiModel):
-    output_format: OutputFormat6 | None = Field(None, description="The output Word document format")
-
-
-class XlsxParams(ApiModel):
-    page_numbers: str | None = Field(
-        "all",
-        description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
-    )
 
 
 class RedactionArea(RootModel[Any]):
@@ -1057,26 +1057,26 @@ class RedactParams(ApiModel):
 
 class Model(
     RootModel[
-        PdfParams
-        | Pdf2Params
-        | Pdf3Params
-        | Pdf4Params
-        | Pdf5Params
-        | Pdf6Params
-        | CbrParams
-        | CbzParams
-        | CsvParams
-        | EpubParams
-        | ImgParams
-        | PdfaParams
-        | PresentationParams
-        | TextParams
-        | VectorParams
-        | WordParams
-        | XlsxParams
-        | Pdf7Params
-        | Pdf8Params
-        | Pdf9Params
+        CbrToPdfParams
+        | CbzToPdfParams
+        | EbookToPdfParams
+        | EmlToPdfParams
+        | HtmlToPdfParams
+        | ImgToPdfParams
+        | PdfToCbrParams
+        | PdfToCbzParams
+        | PdfToCsvParams
+        | PdfToEpubParams
+        | PdfToImgParams
+        | PdfToPdfaParams
+        | PdfToPresentationParams
+        | PdfToTextParams
+        | PdfToVectorParams
+        | PdfToWordParams
+        | PdfToXlsxParams
+        | SvgToPdfParams
+        | UrlToPdfParams
+        | VectorToPdfParams
         | BookletImpositionParams
         | CropParams
         | EditTableOfContentsParams
@@ -1121,26 +1121,26 @@ class Model(
     ]
 ):
     root: (
-        PdfParams
-        | Pdf2Params
-        | Pdf3Params
-        | Pdf4Params
-        | Pdf5Params
-        | Pdf6Params
-        | CbrParams
-        | CbzParams
-        | CsvParams
-        | EpubParams
-        | ImgParams
-        | PdfaParams
-        | PresentationParams
-        | TextParams
-        | VectorParams
-        | WordParams
-        | XlsxParams
-        | Pdf7Params
-        | Pdf8Params
-        | Pdf9Params
+        CbrToPdfParams
+        | CbzToPdfParams
+        | EbookToPdfParams
+        | EmlToPdfParams
+        | HtmlToPdfParams
+        | ImgToPdfParams
+        | PdfToCbrParams
+        | PdfToCbzParams
+        | PdfToCsvParams
+        | PdfToEpubParams
+        | PdfToImgParams
+        | PdfToPdfaParams
+        | PdfToPresentationParams
+        | PdfToTextParams
+        | PdfToVectorParams
+        | PdfToWordParams
+        | PdfToXlsxParams
+        | SvgToPdfParams
+        | UrlToPdfParams
+        | VectorToPdfParams
         | BookletImpositionParams
         | CropParams
         | EditTableOfContentsParams
@@ -1186,26 +1186,26 @@ class Model(
 
 
 type ParamToolModel = (
-    PdfParams
-    | Pdf2Params
-    | Pdf3Params
-    | Pdf4Params
-    | Pdf5Params
-    | Pdf6Params
-    | CbrParams
-    | CbzParams
-    | CsvParams
-    | EpubParams
-    | ImgParams
-    | PdfaParams
-    | PresentationParams
-    | TextParams
-    | VectorParams
-    | WordParams
-    | XlsxParams
-    | Pdf7Params
-    | Pdf8Params
-    | Pdf9Params
+    CbrToPdfParams
+    | CbzToPdfParams
+    | EbookToPdfParams
+    | EmlToPdfParams
+    | HtmlToPdfParams
+    | ImgToPdfParams
+    | PdfToCbrParams
+    | PdfToCbzParams
+    | PdfToCsvParams
+    | PdfToEpubParams
+    | PdfToImgParams
+    | PdfToPdfaParams
+    | PdfToPresentationParams
+    | PdfToTextParams
+    | PdfToVectorParams
+    | PdfToWordParams
+    | PdfToXlsxParams
+    | SvgToPdfParams
+    | UrlToPdfParams
+    | VectorToPdfParams
     | BookletImpositionParams
     | CropParams
     | EditTableOfContentsParams
@@ -1252,26 +1252,26 @@ type ParamToolModelType = type[ParamToolModel]
 
 
 class ToolEndpoint(StrEnum):
-    PDF = "/api/v1/convert/cbr/pdf"
-    PDF_2 = "/api/v1/convert/cbz/pdf"
-    PDF_3 = "/api/v1/convert/ebook/pdf"
-    PDF_4 = "/api/v1/convert/eml/pdf"
-    PDF_5 = "/api/v1/convert/html/pdf"
-    PDF_6 = "/api/v1/convert/img/pdf"
-    CBR = "/api/v1/convert/pdf/cbr"
-    CBZ = "/api/v1/convert/pdf/cbz"
-    CSV = "/api/v1/convert/pdf/csv"
-    EPUB = "/api/v1/convert/pdf/epub"
-    IMG = "/api/v1/convert/pdf/img"
-    PDFA = "/api/v1/convert/pdf/pdfa"
-    PRESENTATION = "/api/v1/convert/pdf/presentation"
-    TEXT = "/api/v1/convert/pdf/text"
-    VECTOR = "/api/v1/convert/pdf/vector"
-    WORD = "/api/v1/convert/pdf/word"
-    XLSX = "/api/v1/convert/pdf/xlsx"
-    PDF_7 = "/api/v1/convert/svg/pdf"
-    PDF_8 = "/api/v1/convert/url/pdf"
-    PDF_9 = "/api/v1/convert/vector/pdf"
+    CBR_TO_PDF = "/api/v1/convert/cbr/pdf"
+    CBZ_TO_PDF = "/api/v1/convert/cbz/pdf"
+    EBOOK_TO_PDF = "/api/v1/convert/ebook/pdf"
+    EML_TO_PDF = "/api/v1/convert/eml/pdf"
+    HTML_TO_PDF = "/api/v1/convert/html/pdf"
+    IMG_TO_PDF = "/api/v1/convert/img/pdf"
+    PDF_TO_CBR = "/api/v1/convert/pdf/cbr"
+    PDF_TO_CBZ = "/api/v1/convert/pdf/cbz"
+    PDF_TO_CSV = "/api/v1/convert/pdf/csv"
+    PDF_TO_EPUB = "/api/v1/convert/pdf/epub"
+    PDF_TO_IMG = "/api/v1/convert/pdf/img"
+    PDF_TO_PDFA = "/api/v1/convert/pdf/pdfa"
+    PDF_TO_PRESENTATION = "/api/v1/convert/pdf/presentation"
+    PDF_TO_TEXT = "/api/v1/convert/pdf/text"
+    PDF_TO_VECTOR = "/api/v1/convert/pdf/vector"
+    PDF_TO_WORD = "/api/v1/convert/pdf/word"
+    PDF_TO_XLSX = "/api/v1/convert/pdf/xlsx"
+    SVG_TO_PDF = "/api/v1/convert/svg/pdf"
+    URL_TO_PDF = "/api/v1/convert/url/pdf"
+    VECTOR_TO_PDF = "/api/v1/convert/vector/pdf"
     BOOKLET_IMPOSITION = "/api/v1/general/booklet-imposition"
     CROP = "/api/v1/general/crop"
     EDIT_TABLE_OF_CONTENTS = "/api/v1/general/edit-table-of-contents"
@@ -1316,26 +1316,26 @@ class ToolEndpoint(StrEnum):
 
 
 OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
-    ToolEndpoint.PDF: PdfParams,
-    ToolEndpoint.PDF_2: Pdf2Params,
-    ToolEndpoint.PDF_3: Pdf3Params,
-    ToolEndpoint.PDF_4: Pdf4Params,
-    ToolEndpoint.PDF_5: Pdf5Params,
-    ToolEndpoint.PDF_6: Pdf6Params,
-    ToolEndpoint.CBR: CbrParams,
-    ToolEndpoint.CBZ: CbzParams,
-    ToolEndpoint.CSV: CsvParams,
-    ToolEndpoint.EPUB: EpubParams,
-    ToolEndpoint.IMG: ImgParams,
-    ToolEndpoint.PDFA: PdfaParams,
-    ToolEndpoint.PRESENTATION: PresentationParams,
-    ToolEndpoint.TEXT: TextParams,
-    ToolEndpoint.VECTOR: VectorParams,
-    ToolEndpoint.WORD: WordParams,
-    ToolEndpoint.XLSX: XlsxParams,
-    ToolEndpoint.PDF_7: Pdf7Params,
-    ToolEndpoint.PDF_8: Pdf8Params,
-    ToolEndpoint.PDF_9: Pdf9Params,
+    ToolEndpoint.CBR_TO_PDF: CbrToPdfParams,
+    ToolEndpoint.CBZ_TO_PDF: CbzToPdfParams,
+    ToolEndpoint.EBOOK_TO_PDF: EbookToPdfParams,
+    ToolEndpoint.EML_TO_PDF: EmlToPdfParams,
+    ToolEndpoint.HTML_TO_PDF: HtmlToPdfParams,
+    ToolEndpoint.IMG_TO_PDF: ImgToPdfParams,
+    ToolEndpoint.PDF_TO_CBR: PdfToCbrParams,
+    ToolEndpoint.PDF_TO_CBZ: PdfToCbzParams,
+    ToolEndpoint.PDF_TO_CSV: PdfToCsvParams,
+    ToolEndpoint.PDF_TO_EPUB: PdfToEpubParams,
+    ToolEndpoint.PDF_TO_IMG: PdfToImgParams,
+    ToolEndpoint.PDF_TO_PDFA: PdfToPdfaParams,
+    ToolEndpoint.PDF_TO_PRESENTATION: PdfToPresentationParams,
+    ToolEndpoint.PDF_TO_TEXT: PdfToTextParams,
+    ToolEndpoint.PDF_TO_VECTOR: PdfToVectorParams,
+    ToolEndpoint.PDF_TO_WORD: PdfToWordParams,
+    ToolEndpoint.PDF_TO_XLSX: PdfToXlsxParams,
+    ToolEndpoint.SVG_TO_PDF: SvgToPdfParams,
+    ToolEndpoint.URL_TO_PDF: UrlToPdfParams,
+    ToolEndpoint.VECTOR_TO_PDF: VectorToPdfParams,
     ToolEndpoint.BOOKLET_IMPOSITION: BookletImpositionParams,
     ToolEndpoint.CROP: CropParams,
     ToolEndpoint.EDIT_TABLE_OF_CONTENTS: EditTableOfContentsParams,
