@@ -193,7 +193,6 @@ def generate_models_code(combined_schema: dict[str, Any]) -> str:
         set_default_enum_member=True,
         enable_version_header=False,
         custom_file_header=_FILE_HEADER,
-        additional_imports=["enum.StrEnum"],
         formatters=[Formatter.RUFF_FORMAT, Formatter.RUFF_CHECK],
         settings_path=_ENGINE_ROOT / "pyproject.toml",
     )
@@ -201,30 +200,32 @@ def generate_models_code(combined_schema: dict[str, Any]) -> str:
 
 
 def write_output(out_path: Path, tools: list[ToolSpec], models_code: str) -> None:
-    # ParamToolModel union
-    union_lines = ["", "", "type ParamToolModel = ("]
+    union_lines = ["type ParamToolModel = ("]
     for i, tool in enumerate(tools):
         prefix = "    | " if i > 0 else "    "
         union_lines.append(f"{prefix}{tool.class_name}")
     union_lines.append(")")
     union_lines.append("type ParamToolModelType = type[ParamToolModel]")
 
-    # ToolEndpoint enum
-    enum_lines = ["", "", "class ToolEndpoint(StrEnum):"]
-    for tool in tools:
-        enum_lines.append(f'    {tool.enum_name} = "{tool.path}"')
+    enum_lines = [
+        "class ToolEndpoint(StrEnum):",
+        *(f'    {tool.enum_name} = "{tool.path}"' for tool in tools),
+    ]
 
-    # OPERATIONS dict
-    ops_lines = ["", "", "OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {"]
-    for tool in tools:
-        ops_lines.append(f"    ToolEndpoint.{tool.enum_name}: {tool.class_name},")
-    ops_lines.append("}")
+    ops_lines = [
+        "OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {",
+        *(f"    ToolEndpoint.{tool.enum_name}: {tool.class_name}," for tool in tools),
+        "}",
+    ]
 
     parts = [
         models_code,
-        "\n".join(union_lines),
-        "\n".join(enum_lines),
-        "\n".join(ops_lines),
+        "\n",
+        *union_lines,
+        "\n",
+        *enum_lines,
+        "\n",
+        *ops_lines,
         "",
     ]
     out_path.write_text("\n".join(parts), encoding="utf-8")
