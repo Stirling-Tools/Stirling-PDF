@@ -17,14 +17,8 @@ from typing import Any
 from datamodel_code_generator import InputFileType, PythonVersion, generate
 from datamodel_code_generator.enums import DataModelType
 from datamodel_code_generator.format import Formatter
-
-# Only tool endpoints under these path prefixes are included.
-ALLOWED_PATH_PREFIXES = (
-    "/api/v1/general/",
-    "/api/v1/misc/",
-    "/api/v1/security/",
-    "/api/v1/convert/",
-)
+from referencing import Registry, Resource
+from referencing.jsonschema import DRAFT202012
 
 # Fields inherited from PDFFile base class — not tool parameters.
 BASE_CLASS_FIELDS = frozenset({"fileInput", "fileId"})
@@ -38,47 +32,90 @@ _FILE_HEADER = (
 )
 
 
-def _resolve_ref(spec: dict[str, Any], ref: str) -> dict[str, Any]:
-    parts = ref.lstrip("#/").split("/")
-    node: Any = spec
-    for part in parts:
-        node = node[part]
-    return node
+@dataclass
+class ToolSpec:
+    path: str
+    enum_name: str
+    class_name: str
 
 
-def _collect_properties(spec: dict[str, Any], schema: dict[str, Any]) -> dict[str, Any]:
-    if "$ref" in schema:
-        schema = _resolve_ref(spec, schema["$ref"])
-    if "allOf" in schema:
-        merged: dict[str, Any] = {}
-        for sub in schema["allOf"]:
-            merged.update(_collect_properties(spec, sub))
-        return merged
-    return dict(schema.get("properties", {}))
+@dataclass
+class DiscoveryResult:
+    tools: list[ToolSpec]
+    combined_schema: dict[str, Any]
 
 
-def _get_request_schema(spec: dict[str, Any], path_item: dict[str, Any]) -> dict[str, Any] | None:
-    post = path_item.get("post")
-    if not post:
+class ToolDiscovery:
+    """Discovers tool endpoints from an OpenAPI spec and builds a combined JSON Schema."""
+
+    ALLOWED_PATH_PREFIXES = (
+        "/api/v1/general/",
+        "/api/v1/misc/",
+        "/api/v1/security/",
+        "/api/v1/convert/",
+    )
+
+    def __init__(self, spec: dict[str, Any]):
+        resource = Resource.from_contents(spec, default_specification=DRAFT202012)
+        self.resolver = Registry().with_resource("", resource).resolver()
+        self.spec = spec
+
+    def discover(self) -> DiscoveryResult:
+        tools: list[ToolSpec] = []
+        defs: dict[str, Any] = {}
+        used_enum: set[str] = set()
+        used_class: set[str] = set()
+
+        for path, path_item in sorted(self.spec.get("paths", {}).items()):
+            if "{" in path or not any(path.startswith(p) for p in self.ALLOWED_PATH_PREFIXES):
+                continue
+            properties = self._get_request_properties(path_item)
+            if not properties:
+                continue
+            clean_props = self._filter_properties(properties)
+            if not clean_props:
+                continue
+
+            enum_name = _deduplicate(_path_to_enum_name(path), used_enum)
+            class_name = _deduplicate(_path_to_class_name(path), used_class)
+
+            defs[class_name] = {"type": "object", "properties": clean_props}
+            tools.append(ToolSpec(path, enum_name, class_name))
+
+        combined_schema: dict[str, Any] = {
+            "$defs": defs,
+            "anyOf": [{"$ref": f"#/$defs/{t.class_name}"} for t in tools],
+        }
+        return DiscoveryResult(tools=tools, combined_schema=combined_schema)
+
+    def _resolve_ref(self, schema: dict[str, Any]) -> dict[str, Any]:
+        if "$ref" in schema:
+            return self.resolver.lookup(schema["$ref"]).contents
+        return schema
+
+    def _get_request_properties(self, path_item: dict[str, Any]) -> dict[str, Any] | None:
+        post = path_item.get("post")
+        if not post:
+            return None
+        content = post.get("requestBody", {}).get("content", {})
+        for media_type in ("multipart/form-data", "application/json"):
+            if media_type in content:
+                schema = content[media_type].get("schema")
+                if schema:
+                    return self._resolve_ref(schema).get("properties")
         return None
-    content = post.get("requestBody", {}).get("content", {})
-    for media_type in ("multipart/form-data", "application/json"):
-        if media_type in content:
-            return content[media_type].get("schema")
-    return None
 
-
-def _filter_properties(spec: dict[str, Any], properties: dict[str, Any]) -> dict[str, Any]:
-    """Remove base-class fields and binary upload fields."""
-    clean: dict[str, Any] = {}
-    for name, prop in properties.items():
-        if name in BASE_CLASS_FIELDS:
-            continue
-        resolved = _resolve_ref(spec, prop["$ref"]) if "$ref" in prop else prop
-        if resolved.get("type") == "string" and resolved.get("format") == "binary":
-            continue
-        clean[name] = resolved
-    return clean
+    def _filter_properties(self, properties: dict[str, Any]) -> dict[str, Any]:
+        """Remove base-class fields and binary upload fields, resolving any $refs."""
+        clean: dict[str, Any] = {}
+        for name, prop in properties.items():
+            if name in BASE_CLASS_FIELDS:
+                continue
+            prop = self._resolve_ref(prop)
+            if prop.get("type") == "string" and prop.get("format") == "binary":
+                continue
+            clean[name] = prop
+        return clean
 
 
 def _tool_name_segments(path: str) -> str:
@@ -101,13 +138,6 @@ def _path_to_class_name(path: str) -> str:
     return "".join(p.capitalize() for p in _tool_name_segments(path).split("-")) + "Params"
 
 
-@dataclass
-class ToolSpec:
-    path: str
-    enum_name: str
-    class_name: str
-
-
 def _deduplicate(name: str, used: set[str]) -> str:
     """Return name, appending 2, 3, ... if already in used. Adds result to used."""
     candidate = name
@@ -119,44 +149,10 @@ def _deduplicate(name: str, used: set[str]) -> str:
     return candidate
 
 
-def discover_tools(spec: dict[str, Any]) -> tuple[list[ToolSpec], dict[str, Any]]:
-    """Extract tool endpoints and build a combined JSON Schema with all models as $defs."""
-    tools: list[ToolSpec] = []
-    defs: dict[str, Any] = {}
-    used_enum: set[str] = set()
-    used_class: set[str] = set()
-
-    for path, path_item in sorted(spec.get("paths", {}).items()):
-        if "{" in path or not any(path.startswith(p) for p in ALLOWED_PATH_PREFIXES):
-            continue
-        schema = _get_request_schema(spec, path_item)
-        if schema is None:
-            continue
-        properties = _collect_properties(spec, schema)
-        if not properties:
-            continue
-        clean_props = _filter_properties(spec, properties)
-        if not clean_props:
-            continue
-
-        enum_name = _deduplicate(_path_to_enum_name(path), used_enum)
-        class_name = _deduplicate(_path_to_class_name(path), used_class)
-
-        defs[class_name] = {"type": "object", "properties": clean_props}
-        tools.append(ToolSpec(path, enum_name, class_name))
-
-    combined_schema: dict[str, Any] = {
-        "$defs": defs,
-        "anyOf": [{"$ref": f"#/$defs/{t.class_name}"} for t in tools],
-    }
-    return tools, combined_schema
-
-
 def generate_models_code(combined_schema: dict[str, Any]) -> str:
     """Run datamodel-code-generator once on the combined schema."""
-    schema_json = json.dumps(combined_schema, sort_keys=True)
     code = generate(
-        input_=schema_json,
+        input_=json.dumps(combined_schema, sort_keys=True),
         input_file_type=InputFileType.JsonSchema,
         output_model_type=DataModelType.PydanticV2BaseModel,
         target_python_version=PythonVersion.PY_313,
@@ -165,7 +161,7 @@ def generate_models_code(combined_schema: dict[str, Any]) -> str:
         field_constraints=True,
         no_alias=True,
         set_default_enum_member=True,
-        additional_imports=["enum.StrEnum"],  # We use this in write_output()
+        additional_imports=["enum.StrEnum"],
         enable_version_header=False,
         custom_file_header=_FILE_HEADER,
         formatters=[Formatter.RUFF_FORMAT, Formatter.RUFF_CHECK],
@@ -205,21 +201,18 @@ def main() -> None:
 
     spec_path = Path(args.spec)
     if not spec_path.exists():
-        raise SystemExit(
-            f"OpenAPI spec not found at {spec_path}\n"
-            "Run 'task engine:tool-models' to generate it."
-        )
+        raise SystemExit(f"OpenAPI spec not found at {spec_path}\nRun 'task engine:tool-models' to generate it.")
     output_path = Path(args.output)
 
     with open(spec_path) as f:
         spec = json.load(f)
 
-    tools, combined_schema = discover_tools(spec)
-    models_code = generate_models_code(combined_schema)
-    write_output(output_path, tools, models_code)
+    result = ToolDiscovery(spec).discover()
+    models_code = generate_models_code(result.combined_schema)
+    write_output(output_path, result.tools, models_code)
 
-    print(f"Generated {len(tools)} tool models from {spec_path.name}")
-    for tool in tools:
+    print(f"Generated {len(result.tools)} tool models from {spec_path.name}")
+    for tool in result.tools:
         print(f"  {tool.enum_name}: {tool.path} → {tool.class_name}")
 
 
