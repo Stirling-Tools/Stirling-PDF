@@ -13,7 +13,7 @@ from stirling.contracts import (
     EditPlanResponse,
     ToolOperationStep,
 )
-from stirling.models.tool_models import Angle, CompressPdfParams, OptimizeLevel, RotatePdfParams, ToolEndpoint
+from stirling.models.tool_models import Angle, FlattenParams, RotatePdfParams, ToolEndpoint
 from stirling.services.runtime import AppRuntime
 
 
@@ -116,8 +116,8 @@ async def test_user_spec_agent_revises_existing_draft(runtime: AppRuntime) -> No
                     parameters=RotatePdfParams(angle=Angle(90)),
                 ),
                 ToolOperationStep(
-                    tool=ToolEndpoint.COMPRESS_PDF,
-                    parameters=CompressPdfParams(optimize_level=OptimizeLevel(5)),  # pyright: ignore[reportCallIssue]
+                    tool=ToolEndpoint.FLATTEN,
+                    parameters=FlattenParams(flatten_only_forms=False, render_dpi=None),
                 ),
             ],
         ),
@@ -139,7 +139,7 @@ def test_tool_operation_step_rejects_mismatched_parameters() -> None:
     with pytest.raises(ValidationError):
         ToolOperationStep(
             tool=ToolEndpoint.ROTATE_PDF,
-            parameters=CompressPdfParams(optimize_level=OptimizeLevel(5)),  # pyright: ignore[reportCallIssue]
+            parameters=FlattenParams(flatten_only_forms=False, render_dpi=None),
         )
 
 
