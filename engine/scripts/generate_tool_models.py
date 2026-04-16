@@ -201,16 +201,17 @@ def write_output(out_path: Path, tools: list[ToolSpec], models_code: str) -> Non
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate Python tool models from Java OpenAPI spec")
-    parser.add_argument("--spec", default="", help="Path to SwaggerDoc.json")
-    parser.add_argument("--output", default="", help="Path to output tool_models.py")
+    parser.add_argument("--spec", required=True, help="Path to SwaggerDoc.json")
+    parser.add_argument("--output", required=True, help="Path to output tool_models.py")
     args = parser.parse_args()
 
-    project_root = _ENGINE_ROOT.parent
-    spec_path = Path(args.spec) if args.spec else project_root / "SwaggerDoc.json"
+    spec_path = Path(args.spec)
     if not spec_path.exists():
-        raise SystemExit(f"ERROR: OpenAPI spec not found at {spec_path}Run 'task engine:tool-models' to generate it.")
-
-    output_path = Path(args.output) if args.output else _ENGINE_ROOT / "src/stirling/models/tool_models.py"
+        raise SystemExit(
+            f"OpenAPI spec not found at {spec_path}\n"
+            "Run 'task engine:tool-models' to generate it."
+        )
+    output_path = Path(args.output)
 
     with open(spec_path) as f:
         spec = json.load(f)

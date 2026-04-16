@@ -94,22 +94,11 @@ tasks:
       - task: format:check
       - task: test
 
-  swagger-doc:
-    desc: "Generate SwaggerDoc.json from running Java server"
-    cmds:
-      - ../gradlew -p .. :stirling-pdf:copySwaggerDoc
-    sources:
-      - ../app/core/src/main/java/**/*.java
-      - ../app/proprietary/src/main/java/**/*.java
-      - ../app/common/src/main/java/**/*.java
-    generates:
-      - ../SwaggerDoc.json
-
   tool-models:
     desc: "Generate tool_models.py from Java OpenAPI spec (SwaggerDoc.json)"
-    deps: [install, swagger-doc]
+    deps: [install, ":backend:swagger"]
     cmds:
-      - uv run python scripts/generate_tool_models.py --output src/stirling/models/tool_models.py
+      - uv run python scripts/generate_tool_models.py --spec ../SwaggerDoc.json --output src/stirling/models/tool_models.py
     sources:
       - ../SwaggerDoc.json
       - scripts/generate_tool_models.py
