@@ -319,10 +319,10 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || 'sb_publishable_UHz2SVRF5mvdrPHWkRteyA_yNlZTkYb' }}
           VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL || 'https://app.stirlingpdf.com' }}
           VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
-          # Enable Windows signing in Tauri when ANY certificate is available (KeyLocker or PFX).
-          # This ensures the exe is signed BEFORE being bundled into NSIS/MSI installers,
-          # so the installed file on disk is signed and won't trigger AV false positives.
-          SIGN: ${{ github.ref == 'refs/heads/main' && (env.SM_API_KEY != '' || env.WINDOWS_CERTIFICATE != '') && '1' || '0' }}
+          # DigiCert KeyLocker signing env vars - the signCommand in tauri.conf.json
+          # calls windows/sign.ps1 which uses these to sign the exe BEFORE bundling
+          # into MSI/NSIS, so the installed file on disk is signed.
+          SM_CODE_SIGNING_CERT_SHA1_HASH: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
           CI: true
         with:
           projectPath: ./frontend
