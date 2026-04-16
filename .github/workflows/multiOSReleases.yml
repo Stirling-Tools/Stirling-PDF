@@ -505,6 +505,38 @@ jobs:
           tauriScript: npx tauri
           args: ${{ matrix.args }}
 
+      # Diagnostic: enumerate every stirling-pdf.exe and every signed PE under target/
+      # with file size + signtool verify + Get-AuthenticodeSignature. signtool verify
+      # reads the signature directly from the PE so if it disagrees with PowerShell's
+      # Get-AuthenticodeSignature we catch that mismatch here. This step never fails -
+      # it's purely informational so the real verify step can act on the truth.
+      - name: Diagnose Windows artifacts
+        if: ${{ always() && matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $targetRoot = "./frontend/src-tauri/target"
+          Write-Host "=== All stirling-pdf.exe files under target/ ==="
+          $allExes = Get-ChildItem -Path $targetRoot -Filter "stirling-pdf.exe" -Recurse -File -ErrorAction SilentlyContinue
+          foreach ($exe in $allExes) {
+            Write-Host ""
+            Write-Host "  Path: $($exe.FullName)"
+            Write-Host "  Size: $($exe.Length) bytes"
+            Write-Host "  LastWriteTime: $($exe.LastWriteTime.ToString('o'))"
+            $psSig = Get-AuthenticodeSignature -FilePath $exe.FullName
+            Write-Host "  PS Get-AuthenticodeSignature: Status=$($psSig.Status), Signer=$($psSig.SignerCertificate.Subject)"
+            # Cross-check with signtool verify /pa (uses default policy, reads PE directly)
+            $signtoolOut = & signtool verify /pa /v $exe.FullName 2>&1 | Out-String
+            Write-Host "  signtool verify /pa exit=$LASTEXITCODE"
+            Write-Host "  signtool output:"
+            $signtoolOut -split "`n" | ForEach-Object { Write-Host "    $_" }
+          }
+          Write-Host ""
+          Write-Host "=== All *.msi files under target/ ==="
+          Get-ChildItem -Path $targetRoot -Filter "*.msi" -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+            Write-Host "  $($_.FullName) [$($_.Length) bytes]"
+          }
+
       # Verify Windows signatures. Tauri's signCommand should have signed the main exe
       # AND the MSI. We verify BOTH the MSI (outer) and the inner exe extracted from the
       # MSI - the inner exe is what gets installed on users' machines and what AV scans.
@@ -590,7 +622,10 @@ jobs:
             Write-Host "smctl log directory not found at $logDir"
           }
 
+      # Rename + Upload: use always() so artifacts are still collected when verify
+      # fails - we need them to manually inspect what actually came out of the build.
       - name: Rename artifacts
+        if: always() && steps.digicert-setup.conclusion != 'failure'
         shell: bash
         run: |
           mkdir -p ./dist
@@ -601,6 +636,10 @@ jobs:
             # Only ship the MSI installer on Windows. The loose exe and WiX toolset exes
             # are not the user-facing installer - the MSI contains the signed inner exe.
             find . -name "*.msi" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.msi" \;
+            # Also copy the raw signed stirling-pdf.exe for diagnostic inspection
+            if [ -f "x86_64-pc-windows-msvc/release/stirling-pdf.exe" ]; then
+              cp "x86_64-pc-windows-msvc/release/stirling-pdf.exe" "../../../dist/stirling-pdf-raw.exe"
+            fi
           elif [ "${{ matrix.platform }}" = "macos-15" ] || [ "${{ matrix.platform }}" = "macos-15-intel" ]; then
             find . -name "*.dmg" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.dmg" \;
             find . -name "*.app" -exec cp -r {} "../../../dist/Stirling-PDF-${{ matrix.name }}.app" \;
@@ -610,6 +649,7 @@ jobs:
           fi
 
       - name: Upload build artifacts
+        if: always() && steps.digicert-setup.conclusion != 'failure'
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: Stirling-PDF-${{ matrix.name }}
