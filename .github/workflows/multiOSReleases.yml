@@ -537,32 +537,28 @@ jobs:
             Write-Host "  $($_.FullName) [$($_.Length) bytes]"
           }
 
-      # Verify Windows signatures. Tauri's signCommand should have signed the main exe
-      # AND the MSI. We verify BOTH the MSI (outer) and the inner exe extracted from the
-      # MSI - the inner exe is what gets installed on users' machines and what AV scans.
-      # Build fails if either is unsigned, so regressions are caught before release.
+      # Verify Windows signatures. We check the two things that actually ship:
+      #   1. The MSI installer (outer wrapper - what users download)
+      #   2. The inner exe extracted from the MSI (what gets installed and what AV scans)
+      #
+      # We intentionally do NOT check target/.../release/stirling-pdf.exe because that's
+      # Tauri's intermediate build artifact - Tauri signs a COPY that it bundles into the
+      # MSI, and the raw cargo output is left unsigned. Checking it was a false-negative
+      # source: the MSI and inner exe were correctly signed but the raw exe was not,
+      # failing this step spuriously. AV flags the installed exe, which is the inner one
+      # from the MSI. That's the check that actually matters.
       - name: Verify Windows Code Signature
         if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
         shell: pwsh
         run: |
           $allSigned = $true
 
-          # Check main exe (Tauri should have signed this via signCommand)
-          $mainExe = Get-ChildItem -Path "./frontend/src-tauri/target/x86_64-pc-windows-msvc/release" -Filter "stirling-pdf.exe" -File -ErrorAction SilentlyContinue
-          if ($mainExe) {
-            $sig = Get-AuthenticodeSignature -FilePath $mainExe.FullName
-            Write-Host "Main EXE: Status=$($sig.Status), Signer=$($sig.SignerCertificate.Subject)"
-            if ($sig.Status -ne "Valid") {
-              Write-Host "[ERROR] Main executable is NOT signed"
-              $allSigned = $false
-            }
-          } else {
-            Write-Host "[ERROR] Main exe not found"
-            $allSigned = $false
-          }
-
-          # Check MSI installer (outer wrapper)
+          # Check MSI installer (outer wrapper - what users download)
           $msiFiles = Get-ChildItem -Path "./frontend/src-tauri/target" -Filter "*.msi" -Recurse -File
+          if ($msiFiles.Count -eq 0) {
+            Write-Host "[ERROR] No MSI found under target/"
+            exit 1
+          }
           foreach ($msi in $msiFiles) {
             $sig = Get-AuthenticodeSignature -FilePath $msi.FullName
             Write-Host "MSI: Status=$($sig.Status), Signer=$($sig.SignerCertificate.Subject)"
@@ -574,35 +570,33 @@ jobs:
 
           # Extract MSI and verify the inner exe (the file that actually gets installed).
           # This is the critical check - AV flags the installed exe at runtime.
-          if ($msiFiles.Count -gt 0) {
-            $msi = $msiFiles[0].FullName
-            $extractDir = Join-Path $env:RUNNER_TEMP "msi-verify"
-            if (Test-Path $extractDir) { Remove-Item $extractDir -Recurse -Force }
-            $proc = Start-Process msiexec.exe -ArgumentList '/a', $msi, '/qn', "TARGETDIR=$extractDir" -Wait -PassThru -NoNewWindow
-            if ($proc.ExitCode -eq 0) {
-              $innerExe = Get-ChildItem -Path $extractDir -Filter "stirling-pdf.exe" -Recurse -File | Select-Object -First 1
-              if ($innerExe) {
-                $sig = Get-AuthenticodeSignature -FilePath $innerExe.FullName
-                Write-Host "Inner EXE (from MSI): Status=$($sig.Status), Signer=$($sig.SignerCertificate.Subject)"
-                if ($sig.Status -ne "Valid") {
-                  Write-Host "[ERROR] Inner exe extracted from MSI is NOT signed - AV will flag this at runtime"
-                  $allSigned = $false
-                }
-              } else {
-                Write-Host "[ERROR] Could not find stirling-pdf.exe inside MSI"
+          $msi = $msiFiles[0].FullName
+          $extractDir = Join-Path $env:RUNNER_TEMP "msi-verify"
+          if (Test-Path $extractDir) { Remove-Item $extractDir -Recurse -Force }
+          $proc = Start-Process msiexec.exe -ArgumentList '/a', $msi, '/qn', "TARGETDIR=$extractDir" -Wait -PassThru -NoNewWindow
+          if ($proc.ExitCode -eq 0) {
+            $innerExe = Get-ChildItem -Path $extractDir -Filter "stirling-pdf.exe" -Recurse -File | Select-Object -First 1
+            if ($innerExe) {
+              $sig = Get-AuthenticodeSignature -FilePath $innerExe.FullName
+              Write-Host "Inner EXE (from MSI): Status=$($sig.Status), Signer=$($sig.SignerCertificate.Subject)"
+              if ($sig.Status -ne "Valid") {
+                Write-Host "[ERROR] Inner exe extracted from MSI is NOT signed - AV will flag this at runtime"
                 $allSigned = $false
               }
             } else {
-              Write-Host "[ERROR] Failed to extract MSI for verification (exit code: $($proc.ExitCode))"
+              Write-Host "[ERROR] Could not find stirling-pdf.exe inside MSI"
               $allSigned = $false
             }
+          } else {
+            Write-Host "[ERROR] Failed to extract MSI for verification (exit code: $($proc.ExitCode))"
+            $allSigned = $false
           }
 
           if (-not $allSigned) {
             Write-Host "[ERROR] Signature verification failed"
             exit 1
           }
-          Write-Host "[SUCCESS] All Windows artifacts are properly signed"
+          Write-Host "[SUCCESS] MSI and installed exe are properly signed"
 
       # Dump smctl log files on failure. Tauri's signCommand captures smctl output
       # but drops stderr when the command exits non-zero, making failures opaque.
