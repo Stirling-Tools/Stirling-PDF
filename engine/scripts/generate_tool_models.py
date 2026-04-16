@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 from pathlib import Path
 from typing import Any
 
@@ -201,51 +200,7 @@ def generate_models_code(combined_schema: dict[str, Any]) -> str:
     return str(code or "")
 
 
-def _fix_enum_defaults(code: str) -> str:
-    """Fix enum default values that datamodel-code-generator emits as raw literals.
-
-    The generator produces e.g.:
-        field: MyEnum | None = 'value'
-    but pyright expects:
-        field: MyEnum | None = MyEnum('value')
-
-    This also handles Field(...) defaults like:
-        field: MyEnum | None = Field('value', ...)
-    """
-    # Collect all enum class names defined in the code
-    enum_names = set(re.findall(r"^class (\w+)\((?:StrEnum|IntEnum|Enum)\):", code, re.MULTILINE))
-    if not enum_names:
-        return code
-
-    # Pattern: `type_name | None = <literal>` where type_name is a known enum
-    # Handles both simple defaults and Field() defaults
-    enum_pattern = re.compile(
-        r"(\b(" + "|".join(re.escape(n) for n in sorted(enum_names)) + r")\s*\|\s*None\s*=\s*)"
-        r"(Field\(\s*)?(-?\d+|True|False|'[^']*'|\"[^\"]*\")"
-    )
-
-    def _replace_default(m: re.Match[str]) -> str:
-        prefix = m.group(1)  # "EnumType | None = "
-        enum_name = m.group(2)  # "EnumType"
-        field_prefix = m.group(3) or ""  # "Field(" or ""
-        value = m.group(4)  # the raw literal
-        return f"{prefix}{field_prefix}{enum_name}({value})"
-
-    return enum_pattern.sub(_replace_default, code)
-
-
-def _clean_generated_code(code: str) -> str:
-    """Post-process datamodel-code-generator output."""
-    # Fix enum defaults (generator emits raw literals instead of enum constructors)
-    code = _fix_enum_defaults(code)
-    # Remove the RootModel wrapper that anyOf generates at the top-level schema
-    code = re.sub(r"\n\nclass Model\(RootModel\[.*?\]\):.*?(?=\n\n|\Z)", "", code, flags=re.DOTALL)
-    return code.rstrip()
-
-
 def write_output(out_path: Path, tools: list[ToolSpec], models_code: str) -> None:
-    models_code = _clean_generated_code(models_code)
-
     # ParamToolModel union
     union_lines = ["", "", "type ParamToolModel = ("]
     for i, tool in enumerate(tools):
