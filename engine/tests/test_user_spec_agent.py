@@ -13,7 +13,7 @@ from stirling.contracts import (
     EditPlanResponse,
     ToolOperationStep,
 )
-from stirling.models.tool_models import CompressPdfParams, RotatePdfParams, ToolEndpoint
+from stirling.models.tool_models import Angle, CompressPdfParams, OptimizeLevel, RotatePdfParams, ToolEndpoint
 from stirling.services.runtime import AppRuntime
 
 
@@ -27,7 +27,7 @@ class StubUserSpecAgent(UserSpecAgent):
             steps=[
                 ToolOperationStep(
                     tool=ToolEndpoint.ROTATE_PDF,
-                    parameters=RotatePdfParams(angle=90),
+                    parameters=RotatePdfParams(angle=Angle(90)),
                 )
             ],
         )
@@ -64,7 +64,7 @@ async def test_user_spec_agent_drafts_agent_spec(runtime: AppRuntime) -> None:
             steps=[
                 ToolOperationStep(
                     tool=ToolEndpoint.ROTATE_PDF,
-                    parameters=RotatePdfParams(angle=90),
+                    parameters=RotatePdfParams(angle=Angle(90)),
                 )
             ],
         ),
@@ -99,7 +99,7 @@ async def test_user_spec_agent_revises_existing_draft(runtime: AppRuntime) -> No
         steps=[
             ToolOperationStep(
                 tool=ToolEndpoint.ROTATE_PDF,
-                parameters=RotatePdfParams(angle=90),
+                parameters=RotatePdfParams(angle=Angle(90)),
             )
         ],
     )
@@ -113,11 +113,11 @@ async def test_user_spec_agent_revises_existing_draft(runtime: AppRuntime) -> No
             steps=[
                 ToolOperationStep(
                     tool=ToolEndpoint.ROTATE_PDF,
-                    parameters=RotatePdfParams(angle=90),
+                    parameters=RotatePdfParams(angle=Angle(90)),
                 ),
                 ToolOperationStep(
                     tool=ToolEndpoint.COMPRESS_PDF,
-                    parameters=CompressPdfParams(optimize_level=5),
+                    parameters=CompressPdfParams(optimize_level=OptimizeLevel(5)),  # pyright: ignore[reportCallIssue]
                 ),
             ],
         ),
@@ -139,7 +139,7 @@ def test_tool_operation_step_rejects_mismatched_parameters() -> None:
     with pytest.raises(ValidationError):
         ToolOperationStep(
             tool=ToolEndpoint.ROTATE_PDF,
-            parameters=CompressPdfParams(optimize_level=5),
+            parameters=CompressPdfParams(optimize_level=OptimizeLevel(5)),  # pyright: ignore[reportCallIssue]
         )
 
 

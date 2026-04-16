@@ -25,7 +25,7 @@ from stirling.contracts import (
     PdfQuestionNotFoundResponse,
     PdfQuestionRequest,
 )
-from stirling.models.tool_models import RotatePdfParams
+from stirling.models.tool_models import Angle, RotatePdfParams
 
 
 class StubOrchestratorAgent:
@@ -128,7 +128,7 @@ def test_agent_revise_route() -> None:
                     {
                         "kind": "tool",
                         "tool": "/api/v1/general/rotate-pdf",
-                        "parameters": RotatePdfParams(angle=90).model_dump(by_alias=True),
+                        "parameters": RotatePdfParams(angle=Angle(90)).model_dump(by_alias=True),
                     }
                 ],
             },
@@ -151,7 +151,7 @@ def test_next_action_route() -> None:
                     {
                         "kind": "tool",
                         "tool": "/api/v1/general/rotate-pdf",
-                        "parameters": RotatePdfParams(angle=90).model_dump(by_alias=True),
+                        "parameters": RotatePdfParams(angle=Angle(90)).model_dump(by_alias=True),
                     }
                 ],
             },

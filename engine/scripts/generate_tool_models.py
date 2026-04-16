@@ -13,10 +13,13 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 from pathlib import Path
 from typing import Any
 
-from datamodel_code_generator import DataModelType, PythonVersion, generate
+from datamodel_code_generator import InputFileType, PythonVersion, generate
+from datamodel_code_generator.enums import DataModelType
+from datamodel_code_generator.format import Formatter
 
 # Only tool endpoints under these path prefixes are included.
 ALLOWED_PATH_PREFIXES = (
@@ -171,7 +174,7 @@ def generate_models_code(combined_schema: dict[str, Any]) -> str:
     schema_json = json.dumps(combined_schema, sort_keys=True)
     code = generate(
         input_=schema_json,
-        input_file_type="jsonschema",
+        input_file_type=InputFileType.JsonSchema,
         output_model_type=DataModelType.PydanticV2BaseModel,
         target_python_version=PythonVersion.PY_313,
         snake_case_field=True,
@@ -180,8 +183,11 @@ def generate_models_code(combined_schema: dict[str, Any]) -> str:
         base_class="stirling.models.base.ApiModel",
         field_constraints=True,
         no_alias=True,
+        set_default_enum_member=True,
+        formatters=[Formatter.RUFF_FORMAT, Formatter.RUFF_CHECK],
+        settings_path=Path(__file__).resolve().parents[1] / "pyproject.toml",
     )
-    return code or ""
+    return str(code or "")
 
 
 def _fix_enum_defaults(code: str) -> str:
@@ -290,6 +296,9 @@ def write_output(out_path: Path, tools: list[ToolSpec], models_code: str) -> Non
     lines.append("}\n")
 
     out_path.write_text("".join(lines), encoding="utf-8")
+
+    # Format the final assembled file with the project's lint/format rules
+    subprocess.run(["task", "engine:fix"], check=False)
 
 
 def main() -> None:

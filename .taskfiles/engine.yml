@@ -110,7 +110,6 @@ tasks:
     deps: [install, swagger-doc]
     cmds:
       - uv run python scripts/generate_tool_models.py --output src/stirling/models/tool_models.py
-      - task: fix
     sources:
       - ../SwaggerDoc.json
       - scripts/generate_tool_models.py

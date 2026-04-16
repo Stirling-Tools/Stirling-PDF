@@ -12,7 +12,7 @@ from stirling.contracts import (
     PdfEditRequest,
     ToolOperationStep,
 )
-from stirling.models.tool_models import CompressPdfParams, RotatePdfParams, ToolEndpoint
+from stirling.models.tool_models import Angle, CompressPdfParams, OptimizeLevel, RotatePdfParams, ToolEndpoint
 from stirling.services.runtime import AppRuntime
 
 
@@ -44,8 +44,8 @@ class RecordingParameterSelector:
             )
         )
         if operation_index == 0:
-            return RotatePdfParams(angle=90)
-        return CompressPdfParams(optimize_level=5)
+            return RotatePdfParams(angle=Angle(90))
+        return CompressPdfParams(optimize_level=OptimizeLevel(5))  # pyright: ignore[reportCallIssue]
 
 
 class StubPdfEditAgent(PdfEditAgent):
@@ -121,7 +121,7 @@ async def test_pdf_edit_agent_passes_previous_steps_to_parameter_selector(runtim
     assert parameter_selector.calls[1].generated_steps == [
         ToolOperationStep(
             tool=ToolEndpoint.ROTATE_PDF,
-            parameters=RotatePdfParams(angle=90),
+            parameters=RotatePdfParams(angle=Angle(90)),
         )
     ]
 
