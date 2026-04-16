@@ -188,7 +188,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       merge: {
         icon: <LocalIcon icon="library-add-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.merge.title", "Merge"),
+        name: t("home.merge.title", "Merge PDFs"),
         component: Merge,
         description: t("home.merge.desc", "Merge multiple PDFs into a single document"),
         categoryId: ToolCategoryId.RECOMMENDED_TOOLS,
