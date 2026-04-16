@@ -536,9 +536,6 @@ wheels = [
 ]
 
 [package.optional-dependencies]
-http = [
-    { name = "httpx" },
-]
 ruff = [
     { name = "ruff" },
 ]
@@ -609,7 +606,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "datamodel-code-generator", extra = ["http", "ruff"] },
+    { name = "datamodel-code-generator", extra = ["ruff"] },
     { name = "pyright" },
     { name = "pytest" },
     { name = "referencing" },
@@ -630,7 +627,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "datamodel-code-generator", extras = ["http", "ruff"], specifier = ">=0.26.0" },
+    { name = "datamodel-code-generator", extras = ["ruff"], specifier = ">=0.26.0" },
     { name = "pyright", specifier = ">=1.1.408" },
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "referencing", specifier = ">=0.35.0" },
