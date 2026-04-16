@@ -12,7 +12,7 @@ from stirling.contracts import (
     PdfEditRequest,
     ToolOperationStep,
 )
-from stirling.models.tool_models import CompressParams, OperationId, RotateParams
+from stirling.models.tool_models import CompressPdfParams, OperationId, RotatePdfParams
 from stirling.services.runtime import AppRuntime
 
 
@@ -34,7 +34,7 @@ class RecordingParameterSelector:
         operation_plan: list[OperationId],
         operation_index: int,
         generated_steps: list[ToolOperationStep],
-    ) -> RotateParams | CompressParams:
+    ) -> RotatePdfParams | CompressPdfParams:
         self.calls.append(
             ParameterSelectorCall(
                 request=request,
@@ -44,8 +44,8 @@ class RecordingParameterSelector:
             )
         )
         if operation_index == 0:
-            return RotateParams(angle=90)
-        return CompressParams(compression_level=5)
+            return RotatePdfParams(angle=90)
+        return CompressPdfParams(optimize_level=5)
 
 
 class StubPdfEditAgent(PdfEditAgent):
@@ -73,7 +73,7 @@ async def test_pdf_edit_agent_builds_multi_step_plan(runtime: AppRuntime) -> Non
     agent = StubPdfEditAgent(
         runtime,
         PdfEditPlanSelection(
-            operations=[OperationId.ROTATE, OperationId.COMPRESS],
+            operations=[OperationId.ROTATE_PDF, OperationId.COMPRESS_PDF],
             summary="Rotate the PDF, then compress it.",
             rationale="The pages need reorientation before reducing file size.",
         ),
@@ -90,9 +90,9 @@ async def test_pdf_edit_agent_builds_multi_step_plan(runtime: AppRuntime) -> Non
     assert isinstance(response, EditPlanResponse)
     assert response.summary == "Rotate the PDF, then compress it."
     assert response.rationale == "The pages need reorientation before reducing file size."
-    assert [step.tool for step in response.steps] == [OperationId.ROTATE, OperationId.COMPRESS]
-    assert isinstance(response.steps[0].parameters, RotateParams)
-    assert isinstance(response.steps[1].parameters, CompressParams)
+    assert [step.tool for step in response.steps] == [OperationId.ROTATE_PDF, OperationId.COMPRESS_PDF]
+    assert isinstance(response.steps[0].parameters, RotatePdfParams)
+    assert isinstance(response.steps[1].parameters, CompressPdfParams)
 
 
 @pytest.mark.anyio
@@ -101,7 +101,7 @@ async def test_pdf_edit_agent_passes_previous_steps_to_parameter_selector(runtim
     agent = StubPdfEditAgent(
         runtime,
         PdfEditPlanSelection(
-            operations=[OperationId.ROTATE, OperationId.COMPRESS],
+            operations=[OperationId.ROTATE_PDF, OperationId.COMPRESS_PDF],
             summary="Rotate the PDF, then compress it.",
         ),
         parameter_selector=parameter_selector,
@@ -120,8 +120,8 @@ async def test_pdf_edit_agent_passes_previous_steps_to_parameter_selector(runtim
     assert parameter_selector.calls[1].operation_index == 1
     assert parameter_selector.calls[1].generated_steps == [
         ToolOperationStep(
-            tool=OperationId.ROTATE,
-            parameters=RotateParams(angle=90),
+            tool=OperationId.ROTATE_PDF,
+            parameters=RotatePdfParams(angle=90),
         )
     ]
 
