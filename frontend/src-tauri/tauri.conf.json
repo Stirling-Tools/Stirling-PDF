@@ -50,7 +50,7 @@
       }
     },
     "windows": {
-      "signCommand": "powershell -ExecutionPolicy Bypass -File src-tauri/windows/sign.ps1 %1",
+      "signCommand": "cmd /c src-tauri\\windows\\sign.bat %1",
       "certificateThumbprint": null,
       "digestAlgorithm": "sha256",
       "timestampUrl": "http://timestamp.digicert.com",
