@@ -1391,10 +1391,6 @@ class ToolEndpoint(StrEnum):
     TIMESTAMP_PDF = "/api/v1/security/timestamp-pdf"
 
 
-# Backward-compatible alias
-OperationId = ToolEndpoint
-
-
 OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.PDF: PdfParams,
     ToolEndpoint.PDF_2: Pdf2Params,

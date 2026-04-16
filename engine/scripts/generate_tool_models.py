@@ -283,9 +283,6 @@ def write_output(out_path: Path, tools: list[ToolSpec], models_code: str) -> Non
     for tool in tools:
         lines.append(f"    {tool.enum_name} = {tool.path!r}\n")
 
-    lines.append("\n\n# Backward-compatible alias\n")
-    lines.append("OperationId = ToolEndpoint\n\n")
-
     # OPERATIONS dict
     lines.append("\nOPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {\n")
     for tool in tools:

@@ -14,13 +14,13 @@ from stirling.contracts import (
     PdfEditResponse,
     ToolOperationStep,
 )
-from stirling.models import OPERATIONS, ApiModel, OperationId, ParamToolModel
+from stirling.models import OPERATIONS, ApiModel, ParamToolModel, ToolEndpoint
 from stirling.services import AppRuntime
 
 
 class PdfEditPlanSelection(ApiModel):
     outcome: Literal["plan"] = "plan"
-    operations: list[OperationId] = Field(min_length=1)
+    operations: list[ToolEndpoint] = Field(min_length=1)
     summary: str
     rationale: str | None = None
 
@@ -41,7 +41,7 @@ class PdfEditParameterSelector:
     async def select(
         self,
         request: PdfEditRequest,
-        operation_plan: list[OperationId],
+        operation_plan: list[ToolEndpoint],
         operation_index: int,
         generated_steps: list[ToolOperationStep],
     ) -> ParamToolModel:
@@ -60,7 +60,7 @@ class PdfEditParameterSelector:
     def _build_parameter_prompt(
         self,
         request: PdfEditRequest,
-        operation_plan: list[OperationId],
+        operation_plan: list[ToolEndpoint],
         operation_index: int,
         generated_steps: list[ToolOperationStep],
     ) -> str:
