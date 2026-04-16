@@ -505,48 +505,11 @@ jobs:
           tauriScript: npx tauri
           args: ${{ matrix.args }}
 
-      # Diagnostic: enumerate every stirling-pdf.exe and every signed PE under target/
-      # with file size + signtool verify + Get-AuthenticodeSignature. signtool verify
-      # reads the signature directly from the PE so if it disagrees with PowerShell's
-      # Get-AuthenticodeSignature we catch that mismatch here. This step never fails -
-      # it's purely informational so the real verify step can act on the truth.
-      - name: Diagnose Windows artifacts
-        if: ${{ always() && matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
-        shell: pwsh
-        continue-on-error: true
-        run: |
-          $targetRoot = "./frontend/src-tauri/target"
-          Write-Host "=== All stirling-pdf.exe files under target/ ==="
-          $allExes = Get-ChildItem -Path $targetRoot -Filter "stirling-pdf.exe" -Recurse -File -ErrorAction SilentlyContinue
-          foreach ($exe in $allExes) {
-            Write-Host ""
-            Write-Host "  Path: $($exe.FullName)"
-            Write-Host "  Size: $($exe.Length) bytes"
-            Write-Host "  LastWriteTime: $($exe.LastWriteTime.ToString('o'))"
-            $psSig = Get-AuthenticodeSignature -FilePath $exe.FullName
-            Write-Host "  PS Get-AuthenticodeSignature: Status=$($psSig.Status), Signer=$($psSig.SignerCertificate.Subject)"
-            # Cross-check with signtool verify /pa (uses default policy, reads PE directly)
-            $signtoolOut = & signtool verify /pa /v $exe.FullName 2>&1 | Out-String
-            Write-Host "  signtool verify /pa exit=$LASTEXITCODE"
-            Write-Host "  signtool output:"
-            $signtoolOut -split "`n" | ForEach-Object { Write-Host "    $_" }
-          }
-          Write-Host ""
-          Write-Host "=== All *.msi files under target/ ==="
-          Get-ChildItem -Path $targetRoot -Filter "*.msi" -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
-            Write-Host "  $($_.FullName) [$($_.Length) bytes]"
-          }
-
-      # Verify Windows signatures. We check the two things that actually ship:
-      #   1. The MSI installer (outer wrapper - what users download)
-      #   2. The inner exe extracted from the MSI (what gets installed and what AV scans)
-      #
-      # We intentionally do NOT check target/.../release/stirling-pdf.exe because that's
-      # Tauri's intermediate build artifact - Tauri signs a COPY that it bundles into the
-      # MSI, and the raw cargo output is left unsigned. Checking it was a false-negative
-      # source: the MSI and inner exe were correctly signed but the raw exe was not,
-      # failing this step spuriously. AV flags the installed exe, which is the inner one
-      # from the MSI. That's the check that actually matters.
+      # Verify the MSI (outer wrapper users download) AND the inner exe extracted
+      # from it (what actually gets installed and what AV scans). We don't check
+      # target/.../release/stirling-pdf.exe - that's Tauri's intermediate build
+      # artifact. Tauri signs a COPY when bundling into the MSI and leaves the raw
+      # cargo output unsigned, so checking it produces false negatives.
       - name: Verify Windows Code Signature
         if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
         shell: pwsh
@@ -630,10 +593,6 @@ jobs:
             # Only ship the MSI installer on Windows. The loose exe and WiX toolset exes
             # are not the user-facing installer - the MSI contains the signed inner exe.
             find . -name "*.msi" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.msi" \;
-            # Also copy the raw signed stirling-pdf.exe for diagnostic inspection
-            if [ -f "x86_64-pc-windows-msvc/release/stirling-pdf.exe" ]; then
-              cp "x86_64-pc-windows-msvc/release/stirling-pdf.exe" "../../../dist/stirling-pdf-raw.exe"
-            fi
           elif [ "${{ matrix.platform }}" = "macos-15" ] || [ "${{ matrix.platform }}" = "macos-15-intel" ]; then
             find . -name "*.dmg" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.dmg" \;
             find . -name "*.app" -exec cp -r {} "../../../dist/Stirling-PDF-${{ matrix.name }}.app" \;
