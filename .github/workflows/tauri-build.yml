@@ -303,6 +303,20 @@ jobs:
           echo "Available tools:"
           ls -la /usr/bin/hd* || echo "No hd* tools found"
 
+      - name: Configure Windows code signing
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        shell: bash
+        run: |
+          cat > ./frontend/src-tauri/tauri.windows.conf.json << 'SIGN_EOF'
+          {
+            "bundle": {
+              "windows": {
+                "signCommand": "smctl sign --fingerprint %SM_CODE_SIGNING_CERT_SHA1_HASH% --input %1"
+              }
+            }
+          }
+          SIGN_EOF
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@51a9f1156b33df106d827c3a78f8f894946c5faa # v0.5.25
         env:
@@ -319,9 +333,6 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || 'sb_publishable_UHz2SVRF5mvdrPHWkRteyA_yNlZTkYb' }}
           VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL || 'https://app.stirlingpdf.com' }}
           VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
-          # DigiCert KeyLocker signing env vars - the signCommand in tauri.conf.json
-          # calls windows/sign.ps1 which uses these to sign the exe BEFORE bundling
-          # into MSI/NSIS, so the installed file on disk is signed.
           SM_CODE_SIGNING_CERT_SHA1_HASH: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
           CI: true
         with:
