@@ -311,11 +311,6 @@ jobs:
       - name: Install frontend dependencies
         run: task frontend:prepare:desktop
 
-      - name: Build installer provisioner (Windows only)
-        if: matrix.platform == 'windows-latest'
-        working-directory: ./frontend
-        run: node scripts/build-provisioner.mjs
-
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
         id: digicert-setup
