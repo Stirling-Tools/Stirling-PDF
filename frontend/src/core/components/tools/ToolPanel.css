@@ -59,23 +59,31 @@
 }
 
 .tool-panel__expand-btn {
-  opacity: 0.75;
-  transition: opacity 0.2s ease;
   flex-shrink: 0;
+  color: var(--text-secondary) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+.tool-panel__expand-btn svg {
+  color: var(--text-secondary) !important;
 }
 
 .tool-panel__expand-btn:hover {
-  opacity: 1;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
 }
 
 .tool-panel__collapsed-search-btn {
-  opacity: 0.4;
-  transition: opacity 0.2s ease;
   flex-shrink: 0;
+  color: var(--text-secondary) !important;
+}
+
+.tool-panel__collapsed-search-btn svg {
+  color: var(--text-secondary) !important;
 }
 
 .tool-panel__collapsed-search-btn:hover {
-  opacity: 0.8;
+  color: var(--text-primary) !important;
 }
 
 .tool-panel__back-btn {

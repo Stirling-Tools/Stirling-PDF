@@ -4,15 +4,15 @@
 
 .workbench-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  height: 48px;
-  padding: 4px 8px;
+  align-content: flex-start;
+  min-height: 48px;
+  padding: 0 8px;
   background-color: var(--bg-toolbar);
   border-bottom: 1px solid var(--border-subtle);
   flex-shrink: 0;
   z-index: 50;
-  gap: 4px;
-  position: relative;
 }
 
 /* ---- View switcher (left) ---- */
@@ -21,6 +21,9 @@
   align-items: center;
   gap: 2px;
   flex-shrink: 0;
+  order: 1;
+  height: 48px;
+  z-index: 0;
 }
 
 .workbench-bar-view-btn {
@@ -61,16 +64,29 @@
   line-height: 1;
 }
 
-/* ---- Center: registered tool buttons (absolutely centered in bar) ---- */
+/* ---- Center: tool buttons ---- */
+
+/* Single-row: center sits between views and globals */
 .workbench-bar-center {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  order: 2;
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  pointer-events: auto;
+  height: 48px;
+  overflow: hidden;
+}
+
+/* Two-row: center drops below views+globals */
+.workbench-bar[data-wrapped="true"] .workbench-bar-center {
+  order: 3;
+  flex: 0 0 100%;
+  height: auto;
+  overflow: visible;
+  padding: 4px 0;
+  border-top: 1px solid var(--border-subtle);
 }
 
 /* ---- Right: global buttons (theme / language / download) ---- */
@@ -79,6 +95,14 @@
   align-items: center;
   gap: 2px;
   flex-shrink: 0;
+  order: 3;
+  height: 48px;
+  margin-left: auto;
+}
+
+/* In two-row mode globals moves to row 1 right side */
+.workbench-bar[data-wrapped="true"] .workbench-bar-globals {
+  order: 2;
   margin-left: auto;
 }
 
@@ -99,6 +123,16 @@
 .workbench-bar-action-icon:hover {
   color: var(--text-primary) !important;
   background-color: var(--bg-hover) !important;
+}
+
+.workbench-bar-action-icon[data-variant="filled"] {
+  background: var(--mantine-color-blue-6, #3b82f6) !important;
+  color: #fff !important;
+}
+
+.workbench-bar-action-icon[data-variant="filled"]:hover {
+  background: var(--mantine-color-blue-7, #2563eb) !important;
+  color: #fff !important;
 }
 
 .workbench-bar-action-wrapper {

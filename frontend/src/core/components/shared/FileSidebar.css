@@ -37,10 +37,7 @@
   transition: background-color 0.15s ease;
 }
 
-.file-sidebar[data-collapsed="true"] .file-sidebar-header {
-  justify-content: center;
-  padding: 0;
-}
+/* Icons stay left-aligned during animation; overflow:hidden on inner clips text naturally */
 
 .file-sidebar-header:hover {
   background-color: var(--bg-hover);
@@ -75,11 +72,6 @@
   transition: background-color 0.15s ease;
 }
 
-.file-sidebar[data-collapsed="true"] .file-sidebar-search-row {
-  justify-content: center;
-  padding: 0;
-  min-height: 40px;
-}
 
 .file-sidebar-search-row:not(.active):hover {
   background-color: var(--bg-hover);
@@ -113,11 +105,13 @@
 }
 
 /* ---- Scrollable content ---- */
+/* This is a flex column — action rows are fixed, only the file list scrolls */
 .file-sidebar-scroll {
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-bottom: 16px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .file-sidebar-scroll::-webkit-scrollbar {
@@ -145,11 +139,6 @@
   flex-shrink: 0;
 }
 
-.file-sidebar[data-collapsed="true"] .file-sidebar-action-row {
-  padding: 0;
-  justify-content: center;
-  height: 40px;
-}
 
 .file-sidebar-action-row:hover {
   background-color: var(--bg-hover);
@@ -182,11 +171,6 @@
   flex-shrink: 0;
 }
 
-.file-sidebar[data-collapsed="true"] .file-sidebar-cloud-row {
-  padding: 0;
-  justify-content: center;
-  height: 40px;
-}
 
 .file-sidebar-cloud-row:not(.disabled):hover {
   background-color: var(--bg-hover);
@@ -228,6 +212,10 @@
 
 /* ---- Files section ---- */
 .file-sidebar-files-section {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   margin-top: 4px;
 }
 
@@ -249,6 +237,7 @@
   border-top: 1px solid var(--border-subtle);
   padding-top: 10px;
   margin-top: 4px;
+  flex-shrink: 0;
 }
 
 .file-sidebar-section-label {
@@ -308,13 +297,21 @@
 }
 
 /* ---- Sidebar content fade (for collapsed state) ---- */
+/* Elements are conditionally rendered so use animation (not transition) to fade in from 0.
+   Delay until the width animation is nearly done (0.18s of 0.22s) to avoid squashed-text effect. */
+@keyframes sidebar-content-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 .sidebar-content-fade {
-  transition: opacity 0.15s ease;
+  animation: sidebar-content-in 0.12s ease 0.18s both;
 }
 
 .file-sidebar[data-collapsed="true"] .sidebar-content-fade {
   opacity: 0;
   pointer-events: none;
+  animation: none;
 }
 
 /* ---- Bottom bar (user + settings) ---- */
@@ -328,10 +325,7 @@
   min-height: 48px;
 }
 
-.file-sidebar[data-collapsed="true"] .file-sidebar-bottom-bar {
-  justify-content: center;
-  padding: 8px 0;
-}
+/* Bottom bar settings icon tracks the right edge during collapse animation */
 
 .file-sidebar-bottom-avatar {
   width: 28px;
@@ -378,10 +372,10 @@
   color: var(--text-muted);
   padding: 0;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .file-sidebar[data-collapsed="true"] .file-sidebar-bottom-settings {
   width: 32px;
   height: 32px;
-  margin: 0 auto;
 }

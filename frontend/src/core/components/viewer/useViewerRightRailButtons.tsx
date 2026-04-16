@@ -179,7 +179,11 @@ export function useViewerRightRailButtons(isRulerActive?: boolean, setIsRulerAct
         disabled: !isPanning && pendingCount > 0 && redactionActiveType !== null,
         onClick: () => {
           viewer.panActions.togglePan();
-          setIsPanning((prev) => !prev);
+          setIsPanning((prev) => {
+            const next = !prev;
+            if (next && isRulerActive) setIsRulerActive?.(false);
+            return next;
+          });
         },
       },
       {
@@ -195,6 +199,7 @@ export function useViewerRightRailButtons(isRulerActive?: boolean, setIsRulerAct
           setIsRulerActive?.(next);
           if (next && isPanning) {
             viewer.panActions.disablePan();
+            setIsPanning(false);
           }
         },
       },

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { ActionIcon } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useRightRail } from "@app/contexts/RightRailContext";
@@ -12,7 +12,6 @@ import { WorkbenchType } from "@app/types/workbench";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { downloadFile } from "@app/services/downloadService";
-import { ViewerInlineControls } from "@app/components/shared/ViewerInlineControls";
 import { RightRailButtonConfig, RightRailRenderContext, RightRailSection } from "@app/types/rightRail";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import FolderIcon from "@mui/icons-material/Folder";
@@ -249,8 +248,36 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
     { value: "fileEditor", label: t("workbenchBar.activeFiles", "Active Files"), icon: <FolderIcon fontSize="small" /> },
   ];
 
+  const barRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const bar = barRef.current;
+    if (!bar) return;
+
+    const measure = () => {
+      const viewsEl = bar.querySelector<HTMLElement>(".workbench-bar-views");
+      const globalsEl = bar.querySelector<HTMLElement>(".workbench-bar-globals");
+      const centerEl = bar.querySelector<HTMLElement>(".workbench-bar-center");
+
+      const viewsWidth = viewsEl?.offsetWidth ?? 0;
+      const globalsWidth = globalsEl?.offsetWidth ?? 0;
+      const centerChildren = centerEl ? (Array.from(centerEl.children) as HTMLElement[]) : [];
+      const centerWidth =
+        centerChildren.reduce((sum, el) => sum + el.offsetWidth, 0) +
+        Math.max(0, centerChildren.length - 1) * 2; // gap: 2px
+
+      const needed = viewsWidth + centerWidth + globalsWidth + 24; // 24px bar padding
+      bar.dataset.wrapped = String(needed > bar.clientWidth);
+    };
+
+    const ro = new ResizeObserver(measure);
+    ro.observe(bar);
+    measure();
+    return () => ro.disconnect();
+  }, []);
+
   return (
-    <div className="workbench-bar" data-tour="workbench-bar">
+    <div ref={barRef} className="workbench-bar" data-wrapped="true" data-tour="workbench-bar">
       {/* Left: View switcher */}
       <div className="workbench-bar-views">
         {hasFiles &&
@@ -268,23 +295,25 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
           ))}
       </div>
 
-      {/* Tool buttons */}
-      <div className="workbench-bar-center">
-        {sectionsWithButtons.map(({ section, buttons: sectionButtons }, idx) => (
-          <React.Fragment key={section}>
-            {idx > 0 && <div className="workbench-bar-divider" />}
-            {sectionButtons.map((btn) => {
-              const content = renderButton(btn);
-              if (!content) return null;
-              return (
-                <div key={btn.id} className="workbench-bar-action-wrapper">
-                  {content}
-                </div>
-              );
-            })}
-          </React.Fragment>
-        ))}
-      </div>
+      {/* Tool buttons — second row, only rendered when buttons exist */}
+      {sectionsWithButtons.length > 0 && (
+        <div className="workbench-bar-center">
+          {sectionsWithButtons.map(({ section, buttons: sectionButtons }, idx) => (
+            <React.Fragment key={section}>
+              {idx > 0 && <div className="workbench-bar-divider" />}
+              {sectionButtons.map((btn) => {
+                const content = renderButton(btn);
+                if (!content) return null;
+                return (
+                  <div key={btn.id} className="workbench-bar-action-wrapper">
+                    {content}
+                  </div>
+                );
+              })}
+            </React.Fragment>
+          ))}
+        </div>
+      )}
 
       {/* Right: Global buttons (share / delete / download / zoom + page nav) */}
       <div className="workbench-bar-globals">
@@ -365,8 +394,6 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
             t("rightRail.saveAs", "Save As"),
           )}
 
-        {/* Viewer inline controls: page navigation + zoom (viewer mode only) */}
-        <ViewerInlineControls />
       </div>
     </div>
   );

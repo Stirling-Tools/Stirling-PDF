@@ -314,7 +314,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
             role="button"
             tabIndex={0}
             onKeyDown={(e) => e.key === "Enter" && openFilesModal()}
-            style={{ justifyContent: collapsed ? "center" : "flex-start" }}
           >
             <FolderOpenIcon className="file-sidebar-action-icon" />
             {!collapsed && (
@@ -332,7 +331,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
               role="button"
               tabIndex={isGoogleDriveEnabled ? 0 : -1}
               aria-disabled={!isGoogleDriveEnabled}
-              style={{ justifyContent: collapsed ? "center" : "flex-start" }}
               title={
                 !isGoogleDriveEnabled
                   ? t("fileSidebar.googleDriveDisabled", "Google Drive is not configured")
