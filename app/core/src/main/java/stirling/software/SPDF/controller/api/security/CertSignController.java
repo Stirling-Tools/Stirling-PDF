@@ -64,6 +64,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.micrometer.common.util.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -78,6 +79,8 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @RestController
@@ -104,13 +107,15 @@ public class CertSignController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final ServerCertificateServiceInterface serverCertificateService;
+    private final TempFileManager tempFileManager;
 
     public CertSignController(
             CustomPDFDocumentFactory pdfDocumentFactory,
-            @Autowired(required = false)
-                    ServerCertificateServiceInterface serverCertificateService) {
+            @Autowired(required = false) ServerCertificateServiceInterface serverCertificateService,
+            TempFileManager tempFileManager) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.serverCertificateService = serverCertificateService;
+        this.tempFileManager = tempFileManager;
     }
 
     public static void sign(
@@ -163,8 +168,8 @@ public class CertSignController {
                     "This endpoint accepts a PDF file, a digital certificate and related"
                             + " information to sign the PDF. It then returns the digitally signed PDF"
                             + " file. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> signPDFWithCert(@ModelAttribute SignPDFWithCertRequest request)
-            throws Exception {
+    public ResponseEntity<StreamingResponseBody> signPDFWithCert(
+            @ModelAttribute SignPDFWithCertRequest request) throws Exception {
         MultipartFile pdf = request.getFileInput();
         String certType = request.getCertType();
         MultipartFile privateKeyFile = request.getPrivateKeyFile();
@@ -246,22 +251,26 @@ public class CertSignController {
         }
 
         CreateSignature createSignature = new CreateSignature(ks, keystorePassword.toCharArray());
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        sign(
-                pdfDocumentFactory,
-                pdf,
-                baos,
-                createSignature,
-                showSignature,
-                pageNumber,
-                name,
-                location,
-                reason,
-                showLogo);
+        TempFile signedOut = tempFileManager.createManagedTempFile(".pdf");
+        try (OutputStream os = new FileOutputStream(signedOut.getFile())) {
+            sign(
+                    pdfDocumentFactory,
+                    pdf,
+                    os,
+                    createSignature,
+                    showSignature,
+                    pageNumber,
+                    name,
+                    location,
+                    reason,
+                    showLogo);
+        } catch (IOException e) {
+            signedOut.close();
+            throw e;
+        }
         // Return the signed PDF
-        return WebResponseUtils.bytesToWebResponse(
-                baos.toByteArray(),
-                GeneralUtils.generateFilename(pdf.getOriginalFilename(), "_signed.pdf"));
+        return WebResponseUtils.pdfFileToWebResponse(
+                signedOut, GeneralUtils.generateFilename(pdf.getOriginalFilename(), "_signed.pdf"));
     }
 
     private MultipartFile validateFilePresent(

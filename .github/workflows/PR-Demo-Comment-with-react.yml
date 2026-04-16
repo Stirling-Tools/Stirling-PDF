@@ -161,6 +161,8 @@ jobs:
         with:
           gradle-version: 9.3.1
 
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
       - name: Run Gradle Command
         run: |
           if [ "${{ needs.check-comment.outputs.disable_security }}" == "true" ]; then
@@ -168,7 +170,7 @@ jobs:
           else
             export DISABLE_ADDITIONAL_FEATURES=false
           fi
-          ./gradlew build
+          task backend:build
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}

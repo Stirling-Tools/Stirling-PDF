@@ -1,12 +1,16 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,17 +19,37 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.model.api.general.RearrangePagesRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class RearrangePagesPDFControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private TempFileManager tempFileManager;
 
     @InjectMocks private RearrangePagesPDFController controller;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
+    }
 
     private MockMultipartFile createMockPdf() {
         return new MockMultipartFile(
@@ -43,7 +67,7 @@ class RearrangePagesPDFControllerTest {
         when(pdfDocumentFactory.load(file)).thenReturn(mockDoc);
         when(mockDoc.getNumberOfPages()).thenReturn(5);
 
-        ResponseEntity<byte[]> response = controller.deletePages(request);
+        ResponseEntity<StreamingResponseBody> response = controller.deletePages(request);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -73,7 +97,7 @@ class RearrangePagesPDFControllerTest {
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDoc))
                 .thenReturn(mockNewDoc);
 
-        ResponseEntity<byte[]> response = controller.rearrangePages(request);
+        ResponseEntity<StreamingResponseBody> response = controller.rearrangePages(request);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -103,7 +127,7 @@ class RearrangePagesPDFControllerTest {
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDoc))
                 .thenReturn(mockNewDoc);
 
-        ResponseEntity<byte[]> response = controller.rearrangePages(request);
+        ResponseEntity<StreamingResponseBody> response = controller.rearrangePages(request);
 
         assertNotNull(response);
         verify(mockNewDoc).addPage(page1);
@@ -131,7 +155,7 @@ class RearrangePagesPDFControllerTest {
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDoc))
                 .thenReturn(mockNewDoc);
 
-        ResponseEntity<byte[]> response = controller.rearrangePages(request);
+        ResponseEntity<StreamingResponseBody> response = controller.rearrangePages(request);
 
         assertNotNull(response);
         verify(mockNewDoc).addPage(page0);
@@ -157,7 +181,7 @@ class RearrangePagesPDFControllerTest {
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDoc))
                 .thenReturn(mockNewDoc);
 
-        ResponseEntity<byte[]> response = controller.rearrangePages(request);
+        ResponseEntity<StreamingResponseBody> response = controller.rearrangePages(request);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -184,7 +208,7 @@ class RearrangePagesPDFControllerTest {
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDoc))
                 .thenReturn(mockNewDoc);
 
-        ResponseEntity<byte[]> response = controller.rearrangePages(request);
+        ResponseEntity<StreamingResponseBody> response = controller.rearrangePages(request);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -208,7 +232,7 @@ class RearrangePagesPDFControllerTest {
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDoc))
                 .thenReturn(mockNewDoc);
 
-        ResponseEntity<byte[]> response = controller.rearrangePages(request);
+        ResponseEntity<StreamingResponseBody> response = controller.rearrangePages(request);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -232,7 +256,7 @@ class RearrangePagesPDFControllerTest {
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDoc))
                 .thenReturn(mockNewDoc);
 
-        ResponseEntity<byte[]> response = controller.rearrangePages(request);
+        ResponseEntity<StreamingResponseBody> response = controller.rearrangePages(request);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -260,7 +284,7 @@ class RearrangePagesPDFControllerTest {
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDoc))
                 .thenReturn(mockNewDoc);
 
-        ResponseEntity<byte[]> response = controller.rearrangePages(request);
+        ResponseEntity<StreamingResponseBody> response = controller.rearrangePages(request);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
@@ -284,7 +308,7 @@ class RearrangePagesPDFControllerTest {
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDoc))
                 .thenReturn(mockNewDoc);
 
-        ResponseEntity<byte[]> response = controller.rearrangePages(request);
+        ResponseEntity<StreamingResponseBody> response = controller.rearrangePages(request);
 
         assertNotNull(response);
         // 2 pages * 3 duplicates = 6 addPage calls
@@ -309,7 +333,7 @@ class RearrangePagesPDFControllerTest {
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDoc))
                 .thenReturn(mockNewDoc);
 
-        ResponseEntity<byte[]> response = controller.rearrangePages(request);
+        ResponseEntity<StreamingResponseBody> response = controller.rearrangePages(request);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());

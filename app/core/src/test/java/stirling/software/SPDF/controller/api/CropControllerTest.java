@@ -1,9 +1,11 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
@@ -29,21 +31,47 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CropController Tests")
 class CropControllerTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     @TempDir Path tempDir;
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private TempFileManager tempFileManager;
     @InjectMocks private CropController cropController;
     private TestPdfFactory pdfFactory;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
         pdfFactory = new TestPdfFactory();
     }
 
@@ -177,7 +205,7 @@ class CropControllerTest {
             when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDocument))
                     .thenReturn(newDocument);
 
-            ResponseEntity<byte[]> response = cropController.cropPdf(request);
+            ResponseEntity<StreamingResponseBody> response = cropController.cropPdf(request);
 
             assertThat(response)
                     .isNotNull()
@@ -214,7 +242,7 @@ class CropControllerTest {
             when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDocument))
                     .thenReturn(newDocument);
 
-            ResponseEntity<byte[]> response = cropController.cropPdf(request);
+            ResponseEntity<StreamingResponseBody> response = cropController.cropPdf(request);
 
             assertThat(response).isNotNull();
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -234,7 +262,7 @@ class CropControllerTest {
         private TestPdfFactory autoCropPdfFactory;
 
         @BeforeEach
-        void setUp() {
+        void setUp() throws Exception {
             autoCropPdfFactory = new TestPdfFactory();
         }
 
@@ -254,13 +282,13 @@ class CropControllerTest {
                 when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDoc))
                         .thenReturn(newDoc);
 
-                ResponseEntity<byte[]> response = cropController.cropPdf(request);
+                ResponseEntity<StreamingResponseBody> response = cropController.cropPdf(request);
 
                 assertThat(response).isNotNull();
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-                assertThat(response.getBody()).isNotEmpty();
+                assertThat(drainBody(response)).isNotEmpty();
 
-                try (PDDocument result = Loader.loadPDF(response.getBody())) {
+                try (PDDocument result = Loader.loadPDF(drainBody(response))) {
                     assertThat(result.getNumberOfPages()).isEqualTo(1);
 
                     PDPage page = result.getPage(0);
@@ -285,13 +313,13 @@ class CropControllerTest {
                 when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDoc))
                         .thenReturn(newDoc);
 
-                ResponseEntity<byte[]> response = cropController.cropPdf(request);
+                ResponseEntity<StreamingResponseBody> response = cropController.cropPdf(request);
 
                 assertThat(response).isNotNull();
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
                 Assertions.assertNotNull(response.getBody());
-                try (PDDocument result = Loader.loadPDF(response.getBody())) {
+                try (PDDocument result = Loader.loadPDF(drainBody(response))) {
                     assertThat(result.getNumberOfPages()).isEqualTo(1);
                 }
             }
@@ -648,7 +676,7 @@ class CropControllerTest {
             when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDocument))
                     .thenReturn(newDocument);
 
-            ResponseEntity<byte[]> response = cropController.cropPdf(request);
+            ResponseEntity<StreamingResponseBody> response = cropController.cropPdf(request);
 
             assertThat(response).isNotNull();
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -676,7 +704,7 @@ class CropControllerTest {
             when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDocument))
                     .thenReturn(newDocument);
 
-            ResponseEntity<byte[]> response = cropController.cropPdf(request);
+            ResponseEntity<StreamingResponseBody> response = cropController.cropPdf(request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             verify(mockDocument, times(1)).close();

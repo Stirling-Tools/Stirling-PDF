@@ -4,12 +4,18 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,17 +27,29 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.EmlToPdf;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ConvertEmlToPDFTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private RuntimePathConfig runtimePathConfig;
@@ -40,35 +58,51 @@ class ConvertEmlToPDFTest {
 
     @InjectMocks private ConvertEmlToPDF controller;
 
+    @BeforeEach
+    void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
+    }
+
     @Test
-    void convertEmlToPdf_emptyFileReturnsBadRequest() {
+    void convertEmlToPdf_emptyFileReturnsBadRequest() throws java.io.IOException {
         MockMultipartFile emptyFile =
                 new MockMultipartFile("fileInput", "test.eml", "message/rfc822", new byte[0]);
 
         EmlToPdfRequest request = new EmlToPdfRequest();
         request.setFileInput(emptyFile);
 
-        ResponseEntity<byte[]> response = controller.convertEmlToPdf(request);
+        ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertTrue(
-                new String(response.getBody(), StandardCharsets.UTF_8)
+                new String(drainBody(response), StandardCharsets.UTF_8)
                         .contains("No file provided"));
     }
 
     @Test
-    void convertEmlToPdf_nullFilenameReturnsBadRequest() {
+    void convertEmlToPdf_nullFilenameReturnsBadRequest() throws java.io.IOException {
         MockMultipartFile file =
                 new MockMultipartFile("fileInput", null, "message/rfc822", "content".getBytes());
 
         EmlToPdfRequest request = new EmlToPdfRequest();
         request.setFileInput(file);
 
-        ResponseEntity<byte[]> response = controller.convertEmlToPdf(request);
+        ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertTrue(
-                new String(response.getBody(), StandardCharsets.UTF_8).contains("valid filename"));
+                new String(drainBody(response), StandardCharsets.UTF_8).contains("valid filename"));
     }
 
     @Test
@@ -79,24 +113,24 @@ class ConvertEmlToPDFTest {
         EmlToPdfRequest request = new EmlToPdfRequest();
         request.setFileInput(file);
 
-        ResponseEntity<byte[]> response = controller.convertEmlToPdf(request);
+        ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
-    void convertEmlToPdf_invalidFileTypeReturnsBadRequest() {
+    void convertEmlToPdf_invalidFileTypeReturnsBadRequest() throws java.io.IOException {
         MockMultipartFile file =
                 new MockMultipartFile("fileInput", "test.txt", "text/plain", "content".getBytes());
 
         EmlToPdfRequest request = new EmlToPdfRequest();
         request.setFileInput(file);
 
-        ResponseEntity<byte[]> response = controller.convertEmlToPdf(request);
+        ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertTrue(
-                new String(response.getBody(), StandardCharsets.UTF_8)
+                new String(drainBody(response), StandardCharsets.UTF_8)
                         .contains("valid EML or MSG"));
     }
 
@@ -112,7 +146,7 @@ class ConvertEmlToPDFTest {
 
         when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/usr/bin/weasyprint");
 
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(pdfBytes);
+        ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(pdfBytes);
 
         try (MockedStatic<EmlToPdf> emlMock = Mockito.mockStatic(EmlToPdf.class);
                 MockedStatic<WebResponseUtils> wrMock =
@@ -132,14 +166,14 @@ class ConvertEmlToPDFTest {
 
             wrMock.when(
                             () ->
-                                    WebResponseUtils.bytesToWebResponse(
-                                            pdfBytes, "test.eml.pdf", MediaType.APPLICATION_PDF))
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = controller.convertEmlToPdf(request);
+            ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertArrayEquals(pdfBytes, response.getBody());
+            assertArrayEquals(pdfBytes, drainBody(response));
         }
     }
 
@@ -154,8 +188,8 @@ class ConvertEmlToPDFTest {
         request.setFileInput(file);
         request.setDownloadHtml(true);
 
-        ResponseEntity<byte[]> expectedResponse =
-                ResponseEntity.ok(htmlContent.getBytes(StandardCharsets.UTF_8));
+        ResponseEntity<StreamingResponseBody> expectedResponse =
+                streamingOk(htmlContent.getBytes(StandardCharsets.UTF_8));
 
         try (MockedStatic<EmlToPdf> emlMock = Mockito.mockStatic(EmlToPdf.class);
                 MockedStatic<WebResponseUtils> wrMock =
@@ -171,13 +205,11 @@ class ConvertEmlToPDFTest {
 
             wrMock.when(
                             () ->
-                                    WebResponseUtils.bytesToWebResponse(
-                                            htmlContent.getBytes(StandardCharsets.UTF_8),
-                                            "test.eml.html",
-                                            MediaType.TEXT_HTML))
+                                    WebResponseUtils.fileToWebResponse(
+                                            any(TempFile.class), anyString(), any(MediaType.class)))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = controller.convertEmlToPdf(request);
+            ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }
@@ -203,11 +235,11 @@ class ConvertEmlToPDFTest {
                                             eq(customHtmlSanitizer)))
                     .thenThrow(new IOException("Parse error"));
 
-            ResponseEntity<byte[]> response = controller.convertEmlToPdf(request);
+            ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
 
             assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
             assertTrue(
-                    new String(response.getBody(), StandardCharsets.UTF_8)
+                    new String(drainBody(response), StandardCharsets.UTF_8)
                             .contains("HTML conversion failed"));
         }
     }
@@ -231,11 +263,11 @@ class ConvertEmlToPDFTest {
                                             any(), any(), any(), any(), any(), any(), any()))
                     .thenReturn(null);
 
-            ResponseEntity<byte[]> response = controller.convertEmlToPdf(request);
+            ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
 
             assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
             assertTrue(
-                    new String(response.getBody(), StandardCharsets.UTF_8)
+                    new String(drainBody(response), StandardCharsets.UTF_8)
                             .contains("empty output"));
         }
     }
@@ -255,7 +287,7 @@ class ConvertEmlToPDFTest {
 
         when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/usr/bin/weasyprint");
 
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(pdfBytes);
+        ResponseEntity<StreamingResponseBody> expectedResponse = streamingOk(pdfBytes);
 
         try (MockedStatic<EmlToPdf> emlMock = Mockito.mockStatic(EmlToPdf.class);
                 MockedStatic<WebResponseUtils> wrMock =
@@ -269,13 +301,11 @@ class ConvertEmlToPDFTest {
 
             wrMock.when(
                             () ->
-                                    WebResponseUtils.bytesToWebResponse(
-                                            any(byte[].class),
-                                            any(String.class),
-                                            any(MediaType.class)))
+                                    WebResponseUtils.pdfFileToWebResponse(
+                                            any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = controller.convertEmlToPdf(request);
+            ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }
@@ -300,11 +330,12 @@ class ConvertEmlToPDFTest {
                                             any(), any(), any(), any(), any(), any(), any()))
                     .thenThrow(new InterruptedException("interrupted"));
 
-            ResponseEntity<byte[]> response = controller.convertEmlToPdf(request);
+            ResponseEntity<StreamingResponseBody> response = controller.convertEmlToPdf(request);
 
             assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
             assertTrue(
-                    new String(response.getBody(), StandardCharsets.UTF_8).contains("interrupted"));
+                    new String(drainBody(response), StandardCharsets.UTF_8)
+                            .contains("interrupted"));
         }
     }
 }

@@ -1,8 +1,10 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,6 +16,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -24,16 +27,46 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import stirling.software.SPDF.model.api.misc.ExtractHeaderRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class AutoRenameControllerTest {
+    private static ResponseEntity<StreamingResponseBody> streamingOk(byte[] bytes) {
+        return ResponseEntity.ok(out -> out.write(bytes));
+    }
+
+    private static byte[] drainBody(ResponseEntity<StreamingResponseBody> response)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        response.getBody().writeTo(baos);
+        return baos.toByteArray();
+    }
 
     @TempDir Path tempDir;
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
+    @Mock private TempFileManager tempFileManager;
     @InjectMocks private AutoRenameController controller;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        lenient()
+                .when(tempFileManager.createManagedTempFile(anyString()))
+                .thenAnswer(
+                        inv -> {
+                            File f =
+                                    Files.createTempFile("test", inv.<String>getArgument(0))
+                                            .toFile();
+                            TempFile tf = mock(TempFile.class);
+                            lenient().when(tf.getFile()).thenReturn(f);
+                            lenient().when(tf.getPath()).thenReturn(f.toPath());
+                            return tf;
+                        });
+    }
 
     private MockMultipartFile createPdfWithText(String text, float fontSize) throws IOException {
         Path path = tempDir.resolve("test.pdf");
@@ -68,10 +101,10 @@ class AutoRenameControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.extractHeader(request);
+        ResponseEntity<StreamingResponseBody> response = controller.extractHeader(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotEmpty();
+        assertThat(drainBody(response)).isNotEmpty();
         String contentDisposition = response.getHeaders().getFirst("Content-Disposition");
         assertThat(contentDisposition).contains(".pdf");
     }
@@ -94,7 +127,7 @@ class AutoRenameControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.extractHeader(request);
+        ResponseEntity<StreamingResponseBody> response = controller.extractHeader(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
@@ -107,7 +140,7 @@ class AutoRenameControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.extractHeader(request);
+        ResponseEntity<StreamingResponseBody> response = controller.extractHeader(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
@@ -155,7 +188,7 @@ class AutoRenameControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.extractHeader(request);
+        ResponseEntity<StreamingResponseBody> response = controller.extractHeader(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         // The largest font text should be used as title (URL-encoded in Content-Disposition)
@@ -173,7 +206,7 @@ class AutoRenameControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.extractHeader(request);
+        ResponseEntity<StreamingResponseBody> response = controller.extractHeader(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         // Should fallback to original filename since header is too long
@@ -189,7 +222,7 @@ class AutoRenameControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.extractHeader(request);
+        ResponseEntity<StreamingResponseBody> response = controller.extractHeader(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         // Special characters should be sanitized
@@ -215,7 +248,7 @@ class AutoRenameControllerTest {
         PDDocument doc = Loader.loadPDF(file.getBytes());
         when(pdfDocumentFactory.load(file)).thenReturn(doc);
 
-        ResponseEntity<byte[]> response = controller.extractHeader(request);
+        ResponseEntity<StreamingResponseBody> response = controller.extractHeader(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }

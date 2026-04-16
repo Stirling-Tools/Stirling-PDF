@@ -5,7 +5,6 @@ from dataclasses import dataclass
 import pytest
 
 from stirling.agents import PdfEditAgent, PdfEditParameterSelector, PdfEditPlanSelection
-from stirling.config import AppSettings
 from stirling.contracts import (
     EditCannotDoResponse,
     EditClarificationRequest,
@@ -14,16 +13,7 @@ from stirling.contracts import (
     ToolOperationStep,
 )
 from stirling.models.tool_models import CompressParams, OperationId, RotateParams
-from stirling.services import build_runtime
-
-
-def build_test_settings() -> AppSettings:
-    return AppSettings(
-        smart_model_name="test",
-        fast_model_name="test",
-        smart_model_max_tokens=8192,
-        fast_model_max_tokens=2048,
-    )
+from stirling.services.runtime import AppRuntime
 
 
 @dataclass(frozen=True)
@@ -61,10 +51,11 @@ class RecordingParameterSelector:
 class StubPdfEditAgent(PdfEditAgent):
     def __init__(
         self,
+        runtime: AppRuntime,
         selection: PdfEditPlanSelection | EditClarificationRequest | EditCannotDoResponse,
         parameter_selector: RecordingParameterSelector | PdfEditParameterSelector | None = None,
     ) -> None:
-        super().__init__(build_runtime(build_test_settings()))
+        super().__init__(runtime)
         self.selection = selection
         if parameter_selector is not None:
             self.parameter_selector = parameter_selector
@@ -77,9 +68,10 @@ class StubPdfEditAgent(PdfEditAgent):
 
 
 @pytest.mark.anyio
-async def test_pdf_edit_agent_builds_multi_step_plan() -> None:
+async def test_pdf_edit_agent_builds_multi_step_plan(runtime: AppRuntime) -> None:
     parameter_selector = RecordingParameterSelector()
     agent = StubPdfEditAgent(
+        runtime,
         PdfEditPlanSelection(
             operations=[OperationId.ROTATE, OperationId.COMPRESS],
             summary="Rotate the PDF, then compress it.",
@@ -104,9 +96,10 @@ async def test_pdf_edit_agent_builds_multi_step_plan() -> None:
 
 
 @pytest.mark.anyio
-async def test_pdf_edit_agent_passes_previous_steps_to_parameter_selector() -> None:
+async def test_pdf_edit_agent_passes_previous_steps_to_parameter_selector(runtime: AppRuntime) -> None:
     parameter_selector = RecordingParameterSelector()
     agent = StubPdfEditAgent(
+        runtime,
         PdfEditPlanSelection(
             operations=[OperationId.ROTATE, OperationId.COMPRESS],
             summary="Rotate the PDF, then compress it.",
@@ -134,12 +127,13 @@ async def test_pdf_edit_agent_passes_previous_steps_to_parameter_selector() -> N
 
 
 @pytest.mark.anyio
-async def test_pdf_edit_agent_returns_clarification_without_partial_plan() -> None:
+async def test_pdf_edit_agent_returns_clarification_without_partial_plan(runtime: AppRuntime) -> None:
     agent = StubPdfEditAgent(
+        runtime,
         EditClarificationRequest(
             question="Which pages should be rotated?",
             reason="The request does not say which pages to change.",
-        )
+        ),
     )
 
     response = await agent.handle(PdfEditRequest(user_message="Rotate some pages."))
@@ -148,11 +142,12 @@ async def test_pdf_edit_agent_returns_clarification_without_partial_plan() -> No
 
 
 @pytest.mark.anyio
-async def test_pdf_edit_agent_returns_cannot_do_without_partial_plan() -> None:
+async def test_pdf_edit_agent_returns_cannot_do_without_partial_plan(runtime: AppRuntime) -> None:
     agent = StubPdfEditAgent(
+        runtime,
         EditCannotDoResponse(
             reason="This request requires OCR, which is not part of PDF edit planning.",
-        )
+        ),
     )
 
     response = await agent.handle(PdfEditRequest(user_message="Read this scan and summarize it."))
