@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.InternalApiClient;
+import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
@@ -52,6 +53,7 @@ public class AiWorkflowService {
     private final ObjectMapper objectMapper;
     private final InternalApiClient internalApiClient;
     private final FileStorage fileStorage;
+    private final ToolMetadataService toolMetadataService;
 
     @FunctionalInterface
     public interface ProgressListener {
@@ -201,11 +203,10 @@ public class AiWorkflowService {
         }
 
         try {
-            // Use the first file as input (single-file tool call)
-            MultipartFile inputFile = filesByName.values().iterator().next();
-            Resource resultResource = executeTool(endpointPath, parameters, inputFile);
+            List<Resource> inputFiles = toResources(filesByName);
+            List<Resource> results = executeStep(endpointPath, parameters, inputFiles);
             return new WorkflowState.Terminal(
-                    buildCompletedResponse(response.getRationale(), resultResource));
+                    buildCompletedResponse(response.getRationale(), results));
         } catch (Exception e) {
             log.error("Failed to execute tool {}: {}", endpointPath, e.getMessage(), e);
             return new WorkflowState.Terminal(
@@ -223,9 +224,7 @@ public class AiWorkflowService {
         }
 
         try {
-            // Start with the first input file
-            MultipartFile inputFile = filesByName.values().iterator().next();
-            Resource currentResource = toResource(inputFile);
+            List<Resource> currentFiles = toResources(filesByName);
 
             for (int i = 0; i < steps.size(); i++) {
                 Map<String, Object> step = steps.get(i);
@@ -240,26 +239,11 @@ public class AiWorkflowService {
                             cannotContinue("Plan step " + (i + 1) + " has no tool endpoint."));
                 }
 
-                MultiValueMap<String, Object> body = buildRequestBody(currentResource, parameters);
-                ResponseEntity<Resource> toolResponse = internalApiClient.post(endpointPath, body);
-
-                if (!HttpStatus.OK.equals(toolResponse.getStatusCode())
-                        || toolResponse.getBody() == null) {
-                    return new WorkflowState.Terminal(
-                            cannotContinue(
-                                    "Tool execution failed at step "
-                                            + (i + 1)
-                                            + " ("
-                                            + endpointPath
-                                            + "): HTTP "
-                                            + toolResponse.getStatusCode()));
-                }
-
-                currentResource = toolResponse.getBody();
+                currentFiles = executeStep(endpointPath, parameters, currentFiles);
             }
 
             return new WorkflowState.Terminal(
-                    buildCompletedResponse(response.getSummary(), currentResource));
+                    buildCompletedResponse(response.getSummary(), currentFiles));
         } catch (Exception e) {
             log.error("Failed to execute plan: {}", e.getMessage(), e);
             return new WorkflowState.Terminal(
@@ -267,24 +251,30 @@ public class AiWorkflowService {
         }
     }
 
-    private Resource executeTool(
-            String endpointPath, Map<String, Object> parameters, MultipartFile inputFile)
+    /**
+     * Execute a single tool step. If the endpoint accepts multiple files, all files are sent in one
+     * call. Otherwise, the endpoint is called once per file.
+     */
+    private List<Resource> executeStep(
+            String endpointPath, Map<String, Object> parameters, List<Resource> inputFiles)
             throws IOException {
-        Resource fileResource = toResource(inputFile);
-        MultiValueMap<String, Object> body = buildRequestBody(fileResource, parameters);
-        ResponseEntity<Resource> response = internalApiClient.post(endpointPath, body);
-
-        if (!HttpStatus.OK.equals(response.getStatusCode()) || response.getBody() == null) {
-            throw new IOException(
-                    "Tool returned HTTP " + response.getStatusCode() + " for " + endpointPath);
+        if (toolMetadataService.isMultiInput(endpointPath)) {
+            return List.of(callEndpoint(endpointPath, parameters, inputFiles));
         }
-        return response.getBody();
+        List<Resource> results = new ArrayList<>();
+        for (Resource file : inputFiles) {
+            results.add(callEndpoint(endpointPath, parameters, List.of(file)));
+        }
+        return results;
     }
 
-    private MultiValueMap<String, Object> buildRequestBody(
-            Resource fileResource, Map<String, Object> parameters) {
+    private Resource callEndpoint(
+            String endpointPath, Map<String, Object> parameters, List<Resource> files)
+            throws IOException {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("fileInput", fileResource);
+        for (Resource file : files) {
+            body.add("fileInput", file);
+        }
         for (Map.Entry<String, Object> entry : parameters.entrySet()) {
             if (entry.getValue() instanceof List<?> list) {
                 for (Object item : list) {
@@ -294,30 +284,52 @@ public class AiWorkflowService {
                 body.add(entry.getKey(), entry.getValue());
             }
         }
-        return body;
+        ResponseEntity<Resource> response = internalApiClient.post(endpointPath, body);
+        if (!HttpStatus.OK.equals(response.getStatusCode()) || response.getBody() == null) {
+            throw new IOException(
+                    "Tool returned HTTP " + response.getStatusCode() + " for " + endpointPath);
+        }
+        return response.getBody();
     }
 
-    private Resource toResource(MultipartFile file) throws IOException {
-        java.nio.file.Path tempPath = Files.createTempFile("ai-workflow-", ".tmp");
-        file.transferTo(tempPath);
-        final String originalName = Filenames.toSimpleFileName(file.getOriginalFilename());
-        return new FileSystemResource(tempPath.toFile()) {
-            @Override
-            public String getFilename() {
-                return originalName;
-            }
-        };
+    private List<Resource> toResources(Map<String, MultipartFile> filesByName) throws IOException {
+        List<Resource> resources = new ArrayList<>();
+        for (MultipartFile file : filesByName.values()) {
+            java.nio.file.Path tempPath = Files.createTempFile("ai-workflow-", ".tmp");
+            file.transferTo(tempPath);
+            final String originalName = Filenames.toSimpleFileName(file.getOriginalFilename());
+            resources.add(
+                    new FileSystemResource(tempPath.toFile()) {
+                        @Override
+                        public String getFilename() {
+                            return originalName;
+                        }
+                    });
+        }
+        return resources;
     }
 
-    private AiWorkflowResponse buildCompletedResponse(String summary, Resource resultResource)
+    private AiWorkflowResponse buildCompletedResponse(String summary, List<Resource> resultFiles)
             throws IOException {
-        byte[] resultBytes = Files.readAllBytes(resultResource.getFile().toPath());
-        String resultFileName =
-                resultResource.getFilename() != null ? resultResource.getFilename() : "result.pdf";
-        String storedFileId = fileStorage.storeBytes(resultBytes, resultFileName);
+        String storedFileId;
+        String resultFileName;
+        String contentType;
 
-        // Extract filename from Content-Disposition if available, otherwise use resource filename
-        String contentType = "application/pdf";
+        if (resultFiles.size() == 1) {
+            Resource resultResource = resultFiles.getFirst();
+            byte[] resultBytes = Files.readAllBytes(resultResource.getFile().toPath());
+            resultFileName =
+                    resultResource.getFilename() != null
+                            ? resultResource.getFilename()
+                            : "result.pdf";
+            storedFileId = fileStorage.storeBytes(resultBytes, resultFileName);
+            contentType = "application/pdf";
+        } else {
+            byte[] zipBytes = zipResults(resultFiles);
+            resultFileName = "results.zip";
+            storedFileId = fileStorage.storeBytes(zipBytes, resultFileName);
+            contentType = "application/zip";
+        }
 
         AiWorkflowResponse completed = new AiWorkflowResponse();
         completed.setOutcome(AiWorkflowOutcome.COMPLETED);
@@ -326,6 +338,23 @@ public class AiWorkflowService {
         completed.setFileName(resultFileName);
         completed.setContentType(contentType);
         return completed;
+    }
+
+    private byte[] zipResults(List<Resource> files) throws IOException {
+        var baos = new java.io.ByteArrayOutputStream();
+        try (var zos = new java.util.zip.ZipOutputStream(baos)) {
+            for (int i = 0; i < files.size(); i++) {
+                Resource file = files.get(i);
+                String name =
+                        file.getFilename() != null
+                                ? file.getFilename()
+                                : "file_" + (i + 1) + ".pdf";
+                zos.putNextEntry(new java.util.zip.ZipEntry(name));
+                zos.write(Files.readAllBytes(file.getFile().toPath()));
+                zos.closeEntry();
+            }
+        }
+        return baos.toByteArray();
     }
 
     private void validateRequest(AiWorkflowRequest request) {

@@ -30,7 +30,7 @@ import tools.jackson.databind.ObjectMapper;
 
 @Service
 @Slf4j
-public class ApiDocService {
+public class ApiDocService implements stirling.software.common.service.ToolMetadataService {
 
     private final Map<String, ApiEndpoint> apiDocumentation = new HashMap<>();
 
@@ -149,6 +149,7 @@ public class ApiDocService {
         return endpoint.areParametersValid(parameters);
     }
 
+    @Override
     public boolean isMultiInput(String operationName) {
         if (apiDocsJsonRootNode == null || apiDocumentation.isEmpty()) {
             loadApiDocumentation();
