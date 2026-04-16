@@ -260,17 +260,33 @@ jobs:
           echo "Available tools:"
           ls -la /usr/bin/hd* || echo "No hd* tools found"
 
+      - name: Preflight smctl
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        shell: pwsh
+        env:
+          KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
+        run: |
+          & smctl healthcheck
+          if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] smctl healthcheck failed"; exit 1 }
+          & smctl keypair ls
+          if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] smctl keypair ls failed"; exit 1 }
+          & smctl windows certsync --keypair-alias "$env:KEYPAIR_ALIAS"
+          if ($LASTEXITCODE -ne 0) { Write-Host "[WARN] smctl windows certsync returned non-zero - continuing" }
+
       - name: Configure Windows code signing
         if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
         shell: bash
         env:
-          FINGERPRINT: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
+          KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
         run: |
           cat > ./frontend/src-tauri/tauri.windows.conf.json <<EOF
           {
             "bundle": {
               "windows": {
-                "signCommand": "smctl sign --fingerprint ${FINGERPRINT} --input %1 --verbose"
+                "signCommand": {
+                  "cmd": "smctl",
+                  "args": ["sign", "--keypair-alias", "${KEYPAIR_ALIAS}", "--input", "%1", "--verbose"]
+                }
               }
             }
           }
@@ -381,6 +397,21 @@ jobs:
             exit 1
           }
           Write-Host "[SUCCESS] MSI and inner exe are properly signed"
+
+      - name: Dump smctl logs on failure
+        if: ${{ failure() && matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
+        shell: pwsh
+        run: |
+          $logDir = "$env:USERPROFILE\.signingmanager\logs"
+          if (Test-Path $logDir) {
+            Get-ChildItem $logDir | ForEach-Object {
+              Write-Host "=== $($_.FullName) ==="
+              Get-Content $_.FullName -Tail 200
+              Write-Host ""
+            }
+          } else {
+            Write-Host "smctl log directory not found at $logDir"
+          }
 
       - name: Upload artifacts
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0

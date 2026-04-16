@@ -425,28 +425,61 @@ jobs:
           echo "APPLE_SIGNING_IDENTITY=$CERT_ID" >> $GITHUB_ENV
           echo "Certificate imported successfully."
 
-      # Write a platform-specific Tauri config that adds signCommand for Windows.
+      # Pre-flight: verify smctl can talk to DigiCert and sync cert before we sign.
+      # Mirrors the setup from working public Tauri+KeyLocker repos (Labric, Meetily).
+      # Without this, signCommand failures are opaque (Tauri captures but drops
+      # smctl's stderr) - running these loudly surfaces auth/env/keypair issues.
+      - name: Preflight smctl
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
+        shell: pwsh
+        env:
+          KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
+        run: |
+          & smctl healthcheck
+          if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] smctl healthcheck failed"; exit 1 }
+          & smctl keypair ls
+          if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] smctl keypair ls failed"; exit 1 }
+          & smctl windows certsync --keypair-alias "$env:KEYPAIR_ALIAS"
+          if ($LASTEXITCODE -ne 0) { Write-Host "[WARN] smctl windows certsync returned non-zero - continuing" }
+          Write-Host "[SUCCESS] smctl preflight passed"
+
+      # Write platform-specific Tauri config that adds signCommand for Windows.
       # Tauri auto-merges tauri.windows.conf.json with tauri.conf.json (RFC 7396).
       # Tauri calls this command on every binary BEFORE bundling into the MSI,
-      # substituting %1 with the file path. The fingerprint is baked in from the
-      # secret at write time (Tauri does NOT expand env vars - only %1).
+      # substituting %1 with the file path.
+      #
+      # Why OBJECT form (cmd + args) instead of string:
+      # Tauri's string-form parser does a naive split(' ') with no shell/quote handling.
+      # Args with spaces or quote characters get mangled. The object form passes each
+      # arg directly to Rust's Command::arg which handles Windows CreateProcess quoting.
+      #
+      # Why --keypair-alias instead of --fingerprint:
+      # --fingerprint requires smctl windows certsync to have synced the cert to the
+      # Windows cert store first. --keypair-alias goes direct through PKCS11 and works
+      # without certsync. All real-world working Tauri+smctl examples use this flag.
+      #
+      # smctl reads SM_HOST, SM_API_KEY, SM_CLIENT_CERT_FILE, SM_CLIENT_CERT_PASSWORD
+      # from env (set by prior DigiCert setup step). No --config-file needed.
       - name: Configure Windows code signing
         if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
         shell: bash
         env:
-          FINGERPRINT: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
+          KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
         run: |
           cat > ./frontend/src-tauri/tauri.windows.conf.json <<EOF
           {
             "bundle": {
               "windows": {
-                "signCommand": "smctl sign --fingerprint ${FINGERPRINT} --input %1 --verbose"
+                "signCommand": {
+                  "cmd": "smctl",
+                  "args": ["sign", "--keypair-alias", "${KEYPAIR_ALIAS}", "--input", "%1", "--verbose"]
+                }
               }
             }
           }
           EOF
-          echo "Generated tauri.windows.conf.json:"
-          cat ./frontend/src-tauri/tauri.windows.conf.json | sed "s/${FINGERPRINT}/***/g"
+          echo "Generated tauri.windows.conf.json (alias masked):"
+          sed "s/${KEYPAIR_ALIAS}/***/g" ./frontend/src-tauri/tauri.windows.conf.json
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@51a9f1156b33df106d827c3a78f8f894946c5faa # v0.5.25
@@ -538,6 +571,24 @@ jobs:
             exit 1
           }
           Write-Host "[SUCCESS] All Windows artifacts are properly signed"
+
+      # Dump smctl log files on failure. Tauri's signCommand captures smctl output
+      # but drops stderr when the command exits non-zero, making failures opaque.
+      # The real errors live in smctl's log files - surface them here for debugging.
+      - name: Dump smctl logs on failure
+        if: ${{ failure() && matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
+        shell: pwsh
+        run: |
+          $logDir = "$env:USERPROFILE\.signingmanager\logs"
+          if (Test-Path $logDir) {
+            Get-ChildItem $logDir | ForEach-Object {
+              Write-Host "=== $($_.FullName) ==="
+              Get-Content $_.FullName -Tail 200
+              Write-Host ""
+            }
+          } else {
+            Write-Host "smctl log directory not found at $logDir"
+          }
 
       - name: Rename artifacts
         shell: bash
