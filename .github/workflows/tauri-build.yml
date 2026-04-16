@@ -306,16 +306,18 @@ jobs:
       - name: Configure Windows code signing
         if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
         shell: bash
+        env:
+          FINGERPRINT: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
         run: |
-          cat > ./frontend/src-tauri/tauri.windows.conf.json << 'SIGN_EOF'
+          cat > ./frontend/src-tauri/tauri.windows.conf.json <<EOF
           {
             "bundle": {
               "windows": {
-                "signCommand": "smctl sign --fingerprint %SM_CODE_SIGNING_CERT_SHA1_HASH% --input %1"
+                "signCommand": "smctl sign --fingerprint ${FINGERPRINT} --input %1"
               }
             }
           }
-          SIGN_EOF
+          EOF
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@51a9f1156b33df106d827c3a78f8f894946c5faa # v0.5.25

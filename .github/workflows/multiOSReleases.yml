@@ -470,21 +470,26 @@ jobs:
 
       # Write a platform-specific Tauri config that adds signCommand for Windows.
       # Tauri auto-merges tauri.windows.conf.json with tauri.conf.json (RFC 7396).
-      # smctl reads SM_CODE_SIGNING_CERT_SHA1_HASH and PKCS11_CONFIG from the env
-      # to sign each binary BEFORE it gets bundled into MSI/NSIS installers.
+      # Tauri calls this command on every binary BEFORE bundling into MSI/NSIS,
+      # substituting %1 with the file path. The fingerprint is baked in from the
+      # secret at write time (Tauri does NOT expand env vars - only %1).
       - name: Configure Windows code signing
         if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
         shell: bash
+        env:
+          FINGERPRINT: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
         run: |
-          cat > ./frontend/src-tauri/tauri.windows.conf.json << 'SIGN_EOF'
+          cat > ./frontend/src-tauri/tauri.windows.conf.json <<EOF
           {
             "bundle": {
               "windows": {
-                "signCommand": "smctl sign --fingerprint %SM_CODE_SIGNING_CERT_SHA1_HASH% --input %1"
+                "signCommand": "smctl sign --fingerprint ${FINGERPRINT} --input %1"
               }
             }
           }
-          SIGN_EOF
+          EOF
+          echo "Generated tauri.windows.conf.json:"
+          cat ./frontend/src-tauri/tauri.windows.conf.json | sed "s/${FINGERPRINT}/***/g"
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@51a9f1156b33df106d827c3a78f8f894946c5faa # v0.5.25
