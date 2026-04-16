@@ -440,7 +440,7 @@ jobs:
           {
             "bundle": {
               "windows": {
-                "signCommand": "smctl sign --fingerprint ${FINGERPRINT} --input %1"
+                "signCommand": "smctl sign --fingerprint ${FINGERPRINT} --input %1 --verbose"
               }
             }
           }
