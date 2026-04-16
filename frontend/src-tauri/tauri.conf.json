@@ -7,7 +7,7 @@
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
     "beforeDevCommand": "npx vite --mode desktop",
-    "beforeBuildCommand": "node scripts/build-provisioner.mjs && npx vite build --mode desktop"
+    "beforeBuildCommand": "npx vite build --mode desktop"
   },
   "app": {
     "windows": [

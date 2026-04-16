@@ -308,8 +308,11 @@ jobs:
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: true
 
-      - name: Install frontend dependencies
+      - name: Prepare frontend and desktop dependencies
         run: task frontend:prepare:desktop
+
+      - name: Build installer provisioner
+        run: task desktop:provisioner
 
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
