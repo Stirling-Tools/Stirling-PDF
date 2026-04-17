@@ -13,7 +13,7 @@ tasks:
     status:
       - test -d .venv
 
-  prep:
+  prepare:
     desc: "Set up engine .env from template"
     deps: [install]
     cmds:
@@ -26,7 +26,7 @@ tasks:
 
   run:
     desc: "Run engine server"
-    deps: [prep]
+    deps: [prepare]
     ignore_error: true
     dir: src
     env:
@@ -36,7 +36,7 @@ tasks:
 
   dev:
     desc: "Start engine dev server with hot reload"
-    deps: [prep]
+    deps: [prepare]
     ignore_error: true
     dir: src
     env:
@@ -76,7 +76,7 @@ tasks:
 
   test:
     desc: "Run tests"
-    deps: [prep]
+    deps: [prepare]
     cmds:
       - uv run pytest tests
 

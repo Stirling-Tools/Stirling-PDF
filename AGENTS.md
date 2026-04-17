@@ -68,8 +68,8 @@ Development for the AI engine happens in the `engine/` folder. The frontend call
   - `frontend/config/.env.saas.example` — SaaS-only vars
   - `frontend/config/.env.desktop.example` — desktop (Tauri)-only vars
 - Never use `|| 'hardcoded-fallback'` inline — put defaults in the example files
-- `task frontend:prep` / `prep:saas` / `prep:desktop` auto-create the env files from examples on first run, and error if any required keys are missing
-- Prep runs automatically as a dependency of all `dev*`, `build*`, and `desktop*` tasks
+- `task frontend:prepare` / `prepare:saas` / `prepare:desktop` auto-create the env files from examples on first run, and error if any required keys are missing
+- Prepare runs automatically as a dependency of all `dev*`, `build*`, and `desktop*` tasks
 - See `frontend/README.md#environment-variables` for full documentation
 
 #### Import Paths - CRITICAL
