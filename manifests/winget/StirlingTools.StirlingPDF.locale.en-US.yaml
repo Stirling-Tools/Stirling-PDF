@@ -4,14 +4,14 @@ PackageIdentifier: StirlingTools.StirlingPDF
 PackageVersion: 2.8.0
 PackageLocale: en-US
 Publisher: Stirling PDF Inc
-PublisherUrl: https://stirlingpdf.com
+PublisherUrl: https://www.stirling.com
 PublisherSupportUrl: https://github.com/Stirling-Tools/Stirling-PDF/issues
 PublisherEmail: contact@stirlingpdf.com
-PrivacyUrl: https://stirlingpdf.com/privacy-policy
+PrivacyUrl: https://www.stirling.com/privacy-policy
 Author: Anthony Stirling
 PackageName: Stirling-PDF
 PackageUrl: https://github.com/Stirling-Tools/Stirling-PDF
-License: Open Core
+License: MIT AND LicenseRef-Stirling-PDF-Proprietary
 LicenseUrl: https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LICENSE
 Copyright: Copyright (c) 2025 Stirling PDF Inc
 CopyrightUrl: https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LICENSE
