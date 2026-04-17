@@ -1,7 +1,6 @@
 package stirling.software.proprietary.service;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,6 +28,7 @@ import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.ZipExtractionUtils;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
@@ -323,11 +323,11 @@ public class AiWorkflowService {
     private List<Resource> toResources(Map<String, MultipartFile> filesByName) throws IOException {
         List<Resource> resources = new ArrayList<>();
         for (MultipartFile file : filesByName.values()) {
-            java.nio.file.Path tempPath = Files.createTempFile("ai-workflow-", ".tmp");
-            file.transferTo(tempPath);
+            TempFile tempFile = tempFileManager.createManagedTempFile("ai-workflow");
+            file.transferTo(tempFile.getPath());
             final String originalName = Filenames.toSimpleFileName(file.getOriginalFilename());
             resources.add(
-                    new FileSystemResource(tempPath.toFile()) {
+                    new FileSystemResource(tempFile.getFile()) {
                         @Override
                         public String getFilename() {
                             return originalName;
