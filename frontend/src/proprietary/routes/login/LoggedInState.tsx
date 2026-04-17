@@ -2,13 +2,12 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@app/auth/UseSession";
 import { useTranslation } from "react-i18next";
-import { useLogoPath } from "@app/hooks/useLogoPath";
+import { LogoIcon } from "@app/components/shared/LogoIcon";
 
 export default function LoggedInState() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useTranslation();
-  const logoPath = useLogoPath();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -47,8 +46,7 @@ export default function LoggedInState() {
               justifyContent: "center",
             }}
           >
-            <img
-              src={logoPath}
+            <LogoIcon
               alt="Stirling PDF Logo"
               style={{ width: "64px", height: "64px", objectFit: "contain" }}
             />

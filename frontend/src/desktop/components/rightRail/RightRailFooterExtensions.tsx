@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Box, Tooltip, rem, useComputedColorScheme } from "@mantine/core";
+import { Box, Tooltip, rem } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import {
   connectionModeService,
@@ -18,7 +18,6 @@ interface RightRailFooterExtensionsProps {
 
 function ConnectionStatusDot() {
   const { t } = useTranslation();
-  const colorScheme = useComputedColorScheme("light");
   const [connectionMode, setConnectionMode] = useState<ConnectionMode | null>(
     null,
   );
@@ -84,14 +83,7 @@ function ConnectionStatusDot() {
   }, [connectionMode, selfHostedState, isOnline, t]);
 
   return (
-    <Tooltip
-      label={label}
-      position="left"
-      offset={12}
-      withArrow
-      withinPortal
-      color={colorScheme === "dark" ? undefined : "dark"}
-    >
+    <Tooltip label={label} position="left" offset={12} withArrow withinPortal>
       <Box
         component="span"
         role="status"
@@ -109,10 +101,7 @@ function ConnectionStatusDot() {
           height: rem(10),
           borderRadius: "50%",
           backgroundColor: color,
-          boxShadow:
-            colorScheme === "dark"
-              ? "0 0 0 2px rgba(255, 255, 255, 0.15)"
-              : "0 0 0 2px rgba(0, 0, 0, 0.07)",
+          boxShadow: "var(--status-dot-ring)",
           display: "inline-block",
           cursor: "pointer",
           outline: "none",
