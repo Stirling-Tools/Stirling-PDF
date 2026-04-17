@@ -1,7 +1,9 @@
 # manifests/nix/server.nix
 # Nix expression for the Stirling-PDF server JAR.
 #
-# License: MIT
+# License: MIT core + proprietary carve-outs (open-core).
+# The packaged JAR may include proprietary code from engine/, frontend/src/proprietary/,
+# or similar directories. SPDX: MIT AND LicenseRef-Stirling-PDF-Proprietary.
 # Full license: https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LICENSE
 # Copyright (c) 2025 Stirling PDF Inc
 #
@@ -48,8 +50,9 @@ stdenv.mkDerivation rec {
       This package provides the Spring Boot server JAR. Once running, access
       the UI at http://localhost:8080.
     '';
-    homepage = "https://www.stirlingpdf.com";
-    license = licenses.mit;
+    homepage = "https://www.stirling.com";
+    # Open-core: MIT with proprietary carve-outs in the packaged JAR.
+    license = with licenses; [ mit unfree ];
     # Full license text: https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LICENSE
     maintainers = [ ];
     platforms = platforms.all;

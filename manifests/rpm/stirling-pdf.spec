@@ -3,7 +3,7 @@ Version:        %{version}
 Release:        1%{?dist}
 Summary:        Locally hosted web-based PDF manipulation tool
 
-License:        MIT
+License:        MIT AND LicenseRef-Stirling-PDF-Proprietary
 # Full license: https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LICENSE
 URL:            https://github.com/Stirling-Tools/Stirling-PDF
 Source0:        https://github.com/Stirling-Tools/Stirling-PDF/releases/download/v%{version}/Stirling-PDF-%{version}.jar
@@ -13,7 +13,7 @@ Source2:        https://github.com/Stirling-Tools/Stirling-PDF/raw/v%{version}/m
 BuildArch:      noarch
 BuildRequires:  systemd-rpm-macros
 
-Requires:       java-17-openjdk-headless
+Requires:       java-25-openjdk-headless
 Requires(pre):  shadow-utils
 
 %description

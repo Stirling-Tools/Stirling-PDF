@@ -97,7 +97,7 @@ stdenv.mkDerivation rec {
       This package provides the desktop (Tauri) application.
       The desktop application is proprietary software.
     '';
-    homepage = "https://www.stirlingpdf.com";
+    homepage = "https://www.stirling.com";
     license = licenses.unfree;
     # Full license text: https://github.com/Stirling-Tools/Stirling-PDF/blob/main/LICENSE
     maintainers = [ ];
