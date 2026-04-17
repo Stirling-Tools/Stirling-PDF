@@ -408,6 +408,26 @@ jobs:
           echo "Generated tauri.windows.conf.json (alias masked):"
           sed "s/${KEYPAIR_ALIAS}/***/g" ./frontend/src-tauri/tauri.windows.conf.json
 
+      - name: Import release GPG signing key (Linux)
+        if: matrix.platform == 'ubuntu-22.04'
+        env:
+          RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
+        run: |
+          echo "$RELEASE_GPG_PRIVATE_KEY" | gpg --batch --import
+          gpg --list-secret-keys --keyid-format=long
+
+      - name: Make libjvm discoverable for linuxdeploy (Linux AppImage)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          JAVA_LIBJVM="$JAVA_HOME/lib/server/libjvm.so"
+          if [ -f "$JAVA_LIBJVM" ]; then
+            sudo ln -sf "$JAVA_LIBJVM" /usr/lib/libjvm.so
+            echo "Linked libjvm from $JAVA_LIBJVM -> /usr/lib/libjvm.so"
+          else
+            echo "libjvm not found at $JAVA_LIBJVM"
+            exit 1
+          fi
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@51a9f1156b33df106d827c3a78f8f894946c5faa # v0.5.25
         env:
@@ -418,7 +438,14 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.APPIMAGETOOL_SIGN_PASSPHRASE }}
+          # AppImage signing — three env vars work together:
+          #   SIGN=1                        tells linuxdeploy-plugin-appimage to forward --sign to appimagetool
+          #   APPIMAGETOOL_SIGN_PASSPHRASE  appimagetool uses this to unlock the GPG key non-interactively
+          #   SIGN_KEY                      appimagetool picks the key matching this fingerprint
+          # Without SIGN=1, the other two are ignored and the AppImage is built unsigned even if a key is present.
+          SIGN: "1"
+          APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+          SIGN_KEY: ${{ vars.RELEASE_GPG_FINGERPRINT }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || 'sb_publishable_UHz2SVRF5mvdrPHWkRteyA_yNlZTkYb' }}
@@ -431,6 +458,16 @@ jobs:
           projectPath: ./frontend
           tauriScript: npx tauri
           args: ${{ matrix.args }}
+
+      - name: Clear release GPG key from runner keyring (Linux)
+        if: always() && matrix.platform == 'ubuntu-22.04'
+        env:
+          RELEASE_GPG_FINGERPRINT: ${{ vars.RELEASE_GPG_FINGERPRINT }}
+        run: |
+          if [ -n "$RELEASE_GPG_FINGERPRINT" ]; then
+            gpg --batch --yes --delete-secret-keys "$RELEASE_GPG_FINGERPRINT" || true
+            gpg --batch --yes --delete-keys "$RELEASE_GPG_FINGERPRINT" || true
+          fi
 
       # Verify the MSI (outer wrapper users download) AND the inner exe extracted
       # from it (what actually gets installed and what AV scans). We don't check
@@ -525,6 +562,7 @@ jobs:
             find . -name "*.app" -exec cp -r {} "../../../dist/Stirling-PDF-${{ matrix.name }}.app" \;
           else
             find . -name "*.deb" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.deb" \;
+            find . -name "*.rpm" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.rpm" \;
             find . -name "*.AppImage" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.AppImage" \;
           fi
 
@@ -585,6 +623,7 @@ jobs:
             ./artifacts/**/*.msi
             ./artifacts/**/*.dmg
             ./artifacts/**/*.deb
+            ./artifacts/**/*.rpm
             ./artifacts/**/*.AppImage
           draft: false
           prerelease: false
