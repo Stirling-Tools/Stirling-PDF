@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, type KeyboardEvent } from "react";
-import { ActionIcon, ScrollArea, TextInput, Stack, Text, Paper, Box, Transition } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { ActionIcon, ScrollArea, TextInput, Stack, Text, Paper, Box, Transition, Loader, Group } from "@mantine/core";
 import SendIcon from "@mui/icons-material/Send";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import CloseIcon from "@mui/icons-material/Close";
@@ -19,7 +20,8 @@ function ChatMessageBubble({ role, content }: { role: "user" | "assistant"; cont
 }
 
 export function ChatPanel() {
-  const { messages, isOpen, isLoading, toggleOpen, sendMessage } = useChat();
+  const { t } = useTranslation();
+  const { messages, isOpen, isLoading, progressPhase, toggleOpen, sendMessage } = useChat();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -95,9 +97,12 @@ export function ChatPanel() {
                 {isLoading && (
                   <div className="chat-message chat-message-assistant">
                     <Paper className="chat-bubble chat-bubble-assistant" p="xs" radius="md">
-                      <Text size="sm" c="dimmed">
-                        Thinking...
-                      </Text>
+                      <Group gap="xs" wrap="nowrap">
+                        <Loader size="xs" type="dots" />
+                        <Text size="sm" c="dimmed">
+                          {progressPhase ? t(`chat.progress.${progressPhase}`) : t("chat.progress.thinking")}
+                        </Text>
+                      </Group>
                     </Paper>
                   </div>
                 )}
