@@ -17,10 +17,15 @@ import {
   Transition,
   Loader,
   Group,
+  Collapse,
+  UnstyledButton,
+  List,
 } from "@mantine/core";
 import SendIcon from "@mui/icons-material/Send";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import CloseIcon from "@mui/icons-material/Close";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import {
   useChat,
   AiWorkflowPhase,
@@ -88,12 +93,66 @@ function formatProgress(
   return t(`chat.progress.${progress.phase}`);
 }
 
+function ToolsUsedBlock({
+  tools,
+  resolveToolName,
+  t,
+}: {
+  tools: string[];
+  resolveToolName: ToolNameResolver;
+  t: TranslateFn;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const names = tools.map(
+    (endpoint) => resolveToolName(endpoint) ?? t("chat.toolsUsed.unknownTool"),
+  );
+  const label = t("chat.toolsUsed.summary", { count: tools.length });
+  return (
+    <Box mt={6}>
+      <UnstyledButton
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+      >
+        <Group gap={4} wrap="nowrap">
+          {expanded ? (
+            <ExpandLessIcon sx={{ fontSize: 14 }} />
+          ) : (
+            <ExpandMoreIcon sx={{ fontSize: 14 }} />
+          )}
+          <Text size="xs" c="dimmed">
+            {label}
+          </Text>
+        </Group>
+      </UnstyledButton>
+      <Collapse in={expanded}>
+        <List
+          type="ordered"
+          size="xs"
+          mt={4}
+          pl="lg"
+          styles={{ itemWrapper: { lineHeight: 1.4 } }}
+        >
+          {names.map((name, i) => (
+            <List.Item key={i}>{name}</List.Item>
+          ))}
+        </List>
+      </Collapse>
+    </Box>
+  );
+}
+
 function ChatMessageBubble({
   role,
   content,
+  toolsUsed,
+  resolveToolName,
+  t,
 }: {
   role: "user" | "assistant";
   content: string;
+  toolsUsed?: string[];
+  resolveToolName: ToolNameResolver;
+  t: TranslateFn;
 }) {
   return (
     <div className={`chat-message chat-message-${role}`}>
@@ -101,6 +160,13 @@ function ChatMessageBubble({
         <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
           {content}
         </Text>
+        {toolsUsed && toolsUsed.length > 0 && (
+          <ToolsUsedBlock
+            tools={toolsUsed}
+            resolveToolName={resolveToolName}
+            t={t}
+          />
+        )}
       </Paper>
     </div>
   );
@@ -194,6 +260,9 @@ export function ChatPanel() {
                     key={msg.id}
                     role={msg.role}
                     content={msg.content}
+                    toolsUsed={msg.toolsUsed}
+                    resolveToolName={resolveToolName}
+                    t={t}
                   />
                 ))}
                 {isLoading && (

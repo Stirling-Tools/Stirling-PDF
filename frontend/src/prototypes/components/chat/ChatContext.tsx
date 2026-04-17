@@ -22,6 +22,13 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: number;
+  /**
+   * Tool endpoint paths executed during this assistant turn (e.g.
+   * {@code /api/v1/general/rotate-pdf}). Populated for assistant messages when the workflow
+   * ran one or more tools, in execution order. Undefined for user messages and for assistant
+   * turns that answered without running any tool.
+   */
+  toolsUsed?: string[];
 }
 
 export enum AiWorkflowPhase {
@@ -346,9 +353,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }
 
         let receivedResult = false;
+        const toolsUsed: string[] = [];
 
         await consumeSSEStream(response, {
           onProgress: (data) => {
+            if (
+              data.phase === AiWorkflowPhase.EXECUTING_TOOL &&
+              typeof data.tool === "string"
+            ) {
+              toolsUsed.push(data.tool);
+            }
             dispatch({
               type: "SET_PROGRESS",
               progress: {
@@ -370,6 +384,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 role: "assistant",
                 content: replyContent,
                 timestamp: Date.now(),
+                toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
               },
             });
             if (data.fileId) {
