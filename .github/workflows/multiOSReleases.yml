@@ -21,6 +21,14 @@ on:
           - windows
           - macos
           - linux
+      sign:
+        description: "Code sign the binaries (requires signing secrets)"
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
   release:
     types: [created]
 
@@ -144,6 +152,9 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+
       - name: Build JAR
         run: ./gradlew build ${{ matrix.variant.build_frontend && '-PbuildWithFrontend=true' || '' }} -x spotlessApply -x spotlessCheck -x test -x sonarqube
         env:
@@ -219,88 +230,21 @@ jobs:
         with:
           gradle-version: 9.3.1
 
-      - name: Build Java backend with JLink
-        working-directory: ./
-        shell: bash
-        run: |
-          chmod +x ./gradlew
-          echo "🔧 Building Stirling-PDF JAR..."
-          ./gradlew build -x spotlessApply -x spotlessCheck -x test -x sonarqube
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
 
-          # Find the built JAR
-          STIRLING_JAR=$(ls app/core/build/libs/stirling-pdf-*.jar | head -n 1)
-          echo "✅ Built JAR: $STIRLING_JAR"
-
-          # Create Tauri directories
-          mkdir -p ./frontend/src-tauri/libs
-          mkdir -p ./frontend/src-tauri/runtime
-
-          # Copy JAR to Tauri libs
-          cp "$STIRLING_JAR" ./frontend/src-tauri/libs/
-          echo "✅ JAR copied to Tauri libs"
-
-          # Analyze JAR dependencies for jlink modules
-          echo "🔍 Analyzing JAR dependencies..."
-          if command -v jdeps &> /dev/null; then
-            DETECTED_MODULES=$(jdeps --print-module-deps --ignore-missing-deps "$STIRLING_JAR" 2>/dev/null || echo "")
-            if [ -n "$DETECTED_MODULES" ]; then
-              echo "📋 jdeps detected modules: $DETECTED_MODULES"
-              MODULES="$DETECTED_MODULES,java.compiler,java.instrument,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
-            else
-              echo "⚠️ jdeps analysis failed, using predefined modules"
-              MODULES="java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
-            fi
-          else
-            echo "⚠️ jdeps not available, using predefined modules"
-            MODULES="java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
-          fi
-
-          # Create custom JRE with jlink
-          echo "🔧 Creating custom JRE with jlink..."
-          echo "📋 Using modules: $MODULES"
-
-          # Remove any existing JRE
-          rm -rf ./frontend/src-tauri/runtime/jre
-
-          # Create the custom JRE
-          jlink \
-            --add-modules "$MODULES" \
-            --strip-debug \
-            --compress=2 \
-            --no-header-files \
-            --no-man-pages \
-            --output ./frontend/src-tauri/runtime/jre
-
-          if [ ! -d "./frontend/src-tauri/runtime/jre" ]; then
-            echo "❌ Failed to create JLink runtime"
-            exit 1
-          fi
-
-          # Test the bundled runtime
-          if [ -f "./frontend/src-tauri/runtime/jre/bin/java" ]; then
-            RUNTIME_VERSION=$(./frontend/src-tauri/runtime/jre/bin/java --version 2>&1 | head -n 1)
-            echo "✅ Custom JRE created successfully: $RUNTIME_VERSION"
-          else
-            echo "❌ Custom JRE executable not found"
-            exit 1
-          fi
-
-          # Calculate runtime size
-          RUNTIME_SIZE=$(du -sh ./frontend/src-tauri/runtime/jre | cut -f1)
-          echo "📊 Custom JRE size: $RUNTIME_SIZE"
+      - name: Prepare desktop build
+        run: task desktop:prepare
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DISABLE_ADDITIONAL_FEATURES: true
 
-      - name: Install frontend dependencies
-        run: task frontend:install
-
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
         id: digicert-setup
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') }}
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
         uses: digicert/ssm-code-signing@1d820463733701cf1484c7eb5d7d24a15ca2c454 # v1.2.1
         env:
           SM_API_KEY: ${{ secrets.SM_API_KEY }}
@@ -310,7 +254,7 @@ jobs:
           SM_HOST: ${{ secrets.SM_HOST }}
 
       - name: Setup DigiCert KeyLocker Certificate
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') }}
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
         shell: pwsh
         run: |
           Write-Host "Setting up DigiCert KeyLocker environment..."
@@ -345,7 +289,7 @@ jobs:
 
       # Traditional PFX Certificate Import (fallback if KeyLocker not configured)
       - name: Import Windows Code Signing Certificate
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY == '' && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') }}
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY == '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
         env:
           WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
@@ -376,7 +320,7 @@ jobs:
           }
 
       - name: Import Apple Developer Certificate
-        if: (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master')
+        if: (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master')
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -397,7 +341,7 @@ jobs:
           rm certificate.p12
 
       - name: Verify Certificate
-        if: (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master')
+        if: (matrix.platform == 'macos-15' || matrix.platform == 'macos-15-intel') && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master')
         run: |
           echo "Verifying Apple Developer Certificate..."
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
@@ -407,6 +351,62 @@ jobs:
           echo "Certificate ID: $CERT_ID"
           echo "APPLE_SIGNING_IDENTITY=$CERT_ID" >> $GITHUB_ENV
           echo "Certificate imported successfully."
+
+      # Pre-flight: verify smctl can talk to DigiCert and sync cert before we sign.
+      # Mirrors the setup from working public Tauri+KeyLocker repos (Labric, Meetily).
+      # Without this, signCommand failures are opaque (Tauri captures but drops
+      # smctl's stderr) - running these loudly surfaces auth/env/keypair issues.
+      - name: Preflight smctl
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
+        shell: pwsh
+        env:
+          KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
+        run: |
+          & smctl healthcheck
+          if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] smctl healthcheck failed"; exit 1 }
+          & smctl keypair ls
+          if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] smctl keypair ls failed"; exit 1 }
+          & smctl windows certsync --keypair-alias "$env:KEYPAIR_ALIAS"
+          if ($LASTEXITCODE -ne 0) { Write-Host "[WARN] smctl windows certsync returned non-zero - continuing" }
+          Write-Host "[SUCCESS] smctl preflight passed"
+
+      # Write platform-specific Tauri config that adds signCommand for Windows.
+      # Tauri auto-merges tauri.windows.conf.json with tauri.conf.json (RFC 7396).
+      # Tauri calls this command on every binary BEFORE bundling into the MSI,
+      # substituting %1 with the file path.
+      #
+      # Why OBJECT form (cmd + args) instead of string:
+      # Tauri's string-form parser does a naive split(' ') with no shell/quote handling.
+      # Args with spaces or quote characters get mangled. The object form passes each
+      # arg directly to Rust's Command::arg which handles Windows CreateProcess quoting.
+      #
+      # Why --keypair-alias instead of --fingerprint:
+      # --fingerprint requires smctl windows certsync to have synced the cert to the
+      # Windows cert store first. --keypair-alias goes direct through PKCS11 and works
+      # without certsync. All real-world working Tauri+smctl examples use this flag.
+      #
+      # smctl reads SM_HOST, SM_API_KEY, SM_CLIENT_CERT_FILE, SM_CLIENT_CERT_PASSWORD
+      # from env (set by prior DigiCert setup step). No --config-file needed.
+      - name: Configure Windows code signing
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
+        shell: bash
+        env:
+          KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
+        run: |
+          cat > ./frontend/src-tauri/tauri.windows.conf.json <<EOF
+          {
+            "bundle": {
+              "windows": {
+                "signCommand": {
+                  "cmd": "smctl",
+                  "args": ["sign", "--keypair-alias", "${KEYPAIR_ALIAS}", "--input", "%1", "--verbose"]
+                }
+              }
+            }
+          }
+          EOF
+          echo "Generated tauri.windows.conf.json (alias masked):"
+          sed "s/${KEYPAIR_ALIAS}/***/g" ./frontend/src-tauri/tauri.windows.conf.json
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@51a9f1156b33df106d827c3a78f8f894946c5faa # v0.5.25
@@ -424,108 +424,92 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || 'sb_publishable_UHz2SVRF5mvdrPHWkRteyA_yNlZTkYb' }}
           VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL || 'https://app.stirlingpdf.com' }}
           VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
-          # Only enable Windows signing in Tauri when on release or V2-master
-          SIGN: ${{ (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') && (env.SM_API_KEY == '' && env.WINDOWS_CERTIFICATE != '') && '1' || '0' }}
+          # DigiCert KeyLocker env vars consumed by smctl during signCommand
+          SM_CODE_SIGNING_CERT_SHA1_HASH: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
           CI: true
         with:
           projectPath: ./frontend
           tauriScript: npx tauri
           args: ${{ matrix.args }}
 
-      # Sign with DigiCert KeyLocker (post-build)
-      - name: Sign Windows binaries with DigiCert KeyLocker
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || github.ref == 'refs/heads/V2-master') }}
+      # Verify the MSI (outer wrapper users download) AND the inner exe extracted
+      # from it (what actually gets installed and what AV scans). We don't check
+      # target/.../release/stirling-pdf.exe - that's Tauri's intermediate build
+      # artifact. Tauri signs a COPY when bundling into the MSI and leaves the raw
+      # cargo output unsigned, so checking it produces false negatives.
+      - name: Verify Windows Code Signature
+        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
         shell: pwsh
         run: |
-          Write-Host "=== DigiCert KeyLocker Signing ==="
+          $allSigned = $true
 
-          # Test smctl connectivity first
-          Write-Host "Testing smctl connection..."
-          $healthCheck = & smctl healthcheck 2>&1
-          if ($LASTEXITCODE -eq 0) {
-            Write-Host "[SUCCESS] Connected to DigiCert KeyLocker"
-          } else {
-            Write-Host "[ERROR] Failed to connect to DigiCert KeyLocker"
-            Write-Host $healthCheck
-            exit 1
-          }
-          Write-Host ""
-
-          # Sync certificates to Windows certificate store
-          Write-Host "Syncing certificates to Windows certificate store..."
-          $syncOutput = & smctl windows certsync 2>&1
-          Write-Host "Cert sync result: $syncOutput"
-          Write-Host ""
-
-          # Find only the files we need to sign
-          $filesToSign = @()
-
-          # Main application executable
-          $mainExe = Get-ChildItem -Path "./frontend/src-tauri/target/x86_64-pc-windows-msvc/release" -Filter "stirling-pdf.exe" -File -ErrorAction SilentlyContinue
-          if ($mainExe) { $filesToSign += $mainExe }
-
-          # MSI installer
+          # Check MSI installer (outer wrapper - what users download)
           $msiFiles = Get-ChildItem -Path "./frontend/src-tauri/target" -Filter "*.msi" -Recurse -File
-          $filesToSign += $msiFiles
-
-          if ($filesToSign.Count -eq 0) {
-            Write-Host "[ERROR] No files found to sign"
+          if ($msiFiles.Count -eq 0) {
+            Write-Host "[ERROR] No MSI found under target/"
             exit 1
           }
-
-          Write-Host "Found $($filesToSign.Count) files to sign:"
-          foreach ($f in $filesToSign) { Write-Host "  - $($f.Name)" }
-          Write-Host ""
-
-          $signedCount = 0
-          foreach ($file in $filesToSign) {
-            Write-Host "Signing: $($file.Name)"
-
-            # Get PKCS11 config file path
-            $pkcs11Config = $env:PKCS11_CONFIG
-            if (-not $pkcs11Config) {
-              Write-Host "[ERROR] PKCS11_CONFIG environment variable not set"
-              exit 1
+          foreach ($msi in $msiFiles) {
+            $sig = Get-AuthenticodeSignature -FilePath $msi.FullName
+            Write-Host "MSI: Status=$($sig.Status), Signer=$($sig.SignerCertificate.Subject)"
+            if ($sig.Status -ne "Valid") {
+              Write-Host "[ERROR] MSI is not signed"
+              $allSigned = $false
             }
-
-            Write-Host "Using PKCS11 config: $pkcs11Config"
-
-            # Try signing with certificate fingerprint first (if available)
-            $fingerprint = "${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}"
-            if ($fingerprint -and $fingerprint -ne "") {
-              Write-Host "Attempting to sign with certificate fingerprint..."
-              $output = & smctl sign --fingerprint "$fingerprint" --input "$($file.FullName)" --config-file "$pkcs11Config" --verbose 2>&1
-              $exitCode = $LASTEXITCODE
-            } else {
-              Write-Host "No fingerprint provided, using keypair alias..."
-              $output = & smctl sign --keypair-alias "${{ secrets.SM_KEYPAIR_ALIAS }}" --input "$($file.FullName)" --config-file "$pkcs11Config" --verbose 2>&1
-              $exitCode = $LASTEXITCODE
-            }
-
-            Write-Host "Exit code: $exitCode"
-            Write-Host "Output: $output"
-
-            if ($output -match "FAILED" -or $output -match "error" -or $output -match "Error") {
-              Write-Host "[ERROR] Signing failed for $($file.Name)"
-              exit 1
-            }
-
-            if ($exitCode -ne 0) {
-              Write-Host "[ERROR] Failed to sign $($file.Name)"
-              Write-Host "Full error output:"
-              Write-Host $output
-              exit 1
-            }
-
-            $signedCount++
-            Write-Host "[SUCCESS] Signed: $($file.Name)"
-            Write-Host ""
           }
 
-          Write-Host "=== Summary ==="
-          Write-Host "[SUCCESS] Signed $signedCount/$($filesToSign.Count) files successfully"
+          # Extract MSI and verify the inner exe (the file that actually gets installed).
+          # This is the critical check - AV flags the installed exe at runtime.
+          $msi = $msiFiles[0].FullName
+          $extractDir = Join-Path $env:RUNNER_TEMP "msi-verify"
+          if (Test-Path $extractDir) { Remove-Item $extractDir -Recurse -Force }
+          $proc = Start-Process msiexec.exe -ArgumentList '/a', $msi, '/qn', "TARGETDIR=$extractDir" -Wait -PassThru -NoNewWindow
+          if ($proc.ExitCode -eq 0) {
+            $innerExe = Get-ChildItem -Path $extractDir -Filter "stirling-pdf.exe" -Recurse -File | Select-Object -First 1
+            if ($innerExe) {
+              $sig = Get-AuthenticodeSignature -FilePath $innerExe.FullName
+              Write-Host "Inner EXE (from MSI): Status=$($sig.Status), Signer=$($sig.SignerCertificate.Subject)"
+              if ($sig.Status -ne "Valid") {
+                Write-Host "[ERROR] Inner exe extracted from MSI is NOT signed - AV will flag this at runtime"
+                $allSigned = $false
+              }
+            } else {
+              Write-Host "[ERROR] Could not find stirling-pdf.exe inside MSI"
+              $allSigned = $false
+            }
+          } else {
+            Write-Host "[ERROR] Failed to extract MSI for verification (exit code: $($proc.ExitCode))"
+            $allSigned = $false
+          }
 
+          if (-not $allSigned) {
+            Write-Host "[ERROR] Signature verification failed"
+            exit 1
+          }
+          Write-Host "[SUCCESS] MSI and installed exe are properly signed"
+
+      # Dump smctl log files on failure. Tauri's signCommand captures smctl output
+      # but drops stderr when the command exits non-zero, making failures opaque.
+      # The real errors live in smctl's log files - surface them here for debugging.
+      - name: Dump smctl logs on failure
+        if: ${{ failure() && matrix.platform == 'windows-latest' && env.SM_API_KEY != '' }}
+        shell: pwsh
+        run: |
+          $logDir = "$env:USERPROFILE\.signingmanager\logs"
+          if (Test-Path $logDir) {
+            Get-ChildItem $logDir | ForEach-Object {
+              Write-Host "=== $($_.FullName) ==="
+              Get-Content $_.FullName -Tail 200
+              Write-Host ""
+            }
+          } else {
+            Write-Host "smctl log directory not found at $logDir"
+          }
+
+      # Rename + Upload: use always() so artifacts are still collected when verify
+      # fails - we need them to manually inspect what actually came out of the build.
       - name: Rename artifacts
+        if: always() && steps.digicert-setup.conclusion != 'failure'
         shell: bash
         run: |
           mkdir -p ./dist
@@ -533,7 +517,8 @@ jobs:
 
           # Find and rename artifacts based on platform
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
-            find . -name "*.exe" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.exe" \;
+            # Only ship the MSI installer on Windows. The loose exe and WiX toolset exes
+            # are not the user-facing installer - the MSI contains the signed inner exe.
             find . -name "*.msi" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.msi" \;
           elif [ "${{ matrix.platform }}" = "macos-15" ] || [ "${{ matrix.platform }}" = "macos-15-intel" ]; then
             find . -name "*.dmg" -exec cp {} "../../../dist/Stirling-PDF-${{ matrix.name }}.dmg" \;
@@ -544,6 +529,7 @@ jobs:
           fi
 
       - name: Upload build artifacts
+        if: always() && steps.digicert-setup.conclusion != 'failure'
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: Stirling-PDF-${{ matrix.name }}
