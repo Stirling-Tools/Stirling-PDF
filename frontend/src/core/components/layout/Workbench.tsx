@@ -13,9 +13,9 @@ import FileEditor from "@app/components/fileEditor/FileEditor";
 import PageEditor from "@app/components/pageEditor/PageEditor";
 import PageEditorControls from "@app/components/pageEditor/PageEditorControls";
 import Viewer from "@app/components/viewer/Viewer";
-import LandingPage from "@app/components/shared/LandingPage";
 import Footer from "@app/components/shared/Footer";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
+import LandingPage from "@app/components/shared/LandingPage";
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
@@ -141,7 +141,7 @@ export default function Workbench() {
         );
 
       default:
-        return <LandingPage />;
+        return null;
     }
   };
 

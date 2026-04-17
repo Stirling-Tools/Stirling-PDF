@@ -326,7 +326,13 @@ export const useFileManager = () => {
   }, [indexedDB, config?.enableLogin, config?.storageEnabled, config?.storageShareLinksEnabled, normalizeServerFileName]);
 
   const handleRemoveFile = useCallback(
-    async (index: number, files: StirlingFileStub[], setFiles: (files: StirlingFileStub[]) => void) => {
+    async (
+      index: number,
+      files: StirlingFileStub[],
+      setFiles: (files: StirlingFileStub[]) => void,
+      onRemovedFromWorkbench?: (fileId: FileId) => void,
+      onDeleteFailed?: () => void,
+    ) => {
       const file = files[index];
       if (!file.id) {
         throw new Error("File ID is required for removal");
@@ -334,13 +340,14 @@ export const useFileManager = () => {
       if (!indexedDB) {
         throw new Error("IndexedDB context not available");
       }
-      try {
-        await indexedDB.deleteFile(file.id);
-        setFiles(files.filter((_, i) => i !== index));
-      } catch (error) {
-        console.error("Failed to remove file:", error);
-        throw error;
-      }
+      // Optimistic update — remove from UI immediately, delete IDB in background
+      setFiles(files.filter((_, i) => i !== index));
+      onRemovedFromWorkbench?.(file.id);
+      indexedDB.deleteFile(file.id).catch((error) => {
+        console.error("Failed to remove file from IndexedDB:", error);
+        // Restore consistency — file is still in IDB so refresh will bring it back
+        onDeleteFailed?.();
+      });
     },
     [indexedDB],
   );

@@ -80,7 +80,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
             className={styles.icon}
             style={{
               pointerEvents: iconClickable ? "auto" : "none",
-              left: iconClickable ? "4px" : "12px",
+              left: "12px",
             }}
           >
             {icon}
@@ -102,7 +102,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
           onFocus={onFocus}
           style={{
             paddingRight: shouldShowClearButton ? "40px" : "12px",
-            paddingLeft: icon ? (iconClickable ? "36px" : "40px") : "12px",
+            paddingLeft: icon ? "40px" : "12px",
           }}
           {...props}
         />

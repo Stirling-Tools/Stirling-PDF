@@ -167,8 +167,8 @@ export function IndexedDBProvider({ children }: IndexedDBProviderProps) {
       // Remove from cache
       fileIds.forEach((id) => fileCache.current.delete(id));
 
-      // Remove from IndexedDB in parallel
-      await Promise.all(fileIds.map((id) => fileStorage.deleteStirlingFile(id)));
+      // Delete all in a single IDB transaction
+      await fileStorage.deleteMultipleStirlingFiles(fileIds);
       bumpRevision();
     },
     [bumpRevision],

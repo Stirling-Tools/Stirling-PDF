@@ -23,7 +23,14 @@ export function ScopedOperationButton({ selectedFiles, disableScopeHints, ...pro
   const { t } = useTranslation();
   const { workbench } = useNavigationState();
   const { activeFileIndex } = useViewer();
-  const { files: allFiles } = useAllFiles();
+  const { files: allFiles, fileIds } = useAllFiles();
+
+  // Disable until all files are hydrated — running early would silently skip unloaded files.
+  const isFilesHydrating = fileIds.length > allFiles.length;
+  const effectiveDisabledReason =
+    isFilesHydrating && props.disabledReason !== "endpointUnavailable"
+      ? "filesLoading"
+      : props.disabledReason;
 
   const isViewerMode = workbench === "viewer";
   const hasMultipleFilesLoaded = allFiles.length > 1;
@@ -47,7 +54,7 @@ export function ScopedOperationButton({ selectedFiles, disableScopeHints, ...pro
 
   return (
     <>
-      <OperationButton {...props} submitText={scopedText} />
+      <OperationButton {...props} submitText={scopedText} disabledReason={effectiveDisabledReason} />
       {viewerFileName && (
         <Text size="xs" c="dimmed" ta="center" mx="md" mt={2}>
           {t("tool.singleFileScope", "Only applying to: {{fileName}}", { fileName: viewerFileName })}

@@ -379,3 +379,8 @@
   width: 32px;
   height: 32px;
 }
+
+.file-sidebar[data-collapsed="true"] .file-sidebar-bottom-bar {
+  justify-content: center;
+  padding: 8px 0;
+}

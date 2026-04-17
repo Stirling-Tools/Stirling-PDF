@@ -4,7 +4,7 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0 8px 16px 8px;
+  padding: 0 8px 0 8px;
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -150,10 +150,11 @@
   opacity: 1;
 }
 
-/* Pin the viewed item to the top of the list when scrolled out of view */
+/* Pin the viewed item when scrolled out of view in either direction */
 .file-sidebar-file-item.viewed {
   position: sticky;
   top: 0;
+  bottom: 0;
   z-index: 2;
   /* solid base + green tint overlay so content behind doesn't bleed through */
   background-color: var(--bg-toolbar);
@@ -198,6 +199,15 @@
 }
 .file-sidebar-file-item.viewed:hover .file-sidebar-eye-closed {
   display: block !important;
+}
+
+/* ---- Loading state ---- */
+.file-sidebar-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0;
+  opacity: 0.5;
 }
 
 /* ---- Empty state ---- */

@@ -195,28 +195,28 @@ export default function ToolPanel() {
               iconOverride={
                 leftPanelView === "toolContent" ? (
                   <ActionIcon
-                    variant="subtle"
+                    variant="transparent"
                     radius="md"
-                    size="sm"
+                    size="1.25rem"
                     onClick={handleBackToTools}
                     aria-label={t("toolPanel.backToTools", "Back to tools")}
-                    color="gray"
+                    style={{ color: "var(--search-text-and-icon-color)" }}
                   >
-                    <ArrowBackIcon sx={{ fontSize: "1rem" }} />
+                    <ArrowBackIcon sx={{ fontSize: "1.25rem" }} />
                   </ActionIcon>
                 ) : undefined
               }
             />
             <ActionIcon
-              variant="subtle"
-              radius="md"
-              size="sm"
+              variant="outline"
+              radius="xl"
+              size="md"
               onClick={handleCollapse}
               aria-label={t("toolPanel.collapse", "Collapse panel")}
-              color="gray"
+              className="tool-panel__expand-btn"
               style={{ flexShrink: 0 }}
             >
-              <ChevronRightIcon sx={{ fontSize: "1rem" }} />
+              <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
             </ActionIcon>
           </div>
 

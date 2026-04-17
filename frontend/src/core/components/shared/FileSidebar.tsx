@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, forwardRef } from "react";
+import { Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useFileState, useFileActions } from "@app/contexts/file/fileHooks";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
@@ -40,6 +41,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const nativeFileInputRef = useRef<HTMLInputElement>(null);
+  // State (not ref) so setting it triggers a re-render — avoids racing addFiles state updates.
+  const [pendingViewFileId, setPendingViewFileId] = useState<string | null>(null);
 
   const { openFilesModal } = useFilesModalContext();
   const { config } = useAppConfig();
@@ -67,48 +70,24 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
 
   // Leaf files = user-visible files (excludes intermediate tool outputs)
   const [allFileStubs, setAllFileStubs] = useState<StirlingFileStub[]>([]);
+  const [stubsLoaded, setStubsLoaded] = useState(false);
 
   const refreshStubs = useCallback(async () => {
+    // Leaf files from IDB — same source as the file selection modal.
     const stubs = await indexedDB.loadLeafMetadata();
-    const workbenchIdSet = new Set(state.files.ids);
+    const idbIds = new Set(stubs.map((s) => s.id as string));
 
-    // Merge in workbench files that aren't persisted to IndexedDB yet
-    const idbQuickKeys = new Set(stubs.map((s) => s.quickKey).filter(Boolean) as string[]);
+    // Also include workbench files not yet flushed to IDB.
     const pendingStubs = state.files.ids
       .map((id) => state.files.byId[id])
       .filter(
         (stub): stub is NonNullable<typeof stub> =>
-          !!stub && stub.isLeaf !== false && (!stub.quickKey || !idbQuickKeys.has(stub.quickKey)),
+          !!stub && stub.isLeaf !== false && !idbIds.has(stub.id as string),
       );
 
     const allStubs = [...stubs, ...pendingStubs];
-
-    // Sort: workbench entries first (keep those on dedup collision), then newest first
-    const sorted = [...allStubs].sort((a, b) => {
-      const aW = workbenchIdSet.has(a.id) ? 1 : 0;
-      const bW = workbenchIdSet.has(b.id) ? 1 : 0;
-      if (bW !== aW) return bW - aW;
-      return (b.lastModified ?? 0) - (a.lastModified ?? 0);
-    });
-
-    const seenKeys = new Set<string>();
-    const toDelete: FileId[] = [];
-    const deduped = sorted.filter((stub) => {
-      if (!stub.quickKey) return true;
-      if (seenKeys.has(stub.quickKey)) {
-        toDelete.push(stub.id); // older / non-workbench duplicate
-        return false;
-      }
-      seenKeys.add(stub.quickKey);
-      return true;
-    });
-
-    // Purge duplicate IndexedDB entries so the file manager modal also shows clean list
-    if (toDelete.length > 0) {
-      await indexedDB.deleteMultiple(toDelete);
-    }
-
-    setAllFileStubs(deduped.sort((a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0)));
+    setAllFileStubs(allStubs.sort((a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0)));
+    setStubsLoaded(true);
   }, [indexedDB, state.files.ids, state.files.byId]);
 
   // Refresh on mount, workbench changes, or external IndexedDB writes
@@ -116,10 +95,16 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
     refreshStubs();
   }, [refreshStubs, state.files.ids.length, indexedDB.revision]);
 
-  // quickKey is stable across re-adds (fileId changes, quickKey doesn't)
-  const workbenchQuickKeySet = new Set(
-    state.files.ids.map((id) => state.files.byId[id]?.quickKey).filter(Boolean) as string[],
-  );
+  // Once a pending file lands in state, open it in the viewer.
+  useEffect(() => {
+    if (!pendingViewFileId) return;
+    const idx = state.files.ids.findIndex((id) => (id as string) === pendingViewFileId);
+    if (idx >= 0) {
+      setPendingViewFileId(null);
+      setActiveFileIndex(idx);
+      navActions.setWorkbench("viewer");
+    }
+  }, [pendingViewFileId, state.files.ids, setActiveFileIndex, navActions]);
 
   const filteredFileStubs = searchQuery.trim()
     ? allFileStubs.filter((stub) => stub.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -149,9 +134,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
     if (!isGoogleDriveEnabled) return;
     const files = await openGoogleDrivePicker({ multiple: true });
     if (files.length > 0) {
-      addFiles(files);
+      await addFiles(files);
+      navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
     }
-  }, [isGoogleDriveEnabled, openGoogleDrivePicker, addFiles]);
+  }, [isGoogleDriveEnabled, openGoogleDrivePicker, addFiles, navActions]);
 
   // Toggle file in/out of workbench
   const handleFileClick = useCallback(
@@ -159,26 +145,20 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
       const stub = allFileStubs.find((s) => s.id === fileId);
       if (!stub) return;
 
-      // Find the workbench entry by quickKey (fileId may differ after re-adding)
-      const workbenchFileId = state.files.ids.find((id) => state.files.byId[id]?.quickKey === stub.quickKey);
+      const workbenchFileId = state.files.ids.find((id) => (id as string) === (stub.id as string));
 
       if (workbenchFileId) {
         // Remove from workbench, keep in IndexedDB
         await fileActions.removeFiles([workbenchFileId], false);
       } else {
-        // Load from IndexedDB and add to workbench
-        const file = await indexedDB.loadFile(fileId);
-        if (!file) return;
-
+        // Re-add by stub to preserve its ID — addFiles() would create a new UUID + IDB entry.
         const workbenchCount = state.files.ids.length;
 
-        // If viewer is mounted and we're adding a 2nd+ file, navigate away first
-        // so the viewer unmounts before FileContext updates (avoids PSPDFKit viewport crash)
         if (workbenchCount > 0 && currentWorkbench === "viewer") {
           navActions.setWorkbench("fileEditor");
         }
 
-        await addFiles([file]);
+        await fileActions.addStirlingFileStubs([stub]);
 
         if (workbenchCount === 0) {
           navActions.setWorkbench("viewer");
@@ -187,19 +167,18 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
         }
       }
     },
-    [allFileStubs, state.files, fileActions, indexedDB, addFiles, navActions, currentWorkbench],
+    [allFileStubs, state.files.ids, fileActions, navActions, currentWorkbench],
   );
 
-  // Determine which stub is currently open in the viewer
+  // Which stub is currently open in the viewer.
   const viewedWorkbenchId = currentWorkbench === "viewer" ? state.files.ids[activeFileIndex] : undefined;
-  const viewedQuickKey = viewedWorkbenchId ? state.files.byId[viewedWorkbenchId]?.quickKey : undefined;
 
   const handleEyeClick = useCallback(
     async (fileId: FileId, _e: React.MouseEvent) => {
       const stub = allFileStubs.find((s) => s.id === fileId);
       if (!stub) return;
 
-      const isCurrentlyViewed = !!(viewedQuickKey && stub.quickKey === viewedQuickKey);
+      const isCurrentlyViewed = !!(viewedWorkbenchId && (viewedWorkbenchId as string) === (stub.id as string));
 
       if (isCurrentlyViewed) {
         // Close viewer: switch to file editor
@@ -207,28 +186,20 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
         return;
       }
 
-      // Find if file is already in workbench
-      const workbenchFileId = state.files.ids.find((id) => state.files.byId[id]?.quickKey === stub.quickKey);
+      const alreadyInWorkbench = state.files.ids.some((id) => (id as string) === (stub.id as string));
 
-      if (workbenchFileId) {
-        // Already loaded — just switch to viewer and set active index
-        const idx = state.files.ids.indexOf(workbenchFileId);
-        setActiveFileIndex(idx);
-        navActions.setWorkbench("viewer");
-      } else {
-        // Load from IndexedDB and add to workbench
-        const file = await indexedDB.loadFile(fileId);
-        if (!file) return;
-
+      if (!alreadyInWorkbench) {
+        // Leave viewer before mutating workbench (prevents PSPDFKit crash).
         if (state.files.ids.length > 0 && currentWorkbench === "viewer") {
           navActions.setWorkbench("fileEditor");
         }
-
-        await addFiles([file]);
-        navActions.setWorkbench("viewer");
+        await fileActions.addStirlingFileStubs([stub]);
       }
+
+      // Route through pendingViewFileId so both setActiveFileIndex + setWorkbench fire together.
+      setPendingViewFileId(stub.id as string);
     },
-    [allFileStubs, viewedQuickKey, state.files, navActions, setActiveFileIndex, indexedDB, addFiles, currentWorkbench],
+    [allFileStubs, viewedWorkbenchId, state.files.ids, fileActions, navActions, currentWorkbench, setPendingViewFileId],
   );
 
   const handleNativeFilePick = useCallback(
@@ -236,13 +207,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
       const files = Array.from(e.target.files ?? []);
       if (files.length > 0) {
         await addFiles(files);
+        navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
       }
       e.target.value = "";
     },
-    [addFiles],
+    [addFiles, navActions],
   );
 
   const shouldHideGoogleDrive = !isGoogleDriveEnabled && config?.hideDisabledToolsGoogleDrive;
+  const hasFiles = state.files.ids.length > 0;
 
   const width = collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH;
 
@@ -278,75 +251,80 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
           {!collapsed && <span className="file-sidebar-brand-text sidebar-content-fade">Stirling PDF</span>}
         </div>
 
-        {/* Search row */}
-        <div
-          className={`file-sidebar-search-row${searchActive && !collapsed ? " active" : ""}`}
-          onClick={!searchActive ? handleSearchClick : undefined}
-          role={!searchActive ? "button" : undefined}
-          tabIndex={!searchActive ? 0 : undefined}
-          onKeyDown={!searchActive ? (e) => e.key === "Enter" && handleSearchClick() : undefined}
-        >
-          <SearchIcon className="file-sidebar-search-icon" />
-          {!collapsed &&
-            (searchActive ? (
-              <input
-                ref={searchInputRef}
-                className="file-sidebar-search-input sidebar-content-fade"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t("fileSidebar.searchPlaceholder", "Search files...")}
-                onClick={(e) => e.stopPropagation()}
-              />
-            ) : (
-              <span className="file-sidebar-search-label sidebar-content-fade">{t("fileSidebar.search", "Search")}</span>
-            ))}
-        </div>
+        {/* Search row — only shown when no files are loaded */}
+        {!hasFiles && (
+          <div
+            className={`file-sidebar-search-row${searchActive && !collapsed ? " active" : ""}`}
+            onClick={!searchActive ? handleSearchClick : undefined}
+            role={!searchActive ? "button" : undefined}
+            tabIndex={!searchActive ? 0 : undefined}
+            onKeyDown={!searchActive ? (e) => e.key === "Enter" && handleSearchClick() : undefined}
+          >
+            <SearchIcon className="file-sidebar-search-icon" />
+            {!collapsed &&
+              (searchActive ? (
+                <input
+                  ref={searchInputRef}
+                  className="file-sidebar-search-input sidebar-content-fade"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={t("fileSidebar.searchPlaceholder", "Search files...")}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <span className="file-sidebar-search-label sidebar-content-fade">{t("fileSidebar.search", "Search")}</span>
+              ))}
+          </div>
+        )}
 
         {/* Scrollable content */}
         <div className="file-sidebar-scroll">
-          {/* Open from Computer */}
-          <div
-            className="file-sidebar-action-row"
-            onClick={() => {
-              if (collapsed && onToggleCollapse) onToggleCollapse();
-              openFilesModal();
-            }}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === "Enter" && openFilesModal()}
-          >
-            <FolderOpenIcon className="file-sidebar-action-icon" />
-            {!collapsed && (
-              <span className="file-sidebar-action-label sidebar-content-fade">
-                {t("fileSidebar.openFromComputer", "Open from computer")}
-              </span>
-            )}
-          </div>
-
-          {/* Google Drive */}
-          {!shouldHideGoogleDrive && (
-            <div
-              className={`file-sidebar-cloud-row${!isGoogleDriveEnabled ? " disabled" : ""}`}
-              onClick={handleGoogleDriveClick}
-              role="button"
-              tabIndex={isGoogleDriveEnabled ? 0 : -1}
-              aria-disabled={!isGoogleDriveEnabled}
-              title={
-                !isGoogleDriveEnabled
-                  ? t("fileSidebar.googleDriveDisabled", "Google Drive is not configured")
-                  : t("fileSidebar.googleDrive", "Open from Google Drive")
-              }
-            >
-              <div className="file-sidebar-cloud-icon-wrapper">
-                <GoogleDriveIcon className="file-sidebar-cloud-icon-gray" style={{ color: "var(--text-secondary)" }} />
-                {isGoogleDriveEnabled && <GoogleDriveIcon colored className="file-sidebar-cloud-icon-color" />}
+          {/* Open from Computer + Google Drive — only shown when no files are loaded */}
+          {!hasFiles && (
+            <>
+              <div
+                className="file-sidebar-action-row"
+                onClick={() => {
+                  if (collapsed && onToggleCollapse) onToggleCollapse();
+                  openFilesModal();
+                }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === "Enter" && openFilesModal()}
+              >
+                <FolderOpenIcon className="file-sidebar-action-icon" />
+                {!collapsed && (
+                  <span className="file-sidebar-action-label sidebar-content-fade">
+                    {t("fileSidebar.openFromComputer", "Open from computer")}
+                  </span>
+                )}
               </div>
-              {!collapsed && (
-                <span className="file-sidebar-action-label sidebar-content-fade">
-                  {t("fileSidebar.googleDrive", "Google Drive")}
-                </span>
+
+              {!shouldHideGoogleDrive && (
+                <div
+                  className={`file-sidebar-cloud-row${!isGoogleDriveEnabled ? " disabled" : ""}`}
+                  onClick={handleGoogleDriveClick}
+                  role="button"
+                  tabIndex={isGoogleDriveEnabled ? 0 : -1}
+                  aria-disabled={!isGoogleDriveEnabled}
+                  title={
+                    !isGoogleDriveEnabled
+                      ? t("fileSidebar.googleDriveDisabled", "Google Drive is not configured")
+                      : t("fileSidebar.googleDrive", "Open from Google Drive")
+                  }
+                >
+                  <div className="file-sidebar-cloud-icon-wrapper">
+                    <GoogleDriveIcon className="file-sidebar-cloud-icon-gray" style={{ color: "var(--text-secondary)" }} />
+                    {isGoogleDriveEnabled && <GoogleDriveIcon colored className="file-sidebar-cloud-icon-color" />}
+                  </div>
+                  {!collapsed && (
+                    <span className="file-sidebar-action-label sidebar-content-fade">
+                      {t("fileSidebar.googleDrive", "Google Drive")}
+                    </span>
+                  )}
+                </div>
               )}
-            </div>
+            </>
           )}
 
           {/* Files section - always visible when expanded */}
@@ -380,14 +358,19 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
                 />
               </div>
 
-              {filteredFileStubs.length > 0 ? (
+              {!stubsLoaded ? (
+                <div className="file-sidebar-loading">
+                  <Loader size="sm" color="var(--text-muted)" />
+                </div>
+              ) : filteredFileStubs.length > 0 ? (
                 <div className="file-sidebar-file-list">
                   {filteredFileStubs.map((stub) => {
-                    const isInWorkbench = !!(stub.quickKey && workbenchQuickKeySet.has(stub.quickKey));
-                    const workbenchFileId = state.files.ids.find((id) => state.files.byId[id]?.quickKey === stub.quickKey);
+                    const workbenchFileId = state.files.ids.find((id) => (id as string) === (stub.id as string));
+                    const isInWorkbench = !!workbenchFileId;
                     const workbenchIdx = workbenchFileId ? state.files.ids.indexOf(workbenchFileId) : -1;
                     const isActive = isInWorkbench && workbenchIdx === activeFileIndex;
-                    const isViewedInViewer = !!(stub.quickKey && stub.quickKey === viewedQuickKey);
+                    // Viewed state by ID only — quickKey could match multiple stubs.
+                    const isViewedInViewer = !!(viewedWorkbenchId && (viewedWorkbenchId as string) === (stub.id as string));
                     // In-memory thumbnail may be fresher than the IndexedDB stub.
                     const thumbnailUrl =
                       (workbenchFileId ? state.files.byId[workbenchFileId]?.thumbnailUrl : undefined) || stub.thumbnailUrl;
@@ -432,13 +415,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
         title={onOpenSettings ? t("fileSidebar.openSettings", "Open settings") : undefined}
         style={onOpenSettings ? { cursor: "pointer" } : undefined}
       >
-        {!collapsed && (
-          <div className="file-sidebar-bottom-avatar" title={displayName}>
-            {displayName.charAt(0).toUpperCase()}
-          </div>
-        )}
+        <div className="file-sidebar-bottom-avatar" title={displayName}>
+          {displayName.charAt(0).toUpperCase()}
+        </div>
         {!collapsed && <span className="file-sidebar-bottom-name sidebar-content-fade">{displayName}</span>}
-        {onOpenSettings && (
+        {onOpenSettings && !collapsed && (
           <div className="file-sidebar-bottom-settings">
             <SettingsIcon sx={{ fontSize: "1.1rem" }} />
           </div>

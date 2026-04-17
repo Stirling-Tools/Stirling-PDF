@@ -374,6 +374,23 @@ class FileStorageService {
   }
 
   /**
+   * Delete multiple StirlingFiles in a single transaction
+   */
+  async deleteMultipleStirlingFiles(ids: FileId[]): Promise<void> {
+    if (ids.length === 0) return;
+    const db = await this.getDatabase();
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], "readwrite");
+      const store = transaction.objectStore(this.storeName);
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+      transaction.onabort = () => reject(transaction.error ?? new Error("Transaction aborted"));
+      ids.forEach((id) => store.delete(id));
+    });
+  }
+
+  /**
    * Update thumbnail for existing file
    */
   async updateThumbnail(id: FileId, thumbnail: string): Promise<boolean> {
