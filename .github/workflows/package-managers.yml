@@ -75,7 +75,7 @@ jobs:
           echo "deb_sha256=$DEB_SHA"              >> "$GITHUB_OUTPUT"
           echo "jar_sha256=$JAR_SHA"              >> "$GITHUB_OUTPUT"
 
-  update-tap:
+  update-homebrew-and-scoop:
     needs: get-release-info
     runs-on: ubuntu-latest
     permissions:
