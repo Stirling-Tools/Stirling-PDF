@@ -51,7 +51,7 @@ class PdfEditParameterSelector:
             self._build_parameter_prompt(request, operation_plan, operation_index, generated_steps),
             output_type=NativeOutput(parameter_model),
             instructions=(
-                f"Generate only the parameters for the PDF operation `{operation_id.value}`. "
+                f"Generate only the parameters for the PDF operation `{operation_id.name}`. "
                 "Do not include fields from any other operation."
             ),
         )
@@ -65,7 +65,7 @@ class PdfEditParameterSelector:
         generated_steps: list[ToolOperationStep],
     ) -> str:
         operation_id = operation_plan[operation_index]
-        operation_list = ", ".join(operation.value for operation in operation_plan)
+        operation_list = ", ".join(operation.name for operation in operation_plan)
         file_names = ", ".join(request.file_names) if request.file_names else "No file names were provided."
         generated_steps_text = (
             "\n".join(
@@ -79,7 +79,7 @@ class PdfEditParameterSelector:
             f"Files: {file_names}\n"
             f"Operation plan: {operation_list}\n"
             f"Selected operation index: {operation_index + 1} of {len(operation_plan)}\n"
-            f"Selected operation: {operation_id.value}\n"
+            f"Selected operation: {operation_id.name}\n"
             f"Already generated steps:\n{generated_steps_text}\n"
             "Return only the parameter object for the selected operation."
         )

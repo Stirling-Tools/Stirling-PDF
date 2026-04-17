@@ -5,7 +5,7 @@ from typing import Literal, assert_never
 
 from pydantic import Field, model_validator
 
-from stirling.models import OPERATIONS, ApiModel, ParamToolModel, ToolEndpoint
+from stirling.models import OPERATIONS, ApiModel, ToolEndpoint
 from stirling.models.agent_tool_models import AGENT_OPERATIONS, AgentToolId, AnyParamModel, AnyToolId
 
 
