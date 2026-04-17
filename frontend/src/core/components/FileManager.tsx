@@ -82,20 +82,19 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
         index,
         recentFiles,
         setRecentFiles,
-        (fileId) => { fileActions.removeFiles([fileId], false); },
+        (fileId) => {
+          fileActions.removeFiles([fileId], false);
+        },
         refreshRecentFiles,
       );
     },
     [handleRemoveFile, recentFiles, fileActions, refreshRecentFiles],
   );
 
-  const handleBulkRemove = useCallback(
-    (fileIds: FileId[]) => {
-      const idSet = new Set(fileIds as string[]);
-      setRecentFiles((prev) => prev.filter((f) => !idSet.has(f.id as string)));
-    },
-    [],
-  );
+  const handleBulkRemove = useCallback((fileIds: FileId[]) => {
+    const idSet = new Set(fileIds as string[]);
+    setRecentFiles((prev) => prev.filter((f) => !idSet.has(f.id as string)));
+  }, []);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1030);

@@ -671,24 +671,19 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
         removeFiles(safeIds, false);
 
         // Single-transaction IDB delete, then refresh.
-        fileStorage.deleteMultipleStirlingFiles(safeIds).then(() => refreshRecentFiles()).catch((error) => {
-          console.error("Failed to bulk delete files from IndexedDB:", error);
-          refreshRecentFiles();
-        });
+        fileStorage
+          .deleteMultipleStirlingFiles(safeIds)
+          .then(() => refreshRecentFiles())
+          .catch((error) => {
+            console.error("Failed to bulk delete files from IndexedDB:", error);
+            refreshRecentFiles();
+          });
       } catch (error) {
         console.error("Failed to bulk delete local files:", error);
         await refreshRecentFiles();
       }
     }
-  }, [
-    selectedFileIds,
-    filteredFiles,
-    performFileDelete,
-    getSafeFilesToDelete,
-    removeFiles,
-    refreshRecentFiles,
-    onBulkRemove,
-  ]);
+  }, [selectedFileIds, filteredFiles, performFileDelete, getSafeFilesToDelete, removeFiles, refreshRecentFiles, onBulkRemove]);
 
   const handleDownloadSelected = useCallback(async () => {
     if (selectedFileIds.length === 0) return;

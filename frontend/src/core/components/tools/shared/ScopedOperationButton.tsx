@@ -28,9 +28,7 @@ export function ScopedOperationButton({ selectedFiles, disableScopeHints, ...pro
   // Disable until all files are hydrated — running early would silently skip unloaded files.
   const isFilesHydrating = fileIds.length > allFiles.length;
   const effectiveDisabledReason =
-    isFilesHydrating && props.disabledReason !== "endpointUnavailable"
-      ? "filesLoading"
-      : props.disabledReason;
+    isFilesHydrating && props.disabledReason !== "endpointUnavailable" ? "filesLoading" : props.disabledReason;
 
   const isViewerMode = workbench === "viewer";
   const hasMultipleFilesLoaded = allFiles.length > 1;

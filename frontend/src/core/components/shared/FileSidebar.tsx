@@ -80,10 +80,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
     // Also include workbench files not yet flushed to IDB.
     const pendingStubs = state.files.ids
       .map((id) => state.files.byId[id])
-      .filter(
-        (stub): stub is NonNullable<typeof stub> =>
-          !!stub && stub.isLeaf !== false && !idbIds.has(stub.id as string),
-      );
+      .filter((stub): stub is NonNullable<typeof stub> => !!stub && stub.isLeaf !== false && !idbIds.has(stub.id as string));
 
     const allStubs = [...stubs, ...pendingStubs];
     setAllFileStubs(allStubs.sort((a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0)));
@@ -251,7 +248,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
         </div>
 
         {/* Search row */}
-        {(
+        {
           <div
             className={`file-sidebar-search-row${searchActive && !collapsed ? " active" : ""}`}
             onClick={!searchActive ? handleSearchClick : undefined}
@@ -274,12 +271,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
                 <span className="file-sidebar-search-label sidebar-content-fade">{t("fileSidebar.search", "Search")}</span>
               ))}
           </div>
-        )}
+        }
 
         {/* Scrollable content */}
         <div className="file-sidebar-scroll">
           {/* Open from Computer + Google Drive */}
-          {(
+          {
             <>
               <div
                 className="file-sidebar-action-row"
@@ -324,7 +321,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
                 </div>
               )}
             </>
-          )}
+          }
 
           {/* Files section - always visible when expanded */}
           {!collapsed && (

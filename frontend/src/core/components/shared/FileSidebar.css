@@ -72,7 +72,6 @@
   transition: background-color 0.15s ease;
 }
 
-
 .file-sidebar-search-row:not(.active):hover {
   background-color: var(--bg-hover);
 }
@@ -139,7 +138,6 @@
   flex-shrink: 0;
 }
 
-
 .file-sidebar-action-row:hover {
   background-color: var(--bg-hover);
 }
@@ -170,7 +168,6 @@
   transition: background-color 0.15s ease;
   flex-shrink: 0;
 }
-
 
 .file-sidebar-cloud-row:not(.disabled):hover {
   background-color: var(--bg-hover);
@@ -300,8 +297,12 @@
 /* Elements are conditionally rendered so use animation (not transition) to fade in from 0.
    Delay until the width animation is nearly done (0.18s of 0.22s) to avoid squashed-text effect. */
 @keyframes sidebar-content-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .sidebar-content-fade {

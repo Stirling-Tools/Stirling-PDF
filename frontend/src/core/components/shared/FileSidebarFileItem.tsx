@@ -179,9 +179,7 @@ export function FileItem({
 
   // Reactive: tooltip appears as soon as both hover rect and thumbnail are ready
   const thumbPos =
-    hoverRect && resolvedThumbnail
-      ? { top: hoverRect.top + hoverRect.height / 2, left: hoverRect.right + 10 }
-      : null;
+    hoverRect && resolvedThumbnail ? { top: hoverRect.top + hoverRect.height / 2, left: hoverRect.right + 10 } : null;
 
   return (
     <>

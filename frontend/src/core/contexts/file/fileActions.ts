@@ -567,7 +567,6 @@ export async function consumeFiles(
   return outputStirlingFileStubs.map((stub) => stub.id);
 }
 
-
 /**
  * Undoes a previous consumeFiles operation by restoring input files and removing output files (unless pinned)
  */

@@ -263,8 +263,7 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
       const globalsWidth = globalsEl?.offsetWidth ?? 0;
       const centerChildren = centerEl ? (Array.from(centerEl.children) as HTMLElement[]) : [];
       const centerWidth =
-        centerChildren.reduce((sum, el) => sum + el.offsetWidth, 0) +
-        Math.max(0, centerChildren.length - 1) * 2; // gap: 2px
+        centerChildren.reduce((sum, el) => sum + el.offsetWidth, 0) + Math.max(0, centerChildren.length - 1) * 2; // gap: 2px
 
       const needed = viewsWidth + centerWidth + globalsWidth + 24; // 24px bar padding
       bar.dataset.wrapped = String(needed > bar.clientWidth);
@@ -393,7 +392,6 @@ export default function WorkbenchBar({ currentView, setCurrentView, hasFiles }: 
             </ActionIcon>,
             t("rightRail.saveAs", "Save As"),
           )}
-
       </div>
     </div>
   );
