@@ -15,7 +15,11 @@ import {
 import SendIcon from "@mui/icons-material/Send";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import CloseIcon from "@mui/icons-material/Close";
-import { useChat, AiWorkflowPhase, type AiWorkflowProgress } from "@app/components/chat/ChatContext";
+import {
+  useChat,
+  AiWorkflowPhase,
+  type AiWorkflowProgress,
+} from "@app/components/chat/ChatContext";
 import "@app/components/chat/ChatPanel.css";
 
 type TranslateFn = (key: string, options?: Record<string, unknown>) => string;
@@ -64,14 +68,8 @@ function ChatMessageBubble({
 
 export function ChatPanel() {
   const { t } = useTranslation();
-  const {
-    messages,
-    isOpen,
-    isLoading,
-    progress,
-    toggleOpen,
-    sendMessage,
-  } = useChat();
+  const { messages, isOpen, isLoading, progress, toggleOpen, sendMessage } =
+    useChat();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -167,7 +165,8 @@ export function ChatPanel() {
                       <Group gap="xs" wrap="nowrap">
                         <Loader size="xs" type="dots" />
                         <Text size="sm" c="dimmed">
-                          {progress ? formatProgress(progress, t)
+                          {progress
+                            ? formatProgress(progress, t)
                             : t("chat.progress.thinking")}
                         </Text>
                       </Group>

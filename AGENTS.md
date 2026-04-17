@@ -29,6 +29,8 @@ This project uses [Task](https://taskfile.dev/) as a unified command runner. All
 - **Code formatting**: `task format` (or `task backend:format` for Java only)
 - **Full quality gate**: `task check` (runs lint + typecheck + test across all components)
 
+After modifying any files in the project, you must run the relevant `task check` command that covers that area of the code. For example, when editing frontend files run `task frontend:check`; for Python engine files run `task engine:check`; for Java backend files run `task backend:check`.
+
 ### Docker Development
 - **Build standard**: `task docker:build` (or `docker build -t stirling-pdf -f docker/embedded/Dockerfile .`)
 - **Build fat version**: `task docker:build:fat`

@@ -153,6 +153,4 @@ class PdfEditAgent:
         )
 
     def _supported_operations_prompt(self) -> str:
-        return ", ".join(
-            f"{op.name} ({op.value})" for op in self.supported_operations
-        )
+        return ", ".join(f"{op.name} ({op.value})" for op in self.supported_operations)
