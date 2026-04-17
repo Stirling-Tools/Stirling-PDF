@@ -16,14 +16,23 @@ export interface ToolWorkflowTitleProps {
   };
 }
 
-export function ToolWorkflowTitle({ title, tooltip, description }: ToolWorkflowTitleProps) {
+export function ToolWorkflowTitle({
+  title,
+  tooltip,
+  description,
+}: ToolWorkflowTitleProps) {
   const titleContent = (
     <Flex align="center" gap="xs" onClick={(e) => e.stopPropagation()}>
       <Text fw={500} size="lg" p="xs">
         {title}
       </Text>
       {tooltip && (
-        <LocalIcon icon="info-outline-rounded" width="1.25rem" height="1.25rem" style={{ color: "var(--icon-files-color)" }} />
+        <LocalIcon
+          icon="info-outline-rounded"
+          width="1.25rem"
+          height="1.25rem"
+          style={{ color: "var(--icon-files-color)" }}
+        />
       )}
     </Flex>
   );
@@ -32,7 +41,12 @@ export function ToolWorkflowTitle({ title, tooltip, description }: ToolWorkflowT
     <>
       {tooltip ? (
         <Flex justify="center" w="100%">
-          <Tooltip content={tooltip.content} tips={tooltip.tips} header={tooltip.header} sidebarTooltip={true}>
+          <Tooltip
+            content={tooltip.content}
+            tips={tooltip.tips}
+            header={tooltip.header}
+            sidebarTooltip={true}
+          >
             {titleContent}
           </Tooltip>
         </Flex>

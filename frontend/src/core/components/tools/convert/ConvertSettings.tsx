@@ -1,5 +1,12 @@
 import { useMemo } from "react";
-import { Stack, Text, Group, Divider, UnstyledButton, useMantineTheme, useMantineColorScheme } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  Group,
+  Divider,
+  UnstyledButton,
+  useMantineTheme,
+} from "@mantine/core";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
@@ -36,8 +43,13 @@ import { StirlingFile } from "@app/types/fileContext";
 
 interface ConvertSettingsProps {
   parameters: ConvertParameters;
-  onParameterChange: <K extends keyof ConvertParameters>(key: K, value: ConvertParameters[K]) => void;
-  getAvailableToExtensions: (fromExtension: string) => Array<{ value: string; label: string; group: string }>;
+  onParameterChange: <K extends keyof ConvertParameters>(
+    key: K,
+    value: ConvertParameters[K],
+  ) => void;
+  getAvailableToExtensions: (
+    fromExtension: string,
+  ) => Array<{ value: string; label: string; group: string }>;
   selectedFiles: StirlingFile[];
   disabled?: boolean;
 }
@@ -51,7 +63,6 @@ const ConvertSettings = ({
 }: ConvertSettingsProps) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
-  const { colorScheme } = useMantineColorScheme();
   const { setSelectedFiles } = useFileSelection();
   const { state, selectors } = useFileState();
   const activeFiles = state.files.ids;
@@ -92,8 +103,9 @@ const ConvertSettings = ({
     const baseOptions = FROM_FORMAT_OPTIONS.map((option) => {
       // Check if this source format has any available conversions
       const availableConversions = getAvailableToExtensions(option.value) || [];
-      const hasAvailableConversions = availableConversions.some((targetOption) =>
-        isConversionAvailable(option.value, targetOption.value),
+      const hasAvailableConversions = availableConversions.some(
+        (targetOption) =>
+          isConversionAvailable(option.value, targetOption.value),
       );
 
       return {
@@ -109,7 +121,10 @@ const ConvertSettings = ({
     }
 
     // Add dynamic format option if current selection is a file-<extension> format
-    if (parameters.fromExtension && parameters.fromExtension.startsWith("file-")) {
+    if (
+      parameters.fromExtension &&
+      parameters.fromExtension.startsWith("file-")
+    ) {
       const extension = parameters.fromExtension.replace("file-", "");
       const dynamicOption = {
         value: parameters.fromExtension,
@@ -123,16 +138,28 @@ const ConvertSettings = ({
     }
 
     return filteredOptions;
-  }, [parameters.fromExtension, endpointStatus, preferences.hideUnavailableConversions, conversionStatus]);
+  }, [
+    parameters.fromExtension,
+    endpointStatus,
+    preferences.hideUnavailableConversions,
+    conversionStatus,
+  ]);
 
   // Enhanced TO options with endpoint availability and cloud status
   const enhancedToOptions = useMemo(() => {
     if (!parameters.fromExtension) return [];
 
-    const availableOptions = getAvailableToExtensions(parameters.fromExtension) || [];
+    const availableOptions =
+      getAvailableToExtensions(parameters.fromExtension) || [];
     const enhanced = availableOptions.map((option) => {
-      const enabled = isConversionAvailable(parameters.fromExtension, option.value);
-      const usesCloud = doesConversionUseCloud(parameters.fromExtension, option.value);
+      const enabled = isConversionAvailable(
+        parameters.fromExtension,
+        option.value,
+      );
+      const usesCloud = doesConversionUseCloud(
+        parameters.fromExtension,
+        option.value,
+      );
       return {
         ...option,
         enabled,
@@ -146,7 +173,12 @@ const ConvertSettings = ({
     }
 
     return enhanced;
-  }, [parameters.fromExtension, endpointStatus, preferences.hideUnavailableConversions, conversionStatus]);
+  }, [
+    parameters.fromExtension,
+    endpointStatus,
+    preferences.hideUnavailableConversions,
+    conversionStatus,
+  ]);
 
   const resetParametersToDefaults = () => {
     onParameterChange("imageOptions", {
@@ -199,12 +231,15 @@ const ConvertSettings = ({
 
   const setAutoTargetExtension = (fromExtension: string) => {
     const availableToOptions = getAvailableToExtensions(fromExtension);
-    const autoTarget = availableToOptions.length === 1 ? availableToOptions[0].value : "";
+    const autoTarget =
+      availableToOptions.length === 1 ? availableToOptions[0].value : "";
     onParameterChange("toExtension", autoTarget);
   };
 
   const filterFilesByExtension = (extension: string) => {
-    const files = activeFiles.map((fileId) => selectors.getFile(fileId)).filter(Boolean) as StirlingFile[];
+    const files = activeFiles
+      .map((fileId) => selectors.getFile(fileId))
+      .filter(Boolean) as StirlingFile[];
     return files.filter((file) => {
       const fileExtension = detectFileExtension(file.name);
 
@@ -302,17 +337,22 @@ const ConvertSettings = ({
               padding: "0.5rem 0.75rem",
               border: `0.0625rem solid ${theme.colors.gray[4]}`,
               borderRadius: theme.radius.sm,
-              backgroundColor: colorScheme === "dark" ? theme.colors.dark[5] : theme.colors.gray[1],
-              color: colorScheme === "dark" ? theme.colors.dark[2] : theme.colors.gray[6],
+              backgroundColor: "var(--select-placeholder-bg)",
+              color: "var(--select-placeholder-text)",
               cursor: "not-allowed",
             }}
           >
             <Group justify="space-between">
-              <Text size="sm">{t("convert.selectSourceFormatFirst", "Select a source format first")}</Text>
+              <Text size="sm">
+                {t(
+                  "convert.selectSourceFormatFirst",
+                  "Select a source format first",
+                )}
+              </Text>
               <KeyboardArrowDownIcon
                 style={{
                   fontSize: "1rem",
-                  color: colorScheme === "dark" ? theme.colors.dark[2] : theme.colors.gray[6],
+                  color: "var(--select-placeholder-text)",
                 }}
               />
             </Group>
@@ -335,117 +375,176 @@ const ConvertSettings = ({
       {isImageFormat(parameters.toExtension) && (
         <>
           <Divider />
-          <ConvertToImageSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
+          <ConvertToImageSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
         </>
       )}
 
       {/* Color options for image to PDF conversion */}
-      {(isImageFormat(parameters.fromExtension) && parameters.toExtension === "pdf") ||
-      (parameters.isSmartDetection && parameters.smartDetectionType === "images") ? (
+      {(isImageFormat(parameters.fromExtension) &&
+        parameters.toExtension === "pdf") ||
+      (parameters.isSmartDetection &&
+        parameters.smartDetectionType === "images") ? (
         <>
           <Divider />
-          <ConvertFromImageSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
+          <ConvertFromImageSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
         </>
       ) : null}
 
       {/* SVG to PDF options */}
-      {parameters.fromExtension === "svg" && parameters.toExtension === "pdf" && (
-        <>
-          <Divider />
-          <ConvertFromSvgSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
-        </>
-      )}
+      {parameters.fromExtension === "svg" &&
+        parameters.toExtension === "pdf" && (
+          <>
+            <Divider />
+            <ConvertFromSvgSettings
+              parameters={parameters}
+              onParameterChange={onParameterChange}
+              disabled={disabled}
+            />
+          </>
+        )}
 
       {/* Web to PDF options */}
-      {(isWebFormat(parameters.fromExtension) && parameters.toExtension === "pdf") ||
-      (parameters.isSmartDetection && parameters.smartDetectionType === "web") ? (
+      {(isWebFormat(parameters.fromExtension) &&
+        parameters.toExtension === "pdf") ||
+      (parameters.isSmartDetection &&
+        parameters.smartDetectionType === "web") ? (
         <>
           <Divider />
-          <ConvertFromWebSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
+          <ConvertFromWebSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
         </>
       ) : null}
 
       {/* Email to PDF options (EML and MSG formats) */}
-      {(parameters.fromExtension === "eml" || parameters.fromExtension === "msg") && parameters.toExtension === "pdf" && (
-        <>
-          <Divider />
-          <ConvertFromEmailSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
-        </>
-      )}
+      {(parameters.fromExtension === "eml" ||
+        parameters.fromExtension === "msg") &&
+        parameters.toExtension === "pdf" && (
+          <>
+            <Divider />
+            <ConvertFromEmailSettings
+              parameters={parameters}
+              onParameterChange={onParameterChange}
+              disabled={disabled}
+            />
+          </>
+        )}
 
       {/* CBZ to PDF options */}
-      {parameters.fromExtension === "cbz" && parameters.toExtension === "pdf" && (
-        <>
-          <Divider />
-          <ConvertFromCbzSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
-        </>
-      )}
+      {parameters.fromExtension === "cbz" &&
+        parameters.toExtension === "pdf" && (
+          <>
+            <Divider />
+            <ConvertFromCbzSettings
+              parameters={parameters}
+              onParameterChange={onParameterChange}
+              disabled={disabled}
+            />
+          </>
+        )}
 
       {/* PDF to CBZ options */}
-      {parameters.fromExtension === "pdf" && parameters.toExtension === "cbz" && (
-        <>
-          <Divider />
-          <ConvertToCbzSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
-        </>
-      )}
+      {parameters.fromExtension === "pdf" &&
+        parameters.toExtension === "cbz" && (
+          <>
+            <Divider />
+            <ConvertToCbzSettings
+              parameters={parameters}
+              onParameterChange={onParameterChange}
+              disabled={disabled}
+            />
+          </>
+        )}
 
       {/* PDF to PDF/A options */}
-      {parameters.fromExtension === "pdf" && parameters.toExtension === "pdfa" && (
-        <>
-          <Divider />
-          <ConvertToPdfaSettings
-            parameters={parameters}
-            onParameterChange={onParameterChange}
-            selectedFiles={selectedFiles}
-            disabled={disabled}
-          />
-        </>
-      )}
+      {parameters.fromExtension === "pdf" &&
+        parameters.toExtension === "pdfa" && (
+          <>
+            <Divider />
+            <ConvertToPdfaSettings
+              parameters={parameters}
+              onParameterChange={onParameterChange}
+              selectedFiles={selectedFiles}
+              disabled={disabled}
+            />
+          </>
+        )}
 
       {/* PDF to PDF/X options */}
-      {parameters.fromExtension === "pdf" && parameters.toExtension === "pdfx" && (
-        <>
-          <Divider />
-          <ConvertToPdfxSettings
-            parameters={parameters}
-            onParameterChange={onParameterChange}
-            selectedFiles={selectedFiles}
-            disabled={disabled}
-          />
-        </>
-      )}
+      {parameters.fromExtension === "pdf" &&
+        parameters.toExtension === "pdfx" && (
+          <>
+            <Divider />
+            <ConvertToPdfxSettings
+              parameters={parameters}
+              onParameterChange={onParameterChange}
+              selectedFiles={selectedFiles}
+              disabled={disabled}
+            />
+          </>
+        )}
 
       {/* eBook to PDF options */}
-      {["epub", "mobi", "azw3", "fb2"].includes(parameters.fromExtension) && parameters.toExtension === "pdf" && (
-        <>
-          <Divider />
-          <ConvertFromEbookSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
-        </>
-      )}
+      {["epub", "mobi", "azw3", "fb2"].includes(parameters.fromExtension) &&
+        parameters.toExtension === "pdf" && (
+          <>
+            <Divider />
+            <ConvertFromEbookSettings
+              parameters={parameters}
+              onParameterChange={onParameterChange}
+              disabled={disabled}
+            />
+          </>
+        )}
 
       {/* CBR to PDF options */}
-      {parameters.fromExtension === "cbr" && parameters.toExtension === "pdf" && (
-        <>
-          <Divider />
-          <ConvertFromCbrSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
-        </>
-      )}
+      {parameters.fromExtension === "cbr" &&
+        parameters.toExtension === "pdf" && (
+          <>
+            <Divider />
+            <ConvertFromCbrSettings
+              parameters={parameters}
+              onParameterChange={onParameterChange}
+              disabled={disabled}
+            />
+          </>
+        )}
 
       {/* PDF to CBR options */}
-      {parameters.fromExtension === "pdf" && parameters.toExtension === "cbr" && (
-        <>
-          <Divider />
-          <ConvertToCbrSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
-        </>
-      )}
+      {parameters.fromExtension === "pdf" &&
+        parameters.toExtension === "cbr" && (
+          <>
+            <Divider />
+            <ConvertToCbrSettings
+              parameters={parameters}
+              onParameterChange={onParameterChange}
+              disabled={disabled}
+            />
+          </>
+        )}
 
       {/* PDF to EPUB/AZW3 options */}
-      {parameters.fromExtension === "pdf" && ["epub", "azw3"].includes(parameters.toExtension) && (
-        <>
-          <Divider />
-          <ConvertToEpubSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
-        </>
-      )}
+      {parameters.fromExtension === "pdf" &&
+        ["epub", "azw3"].includes(parameters.toExtension) && (
+          <>
+            <Divider />
+            <ConvertToEpubSettings
+              parameters={parameters}
+              onParameterChange={onParameterChange}
+              disabled={disabled}
+            />
+          </>
+        )}
     </Stack>
   );
 };

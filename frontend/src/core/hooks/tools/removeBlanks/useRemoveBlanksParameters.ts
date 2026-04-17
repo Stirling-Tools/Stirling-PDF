@@ -1,5 +1,8 @@
 import { BaseParameters } from "@app/types/parameters";
-import { useBaseParameters, BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
+import {
+  useBaseParameters,
+  BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
 
 export interface RemoveBlanksParameters extends BaseParameters {
   threshold: number; // 0-255
@@ -13,12 +16,17 @@ export const defaultParameters: RemoveBlanksParameters = {
   includeBlankPages: false,
 };
 
-export type RemoveBlanksParametersHook = BaseParametersHook<RemoveBlanksParameters>;
+export type RemoveBlanksParametersHook =
+  BaseParametersHook<RemoveBlanksParameters>;
 
 export const useRemoveBlanksParameters = (): RemoveBlanksParametersHook => {
   return useBaseParameters({
     defaultParameters,
     endpointName: "remove-blanks",
-    validateFn: (p) => p.threshold >= 0 && p.threshold <= 255 && p.whitePercent > 0 && p.whitePercent <= 100,
+    validateFn: (p) =>
+      p.threshold >= 0 &&
+      p.threshold <= 255 &&
+      p.whitePercent > 0 &&
+      p.whitePercent <= 100,
   });
 };

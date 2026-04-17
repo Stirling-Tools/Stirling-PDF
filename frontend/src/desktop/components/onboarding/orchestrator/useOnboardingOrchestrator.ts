@@ -18,5 +18,7 @@ export type {
 } from "@core/components/onboarding/orchestrator/useOnboardingOrchestrator";
 
 export function useOnboardingOrchestrator(): UseOnboardingOrchestratorResult {
-  return useCoreOnboardingOrchestrator({ defaultRuntimeState: DEFAULT_RUNTIME_STATE });
+  return useCoreOnboardingOrchestrator({
+    defaultRuntimeState: DEFAULT_RUNTIME_STATE,
+  });
 }

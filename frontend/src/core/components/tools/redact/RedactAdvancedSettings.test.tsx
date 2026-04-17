@@ -11,7 +11,9 @@ vi.mock("react-i18next", () => ({
 }));
 
 // Wrapper component to provide Mantine context
-const TestWrapper = ({ children }: { children: React.ReactNode }) => <MantineProvider>{children}</MantineProvider>;
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <MantineProvider>{children}</MantineProvider>
+);
 
 describe("RedactAdvancedSettings", () => {
   const mockOnParameterChange = vi.fn();
@@ -23,7 +25,10 @@ describe("RedactAdvancedSettings", () => {
   test("should render all advanced settings controls", () => {
     render(
       <TestWrapper>
-        <RedactAdvancedSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} />
+        <RedactAdvancedSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
@@ -31,7 +36,11 @@ describe("RedactAdvancedSettings", () => {
     expect(screen.getByText("Custom Extra Padding")).toBeInTheDocument();
     expect(screen.getByText("Use Regex")).toBeInTheDocument();
     expect(screen.getByText("Whole Word Search")).toBeInTheDocument();
-    expect(screen.getByText("Convert PDF to PDF-Image (Used to remove text behind the box)")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Convert PDF to PDF-Image (Used to remove text behind the box)",
+      ),
+    ).toBeInTheDocument();
   });
 
   test("should display current parameter values", () => {
@@ -46,7 +55,10 @@ describe("RedactAdvancedSettings", () => {
 
     render(
       <TestWrapper>
-        <RedactAdvancedSettings parameters={customParameters} onParameterChange={mockOnParameterChange} />
+        <RedactAdvancedSettings
+          parameters={customParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
@@ -61,7 +73,9 @@ describe("RedactAdvancedSettings", () => {
     // Check checkbox states
     const useRegexCheckbox = screen.getByLabelText("Use Regex");
     const wholeWordCheckbox = screen.getByLabelText("Whole Word Search");
-    const convertCheckbox = screen.getByLabelText("Convert PDF to PDF-Image (Used to remove text behind the box)");
+    const convertCheckbox = screen.getByLabelText(
+      "Convert PDF to PDF-Image (Used to remove text behind the box)",
+    );
 
     expect(useRegexCheckbox).toBeChecked();
     expect(wholeWordCheckbox).toBeChecked();
@@ -71,20 +85,29 @@ describe("RedactAdvancedSettings", () => {
   test("should call onParameterChange when color is changed", () => {
     render(
       <TestWrapper>
-        <RedactAdvancedSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} />
+        <RedactAdvancedSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
     const colorInput = screen.getByDisplayValue("#000000");
     fireEvent.change(colorInput, { target: { value: "#FF0000" } });
 
-    expect(mockOnParameterChange).toHaveBeenCalledWith("redactColor", "#FF0000");
+    expect(mockOnParameterChange).toHaveBeenCalledWith(
+      "redactColor",
+      "#FF0000",
+    );
   });
 
   test("should call onParameterChange when padding is changed", () => {
     render(
       <TestWrapper>
-        <RedactAdvancedSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} />
+        <RedactAdvancedSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
@@ -97,7 +120,10 @@ describe("RedactAdvancedSettings", () => {
   test("should handle invalid padding values", () => {
     render(
       <TestWrapper>
-        <RedactAdvancedSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} />
+        <RedactAdvancedSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
@@ -143,41 +169,72 @@ describe("RedactAdvancedSettings", () => {
 
       render(
         <TestWrapper>
-          <RedactAdvancedSettings parameters={customParameters} onParameterChange={mockOnParameterChange} />
+          <RedactAdvancedSettings
+            parameters={customParameters}
+            onParameterChange={mockOnParameterChange}
+          />
         </TestWrapper>,
       );
 
       const checkbox = screen.getByLabelText(label);
       fireEvent.click(checkbox);
 
-      expect(mockOnParameterChange).toHaveBeenCalledWith(paramName, expectedValue);
+      expect(mockOnParameterChange).toHaveBeenCalledWith(
+        paramName,
+        expectedValue,
+      );
     },
   );
 
   test.each([
-    { controlType: "color input", getValue: () => screen.getByDisplayValue("#000000") },
-    { controlType: "padding input", getValue: () => screen.getByDisplayValue("0.1") },
-    { controlType: "useRegex checkbox", getValue: () => screen.getByLabelText("Use Regex") },
-    { controlType: "wholeWordSearch checkbox", getValue: () => screen.getByLabelText("Whole Word Search") },
+    {
+      controlType: "color input",
+      getValue: () => screen.getByDisplayValue("#000000"),
+    },
+    {
+      controlType: "padding input",
+      getValue: () => screen.getByDisplayValue("0.1"),
+    },
+    {
+      controlType: "useRegex checkbox",
+      getValue: () => screen.getByLabelText("Use Regex"),
+    },
+    {
+      controlType: "wholeWordSearch checkbox",
+      getValue: () => screen.getByLabelText("Whole Word Search"),
+    },
     {
       controlType: "convertPDFToImage checkbox",
-      getValue: () => screen.getByLabelText("Convert PDF to PDF-Image (Used to remove text behind the box)"),
+      getValue: () =>
+        screen.getByLabelText(
+          "Convert PDF to PDF-Image (Used to remove text behind the box)",
+        ),
     },
-  ])("should disable $controlType when disabled prop is true", ({ getValue }) => {
-    render(
-      <TestWrapper>
-        <RedactAdvancedSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} disabled={true} />
-      </TestWrapper>,
-    );
+  ])(
+    "should disable $controlType when disabled prop is true",
+    ({ getValue }) => {
+      render(
+        <TestWrapper>
+          <RedactAdvancedSettings
+            parameters={defaultParameters}
+            onParameterChange={mockOnParameterChange}
+            disabled={true}
+          />
+        </TestWrapper>,
+      );
 
-    const control = getValue();
-    expect(control).toBeDisabled();
-  });
+      const control = getValue();
+      expect(control).toBeDisabled();
+    },
+  );
 
   test("should have correct padding input constraints", () => {
     render(
       <TestWrapper>
-        <RedactAdvancedSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} />
+        <RedactAdvancedSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 

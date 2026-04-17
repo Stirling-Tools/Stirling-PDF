@@ -9,7 +9,10 @@ export const DEBUG_SHOW_ALL_PROVIDERS = false;
 
 // OAuth provider configuration - maps provider ID to display info
 // Known providers get custom icons; unknown providers use generic SSO icon
-export const oauthProviderConfig: Record<string, { label: string; file: string }> = {
+export const oauthProviderConfig: Record<
+  string,
+  { label: string; file: string }
+> = {
   google: { label: "Google", file: "google.svg" },
   github: { label: "GitHub", file: "github.svg" },
   apple: { label: "Apple", file: "apple.svg" },
@@ -47,7 +50,9 @@ export default function OAuthButtons({
   const { t } = useTranslation();
 
   // Debug mode: show all providers for UI testing
-  const providersToShow = DEBUG_SHOW_ALL_PROVIDERS ? Object.keys(oauthProviderConfig) : enabledProviders;
+  const providersToShow = DEBUG_SHOW_ALL_PROVIDERS
+    ? Object.keys(oauthProviderConfig)
+    : enabledProviders;
 
   // Build provider list - extract provider ID from full path for display
   const providers = providersToShow.map((pathOrId) => {
@@ -95,7 +100,10 @@ export default function OAuthButtons({
     return (
       <div className="oauth-container-icons">
         {providers.map((p) => (
-          <div key={p.id} title={`${t("login.signInWith", "Sign in with")} ${p.label}`}>
+          <div
+            key={p.id}
+            title={`${t("login.signInWith", "Sign in with")} ${p.label}`}
+          >
             <Button
               onClick={() => onProviderClick(p.id)}
               disabled={isSubmitting}
@@ -103,7 +111,11 @@ export default function OAuthButtons({
               aria-label={`${t("login.signInWith", "Sign in with")} ${p.label}`}
               variant="default"
             >
-              <img src={`${BASE_PATH}/Login/${p.file}`} alt={p.label} className="oauth-icon-small" />
+              <img
+                src={`${BASE_PATH}/Login/${p.file}`}
+                alt={p.label}
+                className="oauth-icon-small"
+              />
             </Button>
           </div>
         ))}
@@ -115,7 +127,10 @@ export default function OAuthButtons({
     return (
       <div className="oauth-container-grid">
         {providers.map((p) => (
-          <div key={p.id} title={`${t("login.signInWith", "Sign in with")} ${p.label}`}>
+          <div
+            key={p.id}
+            title={`${t("login.signInWith", "Sign in with")} ${p.label}`}
+          >
             <Button
               onClick={() => onProviderClick(p.id)}
               disabled={isSubmitting}
@@ -123,7 +138,11 @@ export default function OAuthButtons({
               aria-label={`${t("login.signInWith", "Sign in with")} ${p.label}`}
               variant="default"
             >
-              <img src={`${BASE_PATH}/Login/${p.file}`} alt={p.label} className="oauth-icon-medium" />
+              <img
+                src={`${BASE_PATH}/Login/${p.file}`}
+                alt={p.label}
+                className="oauth-icon-medium"
+              />
             </Button>
           </div>
         ))}
@@ -132,26 +151,47 @@ export default function OAuthButtons({
   }
 
   return (
-    <div className={`oauth-container-vertical${useNewStyle && isSingleProvider ? " oauth-container-single" : ""}`}>
+    <div
+      className={`oauth-container-vertical${useNewStyle && isSingleProvider ? " oauth-container-single" : ""}`}
+    >
       {providers.map((p) => (
-        <div key={p.id} title={`${t("login.signInWith", "Sign in with")} ${p.label}`}>
+        <div
+          key={p.id}
+          title={`${t("login.signInWith", "Sign in with")} ${p.label}`}
+        >
           <Button
             onClick={() => onProviderClick(p.id)}
             disabled={!demoMode && isSubmitting}
             className={`oauth-button-vertical${useNewStyle && isSingleProvider ? " oauth-button-vertical-single" : ""}${!useNewStyle ? " oauth-button-vertical-legacy" : ""}${isTinted ? " oauth-button-vertical-tinted" : ""}${isOutline ? " oauth-button-vertical-outline" : ""}${isLight ? " oauth-button-vertical-light" : ""}`}
             aria-label={`${t("login.signInWith", "Sign in with")} ${p.label}`}
             variant="default"
-            style={isTinted ? ({ "--oauth-accent": accentMap[p.providerId] || "#334155" } as React.CSSProperties) : undefined}
+            style={
+              isTinted
+                ? ({
+                    "--oauth-accent": accentMap[p.providerId] || "#334155",
+                  } as React.CSSProperties)
+                : undefined
+            }
           >
             <span className="oauth-button-left">
               <span className="oauth-icon-wrapper">
-                <img src={`${BASE_PATH}/Login/${p.file}`} alt={p.label} className="oauth-icon-tiny" />
+                <img
+                  src={`${BASE_PATH}/Login/${p.file}`}
+                  alt={p.label}
+                  className="oauth-icon-tiny"
+                />
               </span>
-              <span className="oauth-button-text">{ctaPrefix ? `${ctaPrefix} ${p.label}` : p.label}</span>
+              <span className="oauth-button-text">
+                {ctaPrefix ? `${ctaPrefix} ${p.label}` : p.label}
+              </span>
             </span>
             {useNewStyle && isSingleProvider && (
               <span className="oauth-button-right" aria-hidden="true">
-                <svg className="oauth-arrow-icon" viewBox="0 0 24 24" fill="none">
+                <svg
+                  className="oauth-arrow-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
                   <path
                     d="M5 12h12m0 0-5-5m5 5-5 5"
                     stroke="currentColor"

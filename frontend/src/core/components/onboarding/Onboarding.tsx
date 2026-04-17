@@ -6,11 +6,21 @@ import { isAuthRoute } from "@app/constants/routes";
 import { dispatchTourState } from "@app/constants/events";
 import { useOnboardingOrchestrator } from "@app/components/onboarding/orchestrator/useOnboardingOrchestrator";
 import { useBypassOnboarding } from "@app/components/onboarding/useBypassOnboarding";
-import OnboardingTour, { type AdvanceArgs, type CloseArgs } from "@app/components/onboarding/OnboardingTour";
+import OnboardingTour, {
+  type AdvanceArgs,
+  type CloseArgs,
+} from "@app/components/onboarding/OnboardingTour";
 import OnboardingModalSlide from "@app/components/onboarding/OnboardingModalSlide";
-import { useServerLicenseRequest, useTourRequest } from "@app/components/onboarding/useOnboardingEffects";
+import {
+  useServerLicenseRequest,
+  useTourRequest,
+} from "@app/components/onboarding/useOnboardingEffects";
 import { useOnboardingDownload } from "@app/components/onboarding/useOnboardingDownload";
-import { SLIDE_DEFINITIONS, type SlideId, type ButtonAction } from "@app/components/onboarding/onboardingFlowConfig";
+import {
+  SLIDE_DEFINITIONS,
+  type SlideId,
+  type ButtonAction,
+} from "@app/components/onboarding/onboardingFlowConfig";
 import ToolPanelModePrompt from "@app/components/tools/ToolPanelModePrompt";
 import { useTourOrchestration } from "@app/contexts/TourOrchestrationContext";
 import { useAdminTourOrchestration } from "@app/contexts/AdminTourOrchestrationContext";
@@ -36,9 +46,18 @@ export default function Onboarding() {
   const onAuthRoute = isAuthRoute(location.pathname);
   const { currentStep, isActive, isLoading, runtimeState, activeFlow } = state;
 
-  const { osInfo, osOptions, setSelectedDownloadUrl, handleDownloadSelected } = useOnboardingDownload();
-  const { showLicenseSlide, licenseNotice: externalLicenseNotice, closeLicenseSlide } = useServerLicenseRequest();
-  const { tourRequested: externalTourRequested, requestedTourType, clearTourRequest } = useTourRequest();
+  const { osInfo, osOptions, setSelectedDownloadUrl, handleDownloadSelected } =
+    useOnboardingDownload();
+  const {
+    showLicenseSlide,
+    licenseNotice: externalLicenseNotice,
+    closeLicenseSlide,
+  } = useServerLicenseRequest();
+  const {
+    tourRequested: externalTourRequested,
+    requestedTourType,
+    clearTourRequest,
+  } = useTourRequest();
   const { config, refetch: refetchConfig } = useAppConfig();
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
@@ -75,10 +94,20 @@ export default function Onboarding() {
 
   // Check if we should show analytics modal before onboarding
   useEffect(() => {
-    if (!isLoading && !analyticsModalDismissed && serverExperience.effectiveIsAdmin && config?.enableAnalytics == null) {
+    if (
+      !isLoading &&
+      !analyticsModalDismissed &&
+      serverExperience.effectiveIsAdmin &&
+      config?.enableAnalytics == null
+    ) {
       setShowAnalyticsModal(true);
     }
-  }, [isLoading, analyticsModalDismissed, serverExperience.effectiveIsAdmin, config?.enableAnalytics]);
+  }, [
+    isLoading,
+    analyticsModalDismissed,
+    serverExperience.effectiveIsAdmin,
+    config?.enableAnalytics,
+  ]);
 
   const handleAnalyticsChoice = useCallback(
     async (enableAnalytics: boolean) => {
@@ -90,12 +119,17 @@ export default function Onboarding() {
       formData.append("enabled", enableAnalytics.toString());
 
       try {
-        await apiClient.post("/api/v1/settings/update-enable-analytics", formData);
+        await apiClient.post(
+          "/api/v1/settings/update-enable-analytics",
+          formData,
+        );
         await refetchConfig();
         setShowAnalyticsModal(false);
         setAnalyticsModalDismissed(true);
       } catch (error) {
-        setAnalyticsError(error instanceof Error ? error.message : "Unknown error");
+        setAnalyticsError(
+          error instanceof Error ? error.message : "Unknown error",
+        );
       } finally {
         setAnalyticsLoading(false);
       }
@@ -137,7 +171,11 @@ export default function Onboarding() {
           setIsTourOpen(true);
           break;
         case "launch-auto": {
-          const tourType = serverExperience.effectiveIsAdmin || runtimeState.selectedRole === "admin" ? "admin" : "whatsnew";
+          const tourType =
+            serverExperience.effectiveIsAdmin ||
+            runtimeState.selectedRole === "admin"
+              ? "admin"
+              : "whatsnew";
           actions.updateRuntimeState({ tourType });
           setIsTourOpen(true);
           break;
@@ -170,7 +208,10 @@ export default function Onboarding() {
     ],
   );
 
-  const isRTL = typeof document !== "undefined" ? document.documentElement.dir === "rtl" : false;
+  const isRTL =
+    typeof document !== "undefined"
+      ? document.documentElement.dir === "rtl"
+      : false;
   const [isTourOpen, setIsTourOpen] = useState(false);
 
   useEffect(() => dispatchTourState(isTourOpen), [isTourOpen]);
@@ -241,7 +282,12 @@ export default function Onboarding() {
       default:
         return Object.values(userStepsConfig);
     }
-  }, [adminStepsConfig, runtimeState.tourType, userStepsConfig, whatsNewStepsConfig]);
+  }, [
+    adminStepsConfig,
+    runtimeState.tourType,
+    userStepsConfig,
+    whatsNewStepsConfig,
+  ]);
 
   useEffect(() => {
     if (externalTourRequested) {
@@ -290,7 +336,12 @@ export default function Onboarding() {
 
   const handleAdvanceTour = useCallback(
     (args: AdvanceArgs) => {
-      const { setCurrentStep, currentStep: tourCurrentStep, steps, setIsOpen } = args;
+      const {
+        setCurrentStep,
+        currentStep: tourCurrentStep,
+        steps,
+        setIsOpen,
+      } = args;
       if (steps && tourCurrentStep === steps.length - 1) {
         setIsOpen(false);
         finishTour();
@@ -310,7 +361,11 @@ export default function Onboarding() {
   );
 
   const currentSlideDefinition = useMemo(() => {
-    if (!currentStep || currentStep.type !== "modal-slide" || !currentStep.slideId) {
+    if (
+      !currentStep ||
+      currentStep.type !== "modal-slide" ||
+      !currentStep.slideId
+    ) {
       return null;
     }
     return SLIDE_DEFINITIONS[currentStep.slideId as SlideId];
@@ -356,7 +411,9 @@ export default function Onboarding() {
 
   const currentModalSlideIndex = useMemo(() => {
     if (!currentStep || currentStep.type !== "modal-slide") return 0;
-    const modalSlides = activeFlow.filter((step) => step.type === "modal-slide");
+    const modalSlides = activeFlow.filter(
+      (step) => step.type === "modal-slide",
+    );
     return modalSlides.findIndex((step) => step.id === currentStep.id);
   }, [activeFlow, currentStep]);
 
@@ -464,9 +521,12 @@ export default function Onboarding() {
     // Remove back button for external license notice
     const slideDefinition = {
       ...baseSlideDefinition,
-      buttons: baseSlideDefinition.buttons.filter((btn) => btn.key !== "license-back"),
+      buttons: baseSlideDefinition.buttons.filter(
+        (btn) => btn.key !== "license-back",
+      ),
     };
-    const effectiveLicenseNotice = externalLicenseNotice || runtimeState.licenseNotice;
+    const effectiveLicenseNotice =
+      externalLicenseNotice || runtimeState.licenseNotice;
     const slideContent = slideDefinition.createSlide({
       osLabel: "",
       osUrl: "",
@@ -482,7 +542,10 @@ export default function Onboarding() {
       <OnboardingModalSlide
         slideDefinition={slideDefinition}
         slideContent={slideContent}
-        runtimeState={{ ...runtimeState, licenseNotice: effectiveLicenseNotice }}
+        runtimeState={{
+          ...runtimeState,
+          licenseNotice: effectiveLicenseNotice,
+        }}
         modalSlideCount={1}
         currentModalSlideIndex={0}
         onSkip={closeLicenseSlide}
@@ -524,7 +587,9 @@ export default function Onboarding() {
   // Render the current onboarding step
   switch (currentStep.type) {
     case "tool-prompt":
-      return <ToolPanelModePrompt forceOpen={true} onComplete={actions.complete} />;
+      return (
+        <ToolPanelModePrompt forceOpen={true} onComplete={actions.complete} />
+      );
 
     case "modal-slide":
       if (!currentSlideDefinition || !currentSlideContent) return null;

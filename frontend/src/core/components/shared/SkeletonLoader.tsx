@@ -10,7 +10,14 @@ interface SkeletonLoaderProps {
   radius?: number | string;
 }
 
-const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({ type, count = 8, animated = true, width, height, radius = 8 }) => {
+const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
+  type,
+  count = 8,
+  animated = true,
+  width,
+  height,
+  radius = 8,
+}) => {
   const animationStyle = animated ? { animation: "pulse 2s infinite" } : {};
 
   // Generic block skeleton for inline text/inputs/etc.
@@ -78,9 +85,24 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({ type, count = 8, animat
 
   const renderControlsSkeleton = () => (
     <Group mb="md">
-      <Box w={150} h={36} bg="gray.1" style={{ borderRadius: 4, ...animationStyle }} />
-      <Box w={120} h={36} bg="gray.1" style={{ borderRadius: 4, ...animationStyle }} />
-      <Box w={100} h={36} bg="gray.1" style={{ borderRadius: 4, ...animationStyle }} />
+      <Box
+        w={150}
+        h={36}
+        bg="gray.1"
+        style={{ borderRadius: 4, ...animationStyle }}
+      />
+      <Box
+        w={120}
+        h={36}
+        bg="gray.1"
+        style={{ borderRadius: 4, ...animationStyle }}
+      />
+      <Box
+        w={100}
+        h={36}
+        bg="gray.1"
+        style={{ borderRadius: 4, ...animationStyle }}
+      />
     </Group>
   );
 
@@ -88,10 +110,30 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({ type, count = 8, animat
     <Stack gap="md" h="100%">
       {/* Toolbar skeleton */}
       <Group>
-        <Box w={40} h={40} bg="gray.1" style={{ borderRadius: 4, ...animationStyle }} />
-        <Box w={40} h={40} bg="gray.1" style={{ borderRadius: 4, ...animationStyle }} />
-        <Box w={80} h={40} bg="gray.1" style={{ borderRadius: 4, ...animationStyle }} />
-        <Box w={40} h={40} bg="gray.1" style={{ borderRadius: 4, ...animationStyle }} />
+        <Box
+          w={40}
+          h={40}
+          bg="gray.1"
+          style={{ borderRadius: 4, ...animationStyle }}
+        />
+        <Box
+          w={40}
+          h={40}
+          bg="gray.1"
+          style={{ borderRadius: 4, ...animationStyle }}
+        />
+        <Box
+          w={80}
+          h={40}
+          bg="gray.1"
+          style={{ borderRadius: 4, ...animationStyle }}
+        />
+        <Box
+          w={40}
+          h={40}
+          bg="gray.1"
+          style={{ borderRadius: 4, ...animationStyle }}
+        />
       </Group>
       {/* Main content skeleton */}
       <Box

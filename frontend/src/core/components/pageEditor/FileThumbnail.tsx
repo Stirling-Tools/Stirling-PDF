@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useRef, useMemo, useEffect } from "react";
+import React, {
+  useState,
+  useCallback,
+  useRef,
+  useMemo,
+  useEffect,
+} from "react";
 import { ActionIcon, CheckboxIndicator } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -6,7 +12,10 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import {
+  draggable,
+  dropTargetForElements,
+} from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 
 import styles from "@app/components/pageEditor/PageEditor.module.css";
 import { useFileContext } from "@app/contexts/FileContext";
@@ -35,7 +44,11 @@ interface FileThumbnailProps {
   onDeleteFile: (fileId: FileId) => void;
   onViewFile: (fileId: FileId) => void;
   onSetStatus: (status: string) => void;
-  onReorderFiles?: (sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => void;
+  onReorderFiles?: (
+    sourceFileId: FileId,
+    targetFileId: FileId,
+    selectedFileIds: FileId[],
+  ) => void;
   onDownloadFile?: (fileId: FileId) => void;
   toolMode?: boolean;
   isSupported?: boolean;
@@ -61,7 +74,9 @@ const FileThumbnail = ({
   // ---- Drag state ----
   const [isDragging, setIsDragging] = useState(false);
   const dragElementRef = useRef<HTMLDivElement | null>(null);
-  const [actionsWidth, setActionsWidth] = useState<number | undefined>(undefined);
+  const [actionsWidth, setActionsWidth] = useState<number | undefined>(
+    undefined,
+  );
   const [showActions, setShowActions] = useState(false);
 
   // Resolve the actual File object for pin/unpin operations
@@ -80,7 +95,10 @@ const FileThumbnail = ({
     // Fallback: attempt to download using the File object if provided
     const maybeFile = (file as unknown as { file?: File }).file;
     if (maybeFile instanceof File) {
-      void downloadFile({ data: maybeFile, filename: maybeFile.name || file.name || "download" });
+      void downloadFile({
+        data: maybeFile,
+        filename: maybeFile.name || file.name || "download",
+      });
       return;
     }
 
@@ -146,7 +164,8 @@ const FileThumbnail = ({
   // Update dropdown width on resize
   useEffect(() => {
     const update = () => {
-      if (dragElementRef.current) setActionsWidth(dragElementRef.current.offsetWidth);
+      if (dragElementRef.current)
+        setActionsWidth(dragElementRef.current.offsetWidth);
     };
     update();
     window.addEventListener("resize", update);
@@ -177,7 +196,9 @@ const FileThumbnail = ({
     };
 
     document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("touchstart", handleTouchStart, { passive: true });
+    document.addEventListener("touchstart", handleTouchStart, {
+      passive: true,
+    });
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("touchstart", handleTouchStart);
@@ -208,7 +229,9 @@ const FileThumbnail = ({
       onClick={handleCardClick}
     >
       {/* Header bar */}
-      <div className={`${styles.header} ${isSelected ? styles.headerSelected : styles.headerResting}`}>
+      <div
+        className={`${styles.header} ${isSelected ? styles.headerSelected : styles.headerResting}`}
+      >
         {/* Logo/checkbox area */}
         <div className={styles.logoMark}>
           {isSupported ? (
@@ -225,7 +248,10 @@ const FileThumbnail = ({
         </div>
 
         {/* Centered index */}
-        <div className={styles.headerIndex} aria-label={`Position ${index + 1}`}>
+        <div
+          className={styles.headerIndex}
+          aria-label={`Position ${index + 1}`}
+        >
           {index + 1}
         </div>
 
@@ -245,7 +271,11 @@ const FileThumbnail = ({
 
       {/* Actions overlay */}
       {showActions && (
-        <div className={styles.actionsOverlay} style={{ width: actionsWidth }} onClick={(e) => e.stopPropagation()}>
+        <div
+          className={styles.actionsOverlay}
+          style={{ width: actionsWidth }}
+          onClick={(e) => e.stopPropagation()}
+        >
           <button
             className={styles.actionRow}
             onClick={() => {
@@ -261,7 +291,11 @@ const FileThumbnail = ({
               setShowActions(false);
             }}
           >
-            {isPinned ? <PushPinIcon fontSize="small" /> : <PushPinOutlinedIcon fontSize="small" />}
+            {isPinned ? (
+              <PushPinIcon fontSize="small" />
+            ) : (
+              <PushPinOutlinedIcon fontSize="small" />
+            )}
             <span>{isPinned ? t("unpin", "Unpin") : t("pin", "Pin")}</span>
           </button>
 

@@ -220,11 +220,19 @@
 }
 
 .oauth-button-vertical-tinted {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--oauth-accent) 65%, #0f172a) 0 6px, #0f172a 6px 100%);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--oauth-accent) 65%, #0f172a) 0 6px,
+    #0f172a 6px 100%
+  );
 }
 
 .oauth-button-vertical-tinted:hover:not(:disabled) {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--oauth-accent) 75%, #111827) 0 6px, #111827 6px 100%);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--oauth-accent) 75%, #111827) 0 6px,
+    #111827 6px 100%
+  );
 }
 
 .oauth-button-vertical-legacy {
@@ -378,8 +386,16 @@
 }
 
 .oauth-button-vertical-tinted .oauth-icon-wrapper {
-  background: color-mix(in srgb, var(--oauth-accent) 20%, rgba(255, 255, 255, 0.08));
-  border-color: color-mix(in srgb, var(--oauth-accent) 35%, rgba(255, 255, 255, 0.2));
+  background: color-mix(
+    in srgb,
+    var(--oauth-accent) 20%,
+    rgba(255, 255, 255, 0.08)
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--oauth-accent) 35%,
+    rgba(255, 255, 255, 0.2)
+  );
 }
 
 .oauth-button-vertical-outline .oauth-icon-wrapper,

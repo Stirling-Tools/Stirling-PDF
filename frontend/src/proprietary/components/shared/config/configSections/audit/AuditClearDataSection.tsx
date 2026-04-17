@@ -1,5 +1,15 @@
 import React, { useState } from "react";
-import { Card, Stack, Text, PasswordInput, Button, Group, Alert, Code, Badge } from "@mantine/core";
+import {
+  Card,
+  Stack,
+  Text,
+  PasswordInput,
+  Button,
+  Group,
+  Alert,
+  Code,
+  Badge,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import auditService from "@app/services/auditService";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -8,7 +18,9 @@ interface AuditClearDataSectionProps {
   loginEnabled?: boolean;
 }
 
-const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({ loginEnabled = true }) => {
+const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({
+  loginEnabled = true,
+}) => {
   const { t } = useTranslation();
   const [confirmationCode, setConfirmationCode] = useState("");
   const [generatedCode, setGeneratedCode] = useState("");
@@ -47,7 +59,9 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({ loginEnab
       // Auto-dismiss success message after 5 seconds
       setTimeout(() => setSuccess(false), 5000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to clear audit data");
+      setError(
+        err instanceof Error ? err.message : "Failed to clear audit data",
+      );
     } finally {
       setClearing(false);
     }
@@ -58,13 +72,18 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({ loginEnab
       <Stack gap="lg">
         <Alert
           color="green"
-          icon={<LocalIcon icon="check-circle" width="1.2rem" height="1.2rem" />}
+          icon={
+            <LocalIcon icon="check-circle" width="1.2rem" height="1.2rem" />
+          }
           title={t("audit.clearData.success", "Success")}
           onClose={() => setSuccess(false)}
           closeButtonLabel="Close alert"
           withCloseButton
         >
-          {t("audit.clearData.successMessage", "All audit data has been cleared successfully")}
+          {t(
+            "audit.clearData.successMessage",
+            "All audit data has been cleared successfully",
+          )}
         </Alert>
       </Stack>
     );
@@ -76,7 +95,10 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({ loginEnab
         <Alert
           color="orange"
           icon={<LocalIcon icon="warning" width="1.2rem" height="1.2rem" />}
-          title={t("audit.clearData.confirmTitle", "Please confirm you want to delete")}
+          title={t(
+            "audit.clearData.confirmTitle",
+            "Please confirm you want to delete",
+          )}
         >
           <Text size="sm">
             {t(
@@ -86,7 +108,12 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({ loginEnab
           </Text>
         </Alert>
 
-        <Card padding="lg" radius="md" withBorder style={{ borderColor: "var(--mantine-color-red-4)" }}>
+        <Card
+          padding="lg"
+          radius="md"
+          withBorder
+          style={{ borderColor: "var(--mantine-color-red-4)" }}
+        >
           <Stack gap="md">
             <div
               style={{
@@ -112,13 +139,19 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({ loginEnab
                 {generatedCode}
               </Code>
               <Text size="xs" c="dimmed" mt="xs">
-                {t("audit.clearData.enterCodeBelow", "Enter the code exactly as shown above (case-sensitive)")}
+                {t(
+                  "audit.clearData.enterCodeBelow",
+                  "Enter the code exactly as shown above (case-sensitive)",
+                )}
               </Text>
             </div>
 
             <PasswordInput
               label={t("audit.clearData.enterCode", "Confirmation Code")}
-              placeholder={t("audit.clearData.codePlaceholder", "Type the code here")}
+              placeholder={t(
+                "audit.clearData.codePlaceholder",
+                "Type the code here",
+              )}
               value={confirmationCode}
               onChange={(e) => setConfirmationCode(e.currentTarget.value)}
               disabled={!loginEnabled}
@@ -130,7 +163,10 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({ loginEnab
             />
 
             {error && (
-              <Alert color="red" icon={<LocalIcon icon="error" width="1.2rem" height="1.2rem" />}>
+              <Alert
+                color="red"
+                icon={<LocalIcon icon="error" width="1.2rem" height="1.2rem" />}
+              >
                 {error}
               </Alert>
             )}
@@ -143,7 +179,11 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({ loginEnab
                 color="red"
                 onClick={handleClearData}
                 loading={clearing}
-                disabled={!loginEnabled || !generatedCode || confirmationCode !== generatedCode}
+                disabled={
+                  !loginEnabled ||
+                  !generatedCode ||
+                  confirmationCode !== generatedCode
+                }
               >
                 {t("audit.clearData.deleteButton", "Delete")}
               </Button>
@@ -169,14 +209,31 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({ loginEnab
         </Text>
       </Alert>
 
-      <Card padding="lg" radius="md" withBorder style={{ borderColor: "var(--mantine-color-red-4)" }}>
+      <Card
+        padding="lg"
+        radius="md"
+        withBorder
+        style={{ borderColor: "var(--mantine-color-red-4)" }}
+      >
         <Stack gap="md">
           <Group>
-            <Text fw={600}>{t("audit.clearData.confirmationRequired", "Delete All Audit Data")}</Text>
-            <Badge color="red">{t("audit.clearData.irreversible", "IRREVERSIBLE")}</Badge>
+            <Text fw={600}>
+              {t(
+                "audit.clearData.confirmationRequired",
+                "Delete All Audit Data",
+              )}
+            </Text>
+            <Badge color="red">
+              {t("audit.clearData.irreversible", "IRREVERSIBLE")}
+            </Badge>
           </Group>
 
-          <Button color="red" onClick={handleInitiateDeletion} disabled={!loginEnabled} fullWidth>
+          <Button
+            color="red"
+            onClick={handleInitiateDeletion}
+            disabled={!loginEnabled}
+            fullWidth
+          >
             {t("audit.clearData.initiateDelete", "Delete All Data")}
           </Button>
         </Stack>

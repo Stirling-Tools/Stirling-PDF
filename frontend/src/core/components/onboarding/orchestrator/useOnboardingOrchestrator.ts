@@ -31,19 +31,27 @@ function hasAuthToken(): boolean {
 }
 
 // Get initial runtime state from session storage (survives remounts)
-function getInitialRuntimeState(baseState: OnboardingRuntimeState): OnboardingRuntimeState {
+function getInitialRuntimeState(
+  baseState: OnboardingRuntimeState,
+): OnboardingRuntimeState {
   if (typeof window === "undefined") {
     return baseState;
   }
 
   try {
-    const tourRequested = sessionStorage.getItem(SESSION_TOUR_REQUESTED) === "true";
+    const tourRequested =
+      sessionStorage.getItem(SESSION_TOUR_REQUESTED) === "true";
     const sessionTourType = sessionStorage.getItem(SESSION_TOUR_TYPE);
     const tourType =
-      sessionTourType === "admin" || sessionTourType === "tools" || sessionTourType === "whatsnew"
+      sessionTourType === "admin" ||
+      sessionTourType === "tools" ||
+      sessionTourType === "whatsnew"
         ? sessionTourType
         : "whatsnew";
-    const selectedRole = sessionStorage.getItem(SESSION_SELECTED_ROLE) as "admin" | "user" | null;
+    const selectedRole = sessionStorage.getItem(SESSION_SELECTED_ROLE) as
+      | "admin"
+      | "user"
+      | null;
 
     return {
       ...baseState,
@@ -61,7 +69,10 @@ function persistRuntimeState(state: Partial<OnboardingRuntimeState>): void {
 
   try {
     if (state.tourRequested !== undefined) {
-      sessionStorage.setItem(SESSION_TOUR_REQUESTED, state.tourRequested ? "true" : "false");
+      sessionStorage.setItem(
+        SESSION_TOUR_REQUESTED,
+        state.tourRequested ? "true" : "false",
+      );
     }
     if (state.tourType !== undefined) {
       sessionStorage.setItem(SESSION_TOUR_TYPE, state.tourType);
@@ -74,7 +85,10 @@ function persistRuntimeState(state: Partial<OnboardingRuntimeState>): void {
       }
     }
   } catch (error) {
-    console.error("[useOnboardingOrchestrator] Error persisting runtime state:", error);
+    console.error(
+      "[useOnboardingOrchestrator] Error persisting runtime state:",
+      error,
+    );
   }
 }
 
@@ -97,7 +111,10 @@ function parseMfaRequired(settings: string | null | undefined): boolean {
     const parsed = JSON.parse(settings) as { mfaRequired?: string };
     return parsed.mfaRequired?.toLowerCase() === "true";
   } catch (error) {
-    console.warn("[useOnboardingOrchestrator] Failed to parse account settings JSON:", error);
+    console.warn(
+      "[useOnboardingOrchestrator] Failed to parse account settings JSON:",
+      error,
+    );
     return false;
   }
 }
@@ -152,14 +169,18 @@ export interface UseOnboardingOrchestratorOptions {
   defaultRuntimeState?: OnboardingRuntimeState;
 }
 
-export function useOnboardingOrchestrator(options?: UseOnboardingOrchestratorOptions): UseOnboardingOrchestratorResult {
+export function useOnboardingOrchestrator(
+  options?: UseOnboardingOrchestratorOptions,
+): UseOnboardingOrchestratorResult {
   const defaultState = options?.defaultRuntimeState ?? DEFAULT_RUNTIME_STATE;
   const serverExperience = useServerExperience();
   const { config, loading: configLoading } = useAppConfig();
   const location = useLocation();
   const bypassOnboarding = useBypassOnboarding();
 
-  const [runtimeState, setRuntimeState] = useState<OnboardingRuntimeState>(() => getInitialRuntimeState(defaultState));
+  const [runtimeState, setRuntimeState] = useState<OnboardingRuntimeState>(() =>
+    getInitialRuntimeState(defaultState),
+  );
   const [isPaused, setIsPaused] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
@@ -186,7 +207,8 @@ export function useOnboardingOrchestrator(options?: UseOnboardingOrchestratorOpt
         requiresLicense:
           !serverExperience.hasPaidLicense &&
           (serverExperience.overFreeTierLimit === true ||
-            (serverExperience.effectiveIsAdmin && serverExperience.userCountResolved)),
+            (serverExperience.effectiveIsAdmin &&
+              serverExperience.userCountResolved)),
       },
     }));
   }, [
@@ -217,7 +239,10 @@ export function useOnboardingOrchestrator(options?: UseOnboardingOrchestratorOpt
           requiresMfaSetup: parseMfaRequired(accountData.settings),
         }));
       } catch (error) {
-        console.log("[OnboardingOrchestrator] Failed to fetch account data for onboarding runtime state:", error);
+        console.log(
+          "[OnboardingOrchestrator] Failed to fetch account data for onboarding runtime state:",
+          error,
+        );
         // Account endpoint failed - user not logged in or security disabled
       }
     };
@@ -227,17 +252,25 @@ export function useOnboardingOrchestrator(options?: UseOnboardingOrchestratorOpt
     }
   }, [config?.enableLogin, configLoading]);
 
-  const isOnAuthRoute = AUTH_ROUTES.some((route) => location.pathname.startsWith(route));
+  const isOnAuthRoute = AUTH_ROUTES.some((route) =>
+    location.pathname.startsWith(route),
+  );
   const loginEnabled = config?.enableLogin === true;
   const isUnauthenticatedWithLoginEnabled = loginEnabled && !hasAuthToken();
-  const shouldBlockOnboarding = bypassOnboarding || isOnAuthRoute || configLoading || isUnauthenticatedWithLoginEnabled;
+  const shouldBlockOnboarding =
+    bypassOnboarding ||
+    isOnAuthRoute ||
+    configLoading ||
+    isUnauthenticatedWithLoginEnabled;
 
   const conditionContext = useMemo<OnboardingConditionContext>(
     () => ({
       ...serverExperience,
       ...runtimeState,
       effectiveIsAdmin:
-        serverExperience.effectiveIsAdmin || (!serverExperience.loginEnabled && runtimeState.selectedRole === "admin"),
+        serverExperience.effectiveIsAdmin ||
+        (!serverExperience.loginEnabled &&
+          runtimeState.selectedRole === "admin"),
     }),
     [serverExperience, runtimeState],
   );
@@ -248,7 +281,10 @@ export function useOnboardingOrchestrator(options?: UseOnboardingOrchestratorOpt
 
   // Wait for config AND admin status before calculating initial step
   const adminStatusResolved =
-    !configLoading && (config?.enableLogin === false || config?.enableLogin === undefined || config?.isAdmin !== undefined);
+    !configLoading &&
+    (config?.enableLogin === false ||
+      config?.enableLogin === undefined ||
+      config?.isAdmin !== undefined);
 
   useEffect(() => {
     if (configLoading || !adminStatusResolved) return;
@@ -276,9 +312,21 @@ export function useOnboardingOrchestrator(options?: UseOnboardingOrchestratorOpt
 
   const totalSteps = activeFlow.length;
 
-  const isComplete = isInitialized && (totalSteps === 0 || currentStepIndex >= totalSteps || isOnboardingCompleted());
-  const currentStep = currentStepIndex >= 0 && currentStepIndex < totalSteps ? activeFlow[currentStepIndex] : null;
-  const isActive = !shouldBlockOnboarding && !isPaused && !isComplete && isInitialized && currentStep !== null;
+  const isComplete =
+    isInitialized &&
+    (totalSteps === 0 ||
+      currentStepIndex >= totalSteps ||
+      isOnboardingCompleted());
+  const currentStep =
+    currentStepIndex >= 0 && currentStepIndex < totalSteps
+      ? activeFlow[currentStepIndex]
+      : null;
+  const isActive =
+    !shouldBlockOnboarding &&
+    !isPaused &&
+    !isComplete &&
+    isInitialized &&
+    currentStep !== null;
   const isLoading =
     configLoading ||
     !adminStatusResolved ||
@@ -322,10 +370,13 @@ export function useOnboardingOrchestrator(options?: UseOnboardingOrchestratorOpt
     setCurrentStepIndex(nextIndex);
   }, [currentStepIndex, totalSteps]);
 
-  const updateRuntimeState = useCallback((updates: Partial<OnboardingRuntimeState>) => {
-    persistRuntimeState(updates);
-    setRuntimeState((prev) => ({ ...prev, ...updates }));
-  }, []);
+  const updateRuntimeState = useCallback(
+    (updates: Partial<OnboardingRuntimeState>) => {
+      persistRuntimeState(updates);
+      setRuntimeState((prev) => ({ ...prev, ...updates }));
+    },
+    [],
+  );
 
   const refreshFlow = useCallback(() => {
     initialIndexSet.current = false;

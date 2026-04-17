@@ -14,13 +14,20 @@ interface UseProcessedFilesResult {
   };
 }
 
-export function useProcessedFiles(activeFiles: File[]): UseProcessedFilesResult {
-  const [processedFiles, setProcessedFiles] = useState<Map<File, ProcessedFile>>(new Map());
-  const [processingStates, setProcessingStates] = useState<Map<string, ProcessingState>>(new Map());
+export function useProcessedFiles(
+  activeFiles: File[],
+): UseProcessedFilesResult {
+  const [processedFiles, setProcessedFiles] = useState<
+    Map<File, ProcessedFile>
+  >(new Map());
+  const [processingStates, setProcessingStates] = useState<
+    Map<string, ProcessingState>
+  >(new Map());
 
   useEffect(() => {
     // Subscribe to processing state changes
-    const unsubscribe = pdfProcessingService.onProcessingChange(setProcessingStates);
+    const unsubscribe =
+      pdfProcessingService.onProcessingChange(setProcessingStates);
 
     // Check/start processing for each active file
     const checkProcessing = async () => {
@@ -71,7 +78,9 @@ export function useProcessedFiles(activeFiles: File[]): UseProcessedFilesResult 
   useEffect(() => {
     const currentFiles = new Set(activeFiles);
     const previousFiles = Array.from(processedFiles.keys());
-    const removedFiles = previousFiles.filter((file) => !currentFiles.has(file));
+    const removedFiles = previousFiles.filter(
+      (file) => !currentFiles.has(file),
+    );
 
     if (removedFiles.length > 0) {
       // Clean up processing service cache
@@ -92,7 +101,9 @@ export function useProcessedFiles(activeFiles: File[]): UseProcessedFilesResult 
 
   // Derived state
   const isProcessing = processingStates.size > 0;
-  const hasProcessingErrors = Array.from(processingStates.values()).some((state) => state.status === "error");
+  const hasProcessingErrors = Array.from(processingStates.values()).some(
+    (state) => state.status === "error",
+  );
   const cacheStats = pdfProcessingService.getCacheStats();
 
   return {
@@ -114,7 +125,9 @@ export function useProcessedFile(file: File | null): {
 
   const processedFile = file ? result.processedFiles.get(file) || null : null;
   const fileKey = file ? pdfProcessingService.generateFileKey(file) : "";
-  const processingState = fileKey ? result.processingStates.get(fileKey) || null : null;
+  const processingState = fileKey
+    ? result.processingStates.get(fileKey) || null
+    : null;
   const isProcessing = !!processingState;
 
   return {

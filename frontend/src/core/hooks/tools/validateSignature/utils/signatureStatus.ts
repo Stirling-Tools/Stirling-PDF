@@ -27,24 +27,42 @@ export const computeSignatureStatus = (
   const trustIssues: string[] = [];
 
   if (!signature.valid) {
-    issues.push(t("validateSignature.issue.signatureInvalid", "Signature cryptographic check failed"));
+    issues.push(
+      t(
+        "validateSignature.issue.signatureInvalid",
+        "Signature cryptographic check failed",
+      ),
+    );
   }
   if (!signature.chainValid) {
-    trustIssues.push(t("validateSignature.issue.chainInvalid", "Certificate chain invalid"));
+    trustIssues.push(
+      t("validateSignature.issue.chainInvalid", "Certificate chain invalid"),
+    );
   }
   if (!signature.trustValid) {
-    trustIssues.push(t("validateSignature.issue.trustInvalid", "Certificate not trusted"));
+    trustIssues.push(
+      t("validateSignature.issue.trustInvalid", "Certificate not trusted"),
+    );
   }
   if (!signature.notExpired) {
-    trustIssues.push(t("validateSignature.issue.certExpired", "Certificate expired"));
+    trustIssues.push(
+      t("validateSignature.issue.certExpired", "Certificate expired"),
+    );
   }
 
   // Use revocationStatus from backend; default to 'unknown' when absent
   const revStatus = signature.revocationStatus ?? "unknown";
   if (revStatus === "revoked") {
-    trustIssues.push(t("validateSignature.issue.certRevoked", "Certificate revoked"));
+    trustIssues.push(
+      t("validateSignature.issue.certRevoked", "Certificate revoked"),
+    );
   } else if (revStatus === "soft-fail") {
-    trustIssues.push(t("validateSignature.issue.certRevocationUnknown", "Certificate revocation status unknown"));
+    trustIssues.push(
+      t(
+        "validateSignature.issue.certRevocationUnknown",
+        "Certificate revocation status unknown",
+      ),
+    );
   }
 
   // Aggregate all issues for details UI (ignore missing metadata fields; they are optional)

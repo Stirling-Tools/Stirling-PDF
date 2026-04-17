@@ -14,7 +14,14 @@ export default function ApiKeys() {
   const [showRefreshModal, setShowRefreshModal] = useState(false);
   const { t } = useTranslation();
 
-  const { apiKey, isLoading: apiKeyLoading, refresh, isRefreshing, error: apiKeyError, refetch } = useApiKey();
+  const {
+    apiKey,
+    isLoading: apiKeyLoading,
+    refresh,
+    isRefreshing,
+    error: apiKeyError,
+    refetch,
+  } = useApiKey();
 
   const copy = async (text: string, tag: string) => {
     try {
@@ -55,7 +62,10 @@ export default function ApiKeys() {
   return (
     <Stack gap={20} p={0}>
       <Text size="sm" c="dimmed">
-        {t("config.apiKeys.intro", "Use your API key to programmatically access Stirling PDF's processing capabilities.")}
+        {t(
+          "config.apiKeys.intro",
+          "Use your API key to programmatically access Stirling PDF's processing capabilities.",
+        )}
       </Text>
 
       <Paper
@@ -67,13 +77,21 @@ export default function ApiKeys() {
         }}
       >
         <Group gap="xs" wrap="nowrap" align="flex-start">
-          <LocalIcon icon="info-rounded" width={18} height={18} style={{ marginTop: 2, flexShrink: 0, opacity: 0.7 }} />
+          <LocalIcon
+            icon="info-rounded"
+            width={18}
+            height={18}
+            style={{ marginTop: 2, flexShrink: 0, opacity: 0.7 }}
+          />
           <Stack gap={8} style={{ flex: 1 }}>
             <Text size="sm" fw={500}>
               {t("config.apiKeys.docsTitle", "API Documentation")}
             </Text>
             <Text size="sm" c="dimmed">
-              {t("config.apiKeys.docsDescription", "Learn more about integrating with Stirling PDF:")}
+              {t(
+                "config.apiKeys.docsDescription",
+                "Learn more about integrating with Stirling PDF:",
+              )}
             </Text>
             <Stack gap={4}>
               <Text size="sm">
@@ -81,10 +99,18 @@ export default function ApiKeys() {
                   href="https://docs.stirlingpdf.com/API"
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
                 >
                   {t("config.apiKeys.docsLink", "API Documentation")}
-                  <LocalIcon icon="open-in-new-rounded" width={14} height={14} />
+                  <LocalIcon
+                    icon="open-in-new-rounded"
+                    width={14}
+                    height={14}
+                  />
                 </Anchor>
               </Text>
               <Text size="sm">
@@ -92,10 +118,18 @@ export default function ApiKeys() {
                   href="https://registry.scalar.com/@stirlingpdf/apis/stirling-pdf-processing-api/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
                 >
                   {t("config.apiKeys.schemaLink", "API Schema Reference")}
-                  <LocalIcon icon="open-in-new-rounded" width={14} height={14} />
+                  <LocalIcon
+                    icon="open-in-new-rounded"
+                    width={14}
+                    height={14}
+                  />
                 </Anchor>
               </Text>
             </Stack>
@@ -105,8 +139,16 @@ export default function ApiKeys() {
 
       {apiKeyError && (
         <Text size="sm" c="red.5">
-          {t("config.apiKeys.generateError", "We couldn't generate your API key.")}{" "}
-          <Anchor component="button" underline="always" onClick={refetch} c="red.4">
+          {t(
+            "config.apiKeys.generateError",
+            "We couldn't generate your API key.",
+          )}{" "}
+          <Anchor
+            component="button"
+            underline="always"
+            onClick={refetch}
+            c="red.4"
+          >
             {t("common.retry", "Retry")}
           </Anchor>
         </Text>
@@ -139,10 +181,17 @@ export default function ApiKeys() {
       )}
 
       <Text size="sm" c="dimmed" style={{ marginTop: -8 }}>
-        {t("config.apiKeys.usage", "Include this key in the X-API-KEY header with all API requests.")}
+        {t(
+          "config.apiKeys.usage",
+          "Include this key in the X-API-KEY header with all API requests.",
+        )}
       </Text>
 
-      <RefreshModal opened={showRefreshModal} onClose={() => setShowRefreshModal(false)} onConfirm={refreshKeys} />
+      <RefreshModal
+        opened={showRefreshModal}
+        onClose={() => setShowRefreshModal(false)}
+        onConfirm={refreshKeys}
+      />
     </Stack>
   );
 }

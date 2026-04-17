@@ -1,4 +1,7 @@
-import { BaseParametersHook, useBaseParameters } from "@app/hooks/tools/shared/useBaseParameters";
+import {
+  BaseParametersHook,
+  useBaseParameters,
+} from "@app/hooks/tools/shared/useBaseParameters";
 import type { CompareMode } from "@app/types/compare";
 import type { FileId } from "@app/types/file";
 
@@ -28,6 +31,10 @@ export const useCompareParameters = (): CompareParametersHook => {
     defaultParameters,
     endpointName: "compare",
     validateFn: (params) =>
-      Boolean(params.baseFileId && params.comparisonFileId && params.baseFileId !== params.comparisonFileId),
+      Boolean(
+        params.baseFileId &&
+        params.comparisonFileId &&
+        params.baseFileId !== params.comparisonFileId,
+      ),
   });
 };

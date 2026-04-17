@@ -20,7 +20,10 @@ import {
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import { teamService, Team } from "@app/services/teamService";
-import { userManagementService, User } from "@app/services/userManagementService";
+import {
+  userManagementService,
+  User,
+} from "@app/services/userManagementService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import TeamDetailsSection from "@app/components/shared/config/configSections/TeamDetailsSection";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
@@ -73,22 +76,31 @@ export default function TeamsSection() {
 
   const handleCreateTeam = async () => {
     if (!newTeamName.trim()) {
-      alert({ alertType: "error", title: t("workspace.teams.createTeam.nameRequired") });
+      alert({
+        alertType: "error",
+        title: t("workspace.teams.createTeam.nameRequired"),
+      });
       return;
     }
 
     try {
       setProcessing(true);
       await teamService.createTeam(newTeamName);
-      alert({ alertType: "success", title: t("workspace.teams.createTeam.success") });
+      alert({
+        alertType: "success",
+        title: t("workspace.teams.createTeam.success"),
+      });
       setNewTeamName("");
       setCreateModalOpened(false);
       await fetchTeams();
     } catch (error: unknown) {
       console.error("Failed to create team:", error);
       const errorMessage = isAxiosError(error)
-        ? error.response?.data?.message || error.response?.data?.error || error.message
-        : (error instanceof Error ? error.message : undefined) || t("workspace.teams.createTeam.error");
+        ? error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message
+        : (error instanceof Error ? error.message : undefined) ||
+          t("workspace.teams.createTeam.error");
       alert({ alertType: "error", title: errorMessage });
     } finally {
       setProcessing(false);
@@ -97,14 +109,20 @@ export default function TeamsSection() {
 
   const handleRenameTeam = async () => {
     if (!selectedTeam || !renameTeamName.trim()) {
-      alert({ alertType: "error", title: t("workspace.teams.renameTeam.nameRequired") });
+      alert({
+        alertType: "error",
+        title: t("workspace.teams.renameTeam.nameRequired"),
+      });
       return;
     }
 
     try {
       setProcessing(true);
       await teamService.renameTeam(selectedTeam.id, renameTeamName);
-      alert({ alertType: "success", title: t("workspace.teams.renameTeam.success") });
+      alert({
+        alertType: "success",
+        title: t("workspace.teams.renameTeam.success"),
+      });
       setRenameTeamName("");
       setSelectedTeam(null);
       setRenameModalOpened(false);
@@ -112,8 +130,11 @@ export default function TeamsSection() {
     } catch (error: unknown) {
       console.error("Failed to rename team:", error);
       const errorMessage = isAxiosError(error)
-        ? error.response?.data?.message || error.response?.data?.error || error.message
-        : (error instanceof Error ? error.message : undefined) || t("workspace.teams.renameTeam.error");
+        ? error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message
+        : (error instanceof Error ? error.message : undefined) ||
+          t("workspace.teams.renameTeam.error");
       alert({ alertType: "error", title: errorMessage });
     } finally {
       setProcessing(false);
@@ -122,7 +143,10 @@ export default function TeamsSection() {
 
   const handleDeleteTeam = async (team: Team) => {
     if (team.name === "Internal") {
-      alert({ alertType: "error", title: t("workspace.teams.cannotDeleteInternal") });
+      alert({
+        alertType: "error",
+        title: t("workspace.teams.cannotDeleteInternal"),
+      });
       return;
     }
 
@@ -132,20 +156,29 @@ export default function TeamsSection() {
 
     try {
       await teamService.deleteTeam(team.id);
-      alert({ alertType: "success", title: t("workspace.teams.deleteTeam.success") });
+      alert({
+        alertType: "success",
+        title: t("workspace.teams.deleteTeam.success"),
+      });
       await fetchTeams();
     } catch (error: unknown) {
       console.error("Failed to delete team:", error);
       const errorMessage = isAxiosError(error)
-        ? error.response?.data?.message || error.response?.data?.error || error.message
-        : (error instanceof Error ? error.message : undefined) || t("workspace.teams.deleteTeam.error");
+        ? error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message
+        : (error instanceof Error ? error.message : undefined) ||
+          t("workspace.teams.deleteTeam.error");
       alert({ alertType: "error", title: errorMessage });
     }
   };
 
   const openRenameModal = (team: Team) => {
     if (team.name === "Internal") {
-      alert({ alertType: "error", title: t("workspace.teams.cannotRenameInternal") });
+      alert({
+        alertType: "error",
+        title: t("workspace.teams.cannotRenameInternal"),
+      });
       return;
     }
     setSelectedTeam(team);
@@ -155,7 +188,10 @@ export default function TeamsSection() {
 
   const openAddMemberModal = async (team: Team) => {
     if (team.name === "Internal") {
-      alert({ alertType: "error", title: t("workspace.teams.cannotAddToInternal") });
+      alert({
+        alertType: "error",
+        title: t("workspace.teams.cannotAddToInternal"),
+      });
       return;
     }
     setSelectedTeam(team);
@@ -166,27 +202,42 @@ export default function TeamsSection() {
       setAddMemberModalOpened(true);
     } catch (error) {
       console.error("Failed to fetch users:", error);
-      alert({ alertType: "error", title: t("workspace.teams.addMemberToTeam.error") });
+      alert({
+        alertType: "error",
+        title: t("workspace.teams.addMemberToTeam.error"),
+      });
     }
   };
 
   const handleAddMember = async () => {
     if (!selectedTeam || !selectedUserId) {
-      alert({ alertType: "error", title: t("workspace.teams.addMemberToTeam.userRequired") });
+      alert({
+        alertType: "error",
+        title: t("workspace.teams.addMemberToTeam.userRequired"),
+      });
       return;
     }
 
     try {
       setProcessing(true);
-      await teamService.addUserToTeam(selectedTeam.id, parseInt(selectedUserId));
-      alert({ alertType: "success", title: t("workspace.teams.addMemberToTeam.success") });
+      await teamService.addUserToTeam(
+        selectedTeam.id,
+        parseInt(selectedUserId),
+      );
+      alert({
+        alertType: "success",
+        title: t("workspace.teams.addMemberToTeam.success"),
+      });
       setSelectedUserId("");
       setSelectedTeam(null);
       setAddMemberModalOpened(false);
       await fetchTeams();
     } catch (error) {
       console.error("Failed to add member to team:", error);
-      alert({ alertType: "error", title: t("workspace.teams.addMemberToTeam.error") });
+      alert({
+        alertType: "error",
+        title: t("workspace.teams.addMemberToTeam.error"),
+      });
     } finally {
       setProcessing(false);
     }
@@ -253,10 +304,22 @@ export default function TeamsSection() {
       >
         <Table.Thead>
           <Table.Tr style={{ backgroundColor: "var(--mantine-color-gray-0)" }}>
-            <Table.Th style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--mantine-color-gray-7)" }}>
+            <Table.Th
+              style={{
+                fontWeight: 600,
+                fontSize: "0.875rem",
+                color: "var(--mantine-color-gray-7)",
+              }}
+            >
               {t("workspace.teams.teamName")}
             </Table.Th>
-            <Table.Th style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--mantine-color-gray-7)" }}>
+            <Table.Th
+              style={{
+                fontWeight: 600,
+                fontSize: "0.875rem",
+                color: "var(--mantine-color-gray-7)",
+              }}
+            >
               {t("workspace.teams.totalMembers")}
             </Table.Th>
             <Table.Th style={{ width: 50 }}></Table.Th>
@@ -280,7 +343,11 @@ export default function TeamsSection() {
               >
                 <Table.Td>
                   <Group gap="xs">
-                    <Tooltip label={team.name} disabled={team.name.length <= 20} zIndex={Z_INDEX_OVER_CONFIG_MODAL}>
+                    <Tooltip
+                      label={team.name}
+                      disabled={team.name.length <= 20}
+                      zIndex={Z_INDEX_OVER_CONFIG_MODAL}
+                    >
                       <Text
                         size="sm"
                         fw={500}
@@ -309,27 +376,47 @@ export default function TeamsSection() {
                 <Table.Td onClick={(e) => e.stopPropagation()}>
                   <Menu position="bottom-end" withinPortal>
                     <Menu.Target>
-                      <ActionIcon variant="subtle" color="gray" disabled={!loginEnabled}>
-                        <LocalIcon icon="more-vert" width="1rem" height="1rem" />
+                      <ActionIcon
+                        variant="subtle"
+                        color="gray"
+                        disabled={!loginEnabled}
+                      >
+                        <LocalIcon
+                          icon="more-vert"
+                          width="1rem"
+                          height="1rem"
+                        />
                       </ActionIcon>
                     </Menu.Target>
-                    <Menu.Dropdown style={{ zIndex: Z_INDEX_OVER_CONFIG_MODAL }}>
+                    <Menu.Dropdown
+                      style={{ zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+                    >
                       <Menu.Item
-                        leftSection={<LocalIcon icon="visibility" width="1rem" height="1rem" />}
+                        leftSection={
+                          <LocalIcon
+                            icon="visibility"
+                            width="1rem"
+                            height="1rem"
+                          />
+                        }
                         onClick={() => setViewingTeamId(team.id)}
                         disabled={!loginEnabled}
                       >
                         {t("workspace.teams.viewTeam", "View Team")}
                       </Menu.Item>
                       <Menu.Item
-                        leftSection={<LocalIcon icon="group" width="1rem" height="1rem" />}
+                        leftSection={
+                          <LocalIcon icon="group" width="1rem" height="1rem" />
+                        }
                         onClick={() => openAddMemberModal(team)}
                         disabled={!loginEnabled}
                       >
                         {t("workspace.teams.addMember")}
                       </Menu.Item>
                       <Menu.Item
-                        leftSection={<LocalIcon icon="edit" width="1rem" height="1rem" />}
+                        leftSection={
+                          <LocalIcon icon="edit" width="1rem" height="1rem" />
+                        }
                         onClick={() => openRenameModal(team)}
                         disabled={!loginEnabled}
                       >
@@ -338,7 +425,9 @@ export default function TeamsSection() {
                       <Menu.Divider />
                       <Menu.Item
                         color="red"
-                        leftSection={<LocalIcon icon="delete" width="1rem" height="1rem" />}
+                        leftSection={
+                          <LocalIcon icon="delete" width="1rem" height="1rem" />
+                        }
                         onClick={() => handleDeleteTeam(team)}
                         disabled={!loginEnabled || team.name === "Internal"}
                       >
@@ -377,7 +466,12 @@ export default function TeamsSection() {
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
-              <LocalIcon icon="group-add" width="3rem" height="3rem" style={{ color: "var(--mantine-color-gray-6)" }} />
+              <LocalIcon
+                icon="group-add"
+                width="3rem"
+                height="3rem"
+                style={{ color: "var(--mantine-color-gray-6)" }}
+              />
               <Text size="xl" fw={600} ta="center">
                 {t("workspace.teams.createTeam.title")}
               </Text>
@@ -391,7 +485,13 @@ export default function TeamsSection() {
               required
             />
 
-            <Button onClick={handleCreateTeam} loading={processing} fullWidth size="md" mt="md">
+            <Button
+              onClick={handleCreateTeam}
+              loading={processing}
+              fullWidth
+              size="md"
+              mt="md"
+            >
               {t("workspace.teams.createTeam.submit")}
             </Button>
           </Stack>
@@ -422,24 +522,38 @@ export default function TeamsSection() {
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
-              <LocalIcon icon="edit" width="3rem" height="3rem" style={{ color: "var(--mantine-color-gray-6)" }} />
+              <LocalIcon
+                icon="edit"
+                width="3rem"
+                height="3rem"
+                style={{ color: "var(--mantine-color-gray-6)" }}
+              />
               <Text size="xl" fw={600} ta="center">
                 {t("workspace.teams.renameTeam.title")}
               </Text>
               <Text size="sm" c="dimmed" ta="center">
-                {t("workspace.teams.renameTeam.renaming")} <strong>{selectedTeam?.name}</strong>
+                {t("workspace.teams.renameTeam.renaming")}{" "}
+                <strong>{selectedTeam?.name}</strong>
               </Text>
             </Stack>
 
             <TextInput
               label={t("workspace.teams.renameTeam.newTeamName")}
-              placeholder={t("workspace.teams.renameTeam.newTeamNamePlaceholder")}
+              placeholder={t(
+                "workspace.teams.renameTeam.newTeamNamePlaceholder",
+              )}
               value={renameTeamName}
               onChange={(e) => setRenameTeamName(e.currentTarget.value)}
               required
             />
 
-            <Button onClick={handleRenameTeam} loading={processing} fullWidth size="md" mt="md">
+            <Button
+              onClick={handleRenameTeam}
+              loading={processing}
+              fullWidth
+              size="md"
+              mt="md"
+            >
               {t("workspace.teams.renameTeam.submit")}
             </Button>
           </Stack>
@@ -470,18 +584,26 @@ export default function TeamsSection() {
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
-              <LocalIcon icon="person-add" width="3rem" height="3rem" style={{ color: "var(--mantine-color-gray-6)" }} />
+              <LocalIcon
+                icon="person-add"
+                width="3rem"
+                height="3rem"
+                style={{ color: "var(--mantine-color-gray-6)" }}
+              />
               <Text size="xl" fw={600} ta="center">
                 {t("workspace.teams.addMemberToTeam.title")}
               </Text>
               <Text size="sm" c="dimmed" ta="center">
-                {t("workspace.teams.addMemberToTeam.addingTo")} <strong>{selectedTeam?.name}</strong>
+                {t("workspace.teams.addMemberToTeam.addingTo")}{" "}
+                <strong>{selectedTeam?.name}</strong>
               </Text>
             </Stack>
 
             <Select
               label={t("workspace.teams.addMemberToTeam.selectUser")}
-              placeholder={t("workspace.teams.addMemberToTeam.selectUserPlaceholder")}
+              placeholder={t(
+                "workspace.teams.addMemberToTeam.selectUserPlaceholder",
+              )}
               data={availableUsers.map((user) => ({
                 value: user.id.toString(),
                 label: `${user.username}${user.team ? ` (${t("workspace.teams.addMemberToTeam.currentlyIn")} ${user.team.name})` : ""}`,
@@ -489,16 +611,27 @@ export default function TeamsSection() {
               value={selectedUserId}
               onChange={(value) => setSelectedUserId(value || "")}
               searchable
-              comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
+              comboboxProps={{
+                withinPortal: true,
+                zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+              }}
             />
 
-            {selectedUserId && availableUsers.find((u) => u.id.toString() === selectedUserId)?.team && (
-              <Text size="xs" c="orange">
-                {t("workspace.teams.addMemberToTeam.willBeMoved")}
-              </Text>
-            )}
+            {selectedUserId &&
+              availableUsers.find((u) => u.id.toString() === selectedUserId)
+                ?.team && (
+                <Text size="xs" c="orange">
+                  {t("workspace.teams.addMemberToTeam.willBeMoved")}
+                </Text>
+              )}
 
-            <Button onClick={handleAddMember} loading={processing} fullWidth size="md" mt="md">
+            <Button
+              onClick={handleAddMember}
+              loading={processing}
+              fullWidth
+              size="md"
+              mt="md"
+            >
               {t("workspace.teams.addMemberToTeam.submit")}
             </Button>
           </Stack>

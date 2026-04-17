@@ -6,7 +6,10 @@ export const useReplaceColorTips = (): TooltipContent => {
 
   return {
     header: {
-      title: t("replaceColor.tooltip.header.title", "Replace & Invert Colour Settings Overview"),
+      title: t(
+        "replaceColor.tooltip.header.title",
+        "Replace & Invert Colour Settings Overview",
+      ),
     },
     tips: [
       {
@@ -23,10 +26,22 @@ export const useReplaceColorTips = (): TooltipContent => {
           "Apply predefined high contrast colour combinations designed for better readability and accessibility compliance.",
         ),
         bullets: [
-          t("replaceColor.tooltip.highContrast.bullet1", "White text on black background - Classic dark mode"),
-          t("replaceColor.tooltip.highContrast.bullet2", "Black text on white background - Standard high contrast"),
-          t("replaceColor.tooltip.highContrast.bullet3", "Yellow text on black background - High visibility option"),
-          t("replaceColor.tooltip.highContrast.bullet4", "Green text on black background - Alternative high contrast"),
+          t(
+            "replaceColor.tooltip.highContrast.bullet1",
+            "White text on black background - Classic dark mode",
+          ),
+          t(
+            "replaceColor.tooltip.highContrast.bullet2",
+            "Black text on white background - Standard high contrast",
+          ),
+          t(
+            "replaceColor.tooltip.highContrast.bullet3",
+            "Yellow text on black background - High visibility option",
+          ),
+          t(
+            "replaceColor.tooltip.highContrast.bullet4",
+            "Green text on black background - Alternative high contrast",
+          ),
         ],
       },
       {
@@ -43,8 +58,14 @@ export const useReplaceColorTips = (): TooltipContent => {
           "Define your own text and background colours using the colour pickers. Perfect for creating branded documents or specific accessibility requirements.",
         ),
         bullets: [
-          t("replaceColor.tooltip.custom.bullet1", "Text colour - Choose the colour for text elements"),
-          t("replaceColor.tooltip.custom.bullet2", "Background colour - Set the background colour for the document"),
+          t(
+            "replaceColor.tooltip.custom.bullet1",
+            "Text colour - Choose the colour for text elements",
+          ),
+          t(
+            "replaceColor.tooltip.custom.bullet2",
+            "Background colour - Set the background colour for the document",
+          ),
         ],
       },
       {

@@ -34,7 +34,9 @@ export function useRainbowTheme(): RainbowThemeHook {
 
   const showRainbowNotification = () => {
     // Remove any existing notification
-    const existingNotification = document.getElementById("rainbow-notification");
+    const existingNotification = document.getElementById(
+      "rainbow-notification",
+    );
     if (existingNotification) {
       existingNotification.remove();
     }
@@ -81,7 +83,9 @@ export function useRainbowTheme(): RainbowThemeHook {
 
   const showExitNotification = () => {
     // Remove any existing notification
-    const existingNotification = document.getElementById("rainbow-exit-notification");
+    const existingNotification = document.getElementById(
+      "rainbow-exit-notification",
+    );
     if (existingNotification) {
       existingNotification.remove();
     }
@@ -150,14 +154,20 @@ export function useRainbowTheme(): RainbowThemeHook {
     // Easter egg: Activate rainbow mode after 10 rapid toggles
     if (allowRainbowMode && toggleCount.current >= 10) {
       updatePreference("theme", "rainbow");
-      console.log("🌈 RAINBOW MODE ACTIVATED! 🌈 You found the secret easter egg!");
-      console.log("🌈 Button will be disabled for 3 seconds, then click once to exit!");
+      console.log(
+        "🌈 RAINBOW MODE ACTIVATED! 🌈 You found the secret easter egg!",
+      );
+      console.log(
+        "🌈 Button will be disabled for 3 seconds, then click once to exit!",
+      );
 
       // Disable toggle for 3 seconds
       isToggleDisabled.current = true;
       setTimeout(() => {
         isToggleDisabled.current = false;
-        console.log("🌈 Theme toggle re-enabled! Click once to exit rainbow mode.");
+        console.log(
+          "🌈 Theme toggle re-enabled! Click once to exit rainbow mode.",
+        );
       }, 3000);
 
       // Reset counter

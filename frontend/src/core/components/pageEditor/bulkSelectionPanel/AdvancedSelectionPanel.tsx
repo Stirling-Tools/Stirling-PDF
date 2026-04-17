@@ -98,7 +98,10 @@ const AdvancedSelectionPanel = ({
             <Flex direction="row" mb="xs" wrap="wrap">
               <SelectPages
                 title={t("bulkSelection.firstNPages.title", "First N Pages")}
-                placeholder={t("bulkSelection.firstNPages.placeholder", "Number of pages")}
+                placeholder={t(
+                  "bulkSelection.firstNPages.placeholder",
+                  "Number of pages",
+                )}
                 onApply={handleFirstNApply}
                 maxPages={maxPages}
                 validationFn={validatePositiveNumber}
@@ -113,12 +116,18 @@ const AdvancedSelectionPanel = ({
                 isRange={true}
                 rangeEndValue={rangeEnd}
                 onRangeEndChange={handleRangeEndChange}
-                rangeEndPlaceholder={t("bulkSelection.range.toPlaceholder", "To")}
+                rangeEndPlaceholder={t(
+                  "bulkSelection.range.toPlaceholder",
+                  "To",
+                )}
               />
 
               <SelectPages
                 title={t("bulkSelection.lastNPages.title", "Last N Pages")}
-                placeholder={t("bulkSelection.lastNPages.placeholder", "Number of pages")}
+                placeholder={t(
+                  "bulkSelection.lastNPages.placeholder",
+                  "Number of pages",
+                )}
                 onApply={handleLastNApply}
                 maxPages={maxPages}
                 validationFn={validatePositiveNumber}
@@ -126,14 +135,20 @@ const AdvancedSelectionPanel = ({
 
               <SelectPages
                 title={t("bulkSelection.everyNthPage.title", "Every Nth Page")}
-                placeholder={t("bulkSelection.everyNthPage.placeholder", "Step size")}
+                placeholder={t(
+                  "bulkSelection.everyNthPage.placeholder",
+                  "Step size",
+                )}
                 onApply={handleEveryNthApply}
                 maxPages={maxPages}
               />
             </Flex>
 
             {/* Operators row at bottom */}
-            <OperatorsSection csvInput={csvInput} onInsertOperator={insertOperator} />
+            <OperatorsSection
+              csvInput={csvInput}
+              onInsertOperator={insertOperator}
+            />
           </div>
         </div>
       )}

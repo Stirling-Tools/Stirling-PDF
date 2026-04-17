@@ -40,12 +40,16 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
   const handleEmailPasswordSubmit = async () => {
     // Validation
     if (!email.trim()) {
-      setValidationError(t("setup.login.error.emptyEmail", "Please enter your email"));
+      setValidationError(
+        t("setup.login.error.emptyEmail", "Please enter your email"),
+      );
       return;
     }
 
     if (!password) {
-      setValidationError(t("setup.login.error.emptyPassword", "Please enter your password"));
+      setValidationError(
+        t("setup.login.error.emptyPassword", "Please enter your password"),
+      );
       return;
     }
 
@@ -61,7 +65,10 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
 
   return (
     <>
-      <LoginHeader title={t("setup.saas.title", "Sign in to Stirling Cloud")} onClose={onClose} />
+      <LoginHeader
+        title={t("setup.saas.title", "Sign in to Stirling Cloud")}
+        onClose={onClose}
+      />
 
       <ErrorMessage error={displayError} />
 
@@ -96,7 +103,10 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
         submitButtonText={t("setup.login.submit", "Login")}
       />
 
-      <div className="navigation-link-container" style={{ marginTop: "0.5rem", textAlign: "right" }}>
+      <div
+        className="navigation-link-container"
+        style={{ marginTop: "0.5rem", textAlign: "right" }}
+      >
         <button
           type="button"
           onClick={() => {
@@ -113,8 +123,16 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
       <SelfHostedLink onClick={onSelfHostedClick} disabled={loading} />
 
       {onSkipSignIn && (
-        <div className="navigation-link-container" style={{ marginTop: "0.5rem", textAlign: "center" }}>
-          <button type="button" onClick={onSkipSignIn} className="navigation-link-button" disabled={loading}>
+        <div
+          className="navigation-link-container"
+          style={{ marginTop: "0.5rem", textAlign: "center" }}
+        >
+          <button
+            type="button"
+            onClick={onSkipSignIn}
+            className="navigation-link-button"
+            disabled={loading}
+          >
             {t("setup.login.skipSignIn", "Continue without signing in")}
           </button>
         </div>

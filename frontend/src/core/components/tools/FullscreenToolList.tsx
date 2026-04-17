@@ -1,7 +1,12 @@
 import { useMemo } from "react";
 import { Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ToolRegistryEntry, getSubcategoryLabel, getSubcategoryColor, getSubcategoryIcon } from "@app/data/toolsTaxonomy";
+import {
+  ToolRegistryEntry,
+  getSubcategoryLabel,
+  getSubcategoryColor,
+  getSubcategoryIcon,
+} from "@app/data/toolsTaxonomy";
 import { ToolId } from "@app/types/toolId";
 import { useToolSections } from "@app/hooks/useToolSections";
 import NoToolsFound from "@app/components/tools/shared/NoToolsFound";
@@ -15,7 +20,10 @@ import CompactToolItem from "@app/components/tools/fullscreen/CompactToolItem";
 import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
 
 interface FullscreenToolListProps {
-  filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>;
+  filteredTools: Array<{
+    item: [ToolId, ToolRegistryEntry];
+    matchedText?: string;
+  }>;
   searchQuery: string;
   showDescriptions: boolean;
   selectedToolKey: string | null;
@@ -34,22 +42,34 @@ const FullscreenToolList = ({
   const { t } = useTranslation();
   const { toolRegistry, favoriteTools } = useToolWorkflow();
 
-  const { sections, searchGroups } = useToolSections(filteredTools, searchQuery);
+  const { sections, searchGroups } = useToolSections(
+    filteredTools,
+    searchQuery,
+  );
 
-  const tooltipPortalTarget = typeof document !== "undefined" ? document.body : undefined;
+  const tooltipPortalTarget =
+    typeof document !== "undefined" ? document.body : undefined;
 
   const favoriteToolItems = useFavoriteToolItems(favoriteTools, toolRegistry);
 
-  const quickSection = useMemo(() => sections.find((section) => section.key === "quick"), [sections]);
+  const quickSection = useMemo(
+    () => sections.find((section) => section.key === "quick"),
+    [sections],
+  );
   const recommendedItems = useMemo(() => {
-    if (!quickSection) return [] as Array<{ id: string; tool: ToolRegistryEntry }>;
+    if (!quickSection)
+      return [] as Array<{ id: string; tool: ToolRegistryEntry }>;
     const items: Array<{ id: string; tool: ToolRegistryEntry }> = [];
-    quickSection.subcategories.forEach((sc) => sc.tools.forEach((t) => items.push(t)));
+    quickSection.subcategories.forEach((sc) =>
+      sc.tools.forEach((t) => items.push(t)),
+    );
     return items;
   }, [quickSection]);
 
   // Show recommended/favorites section only when not searching
-  const showRecentFavorites = searchQuery.trim().length === 0 && (recommendedItems.length > 0 || favoriteToolItems.length > 0);
+  const showRecentFavorites =
+    searchQuery.trim().length === 0 &&
+    (recommendedItems.length > 0 || favoriteToolItems.length > 0);
 
   const subcategoryGroups = useMemo(() => {
     if (searchQuery.trim().length > 0) {
@@ -64,7 +84,10 @@ const FullscreenToolList = ({
       <div className="tool-panel__fullscreen-empty">
         <NoToolsFound />
         <Text size="sm" c="dimmed">
-          {t("toolPanel.fullscreen.noResults", "Try adjusting your search or toggle descriptions to find what you need.")}
+          {t(
+            "toolPanel.fullscreen.noResults",
+            "Try adjusting your search or toggle descriptions to find what you need.",
+          )}
         </Text>
       </div>
     );
@@ -79,7 +102,8 @@ const FullscreenToolList = ({
     const isSelected = selectedToolKey === id;
 
     const handleClick = () => {
-      if (!tool.component && !tool.link && id !== "read" && id !== "multiTool") return;
+      if (!tool.component && !tool.link && id !== "read" && id !== "multiTool")
+        return;
       if (tool.link) {
         window.open(tool.link, "_blank", "noopener,noreferrer");
         return;
@@ -88,7 +112,15 @@ const FullscreenToolList = ({
     };
 
     if (showDescriptions) {
-      return <DetailedToolItem key={id} id={id} tool={tool} isSelected={isSelected} onClick={handleClick} />;
+      return (
+        <DetailedToolItem
+          key={id}
+          id={id}
+          tool={tool}
+          isSelected={isSelected}
+          onClick={handleClick}
+        />
+      );
     }
 
     return (
@@ -129,17 +161,25 @@ const FullscreenToolList = ({
                     {t("toolPanel.fullscreen.favorites", "Favourites")}
                   </Text>
                 </div>
-                <Badge size="sm" variant="colored" color="var(--special-color-favorites)">
+                <Badge
+                  size="sm"
+                  variant="colored"
+                  color="var(--special-color-favorites)"
+                >
                   {favoriteToolItems.length}
                 </Badge>
               </header>
               {showDescriptions ? (
                 <div className="tool-panel__fullscreen-grid tool-panel__fullscreen-grid--detailed">
-                  {favoriteToolItems.map((item) => item && renderToolItem(item.id, item.tool))}
+                  {favoriteToolItems.map(
+                    (item) => item && renderToolItem(item.id, item.tool),
+                  )}
                 </div>
               ) : (
                 <div className="tool-panel__fullscreen-list">
-                  {favoriteToolItems.map((item) => item && renderToolItem(item.id, item.tool))}
+                  {favoriteToolItems.map(
+                    (item) => item && renderToolItem(item.id, item.tool),
+                  )}
                 </div>
               )}
             </section>
@@ -167,17 +207,25 @@ const FullscreenToolList = ({
                     {t("toolPanel.fullscreen.recommended", "Recommended")}
                   </Text>
                 </div>
-                <Badge size="sm" variant="colored" color="var(--special-color-recommended)">
+                <Badge
+                  size="sm"
+                  variant="colored"
+                  color="var(--special-color-recommended)"
+                >
                   {recommendedItems.length}
                 </Badge>
               </header>
               {showDescriptions ? (
                 <div className="tool-panel__fullscreen-grid tool-panel__fullscreen-grid--detailed">
-                  {recommendedItems.map((item: any) => renderToolItem(item.id, item.tool))}
+                  {recommendedItems.map((item: any) =>
+                    renderToolItem(item.id, item.tool),
+                  )}
                 </div>
               ) : (
                 <div className="tool-panel__fullscreen-list">
-                  {recommendedItems.map((item: any) => renderToolItem(item.id, item.tool))}
+                  {recommendedItems.map((item: any) =>
+                    renderToolItem(item.id, item.tool),
+                  )}
                 </div>
               )}
             </section>
@@ -226,11 +274,15 @@ const FullscreenToolList = ({
 
             {showDescriptions ? (
               <div className="tool-panel__fullscreen-grid tool-panel__fullscreen-grid--detailed">
-                {tools.map(({ id, tool }) => renderToolItem(id as ToolId, tool))}
+                {tools.map(({ id, tool }) =>
+                  renderToolItem(id as ToolId, tool),
+                )}
               </div>
             ) : (
               <div className="tool-panel__fullscreen-list">
-                {tools.map(({ id, tool }) => renderToolItem(id as ToolId, tool))}
+                {tools.map(({ id, tool }) =>
+                  renderToolItem(id as ToolId, tool),
+                )}
               </div>
             )}
           </section>

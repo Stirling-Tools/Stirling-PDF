@@ -15,7 +15,10 @@ export const useDocumentMeta = (meta: MetaOptions) => {
 
   useEffect(() => {
     const originalTitle = document.title;
-    const originalDescription = document.querySelector('meta[name="description"]')?.getAttribute("content") || "";
+    const originalDescription =
+      document
+        .querySelector('meta[name="description"]')
+        ?.getAttribute("content") || "";
 
     // Store original OpenGraph values for cleanup
     const ogProperties = [
@@ -43,7 +46,9 @@ export const useDocumentMeta = (meta: MetaOptions) => {
 
     // Update or create meta tags
     const updateOrCreateMeta = (name: string, content: string) => {
-      let metaElement = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement;
+      let metaElement = document.querySelector(
+        `meta[name="${name}"]`,
+      ) as HTMLMetaElement;
       if (!metaElement) {
         metaElement = document.createElement("meta");
         metaElement.name = name;
@@ -53,7 +58,9 @@ export const useDocumentMeta = (meta: MetaOptions) => {
     };
 
     const updateOrCreateProperty = (property: string, content: string) => {
-      let metaElement = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
+      let metaElement = document.querySelector(
+        `meta[property="${property}"]`,
+      ) as HTMLMetaElement;
       if (!metaElement) {
         metaElement = document.createElement("meta");
         metaElement.setAttribute("property", property);
@@ -97,7 +104,9 @@ export const useDocumentMeta = (meta: MetaOptions) => {
 
       // Restore or remove OpenGraph tags
       originalOgValues.forEach((originalValue, property) => {
-        const element = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
+        const element = document.querySelector(
+          `meta[property="${property}"]`,
+        ) as HTMLMetaElement;
         if (element) {
           if (originalValue !== null) {
             element.content = originalValue;
@@ -107,5 +116,13 @@ export const useDocumentMeta = (meta: MetaOptions) => {
         }
       });
     };
-  }, [meta.title, meta.description, meta.ogTitle, meta.ogDescription, meta.ogImage, meta.ogUrl, i18n.language]);
+  }, [
+    meta.title,
+    meta.description,
+    meta.ogTitle,
+    meta.ogDescription,
+    meta.ogImage,
+    meta.ogUrl,
+    i18n.language,
+  ]);
 };

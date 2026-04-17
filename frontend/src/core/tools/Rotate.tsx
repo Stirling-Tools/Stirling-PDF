@@ -11,7 +11,12 @@ const Rotate = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const rotateTips = useRotateTips();
 
-  const base = useBaseTool("rotate", useRotateParameters, useRotateOperation, props);
+  const base = useBaseTool(
+    "rotate",
+    useRotateParameters,
+    useRotateOperation,
+    props,
+  );
 
   return createToolFlow({
     files: {
@@ -22,9 +27,16 @@ const Rotate = (props: BaseToolProps) => {
       {
         title: "Settings",
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: rotateTips,
-        content: <RotateSettings parameters={base.params} disabled={base.endpointLoading} />,
+        content: (
+          <RotateSettings
+            parameters={base.params}
+            disabled={base.endpointLoading}
+          />
+        ),
       },
     ],
     executeButton: {

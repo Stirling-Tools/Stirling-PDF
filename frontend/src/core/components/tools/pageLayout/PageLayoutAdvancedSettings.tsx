@@ -9,7 +9,10 @@ export default function PageLayoutAdvancedSettings({
   disabled,
 }: {
   parameters: PageLayoutParameters;
-  onParameterChange: <K extends keyof PageLayoutParameters>(key: K, value: PageLayoutParameters[K]) => void;
+  onParameterChange: <K extends keyof PageLayoutParameters>(
+    key: K,
+    value: PageLayoutParameters[K],
+  ) => void;
   disabled?: boolean;
 }) {
   const { t } = useTranslation();
@@ -18,8 +21,14 @@ export default function PageLayoutAdvancedSettings({
       <Select
         label={t("pageLayout.orientation.label", "Orientation:")}
         data={[
-          { value: "PORTRAIT", label: t("pageLayout.orientation.portrait", "Portrait") },
-          { value: "LANDSCAPE", label: t("pageLayout.orientation.landscape", "Landscape") },
+          {
+            value: "PORTRAIT",
+            label: t("pageLayout.orientation.portrait", "Portrait"),
+          },
+          {
+            value: "LANDSCAPE",
+            label: t("pageLayout.orientation.landscape", "Landscape"),
+          },
         ]}
         value={String(parameters.orientation)}
         onChange={(v) => {
@@ -28,7 +37,10 @@ export default function PageLayoutAdvancedSettings({
           }
         }}
         disabled={disabled}
-        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+        comboboxProps={{
+          withinPortal: true,
+          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+        }}
       />
 
       <Divider />
@@ -36,8 +48,14 @@ export default function PageLayoutAdvancedSettings({
       <Select
         label={t("pageLayout.arrangement.label", "Page arrangement:")}
         data={[
-          { value: "BY_ROWS", label: t("pageLayout.arrangement.byRows", "By Rows") },
-          { value: "BY_COLUMNS", label: t("pageLayout.arrangement.byColumns", "By Columns") },
+          {
+            value: "BY_ROWS",
+            label: t("pageLayout.arrangement.byRows", "By Rows"),
+          },
+          {
+            value: "BY_COLUMNS",
+            label: t("pageLayout.arrangement.byColumns", "By Columns"),
+          },
         ]}
         value={String(parameters.arrangement)}
         onChange={(v) => {
@@ -46,14 +64,23 @@ export default function PageLayoutAdvancedSettings({
           }
         }}
         disabled={disabled}
-        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+        comboboxProps={{
+          withinPortal: true,
+          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+        }}
       />
 
       <Select
         label={t("pageLayout.readingDirection.label", "Reading Direction:")}
         data={[
-          { value: "LTR", label: t("pageLayout.readingDirection.ltr", "Left to Right") },
-          { value: "RTL", label: t("pageLayout.readingDirection.rtl", "Right to Left") },
+          {
+            value: "LTR",
+            label: t("pageLayout.readingDirection.ltr", "Left to Right"),
+          },
+          {
+            value: "RTL",
+            label: t("pageLayout.readingDirection.rtl", "Right to Left"),
+          },
         ]}
         value={String(parameters.readingDirection)}
         onChange={(v) => {
@@ -62,7 +89,10 @@ export default function PageLayoutAdvancedSettings({
           }
         }}
         disabled={disabled}
-        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+        comboboxProps={{
+          withinPortal: true,
+          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+        }}
       />
     </Stack>
   );

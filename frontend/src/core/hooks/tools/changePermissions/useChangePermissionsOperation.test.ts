@@ -35,7 +35,8 @@ describe("useChangePermissionsOperation", () => {
   const mockUseToolOperation = vi.mocked(useToolOperation);
 
   const getToolConfig = () =>
-    mockUseToolOperation.mock.calls[0][0] as SingleFileToolOperationConfig<ChangePermissionsParameters>;
+    mockUseToolOperation.mock
+      .calls[0][0] as SingleFileToolOperationConfig<ChangePermissionsParameters>;
 
   const mockToolOperationReturn: ToolOperationHook<unknown> = {
     files: [],
@@ -90,32 +91,48 @@ describe("useChangePermissionsOperation", () => {
       preventPrinting: true,
       preventPrintingFaithful: true,
     },
-  ])("should create form data correctly", (testParameters: ChangePermissionsParameters) => {
-    renderHook(() => useChangePermissionsOperation());
+  ])(
+    "should create form data correctly",
+    (testParameters: ChangePermissionsParameters) => {
+      renderHook(() => useChangePermissionsOperation());
 
-    const callArgs = getToolConfig();
-    const buildFormData = callArgs.buildFormData;
+      const callArgs = getToolConfig();
+      const buildFormData = callArgs.buildFormData;
 
-    const testFile = new File(["test content"], "test.pdf", { type: "application/pdf" });
-    const formData = buildFormData(testParameters, testFile);
+      const testFile = new File(["test content"], "test.pdf", {
+        type: "application/pdf",
+      });
+      const formData = buildFormData(testParameters, testFile);
 
-    // Verify the form data contains the file
-    expect(formData.get("fileInput")).toBe(testFile);
+      // Verify the form data contains the file
+      expect(formData.get("fileInput")).toBe(testFile);
 
-    (Object.keys(testParameters) as Array<keyof ChangePermissionsParameters>).forEach((key) => {
-      expect(formData.get(key), `Parameter ${key} should be set correctly`).toBe(testParameters[key].toString());
-    });
-  });
+      (
+        Object.keys(testParameters) as Array<keyof ChangePermissionsParameters>
+      ).forEach((key) => {
+        expect(
+          formData.get(key),
+          `Parameter ${key} should be set correctly`,
+        ).toBe(testParameters[key].toString());
+      });
+    },
+  );
 
   test("should use correct translation for error messages", () => {
     renderHook(() => useChangePermissionsOperation());
 
-    expect(mockT).toHaveBeenCalledWith("changePermissions.error.failed", "An error occurred while changing PDF permissions.");
+    expect(mockT).toHaveBeenCalledWith(
+      "changePermissions.error.failed",
+      "An error occurred while changing PDF permissions.",
+    );
   });
 
   test.each([
     { property: "toolType" as const, expectedValue: ToolType.singleFile },
-    { property: "endpoint" as const, expectedValue: "/api/v1/security/add-password" },
+    {
+      property: "endpoint" as const,
+      expectedValue: "/api/v1/security/add-password",
+    },
     { property: "operationType" as const, expectedValue: "changePermissions" },
   ])("should configure $property correctly", ({ property, expectedValue }) => {
     renderHook(() => useChangePermissionsOperation());

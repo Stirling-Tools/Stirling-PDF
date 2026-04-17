@@ -47,7 +47,12 @@ const CardSelector = <T, K extends CardOption<T>>({
       {options.map((option) => {
         const tips = getTooltips(option);
         return (
-          <Tooltip key={option.value as string} sidebarTooltip tips={tips} disabled={tips.length === 0}>
+          <Tooltip
+            key={option.value as string}
+            sidebarTooltip
+            tips={tips}
+            disabled={tips.length === 0}
+          >
             <Card
               radius="md"
               w="100%"
@@ -63,14 +68,17 @@ const CardSelector = <T, K extends CardOption<T>>({
               }}
               onMouseEnter={(e) => {
                 if (!disabled) {
-                  e.currentTarget.style.backgroundColor = "var(--mantine-color-gray-3)";
+                  e.currentTarget.style.backgroundColor =
+                    "var(--mantine-color-gray-3)";
                   e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+                  e.currentTarget.style.boxShadow =
+                    "0 4px 8px rgba(0, 0, 0, 0.1)";
                 }
               }}
               onMouseLeave={(e) => {
                 if (!disabled) {
-                  e.currentTarget.style.backgroundColor = "var(--mantine-color-gray-2)";
+                  e.currentTarget.style.backgroundColor =
+                    "var(--mantine-color-gray-2)";
                   e.currentTarget.style.transform = "translateY(0px)";
                   e.currentTarget.style.boxShadow = "none";
                 }
@@ -81,7 +89,13 @@ const CardSelector = <T, K extends CardOption<T>>({
                 <Text size="sm" c="dimmed" ta="center" fw={350}>
                   {t(option.prefixKey, "Prefix")}
                 </Text>
-                <Text fw={600} size="sm" c={undefined} ta="center" style={{ marginLeft: "0.25rem" }}>
+                <Text
+                  fw={600}
+                  size="sm"
+                  c={undefined}
+                  ta="center"
+                  style={{ marginLeft: "0.25rem" }}
+                >
                   {t(option.nameKey, "Option Name")}
                 </Text>
               </Flex>

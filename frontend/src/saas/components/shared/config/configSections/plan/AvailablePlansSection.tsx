@@ -16,22 +16,45 @@ interface AvailablePlansSectionProps {
   loginEnabled?: boolean;
 }
 
-const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({ plans, currentPlan, onUpgradeClick }) => {
+const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
+  plans,
+  currentPlan,
+  onUpgradeClick,
+}) => {
   const { t } = useTranslation();
   const [showComparison, setShowComparison] = useState(false);
 
-  const isUserProOrAbove = currentPlan?.id === "pro" || currentPlan?.id === "enterprise";
+  const isUserProOrAbove =
+    currentPlan?.id === "pro" || currentPlan?.id === "enterprise";
 
   return (
     <div>
-      <h3 style={{ margin: 0, color: "var(--mantine-color-text)", fontSize: "1rem" }}>
+      <h3
+        style={{
+          margin: 0,
+          color: "var(--mantine-color-text)",
+          fontSize: "1rem",
+        }}
+      >
         {t("plan.availablePlans.title", "Available Plans")}
       </h3>
-      <p style={{ margin: "0.25rem 0 1rem 0", color: "var(--mantine-color-dimmed)", fontSize: "0.875rem" }}>
-        {t("plan.availablePlans.subtitle", "Choose the plan that fits your needs")}
+      <p
+        style={{
+          margin: "0.25rem 0 1rem 0",
+          color: "var(--mantine-color-dimmed)",
+          fontSize: "0.875rem",
+        }}
+      >
+        {t(
+          "plan.availablePlans.subtitle",
+          "Choose the plan that fits your needs",
+        )}
       </p>
 
-      <div className="flex h-[20rem] mb-4 " style={{ gap: "1rem", overflowX: "auto" }}>
+      <div
+        className="flex h-[20rem] mb-4 "
+        style={{ gap: "1rem", overflowX: "auto" }}
+      >
         {plans.map((plan) => (
           <PlanCard
             key={plan.id}
@@ -44,7 +67,10 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({ plans, cu
       </div>
 
       <div className="text-center">
-        <Button variant="subtle" onClick={() => setShowComparison(!showComparison)}>
+        <Button
+          variant="subtle"
+          onClick={() => setShowComparison(!showComparison)}
+        >
           {showComparison
             ? t("plan.hideComparison", "Hide Feature Comparison")
             : t("plan.showComparison", "Compare All Features")}
@@ -61,9 +87,14 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({ plans, cu
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-2">{t("plan.feature.title", "Feature")}</th>
+                  <th className="text-left p-2">
+                    {t("plan.feature.title", "Feature")}
+                  </th>
                   {plans.map((plan) => (
-                    <th key={plan.id} className="text-center p-2 min-w-24 relative">
+                    <th
+                      key={plan.id}
+                      className="text-center p-2 min-w-24 relative"
+                    >
                       {plan.name}
                       {plan.popular && (
                         <Badge
@@ -89,7 +120,9 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({ plans, cu
               <tbody>
                 {plans[0].features.map((_, featureIndex) => (
                   <tr key={featureIndex} className="border-b">
-                    <td className="p-2">{plans[0].features[featureIndex].name}</td>
+                    <td className="p-2">
+                      {plans[0].features[featureIndex].name}
+                    </td>
                     {plans.map((plan) => (
                       <td key={plan.id} className="text-center p-2">
                         {plan.features[featureIndex].included ? (

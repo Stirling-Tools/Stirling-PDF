@@ -1,5 +1,8 @@
 import { BaseParameters } from "@app/types/parameters";
-import { useBaseParameters, BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
+import {
+  useBaseParameters,
+  BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
 import { validatePageNumbers } from "@app/utils/pageSelection";
 
 export interface RemovePagesParameters extends BaseParameters {
@@ -10,7 +13,8 @@ export const defaultParameters: RemovePagesParameters = {
   pageNumbers: "",
 };
 
-export type RemovePagesParametersHook = BaseParametersHook<RemovePagesParameters>;
+export type RemovePagesParametersHook =
+  BaseParametersHook<RemovePagesParameters>;
 
 export const useRemovePagesParameters = (): RemovePagesParametersHook => {
   return useBaseParameters({

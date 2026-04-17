@@ -1,6 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Paper, Group, Button, Text, Divider, CloseButton } from "@mantine/core";
+import {
+  Paper,
+  Group,
+  Button,
+  Text,
+  Divider,
+  CloseButton,
+} from "@mantine/core";
 import { useIsPhone } from "@app/hooks/useIsMobile";
 import CancelIcon from "@mui/icons-material/Cancel";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
@@ -10,7 +17,10 @@ import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
 import { Z_INDEX_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
 import { SignRequestDetail } from "@app/types/signingSession";
-import { LocalEmbedPDFWithAnnotations, AnnotationAPI } from "@app/components/viewer/LocalEmbedPDFWithAnnotations";
+import {
+  LocalEmbedPDFWithAnnotations,
+  AnnotationAPI,
+} from "@app/components/viewer/LocalEmbedPDFWithAnnotations";
 import { alert } from "@app/components/toast";
 import SignControlsStrip from "@app/components/tools/certSign/SignControlsStrip";
 import { CertificateConfigModal } from "@app/components/tools/certSign/modals/CertificateConfigModal";
@@ -73,7 +83,9 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
       return;
     }
     const check = () => {
-      const has = (annotationApiRef.current as any)?.getHasSelectedAnnotation?.();
+      const has = (
+        annotationApiRef.current as any
+      )?.getHasSelectedAnnotation?.();
       setHasSelectedAnnotation(Boolean(has));
     };
     check();
@@ -90,14 +102,21 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
       alert({
         alertType: "error",
         title: t("common.error"),
-        body: t("certSign.collab.signRequest.noSignatures", "Please place at least one signature on the PDF"),
+        body: t(
+          "certSign.collab.signRequest.noSignatures",
+          "Please place at least one signature on the PDF",
+        ),
       });
       return;
     }
     setCertificateModalOpen(true);
   };
 
-  const handleSign = async (certData: CertificateSubmitData, reason?: string, location?: string) => {
+  const handleSign = async (
+    certData: CertificateSubmitData,
+    reason?: string,
+    location?: string,
+  ) => {
     const previews = annotationApiRef.current?.getSignaturePreviews() || [];
     console.log("handleSign called, previews:", previews.length, "signatures");
 
@@ -106,7 +125,14 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
       const formData = new FormData();
 
       if (certData.certType === "UPLOAD") {
-        const { uploadFormat, p12File, privateKeyFile, certFile, jksFile, password } = certData;
+        const {
+          uploadFormat,
+          p12File,
+          privateKeyFile,
+          certFile,
+          jksFile,
+          password,
+        } = certData;
         formData.append("certType", uploadFormat);
         switch (uploadFormat) {
           case "PKCS12":
@@ -115,7 +141,10 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
               alert({
                 alertType: "error",
                 title: t("common.error"),
-                body: t("certSign.collab.signRequest.noCertificate", "Please select a certificate file"),
+                body: t(
+                  "certSign.collab.signRequest.noCertificate",
+                  "Please select a certificate file",
+                ),
               });
               setSigning(false);
               return;
@@ -127,7 +156,10 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
               alert({
                 alertType: "error",
                 title: t("common.error"),
-                body: t("certSign.collab.signRequest.noCertificate", "Please select a certificate file"),
+                body: t(
+                  "certSign.collab.signRequest.noCertificate",
+                  "Please select a certificate file",
+                ),
               });
               setSigning(false);
               return;
@@ -140,7 +172,10 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
               alert({
                 alertType: "error",
                 title: t("common.error"),
-                body: t("certSign.collab.signRequest.noCertificate", "Please select a certificate file"),
+                body: t(
+                  "certSign.collab.signRequest.noCertificate",
+                  "Please select a certificate file",
+                ),
               });
               setSigning(false);
               return;
@@ -159,7 +194,10 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
       if (signRequest.showSignature !== undefined) {
         formData.append("showSignature", signRequest.showSignature.toString());
       }
-      if (signRequest.pageNumber !== undefined && signRequest.pageNumber !== null) {
+      if (
+        signRequest.pageNumber !== undefined &&
+        signRequest.pageNumber !== null
+      ) {
         formData.append("pageNumber", signRequest.pageNumber.toString());
       }
 
@@ -192,7 +230,11 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
           height: preview.height,
         }));
 
-        console.log("Sending wet signatures to backend:", wetSignaturesJson.length, "signatures");
+        console.log(
+          "Sending wet signatures to backend:",
+          wetSignaturesJson.length,
+          "signatures",
+        );
         formData.append("wetSignaturesData", JSON.stringify(wetSignaturesJson));
       }
 
@@ -220,7 +262,10 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
     alert({
       alertType: "success",
       title: t("success"),
-      body: t("certSign.collab.signRequest.addedToFiles", "Document added to active files"),
+      body: t(
+        "certSign.collab.signRequest.addedToFiles",
+        "Document added to active files",
+      ),
       expandable: false,
       durationMs: 2500,
     });
@@ -231,17 +276,46 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
     (annotationApiRef.current as any)?.deleteSelectedAnnotation?.();
   };
 
-  const handlePlaceSignature = (id: string, pageIndex: number, x: number, y: number, width: number, height: number) => {
+  const handlePlaceSignature = (
+    id: string,
+    pageIndex: number,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+  ) => {
     console.log("Signature placed:", { id, pageIndex, x, y, width, height });
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        overflow: "hidden",
+      }}
+    >
       {/* Top Control Bar */}
-      <Paper p="sm" shadow="sm" style={{ flexShrink: 0, zIndex: Z_INDEX_FULLSCREEN_SURFACE, position: "relative" }}>
-        <Group justify="space-between" style={{ flexWrap: isPhone ? "wrap" : "nowrap" }}>
+      <Paper
+        p="sm"
+        shadow="sm"
+        style={{
+          flexShrink: 0,
+          zIndex: Z_INDEX_FULLSCREEN_SURFACE,
+          position: "relative",
+        }}
+      >
+        <Group
+          justify="space-between"
+          style={{ flexWrap: isPhone ? "wrap" : "nowrap" }}
+        >
           <Group gap="md">
-            <LocalIcon icon="signature-rounded" width="1.5rem" height="1.5rem" />
+            <LocalIcon
+              icon="signature-rounded"
+              width="1.5rem"
+              height="1.5rem"
+            />
             <div>
               <Text
                 size="sm"
@@ -253,14 +327,19 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
               </Text>
               {!isPhone && (
                 <Text size="xs" c="dimmed">
-                  {t("certSign.collab.signRequest.from", "From")}: {signRequest.ownerUsername} •{" "}
+                  {t("certSign.collab.signRequest.from", "From")}:{" "}
+                  {signRequest.ownerUsername} •{" "}
                   {new Date(signRequest.createdAt).toLocaleDateString()}
                 </Text>
               )}
             </div>
           </Group>
 
-          <Group gap="xs" style={{ width: isPhone ? "100%" : undefined }} justify={isPhone ? "flex-end" : undefined}>
+          <Group
+            gap="xs"
+            style={{ width: isPhone ? "100%" : undefined }}
+            justify={isPhone ? "flex-end" : undefined}
+          >
             <Button
               variant="light"
               size="sm"
@@ -272,20 +351,24 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
                 border: "1px solid var(--landing-inner-paper-border)",
               }}
             >
-              {t("certSign.collab.signRequest.addToFiles", "Add to Active Files")}
+              {t(
+                "certSign.collab.signRequest.addToFiles",
+                "Add to Active Files",
+              )}
             </Button>
-            {signRequest.myStatus !== "SIGNED" && signRequest.myStatus !== "DECLINED" && (
-              <Button
-                variant="light"
-                color="red"
-                size="sm"
-                leftSection={<CancelIcon fontSize="small" />}
-                onClick={handleDecline}
-                loading={declining}
-              >
-                {t("certSign.collab.signRequest.decline", "Decline Request")}
-              </Button>
-            )}
+            {signRequest.myStatus !== "SIGNED" &&
+              signRequest.myStatus !== "DECLINED" && (
+                <Button
+                  variant="light"
+                  color="red"
+                  size="sm"
+                  leftSection={<CancelIcon fontSize="small" />}
+                  onClick={handleDecline}
+                  loading={declining}
+                >
+                  {t("certSign.collab.signRequest.decline", "Decline Request")}
+                </Button>
+              )}
             {!isPhone && (
               <>
                 <Divider orientation="vertical" />
@@ -321,7 +404,10 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
             <CloseButton
               size="md"
               onClick={onBack}
-              title={t("certSign.collab.signRequest.backToList", "Back to Sign Requests")}
+              title={t(
+                "certSign.collab.signRequest.backToList",
+                "Back to Sign Requests",
+              )}
             />
           </Group>
         </Group>

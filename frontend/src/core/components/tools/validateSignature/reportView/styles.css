@@ -101,7 +101,11 @@
   align-items: center;
   justify-content: center;
   color: rgb(var(--pdf-light-text-muted));
-  background: linear-gradient(145deg, var(--mantine-color-gray-1) 0%, var(--mantine-color-gray-0) 100%);
+  background: linear-gradient(
+    145deg,
+    var(--mantine-color-gray-1) 0%,
+    var(--mantine-color-gray-0) 100%
+  );
 }
 
 /* Flash highlight animation for section navigation */

@@ -1,16 +1,17 @@
 import React, { useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Tooltip, useMantineTheme, useComputedColorScheme, rem } from "@mantine/core";
+import { Box, Tooltip, useMantineTheme, rem } from "@mantine/core";
 import { useBackendHealth } from "@app/hooks/useBackendHealth";
 
 interface BackendHealthIndicatorProps {
   className?: string;
 }
 
-export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({ className = "" }) => {
+export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({
+  className = "",
+}) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
-  const colorScheme = useComputedColorScheme("light");
   const { status, isOnline, checkHealth } = useBackendHealth();
 
   const label = useMemo(() => {
@@ -33,7 +34,13 @@ export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({ 
       return theme.colors.green?.[5] ?? "#37b24d";
     }
     return theme.colors.red?.[6] ?? "#e03131";
-  }, [status, isOnline, theme.colors.green, theme.colors.red, theme.colors.yellow]);
+  }, [
+    status,
+    isOnline,
+    theme.colors.green,
+    theme.colors.red,
+    theme.colors.yellow,
+  ]);
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLSpanElement>) => {
@@ -46,14 +53,7 @@ export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({ 
   );
 
   return (
-    <Tooltip
-      label={label}
-      position="left"
-      offset={12}
-      withArrow
-      withinPortal
-      color={colorScheme === "dark" ? undefined : "dark"}
-    >
+    <Tooltip label={label} position="left" offset={12} withArrow withinPortal>
       <Box
         component="span"
         className={className ? `${className}` : undefined}
@@ -68,7 +68,7 @@ export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({ 
           height: rem(12),
           borderRadius: "50%",
           backgroundColor: dotColor,
-          boxShadow: colorScheme === "dark" ? "0 0 0 2px rgba(255, 255, 255, 0.18)" : "0 0 0 2px rgba(0, 0, 0, 0.08)",
+          boxShadow: "var(--status-dot-ring)",
           cursor: "pointer",
           display: "inline-block",
           outline: "none",

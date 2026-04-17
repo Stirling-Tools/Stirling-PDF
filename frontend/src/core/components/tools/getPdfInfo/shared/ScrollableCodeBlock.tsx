@@ -12,7 +12,11 @@ interface ScrollableCodeBlockProps {
  * A reusable scrollable code block component with consistent styling.
  * Used for displaying large text content like XMP metadata or structure trees.
  */
-const ScrollableCodeBlock: React.FC<ScrollableCodeBlockProps> = ({ content, maxHeight = "400px", emptyMessage }) => {
+const ScrollableCodeBlock: React.FC<ScrollableCodeBlockProps> = ({
+  content,
+  maxHeight = "400px",
+  emptyMessage,
+}) => {
   const { t } = useTranslation();
 
   if (!content) {

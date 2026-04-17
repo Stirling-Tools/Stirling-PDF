@@ -6,11 +6,18 @@ import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface WatermarkTextStyleProps {
   parameters: AddWatermarkParameters;
-  onParameterChange: <K extends keyof AddWatermarkParameters>(key: K, value: AddWatermarkParameters[K]) => void;
+  onParameterChange: <K extends keyof AddWatermarkParameters>(
+    key: K,
+    value: AddWatermarkParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const WatermarkTextStyle = ({ parameters, onParameterChange, disabled = false }: WatermarkTextStyleProps) => {
+const WatermarkTextStyle = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: WatermarkTextStyleProps) => {
   const { t } = useTranslation();
 
   return (
@@ -24,7 +31,10 @@ const WatermarkTextStyle = ({ parameters, onParameterChange, disabled = false }:
           onChange={(value) => onParameterChange("customColor", value)}
           disabled={disabled}
           format="hex"
-          popoverProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+          popoverProps={{
+            withinPortal: true,
+            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+          }}
         />
       </Stack>
 
@@ -37,7 +47,10 @@ const WatermarkTextStyle = ({ parameters, onParameterChange, disabled = false }:
           onChange={(value) => value && onParameterChange("alphabet", value)}
           data={alphabetOptions}
           disabled={disabled}
-          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+          comboboxProps={{
+            withinPortal: true,
+            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+          }}
         />
       </Stack>
     </Stack>

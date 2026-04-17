@@ -17,7 +17,10 @@ interface CachedDoc {
   /** Number of active consumers (hook instances) holding this entry. */
   refCount: number;
   /** Per-page extracted links (lazy, filled on first request). */
-  pageLinks: Map<number, { links: PdfLibLink[]; width: number; height: number }>;
+  pageLinks: Map<
+    number,
+    { links: PdfLibLink[]; width: number; height: number }
+  >;
   /** Set to true when the PDF is invalid, so we
    *  skip link extraction on all subsequent calls without retrying. */
   invalidDocument?: boolean;
@@ -55,7 +58,10 @@ function releaseDocument(url: string): void {
   });
 }
 
-export function usePdfLibLinks(pdfUrl: string | null, pageIndex: number): PdfLibLinksResult {
+export function usePdfLibLinks(
+  pdfUrl: string | null,
+  pageIndex: number,
+): PdfLibLinksResult {
   const [result, setResult] = useState<PdfLibLinksResult>({
     links: [],
     pdfPageWidth: 0,
@@ -73,7 +79,12 @@ export function usePdfLibLinks(pdfUrl: string | null, pageIndex: number): PdfLib
 
   useEffect(() => {
     if (!pdfUrl) {
-      setResult({ links: [], pdfPageWidth: 0, pdfPageHeight: 0, loading: false });
+      setResult({
+        links: [],
+        pdfPageWidth: 0,
+        pdfPageHeight: 0,
+        loading: false,
+      });
       return;
     }
 
@@ -91,7 +102,12 @@ export function usePdfLibLinks(pdfUrl: string | null, pageIndex: number): PdfLib
         }
 
         if (cached.invalidDocument) {
-          setResult({ links: [], pdfPageWidth: 0, pdfPageHeight: 0, loading: false });
+          setResult({
+            links: [],
+            pdfPageWidth: 0,
+            pdfPageHeight: 0,
+            loading: false,
+          });
           releaseDocument(url);
           return;
         }
@@ -99,11 +115,15 @@ export function usePdfLibLinks(pdfUrl: string | null, pageIndex: number): PdfLib
         let pageData = cached.pageLinks.get(pageIndex);
         if (!pageData) {
           try {
-            const { links, pdfPageWidth, pdfPageHeight } = await extractLinksFromPage(cached.data, pageIndex);
+            const { links, pdfPageWidth, pdfPageHeight } =
+              await extractLinksFromPage(cached.data, pageIndex);
             pageData = { links, width: pdfPageWidth, height: pdfPageHeight };
             cached.pageLinks.set(pageIndex, pageData);
           } catch (pageError) {
-            console.warn(`[usePdfLibLinks] Failed to read page ${pageIndex}:`, pageError);
+            console.warn(
+              `[usePdfLibLinks] Failed to read page ${pageIndex}:`,
+              pageError,
+            );
             pageData = { links: [], width: 0, height: 0 };
             cached.pageLinks.set(pageIndex, pageData);
           }
@@ -122,7 +142,12 @@ export function usePdfLibLinks(pdfUrl: string | null, pageIndex: number): PdfLib
       } catch (error) {
         console.warn("[usePdfLibLinks] Failed to extract links:", error);
         if (!cancelled && mountedRef.current) {
-          setResult({ links: [], pdfPageWidth: 0, pdfPageHeight: 0, loading: false });
+          setResult({
+            links: [],
+            pdfPageWidth: 0,
+            pdfPageHeight: 0,
+            loading: false,
+          });
         }
       }
     })();

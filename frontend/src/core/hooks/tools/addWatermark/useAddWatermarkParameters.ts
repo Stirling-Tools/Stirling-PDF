@@ -1,5 +1,8 @@
 import { BaseParameters } from "@app/types/parameters";
-import { useBaseParameters, BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
+import {
+  useBaseParameters,
+  BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
 
 export interface AddWatermarkParameters extends BaseParameters {
   watermarkType?: "text" | "image";
@@ -28,7 +31,8 @@ export const defaultParameters: AddWatermarkParameters = {
   convertPDFToImage: false,
 };
 
-export type AddWatermarkParametersHook = BaseParametersHook<AddWatermarkParameters>;
+export type AddWatermarkParametersHook =
+  BaseParametersHook<AddWatermarkParameters>;
 
 export const useAddWatermarkParameters = (): AddWatermarkParametersHook => {
   return useBaseParameters({

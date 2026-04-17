@@ -1,18 +1,25 @@
-import { SignatureValidationBackendResult, SignatureValidationSignature } from "@app/types/validateSignature";
+import {
+  SignatureValidationBackendResult,
+  SignatureValidationSignature,
+} from "@app/types/validateSignature";
 import type { StirlingFile } from "@app/types/fileContext";
 
 export const RESULT_JSON_FILENAME = "signature-validation.json";
 export const CSV_FILENAME = "signature-validation.csv";
 export const REPORT_PDF_FILENAME = "signature-validation-report.pdf";
 
-export const coerceString = (value: string | number | null | undefined): string => {
+export const coerceString = (
+  value: string | number | null | undefined,
+): string => {
   if (value === null || value === undefined) {
     return "";
   }
   return String(value);
 };
 
-export const coerceNumber = (value: number | string | null | undefined): number | null => {
+export const coerceNumber = (
+  value: number | string | null | undefined,
+): number | null => {
   if (typeof value === "number" && Number.isFinite(value)) {
     return value;
   }
@@ -60,9 +67,15 @@ export const normalizeBackendResult = (
   trustValid: Boolean(item.trustValid),
   notExpired: Boolean(item.notExpired),
   revocationChecked:
-    item.revocationChecked === null || item.revocationChecked === undefined ? null : Boolean(item.revocationChecked),
-  revocationStatus: item.revocationStatus ? coerceString(item.revocationStatus) : null,
-  validationTimeSource: item.validationTimeSource ? coerceString(item.validationTimeSource) : null,
+    item.revocationChecked === null || item.revocationChecked === undefined
+      ? null
+      : Boolean(item.revocationChecked),
+  revocationStatus: item.revocationStatus
+    ? coerceString(item.revocationStatus)
+    : null,
+  validationTimeSource: item.validationTimeSource
+    ? coerceString(item.validationTimeSource)
+    : null,
   signerName: coerceString(item.signerName),
   signatureDate: coerceString(item.signatureDate),
   reason: coerceString(item.reason),
@@ -75,7 +88,9 @@ export const normalizeBackendResult = (
   signatureAlgorithm: coerceString(item.signatureAlgorithm),
   keySize: coerceNumber(item.keySize),
   version: coerceString(item.version),
-  keyUsages: Array.isArray(item.keyUsages) ? item.keyUsages.filter(Boolean).map(coerceString) : [],
+  keyUsages: Array.isArray(item.keyUsages)
+    ? item.keyUsages.filter(Boolean).map(coerceString)
+    : [],
   selfSigned: Boolean(item.selfSigned),
   errorMessage: item.errorMessage ? coerceString(item.errorMessage) : null,
 });

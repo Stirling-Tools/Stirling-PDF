@@ -1,5 +1,8 @@
 import { BaseParameters } from "@app/types/parameters";
-import { useBaseParameters, BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
+import {
+  useBaseParameters,
+  BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
 
 // Fallback presets used only when AppConfig hasn't loaded yet.
 // The real presets are served by the backend via /api/v1/config/app-config
@@ -20,7 +23,8 @@ export const defaultParameters: TimestampPdfParameters = {
   tsaUrl: FALLBACK_TSA_PRESETS[0].url,
 };
 
-export type TimestampPdfParametersHook = BaseParametersHook<TimestampPdfParameters>;
+export type TimestampPdfParametersHook =
+  BaseParametersHook<TimestampPdfParameters>;
 
 export const useTimestampPdfParameters = (): TimestampPdfParametersHook => {
   return useBaseParameters({

@@ -83,8 +83,15 @@ function ReviewStepContent<TParams = unknown>({
 
   // Auto-scroll to bottom when content appears
   useEffect(() => {
-    if (stepRef.current && (previewFiles.length > 0 || operation.downloadUrl || operation.errorMessage)) {
-      const scrollableContainer = stepRef.current.closest('[style*="overflow: auto"]') as HTMLElement;
+    if (
+      stepRef.current &&
+      (previewFiles.length > 0 ||
+        operation.downloadUrl ||
+        operation.errorMessage)
+    ) {
+      const scrollableContainer = stepRef.current.closest(
+        '[style*="overflow: auto"]',
+      ) as HTMLElement;
       if (scrollableContainer) {
         setTimeout(() => {
           scrollableContainer.scrollTo({
@@ -98,7 +105,10 @@ function ReviewStepContent<TParams = unknown>({
 
   return (
     <Stack gap="sm" ref={stepRef}>
-      <ErrorNotification error={operation.errorMessage} onClose={operation.clearError} />
+      <ErrorNotification
+        error={operation.errorMessage}
+        onClose={operation.clearError}
+      />
 
       {previewFiles.length > 0 && (
         <ResultsPreview
@@ -109,7 +119,12 @@ function ReviewStepContent<TParams = unknown>({
       )}
 
       {onUndo && (
-        <Tooltip content={t("undoOperationTooltip", "Click to undo the last operation and restore the original files")}>
+        <Tooltip
+          content={t(
+            "undoOperationTooltip",
+            "Click to undo the last operation and restore the original files",
+          )}
+        >
           <Button
             leftSection={<UndoIcon />}
             variant="outline"
@@ -162,6 +177,10 @@ export function createReviewToolStep<TParams = unknown>(
       _excludeFromCount: true,
       _noPadding: true,
     },
-    <ReviewStepContent operation={props.operation} onFileClick={props.onFileClick} onUndo={props.onUndo} />,
+    <ReviewStepContent
+      operation={props.operation}
+      onFileClick={props.onFileClick}
+      onUndo={props.onUndo}
+    />,
   );
 }

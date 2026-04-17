@@ -1,5 +1,9 @@
 import type { TFunction } from "i18next";
-import { PdfiumFont, PdfiumImage, PdfiumPage } from "@app/services/pdfiumDocBuilder";
+import {
+  PdfiumFont,
+  PdfiumImage,
+  PdfiumPage,
+} from "@app/services/pdfiumDocBuilder";
 import { SignatureValidationReportEntry } from "@app/types/validateSignature";
 import { drawFieldBox } from "@app/hooks/tools/validateSignature/outputtedPDFSections/FieldBoxSection";
 import {
@@ -63,7 +67,10 @@ export const drawSummarySection = async ({
     color: colorPalette.textPrimary,
   });
 
-  const subtitle = t("validateSignature.report.shortTitle", "Signature Summary");
+  const subtitle = t(
+    "validateSignature.report.shortTitle",
+    "Signature Summary",
+  );
   const subtitleBaseline = titleBaseline - subtitleFontSize - 6;
   page.drawText(subtitle, {
     x: summaryX,
@@ -80,13 +87,28 @@ export const drawSummarySection = async ({
     }>
   > = [
     [
-      { label: t("validateSignature.report.fields.fileSize", "File Size"), value: formatFileSize(entry.fileSize) },
-      { label: t("validateSignature.report.fields.created", "Created"), value: entry.createdAtLabel ?? "--" },
+      {
+        label: t("validateSignature.report.fields.fileSize", "File Size"),
+        value: formatFileSize(entry.fileSize),
+      },
+      {
+        label: t("validateSignature.report.fields.created", "Created"),
+        value: entry.createdAtLabel ?? "--",
+      },
     ],
     [
-      { label: t("validateSignature.report.fields.signatureDate", "Signature Date"), value: latestSignatureLabel },
       {
-        label: t("validateSignature.report.fields.signatureCount", "Total Signatures"),
+        label: t(
+          "validateSignature.report.fields.signatureDate",
+          "Signature Date",
+        ),
+        value: latestSignatureLabel,
+      },
+      {
+        label: t(
+          "validateSignature.report.fields.signatureCount",
+          "Total Signatures",
+        ),
         value: entry.signatures.length.toString(),
       },
     ],
@@ -100,7 +122,9 @@ export const drawSummarySection = async ({
     const singleColumn = fields.length === 1;
     fields.forEach((field, index) => {
       const fieldWidth = singleColumn ? summaryWidth : summaryColumnWidth;
-      const x = singleColumn ? summaryX : summaryX + index * (summaryColumnWidth + columnGap);
+      const x = singleColumn
+        ? summaryX
+        : summaryX + index * (summaryColumnWidth + columnGap);
       const fieldHeight = drawFieldBox({
         page,
         font,
@@ -137,12 +161,33 @@ export const drawSummarySection = async ({
         borderColor: colorPalette.boxBorder,
         borderWidth: 1,
       });
-      drawThumbnailImage(page, thumbnail.image, thumbX, thumbTop, thumbnailWidth, thumbnailHeight);
+      drawThumbnailImage(
+        page,
+        thumbnail.image,
+        thumbX,
+        thumbTop,
+        thumbnailWidth,
+        thumbnailHeight,
+      );
     } else {
-      drawThumbnailPlaceholder(page, fontBold, thumbX, thumbTop, thumbnailWidth, thumbnailHeight);
+      drawThumbnailPlaceholder(
+        page,
+        fontBold,
+        thumbX,
+        thumbTop,
+        thumbnailWidth,
+        thumbnailHeight,
+      );
     }
   } else {
-    drawThumbnailPlaceholder(page, fontBold, thumbX, thumbTop, thumbnailWidth, thumbnailHeight);
+    drawThumbnailPlaceholder(
+      page,
+      fontBold,
+      thumbX,
+      thumbTop,
+      thumbnailWidth,
+      thumbnailHeight,
+    );
   }
 
   const summarySectionHeight = Math.max(thumbnailHeight, rightContentHeight);

@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, ReactNode, useCallback, useRef, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useCallback,
+  useRef,
+  useEffect,
+} from "react";
 import { RedactParameters } from "@app/hooks/tools/redact/useRedactParameters";
 import { useNavigationGuard } from "@app/contexts/NavigationContext";
 import { RedactionMode } from "@embedpdf/plugin-redaction";
@@ -73,7 +81,9 @@ interface RedactionContextValue extends RedactionState, RedactionActions {
 }
 
 // Create context
-const RedactionContext = createContext<RedactionContextValue | undefined>(undefined);
+const RedactionContext = createContext<RedactionContextValue | undefined>(
+  undefined,
+);
 
 // Initial state
 const initialState: RedactionState = {
@@ -91,7 +101,9 @@ const initialState: RedactionState = {
  * Provider component for redaction functionality
  * Bridges between the tool panel (outside EmbedPDF) and the viewer (inside EmbedPDF)
  */
-export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const RedactionProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [state, setState] = useState<RedactionState>(initialState);
   const redactionApiRef = useRef<RedactionAPI | null>(null);
   const { setHasUnsavedChanges } = useNavigationGuard();
@@ -164,7 +176,12 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
       // When there are no pending redactions and nothing has been applied, we're "clean"
       setHasUnsavedChanges(false);
     }
-  }, [state.pendingCount, state.redactionsApplied, state.isRedactionMode, setHasUnsavedChanges]);
+  }, [
+    state.pendingCount,
+    state.redactionsApplied,
+    state.isRedactionMode,
+    setHasUnsavedChanges,
+  ]);
 
   // Unified redaction actions (v2.5.0)
   const activateRedact = useCallback(() => {
@@ -230,7 +247,11 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({ children 
     activateMarquee,
   };
 
-  return <RedactionContext.Provider value={contextValue}>{children}</RedactionContext.Provider>;
+  return (
+    <RedactionContext.Provider value={contextValue}>
+      {children}
+    </RedactionContext.Provider>
+  );
 };
 
 /**

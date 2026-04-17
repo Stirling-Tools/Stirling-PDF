@@ -12,7 +12,10 @@ export const getReorganizePagesModeData = (t: TFunction) => [
   {
     value: "REVERSE_ORDER",
     label: t("pdfOrganiser.mode.2", "Reverse Order"),
-    description: t("pdfOrganiser.mode.desc.REVERSE_ORDER", "Flip the document so the last page becomes first and so on."),
+    description: t(
+      "pdfOrganiser.mode.desc.REVERSE_ORDER",
+      "Flip the document so the last page becomes first and so on.",
+    ),
   },
   {
     value: "DUPLEX_SORT",
@@ -65,16 +68,25 @@ export const getReorganizePagesModeData = (t: TFunction) => [
   {
     value: "REMOVE_FIRST",
     label: t("pdfOrganiser.mode.7", "Remove First"),
-    description: t("pdfOrganiser.mode.desc.REMOVE_FIRST", "Remove the first page from the document."),
+    description: t(
+      "pdfOrganiser.mode.desc.REMOVE_FIRST",
+      "Remove the first page from the document.",
+    ),
   },
   {
     value: "REMOVE_LAST",
     label: t("pdfOrganiser.mode.8", "Remove Last"),
-    description: t("pdfOrganiser.mode.desc.REMOVE_LAST", "Remove the last page from the document."),
+    description: t(
+      "pdfOrganiser.mode.desc.REMOVE_LAST",
+      "Remove the last page from the document.",
+    ),
   },
   {
     value: "REMOVE_FIRST_AND_LAST",
     label: t("pdfOrganiser.mode.9", "Remove First and Last"),
-    description: t("pdfOrganiser.mode.desc.REMOVE_FIRST_AND_LAST", "Remove both the first and last pages from the document."),
+    description: t(
+      "pdfOrganiser.mode.desc.REMOVE_FIRST_AND_LAST",
+      "Remove both the first and last pages from the document.",
+    ),
   },
 ];

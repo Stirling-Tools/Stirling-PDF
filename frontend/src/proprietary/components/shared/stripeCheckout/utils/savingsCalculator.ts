@@ -5,7 +5,10 @@ import { SavingsCalculation } from "@app/components/shared/stripeCheckout/types/
  * Calculate savings for yearly vs monthly plans
  * Returns null if both monthly and yearly plans are not available
  */
-export const calculateSavings = (planGroup: PlanTierGroup, minimumSeats: number): SavingsCalculation | null => {
+export const calculateSavings = (
+  planGroup: PlanTierGroup,
+  minimumSeats: number,
+): SavingsCalculation | null => {
   if (!planGroup.yearly || !planGroup.monthly) return null;
 
   const isEnterprise = planGroup.tier === "enterprise";
@@ -14,10 +17,16 @@ export const calculateSavings = (planGroup: PlanTierGroup, minimumSeats: number)
   let monthlyAnnual: number;
   let yearlyTotal: number;
 
-  if (isEnterprise && planGroup.monthly.seatPrice && planGroup.yearly.seatPrice) {
+  if (
+    isEnterprise &&
+    planGroup.monthly.seatPrice &&
+    planGroup.yearly.seatPrice
+  ) {
     // Enterprise: (base + seats) * 12 vs (base + seats) yearly
-    monthlyAnnual = (planGroup.monthly.price + planGroup.monthly.seatPrice * seatCount) * 12;
-    yearlyTotal = planGroup.yearly.price + planGroup.yearly.seatPrice * seatCount;
+    monthlyAnnual =
+      (planGroup.monthly.price + planGroup.monthly.seatPrice * seatCount) * 12;
+    yearlyTotal =
+      planGroup.yearly.price + planGroup.yearly.seatPrice * seatCount;
   } else {
     // Server: price * 12 vs yearly price
     monthlyAnnual = planGroup.monthly.price * 12;

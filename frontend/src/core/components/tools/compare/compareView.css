@@ -197,25 +197,30 @@
   border-radius: 3px !important;
 }
 
-.compare-changes-select .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb:hover {
+.compare-changes-select
+  .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted) !important;
 }
 
-.compare-changes-select--comparison .mantine-ScrollArea-viewport::-webkit-scrollbar {
+.compare-changes-select--comparison
+  .mantine-ScrollArea-viewport::-webkit-scrollbar {
   width: 6px !important;
 }
 
-.compare-changes-select--comparison .mantine-ScrollArea-viewport::-webkit-scrollbar-track {
+.compare-changes-select--comparison
+  .mantine-ScrollArea-viewport::-webkit-scrollbar-track {
   background: var(--bg-muted) !important;
   border-radius: 3px !important;
 }
 
-.compare-changes-select--comparison .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb {
+.compare-changes-select--comparison
+  .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb {
   background: var(--border-strong) !important;
   border-radius: 3px !important;
 }
 
-.compare-changes-select--comparison .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb:hover {
+.compare-changes-select--comparison
+  .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted) !important;
 }
 

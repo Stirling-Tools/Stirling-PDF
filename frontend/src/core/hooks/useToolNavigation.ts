@@ -16,7 +16,10 @@ export interface ToolNavigationProps {
  * Enables right-click "Open in New Tab" while maintaining SPA behavior for regular clicks
  */
 export function useToolNavigation(): {
-  getToolNavigation: (toolId: string, tool: ToolRegistryEntry) => ToolNavigationProps;
+  getToolNavigation: (
+    toolId: string,
+    tool: ToolRegistryEntry,
+  ) => ToolNavigationProps;
 } {
   const { handleToolSelect } = useToolWorkflow();
 

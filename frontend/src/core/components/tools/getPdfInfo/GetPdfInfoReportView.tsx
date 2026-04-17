@@ -1,7 +1,12 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { Badge, Divider, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import type { PdfInfoReportData, PdfInfoReportEntry, PdfInfoBackendData, ParsedPdfSections } from "@app/types/getPdfInfo";
+import type {
+  PdfInfoReportData,
+  PdfInfoReportEntry,
+  PdfInfoBackendData,
+  ParsedPdfSections,
+} from "@app/types/getPdfInfo";
 import "@app/components/tools/validateSignature/reportView/styles.css";
 import SummarySection from "@app/components/tools/getPdfInfo/sections/SummarySection";
 import KeyValueSection from "@app/components/tools/getPdfInfo/sections/KeyValueSection";
@@ -29,7 +34,9 @@ interface GetPdfInfoReportViewProps {
   data: PdfInfoReportData & { scrollTo?: string | null };
 }
 
-const GetPdfInfoReportView: React.FC<GetPdfInfoReportViewProps> = ({ data }) => {
+const GetPdfInfoReportView: React.FC<GetPdfInfoReportViewProps> = ({
+  data,
+}) => {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const entry: PdfInfoReportEntry | null = data.entries[0] ?? null;
@@ -41,13 +48,18 @@ const GetPdfInfoReportView: React.FC<GetPdfInfoReportViewProps> = ({ data }) => 
     const el = container?.querySelector<HTMLElement>(`#${anchor}`);
     if (el && container) {
       // Calculate scroll position with 4rem buffer from top
-      const bufferPx = parseFloat(getComputedStyle(document.documentElement).fontSize) * 4;
+      const bufferPx =
+        parseFloat(getComputedStyle(document.documentElement).fontSize) * 4;
       const elementTop = el.getBoundingClientRect().top;
       const containerTop = container.getBoundingClientRect().top;
       const currentScroll = container.scrollTop;
-      const targetScroll = currentScroll + (elementTop - containerTop) - bufferPx;
+      const targetScroll =
+        currentScroll + (elementTop - containerTop) - bufferPx;
 
-      container.scrollTo({ top: Math.max(0, targetScroll), behavior: "smooth" });
+      container.scrollTo({
+        top: Math.max(0, targetScroll),
+        behavior: "smooth",
+      });
 
       // Flash highlight the section
       el.classList.remove("section-flash-highlight");
@@ -95,7 +107,11 @@ const GetPdfInfoReportView: React.FC<GetPdfInfoReportViewProps> = ({ data }) => 
         <div className="simulated-page">
           <Stack gap="lg">
             <Stack gap="xs">
-              <Text fw={700} size="xl" style={{ lineHeight: 1.3, wordBreak: "break-word" }}>
+              <Text
+                fw={700}
+                size="xl"
+                style={{ lineHeight: 1.3, wordBreak: "break-word" }}
+              >
                 {entry.fileName}
                 <Text component="span" fw={700}>
                   {" "}
@@ -149,7 +165,10 @@ const GetPdfInfoReportView: React.FC<GetPdfInfoReportViewProps> = ({ data }) => 
               obj={sections.permissions}
             />
 
-            <TableOfContentsSection anchorId="toc" tocArray={sections.toc ?? []} />
+            <TableOfContentsSection
+              anchorId="toc"
+              tocArray={sections.toc ?? []}
+            />
 
             <OtherSection anchorId="other" other={sections.other} />
 

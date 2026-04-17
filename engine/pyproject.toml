@@ -46,6 +46,7 @@ select = [
     "UP",
     "PYI",    # flake8-pyi: flags deprecated typing constructs
     "FA",     # flake8-future-annotations: flags missing future annotations imports
+    "BLE",    # flake8-blind-except: flags bare `except Exception`
 ]
 
 [tool.pyright]

@@ -21,13 +21,19 @@ export function useSelfHostedAuth(): SelfHostedAuthState {
   const wasSelfHosted = useRef(false);
 
   useEffect(() => {
-    void connectionModeService.getCurrentMode().then((mode) => setIsSelfHosted(mode === "selfhosted"));
-    return connectionModeService.subscribeToModeChanges((cfg) => setIsSelfHosted(cfg.mode === "selfhosted"));
+    void connectionModeService
+      .getCurrentMode()
+      .then((mode) => setIsSelfHosted(mode === "selfhosted"));
+    return connectionModeService.subscribeToModeChanges((cfg) =>
+      setIsSelfHosted(cfg.mode === "selfhosted"),
+    );
   }, []);
 
   useEffect(() => {
     void authService.isAuthenticated().then(setIsAuthenticated);
-    return authService.subscribeToAuth((status) => setIsAuthenticated(status === "authenticated"));
+    return authService.subscribeToAuth((status) =>
+      setIsAuthenticated(status === "authenticated"),
+    );
   }, []);
 
   useEffect(() => {

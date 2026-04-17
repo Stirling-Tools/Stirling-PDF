@@ -15,7 +15,9 @@ interface QuickAccessBarFooterExtensionsProps {
   className?: string;
 }
 
-export function QuickAccessBarFooterExtensions({ className }: QuickAccessBarFooterExtensionsProps) {
+export function QuickAccessBarFooterExtensions({
+  className,
+}: QuickAccessBarFooterExtensionsProps) {
   const { creditBalance, loading, isManagedTeamMember } = useSaaSBilling();
   const [isSaasMode, setIsSaasMode] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -70,7 +72,11 @@ export function QuickAccessBarFooterExtensions({ className }: QuickAccessBarFoot
   };
 
   return (
-    <Box className={className} style={{ padding: "0.5rem", cursor: "pointer" }} onClick={handleClick}>
+    <Box
+      className={className}
+      style={{ padding: "0.5rem", cursor: "pointer" }}
+      onClick={handleClick}
+    >
       <Stack gap={2} align="center">
         <Text size="xs" c="dimmed" fw={500}>
           {creditBalance} {creditBalance === 1 ? "credit" : "credits"}

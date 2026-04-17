@@ -9,7 +9,13 @@ interface SettingsStickyFooterProps {
   onDiscard: () => void;
 }
 
-export function SettingsStickyFooter({ isDirty, saving, loginEnabled, onSave, onDiscard }: SettingsStickyFooterProps) {
+export function SettingsStickyFooter({
+  isDirty,
+  saving,
+  loginEnabled,
+  onSave,
+  onDiscard,
+}: SettingsStickyFooterProps) {
   const { t } = useTranslation();
 
   if (!isDirty || !loginEnabled) {

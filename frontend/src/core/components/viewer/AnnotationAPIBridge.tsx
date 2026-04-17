@@ -51,7 +51,10 @@ type AnnotationDefaults =
       customData?: Record<string, unknown>;
     }
   | {
-      type: PdfAnnotationSubtype.SQUARE | PdfAnnotationSubtype.CIRCLE | PdfAnnotationSubtype.POLYGON;
+      type:
+        | PdfAnnotationSubtype.SQUARE
+        | PdfAnnotationSubtype.CIRCLE
+        | PdfAnnotationSubtype.POLYGON;
       color: string;
       strokeColor: string;
       opacity: number;
@@ -98,21 +101,41 @@ type AnnotationDefaults =
 type AnnotationApiSurface = {
   setActiveTool: (toolId: AnnotationToolId | null) => void;
   getActiveTool?: () => { id: AnnotationToolId } | null;
-  setToolDefaults?: (toolId: AnnotationToolId, defaults: AnnotationDefaults) => void;
+  setToolDefaults?: (
+    toolId: AnnotationToolId,
+    defaults: AnnotationDefaults,
+  ) => void;
   getSelectedAnnotation?: () => AnnotationSelection | null;
   deselectAnnotation?: () => void;
-  updateAnnotation?: (pageIndex: number, annotationId: string, patch: AnnotationPatch) => void;
+  updateAnnotation?: (
+    pageIndex: number,
+    annotationId: string,
+    patch: AnnotationPatch,
+  ) => void;
   deleteAnnotation?: (pageIndex: number, annotationId: string) => void;
-  deleteAnnotations?: (annotations: Array<{ pageIndex: number; id: string }>) => void;
-  createAnnotation?: (pageIndex: number, annotation: Record<string, unknown>) => void;
+  deleteAnnotations?: (
+    annotations: Array<{ pageIndex: number; id: string }>,
+  ) => void;
+  createAnnotation?: (
+    pageIndex: number,
+    annotation: Record<string, unknown>,
+  ) => void;
   getSelectedAnnotations?: () => AnnotationSelection[];
-  onAnnotationEvent?: (listener: (event: AnnotationEvent) => void) => void | (() => void);
+  onAnnotationEvent?: (
+    listener: (event: AnnotationEvent) => void,
+  ) => void | (() => void);
   purgeAnnotation?: (pageIndex: number, annotationId: string) => void;
   /** v2.7.0: move annotation without regenerating its appearance stream */
-  moveAnnotation?: (pageIndex: number, annotationId: string, newRect: AnnotationRect) => void;
+  moveAnnotation?: (
+    pageIndex: number,
+    annotationId: string,
+    newRect: AnnotationRect,
+  ) => void;
 };
 
-type ToolDefaultsBuilder = (options?: AnnotationToolOptions) => AnnotationDefaults;
+type ToolDefaultsBuilder = (
+  options?: AnnotationToolOptions,
+) => AnnotationDefaults;
 
 const NOTE_ICON_MAP: Record<NoteIcon, PdfAnnotationIcon> = {
   Comment: PdfAnnotationIcon.Comment,
@@ -138,9 +161,11 @@ const DEFAULTS = {
   shapeOpacity: 0.5,
 };
 
-const withCustomData = (options?: AnnotationToolOptions) => (options?.customData ? { customData: options.customData } : {});
+const withCustomData = (options?: AnnotationToolOptions) =>
+  options?.customData ? { customData: options.customData } : {};
 
-const getIconEnum = (icon?: NoteIcon) => NOTE_ICON_MAP[icon ?? "Comment"] ?? PdfAnnotationIcon.Comment;
+const getIconEnum = (icon?: NoteIcon) =>
+  NOTE_ICON_MAP[icon ?? "Comment"] ?? PdfAnnotationIcon.Comment;
 
 const buildStampDefaults: ToolDefaultsBuilder = (options) => ({
   type: PdfAnnotationSubtype.STAMP,
@@ -149,8 +174,13 @@ const buildStampDefaults: ToolDefaultsBuilder = (options) => ({
   ...withCustomData(options),
 });
 
-const buildInkDefaults = (options?: AnnotationToolOptions, opacityOverride?: number): AnnotationDefaults => {
-  const colorValue = options?.color ?? (opacityOverride ? DEFAULTS.inkHighlighter : DEFAULTS.ink);
+const buildInkDefaults = (
+  options?: AnnotationToolOptions,
+  opacityOverride?: number,
+): AnnotationDefaults => {
+  const colorValue =
+    options?.color ??
+    (opacityOverride ? DEFAULTS.inkHighlighter : DEFAULTS.ink);
   return {
     type: PdfAnnotationSubtype.INK,
     strokeColor: colorValue,
@@ -206,7 +236,8 @@ const TOOL_DEFAULT_BUILDERS: Record<AnnotationToolId, ToolDefaultsBuilder> = {
     };
   },
   ink: (options) => buildInkDefaults(options),
-  inkHighlighter: (options) => buildInkDefaults(options, options?.opacity ?? 0.6),
+  inkHighlighter: (options) =>
+    buildInkDefaults(options, options?.opacity ?? 0.6),
   text: (options) => ({
     type: PdfAnnotationSubtype.FREETEXT,
     fontColor: options?.color ?? DEFAULTS.text,
@@ -215,7 +246,9 @@ const TOOL_DEFAULT_BUILDERS: Record<AnnotationToolId, ToolDefaultsBuilder> = {
     textAlign: options?.textAlign ?? 0,
     opacity: options?.opacity ?? 1,
     borderWidth: options?.thickness ?? 1,
-    ...(options?.fillColor ? { color: options.fillColor, interiorColor: options.fillColor } : {}),
+    ...(options?.fillColor
+      ? { color: options.fillColor, interiorColor: options.fillColor }
+      : {}),
     ...withCustomData(options),
   }),
   note: (options) => {
@@ -325,126 +358,180 @@ const TOOL_DEFAULT_BUILDERS: Record<AnnotationToolId, ToolDefaultsBuilder> = {
   }),
 };
 
-export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(function AnnotationAPIBridge(_props, ref) {
-  // Use the provided annotation API just like SignatureAPIBridge/HistoryAPIBridge
-  const { provides: annotationApi } = useAnnotationCapability();
-  const documentReady = useDocumentReady();
+export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(
+  function AnnotationAPIBridge(_props, ref) {
+    // Use the provided annotation API just like SignatureAPIBridge/HistoryAPIBridge
+    const { provides: annotationApi } = useAnnotationCapability();
+    const documentReady = useDocumentReady();
 
-  const buildAnnotationDefaults = useCallback(
-    (toolId: AnnotationToolId, options?: AnnotationToolOptions) => TOOL_DEFAULT_BUILDERS[toolId]?.(options) ?? null,
-    [],
-  );
+    const buildAnnotationDefaults = useCallback(
+      (toolId: AnnotationToolId, options?: AnnotationToolOptions) =>
+        TOOL_DEFAULT_BUILDERS[toolId]?.(options) ?? null,
+      [],
+    );
 
-  const configureAnnotationTool = useCallback(
-    (toolId: AnnotationToolId, options?: AnnotationToolOptions) => {
-      const api = annotationApi as unknown as AnnotationApiSurface | undefined;
-      if (!api?.setActiveTool) return;
+    const configureAnnotationTool = useCallback(
+      (toolId: AnnotationToolId, options?: AnnotationToolOptions) => {
+        const api = annotationApi as unknown as
+          | AnnotationApiSurface
+          | undefined;
+        if (!api?.setActiveTool) return;
 
-      const defaults = buildAnnotationDefaults(toolId, options);
-
-      // Reset tool first, then activate (like SignatureAPIBridge does)
-      api.setActiveTool(null);
-      api.setActiveTool(toolId === "select" ? null : toolId);
-
-      // Verify tool was activated before setting defaults (like SignatureAPIBridge does)
-      const activeTool = api.getActiveTool?.();
-      if (activeTool && activeTool.id === toolId && defaults) {
-        api.setToolDefaults?.(toolId, defaults);
-      }
-    },
-    [annotationApi, buildAnnotationDefaults],
-  );
-
-  useImperativeHandle(
-    ref,
-    () => ({
-      activateAnnotationTool: (toolId: AnnotationToolId, options?: AnnotationToolOptions) => {
-        configureAnnotationTool(toolId, options);
-      },
-      isReady: () => !!annotationApi && documentReady,
-      setAnnotationStyle: (toolId: AnnotationToolId, options?: AnnotationToolOptions) => {
         const defaults = buildAnnotationDefaults(toolId, options);
-        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
-        if (defaults && api?.setToolDefaults) {
-          api.setToolDefaults(toolId, defaults);
+
+        // Reset tool first, then activate (like SignatureAPIBridge does)
+        api.setActiveTool(null);
+        api.setActiveTool(toolId === "select" ? null : toolId);
+
+        // Verify tool was activated before setting defaults (like SignatureAPIBridge does)
+        const activeTool = api.getActiveTool?.();
+        if (activeTool && activeTool.id === toolId && defaults) {
+          api.setToolDefaults?.(toolId, defaults);
         }
       },
-      getSelectedAnnotation: () => {
-        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
-        if (!api?.getSelectedAnnotation) {
-          return null;
-        }
-        try {
-          return api.getSelectedAnnotation();
-        } catch (error) {
-          // Some EmbedPDF builds expose getSelectedAnnotation with an internal
-          // `this`/state dependency (e.g. reading `selectedUid` from undefined).
-          // If that happens, fail gracefully and treat it as "no selection"
-          // instead of crashing the entire annotations tool.
-          // Only log unexpected errors - "No active document" is a common expected state during init
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          if (!errorMessage.includes("No active document")) {
-            console.error("[AnnotationAPIBridge] getSelectedAnnotation failed:", error);
+      [annotationApi, buildAnnotationDefaults],
+    );
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        activateAnnotationTool: (
+          toolId: AnnotationToolId,
+          options?: AnnotationToolOptions,
+        ) => {
+          configureAnnotationTool(toolId, options);
+        },
+        isReady: () => !!annotationApi && documentReady,
+        setAnnotationStyle: (
+          toolId: AnnotationToolId,
+          options?: AnnotationToolOptions,
+        ) => {
+          const defaults = buildAnnotationDefaults(toolId, options);
+          const api = annotationApi as unknown as
+            | AnnotationApiSurface
+            | undefined;
+          if (defaults && api?.setToolDefaults) {
+            api.setToolDefaults(toolId, defaults);
           }
-          return null;
-        }
-      },
-      deselectAnnotation: () => {
-        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
-        api?.deselectAnnotation?.();
-      },
-      updateAnnotation: (pageIndex: number, annotationId: string, patch: AnnotationPatch) => {
-        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
-        api?.updateAnnotation?.(pageIndex, annotationId, patch);
-      },
-      deactivateTools: () => {
-        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
-        api?.setActiveTool?.(null);
-      },
-      onAnnotationEvent: (listener: (event: AnnotationEvent) => void) => {
-        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
-        if (api?.onAnnotationEvent) {
-          return api.onAnnotationEvent(listener);
-        }
-        return undefined;
-      },
-      getActiveTool: () => {
-        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
-        return api?.getActiveTool?.() ?? null;
-      },
+        },
+        getSelectedAnnotation: () => {
+          const api = annotationApi as unknown as
+            | AnnotationApiSurface
+            | undefined;
+          if (!api?.getSelectedAnnotation) {
+            return null;
+          }
+          try {
+            return api.getSelectedAnnotation();
+          } catch (error) {
+            // Some EmbedPDF builds expose getSelectedAnnotation with an internal
+            // `this`/state dependency (e.g. reading `selectedUid` from undefined).
+            // If that happens, fail gracefully and treat it as "no selection"
+            // instead of crashing the entire annotations tool.
+            // Only log unexpected errors - "No active document" is a common expected state during init
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
+            if (!errorMessage.includes("No active document")) {
+              console.error(
+                "[AnnotationAPIBridge] getSelectedAnnotation failed:",
+                error,
+              );
+            }
+            return null;
+          }
+        },
+        deselectAnnotation: () => {
+          const api = annotationApi as unknown as
+            | AnnotationApiSurface
+            | undefined;
+          api?.deselectAnnotation?.();
+        },
+        updateAnnotation: (
+          pageIndex: number,
+          annotationId: string,
+          patch: AnnotationPatch,
+        ) => {
+          const api = annotationApi as unknown as
+            | AnnotationApiSurface
+            | undefined;
+          api?.updateAnnotation?.(pageIndex, annotationId, patch);
+        },
+        deactivateTools: () => {
+          const api = annotationApi as unknown as
+            | AnnotationApiSurface
+            | undefined;
+          api?.setActiveTool?.(null);
+        },
+        onAnnotationEvent: (listener: (event: AnnotationEvent) => void) => {
+          const api = annotationApi as unknown as
+            | AnnotationApiSurface
+            | undefined;
+          if (api?.onAnnotationEvent) {
+            return api.onAnnotationEvent(listener);
+          }
+          return undefined;
+        },
+        getActiveTool: () => {
+          const api = annotationApi as unknown as
+            | AnnotationApiSurface
+            | undefined;
+          return api?.getActiveTool?.() ?? null;
+        },
 
-      deleteAnnotation: (pageIndex: number, annotationId: string) => {
-        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
-        api?.deleteAnnotation?.(pageIndex, annotationId);
-      },
+        deleteAnnotation: (pageIndex: number, annotationId: string) => {
+          const api = annotationApi as unknown as
+            | AnnotationApiSurface
+            | undefined;
+          api?.deleteAnnotation?.(pageIndex, annotationId);
+        },
 
-      deleteAnnotations: (annotations: Array<{ pageIndex: number; id: string }>) => {
-        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
-        api?.deleteAnnotations?.(annotations);
-      },
+        deleteAnnotations: (
+          annotations: Array<{ pageIndex: number; id: string }>,
+        ) => {
+          const api = annotationApi as unknown as
+            | AnnotationApiSurface
+            | undefined;
+          api?.deleteAnnotations?.(annotations);
+        },
 
-      createAnnotation: (pageIndex: number, annotation: Record<string, unknown>) => {
-        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
-        api?.createAnnotation?.(pageIndex, annotation);
-      },
+        createAnnotation: (
+          pageIndex: number,
+          annotation: Record<string, unknown>,
+        ) => {
+          const api = annotationApi as unknown as
+            | AnnotationApiSurface
+            | undefined;
+          api?.createAnnotation?.(pageIndex, annotation);
+        },
 
-      getSelectedAnnotations: () => {
-        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
-        return api?.getSelectedAnnotations?.() ?? [];
-      },
+        getSelectedAnnotations: () => {
+          const api = annotationApi as unknown as
+            | AnnotationApiSurface
+            | undefined;
+          return api?.getSelectedAnnotations?.() ?? [];
+        },
 
-      purgeAnnotation: (pageIndex: number, annotationId: string) => {
-        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
-        api?.purgeAnnotation?.(pageIndex, annotationId);
-      },
+        purgeAnnotation: (pageIndex: number, annotationId: string) => {
+          const api = annotationApi as unknown as
+            | AnnotationApiSurface
+            | undefined;
+          api?.purgeAnnotation?.(pageIndex, annotationId);
+        },
 
-      moveAnnotation: (pageIndex: number, annotationId: string, newRect: AnnotationRect) => {
-        const api = annotationApi as unknown as AnnotationApiSurface | undefined;
-        api?.moveAnnotation?.(pageIndex, annotationId, newRect);
-      },
-    }),
-    [annotationApi, configureAnnotationTool, buildAnnotationDefaults],
-  );
+        moveAnnotation: (
+          pageIndex: number,
+          annotationId: string,
+          newRect: AnnotationRect,
+        ) => {
+          const api = annotationApi as unknown as
+            | AnnotationApiSurface
+            | undefined;
+          api?.moveAnnotation?.(pageIndex, annotationId, newRect);
+        },
+      }),
+      [annotationApi, configureAnnotationTool, buildAnnotationDefaults],
+    );
 
-  return null;
-});
+    return null;
+  },
+);

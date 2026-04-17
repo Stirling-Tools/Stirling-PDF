@@ -11,7 +11,10 @@ import { SaaSTeamsSection } from "@app/components/shared/config/configSections/S
 import { connectionModeService } from "@app/services/connectionModeService";
 import { authService } from "@app/services/authService";
 
-export type { ConfigNavSection, ConfigNavItem } from "@core/components/shared/config/configNavSections";
+export type {
+  ConfigNavSection,
+  ConfigNavItem,
+} from "@core/components/shared/config/configNavSections";
 
 /**
  * Hook version of desktop config nav sections with proper i18n support
@@ -28,7 +31,9 @@ export const useConfigNavSections = (
 
   useEffect(() => {
     void connectionModeService.getCurrentMode().then(setConnectionMode);
-    return connectionModeService.subscribeToModeChanges((config) => setConnectionMode(config.mode));
+    return connectionModeService.subscribeToModeChanges((config) =>
+      setConnectionMode(config.mode),
+    );
   }, []);
 
   // Subscribe to auth changes
@@ -43,7 +48,11 @@ export const useConfigNavSections = (
   const isLocalMode = connectionMode === "local";
 
   // Get the proprietary sections (includes core Preferences + admin sections)
-  const sections = useProprietaryConfigNavSections(isAdmin, runningEE, loginEnabled);
+  const sections = useProprietaryConfigNavSections(
+    isAdmin,
+    runningEE,
+    loginEnabled,
+  );
 
   const connectionModeSection: ConfigNavSection = {
     title: t("settings.connection.title", "Connection Mode"),
@@ -115,10 +124,16 @@ export const useConfigNavSections = (
   // and hiding the Account section when not authenticated.
   for (const section of sections.slice(1)) {
     const firstItemKey = section.items[0]?.key;
-    if (isSaasMode && firstItemKey && SELF_HOSTED_SECTION_FIRST_KEYS.has(firstItemKey)) {
+    if (
+      isSaasMode &&
+      firstItemKey &&
+      SELF_HOSTED_SECTION_FIRST_KEYS.has(firstItemKey)
+    ) {
       continue;
     }
-    const filteredItems = isAuthenticated ? section.items : section.items.filter((item) => item.key !== "account");
+    const filteredItems = isAuthenticated
+      ? section.items
+      : section.items.filter((item) => item.key !== "account");
     if (filteredItems.length === 0) continue;
     result.push({ ...section, items: filteredItems });
   }
@@ -135,10 +150,16 @@ export const createConfigNavSections = (
   runningEE: boolean = false,
   loginEnabled: boolean = false,
 ): ConfigNavSection[] => {
-  console.warn("createConfigNavSections is deprecated. Use useConfigNavSections hook instead for proper i18n support.");
+  console.warn(
+    "createConfigNavSections is deprecated. Use useConfigNavSections hook instead for proper i18n support.",
+  );
 
   // Get the proprietary sections (includes core Preferences + admin sections)
-  const sections = createProprietaryConfigNavSections(isAdmin, runningEE, loginEnabled);
+  const sections = createProprietaryConfigNavSections(
+    isAdmin,
+    runningEE,
+    loginEnabled,
+  );
 
   // Add Connection section at the beginning (after Preferences)
   sections.splice(1, 0, {

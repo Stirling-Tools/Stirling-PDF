@@ -1,9 +1,18 @@
 import { useTranslation } from "react-i18next";
-import { ToolType, useToolOperation } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  ToolType,
+  useToolOperation,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { AddStampParameters, defaultParameters } from "@app/components/tools/addStamp/useAddStampParameters";
+import {
+  AddStampParameters,
+  defaultParameters,
+} from "@app/components/tools/addStamp/useAddStampParameters";
 
-export const buildAddStampFormData = (parameters: AddStampParameters, file: File): FormData => {
+export const buildAddStampFormData = (
+  parameters: AddStampParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
   formData.append("pageNumbers", parameters.pageNumbers);
@@ -17,7 +26,9 @@ export const buildAddStampFormData = (parameters: AddStampParameters, file: File
   formData.append("overrideY", String(parameters.overrideY));
   formData.append(
     "customColor",
-    parameters.customColor.startsWith("#") ? parameters.customColor : `#${parameters.customColor}`,
+    parameters.customColor.startsWith("#")
+      ? parameters.customColor
+      : `#${parameters.customColor}`,
   );
   formData.append("alphabet", parameters.alphabet);
 
@@ -46,7 +57,10 @@ export const useAddStampOperation = () => {
   return useToolOperation<AddStampParameters>({
     ...addStampOperationConfig,
     getErrorMessage: createStandardErrorHandler(
-      t("AddStampRequest.error.failed", "An error occurred while adding stamp to the PDF."),
+      t(
+        "AddStampRequest.error.failed",
+        "An error occurred while adding stamp to the PDF.",
+      ),
     ),
   });
 };

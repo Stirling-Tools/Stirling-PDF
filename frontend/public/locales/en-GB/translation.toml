@@ -2079,6 +2079,13 @@ keywords = "Keywords: odd, even"
 numbers = "Numbers/ranges: 5, 10-20"
 progressions = "Progressions: 3n, 4n+1"
 
+[chat.progress]
+thinking = "Thinking..."
+analyzing = "Analysing your request..."
+calling_engine = "AI is thinking..."
+extracting_content = "Extracting content from your documents..."
+processing = "Processing extracted content..."
+
 [certSign]
 allSigned = "All participants have signed. Ready to finalize."
 awaitingSignatures = "Awaiting signatures"

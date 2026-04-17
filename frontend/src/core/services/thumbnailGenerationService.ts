@@ -34,7 +34,10 @@ interface CachedPDFDocument {
 
 export class ThumbnailGenerationService {
   // Session-based thumbnail cache
-  private thumbnailCache = new Map<FileId | string /* FIX ME: Page ID */, CachedThumbnail>();
+  private thumbnailCache = new Map<
+    FileId | string /* FIX ME: Page ID */,
+    CachedThumbnail
+  >();
   private maxCacheSizeBytes = 1024 * 1024 * 1024; // 1GB cache limit
   private currentCacheSize = 0;
 
@@ -49,7 +52,10 @@ export class ThumbnailGenerationService {
   /**
    * Get or create a cached PDF document
    */
-  private async getCachedPDFDocument(fileId: FileId, pdfArrayBuffer: ArrayBuffer): Promise<any> {
+  private async getCachedPDFDocument(
+    fileId: FileId,
+    pdfArrayBuffer: ArrayBuffer,
+  ): Promise<any> {
     const cached = this.pdfDocumentCache.get(fileId);
     if (cached) {
       cached.lastUsed = Date.now();
@@ -117,7 +123,11 @@ export class ThumbnailGenerationService {
     pdfArrayBuffer: ArrayBuffer,
     pageNumbers: number[],
     options: ThumbnailGenerationOptions = {},
-    onProgress?: (progress: { completed: number; total: number; thumbnails: ThumbnailResult[] }) => void,
+    onProgress?: (progress: {
+      completed: number;
+      total: number;
+      thumbnails: ThumbnailResult[];
+    }) => void,
   ): Promise<ThumbnailResult[]> {
     // Input validation
     if (!fileId || typeof fileId !== "string" || fileId.trim() === "") {
@@ -134,7 +144,14 @@ export class ThumbnailGenerationService {
 
     const { scale = 0.2, quality = 0.8 } = options;
 
-    return await this.generateThumbnailsMainThread(fileId, pdfArrayBuffer, pageNumbers, scale, quality, onProgress);
+    return await this.generateThumbnailsMainThread(
+      fileId,
+      pdfArrayBuffer,
+      pageNumbers,
+      scale,
+      quality,
+      onProgress,
+    );
   }
 
   /**
@@ -146,7 +163,11 @@ export class ThumbnailGenerationService {
     pageNumbers: number[],
     scale: number,
     quality: number,
-    onProgress?: (progress: { completed: number; total: number; thumbnails: ThumbnailResult[] }) => void,
+    onProgress?: (progress: {
+      completed: number;
+      total: number;
+      thumbnails: ThumbnailResult[];
+    }) => void,
   ): Promise<ThumbnailResult[]> {
     const pdf = await this.getCachedPDFDocument(fileId, pdfArrayBuffer);
 
@@ -178,7 +199,10 @@ export class ThumbnailGenerationService {
 
           allResults.push({ pageNumber, thumbnail, success: true });
         } catch (error) {
-          console.error(`Failed to generate thumbnail for page ${pageNumber}:`, error);
+          console.error(
+            `Failed to generate thumbnail for page ${pageNumber}:`,
+            error,
+          );
           allResults.push({
             pageNumber,
             thumbnail: "",
@@ -227,7 +251,10 @@ export class ThumbnailGenerationService {
     const sizeBytes = thumbnail.length * 2; // Rough estimate for base64 string
 
     // Enforce cache size limits
-    while (this.currentCacheSize + sizeBytes > this.maxCacheSizeBytes && this.thumbnailCache.size > 0) {
+    while (
+      this.currentCacheSize + sizeBytes > this.maxCacheSizeBytes &&
+      this.thumbnailCache.size > 0
+    ) {
       this.evictLeastRecentlyUsed();
     }
 

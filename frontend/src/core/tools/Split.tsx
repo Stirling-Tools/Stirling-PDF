@@ -9,13 +9,23 @@ import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { useSplitMethodTips } from "@app/components/tooltips/useSplitMethodTips";
 import { useSplitSettingsTips } from "@app/components/tooltips/useSplitSettingsTips";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
-import { type SplitMethod, METHOD_OPTIONS, type MethodOption, ENDPOINTS } from "@app/constants/splitConstants";
+import {
+  type SplitMethod,
+  METHOD_OPTIONS,
+  type MethodOption,
+  ENDPOINTS,
+} from "@app/constants/splitConstants";
 import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
 
 const Split = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
-  const base = useBaseTool("split", useSplitParameters, useSplitOperation, props);
+  const base = useBaseTool(
+    "split",
+    useSplitParameters,
+    useSplitOperation,
+    props,
+  );
 
   // Check which split endpoints are available
   const allSplitEndpoints = useMemo(() => Object.values(ENDPOINTS), []);
@@ -36,9 +46,12 @@ const Split = (props: BaseToolProps) => {
 
   // Get the method name for the settings step title
   const getSettingsTitle = () => {
-    if (!base.params.parameters.method) return t("split.steps.settings", "Settings");
+    if (!base.params.parameters.method)
+      return t("split.steps.settings", "Settings");
 
-    const methodOption = METHOD_OPTIONS.find((option) => option.value === base.params.parameters.method);
+    const methodOption = METHOD_OPTIONS.find(
+      (option) => option.value === base.params.parameters.method,
+    );
     if (!methodOption) return t("split.steps.settings", "Settings");
 
     const prefix = t(methodOption.prefixKey, "Split by");
@@ -68,7 +81,9 @@ const Split = (props: BaseToolProps) => {
       {
         title: getSettingsTitle(),
         isCollapsed: !base.params.parameters.method, // Collapsed until method selected
-        onCollapsedClick: base.hasResults ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.hasResults
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: settingsTips || undefined,
         content: (
           <SplitSettings

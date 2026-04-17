@@ -3,17 +3,38 @@
  * Eliminates prop drilling with a single, simple context
  */
 
-import React, { createContext, useContext, useReducer, useCallback, useMemo, useEffect } from "react";
-import { useToolManagement, type ToolAvailabilityMap } from "@app/hooks/useToolManagement";
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useCallback,
+  useMemo,
+  useEffect,
+} from "react";
+import {
+  useToolManagement,
+  type ToolAvailabilityMap,
+} from "@app/hooks/useToolManagement";
 import { PageEditorFunctions } from "@app/types/pageEditor";
 import { ToolRegistryEntry, ToolRegistry } from "@app/data/toolsTaxonomy";
-import { useNavigationActions, useNavigationState } from "@app/contexts/NavigationContext";
+import {
+  useNavigationActions,
+  useNavigationState,
+} from "@app/contexts/NavigationContext";
 import { ToolId, isValidToolId } from "@app/types/toolId";
-import { WorkbenchType, getDefaultWorkbench, isBaseWorkbench } from "@app/types/workbench";
+import {
+  WorkbenchType,
+  getDefaultWorkbench,
+  isBaseWorkbench,
+} from "@app/types/workbench";
 import { useNavigationUrlSync } from "@app/hooks/useUrlSync";
 import { filterToolRegistryByQuery } from "@app/utils/toolSearch";
 import { useToolHistory } from "@app/hooks/tools/useUserToolActivity";
-import { ToolWorkflowState, createInitialState, toolWorkflowReducer } from "@app/contexts/toolWorkflow/toolWorkflowState";
+import {
+  ToolWorkflowState,
+  createInitialState,
+  toolWorkflowReducer,
+} from "@app/contexts/toolWorkflow/toolWorkflowState";
 import type { ToolPanelMode } from "@app/constants/toolPanel";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
@@ -71,7 +92,10 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   handleReaderToggle: () => void;
 
   // Computed values
-  filteredTools: Array<{ item: [ToolId, ToolRegistryEntry]; matchedText?: string }>; // Filtered by search
+  filteredTools: Array<{
+    item: [ToolId, ToolRegistryEntry];
+    matchedText?: string;
+  }>; // Filtered by search
   isPanelVisible: boolean;
 
   // Tool History
@@ -91,7 +115,9 @@ const __GLOBAL_CONTEXT_KEY__ = "__ToolWorkflowContext__";
 const existingContext = (globalThis as any)[__GLOBAL_CONTEXT_KEY__] as
   | React.Context<ToolWorkflowContextValue | undefined>
   | undefined;
-const ToolWorkflowContext = existingContext ?? createContext<ToolWorkflowContextValue | undefined>(undefined);
+const ToolWorkflowContext =
+  existingContext ??
+  createContext<ToolWorkflowContextValue | undefined>(undefined);
 if (!existingContext) {
   (globalThis as any)[__GLOBAL_CONTEXT_KEY__] = ToolWorkflowContext;
 }
@@ -102,21 +128,32 @@ interface ToolWorkflowProviderProps {
 }
 
 export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
-  const [state, dispatch] = useReducer(toolWorkflowReducer, undefined, createInitialState);
+  const [state, dispatch] = useReducer(
+    toolWorkflowReducer,
+    undefined,
+    createInitialState,
+  );
   const { preferences, updatePreference } = usePreferences();
 
   // Store reset functions for tools
-  const [toolResetFunctions, setToolResetFunctions] = React.useState<Record<string, () => void>>({});
+  const [toolResetFunctions, setToolResetFunctions] = React.useState<
+    Record<string, () => void>
+  >({});
 
-  const [customViewRegistry, setCustomViewRegistry] = React.useState<Record<string, CustomWorkbenchViewRegistration>>({});
-  const [customViewData, setCustomViewData] = React.useState<Record<string, any>>({});
+  const [customViewRegistry, setCustomViewRegistry] = React.useState<
+    Record<string, CustomWorkbenchViewRegistration>
+  >({});
+  const [customViewData, setCustomViewData] = React.useState<
+    Record<string, any>
+  >({});
 
   // Navigation actions and state are available since we're inside NavigationProvider
   const { actions } = useNavigationActions();
   const navigationState = useNavigationState();
 
   // Tool management hook
-  const { toolRegistry, getSelectedTool, toolAvailability } = useToolManagement();
+  const { toolRegistry, getSelectedTool, toolAvailability } =
+    useToolManagement();
   const { allTools } = useToolRegistry();
 
   // Tool history hook
@@ -130,9 +167,12 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     dispatch({ type: "SET_SIDEBARS_VISIBLE", payload: visible });
   }, []);
 
-  const setLeftPanelView = useCallback((view: "toolPicker" | "toolContent" | "hidden") => {
-    dispatch({ type: "SET_LEFT_PANEL_VIEW", payload: view });
-  }, []);
+  const setLeftPanelView = useCallback(
+    (view: "toolPicker" | "toolContent" | "hidden") => {
+      dispatch({ type: "SET_LEFT_PANEL_VIEW", payload: view });
+    },
+    [],
+  );
 
   const setReaderMode = useCallback(
     (mode: boolean) => {
@@ -164,17 +204,23 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     [actions],
   );
 
-  const setPageEditorFunctions = useCallback((functions: PageEditorFunctions | null) => {
-    dispatch({ type: "SET_PAGE_EDITOR_FUNCTIONS", payload: functions });
-  }, []);
+  const setPageEditorFunctions = useCallback(
+    (functions: PageEditorFunctions | null) => {
+      dispatch({ type: "SET_PAGE_EDITOR_FUNCTIONS", payload: functions });
+    },
+    [],
+  );
 
   const setSearchQuery = useCallback((query: string) => {
     dispatch({ type: "SET_SEARCH_QUERY", payload: query });
   }, []);
 
-  const registerCustomWorkbenchView = useCallback((view: CustomWorkbenchViewRegistration) => {
-    setCustomViewRegistry((prev) => ({ ...prev, [view.id]: view }));
-  }, []);
+  const registerCustomWorkbenchView = useCallback(
+    (view: CustomWorkbenchViewRegistration) => {
+      setCustomViewRegistry((prev) => ({ ...prev, [view.id]: view }));
+    },
+    [],
+  );
 
   const unregisterCustomWorkbenchView = useCallback(
     (id: string) => {
@@ -200,20 +246,29 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
         return updated;
       });
 
-      if (removedView && navigationState.workbench === removedView.workbenchId) {
+      if (
+        removedView &&
+        navigationState.workbench === removedView.workbenchId
+      ) {
         actions.setWorkbench(getDefaultWorkbench());
       }
     },
     [actions, navigationState.workbench],
   );
 
-  const setCustomWorkbenchViewData = useCallback((id: string, dataOrUpdater: any | ((prev: any) => any)) => {
-    setCustomViewData((prev) => {
-      const currentData = prev[id];
-      const newData = typeof dataOrUpdater === "function" ? dataOrUpdater(currentData) : dataOrUpdater;
-      return { ...prev, [id]: newData };
-    });
-  }, []);
+  const setCustomWorkbenchViewData = useCallback(
+    (id: string, dataOrUpdater: any | ((prev: any) => any)) => {
+      setCustomViewData((prev) => {
+        const currentData = prev[id];
+        const newData =
+          typeof dataOrUpdater === "function"
+            ? dataOrUpdater(currentData)
+            : dataOrUpdater;
+        return { ...prev, [id]: newData };
+      });
+    },
+    [],
+  );
 
   const clearCustomWorkbenchViewData = useCallback((id: string) => {
     setCustomViewData((prev) => {
@@ -229,7 +284,9 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const customWorkbenchViews = useMemo<CustomWorkbenchViewInstance[]>(() => {
     return Object.values(customViewRegistry).map((view) => ({
       ...view,
-      data: Object.prototype.hasOwnProperty.call(customViewData, view.id) ? customViewData[view.id] : null,
+      data: Object.prototype.hasOwnProperty.call(customViewData, view.id)
+        ? customViewData[view.id]
+        : null,
     }));
   }, [customViewRegistry, customViewData]);
 
@@ -238,11 +295,16 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       return;
     }
 
-    if (navigationState.pendingNavigation || navigationState.showNavigationWarning) {
+    if (
+      navigationState.pendingNavigation ||
+      navigationState.showNavigationWarning
+    ) {
       return;
     }
 
-    const currentCustomView = customWorkbenchViews.find((view) => view.workbenchId === navigationState.workbench);
+    const currentCustomView = customWorkbenchViews.find(
+      (view) => view.workbenchId === navigationState.workbench,
+    );
     if (!currentCustomView || currentCustomView.data == null) {
       actions.setWorkbench(getDefaultWorkbench());
     }
@@ -286,12 +348,20 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     if (startupView === "tools") {
       hasAppliedStartupView.current = true;
     }
-  }, [preferences.defaultStartupView, actions, setReaderMode, setLeftPanelView]);
+  }, [
+    preferences.defaultStartupView,
+    actions,
+    setReaderMode,
+    setLeftPanelView,
+  ]);
 
   // Tool reset methods
-  const registerToolReset = useCallback((toolId: string, resetFunction: () => void) => {
-    setToolResetFunctions((prev) => ({ ...prev, [toolId]: resetFunction }));
-  }, []);
+  const registerToolReset = useCallback(
+    (toolId: string, resetFunction: () => void) => {
+      setToolResetFunctions((prev) => ({ ...prev, [toolId]: resetFunction }));
+    },
+    [],
+  );
 
   const resetTool = useCallback((toolId: string) => {
     // Use the current state directly instead of depending on the state in the closure
@@ -308,7 +378,9 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const handleToolSelect = useCallback(
     (toolId: ToolId) => {
       const availabilityInfo = toolAvailability[toolId];
-      const isExplicitlyDisabled = availabilityInfo ? availabilityInfo.available === false : false;
+      const isExplicitlyDisabled = availabilityInfo
+        ? availabilityInfo.available === false
+        : false;
       if (toolId !== "read" && toolId !== "multiTool" && isExplicitlyDisabled) {
         return;
       }
@@ -316,7 +388,11 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       // Guard: if there are unsaved changes and we're switching away from the current tool,
       // show the save modal before proceeding.
       const hasUnsavedChanges = navigationState.hasUnsavedChanges;
-      if (hasUnsavedChanges && navigationState.selectedTool && navigationState.selectedTool !== toolId) {
+      if (
+        hasUnsavedChanges &&
+        navigationState.selectedTool &&
+        navigationState.selectedTool !== toolId
+      ) {
         actions.requestNavigation(() => handleToolSelect(toolId));
         return;
       }
@@ -329,7 +405,9 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       if (toolId === "read") {
         setReaderMode(true);
         actions.setSelectedTool("read");
-        actions.setWorkbench(wasInCustomWorkbench ? getDefaultWorkbench() : "viewer");
+        actions.setWorkbench(
+          wasInCustomWorkbench ? getDefaultWorkbench() : "viewer",
+        );
         setSearchQuery("");
         return;
       }
@@ -339,7 +417,9 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
         setReaderMode(false);
         setLeftPanelView("hidden");
         actions.setSelectedTool("multiTool");
-        actions.setWorkbench(wasInCustomWorkbench ? getDefaultWorkbench() : "pageEditor");
+        actions.setWorkbench(
+          wasInCustomWorkbench ? getDefaultWorkbench() : "pageEditor",
+        );
         setSearchQuery("");
         return;
       }
@@ -389,7 +469,14 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       setLeftPanelView("toolContent");
       setReaderMode(false);
     },
-    [actions, getSelectedTool, navigationState.workbench, setLeftPanelView, setReaderMode, setSearchQuery],
+    [
+      actions,
+      getSelectedTool,
+      navigationState.workbench,
+      setLeftPanelView,
+      setReaderMode,
+      setSearchQuery,
+    ],
   );
 
   const handleBackToTools = useCallback(() => {
@@ -409,11 +496,20 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   }, [toolRegistry, state.searchQuery]);
 
   const isPanelVisible = useMemo(
-    () => state.sidebarsVisible && !state.readerMode && state.leftPanelView !== "hidden",
+    () =>
+      state.sidebarsVisible &&
+      !state.readerMode &&
+      state.leftPanelView !== "hidden",
     [state.sidebarsVisible, state.readerMode, state.leftPanelView],
   );
 
-  useNavigationUrlSync(navigationState.selectedTool, handleToolSelect, handleBackToTools, allTools, true);
+  useNavigationUrlSync(
+    navigationState.selectedTool,
+    handleToolSelect,
+    handleBackToTools,
+    allTools,
+    true,
+  );
 
   // Properly memoized context value
   const contextValue = useMemo(
@@ -497,15 +593,24 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     ],
   );
 
-  return <ToolWorkflowContext.Provider value={contextValue}>{children}</ToolWorkflowContext.Provider>;
+  return (
+    <ToolWorkflowContext.Provider value={contextValue}>
+      {children}
+    </ToolWorkflowContext.Provider>
+  );
 }
 
 // Custom hook to use the context
 export function useToolWorkflow(): ToolWorkflowContextValue {
   const context = useContext(ToolWorkflowContext);
   if (!context) {
-    console.error("ToolWorkflowContext not found. Current stack:", new Error().stack);
-    throw new Error("useToolWorkflow must be used within a ToolWorkflowProvider");
+    console.error(
+      "ToolWorkflowContext not found. Current stack:",
+      new Error().stack,
+    );
+    throw new Error(
+      "useToolWorkflow must be used within a ToolWorkflowProvider",
+    );
   }
   return context;
 }

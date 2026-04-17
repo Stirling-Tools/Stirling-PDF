@@ -9,7 +9,8 @@ import { connectionModeService } from "@app/services/connectionModeService";
 
 export function TeamInvitationBanner() {
   const { t } = useTranslation();
-  const { receivedInvitations, acceptInvitation, rejectInvitation } = useSaaSTeam();
+  const { receivedInvitations, acceptInvitation, rejectInvitation } =
+    useSaaSTeam();
   const { refreshBilling } = useSaaSBilling();
 
   const [processing, setProcessing] = useState(false);
@@ -18,7 +19,9 @@ export function TeamInvitationBanner() {
 
   // Load connection mode on mount
   useEffect(() => {
-    connectionModeService.getCurrentMode().then((mode) => setConnectionMode(mode));
+    connectionModeService
+      .getCurrentMode()
+      .then((mode) => setConnectionMode(mode));
   }, []);
 
   // Accept invitation handler
@@ -30,18 +33,26 @@ export function TeamInvitationBanner() {
 
     try {
       await acceptInvitation(invitation.invitationToken);
-      console.log("[TeamInvitationBanner] Invitation accepted successfully:", invitation.teamName);
+      console.log(
+        "[TeamInvitationBanner] Invitation accepted successfully:",
+        invitation.teamName,
+      );
 
       // Wait briefly for backend to process team membership update
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Refresh billing after joining team (tier may have changed)
-      console.log("[TeamInvitationBanner] Refreshing billing after team join...");
+      console.log(
+        "[TeamInvitationBanner] Refreshing billing after team join...",
+      );
       await refreshBilling();
 
       setDismissed(true);
     } catch (error) {
-      console.error("[TeamInvitationBanner] Failed to accept invitation:", error);
+      console.error(
+        "[TeamInvitationBanner] Failed to accept invitation:",
+        error,
+      );
     } finally {
       setProcessing(false);
     }
@@ -59,22 +70,32 @@ export function TeamInvitationBanner() {
       console.log("[TeamInvitationBanner] Invitation rejected");
       setDismissed(true);
     } catch (error) {
-      console.error("[TeamInvitationBanner] Failed to reject invitation:", error);
+      console.error(
+        "[TeamInvitationBanner] Failed to reject invitation:",
+        error,
+      );
     } finally {
       setProcessing(false);
     }
   };
 
   // Visibility logic
-  const shouldShow = connectionMode === "saas" && !dismissed && receivedInvitations.length > 0;
+  const shouldShow =
+    connectionMode === "saas" && !dismissed && receivedInvitations.length > 0;
 
   if (!shouldShow) return null;
 
   const invitation = receivedInvitations[0]; // Show first invitation
 
   const message = (
-    <Text component="span" size="sm" fw={500} style={{ color: "rgba(255, 255, 255, 0.95)" }}>
-      <strong>{invitation.inviterEmail}</strong> {t("team.invitationBanner.message", "has invited you to join")}{" "}
+    <Text
+      component="span"
+      size="sm"
+      fw={500}
+      style={{ color: "rgba(255, 255, 255, 0.95)" }}
+    >
+      <strong>{invitation.inviterEmail}</strong>{" "}
+      {t("team.invitationBanner.message", "has invited you to join")}{" "}
       <strong>{invitation.teamName}</strong>
     </Text>
   );
@@ -88,7 +109,12 @@ export function TeamInvitationBanner() {
         onClick={handleAccept}
         loading={processing}
         leftSection={
-          <LocalIcon icon="check" width="0.9rem" height="0.9rem" style={{ color: "var(--mantine-color-dark-9)" }} />
+          <LocalIcon
+            icon="check"
+            width="0.9rem"
+            height="0.9rem"
+            style={{ color: "var(--mantine-color-dark-9)" }}
+          />
         }
         styles={{
           label: {
@@ -114,7 +140,12 @@ export function TeamInvitationBanner() {
     <InfoBanner
       icon="mail"
       message={
-        <Group justify="space-between" align="center" wrap="nowrap" style={{ width: "100%" }}>
+        <Group
+          justify="space-between"
+          align="center"
+          wrap="nowrap"
+          style={{ width: "100%" }}
+        >
           {message}
           {actionButtons}
         </Group>

@@ -15,17 +15,20 @@ export function useLogoAssets() {
       folder,
       folderPath,
       getAssetPath: (name: string) => `${folderPath}/${name}`,
+      wordmark: {
+        black: `${folderPath}/StirlingPDFLogoBlackText.svg`,
+        grey: `${folderPath}/StirlingPDFLogoGreyText.svg`,
+        white: `${folderPath}/StirlingPDFLogoWhiteText.svg`,
+      },
       tooltipLogo: `${folderPath}/logo-tooltip.svg`,
       firstPage: `${folderPath}/Firstpage.png`,
       favicon: `${folderPath}/favicon.ico`,
       logo192: `${folderPath}/logo192.png`,
       logo512: `${folderPath}/logo512.png`,
-      wordmark: {
-        white: `${folderPath}/StirlingPDFLogoWhiteText.svg`,
-        black: `${folderPath}/StirlingPDFLogoBlackText.svg`,
-        grey: `${folderPath}/StirlingPDFLogoGreyText.svg`,
-      },
-      manifestHref: logoVariant === "classic" ? `${BASE_PATH}/manifest-classic.json` : `${BASE_PATH}/manifest.json`,
+      manifestHref:
+        logoVariant === "classic"
+          ? `${BASE_PATH}/manifest-classic.json`
+          : `${BASE_PATH}/manifest.json`,
     };
   }, [logoVariant]);
 }

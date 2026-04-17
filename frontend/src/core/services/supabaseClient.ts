@@ -7,7 +7,9 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey);
 
 // Create client only if configured, otherwise export null
-export const supabase: SupabaseClient | null = isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey) : null;
+export const supabase: SupabaseClient | null = isSupabaseConfigured
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
 
 // Log warning if not configured (for self-hosted installations)
 if (!isSupabaseConfigured) {

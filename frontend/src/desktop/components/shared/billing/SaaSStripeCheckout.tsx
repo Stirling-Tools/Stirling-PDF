@@ -18,7 +18,12 @@ interface SaaSStripeCheckoutProps {
   onSuccess?: () => void;
 }
 
-export const SaaSStripeCheckout: React.FC<SaaSStripeCheckoutProps> = ({ opened, onClose, planId, onSuccess }) => {
+export const SaaSStripeCheckout: React.FC<SaaSStripeCheckoutProps> = ({
+  opened,
+  onClose,
+  planId,
+  onSuccess,
+}) => {
   const { t } = useTranslation();
   const [state, setState] = useState<CheckoutState>({ status: "idle" });
 
@@ -35,14 +40,20 @@ export const SaaSStripeCheckout: React.FC<SaaSStripeCheckoutProps> = ({ opened, 
       const stripePlanId = planId === "team" ? "pro" : planId;
 
       // Open checkout in browser (returns void, opens browser window)
-      await saasBillingService.openCheckout(stripePlanId as "pro", window.location.origin);
+      await saasBillingService.openCheckout(
+        stripePlanId as "pro",
+        window.location.origin,
+      );
 
       setState({
         status: "opened",
         sessionPlanId: planId,
       });
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to create checkout session";
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to create checkout session";
       console.error("[SaaSStripeCheckout] Error creating checkout:", err);
       setState({
         status: "error",
@@ -77,10 +88,16 @@ export const SaaSStripeCheckout: React.FC<SaaSStripeCheckoutProps> = ({ opened, 
   useEffect(() => {
     if (opened) {
       // Check if we need a new session (first time or plan changed)
-      const needsNewSession = state.status === "idle" || !state.sessionPlanId || state.sessionPlanId !== planId;
+      const needsNewSession =
+        state.status === "idle" ||
+        !state.sessionPlanId ||
+        state.sessionPlanId !== planId;
 
       if (needsNewSession) {
-        console.log("[SaaSStripeCheckout] Opening checkout in browser for plan:", planId);
+        console.log(
+          "[SaaSStripeCheckout] Opening checkout in browser for plan:",
+          planId,
+        );
         createCheckoutSession();
       }
     } else if (!opened) {
@@ -103,7 +120,11 @@ export const SaaSStripeCheckout: React.FC<SaaSStripeCheckoutProps> = ({ opened, 
 
       case "opened":
         return (
-          <Alert color="blue" title={t("payment.checkoutOpened", "Checkout Opened in Browser")} icon={<OpenInBrowserIcon />}>
+          <Alert
+            color="blue"
+            title={t("payment.checkoutOpened", "Checkout Opened in Browser")}
+            icon={<OpenInBrowserIcon />}
+          >
             <Stack gap="md">
               <Text size="sm">
                 {t(
@@ -111,8 +132,16 @@ export const SaaSStripeCheckout: React.FC<SaaSStripeCheckoutProps> = ({ opened, 
                   "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information.",
                 )}
               </Text>
-              <Button variant="filled" color="blue" onClick={handleRefreshClick} fullWidth>
-                {t("payment.refreshBilling", "I've Completed Payment - Refresh Billing")}
+              <Button
+                variant="filled"
+                color="blue"
+                onClick={handleRefreshClick}
+                fullWidth
+              >
+                {t(
+                  "payment.refreshBilling",
+                  "I've Completed Payment - Refresh Billing",
+                )}
               </Button>
               <Button variant="subtle" onClick={handleClose} fullWidth>
                 {t("payment.closeLater", "I'll Do This Later")}
@@ -151,7 +180,9 @@ export const SaaSStripeCheckout: React.FC<SaaSStripeCheckoutProps> = ({ opened, 
       title={
         <div>
           <Text fw={600} size="lg">
-            {t("payment.upgradeTitle", "Upgrade to {{planName}}", { planName: getPlanName() })}
+            {t("payment.upgradeTitle", "Upgrade to {{planName}}", {
+              planName: getPlanName(),
+            })}
           </Text>
         </div>
       }
