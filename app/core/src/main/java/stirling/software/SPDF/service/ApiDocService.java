@@ -167,5 +167,33 @@ public class ApiDocService implements stirling.software.common.service.ToolMetad
         }
         return false;
     }
+
+    @Override
+    public boolean isZipOutput(String operationName) {
+        if (apiDocsJsonRootNode == null || apiDocumentation.isEmpty()) {
+            loadApiDocumentation();
+        }
+        if (!apiDocumentation.containsKey(operationName)) {
+            return false;
+        }
+        ApiEndpoint endpoint = apiDocumentation.get(operationName);
+        String description = endpoint.getDescription();
+        Matcher typeMatcher =
+                RegexPatternUtils.getInstance().getApiDocTypePattern().matcher(description);
+        if (typeMatcher.find()) {
+            String type = typeMatcher.group(1);
+            // Multi-output endpoints (SIMO/MIMO) return a ZIP of their outputs.
+            if (type.endsWith("MO")) {
+                return true;
+            }
+        }
+        Matcher outputMatcher =
+                RegexPatternUtils.getInstance().getApiDocOutputTypePattern().matcher(description);
+        if (outputMatcher.find()) {
+            String output = outputMatcher.group(1).toUpperCase(Locale.ROOT);
+            return output.startsWith("ZIP");
+        }
+        return false;
+    }
 }
 // Model class for API Endpoint

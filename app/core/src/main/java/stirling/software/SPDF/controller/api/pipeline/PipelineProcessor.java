@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -23,7 +21,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
-import io.github.pixee.security.ZipSecurity;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,8 +29,8 @@ import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
 import stirling.software.common.service.InternalApiClient;
-import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.ZipExtractionUtils;
 
 @Service
 @Slf4j
@@ -280,9 +277,11 @@ public class PipelineProcessor {
             newFilename = removeTrailingNaming(extractFilename(response));
         }
         // Check if the response body is a zip file
-        if (isZip(response.getBody(), newFilename)) {
+        if (ZipExtractionUtils.isZip(response.getBody(), newFilename)) {
             // Unzip the file and add all the files to the new output files
-            newOutputFiles.addAll(unzip(response.getBody(), result));
+            newOutputFiles.addAll(
+                    ZipExtractionUtils.extractZip(
+                            response.getBody(), tempFileManager, result::addTempFile));
         } else {
             final Resource tempResource = response.getBody();
             if (tempResource instanceof InternalApiClient.TempFileResource tfr) {
@@ -368,85 +367,5 @@ public class PipelineProcessor {
         }
         log.info("Files successfully loaded. Starting processing...");
         return outputFiles;
-    }
-
-    private boolean isZip(Resource data, String filename) throws IOException {
-        if (data == null || data.contentLength() < 4) {
-            return false;
-        }
-        if (filename != null) {
-            String lower = filename.toLowerCase();
-            if (lower.endsWith(".cbz")) {
-                // Treat CBZ as non-zip for our unzipping purposes
-                return false;
-            }
-        }
-        // Check the first four bytes of the data against the standard zip magic number
-        try (InputStream is = data.getInputStream()) {
-            byte[] header = new byte[4];
-            if (is.read(header) < 4) {
-                return false;
-            }
-            return header[0] == 0x50 && header[1] == 0x4B && header[2] == 0x03 && header[3] == 0x04;
-        }
-    }
-
-    private boolean isZip(Resource data) throws IOException {
-        return isZip(data, null);
-    }
-
-    private static final int MAX_UNZIP_DEPTH = 10;
-
-    private List<Resource> unzip(Resource data, PipelineResult result) throws IOException {
-        return unzip(data, result, 0);
-    }
-
-    private List<Resource> unzip(Resource data, PipelineResult result, int depth)
-            throws IOException {
-        if (depth > MAX_UNZIP_DEPTH) {
-            log.warn(
-                    "ZIP nesting depth {} exceeds limit {}, treating as file",
-                    depth,
-                    MAX_UNZIP_DEPTH);
-            return List.of(data);
-        }
-        log.info("Unzipping data of length: {}", data.contentLength());
-        List<Resource> unzippedFiles = new ArrayList<>();
-        try (InputStream bais = data.getInputStream();
-                ZipInputStream zis = ZipSecurity.createHardenedInputStream(bais)) {
-            ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
-                if (entry.isDirectory()) {
-                    continue;
-                }
-                TempFile tempFile = tempFileManager.createManagedTempFile("unzip");
-                result.addTempFile(tempFile);
-                try (OutputStream os = Files.newOutputStream(tempFile.getPath())) {
-                    byte[] buffer = new byte[4096];
-                    int count;
-                    while ((count = zis.read(buffer)) != -1) {
-                        os.write(buffer, 0, count);
-                    }
-                }
-                final String filename = entry.getName();
-                Resource fileResource =
-                        new FileSystemResource(tempFile.getFile()) {
-
-                            @Override
-                            public String getFilename() {
-                                return filename;
-                            }
-                        };
-                // If the unzipped file is a zip file, unzip it
-                if (isZip(fileResource, filename)) {
-                    log.info("File {} is a zip file. Unzipping...", filename);
-                    unzippedFiles.addAll(unzip(fileResource, result, depth + 1));
-                } else {
-                    unzippedFiles.add(fileResource);
-                }
-            }
-        }
-        log.info("Unzipping completed. {} files were unzipped.", unzippedFiles.size());
-        return unzippedFiles;
     }
 }

@@ -349,6 +349,52 @@ class ApiDocServiceTest {
     }
 
     @Test
+    void isZipOutputDetectsMultiOutputType() throws Exception {
+        String json = "{\"description\": \"Output:PDF Type:SIMO\"}";
+        JsonNode postNode = mapper.readTree(json);
+        ApiEndpoint endpoint = new ApiEndpoint("/split", postNode);
+        setApiDocumentation(Map.of("/split", endpoint));
+        setApiDocsJsonRootNode();
+        assertTrue(apiDocService.isZipOutput("/split"));
+    }
+
+    @Test
+    void isZipOutputDetectsMimoType() throws Exception {
+        String json = "{\"description\": \"Output:PDF Type:MIMO\"}";
+        JsonNode postNode = mapper.readTree(json);
+        ApiEndpoint endpoint = new ApiEndpoint("/overlay", postNode);
+        setApiDocumentation(Map.of("/overlay", endpoint));
+        setApiDocsJsonRootNode();
+        assertTrue(apiDocService.isZipOutput("/overlay"));
+    }
+
+    @Test
+    void isZipOutputDetectsZipOutputDeclaration() throws Exception {
+        String json = "{\"description\": \"Output:ZIP-PDF Type:SISO\"}";
+        JsonNode postNode = mapper.readTree(json);
+        ApiEndpoint endpoint = new ApiEndpoint("/split-by-sections", postNode);
+        setApiDocumentation(Map.of("/split-by-sections", endpoint));
+        setApiDocsJsonRootNode();
+        assertTrue(apiDocService.isZipOutput("/split-by-sections"));
+    }
+
+    @Test
+    void isZipOutputReturnsFalseForSisoPdf() throws Exception {
+        String json = "{\"description\": \"Input:PDF Output:PDF Type:SISO\"}";
+        JsonNode postNode = mapper.readTree(json);
+        ApiEndpoint endpoint = new ApiEndpoint("/rotate", postNode);
+        setApiDocumentation(Map.of("/rotate", endpoint));
+        setApiDocsJsonRootNode();
+        assertFalse(apiDocService.isZipOutput("/rotate"));
+    }
+
+    @Test
+    void isZipOutputReturnsFalseForUnknownOperation() throws Exception {
+        setApiDocumentation(Map.of());
+        assertFalse(apiDocService.isZipOutput("/unknown"));
+    }
+
+    @Test
     void constructorAcceptsNullUserService() {
         ApiDocService service = new ApiDocService(mapper, servletContext, null);
         assertNotNull(service);

@@ -29,6 +29,8 @@ import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.ZipExtractionUtils;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowOutcome;
@@ -55,6 +57,7 @@ public class AiWorkflowService {
     private final InternalApiClient internalApiClient;
     private final FileStorage fileStorage;
     private final ToolMetadataService toolMetadataService;
+    private final TempFileManager tempFileManager;
 
     @FunctionalInterface
     public interface ProgressListener {
@@ -267,22 +270,29 @@ public class AiWorkflowService {
 
     /**
      * Execute a single tool step. If the endpoint accepts multiple files, all files are sent in one
-     * call. Otherwise, the endpoint is called once per file.
+     * call. Otherwise, the endpoint is called once per file. ZIP responses are unpacked so each
+     * inner file is treated as its own result (e.g. split outputs a ZIP of pages).
      */
     private List<Resource> executeStep(
             String endpointPath, Map<String, Object> parameters, List<Resource> inputFiles)
             throws IOException {
-        if (toolMetadataService.isMultiInput(endpointPath)) {
-            return List.of(callEndpoint(endpointPath, parameters, inputFiles));
-        }
         List<Resource> results = new ArrayList<>();
-        for (Resource file : inputFiles) {
-            results.add(callEndpoint(endpointPath, parameters, List.of(file)));
+        if (toolMetadataService.isMultiInput(endpointPath)) {
+            results.addAll(callEndpoint(endpointPath, parameters, inputFiles));
+        } else {
+            for (Resource file : inputFiles) {
+                results.addAll(callEndpoint(endpointPath, parameters, List.of(file)));
+            }
         }
         return results;
     }
 
-    private Resource callEndpoint(
+    /**
+     * Call an endpoint and return the response body. Endpoints that are declared as ZIP-returning
+     * in the API spec (multi-output, or {@code Output:ZIP-*}) are unpacked into their individual
+     * entries so callers always see a flat list of result files.
+     */
+    private List<Resource> callEndpoint(
             String endpointPath, Map<String, Object> parameters, List<Resource> files)
             throws IOException {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
@@ -303,7 +313,11 @@ public class AiWorkflowService {
             throw new IOException(
                     "Tool returned HTTP " + response.getStatusCode() + " for " + endpointPath);
         }
-        return response.getBody();
+        Resource resource = response.getBody();
+        if (toolMetadataService.isZipOutput(endpointPath)) {
+            return ZipExtractionUtils.extractZip(resource, tempFileManager);
+        }
+        return List.of(resource);
     }
 
     private List<Resource> toResources(Map<String, MultipartFile> filesByName) throws IOException {
@@ -332,7 +346,10 @@ public class AiWorkflowService {
         List<AiWorkflowResultFile> descriptors = new ArrayList<>();
         for (int i = 0; i < resultFiles.size(); i++) {
             Resource resource = resultFiles.get(i);
-            byte[] bytes = Files.readAllBytes(resource.getFile().toPath());
+            byte[] bytes;
+            try (java.io.InputStream is = resource.getInputStream()) {
+                bytes = is.readAllBytes();
+            }
             String name =
                     preserveInputNames && inputFileNames.get(i) != null
                             ? inputFileNames.get(i)

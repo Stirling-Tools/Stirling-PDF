@@ -11,6 +11,7 @@ import apiClient from "@app/services/apiClient";
 import { getAuthHeaders } from "@app/services/apiClientSetup";
 import { createChildStub } from "@app/contexts/file/fileActions";
 import {
+  createNewStirlingFileStub,
   createStirlingFile,
   type StirlingFileStub,
 } from "@app/types/fileContext";
@@ -270,25 +271,32 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
       const files = await Promise.all(descriptors.map(downloadFile));
 
-      if (files.length === sourceStubs.length) {
-        // 1:1 mapping — treat each output as a new version of its matching input.
-        const operation: ToolOperation = {
-          toolId: "ai-workflow",
-          timestamp: Date.now(),
-        };
-        const childStubs = files.map((file, i) =>
-          createChildStub(sourceStubs[i], operation, file),
-        );
-        const stirlingFiles = files.map((file, i) =>
-          createStirlingFile(file, childStubs[i].id),
-        );
+      const operation: ToolOperation = {
+        toolId: "ai-workflow",
+        timestamp: Date.now(),
+      };
+      const isVersionMapping =
+        sourceStubs.length > 0 && files.length === sourceStubs.length;
+      const stubs = files.map((file, i) =>
+        isVersionMapping
+          ? createChildStub(sourceStubs[i], operation, file)
+          : createNewStirlingFileStub(file),
+      );
+      const stirlingFiles = files.map((file, i) =>
+        createStirlingFile(file, stubs[i].id),
+      );
+
+      if (sourceStubs.length > 0) {
+        // Always consume the inputs so merge/split inputs are removed from the workbench.
+        // For 1:1 operations (rotate, compress) the outputs carry the version chain; for
+        // merge/split they're fresh roots.
         await fileActions.consumeFiles(
           sourceStubs.map((s) => s.id),
           stirlingFiles,
-          childStubs,
+          stubs,
         );
       } else {
-        // Merge, split, or mismatched counts — add outputs as fresh root files.
+        // No inputs were provided (unlikely for completed workflows, but handle it safely).
         await fileActions.addFiles(files, { selectFiles: true });
       }
     },
