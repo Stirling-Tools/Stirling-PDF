@@ -215,7 +215,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
   );
 
   const shouldHideGoogleDrive = !isGoogleDriveEnabled && config?.hideDisabledToolsGoogleDrive;
-  const hasFiles = state.files.ids.length > 0;
 
   const width = collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH;
 
@@ -251,8 +250,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
           {!collapsed && <span className="file-sidebar-brand-text sidebar-content-fade">Stirling PDF</span>}
         </div>
 
-        {/* Search row — only shown when no files are loaded */}
-        {!hasFiles && (
+        {/* Search row */}
+        {(
           <div
             className={`file-sidebar-search-row${searchActive && !collapsed ? " active" : ""}`}
             onClick={!searchActive ? handleSearchClick : undefined}
@@ -279,8 +278,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(function FileSi
 
         {/* Scrollable content */}
         <div className="file-sidebar-scroll">
-          {/* Open from Computer + Google Drive — only shown when no files are loaded */}
-          {!hasFiles && (
+          {/* Open from Computer + Google Drive */}
+          {(
             <>
               <div
                 className="file-sidebar-action-row"
