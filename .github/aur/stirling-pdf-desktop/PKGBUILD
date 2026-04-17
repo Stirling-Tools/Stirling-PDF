@@ -1,14 +1,14 @@
 # Maintainer: Stirling PDF Inc <contact@stirlingpdf.com>
-pkgname=stirling-pdf-bin
+pkgname=stirling-pdf-desktop
 pkgver=2.7.3
 pkgrel=1
-pkgdesc="Locally hosted, web-based PDF manipulation tool (desktop app, prebuilt binary)"
+pkgdesc="Locally hosted, web-based PDF manipulation tool (Tauri desktop app, official Stirling PDF Inc build)"
 arch=('x86_64')
 url="https://www.stirling.com"
 license=('MIT' 'LicenseRef-Stirling-PDF-Proprietary')
 depends=('gtk3' 'webkit2gtk' 'libappindicator-gtk3')
 provides=('stirling-pdf')
-conflicts=('stirling-pdf' 'stirling-pdf-git')
+conflicts=('stirling-pdf' 'stirling-pdf-git' 'stirling-pdf-bin')
 options=('!strip')
 
 source_x86_64=("${pkgname}-${pkgver}.deb::https://github.com/Stirling-Tools/Stirling-PDF/releases/download/v${pkgver}/Stirling-PDF-linux-x86_64.deb")
