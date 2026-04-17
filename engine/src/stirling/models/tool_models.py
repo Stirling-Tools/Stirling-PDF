@@ -828,7 +828,7 @@ class Angle(IntEnum):
 
 class RotatePdfParams(ApiModel):
     angle: Angle | None = Field(
-        None, description="The angle by which to rotate the PDF file. This should be a multiple of 90."
+        None, description="The clockwise angle by which to rotate the PDF file. Must be a multiple of 90."
     )
 
 
