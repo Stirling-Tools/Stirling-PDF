@@ -36,7 +36,12 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
   // Memoize backend config to only track Google Drive specific properties
   const googleDriveBackendConfig = useMemo(
     () => extractGoogleDriveBackendConfig(config),
-    [config?.googleDriveEnabled, config?.googleDriveClientId, config?.googleDriveApiKey, config?.googleDriveAppId],
+    [
+      config?.googleDriveEnabled,
+      config?.googleDriveClientId,
+      config?.googleDriveApiKey,
+      config?.googleDriveAppId,
+    ],
   );
 
   // Check if Google Drive is configured and reset initialization if disabled
@@ -91,7 +96,10 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
 
         return files;
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to open Google Drive picker";
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to open Google Drive picker";
         setError(errorMessage);
         console.error("Google Drive picker error:", err);
         return [];

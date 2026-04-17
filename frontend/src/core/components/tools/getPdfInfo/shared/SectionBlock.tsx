@@ -7,7 +7,11 @@ interface SectionBlockProps {
   children: React.ReactNode;
 }
 
-const SectionBlock: React.FC<SectionBlockProps> = ({ title, anchorId, children }) => {
+const SectionBlock: React.FC<SectionBlockProps> = ({
+  title,
+  anchorId,
+  children,
+}) => {
   return (
     <Stack gap="sm" id={anchorId}>
       <Text fw={700} size="lg">

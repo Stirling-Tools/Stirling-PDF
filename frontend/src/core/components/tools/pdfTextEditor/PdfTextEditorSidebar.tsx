@@ -20,7 +20,10 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import FileDownloadIcon from "@mui/icons-material/FileDownloadOutlined";
 
-import { PdfTextEditorViewData, TextGroup } from "@app/tools/pdfTextEditor/pdfTextEditorTypes";
+import {
+  PdfTextEditorViewData,
+  TextGroup,
+} from "@app/tools/pdfTextEditor/pdfTextEditorTypes";
 import { pageDimensions } from "@app/tools/pdfTextEditor/pdfTextEditorUtils";
 import FontStatusPanel from "@app/components/tools/pdfTextEditor/FontStatusPanel";
 import ToolStep from "@app/components/tools/shared/ToolStep";
@@ -35,16 +38,23 @@ interface PdfTextEditorSidebarProps {
 }
 
 // Analyze page content to determine if it's paragraph-heavy
-const analyzePageContentType = (groups: TextGroup[], pageWidth: number): boolean => {
+const analyzePageContentType = (
+  groups: TextGroup[],
+  pageWidth: number,
+): boolean => {
   if (groups.length < 3) {
     return false;
   }
 
   const widths = groups.map((g) => Math.max(g.bounds.right - g.bounds.left, 1));
   const avgWidth = widths.reduce((sum, w) => sum + w, 0) / widths.length;
-  const stdDev = Math.sqrt(widths.reduce((sum, w) => sum + Math.pow(w - avgWidth, 2), 0) / widths.length);
+  const stdDev = Math.sqrt(
+    widths.reduce((sum, w) => sum + Math.pow(w - avgWidth, 2), 0) /
+      widths.length,
+  );
   const coefficientOfVariation = avgWidth > 0 ? stdDev / avgWidth : 0;
-  const fullWidthRatio = widths.filter((w) => w > pageWidth * 0.65).length / widths.length;
+  const fullWidthRatio =
+    widths.filter((w) => w > pageWidth * 0.65).length / widths.length;
 
   const criterion1 = groups.length >= 3;
   const criterion2 = avgWidth > pageWidth * 0.3;
@@ -55,8 +65,10 @@ const analyzePageContentType = (groups: TextGroup[], pageWidth: number): boolean
 
 const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
   const { t } = useTranslation();
-  const [pendingModeChange, setPendingModeChange] = useState<GroupingMode | null>(null);
-  const [advancedSettingsCollapsed, setAdvancedSettingsCollapsed] = useState(false);
+  const [pendingModeChange, setPendingModeChange] =
+    useState<GroupingMode | null>(null);
+  const [advancedSettingsCollapsed, setAdvancedSettingsCollapsed] =
+    useState(false);
   const [fontsCollapsed, setFontsCollapsed] = useState(false);
   const pdfTextEditorTips = usePdfTextEditorTips();
 
@@ -130,29 +142,49 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                     {t("toolPanel.alpha", "Alpha")}
                   </Badge>
                 </Flex>
-                <Tooltip sidebarTooltip={true} tips={pdfTextEditorTips.tips} header={pdfTextEditorTips.header} pinOnClick>
+                <Tooltip
+                  sidebarTooltip={true}
+                  tips={pdfTextEditorTips.tips}
+                  header={pdfTextEditorTips.header}
+                  pinOnClick
+                >
                   <ActionIcon variant="subtle" color="blue" size="sm">
-                    <LocalIcon icon="info-outline-rounded" width="1.25rem" height="1.25rem" />
+                    <LocalIcon
+                      icon="info-outline-rounded"
+                      width="1.25rem"
+                      height="1.25rem"
+                    />
                   </ActionIcon>
                 </Tooltip>
               </Flex>
 
               {fileName && (
                 <Text size="sm" c="dimmed">
-                  {t("pdfTextEditor.currentFile", "Current file: {{name}}", { name: fileName })}
+                  {t("pdfTextEditor.currentFile", "Current file: {{name}}", {
+                    name: fileName,
+                  })}
                 </Text>
               )}
             </Stack>
 
             <ToolStep
-              title={t("pdfTextEditor.options.advanced.title", "Advanced Settings")}
+              title={t(
+                "pdfTextEditor.options.advanced.title",
+                "Advanced Settings",
+              )}
               isCollapsed={advancedSettingsCollapsed}
-              onCollapsedClick={() => setAdvancedSettingsCollapsed(!advancedSettingsCollapsed)}
+              onCollapsedClick={() =>
+                setAdvancedSettingsCollapsed(!advancedSettingsCollapsed)
+              }
             >
               <Stack gap="md">
                 <Divider />
                 <Group justify="space-between" align="center">
-                  <Group gap={4} align="center" style={{ flex: 1, minWidth: 0 }}>
+                  <Group
+                    gap={4}
+                    align="center"
+                    style={{ flex: 1, minWidth: 0 }}
+                  >
                     <Tooltip
                       sidebarTooltip={false}
                       content={t(
@@ -161,18 +193,28 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                       )}
                       position="top"
                     >
-                      <ActionIcon variant="subtle" color="gray" size="sm" style={{ flexShrink: 0 }}>
+                      <ActionIcon
+                        variant="subtle"
+                        color="gray"
+                        size="sm"
+                        style={{ flexShrink: 0 }}
+                      >
                         <InfoOutlinedIcon fontSize="small" />
                       </ActionIcon>
                     </Tooltip>
                     <Text fw={500} size="sm" style={{ flex: 1 }}>
-                      {t("pdfTextEditor.options.autoScaleText.title", "Auto-scale text to fit boxes")}
+                      {t(
+                        "pdfTextEditor.options.autoScaleText.title",
+                        "Auto-scale text to fit boxes",
+                      )}
                     </Text>
                   </Group>
                   <Switch
                     size="md"
                     checked={autoScaleText}
-                    onChange={(event) => onAutoScaleTextChange(event.currentTarget.checked)}
+                    onChange={(event) =>
+                      onAutoScaleTextChange(event.currentTarget.checked)
+                    }
                   />
                 </Group>
 
@@ -181,18 +223,36 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                 <Stack gap="xs">
                   <Group gap={4} align="center">
                     <Text fw={500} size="sm">
-                      {t("pdfTextEditor.options.groupingMode.title", "Text Grouping Mode")}
+                      {t(
+                        "pdfTextEditor.options.groupingMode.title",
+                        "Text Grouping Mode",
+                      )}
                     </Text>
                     {externalGroupingMode === "auto" && isParagraphPage && (
-                      <Badge size="xs" color="blue" variant="light" key={`para-${selectedPage}`}>
-                        {t("pdfTextEditor.pageType.paragraph", "Paragraph page")}
+                      <Badge
+                        size="xs"
+                        color="blue"
+                        variant="light"
+                        key={`para-${selectedPage}`}
+                      >
+                        {t(
+                          "pdfTextEditor.pageType.paragraph",
+                          "Paragraph page",
+                        )}
                       </Badge>
                     )}
-                    {externalGroupingMode === "auto" && !isParagraphPage && hasDocument && (
-                      <Badge size="xs" color="gray" variant="light" key={`sparse-${selectedPage}`}>
-                        {t("pdfTextEditor.pageType.sparse", "Sparse text")}
-                      </Badge>
-                    )}
+                    {externalGroupingMode === "auto" &&
+                      !isParagraphPage &&
+                      hasDocument && (
+                        <Badge
+                          size="xs"
+                          color="gray"
+                          variant="light"
+                          key={`sparse-${selectedPage}`}
+                        >
+                          {t("pdfTextEditor.pageType.sparse", "Sparse text")}
+                        </Badge>
+                      )}
                   </Group>
                   <Text size="xs" c="dimmed">
                     {externalGroupingMode === "auto"
@@ -212,11 +272,28 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                   </Text>
                   <SegmentedControl
                     value={externalGroupingMode}
-                    onChange={(value) => handleModeChangeRequest(value as GroupingMode)}
+                    onChange={(value) =>
+                      handleModeChangeRequest(value as GroupingMode)
+                    }
                     data={[
-                      { label: t("pdfTextEditor.groupingMode.auto", "Auto"), value: "auto" },
-                      { label: t("pdfTextEditor.groupingMode.paragraph", "Paragraph"), value: "paragraph" },
-                      { label: t("pdfTextEditor.groupingMode.singleLine", "Single Line"), value: "singleLine" },
+                      {
+                        label: t("pdfTextEditor.groupingMode.auto", "Auto"),
+                        value: "auto",
+                      },
+                      {
+                        label: t(
+                          "pdfTextEditor.groupingMode.paragraph",
+                          "Paragraph",
+                        ),
+                        value: "paragraph",
+                      },
+                      {
+                        label: t(
+                          "pdfTextEditor.groupingMode.singleLine",
+                          "Single Line",
+                        ),
+                        value: "singleLine",
+                      },
                     ]}
                     fullWidth
                   />
@@ -225,7 +302,11 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                 <Divider />
 
                 <Group justify="space-between" align="center">
-                  <Group gap={4} align="center" style={{ flex: 1, minWidth: 0 }}>
+                  <Group
+                    gap={4}
+                    align="center"
+                    style={{ flex: 1, minWidth: 0 }}
+                  >
                     <Tooltip
                       sidebarTooltip={false}
                       content={t(
@@ -234,18 +315,30 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                       )}
                       position="top"
                     >
-                      <ActionIcon variant="subtle" color="gray" size="sm" style={{ flexShrink: 0 }}>
+                      <ActionIcon
+                        variant="subtle"
+                        color="gray"
+                        size="sm"
+                        style={{ flexShrink: 0 }}
+                      >
                         <InfoOutlinedIcon fontSize="small" />
                       </ActionIcon>
                     </Tooltip>
                     <Text fw={500} size="sm" style={{ flex: 1 }}>
-                      {t("pdfTextEditor.options.forceSingleElement.title", "Lock edited text to a single PDF element")}
+                      {t(
+                        "pdfTextEditor.options.forceSingleElement.title",
+                        "Lock edited text to a single PDF element",
+                      )}
                     </Text>
                   </Group>
                   <Switch
                     size="md"
                     checked={forceSingleTextElement}
-                    onChange={(event) => onForceSingleTextElementChange(event.currentTarget.checked)}
+                    onChange={(event) =>
+                      onForceSingleTextElementChange(
+                        event.currentTarget.checked,
+                      )
+                    }
                   />
                 </Group>
               </Stack>
@@ -274,7 +367,11 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
           </Button>
           <Menu position="bottom-end" withinPortal>
             <Menu.Target>
-              <ActionIcon variant="default" size="lg" disabled={!hasDocument || isConverting}>
+              <ActionIcon
+                variant="default"
+                size="lg"
+                disabled={!hasDocument || isConverting}
+              >
                 <MoreHorizIcon fontSize="small" />
               </ActionIcon>
             </Menu.Target>
@@ -286,7 +383,11 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
               >
                 {t("pdfTextEditor.actions.downloadCopy", "Download Copy")}
               </Menu.Item>
-              <Menu.Item leftSection={<AutorenewIcon fontSize="small" />} onClick={onReset} color="red">
+              <Menu.Item
+                leftSection={<AutorenewIcon fontSize="small" />}
+                onClick={onReset}
+                color="red"
+              >
                 {t("pdfTextEditor.actions.reset", "Reset Changes")}
               </Menu.Item>
             </Menu.Dropdown>

@@ -13,7 +13,9 @@ const TIER_HIERARCHY: Record<PlanTier, number> = {
 /**
  * Get numeric level for a tier
  */
-export function getTierLevel(tier: PlanTier | string | null | undefined): number {
+export function getTierLevel(
+  tier: PlanTier | string | null | undefined,
+): number {
   if (!tier) return 1;
   return TIER_HIERARCHY[tier as PlanTier] || 1;
 }
@@ -21,14 +23,20 @@ export function getTierLevel(tier: PlanTier | string | null | undefined): number
 /**
  * Check if target tier is the current tier
  */
-export function isCurrentTier(currentTier: PlanTier | string | null | undefined, targetTier: PlanTier | string): boolean {
+export function isCurrentTier(
+  currentTier: PlanTier | string | null | undefined,
+  targetTier: PlanTier | string,
+): boolean {
   return getTierLevel(currentTier) === getTierLevel(targetTier);
 }
 
 /**
  * Check if target tier is a downgrade from current tier
  */
-export function isDowngrade(currentTier: PlanTier | string | null | undefined, targetTier: PlanTier | string): boolean {
+export function isDowngrade(
+  currentTier: PlanTier | string | null | undefined,
+  targetTier: PlanTier | string,
+): boolean {
   return getTierLevel(currentTier) > getTierLevel(targetTier);
 }
 

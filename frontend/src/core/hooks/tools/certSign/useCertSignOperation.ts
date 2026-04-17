@@ -1,10 +1,19 @@
 import { useTranslation } from "react-i18next";
-import { ToolType, useToolOperation } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  ToolType,
+  useToolOperation,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { CertSignParameters, defaultParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
+import {
+  CertSignParameters,
+  defaultParameters,
+} from "@app/hooks/tools/certSign/useCertSignParameters";
 
 // Build form data for signing
-export const buildCertSignFormData = (parameters: CertSignParameters, file: File): FormData => {
+export const buildCertSignFormData = (
+  parameters: CertSignParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
 
@@ -67,6 +76,11 @@ export const useCertSignOperation = () => {
 
   return useToolOperation<CertSignParameters>({
     ...certSignOperationConfig,
-    getErrorMessage: createStandardErrorHandler(t("certSign.error.failed", "An error occurred while processing signatures.")),
+    getErrorMessage: createStandardErrorHandler(
+      t(
+        "certSign.error.failed",
+        "An error occurred while processing signatures.",
+      ),
+    ),
   });
 };

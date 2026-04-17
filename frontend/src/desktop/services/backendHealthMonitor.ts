@@ -25,7 +25,8 @@ class BackendHealthMonitor {
         message:
           status === "healthy"
             ? i18n.t("backendHealth.online", "Backend Online")
-            : (this.state.message ?? i18n.t("backendHealth.offline", "Backend Offline")),
+            : (this.state.message ??
+              i18n.t("backendHealth.offline", "Backend Offline")),
       });
     });
   }

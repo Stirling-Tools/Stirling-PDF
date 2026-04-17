@@ -1,16 +1,28 @@
 import { useTranslation } from "react-i18next";
-import { ToolType, useToolOperation } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  ToolType,
+  useToolOperation,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { ReplaceColorParameters, defaultParameters } from "@app/hooks/tools/replaceColor/useReplaceColorParameters";
+import {
+  ReplaceColorParameters,
+  defaultParameters,
+} from "@app/hooks/tools/replaceColor/useReplaceColorParameters";
 
-export const buildReplaceColorFormData = (parameters: ReplaceColorParameters, file: File): FormData => {
+export const buildReplaceColorFormData = (
+  parameters: ReplaceColorParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
 
   formData.append("replaceAndInvertOption", parameters.replaceAndInvertOption);
 
   if (parameters.replaceAndInvertOption === "HIGH_CONTRAST_COLOR") {
-    formData.append("highContrastColorCombination", parameters.highContrastColorCombination);
+    formData.append(
+      "highContrastColorCombination",
+      parameters.highContrastColorCombination,
+    );
   } else if (parameters.replaceAndInvertOption === "CUSTOM_COLOR") {
     formData.append("textColor", parameters.textColor);
     formData.append("backGroundColor", parameters.backGroundColor);
@@ -34,7 +46,10 @@ export const useReplaceColorOperation = () => {
   return useToolOperation<ReplaceColorParameters>({
     ...replaceColorOperationConfig,
     getErrorMessage: createStandardErrorHandler(
-      t("replaceColor.error.failed", "An error occurred while processing the colour replacement."),
+      t(
+        "replaceColor.error.failed",
+        "An error occurred while processing the colour replacement.",
+      ),
     ),
   });
 };

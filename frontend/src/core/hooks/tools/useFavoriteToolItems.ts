@@ -13,6 +13,12 @@ export function useFavoriteToolItems(
         return tool ? { id: toolId as ToolId, tool } : null;
       })
       .filter((x): x is { id: ToolId; tool: ToolRegistryEntry } => x !== null)
-      .filter(({ id, tool }) => Boolean(tool.component) || Boolean(tool.link) || id === "read" || id === "multiTool");
+      .filter(
+        ({ id, tool }) =>
+          Boolean(tool.component) ||
+          Boolean(tool.link) ||
+          id === "read" ||
+          id === "multiTool",
+      );
   }, [favoriteTools, toolRegistry]);
 }

@@ -1,7 +1,19 @@
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Stack, Text, Loader, Group, Divider, Paper, Switch, Badge, Anchor, Select, Collapse } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  Loader,
+  Group,
+  Divider,
+  Paper,
+  Switch,
+  Badge,
+  Anchor,
+  Select,
+  Collapse,
+} from "@mantine/core";
 import { alert } from "@app/components/toast";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
@@ -12,7 +24,10 @@ import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import { Z_INDEX_CONFIG_MODAL } from "@app/styles/zIndex";
 import ProviderCard from "@app/components/shared/config/configSections/ProviderCard";
-import { Provider, useAllProviders } from "@app/components/shared/config/configSections/providerDefinitions";
+import {
+  Provider,
+  useAllProviders,
+} from "@app/components/shared/config/configSections/providerDefinitions";
 import apiClient from "@app/services/apiClient";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
@@ -136,45 +151,66 @@ export default function AdminConnectionsSection() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { loginEnabled, getDisabledStyles } = useLoginRequired();
-  const { restartModalOpened, closeRestartModal, restartServer } = useRestartServer();
+  const { restartModalOpened, closeRestartModal, restartServer } =
+    useRestartServer();
   const allProviders = useAllProviders();
 
   const adminSettings = useAdminSettings<ConnectionsSettingsData>({
     sectionName: "connections",
-    fetchTransformer: async (): Promise<ConnectionsSettingsData & { _pending?: Record<string, unknown> }> => {
+    fetchTransformer: async (): Promise<
+      ConnectionsSettingsData & { _pending?: Record<string, unknown> }
+    > => {
       // Fetch security settings (oauth2, saml2)
-      const securityResponse = await apiClient.get("/api/v1/admin/settings/section/security");
+      const securityResponse = await apiClient.get(
+        "/api/v1/admin/settings/section/security",
+      );
       const securityData = securityResponse.data || {};
 
       // Fetch mail settings
-      const mailResponse = await apiClient.get("/api/v1/admin/settings/section/mail");
+      const mailResponse = await apiClient.get(
+        "/api/v1/admin/settings/section/mail",
+      );
       const mailData = mailResponse.data || {};
 
       // Fetch premium settings for SSO Auto Login
-      const premiumResponse = await apiClient.get("/api/v1/admin/settings/section/premium");
+      const premiumResponse = await apiClient.get(
+        "/api/v1/admin/settings/section/premium",
+      );
       const premiumData = premiumResponse.data || {};
 
       // Fetch Telegram settings
-      const telegramResponse = await apiClient.get("/api/v1/admin/settings/section/telegram");
+      const telegramResponse = await apiClient.get(
+        "/api/v1/admin/settings/section/telegram",
+      );
       const telegramData = telegramResponse.data || {};
 
       // Fetch system settings for enableMobileScanner
-      const systemResponse = await apiClient.get("/api/v1/admin/settings/section/system");
+      const systemResponse = await apiClient.get(
+        "/api/v1/admin/settings/section/system",
+      );
       const systemData = systemResponse.data || {};
 
-      const result: ConnectionsSettingsData & { _pending?: Record<string, unknown> } = {
+      const result: ConnectionsSettingsData & {
+        _pending?: Record<string, unknown>;
+      } = {
         oauth2: securityData.oauth2 || {},
         saml2: securityData.saml2 || {},
         mail: mailData || {},
         telegram: telegramData || {},
         ssoAutoLogin: premiumData.proFeatures?.ssoAutoLogin || false,
         enableMobileScanner: systemData.enableMobileScanner || false,
-        mobileScannerConvertToPdf: systemData.mobileScannerSettings?.convertToPdf !== false,
-        mobileScannerImageResolution: systemData.mobileScannerSettings?.imageResolution || "full",
-        mobileScannerPageFormat: systemData.mobileScannerSettings?.pageFormat || "A4",
-        mobileScannerStretchToFit: systemData.mobileScannerSettings?.stretchToFit || false,
-        googleDriveEnabled: premiumData.proFeatures?.googleDrive?.enabled || false,
-        googleDriveClientId: premiumData.proFeatures?.googleDrive?.clientId || "",
+        mobileScannerConvertToPdf:
+          systemData.mobileScannerSettings?.convertToPdf !== false,
+        mobileScannerImageResolution:
+          systemData.mobileScannerSettings?.imageResolution || "full",
+        mobileScannerPageFormat:
+          systemData.mobileScannerSettings?.pageFormat || "A4",
+        mobileScannerStretchToFit:
+          systemData.mobileScannerSettings?.stretchToFit || false,
+        googleDriveEnabled:
+          premiumData.proFeatures?.googleDrive?.enabled || false,
+        googleDriveClientId:
+          premiumData.proFeatures?.googleDrive?.clientId || "",
         googleDriveApiKey: premiumData.proFeatures?.googleDrive?.apiKey || "",
         googleDriveAppId: premiumData.proFeatures?.googleDrive?.appId || "",
       };
@@ -194,34 +230,59 @@ export default function AdminConnectionsSection() {
         pendingBlock.telegram = telegramData._pending;
       }
       if (premiumData._pending?.proFeatures?.ssoAutoLogin !== undefined) {
-        pendingBlock.ssoAutoLogin = premiumData._pending.proFeatures.ssoAutoLogin;
+        pendingBlock.ssoAutoLogin =
+          premiumData._pending.proFeatures.ssoAutoLogin;
       }
       if (systemData._pending?.enableMobileScanner !== undefined) {
-        pendingBlock.enableMobileScanner = systemData._pending.enableMobileScanner;
+        pendingBlock.enableMobileScanner =
+          systemData._pending.enableMobileScanner;
       }
-      if (systemData._pending?.mobileScannerSettings?.convertToPdf !== undefined) {
-        pendingBlock.mobileScannerConvertToPdf = systemData._pending.mobileScannerSettings.convertToPdf;
+      if (
+        systemData._pending?.mobileScannerSettings?.convertToPdf !== undefined
+      ) {
+        pendingBlock.mobileScannerConvertToPdf =
+          systemData._pending.mobileScannerSettings.convertToPdf;
       }
-      if (systemData._pending?.mobileScannerSettings?.imageResolution !== undefined) {
-        pendingBlock.mobileScannerImageResolution = systemData._pending.mobileScannerSettings.imageResolution;
+      if (
+        systemData._pending?.mobileScannerSettings?.imageResolution !==
+        undefined
+      ) {
+        pendingBlock.mobileScannerImageResolution =
+          systemData._pending.mobileScannerSettings.imageResolution;
       }
-      if (systemData._pending?.mobileScannerSettings?.pageFormat !== undefined) {
-        pendingBlock.mobileScannerPageFormat = systemData._pending.mobileScannerSettings.pageFormat;
+      if (
+        systemData._pending?.mobileScannerSettings?.pageFormat !== undefined
+      ) {
+        pendingBlock.mobileScannerPageFormat =
+          systemData._pending.mobileScannerSettings.pageFormat;
       }
-      if (systemData._pending?.mobileScannerSettings?.stretchToFit !== undefined) {
-        pendingBlock.mobileScannerStretchToFit = systemData._pending.mobileScannerSettings.stretchToFit;
+      if (
+        systemData._pending?.mobileScannerSettings?.stretchToFit !== undefined
+      ) {
+        pendingBlock.mobileScannerStretchToFit =
+          systemData._pending.mobileScannerSettings.stretchToFit;
       }
-      if (premiumData._pending?.proFeatures?.googleDrive?.enabled !== undefined) {
-        pendingBlock.googleDriveEnabled = premiumData._pending.proFeatures.googleDrive.enabled;
+      if (
+        premiumData._pending?.proFeatures?.googleDrive?.enabled !== undefined
+      ) {
+        pendingBlock.googleDriveEnabled =
+          premiumData._pending.proFeatures.googleDrive.enabled;
       }
-      if (premiumData._pending?.proFeatures?.googleDrive?.clientId !== undefined) {
-        pendingBlock.googleDriveClientId = premiumData._pending.proFeatures.googleDrive.clientId;
+      if (
+        premiumData._pending?.proFeatures?.googleDrive?.clientId !== undefined
+      ) {
+        pendingBlock.googleDriveClientId =
+          premiumData._pending.proFeatures.googleDrive.clientId;
       }
-      if (premiumData._pending?.proFeatures?.googleDrive?.apiKey !== undefined) {
-        pendingBlock.googleDriveApiKey = premiumData._pending.proFeatures.googleDrive.apiKey;
+      if (
+        premiumData._pending?.proFeatures?.googleDrive?.apiKey !== undefined
+      ) {
+        pendingBlock.googleDriveApiKey =
+          premiumData._pending.proFeatures.googleDrive.apiKey;
       }
       if (premiumData._pending?.proFeatures?.googleDrive?.appId !== undefined) {
-        pendingBlock.googleDriveAppId = premiumData._pending.proFeatures.googleDrive.appId;
+        pendingBlock.googleDriveAppId =
+          premiumData._pending.proFeatures.googleDrive.appId;
       }
 
       if (Object.keys(pendingBlock).length > 0) {
@@ -237,7 +298,9 @@ export default function AdminConnectionsSection() {
       if (currentSettings.oauth2) {
         Object.keys(currentSettings.oauth2).forEach((key) => {
           if (key !== "client") {
-            deltaSettings[`security.oauth2.${key}`] = (currentSettings.oauth2 as Record<string, unknown>)[key];
+            deltaSettings[`security.oauth2.${key}`] = (
+              currentSettings.oauth2 as Record<string, unknown>
+            )[key];
           }
         });
 
@@ -245,9 +308,13 @@ export default function AdminConnectionsSection() {
         const oauth2Client = currentSettings.oauth2.client;
         if (oauth2Client) {
           Object.keys(oauth2Client).forEach((providerId) => {
-            const providerSettings = oauth2Client[providerId] as Record<string, unknown>;
+            const providerSettings = oauth2Client[providerId] as Record<
+              string,
+              unknown
+            >;
             Object.keys(providerSettings).forEach((key) => {
-              deltaSettings[`security.oauth2.client.${providerId}.${key}`] = providerSettings[key];
+              deltaSettings[`security.oauth2.client.${providerId}.${key}`] =
+                providerSettings[key];
             });
           });
         }
@@ -279,38 +346,48 @@ export default function AdminConnectionsSection() {
 
       // SSO Auto Login
       if (currentSettings?.ssoAutoLogin !== undefined) {
-        deltaSettings["premium.proFeatures.ssoAutoLogin"] = currentSettings.ssoAutoLogin;
+        deltaSettings["premium.proFeatures.ssoAutoLogin"] =
+          currentSettings.ssoAutoLogin;
       }
 
       // Mobile Scanner settings
       if (currentSettings?.enableMobileScanner !== undefined) {
-        deltaSettings["system.enableMobileScanner"] = currentSettings.enableMobileScanner;
+        deltaSettings["system.enableMobileScanner"] =
+          currentSettings.enableMobileScanner;
       }
       if (currentSettings?.mobileScannerConvertToPdf !== undefined) {
-        deltaSettings["system.mobileScannerSettings.convertToPdf"] = currentSettings.mobileScannerConvertToPdf;
+        deltaSettings["system.mobileScannerSettings.convertToPdf"] =
+          currentSettings.mobileScannerConvertToPdf;
       }
       if (currentSettings?.mobileScannerImageResolution !== undefined) {
-        deltaSettings["system.mobileScannerSettings.imageResolution"] = currentSettings.mobileScannerImageResolution;
+        deltaSettings["system.mobileScannerSettings.imageResolution"] =
+          currentSettings.mobileScannerImageResolution;
       }
       if (currentSettings?.mobileScannerPageFormat !== undefined) {
-        deltaSettings["system.mobileScannerSettings.pageFormat"] = currentSettings.mobileScannerPageFormat;
+        deltaSettings["system.mobileScannerSettings.pageFormat"] =
+          currentSettings.mobileScannerPageFormat;
       }
       if (currentSettings?.mobileScannerStretchToFit !== undefined) {
-        deltaSettings["system.mobileScannerSettings.stretchToFit"] = currentSettings.mobileScannerStretchToFit;
+        deltaSettings["system.mobileScannerSettings.stretchToFit"] =
+          currentSettings.mobileScannerStretchToFit;
       }
 
       // Google Drive settings
       if (currentSettings?.googleDriveEnabled !== undefined) {
-        deltaSettings["premium.proFeatures.googleDrive.enabled"] = currentSettings.googleDriveEnabled;
+        deltaSettings["premium.proFeatures.googleDrive.enabled"] =
+          currentSettings.googleDriveEnabled;
       }
       if (currentSettings?.googleDriveClientId !== undefined) {
-        deltaSettings["premium.proFeatures.googleDrive.clientId"] = currentSettings.googleDriveClientId;
+        deltaSettings["premium.proFeatures.googleDrive.clientId"] =
+          currentSettings.googleDriveClientId;
       }
       if (currentSettings?.googleDriveApiKey !== undefined) {
-        deltaSettings["premium.proFeatures.googleDrive.apiKey"] = currentSettings.googleDriveApiKey;
+        deltaSettings["premium.proFeatures.googleDrive.apiKey"] =
+          currentSettings.googleDriveApiKey;
       }
       if (currentSettings?.googleDriveAppId !== undefined) {
-        deltaSettings["premium.proFeatures.googleDrive.appId"] = currentSettings.googleDriveAppId;
+        deltaSettings["premium.proFeatures.googleDrive.appId"] =
+          currentSettings.googleDriveAppId;
       }
 
       return {
@@ -320,7 +397,8 @@ export default function AdminConnectionsSection() {
     },
   });
 
-  const { settings, setSettings, loading, fetchSettings, isFieldPending } = adminSettings;
+  const { settings, setSettings, loading, fetchSettings, isFieldPending } =
+    adminSettings;
 
   useEffect(() => {
     if (loginEnabled) {
@@ -328,7 +406,10 @@ export default function AdminConnectionsSection() {
     }
   }, [loginEnabled, fetchSettings]);
 
-  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(settings, loading);
+  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
+    settings,
+    loading,
+  );
 
   const handleDiscard = useCallback(() => {
     const original = resetToSnapshot();
@@ -428,13 +509,21 @@ export default function AdminConnectionsSection() {
   }
 
   const linkedProviders = allProviders.filter((p) => isProviderConfigured(p));
-  const availableProviders = allProviders.filter((p) => !isProviderConfigured(p));
+  const availableProviders = allProviders.filter(
+    (p) => !isProviderConfigured(p),
+  );
 
-  const updateProviderSettings = (provider: Provider, updatedSettings: Record<string, unknown>) => {
+  const updateProviderSettings = (
+    provider: Provider,
+    updatedSettings: Record<string, unknown>,
+  ) => {
     if (provider.id === "smtp") {
       setSettings({ ...settings, mail: updatedSettings as MailSettings });
     } else if (provider.id === "telegram") {
-      setSettings({ ...settings, telegram: updatedSettings as TelegramSettingsData });
+      setSettings({
+        ...settings,
+        telegram: updatedSettings as TelegramSettingsData,
+      });
     } else if (provider.id === "googledrive") {
       const gd = updatedSettings as GoogleDriveSettings;
       setSettings({
@@ -476,7 +565,10 @@ export default function AdminConnectionsSection() {
             {t("admin.settings.connections.title", "Connections")}
           </Text>
           <Text size="sm" c="dimmed">
-            {t("admin.settings.connections.description", "Configure external authentication providers like OAuth2 and SAML.")}
+            {t(
+              "admin.settings.connections.description",
+              "Configure external authentication providers like OAuth2 and SAML.",
+            )}
           </Text>
         </div>
 
@@ -485,23 +577,38 @@ export default function AdminConnectionsSection() {
           <Stack gap="md">
             <Group justify="space-between" align="center">
               <Text fw={600} size="sm">
-                {t("admin.settings.connections.ssoAutoLogin.label", "SSO Auto Login")}
+                {t(
+                  "admin.settings.connections.ssoAutoLogin.label",
+                  "SSO Auto Login",
+                )}
               </Text>
               <Badge
                 color="grape"
                 size="sm"
                 style={{ cursor: "pointer" }}
                 onClick={() => navigate("/settings/adminPlan")}
-                title={t("admin.settings.badge.clickToUpgrade", "Click to view plan details")}
+                title={t(
+                  "admin.settings.badge.clickToUpgrade",
+                  "Click to view plan details",
+                )}
               >
                 PRO
               </Badge>
             </Group>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.connections.ssoAutoLogin.enable", "Enable SSO Auto Login")}
+                  {t(
+                    "admin.settings.connections.ssoAutoLogin.enable",
+                    "Enable SSO Auto Login",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
@@ -515,7 +622,10 @@ export default function AdminConnectionsSection() {
                   checked={settings?.ssoAutoLogin || false}
                   onChange={(e) => {
                     if (!loginEnabled) return; // Block change when login disabled
-                    setSettings({ ...settings, ssoAutoLogin: e.target.checked });
+                    setSettings({
+                      ...settings,
+                      ssoAutoLogin: e.target.checked,
+                    });
                   }}
                   disabled={!loginEnabled}
                   styles={getDisabledStyles()}
@@ -530,21 +640,46 @@ export default function AdminConnectionsSection() {
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">
             <Group gap="xs" align="center">
-              <LocalIcon icon="qr-code-rounded" width="1.25rem" height="1.25rem" />
+              <LocalIcon
+                icon="qr-code-rounded"
+                width="1.25rem"
+                height="1.25rem"
+              />
               <Text fw={600} size="sm">
-                {t("admin.settings.connections.mobileScanner.label", "Mobile Phone Upload")}
+                {t(
+                  "admin.settings.connections.mobileScanner.label",
+                  "Mobile Phone Upload",
+                )}
               </Text>
             </Group>
 
             {/* Documentation Link */}
-            <Anchor href="https://docs.stirlingpdf.com/Functionality/Mobile-Scanner" target="_blank" size="xs" c="blue">
-              {t("admin.settings.connections.documentation", "View documentation")} ↗
+            <Anchor
+              href="https://docs.stirlingpdf.com/Functionality/Mobile-Scanner"
+              target="_blank"
+              size="xs"
+              c="blue"
+            >
+              {t(
+                "admin.settings.connections.documentation",
+                "View documentation",
+              )}{" "}
+              ↗
             </Anchor>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.connections.mobileScanner.enable", "Enable QR Code Upload")}
+                  {t(
+                    "admin.settings.connections.mobileScanner.enable",
+                    "Enable QR Code Upload",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
@@ -553,7 +688,10 @@ export default function AdminConnectionsSection() {
                   )}
                 </Text>
                 <Text size="xs" c="orange" mt={8} fw={500}>
-                  {t("admin.settings.connections.mobileScanner.note", "Note: Requires Frontend URL to be configured. ")}
+                  {t(
+                    "admin.settings.connections.mobileScanner.note",
+                    "Note: Requires Frontend URL to be configured. ",
+                  )}
                   <Anchor
                     href="#"
                     onClick={(e) => {
@@ -563,7 +701,10 @@ export default function AdminConnectionsSection() {
                     c="orange"
                     td="underline"
                   >
-                    {t("admin.settings.connections.mobileScanner.link", "Configure in System Settings")}
+                    {t(
+                      "admin.settings.connections.mobileScanner.link",
+                      "Configure in System Settings",
+                    )}
                   </Anchor>
                 </Text>
               </div>
@@ -572,7 +713,10 @@ export default function AdminConnectionsSection() {
                   checked={settings?.enableMobileScanner || false}
                   onChange={(e) => {
                     if (!loginEnabled) return; // Block change when login disabled
-                    setSettings({ ...settings, enableMobileScanner: e.target.checked });
+                    setSettings({
+                      ...settings,
+                      enableMobileScanner: e.target.checked,
+                    });
                   }}
                   disabled={!loginEnabled}
                   styles={getDisabledStyles()}
@@ -587,12 +731,18 @@ export default function AdminConnectionsSection() {
                 gap="md"
                 mt="md"
                 ml="lg"
-                style={{ borderLeft: "2px solid var(--mantine-color-gray-3)", paddingLeft: "1rem" }}
+                style={{
+                  borderLeft: "2px solid var(--mantine-color-gray-3)",
+                  paddingLeft: "1rem",
+                }}
               >
                 {/* Convert to PDF */}
                 <div>
                   <Text size="sm" fw={500} mb="xs">
-                    {t("admin.settings.connections.mobileScannerConvertToPdf", "Convert Images to PDF")}
+                    {t(
+                      "admin.settings.connections.mobileScannerConvertToPdf",
+                      "Convert Images to PDF",
+                    )}
                   </Text>
                   <Text size="xs" c="dimmed" mb="sm">
                     {t(
@@ -605,11 +755,16 @@ export default function AdminConnectionsSection() {
                       checked={settings?.mobileScannerConvertToPdf !== false}
                       onChange={(e) => {
                         if (!loginEnabled) return;
-                        setSettings({ ...settings, mobileScannerConvertToPdf: e.target.checked });
+                        setSettings({
+                          ...settings,
+                          mobileScannerConvertToPdf: e.target.checked,
+                        });
                       }}
                       disabled={!loginEnabled}
                     />
-                    <PendingBadge show={isFieldPending("mobileScannerConvertToPdf")} />
+                    <PendingBadge
+                      show={isFieldPending("mobileScannerConvertToPdf")}
+                    />
                   </Group>
                 </div>
 
@@ -619,7 +774,10 @@ export default function AdminConnectionsSection() {
                     {/* Image Resolution */}
                     <div>
                       <Text size="sm" fw={500} mb="xs">
-                        {t("admin.settings.connections.mobileScannerImageResolution", "Image Resolution")}
+                        {t(
+                          "admin.settings.connections.mobileScannerImageResolution",
+                          "Image Resolution",
+                        )}
                       </Text>
                       <Text size="xs" c="dimmed" mb="sm">
                         {t(
@@ -629,33 +787,49 @@ export default function AdminConnectionsSection() {
                       </Text>
                       <Group gap="xs">
                         <Select
-                          value={settings?.mobileScannerImageResolution || "full"}
+                          value={
+                            settings?.mobileScannerImageResolution || "full"
+                          }
                           onChange={(value) => {
                             if (!loginEnabled) return;
-                            setSettings({ ...settings, mobileScannerImageResolution: value || "full" });
+                            setSettings({
+                              ...settings,
+                              mobileScannerImageResolution: value || "full",
+                            });
                           }}
                           data={[
                             {
                               value: "full",
-                              label: t("admin.settings.connections.imageResolutionFull", "Full (Original Size)"),
+                              label: t(
+                                "admin.settings.connections.imageResolutionFull",
+                                "Full (Original Size)",
+                              ),
                             },
                             {
                               value: "reduced",
-                              label: t("admin.settings.connections.imageResolutionReduced", "Reduced (Max 1200px)"),
+                              label: t(
+                                "admin.settings.connections.imageResolutionReduced",
+                                "Reduced (Max 1200px)",
+                              ),
                             },
                           ]}
                           disabled={!loginEnabled}
                           style={{ width: "250px" }}
                           comboboxProps={{ zIndex: Z_INDEX_CONFIG_MODAL }}
                         />
-                        <PendingBadge show={isFieldPending("mobileScannerImageResolution")} />
+                        <PendingBadge
+                          show={isFieldPending("mobileScannerImageResolution")}
+                        />
                       </Group>
                     </div>
 
                     {/* Page Format */}
                     <div>
                       <Text size="sm" fw={500} mb="xs">
-                        {t("admin.settings.connections.mobileScannerPageFormat", "Page Format")}
+                        {t(
+                          "admin.settings.connections.mobileScannerPageFormat",
+                          "Page Format",
+                        )}
                       </Text>
                       <Text size="xs" c="dimmed" mb="sm">
                         {t(
@@ -668,28 +842,51 @@ export default function AdminConnectionsSection() {
                           value={settings?.mobileScannerPageFormat || "A4"}
                           onChange={(value) => {
                             if (!loginEnabled) return;
-                            setSettings({ ...settings, mobileScannerPageFormat: value || "A4" });
+                            setSettings({
+                              ...settings,
+                              mobileScannerPageFormat: value || "A4",
+                            });
                           }}
                           data={[
                             {
                               value: "keep",
-                              label: t("admin.settings.connections.pageFormatKeep", "Keep (Original Dimensions)"),
+                              label: t(
+                                "admin.settings.connections.pageFormatKeep",
+                                "Keep (Original Dimensions)",
+                              ),
                             },
-                            { value: "A4", label: t("admin.settings.connections.pageFormatA4", "A4 (210×297mm)") },
-                            { value: "letter", label: t("admin.settings.connections.pageFormatLetter", "Letter (8.5×11in)") },
+                            {
+                              value: "A4",
+                              label: t(
+                                "admin.settings.connections.pageFormatA4",
+                                "A4 (210×297mm)",
+                              ),
+                            },
+                            {
+                              value: "letter",
+                              label: t(
+                                "admin.settings.connections.pageFormatLetter",
+                                "Letter (8.5×11in)",
+                              ),
+                            },
                           ]}
                           disabled={!loginEnabled}
                           style={{ width: "250px" }}
                           comboboxProps={{ zIndex: Z_INDEX_CONFIG_MODAL }}
                         />
-                        <PendingBadge show={isFieldPending("mobileScannerPageFormat")} />
+                        <PendingBadge
+                          show={isFieldPending("mobileScannerPageFormat")}
+                        />
                       </Group>
                     </div>
 
                     {/* Stretch to Fit */}
                     <div>
                       <Text size="sm" fw={500} mb="xs">
-                        {t("admin.settings.connections.mobileScannerStretchToFit", "Stretch to Fit")}
+                        {t(
+                          "admin.settings.connections.mobileScannerStretchToFit",
+                          "Stretch to Fit",
+                        )}
                       </Text>
                       <Text size="xs" c="dimmed" mb="sm">
                         {t(
@@ -702,11 +899,16 @@ export default function AdminConnectionsSection() {
                           checked={settings?.mobileScannerStretchToFit || false}
                           onChange={(e) => {
                             if (!loginEnabled) return;
-                            setSettings({ ...settings, mobileScannerStretchToFit: e.target.checked });
+                            setSettings({
+                              ...settings,
+                              mobileScannerStretchToFit: e.target.checked,
+                            });
                           }}
                           disabled={!loginEnabled}
                         />
-                        <PendingBadge show={isFieldPending("mobileScannerStretchToFit")} />
+                        <PendingBadge
+                          show={isFieldPending("mobileScannerStretchToFit")}
+                        />
                       </Group>
                     </div>
                   </>
@@ -721,7 +923,10 @@ export default function AdminConnectionsSection() {
           <>
             <div>
               <Text fw={600} size="md" mb="md">
-                {t("admin.settings.connections.linkedServices", "Linked Services")}
+                {t(
+                  "admin.settings.connections.linkedServices",
+                  "Linked Services",
+                )}
               </Text>
               <Stack gap="sm">
                 {linkedProviders.map((provider) => (
@@ -730,7 +935,9 @@ export default function AdminConnectionsSection() {
                     provider={provider}
                     isConfigured={true}
                     settings={getProviderSettings(provider)}
-                    onChange={(updatedSettings) => updateProviderSettings(provider, updatedSettings)}
+                    onChange={(updatedSettings) =>
+                      updateProviderSettings(provider, updatedSettings)
+                    }
                     disabled={!loginEnabled}
                   />
                 ))}
@@ -746,7 +953,10 @@ export default function AdminConnectionsSection() {
         {availableProviders.length > 0 && (
           <div>
             <Text fw={600} size="md" mb="md">
-              {t("admin.settings.connections.unlinkedServices", "Unlinked Services")}
+              {t(
+                "admin.settings.connections.unlinkedServices",
+                "Unlinked Services",
+              )}
             </Text>
             <Stack gap="sm">
               {availableProviders.map((provider) => (
@@ -755,7 +965,9 @@ export default function AdminConnectionsSection() {
                   provider={provider}
                   isConfigured={false}
                   settings={getProviderSettings(provider)}
-                  onChange={(updatedSettings) => updateProviderSettings(provider, updatedSettings)}
+                  onChange={(updatedSettings) =>
+                    updateProviderSettings(provider, updatedSettings)
+                  }
                   disabled={!loginEnabled}
                 />
               ))}
@@ -764,7 +976,11 @@ export default function AdminConnectionsSection() {
         )}
 
         {/* Restart Confirmation Modal */}
-        <RestartConfirmationModal opened={restartModalOpened} onClose={closeRestartModal} onRestart={restartServer} />
+        <RestartConfirmationModal
+          opened={restartModalOpened}
+          onClose={closeRestartModal}
+          onRestart={restartServer}
+        />
       </Stack>
 
       <SettingsStickyFooter

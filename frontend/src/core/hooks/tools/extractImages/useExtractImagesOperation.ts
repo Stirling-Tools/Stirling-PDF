@@ -1,12 +1,21 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { useToolOperation, ToolType } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  useToolOperation,
+  ToolType,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { ExtractImagesParameters, defaultParameters } from "@app/hooks/tools/extractImages/useExtractImagesParameters";
+import {
+  ExtractImagesParameters,
+  defaultParameters,
+} from "@app/hooks/tools/extractImages/useExtractImagesParameters";
 import { useToolResources } from "@app/hooks/tools/shared/useToolResources";
 
 // Static configuration that can be used by both the hook and automation executor
-export const buildExtractImagesFormData = (parameters: ExtractImagesParameters, file: File): FormData => {
+export const buildExtractImagesFormData = (
+  parameters: ExtractImagesParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
   formData.append("format", parameters.format);
@@ -40,7 +49,10 @@ export const useExtractImagesOperation = () => {
     ...extractImagesOperationConfig,
     responseHandler,
     getErrorMessage: createStandardErrorHandler(
-      t("extractImages.error.failed", "An error occurred while extracting images from the PDF."),
+      t(
+        "extractImages.error.failed",
+        "An error occurred while extracting images from the PDF.",
+      ),
     ),
   });
 };

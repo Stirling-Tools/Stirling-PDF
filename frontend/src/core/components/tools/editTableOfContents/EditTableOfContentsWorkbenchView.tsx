@@ -32,7 +32,9 @@ interface EditTableOfContentsWorkbenchViewProps {
   data: EditTableOfContentsWorkbenchViewData | null;
 }
 
-const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbenchViewProps) => {
+const EditTableOfContentsWorkbenchView = ({
+  data,
+}: EditTableOfContentsWorkbenchViewProps) => {
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
   const files = data?.files ?? [];
@@ -51,7 +53,12 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
       <Box p="xl">
         <Card withBorder radius="md">
           <Stack gap="sm">
-            <Text fw={600}>{t("editTableOfContents.workbench.empty.title", "Open the tool to start editing")}</Text>
+            <Text fw={600}>
+              {t(
+                "editTableOfContents.workbench.empty.title",
+                "Open the tool to start editing",
+              )}
+            </Text>
             <Text size="sm" c="dimmed">
               {t(
                 "editTableOfContents.workbench.empty.description",
@@ -81,7 +88,9 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
     onFileClick,
   } = data;
 
-  const showResults = Boolean(previewFiles.length > 0 || downloadUrl || errorMessage);
+  const showResults = Boolean(
+    previewFiles.length > 0 || downloadUrl || errorMessage,
+  );
 
   return (
     <Box
@@ -118,17 +127,25 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
         >
           <Stack gap="md">
             <Stack gap={2}>
-              <Text fw={600}>{t("editTableOfContents.editor.heading", "Bookmark editor")}</Text>
+              <Text fw={600}>
+                {t("editTableOfContents.editor.heading", "Bookmark editor")}
+              </Text>
               <Text size="sm" c="dimmed">
                 {selectedFileName
-                  ? t("editTableOfContents.actions.selectedFile", { file: selectedFileName })
+                  ? t("editTableOfContents.actions.selectedFile", {
+                      file: selectedFileName,
+                    })
                   : t(
                       "editTableOfContents.workbench.filePrompt",
                       "Select a PDF from your library or upload a new one to begin.",
                     )}
               </Text>
             </Stack>
-            <BookmarkEditor bookmarks={bookmarks} onChange={onBookmarksChange} disabled={disabled} />
+            <BookmarkEditor
+              bookmarks={bookmarks}
+              onChange={onBookmarksChange}
+              disabled={disabled}
+            />
             <Divider />
             <Group justify="flex-end">
               <Button
@@ -157,9 +174,17 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
           >
             <Stack gap="md">
               <Stack gap={4}>
-                <Text fw={600}>{t("editTableOfContents.results.title", "Updated PDF with bookmarks")}</Text>
+                <Text fw={600}>
+                  {t(
+                    "editTableOfContents.results.title",
+                    "Updated PDF with bookmarks",
+                  )}
+                </Text>
                 <Text size="sm" c="dimmed">
-                  {t("editTableOfContents.results.subtitle", "Download the processed file or undo the operation below.")}
+                  {t(
+                    "editTableOfContents.results.subtitle",
+                    "Download the processed file or undo the operation below.",
+                  )}
                 </Text>
               </Stack>
 
@@ -177,7 +202,12 @@ const EditTableOfContentsWorkbenchView = ({ data }: EditTableOfContentsWorkbench
                 {downloadUrl && (
                   <Button
                     leftSection={<LocalIcon icon="download-rounded" />}
-                    onClick={() => downloadFromUrl(downloadUrl, downloadFilename ?? "download")}
+                    onClick={() =>
+                      downloadFromUrl(
+                        downloadUrl,
+                        downloadFilename ?? "download",
+                      )
+                    }
                   >
                     {terminology.download}
                   </Button>

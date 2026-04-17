@@ -18,7 +18,12 @@ interface BulkUploadToServerModalProps {
   onUploaded?: () => Promise<void> | void;
 }
 
-const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({ opened, onClose, files, onUploaded }) => {
+const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({
+  opened,
+  onClose,
+  files,
+  onUploaded,
+}) => {
   const { t } = useTranslation();
   const { actions } = useFileActions();
   const [isUploading, setIsUploading] = useState(false);
@@ -39,11 +44,23 @@ const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({ opene
     setErrorMessage(null);
 
     try {
-      const rootIds = Array.from(new Set(files.map((file) => (file.originalFileId || file.id) as FileId)));
-      const remoteIds = Array.from(new Set(files.map((file) => file.remoteStorageId).filter(Boolean) as number[]));
-      const existingRemoteId = remoteIds.length === 1 ? remoteIds[0] : undefined;
+      const rootIds = Array.from(
+        new Set(
+          files.map((file) => (file.originalFileId || file.id) as FileId),
+        ),
+      );
+      const remoteIds = Array.from(
+        new Set(
+          files.map((file) => file.remoteStorageId).filter(Boolean) as number[],
+        ),
+      );
+      const existingRemoteId =
+        remoteIds.length === 1 ? remoteIds[0] : undefined;
 
-      const { remoteId, updatedAt, chain } = await uploadHistoryChains(rootIds, existingRemoteId);
+      const { remoteId, updatedAt, chain } = await uploadHistoryChains(
+        rootIds,
+        existingRemoteId,
+      );
 
       for (const stub of chain) {
         actions.updateStirlingFileStub(stub.id, {
@@ -72,7 +89,12 @@ const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({ opene
       onClose();
     } catch (error) {
       console.error("Failed to upload files to server:", error);
-      setErrorMessage(t("storageUpload.failure", "Upload failed. Please check your login and storage settings."));
+      setErrorMessage(
+        t(
+          "storageUpload.failure",
+          "Upload failed. Please check your login and storage settings.",
+        ),
+      );
     } finally {
       setIsUploading(false);
     }
@@ -87,7 +109,12 @@ const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({ opene
       zIndex={Z_INDEX_OVER_FILE_MANAGER_MODAL}
     >
       <Stack gap="sm">
-        <Text size="sm">{t("storageUpload.bulkDescription", "This uploads the selected files to your server storage.")}</Text>
+        <Text size="sm">
+          {t(
+            "storageUpload.bulkDescription",
+            "This uploads the selected files to your server storage.",
+          )}
+        </Text>
         <Text size="sm" c="dimmed">
           {t("storageUpload.fileCount", "{{count}} files selected", {
             count: files.length,
@@ -105,7 +132,10 @@ const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({ opene
         )}
 
         {errorMessage && (
-          <Alert color="red" title={t("storageUpload.errorTitle", "Upload failed")}>
+          <Alert
+            color="red"
+            title={t("storageUpload.errorTitle", "Upload failed")}
+          >
             {errorMessage}
           </Alert>
         )}
@@ -114,7 +144,11 @@ const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({ opene
           <Button variant="default" onClick={onClose} disabled={isUploading}>
             {t("cancel", "Cancel")}
           </Button>
-          <Button leftSection={<CloudUploadIcon style={{ fontSize: 18 }} />} onClick={handleUpload} loading={isUploading}>
+          <Button
+            leftSection={<CloudUploadIcon style={{ fontSize: 18 }} />}
+            onClick={handleUpload}
+            loading={isUploading}
+          >
             {t("storageUpload.uploadButton", "Upload to Server")}
           </Button>
         </Group>

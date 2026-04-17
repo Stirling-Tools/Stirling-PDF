@@ -18,7 +18,15 @@ export default function ApiKeys() {
   const isAnonymous = Boolean(user && isUserAnonymous(user));
 
   const { data: credits, isLoading: creditsLoading } = useCredits();
-  const { apiKey, isLoading: apiKeyLoading, refresh, isRefreshing, error: apiKeyError, refetch, hasAttempted } = useApiKey();
+  const {
+    apiKey,
+    isLoading: apiKeyLoading,
+    refresh,
+    isRefreshing,
+    error: apiKeyError,
+    refetch,
+    hasAttempted,
+  } = useApiKey();
 
   const copy = async (text: string, tag: string) => {
     try {
@@ -40,7 +48,9 @@ export default function ApiKeys() {
   };
 
   const goToAccount = () => {
-    window.dispatchEvent(new CustomEvent("appConfig:navigate", { detail: { key: "overview" } }));
+    window.dispatchEvent(
+      new CustomEvent("appConfig:navigate", { detail: { key: "overview" } }),
+    );
   };
 
   const showUsage = Boolean(credits);
@@ -51,15 +61,26 @@ export default function ApiKeys() {
         <UsageSection
           apiUsage={credits!}
           obscured={Boolean(!apiKey && hasAttempted && !isAnonymous)}
-          overlayMessage={t("config.apiKeys.overlayMessage", "Generate a key to see credits and available credits")}
+          overlayMessage={t(
+            "config.apiKeys.overlayMessage",
+            "Generate a key to see credits and available credits",
+          )}
           loading={creditsLoading}
         />
       )}
 
       {!isAnonymous && apiKeyError && (
         <Text size="sm" c="red.5">
-          {t("config.apiKeys.generateError", "We couldn't generate your API key.")}{" "}
-          <Anchor component="button" underline="always" onClick={refetch} c="red.4">
+          {t(
+            "config.apiKeys.generateError",
+            "We couldn't generate your API key.",
+          )}{" "}
+          <Anchor
+            component="button"
+            underline="always"
+            onClick={refetch}
+            c="red.4"
+          >
             {t("common.retry", "Retry")}
           </Anchor>
         </Text>
@@ -77,7 +98,12 @@ export default function ApiKeys() {
         >
           <Stack gap={10}>
             <Text fw={500}>{t("config.apiKeys.label", "API Key")}</Text>
-            <Group justify="space-between" wrap="nowrap" align="center" style={{ gap: "1rem" }}>
+            <Group
+              justify="space-between"
+              wrap="nowrap"
+              align="center"
+              style={{ gap: "1rem" }}
+            >
               <Text size="sm" c="dimmed" style={{ flex: 1 }}>
                 {t(
                   "config.apiKeys.guestInfo",
@@ -124,7 +150,11 @@ export default function ApiKeys() {
         />
       )}
 
-      <RefreshModal opened={showRefreshModal} onClose={() => setShowRefreshModal(false)} onConfirm={refreshKeys} />
+      <RefreshModal
+        opened={showRefreshModal}
+        onClose={() => setShowRefreshModal(false)}
+        onConfirm={refreshKeys}
+      />
     </Stack>
   );
 }

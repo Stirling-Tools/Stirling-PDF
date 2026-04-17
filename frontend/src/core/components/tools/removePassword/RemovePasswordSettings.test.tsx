@@ -11,7 +11,9 @@ vi.mock("react-i18next", () => ({
 }));
 
 // Wrapper component to provide Mantine context
-const TestWrapper = ({ children }: { children: React.ReactNode }) => <MantineProvider>{children}</MantineProvider>;
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <MantineProvider>{children}</MantineProvider>
+);
 
 describe("RemovePasswordSettings", () => {
   const mockOnParameterChange = vi.fn();
@@ -23,80 +25,127 @@ describe("RemovePasswordSettings", () => {
   test("should render password input field", () => {
     render(
       <TestWrapper>
-        <RemovePasswordSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} />
+        <RemovePasswordSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
-    expect(screen.getByText("mock-removePassword.password.label")).toBeInTheDocument();
+    expect(
+      screen.getByText("mock-removePassword.password.label"),
+    ).toBeInTheDocument();
   });
 
   test("should call onParameterChange when password is entered", () => {
     render(
       <TestWrapper>
-        <RemovePasswordSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} />
+        <RemovePasswordSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
-    const passwordInput = screen.getByPlaceholderText("mock-removePassword.password.placeholder");
+    const passwordInput = screen.getByPlaceholderText(
+      "mock-removePassword.password.placeholder",
+    );
     fireEvent.change(passwordInput, { target: { value: "test-password" } });
 
-    expect(mockOnParameterChange).toHaveBeenCalledWith("password", "test-password");
+    expect(mockOnParameterChange).toHaveBeenCalledWith(
+      "password",
+      "test-password",
+    );
   });
 
   test("should display current password value", () => {
-    const parametersWithPassword = { ...defaultParameters, password: "current-password" };
+    const parametersWithPassword = {
+      ...defaultParameters,
+      password: "current-password",
+    };
 
     render(
       <TestWrapper>
-        <RemovePasswordSettings parameters={parametersWithPassword} onParameterChange={mockOnParameterChange} />
+        <RemovePasswordSettings
+          parameters={parametersWithPassword}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
-    const passwordInput = screen.getByPlaceholderText("mock-removePassword.password.placeholder") as HTMLInputElement;
+    const passwordInput = screen.getByPlaceholderText(
+      "mock-removePassword.password.placeholder",
+    ) as HTMLInputElement;
     expect(passwordInput.value).toBe("current-password");
   });
 
   test("should disable password input when disabled prop is true", () => {
     render(
       <TestWrapper>
-        <RemovePasswordSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} disabled={true} />
+        <RemovePasswordSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+          disabled={true}
+        />
       </TestWrapper>,
     );
 
-    const passwordInput = screen.getByPlaceholderText("mock-removePassword.password.placeholder");
+    const passwordInput = screen.getByPlaceholderText(
+      "mock-removePassword.password.placeholder",
+    );
     expect(passwordInput).toBeDisabled();
   });
 
   test("should enable password input when disabled prop is false", () => {
     render(
       <TestWrapper>
-        <RemovePasswordSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} disabled={false} />
+        <RemovePasswordSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+          disabled={false}
+        />
       </TestWrapper>,
     );
 
-    const passwordInput = screen.getByPlaceholderText("mock-removePassword.password.placeholder");
+    const passwordInput = screen.getByPlaceholderText(
+      "mock-removePassword.password.placeholder",
+    );
     expect(passwordInput).not.toBeDisabled();
   });
 
   test("should show password input as required", () => {
     render(
       <TestWrapper>
-        <RemovePasswordSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} />
+        <RemovePasswordSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
-    const passwordInput = screen.getByPlaceholderText("mock-removePassword.password.placeholder");
+    const passwordInput = screen.getByPlaceholderText(
+      "mock-removePassword.password.placeholder",
+    );
     expect(passwordInput).toHaveAttribute("required");
   });
 
   test("should call translation function with correct keys", () => {
     render(
       <TestWrapper>
-        <RemovePasswordSettings parameters={defaultParameters} onParameterChange={mockOnParameterChange} />
+        <RemovePasswordSettings
+          parameters={defaultParameters}
+          onParameterChange={mockOnParameterChange}
+        />
       </TestWrapper>,
     );
 
-    expect(mockT).toHaveBeenCalledWith("removePassword.password.label", "Current Password");
-    expect(mockT).toHaveBeenCalledWith("removePassword.password.placeholder", "Enter current password");
+    expect(mockT).toHaveBeenCalledWith(
+      "removePassword.password.label",
+      "Current Password",
+    );
+    expect(mockT).toHaveBeenCalledWith(
+      "removePassword.password.placeholder",
+      "Enter current password",
+    );
   });
 });

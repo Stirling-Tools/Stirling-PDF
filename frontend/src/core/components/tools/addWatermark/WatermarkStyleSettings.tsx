@@ -4,11 +4,18 @@ import { AddWatermarkParameters } from "@app/hooks/tools/addWatermark/useAddWate
 
 interface WatermarkStyleSettingsProps {
   parameters: AddWatermarkParameters;
-  onParameterChange: <K extends keyof AddWatermarkParameters>(key: K, value: AddWatermarkParameters[K]) => void;
+  onParameterChange: <K extends keyof AddWatermarkParameters>(
+    key: K,
+    value: AddWatermarkParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const WatermarkStyleSettings = ({ parameters, onParameterChange, disabled = false }: WatermarkStyleSettingsProps) => {
+const WatermarkStyleSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: WatermarkStyleSettingsProps) => {
   const { t } = useTranslation();
 
   return (
@@ -21,7 +28,12 @@ const WatermarkStyleSettings = ({ parameters, onParameterChange, disabled = fals
         <NumberInput
           value={parameters.rotation}
           onChange={(value) =>
-            onParameterChange("rotation", typeof value === "number" ? value : parseInt(value as string, 10) || 0)
+            onParameterChange(
+              "rotation",
+              typeof value === "number"
+                ? value
+                : parseInt(value as string, 10) || 0,
+            )
           }
           min={-360}
           max={360}
@@ -34,7 +46,12 @@ const WatermarkStyleSettings = ({ parameters, onParameterChange, disabled = fals
         <NumberInput
           value={parameters.opacity}
           onChange={(value) =>
-            onParameterChange("opacity", typeof value === "number" ? value : parseInt(value as string, 10) || 50)
+            onParameterChange(
+              "opacity",
+              typeof value === "number"
+                ? value
+                : parseInt(value as string, 10) || 50,
+            )
           }
           min={0}
           max={100}
@@ -50,7 +67,12 @@ const WatermarkStyleSettings = ({ parameters, onParameterChange, disabled = fals
         <NumberInput
           value={parameters.widthSpacer}
           onChange={(value) =>
-            onParameterChange("widthSpacer", typeof value === "number" ? value : parseInt(value as string, 10) || 50)
+            onParameterChange(
+              "widthSpacer",
+              typeof value === "number"
+                ? value
+                : parseInt(value as string, 10) || 50,
+            )
           }
           min={0}
           max={200}
@@ -63,7 +85,12 @@ const WatermarkStyleSettings = ({ parameters, onParameterChange, disabled = fals
         <NumberInput
           value={parameters.heightSpacer}
           onChange={(value) =>
-            onParameterChange("heightSpacer", typeof value === "number" ? value : parseInt(value as string, 10) || 50)
+            onParameterChange(
+              "heightSpacer",
+              typeof value === "number"
+                ? value
+                : parseInt(value as string, 10) || 50,
+            )
           }
           min={0}
           max={200}

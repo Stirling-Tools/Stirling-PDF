@@ -1,5 +1,8 @@
 import { BaseParameters } from "@app/types/parameters";
-import { useBaseParameters, BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
+import {
+  useBaseParameters,
+  BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
 
 export type RedactMode = "automatic" | "manual";
 
@@ -39,7 +42,10 @@ export const useRedactParameters = (): RedactParametersHook => {
     },
     validateFn: (params) => {
       if (params.mode === "automatic") {
-        return params.wordsToRedact.length > 0 && params.wordsToRedact.some((word) => word.trim().length > 0);
+        return (
+          params.wordsToRedact.length > 0 &&
+          params.wordsToRedact.some((word) => word.trim().length > 0)
+        );
       }
       // Manual mode is not yet supported via this flow
       return false;

@@ -10,7 +10,12 @@ import { useOverlayPdfsTips } from "@app/components/tooltips/useOverlayPdfsTips"
 const OverlayPdfs = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
-  const base = useBaseTool("overlay-pdfs", useOverlayPdfsParameters, useOverlayPdfsOperation, props);
+  const base = useBaseTool(
+    "overlay-pdfs",
+    useOverlayPdfsParameters,
+    useOverlayPdfsOperation,
+    props,
+  );
   const overlayTips = useOverlayPdfsTips();
 
   return createToolFlow({
@@ -22,7 +27,9 @@ const OverlayPdfs = (props: BaseToolProps) => {
       {
         title: t("overlay-pdfs.settings.title", "Settings"),
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: overlayTips,
         content: (
           <OverlayPdfsSettings

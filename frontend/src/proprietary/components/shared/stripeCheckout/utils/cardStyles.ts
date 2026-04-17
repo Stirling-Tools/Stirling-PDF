@@ -20,7 +20,9 @@ export function getCardBorderStyle(isHighlighted: boolean): CSSProperties {
 /**
  * Get base card style
  */
-export function getBaseCardStyle(isHighlighted: boolean = false): CSSProperties {
+export function getBaseCardStyle(
+  isHighlighted: boolean = false,
+): CSSProperties {
   return {
     position: "relative",
     display: "flex",
@@ -33,7 +35,9 @@ export function getBaseCardStyle(isHighlighted: boolean = false): CSSProperties 
 /**
  * Get clickable paper style
  */
-export function getClickablePaperStyle(isHighlighted: boolean = false): CSSProperties {
+export function getClickablePaperStyle(
+  isHighlighted: boolean = false,
+): CSSProperties {
   return {
     cursor: "pointer",
     transition: "all 0.2s",

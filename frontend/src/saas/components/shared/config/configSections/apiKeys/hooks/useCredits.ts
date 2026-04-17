@@ -12,13 +12,27 @@ function coerceNumber(value: unknown, fallback = 0): number {
 function normalizeCredits(raw: Record<string, unknown>): ApiCredits {
   // Accept a variety of possible backend keys to be resilient
   return {
-    weeklyCreditsRemaining: coerceNumber(raw?.weeklyCreditsRemaining ?? raw?.weeklyRemaining ?? raw?.weekly_left),
-    weeklyCreditsAllocated: coerceNumber(raw?.weeklyCreditsAllocated ?? raw?.weeklyAllocated ?? raw?.weekly_total),
-    boughtCreditsRemaining: coerceNumber(raw?.boughtCreditsRemaining ?? raw?.boughtRemaining ?? raw?.bought_left),
-    totalBoughtCredits: coerceNumber(raw?.totalBoughtCredits ?? raw?.boughtTotal ?? raw?.bought_total),
-    totalAvailableCredits: coerceNumber(raw?.totalAvailableCredits ?? raw?.totalRemaining ?? raw?.available_total),
-    weeklyResetDate: String(raw?.weeklyResetDate ?? raw?.weeklyReset ?? raw?.reset_date ?? ""),
-    lastApiUsage: String(raw?.lastApiUsage ?? raw?.lastApiUse ?? raw?.last_used_at ?? ""),
+    weeklyCreditsRemaining: coerceNumber(
+      raw?.weeklyCreditsRemaining ?? raw?.weeklyRemaining ?? raw?.weekly_left,
+    ),
+    weeklyCreditsAllocated: coerceNumber(
+      raw?.weeklyCreditsAllocated ?? raw?.weeklyAllocated ?? raw?.weekly_total,
+    ),
+    boughtCreditsRemaining: coerceNumber(
+      raw?.boughtCreditsRemaining ?? raw?.boughtRemaining ?? raw?.bought_left,
+    ),
+    totalBoughtCredits: coerceNumber(
+      raw?.totalBoughtCredits ?? raw?.boughtTotal ?? raw?.bought_total,
+    ),
+    totalAvailableCredits: coerceNumber(
+      raw?.totalAvailableCredits ?? raw?.totalRemaining ?? raw?.available_total,
+    ),
+    weeklyResetDate: String(
+      raw?.weeklyResetDate ?? raw?.weeklyReset ?? raw?.reset_date ?? "",
+    ),
+    lastApiUsage: String(
+      raw?.lastApiUsage ?? raw?.lastApiUse ?? raw?.last_used_at ?? "",
+    ),
   };
 }
 
@@ -34,7 +48,8 @@ export function useCredits() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await apiClient.get<Record<string, unknown>>("/api/v1/credits");
+      const res =
+        await apiClient.get<Record<string, unknown>>("/api/v1/credits");
       const normalized = normalizeCredits(res.data);
       // If backend returns an "empty" payload, keep data null so the UI stays in loading/skeleton
       const isEmpty =
@@ -60,7 +75,13 @@ export function useCredits() {
     }
   }, [loading, session, hasAttempted, isAnonymous, fetchCredits]);
 
-  return { data, isLoading, error, refetch: fetchCredits, hasAttempted } as const;
+  return {
+    data,
+    isLoading,
+    error,
+    refetch: fetchCredits,
+    hasAttempted,
+  } as const;
 }
 
 export default useCredits;

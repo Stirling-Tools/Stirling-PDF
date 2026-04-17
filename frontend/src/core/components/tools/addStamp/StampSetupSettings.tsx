@@ -60,7 +60,10 @@ const STAMP_TEMPLATES = [
   },
 ];
 
-const resolveVariablesForPreview = (text: string, filename?: string): string => {
+const resolveVariablesForPreview = (
+  text: string,
+  filename?: string,
+): string => {
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -130,7 +133,11 @@ interface ClickableCodeProps {
   block?: boolean;
 }
 
-const ClickableCode = ({ children, onClick, block = false }: ClickableCodeProps) => (
+const ClickableCode = ({
+  children,
+  onClick,
+  block = false,
+}: ClickableCodeProps) => (
   <Code
     tabIndex={0}
     role="button"
@@ -150,7 +157,13 @@ const ClickableCode = ({ children, onClick, block = false }: ClickableCodeProps)
   </Code>
 );
 
-const StampTextPreview = ({ stampText, filename }: { stampText: string; filename?: string }) => {
+const StampTextPreview = ({
+  stampText,
+  filename,
+}: {
+  stampText: string;
+  filename?: string;
+}) => {
   const { t } = useTranslation();
 
   const resolvedText = useMemo(() => {
@@ -165,7 +178,14 @@ const StampTextPreview = ({ stampText, filename }: { stampText: string; filename
       <Text size="xs" c="dimmed" mb={4}>
         {t("AddStampRequest.preview", "Preview:")}
       </Text>
-      <Text size="sm" style={{ whiteSpace: "pre-wrap", fontFamily: "monospace", wordBreak: "break-word" }}>
+      <Text
+        size="sm"
+        style={{
+          whiteSpace: "pre-wrap",
+          fontFamily: "monospace",
+          wordBreak: "break-word",
+        }}
+      >
         {resolvedText}
       </Text>
     </Paper>
@@ -174,20 +194,33 @@ const StampTextPreview = ({ stampText, filename }: { stampText: string; filename
 
 interface StampSetupSettingsProps {
   parameters: AddStampParameters;
-  onParameterChange: <K extends keyof AddStampParameters>(key: K, value: AddStampParameters[K]) => void;
+  onParameterChange: <K extends keyof AddStampParameters>(
+    key: K,
+    value: AddStampParameters[K],
+  ) => void;
   disabled?: boolean;
   filename?: string;
 }
 
-const StampSetupSettings = ({ parameters, onParameterChange, disabled = false, filename }: StampSetupSettingsProps) => {
+const StampSetupSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+  filename,
+}: StampSetupSettingsProps) => {
   const { t } = useTranslation();
 
   return (
     <Stack gap="md">
       <TextInput
-        label={t("pageSelectionPrompt", "Page Selection (e.g. 1,3,2 or 4-8,2,10-12 or 2n-1)")}
+        label={t(
+          "pageSelectionPrompt",
+          "Page Selection (e.g. 1,3,2 or 4-8,2,10-12 or 2n-1)",
+        )}
         value={parameters.pageNumbers}
-        onChange={(e) => onParameterChange("pageNumbers", e.currentTarget.value)}
+        onChange={(e) =>
+          onParameterChange("pageNumbers", e.currentTarget.value)
+        }
         disabled={disabled}
       />
       <Divider />
@@ -213,11 +246,17 @@ const StampSetupSettings = ({ parameters, onParameterChange, disabled = false, f
           {/* Template Selector - always shows placeholder, doesn't persist selection */}
           <Select
             label={t("AddStampRequest.useTemplate", "Use Template")}
-            placeholder={t("AddStampRequest.selectTemplate", "Select a template...")}
+            placeholder={t(
+              "AddStampRequest.selectTemplate",
+              "Select a template...",
+            )}
             value={null}
             data={STAMP_TEMPLATES.map((template) => ({
               value: template.id,
-              label: t(`AddStampRequest.template.${template.id}`, template.name),
+              label: t(
+                `AddStampRequest.template.${template.id}`,
+                template.name,
+              ),
             }))}
             onChange={(value) => {
               const template = STAMP_TEMPLATES.find((t) => t.id === value);
@@ -228,7 +267,10 @@ const StampSetupSettings = ({ parameters, onParameterChange, disabled = false, f
             }}
             clearable
             disabled={disabled}
-            comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+            comboboxProps={{
+              withinPortal: true,
+              zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+            }}
           />
 
           <Textarea
@@ -238,14 +280,19 @@ const StampSetupSettings = ({ parameters, onParameterChange, disabled = false, f
               "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines.",
             )}
             value={parameters.stampText}
-            onChange={(e) => onParameterChange("stampText", e.currentTarget.value)}
+            onChange={(e) =>
+              onParameterChange("stampText", e.currentTarget.value)
+            }
             autosize
             minRows={2}
             disabled={disabled}
           />
 
           {/* Live Preview */}
-          <StampTextPreview stampText={parameters.stampText} filename={filename} />
+          <StampTextPreview
+            stampText={parameters.stampText}
+            filename={filename}
+          />
 
           <Accordion variant="contained" radius="sm">
             <Accordion.Item value="variables">
@@ -272,32 +319,64 @@ const StampSetupSettings = ({ parameters, onParameterChange, disabled = false, f
                       {t("AddStampRequest.dateTimeVars", "Date & Time")}
                     </Text>
                     <Group gap="xs">
-                      <ClickableCode onClick={() => onParameterChange("stampText", parameters.stampText + "@date")}>
+                      <ClickableCode
+                        onClick={() =>
+                          onParameterChange(
+                            "stampText",
+                            parameters.stampText + "@date",
+                          )
+                        }
+                      >
                         @date
                       </ClickableCode>
                       <Text size="xs" c="dimmed">
-                        — {t("AddStampRequest.dateDesc", "Current date")} (YYYY-MM-DD)
-                      </Text>
-                    </Group>
-                    <Group gap="xs" mt={4}>
-                      <ClickableCode onClick={() => onParameterChange("stampText", parameters.stampText + "@time")}>
-                        @time
-                      </ClickableCode>
-                      <Text size="xs" c="dimmed">
-                        — {t("AddStampRequest.timeDesc", "Current time")} (HH:mm:ss)
-                      </Text>
-                    </Group>
-                    <Group gap="xs" mt={4}>
-                      <ClickableCode onClick={() => onParameterChange("stampText", parameters.stampText + "@datetime")}>
-                        @datetime
-                      </ClickableCode>
-                      <Text size="xs" c="dimmed">
-                        — {t("AddStampRequest.datetimeDesc", "Date and time combined")}
+                        — {t("AddStampRequest.dateDesc", "Current date")}{" "}
+                        (YYYY-MM-DD)
                       </Text>
                     </Group>
                     <Group gap="xs" mt={4}>
                       <ClickableCode
-                        onClick={() => onParameterChange("stampText", parameters.stampText + "@date{dd/MM/yyyy}")}
+                        onClick={() =>
+                          onParameterChange(
+                            "stampText",
+                            parameters.stampText + "@time",
+                          )
+                        }
+                      >
+                        @time
+                      </ClickableCode>
+                      <Text size="xs" c="dimmed">
+                        — {t("AddStampRequest.timeDesc", "Current time")}{" "}
+                        (HH:mm:ss)
+                      </Text>
+                    </Group>
+                    <Group gap="xs" mt={4}>
+                      <ClickableCode
+                        onClick={() =>
+                          onParameterChange(
+                            "stampText",
+                            parameters.stampText + "@datetime",
+                          )
+                        }
+                      >
+                        @datetime
+                      </ClickableCode>
+                      <Text size="xs" c="dimmed">
+                        —{" "}
+                        {t(
+                          "AddStampRequest.datetimeDesc",
+                          "Date and time combined",
+                        )}
+                      </Text>
+                    </Group>
+                    <Group gap="xs" mt={4}>
+                      <ClickableCode
+                        onClick={() =>
+                          onParameterChange(
+                            "stampText",
+                            parameters.stampText + "@date{dd/MM/yyyy}",
+                          )
+                        }
                       >
                         @date&#123;format&#125;
                       </ClickableCode>
@@ -306,17 +385,42 @@ const StampSetupSettings = ({ parameters, onParameterChange, disabled = false, f
                       </Text>
                     </Group>
                     <Group gap="xs" mt={4}>
-                      <ClickableCode onClick={() => onParameterChange("stampText", parameters.stampText + "@year")}>
+                      <ClickableCode
+                        onClick={() =>
+                          onParameterChange(
+                            "stampText",
+                            parameters.stampText + "@year",
+                          )
+                        }
+                      >
                         @year
                       </ClickableCode>
-                      <ClickableCode onClick={() => onParameterChange("stampText", parameters.stampText + "@month")}>
+                      <ClickableCode
+                        onClick={() =>
+                          onParameterChange(
+                            "stampText",
+                            parameters.stampText + "@month",
+                          )
+                        }
+                      >
                         @month
                       </ClickableCode>
-                      <ClickableCode onClick={() => onParameterChange("stampText", parameters.stampText + "@day")}>
+                      <ClickableCode
+                        onClick={() =>
+                          onParameterChange(
+                            "stampText",
+                            parameters.stampText + "@day",
+                          )
+                        }
+                      >
                         @day
                       </ClickableCode>
                       <Text size="xs" c="dimmed">
-                        — {t("AddStampRequest.yearMonthDayDesc", "Individual date parts")}
+                        —{" "}
+                        {t(
+                          "AddStampRequest.yearMonthDayDesc",
+                          "Individual date parts",
+                        )}
                       </Text>
                     </Group>
                   </Box>
@@ -326,19 +430,41 @@ const StampSetupSettings = ({ parameters, onParameterChange, disabled = false, f
                       {t("AddStampRequest.pageVars", "Page Information")}
                     </Text>
                     <Group gap="xs">
-                      <ClickableCode onClick={() => onParameterChange("stampText", parameters.stampText + "@page_number")}>
+                      <ClickableCode
+                        onClick={() =>
+                          onParameterChange(
+                            "stampText",
+                            parameters.stampText + "@page_number",
+                          )
+                        }
+                      >
                         @page_number
                       </ClickableCode>
                       <Text size="xs" c="dimmed">
-                        — {t("AddStampRequest.pageNumberDesc", "Current page number")}
+                        —{" "}
+                        {t(
+                          "AddStampRequest.pageNumberDesc",
+                          "Current page number",
+                        )}
                       </Text>
                     </Group>
                     <Group gap="xs" mt={4}>
-                      <ClickableCode onClick={() => onParameterChange("stampText", parameters.stampText + "@total_pages")}>
+                      <ClickableCode
+                        onClick={() =>
+                          onParameterChange(
+                            "stampText",
+                            parameters.stampText + "@total_pages",
+                          )
+                        }
+                      >
                         @total_pages
                       </ClickableCode>
                       <Text size="xs" c="dimmed">
-                        — {t("AddStampRequest.totalPagesDesc", "Total number of pages")}
+                        —{" "}
+                        {t(
+                          "AddStampRequest.totalPagesDesc",
+                          "Total number of pages",
+                        )}
                       </Text>
                     </Group>
                   </Box>
@@ -348,19 +474,41 @@ const StampSetupSettings = ({ parameters, onParameterChange, disabled = false, f
                       {t("AddStampRequest.fileVars", "File Information")}
                     </Text>
                     <Group gap="xs">
-                      <ClickableCode onClick={() => onParameterChange("stampText", parameters.stampText + "@filename")}>
+                      <ClickableCode
+                        onClick={() =>
+                          onParameterChange(
+                            "stampText",
+                            parameters.stampText + "@filename",
+                          )
+                        }
+                      >
                         @filename
                       </ClickableCode>
                       <Text size="xs" c="dimmed">
-                        — {t("AddStampRequest.filenameDesc", "Filename without extension")}
+                        —{" "}
+                        {t(
+                          "AddStampRequest.filenameDesc",
+                          "Filename without extension",
+                        )}
                       </Text>
                     </Group>
                     <Group gap="xs" mt={4}>
-                      <ClickableCode onClick={() => onParameterChange("stampText", parameters.stampText + "@filename_full")}>
+                      <ClickableCode
+                        onClick={() =>
+                          onParameterChange(
+                            "stampText",
+                            parameters.stampText + "@filename_full",
+                          )
+                        }
+                      >
                         @filename_full
                       </ClickableCode>
                       <Text size="xs" c="dimmed">
-                        — {t("AddStampRequest.filenameFullDesc", "Filename with extension")}
+                        —{" "}
+                        {t(
+                          "AddStampRequest.filenameFullDesc",
+                          "Filename with extension",
+                        )}
                       </Text>
                     </Group>
                   </Box>
@@ -370,18 +518,43 @@ const StampSetupSettings = ({ parameters, onParameterChange, disabled = false, f
                       {t("AddStampRequest.metadataVars", "Document Metadata")}
                     </Text>
                     <Group gap="xs">
-                      <ClickableCode onClick={() => onParameterChange("stampText", parameters.stampText + "@author")}>
+                      <ClickableCode
+                        onClick={() =>
+                          onParameterChange(
+                            "stampText",
+                            parameters.stampText + "@author",
+                          )
+                        }
+                      >
                         @author
                       </ClickableCode>
-                      <ClickableCode onClick={() => onParameterChange("stampText", parameters.stampText + "@title")}>
+                      <ClickableCode
+                        onClick={() =>
+                          onParameterChange(
+                            "stampText",
+                            parameters.stampText + "@title",
+                          )
+                        }
+                      >
                         @title
                       </ClickableCode>
-                      <ClickableCode onClick={() => onParameterChange("stampText", parameters.stampText + "@subject")}>
+                      <ClickableCode
+                        onClick={() =>
+                          onParameterChange(
+                            "stampText",
+                            parameters.stampText + "@subject",
+                          )
+                        }
+                      >
                         @subject
                       </ClickableCode>
                     </Group>
                     <Text size="xs" c="dimmed" mt={4}>
-                      — {t("AddStampRequest.metadataDesc", "From PDF document properties")}
+                      —{" "}
+                      {t(
+                        "AddStampRequest.metadataDesc",
+                        "From PDF document properties",
+                      )}
                     </Text>
                   </Box>
                   <Divider my="xs" />
@@ -390,11 +563,22 @@ const StampSetupSettings = ({ parameters, onParameterChange, disabled = false, f
                       {t("AddStampRequest.otherVars", "Other")}
                     </Text>
                     <Group gap="xs">
-                      <ClickableCode onClick={() => onParameterChange("stampText", parameters.stampText + "@uuid")}>
+                      <ClickableCode
+                        onClick={() =>
+                          onParameterChange(
+                            "stampText",
+                            parameters.stampText + "@uuid",
+                          )
+                        }
+                      >
                         @uuid
                       </ClickableCode>
                       <Text size="xs" c="dimmed">
-                        — {t("AddStampRequest.uuidDesc", "Short unique identifier (8 chars)")}
+                        —{" "}
+                        {t(
+                          "AddStampRequest.uuidDesc",
+                          "Short unique identifier (8 chars)",
+                        )}
                       </Text>
                     </Group>
                   </Box>
@@ -404,17 +588,44 @@ const StampSetupSettings = ({ parameters, onParameterChange, disabled = false, f
                       {t("AddStampRequest.examples", "Examples")}
                     </Text>
                     <Stack gap={4}>
-                      <ClickableCode block onClick={() => onParameterChange("stampText", "Page @page_number of @total_pages")}>
+                      <ClickableCode
+                        block
+                        onClick={() =>
+                          onParameterChange(
+                            "stampText",
+                            "Page @page_number of @total_pages",
+                          )
+                        }
+                      >
                         Page @page_number of @total_pages
                       </ClickableCode>
-                      <ClickableCode block onClick={() => onParameterChange("stampText", "Created: @date{dd/MM/yyyy HH:mm}")}>
+                      <ClickableCode
+                        block
+                        onClick={() =>
+                          onParameterChange(
+                            "stampText",
+                            "Created: @date{dd/MM/yyyy HH:mm}",
+                          )
+                        }
+                      >
                         Created: @date&#123;dd/MM/yyyy HH:mm&#125;
                       </ClickableCode>
-                      <ClickableCode block onClick={() => onParameterChange("stampText", "© @year @author")}>
+                      <ClickableCode
+                        block
+                        onClick={() =>
+                          onParameterChange("stampText", "© @year @author")
+                        }
+                      >
                         © @year @author
                       </ClickableCode>
-                      <ClickableCode block onClick={() => onParameterChange("stampText", "@filename\\n@date")}>
-                        @filename\n@date ({t("AddStampRequest.multiLine", "multi-line")})
+                      <ClickableCode
+                        block
+                        onClick={() =>
+                          onParameterChange("stampText", "@filename\\n@date")
+                        }
+                      >
+                        @filename\n@date (
+                        {t("AddStampRequest.multiLine", "multi-line")})
                       </ClickableCode>
                     </Stack>
                   </Box>
@@ -440,7 +651,10 @@ const StampSetupSettings = ({ parameters, onParameterChange, disabled = false, f
               { value: "thai", label: "ไทย" },
             ]}
             disabled={disabled}
-            comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+            comboboxProps={{
+              withinPortal: true,
+              zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+            }}
           />
         </>
       )}
@@ -458,7 +672,12 @@ const StampSetupSettings = ({ parameters, onParameterChange, disabled = false, f
             style={{ display: "none" }}
             id="stamp-image-input"
           />
-          <Button size="xs" component="label" htmlFor="stamp-image-input" disabled={disabled}>
+          <Button
+            size="xs"
+            component="label"
+            htmlFor="stamp-image-input"
+            disabled={disabled}
+          >
             {t("chooseFile", "Choose File")}
           </Button>
           {parameters.stampImage && (

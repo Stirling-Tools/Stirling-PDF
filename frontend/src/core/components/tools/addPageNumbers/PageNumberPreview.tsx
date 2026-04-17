@@ -26,7 +26,9 @@ const getFirstSelectedPage = (input: string): number => {
   return 1;
 };
 
-const detectOverallBackgroundColor = async (thumbnailSrc: string | null): Promise<"light" | "dark"> => {
+const detectOverallBackgroundColor = async (
+  thumbnailSrc: string | null,
+): Promise<"light" | "dark"> => {
   if (!thumbnailSrc) {
     return "light"; // Default to light background if no thumbnail
   }
@@ -59,7 +61,10 @@ const detectOverallBackgroundColor = async (thumbnailSrc: string | null): Promis
         let pixelCount = 0;
 
         // Sample every nth pixel for performance
-        const step = Math.max(1, Math.floor((img.width * img.height) / (sampleWidth * sampleHeight)));
+        const step = Math.max(
+          1,
+          Math.floor((img.width * img.height) / (sampleWidth * sampleHeight)),
+        );
 
         for (let i = 0; i < data.length; i += 4 * step) {
           const r = data[i];
@@ -89,16 +94,30 @@ const detectOverallBackgroundColor = async (thumbnailSrc: string | null): Promis
 
 type Props = {
   parameters: AddPageNumbersParameters;
-  onParameterChange: <K extends keyof AddPageNumbersParameters>(key: K, value: AddPageNumbersParameters[K]) => void;
+  onParameterChange: <K extends keyof AddPageNumbersParameters>(
+    key: K,
+    value: AddPageNumbersParameters[K],
+  ) => void;
   file?: File | null;
   showQuickGrid?: boolean;
 };
 
-export default function PageNumberPreview({ parameters, onParameterChange, file, showQuickGrid }: Props) {
+export default function PageNumberPreview({
+  parameters,
+  onParameterChange,
+  file,
+  showQuickGrid,
+}: Props) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [, setContainerSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
-  const [pageSize, setPageSize] = useState<{ widthPts: number; heightPts: number } | null>(null);
+  const [, setContainerSize] = useState<{ width: number; height: number }>({
+    width: 0,
+    height: 0,
+  });
+  const [pageSize, setPageSize] = useState<{
+    widthPts: number;
+    heightPts: number;
+  } | null>(null);
   const [pageThumbnail, setPageThumbnail] = useState<string | null>(null);
   const { requestThumbnail } = useThumbnailGeneration();
   const [hoverTile, setHoverTile] = useState<number | null>(null);
@@ -109,8 +128,13 @@ export default function PageNumberPreview({ parameters, onParameterChange, file,
     const node = containerRef.current;
     if (!node) return;
     const resize = () => {
-      const aspect = pageSize ? pageSize.widthPts / pageSize.heightPts : A4_ASPECT_RATIO;
-      setContainerSize({ width: node.clientWidth, height: node.clientWidth / aspect });
+      const aspect = pageSize
+        ? pageSize.widthPts / pageSize.heightPts
+        : A4_ASPECT_RATIO;
+      setContainerSize({
+        width: node.clientWidth,
+        height: node.clientWidth / aspect,
+      });
     };
     resize();
     const ro = new ResizeObserver(resize);
@@ -128,7 +152,10 @@ export default function PageNumberPreview({ parameters, onParameterChange, file,
       }
       try {
         const buffer = await file.arrayBuffer();
-        const pdf = await pdfWorkerManager.createDocument(buffer, { disableAutoFetch: true, disableStream: true });
+        const pdf = await pdfWorkerManager.createDocument(buffer, {
+          disableAutoFetch: true,
+          disableStream: true,
+        });
         const page = await pdf.getPage(1);
         const viewport = page.getViewport({ scale: 1 });
         if (!cancelled) {
@@ -154,7 +181,10 @@ export default function PageNumberPreview({ parameters, onParameterChange, file,
         return;
       }
       try {
-        const pageNumber = Math.max(1, getFirstSelectedPage(parameters.pagesToNumber || "1"));
+        const pageNumber = Math.max(
+          1,
+          getFirstSelectedPage(parameters.pagesToNumber || "1"),
+        );
         const pageId = `${file.name}:${file.size}:${file.lastModified}:page:${pageNumber}`;
         const thumb = await requestThumbnail(pageId, file, pageNumber);
         if (isActive) setPageThumbnail(thumb || null);
@@ -199,7 +229,9 @@ export default function PageNumberPreview({ parameters, onParameterChange, file,
     <div>
       <div className={styles.previewHeader}>
         <div className={styles.divider} />
-        <div className={styles.previewLabel}>{t("addPageNumbers.preview", "Preview Page Numbers")}</div>
+        <div className={styles.previewLabel}>
+          {t("addPageNumbers.preview", "Preview Page Numbers")}
+        </div>
       </div>
       <div
         ref={containerRef}
@@ -208,7 +240,12 @@ export default function PageNumberPreview({ parameters, onParameterChange, file,
       >
         {pageThumbnail && (
           <PrivateContent>
-            <img src={pageThumbnail} alt="page preview" className={styles.pageThumbnail} draggable={false} />
+            <img
+              src={pageThumbnail}
+              alt="page preview"
+              className={styles.pageThumbnail}
+              draggable={false}
+            />
           </PrivateContent>
         )}
 
@@ -229,7 +266,9 @@ export default function PageNumberPreview({ parameters, onParameterChange, file,
                   style={{
                     color: textColor,
                     textShadow:
-                      textColor === "#fff" ? "1px 1px 2px rgba(0, 0, 0, 0.8)" : "1px 1px 2px rgba(255, 255, 255, 0.8)",
+                      textColor === "#fff"
+                        ? "1px 1px 2px rgba(0, 0, 0, 0.8)"
+                        : "1px 1px 2px rgba(255, 255, 255, 0.8)",
                   }}
                 >
                   {idx}
@@ -240,7 +279,10 @@ export default function PageNumberPreview({ parameters, onParameterChange, file,
         )}
       </div>
       <div className={styles.previewDisclaimer}>
-        {t("addPageNumbers.previewDisclaimer", "Preview is approximate. Final output may vary due to PDF font metrics.")}
+        {t(
+          "addPageNumbers.previewDisclaimer",
+          "Preview is approximate. Final output may vary due to PDF font metrics.",
+        )}
       </div>
     </div>
   );

@@ -41,7 +41,9 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
       {/* Document Info */}
       <div>
         <Group gap="xs" mb="xs">
-          <PictureAsPdfIcon sx={{ fontSize: 18, color: "var(--mantine-color-red-6)" }} />
+          <PictureAsPdfIcon
+            sx={{ fontSize: 18, color: "var(--mantine-color-red-6)" }}
+          />
           <Text size="sm" fw={600}>
             {t("groupSigning.steps.review.document", "Document")}
           </Text>
@@ -88,33 +90,54 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
         <Group gap="xs" mb="xs">
           <DrawIcon sx={{ fontSize: 18 }} />
           <Text size="sm" fw={600}>
-            {t("groupSigning.steps.review.signatureSettings", "Signature Settings")}
+            {t(
+              "groupSigning.steps.review.signatureSettings",
+              "Signature Settings",
+            )}
           </Text>
         </Group>
         <Stack gap="xs">
           <Text size="sm">
-            <strong>{t("groupSigning.steps.review.visibility", "Visibility:")}</strong>{" "}
+            <strong>
+              {t("groupSigning.steps.review.visibility", "Visibility:")}
+            </strong>{" "}
             {signatureSettings.showSignature
-              ? t("groupSigning.steps.review.visible", "Visible on page {{page}}", {
-                  page: signatureSettings.pageNumber || 1,
-                })
-              : t("groupSigning.steps.review.invisible", "Invisible (metadata only)")}
+              ? t(
+                  "groupSigning.steps.review.visible",
+                  "Visible on page {{page}}",
+                  {
+                    page: signatureSettings.pageNumber || 1,
+                  },
+                )
+              : t(
+                  "groupSigning.steps.review.invisible",
+                  "Invisible (metadata only)",
+                )}
           </Text>
           {signatureSettings.showSignature && signatureSettings.reason && (
             <Text size="sm">
-              <strong>{t("groupSigning.steps.review.reason", "Reason:")}</strong> {signatureSettings.reason}
+              <strong>
+                {t("groupSigning.steps.review.reason", "Reason:")}
+              </strong>{" "}
+              {signatureSettings.reason}
             </Text>
           )}
           {signatureSettings.showSignature && signatureSettings.location && (
             <Text size="sm">
-              <strong>{t("groupSigning.steps.review.location", "Location:")}</strong> {signatureSettings.location}
+              <strong>
+                {t("groupSigning.steps.review.location", "Location:")}
+              </strong>{" "}
+              {signatureSettings.location}
             </Text>
           )}
           {signatureSettings.showSignature && (
             <Text size="sm">
               <strong>{t("groupSigning.steps.review.logo", "Logo:")}</strong>{" "}
               {signatureSettings.showLogo
-                ? t("groupSigning.steps.review.logoShown", "Stirling PDF logo shown")
+                ? t(
+                    "groupSigning.steps.review.logoShown",
+                    "Stirling PDF logo shown",
+                  )
                 : t("groupSigning.steps.review.logoHidden", "No logo")}
             </Text>
           )}
@@ -136,12 +159,19 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
           value={dueDate}
           onChange={(e) => onDueDateChange(e.target.value)}
           disabled={disabled}
-          placeholder={t("groupSigning.steps.review.dueDatePlaceholder", "Select due date...")}
+          placeholder={t(
+            "groupSigning.steps.review.dueDatePlaceholder",
+            "Select due date...",
+          )}
         />
       </div>
 
       <Group gap="sm" mt="md">
-        <Button variant="default" onClick={onBack} leftSection={<ArrowBackIcon sx={{ fontSize: 16 }} />}>
+        <Button
+          variant="default"
+          onClick={onBack}
+          leftSection={<ArrowBackIcon sx={{ fontSize: 16 }} />}
+        >
           {t("groupSigning.steps.back", "Back")}
         </Button>
         <Button

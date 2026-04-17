@@ -2,7 +2,10 @@ import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { Divider, Loader, Alert } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { usePlans } from "@app/hooks/usePlans";
-import licenseService, { PlanTierGroup, mapLicenseToTier } from "@app/services/licenseService";
+import licenseService, {
+  PlanTierGroup,
+  mapLicenseToTier,
+} from "@app/services/licenseService";
 import { useCheckout } from "@app/contexts/CheckoutContext";
 import { useLicense } from "@app/contexts/LicenseContext";
 import AvailablePlansSection from "@app/components/shared/config/configSections/plan/AvailablePlansSection";
@@ -11,7 +14,10 @@ import LicenseKeySection from "@app/components/shared/config/configSections/plan
 import { alert } from "@app/components/toast";
 import { InfoBanner } from "@app/components/shared/InfoBanner";
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
-import { getPreferredCurrency, setCachedCurrency } from "@app/utils/currencyDetection";
+import {
+  getPreferredCurrency,
+  setCachedCurrency,
+} from "@app/utils/currencyDetection";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@core/components/shared/config/LoginRequiredBanner";
 import { isSupabaseConfigured } from "@app/services/supabaseClient";
@@ -57,7 +63,9 @@ const AdminPlanSection: React.FC = () => {
     try {
       // Only allow PRO or ENTERPRISE licenses to access billing portal
       if (!licenseInfo?.licenseType || licenseInfo.licenseType === "NORMAL") {
-        throw new Error("No valid license found. Please purchase a license before accessing the billing portal.");
+        throw new Error(
+          "No valid license found. Please purchase a license before accessing the billing portal.",
+        );
       }
 
       if (!licenseInfo?.licenseKey) {
@@ -65,7 +73,10 @@ const AdminPlanSection: React.FC = () => {
       }
 
       // Create billing portal session with license key
-      const response = await licenseService.createBillingPortalSession(window.location.href, licenseInfo.licenseKey);
+      const response = await licenseService.createBillingPortalSession(
+        window.location.href,
+        licenseInfo.licenseKey,
+      );
 
       // Open billing portal in new tab
       window.open(response.url, "_blank");
@@ -74,7 +85,9 @@ const AdminPlanSection: React.FC = () => {
       alert({
         alertType: "error",
         title: t("billing.portal.error", "Failed to open billing portal"),
-        body: (error instanceof Error ? error.message : undefined) || "Please try again or contact support.",
+        body:
+          (error instanceof Error ? error.message : undefined) ||
+          "Please try again or contact support.",
       });
     }
   }, [licenseInfo, t, validateLoginEnabled]);
@@ -124,7 +137,8 @@ const AdminPlanSection: React.FC = () => {
     [openCheckout, currency, refetch, licenseInfo, t, validateLoginEnabled],
   );
 
-  const shouldShowLicenseWarning = licenseAlert.active && licenseAlert.audience === "admin";
+  const shouldShowLicenseWarning =
+    licenseAlert.active && licenseAlert.audience === "admin";
   const formattedUserCount = useMemo(() => {
     if (licenseAlert.totalUsers == null) {
       return t("plan.licenseWarning.overLimit", "more than {{limit}}", {
@@ -149,7 +163,14 @@ const AdminPlanSection: React.FC = () => {
   // Early returns after all hooks are called
   if (loading) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "2rem 0" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "2rem 0",
+        }}
+      >
         <Loader size="lg" />
       </div>
     );
@@ -176,7 +197,10 @@ const AdminPlanSection: React.FC = () => {
         <InfoBanner
           icon="warning-rounded"
           tone="warning"
-          title={t("plan.licenseWarning.title", "Free self-hosted limit reached")}
+          title={t(
+            "plan.licenseWarning.title",
+            "Free self-hosted limit reached",
+          )}
           message={t("plan.licenseWarning.body", {
             total: formattedUserCount,
             limit: licenseAlert.freeTierLimit,

@@ -10,7 +10,9 @@ interface LoginRequiredBannerProps {
  * Banner component that displays when login mode is required but not enabled
  * Shows prominent warning that settings are read-only
  */
-export default function LoginRequiredBanner({ show }: LoginRequiredBannerProps) {
+export default function LoginRequiredBanner({
+  show,
+}: LoginRequiredBannerProps) {
   const { t } = useTranslation();
 
   if (!show) return null;

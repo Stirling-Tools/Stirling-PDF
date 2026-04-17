@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { Group, Text, Button } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { connectionModeService, type ConnectionMode } from "@app/services/connectionModeService";
+import {
+  connectionModeService,
+  type ConnectionMode,
+} from "@app/services/connectionModeService";
 import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
 
 /**
@@ -11,13 +14,17 @@ import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
  */
 export function ToolPickerFooterExtensions() {
   const { t } = useTranslation();
-  const [connectionMode, setConnectionMode] = useState<ConnectionMode | null>(null);
+  const [connectionMode, setConnectionMode] = useState<ConnectionMode | null>(
+    null,
+  );
 
   useEffect(() => {
     void connectionModeService.getCurrentMode().then(setConnectionMode);
-    const unsubscribe = connectionModeService.subscribeToModeChanges((config) => {
-      setConnectionMode(config.mode);
-    });
+    const unsubscribe = connectionModeService.subscribeToModeChanges(
+      (config) => {
+        setConnectionMode(config.mode);
+      },
+    );
     return unsubscribe;
   }, []);
 
@@ -45,7 +52,9 @@ export function ToolPickerFooterExtensions() {
         variant="light"
         color="blue"
         style={{ flexShrink: 0 }}
-        onClick={() => window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT))}
+        onClick={() =>
+          window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT))
+        }
       >
         {t("localMode.toolPicker.signIn", "Sign In")}
       </Button>

@@ -30,7 +30,11 @@ import React, {
   useSyncExternalStore,
 } from "react";
 import { useDebouncedCallback } from "@mantine/hooks";
-import type { FormField, FormFillState, WidgetCoordinates } from "@app/tools/formFill/types";
+import type {
+  FormField,
+  FormFillState,
+  WidgetCoordinates,
+} from "@app/tools/formFill/types";
 import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
 import { PdfBoxFormProvider } from "@app/tools/formFill/providers/PdfBoxFormProvider";
 import { PdfiumFormProvider } from "@app/tools/formFill/providers/PdfiumFormProvider";
@@ -231,8 +235,14 @@ export function useFieldValue(fieldName: string): string {
     throw new Error("useFieldValue must be used within a FormFillProvider");
   }
 
-  const subscribe = useCallback((cb: () => void) => store.subscribeField(fieldName, cb), [store, fieldName]);
-  const getSnapshot = useCallback(() => store.getValue(fieldName), [store, fieldName]);
+  const subscribe = useCallback(
+    (cb: () => void) => store.subscribeField(fieldName, cb),
+    [store, fieldName],
+  );
+  const getSnapshot = useCallback(
+    () => store.getValue(fieldName),
+    [store, fieldName],
+  );
 
   return useSyncExternalStore(subscribe, getSnapshot);
 }
@@ -247,7 +257,10 @@ export function useAllFormValues(): Record<string, string> {
     throw new Error("useAllFormValues must be used within a FormFillProvider");
   }
 
-  const subscribe = useCallback((cb: () => void) => store.subscribeGlobal(cb), [store]);
+  const subscribe = useCallback(
+    (cb: () => void) => store.subscribeGlobal(cb),
+    [store],
+  );
   const getSnapshot = useCallback(() => store.values, [store]);
 
   return useSyncExternalStore(subscribe, getSnapshot);
@@ -266,10 +279,14 @@ export function FormFillProvider({
   provider?: IFormDataProvider;
 }) {
   const initialMode = providerProp?.name === "pdfbox" ? "pdfbox" : "pdflib";
-  const [providerMode, setProviderModeState] = useState<"pdflib" | "pdfbox">(initialMode);
+  const [providerMode, setProviderModeState] = useState<"pdflib" | "pdfbox">(
+    initialMode,
+  );
   const providerModeRef = useRef(initialMode as "pdflib" | "pdfbox");
   providerModeRef.current = providerMode;
-  const provider = providerProp ?? (providerMode === "pdfbox" ? pdfBoxProvider : pdfiumProvider);
+  const provider =
+    providerProp ??
+    (providerMode === "pdfbox" ? pdfBoxProvider : pdfiumProvider);
   const providerRef = useRef(provider);
   providerRef.current = provider;
 
@@ -309,7 +326,9 @@ export function FormFillProvider({
         let fields = await providerRef.current.fetchFields(file);
         // If another fetch or reset happened while we were waiting, discard this result
         if (fetchVersionRef.current !== version) {
-          console.debug("[FormFill] Discarding stale fetch result (version mismatch)");
+          console.debug(
+            "[FormFill] Discarding stale fetch result (version mismatch)",
+          );
           return;
         }
 
@@ -319,13 +338,17 @@ export function FormFillProvider({
           try {
             // Convert File/Blob to ArrayBuffer for pdfiumService
             const arrayBuffer = await file.arrayBuffer();
-            const sigFields = await fetchSignatureFieldsWithAppearances(arrayBuffer);
+            const sigFields =
+              await fetchSignatureFieldsWithAppearances(arrayBuffer);
             if (fetchVersionRef.current !== version) return; // stale check after async
             if (sigFields.length > 0) {
               fields = [...fields, ...sigFields];
             }
           } catch (e) {
-            console.warn("[FormFill] Failed to extract signature appearances for pdfbox mode:", e);
+            console.warn(
+              "[FormFill] Failed to extract signature appearances for pdfbox mode:",
+              e,
+            );
           }
         }
 
@@ -340,7 +363,10 @@ export function FormFillProvider({
         dispatch({ type: "FETCH_SUCCESS", fields });
       } catch (err: any) {
         if (fetchVersionRef.current !== version) return; // stale
-        const msg = err?.response?.data?.message || err?.message || "Failed to fetch form fields";
+        const msg =
+          err?.response?.data?.message ||
+          err?.message ||
+          "Failed to fetch form fields";
         dispatch({ type: "FETCH_ERROR", error: msg });
       }
     },
@@ -355,7 +381,10 @@ export function FormFillProvider({
     if (!val || val.trim() === "" || val === "Off") {
       dispatch({
         type: "SET_VALIDATION_ERRORS",
-        errors: { ...state.validationErrors, [fieldName]: `${field.label} is required` },
+        errors: {
+          ...state.validationErrors,
+          [fieldName]: `${field.label} is required`,
+        },
       });
     } else {
       dispatch({ type: "CLEAR_VALIDATION_ERROR", fieldName });
@@ -391,7 +420,11 @@ export function FormFillProvider({
 
   const submitForm = useCallback(
     async (file: File | Blob, flatten = false) => {
-      const blob = await providerRef.current.fillForm(file, valuesStore.values, flatten);
+      const blob = await providerRef.current.fillForm(
+        file,
+        valuesStore.values,
+        flatten,
+      );
       dispatch({ type: "MARK_CLEAN" });
       return blob;
     },
@@ -420,15 +453,23 @@ export function FormFillProvider({
     [valuesStore],
   );
 
-  const getField = useCallback((fieldName: string) => fieldsRef.current.find((f) => f.name === fieldName), []);
-
-  const getFieldsForPage = useCallback(
-    (pageIndex: number) =>
-      fieldsRef.current.filter((f) => f.widgets?.some((w: WidgetCoordinates) => w.pageIndex === pageIndex)),
+  const getField = useCallback(
+    (fieldName: string) => fieldsRef.current.find((f) => f.name === fieldName),
     [],
   );
 
-  const getValue = useCallback((fieldName: string) => valuesStore.getValue(fieldName), [valuesStore]);
+  const getFieldsForPage = useCallback(
+    (pageIndex: number) =>
+      fieldsRef.current.filter((f) =>
+        f.widgets?.some((w: WidgetCoordinates) => w.pageIndex === pageIndex),
+      ),
+    [],
+  );
+
+  const getValue = useCallback(
+    (fieldName: string) => valuesStore.getValue(fieldName),
+    [valuesStore],
+  );
 
   const reset = useCallback(() => {
     // Increment version to invalidate any in-flight fetch
@@ -488,7 +529,9 @@ export function FormFillProvider({
 
   return (
     <FormValuesStoreContext.Provider value={valuesStore}>
-      <FormFillContext.Provider value={value}>{children}</FormFillContext.Provider>
+      <FormFillContext.Provider value={value}>
+        {children}
+      </FormFillContext.Provider>
     </FormValuesStoreContext.Provider>
   );
 }

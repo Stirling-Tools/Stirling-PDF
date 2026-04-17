@@ -1,5 +1,11 @@
 import { useState, useRef, useEffect } from "react";
-import { PasswordInput, Group, ActionIcon, Tooltip, TextInput } from "@mantine/core";
+import {
+  PasswordInput,
+  Group,
+  ActionIcon,
+  Tooltip,
+  TextInput,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 
@@ -63,15 +69,38 @@ export default function EditableSecretField({
 
   return (
     <div>
-      {label && <label style={{ display: "block", marginBottom: 4, fontWeight: 500, fontSize: "0.875rem" }}>{label}</label>}
-      {description && <p style={{ margin: "4px 0 12px 0", fontSize: "0.75rem", color: "#666" }}>{description}</p>}
+      {label && (
+        <label
+          style={{
+            display: "block",
+            marginBottom: 4,
+            fontWeight: 500,
+            fontSize: "0.875rem",
+          }}
+        >
+          {label}
+        </label>
+      )}
+      {description && (
+        <p
+          style={{ margin: "4px 0 12px 0", fontSize: "0.75rem", color: "#666" }}
+        >
+          {description}
+        </p>
+      )}
 
       {isMasked && !isEditing ? (
         // Masked value from backend: show display + Edit button
         <Group gap="xs" align="flex-end">
           <TextInput value="••••••••" disabled style={{ flex: 1 }} readOnly />
           <Tooltip label={t("editSecret")} withArrow>
-            <ActionIcon variant="light" onClick={handleEdit} disabled={disabled} title="Edit" aria-label="Edit secret value">
+            <ActionIcon
+              variant="light"
+              onClick={handleEdit}
+              disabled={disabled}
+              title="Edit"
+              aria-label="Edit secret value"
+            >
               <LocalIcon icon="edit" width="1rem" height="1rem" />
             </ActionIcon>
           </Tooltip>

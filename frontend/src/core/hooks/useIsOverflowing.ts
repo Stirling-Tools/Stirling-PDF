@@ -30,9 +30,14 @@ import * as React from "react";
         );
 */
 
-export const useIsOverflowing = (ref: React.RefObject<HTMLElement | null>, callback?: (isOverflow: boolean) => void) => {
+export const useIsOverflowing = (
+  ref: React.RefObject<HTMLElement | null>,
+  callback?: (isOverflow: boolean) => void,
+) => {
   // State to track overflow status
-  const [isOverflow, setIsOverflow] = React.useState<boolean | undefined>(undefined);
+  const [isOverflow, setIsOverflow] = React.useState<boolean | undefined>(
+    undefined,
+  );
 
   React.useLayoutEffect(() => {
     const { current } = ref;

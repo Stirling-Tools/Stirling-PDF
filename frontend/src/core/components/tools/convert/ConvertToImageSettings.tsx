@@ -6,11 +6,18 @@ import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface ConvertToImageSettingsProps {
   parameters: ConvertParameters;
-  onParameterChange: <K extends keyof ConvertParameters>(key: K, value: ConvertParameters[K]) => void;
+  onParameterChange: <K extends keyof ConvertParameters>(
+    key: K,
+    value: ConvertParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const ConvertToImageSettings = ({ parameters, onParameterChange, disabled = false }: ConvertToImageSettingsProps) => {
+const ConvertToImageSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: ConvertToImageSettingsProps) => {
   const { t } = useTranslation();
 
   return (
@@ -32,11 +39,20 @@ const ConvertToImageSettings = ({ parameters, onParameterChange, disabled = fals
           }
           data={[
             { value: COLOR_TYPES.COLOR, label: t("convert.color", "Color") },
-            { value: COLOR_TYPES.GRAYSCALE, label: t("convert.grayscale", "Grayscale") },
-            { value: COLOR_TYPES.BLACK_WHITE, label: t("convert.blackwhite", "Black & White") },
+            {
+              value: COLOR_TYPES.GRAYSCALE,
+              label: t("convert.grayscale", "Grayscale"),
+            },
+            {
+              value: COLOR_TYPES.BLACK_WHITE,
+              label: t("convert.blackwhite", "Black & White"),
+            },
           ]}
           disabled={disabled}
-          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+          comboboxProps={{
+            withinPortal: true,
+            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+          }}
         />
         <NumberInput
           data-testid="dpi-input"
@@ -63,15 +79,25 @@ const ConvertToImageSettings = ({ parameters, onParameterChange, disabled = fals
           val &&
           onParameterChange("imageOptions", {
             ...parameters.imageOptions,
-            singleOrMultiple: val as (typeof OUTPUT_OPTIONS)[keyof typeof OUTPUT_OPTIONS],
+            singleOrMultiple:
+              val as (typeof OUTPUT_OPTIONS)[keyof typeof OUTPUT_OPTIONS],
           })
         }
         data={[
-          { value: OUTPUT_OPTIONS.SINGLE, label: t("convert.single", "Single") },
-          { value: OUTPUT_OPTIONS.MULTIPLE, label: t("convert.multiple", "Multiple") },
+          {
+            value: OUTPUT_OPTIONS.SINGLE,
+            label: t("convert.single", "Single"),
+          },
+          {
+            value: OUTPUT_OPTIONS.MULTIPLE,
+            label: t("convert.multiple", "Multiple"),
+          },
         ]}
         disabled={disabled}
-        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+        comboboxProps={{
+          withinPortal: true,
+          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+        }}
       />
     </Stack>
   );

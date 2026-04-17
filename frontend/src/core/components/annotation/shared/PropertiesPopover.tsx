@@ -1,4 +1,13 @@
-import { ActionIcon, Tooltip, Popover, Stack, Slider, Text, Group, Button } from "@mantine/core";
+import {
+  ActionIcon,
+  Tooltip,
+  Popover,
+  Stack,
+  Slider,
+  Text,
+  Group,
+  Button,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
@@ -18,7 +27,12 @@ interface PropertiesPopoverProps {
   disabled?: boolean;
 }
 
-export function PropertiesPopover({ annotationType, annotation, onUpdate, disabled = false }: PropertiesPopoverProps) {
+export function PropertiesPopover({
+  annotationType,
+  annotation,
+  onUpdate,
+  disabled = false,
+}: PropertiesPopoverProps) {
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
 
@@ -30,7 +44,9 @@ export function PropertiesPopover({ annotationType, annotation, onUpdate, disabl
     strokeWidth?: number;
   }
 
-  const obj = annotation?.object as (PdfAnnotationObject & AnnotationObjectProps) | undefined;
+  const obj = annotation?.object as
+    | (PdfAnnotationObject & AnnotationObjectProps)
+    | undefined;
 
   // Get current values
   const fontSize = obj?.fontSize ?? 14;
@@ -171,7 +187,9 @@ export function PropertiesPopover({ annotationType, annotation, onUpdate, disabl
               });
             }}
           >
-            {borderVisible ? t("annotation.borderOn", "Border: On") : t("annotation.borderOff", "Border: Off")}
+            {borderVisible
+              ? t("annotation.borderOn", "Border: On")
+              : t("annotation.borderOff", "Border: Off")}
           </Button>
         </Group>
       </div>
@@ -207,7 +225,8 @@ export function PropertiesPopover({ annotationType, annotation, onUpdate, disabl
         </Tooltip>
       </Popover.Target>
       <Popover.Dropdown>
-        {(annotationType === "text" || annotationType === "note") && renderTextNoteControls()}
+        {(annotationType === "text" || annotationType === "note") &&
+          renderTextNoteControls()}
         {annotationType === "shape" && renderShapeControls()}
       </Popover.Dropdown>
     </Popover>

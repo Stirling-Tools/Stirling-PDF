@@ -19,8 +19,11 @@ export function createTestStirlingFile(
 /**
  * Create multiple StirlingFile objects for testing
  */
-export function createTestFilesWithId(files: Array<{ name: string; content?: string; type?: string }>): StirlingFile[] {
-  return files.map(({ name, content = "test content", type = "application/pdf" }) =>
-    createTestStirlingFile(name, content, type),
+export function createTestFilesWithId(
+  files: Array<{ name: string; content?: string; type?: string }>,
+): StirlingFile[] {
+  return files.map(
+    ({ name, content = "test content", type = "application/pdf" }) =>
+      createTestStirlingFile(name, content, type),
   );
 }

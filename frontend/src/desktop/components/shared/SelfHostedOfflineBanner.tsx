@@ -1,14 +1,32 @@
 import { useState, useEffect, useMemo } from "react";
-import { Paper, Group, Text, ActionIcon, UnstyledButton, Popover, List, ScrollArea } from "@mantine/core";
+import {
+  Paper,
+  Group,
+  Text,
+  ActionIcon,
+  UnstyledButton,
+  Popover,
+  List,
+  ScrollArea,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useConversionCloudStatus } from "@app/hooks/useConversionCloudStatus";
-import { selfHostedServerMonitor, type SelfHostedServerState } from "@app/services/selfHostedServerMonitor";
-import { connectionModeService, type ConnectionMode } from "@app/services/connectionModeService";
+import {
+  selfHostedServerMonitor,
+  type SelfHostedServerState,
+} from "@app/services/selfHostedServerMonitor";
+import {
+  connectionModeService,
+  type ConnectionMode,
+} from "@app/services/connectionModeService";
 import { tauriBackendService } from "@app/services/tauriBackendService";
 import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
-import { EXTENSION_TO_ENDPOINT, ENDPOINT_I18N } from "@app/constants/convertConstants";
+import {
+  EXTENSION_TO_ENDPOINT,
+  ENDPOINT_I18N,
+} from "@app/constants/convertConstants";
 import { ENDPOINTS as SPLIT_ENDPOINTS } from "@app/constants/splitConstants";
 import type { ToolId } from "@app/types/toolId";
 
@@ -39,16 +57,24 @@ const SPLIT_ENDPOINT_I18N: Record<string, [string, string]> = {
  */
 export function SelfHostedOfflineBanner() {
   const { t } = useTranslation();
-  const [connectionMode, setConnectionMode] = useState<ConnectionMode | null>(null);
-  const [serverState, setServerState] = useState<SelfHostedServerState>(() => selfHostedServerMonitor.getSnapshot());
+  const [connectionMode, setConnectionMode] = useState<ConnectionMode | null>(
+    null,
+  );
+  const [serverState, setServerState] = useState<SelfHostedServerState>(() =>
+    selfHostedServerMonitor.getSnapshot(),
+  );
   const [dismissed, setDismissed] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [localBackendReady, setLocalBackendReady] = useState(() => !!tauriBackendService.getBackendUrl());
+  const [localBackendReady, setLocalBackendReady] = useState(
+    () => !!tauriBackendService.getBackendUrl(),
+  );
 
   // Load connection mode and keep it live via subscription
   useEffect(() => {
     void connectionModeService.getCurrentMode().then(setConnectionMode);
-    return connectionModeService.subscribeToModeChanges((config) => setConnectionMode(config.mode));
+    return connectionModeService.subscribeToModeChanges((config) =>
+      setConnectionMode(config.mode),
+    );
   }, []);
 
   // Subscribe to self-hosted server status changes
@@ -75,7 +101,9 @@ export function SelfHostedOfflineBanner() {
   // Re-use conversion availability already computed by useConversionCloudStatus.
   const { availability: conversionAvailability } = useConversionCloudStatus();
 
-  const [splitAvailability, setSplitAvailability] = useState<Record<string, boolean>>({});
+  const [splitAvailability, setSplitAvailability] = useState<
+    Record<string, boolean>
+  >({});
   useEffect(() => {
     if (serverState.status !== "offline") {
       setSplitAvailability({});
@@ -86,11 +114,15 @@ export function SelfHostedOfflineBanner() {
       setSplitAvailability({});
       return;
     }
-    const uniqueEndpoints = [...new Set(Object.values(SPLIT_ENDPOINTS))] as string[];
+    const uniqueEndpoints = [
+      ...new Set(Object.values(SPLIT_ENDPOINTS)),
+    ] as string[];
     void Promise.all(
       uniqueEndpoints.map(async (ep) => ({
         ep,
-        supported: await endpointAvailabilityService.isEndpointSupportedLocally(ep, localUrl).catch(() => false),
+        supported: await endpointAvailabilityService
+          .isEndpointSupportedLocally(ep, localUrl)
+          .catch(() => false),
       })),
     ).then((results) => {
       const map: Record<string, boolean> = {};
@@ -102,7 +134,11 @@ export function SelfHostedOfflineBanner() {
   const allUnavailableNames = useMemo(() => {
     // Top-level tools unavailable in self-hosted offline mode
     const toolNames = (Object.keys(toolAvailability) as ToolId[])
-      .filter((id) => toolAvailability[id]?.available === false && toolAvailability[id]?.reason === "selfHostedOffline")
+      .filter(
+        (id) =>
+          toolAvailability[id]?.available === false &&
+          toolAvailability[id]?.reason === "selfHostedOffline",
+      )
       .map((id) => toolRegistry[id]?.name ?? id)
       .filter(Boolean) as string[];
 
@@ -140,16 +176,31 @@ export function SelfHostedOfflineBanner() {
       .filter(Boolean);
 
     return [...toolNames, ...conversionNames, ...unavailableSplitNames].sort();
-  }, [toolAvailability, toolRegistry, conversionAvailability, splitAvailability, t]);
+  }, [
+    toolAvailability,
+    toolRegistry,
+    conversionAvailability,
+    splitAvailability,
+    t,
+  ]);
 
   // Only show when in self-hosted mode, server confirmed offline, and not dismissed
-  const show = !dismissed && connectionMode === "selfhosted" && serverState.status === "offline";
+  const show =
+    !dismissed &&
+    connectionMode === "selfhosted" &&
+    serverState.status === "offline";
 
   if (!show) return null;
 
   const messageText = localBackendReady
-    ? t("selfHosted.offline.messageWithFallback", "Some tools require a server connection.")
-    : t("selfHosted.offline.messageNoFallback", "Tools are unavailable until your server comes back online.");
+    ? t(
+        "selfHosted.offline.messageWithFallback",
+        "Some tools require a server connection.",
+      )
+    : t(
+        "selfHosted.offline.messageNoFallback",
+        "Tools are unavailable until your server comes back online.",
+      );
 
   return (
     <Paper
@@ -159,15 +210,42 @@ export function SelfHostedOfflineBanner() {
         borderBottom: `1px solid ${BANNER_BORDER}`,
       }}
     >
-      <Group gap="xs" align="center" wrap="nowrap" justify="space-between" px="sm" py={6}>
-        <Group gap="xs" align="center" wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
-          <LocalIcon icon="warning-rounded" width="1rem" height="1rem" style={{ color: BANNER_ICON, flexShrink: 0 }} />
-          <Text size="xs" fw={600} style={{ color: BANNER_TEXT, flexShrink: 0 }}>
+      <Group
+        gap="xs"
+        align="center"
+        wrap="nowrap"
+        justify="space-between"
+        px="sm"
+        py={6}
+      >
+        <Group
+          gap="xs"
+          align="center"
+          wrap="nowrap"
+          style={{ minWidth: 0, flex: 1 }}
+        >
+          <LocalIcon
+            icon="warning-rounded"
+            width="1rem"
+            height="1rem"
+            style={{ color: BANNER_ICON, flexShrink: 0 }}
+          />
+          <Text
+            size="xs"
+            fw={600}
+            style={{ color: BANNER_TEXT, flexShrink: 0 }}
+          >
             {t("selfHosted.offline.title", "Server unreachable")}
           </Text>
           <Text
             size="xs"
-            style={{ color: BANNER_TEXT, opacity: 0.8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+            style={{
+              color: BANNER_TEXT,
+              opacity: 0.8,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
           >
             {messageText}
           </Text>
@@ -193,8 +271,14 @@ export function SelfHostedOfflineBanner() {
                 }}
               >
                 {expanded
-                  ? t("selfHosted.offline.hideTools", "Hide unavailable tools ▴")
-                  : t("selfHosted.offline.showTools", "View unavailable tools ▾")}
+                  ? t(
+                      "selfHosted.offline.hideTools",
+                      "Hide unavailable tools ▴",
+                    )
+                  : t(
+                      "selfHosted.offline.showTools",
+                      "View unavailable tools ▾",
+                    )}
               </UnstyledButton>
             </Popover.Target>
             <Popover.Dropdown p="xs">

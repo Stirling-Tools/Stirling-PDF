@@ -359,7 +359,12 @@ class ExpressionParser {
     return false;
   }
 
-  private peekWordOrSymbol(): { type: "word" | "symbol"; value: string; raw: string; length: number } | null {
+  private peekWordOrSymbol(): {
+    type: "word" | "symbol";
+    value: string;
+    raw: string;
+    length: number;
+  } | null {
     this.skipWs();
     if (this.idx >= this.src.length) return null;
     const ch = this.src[this.idx];
@@ -383,7 +388,8 @@ class ExpressionParser {
   }
 
   private skipWs() {
-    while (this.idx < this.src.length && /\s/.test(this.src[this.idx])) this.idx++;
+    while (this.idx < this.src.length && /\s/.test(this.src[this.idx]))
+      this.idx++;
   }
 
   private peek(s: string): boolean {

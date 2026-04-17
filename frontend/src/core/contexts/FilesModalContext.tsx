@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFileActions } from "@app/contexts/FileContext";
 import { useFileContext } from "@app/contexts/file/fileHooks";
@@ -30,14 +36,18 @@ interface FilesModalContextType {
 
 const FilesModalContext = createContext<FilesModalContextType | null>(null);
 
-export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const { addFiles } = useFileHandler();
   const { actions } = useFileActions();
   const fileCtx = useFileContext();
   const [isFilesModalOpen, setIsFilesModalOpen] = useState(false);
   const [onModalClose, setOnModalClose] = useState<(() => void) | undefined>();
   const [insertAfterPage, setInsertAfterPage] = useState<number | undefined>();
-  const [customHandler, setCustomHandler] = useState<((files: File[], insertAfterPage?: number) => void) | undefined>();
+  const [customHandler, setCustomHandler] = useState<
+    ((files: File[], insertAfterPage?: number) => void) | undefined
+  >();
 
   const importBundleToWorkbench = useCallback(
     async (
@@ -51,7 +61,9 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       remoteSharedViaLink?: boolean,
       remoteShareToken?: string,
     ): Promise<FileId[]> => {
-      const bundle = isZipBundle(contentType, filename) ? await loadShareBundleEntries(blob) : null;
+      const bundle = isZipBundle(contentType, filename)
+        ? await loadShareBundleEntries(blob)
+        : null;
       if (bundle) {
         const { manifest, rootOrder, sortedEntries, files } = bundle;
 
@@ -64,7 +76,10 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
         const idMap = new Map<string, FileId>();
         for (let i = 0; i < stirlingFiles.length; i += 1) {
-          idMap.set(sortedEntries[i].logicalId, stirlingFiles[i].fileId as FileId);
+          idMap.set(
+            sortedEntries[i].logicalId,
+            stirlingFiles[i].fileId as FileId,
+          );
         }
 
         const rootIdMap = new Map<string, FileId>();
@@ -79,9 +94,13 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         for (const entry of sortedEntries) {
           const newId = idMap.get(entry.logicalId);
           if (!newId) continue;
-          const parentId = entry.parentLogicalId ? idMap.get(entry.parentLogicalId) : undefined;
+          const parentId = entry.parentLogicalId
+            ? idMap.get(entry.parentLogicalId)
+            : undefined;
           const rootId =
-            rootIdMap.get(getShareBundleEntryRootId(manifest, entry)) || idMap.get(manifest.rootLogicalId) || newId;
+            rootIdMap.get(getShareBundleEntryRootId(manifest, entry)) ||
+            idMap.get(manifest.rootLogicalId) ||
+            newId;
           const updates = {
             versionNumber: entry.versionNumber,
             originalFileId: rootId,
@@ -101,7 +120,9 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
         const selectedIds: FileId[] = [];
         for (const rootId of rootOrder) {
-          const rootEntries = sortedEntries.filter((entry) => getShareBundleEntryRootId(manifest, entry) === rootId);
+          const rootEntries = sortedEntries.filter(
+            (entry) => getShareBundleEntryRootId(manifest, entry) === rootId,
+          );
           const latestEntry = rootEntries[rootEntries.length - 1];
           if (!latestEntry) {
             continue;
@@ -115,7 +136,9 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         return selectedIds;
       }
 
-      const file = new File([blob], filename, { type: contentType || blob.type });
+      const file = new File([blob], filename, {
+        type: contentType || blob.type,
+      });
       const stirlingFiles = await actions.addFilesWithOptions([file], {
         selectFiles: false,
         autoUnzip: false,
@@ -142,37 +165,62 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   );
 
   const downloadServerFile = useCallback(async (remoteId: number) => {
-    const response = await apiClient.get(`/api/v1/storage/files/${remoteId}/download`, {
-      responseType: "blob",
-      suppressErrorToast: true,
-      skipAuthRedirect: true,
-    } as any);
-    const contentType = (response.headers && (response.headers["content-type"] || response.headers["Content-Type"])) || "";
+    const response = await apiClient.get(
+      `/api/v1/storage/files/${remoteId}/download`,
+      {
+        responseType: "blob",
+        suppressErrorToast: true,
+        skipAuthRedirect: true,
+      } as any,
+    );
+    const contentType =
+      (response.headers &&
+        (response.headers["content-type"] ||
+          response.headers["Content-Type"])) ||
+      "";
     const disposition =
-      (response.headers && (response.headers["content-disposition"] || response.headers["Content-Disposition"])) || "";
-    const filename = parseContentDispositionFilename(disposition) || "server-file";
+      (response.headers &&
+        (response.headers["content-disposition"] ||
+          response.headers["Content-Disposition"])) ||
+      "";
+    const filename =
+      parseContentDispositionFilename(disposition) || "server-file";
     const blob = response.data as Blob;
     const contentTypeValue = contentType || blob.type;
     return { blob, filename, contentType: contentTypeValue };
   }, []);
 
   const downloadShareLinkFile = useCallback(async (shareToken: string) => {
-    const response = await apiClient.get(`/api/v1/storage/share-links/${shareToken}`, {
-      responseType: "blob",
-      suppressErrorToast: true,
-      skipAuthRedirect: true,
-    } as any);
-    const contentType = (response.headers && (response.headers["content-type"] || response.headers["Content-Type"])) || "";
+    const response = await apiClient.get(
+      `/api/v1/storage/share-links/${shareToken}`,
+      {
+        responseType: "blob",
+        suppressErrorToast: true,
+        skipAuthRedirect: true,
+      } as any,
+    );
+    const contentType =
+      (response.headers &&
+        (response.headers["content-type"] ||
+          response.headers["Content-Type"])) ||
+      "";
     const disposition =
-      (response.headers && (response.headers["content-disposition"] || response.headers["Content-Disposition"])) || "";
-    const filename = parseContentDispositionFilename(disposition) || "shared-file";
+      (response.headers &&
+        (response.headers["content-disposition"] ||
+          response.headers["Content-Disposition"])) ||
+      "";
+    const filename =
+      parseContentDispositionFilename(disposition) || "shared-file";
     const blob = response.data as Blob;
     const contentTypeValue = contentType || blob.type;
     return { blob, filename, contentType: contentTypeValue };
   }, []);
 
   const openFilesModal = useCallback(
-    (options?: { insertAfterPage?: number; customHandler?: (files: File[], insertAfterPage?: number) => void }) => {
+    (options?: {
+      insertAfterPage?: number;
+      customHandler?: (files: File[], insertAfterPage?: number) => void;
+    }) => {
       setInsertAfterPage(options?.insertAfterPage);
       setCustomHandler(() => options?.customHandler);
       setIsFilesModalOpen(true);
@@ -196,24 +244,42 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         // 1) Add via standard flow (auto-selects new files)
         await addFiles(files);
         // 2) Merge all requested file IDs (covers already-present files too)
-        const ids = files.map((f) => fileCtx.findFileId(f) as FileId | undefined).filter((id): id is FileId => Boolean(id));
+        const ids = files
+          .map((f) => fileCtx.findFileId(f) as FileId | undefined)
+          .filter((id): id is FileId => Boolean(id));
         if (ids.length > 0) {
-          const currentSelected = fileCtx.selectors.getSelectedStirlingFileStubs().map((s) => s.id);
-          const nextSelection = Array.from(new Set([...currentSelected, ...ids]));
+          const currentSelected = fileCtx.selectors
+            .getSelectedStirlingFileStubs()
+            .map((s) => s.id);
+          const nextSelection = Array.from(
+            new Set([...currentSelected, ...ids]),
+          );
           actions.setSelectedFiles(nextSelection);
         }
       }
       closeFilesModal();
     },
-    [addFiles, closeFilesModal, insertAfterPage, customHandler, actions, fileCtx],
+    [
+      addFiles,
+      closeFilesModal,
+      insertAfterPage,
+      customHandler,
+      actions,
+      fileCtx,
+    ],
   );
 
   const handleRecentFileSelect = useCallback(
     async (stirlingFileStubs: StirlingFileStub[]) => {
-      const serverOnlyStubs = stirlingFileStubs.filter((stub) => stub.remoteStorageId && stub.id.startsWith("server-"));
-      const sharedLinkStubs = stirlingFileStubs.filter((stub) => stub.remoteShareToken);
+      const serverOnlyStubs = stirlingFileStubs.filter(
+        (stub) => stub.remoteStorageId && stub.id.startsWith("server-"),
+      );
+      const sharedLinkStubs = stirlingFileStubs.filter(
+        (stub) => stub.remoteShareToken,
+      );
       const localStubs = stirlingFileStubs.filter(
-        (stub) => !serverOnlyStubs.includes(stub) && !sharedLinkStubs.includes(stub),
+        (stub) =>
+          !serverOnlyStubs.includes(stub) && !sharedLinkStubs.includes(stub),
       );
 
       if (customHandler) {
@@ -227,14 +293,26 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           }
           for (const stub of serverOnlyStubs) {
             if (!stub.remoteStorageId) continue;
-            const { blob, filename, contentType } = await downloadServerFile(stub.remoteStorageId);
-            const latestFiles = await extractLatestFilesFromBundle(blob, filename, contentType);
+            const { blob, filename, contentType } = await downloadServerFile(
+              stub.remoteStorageId,
+            );
+            const latestFiles = await extractLatestFilesFromBundle(
+              blob,
+              filename,
+              contentType,
+            );
             loadedFiles.push(...latestFiles);
           }
           for (const stub of sharedLinkStubs) {
             if (!stub.remoteShareToken) continue;
-            const { blob, filename, contentType } = await downloadShareLinkFile(stub.remoteShareToken);
-            const latestFiles = await extractLatestFilesFromBundle(blob, filename, contentType);
+            const { blob, filename, contentType } = await downloadShareLinkFile(
+              stub.remoteShareToken,
+            );
+            const latestFiles = await extractLatestFilesFromBundle(
+              blob,
+              filename,
+              contentType,
+            );
             loadedFiles.push(...latestFiles);
           }
 
@@ -258,7 +336,9 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       try {
         for (const stub of serverOnlyStubs) {
           if (!stub.remoteStorageId) continue;
-          const { blob, filename, contentType } = await downloadServerFile(stub.remoteStorageId);
+          const { blob, filename, contentType } = await downloadServerFile(
+            stub.remoteStorageId,
+          );
           const importedIds = await importBundleToWorkbench(
             blob,
             filename,
@@ -274,7 +354,9 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         }
         for (const stub of sharedLinkStubs) {
           if (!stub.remoteShareToken) continue;
-          const { blob, filename, contentType } = await downloadShareLinkFile(stub.remoteShareToken);
+          const { blob, filename, contentType } = await downloadShareLinkFile(
+            stub.remoteShareToken,
+          );
           const importedIds = await importBundleToWorkbench(
             blob,
             filename,
@@ -301,7 +383,9 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (actions.addStirlingFileStubs) {
         await actions.addStirlingFileStubs(localStubs, { selectFiles: false });
         const requestedIds = localStubs.map((s) => s.id);
-        const nextSelection = Array.from(new Set([...requestedIds, ...selectedFromServer]));
+        const nextSelection = Array.from(
+          new Set([...requestedIds, ...selectedFromServer]),
+        );
         actions.setSelectedFiles(nextSelection);
       } else {
         console.error("addStirlingFileStubs action not available");
@@ -348,13 +432,19 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     ],
   );
 
-  return <FilesModalContext.Provider value={contextValue}>{children}</FilesModalContext.Provider>;
+  return (
+    <FilesModalContext.Provider value={contextValue}>
+      {children}
+    </FilesModalContext.Provider>
+  );
 };
 
 export const useFilesModalContext = () => {
   const context = useContext(FilesModalContext);
   if (!context) {
-    throw new Error("useFilesModalContext must be used within FilesModalProvider");
+    throw new Error(
+      "useFilesModalContext must be used within FilesModalProvider",
+    );
   }
   return context;
 };

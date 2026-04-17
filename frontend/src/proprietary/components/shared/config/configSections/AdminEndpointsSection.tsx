@@ -1,6 +1,14 @@
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Stack, Paper, Text, Loader, Group, MultiSelect, Switch } from "@mantine/core";
+import {
+  Stack,
+  Paper,
+  Text,
+  Loader,
+  Group,
+  MultiSelect,
+  Switch,
+} from "@mantine/core";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
@@ -24,12 +32,24 @@ interface EndpointsSettingsData {
 export default function AdminEndpointsSection() {
   const { t } = useTranslation();
   const { loginEnabled, validateLoginEnabled } = useLoginRequired();
-  const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
+  const {
+    restartModalOpened,
+    showRestartModal,
+    closeRestartModal,
+    restartServer,
+  } = useRestartServer();
 
-  const { settings, setSettings, loading, saving, fetchSettings, saveSettings, isFieldPending } =
-    useAdminSettings<EndpointsSettingsData>({
-      sectionName: "endpoints",
-    });
+  const {
+    settings,
+    setSettings,
+    loading,
+    saving,
+    fetchSettings,
+    saveSettings,
+    isFieldPending,
+  } = useAdminSettings<EndpointsSettingsData>({
+    sectionName: "endpoints",
+  });
 
   const {
     settings: uiSettings,
@@ -96,7 +116,14 @@ export default function AdminEndpointsSection() {
       const original = resetUiSnapshot();
       setUiSettings(original);
     }
-  }, [isEndpointsDirty, isUiDirty, resetEndpointsSnapshot, resetUiSnapshot, setSettings, setUiSettings]);
+  }, [
+    isEndpointsDirty,
+    isUiDirty,
+    resetEndpointsSnapshot,
+    resetUiSnapshot,
+    setSettings,
+    setUiSettings,
+  ]);
 
   // Override loading state when login is disabled
   const actualLoading = loginEnabled ? loading || uiLoading : false;
@@ -228,7 +255,10 @@ export default function AdminEndpointsSection() {
             {t("admin.settings.endpoints.title", "API Endpoints")}
           </Text>
           <Text size="sm" c="dimmed">
-            {t("admin.settings.endpoints.description", "Control which API endpoints and endpoint groups are available.")}
+            {t(
+              "admin.settings.endpoints.description",
+              "Control which API endpoints and endpoint groups are available.",
+            )}
           </Text>
         </div>
 
@@ -242,17 +272,28 @@ export default function AdminEndpointsSection() {
               <MultiSelect
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.endpoints.toRemove.label", "Disabled Endpoints")}</span>
+                    <span>
+                      {t(
+                        "admin.settings.endpoints.toRemove.label",
+                        "Disabled Endpoints",
+                      )}
+                    </span>
                     <PendingBadge show={isFieldPending("toRemove")} />
                   </Group>
                 }
-                description={t("admin.settings.endpoints.toRemove.description", "Select individual endpoints to disable")}
+                description={t(
+                  "admin.settings.endpoints.toRemove.description",
+                  "Select individual endpoints to disable",
+                )}
                 value={settings.toRemove || []}
                 onChange={(value) => {
                   if (!loginEnabled) return;
                   setSettings({ ...settings, toRemove: value });
                 }}
-                data={commonEndpoints.map((endpoint) => ({ value: endpoint, label: endpoint }))}
+                data={commonEndpoints.map((endpoint) => ({
+                  value: endpoint,
+                  label: endpoint,
+                }))}
                 searchable
                 clearable
                 placeholder="Select endpoints to disable"
@@ -265,17 +306,28 @@ export default function AdminEndpointsSection() {
               <MultiSelect
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.endpoints.groupsToRemove.label", "Disabled Endpoint Groups")}</span>
+                    <span>
+                      {t(
+                        "admin.settings.endpoints.groupsToRemove.label",
+                        "Disabled Endpoint Groups",
+                      )}
+                    </span>
                     <PendingBadge show={isFieldPending("groupsToRemove")} />
                   </Group>
                 }
-                description={t("admin.settings.endpoints.groupsToRemove.description", "Select endpoint groups to disable")}
+                description={t(
+                  "admin.settings.endpoints.groupsToRemove.description",
+                  "Select endpoint groups to disable",
+                )}
                 value={settings.groupsToRemove || []}
                 onChange={(value) => {
                   if (!loginEnabled) return;
                   setSettings({ ...settings, groupsToRemove: value });
                 }}
-                data={commonGroups.map((group) => ({ value: group, label: group }))}
+                data={commonGroups.map((group) => ({
+                  value: group,
+                  label: group,
+                }))}
                 searchable
                 clearable
                 placeholder="Select groups to disable"
@@ -290,7 +342,10 @@ export default function AdminEndpointsSection() {
           <Stack gap="md">
             <div>
               <Text fw={600} size="sm" mb="xs">
-                {t("admin.settings.endpoints.userDefaults", "User Preference Defaults")}
+                {t(
+                  "admin.settings.endpoints.userDefaults",
+                  "User Preference Defaults",
+                )}
               </Text>
               <Text size="xs" c="dimmed">
                 {t(
@@ -304,9 +359,14 @@ export default function AdminEndpointsSection() {
               label={
                 <Group gap="xs">
                   <span>
-                    {t("admin.settings.endpoints.defaultHideUnavailableTools.label", "Hide unavailable tools by default")}
+                    {t(
+                      "admin.settings.endpoints.defaultHideUnavailableTools.label",
+                      "Hide unavailable tools by default",
+                    )}
                   </span>
-                  <PendingBadge show={isUiFieldPending("defaultHideUnavailableTools")} />
+                  <PendingBadge
+                    show={isUiFieldPending("defaultHideUnavailableTools")}
+                  />
                 </Group>
               }
               description={t(
@@ -316,7 +376,10 @@ export default function AdminEndpointsSection() {
               checked={uiSettings.defaultHideUnavailableTools || false}
               onChange={(e) => {
                 if (!loginEnabled) return;
-                setUiSettings({ ...uiSettings, defaultHideUnavailableTools: e.currentTarget.checked });
+                setUiSettings({
+                  ...uiSettings,
+                  defaultHideUnavailableTools: e.currentTarget.checked,
+                });
               }}
               disabled={!loginEnabled}
             />
@@ -330,7 +393,9 @@ export default function AdminEndpointsSection() {
                       "Hide unavailable conversions by default",
                     )}
                   </span>
-                  <PendingBadge show={isUiFieldPending("defaultHideUnavailableConversions")} />
+                  <PendingBadge
+                    show={isUiFieldPending("defaultHideUnavailableConversions")}
+                  />
                 </Group>
               }
               description={t(
@@ -340,7 +405,10 @@ export default function AdminEndpointsSection() {
               checked={uiSettings.defaultHideUnavailableConversions || false}
               onChange={(e) => {
                 if (!loginEnabled) return;
-                setUiSettings({ ...uiSettings, defaultHideUnavailableConversions: e.currentTarget.checked });
+                setUiSettings({
+                  ...uiSettings,
+                  defaultHideUnavailableConversions: e.currentTarget.checked,
+                });
               }}
               disabled={!loginEnabled}
             />
@@ -357,7 +425,11 @@ export default function AdminEndpointsSection() {
       />
 
       {/* Restart Confirmation Modal */}
-      <RestartConfirmationModal opened={restartModalOpened} onClose={closeRestartModal} onRestart={restartServer} />
+      <RestartConfirmationModal
+        opened={restartModalOpened}
+        onClose={closeRestartModal}
+        onRestart={restartServer}
+      />
     </div>
   );
 }

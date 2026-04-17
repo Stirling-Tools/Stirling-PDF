@@ -13,31 +13,48 @@ import { useEditTableOfContentsOperation } from "@app/hooks/tools/editTableOfCon
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import apiClient from "@app/services/apiClient";
-import { BookmarkPayload, BookmarkNode, hydrateBookmarkPayload, serializeBookmarkNodes } from "@app/utils/editTableOfContents";
+import {
+  BookmarkPayload,
+  BookmarkNode,
+  hydrateBookmarkPayload,
+  serializeBookmarkNodes,
+} from "@app/utils/editTableOfContents";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
-import { useNavigationActions, useNavigationState } from "@app/contexts/NavigationContext";
+import {
+  useNavigationActions,
+  useNavigationState,
+} from "@app/contexts/NavigationContext";
 import { useFileSelection } from "@app/contexts/FileContext";
 
 const extractBookmarks = async (file: File): Promise<BookmarkPayload[]> => {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await apiClient.post("/api/v1/general/extract-bookmarks", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const response = await apiClient.post(
+    "/api/v1/general/extract-bookmarks",
+    formData,
+    {
+      headers: { "Content-Type": "multipart/form-data" },
+    },
+  );
 
   return response.data as BookmarkPayload[];
 };
 
-const useStableCallback = <T extends (...args: any[]) => any>(callback: T): T => {
+const useStableCallback = <T extends (...args: any[]) => any>(
+  callback: T,
+): T => {
   const callbackRef = useRef(callback);
 
   useEffect(() => {
     callbackRef.current = callback;
   }, [callback]);
 
-  return useMemo(() => ((...args: Parameters<T>) => callbackRef.current(...args)) as T, []);
+  return useMemo(
+    () => ((...args: Parameters<T>) => callbackRef.current(...args)) as T,
+    [],
+  );
 };
 
 const EditTableOfContents = (props: BaseToolProps) => {
@@ -102,18 +119,34 @@ const EditTableOfContents = (props: BaseToolProps) => {
 
         if (showToast) {
           alert({
-            title: t("editTableOfContents.messages.loadedTitle", "Bookmarks extracted"),
-            body: t("editTableOfContents.messages.loadedBody", "Existing bookmarks from the PDF were loaded into the editor."),
+            title: t(
+              "editTableOfContents.messages.loadedTitle",
+              "Bookmarks extracted",
+            ),
+            body: t(
+              "editTableOfContents.messages.loadedBody",
+              "Existing bookmarks from the PDF were loaded into the editor.",
+            ),
             alertType: "success",
           });
         }
 
         if (bookmarks.length === 0) {
-          setLoadError(t("editTableOfContents.messages.noBookmarks", "No bookmarks were found in the selected PDF."));
+          setLoadError(
+            t(
+              "editTableOfContents.messages.noBookmarks",
+              "No bookmarks were found in the selected PDF.",
+            ),
+          );
         }
       } catch (error) {
         console.error("Failed to load bookmarks", error);
-        setLoadError(t("editTableOfContents.messages.loadFailed", "Unable to extract bookmarks from the selected PDF."));
+        setLoadError(
+          t(
+            "editTableOfContents.messages.loadFailed",
+            "Unable to extract bookmarks from the selected PDF.",
+          ),
+        );
       } finally {
         setIsLoadingBookmarks(false);
       }
@@ -142,7 +175,13 @@ const EditTableOfContents = (props: BaseToolProps) => {
     loadBookmarksForFile(selectedFile).catch(() => {
       // errors handled in hook
     });
-  }, [selectedFile, lastLoadedFileId, loadBookmarksForFile, setBookmarks, base.hasResults]);
+  }, [
+    selectedFile,
+    lastLoadedFileId,
+    loadBookmarksForFile,
+    setBookmarks,
+    base.hasResults,
+  ]);
 
   const importJsonCallback = async (file: File) => {
     try {
@@ -151,14 +190,23 @@ const EditTableOfContents = (props: BaseToolProps) => {
       setBookmarks(hydrateBookmarkPayload(json));
       alert({
         title: t("editTableOfContents.messages.imported", "Bookmarks imported"),
-        body: t("editTableOfContents.messages.importedBody", "Your JSON outline replaced the current editor contents."),
+        body: t(
+          "editTableOfContents.messages.importedBody",
+          "Your JSON outline replaced the current editor contents.",
+        ),
         alertType: "success",
       });
     } catch (error) {
       console.error("Failed to import JSON bookmarks", error);
       alert({
-        title: t("editTableOfContents.messages.invalidJson", "Invalid JSON structure"),
-        body: t("editTableOfContents.messages.invalidJsonBody", "Please provide a valid bookmark JSON file and try again."),
+        title: t(
+          "editTableOfContents.messages.invalidJson",
+          "Invalid JSON structure",
+        ),
+        body: t(
+          "editTableOfContents.messages.invalidJsonBody",
+          "Please provide a valid bookmark JSON file and try again.",
+        ),
         alertType: "error",
       });
     }
@@ -168,7 +216,10 @@ const EditTableOfContents = (props: BaseToolProps) => {
   const importClipboardCallback = async () => {
     if (!navigator.clipboard?.readText) {
       alert({
-        title: t("editTableOfContents.actions.clipboardUnavailable", "Clipboard access unavailable"),
+        title: t(
+          "editTableOfContents.actions.clipboardUnavailable",
+          "Clipboard access unavailable",
+        ),
         alertType: "warning",
       });
       return;
@@ -180,14 +231,23 @@ const EditTableOfContents = (props: BaseToolProps) => {
       setBookmarks(hydrateBookmarkPayload(json));
       alert({
         title: t("editTableOfContents.messages.imported", "Bookmarks imported"),
-        body: t("editTableOfContents.messages.importedClipboard", "Clipboard data replaced the current bookmark list."),
+        body: t(
+          "editTableOfContents.messages.importedClipboard",
+          "Clipboard data replaced the current bookmark list.",
+        ),
         alertType: "success",
       });
     } catch (error) {
       console.error("Failed to import bookmarks from clipboard", error);
       alert({
-        title: t("editTableOfContents.messages.invalidJson", "Invalid JSON structure"),
-        body: t("editTableOfContents.messages.invalidJsonBody", "Please provide a valid bookmark JSON file and try again."),
+        title: t(
+          "editTableOfContents.messages.invalidJson",
+          "Invalid JSON structure",
+        ),
+        body: t(
+          "editTableOfContents.messages.invalidJsonBody",
+          "Please provide a valid bookmark JSON file and try again.",
+        ),
         alertType: "error",
       });
     }
@@ -195,7 +255,11 @@ const EditTableOfContents = (props: BaseToolProps) => {
   const handleImportClipboard = useStableCallback(importClipboardCallback);
 
   const exportJsonCallback = () => {
-    const data = JSON.stringify(serializeBookmarkNodes(base.params.parameters.bookmarks), null, 2);
+    const data = JSON.stringify(
+      serializeBookmarkNodes(base.params.parameters.bookmarks),
+      null,
+      2,
+    );
     const blob = new Blob([data], { type: "application/json" });
     void downloadFile({ data: blob, filename: "bookmarks.json" });
     alert({
@@ -208,18 +272,28 @@ const EditTableOfContents = (props: BaseToolProps) => {
   const exportClipboardCallback = async () => {
     if (!navigator.clipboard?.writeText) {
       alert({
-        title: t("editTableOfContents.actions.clipboardUnavailable", "Clipboard access unavailable"),
+        title: t(
+          "editTableOfContents.actions.clipboardUnavailable",
+          "Clipboard access unavailable",
+        ),
         alertType: "warning",
       });
       return;
     }
 
-    const data = JSON.stringify(serializeBookmarkNodes(base.params.parameters.bookmarks), null, 2);
+    const data = JSON.stringify(
+      serializeBookmarkNodes(base.params.parameters.bookmarks),
+      null,
+      2,
+    );
     try {
       await navigator.clipboard.writeText(data);
       alert({
         title: t("editTableOfContents.messages.copied", "Copied to clipboard"),
-        body: t("editTableOfContents.messages.copiedBody", "Bookmark JSON copied successfully."),
+        body: t(
+          "editTableOfContents.messages.copiedBody",
+          "Bookmark JSON copied successfully.",
+        ),
         alertType: "success",
       });
     } catch (error) {
@@ -232,8 +306,10 @@ const EditTableOfContents = (props: BaseToolProps) => {
   };
   const handleExportClipboard = useStableCallback(exportClipboardCallback);
 
-  const clipboardReadAvailable = typeof navigator !== "undefined" && Boolean(navigator.clipboard?.readText);
-  const clipboardWriteAvailable = typeof navigator !== "undefined" && Boolean(navigator.clipboard?.writeText);
+  const clipboardReadAvailable =
+    typeof navigator !== "undefined" && Boolean(navigator.clipboard?.readText);
+  const clipboardWriteAvailable =
+    typeof navigator !== "undefined" && Boolean(navigator.clipboard?.writeText);
 
   const loadFromSelectedCallback = () => {
     if (selectedFile) {
@@ -245,7 +321,9 @@ const EditTableOfContents = (props: BaseToolProps) => {
   const replaceExistingCallback = (value: boolean) => {
     base.params.updateParameter("replaceExisting", value);
   };
-  const handleReplaceExistingChange = useStableCallback(replaceExistingCallback);
+  const handleReplaceExistingChange = useStableCallback(
+    replaceExistingCallback,
+  );
 
   const bookmarksChangeCallback = (bookmarks: BookmarkNode[]) => {
     setBookmarks(bookmarks);
@@ -292,7 +370,11 @@ const EditTableOfContents = (props: BaseToolProps) => {
       errorMessage: base.operation.errorMessage ?? null,
       isGeneratingThumbnails: base.operation.isGeneratingThumbnails,
       isExecuteDisabled:
-        !selectedFile || !base.hasFiles || base.endpointEnabled === false || base.operation.isLoading || base.endpointLoading,
+        !selectedFile ||
+        !base.hasFiles ||
+        base.endpointEnabled === false ||
+        base.operation.isLoading ||
+        base.endpointLoading,
       isExecuting: base.operation.isLoading,
       onClearError: handleClearError,
       onBookmarksChange: handleBookmarksChange,
@@ -377,7 +459,10 @@ const EditTableOfContents = (props: BaseToolProps) => {
     review: {
       isVisible: base.hasResults,
       operation: base.operation,
-      title: t("editTableOfContents.results.title", "Updated PDF with bookmarks"),
+      title: t(
+        "editTableOfContents.results.title",
+        "Updated PDF with bookmarks",
+      ),
       onFileClick: base.handleThumbnailClick,
       onUndo: handleUndo,
     },

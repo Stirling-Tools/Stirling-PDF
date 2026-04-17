@@ -17,7 +17,10 @@ import ErrorMessage from "@app/routes/login/ErrorMessage";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
 import DividerWithText from "@app/components/shared/DividerWithText";
 import SignupForm from "@app/routes/signup/SignupForm";
-import { useSignupFormValidation, SignupFieldErrors } from "@app/routes/signup/SignupFormValidation";
+import {
+  useSignupFormValidation,
+  SignupFieldErrors,
+} from "@app/routes/signup/SignupFormValidation";
 import { useAuthService } from "@app/routes/signup/AuthService";
 
 export default function Signup() {
@@ -46,9 +49,15 @@ export default function Signup() {
   // Redirect back to original tool URL once session appears (after auto-anon completes)
   useEffect(() => {
     if (!loading && session) {
-      const state = location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null;
+      const state = location.state as {
+        from?: { pathname?: string; search?: string; hash?: string };
+      } | null;
       const from = state?.from;
-      if (from?.pathname && from.pathname !== "/signup" && from.pathname !== "/login") {
+      if (
+        from?.pathname &&
+        from.pathname !== "/signup" &&
+        from.pathname !== "/login"
+      ) {
         const target = `${from.pathname}${from.search ?? ""}${from.hash ?? ""}`;
         console.log("[Signup] Session detected, redirecting back to:", target);
         navigate(target, { replace: true });
@@ -65,7 +74,9 @@ export default function Signup() {
       const { data } = await signInAnonymously();
 
       if (data.user) {
-        console.log("[Signup] Anonymous sign-in successful, refreshing session...");
+        console.log(
+          "[Signup] Anonymous sign-in successful, refreshing session...",
+        );
 
         // Refresh session to ensure backend endpoints are properly synchronized
         await refreshSession();
@@ -76,7 +87,9 @@ export default function Signup() {
       }
     } catch (err) {
       console.error("[Signup] Anonymous sign-in unexpected error:", err);
-      setError(`Unexpected error: ${err instanceof Error ? err.message : "Unknown error"}`);
+      setError(
+        `Unexpected error: ${err instanceof Error ? err.message : "Unknown error"}`,
+      );
     } finally {
       setIsSigningUp(false);
     }
@@ -87,9 +100,15 @@ export default function Signup() {
   // Set document meta
   useDocumentMeta({
     title: `${t("signup.title", "Create an account")} - Stirling PDF`,
-    description: t("app.description", "The Free Adobe Acrobat alternative (10M+ Downloads)"),
+    description: t(
+      "app.description",
+      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+    ),
     ogTitle: `${t("signup.title", "Create an account")} - Stirling PDF`,
-    ogDescription: t("app.description", "The Free Adobe Acrobat alternative (10M+ Downloads)"),
+    ogDescription: t(
+      "app.description",
+      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+    ),
     ogImage: `${baseUrl}/og_images/home.png`,
     ogUrl: `${window.location.origin}${window.location.pathname}`,
   });
@@ -98,7 +117,12 @@ export default function Signup() {
   const { signUp, signInWithProvider } = useAuthService();
 
   const handleSignUp = async () => {
-    const validation = validateSignupForm(email, password, confirmPassword, name);
+    const validation = validateSignupForm(
+      email,
+      password,
+      confirmPassword,
+      name,
+    );
     if (!validation.isValid) {
       setError(validation.error);
       setFieldErrors(validation.fieldErrors || {});
@@ -130,19 +154,29 @@ export default function Signup() {
       }
     } catch (err) {
       console.error("[Signup] Unexpected error:", err);
-      setError(err instanceof Error ? err.message : t("signup.unexpectedError", { message: "Unknown error" }));
+      setError(
+        err instanceof Error
+          ? err.message
+          : t("signup.unexpectedError", { message: "Unknown error" }),
+      );
     } finally {
       setIsSigningUp(false);
     }
   };
 
-  const handleProviderSignIn = async (provider: "github" | "google" | "apple" | "azure") => {
+  const handleProviderSignIn = async (
+    provider: "github" | "google" | "apple" | "azure",
+  ) => {
     try {
       setIsSigningUp(true);
       setError(null);
       await signInWithProvider(provider);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("signup.unexpectedError", { message: "Unknown error" }));
+      setError(
+        err instanceof Error
+          ? err.message
+          : t("signup.unexpectedError", { message: "Unknown error" }),
+      );
     } finally {
       setIsSigningUp(false);
     }
@@ -156,12 +190,20 @@ export default function Signup() {
 
       {/* OAuth first */}
       <div style={{ marginBottom: "0.5rem" }}>
-        <OAuthButtons onProviderClick={handleProviderSignIn} isSubmitting={isSigningUp} layout="fullwidth" />
+        <OAuthButtons
+          onProviderClick={handleProviderSignIn}
+          isSubmitting={isSigningUp}
+          layout="fullwidth"
+        />
       </div>
 
       {/* Divider between OAuth and Email */}
       <div style={{ margin: "0.5rem 0" }}>
-        <DividerWithText text={t("signup.or", "or")} respondsToDarkMode={false} opacity={0.4} />
+        <DividerWithText
+          text={t("signup.or", "or")}
+          respondsToDarkMode={false}
+          opacity={0.4}
+        />
       </div>
 
       {/* Use Email Instead button (toggles email form) */}
@@ -195,18 +237,30 @@ export default function Signup() {
       )}
 
       <div className="auth-section-sm">
-        <DividerWithText text={t("signup.or", "or")} respondsToDarkMode={false} opacity={0.4} />
+        <DividerWithText
+          text={t("signup.or", "or")}
+          respondsToDarkMode={false}
+          opacity={0.4}
+        />
       </div>
 
       <GuestSignInButton
         onClick={handleAnonymousSignIn}
         disabled={isSigningUp}
-        label={isSigningUp ? t("login.signingIn", "Signing in...") : t("login.signInAnonymously", "Sign in as a Guest")}
+        label={
+          isSigningUp
+            ? t("login.signingIn", "Signing in...")
+            : t("login.signInAnonymously", "Sign in as a Guest")
+        }
       />
 
       {/* Bottom row */}
       <div className="auth-bottom-right">
-        <button type="button" onClick={() => navigate("/login")} className="auth-link-black">
+        <button
+          type="button"
+          onClick={() => navigate("/login")}
+          className="auth-link-black"
+        >
           {t("login.logIn", "Log In")}
         </button>
       </div>

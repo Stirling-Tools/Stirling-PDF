@@ -1,16 +1,26 @@
 import { useEffect, useRef } from "react";
 import { Stack, Text, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { TimestampPdfParameters, FALLBACK_TSA_PRESETS } from "@app/hooks/tools/timestampPdf/useTimestampPdfParameters";
+import {
+  TimestampPdfParameters,
+  FALLBACK_TSA_PRESETS,
+} from "@app/hooks/tools/timestampPdf/useTimestampPdfParameters";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 interface TimestampPdfSettingsProps {
   parameters: TimestampPdfParameters;
-  onParameterChange: <K extends keyof TimestampPdfParameters>(key: K, value: TimestampPdfParameters[K]) => void;
+  onParameterChange: <K extends keyof TimestampPdfParameters>(
+    key: K,
+    value: TimestampPdfParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const TimestampPdfSettings = ({ parameters, onParameterChange, disabled = false }: TimestampPdfSettingsProps) => {
+const TimestampPdfSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: TimestampPdfSettingsProps) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const defaultApplied = useRef(false);
@@ -20,7 +30,9 @@ const TimestampPdfSettings = ({ parameters, onParameterChange, disabled = false 
 
   // Build dropdown: presets + admin custom URLs, deduplicated (TASK-9)
   const presetUrls = new Set(presets.map((p) => p.url));
-  const adminCustomUrls = (config?.timestampCustomTsaUrls ?? []).filter((url) => !presetUrls.has(url));
+  const adminCustomUrls = (config?.timestampCustomTsaUrls ?? []).filter(
+    (url) => !presetUrls.has(url),
+  );
   const selectData = [
     ...presets.map((preset) => ({ value: preset.url, label: preset.label })),
     ...adminCustomUrls.map((url) => ({ value: url, label: url })),
@@ -45,10 +57,15 @@ const TimestampPdfSettings = ({ parameters, onParameterChange, disabled = false 
 
       <Select
         label={t("timestampPdf.options.tsaUrl.label", "Select a TSA server")}
-        description={t("timestampPdf.options.tsaUrl.desc", "Pick a trusted Time Stamp Authority")}
+        description={t(
+          "timestampPdf.options.tsaUrl.desc",
+          "Pick a trusted Time Stamp Authority",
+        )}
         data={selectData}
         value={parameters.tsaUrl}
-        onChange={(value) => onParameterChange("tsaUrl", value ?? presets[0].url)}
+        onChange={(value) =>
+          onParameterChange("tsaUrl", value ?? presets[0].url)
+        }
         disabled={disabled}
       />
 

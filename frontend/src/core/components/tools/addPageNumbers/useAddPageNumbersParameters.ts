@@ -1,5 +1,8 @@
 import { BaseParameters } from "@app/types/parameters";
-import { useBaseParameters, type BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
+import {
+  useBaseParameters,
+  type BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
 
 export interface AddPageNumbersParameters extends BaseParameters {
   customMargin: "small" | "medium" | "large" | "x-large";
@@ -24,7 +27,8 @@ export const defaultParameters: AddPageNumbersParameters = {
   zeroPad: 0,
 };
 
-export type AddPageNumbersParametersHook = BaseParametersHook<AddPageNumbersParameters>;
+export type AddPageNumbersParametersHook =
+  BaseParametersHook<AddPageNumbersParameters>;
 
 export const useAddPageNumbersParameters = (): AddPageNumbersParametersHook => {
   return useBaseParameters<AddPageNumbersParameters>({

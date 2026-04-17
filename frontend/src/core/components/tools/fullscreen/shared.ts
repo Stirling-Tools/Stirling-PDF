@@ -9,8 +9,13 @@ export const getItemClasses = (isDetailed: boolean): string => {
   return isDetailed ? "tool-panel__fullscreen-item--detailed" : "";
 };
 
-export const getIconBackground = (categoryColor: string, isDetailed: boolean): string => {
-  const baseColor = isDetailed ? "var(--fullscreen-bg-icon-detailed)" : "var(--fullscreen-bg-icon-compact)";
+export const getIconBackground = (
+  categoryColor: string,
+  isDetailed: boolean,
+): string => {
+  const baseColor = isDetailed
+    ? "var(--fullscreen-bg-icon-detailed)"
+    : "var(--fullscreen-bg-icon-compact)";
   const blend1 = isDetailed ? "18%" : "15%";
   const blend2 = isDetailed ? "8%" : "6%";
 
@@ -65,7 +70,9 @@ export const getToolDisabledReason = (
   return null;
 };
 
-export const getDisabledLabel = (disabledReason: ToolDisabledReason): { key: string; fallback: string } => {
+export const getDisabledLabel = (
+  disabledReason: ToolDisabledReason,
+): { key: string; fallback: string } => {
   if (disabledReason === "requiresPremium") {
     return {
       key: "toolPanel.premiumFeature",
@@ -84,7 +91,10 @@ export const getDisabledLabel = (disabledReason: ToolDisabledReason): { key: str
       fallback: "Unavailable - required tool missing on server:",
     };
   }
-  if (disabledReason === "disabledByAdmin" || disabledReason === "unknownUnavailable") {
+  if (
+    disabledReason === "disabledByAdmin" ||
+    disabledReason === "unknownUnavailable"
+  ) {
     return {
       key: "toolPanel.fullscreen.unavailable",
       fallback: "Disabled by server administrator:",
@@ -104,7 +114,12 @@ export function useToolMeta(id: string, tool: ToolRegistryEntry) {
 
   const isFav = isFavorite(id as ToolId);
   const binding = hotkeys[id as ToolId];
-  const disabledReason = getToolDisabledReason(id, tool, toolAvailability, premiumEnabled);
+  const disabledReason = getToolDisabledReason(
+    id,
+    tool,
+    toolAvailability,
+    premiumEnabled,
+  );
   const disabled = disabledReason !== null;
 
   return {

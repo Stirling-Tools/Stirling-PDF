@@ -28,7 +28,11 @@ export const renderToolButtons = (
 
   return (
     <Box key={subcategory.subcategoryId} w="100%">
-      {showSubcategoryHeader && <SubcategoryHeader label={getSubcategoryLabel(t, subcategory.subcategoryId)} />}
+      {showSubcategoryHeader && (
+        <SubcategoryHeader
+          label={getSubcategoryLabel(t, subcategory.subcategoryId)}
+        />
+      )}
       <div>
         {subcategory.tools.map(({ id, tool }) => {
           const matchedSynonym = matchedTextMap.get(id);

@@ -73,7 +73,10 @@ interface UsageAnalyticsChartProps {
 const UsageAnalyticsChart: React.FC<UsageAnalyticsChartProps> = ({ data }) => {
   const { t } = useTranslation();
 
-  const safeMaxValue = Math.max(...data.map((d) => d.value).filter((value) => Number.isFinite(value)), 1);
+  const safeMaxValue = Math.max(
+    ...data.map((d) => d.value).filter((value) => Number.isFinite(value)),
+    1,
+  );
   const safeData = data.map((item) => ({
     label: item.label,
     value: Number.isFinite(item.value) ? Math.max(0, item.value) : 0,

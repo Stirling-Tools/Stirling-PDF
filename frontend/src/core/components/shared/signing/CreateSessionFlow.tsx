@@ -29,14 +29,22 @@ interface StepWrapperProps {
   children: React.ReactNode;
 }
 
-const StepWrapper: React.FC<StepWrapperProps> = ({ number, title, isActive, isCompleted, children }) => {
+const StepWrapper: React.FC<StepWrapperProps> = ({
+  number,
+  title,
+  isActive,
+  isCompleted,
+  children,
+}) => {
   const { t } = useTranslation();
 
   return (
     <div
       style={{
         padding: "16px",
-        border: isActive ? "2px solid var(--mantine-color-blue-6)" : "1px solid var(--mantine-color-default-border)",
+        border: isActive
+          ? "2px solid var(--mantine-color-blue-6)"
+          : "1px solid var(--mantine-color-default-border)",
         borderRadius: "var(--mantine-radius-default)",
         backgroundColor: isActive
           ? "var(--mantine-color-blue-0)"
@@ -105,14 +113,16 @@ export const CreateSessionFlow: React.FC<CreateSessionFlowProps> = ({
   const [currentStep, setCurrentStep] = useState(1);
 
   // Signature settings state
-  const [signatureSettings, setSignatureSettings] = useState<SignatureSettings>({
-    showSignature: false,
-    pageNumber: 1,
-    reason: "",
-    location: "",
-    showLogo: false,
-    includeSummaryPage: false,
-  });
+  const [signatureSettings, setSignatureSettings] = useState<SignatureSettings>(
+    {
+      showSignature: false,
+      pageNumber: 1,
+      reason: "",
+      location: "",
+      showLogo: false,
+      includeSummaryPage: false,
+    },
+  );
 
   const groupSigningTips = useGroupSigningTips();
   const signatureSettingsTips = useSignatureSettingsTips();
@@ -128,12 +138,18 @@ export const CreateSessionFlow: React.FC<CreateSessionFlowProps> = ({
     },
     {
       number: 2,
-      title: t("groupSigning.steps.selectParticipants.title", "Choose Participants"),
+      title: t(
+        "groupSigning.steps.selectParticipants.title",
+        "Choose Participants",
+      ),
       tooltip: null,
     },
     {
       number: 3,
-      title: t("groupSigning.steps.configureDefaults.title", "Configure Signature Settings"),
+      title: t(
+        "groupSigning.steps.configureDefaults.title",
+        "Configure Signature Settings",
+      ),
       tooltip: signatureSettingsTips,
     },
     {
@@ -147,9 +163,17 @@ export const CreateSessionFlow: React.FC<CreateSessionFlowProps> = ({
     <div className="quick-access-popout__panel">
       <Stack gap="md">
         {/* Step 1: Select Document */}
-        <StepWrapper number={1} title={steps[0].title} isActive={currentStep === 1} isCompleted={currentStep > 1}>
+        <StepWrapper
+          number={1}
+          title={steps[0].title}
+          isActive={currentStep === 1}
+          isCompleted={currentStep > 1}
+        >
           {hasValidFile ? (
-            <SelectDocumentStep selectedFiles={selectedFiles} onNext={() => setCurrentStep(2)} />
+            <SelectDocumentStep
+              selectedFiles={selectedFiles}
+              onNext={() => setCurrentStep(2)}
+            />
           ) : (
             <div style={{ padding: "12px 0" }}>
               <Text size="sm" c="dimmed" ta="center">
@@ -163,7 +187,12 @@ export const CreateSessionFlow: React.FC<CreateSessionFlowProps> = ({
         </StepWrapper>
 
         {/* Step 2: Select Participants */}
-        <StepWrapper number={2} title={steps[1].title} isActive={currentStep === 2} isCompleted={currentStep > 2}>
+        <StepWrapper
+          number={2}
+          title={steps[1].title}
+          isActive={currentStep === 2}
+          isCompleted={currentStep > 2}
+        >
           <SelectParticipantsStep
             selectedUserIds={selectedUserIds}
             onSelectedUserIdsChange={onSelectedUserIdsChange}
@@ -174,7 +203,12 @@ export const CreateSessionFlow: React.FC<CreateSessionFlowProps> = ({
         </StepWrapper>
 
         {/* Step 3: Configure Signature Defaults */}
-        <StepWrapper number={3} title={steps[2].title} isActive={currentStep === 3} isCompleted={currentStep > 3}>
+        <StepWrapper
+          number={3}
+          title={steps[2].title}
+          isActive={currentStep === 3}
+          isCompleted={currentStep > 3}
+        >
           <ConfigureSignatureDefaultsStep
             settings={signatureSettings}
             onSettingsChange={setSignatureSettings}
@@ -185,7 +219,12 @@ export const CreateSessionFlow: React.FC<CreateSessionFlowProps> = ({
         </StepWrapper>
 
         {/* Step 4: Review & Send */}
-        <StepWrapper number={4} title={steps[3].title} isActive={currentStep === 4} isCompleted={false}>
+        <StepWrapper
+          number={4}
+          title={steps[3].title}
+          isActive={currentStep === 4}
+          isCompleted={false}
+        >
           {selectedFile && (
             <ReviewSessionStep
               selectedFile={selectedFile}

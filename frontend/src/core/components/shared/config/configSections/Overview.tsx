@@ -91,13 +91,31 @@ const Overview: React.FC = () => {
 
       {config && (
         <>
-          {renderConfigSection(t("config.overview.sections.basic", "Basic Configuration"), basicConfig)}
-          {renderConfigSection(t("config.overview.sections.security", "Security Configuration"), securityConfig)}
-          {renderConfigSection(t("config.overview.sections.system", "System Configuration"), systemConfig)}
-          {renderConfigSection(t("config.overview.sections.integration", "Integration Configuration"), integrationConfig)}
+          {renderConfigSection(
+            t("config.overview.sections.basic", "Basic Configuration"),
+            basicConfig,
+          )}
+          {renderConfigSection(
+            t("config.overview.sections.security", "Security Configuration"),
+            securityConfig,
+          )}
+          {renderConfigSection(
+            t("config.overview.sections.system", "System Configuration"),
+            systemConfig,
+          )}
+          {renderConfigSection(
+            t(
+              "config.overview.sections.integration",
+              "Integration Configuration",
+            ),
+            integrationConfig,
+          )}
 
           {config.error && (
-            <Alert color="yellow" title={t("config.overview.warning", "Configuration Warning")}>
+            <Alert
+              color="yellow"
+              title={t("config.overview.warning", "Configuration Warning")}
+            >
               {config.error}
             </Alert>
           )}

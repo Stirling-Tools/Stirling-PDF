@@ -4,7 +4,10 @@ import { RepairParameters } from "@app/hooks/tools/repair/useRepairParameters";
 
 interface RepairSettingsProps {
   parameters: RepairParameters;
-  onParameterChange: <K extends keyof RepairParameters>(parameter: K, value: RepairParameters[K]) => void;
+  onParameterChange: <K extends keyof RepairParameters>(
+    parameter: K,
+    value: RepairParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 

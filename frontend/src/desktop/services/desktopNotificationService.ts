@@ -1,6 +1,10 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
+import {
+  isPermissionGranted,
+  requestPermission,
+  sendNotification,
+} from "@tauri-apps/plugin-notification";
 import i18n from "@app/i18n";
 
 const APP_TITLE = "Stirling-PDF";
@@ -23,8 +27,13 @@ async function shouldShowBackgroundNotification(): Promise<boolean> {
   }
 }
 
-export async function notifyPdfProcessingComplete(fileCount: number): Promise<void> {
-  console.log("[DesktopNotification] notifyPdfProcessingComplete called with fileCount:", fileCount);
+export async function notifyPdfProcessingComplete(
+  fileCount: number,
+): Promise<void> {
+  console.log(
+    "[DesktopNotification] notifyPdfProcessingComplete called with fileCount:",
+    fileCount,
+  );
 
   if (!isTauri() || fileCount <= 0) {
     console.log("[DesktopNotification] Skipped: !isTauri() or fileCount <= 0");
@@ -51,14 +60,18 @@ export async function notifyPdfProcessingComplete(fileCount: number): Promise<vo
     }
 
     if (!permissionGranted) {
-      console.log("[DesktopNotification] Permission not granted, skipping notification");
+      console.log(
+        "[DesktopNotification] Permission not granted, skipping notification",
+      );
       return;
     }
 
     const body =
       fileCount === 1
         ? i18n.t("processingComplete", "Your file is ready.")
-        : i18n.t("processingCompleteMultiple", "{{count}} files are ready.", { count: fileCount });
+        : i18n.t("processingCompleteMultiple", "{{count}} files are ready.", {
+            count: fileCount,
+          });
     console.log("[DesktopNotification] Sending notification:", body);
     await sendNotification({
       title: APP_TITLE,

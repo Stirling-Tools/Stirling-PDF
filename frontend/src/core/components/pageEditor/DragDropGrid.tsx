@@ -1,9 +1,19 @@
-import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
+import React, {
+  useRef,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import { Box } from "@mantine/core";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { GRID_CONSTANTS } from "@app/components/pageEditor/constants";
 import styles from "@app/components/pageEditor/DragDropGrid.module.css";
-import { Z_INDEX_SELECTION_BOX, Z_INDEX_DROP_INDICATOR, Z_INDEX_DRAG_BADGE } from "@app/styles/zIndex";
+import {
+  Z_INDEX_SELECTION_BOX,
+  Z_INDEX_DROP_INDICATOR,
+  Z_INDEX_DRAG_BADGE,
+} from "@app/styles/zIndex";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
 import {
   DndContext,
@@ -28,7 +38,11 @@ interface DragDropItem {
 
 interface DragDropGridProps<T extends DragDropItem> {
   items: T[];
-  onReorderPages: (sourcePageNumber: number, targetIndex: number, selectedPageIds?: string[]) => void;
+  onReorderPages: (
+    sourcePageNumber: number,
+    targetIndex: number,
+    selectedPageIds?: string[],
+  ) => void;
   renderItem: (
     item: T,
     index: number,
@@ -40,7 +54,9 @@ interface DragDropGridProps<T extends DragDropItem> {
     dragHandleProps?: any,
     zoomLevel?: number,
   ) => React.ReactNode;
-  getThumbnailData?: (itemId: string) => { src: string; rotation: number } | null;
+  getThumbnailData?: (
+    itemId: string,
+  ) => { src: string; rotation: number } | null;
   zoomLevel?: number;
   selectedFileIds?: string[];
   selectedPageIds?: string[];
@@ -67,7 +83,10 @@ function resolveDropHint(
   }
 
   const items: ItemRect[] = Array.from(itemRefs.current.entries())
-    .filter((entry): entry is [string, HTMLDivElement] => !!entry[1] && entry[0] !== activeId)
+    .filter(
+      (entry): entry is [string, HTMLDivElement] =>
+        !!entry[1] && entry[0] !== activeId,
+    )
     .map(([itemId, element]) => ({
       id: itemId,
       rect: element.getBoundingClientRect(),
@@ -90,7 +109,8 @@ function resolveDropHint(
       return;
     }
 
-    const isSameRow = Math.abs(item.rect.top - currentRow[0].rect.top) <= rowTolerance;
+    const isSameRow =
+      Math.abs(item.rect.top - currentRow[0].rect.top) <= rowTolerance;
     if (isSameRow) {
       currentRow.push(item);
     } else {
@@ -174,7 +194,9 @@ function resolveTargetIndex<T extends DragDropItem>(
   };
 
   if (hoveredId) {
-    const filteredIndex = filteredItems.findIndex((item) => item.id === hoveredId);
+    const filteredIndex = filteredItems.findIndex(
+      (item) => item.id === hoveredId,
+    );
     if (filteredIndex !== -1) {
       const adjustedIndex = filteredIndex + (dropSide === "right" ? 1 : 0);
       return convertFilteredIndexToOriginal(adjustedIndex);
@@ -198,7 +220,9 @@ interface DraggableItemProps<T extends DragDropItem> {
   clearBoxSelection: () => void;
   activeDragIds: string[];
   justMoved: boolean;
-  getThumbnailData?: (itemId: string) => { src: string; rotation: number } | null;
+  getThumbnailData?: (
+    itemId: string,
+  ) => { src: string; rotation: number } | null;
   onUpdateDropTarget: (itemId: string | null) => void;
   renderItem: (
     item: T,
@@ -247,11 +271,15 @@ const DraggableItemInner = <T extends DragDropItem>({
         }
 
         const element = itemRefs.current.get(item.id);
-        const imgElement = element?.querySelector("img.ph-no-capture") as HTMLImageElement;
+        const imgElement = element?.querySelector(
+          "img.ph-no-capture",
+        ) as HTMLImageElement;
         if (imgElement?.src) {
           return {
             src: imgElement.src,
-            rotation: imgElement.dataset.originalRotation ? parseInt(imgElement.dataset.originalRotation) : 0,
+            rotation: imgElement.dataset.originalRotation
+              ? parseInt(imgElement.dataset.originalRotation)
+              : 0,
           };
         }
         return null;
@@ -312,8 +340,12 @@ const DraggableItem = React.memo(DraggableItemInner, (prevProps, nextProps) => {
   }
 
   // Check if page selection changed (for checkbox selection, not box selection)
-  const prevSelectedSet = prevProps.selectedPageIds ? new Set(prevProps.selectedPageIds) : null;
-  const nextSelectedSet = nextProps.selectedPageIds ? new Set(nextProps.selectedPageIds) : null;
+  const prevSelectedSet = prevProps.selectedPageIds
+    ? new Set(prevProps.selectedPageIds)
+    : null;
+  const nextSelectedSet = nextProps.selectedPageIds
+    ? new Set(nextProps.selectedPageIds)
+    : null;
 
   if (prevSelectedSet && nextSelectedSet) {
     const prevSelected = prevSelectedSet.has(prevProps.item.id);
@@ -348,36 +380,51 @@ const DragDropGrid = <T extends DragDropItem>({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const getScrollElement = useCallback(() => {
-    return containerRef.current?.closest("[data-scrolling-container]") as HTMLElement | null;
+    return containerRef.current?.closest(
+      "[data-scrolling-container]",
+    ) as HTMLElement | null;
   }, []);
 
   // Create stable signature for items to ensure useMemo detects changes
-  const itemsSignature = useMemo(() => items.map((item) => item.id).join(","), [items]);
-  const selectedFileIdsSignature = useMemo(() => selectedFileIds?.join(",") || "", [selectedFileIds]);
+  const itemsSignature = useMemo(
+    () => items.map((item) => item.id).join(","),
+    [items],
+  );
+  const selectedFileIdsSignature = useMemo(
+    () => selectedFileIds?.join(",") || "",
+    [selectedFileIds],
+  );
 
-  const { filteredItems: visibleItems, filteredToOriginalIndex } = useMemo(() => {
-    const filtered: T[] = [];
-    const indexMap: number[] = [];
-    const selectedIds = selectedFileIds && selectedFileIds.length > 0 ? new Set(selectedFileIds) : null;
+  const { filteredItems: visibleItems, filteredToOriginalIndex } =
+    useMemo(() => {
+      const filtered: T[] = [];
+      const indexMap: number[] = [];
+      const selectedIds =
+        selectedFileIds && selectedFileIds.length > 0
+          ? new Set(selectedFileIds)
+          : null;
 
-    items.forEach((item, index) => {
-      const isPlaceholder = Boolean(item.isPlaceholder);
-      if (isPlaceholder) {
-        return;
-      }
+      items.forEach((item, index) => {
+        const isPlaceholder = Boolean(item.isPlaceholder);
+        if (isPlaceholder) {
+          return;
+        }
 
-      const belongsToVisibleFile = !selectedIds || !item.originalFileId || selectedIds.has(item.originalFileId);
+        const belongsToVisibleFile =
+          !selectedIds ||
+          !item.originalFileId ||
+          selectedIds.has(item.originalFileId);
 
-      if (!belongsToVisibleFile) {
-        return;
-      }
+        if (!belongsToVisibleFile) {
+          return;
+        }
 
-      filtered.push(item);
-      indexMap.push(index);
-    });
+        filtered.push(item);
+        indexMap.push(index);
+      });
 
-    return { filteredItems: filtered, filteredToOriginalIndex: indexMap };
-  }, [items, selectedFileIds, itemsSignature, selectedFileIdsSignature]);
+      return { filteredItems: filtered, filteredToOriginalIndex: indexMap };
+    }, [items, selectedFileIds, itemsSignature, selectedFileIdsSignature]);
 
   useEffect(() => {
     const visibleIdSet = new Set(visibleItems.map((item) => item.id));
@@ -389,8 +436,14 @@ const DragDropGrid = <T extends DragDropItem>({
   }, [visibleItems]);
 
   // Box selection state
-  const [boxSelectStart, setBoxSelectStart] = useState<{ x: number; y: number } | null>(null);
-  const [boxSelectEnd, setBoxSelectEnd] = useState<{ x: number; y: number } | null>(null);
+  const [boxSelectStart, setBoxSelectStart] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [boxSelectEnd, setBoxSelectEnd] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const [isBoxSelecting, setIsBoxSelecting] = useState(false);
   const [boxSelectedPageIds, setBoxSelectedPageIds] = useState<string[]>([]);
   const [justMovedIds, setJustMovedIds] = useState<string[]>([]);
@@ -398,7 +451,10 @@ const DragDropGrid = <T extends DragDropItem>({
 
   // Drag state
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [dragPreview, setDragPreview] = useState<{ src: string; rotation: number } | null>(null);
+  const [dragPreview, setDragPreview] = useState<{
+    src: string;
+    rotation: number;
+  } | null>(null);
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
   const [dropSide, setDropSide] = useState<DropSide>(null);
 
@@ -438,7 +494,9 @@ const DragDropGrid = <T extends DragDropItem>({
       }
     };
 
-    window.addEventListener("pointermove", handlePointerMove, { passive: true });
+    window.addEventListener("pointermove", handlePointerMove, {
+      passive: true,
+    });
     return () => {
       window.removeEventListener("pointermove", handlePointerMove);
       if (rafId !== null) {
@@ -449,7 +507,10 @@ const DragDropGrid = <T extends DragDropItem>({
 
   // Responsive grid configuration
   const [itemsPerRow, setItemsPerRow] = useState(4);
-  const OVERSCAN = visibleItems.length > 1000 ? GRID_CONSTANTS.OVERSCAN_LARGE : GRID_CONSTANTS.OVERSCAN_SMALL;
+  const OVERSCAN =
+    visibleItems.length > 1000
+      ? GRID_CONSTANTS.OVERSCAN_LARGE
+      : GRID_CONSTANTS.OVERSCAN_SMALL;
 
   // Calculate items per row based on container width
   const calculateItemsPerRow = useCallback(() => {
@@ -459,8 +520,11 @@ const DragDropGrid = <T extends DragDropItem>({
     if (containerWidth === 0) return 4; // Container not measured yet
 
     // Convert rem to pixels for calculation
-    const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
-    const ITEM_WIDTH = parseFloat(GRID_CONSTANTS.ITEM_WIDTH) * remToPx * zoomLevel;
+    const remToPx = parseFloat(
+      getComputedStyle(document.documentElement).fontSize,
+    );
+    const ITEM_WIDTH =
+      parseFloat(GRID_CONSTANTS.ITEM_WIDTH) * remToPx * zoomLevel;
     const ITEM_GAP = parseFloat(GRID_CONSTANTS.ITEM_GAP) * remToPx * zoomLevel;
 
     // Calculate how many items fit: (width - gap) / (itemWidth + gap)
@@ -501,7 +565,9 @@ const DragDropGrid = <T extends DragDropItem>({
     count: Math.ceil(visibleItems.length / itemsPerRow),
     getScrollElement,
     estimateSize: () => {
-      const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
+      const remToPx = parseFloat(
+        getComputedStyle(document.documentElement).fontSize,
+      );
       return parseFloat(GRID_CONSTANTS.ITEM_HEIGHT) * remToPx * zoomLevel;
     },
     overscan: OVERSCAN,
@@ -524,10 +590,19 @@ const DragDropGrid = <T extends DragDropItem>({
 
   // Re-measure virtualizer when zoom or items per row changes
   // Also remeasure when items change (not just length) to handle item additions/removals
-  const visibleItemsSignature = useMemo(() => visibleItems.map((item) => item.id).join(","), [visibleItems]);
+  const visibleItemsSignature = useMemo(
+    () => visibleItems.map((item) => item.id).join(","),
+    [visibleItems],
+  );
   useEffect(() => {
     rowVirtualizer.measure();
-  }, [zoomLevel, itemsPerRow, visibleItems.length, visibleItemsSignature, rowVirtualizer]);
+  }, [
+    zoomLevel,
+    itemsPerRow,
+    visibleItems.length,
+    visibleItemsSignature,
+    rowVirtualizer,
+  ]);
 
   // Cleanup highlight timeout on unmount
   useEffect(() => {
@@ -559,7 +634,10 @@ const DragDropGrid = <T extends DragDropItem>({
       if (clickedPageId) {
         // Clicking directly on a page shouldn't initiate box selection
         // but clear previous box selection if clicking outside current group
-        if (boxSelectedPageIds.length > 0 && !boxSelectedPageIds.includes(clickedPageId)) {
+        if (
+          boxSelectedPageIds.length > 0 &&
+          !boxSelectedPageIds.includes(clickedPageId)
+        ) {
           setBoxSelectedPageIds([]);
         }
         return;
@@ -600,7 +678,12 @@ const DragDropGrid = <T extends DragDropItem>({
         const pageBottom = pageRect.bottom - rect.top;
 
         // Check if page intersects with selection box
-        const intersects = !(pageRight < boxLeft || pageLeft > boxRight || pageBottom < boxTop || pageTop > boxBottom);
+        const intersects = !(
+          pageRight < boxLeft ||
+          pageLeft > boxRight ||
+          pageBottom < boxTop ||
+          pageTop > boxBottom
+        );
 
         if (intersects) {
           selectedIds.push(pageId);
@@ -637,7 +720,10 @@ const DragDropGrid = <T extends DragDropItem>({
     if (getThumbnail) {
       const thumbnailData = getThumbnail();
       if (thumbnailData?.src) {
-        setDragPreview({ src: thumbnailData.src, rotation: thumbnailData.rotation });
+        setDragPreview({
+          src: thumbnailData.src,
+          rotation: thumbnailData.rotation,
+        });
         return;
       }
     }
@@ -692,7 +778,10 @@ const DragDropGrid = <T extends DragDropItem>({
 
       // Check if this page is box-selected
       const isBoxSelected = boxSelectedPageIds.includes(active.id as string);
-      const pagesToDrag = isBoxSelected && boxSelectedPageIds.length > 0 ? boxSelectedPageIds : undefined;
+      const pagesToDrag =
+        isBoxSelected && boxSelectedPageIds.length > 0
+          ? boxSelectedPageIds
+          : undefined;
 
       // Call reorder with page number and target index
       onReorderPages(sourcePageNumber, targetIndex, pagesToDrag);
@@ -726,7 +815,9 @@ const DragDropGrid = <T extends DragDropItem>({
   );
 
   // Calculate optimal width for centering
-  const remToPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const remToPx = parseFloat(
+    getComputedStyle(document.documentElement).fontSize,
+  );
   const itemWidth = parseFloat(GRID_CONSTANTS.ITEM_WIDTH) * remToPx * zoomLevel;
   const itemGap = parseFloat(GRID_CONSTANTS.ITEM_GAP) * remToPx * zoomLevel;
   const gridWidth = itemsPerRow * itemWidth + (itemsPerRow - 1) * itemGap;
@@ -814,9 +905,13 @@ const DragDropGrid = <T extends DragDropItem>({
         onMouseUp={handleMouseUp}
         onWheel={handleWheelWhileDragging}
       >
-        {selectionBoxStyle && <div className={styles.selectionBox} style={selectionBoxStyle} />}
+        {selectionBoxStyle && (
+          <div className={styles.selectionBox} style={selectionBoxStyle} />
+        )}
 
-        {dropIndicatorStyle && <div className={styles.dropIndicator} style={dropIndicatorStyle} />}
+        {dropIndicatorStyle && (
+          <div className={styles.dropIndicator} style={dropIndicatorStyle} />
+        )}
 
         <div
           className={styles.virtualRows}
@@ -828,7 +923,10 @@ const DragDropGrid = <T extends DragDropItem>({
         >
           {virtualRows.map((virtualRow) => {
             const startIndex = virtualRow.index * itemsPerRow;
-            const endIndex = Math.min(startIndex + itemsPerRow, visibleItems.length);
+            const endIndex = Math.min(
+              startIndex + itemsPerRow,
+              visibleItems.length,
+            );
             const rowItems = visibleItems.slice(startIndex, endIndex);
 
             return (
@@ -877,11 +975,15 @@ const DragDropGrid = <T extends DragDropItem>({
       <DragOverlay>
         {activeId && (
           <div className={styles.dragOverlay}>
-            {boxSelectedPageIds.includes(activeId) && boxSelectedPageIds.length > 1 && (
-              <div className={styles.dragOverlayBadge} style={{ zIndex: Z_INDEX_DRAG_BADGE }}>
-                {boxSelectedPageIds.length}
-              </div>
-            )}
+            {boxSelectedPageIds.includes(activeId) &&
+              boxSelectedPageIds.length > 1 && (
+                <div
+                  className={styles.dragOverlayBadge}
+                  style={{ zIndex: Z_INDEX_DRAG_BADGE }}
+                >
+                  {boxSelectedPageIds.length}
+                </div>
+              )}
             {dragPreview ? (
               <img
                 src={dragPreview.src}

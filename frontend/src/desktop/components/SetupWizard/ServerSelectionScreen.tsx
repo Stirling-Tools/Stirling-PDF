@@ -12,14 +12,21 @@ interface ServerSelectionScreenProps {
   error: string | null;
 }
 
-export const ServerSelectionScreen: React.FC<ServerSelectionScreenProps> = ({ onSelect, loading, error }) => {
+export const ServerSelectionScreen: React.FC<ServerSelectionScreenProps> = ({
+  onSelect,
+  loading,
+  error,
+}) => {
   const { t } = useTranslation();
 
   return (
     <>
       <LoginHeader
         title={t("setup.server.title", "Connect to Server")}
-        subtitle={t("setup.server.subtitle", "Enter your self-hosted server URL")}
+        subtitle={t(
+          "setup.server.subtitle",
+          "Enter your self-hosted server URL",
+        )}
       />
 
       <ErrorMessage error={error} />

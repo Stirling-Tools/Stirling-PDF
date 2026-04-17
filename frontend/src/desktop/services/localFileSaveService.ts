@@ -1,4 +1,7 @@
-import type { SaveResult, MultiFileSaveResult } from "@core/services/localFileSaveService";
+import type {
+  SaveResult,
+  MultiFileSaveResult,
+} from "@core/services/localFileSaveService";
 export type { SaveResult, MultiFileSaveResult };
 
 /**
@@ -8,7 +11,10 @@ export type { SaveResult, MultiFileSaveResult };
  * @param filePath - Absolute path to save to
  * @returns Result indicating success or failure with error message
  */
-export async function saveToLocalPath(data: Blob | File, filePath: string): Promise<SaveResult> {
+export async function saveToLocalPath(
+  data: Blob | File,
+  filePath: string,
+): Promise<SaveResult> {
   try {
     const { writeFile } = await import("@tauri-apps/plugin-fs");
     const arrayBuffer = await data.arrayBuffer();
@@ -28,7 +34,10 @@ export async function saveToLocalPath(data: Blob | File, filePath: string): Prom
  * @param defaultDirectory - Optional default directory
  * @returns Selected file path or null if cancelled
  */
-export async function showSaveDialog(defaultFilename: string, defaultDirectory?: string): Promise<string | null> {
+export async function showSaveDialog(
+  defaultFilename: string,
+  defaultDirectory?: string,
+): Promise<string | null> {
   try {
     const { save } = await import("@tauri-apps/plugin-dialog");
 
@@ -38,7 +47,9 @@ export async function showSaveDialog(defaultFilename: string, defaultDirectory?:
     const filters = ext ? [{ name: ext.toUpperCase(), extensions: [ext] }] : [];
 
     const selectedPath = await save({
-      defaultPath: defaultDirectory ? `${defaultDirectory}/${defaultFilename}` : defaultFilename,
+      defaultPath: defaultDirectory
+        ? `${defaultDirectory}/${defaultFilename}`
+        : defaultFilename,
       filters,
       title: "Save As",
     });
@@ -85,7 +96,8 @@ export async function saveMultipleFilesWithPrompt(
 
     for (const file of files) {
       try {
-        const fileName = file instanceof File ? file.name : `output_${savedCount + 1}.pdf`;
+        const fileName =
+          file instanceof File ? file.name : `output_${savedCount + 1}.pdf`;
         const filePath = await join(selectedFolder as string, fileName);
         const arrayBuffer = await file.arrayBuffer();
         await writeFile(filePath, new Uint8Array(arrayBuffer));

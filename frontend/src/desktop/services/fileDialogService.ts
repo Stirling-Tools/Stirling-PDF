@@ -1,5 +1,8 @@
 // Desktop implementation - Tauri native file dialogs
-import type { FileWithPath, FileDialogOptions } from "@core/services/fileDialogService";
+import type {
+  FileWithPath,
+  FileDialogOptions,
+} from "@core/services/fileDialogService";
 import { createQuickKey } from "@app/types/fileContext";
 import { getDocumentFileDialogFilter } from "@app/utils/fileDialogUtils";
 
@@ -8,7 +11,9 @@ export type { FileWithPath, FileDialogOptions };
 /**
  * Open native file dialog and read selected files (Desktop/Tauri only)
  */
-export async function openFileDialog(options?: FileDialogOptions): Promise<FileWithPath[]> {
+export async function openFileDialog(
+  options?: FileDialogOptions,
+): Promise<FileWithPath[]> {
   try {
     const { open } = await import("@tauri-apps/plugin-dialog");
     const { readFile } = await import("@tauri-apps/plugin-fs");
@@ -24,7 +29,9 @@ export async function openFileDialog(options?: FileDialogOptions): Promise<FileW
       return [];
     }
 
-    const paths = Array.isArray(selectedPaths) ? selectedPaths : [selectedPaths];
+    const paths = Array.isArray(selectedPaths)
+      ? selectedPaths
+      : [selectedPaths];
     console.log(`[FileDialog] Selected ${paths.length} file(s):`, paths);
 
     const filesWithPaths: FileWithPath[] = [];
@@ -38,7 +45,9 @@ export async function openFileDialog(options?: FileDialogOptions): Promise<FileW
           type: fileName.endsWith(".pdf") ? "application/pdf" : undefined,
         });
         const quickKey = createQuickKey(file);
-        console.log(`[FileDialog] Created File: ${fileName}, quickKey: ${quickKey}`);
+        console.log(
+          `[FileDialog] Created File: ${fileName}, quickKey: ${quickKey}`,
+        );
 
         filesWithPaths.push({
           file,

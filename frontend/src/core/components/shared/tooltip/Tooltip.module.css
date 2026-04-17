@@ -132,7 +132,10 @@
 
 .tooltip-body a:hover {
   color: var(--link-hover-color, #2563eb) !important;
-  text-decoration-color: var(--link-hover-underline-color, rgba(37, 99, 235, 0.5));
+  text-decoration-color: var(
+    --link-hover-underline-color,
+    rgba(37, 99, 235, 0.5)
+  );
 }
 
 .tooltip-container .tooltip-body {
@@ -152,7 +155,10 @@
 
 .tooltip-container .tooltip-body a:hover {
   color: var(--link-hover-color, #2563eb) !important;
-  text-decoration-color: var(--link-hover-underline-color, rgba(37, 99, 235, 0.5));
+  text-decoration-color: var(
+    --link-hover-underline-color,
+    rgba(37, 99, 235, 0.5)
+  );
 }
 
 /* Tooltip Arrows */

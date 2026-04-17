@@ -69,7 +69,9 @@ const buildWordChanges = (
   return items;
 };
 
-const buildHighlightMap = (tokens: CompareFilteredTokenInfo[]): Map<number, WordHighlightEntry[]> => {
+const buildHighlightMap = (
+  tokens: CompareFilteredTokenInfo[],
+): Map<number, WordHighlightEntry[]> => {
   const map = new Map<number, WordHighlightEntry[]>();
   for (const token of tokens) {
     if (!token.hasHighlight || !token.bbox || token.page == null) continue;
@@ -86,16 +88,27 @@ export const useCompareHighlights = (
   comparisonPages: PagePreview[],
 ): UseCompareHighlightsResult => {
   const baseMetaIndexToGroupId = useMemo(() => new Map<number, string>(), []);
-  const comparisonMetaIndexToGroupId = useMemo(() => new Map<number, string>(), []);
+  const comparisonMetaIndexToGroupId = useMemo(
+    () => new Map<number, string>(),
+    [],
+  );
 
   const baseWordChanges = useMemo(() => {
     if (!result) return [];
-    return buildWordChanges(result.filteredTokenData.base, baseMetaIndexToGroupId, "base-group");
+    return buildWordChanges(
+      result.filteredTokenData.base,
+      baseMetaIndexToGroupId,
+      "base-group",
+    );
   }, [baseMetaIndexToGroupId, result]);
 
   const comparisonWordChanges = useMemo(() => {
     if (!result) return [];
-    return buildWordChanges(result.filteredTokenData.comparison, comparisonMetaIndexToGroupId, "comparison-group");
+    return buildWordChanges(
+      result.filteredTokenData.comparison,
+      comparisonMetaIndexToGroupId,
+      "comparison-group",
+    );
   }, [comparisonMetaIndexToGroupId, result]);
 
   const wordHighlightMaps = useMemo(() => {
@@ -115,7 +128,9 @@ export const useCompareHighlights = (
   const getRowHeightPx = useCallback(
     (pageNumber: number) => {
       const basePage = basePages.find((page) => page.pageNumber === pageNumber);
-      const comparisonPage = comparisonPages.find((page) => page.pageNumber === pageNumber);
+      const comparisonPage = comparisonPages.find(
+        (page) => page.pageNumber === pageNumber,
+      );
       const baseHeight = basePage ? basePage.height : 0;
       const comparisonHeight = comparisonPage ? comparisonPage.height : 0;
       const rowHeight = Math.max(baseHeight, comparisonHeight);

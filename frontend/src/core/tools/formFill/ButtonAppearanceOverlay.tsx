@@ -9,7 +9,10 @@
  * SignatureFieldOverlay to produce the button's native PDF appearance.
  */
 import React, { useEffect, useMemo, useRef, useState, memo } from "react";
-import { renderButtonFieldAppearances, type SignatureFieldAppearance } from "@app/services/pdfiumService";
+import {
+  renderButtonFieldAppearances,
+  type SignatureFieldAppearance,
+} from "@app/services/pdfiumService";
 
 interface ButtonAppearanceOverlayProps {
   pageIndex: number;
@@ -20,10 +23,14 @@ interface ButtonAppearanceOverlayProps {
 let _cachedSource: File | Blob | null = null;
 let _cachePromise: Promise<SignatureFieldAppearance[]> | null = null;
 
-async function resolveButtonAppearances(source: File | Blob): Promise<SignatureFieldAppearance[]> {
+async function resolveButtonAppearances(
+  source: File | Blob,
+): Promise<SignatureFieldAppearance[]> {
   if (source === _cachedSource && _cachePromise) return _cachePromise;
   _cachedSource = source;
-  _cachePromise = source.arrayBuffer().then((buf) => renderButtonFieldAppearances(buf));
+  _cachePromise = source
+    .arrayBuffer()
+    .then((buf) => renderButtonFieldAppearances(buf));
   return _cachePromise;
 }
 function ButtonBitmapCanvas({
@@ -46,10 +53,22 @@ function ButtonBitmapCanvas({
     if (ctx) ctx.putImageData(imageData, 0, 0);
   }, [imageData]);
 
-  return <canvas ref={canvasRef} style={{ width: cssWidth, height: cssHeight, display: "block" }} />;
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{ width: cssWidth, height: cssHeight, display: "block" }}
+    />
+  );
 }
-function ButtonAppearanceOverlayInner({ pageIndex, pdfSource, pageWidth, pageHeight }: ButtonAppearanceOverlayProps) {
-  const [appearances, setAppearances] = useState<SignatureFieldAppearance[]>([]);
+function ButtonAppearanceOverlayInner({
+  pageIndex,
+  pdfSource,
+  pageWidth,
+  pageHeight,
+}: ButtonAppearanceOverlayProps) {
+  const [appearances, setAppearances] = useState<SignatureFieldAppearance[]>(
+    [],
+  );
 
   useEffect(() => {
     if (!pdfSource) {
@@ -70,7 +89,10 @@ function ButtonAppearanceOverlayInner({ pageIndex, pdfSource, pageWidth, pageHei
   }, [pdfSource]);
 
   const pageAppearances = useMemo(
-    () => appearances.filter((a) => a.pageIndex === pageIndex && a.imageData !== null),
+    () =>
+      appearances.filter(
+        (a) => a.pageIndex === pageIndex && a.imageData !== null,
+      ),
     [appearances, pageIndex],
   );
 
@@ -90,8 +112,10 @@ function ButtonAppearanceOverlayInner({ pageIndex, pdfSource, pageWidth, pageHei
       data-button-appearance-page={pageIndex}
     >
       {pageAppearances.map((btn, idx) => {
-        const sx = btn.sourcePageWidth > 0 ? pageWidth / btn.sourcePageWidth : 1;
-        const sy = btn.sourcePageHeight > 0 ? pageHeight / btn.sourcePageHeight : 1;
+        const sx =
+          btn.sourcePageWidth > 0 ? pageWidth / btn.sourcePageWidth : 1;
+        const sy =
+          btn.sourcePageHeight > 0 ? pageHeight / btn.sourcePageHeight : 1;
         const left = btn.x * sx;
         const top = btn.y * sy;
         const width = btn.width * sx;
@@ -109,7 +133,11 @@ function ButtonAppearanceOverlayInner({ pageIndex, pdfSource, pageWidth, pageHei
               overflow: "hidden",
             }}
           >
-            <ButtonBitmapCanvas imageData={btn.imageData!} cssWidth={width} cssHeight={height} />
+            <ButtonBitmapCanvas
+              imageData={btn.imageData!}
+              cssWidth={width}
+              cssHeight={height}
+            />
           </div>
         );
       })}

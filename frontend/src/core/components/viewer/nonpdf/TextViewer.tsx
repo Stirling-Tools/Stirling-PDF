@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Box, Center, Checkbox, Group, Paper, ScrollArea, Stack, Text } from "@mantine/core";
+import {
+  Box,
+  Center,
+  Checkbox,
+  Group,
+  Paper,
+  ScrollArea,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
 import { formatFileSize } from "@app/utils/fileUtils";
@@ -171,10 +180,20 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
   return (
     <Stack gap={0} style={{ height: "100%", flex: 1 }}>
       {/* Toolbar */}
-      <Paper radius={0} p="xs" style={{ borderBottom: "1px solid var(--mantine-color-gray-2)", flexShrink: 0 }}>
+      <Paper
+        radius={0}
+        p="xs"
+        style={{
+          borderBottom: "1px solid var(--mantine-color-gray-2)",
+          flexShrink: 0,
+        }}
+      >
         <Group gap="md" align="center">
           <Text size="xs" c="dimmed">
-            {t("viewer.nonPdf.textStats", { lines: lines.length.toLocaleString(), size: formatFileSize(file.size) })}
+            {t("viewer.nonPdf.textStats", {
+              lines: lines.length.toLocaleString(),
+              size: formatFileSize(file.size),
+            })}
           </Text>
           {!isMarkdown && (
             <Checkbox
@@ -204,7 +223,9 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
             </Text>
           </Center>
         ) : isMarkdown && renderMd ? (
-          <Box style={{ maxWidth: 800, margin: "0 auto", padding: "8px 0" }}>{renderMarkdown(content)}</Box>
+          <Box style={{ maxWidth: 800, margin: "0 auto", padding: "8px 0" }}>
+            {renderMarkdown(content)}
+          </Box>
         ) : (
           <Box
             component="pre"
@@ -238,7 +259,13 @@ export function TextViewer({ file, isMarkdown }: TextViewerProps) {
                     {i + 1}
                   </Box>
                 )}
-                <Box component="span" style={{ display: "table-cell", paddingLeft: showLineNumbers ? 12 : 0 }}>
+                <Box
+                  component="span"
+                  style={{
+                    display: "table-cell",
+                    paddingLeft: showLineNumbers ? 12 : 0,
+                  }}
+                >
                   {line || "\u00A0"}
                 </Box>
               </Box>

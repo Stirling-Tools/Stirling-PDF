@@ -8,7 +8,11 @@ interface TooltipContentProps {
   extraRightPadding?: number;
 }
 
-export const TooltipContent: React.FC<TooltipContentProps> = ({ content, tips, extraRightPadding = 0 }) => {
+export const TooltipContent: React.FC<TooltipContentProps> = ({
+  content,
+  tips,
+  extraRightPadding = 0,
+}) => {
   return (
     <div
       className={`${styles["tooltip-body"]}`}
@@ -23,7 +27,10 @@ export const TooltipContent: React.FC<TooltipContentProps> = ({ content, tips, e
         {tips ? (
           <>
             {tips.map((tip, index) => (
-              <div key={index} style={{ marginBottom: index < tips.length - 1 ? "24px" : "0" }}>
+              <div
+                key={index}
+                style={{ marginBottom: index < tips.length - 1 ? "24px" : "0" }}
+              >
                 {tip.title && (
                   <div
                     style={{
@@ -42,18 +49,35 @@ export const TooltipContent: React.FC<TooltipContentProps> = ({ content, tips, e
                 )}
                 {tip.description && (
                   <p
-                    style={{ margin: "0 0 12px 0", color: "var(--text-secondary)", fontSize: "13px" }}
+                    style={{
+                      margin: "0 0 12px 0",
+                      color: "var(--text-secondary)",
+                      fontSize: "13px",
+                    }}
                     dangerouslySetInnerHTML={{ __html: tip.description }}
                   />
                 )}
                 {tip.bullets && tip.bullets.length > 0 && (
-                  <ul style={{ margin: "0", paddingLeft: "16px", color: "var(--text-secondary)", fontSize: "13px" }}>
+                  <ul
+                    style={{
+                      margin: "0",
+                      paddingLeft: "16px",
+                      color: "var(--text-secondary)",
+                      fontSize: "13px",
+                    }}
+                  >
                     {tip.bullets.map((bullet, bulletIndex) => (
-                      <li key={bulletIndex} style={{ marginBottom: "6px" }} dangerouslySetInnerHTML={{ __html: bullet }} />
+                      <li
+                        key={bulletIndex}
+                        style={{ marginBottom: "6px" }}
+                        dangerouslySetInnerHTML={{ __html: bullet }}
+                      />
                     ))}
                   </ul>
                 )}
-                {tip.body && <div style={{ marginTop: "12px" }}>{tip.body}</div>}
+                {tip.body && (
+                  <div style={{ marginTop: "12px" }}>{tip.body}</div>
+                )}
               </div>
             ))}
             {content && <div style={{ marginTop: "24px" }}>{content}</div>}

@@ -63,7 +63,10 @@ export function scoreMatch(queryRaw: string, targetRaw: string): number {
     }
   }
 
-  const distance = levenshtein(query, target.length > 64 ? target.slice(0, 64) : target);
+  const distance = levenshtein(
+    query,
+    target.length > 64 ? target.slice(0, 64) : target,
+  );
   const maxLen = Math.max(query.length, target.length, 1);
   const similarity = 1 - distance / maxLen; // 0..1
   return Math.floor(similarity * 60); // scale below substring scores
@@ -77,8 +80,13 @@ export function minScoreForQuery(query: string): number {
 }
 
 // Decide if a target matches a query based on a threshold
-export function isFuzzyMatch(query: string, target: string, minScore?: number): boolean {
-  const threshold = typeof minScore === "number" ? minScore : minScoreForQuery(query);
+export function isFuzzyMatch(
+  query: string,
+  target: string,
+  minScore?: number,
+): boolean {
+  const threshold =
+    typeof minScore === "number" ? minScore : minScoreForQuery(query);
   return scoreMatch(query, target) >= threshold;
 }
 
@@ -90,7 +98,8 @@ export function rankByFuzzy<T>(
   minScore?: number,
 ): Array<{ item: T; score: number; matchedText?: string }> {
   const results: Array<{ item: T; score: number; matchedText?: string }> = [];
-  const threshold = typeof minScore === "number" ? minScore : minScoreForQuery(query);
+  const threshold =
+    typeof minScore === "number" ? minScore : minScoreForQuery(query);
   for (const item of items) {
     let best = 0;
     let matchedText = "";
@@ -118,6 +127,8 @@ export function normalizeForSearch(text: string): string {
 
 // Convert ids like "addPassword", "add-password", "add_password" to words for matching
 export function idToWords(id: string): string {
-  const spaced = id.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/[._-]+/g, " ");
+  const spaced = id
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[._-]+/g, " ");
   return normalizeText(spaced);
 }

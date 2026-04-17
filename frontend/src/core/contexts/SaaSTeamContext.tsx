@@ -45,7 +45,9 @@ export interface SaaSTeamContextValue {
   refreshTeams: () => Promise<void>;
 }
 
-const SaaSTeamContext = createContext<SaaSTeamContextValue | undefined>(undefined);
+const SaaSTeamContext = createContext<SaaSTeamContextValue | undefined>(
+  undefined,
+);
 
 export function SaaSTeamProvider({ children }: { children: ReactNode }) {
   // Core stub - no-op implementation

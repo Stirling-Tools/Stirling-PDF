@@ -13,12 +13,18 @@ interface ParticipantListPanelProps {
   onRemove: (participantId: number) => void;
 }
 
-export const ParticipantListPanel: React.FC<ParticipantListPanelProps> = ({ participants, finalized, onRemove }) => {
+export const ParticipantListPanel: React.FC<ParticipantListPanelProps> = ({
+  participants,
+  finalized,
+  onRemove,
+}) => {
   const { t } = useTranslation();
 
   const getIcon = (status: string) => {
-    if (status === "SIGNED") return <CheckCircleIcon sx={{ color: "green", fontSize: "1rem" }} />;
-    if (status === "DECLINED") return <CancelIcon sx={{ color: "red", fontSize: "1rem" }} />;
+    if (status === "SIGNED")
+      return <CheckCircleIcon sx={{ color: "green", fontSize: "1rem" }} />;
+    if (status === "DECLINED")
+      return <CancelIcon sx={{ color: "red", fontSize: "1rem" }} />;
     return <PendingIcon sx={{ color: "orange", fontSize: "1rem" }} />;
   };
 
@@ -46,19 +52,33 @@ export const ParticipantListPanel: React.FC<ParticipantListPanelProps> = ({ part
                 <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
                   <Group gap={6} wrap="nowrap">
                     <div
-                      style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: annotationColor, flexShrink: 0 }}
+                      style={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: "50%",
+                        backgroundColor: annotationColor,
+                        flexShrink: 0,
+                      }}
                     />
                     <Text size="xs" truncate>
                       {participant.name}
                     </Text>
                   </Group>
-                  {participant.email && participant.email !== participant.name && (
-                    <Text size="xs" c="dimmed" truncate>
-                      @{participant.email}
-                    </Text>
-                  )}
-                  <Badge size="xs" color={getColor(participant.status)} variant="light">
-                    {t(`certSign.collab.status.${participant.status.toLowerCase()}`, participant.status)}
+                  {participant.email &&
+                    participant.email !== participant.name && (
+                      <Text size="xs" c="dimmed" truncate>
+                        @{participant.email}
+                      </Text>
+                    )}
+                  <Badge
+                    size="xs"
+                    color={getColor(participant.status)}
+                    variant="light"
+                  >
+                    {t(
+                      `certSign.collab.status.${participant.status.toLowerCase()}`,
+                      participant.status,
+                    )}
                   </Badge>
                 </Stack>
                 {!finalized && !isSigned && !isDeclined && (
@@ -67,7 +87,10 @@ export const ParticipantListPanel: React.FC<ParticipantListPanelProps> = ({ part
                     variant="subtle"
                     color="red"
                     onClick={() => onRemove(participant.id)}
-                    title={t("certSign.collab.sessionDetail.removeParticipant", "Remove")}
+                    title={t(
+                      "certSign.collab.sessionDetail.removeParticipant",
+                      "Remove",
+                    )}
                   >
                     <DeleteIcon sx={{ fontSize: "1rem" }} />
                   </ActionIcon>

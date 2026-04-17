@@ -1,7 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { isAxiosError } from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-import { Alert, Badge, Button, Group, Loader, Paper, Stack, Text, Title } from "@mantine/core";
+import {
+  Alert,
+  Badge,
+  Button,
+  Group,
+  Loader,
+  Paper,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import LoginIcon from "@mui/icons-material/Login";
@@ -17,7 +27,13 @@ import {
   ShareLinkMetadata,
 } from "@app/services/shareLinkImport";
 
-type ShareLinkStatus = "loading" | "ready" | "login" | "forbidden" | "notfound" | "error";
+type ShareLinkStatus =
+  | "loading"
+  | "ready"
+  | "login"
+  | "forbidden"
+  | "notfound"
+  | "error";
 
 export default function ShareLinkPage() {
   const { token } = useParams<{ token: string }>();
@@ -31,7 +47,10 @@ export default function ShareLinkPage() {
 
   const normalizedToken = useMemo(() => (token || "").trim(), [token]);
   const shareRole = (metadata?.accessRole ?? "viewer").toLowerCase();
-  const hasReadAccess = shareRole === "editor" || shareRole === "commenter" || shareRole === "viewer";
+  const hasReadAccess =
+    shareRole === "editor" ||
+    shareRole === "commenter" ||
+    shareRole === "viewer";
   const canDownload = hasReadAccess;
   const canOpen = hasReadAccess;
 
@@ -46,7 +65,9 @@ export default function ShareLinkPage() {
       setMetadata(data);
       setStatus("ready");
     } catch (error: unknown) {
-      const statusCode = isAxiosError(error) ? error.response?.status : undefined;
+      const statusCode = isAxiosError(error)
+        ? error.response?.status
+        : undefined;
       if (statusCode === 401) {
         setStatus("login");
       } else if (statusCode === 403) {
@@ -84,7 +105,9 @@ export default function ShareLinkPage() {
       link.remove();
       URL.revokeObjectURL(url);
     } catch (error: unknown) {
-      const statusCode = isAxiosError(error) ? error.response?.status : undefined;
+      const statusCode = isAxiosError(error)
+        ? error.response?.status
+        : undefined;
       if (statusCode === 401) {
         setStatus("login");
       } else if (statusCode === 403) {
@@ -94,7 +117,10 @@ export default function ShareLinkPage() {
       } else {
         alert({
           alertType: "error",
-          title: t("storageShare.downloadFailed", "Unable to download this file."),
+          title: t(
+            "storageShare.downloadFailed",
+            "Unable to download this file.",
+          ),
           expandable: false,
           durationMs: 3500,
         });
@@ -108,14 +134,20 @@ export default function ShareLinkPage() {
     if (!normalizedToken || !canOpen) return;
     setIsWorking(true);
     try {
-      const selectedIds = await importShareLinkToWorkbench(normalizedToken, actions, metadata);
+      const selectedIds = await importShareLinkToWorkbench(
+        normalizedToken,
+        actions,
+        metadata,
+      );
       if (selectedIds.length > 0) {
         actions.setSelectedFiles(selectedIds);
       }
       navActions.setWorkbench("viewer");
       navigate("/", { replace: true });
     } catch (error: unknown) {
-      const statusCode = isAxiosError(error) ? error.response?.status : undefined;
+      const statusCode = isAxiosError(error)
+        ? error.response?.status
+        : undefined;
       if (statusCode === 401) {
         setStatus("login");
       } else if (statusCode === 403) {
@@ -135,15 +167,25 @@ export default function ShareLinkPage() {
     }
   }, [actions, canOpen, metadata, navActions, navigate, normalizedToken, t]);
 
-  const title = metadata?.fileName || t("storageShare.titleDefault", "Shared file");
-  const ownerLabel = metadata?.owner || t("storageShare.ownerUnknown", "Unknown");
+  const title =
+    metadata?.fileName || t("storageShare.titleDefault", "Shared file");
+  const ownerLabel =
+    metadata?.owner || t("storageShare.ownerUnknown", "Unknown");
 
   return (
     <div style={{ minHeight: "100%", padding: "2.5rem 1.5rem" }}>
-      <Paper radius="lg" p="xl" withBorder shadow="sm" style={{ maxWidth: 720, margin: "0 auto" }}>
+      <Paper
+        radius="lg"
+        p="xl"
+        withBorder
+        shadow="sm"
+        style={{ maxWidth: 720, margin: "0 auto" }}
+      >
         <Stack gap="md">
           <Group justify="space-between" align="center">
-            <Title order={3}>{t("storageShare.shareHeading", "Shared file")}</Title>
+            <Title order={3}>
+              {t("storageShare.shareHeading", "Shared file")}
+            </Title>
             <Group gap="xs">
               {metadata?.accessRole && (
                 <Badge variant="light" color="gray">
@@ -176,7 +218,8 @@ export default function ShareLinkPage() {
               </Text>
               {metadata?.createdAt && (
                 <Text size="sm" c="dimmed">
-                  {t("storageShare.createdAt", "Created")} {new Date(metadata.createdAt).toLocaleString()}
+                  {t("storageShare.createdAt", "Created")}{" "}
+                  {new Date(metadata.createdAt).toLocaleString()}
                 </Text>
               )}
               <Group justify="flex-start" gap="sm" pt="sm">
@@ -199,7 +242,11 @@ export default function ShareLinkPage() {
                 </Button>
               </Group>
               {!canDownload && (
-                <Alert mt="md" color="yellow" title={t("storageShare.accessLimitedTitle", "Limited access")}>
+                <Alert
+                  mt="md"
+                  color="yellow"
+                  title={t("storageShare.accessLimitedTitle", "Limited access")}
+                >
                   {shareRole === "commenter"
                     ? t(
                         "storageShare.accessLimitedCommenter",
@@ -215,10 +262,21 @@ export default function ShareLinkPage() {
           )}
 
           {status === "login" && (
-            <Alert color="blue" title={t("storageShare.loginRequired", "Login required")}>
-              <Text size="sm">{t("storageShare.loginPrompt", "Sign in to access this shared file.")}</Text>
+            <Alert
+              color="blue"
+              title={t("storageShare.loginRequired", "Login required")}
+            >
+              <Text size="sm">
+                {t(
+                  "storageShare.loginPrompt",
+                  "Sign in to access this shared file.",
+                )}
+              </Text>
               <Group mt="md">
-                <Button leftSection={<LoginIcon style={{ fontSize: 18 }} />} onClick={handleLogin}>
+                <Button
+                  leftSection={<LoginIcon style={{ fontSize: 18 }} />}
+                  onClick={handleLogin}
+                >
                   {t("storageShare.goToLogin", "Go to login")}
                 </Button>
               </Group>
@@ -226,19 +284,37 @@ export default function ShareLinkPage() {
           )}
 
           {status === "forbidden" && (
-            <Alert color="red" title={t("storageShare.accessDeniedTitle", "No access")}>
-              {t("storageShare.accessDeniedBody", "You do not have access to this file. Ask the owner to share it with you.")}
+            <Alert
+              color="red"
+              title={t("storageShare.accessDeniedTitle", "No access")}
+            >
+              {t(
+                "storageShare.accessDeniedBody",
+                "You do not have access to this file. Ask the owner to share it with you.",
+              )}
             </Alert>
           )}
 
           {status === "notfound" && (
-            <Alert color="red" title={t("storageShare.expiredTitle", "Link expired")}>
-              {t("storageShare.expiredBody", "This share link is invalid or has expired.")}
+            <Alert
+              color="red"
+              title={t("storageShare.expiredTitle", "Link expired")}
+            >
+              {t(
+                "storageShare.expiredBody",
+                "This share link is invalid or has expired.",
+              )}
             </Alert>
           )}
 
           {status === "error" && (
-            <Alert color="red" title={t("storageShare.loadFailed", "Unable to open shared file.")}>
+            <Alert
+              color="red"
+              title={t(
+                "storageShare.loadFailed",
+                "Unable to open shared file.",
+              )}
+            >
               {t("storageShare.tryAgain", "Please try again later.")}
             </Alert>
           )}

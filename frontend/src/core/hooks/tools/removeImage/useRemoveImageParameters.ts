@@ -5,7 +5,8 @@ export type RemoveImageParameters = Record<string, never>;
 
 export const defaultParameters: RemoveImageParameters = {};
 
-export type RemoveImageParametersHook = BaseParametersHook<RemoveImageParameters>;
+export type RemoveImageParametersHook =
+  BaseParametersHook<RemoveImageParameters>;
 
 export const useRemoveImageParameters = (): RemoveImageParametersHook => {
   return useBaseParameters({

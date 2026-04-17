@@ -12,7 +12,13 @@ export interface DocumentThumbnailProps {
   children?: React.ReactNode;
 }
 
-const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({ file, thumbnail, style = {}, onClick, children }) => {
+const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
+  file,
+  thumbnail,
+  style = {},
+  onClick,
+  children,
+}) => {
   if (!file) return null;
 
   const containerStyle = {
@@ -51,7 +57,12 @@ const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({ file, thumbnail, 
   return (
     <Box style={containerStyle} onClick={onClick}>
       <Center
-        style={{ width: "100%", height: "100%", backgroundColor: "var(--mantine-color-gray-1)", borderRadius: "0.25rem" }}
+        style={{
+          width: "100%",
+          height: "100%",
+          backgroundColor: "var(--mantine-color-gray-1)",
+          borderRadius: "0.25rem",
+        }}
       >
         <PrivateContent>{getFileTypeIcon(file)}</PrivateContent>
       </Center>

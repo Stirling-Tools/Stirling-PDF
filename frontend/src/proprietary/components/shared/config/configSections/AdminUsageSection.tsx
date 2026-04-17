@@ -1,8 +1,19 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Stack, Group, Text, Button, SegmentedControl, Loader, Alert, Card } from "@mantine/core";
+import {
+  Stack,
+  Group,
+  Text,
+  Button,
+  SegmentedControl,
+  Loader,
+  Alert,
+  Card,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import usageAnalyticsService, { EndpointStatisticsResponse } from "@app/services/usageAnalyticsService";
+import usageAnalyticsService, {
+  EndpointStatisticsResponse,
+} from "@app/services/usageAnalyticsService";
 import UsageAnalyticsChart from "@app/components/shared/config/configSections/usage/UsageAnalyticsChart";
 import UsageAnalyticsTable from "@app/components/shared/config/configSections/usage/UsageAnalyticsTable";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -22,32 +33,110 @@ const AdminUsageSection: React.FC = () => {
   const [data, setData] = useState<EndpointStatisticsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [displayMode, setDisplayMode] = useState<"top10" | "top20" | "all">("top10");
+  const [displayMode, setDisplayMode] = useState<"top10" | "top20" | "all">(
+    "top10",
+  );
   const [dataType, setDataType] = useState<"all" | "api" | "ui">("api");
 
   const buildDemoUsageData = useCallback((): EndpointStatisticsResponse => {
     const totalVisits = 15847;
     const allEndpoints = [
-      { endpoint: "merge-pdfs", visits: 3245, percentage: (3245 / totalVisits) * 100 },
-      { endpoint: "compress-pdf", visits: 2891, percentage: (2891 / totalVisits) * 100 },
-      { endpoint: "pdf-to-img", visits: 2156, percentage: (2156 / totalVisits) * 100 },
-      { endpoint: "split-pdf", visits: 1834, percentage: (1834 / totalVisits) * 100 },
-      { endpoint: "rotate-pdf", visits: 1523, percentage: (1523 / totalVisits) * 100 },
-      { endpoint: "ocr-pdf", visits: 1287, percentage: (1287 / totalVisits) * 100 },
-      { endpoint: "add-watermark", visits: 945, percentage: (945 / totalVisits) * 100 },
-      { endpoint: "extract-images", visits: 782, percentage: (782 / totalVisits) * 100 },
-      { endpoint: "add-password", visits: 621, percentage: (621 / totalVisits) * 100 },
-      { endpoint: "html-to-pdf", visits: 563, percentage: (563 / totalVisits) * 100 },
-      { endpoint: "remove-password", visits: 487, percentage: (487 / totalVisits) * 100 },
-      { endpoint: "pdf-to-pdfa", visits: 423, percentage: (423 / totalVisits) * 100 },
-      { endpoint: "extract-pdf-metadata", visits: 356, percentage: (356 / totalVisits) * 100 },
-      { endpoint: "add-page-numbers", visits: 298, percentage: (298 / totalVisits) * 100 },
+      {
+        endpoint: "merge-pdfs",
+        visits: 3245,
+        percentage: (3245 / totalVisits) * 100,
+      },
+      {
+        endpoint: "compress-pdf",
+        visits: 2891,
+        percentage: (2891 / totalVisits) * 100,
+      },
+      {
+        endpoint: "pdf-to-img",
+        visits: 2156,
+        percentage: (2156 / totalVisits) * 100,
+      },
+      {
+        endpoint: "split-pdf",
+        visits: 1834,
+        percentage: (1834 / totalVisits) * 100,
+      },
+      {
+        endpoint: "rotate-pdf",
+        visits: 1523,
+        percentage: (1523 / totalVisits) * 100,
+      },
+      {
+        endpoint: "ocr-pdf",
+        visits: 1287,
+        percentage: (1287 / totalVisits) * 100,
+      },
+      {
+        endpoint: "add-watermark",
+        visits: 945,
+        percentage: (945 / totalVisits) * 100,
+      },
+      {
+        endpoint: "extract-images",
+        visits: 782,
+        percentage: (782 / totalVisits) * 100,
+      },
+      {
+        endpoint: "add-password",
+        visits: 621,
+        percentage: (621 / totalVisits) * 100,
+      },
+      {
+        endpoint: "html-to-pdf",
+        visits: 563,
+        percentage: (563 / totalVisits) * 100,
+      },
+      {
+        endpoint: "remove-password",
+        visits: 487,
+        percentage: (487 / totalVisits) * 100,
+      },
+      {
+        endpoint: "pdf-to-pdfa",
+        visits: 423,
+        percentage: (423 / totalVisits) * 100,
+      },
+      {
+        endpoint: "extract-pdf-metadata",
+        visits: 356,
+        percentage: (356 / totalVisits) * 100,
+      },
+      {
+        endpoint: "add-page-numbers",
+        visits: 298,
+        percentage: (298 / totalVisits) * 100,
+      },
       { endpoint: "crop", visits: 245, percentage: (245 / totalVisits) * 100 },
-      { endpoint: "flatten", visits: 187, percentage: (187 / totalVisits) * 100 },
-      { endpoint: "sanitize-pdf", visits: 134, percentage: (134 / totalVisits) * 100 },
-      { endpoint: "auto-split-pdf", visits: 98, percentage: (98 / totalVisits) * 100 },
-      { endpoint: "scale-pages", visits: 76, percentage: (76 / totalVisits) * 100 },
-      { endpoint: "compare-pdfs", visits: 42, percentage: (42 / totalVisits) * 100 },
+      {
+        endpoint: "flatten",
+        visits: 187,
+        percentage: (187 / totalVisits) * 100,
+      },
+      {
+        endpoint: "sanitize-pdf",
+        visits: 134,
+        percentage: (134 / totalVisits) * 100,
+      },
+      {
+        endpoint: "auto-split-pdf",
+        visits: 98,
+        percentage: (98 / totalVisits) * 100,
+      },
+      {
+        endpoint: "scale-pages",
+        visits: 76,
+        percentage: (76 / totalVisits) * 100,
+      },
+      {
+        endpoint: "compare-pdfs",
+        visits: 42,
+        percentage: (42 / totalVisits) * 100,
+      },
     ];
 
     let filteredEndpoints = allEndpoints;
@@ -69,12 +158,18 @@ const AdminUsageSection: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const limit = displayMode === "all" ? undefined : displayMode === "top10" ? 10 : 20;
-      const response = await usageAnalyticsService.getEndpointStatistics(limit, dataType);
+      const limit =
+        displayMode === "all" ? undefined : displayMode === "top10" ? 10 : 20;
+      const response = await usageAnalyticsService.getEndpointStatistics(
+        limit,
+        dataType,
+      );
 
       setData(response);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load usage statistics");
+      setError(
+        err instanceof Error ? err.message : "Failed to load usage statistics",
+      );
     } finally {
       setLoading(false);
     }
@@ -120,7 +215,9 @@ const AdminUsageSection: React.FC = () => {
   // Early returns for loading/error states
   if (actualLoading) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
+      <div
+        style={{ display: "flex", justifyContent: "center", padding: "2rem" }}
+      >
         <Loader size="lg" />
       </div>
     );
@@ -128,7 +225,10 @@ const AdminUsageSection: React.FC = () => {
 
   if (error) {
     return (
-      <Alert color="red" title={t("usage.error", "Error loading usage statistics")}>
+      <Alert
+        color="red"
+        title={t("usage.error", "Error loading usage statistics")}
+      >
         {error}
       </Alert>
     );
@@ -137,15 +237,21 @@ const AdminUsageSection: React.FC = () => {
   if (!data) {
     return (
       <Alert color="yellow" title={t("usage.noData", "No data available")}>
-        {t("usage.noDataMessage", "No usage statistics are currently available.")}
+        {t(
+          "usage.noDataMessage",
+          "No usage statistics are currently available.",
+        )}
       </Alert>
     );
   }
 
   const endpoints = (data?.endpoints ?? []).map((endpoint) => ({
-    endpoint: endpoint.endpoint ?? t("usage.table.unknownEndpoint", "Unknown endpoint"),
+    endpoint:
+      endpoint.endpoint ?? t("usage.table.unknownEndpoint", "Unknown endpoint"),
     visits: Number.isFinite(endpoint.visits) ? Math.max(0, endpoint.visits) : 0,
-    percentage: Number.isFinite(endpoint.percentage) ? Math.max(0, endpoint.percentage) : 0,
+    percentage: Number.isFinite(endpoint.percentage)
+      ? Math.max(0, endpoint.percentage)
+      : 0,
   }));
 
   const chartData = endpoints.map((e) => ({
@@ -154,17 +260,27 @@ const AdminUsageSection: React.FC = () => {
   }));
 
   const displayedVisits = endpoints.reduce((sum, e) => sum + e.visits, 0);
-  const totalVisits = Number.isFinite(data?.totalVisits) ? Math.max(0, data?.totalVisits ?? 0) : displayedVisits;
-  const totalEndpoints = Number.isFinite(data?.totalEndpoints) ? Math.max(0, data?.totalEndpoints ?? 0) : endpoints.length;
+  const totalVisits = Number.isFinite(data?.totalVisits)
+    ? Math.max(0, data?.totalVisits ?? 0)
+    : displayedVisits;
+  const totalEndpoints = Number.isFinite(data?.totalEndpoints)
+    ? Math.max(0, data?.totalEndpoints ?? 0)
+    : endpoints.length;
 
-  const displayedPercentage = totalVisits > 0 ? ((displayedVisits / (totalVisits || 1)) * 100).toFixed(1) : "0";
+  const displayedPercentage =
+    totalVisits > 0
+      ? ((displayedVisits / (totalVisits || 1)) * 100).toFixed(1)
+      : "0";
 
   return (
     <Stack gap="lg">
       <LoginRequiredBanner show={!loginEnabled} />
       <EnterpriseRequiredBanner
         show={!hasEnterpriseLicense}
-        featureName={t("settings.licensingAnalytics.usageAnalytics", "Usage Analytics")}
+        featureName={t(
+          "settings.licensingAnalytics.usageAnalytics",
+          "Usage Analytics",
+        )}
       />
 
       {/* Info banner about usage analytics and audit relationship */}
@@ -187,7 +303,13 @@ const AdminUsageSection: React.FC = () => {
                 variant="light"
                 size="xs"
                 onClick={() => navigate("/settings/adminSecurity")}
-                rightSection={<LocalIcon icon="arrow-forward" width="0.9rem" height="0.9rem" />}
+                rightSection={
+                  <LocalIcon
+                    icon="arrow-forward"
+                    width="0.9rem"
+                    height="0.9rem"
+                  />
+                }
               >
                 {t("usage.configureSettings", "Configure Analytics Settings")}
               </Button>
@@ -195,7 +317,13 @@ const AdminUsageSection: React.FC = () => {
                 variant="light"
                 size="xs"
                 onClick={() => navigate("/settings/adminSecurity#auditLogging")}
-                rightSection={<LocalIcon icon="arrow-forward" width="0.9rem" height="0.9rem" />}
+                rightSection={
+                  <LocalIcon
+                    icon="arrow-forward"
+                    width="0.9rem"
+                    height="0.9rem"
+                  />
+                }
               >
                 {t("usage.viewAuditLogs", "View Audit Logs")}
               </Button>
@@ -211,7 +339,9 @@ const AdminUsageSection: React.FC = () => {
             <Group>
               <SegmentedControl
                 value={displayMode}
-                onChange={(value) => setDisplayMode(value as "top10" | "top20" | "all")}
+                onChange={(value) =>
+                  setDisplayMode(value as "top10" | "top20" | "all")
+                }
                 disabled={showDemoData}
                 data={[
                   {
@@ -230,7 +360,9 @@ const AdminUsageSection: React.FC = () => {
               />
               <Button
                 variant="outline"
-                leftSection={<LocalIcon icon="refresh" width="1rem" height="1rem" />}
+                leftSection={
+                  <LocalIcon icon="refresh" width="1rem" height="1rem" />
+                }
                 onClick={handleRefresh}
                 loading={loading}
                 disabled={showDemoData}

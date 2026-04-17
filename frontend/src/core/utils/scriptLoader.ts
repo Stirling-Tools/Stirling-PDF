@@ -12,7 +12,13 @@ interface ScriptLoadOptions {
 
 const loadedScripts = new Set<string>();
 
-export function loadScript({ src, id, async = true, defer = false, onLoad }: ScriptLoadOptions): Promise<void> {
+export function loadScript({
+  src,
+  id,
+  async = true,
+  defer = false,
+  onLoad,
+}: ScriptLoadOptions): Promise<void> {
   return new Promise((resolve, reject) => {
     // Check if already loaded
     const scriptId = id || src;
@@ -22,7 +28,9 @@ export function loadScript({ src, id, async = true, defer = false, onLoad }: Scr
     }
 
     // Check if script already exists in DOM
-    const existingScript = id ? document.getElementById(id) : document.querySelector(`script[src="${src}"]`);
+    const existingScript = id
+      ? document.getElementById(id)
+      : document.querySelector(`script[src="${src}"]`);
     if (existingScript) {
       loadedScripts.add(scriptId);
       resolve();

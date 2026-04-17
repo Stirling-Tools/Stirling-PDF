@@ -1,7 +1,14 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useSaaSBilling, usePlanPricing } from "@app/contexts/SaasBillingContext";
-import { FREE_PLAN_FEATURES, TEAM_PLAN_FEATURES, ENTERPRISE_PLAN_FEATURES } from "@app/config/planFeatures";
+import {
+  useSaaSBilling,
+  usePlanPricing,
+} from "@app/contexts/SaasBillingContext";
+import {
+  FREE_PLAN_FEATURES,
+  TEAM_PLAN_FEATURES,
+  ENTERPRISE_PLAN_FEATURES,
+} from "@app/config/planFeatures";
 import type { TierLevel } from "@app/types/billing";
 
 export interface PlanFeature {
@@ -37,14 +44,31 @@ export const useSaaSPlans = () => {
         price: 0,
         currency: "$",
         period: t("plan.period.month", "/month"),
-        highlights: FREE_PLAN_FEATURES.map((f) => t(f.translationKey, f.defaultText)),
+        highlights: FREE_PLAN_FEATURES.map((f) =>
+          t(f.translationKey, f.defaultText),
+        ),
         features: [
-          { name: t("plan.feature.pdfTools", "Basic PDF Tools"), included: true },
-          { name: t("plan.feature.fileSize", "File Size Limit"), included: false },
-          { name: t("plan.feature.automation", "Automate tool workflows"), included: false },
+          {
+            name: t("plan.feature.pdfTools", "Basic PDF Tools"),
+            included: true,
+          },
+          {
+            name: t("plan.feature.fileSize", "File Size Limit"),
+            included: false,
+          },
+          {
+            name: t("plan.feature.automation", "Automate tool workflows"),
+            included: false,
+          },
           { name: t("plan.feature.api", "API Access"), included: false },
-          { name: t("plan.feature.priority", "Priority Support"), included: false },
-          { name: t("plan.feature.customPricing", "Custom Pricing"), included: false },
+          {
+            name: t("plan.feature.priority", "Priority Support"),
+            included: false,
+          },
+          {
+            name: t("plan.feature.customPricing", "Custom Pricing"),
+            included: false,
+          },
         ],
       },
       {
@@ -55,14 +79,34 @@ export const useSaaSPlans = () => {
         period: t("plan.period.month", "/month"),
         popular: true,
         overagePrice: teamPlan?.overagePrice || 0.05,
-        highlights: TEAM_PLAN_FEATURES.map((f) => t(f.translationKey, f.defaultText)),
+        highlights: TEAM_PLAN_FEATURES.map((f) =>
+          t(f.translationKey, f.defaultText),
+        ),
         features: [
-          { name: t("plan.feature.pdfTools", "Basic PDF Tools"), included: true },
-          { name: t("plan.feature.fileSize", "File Size Limit"), included: true },
-          { name: t("plan.feature.automation", "Automate tool workflows"), included: true },
-          { name: t("plan.feature.api", "Monthly API Credits"), included: true },
-          { name: t("plan.feature.priority", "Priority Support"), included: false },
-          { name: t("plan.feature.customPricing", "Custom Pricing"), included: false },
+          {
+            name: t("plan.feature.pdfTools", "Basic PDF Tools"),
+            included: true,
+          },
+          {
+            name: t("plan.feature.fileSize", "File Size Limit"),
+            included: true,
+          },
+          {
+            name: t("plan.feature.automation", "Automate tool workflows"),
+            included: true,
+          },
+          {
+            name: t("plan.feature.api", "Monthly API Credits"),
+            included: true,
+          },
+          {
+            name: t("plan.feature.priority", "Priority Support"),
+            included: false,
+          },
+          {
+            name: t("plan.feature.customPricing", "Custom Pricing"),
+            included: false,
+          },
         ],
       },
       {
@@ -72,14 +116,34 @@ export const useSaaSPlans = () => {
         currency: "$",
         period: "",
         isContactOnly: true,
-        highlights: ENTERPRISE_PLAN_FEATURES.map((f) => t(f.translationKey, f.defaultText)),
+        highlights: ENTERPRISE_PLAN_FEATURES.map((f) =>
+          t(f.translationKey, f.defaultText),
+        ),
         features: [
-          { name: t("plan.feature.pdfTools", "Basic PDF Tools"), included: true },
-          { name: t("plan.feature.fileSize", "File Size Limit"), included: true },
-          { name: t("plan.feature.automation", "Automate tool workflows"), included: true },
-          { name: t("plan.feature.api", "Monthly API Credits"), included: true },
-          { name: t("plan.feature.priority", "Priority Support"), included: true },
-          { name: t("plan.feature.customPricing", "Custom Pricing"), included: true },
+          {
+            name: t("plan.feature.pdfTools", "Basic PDF Tools"),
+            included: true,
+          },
+          {
+            name: t("plan.feature.fileSize", "File Size Limit"),
+            included: true,
+          },
+          {
+            name: t("plan.feature.automation", "Automate tool workflows"),
+            included: true,
+          },
+          {
+            name: t("plan.feature.api", "Monthly API Credits"),
+            included: true,
+          },
+          {
+            name: t("plan.feature.priority", "Priority Support"),
+            included: true,
+          },
+          {
+            name: t("plan.feature.customPricing", "Custom Pricing"),
+            included: true,
+          },
         ],
       },
     ];

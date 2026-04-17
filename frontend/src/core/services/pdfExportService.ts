@@ -33,7 +33,9 @@ export class PDFExportService {
     try {
       const pagesToExport =
         selectedOnly && selectedPageIds.length > 0
-          ? pdfDocument.pages.filter((page) => selectedPageIds.includes(page.id))
+          ? pdfDocument.pages.filter((page) =>
+              selectedPageIds.includes(page.id),
+            )
           : pdfDocument.pages;
 
       if (pagesToExport.length === 0) {
@@ -41,13 +43,21 @@ export class PDFExportService {
       }
 
       const originalPDFBytes = await pdfDocument.file.arrayBuffer();
-      const blob = await this.createSingleDocument(originalPDFBytes, pagesToExport);
-      const exportFilename = this.generateFilename(filename || pdfDocument.name);
+      const blob = await this.createSingleDocument(
+        originalPDFBytes,
+        pagesToExport,
+      );
+      const exportFilename = this.generateFilename(
+        filename || pdfDocument.name,
+      );
 
       return { blob, filename: exportFilename };
     } catch (error) {
       console.error("PDF export error:", error);
-      throw new Error(`Failed to export PDF: ${error instanceof Error ? error.message : "Unknown error"}`, { cause: error });
+      throw new Error(
+        `Failed to export PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
+        { cause: error },
+      );
     }
   }
 
@@ -65,32 +75,46 @@ export class PDFExportService {
     try {
       const pagesToExport =
         selectedOnly && selectedPageIds.length > 0
-          ? pdfDocument.pages.filter((page) => selectedPageIds.includes(page.id))
+          ? pdfDocument.pages.filter((page) =>
+              selectedPageIds.includes(page.id),
+            )
           : pdfDocument.pages;
 
       if (pagesToExport.length === 0) {
         throw new Error("No pages to export");
       }
 
-      const blob = await this.createMultiSourceDocument(sourceFiles, pagesToExport);
-      const exportFilename = this.generateFilename(filename || pdfDocument.name);
+      const blob = await this.createMultiSourceDocument(
+        sourceFiles,
+        pagesToExport,
+      );
+      const exportFilename = this.generateFilename(
+        filename || pdfDocument.name,
+      );
 
       return { blob, filename: exportFilename };
     } catch (error) {
       console.error("Multi-file PDF export error:", error);
-      throw new Error(`Failed to export PDF: ${error instanceof Error ? error.message : "Unknown error"}`, { cause: error });
+      throw new Error(
+        `Failed to export PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
+        { cause: error },
+      );
     }
   }
 
   /**
    * Create a PDF document from multiple source files using PDFium WASM.
    */
-  private async createMultiSourceDocument(sourceFiles: Map<string, File>, pages: PDFPage[]): Promise<Blob> {
+  private async createMultiSourceDocument(
+    sourceFiles: Map<string, File>,
+    pages: PDFPage[],
+  ): Promise<Blob> {
     const m = await getPdfiumModule();
 
     // Create destination document
     const destDocPtr = m.FPDF_CreateNewDocument();
-    if (!destDocPtr) throw new Error("PDFium: failed to create destination document");
+    if (!destDocPtr)
+      throw new Error("PDFium: failed to create destination document");
 
     // Load all source documents once and cache them
     const loadedDocs = new Map<string, number>();
@@ -125,7 +149,12 @@ export class PDFExportService {
           if (sourcePageIndex >= 0 && sourcePageIndex < srcPageCount) {
             // Import the specific page (1-based page range for FPDF_ImportPages)
             const pageRange = String(sourcePageIndex + 1);
-            const imported = await importPages(destDocPtr, srcDocPtr, pageRange, insertIdx);
+            const imported = await importPages(
+              destDocPtr,
+              srcDocPtr,
+              pageRange,
+              insertIdx,
+            );
             if (!imported) {
               console.warn(
                 `[PDFExport] importPages failed for fileId=${page.originalFileId} pageRange=${pageRange} — page will be missing from output.`,
@@ -140,7 +169,9 @@ export class PDFExportService {
             insertIdx++;
           }
         } else {
-          console.warn(`Cannot find source document for page ${page.pageNumber} (fileId: ${page.originalFileId})`);
+          console.warn(
+            `Cannot find source document for page ${page.pageNumber} (fileId: ${page.originalFileId})`,
+          );
         }
       }
 
@@ -159,7 +190,10 @@ export class PDFExportService {
   /**
    * Create a single PDF document with all operations applied (single source) using PDFium.
    */
-  private async createSingleDocument(sourceData: ArrayBuffer, pages: PDFPage[]): Promise<Blob> {
+  private async createSingleDocument(
+    sourceData: ArrayBuffer,
+    pages: PDFPage[],
+  ): Promise<Blob> {
     const m = await getPdfiumModule();
 
     // Open source document
@@ -187,7 +221,12 @@ export class PDFExportService {
 
           if (sourcePageIndex >= 0 && sourcePageIndex < srcPageCount) {
             const pageRange = String(sourcePageIndex + 1);
-            const imported = await importPages(destDocPtr, srcDocPtr, pageRange, insertIdx);
+            const imported = await importPages(
+              destDocPtr,
+              srcDocPtr,
+              pageRange,
+              insertIdx,
+            );
             if (!imported) {
               console.warn(
                 `[PDFExport] importPages failed for page ${page.originalPageNumber} pageRange=${pageRange} — page will be missing from output.`,
@@ -240,7 +279,11 @@ export class PDFExportService {
   /**
    * Validate PDF operations before export
    */
-  validateExport(pdfDocument: PDFDocument, selectedPageIds: string[], selectedOnly: boolean): string[] {
+  validateExport(
+    pdfDocument: PDFDocument,
+    selectedPageIds: string[],
+    selectedOnly: boolean,
+  ): string[] {
     const errors: string[] = [];
 
     if (selectedOnly && selectedPageIds.length === 0) {

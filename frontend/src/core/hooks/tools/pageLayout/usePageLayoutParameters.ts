@@ -1,5 +1,8 @@
 import { BaseParameters } from "@app/types/parameters";
-import { useBaseParameters, BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
+import {
+  useBaseParameters,
+  BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
 
 export interface PageLayoutParameters extends BaseParameters {
   mode: "DEFAULT" | "CUSTOM";
@@ -42,8 +45,14 @@ export const usePageLayoutParameters = (): PageLayoutParametersHook => {
     defaultParameters,
     endpointName: "multi-page-layout",
     validateFn: (params) => {
-      const cols = params.mode === "DEFAULT" ? Math.ceil(Math.sqrt(params.pagesPerSheet)) : params.cols;
-      const rows = params.mode === "DEFAULT" ? Math.ceil(params.pagesPerSheet / cols) : params.rows;
+      const cols =
+        params.mode === "DEFAULT"
+          ? Math.ceil(Math.sqrt(params.pagesPerSheet))
+          : params.cols;
+      const rows =
+        params.mode === "DEFAULT"
+          ? Math.ceil(params.pagesPerSheet / cols)
+          : params.rows;
 
       if (cols <= 0 || rows <= 0) return false;
 

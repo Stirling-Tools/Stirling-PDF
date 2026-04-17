@@ -1,9 +1,18 @@
 import { useTranslation } from "react-i18next";
-import { ToolType, useToolOperation } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  ToolType,
+  useToolOperation,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { PageLayoutParameters, defaultParameters } from "@app/hooks/tools/pageLayout/usePageLayoutParameters";
+import {
+  PageLayoutParameters,
+  defaultParameters,
+} from "@app/hooks/tools/pageLayout/usePageLayoutParameters";
 
-export const buildPageLayoutFormData = (parameters: PageLayoutParameters, file: File): FormData => {
+export const buildPageLayoutFormData = (
+  parameters: PageLayoutParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
   formData.append("mode", String(parameters.mode));
@@ -37,7 +46,10 @@ export const usePageLayoutOperation = () => {
   return useToolOperation<PageLayoutParameters>({
     ...pageLayoutOperationConfig,
     getErrorMessage: createStandardErrorHandler(
-      t("pageLayout.error.failed", "An error occurred while creating the multi-page layout."),
+      t(
+        "pageLayout.error.failed",
+        "An error occurred while creating the multi-page layout.",
+      ),
     ),
   });
 };

@@ -53,7 +53,11 @@ export const usePageSelectionManager = ({
   );
 
   useEffect(() => {
-    if (displayDocument && displayDocument.pages.length > 0 && !hasInitializedSelection.current) {
+    if (
+      displayDocument &&
+      displayDocument.pages.length > 0 &&
+      !hasInitializedSelection.current
+    ) {
       const allPageIds = displayDocument.pages.map((page) => page.id);
       setSelectedPageIds(allPageIds);
       setSelectionMode(true);
@@ -128,4 +132,6 @@ export const usePageSelectionManager = ({
   };
 };
 
-export type UsePageSelectionManagerReturn = ReturnType<typeof usePageSelectionManager>;
+export type UsePageSelectionManagerReturn = ReturnType<
+  typeof usePageSelectionManager
+>;

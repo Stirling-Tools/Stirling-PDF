@@ -19,7 +19,11 @@ export function getStartupNavigationAction(
   }
 
   // Already actively viewing in the viewer → update to the latest file
-  if (previousFileCount > 0 && currentWorkbench === "viewer" && currentFileCount > previousFileCount) {
+  if (
+    previousFileCount > 0 &&
+    currentWorkbench === "viewer" &&
+    currentFileCount > previousFileCount
+  ) {
     return { workbench: "viewer", activeFileIndex: currentFileCount - 1 };
   }
 

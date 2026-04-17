@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { AutomationTool, AutomationConfig, AutomationMode } from "@app/types/automation";
+import {
+  AutomationTool,
+  AutomationConfig,
+  AutomationMode,
+} from "@app/types/automation";
 import { AUTOMATION_CONSTANTS } from "@app/constants/automation";
 import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import { ToolId } from "@app/types/toolId";
@@ -11,7 +15,11 @@ interface UseAutomationFormProps {
   toolRegistry: Partial<ToolRegistry>;
 }
 
-export function useAutomationForm({ mode, existingAutomation, toolRegistry }: UseAutomationFormProps) {
+export function useAutomationForm({
+  mode,
+  existingAutomation,
+  toolRegistry,
+}: UseAutomationFormProps) {
   const { t } = useTranslation();
 
   const [automationName, setAutomationName] = useState("");
@@ -40,7 +48,10 @@ export function useAutomationForm({ mode, existingAutomation, toolRegistry }: Us
 
   // Initialize based on mode and existing automation
   useEffect(() => {
-    if ((mode === AutomationMode.SUGGESTED || mode === AutomationMode.EDIT) && existingAutomation) {
+    if (
+      (mode === AutomationMode.SUGGESTED || mode === AutomationMode.EDIT) &&
+      existingAutomation
+    ) {
       setAutomationName(existingAutomation.name || "");
       setAutomationDescription(existingAutomation.description || "");
       setAutomationIcon(existingAutomation.icon || "");
@@ -50,7 +61,8 @@ export function useAutomationForm({ mode, existingAutomation, toolRegistry }: Us
         const operation = typeof op === "string" ? op : op.operation;
         const toolEntry = toolRegistry[operation as ToolId];
         // If tool has no settingsComponent, it's automatically configured
-        const isConfigured = mode === AutomationMode.EDIT ? true : !toolEntry?.automationSettings;
+        const isConfigured =
+          mode === AutomationMode.EDIT ? true : !toolEntry?.automationSettings;
 
         return {
           id: `${operation}-${Date.now()}-${index}`,
@@ -59,7 +71,10 @@ export function useAutomationForm({ mode, existingAutomation, toolRegistry }: Us
           configured: isConfigured,
           parameters:
             typeof op === "object"
-              ? { ...getToolDefaultParameters(operation), ...(op.parameters || {}) }
+              ? {
+                  ...getToolDefaultParameters(operation),
+                  ...(op.parameters || {}),
+                }
               : getToolDefaultParameters(operation),
         };
       });
@@ -67,13 +82,16 @@ export function useAutomationForm({ mode, existingAutomation, toolRegistry }: Us
       setSelectedTools(tools);
     } else if (mode === AutomationMode.CREATE && selectedTools.length === 0) {
       // Initialize with default empty tools for new automation
-      const defaultTools = Array.from({ length: AUTOMATION_CONSTANTS.DEFAULT_TOOL_COUNT }, (_, index) => ({
-        id: `tool-${index + 1}-${Date.now()}`,
-        operation: "",
-        name: t("automate.creation.tools.selectTool", "Select a tool..."),
-        configured: false,
-        parameters: {},
-      }));
+      const defaultTools = Array.from(
+        { length: AUTOMATION_CONSTANTS.DEFAULT_TOOL_COUNT },
+        (_, index) => ({
+          id: `tool-${index + 1}-${Date.now()}`,
+          operation: "",
+          name: t("automate.creation.tools.selectTool", "Select a tool..."),
+          configured: false,
+          parameters: {},
+        }),
+      );
       setSelectedTools(defaultTools);
     }
   }, [mode, existingAutomation, t, getToolName, getToolDefaultParameters]);
@@ -106,7 +124,10 @@ export function useAutomationForm({ mode, existingAutomation, toolRegistry }: Us
   };
 
   const hasUnsavedChanges = () => {
-    return automationName.trim() !== "" || selectedTools.some((tool) => tool.operation !== "" || tool.configured);
+    return (
+      automationName.trim() !== "" ||
+      selectedTools.some((tool) => tool.operation !== "" || tool.configured)
+    );
   };
 
   const canSaveAutomation = () => {

@@ -1,5 +1,11 @@
 import React, { useEffect } from "react";
-import { Group, Text, ActionIcon, Tooltip, SegmentedControl } from "@mantine/core";
+import {
+  Group,
+  Text,
+  ActionIcon,
+  Tooltip,
+  SegmentedControl,
+} from "@mantine/core";
 import SelectAllIcon from "@mui/icons-material/SelectAll";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -33,33 +39,51 @@ const FileActions: React.FC = () => {
     onStorageFilterChange,
   } = useFileManagerContext();
   const uploadEnabled = config?.storageEnabled === true;
-  const sharingEnabled = uploadEnabled && config?.storageSharingEnabled === true;
-  const shareLinksEnabled = sharingEnabled && config?.storageShareLinksEnabled === true;
+  const sharingEnabled =
+    uploadEnabled && config?.storageSharingEnabled === true;
+  const shareLinksEnabled =
+    sharingEnabled && config?.storageShareLinksEnabled === true;
   const showStorageFilter = uploadEnabled;
   const storageFilterOptions = sharingEnabled
     ? [
         { value: "all", label: t("fileManager.filterAll", "All") },
         { value: "local", label: t("fileManager.filterLocal", "Local") },
-        { value: "sharedWithMe", label: t("fileManager.filterSharedWithMe", "Shared with me") },
-        { value: "sharedByMe", label: t("fileManager.filterSharedByMe", "Shared by me") },
+        {
+          value: "sharedWithMe",
+          label: t("fileManager.filterSharedWithMe", "Shared with me"),
+        },
+        {
+          value: "sharedByMe",
+          label: t("fileManager.filterSharedByMe", "Shared by me"),
+        },
       ]
     : [
         { value: "all", label: t("fileManager.filterAll", "All") },
         { value: "local", label: t("fileManager.filterLocal", "Local") },
       ];
   useEffect(() => {
-    if (!sharingEnabled && (storageFilter === "sharedWithMe" || storageFilter === "sharedByMe")) {
+    if (
+      !sharingEnabled &&
+      (storageFilter === "sharedWithMe" || storageFilter === "sharedByMe")
+    ) {
       onStorageFilterChange("all");
     }
   }, [sharingEnabled, storageFilter, onStorageFilterChange]);
   const hasSelection = selectedFileIds.length > 0;
-  const hasOnlyOwnedSelection = selectedFiles.every((file) => file.remoteOwnedByCurrentUser !== false);
+  const hasOnlyOwnedSelection = selectedFiles.every(
+    (file) => file.remoteOwnedByCurrentUser !== false,
+  );
   const hasDownloadAccess = selectedFiles.every((file) => {
-    const role = (file.remoteOwnedByCurrentUser !== false ? "editor" : (file.remoteAccessRole ?? "viewer")).toLowerCase();
+    const role = (
+      file.remoteOwnedByCurrentUser !== false
+        ? "editor"
+        : (file.remoteAccessRole ?? "viewer")
+    ).toLowerCase();
     return role === "editor" || role === "commenter" || role === "viewer";
   });
   const canBulkUpload = uploadEnabled && hasSelection && hasOnlyOwnedSelection;
-  const canBulkShare = shareLinksEnabled && hasSelection && hasOnlyOwnedSelection;
+  const canBulkShare =
+    shareLinksEnabled && hasSelection && hasOnlyOwnedSelection;
 
   const handleSelectAll = () => {
     onSelectAll();
@@ -82,7 +106,8 @@ const FileActions: React.FC = () => {
     return null;
   }
 
-  const allFilesSelected = filteredFiles.length > 0 && selectedFileIds.length === filteredFiles.length;
+  const allFilesSelected =
+    filteredFiles.length > 0 && selectedFileIds.length === filteredFiles.length;
 
   return (
     <div
@@ -99,7 +124,11 @@ const FileActions: React.FC = () => {
       {/* Left: Select All + Filter */}
       <Group gap="xs">
         <Tooltip
-          label={allFilesSelected ? t("fileManager.deselectAll", "Deselect All") : t("fileManager.selectAll", "Select All")}
+          label={
+            allFilesSelected
+              ? t("fileManager.deselectAll", "Deselect All")
+              : t("fileManager.selectAll", "Select All")
+          }
         >
           <ActionIcon
             variant="light"
@@ -116,7 +145,11 @@ const FileActions: React.FC = () => {
           <SegmentedControl
             size="xs"
             value={storageFilter}
-            onChange={(value) => onStorageFilterChange(value as "all" | "local" | "sharedWithMe" | "sharedByMe")}
+            onChange={(value) =>
+              onStorageFilterChange(
+                value as "all" | "local" | "sharedWithMe" | "sharedByMe",
+              )
+            }
             data={storageFilterOptions}
           />
         )}
@@ -132,7 +165,9 @@ const FileActions: React.FC = () => {
       >
         {hasSelection && (
           <Text size="sm" c="dimmed" fw={500}>
-            {t("fileManager.selectedCount", "{{count}} selected", { count: selectedFileIds.length })}
+            {t("fileManager.selectedCount", "{{count}} selected", {
+              count: selectedFileIds.length,
+            })}
           </Text>
         )}
       </div>
