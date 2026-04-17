@@ -20,7 +20,18 @@ export enum AiWorkflowPhase {
   ANALYZING = "analyzing",
   CALLING_ENGINE = "calling_engine",
   EXTRACTING_CONTENT = "extracting_content",
+  EXECUTING_TOOL = "executing_tool",
   PROCESSING = "processing",
+}
+
+export interface AiWorkflowProgress {
+  phase: AiWorkflowPhase;
+  /** Tool endpoint path currently executing, for EXECUTING_TOOL events. */
+  tool?: string;
+  /** 1-based step index, for EXECUTING_TOOL events. */
+  stepIndex?: number;
+  /** Total number of plan steps, for EXECUTING_TOOL events. */
+  stepCount?: number;
 }
 
 type AiWorkflowOutcome =
@@ -52,13 +63,13 @@ interface ChatState {
   messages: ChatMessage[];
   isOpen: boolean;
   isLoading: boolean;
-  progressPhase: AiWorkflowPhase | null;
+  progress: AiWorkflowProgress | null;
 }
 
 type ChatAction =
   | { type: "ADD_MESSAGE"; message: ChatMessage }
   | { type: "SET_LOADING"; loading: boolean }
-  | { type: "SET_PROGRESS"; phase: AiWorkflowPhase | null }
+  | { type: "SET_PROGRESS"; progress: AiWorkflowProgress | null }
   | { type: "TOGGLE_OPEN" }
   | { type: "SET_OPEN"; open: boolean };
 
@@ -69,7 +80,7 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
     case "SET_LOADING":
       return { ...state, isLoading: action.loading };
     case "SET_PROGRESS":
-      return { ...state, progressPhase: action.phase };
+      return { ...state, progress: action.progress };
     case "TOGGLE_OPEN":
       return { ...state, isOpen: !state.isOpen };
     case "SET_OPEN":
@@ -114,10 +125,18 @@ function formatWorkflowResponse(data: AiWorkflowResponse): string {
 /**
  * Parses an SSE text stream and invokes callbacks for each named event.
  */
+interface ProgressEvent {
+  phase: string;
+  timestamp: number;
+  tool?: string;
+  stepIndex?: number;
+  stepCount?: number;
+}
+
 async function consumeSSEStream(
   response: Response,
   handlers: {
-    onProgress: (data: { phase: string; timestamp: number }) => void;
+    onProgress: (data: ProgressEvent) => void;
     onResult: (data: AiWorkflowResponse) => void;
     onError: (data: { message: string }) => void;
   },
@@ -171,7 +190,7 @@ interface ChatContextValue {
   messages: ChatMessage[];
   isOpen: boolean;
   isLoading: boolean;
-  progressPhase: AiWorkflowPhase | null;
+  progress: AiWorkflowProgress | null;
   toggleOpen: () => void;
   setOpen: (open: boolean) => void;
   sendMessage: (content: string) => Promise<void>;
@@ -183,7 +202,7 @@ const initialState: ChatState = {
   messages: [],
   isOpen: false,
   isLoading: false,
-  progressPhase: null,
+  progress: null,
 };
 
 export function ChatProvider({ children }: { children: ReactNode }) {
@@ -212,7 +231,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       };
       dispatch({ type: "ADD_MESSAGE", message: userMessage });
       dispatch({ type: "SET_LOADING", loading: true });
-      dispatch({ type: "SET_PROGRESS", phase: null });
+      dispatch({ type: "SET_PROGRESS", progress: null });
 
       try {
         const formData = new FormData();
@@ -239,12 +258,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           onProgress: (data) => {
             dispatch({
               type: "SET_PROGRESS",
-              phase: data.phase as AiWorkflowPhase,
+              progress: {
+                phase: data.phase as AiWorkflowPhase,
+                tool: data.tool,
+                stepIndex: data.stepIndex,
+                stepCount: data.stepCount,
+              },
             });
           },
           onResult: (data) => {
             receivedResult = true;
-            dispatch({ type: "SET_PROGRESS", phase: null });
+            dispatch({ type: "SET_PROGRESS", progress: null });
             const replyContent = formatWorkflowResponse(data);
             dispatch({
               type: "ADD_MESSAGE",
@@ -258,7 +282,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           },
           onError: (data) => {
             receivedResult = true;
-            dispatch({ type: "SET_PROGRESS", phase: null });
+            dispatch({ type: "SET_PROGRESS", progress: null });
             dispatch({
               type: "ADD_MESSAGE",
               message: {
@@ -276,7 +300,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }
       } catch (e) {
         if ((e as Error).name === "AbortError") return;
-        dispatch({ type: "SET_PROGRESS", phase: null });
+        dispatch({ type: "SET_PROGRESS", progress: null });
         dispatch({
           type: "ADD_MESSAGE",
           message: {
@@ -303,7 +327,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         messages: state.messages,
         isOpen: state.isOpen,
         isLoading: state.isLoading,
-        progressPhase: state.progressPhase,
+        progress: state.progress,
         toggleOpen,
         setOpen,
         sendMessage,

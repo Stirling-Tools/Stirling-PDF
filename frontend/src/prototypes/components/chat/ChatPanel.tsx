@@ -15,8 +15,34 @@ import {
 import SendIcon from "@mui/icons-material/Send";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import CloseIcon from "@mui/icons-material/Close";
-import { useChat } from "@app/components/chat/ChatContext";
+import { useChat, AiWorkflowPhase, type AiWorkflowProgress } from "@app/components/chat/ChatContext";
 import "@app/components/chat/ChatPanel.css";
+
+type TranslateFn = (key: string, options?: Record<string, unknown>) => string;
+
+/** Turn a tool endpoint path (e.g. /api/v1/general/rotate-pdf) into a human label (e.g. Rotate Pdf). */
+function toolLabel(endpoint: string): string {
+  const segment = endpoint.split("/").filter(Boolean).pop() ?? endpoint;
+  return segment
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function formatProgress(progress: AiWorkflowProgress, t: TranslateFn): string {
+  if (progress.phase === AiWorkflowPhase.EXECUTING_TOOL && progress.tool) {
+    const tool = toolLabel(progress.tool);
+    if (progress.stepIndex && progress.stepCount && progress.stepCount > 1) {
+      return t("chat.progress.executing_tool_step", {
+        tool,
+        step: progress.stepIndex,
+        total: progress.stepCount,
+      });
+    }
+    return t("chat.progress.executing_tool_single", { tool });
+  }
+  return t(`chat.progress.${progress.phase}`);
+}
 
 function ChatMessageBubble({
   role,
@@ -42,7 +68,7 @@ export function ChatPanel() {
     messages,
     isOpen,
     isLoading,
-    progressPhase,
+    progress,
     toggleOpen,
     sendMessage,
   } = useChat();
@@ -141,8 +167,7 @@ export function ChatPanel() {
                       <Group gap="xs" wrap="nowrap">
                         <Loader size="xs" type="dots" />
                         <Text size="sm" c="dimmed">
-                          {progressPhase
-                            ? t(`chat.progress.${progressPhase}`)
+                          {progress ? formatProgress(progress, t)
                             : t("chat.progress.thinking")}
                         </Text>
                       </Group>

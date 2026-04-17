@@ -104,8 +104,8 @@ public class AiWorkflowService {
         AiWorkflowResponse response = invokeOrchestrator(request);
         return switch (response.getOutcome()) {
             case NEED_CONTENT -> onNeedContent(response, filesByName, request, listener);
-            case TOOL_CALL -> onToolCall(response, filesByName);
-            case PLAN -> onPlan(response, filesByName);
+            case TOOL_CALL -> onToolCall(response, filesByName, listener);
+            case PLAN -> onPlan(response, filesByName, listener);
             case ANSWER,
                     NOT_FOUND,
                     NEED_CLARIFICATION,
@@ -191,7 +191,9 @@ public class AiWorkflowService {
 
     @SuppressWarnings("unchecked")
     private WorkflowState onToolCall(
-            AiWorkflowResponse response, Map<String, MultipartFile> filesByName) {
+            AiWorkflowResponse response,
+            Map<String, MultipartFile> filesByName,
+            ProgressListener listener) {
         String endpointPath = response.getTool();
         Map<String, Object> parameters = response.getParameters();
         if (endpointPath == null || endpointPath.isBlank()) {
@@ -204,6 +206,7 @@ public class AiWorkflowService {
 
         try {
             List<Resource> inputFiles = toResources(filesByName);
+            listener.onProgress(AiWorkflowProgressEvent.executingTool(endpointPath, 1, 1));
             List<Resource> results = executeStep(endpointPath, parameters, inputFiles);
             return new WorkflowState.Terminal(
                     buildCompletedResponse(response.getRationale(), results));
@@ -216,7 +219,9 @@ public class AiWorkflowService {
 
     @SuppressWarnings("unchecked")
     private WorkflowState onPlan(
-            AiWorkflowResponse response, Map<String, MultipartFile> filesByName) {
+            AiWorkflowResponse response,
+            Map<String, MultipartFile> filesByName,
+            ProgressListener listener) {
         List<Map<String, Object>> steps = response.getSteps();
         if (steps == null || steps.isEmpty()) {
             return new WorkflowState.Terminal(
@@ -239,6 +244,8 @@ public class AiWorkflowService {
                             cannotContinue("Plan step " + (i + 1) + " has no tool endpoint."));
                 }
 
+                listener.onProgress(
+                        AiWorkflowProgressEvent.executingTool(endpointPath, i + 1, steps.size()));
                 currentFiles = executeStep(endpointPath, parameters, currentFiles);
             }
 
