@@ -1,0 +1,128 @@
+name: Publish to AUR
+
+on:
+  release:
+    types: [released]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (e.g. 2.9.2 — no v prefix)"
+        required: true
+        type: string
+      dry_run:
+        description: "Skip the AUR push (safe test)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  get-release-info:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.info.outputs.version }}
+      deb_sha256: ${{ steps.hashes.outputs.deb_sha256 }}
+      jar_sha256: ${{ steps.hashes.outputs.jar_sha256 }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
+        with:
+          egress-policy: audit
+
+      - name: Extract version from tag or manual input
+        id: info
+        env:
+          DISPATCH_VERSION: ${{ inputs.version }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="$DISPATCH_VERSION"
+          else
+            VERSION="$RELEASE_TAG"
+          fi
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Download release assets and compute SHA256
+        id: hashes
+        env:
+          VERSION: ${{ steps.info.outputs.version }}
+        run: |
+          BASE="https://github.com/Stirling-Tools/Stirling-PDF/releases/download/v${VERSION}"
+
+          download_sha256() {
+            local url="$1"
+            local file
+            file=$(basename "$url")
+            curl -fsSL --retry 3 -o "$file" "$url"
+            sha256sum "$file" | awk '{print $1}'
+          }
+
+          DEB_SHA=$(download_sha256 "${BASE}/Stirling-PDF-linux-x86_64.deb")
+          JAR_SHA=$(download_sha256 "${BASE}/Stirling-PDF-with-login.jar")
+
+          echo "deb_sha256=$DEB_SHA" >> "$GITHUB_OUTPUT"
+          echo "jar_sha256=$JAR_SHA" >> "$GITHUB_OUTPUT"
+
+  publish-aur:
+    needs: get-release-info
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository (for PKGBUILD templates)
+        uses: actions/checkout@v4
+
+      - name: Update stirling-pdf-bin PKGBUILD
+        env:
+          VERSION: ${{ needs.get-release-info.outputs.version }}
+          DEB_SHA: ${{ needs.get-release-info.outputs.deb_sha256 }}
+        run: |
+          PKGBUILD=".github/aur/stirling-pdf-bin/PKGBUILD"
+          sed -i "s/^pkgver=.*/pkgver=${VERSION}/" "$PKGBUILD"
+          sed -i "s/^pkgrel=.*/pkgrel=1/" "$PKGBUILD"
+          sed -i "s/'PLACEHOLDER_DEB_SHA256'/'${DEB_SHA}'/" "$PKGBUILD"
+
+      - name: Update stirling-pdf-server-bin PKGBUILD
+        env:
+          VERSION: ${{ needs.get-release-info.outputs.version }}
+          JAR_SHA: ${{ needs.get-release-info.outputs.jar_sha256 }}
+        run: |
+          PKGBUILD=".github/aur/stirling-pdf-server-bin/PKGBUILD"
+          sed -i "s/^pkgver=.*/pkgver=${VERSION}/" "$PKGBUILD"
+          sed -i "s/^pkgrel=.*/pkgrel=1/" "$PKGBUILD"
+          sed -i "s/'PLACEHOLDER_JAR_SHA256'/'${JAR_SHA}'/" "$PKGBUILD"
+
+      - name: Show updated PKGBUILDs (for dry-run visibility)
+        run: |
+          echo "--- stirling-pdf-bin PKGBUILD ---"
+          cat .github/aur/stirling-pdf-bin/PKGBUILD
+          echo ""
+          echo "--- stirling-pdf-server-bin PKGBUILD ---"
+          cat .github/aur/stirling-pdf-server-bin/PKGBUILD
+
+      - name: Publish stirling-pdf-bin to AUR
+        if: ${{ github.event_name == 'release' || inputs.dry_run == false }}
+        uses: KSXGitHub/github-actions-deploy-aur@2ac5a4c1d7035885d46b10e3193393be8460b6f1 # v4.1.1
+        with:
+          pkgname: stirling-pdf-bin
+          pkgbuild: .github/aur/stirling-pdf-bin/PKGBUILD
+          commit_username: Stirling PDF Inc
+          commit_email: contact@stirlingpdf.com
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: "Update to v${{ needs.get-release-info.outputs.version }}"
+
+      - name: Publish stirling-pdf-server-bin to AUR
+        if: ${{ github.event_name == 'release' || inputs.dry_run == false }}
+        uses: KSXGitHub/github-actions-deploy-aur@v4.1.1
+        with:
+          pkgname: stirling-pdf-server-bin
+          pkgbuild: .github/aur/stirling-pdf-server-bin/PKGBUILD
+          commit_username: Stirling PDF Inc
+          commit_email: contact@stirlingpdf.com
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: "Update to v${{ needs.get-release-info.outputs.version }}"
