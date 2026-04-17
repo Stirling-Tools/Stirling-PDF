@@ -9,6 +9,8 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -392,6 +394,75 @@ class ApiDocServiceTest {
     void isZipOutputReturnsFalseForUnknownOperation() throws Exception {
         setApiDocumentation(Map.of());
         assertFalse(apiDocService.isZipOutput("/unknown"));
+    }
+
+    /**
+     * Coverage test: every Stirling endpoint that returns a ZIP response (via {@code
+     * WebResponseUtils.zipFileToWebResponse} or equivalent) must be classified as {@code
+     * isZipOutput = true} by {@link ApiDocService}. The descriptions below are the real
+     * {@code @Operation(description=...)} strings from each controller, so if a controller is
+     * renamed, tweaked or introduced without a {@code Type:} / {@code Output:ZIP} tag, this test
+     * breaks — surfacing the bug before {@code AiWorkflowService} silently registers a ZIP as a
+     * single PDF.
+     *
+     * <p>Add a new row here whenever a new ZIP-returning endpoint is introduced. Descriptions can
+     * be trimmed to the part containing the relevant tags.
+     */
+    @ParameterizedTest(name = "{0} → isZipOutput")
+    @CsvSource(
+            textBlock =
+                    """
+                    /api/v1/general/split-pages,              'Split pages. Input:PDF Output:PDF Type:SIMO'
+                    /api/v1/general/split-pdf-by-sections,    'Split. Input:PDF Output:ZIP-PDF Type:SISO'
+                    /api/v1/general/split-by-size-or-count,   'Split by size. Input:PDF Output:ZIP-PDF Type:SISO'
+                    /api/v1/general/split-pdf-by-chapters,    'Split by chapters. Input:PDF Output:ZIP-PDF Type:SISO'
+                    /api/v1/general/split-for-poster-print,   'Poster split. Input: PDF Output: ZIP-PDF Type: SISO'
+                    /api/v1/general/overlay-pdfs,             'Overlay PDFs. Input:PDF Output:PDF Type:MIMO'
+                    /api/v1/misc/auto-split-pdf,              'Auto split. Input:PDF Output:ZIP-PDF Type:SISO'
+                    /api/v1/misc/extract-images,              'Extract images. Output:IMAGE/ZIP Type:SIMO'
+                    /api/v1/misc/extract-image-scans,         'Extract image scans. Input:PDF Output:IMAGE/ZIP Type:SIMO'
+                    /api/v1/security/get-attachments,         'Extract attachments. Input:PDF Output:ZIP Type:SISO'
+                    """)
+    void isZipOutputClassifiesKnownZipEndpoints(String endpoint, String description)
+            throws Exception {
+        String json = mapper.writeValueAsString(Map.of("description", description));
+        JsonNode postNode = mapper.readTree(json);
+        setApiDocumentation(Map.of(endpoint, new ApiEndpoint(endpoint, postNode)));
+        setApiDocsJsonRootNode();
+        assertTrue(
+                apiDocService.isZipOutput(endpoint),
+                () ->
+                        "Expected isZipOutput=true for "
+                                + endpoint
+                                + " with description: "
+                                + description);
+    }
+
+    /**
+     * Inverse coverage: a sample of PDF-returning endpoints must not be classified as ZIP. Catches
+     * regressions where a change to the classifier accidentally widens the positive match.
+     */
+    @ParameterizedTest(name = "{0} → !isZipOutput")
+    @CsvSource(
+            textBlock =
+                    """
+                    /api/v1/general/rotate-pdf,    'Rotate. Input:PDF Output:PDF Type:SISO'
+                    /api/v1/general/merge-pdfs,    'Merge. Input:PDF Output:PDF Type:MISO'
+                    /api/v1/misc/compress-pdf,     'Compress. Input:PDF Output:PDF Type:SISO'
+                    /api/v1/misc/flatten,          'Flatten forms. Input:PDF Output:PDF Type:SISO'
+                    """)
+    void isZipOutputRejectsNonZipEndpoints(String endpoint, String description) throws Exception {
+        String json = mapper.writeValueAsString(Map.of("description", description));
+        JsonNode postNode = mapper.readTree(json);
+        setApiDocumentation(Map.of(endpoint, new ApiEndpoint(endpoint, postNode)));
+        setApiDocsJsonRootNode();
+        assertFalse(
+                apiDocService.isZipOutput(endpoint),
+                () ->
+                        "Expected isZipOutput=false for "
+                                + endpoint
+                                + " with description: "
+                                + description);
     }
 
     @Test

@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -51,6 +52,14 @@ public class AiEngineController {
     private final Executor aiStreamExecutor;
     private final TaskManager taskManager;
 
+    /**
+     * SSE emitter timeout. Long enough to accommodate multi-gigabyte PDF workflows (OCR on a
+     * 1000-page scan, splitting a huge PDF, etc.) without the emitter completing out from under the
+     * executor. Configurable via {@code stirling.ai.streamTimeoutMs}.
+     */
+    @Value("${stirling.ai.streamTimeoutMs:1800000}")
+    private long streamTimeoutMs;
+
     public AiEngineController(
             AiEngineClient aiEngineClient,
             AiWorkflowService aiWorkflowService,
@@ -94,11 +103,23 @@ public class AiEngineController {
                     "Accepts a PDF upload and a user message, returns SSE events with progress"
                             + " updates followed by the final AI workflow result")
     public SseEmitter orchestrateStream(@Valid @ModelAttribute AiWorkflowRequest request) {
-        SseEmitter emitter = new SseEmitter(180_000L);
+        SseEmitter emitter = new SseEmitter(streamTimeoutMs);
 
         emitter.onTimeout(
                 () -> {
-                    log.warn("SSE emitter timed out for AI orchestration stream");
+                    // Emit an explicit error frame so the frontend reports a timeout rather than
+                    // silently seeing the stream end without a result.
+                    log.warn(
+                            "SSE emitter timed out for AI orchestration stream after {} ms",
+                            streamTimeoutMs);
+                    sendEvent(
+                            emitter,
+                            "error",
+                            Map.of(
+                                    "message",
+                                    "AI workflow timed out after "
+                                            + (streamTimeoutMs / 1000)
+                                            + " seconds"));
                     emitter.complete();
                 });
         emitter.onError(e -> log.warn("SSE emitter error for AI orchestration stream", e));
@@ -118,8 +139,11 @@ public class AiEngineController {
             emitter.complete();
         } catch (Exception e) {
             log.error("AI orchestration stream failed", e);
+            // Emit an error frame for the frontend and then complete normally. Using
+            // completeWithError here as well would double-complete the emitter - the error
+            // frame already conveys the failure to the client.
             sendEvent(emitter, "error", Map.of("message", e.getMessage()));
-            emitter.completeWithError(e);
+            emitter.complete();
         }
     }
 
