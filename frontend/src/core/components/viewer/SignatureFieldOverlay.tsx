@@ -42,13 +42,18 @@ let _cachedSource: File | Blob | null = null;
 let _cachedFields: ResolvedSignatureField[] = [];
 let _cachePromise: Promise<ResolvedSignatureField[]> | null = null;
 
-async function resolveFields(source: File | Blob): Promise<ResolvedSignatureField[]> {
+async function resolveFields(
+  source: File | Blob,
+): Promise<ResolvedSignatureField[]> {
   if (source === _cachedSource && _cachePromise) return _cachePromise;
   _cachedSource = source;
 
   _cachePromise = (async () => {
     const buf = await source.arrayBuffer();
-    const [appearances, signatures] = await Promise.all([renderSignatureFieldAppearances(buf), extractSignatures(buf)]);
+    const [appearances, signatures] = await Promise.all([
+      renderSignatureFieldAppearances(buf),
+      extractSignatures(buf),
+    ]);
 
     return appearances.map((f, i) => {
       // Positional correlation is only reliable when both arrays have the same
@@ -129,7 +134,10 @@ function SignatureFieldOverlayInner({
     };
   }, [pdfSource]);
 
-  const pageFields = useMemo(() => fields.filter((f) => f.pageIndex === pageIndex), [fields, pageIndex]);
+  const pageFields = useMemo(
+    () => fields.filter((f) => f.pageIndex === pageIndex),
+    [fields, pageIndex],
+  );
 
   if (pageFields.length === 0) return null;
 
@@ -150,8 +158,10 @@ function SignatureFieldOverlayInner({
         // Use the source PDF page dimensions that the extraction used for
         // coordinate computation. This avoids mismatches with pdfPage.size
         // from EmbedPDF which may report different dimensions.
-        const sx = field.sourcePageWidth > 0 ? pageWidth / field.sourcePageWidth : 1;
-        const sy = field.sourcePageHeight > 0 ? pageHeight / field.sourcePageHeight : 1;
+        const sx =
+          field.sourcePageWidth > 0 ? pageWidth / field.sourcePageWidth : 1;
+        const sy =
+          field.sourcePageHeight > 0 ? pageHeight / field.sourcePageHeight : 1;
         const left = field.x * sx;
         const top = field.y * sy;
         const width = field.width * sx;
@@ -178,7 +188,11 @@ function SignatureFieldOverlayInner({
                   : `Signature field: ${field.fieldName}`
               }
             >
-              <SignatureBitmapCanvas imageData={field.imageData} cssWidth={width} cssHeight={height} />
+              <SignatureBitmapCanvas
+                imageData={field.imageData}
+                cssWidth={width}
+                cssHeight={height}
+              />
             </div>
           );
         }
@@ -193,9 +207,13 @@ function SignatureFieldOverlayInner({
               top,
               width,
               height,
-              border: field.isSigned ? "2px solid rgba(34, 139, 34, 0.7)" : "2px dashed rgba(180, 180, 180, 0.7)",
+              border: field.isSigned
+                ? "2px solid rgba(34, 139, 34, 0.7)"
+                : "2px dashed rgba(180, 180, 180, 0.7)",
               borderRadius: 4,
-              background: field.isSigned ? "rgba(34, 139, 34, 0.08)" : "rgba(200, 200, 200, 0.08)",
+              background: field.isSigned
+                ? "rgba(34, 139, 34, 0.08)"
+                : "rgba(200, 200, 200, 0.08)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -212,7 +230,9 @@ function SignatureFieldOverlayInner({
             <span
               style={{
                 fontSize: Math.min(height * 0.35, 14),
-                color: field.isSigned ? "rgba(34, 139, 34, 0.85)" : "rgba(120, 120, 120, 0.85)",
+                color: field.isSigned
+                  ? "rgba(34, 139, 34, 0.85)"
+                  : "rgba(120, 120, 120, 0.85)",
                 fontWeight: 600,
                 textAlign: "center",
                 lineHeight: 1.2,

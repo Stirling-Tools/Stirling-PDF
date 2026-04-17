@@ -41,7 +41,8 @@ export function useToursTooltip(): ToursTooltipState {
     };
 
     window.addEventListener(TOUR_STATE_EVENT, handleTourStateChange);
-    return () => window.removeEventListener(TOUR_STATE_EVENT, handleTourStateChange);
+    return () =>
+      window.removeEventListener(TOUR_STATE_EVENT, handleTourStateChange);
   }, []);
 
   // Show once after onboarding is complete
@@ -71,7 +72,11 @@ export function useToursTooltip(): ToursTooltipState {
     [hasBeenDismissed, toursMenuOpen, handleDismissToursTooltip],
   );
 
-  const tooltipOpen = toursMenuOpen ? false : hasBeenDismissed ? undefined : showToursTooltip;
+  const tooltipOpen = toursMenuOpen
+    ? false
+    : hasBeenDismissed
+      ? undefined
+      : showToursTooltip;
 
   return {
     tooltipOpen,

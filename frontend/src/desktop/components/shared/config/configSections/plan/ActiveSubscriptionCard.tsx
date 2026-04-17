@@ -1,4 +1,12 @@
-import { Card, Text, Group, Badge, Stack, Tooltip, ActionIcon } from "@mantine/core";
+import {
+  Card,
+  Text,
+  Group,
+  Badge,
+  Stack,
+  Tooltip,
+  ActionIcon,
+} from "@mantine/core";
 import GroupIcon from "@mui/icons-material/Group";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { useTranslation } from "react-i18next";
@@ -78,7 +86,10 @@ export function ActiveSubscriptionCard({
   // Get description
   const getDescription = (): string => {
     if (tier === "free") {
-      return t("settings.planBilling.tier.freeDescription", "50 credits per month");
+      return t(
+        "settings.planBilling.tier.freeDescription",
+        "50 credits per month",
+      );
     }
     return t(
       "settings.planBilling.tier.teamDescription",
@@ -105,10 +116,16 @@ export function ActiveSubscriptionCard({
             <div style={{ flex: 1 }}>
               <Group gap="xs" mb="xs">
                 <Text size="lg" fw={600}>
-                  {!isPersonalTeam && isTeamLeader ? t("settings.planBilling.tier.team", "Team Plan") : getTierName()}
+                  {!isPersonalTeam && isTeamLeader
+                    ? t("settings.planBilling.tier.team", "Team Plan")
+                    : getTierName()}
                 </Text>
                 {!isPersonalTeam && (
-                  <Badge color="violet" variant="light" leftSection={<GroupIcon sx={{ fontSize: 12 }} />}>
+                  <Badge
+                    color="violet"
+                    variant="light"
+                    leftSection={<GroupIcon sx={{ fontSize: 12 }} />}
+                  >
                     {t("settings.planBilling.tier.teamBadge", "Team")}
                   </Badge>
                 )}
@@ -152,12 +169,19 @@ export function ActiveSubscriptionCard({
               </Group>
               {!isPersonalTeam && !isTeamLeader && (
                 <Text size="sm" c="dimmed" mb="xs">
-                  {t("settings.planBilling.team.managedByTeam", "Managed by team")}
+                  {t(
+                    "settings.planBilling.team.managedByTeam",
+                    "Managed by team",
+                  )}
                 </Text>
               )}
               {!isPersonalTeam && isTeamLeader && currentTeam && (
                 <Text size="sm" c="dimmed" mb="xs">
-                  {t("settings.planBilling.team.memberCount", "{{count}} team members", { count: currentTeam.seatsUsed })}
+                  {t(
+                    "settings.planBilling.team.memberCount",
+                    "{{count}} team members",
+                    { count: currentTeam.seatsUsed },
+                  )}
                 </Text>
               )}
               <Text size="sm" c="dimmed" mb="xs">
@@ -166,7 +190,10 @@ export function ActiveSubscriptionCard({
               {/* Show overage cost if applicable */}
               {usage && usage.currentPeriodCredits > 0 && (
                 <Text size="sm" c="orange" fw={500}>
-                  {formatOverageCost(usage.estimatedCost, usage.currentPeriodCredits)}
+                  {formatOverageCost(
+                    usage.estimatedCost,
+                    usage.currentPeriodCredits,
+                  )}
                 </Text>
               )}
             </div>
@@ -175,7 +202,10 @@ export function ActiveSubscriptionCard({
             <div style={{ textAlign: "right" }}>
               {!isPersonalTeam && !isTeamLeader ? (
                 <Text size="lg" c="dimmed">
-                  {t("settings.planBilling.team.managedByTeam", "Managed by team")}
+                  {t(
+                    "settings.planBilling.team.managedByTeam",
+                    "Managed by team",
+                  )}
                 </Text>
               ) : (
                 <Text size="xl" fw={700}>
@@ -189,7 +219,10 @@ export function ActiveSubscriptionCard({
           {subscription?.currentPeriodEnd && (
             <Group gap="xs" mt="xs">
               <Text size="sm" c="dimmed">
-                {t("settings.planBilling.billing.nextBillingDate", "Next billing date:")}{" "}
+                {t(
+                  "settings.planBilling.billing.nextBillingDate",
+                  "Next billing date:",
+                )}{" "}
                 {formatDate(subscription.currentPeriodEnd)}
               </Text>
             </Group>

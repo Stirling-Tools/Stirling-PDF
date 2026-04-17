@@ -14,9 +14,16 @@ interface AnimatedSlideBackgroundComponentProps extends AnimatedSlideBackgroundP
   slideKey: string;
 }
 
-export default function AnimatedSlideBackground({ gradientStops, circles, isActive }: AnimatedSlideBackgroundComponentProps) {
-  const [prevGradient, setPrevGradient] = React.useState<[string, string] | null>(null);
-  const [currentGradient, setCurrentGradient] = React.useState<[string, string]>(gradientStops);
+export default function AnimatedSlideBackground({
+  gradientStops,
+  circles,
+  isActive,
+}: AnimatedSlideBackgroundComponentProps) {
+  const [prevGradient, setPrevGradient] = React.useState<
+    [string, string] | null
+  >(null);
+  const [currentGradient, setCurrentGradient] =
+    React.useState<[string, string]>(gradientStops);
   const [isTransitioning, setIsTransitioning] = React.useState(false);
   const isFirstMount = React.useRef(true);
 
@@ -29,7 +36,10 @@ export default function AnimatedSlideBackground({ gradientStops, circles, isActi
     }
 
     // Only transition if gradient actually changed
-    if (currentGradient[0] !== gradientStops[0] || currentGradient[1] !== gradientStops[1]) {
+    if (
+      currentGradient[0] !== gradientStops[0] ||
+      currentGradient[1] !== gradientStops[1]
+    ) {
       // Store previous gradient and start transition
       setPrevGradient(currentGradient);
       setIsTransitioning(true);
@@ -69,10 +79,20 @@ export default function AnimatedSlideBackground({ gradientStops, circles, isActi
         style={currentGradientStyle}
       />
       {circles.map((circle, index) => {
-        const { position, size, color, opacity, blur, amplitude = 48, duration = 15, delay = 0 } = circle;
+        const {
+          position,
+          size,
+          color,
+          opacity,
+          blur,
+          amplitude = 48,
+          duration = 15,
+          delay = 0,
+        } = circle;
 
         const moveX = position === "bottom-left" ? amplitude : -amplitude;
-        const moveY = position === "bottom-left" ? -amplitude * 0.6 : amplitude * 0.6;
+        const moveY =
+          position === "bottom-left" ? -amplitude * 0.6 : amplitude * 0.6;
 
         const circleStyle: CircleStyles = {
           width: size,
@@ -98,7 +118,13 @@ export default function AnimatedSlideBackground({ gradientStops, circles, isActi
           circleStyle.top = `${defaultOffset + offsetY}px`;
         }
 
-        return <div key={`circle-${index}-${position}`} className={styles.circle} style={circleStyle} />;
+        return (
+          <div
+            key={`circle-${index}-${position}`}
+            className={styles.circle}
+            style={circleStyle}
+          />
+        );
       })}
     </div>
   );

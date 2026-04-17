@@ -5,11 +5,18 @@ import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface ReplaceColorSettingsProps {
   parameters: ReplaceColorParameters;
-  onParameterChange: <K extends keyof ReplaceColorParameters>(key: K, value: ReplaceColorParameters[K]) => void;
+  onParameterChange: <K extends keyof ReplaceColorParameters>(
+    key: K,
+    value: ReplaceColorParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const ReplaceColorSettings = ({ parameters, onParameterChange, disabled = false }: ReplaceColorSettingsProps) => {
+const ReplaceColorSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: ReplaceColorSettingsProps) => {
   const { t } = useTranslation();
 
   const replaceAndInvertOptions = [
@@ -59,11 +66,18 @@ const ReplaceColorSettings = ({ parameters, onParameterChange, disabled = false 
         <Select
           value={parameters.replaceAndInvertOption}
           onChange={(value) =>
-            value && onParameterChange("replaceAndInvertOption", value as ReplaceColorParameters["replaceAndInvertOption"])
+            value &&
+            onParameterChange(
+              "replaceAndInvertOption",
+              value as ReplaceColorParameters["replaceAndInvertOption"],
+            )
           }
           data={replaceAndInvertOptions}
           disabled={disabled}
-          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+          comboboxProps={{
+            withinPortal: true,
+            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+          }}
         />
       </Stack>
 
@@ -83,7 +97,10 @@ const ReplaceColorSettings = ({ parameters, onParameterChange, disabled = false 
             }
             data={highContrastOptions}
             disabled={disabled}
-            comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+            comboboxProps={{
+              withinPortal: true,
+              zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+            }}
           />
         </Stack>
       )}
@@ -99,7 +116,10 @@ const ReplaceColorSettings = ({ parameters, onParameterChange, disabled = false 
               onChange={(value) => onParameterChange("textColor", value)}
               format="hex"
               disabled={disabled}
-              popoverProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+              popoverProps={{
+                withinPortal: true,
+                zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+              }}
             />
           </Stack>
 
@@ -112,7 +132,10 @@ const ReplaceColorSettings = ({ parameters, onParameterChange, disabled = false 
               onChange={(value) => onParameterChange("backGroundColor", value)}
               format="hex"
               disabled={disabled}
-              popoverProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+              popoverProps={{
+                withinPortal: true,
+                zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+              }}
             />
           </Stack>
         </>

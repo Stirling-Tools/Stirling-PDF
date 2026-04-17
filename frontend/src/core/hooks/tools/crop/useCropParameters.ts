@@ -1,5 +1,8 @@
 import { BaseParameters } from "@app/types/parameters";
-import { useBaseParameters, BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
+import {
+  useBaseParameters,
+  BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
 import { useCallback } from "react";
 import {
   Rectangle,
@@ -33,7 +36,10 @@ export type CropParametersHook = BaseParametersHook<CropParameters> & {
   /** Check if crop area covers the entire PDF */
   isFullPDFCrop: (pdfBounds?: PDFBounds) => boolean;
   /** Update crop area with constraints applied */
-  updateCropAreaConstrained: (cropArea: Partial<Rectangle>, pdfBounds?: PDFBounds) => void;
+  updateCropAreaConstrained: (
+    cropArea: Partial<Rectangle>,
+    pdfBounds?: PDFBounds,
+  ) => void;
 };
 
 export const useCropParameters = (): CropParametersHook => {
@@ -81,7 +87,12 @@ export const useCropParameters = (): CropParametersHook => {
       const cropArea = getCropArea();
 
       // Basic validation
-      if (cropArea.x < 0 || cropArea.y < 0 || cropArea.width <= 0 || cropArea.height <= 0) {
+      if (
+        cropArea.x < 0 ||
+        cropArea.y < 0 ||
+        cropArea.width <= 0 ||
+        cropArea.height <= 0
+      ) {
         return false;
       }
 
@@ -137,7 +148,10 @@ export const useCropParameters = (): CropParametersHook => {
 
   // Override updateParameter to ensure positive values
   const updateParameter = useCallback(
-    <K extends keyof CropParameters>(parameter: K, value: CropParameters[K]) => {
+    <K extends keyof CropParameters>(
+      parameter: K,
+      value: CropParameters[K],
+    ) => {
       if (isRectangle(value)) {
         value.x = Math.max(0.1, value.x); // Minimum 0.1 point
         value.x = Math.max(0.1, value.y); // Minimum 0.1 point

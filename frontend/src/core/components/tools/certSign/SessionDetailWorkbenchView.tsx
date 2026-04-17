@@ -1,6 +1,16 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Stack, Paper, Text, Group, Badge, Button, Divider, Modal, SegmentedControl } from "@mantine/core";
+import {
+  Stack,
+  Paper,
+  Text,
+  Group,
+  Badge,
+  Button,
+  Divider,
+  Modal,
+  SegmentedControl,
+} from "@mantine/core";
 import { useIsPhone } from "@app/hooks/useIsMobile";
 import { alert } from "@app/components/toast";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -25,7 +35,10 @@ export interface SessionDetailWorkbenchData {
   pdfFile: File | null;
   onFinalize: () => Promise<void>;
   onLoadSignedPdf: () => Promise<void>;
-  onAddParticipants: (userIds: number[], defaultReason?: string) => Promise<void>;
+  onAddParticipants: (
+    userIds: number[],
+    defaultReason?: string,
+  ) => Promise<void>;
   onRemoveParticipant: (participantId: number) => Promise<void>;
   onDelete: () => Promise<void>;
   onBack: () => void;
@@ -36,10 +49,14 @@ interface SessionDetailWorkbenchViewProps {
   data: SessionDetailWorkbenchData;
 }
 
-const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) => {
+const SessionDetailWorkbenchView = ({
+  data,
+}: SessionDetailWorkbenchViewProps) => {
   const { t } = useTranslation();
   const isPhone = useIsPhone();
-  const [mobilePanel, setMobilePanel] = useState<"participants" | "pdf" | "actions">("pdf");
+  const [mobilePanel, setMobilePanel] = useState<
+    "participants" | "pdf" | "actions"
+  >("pdf");
   const {
     session,
     pdfFile,
@@ -56,7 +73,8 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
   const annotationApiRef = useRef<AnnotationAPI | null>(null);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [addParticipantsModalOpen, setAddParticipantsModalOpen] = useState(false);
+  const [addParticipantsModalOpen, setAddParticipantsModalOpen] =
+    useState(false);
   const [finalizing, setFinalizing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [loadingPdf, setLoadingPdf] = useState(false);
@@ -71,19 +89,28 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
     }
   }, [session.finalized, onRefresh]);
 
-  const handleAddParticipants = async (userIds: number[], defaultReason?: string) => {
+  const handleAddParticipants = async (
+    userIds: number[],
+    defaultReason?: string,
+  ) => {
     try {
       await onAddParticipants(userIds, defaultReason);
       alert({
         alertType: "success",
         title: t("success"),
-        body: t("certSign.collab.sessionDetail.participantsAdded", "Participants added successfully"),
+        body: t(
+          "certSign.collab.sessionDetail.participantsAdded",
+          "Participants added successfully",
+        ),
       });
     } catch (_error) {
       alert({
         alertType: "error",
         title: t("common.error"),
-        body: t("certSign.collab.sessionDetail.addParticipantsError", "Failed to add participants"),
+        body: t(
+          "certSign.collab.sessionDetail.addParticipantsError",
+          "Failed to add participants",
+        ),
       });
       throw _error; // Re-throw so modal can handle loading state
     }
@@ -95,13 +122,19 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
       alert({
         alertType: "success",
         title: t("success"),
-        body: t("certSign.collab.sessionDetail.participantRemoved", "Participant removed"),
+        body: t(
+          "certSign.collab.sessionDetail.participantRemoved",
+          "Participant removed",
+        ),
       });
     } catch (_error) {
       alert({
         alertType: "error",
         title: t("common.error"),
-        body: t("certSign.collab.sessionDetail.removeParticipantError", "Failed to remove participant"),
+        body: t(
+          "certSign.collab.sessionDetail.removeParticipantError",
+          "Failed to remove participant",
+        ),
       });
     }
   };
@@ -114,7 +147,10 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
       alert({
         alertType: "error",
         title: t("common.error"),
-        body: t("certSign.collab.sessionDetail.finalizeError", "Failed to finalize session"),
+        body: t(
+          "certSign.collab.sessionDetail.finalizeError",
+          "Failed to finalize session",
+        ),
       });
     } finally {
       setFinalizing(false);
@@ -135,7 +171,10 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
       alert({
         alertType: "error",
         title: t("common.error"),
-        body: t("certSign.collab.sessionDetail.deleteError", "Failed to delete session"),
+        body: t(
+          "certSign.collab.sessionDetail.deleteError",
+          "Failed to delete session",
+        ),
       });
       setDeleting(false);
     }
@@ -149,7 +188,10 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
       alert({
         alertType: "error",
         title: t("common.error"),
-        body: t("certSign.collab.sessionDetail.loadPdfError", "Failed to load signed PDF"),
+        body: t(
+          "certSign.collab.sessionDetail.loadPdfError",
+          "Failed to load signed PDF",
+        ),
       });
     } finally {
       setLoadingPdf(false);
@@ -185,13 +227,32 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
   }, [session.participants]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        overflow: "hidden",
+      }}
+    >
       {/* Top Control Bar */}
-      <Paper p="sm" shadow="sm" style={{ flexShrink: 0, zIndex: Z_INDEX_FULLSCREEN_SURFACE }}>
+      <Paper
+        p="sm"
+        shadow="sm"
+        style={{ flexShrink: 0, zIndex: Z_INDEX_FULLSCREEN_SURFACE }}
+      >
         <Group justify="space-between">
           <Group gap="md">
-            <Button leftSection={<ArrowBackIcon />} variant="subtle" onClick={onBack} size="sm">
-              {t("certSign.collab.sessionDetail.backToList", "Back to Sessions")}
+            <Button
+              leftSection={<ArrowBackIcon />}
+              variant="subtle"
+              onClick={onBack}
+              size="sm"
+            >
+              {t(
+                "certSign.collab.sessionDetail.backToList",
+                "Back to Sessions",
+              )}
             </Button>
             <Divider orientation="vertical" />
             <Stack gap={2}>
@@ -204,7 +265,11 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
                 >
                   {session.documentName}
                 </Text>
-                <Badge size="sm" color={session.finalized ? "green" : "blue"} variant="light">
+                <Badge
+                  size="sm"
+                  color={session.finalized ? "green" : "blue"}
+                  variant="light"
+                >
                   {session.finalized
                     ? t("certSign.collab.sessionList.finalized", "Finalized")
                     : t("certSign.collab.sessionList.active", "Active")}
@@ -212,7 +277,8 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
               </Group>
               {!isPhone && (
                 <Text size="xs" c="dimmed">
-                  {session.ownerEmail && `${t("certSign.collab.sessionDetail.owner", "Owner")}: ${session.ownerEmail}`}
+                  {session.ownerEmail &&
+                    `${t("certSign.collab.sessionDetail.owner", "Owner")}: ${session.ownerEmail}`}
                   {session.ownerEmail && " • "}
                   {new Date(session.createdAt).toLocaleDateString()}
                 </Text>
@@ -260,7 +326,10 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
                 onClick={() => setDeleteModalOpen(true)}
                 size="sm"
               >
-                {t("certSign.collab.sessionDetail.deleteSession", "Delete Session")}
+                {t(
+                  "certSign.collab.sessionDetail.deleteSession",
+                  "Delete Session",
+                )}
               </Button>
             )}
           </Group>
@@ -381,15 +450,30 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
 
       {/* Phone bottom navigation */}
       {isPhone && (
-        <Paper shadow="sm" style={{ flexShrink: 0, borderTop: "1px solid var(--mantine-color-gray-3)" }}>
+        <Paper
+          shadow="sm"
+          style={{
+            flexShrink: 0,
+            borderTop: "1px solid var(--mantine-color-gray-3)",
+          }}
+        >
           <SegmentedControl
             fullWidth
             value={mobilePanel}
             onChange={(v) => setMobilePanel(v as typeof mobilePanel)}
             data={[
-              { value: "participants", label: t("certSign.mobile.panelPeople", "People") },
-              { value: "pdf", label: t("certSign.mobile.panelDocument", "Document") },
-              { value: "actions", label: t("certSign.mobile.panelActions", "Actions") },
+              {
+                value: "participants",
+                label: t("certSign.mobile.panelPeople", "People"),
+              },
+              {
+                value: "pdf",
+                label: t("certSign.mobile.panelDocument", "Document"),
+              },
+              {
+                value: "actions",
+                label: t("certSign.mobile.panelActions", "Actions"),
+              },
             ]}
           />
         </Paper>
@@ -406,10 +490,18 @@ const SessionDetailWorkbenchView = ({ data }: SessionDetailWorkbenchViewProps) =
       <Modal
         opened={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        title={t("certSign.collab.sessionDetail.deleteSession", "Delete Session")}
+        title={t(
+          "certSign.collab.sessionDetail.deleteSession",
+          "Delete Session",
+        )}
       >
         <Stack gap="md">
-          <Text>{t("certSign.collab.sessionDetail.deleteConfirm", "Are you sure? This cannot be undone.")}</Text>
+          <Text>
+            {t(
+              "certSign.collab.sessionDetail.deleteConfirm",
+              "Are you sure? This cannot be undone.",
+            )}
+          </Text>
           <Group justify="flex-end">
             <Button variant="subtle" onClick={() => setDeleteModalOpen(false)}>
               {t("cancel", "Cancel")}

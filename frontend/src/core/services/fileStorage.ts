@@ -5,8 +5,15 @@
  */
 
 import { FileId, BaseFileMetadata } from "@app/types/file";
-import { StirlingFile, StirlingFileStub, createStirlingFile } from "@app/types/fileContext";
-import { indexedDBManager, DATABASE_CONFIGS } from "@app/services/indexedDBManager";
+import {
+  StirlingFile,
+  StirlingFileStub,
+  createStirlingFile,
+} from "@app/types/fileContext";
+import {
+  indexedDBManager,
+  DATABASE_CONFIGS,
+} from "@app/services/indexedDBManager";
 
 /**
  * Storage record - single source of truth
@@ -41,7 +48,10 @@ class FileStorageService {
   /**
    * Store a StirlingFile with its metadata from StirlingFileStub
    */
-  async storeStirlingFile(stirlingFile: StirlingFile, stub: StirlingFileStub): Promise<void> {
+  async storeStirlingFile(
+    stirlingFile: StirlingFile,
+    stub: StirlingFileStub,
+  ): Promise<void> {
     const db = await this.getDatabase();
     const arrayBuffer = await stirlingFile.arrayBuffer();
 
@@ -138,7 +148,9 @@ class FileStorageService {
    * Get multiple StirlingFiles - for batch loading
    */
   async getStirlingFiles(ids: FileId[]): Promise<StirlingFile[]> {
-    const results = await Promise.all(ids.map((id) => this.getStirlingFile(id)));
+    const results = await Promise.all(
+      ids.map((id) => this.getStirlingFile(id)),
+    );
     return results.filter((file): file is StirlingFile => file !== null);
   }
 
@@ -245,7 +257,9 @@ class FileStorageService {
   /**
    * Get all history stubs for a given original file ID.
    */
-  async getHistoryChainStubs(originalFileId: FileId): Promise<StirlingFileStub[]> {
+  async getHistoryChainStubs(
+    originalFileId: FileId,
+  ): Promise<StirlingFileStub[]> {
     const stubs = await this.getAllStirlingFileStubs();
     return stubs
       .filter((stub) => (stub.originalFileId || stub.id) === originalFileId)
@@ -270,7 +284,12 @@ class FileStorageService {
         if (cursor) {
           const record = cursor.value as StoredStirlingFileRecord;
           // Only include leaf files (default to true if undefined)
-          if (record && record.name && typeof record.size === "number" && record.isLeaf !== false) {
+          if (
+            record &&
+            record.name &&
+            typeof record.size === "number" &&
+            record.isLeaf !== false
+          ) {
             leafStubs.push({
               id: record.id,
               name: record.name,
@@ -350,7 +369,10 @@ class FileStorageService {
         };
 
         getRequest.onerror = () => {
-          console.error("Failed to get file for thumbnail update:", getRequest.error);
+          console.error(
+            "Failed to get file for thumbnail update:",
+            getRequest.error,
+          );
           resolve(false);
         };
       } catch (error) {
@@ -456,11 +478,13 @@ class FileStorageService {
       const transaction = db.transaction([this.storeName], "readwrite");
       const store = transaction.objectStore(this.storeName);
 
-      const record = await new Promise<StoredStirlingFileRecord | undefined>((resolve, reject) => {
-        const request = store.get(fileId);
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
+      const record = await new Promise<StoredStirlingFileRecord | undefined>(
+        (resolve, reject) => {
+          const request = store.get(fileId);
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        },
+      );
 
       if (!record) {
         return false; // File not found
@@ -492,11 +516,13 @@ class FileStorageService {
       const transaction = db.transaction([this.storeName], "readwrite");
       const store = transaction.objectStore(this.storeName);
 
-      const record = await new Promise<StoredStirlingFileRecord | undefined>((resolve, reject) => {
-        const request = store.get(fileId);
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
+      const record = await new Promise<StoredStirlingFileRecord | undefined>(
+        (resolve, reject) => {
+          const request = store.get(fileId);
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        },
+      );
 
       if (!record) {
         return false; // File not found
@@ -521,16 +547,22 @@ class FileStorageService {
   /**
    * Update metadata fields for a stored file record.
    */
-  async updateFileMetadata(fileId: FileId, updates: Partial<StoredStirlingFileRecord>): Promise<boolean> {
+  async updateFileMetadata(
+    fileId: FileId,
+    updates: Partial<StoredStirlingFileRecord>,
+  ): Promise<boolean> {
     try {
       const db = await this.getDatabase();
       const transaction = db.transaction([this.storeName], "readwrite");
       const store = transaction.objectStore(this.storeName);
-      const record = await new Promise<StoredStirlingFileRecord | undefined>((resolve, reject) => {
-        const request = store.get(fileId);
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve(request.result as StoredStirlingFileRecord | undefined);
-      });
+      const record = await new Promise<StoredStirlingFileRecord | undefined>(
+        (resolve, reject) => {
+          const request = store.get(fileId);
+          request.onerror = () => reject(request.error);
+          request.onsuccess = () =>
+            resolve(request.result as StoredStirlingFileRecord | undefined);
+        },
+      );
 
       if (!record) {
         return false;

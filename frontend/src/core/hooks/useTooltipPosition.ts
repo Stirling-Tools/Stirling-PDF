@@ -15,7 +15,12 @@ interface PositionState {
   positionReady: boolean;
 }
 
-function place(triggerRect: DOMRect, tooltipRect: DOMRect, position: Position, offset: number): PlacementResult {
+function place(
+  triggerRect: DOMRect,
+  tooltipRect: DOMRect,
+  position: Position,
+  offset: number,
+): PlacementResult {
   let top = 0;
   let left = 0;
 
@@ -60,7 +65,11 @@ export function useTooltipPosition({
   sidebarRefs?: SidebarRefs;
   sidebarState?: SidebarState;
 }): PositionState {
-  const [coords, setCoords] = useState<{ top: number; left: number; arrowOffset: number | null }>({
+  const [coords, setCoords] = useState<{
+    top: number;
+    left: number;
+    arrowOffset: number | null;
+  }>({
     top: 0,
     left: 0,
     arrowOffset: null,
@@ -69,7 +78,8 @@ export function useTooltipPosition({
 
   // Fallback sidebar position (only used as last resort)
   const sidebarLeft = 240;
-  const isRTL = typeof document !== "undefined" && document.documentElement.dir === "rtl";
+  const isRTL =
+    typeof document !== "undefined" && document.documentElement.dir === "rtl";
 
   const updatePosition = () => {
     if (!triggerRef.current || !open) return;
@@ -83,7 +93,9 @@ export function useTooltipPosition({
     if (sidebarTooltip) {
       // Require sidebar refs and state for proper positioning
       if (!sidebarRefs || !sidebarState) {
-        console.warn("Sidebar tooltip requires sidebarRefs and sidebarState props");
+        console.warn(
+          "Sidebar tooltip requires sidebarRefs and sidebarState props",
+        );
         setPositionReady(false);
         return;
       }

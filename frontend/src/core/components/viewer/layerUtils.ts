@@ -10,10 +10,14 @@ export interface LayerInfo {
  * Returns a flat list of all OCG groups with their names and default visibility.
  */
 export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
-  const { getDocument, GlobalWorkerOptions } = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const { getDocument, GlobalWorkerOptions } =
+    await import("pdfjs-dist/legacy/build/pdf.mjs");
 
   if (!GlobalWorkerOptions.workerSrc) {
-    GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/legacy/build/pdf.worker.min.mjs", import.meta.url).toString();
+    GlobalWorkerOptions.workerSrc = new URL(
+      "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
+      import.meta.url,
+    ).toString();
   }
 
   const arrayBuffer = await file.arrayBuffer();
@@ -62,7 +66,11 @@ export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
  *  - { name: string, order: any[] }: a named group with children
  *  - array: a nested group
  */
-function buildLayerTree(order: any[], groups: Record<string, any>, visited = new Set<string>()): LayerInfo[] {
+function buildLayerTree(
+  order: any[],
+  groups: Record<string, any>,
+  visited = new Set<string>(),
+): LayerInfo[] {
   const result: LayerInfo[] = [];
 
   for (const item of order) {
@@ -84,8 +92,13 @@ function buildLayerTree(order: any[], groups: Record<string, any>, visited = new
       result.push(...children);
     } else if (item && typeof item === "object") {
       // Named group with nested items
-      const { name, order: subOrder } = item as { name?: string; order?: any[] };
-      const children = subOrder ? buildLayerTree(subOrder, groups, visited) : [];
+      const { name, order: subOrder } = item as {
+        name?: string;
+        order?: any[];
+      };
+      const children = subOrder
+        ? buildLayerTree(subOrder, groups, visited)
+        : [];
       if (name && children.length > 0) {
         // Use the first child's id as a synthetic group id
         result.push({
@@ -116,14 +129,17 @@ export async function applyOCGVisibilityToPdf(
   pdfBytes: ArrayBuffer,
   layerVisibility: Record<string, boolean>,
 ): Promise<Uint8Array> {
-  const { PDFDocument, PDFDict, PDFName, PDFArray, PDFString, PDFHexString } = await import("@cantoo/pdf-lib");
+  const { PDFDocument, PDFDict, PDFName, PDFArray, PDFString, PDFHexString } =
+    await import("@cantoo/pdf-lib");
 
   const doc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
   const context = doc.context;
 
   // Access the catalog via the trailer's Root reference
   const catalogRef = context.trailerInfo.Root;
-  const catalog = context.lookup(catalogRef) as unknown as typeof PDFDict.prototype;
+  const catalog = context.lookup(
+    catalogRef,
+  ) as unknown as typeof PDFDict.prototype;
 
   // Get OCProperties dict (may be a direct dict or an indirect reference)
   const ocPropsRaw = (catalog as any).lookup(PDFName.of("OCProperties"));
@@ -146,7 +162,9 @@ export async function applyOCGVisibilityToPdf(
   if (!dRaw) {
     return doc.save();
   }
-  const dDict = (dRaw instanceof PDFDict ? dRaw : context.lookup(dRaw)) as unknown as typeof PDFDict.prototype;
+  const dDict = (dRaw instanceof PDFDict
+    ? dRaw
+    : context.lookup(dRaw)) as unknown as typeof PDFDict.prototype;
 
   // Collect OCG refs for ON vs OFF based on user visibility settings
   const onRefs: any[] = [];
@@ -155,14 +173,17 @@ export async function applyOCGVisibilityToPdf(
   const size = (ocgsArray as any).size() as number;
   for (let i = 0; i < size; i++) {
     const ocgRef = (ocgsArray as any).get(i);
-    const ocgDict = context.lookup(ocgRef) as unknown as typeof PDFDict.prototype;
+    const ocgDict = context.lookup(
+      ocgRef,
+    ) as unknown as typeof PDFDict.prototype;
     if (!ocgDict) continue;
 
     // Get the OCG name
     const nameRaw = (ocgDict as any).lookup(PDFName.of("Name"));
     let ocgName = "";
     if (nameRaw instanceof PDFString || nameRaw instanceof PDFHexString) {
-      ocgName = (nameRaw as any).decodeText?.() ?? (nameRaw as any).asString?.() ?? "";
+      ocgName =
+        (nameRaw as any).decodeText?.() ?? (nameRaw as any).asString?.() ?? "";
     } else if (nameRaw) {
       ocgName = String(nameRaw);
     }

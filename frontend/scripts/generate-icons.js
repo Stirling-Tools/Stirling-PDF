@@ -5,7 +5,8 @@ const fs = require("fs");
 const path = require("path");
 
 // Check for verbose flag
-const isVerbose = process.argv.includes("--verbose") || process.argv.includes("-v");
+const isVerbose =
+  process.argv.includes("--verbose") || process.argv.includes("-v");
 
 // Logging functions
 const info = (message) => console.log(message);
@@ -41,62 +42,82 @@ function scanForUsedIcons() {
         const content = fs.readFileSync(filePath, "utf8");
 
         // Match LocalIcon usage: <LocalIcon icon="icon-name" ...>
-        const localIconMatches = content.match(/<LocalIcon\s+[^>]*icon="([^"]+)"/g);
+        const localIconMatches = content.match(
+          /<LocalIcon\s+[^>]*icon="([^"]+)"/g,
+        );
         if (localIconMatches) {
           localIconMatches.forEach((match) => {
             const iconMatch = match.match(/icon="([^"]+)"/);
             if (iconMatch) {
               usedIcons.add(iconMatch[1]);
-              debug(`  Found: ${iconMatch[1]} in ${path.relative(srcDir, filePath)}`);
+              debug(
+                `  Found: ${iconMatch[1]} in ${path.relative(srcDir, filePath)}`,
+              );
             }
           });
         }
 
         // Match LocalIcon usage: <LocalIcon icon='icon-name' ...>
-        const localIconSingleQuoteMatches = content.match(/<LocalIcon\s+[^>]*icon='([^']+)'/g);
+        const localIconSingleQuoteMatches = content.match(
+          /<LocalIcon\s+[^>]*icon='([^']+)'/g,
+        );
         if (localIconSingleQuoteMatches) {
           localIconSingleQuoteMatches.forEach((match) => {
             const iconMatch = match.match(/icon='([^']+)'/);
             if (iconMatch) {
               usedIcons.add(iconMatch[1]);
-              debug(`  Found: ${iconMatch[1]} in ${path.relative(srcDir, filePath)}`);
+              debug(
+                `  Found: ${iconMatch[1]} in ${path.relative(srcDir, filePath)}`,
+              );
             }
           });
         }
 
         // Match old material-symbols-rounded spans: <span className="material-symbols-rounded">icon-name</span>
-        const spanMatches = content.match(/<span[^>]*className="[^"]*material-symbols-rounded[^"]*"[^>]*>([^<]+)<\/span>/g);
+        const spanMatches = content.match(
+          /<span[^>]*className="[^"]*material-symbols-rounded[^"]*"[^>]*>([^<]+)<\/span>/g,
+        );
         if (spanMatches) {
           spanMatches.forEach((match) => {
             const iconMatch = match.match(/>([^<]+)<\/span>/);
             if (iconMatch && iconMatch[1].trim()) {
               const iconName = iconMatch[1].trim();
               usedIcons.add(iconName);
-              debug(`  Found (legacy): ${iconName} in ${path.relative(srcDir, filePath)}`);
+              debug(
+                `  Found (legacy): ${iconName} in ${path.relative(srcDir, filePath)}`,
+              );
             }
           });
         }
 
         // Match Icon component usage: <Icon icon="material-symbols:icon-name" ...>
-        const iconMatches = content.match(/<Icon\s+[^>]*icon="material-symbols:([^"]+)"/g);
+        const iconMatches = content.match(
+          /<Icon\s+[^>]*icon="material-symbols:([^"]+)"/g,
+        );
         if (iconMatches) {
           iconMatches.forEach((match) => {
             const iconMatch = match.match(/icon="material-symbols:([^"]+)"/);
             if (iconMatch) {
               usedIcons.add(iconMatch[1]);
-              debug(`  Found (Icon): ${iconMatch[1]} in ${path.relative(srcDir, filePath)}`);
+              debug(
+                `  Found (Icon): ${iconMatch[1]} in ${path.relative(srcDir, filePath)}`,
+              );
             }
           });
         }
 
         // Match icon config usage: icon: 'icon-name' or icon: "icon-name"
-        const iconPropertyMatches = content.match(/icon:\s*(['"])([a-z0-9-]+)\1/g);
+        const iconPropertyMatches = content.match(
+          /icon:\s*(['"])([a-z0-9-]+)\1/g,
+        );
         if (iconPropertyMatches) {
           iconPropertyMatches.forEach((match) => {
             const iconMatch = match.match(/icon:\s*(['"])([a-z0-9-]+)\1/);
             if (iconMatch) {
               usedIcons.add(iconMatch[2]);
-              debug(`  Found (config): ${iconMatch[2]} in ${path.relative(srcDir, filePath)}`);
+              debug(
+                `  Found (config): ${iconMatch[2]} in ${path.relative(srcDir, filePath)}`,
+              );
             }
           });
         }
@@ -118,7 +139,13 @@ async function main() {
   const usedIcons = scanForUsedIcons();
 
   // Check if we need to regenerate (compare with existing)
-  const outputPath = path.join(__dirname, "..", "src", "assets", "material-symbols-icons.json");
+  const outputPath = path.join(
+    __dirname,
+    "..",
+    "src",
+    "assets",
+    "material-symbols-icons.json",
+  );
   let needsRegeneration = true;
 
   if (fs.existsSync(outputPath)) {
@@ -159,11 +186,17 @@ async function main() {
 
   // Check for missing icons
   const extractedIconNames = Object.keys(extractedIcons.icons || {});
-  const missingIcons = usedIcons.filter((icon) => !extractedIconNames.includes(icon));
+  const missingIcons = usedIcons.filter(
+    (icon) => !extractedIconNames.includes(icon),
+  );
 
   if (missingIcons.length > 0) {
-    info(`⚠️  Missing icons (${missingIcons.length}): ${missingIcons.join(", ")}`);
-    info("💡 These icons don't exist in Material Symbols. Please use available alternatives.");
+    info(
+      `⚠️  Missing icons (${missingIcons.length}): ${missingIcons.join(", ")}`,
+    );
+    info(
+      "💡 These icons don't exist in Material Symbols. Please use available alternatives.",
+    );
   }
 
   // Create output directory
@@ -175,8 +208,12 @@ async function main() {
   // Write the extracted icon set to a file (outputPath already defined above)
   fs.writeFileSync(outputPath, JSON.stringify(extractedIcons, null, 2));
 
-  info(`✅ Successfully extracted ${Object.keys(extractedIcons.icons || {}).length} icons`);
-  info(`📦 Bundle size: ${Math.round(JSON.stringify(extractedIcons).length / 1024)}KB`);
+  info(
+    `✅ Successfully extracted ${Object.keys(extractedIcons.icons || {}).length} icons`,
+  );
+  info(
+    `📦 Bundle size: ${Math.round(JSON.stringify(extractedIcons).length / 1024)}KB`,
+  );
   info(`💾 Saved to: ${outputPath}`);
 
   // Generate TypeScript types

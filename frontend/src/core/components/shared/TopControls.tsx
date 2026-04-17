@@ -56,7 +56,11 @@ const createViewOptions = (
       />
     ) : (
       <div style={viewOptionStyle}>
-        {switchingTo === "viewer" ? <Loader size="sm" /> : <InsertDriveFileIcon fontSize="medium" />}
+        {switchingTo === "viewer" ? (
+          <Loader size="sm" />
+        ) : (
+          <InsertDriveFileIcon fontSize="medium" />
+        )}
       </div>
     ),
     value: "viewer",
@@ -81,7 +85,11 @@ const createViewOptions = (
       />
     ) : (
       <div style={viewOptionStyle}>
-        {switchingTo === "pageEditor" ? <Loader size="sm" /> : <GridViewIcon fontSize="medium" />}
+        {switchingTo === "pageEditor" ? (
+          <Loader size="sm" />
+        ) : (
+          <GridViewIcon fontSize="medium" />
+        )}
       </div>
     ),
     value: "pageEditor",
@@ -90,7 +98,11 @@ const createViewOptions = (
   const fileEditorOption = {
     label: (
       <div style={viewOptionStyle}>
-        {switchingTo === "fileEditor" ? <Loader size="sm" /> : <FolderIcon fontSize="medium" />}
+        {switchingTo === "fileEditor" ? (
+          <Loader size="sm" />
+        ) : (
+          <FolderIcon fontSize="medium" />
+        )}
       </div>
     ),
     value: "fileEditor",
@@ -103,7 +115,11 @@ const createViewOptions = (
     .map((view) => ({
       label: (
         <div style={viewOptionStyle as React.CSSProperties}>
-          {switchingTo === view.workbenchId ? <Loader size="sm" /> : view.icon || <PictureAsPdfIcon fontSize="medium" />}
+          {switchingTo === view.workbenchId ? (
+            <Loader size="sm" />
+          ) : (
+            view.icon || <PictureAsPdfIcon fontSize="medium" />
+          )}
           <span>{view.label}</span>
         </div>
       ),
@@ -175,7 +191,16 @@ const TopControls = ({
         pageEditorState,
         customViews,
       ),
-    [currentView, switchingTo, activeFiles, currentFileIndex, onFileSelect, onFileRemove, pageEditorState, customViews],
+    [
+      currentView,
+      switchingTo,
+      activeFiles,
+      currentFileIndex,
+      onFileSelect,
+      onFileRemove,
+      pageEditorState,
+      customViews,
+    ],
   );
 
   return (

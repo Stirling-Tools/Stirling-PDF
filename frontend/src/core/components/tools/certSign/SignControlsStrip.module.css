@@ -248,7 +248,8 @@
   flex-wrap: nowrap;
 }
 
-.topBar[data-view="viewer"][data-mobile="true"][data-wrapped="false"] .viewerControls {
+.topBar[data-view="viewer"][data-mobile="true"][data-wrapped="false"]
+  .viewerControls {
   flex: 1 1 auto;
   overflow: hidden;
 }

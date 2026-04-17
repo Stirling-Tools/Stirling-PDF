@@ -133,7 +133,9 @@ export class TauriBackendService {
       } else {
         // Don't call setStatus('unhealthy') — the status is already unhealthy and calling it
         // again would bypass the dedup check and re-trigger scheduleRecovery.
-        console.error("[TauriBackendService] Max restart attempts reached, backend is permanently unhealthy.");
+        console.error(
+          "[TauriBackendService] Max restart attempts reached, backend is permanently unhealthy.",
+        );
       }
     }
   }
@@ -200,7 +202,9 @@ export class TauriBackendService {
         if (port) {
           this.backendPort = port;
           // Notify status listeners so hooks reading getBackendUrl() re-evaluate
-          this.statusListeners.forEach((listener) => listener(this.backendStatus));
+          this.statusListeners.forEach((listener) =>
+            listener(this.backendStatus),
+          );
           return;
         }
       } catch (error) {
@@ -231,25 +235,36 @@ export class TauriBackendService {
       return false;
     }
     if (!this.backendPort) {
-      console.debug("[TauriBackendService] Health check: backend port not available");
+      console.debug(
+        "[TauriBackendService] Health check: backend port not available",
+      );
       return false;
     }
 
     const configUrl = `http://localhost:${this.backendPort}/api/v1/config/app-config`;
-    console.debug(`[TauriBackendService] Checking local backend health at: ${configUrl}`);
+    console.debug(
+      `[TauriBackendService] Checking local backend health at: ${configUrl}`,
+    );
 
     try {
-      const response = await fetch(configUrl, { method: "GET", connectTimeout: 5000 });
+      const response = await fetch(configUrl, {
+        method: "GET",
+        connectTimeout: 5000,
+      });
 
       if (!response.ok) {
-        console.warn(`[TauriBackendService] Health check failed: ${response.status}`);
+        console.warn(
+          `[TauriBackendService] Health check failed: ${response.status}`,
+        );
         this.setStatus("unhealthy");
         return false;
       }
 
       const data = await response.json();
       const dependenciesReady = data.dependenciesReady === true;
-      console.debug(`[TauriBackendService] dependenciesReady=${dependenciesReady}`);
+      console.debug(
+        `[TauriBackendService] dependenciesReady=${dependenciesReady}`,
+      );
 
       this.setStatus(dependenciesReady ? "healthy" : "starting");
       return dependenciesReady;

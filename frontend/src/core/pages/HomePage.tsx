@@ -10,7 +10,10 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useLogoPath } from "@app/hooks/useLogoPath";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
 import { useFileContext } from "@app/contexts/file/fileHooks";
-import { useNavigationState, useNavigationActions } from "@app/contexts/NavigationContext";
+import {
+  useNavigationState,
+  useNavigationActions,
+} from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import AppsIcon from "@mui/icons-material/AppsRounded";
 
@@ -75,7 +78,12 @@ export default function HomePage() {
       selectedToolKey,
     });
 
-    const action = getStartupNavigationAction(prevCount, currentCount, selectedToolKey, navigationState.workbench);
+    const action = getStartupNavigationAction(
+      prevCount,
+      currentCount,
+      selectedToolKey,
+      navigationState.workbench,
+    );
 
     console.log("[HomePage] Navigation action returned:", action);
 
@@ -90,9 +98,18 @@ export default function HomePage() {
     }
 
     prevFileCountRef.current = currentCount;
-  }, [activeFiles.length, actions, setActiveFileIndex, selectedToolKey, navigationState.workbench]);
+  }, [
+    activeFiles.length,
+    actions,
+    setActiveFileIndex,
+    selectedToolKey,
+    navigationState.workbench,
+  ]);
 
-  const hideToolPanel = customWorkbenchViews.find((v) => v.workbenchId === navigationState.workbench)?.hideToolPanel ?? false;
+  const hideToolPanel =
+    customWorkbenchViews.find(
+      (v) => v.workbenchId === navigationState.workbench,
+    )?.hideToolPanel ?? false;
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
   const brandIconSrc = useLogoPath();
@@ -146,8 +163,11 @@ export default function HomePage() {
       animationFrame = window.requestAnimationFrame(() => {
         const { scrollLeft, offsetWidth } = container;
         const threshold = offsetWidth / 2;
-        const nextView: MobileView = scrollLeft >= threshold ? "workbench" : "tools";
-        setActiveMobileView((current) => (current === nextView ? current : nextView));
+        const nextView: MobileView =
+          scrollLeft >= threshold ? "workbench" : "tools";
+        setActiveMobileView((current) =>
+          current === nextView ? current : nextView,
+        );
       });
     };
 
@@ -192,10 +212,22 @@ export default function HomePage() {
   const appName = config?.appNameNavbar || "Stirling PDF";
   useDocumentMeta({
     title: selectedTool ? `${selectedTool.name} - ${appName}` : appName,
-    description: selectedTool?.description || t("app.description", "The Free Adobe Acrobat alternative (10M+ Downloads)"),
+    description:
+      selectedTool?.description ||
+      t(
+        "app.description",
+        "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      ),
     ogTitle: selectedTool ? `${selectedTool.name} - ${appName}` : appName,
-    ogDescription: selectedTool?.description || t("app.description", "The Free Adobe Acrobat alternative (10M+ Downloads)"),
-    ogImage: selectedToolKey ? `${baseUrl}/og_images/${selectedToolKey}.png` : `${baseUrl}/og_images/home.png`,
+    ogDescription:
+      selectedTool?.description ||
+      t(
+        "app.description",
+        "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      ),
+    ogImage: selectedToolKey
+      ? `${baseUrl}/og_images/${selectedToolKey}.png`
+      : `${baseUrl}/og_images/home.png`,
     ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl,
   });
 
@@ -209,14 +241,26 @@ export default function HomePage() {
           <div className="mobile-toggle">
             <div className="mobile-header">
               <div className="mobile-brand">
-                <img src={brandIconSrc} alt="" aria-hidden="true" className="mobile-brand-icon" />
-                <img src={brandTextSrc} alt={brandAltText} className="mobile-brand-text" />
+                <img
+                  src={brandIconSrc}
+                  alt=""
+                  aria-hidden="true"
+                  className="mobile-brand-icon"
+                />
+                <img
+                  src={brandTextSrc}
+                  alt={brandAltText}
+                  className="mobile-brand-text"
+                />
               </div>
             </div>
             <div
               className="mobile-toggle-buttons"
               role="tablist"
-              aria-label={t("home.mobile.viewSwitcher", "Switch workspace view")}
+              aria-label={t(
+                "home.mobile.viewSwitcher",
+                "Switch workspace view",
+              )}
             >
               <button
                 type="button"
@@ -237,15 +281,26 @@ export default function HomePage() {
                 {t("home.mobile.workspace", "Workspace")}
               </button>
             </div>
-            <span className="mobile-toggle-hint">{t("home.mobile.swipeHint", "Swipe left or right to switch views")}</span>
+            <span className="mobile-toggle-hint">
+              {t(
+                "home.mobile.swipeHint",
+                "Swipe left or right to switch views",
+              )}
+            </span>
           </div>
           <div ref={sliderRef} className="mobile-slider">
-            <div className="mobile-slide" aria-label={t("home.mobile.toolsSlide", "Tool selection panel")}>
+            <div
+              className="mobile-slide"
+              aria-label={t("home.mobile.toolsSlide", "Tool selection panel")}
+            >
               <div className="mobile-slide-content">
                 <ToolPanel />
               </div>
             </div>
-            <div className="mobile-slide" aria-label={t("home.mobile.workbenchSlide", "Workspace panel")}>
+            <div
+              className="mobile-slide"
+              aria-label={t("home.mobile.workbenchSlide", "Workspace panel")}
+            >
               <div className="mobile-slide-content">
                 <div className="flex-1 min-h-0 flex">
                   <Workbench />
@@ -266,7 +321,9 @@ export default function HomePage() {
               }}
             >
               <AppsIcon sx={{ fontSize: "1.5rem" }} />
-              <span className="mobile-bottom-button-label">{t("quickAccess.allTools", "Tools")}</span>
+              <span className="mobile-bottom-button-label">
+                {t("quickAccess.allTools", "Tools")}
+              </span>
             </button>
             {toolAvailability["automate"]?.available !== false && (
               <button
@@ -279,8 +336,14 @@ export default function HomePage() {
                   }
                 }}
               >
-                <LocalIcon icon="automation-outline" width="1.5rem" height="1.5rem" />
-                <span className="mobile-bottom-button-label">{t("quickAccess.automate", "Automate")}</span>
+                <LocalIcon
+                  icon="automation-outline"
+                  width="1.5rem"
+                  height="1.5rem"
+                />
+                <span className="mobile-bottom-button-label">
+                  {t("quickAccess.automate", "Automate")}
+                </span>
               </button>
             )}
             <button
@@ -289,19 +352,30 @@ export default function HomePage() {
               onClick={() => openFilesModal()}
             >
               <LocalIcon icon="folder-rounded" width="1.5rem" height="1.5rem" />
-              <span className="mobile-bottom-button-label">{t("quickAccess.files", "Files")}</span>
+              <span className="mobile-bottom-button-label">
+                {t("quickAccess.files", "Files")}
+              </span>
             </button>
             <button
               className="mobile-bottom-button"
               aria-label={t("quickAccess.config", "Config")}
               onClick={() => setConfigModalOpen(true)}
             >
-              <LocalIcon icon="settings-rounded" width="1.5rem" height="1.5rem" />
-              <span className="mobile-bottom-button-label">{t("quickAccess.config", "Config")}</span>
+              <LocalIcon
+                icon="settings-rounded"
+                width="1.5rem"
+                height="1.5rem"
+              />
+              <span className="mobile-bottom-button-label">
+                {t("quickAccess.config", "Config")}
+              </span>
             </button>
           </div>
           <FileManager selectedTool={selectedTool as any /* FIX ME */} />
-          <AppConfigModal opened={configModalOpen} onClose={() => setConfigModalOpen(false)} />
+          <AppConfigModal
+            opened={configModalOpen}
+            onClose={() => setConfigModalOpen(false)}
+          />
         </div>
       ) : (
         <Group align="flex-start" gap={0} h="100%" className="flex-nowrap flex">

@@ -1,4 +1,11 @@
-import { Modal, Stack, Text, Button, PasswordInput, Group } from "@mantine/core";
+import {
+  Modal,
+  Stack,
+  Text,
+  Button,
+  PasswordInput,
+  Group,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { type KeyboardEventHandler } from "react";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
@@ -61,7 +68,10 @@ const EncryptedPdfUnlockModal = ({
         <Stack gap={4}>
           <PasswordInput
             label={t("encryptedPdfUnlock.password.label", "PDF password")}
-            placeholder={t("encryptedPdfUnlock.password.placeholder", "Enter the PDF password")}
+            placeholder={t(
+              "encryptedPdfUnlock.password.placeholder",
+              "Enter the PDF password",
+            )}
             value={password}
             onChange={(event) => onPasswordChange(event.currentTarget.value)}
             onKeyDown={handleKeyDown}
@@ -76,16 +86,32 @@ const EncryptedPdfUnlockModal = ({
         </Stack>
 
         <Group justify="space-between">
-          <Button variant="light" color="var(--mantine-color-gray-8)" onClick={onSkip} disabled={isProcessing}>
+          <Button
+            variant="light"
+            color="var(--mantine-color-gray-8)"
+            onClick={onSkip}
+            disabled={isProcessing}
+          >
             {t("encryptedPdfUnlock.skip", "Skip for now")}
           </Button>
           <Group gap="xs">
             {remainingCount > 0 && (
-              <Button variant="light" onClick={onUnlockAll} loading={isProcessing} disabled={password.trim().length === 0}>
-                {t("encryptedPdfUnlock.unlockAll", "Use for all ({{count}})", { count: remainingCount + 1 })}
+              <Button
+                variant="light"
+                onClick={onUnlockAll}
+                loading={isProcessing}
+                disabled={password.trim().length === 0}
+              >
+                {t("encryptedPdfUnlock.unlockAll", "Use for all ({{count}})", {
+                  count: remainingCount + 1,
+                })}
               </Button>
             )}
-            <Button onClick={onUnlock} loading={isProcessing} disabled={password.trim().length === 0}>
+            <Button
+              onClick={onUnlock}
+              loading={isProcessing}
+              disabled={password.trim().length === 0}
+            >
               {t("encryptedPdfUnlock.unlock", "Unlock & Continue")}
             </Button>
           </Group>

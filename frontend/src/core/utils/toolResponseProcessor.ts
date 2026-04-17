@@ -1,7 +1,10 @@
 // Note: This utility should be used with useToolResources for ZIP operations
 import { getFilenameFromHeaders } from "@app/utils/fileResponseUtils";
 
-export type ResponseHandler = (blob: Blob, originalFiles: File[]) => Promise<File[]> | File[];
+export type ResponseHandler = (
+  blob: Blob,
+  originalFiles: File[],
+) => Promise<File[]> | File[];
 
 /**
  * Processes a blob response into File(s).
@@ -28,7 +31,10 @@ export async function processResponse(
     const contentDisposition = responseHeaders["content-disposition"];
     const backendFilename = getFilenameFromHeaders(contentDisposition);
     if (backendFilename) {
-      const type = blob.type || responseHeaders["content-type"] || "application/octet-stream";
+      const type =
+        blob.type ||
+        responseHeaders["content-type"] ||
+        "application/octet-stream";
       return [new File([blob], backendFilename, { type })];
     }
     // If preserveBackendFilename was requested but no Content-Disposition header found,

@@ -1,13 +1,25 @@
 import { useTranslation } from "react-i18next";
-import { ToolType, useToolOperation } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  ToolType,
+  useToolOperation,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { AutoRenameParameters, defaultParameters } from "@app/hooks/tools/autoRename/useAutoRenameParameters";
+import {
+  AutoRenameParameters,
+  defaultParameters,
+} from "@app/hooks/tools/autoRename/useAutoRenameParameters";
 
 export const getFormData = (parameters: AutoRenameParameters) =>
-  Object.entries(parameters).map(([key, value]) => [key, value.toString()]) as string[][];
+  Object.entries(parameters).map(([key, value]) => [
+    key,
+    value.toString(),
+  ]) as string[][];
 
 // Static function that can be used by both the hook and automation executor
-export const buildAutoRenameFormData = (parameters: AutoRenameParameters, file: File): FormData => {
+export const buildAutoRenameFormData = (
+  parameters: AutoRenameParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
 
@@ -35,7 +47,10 @@ export const useAutoRenameOperation = () => {
   return useToolOperation({
     ...autoRenameOperationConfig,
     getErrorMessage: createStandardErrorHandler(
-      t("auto-rename.error.failed", "An error occurred while auto-renaming the PDF."),
+      t(
+        "auto-rename.error.failed",
+        "An error occurred while auto-renaming the PDF.",
+      ),
     ),
   });
 };

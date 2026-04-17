@@ -100,7 +100,9 @@ export function isStirlingFile(file: File | Blob): file is StirlingFile {
  * This ensures that form widgets/values are correctly isolated between files
  * even if they have the same name or are re-scanned.
  */
-export function getFormFillFileId(file: File | Blob | null | undefined): string | null {
+export function getFormFillFileId(
+  file: File | Blob | null | undefined,
+): string | null {
   if (!file) return null;
 
   if (isStirlingFile(file)) {
@@ -267,20 +269,38 @@ export type FileContextAction =
   // File management actions
   | { type: "ADD_FILES"; payload: { stirlingFileStubs: StirlingFileStub[] } }
   | { type: "REMOVE_FILES"; payload: { fileIds: FileId[] } }
-  | { type: "UPDATE_FILE_RECORD"; payload: { id: FileId; updates: Partial<StirlingFileStub> } }
+  | {
+      type: "UPDATE_FILE_RECORD";
+      payload: { id: FileId; updates: Partial<StirlingFileStub> };
+    }
   | { type: "REORDER_FILES"; payload: { orderedFileIds: FileId[] } }
 
   // Pinned files actions
   | { type: "PIN_FILE"; payload: { fileId: FileId } }
   | { type: "UNPIN_FILE"; payload: { fileId: FileId } }
-  | { type: "CONSUME_FILES"; payload: { inputFileIds: FileId[]; outputStirlingFileStubs: StirlingFileStub[] } }
-  | { type: "UNDO_CONSUME_FILES"; payload: { inputStirlingFileStubs: StirlingFileStub[]; outputFileIds: FileId[] } }
+  | {
+      type: "CONSUME_FILES";
+      payload: {
+        inputFileIds: FileId[];
+        outputStirlingFileStubs: StirlingFileStub[];
+      };
+    }
+  | {
+      type: "UNDO_CONSUME_FILES";
+      payload: {
+        inputStirlingFileStubs: StirlingFileStub[];
+        outputFileIds: FileId[];
+      };
+    }
 
   // UI actions
   | { type: "SET_SELECTED_FILES"; payload: { fileIds: FileId[] } }
   | { type: "SET_SELECTED_PAGES"; payload: { pageNumbers: number[] } }
   | { type: "CLEAR_SELECTIONS" }
-  | { type: "SET_PROCESSING"; payload: { isProcessing: boolean; progress: number } }
+  | {
+      type: "SET_PROCESSING";
+      payload: { isProcessing: boolean; progress: number };
+    }
   | { type: "MARK_FILE_ERROR"; payload: { fileId: FileId } }
   | { type: "CLEAR_FILE_ERROR"; payload: { fileId: FileId } }
   | { type: "CLEAR_ALL_FILE_ERRORS" }
@@ -293,7 +313,10 @@ export type FileContextAction =
 
 export interface FileContextActions {
   // File management - lightweight actions only
-  addFiles: (files: File[], options?: { insertAfterPageId?: string; selectFiles?: boolean }) => Promise<StirlingFile[]>;
+  addFiles: (
+    files: File[],
+    options?: { insertAfterPageId?: string; selectFiles?: boolean },
+  ) => Promise<StirlingFile[]>;
   addFilesWithOptions: (
     files: File[],
     options?: {
@@ -302,7 +325,10 @@ export interface FileContextActions {
       autoUnzip?: boolean;
       autoUnzipFileLimit?: number;
       skipAutoUnzip?: boolean;
-      confirmLargeExtraction?: (fileCount: number, fileName: string) => Promise<boolean>;
+      confirmLargeExtraction?: (
+        fileCount: number,
+        fileName: string,
+      ) => Promise<boolean>;
       allowDuplicates?: boolean;
     },
   ) => Promise<StirlingFile[]>;
@@ -310,8 +336,14 @@ export interface FileContextActions {
     stirlingFileStubs: StirlingFileStub[],
     options?: { insertAfterPageId?: string; selectFiles?: boolean },
   ) => Promise<StirlingFile[]>;
-  removeFiles: (fileIds: FileId[], deleteFromStorage?: boolean) => Promise<void>;
-  updateStirlingFileStub: (id: FileId, updates: Partial<StirlingFileStub>) => void;
+  removeFiles: (
+    fileIds: FileId[],
+    deleteFromStorage?: boolean,
+  ) => Promise<void>;
+  updateStirlingFileStub: (
+    id: FileId,
+    updates: Partial<StirlingFileStub>,
+  ) => void;
   reorderFiles: (orderedFileIds: FileId[]) => void;
   clearAllFiles: () => Promise<void>;
   clearAllData: () => Promise<void>;
@@ -326,7 +358,11 @@ export interface FileContextActions {
     outputStirlingFiles: StirlingFile[],
     outputStirlingFileStubs: StirlingFileStub[],
   ) => Promise<FileId[]>;
-  undoConsumeFiles: (inputFiles: File[], inputStirlingFileStubs: StirlingFileStub[], outputFileIds: FileId[]) => Promise<void>;
+  undoConsumeFiles: (
+    inputFiles: File[],
+    inputStirlingFileStubs: StirlingFileStub[],
+    outputFileIds: FileId[],
+  ) => Promise<void>;
   // Selection management
   setSelectedFiles: (fileIds: FileId[]) => void;
   setSelectedPages: (pageNumbers: number[]) => void;

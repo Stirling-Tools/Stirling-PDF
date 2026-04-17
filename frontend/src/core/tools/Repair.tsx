@@ -8,7 +8,12 @@ import { BaseToolProps, ToolComponent } from "@app/types/tool";
 const Repair = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
-  const base = useBaseTool("repair", useRepairParameters, useRepairOperation, props);
+  const base = useBaseTool(
+    "repair",
+    useRepairParameters,
+    useRepairOperation,
+    props,
+  );
 
   return createToolFlow({
     files: {

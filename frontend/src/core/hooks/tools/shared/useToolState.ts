@@ -27,7 +27,12 @@ type OperationAction =
   | { type: "SET_GENERATING_THUMBNAILS"; payload: boolean }
   | {
       type: "SET_DOWNLOAD_INFO";
-      payload: { url: string | null; filename: string; localPath?: string | null; outputFileIds?: string[] | null };
+      payload: {
+        url: string | null;
+        filename: string;
+        localPath?: string | null;
+        outputFileIds?: string[] | null;
+      };
     }
   | { type: "SET_STATUS"; payload: string }
   | { type: "SET_ERROR"; payload: string | null }
@@ -49,7 +54,10 @@ const initialState: OperationState = {
   progress: null,
 };
 
-const operationReducer = (state: OperationState, action: OperationAction): OperationState => {
+const operationReducer = (
+  state: OperationState,
+  action: OperationAction,
+): OperationState => {
   switch (action.type) {
     case "SET_LOADING":
       return { ...state, isLoading: action.payload };
@@ -109,8 +117,16 @@ export const useToolState = () => {
   }, []);
 
   const setDownloadInfo = useCallback(
-    (url: string | null, filename: string, localPath?: string | null, outputFileIds?: string[] | null) => {
-      dispatch({ type: "SET_DOWNLOAD_INFO", payload: { url, filename, localPath, outputFileIds } });
+    (
+      url: string | null,
+      filename: string,
+      localPath?: string | null,
+      outputFileIds?: string[] | null,
+    ) => {
+      dispatch({
+        type: "SET_DOWNLOAD_INFO",
+        payload: { url, filename, localPath, outputFileIds },
+      });
     },
     [],
   );

@@ -1,4 +1,12 @@
-import { Stack, Radio, Divider, TextInput, Text, Group, Button } from "@mantine/core";
+import {
+  Stack,
+  Radio,
+  Divider,
+  TextInput,
+  Text,
+  Group,
+  Button,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -71,7 +79,10 @@ export const CertificateSelector: React.FC<CertificateSelectorProps> = ({
     <Stack gap="md">
       {/* Managed certificate options — server plan only */}
       {isServerPlan && (
-        <Radio.Group value={certType} onChange={(val) => onCertTypeChange(val as CertificateType)}>
+        <Radio.Group
+          value={certType}
+          onChange={(val) => onCertTypeChange(val as CertificateType)}
+        >
           <Stack gap="sm">
             <Radio
               value="USER_CERT"
@@ -79,10 +90,16 @@ export const CertificateSelector: React.FC<CertificateSelectorProps> = ({
               label={
                 <Stack gap={1}>
                   <Text size="sm" fw={500}>
-                    {t("certSign.collab.signRequest.usePersonalCert", "Personal Certificate")}
+                    {t(
+                      "certSign.collab.signRequest.usePersonalCert",
+                      "Personal Certificate",
+                    )}
                   </Text>
                   <Text size="xs" c="dimmed">
-                    {t("certSign.collab.signRequest.usePersonalCertDesc", "Auto-generated for your account")}
+                    {t(
+                      "certSign.collab.signRequest.usePersonalCertDesc",
+                      "Auto-generated for your account",
+                    )}
                   </Text>
                 </Stack>
               }
@@ -93,10 +110,16 @@ export const CertificateSelector: React.FC<CertificateSelectorProps> = ({
               label={
                 <Stack gap={1}>
                   <Text size="sm" fw={500}>
-                    {t("certSign.collab.signRequest.useServerCert", "Organization Certificate")}
+                    {t(
+                      "certSign.collab.signRequest.useServerCert",
+                      "Organization Certificate",
+                    )}
                   </Text>
                   <Text size="xs" c="dimmed">
-                    {t("certSign.collab.signRequest.useServerCertDesc", "Shared organization certificate")}
+                    {t(
+                      "certSign.collab.signRequest.useServerCertDesc",
+                      "Shared organization certificate",
+                    )}
                   </Text>
                 </Stack>
               }
@@ -106,7 +129,10 @@ export const CertificateSelector: React.FC<CertificateSelectorProps> = ({
               disabled={disabled}
               label={
                 <Text size="sm" fw={500}>
-                  {t("certSign.collab.signRequest.uploadCert", "Custom Certificate")}
+                  {t(
+                    "certSign.collab.signRequest.uploadCert",
+                    "Custom Certificate",
+                  )}
                 </Text>
               }
             />
@@ -118,7 +144,13 @@ export const CertificateSelector: React.FC<CertificateSelectorProps> = ({
       {certType === "UPLOAD" && (
         <Stack gap="sm">
           {isServerPlan && (
-            <Divider label={t("certSign.collab.signRequest.uploadCert", "Custom Certificate")} labelPosition="left" />
+            <Divider
+              label={t(
+                "certSign.collab.signRequest.uploadCert",
+                "Custom Certificate",
+              )}
+              labelPosition="left"
+            />
           )}
 
           {/* Format picker */}
@@ -159,7 +191,10 @@ export const CertificateSelector: React.FC<CertificateSelectorProps> = ({
                 onChange={(file) => onPrivateKeyFileChange(file || null)}
                 accept=".pem,.der,.key"
                 disabled={disabled}
-                placeholder={t("certSign.choosePrivateKey", "Choose Private Key File")}
+                placeholder={t(
+                  "certSign.choosePrivateKey",
+                  "Choose Private Key File",
+                )}
               />
               {privateKeyFile && (
                 <FileUploadButton
@@ -167,7 +202,10 @@ export const CertificateSelector: React.FC<CertificateSelectorProps> = ({
                   onChange={(file) => onCertFileChange(file || null)}
                   accept=".pem,.der,.crt,.cer"
                   disabled={disabled}
-                  placeholder={t("certSign.chooseCertificate", "Choose Certificate File")}
+                  placeholder={t(
+                    "certSign.chooseCertificate",
+                    "Choose Certificate File",
+                  )}
                 />
               )}
             </Stack>
@@ -187,9 +225,15 @@ export const CertificateSelector: React.FC<CertificateSelectorProps> = ({
           {/* Password */}
           {showPassword && (
             <TextInput
-              label={t("certSign.collab.signRequest.password", "Certificate Password")}
+              label={t(
+                "certSign.collab.signRequest.password",
+                "Certificate Password",
+              )}
               type="password"
-              placeholder={t("certSign.passwordOptional", "Leave empty if no password")}
+              placeholder={t(
+                "certSign.passwordOptional",
+                "Leave empty if no password",
+              )}
               value={password}
               onChange={(e) => onPasswordChange(e.target.value)}
               disabled={disabled}

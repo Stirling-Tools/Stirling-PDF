@@ -21,7 +21,9 @@ export function AppLayout({ children }: AppLayoutProps) {
           height: 100% !important;
         }
       `}</style>
-      <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+      <div
+        style={{ height: "100vh", display: "flex", flexDirection: "column" }}
+      >
         {banner}
         <div style={{ flex: 1, minHeight: 0, height: 0 }}>{children}</div>
       </div>

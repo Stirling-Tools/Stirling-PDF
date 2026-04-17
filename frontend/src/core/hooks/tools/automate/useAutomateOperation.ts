@@ -1,4 +1,7 @@
-import { ToolType, useToolOperation } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  ToolType,
+  useToolOperation,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { useCallback } from "react";
 import { executeAutomationSequence } from "@app/utils/automationExecutor";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
@@ -10,7 +13,10 @@ export function useAutomateOperation() {
 
   const customProcessor = useCallback(
     async (params: AutomateParameters, files: File[]) => {
-      console.log("🚀 Starting automation execution via customProcessor", { params, files });
+      console.log("🚀 Starting automation execution via customProcessor", {
+        params,
+        files,
+      });
 
       if (!params.automationConfig) {
         throw new Error("No automation configuration provided");
@@ -26,7 +32,9 @@ export function useAutomateOperation() {
           params.onStepStart?.(stepIndex, operationName);
         },
         (stepIndex: number, resultFiles: File[]) => {
-          console.log(`Step ${stepIndex + 1} completed with ${resultFiles.length} files`);
+          console.log(
+            `Step ${stepIndex + 1} completed with ${resultFiles.length} files`,
+          );
           params.onStepComplete?.(stepIndex, resultFiles);
         },
         (stepIndex: number, error: string) => {
@@ -36,7 +44,9 @@ export function useAutomateOperation() {
         },
       );
 
-      console.log(`✅ Automation completed, returning ${finalResults.length} files`);
+      console.log(
+        `✅ Automation completed, returning ${finalResults.length} files`,
+      );
       return {
         files: finalResults,
         consumedAllInputs: true,

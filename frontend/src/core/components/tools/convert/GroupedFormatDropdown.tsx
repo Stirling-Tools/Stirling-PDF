@@ -65,7 +65,9 @@ const GroupedFormatDropdown = ({
   const selectedLabel = useMemo(() => {
     if (!value) return placeholder;
     const selected = options.find((opt) => opt.value === value);
-    return selected ? `${selected.group} (${selected.label})` : value.toUpperCase();
+    return selected
+      ? `${selected.group} (${selected.label})`
+      : value.toUpperCase();
   }, [value, options, placeholder]);
 
   const handleOptionSelect = (selectedValue: string) => {
@@ -96,7 +98,11 @@ const GroupedFormatDropdown = ({
             padding: "0.5rem 0.75rem",
             border: `0.0625rem solid ${theme.colors.gray[4]}`,
             borderRadius: theme.radius.sm,
-            backgroundColor: disabled ? theme.colors.gray[1] : colorScheme === "dark" ? theme.colors.dark[6] : theme.white,
+            backgroundColor: disabled
+              ? theme.colors.gray[1]
+              : colorScheme === "dark"
+                ? theme.colors.dark[6]
+                : theme.white,
             cursor: disabled ? "not-allowed" : "pointer",
             width: "100%",
             color: disabled
@@ -117,7 +123,10 @@ const GroupedFormatDropdown = ({
                 fontSize: "1rem",
                 transform: dropdownOpened ? "rotate(180deg)" : "rotate(0deg)",
                 transition: "transform 0.2s ease",
-                color: colorScheme === "dark" ? theme.colors.dark[2] : theme.colors.gray[6],
+                color:
+                  colorScheme === "dark"
+                    ? theme.colors.dark[2]
+                    : theme.colors.gray[6],
               }}
             />
           </Group>
@@ -129,14 +138,20 @@ const GroupedFormatDropdown = ({
           maxWidth: "90vw",
           maxHeight: "40vh",
           overflow: "auto",
-          backgroundColor: colorScheme === "dark" ? theme.colors.dark[7] : theme.white,
+          backgroundColor:
+            colorScheme === "dark" ? theme.colors.dark[7] : theme.white,
           border: `0.0625rem solid ${colorScheme === "dark" ? theme.colors.dark[4] : theme.colors.gray[4]}`,
         }}
       >
         <Stack gap="md">
           {Object.entries(groupedOptions).map(([groupName, groupOptions]) => (
             <Box key={groupName}>
-              <Text size="sm" fw={600} c={colorScheme === "dark" ? "dark.2" : "gray.6"} mb="xs">
+              <Text
+                size="sm"
+                fw={600}
+                c={colorScheme === "dark" ? "dark.2" : "gray.6"}
+                mb="xs"
+              >
                 {groupName}
               </Text>
               <Group gap="xs" style={{ flexWrap: "wrap" }}>

@@ -10,8 +10,12 @@ export function useSaaSMode(): boolean {
   const [isSaaSMode, setIsSaaSMode] = useState(true);
 
   useEffect(() => {
-    void connectionModeService.getCurrentMode().then((mode) => setIsSaaSMode(mode === "saas"));
-    return connectionModeService.subscribeToModeChanges((cfg) => setIsSaaSMode(cfg.mode === "saas"));
+    void connectionModeService
+      .getCurrentMode()
+      .then((mode) => setIsSaaSMode(mode === "saas"));
+    return connectionModeService.subscribeToModeChanges((cfg) =>
+      setIsSaaSMode(cfg.mode === "saas"),
+    );
   }, []);
 
   return isSaaSMode;

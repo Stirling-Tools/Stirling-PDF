@@ -11,7 +11,12 @@ const AdjustPageScale = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const adjustPageScaleTips = useAdjustPageScaleTips();
 
-  const base = useBaseTool("adjustPageScale", useAdjustPageScaleParameters, useAdjustPageScaleOperation, props);
+  const base = useBaseTool(
+    "adjustPageScale",
+    useAdjustPageScaleParameters,
+    useAdjustPageScaleOperation,
+    props,
+  );
 
   return createToolFlow({
     files: {
@@ -22,7 +27,9 @@ const AdjustPageScale = (props: BaseToolProps) => {
       {
         title: "Settings",
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: adjustPageScaleTips,
         content: (
           <AdjustPageScaleSettings

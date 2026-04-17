@@ -1,7 +1,11 @@
 import type { StepType } from "@reactour/tour";
 import type { TFunction } from "i18next";
 
-async function waitForElement(selector: string, timeoutMs = 7000, intervalMs = 100): Promise<void> {
+async function waitForElement(
+  selector: string,
+  timeoutMs = 7000,
+  intervalMs = 100,
+): Promise<void> {
   if (typeof document === "undefined") return;
   const start = Date.now();
   // Immediate hit
@@ -19,7 +23,11 @@ async function waitForElement(selector: string, timeoutMs = 7000, intervalMs = 1
   });
 }
 
-async function waitForHighlightable(selector: string, timeoutMs = 7000, intervalMs = 500): Promise<void> {
+async function waitForHighlightable(
+  selector: string,
+  timeoutMs = 7000,
+  intervalMs = 500,
+): Promise<void> {
   if (typeof document === "undefined") return;
   const start = Date.now();
 
@@ -68,7 +76,10 @@ interface CreateWhatsNewStepsConfigArgs {
   actions: WhatsNewStepActions;
 }
 
-export function createWhatsNewStepsConfig({ t, actions }: CreateWhatsNewStepsConfigArgs): Record<WhatsNewTourStep, StepType> {
+export function createWhatsNewStepsConfig({
+  t,
+  actions,
+}: CreateWhatsNewStepsConfigArgs): Record<WhatsNewTourStep, StepType> {
   const {
     saveWorkbenchState,
     closeFilesModal,
@@ -128,7 +139,10 @@ export function createWhatsNewStepsConfig({ t, actions }: CreateWhatsNewStepsCon
     },
     [WhatsNewTourStep.RIGHT_RAIL]: {
       selector: '[data-tour="right-rail-controls"]',
-      highlightedSelectors: ['[data-tour="right-rail-controls"]', '[data-tour="right-rail-settings"]'],
+      highlightedSelectors: [
+        '[data-tour="right-rail-controls"]',
+        '[data-tour="right-rail-settings"]',
+      ],
       content: t(
         "onboarding.whatsNew.rightRail",
         "The <strong>Right Rail</strong> holds quick actions to select files, change theme or language, and download results.",
@@ -157,7 +171,10 @@ export function createWhatsNewStepsConfig({ t, actions }: CreateWhatsNewStepsCon
     },
     [WhatsNewTourStep.PAGE_EDITOR_VIEW]: {
       selector: '[data-tour="view-switcher"]',
-      content: t("onboarding.whatsNew.pageEditorView", "Switch to the Page Editor to reorder, rotate, or delete pages."),
+      content: t(
+        "onboarding.whatsNew.pageEditorView",
+        "Switch to the Page Editor to reorder, rotate, or delete pages.",
+      ),
       position: "bottom",
       padding: 8,
       action: async () => {

@@ -3,7 +3,13 @@ import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
-const VALID_MODES = ["core", "proprietary", "saas", "desktop", "prototypes"] as const;
+const VALID_MODES = [
+  "core",
+  "proprietary",
+  "saas",
+  "desktop",
+  "prototypes",
+] as const;
 type BuildMode = (typeof VALID_MODES)[number];
 
 const TSCONFIG_MAP: Record<BuildMode, string> = {
@@ -23,7 +29,9 @@ export default defineConfig(({ mode }) => {
   // Resolve the effective build mode.
   // Explicit --mode flags take precedence; otherwise default to proprietary
   // unless DISABLE_ADDITIONAL_FEATURES=true, in which case default to core.
-  const effectiveMode: BuildMode = (VALID_MODES as readonly string[]).includes(mode)
+  const effectiveMode: BuildMode = (VALID_MODES as readonly string[]).includes(
+    mode,
+  )
     ? (mode as BuildMode)
     : process.env.DISABLE_ADDITIONAL_FEATURES === "true"
       ? "core"

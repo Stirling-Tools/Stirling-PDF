@@ -10,14 +10,20 @@ export const usePdfTextEditorTips = (): TooltipContent => {
     },
     tips: [
       {
-        title: t("pdfTextEditor.tooltip.textFocus.title", "Text and Image Focus"),
+        title: t(
+          "pdfTextEditor.tooltip.textFocus.title",
+          "Text and Image Focus",
+        ),
         description: t(
           "pdfTextEditor.tooltip.textFocus.text",
           "This workspace focuses on editing text and repositioning embedded images. Complex page artwork, form widgets, and layered graphics are preserved for export but are not fully editable here.",
         ),
       },
       {
-        title: t("pdfTextEditor.tooltip.previewVariance.title", "Preview Variance"),
+        title: t(
+          "pdfTextEditor.tooltip.previewVariance.title",
+          "Preview Variance",
+        ),
         description: t(
           "pdfTextEditor.tooltip.previewVariance.text",
           "Some visuals (such as table borders, shapes, or annotation appearances) may not display exactly in the preview. The exported PDF keeps the original drawing commands whenever possible.",

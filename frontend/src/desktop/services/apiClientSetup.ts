@@ -6,7 +6,10 @@ import { createBackendNotReadyError } from "@app/constants/backendErrors";
 import { operationRouter } from "@app/services/operationRouter";
 import { authService } from "@app/services/authService";
 import { connectionModeService } from "@app/services/connectionModeService";
-import { STIRLING_SAAS_URL, STIRLING_SAAS_BACKEND_API_URL } from "@app/constants/connection";
+import {
+  STIRLING_SAAS_URL,
+  STIRLING_SAAS_BACKEND_API_URL,
+} from "@app/constants/connection";
 import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
 import i18n from "@app/i18n";
 
@@ -42,7 +45,8 @@ export function setupApiInterceptors(client: AxiosInstance): void {
       // Pattern matching in shouldSkipBackendReadyCheck() needs original relative URL
       const originalUrl = extendedConfig.url;
       const skipCheck = extendedConfig.skipBackendReadyCheck === true;
-      const skipForSaaSBackend = await operationRouter.shouldSkipBackendReadyCheck(originalUrl);
+      const skipForSaaSBackend =
+        await operationRouter.shouldSkipBackendReadyCheck(originalUrl);
 
       try {
         // Get the appropriate base URL for this request
@@ -81,9 +85,13 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
           if (token) {
             extendedConfig.headers.Authorization = `Bearer ${token}`;
-            console.debug(`[apiClientSetup] Added auth token for request to: ${extendedConfig.url}`);
+            console.debug(
+              `[apiClientSetup] Added auth token for request to: ${extendedConfig.url}`,
+            );
           } else {
-            console.warn(`[apiClientSetup] No auth token available for: ${extendedConfig.url}`);
+            console.warn(
+              `[apiClientSetup] No auth token available for: ${extendedConfig.url}`,
+            );
           }
         } else {
           // Local bundled backend: disable credentials (security disabled)
@@ -114,7 +122,10 @@ export function setupApiInterceptors(client: AxiosInstance): void {
             alert({
               alertType: "error",
               title: i18n.t("backendHealth.offline", "Backend Offline"),
-              body: i18n.t("backendHealth.wait", "Please wait for the backend to finish launching and try again."),
+              body: i18n.t(
+                "backendHealth.wait",
+                "Please wait for the backend to finish launching and try again.",
+              ),
               isPersistentPopup: false,
             });
           }
@@ -162,7 +173,12 @@ export function setupApiInterceptors(client: AxiosInstance): void {
           return Promise.reject(error);
         }
         if (typeof window !== "undefined") {
-          console.warn("[apiClientSetup] 401 on path:", window.location.pathname, "url:", originalRequest.url);
+          console.warn(
+            "[apiClientSetup] 401 on path:",
+            window.location.pathname,
+            "url:",
+            originalRequest.url,
+          );
         }
         if (originalRequest.skipAuthRedirect) {
           return Promise.reject(error);
@@ -175,7 +191,9 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         }
         originalRequest._retry = true;
 
-        console.debug(`[apiClientSetup] 401 error, attempting token refresh for: ${originalRequest.url}`);
+        console.debug(
+          `[apiClientSetup] 401 error, attempting token refresh for: ${originalRequest.url}`,
+        );
 
         const isRemote = await operationRouter.isSelfHostedMode();
         let refreshed = false;
@@ -194,19 +212,25 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         if (refreshed) {
           // Retry the original request with new token
           const token = await authService.getAuthToken();
-          console.debug(`[apiClientSetup] Token refreshed, retrying request to: ${originalRequest.url}`);
+          console.debug(
+            `[apiClientSetup] Token refreshed, retrying request to: ${originalRequest.url}`,
+          );
 
           if (token) {
             originalRequest.headers.Authorization = `Bearer ${token}`;
           } else {
-            console.error(`[apiClientSetup] No token available after successful refresh!`);
+            console.error(
+              `[apiClientSetup] No token available after successful refresh!`,
+            );
           }
 
           return client.request(originalRequest);
         }
 
         // Refresh failed - prompt for re-authentication via the sign-in modal.
-        window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: { locked: false } }));
+        window.dispatchEvent(
+          new CustomEvent(OPEN_SIGN_IN_EVENT, { detail: { locked: false } }),
+        );
       }
 
       // Handle 403 Forbidden - unauthorized access
@@ -214,7 +238,10 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         alert({
           alertType: "error",
           title: i18n.t("auth.accessDenied", "Access Denied"),
-          body: i18n.t("auth.insufficientPermissions", "You do not have permission to perform this action."),
+          body: i18n.t(
+            "auth.insufficientPermissions",
+            "You do not have permission to perform this action.",
+          ),
           isPersistentPopup: false,
         });
       }

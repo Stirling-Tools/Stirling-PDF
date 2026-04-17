@@ -16,9 +16,13 @@ interface AdminTourOrchestrationContextType {
   scrollToSetting: (settingId: string) => void;
 }
 
-const AdminTourOrchestrationContext = createContext<AdminTourOrchestrationContextType | undefined>(undefined);
+const AdminTourOrchestrationContext = createContext<
+  AdminTourOrchestrationContextType | undefined
+>(undefined);
 
-export const AdminTourOrchestrationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AdminTourOrchestrationProvider: React.FC<{
+  children: React.ReactNode;
+}> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -31,7 +35,10 @@ export const AdminTourOrchestrationProvider: React.FC<{ children: React.ReactNod
   }, [location.pathname]);
 
   const restoreAdminState = useCallback(() => {
-    console.log("Restoring admin state, saved location:", savedLocationRef.current);
+    console.log(
+      "Restoring admin state, saved location:",
+      savedLocationRef.current,
+    );
 
     // Navigate back to saved location or home
     const targetPath = savedLocationRef.current || "/";
@@ -59,8 +66,12 @@ export const AdminTourOrchestrationProvider: React.FC<{ children: React.ReactNod
 
   const scrollNavToSection = useCallback((section: string): Promise<void> => {
     return new Promise((resolve) => {
-      const navElement = document.querySelector(`[data-tour="admin-${section}-nav"]`) as HTMLElement;
-      const scrollContainer = document.querySelector(".modal-nav-scroll") as HTMLElement;
+      const navElement = document.querySelector(
+        `[data-tour="admin-${section}-nav"]`,
+      ) as HTMLElement;
+      const scrollContainer = document.querySelector(
+        ".modal-nav-scroll",
+      ) as HTMLElement;
 
       if (navElement && scrollContainer) {
         // Get the position of the nav element relative to the scroll container
@@ -111,13 +122,20 @@ export const AdminTourOrchestrationProvider: React.FC<{ children: React.ReactNod
     scrollToSetting,
   };
 
-  return <AdminTourOrchestrationContext.Provider value={value}>{children}</AdminTourOrchestrationContext.Provider>;
+  return (
+    <AdminTourOrchestrationContext.Provider value={value}>
+      {children}
+    </AdminTourOrchestrationContext.Provider>
+  );
 };
 
-export const useAdminTourOrchestration = (): AdminTourOrchestrationContextType => {
-  const context = useContext(AdminTourOrchestrationContext);
-  if (!context) {
-    throw new Error("useAdminTourOrchestration must be used within AdminTourOrchestrationProvider");
-  }
-  return context;
-};
+export const useAdminTourOrchestration =
+  (): AdminTourOrchestrationContextType => {
+    const context = useContext(AdminTourOrchestrationContext);
+    if (!context) {
+      throw new Error(
+        "useAdminTourOrchestration must be used within AdminTourOrchestrationProvider",
+      );
+    }
+    return context;
+  };

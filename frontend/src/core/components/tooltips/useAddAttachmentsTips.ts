@@ -6,11 +6,17 @@ export const useAddAttachmentsTips = (): TooltipContent => {
 
   return {
     header: {
-      title: t("AddAttachmentsRequest.tooltip.header.title", "About Add Attachments"),
+      title: t(
+        "AddAttachmentsRequest.tooltip.header.title",
+        "About Add Attachments",
+      ),
     },
     tips: [
       {
-        title: t("AddAttachmentsRequest.tooltip.description.title", "What it does"),
+        title: t(
+          "AddAttachmentsRequest.tooltip.description.title",
+          "What it does",
+        ),
         description: t(
           "AddAttachmentsRequest.info",
           "Select files to attach to your PDF. These files will be embedded and accessible through the PDF's attachment panel.",

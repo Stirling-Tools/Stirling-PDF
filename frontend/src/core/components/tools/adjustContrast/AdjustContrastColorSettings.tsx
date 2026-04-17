@@ -5,11 +5,18 @@ import SliderWithInput from "@app/components/shared/sliderWithInput/SliderWithIn
 
 interface Props {
   parameters: AdjustContrastParameters;
-  onParameterChange: <K extends keyof AdjustContrastParameters>(key: K, value: AdjustContrastParameters[K]) => void;
+  onParameterChange: <K extends keyof AdjustContrastParameters>(
+    key: K,
+    value: AdjustContrastParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-export default function AdjustContrastColorSettings({ parameters, onParameterChange, disabled }: Props) {
+export default function AdjustContrastColorSettings({
+  parameters,
+  onParameterChange,
+  disabled,
+}: Props) {
   const { t } = useTranslation();
 
   return (

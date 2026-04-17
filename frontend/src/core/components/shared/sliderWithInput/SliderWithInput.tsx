@@ -28,7 +28,14 @@ export default function SliderWithInput({
       </Text>
       <Group gap="md" align="center">
         <div style={{ flex: 1 }}>
-          <Slider min={min} max={max} step={step} value={value} onChange={onChange} disabled={disabled} />
+          <Slider
+            min={min}
+            max={max}
+            step={step}
+            value={value}
+            onChange={onChange}
+            disabled={disabled}
+          />
         </div>
         <NumberInput
           value={value}

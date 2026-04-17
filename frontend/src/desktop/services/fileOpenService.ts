@@ -2,7 +2,9 @@ import { invoke, isTauri } from "@tauri-apps/api/core";
 
 export interface FileOpenService {
   getOpenedFiles(): Promise<string[]>;
-  readFileAsArrayBuffer(filePath: string): Promise<{ fileName: string; arrayBuffer: ArrayBuffer } | null>;
+  readFileAsArrayBuffer(
+    filePath: string,
+  ): Promise<{ fileName: string; arrayBuffer: ArrayBuffer } | null>;
   clearOpenedFiles(): Promise<void>;
   onFileOpened(callback: (filePath: string) => void): () => void; // Returns unlisten function
 }
@@ -20,7 +22,9 @@ class TauriFileOpenService implements FileOpenService {
     }
   }
 
-  async readFileAsArrayBuffer(filePath: string): Promise<{ fileName: string; arrayBuffer: ArrayBuffer } | null> {
+  async readFileAsArrayBuffer(
+    filePath: string,
+  ): Promise<{ fileName: string; arrayBuffer: ArrayBuffer } | null> {
     try {
       const { readFile } = await import("@tauri-apps/plugin-fs");
 
@@ -29,7 +33,10 @@ class TauriFileOpenService implements FileOpenService {
 
       return {
         fileName,
-        arrayBuffer: fileData.buffer.slice(fileData.byteOffset, fileData.byteOffset + fileData.byteLength),
+        arrayBuffer: fileData.buffer.slice(
+          fileData.byteOffset,
+          fileData.byteOffset + fileData.byteLength,
+        ),
       };
     } catch (error) {
       console.error("Failed to read file:", error);
@@ -115,7 +122,9 @@ class WebFileOpenService implements FileOpenService {
     return [];
   }
 
-  async readFileAsArrayBuffer(_filePath: string): Promise<{ fileName: string; arrayBuffer: ArrayBuffer } | null> {
+  async readFileAsArrayBuffer(
+    _filePath: string,
+  ): Promise<{ fileName: string; arrayBuffer: ArrayBuffer } | null> {
     // In web mode, cannot read arbitrary file paths
     return null;
   }
@@ -134,4 +143,6 @@ class WebFileOpenService implements FileOpenService {
 }
 
 // Export the appropriate service based on environment
-export const fileOpenService: FileOpenService = isTauri() ? new TauriFileOpenService() : new WebFileOpenService();
+export const fileOpenService: FileOpenService = isTauri()
+  ? new TauriFileOpenService()
+  : new WebFileOpenService();

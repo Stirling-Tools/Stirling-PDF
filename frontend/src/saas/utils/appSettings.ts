@@ -12,7 +12,9 @@ export function openAppSettings(targetKey?: NavKey, notice?: string) {
     window.dispatchEvent(new CustomEvent("appConfig:open", { detail }));
     // If a specific section is requested, navigate there once modal mounts
     if (targetKey) {
-      window.dispatchEvent(new CustomEvent("appConfig:navigate", { detail: { key: targetKey } }));
+      window.dispatchEvent(
+        new CustomEvent("appConfig:navigate", { detail: { key: targetKey } }),
+      );
     }
   } catch (_e) {
     // no-op on SSR or test environments

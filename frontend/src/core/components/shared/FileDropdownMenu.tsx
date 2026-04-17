@@ -31,7 +31,9 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
   return (
     <Menu trigger="click" position="bottom" width="30rem">
       <Menu.Target>
-        <div style={{ ...viewOptionStyle, cursor: "pointer", maxWidth: "100%" }}>
+        <div
+          style={{ ...viewOptionStyle, cursor: "pointer", maxWidth: "100%" }}
+        >
           {switchingTo === "viewer" ? (
             <Loader size="xs" />
           ) : (
@@ -73,7 +75,10 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
                 justifyContent: "flex-start",
               }}
             >
-              <Group gap="xs" style={{ width: "100%", justifyContent: "space-between" }}>
+              <Group
+                gap="xs"
+                style={{ width: "100%", justifyContent: "space-between" }}
+              >
                 <div style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
                   <PrivateContent>
                     <FitText

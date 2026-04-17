@@ -11,7 +11,9 @@ export interface OperationSaveContext {
   markSaved: (fileId: FileId, savedPath?: string) => void;
 }
 
-export async function saveOperationResults(context: OperationSaveContext): Promise<DownloadResult | null> {
+export async function saveOperationResults(
+  context: OperationSaveContext,
+): Promise<DownloadResult | null> {
   if (!context.downloadUrl) return null;
 
   const result = await downloadFromUrl(

@@ -8,11 +8,21 @@
  * - Better visual hierarchy and spacing
  */
 import React, { useCallback, useEffect, useRef } from "react";
-import { Box, Text, ScrollArea, Badge, Tooltip, ActionIcon } from "@mantine/core";
+import {
+  Box,
+  Text,
+  ScrollArea,
+  Badge,
+  Tooltip,
+  ActionIcon,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FieldInput } from "@app/tools/formFill/FieldInput";
-import { FIELD_TYPE_ICON, FIELD_TYPE_COLOR } from "@app/tools/formFill/fieldMeta";
+import {
+  FIELD_TYPE_ICON,
+  FIELD_TYPE_COLOR,
+} from "@app/tools/formFill/fieldMeta";
 import type { FormField } from "@app/tools/formFill/types";
 import CloseIcon from "@mui/icons-material/Close";
 import TextFieldsIcon from "@mui/icons-material/TextFields";
@@ -56,7 +66,10 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
 
   const fieldsByPage = new Map<number, FormField[]>();
   for (const field of fields) {
-    const pageIndex = field.widgets && field.widgets.length > 0 ? field.widgets[0].pageIndex : 0;
+    const pageIndex =
+      field.widgets && field.widgets.length > 0
+        ? field.widgets[0].pageIndex
+        : 0;
     if (!fieldsByPage.has(pageIndex)) {
       fieldsByPage.set(pageIndex, []);
     }
@@ -76,7 +89,8 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
         display: "flex",
         flexDirection: "column",
         background: "var(--bg-toolbar, var(--mantine-color-body))",
-        borderLeft: "1px solid var(--border-subtle, var(--mantine-color-default-border))",
+        borderLeft:
+          "1px solid var(--border-subtle, var(--mantine-color-default-border))",
         boxShadow: "-4px 0 16px rgba(0,0,0,0.08)",
       }}
     >
@@ -87,7 +101,8 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
           alignItems: "center",
           justifyContent: "space-between",
           padding: "0.625rem 0.75rem",
-          borderBottom: "1px solid var(--border-subtle, var(--mantine-color-default-border))",
+          borderBottom:
+            "1px solid var(--border-subtle, var(--mantine-color-default-border))",
           flexShrink: 0,
         }}
       >
@@ -100,7 +115,12 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
             {fields.length}
           </Badge>
         </div>
-        <ActionIcon variant="subtle" size="sm" onClick={onToggle} aria-label="Close sidebar">
+        <ActionIcon
+          variant="subtle"
+          size="sm"
+          onClick={onToggle}
+          aria-label="Close sidebar"
+        >
           <CloseIcon sx={{ fontSize: 16 }} />
         </ActionIcon>
       </div>
@@ -117,7 +137,9 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
 
         {!loading && fields.length === 0 && (
           <div className={styles.emptyState}>
-            <span className={styles.emptyStateText}>No form fields found in this PDF</span>
+            <span className={styles.emptyStateText}>
+              No form fields found in this PDF
+            </span>
           </div>
         )}
 
@@ -125,8 +147,13 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
           <div className={styles.fieldListInner}>
             {sortedPages.map((pageIdx, i) => (
               <React.Fragment key={pageIdx}>
-                <div className={styles.pageDivider} style={i === 0 ? { marginTop: 0 } : undefined}>
-                  <Text className={styles.pageDividerLabel}>Page {pageIdx + 1}</Text>
+                <div
+                  className={styles.pageDivider}
+                  style={i === 0 ? { marginTop: 0 } : undefined}
+                >
+                  <Text className={styles.pageDividerLabel}>
+                    Page {pageIdx + 1}
+                  </Text>
                 </div>
 
                 {fieldsByPage.get(pageIdx)!.map((field) => {
@@ -151,17 +178,27 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
                             {FIELD_TYPE_ICON[field.type]}
                           </span>
                         </Tooltip>
-                        <span className={styles.fieldName}>{field.label || field.name}</span>
-                        {field.required && <span className={styles.fieldRequired}>req</span>}
+                        <span className={styles.fieldName}>
+                          {field.label || field.name}
+                        </span>
+                        {field.required && (
+                          <span className={styles.fieldRequired}>req</span>
+                        )}
                       </div>
 
-                      {field.type !== "button" && field.type !== "signature" && (
-                        <div className={styles.fieldInputWrap}>
-                          <FieldInput field={field} onValueChange={handleValueChange} />
-                        </div>
-                      )}
+                      {field.type !== "button" &&
+                        field.type !== "signature" && (
+                          <div className={styles.fieldInputWrap}>
+                            <FieldInput
+                              field={field}
+                              onValueChange={handleValueChange}
+                            />
+                          </div>
+                        )}
 
-                      {field.tooltip && <div className={styles.fieldHint}>{field.tooltip}</div>}
+                      {field.tooltip && (
+                        <div className={styles.fieldHint}>{field.tooltip}</div>
+                      )}
                     </div>
                   );
                 })}

@@ -24,9 +24,16 @@ const Crop = (props: BaseToolProps) => {
       {
         title: t("crop.steps.selectArea", "Select Crop Area"),
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.hasResults ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.hasResults
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: tooltips,
-        content: <CropSettings parameters={base.params} disabled={base.endpointLoading} />,
+        content: (
+          <CropSettings
+            parameters={base.params}
+            disabled={base.endpointLoading}
+          />
+        ),
       },
     ],
     executeButton: {

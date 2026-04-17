@@ -34,7 +34,12 @@ const ChangeMetadata = (props: BaseToolProps) => {
   const documentDatesTips = useDocumentDatesTips();
   const advancedOptionsTips = useAdvancedOptionsTips();
 
-  const base = useBaseTool("changeMetadata", useChangeMetadataParameters, useChangeMetadataOperation, props);
+  const base = useBaseTool(
+    "changeMetadata",
+    useChangeMetadataParameters,
+    useChangeMetadataOperation,
+    props,
+  );
 
   // Extract metadata from uploaded files
   const { isExtractingMetadata } = useMetadataExtraction(base.params);
@@ -54,7 +59,8 @@ const ChangeMetadata = (props: BaseToolProps) => {
   const createStandardMetadataStep = () => ({
     title: t("changeMetadata.standardFields.title", "Standard Fields"),
     isCollapsed: accordion.getCollapsedState(MetadataStep.STANDARD_METADATA),
-    onCollapsedClick: () => accordion.handleStepToggle(MetadataStep.STANDARD_METADATA),
+    onCollapsedClick: () =>
+      accordion.handleStepToggle(MetadataStep.STANDARD_METADATA),
     tooltip: standardMetadataTips,
     content: (
       <StandardMetadataStep
@@ -68,7 +74,8 @@ const ChangeMetadata = (props: BaseToolProps) => {
   const createDocumentDatesStep = () => ({
     title: t("changeMetadata.dates.title", "Date Fields"),
     isCollapsed: accordion.getCollapsedState(MetadataStep.DOCUMENT_DATES),
-    onCollapsedClick: () => accordion.handleStepToggle(MetadataStep.DOCUMENT_DATES),
+    onCollapsedClick: () =>
+      accordion.handleStepToggle(MetadataStep.DOCUMENT_DATES),
     tooltip: documentDatesTips,
     content: (
       <DocumentDatesStep
@@ -82,7 +89,8 @@ const ChangeMetadata = (props: BaseToolProps) => {
   const createAdvancedOptionsStep = () => ({
     title: t("changeMetadata.advanced.title", "Advanced Options"),
     isCollapsed: accordion.getCollapsedState(MetadataStep.ADVANCED_OPTIONS),
-    onCollapsedClick: () => accordion.handleStepToggle(MetadataStep.ADVANCED_OPTIONS),
+    onCollapsedClick: () =>
+      accordion.handleStepToggle(MetadataStep.ADVANCED_OPTIONS),
     tooltip: advancedOptionsTips,
     content: (
       <AdvancedOptionsStep
@@ -102,7 +110,8 @@ const ChangeMetadata = (props: BaseToolProps) => {
       {
         title: t("changeMetadata.deleteAll.label", "Remove Existing Metadata"),
         isCollapsed: accordion.getCollapsedState(MetadataStep.DELETE_ALL),
-        onCollapsedClick: () => accordion.handleStepToggle(MetadataStep.DELETE_ALL),
+        onCollapsedClick: () =>
+          accordion.handleStepToggle(MetadataStep.DELETE_ALL),
         tooltip: deleteAllTips,
         content: (
           <DeleteAllStep
@@ -115,7 +124,11 @@ const ChangeMetadata = (props: BaseToolProps) => {
     ];
 
     if (!base.params.parameters.deleteAll) {
-      steps.push(createStandardMetadataStep(), createDocumentDatesStep(), createAdvancedOptionsStep());
+      steps.push(
+        createStandardMetadataStep(),
+        createDocumentDatesStep(),
+        createAdvancedOptionsStep(),
+      );
     }
 
     return steps;

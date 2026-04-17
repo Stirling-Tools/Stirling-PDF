@@ -10,11 +10,14 @@ interface ServerLicenseSlideProps {
 
 const DEFAULT_FREE_TIER_LIMIT = 5;
 
-export default function ServerLicenseSlide({ licenseNotice }: ServerLicenseSlideProps = {}): SlideConfig {
+export default function ServerLicenseSlide({
+  licenseNotice,
+}: ServerLicenseSlideProps = {}): SlideConfig {
   const freeTierLimit = licenseNotice?.freeTierLimit ?? DEFAULT_FREE_TIER_LIMIT;
   const totalUsers = licenseNotice?.totalUsers ?? null;
   const isOverLimit = licenseNotice?.isOverLimit ?? false;
-  const formattedTotalUsers = totalUsers != null ? totalUsers.toLocaleString() : null;
+  const formattedTotalUsers =
+    totalUsers != null ? totalUsers.toLocaleString() : null;
   const overLimitUserCopy = formattedTotalUsers ?? `more than ${freeTierLimit}`;
   const title = isOverLimit
     ? i18n.t("onboarding.serverLicense.overLimitTitle", "Server License Needed")
@@ -50,7 +53,9 @@ export default function ServerLicenseSlide({ licenseNotice }: ServerLicenseSlide
     title,
     body,
     background: {
-      gradientStops: isOverLimit ? ["#F472B6", "#8B5CF6"] : ["#F97316", "#F59E0B"],
+      gradientStops: isOverLimit
+        ? ["#F472B6", "#8B5CF6"]
+        : ["#F97316", "#F59E0B"],
       circles: UNIFIED_CIRCLE_CONFIG,
     },
   };

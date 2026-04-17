@@ -17,14 +17,23 @@ export const useCompressTips = (): TooltipContent => {
         ),
       },
       {
-        title: t("compress.tooltip.qualityAdjustment.title", "Quality Adjustment"),
+        title: t(
+          "compress.tooltip.qualityAdjustment.title",
+          "Quality Adjustment",
+        ),
         description: t(
           "compress.tooltip.qualityAdjustment.text",
           "Drag the slider to adjust the compression strength. Lower values (1-3) preserve quality but result in larger files. Higher values (7-9) shrink the file more but reduce image clarity.",
         ),
         bullets: [
-          t("compress.tooltip.qualityAdjustment.bullet1", "Lower values preserve quality"),
-          t("compress.tooltip.qualityAdjustment.bullet2", "Higher values reduce file size"),
+          t(
+            "compress.tooltip.qualityAdjustment.bullet1",
+            "Lower values preserve quality",
+          ),
+          t(
+            "compress.tooltip.qualityAdjustment.bullet2",
+            "Higher values reduce file size",
+          ),
         ],
       },
       {

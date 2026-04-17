@@ -35,7 +35,10 @@ describe("useLogoAssets - Logo Asset Files", () => {
 
     test.each(requiredAssets)("should have %s", (assetName) => {
       const assetPath = path.join(folderPath, assetName);
-      expect(fs.existsSync(assetPath), `Missing asset: ${folder}/${assetName}`).toBe(true);
+      expect(
+        fs.existsSync(assetPath),
+        `Missing asset: ${folder}/${assetName}`,
+      ).toBe(true);
     });
   });
 

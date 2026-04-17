@@ -14,7 +14,10 @@ function getBasePath(): string {
   }
 
   // Fall back to Vite's BASE_URL (build-time subpath)
-  return (import.meta.env.BASE_URL || "/").replace(/\/$/, "").replace(/^\.$/, "").replace(/^\/$/, "");
+  return (import.meta.env.BASE_URL || "/")
+    .replace(/\/$/, "")
+    .replace(/^\.$/, "")
+    .replace(/^\/$/, "");
 }
 
 export const BASE_PATH = getBasePath();

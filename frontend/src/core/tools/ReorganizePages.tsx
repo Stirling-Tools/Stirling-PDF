@@ -9,14 +9,19 @@ import ReorganizePagesSettings from "@app/components/tools/reorganizePages/Reorg
 import { useReorganizePagesParameters } from "@app/hooks/tools/reorganizePages/useReorganizePagesParameters";
 import { useReorganizePagesOperation } from "@app/hooks/tools/reorganizePages/useReorganizePagesOperation";
 
-const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
+const ReorganizePages = ({
+  onPreviewFile,
+  onComplete,
+  onError,
+}: BaseToolProps) => {
   const { t } = useTranslation();
   const selectedFiles = useViewScopedFiles();
 
   const params = useReorganizePagesParameters();
   const operation = useReorganizePagesOperation();
 
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("rearrange-pages");
+  const { enabled: endpointEnabled, loading: endpointLoading } =
+    useEndpointEnabled("rearrange-pages");
 
   useEffect(() => {
     operation.resetResults();
@@ -30,12 +35,16 @@ const ReorganizePages = ({ onPreviewFile, onComplete, onError }: BaseToolProps) 
         onComplete(operation.files);
       }
     } catch (error: any) {
-      onError?.(error?.message || t("reorganizePages.error.failed", "Failed to reorganize pages"));
+      onError?.(
+        error?.message ||
+          t("reorganizePages.error.failed", "Failed to reorganize pages"),
+      );
     }
   };
 
   const hasFiles = selectedFiles.length > 0;
-  const hasResults = operation.files.length > 0 || operation.downloadUrl !== null;
+  const hasResults =
+    operation.files.length > 0 || operation.downloadUrl !== null;
 
   enum Step {
     NONE = "none",

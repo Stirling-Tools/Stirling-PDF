@@ -1,5 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Modal, Stack, Text, Button, Group, Alert, TextInput, Paper, Select } from "@mantine/core";
+import {
+  Modal,
+  Stack,
+  Text,
+  Button,
+  Group,
+  Alert,
+  TextInput,
+  Paper,
+  Select,
+} from "@mantine/core";
 import LinkIcon from "@mui/icons-material/Link";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import { useTranslation } from "react-i18next";
@@ -22,7 +32,12 @@ interface ShareFileModalProps {
   onUploaded?: () => Promise<void> | void;
 }
 
-const ShareFileModal: React.FC<ShareFileModalProps> = ({ opened, onClose, file, onUploaded }) => {
+const ShareFileModal: React.FC<ShareFileModalProps> = ({
+  opened,
+  onClose,
+  file,
+  onUploaded,
+}) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const { actions } = useFileActions();
@@ -30,7 +45,9 @@ const ShareFileModal: React.FC<ShareFileModalProps> = ({ opened, onClose, file, 
   const [isWorking, setIsWorking] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [shareToken, setShareToken] = useState<string | null>(null);
-  const [shareRole, setShareRole] = useState<"editor" | "commenter" | "viewer">("editor");
+  const [shareRole, setShareRole] = useState<"editor" | "commenter" | "viewer">(
+    "editor",
+  );
 
   useEffect(() => {
     if (!opened) {
@@ -53,7 +70,9 @@ const ShareFileModal: React.FC<ShareFileModalProps> = ({ opened, onClose, file, 
       try {
         const parsed = new URL(frontendUrl);
         if (parsed.protocol === "http:" || parsed.protocol === "https:") {
-          const normalized = frontendUrl.endsWith("/") ? frontendUrl.slice(0, -1) : frontendUrl;
+          const normalized = frontendUrl.endsWith("/")
+            ? frontendUrl.slice(0, -1)
+            : frontendUrl;
           return `${normalized}/share/${shareToken}`;
         }
       } catch {
@@ -65,9 +84,12 @@ const ShareFileModal: React.FC<ShareFileModalProps> = ({ opened, onClose, file, 
 
   const createShareLink = useCallback(
     async (storedFileId: number) => {
-      const response = await apiClient.post(`/api/v1/storage/files/${storedFileId}/shares/links`, {
-        accessRole: shareRole,
-      });
+      const response = await apiClient.post(
+        `/api/v1/storage/files/${storedFileId}/shares/links`,
+        {
+          accessRole: shareRole,
+        },
+      );
       return response.data as { token?: string };
     },
     [shareRole],
@@ -99,7 +121,11 @@ const ShareFileModal: React.FC<ShareFileModalProps> = ({ opened, onClose, file, 
       if (!isUpToDate) {
         const originalFileId = (file.originalFileId || file.id) as FileId;
         const remoteId = file.remoteStorageId;
-        const { remoteId: newStoredId, updatedAt, chain } = await uploadHistoryChain(originalFileId, remoteId);
+        const {
+          remoteId: newStoredId,
+          updatedAt,
+          chain,
+        } = await uploadHistoryChain(originalFileId, remoteId);
         storedId = newStoredId;
 
         for (const stub of chain) {
@@ -132,14 +158,21 @@ const ShareFileModal: React.FC<ShareFileModalProps> = ({ opened, onClose, file, 
       });
       if (storedId) {
         actions.updateStirlingFileStub(file.id, { remoteHasShareLinks: true });
-        await fileStorage.updateFileMetadata(file.id, { remoteHasShareLinks: true });
+        await fileStorage.updateFileMetadata(file.id, {
+          remoteHasShareLinks: true,
+        });
       }
       if (onUploaded) {
         await onUploaded();
       }
     } catch (error: any) {
       console.error("Failed to generate share link:", error);
-      setErrorMessage(t("storageShare.failure", "Unable to generate a share link. Please try again."));
+      setErrorMessage(
+        t(
+          "storageShare.failure",
+          "Unable to generate a share link. Please try again.",
+        ),
+      );
     } finally {
       setIsWorking(false);
     }
@@ -192,13 +225,22 @@ const ShareFileModal: React.FC<ShareFileModalProps> = ({ opened, onClose, file, 
         </Paper>
 
         {errorMessage && (
-          <Alert color="red" title={t("storageShare.errorTitle", "Share failed")}>
+          <Alert
+            color="red"
+            title={t("storageShare.errorTitle", "Share failed")}
+          >
             {errorMessage}
           </Alert>
         )}
         {!shareLinksEnabled && (
-          <Alert color="yellow" title={t("storageShare.linksDisabled", "Share links are disabled.")}>
-            {t("storageShare.linksDisabledBody", "Share links are disabled by your server settings.")}
+          <Alert
+            color="yellow"
+            title={t("storageShare.linksDisabled", "Share links are disabled.")}
+          >
+            {t(
+              "storageShare.linksDisabledBody",
+              "Share links are disabled by your server settings.",
+            )}
           </Alert>
         )}
 
@@ -213,7 +255,9 @@ const ShareFileModal: React.FC<ShareFileModalProps> = ({ opened, onClose, file, 
                   <Button
                     variant="subtle"
                     size="xs"
-                    leftSection={<ContentCopyRoundedIcon style={{ fontSize: 16 }} />}
+                    leftSection={
+                      <ContentCopyRoundedIcon style={{ fontSize: 16 }} />
+                    }
                     onClick={handleCopyLink}
                   >
                     {t("storageShare.copy", "Copy")}
@@ -232,12 +276,26 @@ const ShareFileModal: React.FC<ShareFileModalProps> = ({ opened, onClose, file, 
             <Select
               label={t("storageShare.roleLabel", "Role")}
               value={shareRole}
-              onChange={(value) => setShareRole((value as typeof shareRole) || "editor")}
-              comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_OVER_FILE_MANAGER_MODAL + 10 }}
+              onChange={(value) =>
+                setShareRole((value as typeof shareRole) || "editor")
+              }
+              comboboxProps={{
+                withinPortal: true,
+                zIndex: Z_INDEX_OVER_FILE_MANAGER_MODAL + 10,
+              }}
               data={[
-                { value: "editor", label: t("storageShare.roleEditor", "Editor") },
-                { value: "commenter", label: t("storageShare.roleCommenter", "Commenter") },
-                { value: "viewer", label: t("storageShare.roleViewer", "Viewer") },
+                {
+                  value: "editor",
+                  label: t("storageShare.roleEditor", "Editor"),
+                },
+                {
+                  value: "commenter",
+                  label: t("storageShare.roleCommenter", "Commenter"),
+                },
+                {
+                  value: "viewer",
+                  label: t("storageShare.roleViewer", "Viewer"),
+                },
               ]}
             />
             {shareRole === "commenter" && (

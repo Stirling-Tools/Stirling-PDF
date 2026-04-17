@@ -67,18 +67,29 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
           shareMetadata = null;
         }
 
-        const response = await apiClient.get(`/api/v1/storage/share-links/${normalizedToken}`, {
-          responseType: "blob",
-          suppressErrorToast: true,
-          skipAuthRedirect: true,
-          signal,
-        });
+        const response = await apiClient.get(
+          `/api/v1/storage/share-links/${normalizedToken}`,
+          {
+            responseType: "blob",
+            suppressErrorToast: true,
+            skipAuthRedirect: true,
+            signal,
+          },
+        );
         if (signal.aborted) return;
 
-        const contentType = (response.headers && (response.headers["content-type"] || response.headers["Content-Type"])) || "";
+        const contentType =
+          (response.headers &&
+            (response.headers["content-type"] ||
+              response.headers["Content-Type"])) ||
+          "";
         const disposition =
-          (response.headers && (response.headers["content-disposition"] || response.headers["Content-Disposition"])) || "";
-        const filename = parseContentDispositionFilename(disposition) || "shared-file";
+          (response.headers &&
+            (response.headers["content-disposition"] ||
+              response.headers["Content-Disposition"])) ||
+          "";
+        const filename =
+          parseContentDispositionFilename(disposition) || "shared-file";
         const blob = response.data as Blob;
         const contentTypeValue = contentType || blob.type;
 
@@ -110,9 +121,13 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
               const entry = sortedEntries[i];
               const newId = idMap.get(entry.logicalId);
               if (!newId) continue;
-              const parentId = entry.parentLogicalId ? idMap.get(entry.parentLogicalId) : undefined;
+              const parentId = entry.parentLogicalId
+                ? idMap.get(entry.parentLogicalId)
+                : undefined;
               const rootId =
-                rootIdMap.get(getShareBundleEntryRootId(manifest, entry)) || idMap.get(manifest.rootLogicalId) || newId;
+                rootIdMap.get(getShareBundleEntryRootId(manifest, entry)) ||
+                idMap.get(manifest.rootLogicalId) ||
+                newId;
               const sharedUpdates = {
                 remoteStorageId: shareMetadata?.fileId,
                 remoteOwnerUsername: shareMetadata?.owner ?? undefined,
@@ -142,7 +157,10 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
 
             const selectedIds: FileId[] = [];
             for (const rootId of rootOrder) {
-              const rootEntries = sortedEntries.filter((entry) => getShareBundleEntryRootId(manifest, entry) === rootId);
+              const rootEntries = sortedEntries.filter(
+                (entry) =>
+                  getShareBundleEntryRootId(manifest, entry) === rootId,
+              );
               const latestEntry = rootEntries[rootEntries.length - 1];
               if (!latestEntry) {
                 continue;
@@ -162,7 +180,9 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
           }
         }
 
-        const file = new File([blob], filename, { type: contentTypeValue || blob.type });
+        const file = new File([blob], filename, {
+          type: contentTypeValue || blob.type,
+        });
         const stirlingFiles = await actions.addFilesWithOptions([file], {
           selectFiles: true,
           autoUnzip: false,
@@ -171,7 +191,9 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
         if (signal.aborted) return;
 
         if (stirlingFiles.length > 0) {
-          const ids = stirlingFiles.map((stirlingFile: StirlingFile) => stirlingFile.fileId);
+          const ids = stirlingFiles.map(
+            (stirlingFile: StirlingFile) => stirlingFile.fileId,
+          );
           actions.setSelectedFiles(ids);
           const sharedUpdates = {
             remoteStorageId: shareMetadata?.fileId,
@@ -197,7 +219,10 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
           if (!isAuthenticated && !authLoading) {
             alert({
               alertType: "warning",
-              title: t("storageShare.requiresLogin", "This shared file requires login."),
+              title: t(
+                "storageShare.requiresLogin",
+                "This shared file requires login.",
+              ),
               expandable: false,
               durationMs: 4000,
             });
@@ -241,7 +266,15 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
     return () => {
       abortController.abort();
     };
-  }, [normalizedToken, actions, navActions, navigate, t, isAuthenticated, authLoading]);
+  }, [
+    normalizedToken,
+    actions,
+    navActions,
+    navigate,
+    t,
+    isAuthenticated,
+    authLoading,
+  ]);
 
   return null;
 }

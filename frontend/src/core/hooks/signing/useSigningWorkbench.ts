@@ -28,13 +28,15 @@ export interface UseSigningWorkbenchResult {
  */
 export const useSigningWorkbench = (): UseSigningWorkbenchResult => {
   const { t } = useTranslation();
-  const { registerCustomWorkbenchView, unregisterCustomWorkbenchView } = useToolWorkflow();
+  const { registerCustomWorkbenchView, unregisterCustomWorkbenchView } =
+    useToolWorkflow();
 
   // Define workbench IDs as constants
   const SIGN_REQUEST_WORKBENCH_ID = "signRequestWorkbench";
   const SIGN_REQUEST_WORKBENCH_TYPE = "custom:signRequestWorkbench" as const;
   const SESSION_DETAIL_WORKBENCH_ID = "sessionDetailWorkbench";
-  const SESSION_DETAIL_WORKBENCH_TYPE = "custom:sessionDetailWorkbench" as const;
+  const SESSION_DETAIL_WORKBENCH_TYPE =
+    "custom:sessionDetailWorkbench" as const;
 
   // Register workbenches on mount
   useEffect(() => {
@@ -48,7 +50,10 @@ export const useSigningWorkbench = (): UseSigningWorkbenchResult => {
     registerCustomWorkbenchView({
       id: SESSION_DETAIL_WORKBENCH_ID,
       workbenchId: SESSION_DETAIL_WORKBENCH_TYPE,
-      label: t("certSign.collab.sessionDetail.workbenchTitle", "Session Management"),
+      label: t(
+        "certSign.collab.sessionDetail.workbenchTitle",
+        "Session Management",
+      ),
       component: SessionDetailWorkbenchView,
     });
 

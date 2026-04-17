@@ -23,7 +23,10 @@ interface CookieConsentConfig {
   forceLightMode?: boolean;
 }
 
-export const useCookieConsent = ({ analyticsEnabled = false, forceLightMode = false }: CookieConsentConfig = {}) => {
+export const useCookieConsent = ({
+  analyticsEnabled = false,
+  forceLightMode = false,
+}: CookieConsentConfig = {}) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const [isInitialized, setIsInitialized] = useState(false);
@@ -63,10 +66,16 @@ export const useCookieConsent = ({ analyticsEnabled = false, forceLightMode = fa
             return false;
           }
 
-          const mantineScheme = document.documentElement.getAttribute("data-mantine-color-scheme");
-          const hasLightClass = document.documentElement.classList.contains("light");
-          const hasDarkClass = document.documentElement.classList.contains("dark");
-          const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          const mantineScheme = document.documentElement.getAttribute(
+            "data-mantine-color-scheme",
+          );
+          const hasLightClass =
+            document.documentElement.classList.contains("light");
+          const hasDarkClass =
+            document.documentElement.classList.contains("dark");
+          const systemPrefersDark = window.matchMedia(
+            "(prefers-color-scheme: dark)",
+          ).matches;
 
           let isDarkMode: boolean;
           if (mantineScheme) {
@@ -95,7 +104,8 @@ export const useCookieConsent = ({ analyticsEnabled = false, forceLightMode = fa
             mutations.forEach((mutation) => {
               if (
                 mutation.type === "attributes" &&
-                (mutation.attributeName === "data-mantine-color-scheme" || mutation.attributeName === "class")
+                (mutation.attributeName === "data-mantine-color-scheme" ||
+                  mutation.attributeName === "class")
               ) {
                 detectTheme();
               }
@@ -136,7 +146,10 @@ export const useCookieConsent = ({ analyticsEnabled = false, forceLightMode = fa
                 services: {
                   ...(config?.enablePosthog !== false && {
                     posthog: {
-                      label: t("cookieBanner.services.posthog", "PostHog Analytics"),
+                      label: t(
+                        "cookieBanner.services.posthog",
+                        "PostHog Analytics",
+                      ),
                     },
                   }),
                   ...(config?.enableScarf !== false && {
@@ -164,19 +177,46 @@ export const useCookieConsent = ({ analyticsEnabled = false, forceLightMode = fa
                         "If you'd rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly.",
                       ),
                     acceptAllBtn: t("cookieBanner.popUp.acceptAllBtn", "Okay"),
-                    acceptNecessaryBtn: t("cookieBanner.popUp.acceptNecessaryBtn", "No Thanks"),
-                    showPreferencesBtn: t("cookieBanner.popUp.showPreferencesBtn", "Manage preferences"),
+                    acceptNecessaryBtn: t(
+                      "cookieBanner.popUp.acceptNecessaryBtn",
+                      "No Thanks",
+                    ),
+                    showPreferencesBtn: t(
+                      "cookieBanner.popUp.showPreferencesBtn",
+                      "Manage preferences",
+                    ),
                   },
                   preferencesModal: {
-                    title: t("cookieBanner.preferencesModal.title", "Consent Preferences Center"),
-                    acceptAllBtn: t("cookieBanner.preferencesModal.acceptAllBtn", "Accept all"),
-                    acceptNecessaryBtn: t("cookieBanner.preferencesModal.acceptNecessaryBtn", "Reject all"),
-                    savePreferencesBtn: t("cookieBanner.preferencesModal.savePreferencesBtn", "Save preferences"),
-                    closeIconLabel: t("cookieBanner.preferencesModal.closeIconLabel", "Close modal"),
-                    serviceCounterLabel: t("cookieBanner.preferencesModal.serviceCounterLabel", "Service|Services"),
+                    title: t(
+                      "cookieBanner.preferencesModal.title",
+                      "Consent Preferences Center",
+                    ),
+                    acceptAllBtn: t(
+                      "cookieBanner.preferencesModal.acceptAllBtn",
+                      "Accept all",
+                    ),
+                    acceptNecessaryBtn: t(
+                      "cookieBanner.preferencesModal.acceptNecessaryBtn",
+                      "Reject all",
+                    ),
+                    savePreferencesBtn: t(
+                      "cookieBanner.preferencesModal.savePreferencesBtn",
+                      "Save preferences",
+                    ),
+                    closeIconLabel: t(
+                      "cookieBanner.preferencesModal.closeIconLabel",
+                      "Close modal",
+                    ),
+                    serviceCounterLabel: t(
+                      "cookieBanner.preferencesModal.serviceCounterLabel",
+                      "Service|Services",
+                    ),
                     sections: [
                       {
-                        title: t("cookieBanner.preferencesModal.subtitle", "Cookie Usage"),
+                        title: t(
+                          "cookieBanner.preferencesModal.subtitle",
+                          "Cookie Usage",
+                        ),
                         description:
                           t(
                             "cookieBanner.preferencesModal.description.1",
@@ -196,9 +236,15 @@ export const useCookieConsent = ({ analyticsEnabled = false, forceLightMode = fa
                       },
                       {
                         title:
-                          t("cookieBanner.preferencesModal.necessary.title.1", "Strictly Necessary Cookies") +
+                          t(
+                            "cookieBanner.preferencesModal.necessary.title.1",
+                            "Strictly Necessary Cookies",
+                          ) +
                           '<span class="pm__badge">' +
-                          t("cookieBanner.preferencesModal.necessary.title.2", "Always Enabled") +
+                          t(
+                            "cookieBanner.preferencesModal.necessary.title.2",
+                            "Always Enabled",
+                          ) +
                           "</span>",
                         description: t(
                           "cookieBanner.preferencesModal.necessary.description",
@@ -207,7 +253,10 @@ export const useCookieConsent = ({ analyticsEnabled = false, forceLightMode = fa
                         linkedCategory: "necessary",
                       },
                       {
-                        title: t("cookieBanner.preferencesModal.analytics.title", "Analytics"),
+                        title: t(
+                          "cookieBanner.preferencesModal.analytics.title",
+                          "Analytics",
+                        ),
                         description: t(
                           "cookieBanner.preferencesModal.analytics.description",
                           "These cookies help us understand how our tools are being used, so we can focus on building the features our community values most. Rest assured—Stirling PDF cannot and will never track the content of the documents you work with.",
@@ -244,7 +293,13 @@ export const useCookieConsent = ({ analyticsEnabled = false, forceLightMode = fa
         document.head.removeChild(customCSS);
       }
     };
-  }, [analyticsEnabled, config?.enablePosthog, config?.enableScarf, t, forceLightMode]);
+  }, [
+    analyticsEnabled,
+    config?.enablePosthog,
+    config?.enableScarf,
+    t,
+    forceLightMode,
+  ]);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -255,10 +310,15 @@ export const useCookieConsent = ({ analyticsEnabled = false, forceLightMode = fa
         return false;
       }
 
-      const mantineScheme = document.documentElement.getAttribute("data-mantine-color-scheme");
-      const hasLightClass = document.documentElement.classList.contains("light");
+      const mantineScheme = document.documentElement.getAttribute(
+        "data-mantine-color-scheme",
+      );
+      const hasLightClass =
+        document.documentElement.classList.contains("light");
       const hasDarkClass = document.documentElement.classList.contains("dark");
-      const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const systemPrefersDark = window.matchMedia(
+        "(prefers-color-scheme: dark)",
+      ).matches;
 
       let isDarkMode: boolean;
       if (mantineScheme) {
@@ -283,7 +343,8 @@ export const useCookieConsent = ({ analyticsEnabled = false, forceLightMode = fa
         mutations.forEach((mutation) => {
           if (
             mutation.type === "attributes" &&
-            (mutation.attributeName === "data-mantine-color-scheme" || mutation.attributeName === "class")
+            (mutation.attributeName === "data-mantine-color-scheme" ||
+              mutation.attributeName === "class")
           ) {
             detectTheme();
           }
@@ -312,7 +373,8 @@ export const useCookieConsent = ({ analyticsEnabled = false, forceLightMode = fa
         window.CookieConsent?.hide();
       } else {
         const consentCookie = window.CookieConsent?.getCookie?.();
-        const hasConsented = consentCookie && Object.keys(consentCookie).length > 0;
+        const hasConsented =
+          consentCookie && Object.keys(consentCookie).length > 0;
         if (!hasConsented) window.CookieConsent?.show();
       }
     };
@@ -333,12 +395,15 @@ export const useCookieConsent = ({ analyticsEnabled = false, forceLightMode = fa
     }
   }, [isInitialized]);
 
-  const isServiceAccepted = useCallback((service: string, category: string): boolean => {
-    if (typeof window === "undefined" || !window.CookieConsent) {
-      return false;
-    }
-    return window.CookieConsent.acceptedService(service, category);
-  }, []);
+  const isServiceAccepted = useCallback(
+    (service: string, category: string): boolean => {
+      if (typeof window === "undefined" || !window.CookieConsent) {
+        return false;
+      }
+      return window.CookieConsent.acceptedService(service, category);
+    },
+    [],
+  );
 
   return {
     showCookieConsent,

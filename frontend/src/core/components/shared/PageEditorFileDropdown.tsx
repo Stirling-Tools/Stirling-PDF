@@ -28,13 +28,27 @@ interface FileMenuItemProps {
   onReorder: (fromIndex: number, toIndex: number) => void;
 }
 
-const FileMenuItem: React.FC<FileMenuItemProps> = ({ file, index, colorIndex, onToggleSelection, onReorder }) => {
-  const { itemRef, isDragging, isDragOver, dropPosition, movedRef, onPointerDown, onPointerMove, onPointerUp } =
-    useFileItemDragDrop({
-      fileId: file.fileId,
-      index,
-      onReorder,
-    });
+const FileMenuItem: React.FC<FileMenuItemProps> = ({
+  file,
+  index,
+  colorIndex,
+  onToggleSelection,
+  onReorder,
+}) => {
+  const {
+    itemRef,
+    isDragging,
+    isDragOver,
+    dropPosition,
+    movedRef,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+  } = useFileItemDragDrop({
+    fileId: file.fileId,
+    index,
+    onReorder,
+  });
 
   const itemName = file?.name || "Untitled";
   const fileColorBorder = getFileColorWithOpacity(colorIndex, 1);
@@ -52,7 +66,9 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({ file, index, colorIndex, on
         <div
           style={{
             position: "absolute",
-            ...(dropPosition === "above" ? { top: "-2px" } : { bottom: "-2px" }),
+            ...(dropPosition === "above"
+              ? { top: "-2px" }
+              : { bottom: "-2px" }),
             left: 0,
             right: 0,
             height: "4px",
@@ -75,7 +91,9 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({ file, index, colorIndex, on
         style={{
           padding: "0.75rem 0.75rem",
           cursor: isDragging ? "grabbing" : "grab",
-          backgroundColor: file.isSelected ? "rgba(0, 0, 0, 0.05)" : "transparent",
+          backgroundColor: file.isSelected
+            ? "rgba(0, 0, 0, 0.05)"
+            : "transparent",
           borderLeft: `6px solid ${fileColorBorder}`,
           opacity: isDragging ? 0.5 : 1,
           transition: "opacity 0.2s ease-in-out, background-color 0.15s ease",
@@ -83,16 +101,18 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({ file, index, colorIndex, on
         }}
         onMouseEnter={(e) => {
           if (!isDragging) {
-            (e.currentTarget as HTMLDivElement).style.backgroundColor = "rgba(0, 0, 0, 0.05)";
-            (e.currentTarget as HTMLDivElement).style.borderLeftColor = fileColorBorderHover;
+            (e.currentTarget as HTMLDivElement).style.backgroundColor =
+              "rgba(0, 0, 0, 0.05)";
+            (e.currentTarget as HTMLDivElement).style.borderLeftColor =
+              fileColorBorderHover;
           }
         }}
         onMouseLeave={(e) => {
           if (!isDragging) {
-            (e.currentTarget as HTMLDivElement).style.backgroundColor = file.isSelected
-              ? "rgba(0, 0, 0, 0.05)"
-              : "transparent";
-            (e.currentTarget as HTMLDivElement).style.borderLeftColor = fileColorBorder;
+            (e.currentTarget as HTMLDivElement).style.backgroundColor =
+              file.isSelected ? "rgba(0, 0, 0, 0.05)" : "transparent";
+            (e.currentTarget as HTMLDivElement).style.borderLeftColor =
+              fileColorBorder;
           }
         }}
       >
@@ -155,11 +175,18 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
   return (
     <Menu trigger="click" position="bottom" width="40rem">
       <Menu.Target>
-        <div className="ph-no-capture" style={{ ...viewOptionStyle, cursor: "pointer" }}>
+        <div
+          className="ph-no-capture"
+          style={{ ...viewOptionStyle, cursor: "pointer" }}
+        >
           {switchingTo === "pageEditor" ? (
             <Loader size="xs" />
           ) : (
-            <LocalIcon icon="dashboard-customize-rounded" width="1.4rem" height="1.4rem" />
+            <LocalIcon
+              icon="dashboard-customize-rounded"
+              width="1.4rem"
+              height="1.4rem"
+            />
           )}
           <span className="ph-no-capture">
             {selectedCount}/{totalCount} files selected
@@ -208,15 +235,25 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
             transition: "background-color 0.15s ease",
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLDivElement).style.backgroundColor = "rgba(59, 130, 246, 0.25)";
+            (e.currentTarget as HTMLDivElement).style.backgroundColor =
+              "rgba(59, 130, 246, 0.25)";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLDivElement).style.backgroundColor = "transparent";
+            (e.currentTarget as HTMLDivElement).style.backgroundColor =
+              "transparent";
           }}
         >
           <Group gap="xs" style={{ width: "100%" }}>
-            <AddIcon fontSize="small" style={{ color: "var(--mantine-color-text)" }} />
-            <Text size="sm" fw={500} style={{ color: "var(--mantine-color-text)" }} className="ph-no-capture">
+            <AddIcon
+              fontSize="small"
+              style={{ color: "var(--mantine-color-text)" }}
+            />
+            <Text
+              size="sm"
+              fw={500}
+              style={{ color: "var(--mantine-color-text)" }}
+              className="ph-no-capture"
+            >
               Add File
             </Text>
           </Group>

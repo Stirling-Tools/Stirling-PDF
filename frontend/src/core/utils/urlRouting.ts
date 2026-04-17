@@ -5,7 +5,11 @@
 import { ToolRoute } from "@app/types/navigation";
 import { ToolId, isValidToolId } from "@app/types/toolId";
 import { getDefaultWorkbench } from "@app/types/workbench";
-import { ToolRegistry, getToolWorkbench, getToolUrlPath } from "@app/data/toolsTaxonomy";
+import {
+  ToolRegistry,
+  getToolWorkbench,
+  getToolUrlPath,
+} from "@app/data/toolsTaxonomy";
 import { firePixel } from "@app/utils/scarfTracking";
 import { URL_TO_TOOL_MAP } from "@app/utils/urlMapping";
 import { BASE_PATH, withBasePath } from "@app/constants/app";
@@ -16,7 +20,10 @@ import { BASE_PATH, withBasePath } from "@app/constants/app";
 export function parseToolRoute(registry: ToolRegistry): ToolRoute {
   const fullPath = window.location.pathname;
   // Remove base path to get app-relative path
-  const path = BASE_PATH && fullPath.startsWith(BASE_PATH) ? fullPath.slice(BASE_PATH.length) || "/" : fullPath;
+  const path =
+    BASE_PATH && fullPath.startsWith(BASE_PATH)
+      ? fullPath.slice(BASE_PATH.length) || "/"
+      : fullPath;
   const searchParams = new URLSearchParams(window.location.search);
 
   // First, check URL mapping for multiple URL aliases
@@ -60,13 +67,20 @@ export function parseToolRoute(registry: ToolRegistry): ToolRoute {
 /**
  * Update URL and fire analytics pixel
  */
-function updateUrl(newPath: string, searchParams: URLSearchParams, replace: boolean = false): void {
+function updateUrl(
+  newPath: string,
+  searchParams: URLSearchParams,
+  replace: boolean = false,
+): void {
   const currentPath = window.location.pathname;
   const queryString = searchParams.toString();
   const fullUrl = newPath + (queryString ? `?${queryString}` : "");
 
   // Only update URL and fire pixel if something actually changed
-  if (currentPath !== newPath || window.location.search !== (queryString ? `?${queryString}` : "")) {
+  if (
+    currentPath !== newPath ||
+    window.location.search !== (queryString ? `?${queryString}` : "")
+  ) {
     if (replace) {
       window.history.replaceState(null, "", fullUrl);
     } else {
@@ -79,7 +93,11 @@ function updateUrl(newPath: string, searchParams: URLSearchParams, replace: bool
 /**
  * Update the URL to reflect the current tool selection
  */
-export function updateToolRoute(toolId: ToolId, registry: ToolRegistry, replace: boolean = false): void {
+export function updateToolRoute(
+  toolId: ToolId,
+  registry: ToolRegistry,
+  replace: boolean = false,
+): void {
   const tool = registry[toolId];
   if (!tool) {
     console.warn(`Tool ${toolId} not found in registry`);
@@ -109,7 +127,10 @@ export function clearToolRoute(replace: boolean = false): void {
 /**
  * Get clean tool name for display purposes using registry
  */
-export function getToolDisplayName(toolId: ToolId, registry: ToolRegistry): string {
+export function getToolDisplayName(
+  toolId: ToolId,
+  registry: ToolRegistry,
+): string {
   const tool = registry[toolId];
   return tool ? tool.name : toolId;
 }

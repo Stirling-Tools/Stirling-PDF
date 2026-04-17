@@ -10,14 +10,20 @@ export default function ReorganizePagesSettings({
   disabled,
 }: {
   parameters: ReorganizePagesParameters;
-  onParameterChange: <K extends keyof ReorganizePagesParameters>(key: K, value: ReorganizePagesParameters[K]) => void;
+  onParameterChange: <K extends keyof ReorganizePagesParameters>(
+    key: K,
+    value: ReorganizePagesParameters[K],
+  ) => void;
   disabled?: boolean;
 }) {
   const { t } = useTranslation();
   const modeData = getReorganizePagesModeData(t);
 
-  const requiresOrder = parameters.customMode === "" || parameters.customMode === "DUPLICATE";
-  const selectedMode = modeData.find((mode) => mode.value === parameters.customMode) || modeData[0];
+  const requiresOrder =
+    parameters.customMode === "" || parameters.customMode === "DUPLICATE";
+  const selectedMode =
+    modeData.find((mode) => mode.value === parameters.customMode) ||
+    modeData[0];
   return (
     <Stack gap="sm">
       <Select
@@ -26,7 +32,10 @@ export default function ReorganizePagesSettings({
         value={parameters.customMode}
         onChange={(v) => onParameterChange("customMode", v ?? "")}
         disabled={disabled}
-        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+        comboboxProps={{
+          withinPortal: true,
+          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+        }}
       />
       {selectedMode && (
         <div
@@ -51,7 +60,9 @@ export default function ReorganizePagesSettings({
             label={t("pageOrderPrompt", "Page order / ranges")}
             placeholder={t("pdfOrganiser.placeholder", "e.g. 1,3,2,4-6")}
             value={parameters.pageNumbers}
-            onChange={(e) => onParameterChange("pageNumbers", e.currentTarget.value)}
+            onChange={(e) =>
+              onParameterChange("pageNumbers", e.currentTarget.value)
+            }
             disabled={disabled}
           />
         </>

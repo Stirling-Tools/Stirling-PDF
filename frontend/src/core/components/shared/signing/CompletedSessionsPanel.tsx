@@ -21,7 +21,11 @@ interface CompletedSessionsPanelProps {
   onSessionClick: (session: SessionItem) => void;
 }
 
-const CompletedSessionsPanel = ({ sessions, loading, onSessionClick }: CompletedSessionsPanelProps) => {
+const CompletedSessionsPanel = ({
+  sessions,
+  loading,
+  onSessionClick,
+}: CompletedSessionsPanelProps) => {
   const { t } = useTranslation();
 
   const getStatusColor = (status?: string, itemType?: string): string => {
@@ -73,16 +77,20 @@ const CompletedSessionsPanel = ({ sessions, loading, onSessionClick }: Completed
               onClick={() => onSessionClick(session)}
             >
               <div className="quick-access-popout__sign-request-info">
-                <div className="quick-access-popout__row-title">{session.documentName}</div>
+                <div className="quick-access-popout__row-title">
+                  {session.documentName}
+                </div>
                 <div className="quick-access-popout__row-subtitle">
                   {session.itemType === "signRequest" ? (
                     <>
                       From: {session.ownerUsername}
-                      {session.dueDate && ` • Due: ${new Date(session.dueDate).toLocaleDateString()}`}
+                      {session.dueDate &&
+                        ` • Due: ${new Date(session.dueDate).toLocaleDateString()}`}
                     </>
                   ) : (
                     <>
-                      Created: {new Date(session.createdAt).toLocaleDateString()}
+                      Created:{" "}
+                      {new Date(session.createdAt).toLocaleDateString()}
                       {session.signedCount !== undefined &&
                         session.participantCount !== undefined &&
                         ` • ${session.signedCount}/${session.participantCount} signed`}
@@ -91,7 +99,10 @@ const CompletedSessionsPanel = ({ sessions, loading, onSessionClick }: Completed
                 </div>
               </div>
               <div className="quick-access-popout__sign-request-badge">
-                <Badge size="sm" color={getStatusColor(session.myStatus, session.itemType)}>
+                <Badge
+                  size="sm"
+                  color={getStatusColor(session.myStatus, session.itemType)}
+                >
                   {getStatusLabel(session)}
                 </Badge>
               </div>

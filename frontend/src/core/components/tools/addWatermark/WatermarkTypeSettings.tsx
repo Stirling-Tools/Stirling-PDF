@@ -7,7 +7,11 @@ interface WatermarkTypeSettingsProps {
   disabled?: boolean;
 }
 
-const WatermarkTypeSettings = ({ watermarkType, onWatermarkTypeChange, disabled = false }: WatermarkTypeSettingsProps) => {
+const WatermarkTypeSettings = ({
+  watermarkType,
+  onWatermarkTypeChange,
+  disabled = false,
+}: WatermarkTypeSettingsProps) => {
   const { t } = useTranslation();
 
   return (

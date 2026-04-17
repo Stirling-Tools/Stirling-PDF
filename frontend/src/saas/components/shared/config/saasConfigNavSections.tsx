@@ -18,8 +18,12 @@ interface CreateSaasConfigNavSectionsOptions {
   t: TFunction<"translation", undefined>;
 }
 
-function ensurePreferencesSection(sections: ConfigNavSection[]): ConfigNavSection[] {
-  const preferencesIndex = sections.findIndex((section) => section.title === "Preferences");
+function ensurePreferencesSection(
+  sections: ConfigNavSection[],
+): ConfigNavSection[] {
+  const preferencesIndex = sections.findIndex(
+    (section) => section.title === "Preferences",
+  );
 
   if (preferencesIndex === -1) {
     return [
@@ -47,9 +51,13 @@ function ensurePreferencesSection(sections: ConfigNavSection[]): ConfigNavSectio
   return sections;
 }
 
-function appendDeveloperSection(sections: ConfigNavSection[]): ConfigNavSection[] {
+function appendDeveloperSection(
+  sections: ConfigNavSection[],
+): ConfigNavSection[] {
   const hasDeveloper = sections.some((section) =>
-    section.items.some((item) => item.key === "developer" || item.key === "api-keys"),
+    section.items.some(
+      (item) => item.key === "developer" || item.key === "api-keys",
+    ),
   );
 
   if (hasDeveloper) {
@@ -72,8 +80,13 @@ function appendDeveloperSection(sections: ConfigNavSection[]): ConfigNavSection[
   ];
 }
 
-function appendBillingSection(sections: ConfigNavSection[], t: TFunction<"translation", undefined>): ConfigNavSection[] {
-  const hasPlan = sections.some((section) => section.items.some((item) => item.key === "plan"));
+function appendBillingSection(
+  sections: ConfigNavSection[],
+  t: TFunction<"translation", undefined>,
+): ConfigNavSection[] {
+  const hasPlan = sections.some((section) =>
+    section.items.some((item) => item.key === "plan"),
+  );
 
   if (hasPlan) {
     return sections;
@@ -127,7 +140,12 @@ export function createSaasConfigNavSections(
   sections = sections.map((section) => ({
     ...section,
     items: section.items.map((item) =>
-      item.key === "general" ? { ...item, component: <GeneralSection hideUpdateSection hideAdminBanner /> } : item,
+      item.key === "general"
+        ? {
+            ...item,
+            component: <GeneralSection hideUpdateSection hideAdminBanner />,
+          }
+        : item,
     ),
   }));
 

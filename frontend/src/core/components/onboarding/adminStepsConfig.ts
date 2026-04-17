@@ -1,6 +1,9 @@
 import type { StepType } from "@reactour/tour";
 import type { TFunction } from "i18next";
-import { addGlowToElements, removeAllGlows } from "@app/components/onboarding/tourGlow";
+import {
+  addGlowToElements,
+  removeAllGlows,
+} from "@app/components/onboarding/tourGlow";
 
 export enum AdminTourStep {
   WELCOME,
@@ -26,8 +29,16 @@ interface CreateAdminStepsConfigArgs {
   actions: AdminStepActions;
 }
 
-export function createAdminStepsConfig({ t, actions }: CreateAdminStepsConfigArgs): Record<AdminTourStep, StepType> {
-  const { saveAdminState, openConfigModal, navigateToSection, scrollNavToSection } = actions;
+export function createAdminStepsConfig({
+  t,
+  actions,
+}: CreateAdminStepsConfigArgs): Record<AdminTourStep, StepType> {
+  const {
+    saveAdminState,
+    openConfigModal,
+    navigateToSection,
+    scrollNavToSection,
+  } = actions;
 
   return {
     [AdminTourStep.WELCOME]: {
@@ -120,7 +131,10 @@ export function createAdminStepsConfig({ t, actions }: CreateAdminStepsConfigArg
     },
     [AdminTourStep.DATABASE_SECTION]: {
       selector: '[data-tour="admin-adminDatabase-nav"]',
-      highlightedSelectors: ['[data-tour="admin-adminDatabase-nav"]', '[data-tour="settings-content-area"]'],
+      highlightedSelectors: [
+        '[data-tour="admin-adminDatabase-nav"]',
+        '[data-tour="settings-content-area"]',
+      ],
       content: t(
         "adminOnboarding.databaseSection",
         "For advanced production environments, we have settings to allow <strong>external database hookups</strong> so you can integrate with your existing infrastructure.",
@@ -131,13 +145,19 @@ export function createAdminStepsConfig({ t, actions }: CreateAdminStepsConfigArg
         removeAllGlows();
         navigateToSection("adminDatabase");
         setTimeout(() => {
-          addGlowToElements(['[data-tour="admin-adminDatabase-nav"]', '[data-tour="settings-content-area"]']);
+          addGlowToElements([
+            '[data-tour="admin-adminDatabase-nav"]',
+            '[data-tour="settings-content-area"]',
+          ]);
         }, 100);
       },
     },
     [AdminTourStep.CONNECTIONS_SECTION]: {
       selector: '[data-tour="admin-adminConnections-nav"]',
-      highlightedSelectors: ['[data-tour="admin-adminConnections-nav"]', '[data-tour="settings-content-area"]'],
+      highlightedSelectors: [
+        '[data-tour="admin-adminConnections-nav"]',
+        '[data-tour="settings-content-area"]',
+      ],
       content: t(
         "adminOnboarding.connectionsSection",
         "The <strong>Connections</strong> section supports various login methods including custom SSO and SAML providers like Google and GitHub, plus email integrations for notifications and communications.",
@@ -148,7 +168,10 @@ export function createAdminStepsConfig({ t, actions }: CreateAdminStepsConfigArg
         removeAllGlows();
         navigateToSection("adminConnections");
         setTimeout(() => {
-          addGlowToElements(['[data-tour="admin-adminConnections-nav"]', '[data-tour="settings-content-area"]']);
+          addGlowToElements([
+            '[data-tour="admin-adminConnections-nav"]',
+            '[data-tour="settings-content-area"]',
+          ]);
         }, 100);
       },
       actionAfter: async () => {

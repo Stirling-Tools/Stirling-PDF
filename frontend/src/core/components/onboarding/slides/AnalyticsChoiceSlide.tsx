@@ -11,10 +11,15 @@ interface AnalyticsChoiceSlideProps {
   analyticsError?: string | null;
 }
 
-export default function AnalyticsChoiceSlide({ analyticsError }: AnalyticsChoiceSlideProps): SlideConfig {
+export default function AnalyticsChoiceSlide({
+  analyticsError,
+}: AnalyticsChoiceSlideProps): SlideConfig {
   return {
     key: "analytics-choice",
-    title: i18n.t("analytics.title", "Do you want to help make Stirling PDF better?"),
+    title: i18n.t(
+      "analytics.title",
+      "Do you want to help make Stirling PDF better?",
+    ),
     body: (
       <div className={styles.bodyCopyInner}>
         <Trans
@@ -33,13 +38,22 @@ export default function AnalyticsChoiceSlide({ analyticsError }: AnalyticsChoice
           <Button
             variant="default"
             size="sm"
-            onClick={() => window.open("https://docs.stirlingpdf.com/analytics-telemetry/", "_blank")}
+            onClick={() =>
+              window.open(
+                "https://docs.stirlingpdf.com/analytics-telemetry/",
+                "_blank",
+              )
+            }
             rightSection={<OpenInNewIcon style={{ fontSize: 16 }} />}
           >
             {i18n.t("analytics.learnMore", "Learn more about our analytics")}
           </Button>
         </div>
-        {analyticsError && <div style={{ color: "var(--mantine-color-red-6)", marginTop: 12 }}>{analyticsError}</div>}
+        {analyticsError && (
+          <div style={{ color: "var(--mantine-color-red-6)", marginTop: 12 }}>
+            {analyticsError}
+          </div>
+        )}
       </div>
     ),
     background: {

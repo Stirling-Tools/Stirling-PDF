@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { Box, ScrollArea, Text, ActionIcon, Loader, Stack, TextInput, Button } from "@mantine/core";
+import {
+  Box,
+  ScrollArea,
+  Text,
+  ActionIcon,
+  Loader,
+  Stack,
+  TextInput,
+  Button,
+} from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { PdfBookmarkObject, PdfActionType } from "@embedpdf/models";
@@ -27,7 +36,9 @@ interface BookmarkCacheEntry {
   lastFetched: number | null;
 }
 
-const createEntry = (overrides: Partial<BookmarkCacheEntry> = {}): BookmarkCacheEntry => ({
+const createEntry = (
+  overrides: Partial<BookmarkCacheEntry> = {},
+): BookmarkCacheEntry => ({
   status: "idle",
   bookmarks: null,
   error: null,
@@ -45,8 +56,13 @@ const resolvePageNumber = (bookmark: PdfBookmarkObject): number | null => {
 
   if (target.type === "action") {
     const action = target.action;
-    if (action.type === PdfActionType.Goto || action.type === PdfActionType.RemoteGoto) {
-      return action.destination?.pageIndex !== undefined ? action.destination.pageIndex + 1 : null;
+    if (
+      action.type === PdfActionType.Goto ||
+      action.type === PdfActionType.RemoteGoto
+    ) {
+      return action.destination?.pageIndex !== undefined
+        ? action.destination.pageIndex + 1
+        : null;
     }
   }
 
@@ -62,8 +78,12 @@ export const BookmarkSidebar = ({
   const { bookmarkActions, scrollActions, hasBookmarkSupport } = useViewer();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [searchTerm, setSearchTerm] = useState("");
-  const [bookmarkSupport, setBookmarkSupport] = useState(() => hasBookmarkSupport());
-  const [activeEntry, setActiveEntry] = useState<BookmarkCacheEntry>(() => createEntry());
+  const [bookmarkSupport, setBookmarkSupport] = useState(() =>
+    hasBookmarkSupport(),
+  );
+  const [activeEntry, setActiveEntry] = useState<BookmarkCacheEntry>(() =>
+    createEntry(),
+  );
   const cacheRef = useRef<Map<string, BookmarkCacheEntry>>(new Map());
   const [fetchNonce, setFetchNonce] = useState(0);
   const currentKeyRef = useRef<string | null>(documentCacheKey ?? null);
@@ -106,7 +126,10 @@ export const BookmarkSidebar = ({
       if (cached.status === "success") {
         bookmarkActions.setLocalBookmarks(cached.bookmarks ?? [], null);
       } else if (cached.status === "error") {
-        bookmarkActions.setLocalBookmarks(cached.bookmarks ?? null, cached.error);
+        bookmarkActions.setLocalBookmarks(
+          cached.bookmarks ?? null,
+          cached.error,
+        );
       } else {
         bookmarkActions.clearBookmarks();
       }
@@ -141,7 +164,10 @@ export const BookmarkSidebar = ({
 
     const key = documentCacheKey;
     const cached = cacheRef.current.get(key);
-    if (cached && (cached.status === "loading" || cached.status === "success")) {
+    if (
+      cached &&
+      (cached.status === "loading" || cached.status === "success")
+    ) {
       return;
     }
 
@@ -168,8 +194,14 @@ export const BookmarkSidebar = ({
           const result = await bookmarkActions.fetchBookmarks();
           return Array.isArray(result) ? result : [];
         } catch (error: any) {
-          const message = typeof error?.message === "string" ? error.message.toLowerCase() : "";
-          const notReady = message.includes("document") && message.includes("not") && message.includes("open");
+          const message =
+            typeof error?.message === "string"
+              ? error.message.toLowerCase()
+              : "";
+          const notReady =
+            message.includes("document") &&
+            message.includes("not") &&
+            message.includes("open");
 
           if (!notReady || attempt === maxAttempts - 1) {
             throw error;
@@ -196,7 +228,8 @@ export const BookmarkSidebar = ({
       })
       .catch((error) => {
         if (cancelled) return;
-        const message = error instanceof Error ? error.message : "Failed to load bookmarks";
+        const message =
+          error instanceof Error ? error.message : "Failed to load bookmarks";
         const fallback = cacheRef.current.get(key);
         const entry = createEntry({
           status: "error",
@@ -224,7 +257,10 @@ export const BookmarkSidebar = ({
   }, [documentCacheKey, bookmarkActions]);
 
   const bookmarksWithIds = useMemo(() => {
-    const assignIds = (nodes: PdfBookmarkObject[], prefix = "root"): BookmarkNode[] => {
+    const assignIds = (
+      nodes: PdfBookmarkObject[],
+      prefix = "root",
+    ): BookmarkNode[] => {
       if (!Array.isArray(nodes)) {
         return [];
       }
@@ -239,13 +275,16 @@ export const BookmarkSidebar = ({
       });
     };
 
-    const bookmarks = Array.isArray(activeEntry.bookmarks) ? activeEntry.bookmarks : [];
+    const bookmarks = Array.isArray(activeEntry.bookmarks)
+      ? activeEntry.bookmarks
+      : [];
     return assignIds(bookmarks);
   }, [activeEntry.bookmarks]);
 
   const currentStatus = activeEntry.status;
   const isLocalLoading = bookmarkSupport && currentStatus === "loading";
-  const currentError = bookmarkSupport && currentStatus === "error" ? activeEntry.error : null;
+  const currentError =
+    bookmarkSupport && currentStatus === "error" ? activeEntry.error : null;
 
   const toggleNode = (nodeId: string) => {
     setExpanded((prev) => ({
@@ -282,7 +321,10 @@ export const BookmarkSidebar = ({
     setExpanded(allCollapsed);
   }, [bookmarksWithIds]);
 
-  const handleBookmarkClick = (bookmark: PdfBookmarkObject, event: React.MouseEvent) => {
+  const handleBookmarkClick = (
+    bookmark: PdfBookmarkObject,
+    event: React.MouseEvent,
+  ) => {
     const target = bookmark.target;
     if (target?.type === "action") {
       const action = target.action;
@@ -312,11 +354,16 @@ export const BookmarkSidebar = ({
       const results: BookmarkNode[] = [];
 
       for (const node of nodeList) {
-        const childMatches = node.children ? applyFilter(node.children as BookmarkNode[]) : [];
+        const childMatches = node.children
+          ? applyFilter(node.children as BookmarkNode[])
+          : [];
         const matchesSelf = node.title?.toLowerCase().includes(term) ?? false;
 
         if (matchesSelf || childMatches.length > 0) {
-          results.push({ ...node, children: childMatches.length > 0 ? childMatches : node.children });
+          results.push({
+            ...node,
+            children: childMatches.length > 0 ? childMatches : node.children,
+          });
         }
       }
 
@@ -336,7 +383,8 @@ export const BookmarkSidebar = ({
         return null;
       }
 
-      const hasChildren = Array.isArray(node.children) && node.children.length > 0;
+      const hasChildren =
+        Array.isArray(node.children) && node.children.length > 0;
       const isNodeExpanded = expanded[node.id] ?? true;
 
       const pageNumber = resolvePageNumber(node);
@@ -375,7 +423,13 @@ export const BookmarkSidebar = ({
                   toggleNode(node.id);
                 }}
               >
-                <LocalIcon icon={isNodeExpanded ? "keyboard-arrow-up" : "keyboard-arrow-down"} width="1rem" height="1rem" />
+                <LocalIcon
+                  icon={
+                    isNodeExpanded ? "keyboard-arrow-up" : "keyboard-arrow-down"
+                  }
+                  width="1rem"
+                  height="1rem"
+                />
               </ActionIcon>
             ) : (
               <span className="bookmark-item__dash">-</span>
@@ -392,7 +446,9 @@ export const BookmarkSidebar = ({
             </div>
           </div>
           {hasChildren && isNodeExpanded && (
-            <div className="bookmark-item__children">{renderBookmarks(node.children as BookmarkNode[], depth + 1)}</div>
+            <div className="bookmark-item__children">
+              {renderBookmarks(node.children as BookmarkNode[], depth + 1)}
+            </div>
           )}
         </div>
       );
@@ -401,11 +457,21 @@ export const BookmarkSidebar = ({
 
   const isSearchActive = searchTerm.trim().length > 0;
   const hasBookmarks = bookmarksWithIds.length > 0;
-  const showBookmarkList = bookmarkSupport && documentCacheKey && filteredBookmarks.length > 0;
+  const showBookmarkList =
+    bookmarkSupport && documentCacheKey && filteredBookmarks.length > 0;
   const showEmptyState =
-    bookmarkSupport && documentCacheKey && !isLocalLoading && !currentError && currentStatus === "success" && !hasBookmarks;
+    bookmarkSupport &&
+    documentCacheKey &&
+    !isLocalLoading &&
+    !currentError &&
+    currentStatus === "success" &&
+    !hasBookmarks;
   const showSearchEmpty =
-    bookmarkSupport && documentCacheKey && isSearchActive && hasBookmarks && filteredBookmarks.length === 0;
+    bookmarkSupport &&
+    documentCacheKey &&
+    isSearchActive &&
+    hasBookmarks &&
+    filteredBookmarks.length === 0;
   const showNoDocument = bookmarkSupport && !documentCacheKey;
 
   if (!visible) {
@@ -436,7 +502,13 @@ export const BookmarkSidebar = ({
         {bookmarkSupport && bookmarksWithIds.length > 0 && (
           <>
             {Object.values(expanded).some((val) => val === false) ? (
-              <ActionIcon variant="subtle" size="sm" onClick={expandAll} aria-label="Expand all bookmarks" title="Expand all">
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                onClick={expandAll}
+                aria-label="Expand all bookmarks"
+                title="Expand all"
+              >
                 <LocalIcon icon="unfold-more" width="1.1rem" height="1.1rem" />
               </ActionIcon>
             ) : (
@@ -454,12 +526,18 @@ export const BookmarkSidebar = ({
         )}
       </div>
 
-      <Box px="sm" pb="sm" className="sidebar-base__search bookmark-sidebar__search">
+      <Box
+        px="sm"
+        pb="sm"
+        className="sidebar-base__search bookmark-sidebar__search"
+      >
         <TextInput
           value={searchTerm}
           placeholder="Search bookmarks"
           onChange={(event) => setSearchTerm(event.currentTarget.value)}
-          leftSection={<LocalIcon icon="search" width="1.1rem" height="1.1rem" />}
+          leftSection={
+            <LocalIcon icon="search" width="1.1rem" height="1.1rem" />
+          }
           size="xs"
         />
       </Box>
@@ -494,7 +572,13 @@ export const BookmarkSidebar = ({
           )}
 
           {bookmarkSupport && documentCacheKey && isLocalLoading && (
-            <Stack gap="md" align="center" c="dimmed" py="xl" className="sidebar-base__loading">
+            <Stack
+              gap="md"
+              align="center"
+              c="dimmed"
+              py="xl"
+              className="sidebar-base__loading"
+            >
               <Loader size="md" type="dots" />
               <Text size="sm" ta="center">
                 Loading bookmarks...
@@ -510,7 +594,11 @@ export const BookmarkSidebar = ({
             </div>
           )}
 
-          {showBookmarkList && <div className="bookmark-list">{renderBookmarks(filteredBookmarks)}</div>}
+          {showBookmarkList && (
+            <div className="bookmark-list">
+              {renderBookmarks(filteredBookmarks)}
+            </div>
+          )}
 
           {showSearchEmpty && (
             <div className="sidebar-base__empty-state">

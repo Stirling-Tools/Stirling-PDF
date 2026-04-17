@@ -31,7 +31,9 @@ export const useAuthService = () => {
     throw new Error("Unknown error occurred during signup");
   };
 
-  const signInWithProvider = async (provider: "github" | "google" | "apple" | "azure") => {
+  const signInWithProvider = async (
+    provider: "github" | "google" | "apple" | "azure",
+  ) => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo: absoluteWithBasePath("/auth/callback") },

@@ -100,15 +100,18 @@ describe("useAdjustPageScaleParameters", () => {
       },
       expected: false,
     },
-  ])("should validate parameters correctly $description", ({ setup, expected }) => {
-    const { result } = renderHook(() => useAdjustPageScaleParameters());
+  ])(
+    "should validate parameters correctly $description",
+    ({ setup, expected }) => {
+      const { result } = renderHook(() => useAdjustPageScaleParameters());
 
-    act(() => {
-      setup(result.current);
-    });
+      act(() => {
+        setup(result.current);
+      });
 
-    expect(result.current.validateParameters()).toBe(expected);
-  });
+      expect(result.current.validateParameters()).toBe(expected);
+    },
+  );
 
   test("should handle all PageSize enum values", () => {
     const { result } = renderHook(() => useAdjustPageScaleParameters());

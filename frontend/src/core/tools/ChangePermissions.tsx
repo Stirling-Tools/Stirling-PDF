@@ -11,7 +11,12 @@ const ChangePermissions = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const changePermissionsTips = useChangePermissionsTips();
 
-  const base = useBaseTool("changePermissions", useChangePermissionsParameters, useChangePermissionsOperation, props);
+  const base = useBaseTool(
+    "changePermissions",
+    useChangePermissionsParameters,
+    useChangePermissionsOperation,
+    props,
+  );
 
   return createToolFlow({
     files: {
@@ -22,7 +27,9 @@ const ChangePermissions = (props: BaseToolProps) => {
       {
         title: t("changePermissions.title", "Document Permissions"),
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: changePermissionsTips,
         content: (
           <ChangePermissionsSettings

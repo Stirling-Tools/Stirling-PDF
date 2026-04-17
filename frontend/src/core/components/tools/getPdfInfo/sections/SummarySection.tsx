@@ -1,7 +1,11 @@
 import React, { useMemo } from "react";
 import { Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import type { ParsedPdfSections, PdfFontInfo, PdfComplianceSummary } from "@app/types/getPdfInfo";
+import type {
+  ParsedPdfSections,
+  PdfFontInfo,
+  PdfComplianceSummary,
+} from "@app/types/getPdfInfo";
 import SectionBlock from "@app/components/tools/getPdfInfo/shared/SectionBlock";
 import KeyValueList from "@app/components/tools/getPdfInfo/shared/KeyValueList";
 
@@ -16,13 +20,19 @@ interface SummarySectionProps {
  */
 const getComplianceSummaryInfo = (
   complianceSummary?: PdfComplianceSummary[] | null,
-): { hasCompliance: boolean; passedStandards: string[]; failedCount: number } => {
+): {
+  hasCompliance: boolean;
+  passedStandards: string[];
+  failedCount: number;
+} => {
   if (!complianceSummary || complianceSummary.length === 0) {
     return { hasCompliance: false, passedStandards: [], failedCount: 0 };
   }
 
   // Filter out informational markers like "not-pdfa"
-  const actualChecks = complianceSummary.filter((item) => item.Standard.toLowerCase() !== "not-pdfa");
+  const actualChecks = complianceSummary.filter(
+    (item) => item.Standard.toLowerCase() !== "not-pdfa",
+  );
 
   if (actualChecks.length === 0) {
     return { hasCompliance: false, passedStandards: [], failedCount: 0 };
@@ -54,7 +64,10 @@ interface SummarySectionProps {
   hideSectionTitle?: boolean;
 }
 
-const SummarySection: React.FC<SummarySectionProps> = ({ sections, hideSectionTitle = false }) => {
+const SummarySection: React.FC<SummarySectionProps> = ({
+  sections,
+  hideSectionTitle = false,
+}) => {
   const { t } = useTranslation();
 
   const summaryBlocks = useMemo(() => {
@@ -75,7 +88,9 @@ const SummarySection: React.FC<SummarySectionProps> = ({ sections, hideSectionTi
     const basicInformation: Record<string, unknown> = {
       [t("getPdfInfo.summary.pages", "Pages")]: pages,
       [t("getPdfInfo.summary.fileSize", "File Size")]:
-        typeof fileSizeBytes === "number" ? `${(fileSizeBytes / 1024).toFixed(2)} KB` : fileSizeBytes,
+        typeof fileSizeBytes === "number"
+          ? `${(fileSizeBytes / 1024).toFixed(2)} KB`
+          : fileSizeBytes,
       [t("getPdfInfo.summary.pdfVersion", "PDF Version")]: pdfVersion,
       [t("getPdfInfo.summary.language", "Language")]: language,
     };
@@ -88,15 +103,25 @@ const SummarySection: React.FC<SummarySectionProps> = ({ sections, hideSectionTi
     };
 
     const securityStatusText = encryption.IsEncrypted
-      ? t("getPdfInfo.summary.security.encrypted", "Encrypted PDF - Password protection present")
-      : t("getPdfInfo.summary.security.unencrypted", "Unencrypted PDF - No password protection");
+      ? t(
+          "getPdfInfo.summary.security.encrypted",
+          "Encrypted PDF - Password protection present",
+        )
+      : t(
+          "getPdfInfo.summary.security.unencrypted",
+          "Unencrypted PDF - No password protection",
+        );
 
     const restrictedCount = summary.restrictedPermissionsCount ?? 0;
-    const permissionsAllAllowed = Object.values(permissions).every((v) => v === "Allowed");
+    const permissionsAllAllowed = Object.values(permissions).every(
+      (v) => v === "Allowed",
+    );
     const permSummary = permissionsAllAllowed
       ? t("getPdfInfo.summary.permsAll", "All Permissions Allowed")
       : restrictedCount > 0
-        ? t("getPdfInfo.summary.permsRestricted", "{{count}} restrictions", { count: restrictedCount })
+        ? t("getPdfInfo.summary.permsRestricted", "{{count}} restrictions", {
+            count: restrictedCount,
+          })
         : t("getPdfInfo.summary.permsMixed", "Some permissions restricted");
 
     // Use authoritative VeraPDF results for compliance summary
@@ -106,9 +131,13 @@ const SummarySection: React.FC<SummarySectionProps> = ({ sections, hideSectionTi
         ? t("getPdfInfo.summary.compliancePassed", "{{standards}} compliant", {
             standards: complianceInfo.passedStandards.join(", "),
           })
-        : t("getPdfInfo.summary.complianceChecked", "Standards verified ({{failed}} failed)", {
-            failed: complianceInfo.failedCount,
-          })
+        : t(
+            "getPdfInfo.summary.complianceChecked",
+            "Standards verified ({{failed}} failed)",
+            {
+              failed: complianceInfo.failedCount,
+            },
+          )
       : t("getPdfInfo.summary.noCompliance", "No Compliance Standards");
 
     // Helper to get first page data
@@ -127,19 +156,28 @@ const SummarySection: React.FC<SummarySectionProps> = ({ sections, hideSectionTi
         return `${firstPageFonts.length} (${embedded} embedded)`;
       })(),
       [t("getPdfInfo.summary.tech.formFields", "Form Fields")]:
-        sections.formFields && Object.keys(sections.formFields).length > 0 ? Object.keys(sections.formFields).length : "None",
-      [t("getPdfInfo.summary.tech.embeddedFiles", "Embedded Files")]: other.EmbeddedFiles?.length ?? "None",
-      [t("getPdfInfo.summary.tech.javaScript", "JavaScript")]: other.JavaScript?.length ?? "None",
-      [t("getPdfInfo.summary.tech.layers", "Layers")]: other.Layers?.length ?? "None",
-      [t("getPdfInfo.summary.tech.bookmarks", "Bookmarks")]: sections.toc?.length ?? "None",
-      [t("getPdfInfo.summary.tech.multimedia", "Multimedia")]: firstPage?.Multimedia?.length ?? "None",
+        sections.formFields && Object.keys(sections.formFields).length > 0
+          ? Object.keys(sections.formFields).length
+          : "None",
+      [t("getPdfInfo.summary.tech.embeddedFiles", "Embedded Files")]:
+        other.EmbeddedFiles?.length ?? "None",
+      [t("getPdfInfo.summary.tech.javaScript", "JavaScript")]:
+        other.JavaScript?.length ?? "None",
+      [t("getPdfInfo.summary.tech.layers", "Layers")]:
+        other.Layers?.length ?? "None",
+      [t("getPdfInfo.summary.tech.bookmarks", "Bookmarks")]:
+        sections.toc?.length ?? "None",
+      [t("getPdfInfo.summary.tech.multimedia", "Multimedia")]:
+        firstPage?.Multimedia?.length ?? "None",
     };
 
     const overview = (() => {
       const tTitle = metadata.Title
         ? `"${metadata.Title}"`
         : t("getPdfInfo.summary.overview.untitled", "an untitled document");
-      const author = metadata.Author || t("getPdfInfo.summary.overview.unknown", "Unknown Author");
+      const author =
+        metadata.Author ||
+        t("getPdfInfo.summary.overview.unknown", "Unknown Author");
       const pagesCount = typeof pages === "number" ? pages : "?";
       const version = pdfVersion ?? "?";
       return t(
@@ -215,7 +253,10 @@ const SummarySection: React.FC<SummarySectionProps> = ({ sections, hideSectionTi
   }
 
   return (
-    <SectionBlock title={t("getPdfInfo.summary.title", "PDF Summary")} anchorId="summary">
+    <SectionBlock
+      title={t("getPdfInfo.summary.title", "PDF Summary")}
+      anchorId="summary"
+    >
       {content}
     </SectionBlock>
   );

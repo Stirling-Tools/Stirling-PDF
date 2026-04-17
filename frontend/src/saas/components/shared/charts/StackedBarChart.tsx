@@ -1,11 +1,21 @@
 import React, { useEffect, useMemo, useRef, useCallback, useId } from "react";
 import { Group, Loader, Text } from "@mantine/core";
 import * as d3 from "d3";
-import { StackedBarChartProps, TooltipData, FractionData } from "@app/types/charts";
+import {
+  StackedBarChartProps,
+  TooltipData,
+  FractionData,
+} from "@app/types/charts";
 import { generateTooltipHTML } from "@app/components/shared/charts/stackedBarChart/StackedBarTooltip";
-import { detectTheme, getChartThemeVars } from "@app/components/shared/charts/utils/themeUtils";
+import {
+  detectTheme,
+  getChartThemeVars,
+} from "@app/components/shared/charts/utils/themeUtils";
 import { createTooltipPositioner } from "@app/components/shared/charts/utils/tooltipUtils";
-import { createRoundedRectPath, createScale } from "@app/components/shared/charts/utils/d3Utils";
+import {
+  createRoundedRectPath,
+  createScale,
+} from "@app/components/shared/charts/utils/d3Utils";
 
 export default function StackedBarChart({
   fractions,
@@ -27,10 +37,16 @@ export default function StackedBarChart({
 
   // Memoize theme detection to avoid recalculation
   const theme = useMemo(() => detectTheme(), []);
-  const themeVars = useMemo(() => getChartThemeVars(theme.isDark), [theme.isDark]);
+  const themeVars = useMemo(
+    () => getChartThemeVars(theme.isDark),
+    [theme.isDark],
+  );
 
   // Memoize tooltip positioner
-  const tooltipPositioner = useMemo(() => createTooltipPositioner(tooltipPosition), [tooltipPosition]);
+  const tooltipPositioner = useMemo(
+    () => createTooltipPositioner(tooltipPosition),
+    [tooltipPosition],
+  );
 
   const positionTooltip = useCallback(
     (event: MouseEvent) => {
@@ -70,7 +86,10 @@ export default function StackedBarChart({
     container.innerHTML = "";
 
     // Calculate total capacity (sum of all denominators)
-    const totalCapacity = fractions.reduce((sum: number, fraction: FractionData) => sum + fraction.denominator, 0);
+    const totalCapacity = fractions.reduce(
+      (sum: number, fraction: FractionData) => sum + fraction.denominator,
+      0,
+    );
 
     if (totalCapacity === 0 && !loading) return;
 
@@ -150,21 +169,35 @@ export default function StackedBarChart({
             .attr("fill", fraction.color);
         } else if (isFirst) {
           // First segment: rounded on left side only
-          const path = createRoundedRectPath(xPos, 0, segWidth, height, radius, {
-            topLeft: true,
-            topRight: false,
-            bottomLeft: true,
-            bottomRight: false,
-          });
+          const path = createRoundedRectPath(
+            xPos,
+            0,
+            segWidth,
+            height,
+            radius,
+            {
+              topLeft: true,
+              topRight: false,
+              bottomLeft: true,
+              bottomRight: false,
+            },
+          );
           usedGroup.append("path").attr("d", path).attr("fill", fraction.color);
         } else if (isLast) {
           // Last segment: rounded on right side only
-          const path = createRoundedRectPath(xPos, 0, segWidth, height, radius, {
-            topLeft: false,
-            topRight: true,
-            bottomLeft: false,
-            bottomRight: true,
-          });
+          const path = createRoundedRectPath(
+            xPos,
+            0,
+            segWidth,
+            height,
+            radius,
+            {
+              topLeft: false,
+              topRight: true,
+              bottomLeft: false,
+              bottomRight: true,
+            },
+          );
           usedGroup.append("path").attr("d", path).attr("fill", fraction.color);
         } else {
           // Middle segments: no rounded edges
@@ -190,21 +223,32 @@ export default function StackedBarChart({
         .attr("fill", "transparent")
         .style("pointer-events", "all")
         .on("mouseenter", (event: MouseEvent) => {
-          const tooltipData: TooltipData = { fractions: data, isDark: theme.isDark };
+          const tooltipData: TooltipData = {
+            fractions: data,
+            isDark: theme.isDark,
+          };
           const html = generateTooltipHTML(tooltipData);
           setTooltipContent(html);
           const tooltip = tooltipRef.current;
           if (tooltip) tooltip.style.opacity = "1";
           positionTooltip(event as unknown as MouseEvent);
         })
-        .on("mousemove", (event: MouseEvent) => positionTooltip(event as unknown as MouseEvent))
+        .on("mousemove", (event: MouseEvent) =>
+          positionTooltip(event as unknown as MouseEvent),
+        )
         .on("mouseleave", hideTooltip);
 
       // Animate reveal of used segments (only on first load, not on re-renders)
-      const totalUsed = data.reduce((sum: number, f: (typeof data)[number]) => sum + f.value, 0);
+      const totalUsed = data.reduce(
+        (sum: number, f: (typeof data)[number]) => sum + f.value,
+        0,
+      );
       const revealTo = x(totalUsed);
       if (animate && !hasAnimatedRef.current) {
-        clipRect.transition().duration(animationDurationMs).attr("width", revealTo);
+        clipRect
+          .transition()
+          .duration(animationDurationMs)
+          .attr("width", revealTo);
         hasAnimatedRef.current = true;
       } else {
         clipRect.attr("width", revealTo);
@@ -246,7 +290,15 @@ export default function StackedBarChart({
           }}
         />
         {loading && (
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <Loader size="sm" color="blue" />
           </div>
         )}

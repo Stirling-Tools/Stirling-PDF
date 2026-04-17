@@ -102,7 +102,11 @@ export type PageMeasureScales = Map<number, PageScaleInfo>;
  * viewport whose BBox contains the midpoint. Falls back to the first viewport
  * if none contains it (handles whole-page viewports with bbox=null).
  */
-function pickScale(start: PagePoint, end: PagePoint, pageMeasureScales: PageMeasureScales): MeasureScale | null {
+function pickScale(
+  start: PagePoint,
+  end: PagePoint,
+  pageMeasureScales: PageMeasureScales,
+): MeasureScale | null {
   if (start.pageIndex !== end.pageIndex) return null;
   const info = pageMeasureScales.get(start.pageIndex);
   if (!info?.viewports.length) return null;
@@ -115,7 +119,12 @@ function pickScale(start: PagePoint, end: PagePoint, pageMeasureScales: PageMeas
   for (const { bbox, scale } of info.viewports) {
     if (!bbox) return scale; // whole-page viewport
     const [x0, y0, x1, y1] = bbox;
-    if (mx >= Math.min(x0, x1) && mx <= Math.max(x0, x1) && my >= Math.min(y0, y1) && my <= Math.max(y0, y1)) {
+    if (
+      mx >= Math.min(x0, x1) &&
+      mx <= Math.max(x0, x1) &&
+      my >= Math.min(y0, y1) &&
+      my <= Math.max(y0, y1)
+    ) {
       return scale;
     }
   }
@@ -168,7 +177,9 @@ function scaledCross(pts: number, scale: MeasureScale): string | null {
   const toM = TO_METRES[scale.unit.toLowerCase().trim()];
   if (!toM) return null;
   const metres = pts * scale.factor * toM;
-  return isImperialUnit(scale.unit) ? formatMetricFromMetres(metres) : formatImperialFromFeet(metres / 0.3048);
+  return isImperialUnit(scale.unit)
+    ? formatMetricFromMetres(metres)
+    : formatImperialFromFeet(metres / 0.3048);
 }
 
 // ─── DOM helpers ──────────────────────────────────────────────────────────────
@@ -180,7 +191,11 @@ function findScrollEl(root: HTMLElement): HTMLElement | null {
     const el = node as HTMLElement;
     if (el === root) continue;
     const { overflow, overflowY, overflowX } = window.getComputedStyle(el);
-    if ([overflow, overflowY, overflowX].some((v) => v === "auto" || v === "scroll")) {
+    if (
+      [overflow, overflowY, overflowX].some(
+        (v) => v === "auto" || v === "scroll",
+      )
+    ) {
       return el;
     }
   }
@@ -196,7 +211,11 @@ function isOverPage(e: MouseEvent): boolean {
  * an SVG screen coordinate and a PagePoint (page-relative PDF units).
  * Used to clamp the live line when the cursor drifts off the page.
  */
-function nearestPageDocPt(cursor: Point, container: HTMLElement, zoom: number): { screenPt: Point; docPt: PagePoint } | null {
+function nearestPageDocPt(
+  cursor: Point,
+  container: HTMLElement,
+  zoom: number,
+): { screenPt: Point; docPt: PagePoint } | null {
   const pages = container.querySelectorAll("[data-page-index]");
   if (!pages.length) return null;
 
@@ -262,7 +281,16 @@ interface MeasurementLineProps {
   measureScale?: MeasureScale | null;
 }
 
-function MeasurementLine({ id, startS, endS, distPts, hovered, onDelete, onHover, measureScale }: MeasurementLineProps) {
+function MeasurementLine({
+  id,
+  startS,
+  endS,
+  distPts,
+  hovered,
+  onDelete,
+  onHover,
+  measureScale,
+}: MeasurementLineProps) {
   const mid = midpoint(startS, endS);
   const { nx, ny } = perpUnit(startS, endS);
   const ang = angleDeg(startS, endS);
@@ -272,7 +300,9 @@ function MeasurementLine({ id, startS, endS, distPts, hovered, onDelete, onHover
   const imperialFirst = !!measureScale && isImperialUnit(measureScale.unit);
 
   // Idle: scaled primary if scale present, else physical metric
-  const distLabel = measureScale ? formatScaled(distPts, measureScale) : formatDist(distPts);
+  const distLabel = measureScale
+    ? formatScaled(distPts, measureScale)
+    : formatDist(distPts);
 
   // Hover line 1 — both real-world values ordered by PDF unit system:
   //   imperial PDF: "10.000 ft / 3.048 m"
@@ -296,7 +326,9 @@ function MeasurementLine({ id, startS, endS, distPts, hovered, onDelete, onHover
     : null;
 
   // Hover line 3 (scaled) / line 2 (no scale) — ratio label + angle
-  const contextLabel = measureScale?.ratioLabel ? `${measureScale.ratioLabel}   ${angLabel}` : angLabel;
+  const contextLabel = measureScale?.ratioLabel
+    ? `${measureScale.ratioLabel}   ${angLabel}`
+    : angLabel;
 
   const maxHoverLh = measureScale ? LH3 : LH2;
   const lh = hovered ? maxHoverLh : LH;
@@ -322,7 +354,11 @@ function MeasurementLine({ id, startS, endS, distPts, hovered, onDelete, onHover
   const mono = "'Roboto Mono','Consolas',monospace";
 
   return (
-    <g onMouseEnter={() => onHover(id)} onMouseLeave={() => onHover(null)} style={{ pointerEvents: "all" }}>
+    <g
+      onMouseEnter={() => onHover(id)}
+      onMouseLeave={() => onHover(null)}
+      style={{ pointerEvents: "all" }}
+    >
       <rect
         x={hitLeft}
         y={hitTop}
@@ -333,7 +369,15 @@ function MeasurementLine({ id, startS, endS, distPts, hovered, onDelete, onHover
         style={{ pointerEvents: "all" }}
       />
 
-      <line x1={startS.x} y1={startS.y} x2={endS.x} y2={endS.y} stroke="#1e88e5" strokeWidth={sw} strokeLinecap="round" />
+      <line
+        x1={startS.x}
+        y1={startS.y}
+        x2={endS.x}
+        y2={endS.y}
+        stroke="#1e88e5"
+        strokeWidth={sw}
+        strokeLinecap="round"
+      />
       <line
         x1={startS.x + (nx * TICK) / 2}
         y1={startS.y + (ny * TICK) / 2}
@@ -352,8 +396,22 @@ function MeasurementLine({ id, startS, endS, distPts, hovered, onDelete, onHover
         strokeWidth={sw}
         strokeLinecap="round"
       />
-      <circle cx={startS.x} cy={startS.y} r={DOT_R} fill="#1e88e5" stroke="white" strokeWidth={2} />
-      <circle cx={endS.x} cy={endS.y} r={DOT_R} fill="#1e88e5" stroke="white" strokeWidth={2} />
+      <circle
+        cx={startS.x}
+        cy={startS.y}
+        r={DOT_R}
+        fill="#1e88e5"
+        stroke="white"
+        strokeWidth={2}
+      />
+      <circle
+        cx={endS.x}
+        cy={endS.y}
+        r={DOT_R}
+        fill="#1e88e5"
+        stroke="white"
+        strokeWidth={2}
+      />
 
       <g style={{ pointerEvents: "all", cursor: "default" }}>
         <rect
@@ -465,7 +523,14 @@ function MeasurementLine({ id, startS, endS, distPts, hovered, onDelete, onHover
             onDelete(id);
           }}
         >
-          <circle cx={delX} cy={delY} r={DEL_R} fill="#ef5350" stroke="white" strokeWidth={1.5} />
+          <circle
+            cx={delX}
+            cy={delY}
+            r={DEL_R}
+            fill="#ef5350"
+            stroke="white"
+            strokeWidth={1.5}
+          />
           <text
             x={delX}
             y={delY}
@@ -496,7 +561,9 @@ function LiveLine({ startS, endS, zoom, measureScale }: LiveLineProps) {
   const mid = midpoint(startS, endS);
   const { nx, ny } = perpUnit(startS, endS);
   const ang = angleDeg(startS, endS);
-  const distLabel = measureScale ? formatScaled(d, measureScale) : formatDist(d);
+  const distLabel = measureScale
+    ? formatScaled(d, measureScale)
+    : formatDist(d);
   const lw = Math.max(distLabel.length * 8 + LP * 2, 80);
 
   return (
@@ -567,349 +634,399 @@ function LiveLine({ startS, endS, zoom, measureScale }: LiveLineProps) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export const RulerOverlay = React.forwardRef<RulerOverlayHandle, RulerOverlayProps>(
-  ({ containerRef, isActive, pageMeasureScales }, ref) => {
-    const [measurements, setMeasurements] = useState<Measurement[]>([]);
-    const [firstPt, setFirstPt] = useState<PagePoint | null>(null);
-    /** Current cursor in SVG screen-space — for live crosshair and live line rendering. */
-    const [cursorS, setCursorS] = useState<Point | null>(null);
-    /** Current cursor in page-relative PDF units — for finalising off-page clicks. */
-    const [cursorDoc, setCursorDoc] = useState<PagePoint | null>(null);
-    const [hoveredId, setHoveredId] = useState<string | null>(null);
+export const RulerOverlay = React.forwardRef<
+  RulerOverlayHandle,
+  RulerOverlayProps
+>(({ containerRef, isActive, pageMeasureScales }, ref) => {
+  const [measurements, setMeasurements] = useState<Measurement[]>([]);
+  const [firstPt, setFirstPt] = useState<PagePoint | null>(null);
+  /** Current cursor in SVG screen-space — for live crosshair and live line rendering. */
+  const [cursorS, setCursorS] = useState<Point | null>(null);
+  /** Current cursor in page-relative PDF units — for finalising off-page clicks. */
+  const [cursorDoc, setCursorDoc] = useState<PagePoint | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
-    /**
-     * Incremented on scroll to trigger re-renders.
-     * We no longer store the scroll value — getBoundingClientRect handles that
-     * automatically and is always accurate regardless of scroll position.
-     */
-    const [, setScrollVersion] = useState(0);
+  /**
+   * Incremented on scroll to trigger re-renders.
+   * We no longer store the scroll value — getBoundingClientRect handles that
+   * automatically and is always accurate regardless of scroll position.
+   */
+  const [, setScrollVersion] = useState(0);
 
-    const scrollElRef = useRef<HTMLElement | null>(null);
-    const scrollCleanupRef = useRef<(() => void) | null>(null);
-    const idCounter = useRef(0);
+  const scrollElRef = useRef<HTMLElement | null>(null);
+  const scrollCleanupRef = useRef<(() => void) | null>(null);
+  const idCounter = useRef(0);
 
-    const firstPtRef = useRef<PagePoint | null>(null);
-    useEffect(() => {
-      firstPtRef.current = firstPt;
-    }, [firstPt]);
+  const firstPtRef = useRef<PagePoint | null>(null);
+  useEffect(() => {
+    firstPtRef.current = firstPt;
+  }, [firstPt]);
 
-    const cursorDocRef = useRef<PagePoint | null>(null);
+  const cursorDocRef = useRef<PagePoint | null>(null);
 
-    // ── Zoom ──────────────────────────────────────────────────────────────────
-    const viewer = useViewer();
-    const { registerImmediateZoomUpdate } = viewer;
+  // ── Zoom ──────────────────────────────────────────────────────────────────
+  const viewer = useViewer();
+  const { registerImmediateZoomUpdate } = viewer;
 
-    const [zoom, setZoom] = useState<number>(() => {
-      try {
-        return ((viewer.getZoomState() as any)?.zoomPercent ?? 140) / 100;
-      } catch {
-        return 1.4;
-      }
+  const [zoom, setZoom] = useState<number>(() => {
+    try {
+      return ((viewer.getZoomState() as any)?.zoomPercent ?? 140) / 100;
+    } catch {
+      return 1.4;
+    }
+  });
+
+  const zoomRef = useRef(zoom);
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
+
+  useEffect(() => {
+    return registerImmediateZoomUpdate((pct) => {
+      const newZoom = pct / 100;
+      zoomRef.current = newZoom; // immediate for event-listener closures
+      setZoom(newZoom); // re-render #1: zoom updated, but PDF.js DOM may not be yet
+      // re-render #2: after PDF.js has updated page element dimensions in the DOM,
+      // so getBoundingClientRect returns the correct positions for the new zoom level.
+      requestAnimationFrame(() => setScrollVersion((n) => n + 1));
     });
+  }, [registerImmediateZoomUpdate]);
 
-    const zoomRef = useRef(zoom);
-    useEffect(() => {
-      zoomRef.current = zoom;
-    }, [zoom]);
+  // ── Scroll tracking ────────────────────────────────────────────────────────
+  // We only need re-renders on scroll; getBoundingClientRect gives us accurate
+  // positions without needing to know the scroll offset ourselves.
 
-    useEffect(() => {
-      return registerImmediateZoomUpdate((pct) => {
-        const newZoom = pct / 100;
-        zoomRef.current = newZoom; // immediate for event-listener closures
-        setZoom(newZoom); // re-render #1: zoom updated, but PDF.js DOM may not be yet
-        // re-render #2: after PDF.js has updated page element dimensions in the DOM,
-        // so getBoundingClientRect returns the correct positions for the new zoom level.
-        requestAnimationFrame(() => setScrollVersion((n) => n + 1));
-      });
-    }, [registerImmediateZoomUpdate]);
+  const attachScrollEl = useCallback((el: HTMLElement) => {
+    scrollCleanupRef.current?.();
+    scrollElRef.current = el;
+    const handler = () => setScrollVersion((n) => n + 1);
+    el.addEventListener("scroll", handler, { passive: true });
+    scrollCleanupRef.current = () => el.removeEventListener("scroll", handler);
+  }, []);
 
-    // ── Scroll tracking ────────────────────────────────────────────────────────
-    // We only need re-renders on scroll; getBoundingClientRect gives us accurate
-    // positions without needing to know the scroll offset ourselves.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
 
-    const attachScrollEl = useCallback((el: HTMLElement) => {
-      scrollCleanupRef.current?.();
-      scrollElRef.current = el;
-      const handler = () => setScrollVersion((n) => n + 1);
-      el.addEventListener("scroll", handler, { passive: true });
-      scrollCleanupRef.current = () => el.removeEventListener("scroll", handler);
-    }, []);
-
-    useEffect(() => {
-      const container = containerRef.current;
-      if (!container) return;
-
-      const tryAttach = () => {
-        const el = findScrollEl(container);
-        if (el) {
-          attachScrollEl(el);
-          return true;
-        }
-        return false;
-      };
-
-      if (!tryAttach()) {
-        const timer = setTimeout(() => tryAttach(), 600);
-        return () => {
-          clearTimeout(timer);
-          scrollCleanupRef.current?.();
-        };
-      }
-      return () => scrollCleanupRef.current?.();
-    }, [containerRef, attachScrollEl]);
-
-    // Re-find scroll element when zoom changes (PDF.js may recreate the scroll DOM).
-    useEffect(() => {
-      const container = containerRef.current;
-      if (!container) return;
+    const tryAttach = () => {
       const el = findScrollEl(container);
-      if (el && el !== scrollElRef.current) attachScrollEl(el);
-    }, [zoom, containerRef, attachScrollEl]);
-
-    // ── Imperative handle ──────────────────────────────────────────────────────
-    React.useImperativeHandle(ref, () => ({
-      clearAll: () => {
-        setMeasurements([]);
-        setFirstPt(null);
-        setCursorS(null);
-        setCursorDoc(null);
-      },
-    }));
-
-    // ── Reset when deactivated ─────────────────────────────────────────────────
-    useEffect(() => {
-      if (!isActive) {
-        setFirstPt(null);
-        setCursorS(null);
-        setCursorDoc(null);
+      if (el) {
+        attachScrollEl(el);
+        return true;
       }
-    }, [isActive]);
+      return false;
+    };
 
-    // ── Mouse events ───────────────────────────────────────────────────────────
-    useEffect(() => {
-      const el = containerRef.current;
-      if (!isActive || !el) return;
-
-      const toScreenPt = (e: MouseEvent): Point => {
-        const r = el.getBoundingClientRect();
-        return { x: e.clientX - r.left, y: e.clientY - r.top };
-      };
-
-      /**
-       * Convert a mouse event to a page-relative PagePoint.
-       * Returns null if the cursor is not directly over a page element.
-       */
-      const toDocPagePt = (e: MouseEvent): PagePoint | null => {
-        const pageEl = (e.target as Element).closest?.("[data-page-index]") as HTMLElement | null;
-        if (!pageEl) return null;
-        const pageIndex = parseInt(pageEl.dataset.pageIndex ?? "0", 10);
-        const r = pageEl.getBoundingClientRect();
-        const z = zoomRef.current;
-        return { pageIndex, x: (e.clientX - r.left) / z, y: (e.clientY - r.top) / z };
-      };
-
-      const clearCursor = () => {
-        setCursorS(null);
-        setCursorDoc(null);
-        cursorDocRef.current = null;
-      };
-
-      const onMove = (e: MouseEvent) => {
-        const screenPt = toScreenPt(e);
-
-        if (isOverPage(e)) {
-          el.style.cursor = "crosshair";
-          const docPt = toDocPagePt(e);
-          setCursorS(screenPt);
-          setCursorDoc(docPt);
-          cursorDocRef.current = docPt;
-        } else if (firstPtRef.current !== null) {
-          // First point placed, cursor wandered off page — clamp to nearest edge
-          el.style.cursor = "crosshair";
-          const result = nearestPageDocPt(screenPt, el, zoomRef.current);
-          if (result) {
-            setCursorS(result.screenPt);
-            setCursorDoc(result.docPt);
-            cursorDocRef.current = result.docPt;
-          }
-        } else {
-          el.style.cursor = "default";
-          clearCursor();
-        }
-      };
-
-      const onClick = (e: MouseEvent) => {
-        if (e.button !== 0) return;
-        if ((e.target as Element).closest?.("[data-ruler-interactive]")) return;
-
-        const overPage = isOverPage(e);
-        if (!overPage && firstPtRef.current === null) return;
-        e.preventDefault();
-
-        const dp = overPage ? toDocPagePt(e) : cursorDocRef.current;
-        if (!dp) return;
-
-        setFirstPt((prev) => {
-          if (!prev) {
-            firstPtRef.current = dp;
-            return dp;
-          }
-          firstPtRef.current = null;
-          const id = `ruler-${++idCounter.current}`;
-          setMeasurements((m) => [...m, { id, start: prev, end: dp }]);
-          return null;
-        });
-      };
-
-      const onLeave = () => {
-        el.style.cursor = "";
-        if (firstPtRef.current === null) clearCursor();
-      };
-      const onKey = (e: KeyboardEvent) => {
-        if (e.key === "Escape") {
-          setFirstPt(null);
-          setCursorS(null);
-          setCursorDoc(null);
-        }
-      };
-
-      el.addEventListener("mousemove", onMove);
-      el.addEventListener("click", onClick);
-      el.addEventListener("mouseleave", onLeave);
-      document.addEventListener("keydown", onKey);
+    if (!tryAttach()) {
+      const timer = setTimeout(() => tryAttach(), 600);
       return () => {
-        el.removeEventListener("mousemove", onMove);
-        el.removeEventListener("click", onClick);
-        el.removeEventListener("mouseleave", onLeave);
-        document.removeEventListener("keydown", onKey);
-        el.style.cursor = "";
+        clearTimeout(timer);
+        scrollCleanupRef.current?.();
       };
-    }, [containerRef, isActive]);
+    }
+    return () => scrollCleanupRef.current?.();
+  }, [containerRef, attachScrollEl]);
 
-    const deleteMeasurement = useCallback((id: string) => {
-      setMeasurements((prev) => prev.filter((m) => m.id !== id));
-    }, []);
+  // Re-find scroll element when zoom changes (PDF.js may recreate the scroll DOM).
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const el = findScrollEl(container);
+    if (el && el !== scrollElRef.current) attachScrollEl(el);
+  }, [zoom, containerRef, attachScrollEl]);
 
-    if (!isActive && measurements.length === 0) return null;
+  // ── Imperative handle ──────────────────────────────────────────────────────
+  React.useImperativeHandle(ref, () => ({
+    clearAll: () => {
+      setMeasurements([]);
+      setFirstPt(null);
+      setCursorS(null);
+      setCursorDoc(null);
+    },
+  }));
 
-    // ── PagePoint → SVG screen coordinates ────────────────────────────────────
+  // ── Reset when deactivated ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (!isActive) {
+      setFirstPt(null);
+      setCursorS(null);
+      setCursorDoc(null);
+    }
+  }, [isActive]);
+
+  // ── Mouse events ───────────────────────────────────────────────────────────
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!isActive || !el) return;
+
+    const toScreenPt = (e: MouseEvent): Point => {
+      const r = el.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    };
+
     /**
-     * Convert a page-anchored point to SVG screen coordinates.
-     *
-     * Uses getBoundingClientRect so the browser computes the exact screen position
-     * accounting for scroll, zoom, page margins, centering — everything. This is
-     * why we no longer need to track scroll offsets.
-     *
-     * Returns null if the page element isn't in the DOM (shouldn't happen with
-     * PDF.js placeholder divs, but guard anyway).
+     * Convert a mouse event to a page-relative PagePoint.
+     * Returns null if the cursor is not directly over a page element.
      */
-    const pagePointToScreen = (pt: PagePoint): Point | null => {
-      const container = containerRef.current;
-      if (!container) return null;
-      const pageEl = container.querySelector(`[data-page-index="${pt.pageIndex}"]`) as HTMLElement | null;
+    const toDocPagePt = (e: MouseEvent): PagePoint | null => {
+      const pageEl = (e.target as Element).closest?.(
+        "[data-page-index]",
+      ) as HTMLElement | null;
       if (!pageEl) return null;
-      const pageRect = pageEl.getBoundingClientRect();
-      const containerRect = container.getBoundingClientRect();
+      const pageIndex = parseInt(pageEl.dataset.pageIndex ?? "0", 10);
+      const r = pageEl.getBoundingClientRect();
+      const z = zoomRef.current;
       return {
-        x: pageRect.left - containerRect.left + pt.x * zoom,
-        y: pageRect.top - containerRect.top + pt.y * zoom,
+        pageIndex,
+        x: (e.clientX - r.left) / z,
+        y: (e.clientY - r.top) / z,
       };
     };
 
-    const firstPtS = firstPt ? pagePointToScreen(firstPt) : null;
+    const clearCursor = () => {
+      setCursorS(null);
+      setCursorDoc(null);
+      cursorDocRef.current = null;
+    };
 
-    return (
-      <svg
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          pointerEvents: "none",
-          overflow: "visible",
-          zIndex: 100,
-        }}
-      >
-        <defs>
-          <filter id="ruler-shadow" x="-20%" y="-50%" width="140%" height="200%">
-            <feDropShadow dx="0" dy="1" stdDeviation="2" floodColor="rgba(0,0,0,0.22)" />
-          </filter>
-        </defs>
+    const onMove = (e: MouseEvent) => {
+      const screenPt = toScreenPt(e);
 
-        {/* Completed measurements */}
-        {measurements.map((m) => {
-          const startS = pagePointToScreen(m.start);
-          const endS = pagePointToScreen(m.end);
-          if (!startS || !endS) return null;
-          const mScale = pageMeasureScales ? pickScale(m.start, m.end, pageMeasureScales) : null;
-          return (
-            <MeasurementLine
-              key={m.id}
-              id={m.id}
-              startS={startS}
-              endS={endS}
-              distPts={dist(startS, endS) / zoom}
-              hovered={hoveredId === m.id}
-              onDelete={deleteMeasurement}
-              onHover={setHoveredId}
-              measureScale={mScale}
-            />
-          );
-        })}
+      if (isOverPage(e)) {
+        el.style.cursor = "crosshair";
+        const docPt = toDocPagePt(e);
+        setCursorS(screenPt);
+        setCursorDoc(docPt);
+        cursorDocRef.current = docPt;
+      } else if (firstPtRef.current !== null) {
+        // First point placed, cursor wandered off page — clamp to nearest edge
+        el.style.cursor = "crosshair";
+        const result = nearestPageDocPt(screenPt, el, zoomRef.current);
+        if (result) {
+          setCursorS(result.screenPt);
+          setCursorDoc(result.docPt);
+          cursorDocRef.current = result.docPt;
+        }
+      } else {
+        el.style.cursor = "default";
+        clearCursor();
+      }
+    };
 
-        {/* Live line while drawing */}
-        {isActive && firstPtS && cursorS && (
-          <LiveLine
-            startS={firstPtS}
-            endS={cursorS}
-            zoom={zoom}
-            measureScale={pageMeasureScales && firstPt && cursorDoc ? pickScale(firstPt, cursorDoc, pageMeasureScales) : null}
+    const onClick = (e: MouseEvent) => {
+      if (e.button !== 0) return;
+      if ((e.target as Element).closest?.("[data-ruler-interactive]")) return;
+
+      const overPage = isOverPage(e);
+      if (!overPage && firstPtRef.current === null) return;
+      e.preventDefault();
+
+      const dp = overPage ? toDocPagePt(e) : cursorDocRef.current;
+      if (!dp) return;
+
+      setFirstPt((prev) => {
+        if (!prev) {
+          firstPtRef.current = dp;
+          return dp;
+        }
+        firstPtRef.current = null;
+        const id = `ruler-${++idCounter.current}`;
+        setMeasurements((m) => [...m, { id, start: prev, end: dp }]);
+        return null;
+      });
+    };
+
+    const onLeave = () => {
+      el.style.cursor = "";
+      if (firstPtRef.current === null) clearCursor();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setFirstPt(null);
+        setCursorS(null);
+        setCursorDoc(null);
+      }
+    };
+
+    el.addEventListener("mousemove", onMove);
+    el.addEventListener("click", onClick);
+    el.addEventListener("mouseleave", onLeave);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      el.removeEventListener("mousemove", onMove);
+      el.removeEventListener("click", onClick);
+      el.removeEventListener("mouseleave", onLeave);
+      document.removeEventListener("keydown", onKey);
+      el.style.cursor = "";
+    };
+  }, [containerRef, isActive]);
+
+  const deleteMeasurement = useCallback((id: string) => {
+    setMeasurements((prev) => prev.filter((m) => m.id !== id));
+  }, []);
+
+  if (!isActive && measurements.length === 0) return null;
+
+  // ── PagePoint → SVG screen coordinates ────────────────────────────────────
+  /**
+   * Convert a page-anchored point to SVG screen coordinates.
+   *
+   * Uses getBoundingClientRect so the browser computes the exact screen position
+   * accounting for scroll, zoom, page margins, centering — everything. This is
+   * why we no longer need to track scroll offsets.
+   *
+   * Returns null if the page element isn't in the DOM (shouldn't happen with
+   * PDF.js placeholder divs, but guard anyway).
+   */
+  const pagePointToScreen = (pt: PagePoint): Point | null => {
+    const container = containerRef.current;
+    if (!container) return null;
+    const pageEl = container.querySelector(
+      `[data-page-index="${pt.pageIndex}"]`,
+    ) as HTMLElement | null;
+    if (!pageEl) return null;
+    const pageRect = pageEl.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    return {
+      x: pageRect.left - containerRect.left + pt.x * zoom,
+      y: pageRect.top - containerRect.top + pt.y * zoom,
+    };
+  };
+
+  const firstPtS = firstPt ? pagePointToScreen(firstPt) : null;
+
+  return (
+    <svg
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        pointerEvents: "none",
+        overflow: "visible",
+        zIndex: 100,
+      }}
+    >
+      <defs>
+        <filter id="ruler-shadow" x="-20%" y="-50%" width="140%" height="200%">
+          <feDropShadow
+            dx="0"
+            dy="1"
+            stdDeviation="2"
+            floodColor="rgba(0,0,0,0.22)"
           />
-        )}
+        </filter>
+      </defs>
 
-        {/* First-point anchor dot */}
-        {isActive && firstPtS && (
-          <circle cx={firstPtS.x} cy={firstPtS.y} r={DOT_R} fill="#1e88e5" stroke="white" strokeWidth={2} />
-        )}
+      {/* Completed measurements */}
+      {measurements.map((m) => {
+        const startS = pagePointToScreen(m.start);
+        const endS = pagePointToScreen(m.end);
+        if (!startS || !endS) return null;
+        const mScale = pageMeasureScales
+          ? pickScale(m.start, m.end, pageMeasureScales)
+          : null;
+        return (
+          <MeasurementLine
+            key={m.id}
+            id={m.id}
+            startS={startS}
+            endS={endS}
+            distPts={dist(startS, endS) / zoom}
+            hovered={hoveredId === m.id}
+            onDelete={deleteMeasurement}
+            onHover={setHoveredId}
+            measureScale={mScale}
+          />
+        );
+      })}
 
-        {/* Crosshair */}
-        {isActive && cursorS && (
-          <g opacity={0.75}>
-            <line x1={cursorS.x - 12} y1={cursorS.y} x2={cursorS.x + 12} y2={cursorS.y} stroke="#1e88e5" strokeWidth={1.5} />
-            <line x1={cursorS.x} y1={cursorS.y - 12} x2={cursorS.x} y2={cursorS.y + 12} stroke="#1e88e5" strokeWidth={1.5} />
-            <circle cx={cursorS.x} cy={cursorS.y} r={2} fill="#1e88e5" />
-          </g>
-        )}
+      {/* Live line while drawing */}
+      {isActive && firstPtS && cursorS && (
+        <LiveLine
+          startS={firstPtS}
+          endS={cursorS}
+          zoom={zoom}
+          measureScale={
+            pageMeasureScales && firstPt && cursorDoc
+              ? pickScale(firstPt, cursorDoc, pageMeasureScales)
+              : null
+          }
+        />
+      )}
 
-        {/* Clear all */}
-        {measurements.length > 0 && (
-          <g
-            data-ruler-interactive="true"
-            style={{ pointerEvents: "all", cursor: "pointer" }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setMeasurements([]);
-            }}
+      {/* First-point anchor dot */}
+      {isActive && firstPtS && (
+        <circle
+          cx={firstPtS.x}
+          cy={firstPtS.y}
+          r={DOT_R}
+          fill="#1e88e5"
+          stroke="white"
+          strokeWidth={2}
+        />
+      )}
+
+      {/* Crosshair */}
+      {isActive && cursorS && (
+        <g opacity={0.75}>
+          <line
+            x1={cursorS.x - 12}
+            y1={cursorS.y}
+            x2={cursorS.x + 12}
+            y2={cursorS.y}
+            stroke="#1e88e5"
+            strokeWidth={1.5}
+          />
+          <line
+            x1={cursorS.x}
+            y1={cursorS.y - 12}
+            x2={cursorS.x}
+            y2={cursorS.y + 12}
+            stroke="#1e88e5"
+            strokeWidth={1.5}
+          />
+          <circle cx={cursorS.x} cy={cursorS.y} r={2} fill="#1e88e5" />
+        </g>
+      )}
+
+      {/* Clear all */}
+      {measurements.length > 0 && (
+        <g
+          data-ruler-interactive="true"
+          style={{ pointerEvents: "all", cursor: "pointer" }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setMeasurements([]);
+          }}
+        >
+          <rect
+            x={8}
+            y={8}
+            width={88}
+            height={26}
+            rx={5}
+            fill="rgba(239,83,80,0.9)"
+            stroke="white"
+            strokeWidth={1}
+          />
+          <text
+            x={52}
+            y={25}
+            textAnchor="middle"
+            fill="white"
+            fontSize={12}
+            fontFamily="sans-serif"
+            fontWeight={600}
+            style={{ userSelect: "none" }}
           >
-            <rect x={8} y={8} width={88} height={26} rx={5} fill="rgba(239,83,80,0.9)" stroke="white" strokeWidth={1} />
-            <text
-              x={52}
-              y={25}
-              textAnchor="middle"
-              fill="white"
-              fontSize={12}
-              fontFamily="sans-serif"
-              fontWeight={600}
-              style={{ userSelect: "none" }}
-            >
-              Clear all
-            </text>
-          </g>
-        )}
-      </svg>
-    );
-  },
-);
+            Clear all
+          </text>
+        </g>
+      )}
+    </svg>
+  );
+});
 
 RulerOverlay.displayName = "RulerOverlay";

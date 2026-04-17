@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Stack, Card, Badge, Button, Text, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { connectionModeService, ConnectionConfig } from "@app/services/connectionModeService";
+import {
+  connectionModeService,
+  ConnectionConfig,
+} from "@app/services/connectionModeService";
 import { authService, UserInfo } from "@app/services/authService";
 import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
 
@@ -17,7 +20,10 @@ export const ConnectionSettings: React.FC = () => {
       const currentConfig = await connectionModeService.getCurrentConfig();
       setConfig(currentConfig);
 
-      if (currentConfig.mode === "saas" || currentConfig.mode === "selfhosted") {
+      if (
+        currentConfig.mode === "saas" ||
+        currentConfig.mode === "selfhosted"
+      ) {
         const user = await authService.getUserInfo();
         setUserInfo(user);
       }
@@ -25,7 +31,8 @@ export const ConnectionSettings: React.FC = () => {
 
     loadConfig();
 
-    const unsubscribe = connectionModeService.subscribeToModeChanges(loadConfig);
+    const unsubscribe =
+      connectionModeService.subscribeToModeChanges(loadConfig);
     return unsubscribe;
   }, []);
 
@@ -69,8 +76,19 @@ export const ConnectionSettings: React.FC = () => {
       <Card shadow="sm" padding="lg" radius="md" withBorder>
         <Stack gap="md">
           <Group justify="space-between">
-            <Text fw={600}>{t("settings.connection.title", "Connection Mode")}</Text>
-            <Badge color={config.mode === "saas" ? "blue" : config.mode === "local" ? "white" : "green"} variant="light">
+            <Text fw={600}>
+              {t("settings.connection.title", "Connection Mode")}
+            </Text>
+            <Badge
+              color={
+                config.mode === "saas"
+                  ? "blue"
+                  : config.mode === "local"
+                    ? "white"
+                    : "green"
+              }
+              variant="light"
+            >
               {config.mode === "saas"
                 ? t("settings.connection.mode.saas", "Stirling Cloud")
                 : config.mode === "local"
@@ -88,30 +106,33 @@ export const ConnectionSettings: React.FC = () => {
             </Text>
           )}
 
-          {(config.mode === "saas" || config.mode === "selfhosted") && config.server_config && (
-            <>
-              <div>
-                <Text size="sm" fw={500}>
-                  {t("settings.connection.server", "Server")}
-                </Text>
-                <Text size="sm" c="dimmed">
-                  {config.mode === "saas" ? "stirling.com" : config.server_config.url}
-                </Text>
-              </div>
-
-              {userInfo && (
+          {(config.mode === "saas" || config.mode === "selfhosted") &&
+            config.server_config && (
+              <>
                 <div>
                   <Text size="sm" fw={500}>
-                    {t("settings.connection.user", "Logged in as")}
+                    {t("settings.connection.server", "Server")}
                   </Text>
                   <Text size="sm" c="dimmed">
-                    {userInfo.username}
-                    {userInfo.email && ` (${userInfo.email})`}
+                    {config.mode === "saas"
+                      ? "stirling.com"
+                      : config.server_config.url}
                   </Text>
                 </div>
-              )}
-            </>
-          )}
+
+                {userInfo && (
+                  <div>
+                    <Text size="sm" fw={500}>
+                      {t("settings.connection.user", "Logged in as")}
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                      {userInfo.username}
+                      {userInfo.email && ` (${userInfo.email})`}
+                    </Text>
+                  </div>
+                )}
+              </>
+            )}
 
           <Group mt="md">
             {config.mode === "local" ? (
@@ -119,7 +140,12 @@ export const ConnectionSettings: React.FC = () => {
                 {t("settings.connection.signIn", "Sign In")}
               </Button>
             ) : (
-              <Button onClick={handleLogout} color="red" variant="light" disabled={loading}>
+              <Button
+                onClick={handleLogout}
+                color="red"
+                variant="light"
+                disabled={loading}
+              >
                 {t("settings.connection.logout", "Log Out")}
               </Button>
             )}

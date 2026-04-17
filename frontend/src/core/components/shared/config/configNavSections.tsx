@@ -66,7 +66,9 @@ export const createConfigNavSections = (
   _runningEE: boolean = false,
   _loginEnabled: boolean = false,
 ): ConfigNavSection[] => {
-  console.warn("createConfigNavSections is deprecated. Use useConfigNavSections hook instead for proper i18n support.");
+  console.warn(
+    "createConfigNavSections is deprecated. Use useConfigNavSections hook instead for proper i18n support.",
+  );
   const sections: ConfigNavSection[] = [
     {
       title: "Preferences",

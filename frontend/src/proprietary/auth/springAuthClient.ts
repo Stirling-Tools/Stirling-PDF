@@ -39,7 +39,12 @@ function getHttpStatus(error: unknown): number | undefined {
 // Helper to extract error message from axios error
 function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof AxiosError) {
-    return error.response?.data?.error || error.response?.data?.message || error.message || fallback;
+    return (
+      error.response?.data?.error ||
+      error.response?.data?.message ||
+      error.message ||
+      fallback
+    );
   }
   return error instanceof Error ? error.message : fallback;
 }
@@ -108,9 +113,16 @@ export interface AuthResponse {
   error: AuthError | null;
 }
 
-export type AuthChangeEvent = "SIGNED_IN" | "SIGNED_OUT" | "TOKEN_REFRESHED" | "USER_UPDATED";
+export type AuthChangeEvent =
+  | "SIGNED_IN"
+  | "SIGNED_OUT"
+  | "TOKEN_REFRESHED"
+  | "USER_UPDATED";
 
-type AuthChangeCallback = (event: AuthChangeEvent, session: Session | null) => void;
+type AuthChangeCallback = (
+  event: AuthChangeEvent,
+  session: Session | null,
+) => void;
 
 class SpringAuthClient {
   private listeners: AuthChangeCallback[] = [];
@@ -138,7 +150,9 @@ class SpringAuthClient {
     try {
       const payload = this.decodeJwtPayload(token);
       if (!payload) {
-        console.warn("[SpringAuth] Cannot decode token for adaptive intervals, using defaults");
+        console.warn(
+          "[SpringAuth] Cannot decode token for adaptive intervals, using defaults",
+        );
         return;
       }
 
@@ -146,7 +160,9 @@ class SpringAuthClient {
       const iatSeconds = typeof payload?.iat === "number" ? payload.iat : 0;
 
       if (expSeconds <= 0 || iatSeconds <= 0) {
-        console.warn("[SpringAuth] Token missing exp/iat claims, using default intervals");
+        console.warn(
+          "[SpringAuth] Token missing exp/iat claims, using default intervals",
+        );
         return;
       }
 
@@ -155,12 +171,18 @@ class SpringAuthClient {
       // Check interval: check 6 times during token lifetime
       // Min: 5 seconds (for very short tokens)
       // Max: 60 seconds (don't check too infrequently)
-      this.sessionCheckIntervalMs = Math.max(5000, Math.min(60000, tokenLifetimeMs / 6));
+      this.sessionCheckIntervalMs = Math.max(
+        5000,
+        Math.min(60000, tokenLifetimeMs / 6),
+      );
 
       // Refresh threshold: refresh when 25% of lifetime remaining
       // Min: 30 seconds (give buffer for refresh to complete)
       // Max: 5 minutes (don't wait too long for long-lived tokens)
-      this.tokenRefreshThresholdMs = Math.max(30000, Math.min(300000, tokenLifetimeMs / 4));
+      this.tokenRefreshThresholdMs = Math.max(
+        30000,
+        Math.min(300000, tokenLifetimeMs / 4),
+      );
 
       console.log("[SpringAuth] 📊 Adaptive intervals calculated:", {
         tokenLifetime: Math.floor(tokenLifetimeMs / 1000) + "s",
@@ -171,7 +193,10 @@ class SpringAuthClient {
       // Restart monitoring with new interval
       this.restartSessionMonitoring();
     } catch (error) {
-      console.warn("[SpringAuth] Failed to calculate adaptive intervals:", error);
+      console.warn(
+        "[SpringAuth] Failed to calculate adaptive intervals:",
+        error,
+      );
     }
   }
 
@@ -190,7 +215,10 @@ class SpringAuthClient {
     return JSON.parse(atob(base64));
   }
 
-  private getTokenExpiry(token: string): { expiresIn: number; expiresAt: number } {
+  private getTokenExpiry(token: string): {
+    expiresIn: number;
+    expiresAt: number;
+  } {
     try {
       const payload = this.decodeJwtPayload(token);
       if (!payload) {
@@ -198,8 +226,12 @@ class SpringAuthClient {
       }
 
       const expSeconds = typeof payload?.exp === "number" ? payload.exp : 0;
-      const expiresAt = expSeconds > 0 ? expSeconds * 1000 : Date.now() + 3600 * 1000;
-      const expiresIn = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+      const expiresAt =
+        expSeconds > 0 ? expSeconds * 1000 : Date.now() + 3600 * 1000;
+      const expiresIn = Math.max(
+        0,
+        Math.floor((expiresAt - Date.now()) / 1000),
+      );
 
       return { expiresIn, expiresAt };
     } catch {
@@ -227,7 +259,10 @@ class SpringAuthClient {
    * Get current session
    * JWT is stored in localStorage and sent via Authorization header
    */
-  async getSession(): Promise<{ data: { session: Session | null }; error: AuthError | null }> {
+  async getSession(): Promise<{
+    data: { session: Session | null };
+    error: AuthError | null;
+  }> {
     try {
       // Get JWT from localStorage
       let token = localStorage.getItem("stirling_jwt");
@@ -265,7 +300,10 @@ class SpringAuthClient {
 
         const session: Session = {
           user: {
-            id: platformUser?.email || platformUser?.username || "desktop-saas-user",
+            id:
+              platformUser?.email ||
+              platformUser?.username ||
+              "desktop-saas-user",
             email: platformUser?.email || "",
             username: platformUser?.username || platformUser?.email || "User",
             role: "USER",
@@ -334,7 +372,11 @@ class SpringAuthClient {
   /**
    * Sign in with email and password
    */
-  async signInWithPassword(credentials: { email: string; password: string; mfaCode?: string }): Promise<AuthResponse> {
+  async signInWithPassword(credentials: {
+    email: string;
+    password: string;
+    mfaCode?: string;
+  }): Promise<AuthResponse> {
     try {
       const response = await apiClient.post(
         "/api/v1/auth/login",
@@ -379,7 +421,11 @@ class SpringAuthClient {
       console.error("[SpringAuth] signInWithPassword error:", error);
       if (error instanceof AxiosError) {
         const errorCode = error.response?.data?.error as string | undefined;
-        const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || "Login failed";
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message ||
+          "Login failed";
         return {
           user: null,
           session: null,
@@ -462,7 +508,10 @@ class SpringAuthClient {
       return { error: null };
     } catch (error) {
       return {
-        error: { message: error instanceof Error ? error.message : "SSO redirect failed" },
+        error: {
+          message:
+            error instanceof Error ? error.message : "SSO redirect failed",
+        },
       };
     }
   }
@@ -473,7 +522,10 @@ class SpringAuthClient {
   async signOut(): Promise<{ error: AuthError | null }> {
     try {
       if (typeof window !== "undefined") {
-        window.sessionStorage.setItem("stirling_sso_auto_login_logged_out", "1");
+        window.sessionStorage.setItem(
+          "stirling_sso_auto_login_logged_out",
+          "1",
+        );
       }
       const response = await apiClient.post("/api/v1/auth/logout", null, {
         headers: {
@@ -496,14 +548,18 @@ class SpringAuthClient {
         // Clear any cached OAuth redirect/session state
         resetOAuthState();
       } catch (err) {
-        console.warn("[SpringAuth] Failed to clear Supabase/local auth tokens", err);
+        console.warn(
+          "[SpringAuth] Failed to clear Supabase/local auth tokens",
+          err,
+        );
       }
 
       // Clear cookies that might hold refresh/session tokens
       try {
         document.cookie.split(";").forEach((cookie) => {
           const eqPos = cookie.indexOf("=");
-          const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+          const name =
+            eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
           if (name) {
             document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;`;
           }
@@ -515,7 +571,10 @@ class SpringAuthClient {
       try {
         await clearPlatformAuthAfterSignOut();
       } catch (cleanupError) {
-        console.warn("[SpringAuth] Failed to run platform auth cleanup", cleanupError);
+        console.warn(
+          "[SpringAuth] Failed to run platform auth cleanup",
+          cleanupError,
+        );
       }
 
       // Notify listeners
@@ -529,7 +588,10 @@ class SpringAuthClient {
       try {
         await clearPlatformAuthAfterSignOut();
       } catch (cleanupError) {
-        console.warn("[SpringAuth] Failed to run platform auth cleanup after error", cleanupError);
+        console.warn(
+          "[SpringAuth] Failed to run platform auth cleanup after error",
+          cleanupError,
+        );
       }
       return {
         error: { message: getErrorMessage(error, "Logout failed") },
@@ -540,7 +602,10 @@ class SpringAuthClient {
   /**
    * Refresh JWT token
    */
-  async refreshSession(): Promise<{ data: { session: Session | null }; error: AuthError | null }> {
+  async refreshSession(): Promise<{
+    data: { session: Session | null };
+    error: AuthError | null;
+  }> {
     try {
       if (await isDesktopSaaSAuthMode()) {
         const refreshed = await refreshPlatformSession();
@@ -556,7 +621,9 @@ class SpringAuthClient {
         if (error || !data.session) {
           return {
             data: { session: null },
-            error: error || { message: "Token refresh failed - please log in again" },
+            error: error || {
+              message: "Token refresh failed - please log in again",
+            },
           };
         }
 
@@ -610,7 +677,10 @@ class SpringAuthClient {
       // Handle different error statuses
       const status = getHttpStatus(error);
       if (status === 401 || status === 403) {
-        return { data: { session: null }, error: { message: "Token refresh failed - please log in again" } };
+        return {
+          data: { session: null },
+          error: { message: "Token refresh failed - please log in again" },
+        };
       }
 
       return {
@@ -623,7 +693,9 @@ class SpringAuthClient {
   /**
    * Listen to auth state changes
    */
-  onAuthStateChange(callback: AuthChangeCallback): { data: { subscription: { unsubscribe: () => void } } } {
+  onAuthStateChange(callback: AuthChangeCallback): {
+    data: { subscription: { unsubscribe: () => void } };
+  } {
     this.listeners.push(callback);
 
     return {
@@ -646,7 +718,10 @@ class SpringAuthClient {
         try {
           callback(event, session);
         } catch (error) {
-          console.error("[SpringAuth] Error in auth state change listener:", error);
+          console.error(
+            "[SpringAuth] Error in auth state change listener:",
+            error,
+          );
         }
       });
     }, 0);
@@ -665,9 +740,14 @@ class SpringAuthClient {
           const timeUntilExpiry = (data.session.expires_at || 0) - Date.now();
 
           // Refresh if token expires soon (threshold is adaptive)
-          if (timeUntilExpiry > 0 && timeUntilExpiry < this.tokenRefreshThresholdMs) {
+          if (
+            timeUntilExpiry > 0 &&
+            timeUntilExpiry < this.tokenRefreshThresholdMs
+          ) {
             console.log(
-              "[SpringAuth] 🔄 Proactively refreshing token (expires in " + Math.floor(timeUntilExpiry / 1000) + "s)",
+              "[SpringAuth] 🔄 Proactively refreshing token (expires in " +
+                Math.floor(timeUntilExpiry / 1000) +
+                "s)",
             );
             await this.refreshSession();
           }

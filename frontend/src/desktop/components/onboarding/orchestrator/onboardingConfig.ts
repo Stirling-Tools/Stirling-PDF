@@ -9,7 +9,11 @@
  */
 
 // Re-export everything from core
-export { ONBOARDING_STEPS, getStepById, getStepIndex } from "@core/components/onboarding/orchestrator/onboardingConfig";
+export {
+  ONBOARDING_STEPS,
+  getStepById,
+  getStepIndex,
+} from "@core/components/onboarding/orchestrator/onboardingConfig";
 
 export type {
   OnboardingStepId,

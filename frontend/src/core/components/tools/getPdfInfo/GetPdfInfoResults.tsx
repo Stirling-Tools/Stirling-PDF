@@ -14,12 +14,22 @@ const findFileByExtension = (files: File[], extension: string) => {
   return files.find((file) => file.name.toLowerCase().endsWith(extension));
 };
 
-const GetPdfInfoResults = ({ operation, isLoading, errorMessage }: GetPdfInfoResultsProps) => {
+const GetPdfInfoResults = ({
+  operation,
+  isLoading,
+  errorMessage,
+}: GetPdfInfoResultsProps) => {
   const { t } = useTranslation();
 
-  const jsonFile = useMemo(() => findFileByExtension(operation.files, ".json"), [operation.files]);
+  const jsonFile = useMemo(
+    () => findFileByExtension(operation.files, ".json"),
+    [operation.files],
+  );
   const selectedFile = useMemo(() => jsonFile ?? null, [jsonFile]);
-  const selectedDownloadLabel = useMemo(() => t("getPdfInfo.downloadJson", "Download JSON"), [t]);
+  const selectedDownloadLabel = useMemo(
+    () => t("getPdfInfo.downloadJson", "Download JSON"),
+    [t],
+  );
 
   const handleDownload = useCallback((file: File) => {
     void downloadFile({ data: file, filename: file.name });
@@ -36,8 +46,14 @@ const GetPdfInfoResults = ({ operation, isLoading, errorMessage }: GetPdfInfoRes
 
   if (!isLoading && operation.results.length === 0) {
     return (
-      <Alert color="gray" variant="light" title={t("getPdfInfo.results", "Results")}>
-        <Text size="sm">{t("getPdfInfo.noResults", "Run the tool to generate a report.")}</Text>
+      <Alert
+        color="gray"
+        variant="light"
+        title={t("getPdfInfo.results", "Results")}
+      >
+        <Text size="sm">
+          {t("getPdfInfo.noResults", "Run the tool to generate a report.")}
+        </Text>
       </Alert>
     );
   }
@@ -55,7 +71,12 @@ const GetPdfInfoResults = ({ operation, isLoading, errorMessage }: GetPdfInfoRes
         <Text size="sm" fw={600}>
           {t("getPdfInfo.downloads", "Downloads")}
         </Text>
-        <Button color="blue" onClick={() => selectedFile && handleDownload(selectedFile)} disabled={!selectedFile} fullWidth>
+        <Button
+          color="blue"
+          onClick={() => selectedFile && handleDownload(selectedFile)}
+          disabled={!selectedFile}
+          fullWidth
+        >
           {selectedDownloadLabel}
         </Button>
       </Stack>

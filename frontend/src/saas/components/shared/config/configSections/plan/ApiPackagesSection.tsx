@@ -29,11 +29,26 @@ const ApiPackagesSection: React.FC<ApiPackagesSectionProps> = ({
 
   return (
     <div>
-      <h3 style={{ margin: 0, color: "var(--mantine-color-text)", fontSize: "1rem" }}>
+      <h3
+        style={{
+          margin: 0,
+          color: "var(--mantine-color-text)",
+          fontSize: "1rem",
+        }}
+      >
         {t("plan.apiPackages.title", "API Credit Packages")}
       </h3>
-      <p style={{ margin: "0.25rem 0 1rem 0", color: "var(--mantine-color-dimmed)", fontSize: "0.875rem" }}>
-        {t("plan.apiPackages.subtitle", "Purchase API credits for your applications")}
+      <p
+        style={{
+          margin: "0.25rem 0 1rem 0",
+          color: "var(--mantine-color-dimmed)",
+          fontSize: "0.875rem",
+        }}
+      >
+        {t(
+          "plan.apiPackages.subtitle",
+          "Purchase API credits for your applications",
+        )}
       </p>
 
       <Card padding="xl" radius="md" className="mb-4">
@@ -48,7 +63,9 @@ const ApiPackagesSection: React.FC<ApiPackagesSectionProps> = ({
               <Slider
                 value={selectedCredits}
                 onChange={onSelectedCreditsChange}
-                onChangeEnd={(value) => onSelectedCreditsChange(Math.round(value))}
+                onChangeEnd={(value) =>
+                  onSelectedCreditsChange(Math.round(value))
+                }
                 min={0}
                 max={3}
                 step={0.01}
@@ -69,7 +86,10 @@ const ApiPackagesSection: React.FC<ApiPackagesSectionProps> = ({
           <Flex gap={"xl"} justify="space-between" align="center">
             <div>
               <Text size="xl" fw={700}>
-                {apiPackages[Math.round(selectedCredits)].credits.toLocaleString()} Credits
+                {apiPackages[
+                  Math.round(selectedCredits)
+                ].credits.toLocaleString()}{" "}
+                Credits
               </Text>
               <Text size="sm" c="dimmed">
                 {apiPackages[Math.round(selectedCredits)].description}
@@ -88,7 +108,11 @@ const ApiPackagesSection: React.FC<ApiPackagesSectionProps> = ({
 
             <Button
               size="lg"
-              onClick={() => onCreditPurchaseClick(apiPackages[Math.round(selectedCredits)].id as CreditsPack)}
+              onClick={() =>
+                onCreditPurchaseClick(
+                  apiPackages[Math.round(selectedCredits)].id as CreditsPack,
+                )
+              }
             >
               {t("plan.purchase", "Purchase")}
             </Button>

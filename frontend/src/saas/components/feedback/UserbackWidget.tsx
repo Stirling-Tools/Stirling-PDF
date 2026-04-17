@@ -24,7 +24,8 @@ export default function UserbackWidget({ token }: UserbackWidgetProps) {
       try {
         // Prepare user data options
         const userInfo: { name?: string; email?: string } = {};
-        if (user.user_metadata?.full_name) userInfo.name = user.user_metadata.full_name;
+        if (user.user_metadata?.full_name)
+          userInfo.name = user.user_metadata.full_name;
         if (user.email) userInfo.email = user.email;
 
         const options = {
@@ -45,7 +46,10 @@ export default function UserbackWidget({ token }: UserbackWidgetProps) {
 
     // Cleanup function
     return () => {
-      if (userbackRef.current && typeof userbackRef.current.destroy === "function") {
+      if (
+        userbackRef.current &&
+        typeof userbackRef.current.destroy === "function"
+      ) {
         userbackRef.current.destroy();
       }
       initializingRef.current = false;

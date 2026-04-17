@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Text, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { getAutoOcrLanguage, getBrowserLanguagesForOcr, getOcrDisplayName } from "@app/utils/languageMapping";
+import {
+  getAutoOcrLanguage,
+  getBrowserLanguagesForOcr,
+  getOcrDisplayName,
+} from "@app/utils/languageMapping";
 import apiClient from "@app/services/apiClient";
-import DropdownListWithFooter, { DropdownItem } from "@app/components/shared/DropdownListWithFooter";
+import DropdownListWithFooter, {
+  DropdownItem,
+} from "@app/components/shared/DropdownListWithFooter";
 
 export interface LanguageOption {
   value: string;
@@ -30,7 +36,9 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
   autoFillFromBrowserLanguage = true,
 }) => {
   const { t, i18n } = useTranslation();
-  const [availableLanguages, setAvailableLanguages] = useState<DropdownItem[]>([]);
+  const [availableLanguages, setAvailableLanguages] = useState<DropdownItem[]>(
+    [],
+  );
   const [isLoadingLanguages, setIsLoadingLanguages] = useState(true);
   const [hasAutoFilled, setHasAutoFilled] = useState(false);
 
@@ -38,10 +46,14 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
     // Fetch available languages from backend
     const fetchLanguages = async () => {
       try {
-        const { data } = await apiClient.get<{ languages: string[] }>(languagesEndpoint);
+        const { data } = await apiClient.get<{ languages: string[] }>(
+          languagesEndpoint,
+        );
 
         const displayNames =
-          typeof Intl.DisplayNames !== "undefined" ? new Intl.DisplayNames([i18n.language], { type: "language" }) : null;
+          typeof Intl.DisplayNames !== "undefined"
+            ? new Intl.DisplayNames([i18n.language], { type: "language" })
+            : null;
 
         const languageOptions = [...new Set(data.languages)]
           .map((lang) => {
@@ -53,11 +65,15 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
             const hasKeyTranslation = translatedFromKey !== langKey;
 
             const intlTranslatedName = displayNames
-              ? browserLanguageCodes.map((code) => displayNames.of(code)).find((name): name is string => Boolean(name))
+              ? browserLanguageCodes
+                  .map((code) => displayNames.of(code))
+                  .find((name): name is string => Boolean(name))
               : null;
 
             const translatedName =
-              (hasKeyTranslation ? translatedFromKey : null) || intlTranslatedName || t(`ocr.languages.${lang}`, displayName);
+              (hasKeyTranslation ? translatedFromKey : null) ||
+              intlTranslatedName ||
+              t(`ocr.languages.${lang}`, displayName);
 
             return {
               value: lang,
@@ -98,7 +114,9 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
 
       if (suggestedOcrLanguages.length > 0) {
         // Find the first suggested language that's available in the backend
-        const matchingLanguage = availableLanguages.find((lang) => suggestedOcrLanguages.includes(lang.value));
+        const matchingLanguage = availableLanguages.find((lang) =>
+          suggestedOcrLanguages.includes(lang.value),
+        );
 
         if (matchingLanguage) {
           onChange([matchingLanguage.value]);
@@ -130,7 +148,10 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
     <>
       <div className="flex flex-col items-center gap-1 text-center">
         <Text size="xs" c="dimmed" className="text-center">
-          {t("ocr.languagePicker.additionalLanguages", "Looking for additional languages?")}
+          {t(
+            "ocr.languagePicker.additionalLanguages",
+            "Looking for additional languages?",
+          )}
         </Text>
         <Text
           size="xs"
@@ -140,7 +161,12 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
             textDecoration: "underline",
             textAlign: "center",
           }}
-          onClick={() => window.open("https://docs.stirlingpdf.com/Configuration/OCR", "_blank")}
+          onClick={() =>
+            window.open(
+              "https://docs.stirlingpdf.com/Configuration/OCR",
+              "_blank",
+            )
+          }
         >
           {t("ocr.languagePicker.viewSetupGuide", "View setup guide →")}
         </Text>

@@ -11,7 +11,10 @@ export function useFileActionTerminology() {
     uploadFiles: t("fileUpload.openFiles", "Open Files"),
     uploadFile: t("fileUpload.openFile", "Open File"),
     upload: t("fileUpload.open", "Open"),
-    dropFilesHere: t("fileUpload.dropFilesHereOpen", "Drop files here or click the open button"),
+    dropFilesHere: t(
+      "fileUpload.dropFilesHereOpen",
+      "Drop files here or click the open button",
+    ),
     addFiles: t("fileUpload.openFiles", "Open Files"),
     mobileUpload: t("landing.mobileUpload", "Upload from Mobile"),
     uploadFromComputer: t("landing.openFromComputer", "Open from computer"),
@@ -19,6 +22,9 @@ export function useFileActionTerminology() {
     downloadAll: t("rightRail.saveAll", "Save All"),
     downloadSelected: t("fileManager.saveSelected", "Save Selected"),
     downloadUnavailable: t("saveUnavailable", "Save unavailable for this item"),
-    noFilesInStorage: t("fileUpload.noFilesInStorageOpen", "No files available in storage. Open some files first."),
+    noFilesInStorage: t(
+      "fileUpload.noFilesInStorageOpen",
+      "No files available in storage. Open some files first.",
+    ),
   };
 }

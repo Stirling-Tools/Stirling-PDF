@@ -51,7 +51,9 @@ export default function EmailPasswordForm({
             onChange={(e) => setEmail(e.target.value)}
             className={`auth-input ${fieldErrors.email ? "auth-input-error" : ""}`}
           />
-          {fieldErrors.email && <div className="auth-field-error">{fieldErrors.email}</div>}
+          {fieldErrors.email && (
+            <div className="auth-field-error">{fieldErrors.email}</div>
+          )}
         </div>
 
         {showPasswordField && (
@@ -69,12 +71,18 @@ export default function EmailPasswordForm({
               onChange={(e) => setPassword(e.target.value)}
               className={`auth-input ${fieldErrors.password ? "auth-input-error" : ""}`}
             />
-            {fieldErrors.password && <div className="auth-field-error">{fieldErrors.password}</div>}
+            {fieldErrors.password && (
+              <div className="auth-field-error">{fieldErrors.password}</div>
+            )}
           </div>
         )}
       </div>
 
-      <button type="submit" disabled={isSubmitting || !email || (showPasswordField && !password)} className="auth-button">
+      <button
+        type="submit"
+        disabled={isSubmitting || !email || (showPasswordField && !password)}
+        className="auth-button"
+      >
         {submitButtonText}
       </button>
     </form>

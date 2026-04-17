@@ -40,10 +40,27 @@ export default function LoggedInState() {
         }}
       >
         <div style={{ textAlign: "center", marginBottom: "24px" }}>
-          <div style={{ marginBottom: "16px", display: "flex", justifyContent: "center" }}>
-            <img src={logoPath} alt="Stirling PDF Logo" style={{ width: "64px", height: "64px", objectFit: "contain" }} />
+          <div
+            style={{
+              marginBottom: "16px",
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <img
+              src={logoPath}
+              alt="Stirling PDF Logo"
+              style={{ width: "64px", height: "64px", objectFit: "contain" }}
+            />
           </div>
-          <h1 style={{ fontSize: "24px", fontWeight: "bold", color: "#059669", marginBottom: "8px" }}>
+          <h1
+            style={{
+              fontSize: "24px",
+              fontWeight: "bold",
+              color: "#059669",
+              marginBottom: "8px",
+            }}
+          >
             {t("login.youAreLoggedIn")}
           </h1>
           <p style={{ color: "#6b7280", fontSize: "14px" }}>
@@ -52,7 +69,9 @@ export default function LoggedInState() {
         </div>
 
         <div style={{ textAlign: "center", marginTop: "16px" }}>
-          <p style={{ color: "#6b7280", fontSize: "14px" }}>Redirecting to home...</p>
+          <p style={{ color: "#6b7280", fontSize: "14px" }}>
+            Redirecting to home...
+          </p>
         </div>
       </div>
     </div>

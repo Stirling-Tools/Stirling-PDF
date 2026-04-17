@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
-import licenseService, { PlanTier, PlansResponse } from "@app/services/licenseService";
+import licenseService, {
+  PlanTier,
+  PlansResponse,
+} from "@app/services/licenseService";
 
 export interface UsePlansReturn {
   plans: PlanTier[];

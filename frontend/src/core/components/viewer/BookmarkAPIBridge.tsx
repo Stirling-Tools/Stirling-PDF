@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { useBookmarkCapability, BookmarkCapability } from "@embedpdf/plugin-bookmark/react";
+import {
+  useBookmarkCapability,
+  BookmarkCapability,
+} from "@embedpdf/plugin-bookmark/react";
 import { useViewer } from "@app/contexts/ViewerContext";
-import { BookmarkState, BookmarkAPIWrapper } from "@app/contexts/viewer/viewerBridges";
+import {
+  BookmarkState,
+  BookmarkAPIWrapper,
+} from "@app/contexts/viewer/viewerBridges";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
 
 /**
@@ -39,7 +45,8 @@ export function BookmarkAPIBridge() {
         });
         return result.bookmarks ?? [];
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load bookmarks";
+        const message =
+          error instanceof Error ? error.message : "Failed to load bookmarks";
         setState({
           bookmarks: null,
           isLoading: false,

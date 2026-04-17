@@ -18,7 +18,9 @@ export function useExitWarning() {
   useEffect(() => {
     const appWindow = getCurrentWindow();
 
-    const handleCloseRequested = async (event: { preventDefault: () => void }) => {
+    const handleCloseRequested = async (event: {
+      preventDefault: () => void;
+    }) => {
       event.preventDefault();
 
       if (isClosingRef.current) {
@@ -31,15 +33,22 @@ export function useExitWarning() {
       if (dirtyStubs.length > 0) {
         const fileList = dirtyStubs.map((f) => `• ${f.name}`).join("\n");
         const saveLabel = t("confirmCloseSave", "Save and close");
-        const discardLabel = t("confirmCloseDiscard", "Discard changes and close");
+        const discardLabel = t(
+          "confirmCloseDiscard",
+          "Discard changes and close",
+        );
         const cancelLabel = t("confirmCloseCancel", "Cancel");
 
         const choice = await message(
-          t("confirmCloseUnsavedList", "You have {{count}} file{{plural}} with unsaved changes.\n\n{{fileList}}", {
-            count: dirtyStubs.length,
-            plural: dirtyStubs.length > 1 ? "s" : "",
-            fileList,
-          }),
+          t(
+            "confirmCloseUnsavedList",
+            "You have {{count}} file{{plural}} with unsaved changes.\n\n{{fileList}}",
+            {
+              count: dirtyStubs.length,
+              plural: dirtyStubs.length > 1 ? "s" : "",
+              fileList,
+            },
+          ),
           {
             title: t("confirmCloseUnsaved", "This file has unsaved changes."),
             kind: "warning",
@@ -62,11 +71,18 @@ export function useExitWarning() {
           }
           if (failedCount > 0) {
             await message(
-              t("confirmCloseSaveFailed", "Saved with errors. {{count}} file{{plural}} could not be saved.", {
-                count: failedCount,
-                plural: failedCount > 1 ? "s" : "",
-              }),
-              { title: t("confirmCloseSaveFailedTitle", "Save Failed"), kind: "error" },
+              t(
+                "confirmCloseSaveFailed",
+                "Saved with errors. {{count}} file{{plural}} could not be saved.",
+                {
+                  count: failedCount,
+                  plural: failedCount > 1 ? "s" : "",
+                },
+              ),
+              {
+                title: t("confirmCloseSaveFailedTitle", "Save Failed"),
+                kind: "error",
+              },
             );
             return;
           }
@@ -93,7 +109,9 @@ export function useExitWarning() {
   }, [fileActions, t]);
 
   const saveDirtyFiles = async (dirtyStubs: StirlingFileStub[]) => {
-    const filesById = new Map(selectorsRef.current.getFiles().map((file) => [file.fileId, file]));
+    const filesById = new Map(
+      selectorsRef.current.getFiles().map((file) => [file.fileId, file]),
+    );
     let failedCount = 0;
     let cancelled = false;
 

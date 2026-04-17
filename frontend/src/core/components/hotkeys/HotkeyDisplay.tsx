@@ -23,7 +23,11 @@ const baseKeyStyle: React.CSSProperties = {
   color: "var(--mantine-color-text)",
 };
 
-export const HotkeyDisplay: React.FC<HotkeyDisplayProps> = ({ binding, size = "sm", muted = false }) => {
+export const HotkeyDisplay: React.FC<HotkeyDisplayProps> = ({
+  binding,
+  size = "sm",
+  muted = false,
+}) => {
   const { getDisplayParts } = useHotkeys();
   const parts = getDisplayParts(binding);
 
@@ -31,7 +35,10 @@ export const HotkeyDisplay: React.FC<HotkeyDisplayProps> = ({ binding, size = "s
     return null;
   }
 
-  const keyStyle = size === "md" ? { ...baseKeyStyle, fontSize: "0.85rem", padding: "0.2rem 0.5rem" } : baseKeyStyle;
+  const keyStyle =
+    size === "md"
+      ? { ...baseKeyStyle, fontSize: "0.85rem", padding: "0.2rem 0.5rem" }
+      : baseKeyStyle;
 
   return (
     <span

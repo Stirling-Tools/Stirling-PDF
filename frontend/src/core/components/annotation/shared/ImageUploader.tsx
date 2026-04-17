@@ -27,22 +27,33 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   const { t } = useTranslation();
   const [removeBackground, setRemoveBackground] = useState(false);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
-  const [originalImageData, setOriginalImageData] = useState<string | null>(null);
+  const [originalImageData, setOriginalImageData] = useState<string | null>(
+    null,
+  );
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const processImage = async (imageSource: File | string, shouldRemoveBackground: boolean): Promise<void> => {
+  const processImage = async (
+    imageSource: File | string,
+    shouldRemoveBackground: boolean,
+  ): Promise<void> => {
     if (shouldRemoveBackground && allowBackgroundRemoval) {
       setIsProcessing(true);
       try {
-        const transparentImageDataUrl = await removeWhiteBackground(imageSource, {
-          autoDetectCorner: true,
-          tolerance: 15,
-        });
+        const transparentImageDataUrl = await removeWhiteBackground(
+          imageSource,
+          {
+            autoDetectCorner: true,
+            tolerance: 15,
+          },
+        );
         onProcessedImageData?.(transparentImageDataUrl);
       } catch (error) {
         console.error("Error removing background:", error);
         alert({
-          title: t("sign.image.backgroundRemovalFailedTitle", "Background removal failed"),
+          title: t(
+            "sign.image.backgroundRemovalFailedTitle",
+            "Background removal failed",
+          ),
           body: t(
             "sign.image.backgroundRemovalFailedMessage",
             "Could not remove the background from the image. Using original image instead.",
@@ -72,7 +83,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     if (file && !disabled) {
       try {
         // Validate that it's actually an image file or SVG
-        if (!file.type.startsWith("image/") && !file.name.toLowerCase().endsWith(".svg")) {
+        if (
+          !file.type.startsWith("image/") &&
+          !file.name.toLowerCase().endsWith(".svg")
+        ) {
           console.error("Selected file is not an image or SVG");
           return;
         }
@@ -83,7 +97,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         let dataUrlToProcess: string;
 
         // Check if file is SVG
-        const isSvg = file.type === "image/svg+xml" || file.name.toLowerCase().endsWith(".svg");
+        const isSvg =
+          file.type === "image/svg+xml" ||
+          file.name.toLowerCase().endsWith(".svg");
 
         if (isSvg) {
           // For SVG, convert to PNG so it can be embedded in PDF
@@ -129,7 +145,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           let width = 800; // Default width
           let height = 600; // Default height
 
-          if (svgElement.hasAttribute("width") && svgElement.hasAttribute("height")) {
+          if (
+            svgElement.hasAttribute("width") &&
+            svgElement.hasAttribute("height")
+          ) {
             width = parseFloat(svgElement.getAttribute("width") || "800");
             height = parseFloat(svgElement.getAttribute("height") || "600");
           } else if (svgElement.hasAttribute("viewBox")) {
@@ -141,7 +160,12 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           }
 
           // Ensure reasonable dimensions
-          if (width === 0 || height === 0 || !isFinite(width) || !isFinite(height)) {
+          if (
+            width === 0 ||
+            height === 0 ||
+            !isFinite(width) ||
+            !isFinite(height)
+          ) {
             width = 800;
             height = 600;
           }
@@ -158,7 +182,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
           // Create an image element to render SVG
           const img = new Image();
-          const blob = new Blob([svgText], { type: "image/svg+xml;charset=utf-8" });
+          const blob = new Blob([svgText], {
+            type: "image/svg+xml;charset=utf-8",
+          });
           const url = URL.createObjectURL(blob);
 
           img.onload = () => {
@@ -239,7 +265,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       <PrivateContent>
         <FileInput
           label={label}
-          placeholder={placeholder || t("sign.image.placeholder", "Select image file")}
+          placeholder={
+            placeholder || t("sign.image.placeholder", "Select image file")
+          }
           accept="image/*,.svg"
           onChange={handleImageChange}
           disabled={disabled || isProcessing}
@@ -247,9 +275,14 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       </PrivateContent>
       {allowBackgroundRemoval && (
         <Checkbox
-          label={t("sign.image.removeBackground", "Remove white background (make transparent)")}
+          label={t(
+            "sign.image.removeBackground",
+            "Remove white background (make transparent)",
+          )}
           checked={removeBackground}
-          onChange={(event) => handleBackgroundRemovalChange(event.currentTarget.checked)}
+          onChange={(event) =>
+            handleBackgroundRemovalChange(event.currentTarget.checked)
+          }
           disabled={disabled || !currentFile || isProcessing}
         />
       )}

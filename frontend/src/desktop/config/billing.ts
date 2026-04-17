@@ -49,9 +49,14 @@ export function getBillingConfig() {
  * @param currency Currency code (e.g., 'usd', 'gbp')
  * @param price Optional price override (defaults to BILLING_CONFIG.OVERAGE_PRICE_PER_CREDIT)
  */
-export function getFormattedOveragePrice(currency: string = "usd", price?: number): string {
+export function getFormattedOveragePrice(
+  currency: string = "usd",
+  price?: number,
+): string {
   const symbol =
-    BILLING_CONFIG.CURRENCY_SYMBOLS[currency.toLowerCase() as keyof typeof BILLING_CONFIG.CURRENCY_SYMBOLS] || "$";
+    BILLING_CONFIG.CURRENCY_SYMBOLS[
+      currency.toLowerCase() as keyof typeof BILLING_CONFIG.CURRENCY_SYMBOLS
+    ] || "$";
   const amount = price ?? BILLING_CONFIG.OVERAGE_PRICE_PER_CREDIT;
   return `${symbol}${amount.toFixed(2)}`;
 }
@@ -61,7 +66,8 @@ export function getFormattedOveragePrice(currency: string = "usd", price?: numbe
  */
 export function getCurrencySymbol(currency: string): string {
   return (
-    BILLING_CONFIG.CURRENCY_SYMBOLS[currency.toLowerCase() as keyof typeof BILLING_CONFIG.CURRENCY_SYMBOLS] ||
-    currency.toUpperCase()
+    BILLING_CONFIG.CURRENCY_SYMBOLS[
+      currency.toLowerCase() as keyof typeof BILLING_CONFIG.CURRENCY_SYMBOLS
+    ] || currency.toUpperCase()
   );
 }

@@ -4,7 +4,15 @@
  */
 
 import React from "react";
-import { describe, test, expect, vi, beforeEach, afterEach, Mock } from "vitest";
+import {
+  describe,
+  test,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+  Mock,
+} from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useConvertOperation } from "@app/hooks/tools/convert/useConvertOperation";
 import { useConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
@@ -16,7 +24,10 @@ import { I18nextProvider } from "react-i18next";
 import i18n from "@app/i18n/config";
 import { detectFileExtension } from "@app/utils/fileUtils";
 import { FIT_OPTIONS } from "@app/constants/convertConstants";
-import { createTestStirlingFile, createTestFilesWithId } from "@app/tests/utils/testFileHelpers";
+import {
+  createTestStirlingFile,
+  createTestFilesWithId,
+} from "@app/tests/utils/testFileHelpers";
 import { MantineProvider } from "@mantine/core";
 
 // Mock axios (for static methods like CancelToken, isCancel)
@@ -72,7 +83,9 @@ vi.mock("../../services/fileStorage", () => ({
 
 vi.mock("../../services/thumbnailGenerationService", () => ({
   thumbnailGenerationService: {
-    generateThumbnail: vi.fn().mockResolvedValue("data:image/png;base64,fake-thumbnail"),
+    generateThumbnail: vi
+      .fn()
+      .mockResolvedValue("data:image/png;base64,fake-thumbnail"),
     cleanup: vi.fn(),
     destroy: vi.fn(),
   },
@@ -109,13 +122,19 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
 
   describe("Single File Auto-Detection Flow", () => {
     test("should auto-detect PDF from DOCX and convert to PDF", async () => {
-      const { result: paramsResult } = renderHook(() => useConvertParameters(), {
-        wrapper: TestWrapper,
-      });
+      const { result: paramsResult } = renderHook(
+        () => useConvertParameters(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
-      const { result: operationResult } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper,
-      });
+      const { result: operationResult } = renderHook(
+        () => useConvertOperation(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
       // Create mock DOCX file
       const docxFile = createTestStirlingFile(
@@ -137,25 +156,42 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
 
       // Test conversion operation
       await act(async () => {
-        await operationResult.current.executeOperation(paramsResult.current.parameters, [docxFile]);
+        await operationResult.current.executeOperation(
+          paramsResult.current.parameters,
+          [docxFile],
+        );
       });
 
-      expect(mockedApiClient.post).toHaveBeenCalledWith("/api/v1/convert/file/pdf", expect.any(FormData), {
-        responseType: "blob",
-      });
+      expect(mockedApiClient.post).toHaveBeenCalledWith(
+        "/api/v1/convert/file/pdf",
+        expect.any(FormData),
+        {
+          responseType: "blob",
+        },
+      );
     });
 
     test("should handle unknown file type with file-to-pdf fallback", async () => {
-      const { result: paramsResult } = renderHook(() => useConvertParameters(), {
-        wrapper: TestWrapper,
-      });
+      const { result: paramsResult } = renderHook(
+        () => useConvertParameters(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
-      const { result: operationResult } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper,
-      });
+      const { result: operationResult } = renderHook(
+        () => useConvertOperation(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
       // Create mock unknown file
-      const unknownFile = createTestStirlingFile("document.xyz", "unknown content", "application/octet-stream");
+      const unknownFile = createTestStirlingFile(
+        "document.xyz",
+        "unknown content",
+        "application/octet-stream",
+      );
 
       // Test auto-detection
       act(() => {
@@ -170,24 +206,37 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
 
       // Test conversion operation
       await act(async () => {
-        await operationResult.current.executeOperation(paramsResult.current.parameters, [unknownFile]);
+        await operationResult.current.executeOperation(
+          paramsResult.current.parameters,
+          [unknownFile],
+        );
       });
 
-      expect(mockedApiClient.post).toHaveBeenCalledWith("/api/v1/convert/file/pdf", expect.any(FormData), {
-        responseType: "blob",
-      });
+      expect(mockedApiClient.post).toHaveBeenCalledWith(
+        "/api/v1/convert/file/pdf",
+        expect.any(FormData),
+        {
+          responseType: "blob",
+        },
+      );
     });
   });
 
   describe("Multi-File Smart Detection Flow", () => {
     test("should detect all images and use img-to-pdf endpoint", async () => {
-      const { result: paramsResult } = renderHook(() => useConvertParameters(), {
-        wrapper: TestWrapper,
-      });
+      const { result: paramsResult } = renderHook(
+        () => useConvertParameters(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
-      const { result: operationResult } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper,
-      });
+      const { result: operationResult } = renderHook(
+        () => useConvertOperation(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
       // Create mock image files
       const imageFiles = createTestFilesWithId([
@@ -205,36 +254,56 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
         expect(paramsResult.current.parameters.fromExtension).toBe("image");
         expect(paramsResult.current.parameters.toExtension).toBe("pdf");
         expect(paramsResult.current.parameters.isSmartDetection).toBe(true);
-        expect(paramsResult.current.parameters.smartDetectionType).toBe("images");
+        expect(paramsResult.current.parameters.smartDetectionType).toBe(
+          "images",
+        );
       });
 
       // Test conversion operation
       await act(async () => {
-        await operationResult.current.executeOperation(paramsResult.current.parameters, imageFiles);
+        await operationResult.current.executeOperation(
+          paramsResult.current.parameters,
+          imageFiles,
+        );
       });
 
-      expect(mockedApiClient.post).toHaveBeenCalledWith("/api/v1/convert/img/pdf", expect.any(FormData), {
-        responseType: "blob",
-      });
+      expect(mockedApiClient.post).toHaveBeenCalledWith(
+        "/api/v1/convert/img/pdf",
+        expect.any(FormData),
+        {
+          responseType: "blob",
+        },
+      );
 
       // Should send all files in single request
-      const formData = (mockedApiClient.post as Mock).mock.calls[0][1] as FormData;
+      const formData = (mockedApiClient.post as Mock).mock
+        .calls[0][1] as FormData;
       const files = formData.getAll("fileInput");
       expect(files).toHaveLength(3);
     });
 
     test("should detect mixed file types and use file-to-pdf endpoint", async () => {
-      const { result: paramsResult } = renderHook(() => useConvertParameters(), {
-        wrapper: TestWrapper,
-      });
+      const { result: paramsResult } = renderHook(
+        () => useConvertParameters(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
-      const { result: operationResult } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper,
-      });
+      const { result: operationResult } = renderHook(
+        () => useConvertOperation(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
       // Create mixed file types
       const mixedFiles = createTestFilesWithId([
-        { name: "document.pdf", content: "pdf content", type: "application/pdf" },
+        {
+          name: "document.pdf",
+          content: "pdf content",
+          type: "application/pdf",
+        },
         {
           name: "spreadsheet.xlsx",
           content: "docx content",
@@ -256,31 +325,50 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
         expect(paramsResult.current.parameters.fromExtension).toBe("any");
         expect(paramsResult.current.parameters.toExtension).toBe("pdf");
         expect(paramsResult.current.parameters.isSmartDetection).toBe(true);
-        expect(paramsResult.current.parameters.smartDetectionType).toBe("mixed");
+        expect(paramsResult.current.parameters.smartDetectionType).toBe(
+          "mixed",
+        );
       });
 
       // Test conversion operation
       await act(async () => {
-        await operationResult.current.executeOperation(paramsResult.current.parameters, mixedFiles);
+        await operationResult.current.executeOperation(
+          paramsResult.current.parameters,
+          mixedFiles,
+        );
       });
 
-      expect(mockedApiClient.post).toHaveBeenCalledWith("/api/v1/convert/file/pdf", expect.any(FormData), {
-        responseType: "blob",
-      });
+      expect(mockedApiClient.post).toHaveBeenCalledWith(
+        "/api/v1/convert/file/pdf",
+        expect.any(FormData),
+        {
+          responseType: "blob",
+        },
+      );
     });
 
     test("should detect all web files and use html-to-pdf endpoint", async () => {
-      const { result: paramsResult } = renderHook(() => useConvertParameters(), {
-        wrapper: TestWrapper,
-      });
+      const { result: paramsResult } = renderHook(
+        () => useConvertParameters(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
-      const { result: operationResult } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper,
-      });
+      const { result: operationResult } = renderHook(
+        () => useConvertOperation(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
       // Create mock web files
       const webFiles = createTestFilesWithId([
-        { name: "page1.html", content: "<html>content</html>", type: "text/html" },
+        {
+          name: "page1.html",
+          content: "<html>content</html>",
+          type: "text/html",
+        },
         { name: "site.zip", content: "zip content", type: "application/zip" },
       ]);
 
@@ -298,12 +386,19 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
 
       // Test conversion operation
       await act(async () => {
-        await operationResult.current.executeOperation(paramsResult.current.parameters, webFiles);
+        await operationResult.current.executeOperation(
+          paramsResult.current.parameters,
+          webFiles,
+        );
       });
 
-      expect(mockedApiClient.post).toHaveBeenCalledWith("/api/v1/convert/html/pdf", expect.any(FormData), {
-        responseType: "blob",
-      });
+      expect(mockedApiClient.post).toHaveBeenCalledWith(
+        "/api/v1/convert/html/pdf",
+        expect.any(FormData),
+        {
+          responseType: "blob",
+        },
+      );
 
       // Should process files separately for web files
       expect(mockedApiClient.post).toHaveBeenCalledTimes(2);
@@ -312,15 +407,25 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
 
   describe("Web and Email Conversion Options Integration", () => {
     test("should send correct HTML parameters for web-to-pdf conversion", async () => {
-      const { result: paramsResult } = renderHook(() => useConvertParameters(), {
-        wrapper: TestWrapper,
-      });
+      const { result: paramsResult } = renderHook(
+        () => useConvertParameters(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
-      const { result: operationResult } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper,
-      });
+      const { result: operationResult } = renderHook(
+        () => useConvertOperation(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
-      const htmlFile = createTestStirlingFile("page.html", "<html>content</html>", "text/html");
+      const htmlFile = createTestStirlingFile(
+        "page.html",
+        "<html>content</html>",
+        "text/html",
+      );
 
       // Set up HTML conversion parameters
       act(() => {
@@ -331,23 +436,37 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
       });
 
       await act(async () => {
-        await operationResult.current.executeOperation(paramsResult.current.parameters, [htmlFile]);
+        await operationResult.current.executeOperation(
+          paramsResult.current.parameters,
+          [htmlFile],
+        );
       });
 
-      const formData = (mockedApiClient.post as Mock).mock.calls[0][1] as FormData;
+      const formData = (mockedApiClient.post as Mock).mock
+        .calls[0][1] as FormData;
       expect(formData.get("zoom")).toBe("1.5");
     });
 
     test("should send correct email parameters for eml-to-pdf conversion", async () => {
-      const { result: paramsResult } = renderHook(() => useConvertParameters(), {
-        wrapper: TestWrapper,
-      });
+      const { result: paramsResult } = renderHook(
+        () => useConvertParameters(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
-      const { result: operationResult } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper,
-      });
+      const { result: operationResult } = renderHook(
+        () => useConvertOperation(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
-      const emlFile = createTestStirlingFile("email.eml", "email content", "message/rfc822");
+      const emlFile = createTestStirlingFile(
+        "email.eml",
+        "email content",
+        "message/rfc822",
+      );
 
       // Set up email conversion parameters
       act(() => {
@@ -362,10 +481,14 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
       });
 
       await act(async () => {
-        await operationResult.current.executeOperation(paramsResult.current.parameters, [emlFile]);
+        await operationResult.current.executeOperation(
+          paramsResult.current.parameters,
+          [emlFile],
+        );
       });
 
-      const formData = (mockedApiClient.post as Mock).mock.calls[0][1] as FormData;
+      const formData = (mockedApiClient.post as Mock).mock
+        .calls[0][1] as FormData;
       expect(formData.get("includeAttachments")).toBe("false");
       expect(formData.get("maxAttachmentSizeMB")).toBe("20");
       expect(formData.get("downloadHtml")).toBe("true");
@@ -373,15 +496,25 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
     });
 
     test("should send correct PDF/A parameters for pdf-to-pdfa conversion", async () => {
-      const { result: paramsResult } = renderHook(() => useConvertParameters(), {
-        wrapper: TestWrapper,
-      });
+      const { result: paramsResult } = renderHook(
+        () => useConvertParameters(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
-      const { result: operationResult } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper,
-      });
+      const { result: operationResult } = renderHook(
+        () => useConvertOperation(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
-      const pdfFile = createTestStirlingFile("document.pdf", "pdf content", "application/pdf");
+      const pdfFile = createTestStirlingFile(
+        "document.pdf",
+        "pdf content",
+        "application/pdf",
+      );
 
       // Set up PDF/A conversion parameters
       act(() => {
@@ -394,27 +527,41 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
       });
 
       await act(async () => {
-        await operationResult.current.executeOperation(paramsResult.current.parameters, [pdfFile]);
+        await operationResult.current.executeOperation(
+          paramsResult.current.parameters,
+          [pdfFile],
+        );
       });
 
-      const formData = (mockedApiClient.post as Mock).mock.calls[0][1] as FormData;
+      const formData = (mockedApiClient.post as Mock).mock
+        .calls[0][1] as FormData;
       expect(formData.get("outputFormat")).toBe("pdfa");
       expect(formData.get("strict")).toBe("false");
-      expect(mockedApiClient.post).toHaveBeenCalledWith("/api/v1/convert/pdf/pdfa", expect.any(FormData), {
-        responseType: "blob",
-      });
+      expect(mockedApiClient.post).toHaveBeenCalledWith(
+        "/api/v1/convert/pdf/pdfa",
+        expect.any(FormData),
+        {
+          responseType: "blob",
+        },
+      );
     });
   });
 
   describe("Image Conversion Options Integration", () => {
     test("should send correct parameters for image-to-pdf conversion", async () => {
-      const { result: paramsResult } = renderHook(() => useConvertParameters(), {
-        wrapper: TestWrapper,
-      });
+      const { result: paramsResult } = renderHook(
+        () => useConvertParameters(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
-      const { result: operationResult } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper,
-      });
+      const { result: operationResult } = renderHook(
+        () => useConvertOperation(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
       const imageFiles = createTestFilesWithId([
         { name: "photo1.jpg", content: "jpg1", type: "image/jpeg" },
@@ -435,23 +582,33 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
       });
 
       await act(async () => {
-        await operationResult.current.executeOperation(paramsResult.current.parameters, imageFiles);
+        await operationResult.current.executeOperation(
+          paramsResult.current.parameters,
+          imageFiles,
+        );
       });
 
-      const formData = (mockedApiClient.post as Mock).mock.calls[0][1] as FormData;
+      const formData = (mockedApiClient.post as Mock).mock
+        .calls[0][1] as FormData;
       expect(formData.get("fitOption")).toBe(FIT_OPTIONS.FIT_PAGE);
       expect(formData.get("colorType")).toBe("grayscale");
       expect(formData.get("autoRotate")).toBe("false");
     });
 
     test("should process images separately when combineImages is false", async () => {
-      const { result: paramsResult } = renderHook(() => useConvertParameters(), {
-        wrapper: TestWrapper,
-      });
+      const { result: paramsResult } = renderHook(
+        () => useConvertParameters(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
-      const { result: operationResult } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper,
-      });
+      const { result: operationResult } = renderHook(
+        () => useConvertOperation(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
       const imageFiles = createTestFilesWithId([
         { name: "photo1.jpg", content: "jpg1", type: "image/jpeg" },
@@ -468,7 +625,10 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
       });
 
       await act(async () => {
-        await operationResult.current.executeOperation(paramsResult.current.parameters, imageFiles);
+        await operationResult.current.executeOperation(
+          paramsResult.current.parameters,
+          imageFiles,
+        );
       });
 
       // Should make separate API calls for each file
@@ -478,13 +638,19 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
 
   describe("Error Scenarios in Smart Detection", () => {
     test("should handle partial failures in multi-file processing", async () => {
-      const { result: paramsResult } = renderHook(() => useConvertParameters(), {
-        wrapper: TestWrapper,
-      });
+      const { result: paramsResult } = renderHook(
+        () => useConvertParameters(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
-      const { result: operationResult } = renderHook(() => useConvertOperation(), {
-        wrapper: TestWrapper,
-      });
+      const { result: operationResult } = renderHook(
+        () => useConvertOperation(),
+        {
+          wrapper: TestWrapper,
+        },
+      );
 
       // Mock one success, one failure
       (mockedApiClient.post as Mock)
@@ -495,7 +661,11 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
 
       const mixedFiles = createTestFilesWithId([
         { name: "doc1.txt", content: "file1", type: "text/plain" },
-        { name: "doc2.xyz", content: "file2", type: "application/octet-stream" },
+        {
+          name: "doc2.xyz",
+          content: "file2",
+          type: "application/octet-stream",
+        },
       ]);
 
       // Set up for separate processing (mixed smart detection)
@@ -504,7 +674,10 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
       });
 
       await act(async () => {
-        await operationResult.current.executeOperation(paramsResult.current.parameters, mixedFiles);
+        await operationResult.current.executeOperation(
+          paramsResult.current.parameters,
+          mixedFiles,
+        );
       });
 
       await waitFor(() => {

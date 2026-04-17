@@ -34,7 +34,9 @@ import {
 describe("useRotateOperation", () => {
   const mockUseToolOperation = vi.mocked(useToolOperation);
 
-  const getToolConfig = () => mockUseToolOperation.mock.calls[0][0] as SingleFileToolOperationConfig<RotateParameters>;
+  const getToolConfig = () =>
+    mockUseToolOperation.mock
+      .calls[0][0] as SingleFileToolOperationConfig<RotateParameters>;
 
   const mockToolOperationReturn: ToolOperationHook<unknown> = {
     files: [],
@@ -76,7 +78,9 @@ describe("useRotateOperation", () => {
       const callArgs = getToolConfig();
 
       const testParameters: RotateParameters = { angle };
-      const testFile = new File(["test content"], "test.pdf", { type: "application/pdf" });
+      const testFile = new File(["test content"], "test.pdf", {
+        type: "application/pdf",
+      });
       const formData = callArgs.buildFormData(testParameters, testFile);
 
       // Verify the form data contains the file
@@ -90,12 +94,18 @@ describe("useRotateOperation", () => {
   test("should use correct translation for error messages", () => {
     renderHook(() => useRotateOperation());
 
-    expect(mockT).toHaveBeenCalledWith("rotate.error.failed", "An error occurred while rotating the PDF.");
+    expect(mockT).toHaveBeenCalledWith(
+      "rotate.error.failed",
+      "An error occurred while rotating the PDF.",
+    );
   });
 
   test.each([
     { property: "toolType" as const, expectedValue: ToolType.singleFile },
-    { property: "endpoint" as const, expectedValue: "/api/v1/general/rotate-pdf" },
+    {
+      property: "endpoint" as const,
+      expectedValue: "/api/v1/general/rotate-pdf",
+    },
     { property: "operationType" as const, expectedValue: "rotate" },
   ])("should configure $property correctly", ({ property, expectedValue }) => {
     renderHook(() => useRotateOperation());

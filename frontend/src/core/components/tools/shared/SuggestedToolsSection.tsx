@@ -20,7 +20,12 @@ export function SuggestedToolsSection(): React.ReactElement {
         {suggestedTools.map((tool) => {
           const IconComponent = tool.icon;
           return (
-            <Anchor key={tool.id} href={tool.href} onClick={tool.onClick} style={{ textDecoration: "none", color: "inherit" }}>
+            <Anchor
+              key={tool.id}
+              href={tool.href}
+              onClick={tool.onClick}
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
               <Card p="sm" withBorder style={{ cursor: "pointer" }}>
                 <Group gap="xs">
                   <ToolIcon icon={<IconComponent />} />

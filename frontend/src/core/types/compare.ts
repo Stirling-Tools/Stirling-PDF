@@ -151,10 +151,22 @@ export interface CompareDocumentPaneProps {
   layout: "side-by-side" | "stacked";
   scrollRef: React.RefObject<HTMLDivElement | null>;
   peerScrollRef: React.RefObject<HTMLDivElement | null>;
-  handleScrollSync: (source: HTMLDivElement | null, target: HTMLDivElement | null) => void;
-  handleWheelZoom: (pane: "base" | "comparison", event: React.WheelEvent<HTMLDivElement>) => void;
-  handleWheelOverscroll: (pane: "base" | "comparison", event: React.WheelEvent<HTMLDivElement>) => void;
-  onTouchStart: (pane: "base" | "comparison", event: React.TouchEvent<HTMLDivElement>) => void;
+  handleScrollSync: (
+    source: HTMLDivElement | null,
+    target: HTMLDivElement | null,
+  ) => void;
+  handleWheelZoom: (
+    pane: "base" | "comparison",
+    event: React.WheelEvent<HTMLDivElement>,
+  ) => void;
+  handleWheelOverscroll: (
+    pane: "base" | "comparison",
+    event: React.WheelEvent<HTMLDivElement>,
+  ) => void;
+  onTouchStart: (
+    pane: "base" | "comparison",
+    event: React.TouchEvent<HTMLDivElement>,
+  ) => void;
   onTouchMove: (event: React.TouchEvent<HTMLDivElement>) => void;
   onTouchEnd: (event: React.TouchEvent<HTMLDivElement>) => void;
   isPanMode: boolean;
@@ -178,7 +190,10 @@ export interface CompareDocumentPaneProps {
   onPageInputChange?: (next: string) => void;
   maxSharedPages?: number; // min(baseTotal, compTotal)
   renderedPageNumbers?: Set<number>;
-  onVisiblePageChange?: (pane: "base" | "comparison", pageNumber: number) => void;
+  onVisiblePageChange?: (
+    pane: "base" | "comparison",
+    pageNumber: number,
+  ) => void;
 }
 
 // Import types that are referenced in CompareDocumentPaneProps
@@ -269,13 +284,28 @@ export interface UseComparePanZoomReturn {
   setPanToTopLeft: (pane: ComparePane) => void;
   centerPanForZoom: (pane: ComparePane, zoom: number) => void;
   clampPanForZoom: (pane: ComparePane, zoom: number) => void;
-  handleScrollSync: (source: HTMLDivElement | null, target: HTMLDivElement | null) => void;
-  beginPan: (pane: ComparePane, event: React.MouseEvent<HTMLDivElement>) => void;
+  handleScrollSync: (
+    source: HTMLDivElement | null,
+    target: HTMLDivElement | null,
+  ) => void;
+  beginPan: (
+    pane: ComparePane,
+    event: React.MouseEvent<HTMLDivElement>,
+  ) => void;
   continuePan: (event: React.MouseEvent<HTMLDivElement>) => void;
   endPan: () => void;
-  handleWheelZoom: (pane: ComparePane, event: React.WheelEvent<HTMLDivElement>) => void;
-  handleWheelOverscroll: (pane: ComparePane, event: React.WheelEvent<HTMLDivElement>) => void;
-  onTouchStart: (pane: ComparePane, event: React.TouchEvent<HTMLDivElement>) => void;
+  handleWheelZoom: (
+    pane: ComparePane,
+    event: React.WheelEvent<HTMLDivElement>,
+  ) => void;
+  handleWheelOverscroll: (
+    pane: ComparePane,
+    event: React.WheelEvent<HTMLDivElement>,
+  ) => void;
+  onTouchStart: (
+    pane: ComparePane,
+    event: React.TouchEvent<HTMLDivElement>,
+  ) => void;
   onTouchMove: (event: React.TouchEvent<HTMLDivElement>) => void;
   onTouchEnd: () => void;
   zoomLimits: { min: number; max: number; step: number };

@@ -34,12 +34,27 @@ const ActivePlanSection: React.FC<ActivePlanSectionProps> = ({
   return (
     <div>
       <Flex justify="space-between" align="center">
-        <h3 style={{ margin: 0, color: "var(--mantine-color-text)", fontSize: "1rem" }}>
+        <h3
+          style={{
+            margin: 0,
+            color: "var(--mantine-color-text)",
+            fontSize: "1rem",
+          }}
+        >
           {t("plan.activePlan.title", "Active Plan")}
         </h3>
-        <ManageBillingButton returnUrl={`${window.location.origin}/account`} trialStatus={trialStatus} />
+        <ManageBillingButton
+          returnUrl={`${window.location.origin}/account`}
+          trialStatus={trialStatus}
+        />
       </Flex>
-      <p style={{ margin: "0.25rem 0 1rem 0", color: "var(--mantine-color-dimmed)", fontSize: "0.875rem" }}>
+      <p
+        style={{
+          margin: "0.25rem 0 1rem 0",
+          color: "var(--mantine-color-dimmed)",
+          fontSize: "0.875rem",
+        }}
+      >
         {t("plan.activePlan.subtitle", "Your current subscription details")}
       </p>
 
@@ -65,9 +80,13 @@ const ActivePlanSection: React.FC<ActivePlanSectionProps> = ({
           {trialStatus.hasScheduledSub ? (
             <Text size="xs" c="green" fw={500} mt="sm">
               ✓{" "}
-              {t("plan.trial.subscriptionScheduled", "Subscription scheduled - starts {{date}}", {
-                date: new Date(trialStatus.trialEnd).toLocaleDateString(),
-              })}
+              {t(
+                "plan.trial.subscriptionScheduled",
+                "Subscription scheduled - starts {{date}}",
+                {
+                  date: new Date(trialStatus.trialEnd).toLocaleDateString(),
+                },
+              )}
             </Text>
           ) : (
             onAddPaymentClick && (

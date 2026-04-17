@@ -12,21 +12,36 @@ type FileLike = File | StirlingFileStub;
  * - Uses the real file type and extension to decide the icon.
  * - No any-casts; accepts File or StirlingFileStub.
  */
-export function getFileTypeIcon(file: FileLike, size: number | string = "2rem"): React.ReactElement {
+export function getFileTypeIcon(
+  file: FileLike,
+  size: number | string = "2rem",
+): React.ReactElement {
   const name = (file?.name ?? "").toLowerCase();
   const mime = (file?.type ?? "").toLowerCase();
   const ext = detectFileExtension(name);
 
   // JavaScript
   if (ext === "js" || mime.includes("javascript")) {
-    return <JavascriptIcon style={{ fontSize: size, color: "var(--mantine-color-gray-6)" }} />;
+    return (
+      <JavascriptIcon
+        style={{ fontSize: size, color: "var(--mantine-color-gray-6)" }}
+      />
+    );
   }
 
   // PDF
   if (ext === "pdf" || mime === "application/pdf") {
-    return <PictureAsPdfIcon style={{ fontSize: size, color: "var(--mantine-color-gray-6)" }} />;
+    return (
+      <PictureAsPdfIcon
+        style={{ fontSize: size, color: "var(--mantine-color-gray-6)" }}
+      />
+    );
   }
 
   // Fallback generic
-  return <InsertDriveFileIcon style={{ fontSize: size, color: "var(--mantine-color-gray-6)" }} />;
+  return (
+    <InsertDriveFileIcon
+      style={{ fontSize: size, color: "var(--mantine-color-gray-6)" }}
+    />
+  );
 }

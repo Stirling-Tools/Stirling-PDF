@@ -20,7 +20,10 @@ export function isSpecialClick(e: React.MouseEvent): boolean {
  * @param handleClick - Function to execute for regular clicks (SPA navigation)
  * @returns true if the event was handled as a special click, false if it was handled as regular click
  */
-export function handleUnlessSpecialClick(e: React.MouseEvent, handleClick: () => void): boolean {
+export function handleUnlessSpecialClick(
+  e: React.MouseEvent,
+  handleClick: () => void,
+): boolean {
   if (isSpecialClick(e)) {
     return true; // Let browser handle via href
   }

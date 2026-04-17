@@ -11,12 +11,22 @@ interface TrialExpiredModalProps {
   onSubscribe: () => void;
 }
 
-export function TrialExpiredModal({ opened, onClose, onSubscribe }: TrialExpiredModalProps) {
+export function TrialExpiredModal({
+  opened,
+  onClose,
+  onSubscribe,
+}: TrialExpiredModalProps) {
   const { t } = useTranslation();
 
   // Use CSS variables for theme colors
-  const amberColor = getComputedStyle(document.documentElement).getPropertyValue("--color-amber-500").trim() || "#f59e0b";
-  const redColor = getComputedStyle(document.documentElement).getPropertyValue("--color-red-500").trim() || "#ef4444";
+  const amberColor =
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-amber-500")
+      .trim() || "#f59e0b";
+  const redColor =
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-red-500")
+      .trim() || "#ef4444";
   const gradientStops: [string, string] = [amberColor, redColor];
 
   const circles = [
@@ -69,10 +79,20 @@ export function TrialExpiredModal({ opened, onClose, onSubscribe }: TrialExpired
       <Stack
         gap={0}
         className={styles.modalContent}
-        style={{ height: "100%", maxHeight: "90vh", display: "flex", flexDirection: "column" }}
+        style={{
+          height: "100%",
+          maxHeight: "90vh",
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
         <div className={styles.heroWrapper} style={{ flexShrink: 0 }}>
-          <AnimatedSlideBackground gradientStops={gradientStops} circles={circles} isActive slideKey="trial-expired" />
+          <AnimatedSlideBackground
+            gradientStops={gradientStops}
+            circles={circles}
+            isActive
+            slideKey="trial-expired"
+          />
           <div className={styles.heroLogo}>
             <div className={styles.heroLogoCircle}>
               <DiamondOutlinedIcon sx={{ fontSize: 64, color: "#000000" }} />
@@ -90,7 +110,9 @@ export function TrialExpiredModal({ opened, onClose, onSubscribe }: TrialExpired
           }}
         >
           <Stack gap={16}>
-            <div className={`${styles.title} ${styles.titleText}`}>{t("plan.trial.expired", "Your Trial Has Ended")}</div>
+            <div className={`${styles.title} ${styles.titleText}`}>
+              {t("plan.trial.expired", "Your Trial Has Ended")}
+            </div>
 
             <div className={styles.bodyText}>
               <div className={`${styles.bodyCopy} ${styles.bodyCopyInner}`}>
@@ -103,7 +125,10 @@ export function TrialExpiredModal({ opened, onClose, onSubscribe }: TrialExpired
 
             <div className={styles.bodyText}>
               <div className={`${styles.bodyCopy} ${styles.bodyCopyInner}`}>
-                {t("plan.trial.freeTierLimitations", "Free tier includes basic PDF tools with usage limits.")}
+                {t(
+                  "plan.trial.freeTierLimitations",
+                  "Free tier includes basic PDF tools with usage limits.",
+                )}
               </div>
             </div>
 
@@ -152,7 +177,8 @@ export function TrialExpiredModal({ opened, onClose, onSubscribe }: TrialExpired
                   size="md"
                   className="trial-modal-button trial-modal-button-primary"
                   style={{
-                    background: "linear-gradient(135deg, var(--color-amber-500), var(--color-red-500))",
+                    background:
+                      "linear-gradient(135deg, var(--color-amber-500), var(--color-red-500))",
                     color: "#FFFFFF",
                     fontSize: "0.9375rem",
                     fontWeight: 600,

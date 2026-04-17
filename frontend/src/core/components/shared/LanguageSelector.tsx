@@ -133,7 +133,8 @@ const LanguageItem: React.FC<LanguageItemProps> = ({
               backgroundColor: "var(--mantine-color-blue-4)",
               opacity: 0.6,
               transform: "translate(-50%, -50%)",
-              animation: "ripple-expand 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+              animation:
+                "ripple-expand 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
               zIndex: 1,
             }}
           />
@@ -185,10 +186,15 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
 
   // Get the filtered list of supported languages from i18n
   // This respects server config (ui.languages) applied by AppConfigLoader
-  const allowedLanguages = ((i18n.options.supportedLngs as string[]) || []).filter((lang) => lang !== "cimode"); // Exclude i18next debug language
+  const allowedLanguages = (
+    (i18n.options.supportedLngs as string[]) || []
+  ).filter((lang) => lang !== "cimode"); // Exclude i18next debug language
 
   const languageOptions: LanguageOption[] = Object.entries(supportedLanguages)
-    .filter(([code]) => allowedLanguages.length === 0 || allowedLanguages.includes(code))
+    .filter(
+      ([code]) =>
+        allowedLanguages.length === 0 || allowedLanguages.includes(code),
+    )
     .sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB))
     .map(([code, name]) => ({
       value: code,
@@ -197,9 +203,11 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
 
   // Calculate dropdown width and grid columns based on number of languages
   // 2-4: 300px/2 cols, 5-9: 400px/3 cols, 10+: 600px/4 cols
-  const dropdownWidth = languageOptions.length <= 4 ? 300 : languageOptions.length <= 9 ? 400 : 600;
+  const dropdownWidth =
+    languageOptions.length <= 4 ? 300 : languageOptions.length <= 9 ? 400 : 600;
 
-  const gridColumns = languageOptions.length <= 4 ? 2 : languageOptions.length <= 9 ? 3 : 4;
+  const gridColumns =
+    languageOptions.length <= 4 ? 2 : languageOptions.length <= 9 ? 3 : 4;
 
   const handleLanguageChange = (value: string, event: React.MouseEvent) => {
     // Create ripple effect at click position (only for button mode)
@@ -234,7 +242,9 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   };
 
   const currentLanguage =
-    supportedLanguages[i18n.language as keyof typeof supportedLanguages] || supportedLanguages["en-GB"] || "English"; // Fallback if supportedLanguages lookup fails
+    supportedLanguages[i18n.language as keyof typeof supportedLanguages] ||
+    supportedLanguages["en-GB"] ||
+    "English"; // Fallback if supportedLanguages lookup fails
 
   // Hide the language selector if there's only one language option
   // (no point showing a selector when there's nothing to select)
@@ -270,7 +280,8 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                 root: {
                   color: "var(--right-rail-icon)",
                   "&:hover": {
-                    backgroundColor: "light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5))",
+                    backgroundColor:
+                      "light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5))",
                   },
                 },
               }}
@@ -281,14 +292,19 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
             <Button
               variant="subtle"
               size="sm"
-              leftSection={<LocalIcon icon="language" width="1.5rem" height="1.5rem" />}
+              leftSection={
+                <LocalIcon icon="language" width="1.5rem" height="1.5rem" />
+              }
               styles={{
                 root: {
                   border: "none",
-                  color: "light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-1))",
-                  transition: "background-color 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+                  color:
+                    "light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-1))",
+                  transition:
+                    "background-color 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
                   "&:hover": {
-                    backgroundColor: "light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5))",
+                    backgroundColor:
+                      "light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5))",
                   },
                 },
                 label: { fontSize: "12px", fontWeight: 500 },
@@ -304,11 +320,16 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
             padding: "12px",
             borderRadius: "8px",
             boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-            backgroundColor: "light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))",
-            border: "light-dark(1px solid var(--mantine-color-gray-3), 1px solid var(--mantine-color-dark-4))",
+            backgroundColor:
+              "light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))",
+            border:
+              "light-dark(1px solid var(--mantine-color-gray-3), 1px solid var(--mantine-color-dark-4))",
           }}
         >
-          <div className={styles.languageGrid} style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}>
+          <div
+            className={styles.languageGrid}
+            style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
+          >
             {languageOptions.map((option, index) => (
               <LanguageItem
                 key={option.value}

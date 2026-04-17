@@ -15,7 +15,10 @@ const formatFileSize = (bytes?: number | null) => {
   if (bytes === undefined || bytes === null) return "--";
   if (bytes === 0) return "0 B";
   const units = ["B", "KB", "MB", "GB", "TB"];
-  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  const exponent = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(1024)),
+    units.length - 1,
+  );
   const size = bytes / Math.pow(1024, exponent);
   return `${size.toFixed(exponent === 0 ? 0 : 1)} ${units[exponent]}`;
 };
@@ -35,8 +38,14 @@ const FileSummaryHeader = ({
   const infoBlocks = [
     FieldBlock(t("files.size", "File Size"), formatFileSize(fileSize ?? null)),
     FieldBlock(t("files.created", "Created"), createdAt || "-"),
-    FieldBlock(t("validateSignature.signatureDate", "Signature Date"), formatDate(lastSignatureDate)),
-    FieldBlock(t("validateSignature.totalSignatures", "Total Signatures"), totalSignatures.toString()),
+    FieldBlock(
+      t("validateSignature.signatureDate", "Signature Date"),
+      formatDate(lastSignatureDate),
+    ),
+    FieldBlock(
+      t("validateSignature.totalSignatures", "Total Signatures"),
+      totalSignatures.toString(),
+    ),
   ];
 
   return <div className="grid-container">{infoBlocks}</div>;

@@ -11,7 +11,9 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-const TestWrapper = ({ children }: { children: React.ReactNode }) => <MantineProvider>{children}</MantineProvider>;
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <MantineProvider>{children}</MantineProvider>
+);
 
 describe("OAuthButtons", () => {
   const mockOnProviderClick = vi.fn();
@@ -25,7 +27,11 @@ describe("OAuthButtons", () => {
 
     render(
       <TestWrapper>
-        <OAuthButtons onProviderClick={mockOnProviderClick} isSubmitting={false} enabledProviders={enabledProviders} />
+        <OAuthButtons
+          onProviderClick={mockOnProviderClick}
+          isSubmitting={false}
+          enabledProviders={enabledProviders}
+        />
       </TestWrapper>,
     );
 
@@ -40,7 +46,11 @@ describe("OAuthButtons", () => {
 
     render(
       <TestWrapper>
-        <OAuthButtons onProviderClick={mockOnProviderClick} isSubmitting={false} enabledProviders={enabledProviders} />
+        <OAuthButtons
+          onProviderClick={mockOnProviderClick}
+          isSubmitting={false}
+          enabledProviders={enabledProviders}
+        />
       </TestWrapper>,
     );
 
@@ -60,7 +70,11 @@ describe("OAuthButtons", () => {
 
     render(
       <TestWrapper>
-        <OAuthButtons onProviderClick={mockOnProviderClick} isSubmitting={false} enabledProviders={enabledProviders} />
+        <OAuthButtons
+          onProviderClick={mockOnProviderClick}
+          isSubmitting={false}
+          enabledProviders={enabledProviders}
+        />
       </TestWrapper>,
     );
 
@@ -77,7 +91,11 @@ describe("OAuthButtons", () => {
 
     render(
       <TestWrapper>
-        <OAuthButtons onProviderClick={mockOnProviderClick} isSubmitting={false} enabledProviders={enabledProviders} />
+        <OAuthButtons
+          onProviderClick={mockOnProviderClick}
+          isSubmitting={false}
+          enabledProviders={enabledProviders}
+        />
       </TestWrapper>,
     );
 
@@ -93,7 +111,11 @@ describe("OAuthButtons", () => {
 
     render(
       <TestWrapper>
-        <OAuthButtons onProviderClick={mockOnProviderClick} isSubmitting={false} enabledProviders={enabledProviders} />
+        <OAuthButtons
+          onProviderClick={mockOnProviderClick}
+          isSubmitting={false}
+          enabledProviders={enabledProviders}
+        />
       </TestWrapper>,
     );
 
@@ -108,12 +130,20 @@ describe("OAuthButtons", () => {
 
     render(
       <TestWrapper>
-        <OAuthButtons onProviderClick={mockOnProviderClick} isSubmitting={true} enabledProviders={enabledProviders} />
+        <OAuthButtons
+          onProviderClick={mockOnProviderClick}
+          isSubmitting={true}
+          enabledProviders={enabledProviders}
+        />
       </TestWrapper>,
     );
 
-    const googleButton = screen.getByText("Google").closest("button") as HTMLButtonElement;
-    const githubButton = screen.getByText("GitHub").closest("button") as HTMLButtonElement;
+    const googleButton = screen
+      .getByText("Google")
+      .closest("button") as HTMLButtonElement;
+    const githubButton = screen
+      .getByText("GitHub")
+      .closest("button") as HTMLButtonElement;
 
     expect(googleButton.disabled).toBe(true);
     expect(githubButton.disabled).toBe(true);
@@ -122,12 +152,18 @@ describe("OAuthButtons", () => {
   it("should render nothing when no providers are enabled", () => {
     const { container } = render(
       <TestWrapper>
-        <OAuthButtons onProviderClick={mockOnProviderClick} isSubmitting={false} enabledProviders={[]} />
+        <OAuthButtons
+          onProviderClick={mockOnProviderClick}
+          isSubmitting={false}
+          enabledProviders={[]}
+        />
       </TestWrapper>,
     );
 
     // Should render null/nothing (excluding Mantine's style tags)
-    const hasContent = Array.from(container.children).some((child) => child.tagName.toLowerCase() !== "style");
+    const hasContent = Array.from(container.children).some(
+      (child) => child.tagName.toLowerCase() !== "style",
+    );
     expect(hasContent).toBe(false);
   });
 
@@ -137,7 +173,11 @@ describe("OAuthButtons", () => {
 
     render(
       <TestWrapper>
-        <OAuthButtons onProviderClick={mockOnProviderClick} isSubmitting={false} enabledProviders={enabledProviders} />
+        <OAuthButtons
+          onProviderClick={mockOnProviderClick}
+          isSubmitting={false}
+          enabledProviders={enabledProviders}
+        />
       </TestWrapper>,
     );
 
@@ -162,7 +202,11 @@ describe("OAuthButtons", () => {
 
     render(
       <TestWrapper>
-        <OAuthButtons onProviderClick={mockOnProviderClick} isSubmitting={false} enabledProviders={enabledProviders} />
+        <OAuthButtons
+          onProviderClick={mockOnProviderClick}
+          isSubmitting={false}
+          enabledProviders={enabledProviders}
+        />
       </TestWrapper>,
     );
 
@@ -174,7 +218,9 @@ describe("OAuthButtons", () => {
     expect(githubButton?.querySelector("img")?.src).toContain("github.svg");
 
     const authentikButton = screen.getByText("Authentik").closest("button");
-    expect(authentikButton?.querySelector("img")?.src).toContain("authentik.svg");
+    expect(authentikButton?.querySelector("img")?.src).toContain(
+      "authentik.svg",
+    );
 
     const keycloakButton = screen.getByText("Keycloak").closest("button");
     expect(keycloakButton?.querySelector("img")?.src).toContain("keycloak.svg");
@@ -186,7 +232,11 @@ describe("OAuthButtons", () => {
 
     render(
       <TestWrapper>
-        <OAuthButtons onProviderClick={mockOnProviderClick} isSubmitting={false} enabledProviders={enabledProviders} />
+        <OAuthButtons
+          onProviderClick={mockOnProviderClick}
+          isSubmitting={false}
+          enabledProviders={enabledProviders}
+        />
       </TestWrapper>,
     );
 
@@ -223,7 +273,11 @@ describe("OAuthButtons", () => {
 
     render(
       <TestWrapper>
-        <OAuthButtons onProviderClick={mockOnProviderClick} isSubmitting={false} enabledProviders={enabledProviders} />
+        <OAuthButtons
+          onProviderClick={mockOnProviderClick}
+          isSubmitting={false}
+          enabledProviders={enabledProviders}
+        />
       </TestWrapper>,
     );
 

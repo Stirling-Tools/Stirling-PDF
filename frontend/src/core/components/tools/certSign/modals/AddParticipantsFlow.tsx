@@ -10,7 +10,11 @@ interface AddParticipantsFlowProps {
   onSubmit: (userIds: number[], defaultReason?: string) => Promise<void>;
 }
 
-export const AddParticipantsFlow: React.FC<AddParticipantsFlowProps> = ({ opened, onClose, onSubmit }) => {
+export const AddParticipantsFlow: React.FC<AddParticipantsFlowProps> = ({
+  opened,
+  onClose,
+  onSubmit,
+}) => {
   const { t } = useTranslation();
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
   const [defaultReason, setDefaultReason] = useState("");
@@ -38,14 +42,20 @@ export const AddParticipantsFlow: React.FC<AddParticipantsFlowProps> = ({ opened
     <Modal
       opened={opened}
       onClose={handleClose}
-      title={t("certSign.collab.sessionDetail.addParticipants", "Add Participants")}
+      title={t(
+        "certSign.collab.sessionDetail.addParticipants",
+        "Add Participants",
+      )}
       size="lg"
     >
       <Stack gap="md">
         <UserSelector
           value={selectedUserIds}
           onChange={setSelectedUserIds}
-          placeholder={t("certSign.collab.sessionDetail.selectUsers", "Select users...")}
+          placeholder={t(
+            "certSign.collab.sessionDetail.selectUsers",
+            "Select users...",
+          )}
         />
 
         <TextInput
@@ -56,7 +66,10 @@ export const AddParticipantsFlow: React.FC<AddParticipantsFlowProps> = ({ opened
           )}
           value={defaultReason}
           onChange={(e) => setDefaultReason(e.currentTarget.value)}
-          placeholder={t("certSign.collab.addParticipants.reasonPlaceholder", "e.g. Approval, Review...")}
+          placeholder={t(
+            "certSign.collab.addParticipants.reasonPlaceholder",
+            "e.g. Approval, Review...",
+          )}
           size="sm"
         />
 
@@ -71,9 +84,13 @@ export const AddParticipantsFlow: React.FC<AddParticipantsFlowProps> = ({ opened
             leftSection={<AddIcon sx={{ fontSize: 16 }} />}
             color="green"
           >
-            {t("certSign.collab.addParticipants.add", "Add {{count}} Participant(s)", {
-              count: selectedUserIds.length,
-            })}
+            {t(
+              "certSign.collab.addParticipants.add",
+              "Add {{count}} Participant(s)",
+              {
+                count: selectedUserIds.length,
+              },
+            )}
           </Button>
         </Group>
       </Stack>

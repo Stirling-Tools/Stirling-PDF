@@ -1,5 +1,8 @@
 import { useRef, useEffect, useState } from "react";
-import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import {
+  draggable,
+  dropTargetForElements,
+} from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 
 import { FileId } from "@app/types/file";
 
@@ -25,7 +28,11 @@ interface UseFileItemDragDropReturn {
  * Hook to handle drag and drop functionality for file items in a list.
  * Manages drag state, drop zones, and reordering logic using Pragmatic Drag and Drop.
  */
-export const useFileItemDragDrop = ({ fileId, index, onReorder }: UseFileItemDragDropParams): UseFileItemDragDropReturn => {
+export const useFileItemDragDrop = ({
+  fileId,
+  index,
+  onReorder,
+}: UseFileItemDragDropParams): UseFileItemDragDropReturn => {
   const [isDragging, setIsDragging] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [dropPosition, setDropPosition] = useState<"above" | "below">("below");
@@ -104,7 +111,8 @@ export const useFileItemDragDrop = ({ fileId, index, onReorder }: UseFileItemDra
         if (!element) return;
 
         const rect = element.getBoundingClientRect();
-        const clientY = (source as any).element?.getBoundingClientRect().top || 0;
+        const clientY =
+          (source as any).element?.getBoundingClientRect().top || 0;
         const midpoint = rect.top + rect.height / 2;
 
         setDropPosition(clientY < midpoint ? "below" : "above");

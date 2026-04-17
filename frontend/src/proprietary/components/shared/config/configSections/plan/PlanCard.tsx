@@ -37,8 +37,19 @@ const PlanCard: React.FC<PlanCardProps> = ({
     const freeCurrency = planGroup.monthly?.currency || "$";
 
     return (
-      <Card padding="lg" radius="md" withBorder style={getBaseCardStyle(isCurrentTier)} className="plan-card">
-        {isCurrentTier && <PricingBadge type="current" label={t("plan.current", "Current Plan")} />}
+      <Card
+        padding="lg"
+        radius="md"
+        withBorder
+        style={getBaseCardStyle(isCurrentTier)}
+        className="plan-card"
+      >
+        {isCurrentTier && (
+          <PricingBadge
+            type="current"
+            label={t("plan.current", "Current Plan")}
+          />
+        )}
         <Stack gap="md" style={{ height: "100%" }}>
           <div>
             <Text size="xl" fw={700} mb="xs">
@@ -47,7 +58,12 @@ const PlanCard: React.FC<PlanCardProps> = ({
             <Text size="xs" c="dimmed" mb="xs" style={{ opacity: 0 }}>
               {t("plan.from", "From")}
             </Text>
-            <PriceDisplay mode="simple" price={0} currency={freeCurrency} period={t("plan.free.forever", "Forever free")} />
+            <PriceDisplay
+              mode="simple"
+              price={0}
+              currency={freeCurrency}
+              period={t("plan.free.forever", "Forever free")}
+            />
           </div>
 
           <Divider />
@@ -63,7 +79,9 @@ const PlanCard: React.FC<PlanCardProps> = ({
           <div style={{ flexGrow: 1 }} />
 
           <Button variant="filled" disabled fullWidth className="plan-button">
-            {isCurrentTier ? t("plan.current", "Current Plan") : t("plan.free.included", "Included")}
+            {isCurrentTier
+              ? t("plan.current", "Current Plan")
+              : t("plan.free.included", "Included")}
           </Button>
         </Stack>
       </Card>
@@ -75,19 +93,30 @@ const PlanCard: React.FC<PlanCardProps> = ({
   const isEnterprise = planGroup.tier === "enterprise";
 
   // Block enterprise for free tier users (must have server first)
-  const isEnterpriseBlockedForFree = checkIsEnterpriseBlockedForFree(currentTier, planGroup.tier);
-
-  // Calculate "From" pricing - show yearly price divided by 12 for lowest monthly equivalent
-  const { displayPrice, displaySeatPrice, displayCurrency } = calculateDisplayPricing(
-    monthly || undefined,
-    yearly || undefined,
+  const isEnterpriseBlockedForFree = checkIsEnterpriseBlockedForFree(
+    currentTier,
+    planGroup.tier,
   );
 
+  // Calculate "From" pricing - show yearly price divided by 12 for lowest monthly equivalent
+  const { displayPrice, displaySeatPrice, displayCurrency } =
+    calculateDisplayPricing(monthly || undefined, yearly || undefined);
+
   return (
-    <Card padding="lg" radius="md" withBorder style={getBaseCardStyle(isCurrentTier)} className="plan-card">
+    <Card
+      padding="lg"
+      radius="md"
+      withBorder
+      style={getBaseCardStyle(isCurrentTier)}
+      className="plan-card"
+    >
       {isCurrentTier ? (
-        <PricingBadge type="current" label={t("plan.current", "Current Plan")} />
-      ) : planGroup.popular && !(planGroup.tier === "server" && currentTier === "enterprise") ? (
+        <PricingBadge
+          type="current"
+          label={t("plan.current", "Current Plan")}
+        />
+      ) : planGroup.popular &&
+        !(planGroup.tier === "server" && currentTier === "enterprise") ? (
         <PricingBadge type="popular" label={t("plan.popular", "Popular")} />
       ) : null}
 
@@ -113,7 +142,8 @@ const PlanCard: React.FC<PlanCardProps> = ({
                 {t("plan.perSeat", "/seat")}
               </Text>
               <Text size="sm" c="dimmed" mt="xs">
-                {t("plan.perMonth", "/month")} {t("plan.withServer", "+ Server Plan")}
+                {t("plan.perMonth", "/month")}{" "}
+                {t("plan.withServer", "+ Server Plan")}
               </Text>
             </>
           ) : (
@@ -141,11 +171,16 @@ const PlanCard: React.FC<PlanCardProps> = ({
 
         <Stack gap="xs">
           {/* Show seat count for enterprise plans when current */}
-          {isEnterprise && isCurrentTier && currentLicenseInfo && currentLicenseInfo.maxUsers > 0 && (
-            <Text size="sm" c="green" fw={500} ta="center">
-              {t("plan.licensedSeats", "Licensed: {{count}} seats", { count: currentLicenseInfo.maxUsers })}
-            </Text>
-          )}
+          {isEnterprise &&
+            isCurrentTier &&
+            currentLicenseInfo &&
+            currentLicenseInfo.maxUsers > 0 && (
+              <Text size="sm" c="green" fw={500} ta="center">
+                {t("plan.licensedSeats", "Licensed: {{count}} seats", {
+                  count: currentLicenseInfo.maxUsers,
+                })}
+              </Text>
+            )}
 
           {/* Single Upgrade Button */}
           <Tooltip
@@ -157,8 +192,14 @@ const PlanCard: React.FC<PlanCardProps> = ({
             <Button
               variant="filled"
               fullWidth
-              onClick={() => (isCurrentTier && onManageClick ? onManageClick() : onUpgradeClick(planGroup))}
-              disabled={!loginEnabled || isDowngrade || isEnterpriseBlockedForFree}
+              onClick={() =>
+                isCurrentTier && onManageClick
+                  ? onManageClick()
+                  : onUpgradeClick(planGroup)
+              }
+              disabled={
+                !loginEnabled || isDowngrade || isEnterpriseBlockedForFree
+              }
               className="plan-button"
             >
               {isCurrentTier

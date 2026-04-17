@@ -38,7 +38,10 @@ export const createStandardErrorHandler = (fallbackMessage: string) => {
  * Parses a 422 response, extracts errored file IDs from the payload (JSON or UUID regex),
  * and marks them in the UI. Returns true if IDs were found and handled, false otherwise.
  */
-export const handle422Error = async (error: any, markFileError: (fileId: string) => void): Promise<boolean> => {
+export const handle422Error = async (
+  error: any,
+  markFileError: (fileId: string) => void,
+): Promise<boolean> => {
   const status = error?.response?.status;
   if (typeof status !== "number" || status !== 422) return false;
 
@@ -60,12 +63,16 @@ export const handle422Error = async (error: any, markFileError: (fileId: string)
     }
   }
 
-  let ids: string[] | undefined = Array.isArray((parsed as { errorFileIds?: unknown })?.errorFileIds)
+  let ids: string[] | undefined = Array.isArray(
+    (parsed as { errorFileIds?: unknown })?.errorFileIds,
+  )
     ? (parsed as { errorFileIds: string[] }).errorFileIds
     : undefined;
 
   if (!ids && typeof parsed === "string") {
-    const match = parsed.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/g);
+    const match = parsed.match(
+      /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/g,
+    );
     if (match && match.length > 0) ids = Array.from(new Set(match));
   }
 

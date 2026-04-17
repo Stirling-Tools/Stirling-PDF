@@ -1,7 +1,11 @@
 import React from "react";
 import { Accordion, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import type { PdfOtherInfo, PdfAttachmentInfo, PdfEmbeddedFileInfo } from "@app/types/getPdfInfo";
+import type {
+  PdfOtherInfo,
+  PdfAttachmentInfo,
+  PdfEmbeddedFileInfo,
+} from "@app/types/getPdfInfo";
 import SectionBlock from "@app/components/tools/getPdfInfo/shared/SectionBlock";
 import ScrollableCodeBlock from "@app/components/tools/getPdfInfo/shared/ScrollableCodeBlock";
 import { pdfInfoAccordionStyles } from "@app/components/tools/getPdfInfo/shared/accordionStyles";
@@ -11,7 +15,10 @@ interface OtherSectionProps {
   other?: PdfOtherInfo | null;
 }
 
-const renderAttachmentsList = (attachments: PdfAttachmentInfo[] | undefined, emptyText: string) => {
+const renderAttachmentsList = (
+  attachments: PdfAttachmentInfo[] | undefined,
+  emptyText: string,
+) => {
   if (!attachments || attachments.length === 0)
     return (
       <Text size="sm" c="dimmed">
@@ -21,7 +28,10 @@ const renderAttachmentsList = (attachments: PdfAttachmentInfo[] | undefined, emp
   return (
     <Stack gap={4}>
       {attachments.map((attachment, idx) => (
-        <div key={idx} style={{ wordBreak: "break-word", overflowWrap: "break-word" }}>
+        <div
+          key={idx}
+          style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
+        >
           <Text size="sm" c="dimmed">
             <strong>{attachment.Name || "Unnamed attachment"}</strong>
             {attachment.Description && ` - ${attachment.Description}`}
@@ -33,7 +43,10 @@ const renderAttachmentsList = (attachments: PdfAttachmentInfo[] | undefined, emp
   );
 };
 
-const renderEmbeddedFilesList = (embeddedFiles: PdfEmbeddedFileInfo[] | undefined, emptyText: string) => {
+const renderEmbeddedFilesList = (
+  embeddedFiles: PdfEmbeddedFileInfo[] | undefined,
+  emptyText: string,
+) => {
   if (!embeddedFiles || embeddedFiles.length === 0)
     return (
       <Text size="sm" c="dimmed">
@@ -43,7 +56,10 @@ const renderEmbeddedFilesList = (embeddedFiles: PdfEmbeddedFileInfo[] | undefine
   return (
     <Stack gap={4}>
       {embeddedFiles.map((file, idx) => (
-        <div key={idx} style={{ wordBreak: "break-word", overflowWrap: "break-word" }}>
+        <div
+          key={idx}
+          style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
+        >
           <Text size="sm" c="dimmed">
             <strong>{file.Name || "Unnamed file"}</strong>
             {file.FileSize != null && ` (${file.FileSize} bytes)`}
@@ -67,7 +83,12 @@ const renderList = (arr: unknown[] | undefined, emptyText: string) => {
   return (
     <Stack gap={4}>
       {arr.map((item, idx) => (
-        <Text key={idx} size="sm" c="dimmed" style={{ wordBreak: "break-word", overflowWrap: "break-word" }}>
+        <Text
+          key={idx}
+          size="sm"
+          c="dimmed"
+          style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
+        >
           {typeof item === "string" ? item : JSON.stringify(item)}
         </Text>
       ))}
@@ -85,7 +106,10 @@ const OtherSection: React.FC<OtherSectionProps> = ({ anchorId, other }) => {
       : null;
 
   return (
-    <SectionBlock title={t("getPdfInfo.sections.other", "Other")} anchorId={anchorId}>
+    <SectionBlock
+      title={t("getPdfInfo.sections.other", "Other")}
+      anchorId={anchorId}
+    >
       <Stack gap="sm">
         <Stack gap={6}>
           <Text fw={600} size="sm">
@@ -111,7 +135,12 @@ const OtherSection: React.FC<OtherSectionProps> = ({ anchorId, other }) => {
           </Text>
           {renderList(other?.Layers, noneDetected)}
         </Stack>
-        <Accordion variant="separated" radius="md" defaultValue="" styles={pdfInfoAccordionStyles}>
+        <Accordion
+          variant="separated"
+          radius="md"
+          defaultValue=""
+          styles={pdfInfoAccordionStyles}
+        >
           <Accordion.Item value="structureTree">
             <Accordion.Control>
               <Text fw={600} size="sm">
@@ -119,7 +148,10 @@ const OtherSection: React.FC<OtherSectionProps> = ({ anchorId, other }) => {
               </Text>
             </Accordion.Control>
             <Accordion.Panel>
-              <ScrollableCodeBlock content={structureTreeContent} maxHeight="20rem" />
+              <ScrollableCodeBlock
+                content={structureTreeContent}
+                maxHeight="20rem"
+              />
             </Accordion.Panel>
           </Accordion.Item>
           <Accordion.Item value="xmp">
@@ -129,7 +161,10 @@ const OtherSection: React.FC<OtherSectionProps> = ({ anchorId, other }) => {
               </Text>
             </Accordion.Control>
             <Accordion.Panel>
-              <ScrollableCodeBlock content={other?.XMPMetadata} maxHeight="400px" />
+              <ScrollableCodeBlock
+                content={other?.XMPMetadata}
+                maxHeight="400px"
+              />
             </Accordion.Panel>
           </Accordion.Item>
         </Accordion>

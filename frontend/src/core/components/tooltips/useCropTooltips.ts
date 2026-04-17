@@ -15,8 +15,14 @@ export function useCropTooltips() {
         ),
         bullets: [
           t("crop.tooltip.drag", "Drag the overlay to move the crop area"),
-          t("crop.tooltip.resize", "Drag the corner and edge handles to resize"),
-          t("crop.tooltip.precision", "Use coordinate inputs for precise positioning"),
+          t(
+            "crop.tooltip.resize",
+            "Drag the corner and edge handles to resize",
+          ),
+          t(
+            "crop.tooltip.precision",
+            "Use coordinate inputs for precise positioning",
+          ),
         ],
       },
     ],

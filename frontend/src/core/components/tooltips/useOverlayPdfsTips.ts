@@ -27,7 +27,10 @@ export const useOverlayPdfsTips = (): TooltipContent => {
             "overlay-pdfs.tooltip.mode.sequential",
             "Sequential Overlay: Use pages from the first overlay PDF until it ends, then move to the next.",
           ),
-          t("overlay-pdfs.tooltip.mode.interleaved", "Interleaved Overlay: Take one page from each overlay in turn."),
+          t(
+            "overlay-pdfs.tooltip.mode.interleaved",
+            "Interleaved Overlay: Take one page from each overlay in turn.",
+          ),
           t(
             "overlay-pdfs.tooltip.mode.fixedRepeat",
             "Fixed Repeat Overlay: Take a set number of pages from each overlay before moving to the next. Use Counts to set the numbers.",
@@ -49,7 +52,10 @@ export const useOverlayPdfsTips = (): TooltipContent => {
         ),
       },
       {
-        title: t("overlay-pdfs.tooltip.counts.title", "Counts (Fixed Repeat only)"),
+        title: t(
+          "overlay-pdfs.tooltip.counts.title",
+          "Counts (Fixed Repeat only)",
+        ),
         description: t(
           "overlay-pdfs.tooltip.counts.text",
           "Provide a positive number for each overlay file showing how many pages to take before moving to the next. Required when mode is Fixed Repeat.",

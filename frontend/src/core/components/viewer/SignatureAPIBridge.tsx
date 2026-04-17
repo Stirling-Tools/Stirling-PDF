@@ -1,8 +1,18 @@
-import { useImperativeHandle, forwardRef, useEffect, useCallback, useRef, useState } from "react";
+import {
+  useImperativeHandle,
+  forwardRef,
+  useEffect,
+  useCallback,
+  useRef,
+  useState,
+} from "react";
 import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
 import { PdfAnnotationSubtype, uuidV4 } from "@embedpdf/models";
 import { useSignature } from "@app/contexts/SignatureContext";
-import type { SignatureAPI, AnnotationRect } from "@app/components/viewer/viewerTypes";
+import type {
+  SignatureAPI,
+  AnnotationRect,
+} from "@app/components/viewer/viewerTypes";
 import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
@@ -19,7 +29,11 @@ const MIN_SIGNATURE_DIMENSION = 12;
 // This provides a good balance between visual fidelity and performance/memory usage.
 const TEXT_OVERSAMPLE_FACTOR = 2;
 
-const extractDataUrl = (value: unknown, depth = 0, visited: Set<unknown> = new Set()): string | undefined => {
+const extractDataUrl = (
+  value: unknown,
+  depth = 0,
+  visited: Set<unknown> = new Set(),
+): string | undefined => {
   if (!value || depth > 6) return undefined;
 
   // Prevent circular references
@@ -41,7 +55,11 @@ const extractDataUrl = (value: unknown, depth = 0, visited: Set<unknown> = new S
       }
     } else {
       for (const key of Object.keys(value as Record<string, unknown>)) {
-        const result = extractDataUrl((value as Record<string, unknown>)[key], depth + 1, visited);
+        const result = extractDataUrl(
+          (value as Record<string, unknown>)[key],
+          depth + 1,
+          visited,
+        );
         if (result) return result;
       }
     }
@@ -53,7 +71,13 @@ const extractDataUrl = (value: unknown, depth = 0, visited: Set<unknown> = new S
 const createTextStampImage = (
   config: SignParameters,
   displaySize?: { width: number; height: number } | null,
-): { dataUrl: string; pixelWidth: number; pixelHeight: number; displayWidth: number; displayHeight: number } | null => {
+): {
+  dataUrl: string;
+  pixelWidth: number;
+  pixelHeight: number;
+  displayWidth: number;
+  displayHeight: number;
+} | null => {
   const text = (config.signerName ?? "").trim();
   if (!text) {
     return null;
@@ -75,19 +99,37 @@ const createTextStampImage = (
   measureCtx.font = `${fontSize}px ${fontFamily}`;
   const metrics = measureCtx.measureText(text);
   const textWidth = Math.ceil(metrics.width);
-  const naturalWidth = Math.max(MIN_SIGNATURE_DIMENSION, textWidth + paddingX * 2);
-  const naturalHeight = Math.max(MIN_SIGNATURE_DIMENSION, Math.ceil(fontSize + paddingY * 2));
+  const naturalWidth = Math.max(
+    MIN_SIGNATURE_DIMENSION,
+    textWidth + paddingX * 2,
+  );
+  const naturalHeight = Math.max(
+    MIN_SIGNATURE_DIMENSION,
+    Math.ceil(fontSize + paddingY * 2),
+  );
 
   const scale =
     displaySize && naturalWidth > 0 && naturalHeight > 0
-      ? Math.min(displaySize.width / naturalWidth, displaySize.height / naturalHeight)
+      ? Math.min(
+          displaySize.width / naturalWidth,
+          displaySize.height / naturalHeight,
+        )
       : 1;
 
   const displayWidth = Math.max(MIN_SIGNATURE_DIMENSION, naturalWidth * scale);
-  const displayHeight = Math.max(MIN_SIGNATURE_DIMENSION, naturalHeight * scale);
+  const displayHeight = Math.max(
+    MIN_SIGNATURE_DIMENSION,
+    naturalHeight * scale,
+  );
 
-  const canvasWidth = Math.max(MIN_SIGNATURE_DIMENSION, Math.round(displayWidth * TEXT_OVERSAMPLE_FACTOR));
-  const canvasHeight = Math.max(MIN_SIGNATURE_DIMENSION, Math.round(displayHeight * TEXT_OVERSAMPLE_FACTOR));
+  const canvasWidth = Math.max(
+    MIN_SIGNATURE_DIMENSION,
+    Math.round(displayWidth * TEXT_OVERSAMPLE_FACTOR),
+  );
+  const canvasHeight = Math.max(
+    MIN_SIGNATURE_DIMENSION,
+    Math.round(displayHeight * TEXT_OVERSAMPLE_FACTOR),
+  );
 
   const canvas = document.createElement("canvas");
   canvas.width = canvasWidth;
@@ -132,15 +174,23 @@ interface SignatureAPIBridgeProps {
   isSignMode?: boolean;
 }
 
-export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgeProps>(function SignatureAPIBridge(
-  { isSignMode = false },
-  ref,
-) {
+export const SignatureAPIBridge = forwardRef<
+  SignatureAPI,
+  SignatureAPIBridgeProps
+>(function SignatureAPIBridge({ isSignMode = false }, ref) {
   const { provides: annotationApi } = useAnnotationCapability();
-  const { signatureConfig, storeImageData, isPlacementMode, placementPreviewSize, setSignaturesApplied } = useSignature();
+  const {
+    signatureConfig,
+    storeImageData,
+    isPlacementMode,
+    placementPreviewSize,
+    setSignaturesApplied,
+  } = useSignature();
   const { getZoomState, registerImmediateZoomUpdate } = useViewer();
   const documentReady = useDocumentReady();
-  const [currentZoom, setCurrentZoom] = useState(() => getZoomState()?.currentZoom ?? 1);
+  const [currentZoom, setCurrentZoom] = useState(
+    () => getZoomState()?.currentZoom ?? 1,
+  );
   const lastStampImageRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -174,7 +224,11 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
   );
 
   const applyStampDefaults = useCallback(
-    (imageSrc: string, subject: string, size?: { width: number; height: number }) => {
+    (
+      imageSrc: string,
+      subject: string,
+      size?: { width: number; height: number },
+    ) => {
       if (!annotationApi) return;
 
       annotationApi.setActiveTool(null);
@@ -184,7 +238,9 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
         annotationApi.setToolDefaults("stamp", {
           imageSrc,
           subject,
-          ...(size ? { imageSize: { width: size.width, height: size.height } } : {}),
+          ...(size
+            ? { imageSize: { width: size.width, height: size.height } }
+            : {}),
         });
       }
     },
@@ -197,8 +253,14 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
     }
 
     try {
-      if (signatureConfig.signatureType === "text" && signatureConfig.signerName) {
-        const textStamp = createTextStampImage(signatureConfig, placementPreviewSize);
+      if (
+        signatureConfig.signatureType === "text" &&
+        signatureConfig.signerName
+      ) {
+        const textStamp = createTextStampImage(
+          signatureConfig,
+          placementPreviewSize,
+        );
         if (textStamp) {
           const displaySize = placementPreviewSize ?? {
             width: textStamp.displayWidth,
@@ -206,13 +268,19 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
           };
           const pdfSize = cssToPdfSize(displaySize);
           lastStampImageRef.current = textStamp.dataUrl;
-          applyStampDefaults(textStamp.dataUrl, `Text Signature - ${signatureConfig.signerName}`, pdfSize);
+          applyStampDefaults(
+            textStamp.dataUrl,
+            `Text Signature - ${signatureConfig.signerName}`,
+            pdfSize,
+          );
         }
         return;
       }
 
       if (signatureConfig.signatureData) {
-        const pdfSize = placementPreviewSize ? cssToPdfSize(placementPreviewSize) : undefined;
+        const pdfSize = placementPreviewSize
+          ? cssToPdfSize(placementPreviewSize)
+          : undefined;
         lastStampImageRef.current = signatureConfig.signatureData;
         applyStampDefaults(
           signatureConfig.signatureData,
@@ -224,12 +292,19 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
     } catch (error) {
       console.error("Error preparing signature defaults:", error);
     }
-  }, [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults, cssToPdfSize]);
+  }, [
+    annotationApi,
+    signatureConfig,
+    placementPreviewSize,
+    applyStampDefaults,
+    cssToPdfSize,
+  ]);
 
   // Enable keyboard deletion of selected annotations
   useEffect(() => {
     // Always enable delete key when we have annotation API and are in sign mode
-    if (!annotationApi || isPlacementMode === undefined || !documentReady) return;
+    if (!annotationApi || isPlacementMode === undefined || !documentReady)
+      return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       // Skip delete/backspace while a text input/textarea is focused (e.g., editing textbox)
@@ -251,12 +326,16 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
           // For STAMP annotations, ensure image data is preserved before deletion
           if (annotation.object?.type === 13 && id) {
             // Get current annotation data to ensure we have latest image data stored
-            const pageAnnotationsTask = annotationApi.getPageAnnotations?.({ pageIndex });
+            const pageAnnotationsTask = annotationApi.getPageAnnotations?.({
+              pageIndex,
+            });
             if (pageAnnotationsTask) {
               pageAnnotationsTask
                 .toPromise()
                 .then((pageAnnotations: any) => {
-                  const currentAnn = pageAnnotations?.find((ann: any) => ann.id === id);
+                  const currentAnn = pageAnnotations?.find(
+                    (ann: any) => ann.id === id,
+                  );
                   if (currentAnn && currentAnn.imageSrc) {
                     // Ensure the image data is stored in our persistent store
                     storeImageData(id, currentAnn.imageSrc);
@@ -286,7 +365,14 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
   useImperativeHandle(
     ref,
     () => ({
-      addImageSignature: (signatureData: string, x: number, y: number, width: number, height: number, pageIndex: number) => {
+      addImageSignature: (
+        signatureData: string,
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+        pageIndex: number,
+      ) => {
         if (!annotationApi) return;
 
         // Create image stamp annotation with proper image data
@@ -377,13 +463,21 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
         if (!annotationApi) return;
 
         // Before deleting, try to preserve image data for potential undo
-        const pageAnnotationsTask = annotationApi.getPageAnnotations?.({ pageIndex });
+        const pageAnnotationsTask = annotationApi.getPageAnnotations?.({
+          pageIndex,
+        });
         if (pageAnnotationsTask) {
           pageAnnotationsTask
             .toPromise()
             .then((pageAnnotations: any) => {
-              const annotation = pageAnnotations?.find((ann: any) => ann.id === annotationId);
-              if (annotation && annotation.type === PdfAnnotationSubtype.STAMP && annotation.imageSrc) {
+              const annotation = pageAnnotations?.find(
+                (ann: any) => ann.id === annotationId,
+              );
+              if (
+                annotation &&
+                annotation.type === PdfAnnotationSubtype.STAMP &&
+                annotation.imageSrc
+              ) {
                 // Store image data before deletion
                 storeImageData(annotationId, annotation.imageSrc);
               }
@@ -407,23 +501,36 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
         }
 
         try {
-          const pageAnnotationsTask = annotationApi.getPageAnnotations({ pageIndex });
+          const pageAnnotationsTask = annotationApi.getPageAnnotations({
+            pageIndex,
+          });
           if (pageAnnotationsTask && pageAnnotationsTask.toPromise) {
             const annotations = await pageAnnotationsTask.toPromise();
             return annotations || [];
           }
           return [];
         } catch (error) {
-          console.error(`Error getting annotations for page ${pageIndex}:`, error);
+          console.error(
+            `Error getting annotations for page ${pageIndex}:`,
+            error,
+          );
           return [];
         }
       },
 
-      moveAnnotation: (pageIndex: number, annotationId: string, newRect: AnnotationRect) => {
+      moveAnnotation: (
+        pageIndex: number,
+        annotationId: string,
+        newRect: AnnotationRect,
+      ) => {
         if (!annotationApi) return;
         // v2.7.0: move signature stamp to newRect without regenerating the AP stream,
         // preserving the original appearance (image data stays intact).
-        (annotationApi as any).moveAnnotation?.(pageIndex, annotationId, newRect);
+        (annotationApi as any).moveAnnotation?.(
+          pageIndex,
+          annotationId,
+          newRect,
+        );
       },
     }),
     [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults],
@@ -486,7 +593,13 @@ export const SignatureAPIBridge = forwardRef<SignatureAPI, SignatureAPIBridgePro
     return () => {
       cancelled = true;
     };
-  }, [isPlacementMode, configureStampDefaults, placementPreviewSize, signatureConfig, documentReady]);
+  }, [
+    isPlacementMode,
+    configureStampDefaults,
+    placementPreviewSize,
+    signatureConfig,
+    documentReady,
+  ]);
 
   return null; // This is a bridge component with no UI
 });

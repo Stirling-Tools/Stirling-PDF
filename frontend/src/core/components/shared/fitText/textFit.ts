@@ -17,11 +17,15 @@ export type AdjustFontSizeOptions = {
  * Imperative util: progressively reduces font-size until content fits within the element
  * (width and optional line count). Returns a cleanup that disconnects observers.
  */
-export function adjustFontSizeToFit(element: HTMLElement, options: AdjustFontSizeOptions = {}): () => void {
+export function adjustFontSizeToFit(
+  element: HTMLElement,
+  options: AdjustFontSizeOptions = {},
+): () => void {
   if (!element) return () => {};
 
   const computed = window.getComputedStyle(element);
-  const baseFontPx = options.maxFontSizePx ?? parseFloat(computed.fontSize || "16");
+  const baseFontPx =
+    options.maxFontSizePx ?? parseFloat(computed.fontSize || "16");
   const minScale = Math.max(0.1, options.minFontScale ?? 0.7);
   const stepScale = Math.max(0.005, options.stepScale ?? 0.05);
   const singleLine = options.singleLine ?? false;
@@ -93,10 +97,20 @@ export function adjustFontSizeToFit(element: HTMLElement, options: AdjustFontSiz
 }
 
 /** React hook wrapper for convenience */
-export function useAdjustFontSizeToFit(ref: RefObject<HTMLElement | null>, options: AdjustFontSizeOptions = {}) {
+export function useAdjustFontSizeToFit(
+  ref: RefObject<HTMLElement | null>,
+  options: AdjustFontSizeOptions = {},
+) {
   useEffect(() => {
     if (!ref.current) return;
     const cleanup = adjustFontSizeToFit(ref.current, options);
     return cleanup;
-  }, [ref, options.maxFontSizePx, options.minFontScale, options.stepScale, options.maxLines, options.singleLine]);
+  }, [
+    ref,
+    options.maxFontSizePx,
+    options.minFontScale,
+    options.stepScale,
+    options.maxLines,
+    options.singleLine,
+  ]);
 }

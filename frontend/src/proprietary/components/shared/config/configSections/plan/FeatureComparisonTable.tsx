@@ -15,7 +15,10 @@ interface FeatureComparisonTableProps {
   currentTier?: "free" | "server" | "enterprise" | null;
 }
 
-const FeatureComparisonTable: React.FC<FeatureComparisonTableProps> = ({ plans, currentTier }) => {
+const FeatureComparisonTable: React.FC<FeatureComparisonTableProps> = ({
+  plans,
+  currentTier,
+}) => {
   const { t } = useTranslation();
 
   return (
@@ -27,8 +30,12 @@ const FeatureComparisonTable: React.FC<FeatureComparisonTableProps> = ({ plans, 
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ borderBottom: "2px solid var(--mantine-color-gray-3)" }}>
-              <th style={{ textAlign: "left", padding: "0.75rem" }}>{t("plan.feature.title", "Feature")}</th>
+            <tr
+              style={{ borderBottom: "2px solid var(--mantine-color-gray-3)" }}
+            >
+              <th style={{ textAlign: "left", padding: "0.75rem" }}>
+                {t("plan.feature.title", "Feature")}
+              </th>
               {plans.map((plan, index) => (
                 <th
                   key={plan.tier || plan.name || index}
@@ -40,30 +47,43 @@ const FeatureComparisonTable: React.FC<FeatureComparisonTableProps> = ({ plans, 
                   }}
                 >
                   {plan.name}
-                  {plan.popular && !(plan.tier === "server" && currentTier === "enterprise") && (
-                    <Badge
-                      color="blue"
-                      variant="filled"
-                      size="xs"
-                      style={{
-                        position: "absolute",
-                        top: "0.5rem",
-                        right: "0.5rem",
-                      }}
-                    >
-                      {t("plan.popular", "Popular")}
-                    </Badge>
-                  )}
+                  {plan.popular &&
+                    !(
+                      plan.tier === "server" && currentTier === "enterprise"
+                    ) && (
+                      <Badge
+                        color="blue"
+                        variant="filled"
+                        size="xs"
+                        style={{
+                          position: "absolute",
+                          top: "0.5rem",
+                          right: "0.5rem",
+                        }}
+                      >
+                        {t("plan.popular", "Popular")}
+                      </Badge>
+                    )}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
             {plans[0]?.features.map((_, featureIndex) => (
-              <tr key={featureIndex} style={{ borderBottom: "1px solid var(--mantine-color-gray-3)" }}>
-                <td style={{ padding: "0.75rem" }}>{plans[0].features[featureIndex].name}</td>
+              <tr
+                key={featureIndex}
+                style={{
+                  borderBottom: "1px solid var(--mantine-color-gray-3)",
+                }}
+              >
+                <td style={{ padding: "0.75rem" }}>
+                  {plans[0].features[featureIndex].name}
+                </td>
                 {plans.map((plan, planIndex) => (
-                  <td key={planIndex} style={{ textAlign: "center", padding: "0.75rem" }}>
+                  <td
+                    key={planIndex}
+                    style={{ textAlign: "center", padding: "0.75rem" }}
+                  >
                     {plan.features[featureIndex]?.included ? (
                       <Text c="green" fw={600} size="lg">
                         ✓

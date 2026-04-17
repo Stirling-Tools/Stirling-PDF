@@ -49,7 +49,10 @@ export const STATIC_STRIPE_LINKS: StaticStripeLinks = {
  * @param email - The email address to prefill
  * @returns The complete URL with encoded email parameter
  */
-export function buildStripeUrlWithEmail(baseUrl: string, email: string): string {
+export function buildStripeUrlWithEmail(
+  baseUrl: string,
+  email: string,
+): string {
   const encodedEmail = encodeURIComponent(email);
   return `${baseUrl}?locked_prefilled_email=${encodedEmail}`;
 }

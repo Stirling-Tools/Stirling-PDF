@@ -20,7 +20,13 @@ const WARNING_ICON_STYLE: CSSProperties = {
   color: "var(--mantine-color-blue-6)",
 };
 
-const ZipWarningModal = ({ opened, onConfirm, onCancel, fileCount, zipFileName }: ZipWarningModalProps) => {
+const ZipWarningModal = ({
+  opened,
+  onConfirm,
+  onCancel,
+  fileCount,
+  zipFileName,
+}: ZipWarningModalProps) => {
   const { t } = useTranslation();
 
   return (

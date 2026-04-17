@@ -26,7 +26,9 @@ interface PDFAnnotationContextValue {
   setSignatureConfig: (config: any | null) => void;
 }
 
-const PDFAnnotationContext = createContext<PDFAnnotationContextValue | undefined>(undefined);
+const PDFAnnotationContext = createContext<
+  PDFAnnotationContextValue | undefined
+>(undefined);
 
 interface PDFAnnotationProviderProps {
   children: ReactNode;
@@ -75,13 +77,19 @@ export const PDFAnnotationProvider: React.FC<PDFAnnotationProviderProps> = ({
     setSignatureConfig,
   };
 
-  return <PDFAnnotationContext.Provider value={contextValue}>{children}</PDFAnnotationContext.Provider>;
+  return (
+    <PDFAnnotationContext.Provider value={contextValue}>
+      {children}
+    </PDFAnnotationContext.Provider>
+  );
 };
 
 export const usePDFAnnotation = (): PDFAnnotationContextValue => {
   const context = useContext(PDFAnnotationContext);
   if (context === undefined) {
-    throw new Error("usePDFAnnotation must be used within a PDFAnnotationProvider");
+    throw new Error(
+      "usePDFAnnotation must be used within a PDFAnnotationProvider",
+    );
   }
   return context;
 };

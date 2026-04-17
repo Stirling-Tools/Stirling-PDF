@@ -52,7 +52,9 @@ export function usePageEditorState(): PageEditorState {
   // Helper functions
   const togglePage = useCallback((pageId: string) => {
     setSelectedPageIds((prev) => {
-      const newSelection = prev.includes(pageId) ? prev.filter((id) => id !== pageId) : [...prev, pageId];
+      const newSelection = prev.includes(pageId)
+        ? prev.filter((id) => id !== pageId)
+        : [...prev, pageId];
       return newSelection;
     });
   }, []); // Empty deps - uses updater function so always has latest state
@@ -60,7 +62,9 @@ export function usePageEditorState(): PageEditorState {
   const toggleSelectAll = useCallback((allPageIds: string[]) => {
     if (!allPageIds.length) return;
 
-    setSelectedPageIds((prev) => (prev.length === allPageIds.length ? [] : allPageIds));
+    setSelectedPageIds((prev) =>
+      prev.length === allPageIds.length ? [] : allPageIds,
+    );
   }, []);
 
   const animateReorder = useCallback(() => {

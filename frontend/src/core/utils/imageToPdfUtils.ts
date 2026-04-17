@@ -16,8 +16,15 @@ const PAGE_SIZES = {
 /**
  * Convert an image file to a PDF file using PDFium WASM.
  */
-export async function convertImageToPdf(imageFile: File, options: ImageToPdfOptions = {}): Promise<File> {
-  const { imageResolution = "full", pageFormat = "A4", stretchToFit = false } = options;
+export async function convertImageToPdf(
+  imageFile: File,
+  options: ImageToPdfOptions = {},
+): Promise<File> {
+  const {
+    imageResolution = "full",
+    pageFormat = "A4",
+    stretchToFit = false,
+  } = options;
 
   try {
     const m = await getPdfiumModule();
@@ -114,7 +121,12 @@ export async function convertImageToPdf(imageFile: File, options: ImageToPdfOpti
         throw new Error("PDFium: failed to create image object");
       }
 
-      const setBitmapOk = m.FPDFImageObj_SetBitmap(pagePtr, 0, imageObjPtr, bitmapPtr);
+      const setBitmapOk = m.FPDFImageObj_SetBitmap(
+        pagePtr,
+        0,
+        imageObjPtr,
+        bitmapPtr,
+      );
       m.FPDFBitmap_Destroy(bitmapPtr);
 
       if (!setBitmapOk) {
@@ -157,16 +169,21 @@ export async function convertImageToPdf(imageFile: File, options: ImageToPdfOpti
     }
   } catch (error) {
     console.error("Error converting image to PDF:", error);
-    throw new Error(`Failed to convert image to PDF: ${error instanceof Error ? error.message : "Unknown error"}`, {
-      cause: error,
-    });
+    throw new Error(
+      `Failed to convert image to PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
+      {
+        cause: error,
+      },
+    );
   }
 }
 
 /**
  * Decode an image Blob to RGBA pixel data via canvas.
  */
-function decodeImageToRgba(imageBlob: Blob): Promise<{ rgba: Uint8Array; width: number; height: number } | null> {
+function decodeImageToRgba(
+  imageBlob: Blob,
+): Promise<{ rgba: Uint8Array; width: number; height: number } | null> {
   return new Promise((resolve) => {
     const img = new Image();
     const url = URL.createObjectURL(imageBlob);
@@ -208,7 +225,10 @@ function decodeImageToRgba(imageBlob: Blob): Promise<{ rgba: Uint8Array; width: 
 /**
  * Reduce image resolution to a maximum dimension
  */
-async function reduceImageResolution(imageFile: File, maxDimension: number): Promise<File> {
+async function reduceImageResolution(
+  imageFile: File,
+  maxDimension: number,
+): Promise<File> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(imageFile);
@@ -242,7 +262,9 @@ async function reduceImageResolution(imageFile: File, maxDimension: number): Pro
         if (!ctx) throw new Error("Failed to get canvas context");
         ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
-        const outputType = imageFile.type.startsWith("image/") ? imageFile.type : "image/jpeg";
+        const outputType = imageFile.type.startsWith("image/")
+          ? imageFile.type
+          : "image/jpeg";
 
         canvas.toBlob(
           (blob) => {
@@ -250,7 +272,9 @@ async function reduceImageResolution(imageFile: File, maxDimension: number): Pro
               reject(new Error("Failed to convert canvas to blob"));
               return;
             }
-            const reducedFile = new File([blob], imageFile.name, { type: outputType });
+            const reducedFile = new File([blob], imageFile.name, {
+              type: outputType,
+            });
             URL.revokeObjectURL(url);
             resolve(reducedFile);
           },

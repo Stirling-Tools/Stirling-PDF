@@ -21,7 +21,8 @@ interface MobileUploadModalProps {
 // Generate a cryptographically secure UUID v4-like session ID
 function generateSessionId(): string {
   // Use Web Crypto API for cryptographically secure random values
-  const cryptoObj = typeof crypto !== "undefined" ? crypto : (window as any).crypto;
+  const cryptoObj =
+    typeof crypto !== "undefined" ? crypto : (window as any).crypto;
 
   if (cryptoObj && typeof cryptoObj.getRandomValues === "function") {
     const bytes = new Uint8Array(16);
@@ -43,8 +44,12 @@ function generateSessionId(): string {
   }
 
   // If Web Crypto is not available, fail fast rather than using insecure randomness
-  console.error("Web Crypto API not available. Cannot generate secure session ID.");
-  throw new Error("Web Crypto API not available. Cannot generate secure session ID.");
+  console.error(
+    "Web Crypto API not available. Cannot generate secure session ID.",
+  );
+  throw new Error(
+    "Web Crypto API not available. Cannot generate secure session ID.",
+  );
 }
 
 interface SessionInfo {
@@ -60,7 +65,11 @@ interface SessionInfo {
  * Displays a QR code that mobile devices can scan to upload files via backend server.
  * Files are temporarily stored on server and retrieved by desktop.
  */
-export default function MobileUploadModal({ opened, onClose, onFilesReceived }: MobileUploadModalProps) {
+export default function MobileUploadModal({
+  opened,
+  onClose,
+  onFilesReceived,
+}: MobileUploadModalProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
 
@@ -102,7 +111,9 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
         console.log("[MobileUploadModal] Session created:", data);
       } catch (err) {
         console.error("[MobileUploadModal] Failed to create session:", err);
-        setError(t("mobileUpload.sessionCreateError", "Failed to create session"));
+        setError(
+          t("mobileUpload.sessionCreateError", "Failed to create session"),
+        );
       }
     },
     [t],
@@ -122,7 +133,9 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
     if (!opened) return;
 
     try {
-      const response = await apiClient.get(`/api/v1/mobile-scanner/files/${sessionId}`);
+      const response = await apiClient.get(
+        `/api/v1/mobile-scanner/files/${sessionId}`,
+      );
       if (!response.status || response.status !== 200) {
         throw new Error("Failed to check for files");
       }
@@ -131,7 +144,9 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
       const files = data.files || [];
 
       // Download only files we haven't processed yet
-      const newFiles = files.filter((f: any) => !processedFiles.current.has(f.filename));
+      const newFiles = files.filter(
+        (f: any) => !processedFiles.current.has(f.filename),
+      );
 
       if (newFiles.length > 0) {
         for (const fileMetadata of newFiles) {
@@ -150,16 +165,32 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
               });
 
               // Convert images to PDF if enabled
-              if (isImageFile(file) && config?.mobileScannerConvertToPdf !== false) {
+              if (
+                isImageFile(file) &&
+                config?.mobileScannerConvertToPdf !== false
+              ) {
                 try {
                   file = await convertImageToPdf(file, {
-                    imageResolution: config?.mobileScannerImageResolution as "full" | "reduced" | undefined,
-                    pageFormat: config?.mobileScannerPageFormat as "keep" | "A4" | "letter" | undefined,
+                    imageResolution: config?.mobileScannerImageResolution as
+                      | "full"
+                      | "reduced"
+                      | undefined,
+                    pageFormat: config?.mobileScannerPageFormat as
+                      | "keep"
+                      | "A4"
+                      | "letter"
+                      | undefined,
                     stretchToFit: config?.mobileScannerStretchToFit,
                   });
-                  console.log("[MobileUploadModal] Converted image to PDF:", file.name);
+                  console.log(
+                    "[MobileUploadModal] Converted image to PDF:",
+                    file.name,
+                  );
                 } catch (convertError) {
-                  console.warn("[MobileUploadModal] Failed to convert image to PDF, using original file:", convertError);
+                  console.warn(
+                    "[MobileUploadModal] Failed to convert image to PDF, using original file:",
+                    convertError,
+                  );
                   // Continue with original image file if conversion fails
                 }
               }
@@ -169,7 +200,11 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
               onFilesReceived([file]);
             }
           } catch (err) {
-            console.error("[MobileUploadModal] Failed to download file:", fileMetadata.filename, err);
+            console.error(
+              "[MobileUploadModal] Failed to download file:",
+              fileMetadata.filename,
+              err,
+            );
           }
         }
 
@@ -177,9 +212,14 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
         // This ensures files are only on server for ~1 second
         try {
           await apiClient.delete(`/api/v1/mobile-scanner/session/${sessionId}`);
-          console.log("[MobileUploadModal] Session cleaned up after file download");
+          console.log(
+            "[MobileUploadModal] Session cleaned up after file download",
+          );
         } catch (cleanupErr) {
-          console.warn("[MobileUploadModal] Failed to cleanup session after download:", cleanupErr);
+          console.warn(
+            "[MobileUploadModal] Failed to cleanup session after download:",
+            cleanupErr,
+          );
         }
       }
     } catch (err) {
@@ -212,7 +252,9 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
       console.log("Cleaning up session on unmount/close:", sessionId);
       apiClient
         .delete(`/api/v1/mobile-scanner/session/${sessionId}`)
-        .catch((err) => console.warn("[MobileUploadModal] Cleanup failed:", err));
+        .catch((err) =>
+          console.warn("[MobileUploadModal] Cleanup failed:", err),
+        );
     };
   }, [opened, sessionId, createSession]);
 
@@ -289,14 +331,21 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
       }}
     >
       <Stack gap="md">
-        <Alert icon={<InfoRoundedIcon style={{ fontSize: "1rem" }} />} color="blue" variant="light">
+        <Alert
+          icon={<InfoRoundedIcon style={{ fontSize: "1rem" }} />}
+          color="blue"
+          variant="light"
+        >
           <Text size="sm">
             {config?.mobileScannerConvertToPdf !== false
               ? t(
                   "mobileUpload.description",
                   "Scan this QR code with your mobile device to upload photos. Images will be automatically converted to PDF.",
                 )
-              : t("mobileUpload.descriptionNoConvert", "Scan this QR code with your mobile device to upload photos.")}
+              : t(
+                  "mobileUpload.descriptionNoConvert",
+                  "Scan this QR code with your mobile device to upload photos.",
+                )}
           </Text>
         </Alert>
 
@@ -326,7 +375,14 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
           </Alert>
         )}
 
-        <Box style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
+        <Box
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "1rem",
+          }}
+        >
           <Box
             style={{
               padding: "1.5rem",
@@ -339,8 +395,15 @@ export default function MobileUploadModal({ opened, onClose, onFilesReceived }: 
           </Box>
 
           {filesReceived > 0 && (
-            <Badge variant="filled" color="green" size="lg" leftSection={<CheckRoundedIcon style={{ fontSize: "1rem" }} />}>
-              {t("mobileUpload.filesReceived", "{{count}} file(s) received", { count: filesReceived })}
+            <Badge
+              variant="filled"
+              color="green"
+              size="lg"
+              leftSection={<CheckRoundedIcon style={{ fontSize: "1rem" }} />}
+            >
+              {t("mobileUpload.filesReceived", "{{count}} file(s) received", {
+                count: filesReceived,
+              })}
             </Badge>
           )}
 

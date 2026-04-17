@@ -3,8 +3,14 @@ import { Text, Stack, Flex, Divider } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { TooltipTip } from "@app/types/tips";
-import { createFilesToolStep, FilesToolStepProps } from "@app/components/tools/shared/FilesToolStep";
-import { createReviewToolStep, ReviewToolStepProps } from "@app/components/tools/shared/ReviewToolStep";
+import {
+  createFilesToolStep,
+  FilesToolStepProps,
+} from "@app/components/tools/shared/FilesToolStep";
+import {
+  createReviewToolStep,
+  ReviewToolStepProps,
+} from "@app/components/tools/shared/ReviewToolStep";
 
 interface ToolStepContextType {
   visibleStepCount: number;
@@ -43,7 +49,13 @@ const renderTooltipTitle = (
 ) => {
   if (tooltip && (!isCollapsed || alwaysShowTooltip)) {
     return (
-      <Tooltip content={tooltip.content} tips={tooltip.tips} header={tooltip.header} sidebarTooltip={true} pinOnClick={true}>
+      <Tooltip
+        content={tooltip.content}
+        tips={tooltip.tips}
+        header={tooltip.header}
+        sidebarTooltip={true}
+        pinOnClick={true}
+      >
         <Flex align="center" gap="xs" onClick={(e) => e.stopPropagation()}>
           <Text fw={400} size="sm">
             {title}
@@ -155,7 +167,9 @@ const ToolStep = ({
           </Stack>
         )}
       </div>
-      <Divider style={{ color: "#E2E8F0", marginLeft: "1rem", marginRight: "-0.5rem" }} />
+      <Divider
+        style={{ color: "#E2E8F0", marginLeft: "1rem", marginRight: "-0.5rem" }}
+      />
     </div>
   );
 };
@@ -192,7 +206,9 @@ export function createToolSteps() {
     return createFilesToolStep(create, props);
   };
 
-  const createReviewStep = <TParams = unknown,>(props: ReviewToolStepProps<TParams>): React.ReactElement => {
+  const createReviewStep = <TParams = unknown,>(
+    props: ReviewToolStepProps<TParams>,
+  ): React.ReactElement => {
     return createReviewToolStep(create, props);
   };
 
@@ -209,7 +225,13 @@ export function createToolSteps() {
 }
 
 // Context provider wrapper for tools using the factory
-export function ToolStepProvider({ children, forceStepNumbers }: { children: React.ReactNode; forceStepNumbers?: boolean }) {
+export function ToolStepProvider({
+  children,
+  forceStepNumbers,
+}: {
+  children: React.ReactNode;
+  forceStepNumbers?: boolean;
+}) {
   // Count visible steps from children that are ToolStep elements
   const visibleStepCount = useMemo(() => {
     let count = 0;
@@ -232,7 +254,11 @@ export function ToolStepProvider({ children, forceStepNumbers }: { children: Rea
     [visibleStepCount, forceStepNumbers],
   );
 
-  return <ToolStepContext.Provider value={contextValue}>{children}</ToolStepContext.Provider>;
+  return (
+    <ToolStepContext.Provider value={contextValue}>
+      {children}
+    </ToolStepContext.Provider>
+  );
 }
 
 export type { FilesToolStepProps } from "@app/components/tools/shared/FilesToolStep";

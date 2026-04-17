@@ -15,12 +15,22 @@ export type Sheet = {
   height: number;
 };
 
-export function computeBoxes(sheet: Sheet, parameters: PageLayoutParameters): Box[] {
+export function computeBoxes(
+  sheet: Sheet,
+  parameters: PageLayoutParameters,
+): Box[] {
   const { mode, arrangement, readingDirection } = parameters;
 
-  const cols = mode === "DEFAULT" ? Math.ceil(Math.sqrt(parameters.pagesPerSheet)) : parameters.cols;
-  const rows = mode === "DEFAULT" ? Math.ceil(parameters.pagesPerSheet / cols) : parameters.rows;
-  const pagesPerSheet = mode === "DEFAULT" ? parameters.pagesPerSheet : cols * rows;
+  const cols =
+    mode === "DEFAULT"
+      ? Math.ceil(Math.sqrt(parameters.pagesPerSheet))
+      : parameters.cols;
+  const rows =
+    mode === "DEFAULT"
+      ? Math.ceil(parameters.pagesPerSheet / cols)
+      : parameters.rows;
+  const pagesPerSheet =
+    mode === "DEFAULT" ? parameters.pagesPerSheet : cols * rows;
 
   const boxes: Box[] = [];
 

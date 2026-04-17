@@ -39,7 +39,8 @@ const FileHistoryGroup: React.FC<FileHistoryGroupProps> = ({
       <Box ml="md" mt="xs" mb="sm">
         <Group align="center" mb="sm">
           <Text size="xs" fw={600} c="dimmed">
-            {t("fileManager.fileHistory", "File History")} ({sortedHistory.length})
+            {t("fileManager.fileHistory", "File History")} (
+            {sortedHistory.length})
           </Text>
         </Group>
 

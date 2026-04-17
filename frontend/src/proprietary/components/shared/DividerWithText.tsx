@@ -19,11 +19,17 @@ export default function DividerWithText({
 }: TextDividerProps) {
   const variantClass = variant === "subcategory" ? "subcategory" : "";
   const themeClass = respondsToDarkMode ? "" : "force-light";
-  const styleWithOpacity = opacity !== undefined ? { ...(style || {}), ["--text-divider-opacity" as string]: opacity } : style;
+  const styleWithOpacity =
+    opacity !== undefined
+      ? { ...(style || {}), ["--text-divider-opacity" as string]: opacity }
+      : style;
 
   if (text) {
     return (
-      <div className={`text-divider ${variantClass} ${themeClass} ${className}`} style={styleWithOpacity}>
+      <div
+        className={`text-divider ${variantClass} ${themeClass} ${className}`}
+        style={styleWithOpacity}
+      >
         <div className="text-divider__rule" />
         <span className="text-divider__label">{text}</span>
         <div className="text-divider__rule" />
@@ -31,5 +37,10 @@ export default function DividerWithText({
     );
   }
 
-  return <div className={`h-px my-2.5 ${themeClass} ${className}`} style={styleWithOpacity} />;
+  return (
+    <div
+      className={`h-px my-2.5 ${themeClass} ${className}`}
+      style={styleWithOpacity}
+    />
+  );
 }

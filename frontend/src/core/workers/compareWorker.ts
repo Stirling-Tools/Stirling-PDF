@@ -1,6 +1,10 @@
 /// <reference lib="webworker" />
 
-import type { CompareDiffToken, CompareWorkerRequest, CompareWorkerResponse } from "@app/types/compare";
+import type {
+  CompareDiffToken,
+  CompareWorkerRequest,
+  CompareWorkerResponse,
+} from "@app/types/compare";
 
 declare const self: DedicatedWorkerGlobalScope;
 
@@ -33,14 +37,21 @@ const buildMatrix = (words1: string[], words2: string[]) => {
 
   for (let i = 1; i <= words1.length; i += 1) {
     for (let j = 1; j <= words2.length; j += 1) {
-      matrix[i][j] = words1[i - 1] === words2[j - 1] ? matrix[i - 1][j - 1] + 1 : Math.max(matrix[i][j - 1], matrix[i - 1][j]);
+      matrix[i][j] =
+        words1[i - 1] === words2[j - 1]
+          ? matrix[i - 1][j - 1] + 1
+          : Math.max(matrix[i][j - 1], matrix[i - 1][j]);
     }
   }
 
   return matrix;
 };
 
-const backtrack = (matrix: number[][], words1: string[], words2: string[]): CompareDiffToken[] => {
+const backtrack = (
+  matrix: number[][],
+  words1: string[],
+  words2: string[],
+): CompareDiffToken[] => {
   const tokens: CompareDiffToken[] = [];
   let i = words1.length;
   let j = words2.length;
@@ -112,12 +123,21 @@ const chunkedDiff = (
     if (dynamicChunkSize >= maxChunkSize) {
       return;
     }
-    const nextChunk = Math.min(maxChunkSize, Math.max(dynamicChunkSize + dynamicStep, Math.floor(dynamicChunkSize * 1.5)));
+    const nextChunk = Math.min(
+      maxChunkSize,
+      Math.max(
+        dynamicChunkSize + dynamicStep,
+        Math.floor(dynamicChunkSize * 1.5),
+      ),
+    );
     if (nextChunk === dynamicChunkSize) {
       return;
     }
     dynamicChunkSize = nextChunk;
-    dynamicMaxWindow = Math.max(dynamicMaxWindow, Math.max(dynamicChunkSize * 6, dynamicChunkSize + 512));
+    dynamicMaxWindow = Math.max(
+      dynamicMaxWindow,
+      Math.max(dynamicChunkSize * 6, dynamicChunkSize + 512),
+    );
     dynamicMinCommit = Math.max(1, Math.floor(dynamicChunkSize * 0.1));
     dynamicStep = Math.max(64, Math.floor(dynamicChunkSize * 0.5));
   };
@@ -131,7 +151,10 @@ const chunkedDiff = (
   let totalUnchanged = 0;
 
   const countUnchanged = (segment: CompareDiffToken[]) =>
-    segment.reduce((acc, token) => acc + (token.type === "unchanged" ? 1 : 0), 0);
+    segment.reduce(
+      (acc, token) => acc + (token.type === "unchanged" ? 1 : 0),
+      0,
+    );
 
   const flushRemainder = () => {
     if (buffer1.length === 0 && buffer2.length === 0) {
@@ -147,7 +170,12 @@ const chunkedDiff = (
     index2 = words2.length;
   };
 
-  while (index1 < words1.length || index2 < words2.length || buffer1.length > 0 || buffer2.length > 0) {
+  while (
+    index1 < words1.length ||
+    index2 < words2.length ||
+    buffer1.length > 0 ||
+    buffer2.length > 0
+  ) {
     const remaining1 = Math.max(0, words1.length - index1);
     const remaining2 = Math.max(0, words2.length - index2);
 
@@ -158,8 +186,14 @@ const chunkedDiff = (
     let reachedEnd: boolean;
 
     while (true) {
-      const take1 = Math.min(Math.max(0, windowSize - buffer1.length), remaining1);
-      const take2 = Math.min(Math.max(0, windowSize - buffer2.length), remaining2);
+      const take1 = Math.min(
+        Math.max(0, windowSize - buffer1.length),
+        remaining1,
+      );
+      const take2 = Math.min(
+        Math.max(0, windowSize - buffer2.length),
+        remaining2,
+      );
 
       const slice1 = take1 > 0 ? words1.slice(index1, index1 + take1) : [];
       const slice2 = take2 > 0 ? words2.slice(index2, index2 + take2) : [];
@@ -175,9 +209,12 @@ const chunkedDiff = (
       chunkTokens = diff(window1, window2);
       const lastStableIndex = findLastUnchangedIndex(chunkTokens);
 
-      reachedEnd = index1 + take1 >= words1.length && index2 + take2 >= words2.length;
+      reachedEnd =
+        index1 + take1 >= words1.length && index2 + take2 >= words2.length;
 
-      const windowTooLarge = window1.length >= dynamicMaxWindow || window2.length >= dynamicMaxWindow;
+      const windowTooLarge =
+        window1.length >= dynamicMaxWindow ||
+        window2.length >= dynamicMaxWindow;
 
       if (lastStableIndex >= 0 || reachedEnd || windowTooLarge) {
         break;
@@ -206,12 +243,17 @@ const chunkedDiff = (
       continue;
     }
 
-    let commitIndex = reachedEnd ? chunkTokens.length - 1 : findLastUnchangedIndex(chunkTokens);
+    let commitIndex = reachedEnd
+      ? chunkTokens.length - 1
+      : findLastUnchangedIndex(chunkTokens);
     if (commitIndex < 0) {
-      commitIndex = reachedEnd ? chunkTokens.length - 1 : Math.min(chunkTokens.length - 1, dynamicMinCommit - 1);
+      commitIndex = reachedEnd
+        ? chunkTokens.length - 1
+        : Math.min(chunkTokens.length - 1, dynamicMinCommit - 1);
     }
 
-    const commitTokens = commitIndex >= 0 ? chunkTokens.slice(0, commitIndex + 1) : [];
+    const commitTokens =
+      commitIndex >= 0 ? chunkTokens.slice(0, commitIndex + 1) : [];
     const baseConsumed = countBaseTokens(commitTokens);
     const comparisonConsumed = countComparisonTokens(commitTokens);
 
@@ -276,7 +318,11 @@ const chunkedDiff = (
 };
 
 // Fast similarity estimation using sampled unigrams and bigrams with Jaccard
-const buildSampledSet = (tokens: string[], sampleLimit: number, ngram: 1 | 2): Set<string> => {
+const buildSampledSet = (
+  tokens: string[],
+  sampleLimit: number,
+  ngram: 1 | 2,
+): Set<string> => {
   const result = new Set<string>();
   if (tokens.length === 0) return result;
   const stride = Math.max(1, Math.ceil(tokens.length / sampleLimit));
@@ -329,7 +375,12 @@ self.onmessage = (event: MessageEvent<CompareWorkerRequest>) => {
     runtimeMinUnchangedRatio = DEFAULT_SETTINGS.runtimeMinUnchangedRatio,
   } = settings ?? {};
 
-  if (!baseTokens || !comparisonTokens || baseTokens.length === 0 || comparisonTokens.length === 0) {
+  if (
+    !baseTokens ||
+    !comparisonTokens ||
+    baseTokens.length === 0 ||
+    comparisonTokens.length === 0
+  ) {
     const response: CompareWorkerResponse = {
       type: "error",
       message: warnings.emptyTextMessage ?? "One or both texts are empty.",
@@ -339,16 +390,22 @@ self.onmessage = (event: MessageEvent<CompareWorkerRequest>) => {
     return;
   }
 
-  if (baseTokens.length > maxWordThreshold || comparisonTokens.length > maxWordThreshold) {
+  if (
+    baseTokens.length > maxWordThreshold ||
+    comparisonTokens.length > maxWordThreshold
+  ) {
     // For compare tool, do not fail hard; warn and continue with chunked diff
     const response: CompareWorkerResponse = {
       type: "warning",
-      message: warnings.tooLargeMessage ?? "Documents are too large to compare.",
+      message:
+        warnings.tooLargeMessage ?? "Documents are too large to compare.",
     };
     self.postMessage(response);
   }
 
-  const isComplex = baseTokens.length > complexThreshold || comparisonTokens.length > complexThreshold;
+  const isComplex =
+    baseTokens.length > complexThreshold ||
+    comparisonTokens.length > complexThreshold;
 
   if (isComplex && warnings.complexMessage) {
     const warningResponse: CompareWorkerResponse = {
@@ -359,7 +416,11 @@ self.onmessage = (event: MessageEvent<CompareWorkerRequest>) => {
   }
 
   // Quick prefilter to avoid heavy diff on extremely dissimilar large docs
-  if (earlyStopEnabled && Math.min(baseTokens.length, comparisonTokens.length) >= minTokensForEarlyStop) {
+  if (
+    earlyStopEnabled &&
+    Math.min(baseTokens.length, comparisonTokens.length) >=
+      minTokensForEarlyStop
+  ) {
     const set1u = buildSampledSet(baseTokens, sampleLimit, 1);
     const set2u = buildSampledSet(comparisonTokens, sampleLimit, 1);
     const jUni = jaccard(set1u, set2u);
@@ -370,7 +431,8 @@ self.onmessage = (event: MessageEvent<CompareWorkerRequest>) => {
       const response: CompareWorkerResponse = {
         type: "error",
         message:
-          warnings.tooDissimilarMessage ?? "These documents appear highly dissimilar. Comparison was stopped to save time.",
+          warnings.tooDissimilarMessage ??
+          "These documents appear highly dissimilar. Comparison was stopped to save time.",
         code: "TOO_DISSIMILAR",
       };
       self.postMessage(response);
@@ -394,15 +456,22 @@ self.onmessage = (event: MessageEvent<CompareWorkerRequest>) => {
         };
         self.postMessage(response);
       },
-      { maxProcessedTokens: runtimeMaxProcessedTokens, minUnchangedRatio: runtimeMinUnchangedRatio },
+      {
+        maxProcessedTokens: runtimeMaxProcessedTokens,
+        minUnchangedRatio: runtimeMinUnchangedRatio,
+      },
     );
   } catch (err) {
     const error = err as Error & { __earlyStop?: boolean };
-    if (error && (error.__earlyStop || error.message === "EARLY_STOP_TOO_DISSIMILAR")) {
+    if (
+      error &&
+      (error.__earlyStop || error.message === "EARLY_STOP_TOO_DISSIMILAR")
+    ) {
       const response: CompareWorkerResponse = {
         type: "error",
         message:
-          warnings.tooDissimilarMessage ?? "These documents appear highly dissimilar. Comparison was stopped to save time.",
+          warnings.tooDissimilarMessage ??
+          "These documents appear highly dissimilar. Comparison was stopped to save time.",
         code: "TOO_DISSIMILAR",
       };
       self.postMessage(response);

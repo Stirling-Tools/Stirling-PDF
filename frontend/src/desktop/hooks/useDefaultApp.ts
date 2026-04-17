@@ -30,14 +30,20 @@ export const useDefaultApp = () => {
         alert({
           alertType: "success",
           title: t("defaultApp.success.title", "Default App Set"),
-          body: t("defaultApp.success.message", "Stirling PDF is now your default PDF editor"),
+          body: t(
+            "defaultApp.success.message",
+            "Stirling PDF is now your default PDF editor",
+          ),
         });
         setIsDefault(true);
       } else if (result === "opened_dialog") {
         alert({
           alertType: "neutral",
           title: t("defaultApp.settingsOpened.title", "Settings Opened"),
-          body: t("defaultApp.settingsOpened.message", "Please select Stirling PDF in the file association dialogue"),
+          body: t(
+            "defaultApp.settingsOpened.message",
+            "Please select Stirling PDF in the file association dialogue",
+          ),
         });
       }
     } catch (error) {
@@ -45,7 +51,10 @@ export const useDefaultApp = () => {
       alert({
         alertType: "error",
         title: t("defaultApp.error.title", "Error"),
-        body: t("defaultApp.error.message", "Failed to set default PDF handler"),
+        body: t(
+          "defaultApp.error.message",
+          "Failed to set default PDF handler",
+        ),
       });
     } finally {
       setIsLoading(false);

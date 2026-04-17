@@ -38,8 +38,20 @@ export function FeatureListItem({
 
   return (
     <Group gap="xs" wrap="nowrap" align="flex-start">
-      <Icon sx={{ fontSize: iconSize, color: iconColor, flexShrink: 0, marginTop: "2px" }} />
-      <Text size={textSize} c={dimmed ? "dimmed" : undefined} fw={fw} style={textSize ? undefined : { fontSize: size }}>
+      <Icon
+        sx={{
+          fontSize: iconSize,
+          color: iconColor,
+          flexShrink: 0,
+          marginTop: "2px",
+        }}
+      />
+      <Text
+        size={textSize}
+        c={dimmed ? "dimmed" : undefined}
+        fw={fw}
+        style={textSize ? undefined : { fontSize: size }}
+      >
         {children}
       </Text>
     </Group>

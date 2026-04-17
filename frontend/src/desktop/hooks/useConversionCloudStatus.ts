@@ -39,7 +39,9 @@ export function useConversionCloudStatus(): ConversionStatus {
         if (status === "offline" && localUrl) {
           const pairs: [string, string, string][] = [];
           for (const fromExt of Object.keys(EXTENSION_TO_ENDPOINT)) {
-            for (const toExt of Object.keys(EXTENSION_TO_ENDPOINT[fromExt] || {})) {
+            for (const toExt of Object.keys(
+              EXTENSION_TO_ENDPOINT[fromExt] || {},
+            )) {
               const endpointName = getEndpointName(fromExt, toExt);
               if (endpointName) pairs.push([fromExt, toExt, endpointName]);
             }
@@ -51,7 +53,11 @@ export function useConversionCloudStatus(): ConversionStatus {
             pairs.map(async ([fromExt, toExt, endpointName]) => {
               const key = `${fromExt}-${toExt}`;
               try {
-                const supported = await endpointAvailabilityService.isEndpointSupportedLocally(endpointName, localUrl);
+                const supported =
+                  await endpointAvailabilityService.isEndpointSupportedLocally(
+                    endpointName,
+                    localUrl,
+                  );
                 return { key, supported };
               } catch {
                 return { key, supported: false };
@@ -103,20 +109,39 @@ export function useConversionCloudStatus(): ConversionStatus {
             // In SaaS mode, everything is available (locally or via cloud routing).
             // Only check local support to determine willUseCloud — the same approach
             // used by useMultipleEndpointsEnabled's SaaS enhancement.
-            const availableLocally = await endpointAvailabilityService.isEndpointSupportedLocally(
-              endpointName,
-              tauriBackendService.getBackendUrl(),
-            );
-            return { key, isAvailable: true, willUseCloud: !availableLocally, localOnly: false };
+            const availableLocally =
+              await endpointAvailabilityService.isEndpointSupportedLocally(
+                endpointName,
+                tauriBackendService.getBackendUrl(),
+              );
+            return {
+              key,
+              isAvailable: true,
+              willUseCloud: !availableLocally,
+              localOnly: false,
+            };
           } catch (error) {
-            console.error(`[useConversionCloudStatus] Endpoint check failed for ${key}:`, error);
+            console.error(
+              `[useConversionCloudStatus] Endpoint check failed for ${key}:`,
+              error,
+            );
             // On error, assume available via cloud (safe default in SaaS mode)
-            return { key, isAvailable: true, willUseCloud: true, localOnly: false };
+            return {
+              key,
+              isAvailable: true,
+              willUseCloud: true,
+              localOnly: false,
+            };
           }
         }),
       );
 
-      for (const { key, isAvailable, willUseCloud: wuc, localOnly: lo } of results) {
+      for (const {
+        key,
+        isAvailable,
+        willUseCloud: wuc,
+        localOnly: lo,
+      } of results) {
         availability[key] = isAvailable;
         cloudStatus[key] = wuc;
         localOnly[key] = lo;

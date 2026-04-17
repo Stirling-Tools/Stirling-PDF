@@ -12,7 +12,10 @@ interface FileListAreaProps {
   scrollAreaStyle?: React.CSSProperties;
 }
 
-const FileListArea: React.FC<FileListAreaProps> = ({ scrollAreaHeight, scrollAreaStyle = {} }) => {
+const FileListArea: React.FC<FileListAreaProps> = ({
+  scrollAreaHeight,
+  scrollAreaStyle = {},
+}) => {
   const {
     activeSource,
     recentFiles,
@@ -94,9 +97,14 @@ const FileListArea: React.FC<FileListAreaProps> = ({ scrollAreaHeight, scrollAre
   return (
     <Center style={{ height: "12.5rem" }}>
       <Stack align="center" gap="sm">
-        <CloudIcon style={{ fontSize: "3rem", color: "var(--mantine-color-gray-5)" }} />
+        <CloudIcon
+          style={{ fontSize: "3rem", color: "var(--mantine-color-gray-5)" }}
+        />
         <Text c="dimmed" ta="center">
-          {t("fileManager.googleDriveNotAvailable", "Google Drive integration coming soon")}
+          {t(
+            "fileManager.googleDriveNotAvailable",
+            "Google Drive integration coming soon",
+          )}
         </Text>
       </Stack>
     </Center>

@@ -38,9 +38,13 @@ interface TourOrchestrationContextType {
   executeTool: () => void;
 }
 
-const TourOrchestrationContext = createContext<TourOrchestrationContextType | undefined>(undefined);
+const TourOrchestrationContext = createContext<
+  TourOrchestrationContextType | undefined
+>(undefined);
 
-export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const TourOrchestrationProvider: React.FC<{
+  children: React.ReactNode;
+}> = ({ children }) => {
   const { addFiles } = useFileHandler();
   const { closeFilesModal } = useFilesModalContext();
   const { actions: navActions } = useNavigationActions();
@@ -67,7 +71,10 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
   }, [clearAllFiles]);
 
   const restoreWorkbenchState = useCallback(async () => {
-    console.log("Restoring workbench state, saved files count:", savedFilesRef.current.length);
+    console.log(
+      "Restoring workbench state, saved files count:",
+      savedFilesRef.current.length,
+    );
 
     // Go back to Tools
     handleBackToTools();
@@ -79,7 +86,11 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
     const currentFiles = filesRef.current;
     if (currentFiles.length > 0) {
       try {
-        await Promise.all(currentFiles.map((file) => fileStorage.deleteStirlingFile(file.fileId)));
+        await Promise.all(
+          currentFiles.map((file) =>
+            fileStorage.deleteStirlingFile(file.fileId),
+          ),
+        );
         console.log(`Deleted ${currentFiles.length} file(s) from storage`);
       } catch (error) {
         console.error("Failed to delete files from storage:", error);
@@ -92,7 +103,10 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
       const filesToRestore = await Promise.all(
         savedFilesRef.current.map(async (sf) => {
           const buffer = await sf.arrayBuffer();
-          return new File([buffer], sf.name, { type: sf.type, lastModified: sf.lastModified });
+          return new File([buffer], sf.name, {
+            type: sf.type,
+            lastModified: sf.lastModified,
+          });
         }),
       );
       console.log(
@@ -142,7 +156,9 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
   const selectFirstFile = useCallback(() => {
     // File selection is handled by FileCard onClick
     // This function could trigger a click event on the first file card
-    const firstFileCard = document.querySelector('[data-tour="file-card-checkbox"]') as HTMLElement;
+    const firstFileCard = document.querySelector(
+      '[data-tour="file-card-checkbox"]',
+    ) as HTMLElement;
     if (firstFileCard) {
       // Check if already selected (data-selected attribute)
       const isSelected = firstFileCard.getAttribute("data-selected") === "true";
@@ -155,7 +171,9 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
 
   const pinFile = useCallback(() => {
     // Click the pin button directly
-    const pinButton = document.querySelector('[data-tour="file-card-pin"]') as HTMLElement;
+    const pinButton = document.querySelector(
+      '[data-tour="file-card-pin"]',
+    ) as HTMLElement;
     if (pinButton) {
       pinButton.click();
     }
@@ -176,7 +194,9 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
 
   const executeTool = useCallback(() => {
     // Trigger the run button click
-    const runButton = document.querySelector('[data-tour="run-button"]') as HTMLElement;
+    const runButton = document.querySelector(
+      '[data-tour="run-button"]',
+    ) as HTMLElement;
     if (runButton) {
       runButton.click();
     }
@@ -197,13 +217,19 @@ export const TourOrchestrationProvider: React.FC<{ children: React.ReactNode }> 
     executeTool,
   };
 
-  return <TourOrchestrationContext.Provider value={value}>{children}</TourOrchestrationContext.Provider>;
+  return (
+    <TourOrchestrationContext.Provider value={value}>
+      {children}
+    </TourOrchestrationContext.Provider>
+  );
 };
 
 export const useTourOrchestration = (): TourOrchestrationContextType => {
   const context = useContext(TourOrchestrationContext);
   if (!context) {
-    throw new Error("useTourOrchestration must be used within TourOrchestrationProvider");
+    throw new Error(
+      "useTourOrchestration must be used within TourOrchestrationProvider",
+    );
   }
   return context;
 };

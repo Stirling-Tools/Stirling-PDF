@@ -68,18 +68,27 @@ export const useShowJSOperation = (): ShowJSOperationHook => {
         const formData = new FormData();
         formData.append("fileInput", file);
 
-        const response = await apiClient.post("/api/v1/misc/show-javascript", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-          responseType: "text",
-        });
+        const response = await apiClient.post(
+          "/api/v1/misc/show-javascript",
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+            responseType: "text",
+          },
+        );
 
-        const text: string = typeof response.data === "string" ? response.data : "";
+        const text: string =
+          typeof response.data === "string" ? response.data : "";
         setScriptText(text);
 
         // Optional: prepare a downloadable file
-        const outFile = new File([text], (file.name?.replace(/\.[^.]+$/, "") || "extracted") + ".js", {
-          type: "application/javascript",
-        });
+        const outFile = new File(
+          [text],
+          (file.name?.replace(/\.[^.]+$/, "") || "extracted") + ".js",
+          {
+            type: "application/javascript",
+          },
+        );
         setFiles([outFile]);
         const blobUrl = URL.createObjectURL(outFile);
         previousUrl.current = blobUrl;

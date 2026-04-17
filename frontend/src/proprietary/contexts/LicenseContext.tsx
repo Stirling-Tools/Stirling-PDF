@@ -1,4 +1,13 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  ReactNode,
+} from "react";
 import { useLocation } from "react-router-dom";
 import licenseService, { LicenseInfo } from "@app/services/licenseService";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -11,13 +20,17 @@ interface LicenseContextValue {
   refetchLicense: () => Promise<void>;
 }
 
-const LicenseContext = createContext<LicenseContextValue | undefined>(undefined);
+const LicenseContext = createContext<LicenseContextValue | undefined>(
+  undefined,
+);
 
 interface LicenseProviderProps {
   children: ReactNode;
 }
 
-export const LicenseProvider: React.FC<LicenseProviderProps> = ({ children }) => {
+export const LicenseProvider: React.FC<LicenseProviderProps> = ({
+  children,
+}) => {
   const { config } = useAppConfig();
   const location = useLocation();
   const configRef = useRef(config);
@@ -52,7 +65,9 @@ export const LicenseProvider: React.FC<LicenseProviderProps> = ({ children }) =>
 
     // Only fetch license info if user is an admin
     if (!currentConfig.isAdmin) {
-      console.log("[LicenseContext] User is not an admin, skipping license fetch");
+      console.log(
+        "[LicenseContext] User is not an admin, skipping license fetch",
+      );
       setLoading(false);
       return;
     }
@@ -73,7 +88,8 @@ export const LicenseProvider: React.FC<LicenseProviderProps> = ({ children }) =>
       const info = await licenseService.getLicenseInfo();
       setLicenseInfo(info);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to fetch license info";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch license info";
       console.error("Error fetching license info:", errorMessage);
       setError(errorMessage);
       setLicenseInfo(null);
@@ -114,7 +130,11 @@ export const LicenseProvider: React.FC<LicenseProviderProps> = ({ children }) =>
     [licenseInfo, loading, error, refetchLicense],
   );
 
-  return <LicenseContext.Provider value={contextValue}>{children}</LicenseContext.Provider>;
+  return (
+    <LicenseContext.Provider value={contextValue}>
+      {children}
+    </LicenseContext.Provider>
+  );
 };
 
 export const useOptionalLicense = (): LicenseContextValue | undefined => {

@@ -9,9 +9,28 @@
  * - CSS module for theme-consistent styling
  * - Status bar at bottom for contextual info
  */
-import React, { useEffect, useCallback, useState, useRef, useMemo } from "react";
-import { Button, Text, Alert, Switch, Loader, ScrollArea, Progress, Tooltip, ActionIcon } from "@mantine/core";
-import { useFormFill, useAllFormValues } from "@app/tools/formFill/FormFillContext";
+import React, {
+  useEffect,
+  useCallback,
+  useState,
+  useRef,
+  useMemo,
+} from "react";
+import {
+  Button,
+  Text,
+  Alert,
+  Switch,
+  Loader,
+  ScrollArea,
+  Progress,
+  Tooltip,
+  ActionIcon,
+} from "@mantine/core";
+import {
+  useFormFill,
+  useAllFormValues,
+} from "@app/tools/formFill/FormFillContext";
 import { useNavigation } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useFileState } from "@app/contexts/FileContext";
@@ -20,7 +39,10 @@ import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
 import type { BaseToolProps } from "@app/types/tool";
 import type { FormField } from "@app/tools/formFill/types";
 import { FieldInput } from "@app/tools/formFill/FieldInput";
-import { FIELD_TYPE_ICON, FIELD_TYPE_COLOR } from "@app/tools/formFill/fieldMeta";
+import {
+  FIELD_TYPE_ICON,
+  FIELD_TYPE_COLOR,
+} from "@app/tools/formFill/fieldMeta";
 import SaveIcon from "@mui/icons-material/Save";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
@@ -30,7 +52,10 @@ import FileCopyIcon from "@mui/icons-material/FileCopy";
 import BuildCircleIcon from "@mui/icons-material/BuildCircle";
 import DescriptionIcon from "@mui/icons-material/Description";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
-import { extractFormFieldsCsv, extractFormFieldsXlsx } from "@app/tools/formFill/formApi";
+import {
+  extractFormFieldsCsv,
+  extractFormFieldsXlsx,
+} from "@app/tools/formFill/formApi";
 import styles from "@app/tools/formFill/FormFill.module.css";
 
 // ---------------------------------------------------------------------------
@@ -47,10 +72,30 @@ interface ModeTabDef {
 }
 
 const _MODE_TABS: ModeTabDef[] = [
-  { id: "fill", label: "Fill", icon: <EditNoteIcon className={styles.modeTabIcon} />, ready: true },
-  { id: "make", label: "Create", icon: <PostAddIcon className={styles.modeTabIcon} />, ready: false },
-  { id: "batch", label: "Batch", icon: <FileCopyIcon className={styles.modeTabIcon} />, ready: false },
-  { id: "modify", label: "Modify", icon: <BuildCircleIcon className={styles.modeTabIcon} />, ready: false },
+  {
+    id: "fill",
+    label: "Fill",
+    icon: <EditNoteIcon className={styles.modeTabIcon} />,
+    ready: true,
+  },
+  {
+    id: "make",
+    label: "Create",
+    icon: <PostAddIcon className={styles.modeTabIcon} />,
+    ready: false,
+  },
+  {
+    id: "batch",
+    label: "Batch",
+    icon: <FileCopyIcon className={styles.modeTabIcon} />,
+    ready: false,
+  },
+  {
+    id: "modify",
+    label: "Modify",
+    icon: <BuildCircleIcon className={styles.modeTabIcon} />,
+    ready: false,
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -78,7 +123,14 @@ const FormFill = (_props: BaseToolProps) => {
   const { selectedTool } = useNavigation();
   const { selectors, state: fileState } = useFileState();
 
-  const { state: formState, fetchFields, submitForm, setValue, setActiveField, validateForm } = useFormFill();
+  const {
+    state: formState,
+    fetchFields,
+    submitForm,
+    setValue,
+    setActiveField,
+    validateForm,
+  } = useFormFill();
 
   const allValues = useAllFormValues();
   const { validationErrors } = formState;
@@ -95,8 +147,11 @@ const FormFill = (_props: BaseToolProps) => {
   const [extracting, setExtracting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const [lastSavedFlatten, setLastSavedFlatten] = useState<boolean | null>(null);
-  const flattenChanged = lastSavedFlatten !== null && flatten !== lastSavedFlatten;
+  const [lastSavedFlatten, setLastSavedFlatten] = useState<boolean | null>(
+    null,
+  );
+  const flattenChanged =
+    lastSavedFlatten !== null && flatten !== lastSavedFlatten;
 
   const savingRef = useRef(false);
 
@@ -125,7 +180,9 @@ const FormFill = (_props: BaseToolProps) => {
   const currentFile = useMemo(() => {
     if (activeFiles.length === 0) return null;
     if (selectedFileIds.length > 0) {
-      const sel = activeFiles.find((f) => isStirlingFile(f) && selectedFileIds.includes(f.fileId));
+      const sel = activeFiles.find(
+        (f) => isStirlingFile(f) && selectedFileIds.includes(f.fileId),
+      );
       if (sel) return sel;
     }
     return activeFiles[0];
@@ -204,7 +261,9 @@ const FormFill = (_props: BaseToolProps) => {
       // This ensures the viewer tracks the new file ID, preserves
       // scroll position and rotation — instead of our own consumeFiles
       // call which would lose the viewer's file tracking context.
-      const event = new CustomEvent("formfill:apply", { detail: { blob: filledBlob } });
+      const event = new CustomEvent("formfill:apply", {
+        detail: { blob: filledBlob },
+      });
       window.dispatchEvent(event);
     } catch (err: any) {
       const message =
@@ -273,14 +332,19 @@ const FormFill = (_props: BaseToolProps) => {
 
   // Progress tracking
   const fillableFields = useMemo(() => {
-    return formState.fields.filter((f) => f.type !== "button" && f.type !== "signature");
+    return formState.fields.filter(
+      (f) => f.type !== "button" && f.type !== "signature",
+    );
   }, [formState.fields]);
 
   // Memoize fillable fields grouped by page (signatures/buttons excluded)
   const { sortedPages, fieldsByPage } = useMemo(() => {
     const byPage = new Map<number, FormField[]>();
     for (const field of fillableFields) {
-      const pageIndex = field.widgets && field.widgets.length > 0 ? field.widgets[0].pageIndex : 0;
+      const pageIndex =
+        field.widgets && field.widgets.length > 0
+          ? field.widgets[0].pageIndex
+          : 0;
       if (!byPage.has(pageIndex)) {
         byPage.set(pageIndex, []);
       }
@@ -356,7 +420,13 @@ const FormFill = (_props: BaseToolProps) => {
             {/* Loading state */}
             {formState.loading && (
               <>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
                   <Loader size={14} />
                   <Text size="xs" c="dimmed">
                     Analysing form fields...
@@ -369,7 +439,13 @@ const FormFill = (_props: BaseToolProps) => {
 
             {/* Error state */}
             {formState.error && (
-              <Alert icon={<WarningAmberIcon sx={{ fontSize: 16 }} />} color="red" variant="light" p="xs" radius="sm">
+              <Alert
+                icon={<WarningAmberIcon sx={{ fontSize: 16 }} />}
+                color="red"
+                variant="light"
+                p="xs"
+                radius="sm"
+              >
                 <Text size="xs">{formState.error}</Text>
               </Alert>
             )}
@@ -389,14 +465,23 @@ const FormFill = (_props: BaseToolProps) => {
                       )}
                     </span>
                     <span className={styles.progressLabel}>
-                      {fillableCount > 0 ? Math.round((filledCount / fillableCount) * 100) : 0}%
+                      {fillableCount > 0
+                        ? Math.round((filledCount / fillableCount) * 100)
+                        : 0}
+                      %
                     </span>
                   </div>
                   <Progress
-                    value={fillableCount > 0 ? (filledCount / fillableCount) * 100 : 0}
+                    value={
+                      fillableCount > 0
+                        ? (filledCount / fillableCount) * 100
+                        : 0
+                    }
                     size={6}
                     radius="xl"
-                    color={filledRequiredCount === requiredCount ? "teal" : "blue"}
+                    color={
+                      filledRequiredCount === requiredCount ? "teal" : "blue"
+                    }
                     mt={4}
                   />
                 </div>
@@ -426,7 +511,12 @@ const FormFill = (_props: BaseToolProps) => {
                     </Button>
 
                     <Tooltip label="Re-scan fields" withArrow position="bottom">
-                      <ActionIcon variant="light" size="md" onClick={handleRefresh} aria-label="Re-scan form fields">
+                      <ActionIcon
+                        variant="light"
+                        size="md"
+                        onClick={handleRefresh}
+                        aria-label="Re-scan form fields"
+                      >
                         <RefreshIcon sx={{ fontSize: 16 }} />
                       </ActionIcon>
                     </Tooltip>
@@ -478,12 +568,16 @@ const FormFill = (_props: BaseToolProps) => {
             )}
 
             {/* Empty state */}
-            {!formState.loading && formState.fields.length === 0 && !formState.error && (
-              <div className={styles.emptyState}>
-                <DescriptionIcon className={styles.emptyStateIcon} />
-                <span className={styles.emptyStateText}>No fillable form fields found in this PDF.</span>
-              </div>
-            )}
+            {!formState.loading &&
+              formState.fields.length === 0 &&
+              !formState.error && (
+                <div className={styles.emptyState}>
+                  <DescriptionIcon className={styles.emptyStateIcon} />
+                  <span className={styles.emptyStateText}>
+                    No fillable form fields found in this PDF.
+                  </span>
+                </div>
+              )}
           </div>
 
           {/* ---- Scrollable field list ---- */}
@@ -492,14 +586,23 @@ const FormFill = (_props: BaseToolProps) => {
               <div className={styles.fieldListInner}>
                 {sortedPages.map((pageIdx, i) => (
                   <React.Fragment key={pageIdx}>
-                    <div className={styles.pageDivider} style={i === 0 ? { marginTop: 0 } : undefined}>
-                      <Text className={styles.pageDividerLabel}>Page {pageIdx + 1}</Text>
+                    <div
+                      className={styles.pageDivider}
+                      style={i === 0 ? { marginTop: 0 } : undefined}
+                    >
+                      <Text className={styles.pageDividerLabel}>
+                        Page {pageIdx + 1}
+                      </Text>
                     </div>
 
                     {fieldsByPage.get(pageIdx)!.map((field) => {
-                      const isFieldActive = formState.activeFieldName === field.name;
+                      const isFieldActive =
+                        formState.activeFieldName === field.name;
                       const hasError = !!validationErrors[field.name];
-                      const pageIndex = field.widgets && field.widgets.length > 0 ? field.widgets[0].pageIndex : undefined;
+                      const pageIndex =
+                        field.widgets && field.widgets.length > 0
+                          ? field.widgets[0].pageIndex
+                          : undefined;
 
                       return (
                         <div
@@ -508,7 +611,9 @@ const FormFill = (_props: BaseToolProps) => {
                           className={`${styles.fieldCard} ${
                             isFieldActive ? styles.fieldCardActive : ""
                           } ${hasError ? styles.fieldCardError : ""}`}
-                          onClick={() => handleFieldClick(field.name, pageIndex)}
+                          onClick={() =>
+                            handleFieldClick(field.name, pageIndex)
+                          }
                         >
                           <div className={styles.fieldHeader}>
                             <span
@@ -520,19 +625,35 @@ const FormFill = (_props: BaseToolProps) => {
                             >
                               {FIELD_TYPE_ICON[field.type]}
                             </span>
-                            <span className={styles.fieldName}>{field.label || field.name}</span>
-                            {field.required && <span className={styles.fieldRequired}>req</span>}
+                            <span className={styles.fieldName}>
+                              {field.label || field.name}
+                            </span>
+                            {field.required && (
+                              <span className={styles.fieldRequired}>req</span>
+                            )}
                           </div>
 
-                          {field.type !== "button" && field.type !== "signature" && (
-                            <div className={styles.fieldInputWrap}>
-                              <FieldInput field={field} onValueChange={handleValueChange} />
+                          {field.type !== "button" &&
+                            field.type !== "signature" && (
+                              <div className={styles.fieldInputWrap}>
+                                <FieldInput
+                                  field={field}
+                                  onValueChange={handleValueChange}
+                                />
+                              </div>
+                            )}
+
+                          {hasError && (
+                            <div className={styles.fieldError}>
+                              {validationErrors[field.name]}
                             </div>
                           )}
 
-                          {hasError && <div className={styles.fieldError}>{validationErrors[field.name]}</div>}
-
-                          {field.tooltip && <div className={styles.fieldHint}>{field.tooltip}</div>}
+                          {field.tooltip && (
+                            <div className={styles.fieldHint}>
+                              {field.tooltip}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -546,8 +667,12 @@ const FormFill = (_props: BaseToolProps) => {
           {!formState.loading && formState.fields.length > 0 && (
             <div className={styles.statusBar}>
               <span>
-                {(formState.isDirty || flattenChanged) && <span className={styles.unsavedDot} />}
-                {formState.isDirty || flattenChanged ? "Unsaved changes" : "All saved"}
+                {(formState.isDirty || flattenChanged) && (
+                  <span className={styles.unsavedDot} />
+                )}
+                {formState.isDirty || flattenChanged
+                  ? "Unsaved changes"
+                  : "All saved"}
               </span>
               <span>Ctrl+S to save</span>
             </div>

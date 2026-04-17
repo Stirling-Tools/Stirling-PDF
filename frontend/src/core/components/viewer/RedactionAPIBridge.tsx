@@ -23,10 +23,17 @@ export function RedactionAPIBridge() {
 }
 
 function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
-  const { state, provides: redactionProvides } = useEmbedPdfRedaction(documentId);
+  const { state, provides: redactionProvides } =
+    useEmbedPdfRedaction(documentId);
   const { provides: annotationProvides } = useAnnotationCapability();
-  const { redactionApiRef, setPendingCount, setActiveType, setIsRedacting, setBridgeReady, manualRedactColor } =
-    useRedaction();
+  const {
+    redactionApiRef,
+    setPendingCount,
+    setActiveType,
+    setIsRedacting,
+    setBridgeReady,
+    manualRedactColor,
+  } = useRedaction();
 
   // Mark bridge as ready on mount, not ready on unmount
   useEffect(() => {

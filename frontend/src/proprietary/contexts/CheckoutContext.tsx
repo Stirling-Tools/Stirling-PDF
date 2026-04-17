@@ -1,10 +1,26 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  ReactNode,
+} from "react";
 import { useTranslation } from "react-i18next";
-import licenseService, { PlanTierGroup, LicenseInfo, mapLicenseToTier, PlanTier } from "@app/services/licenseService";
+import licenseService, {
+  PlanTierGroup,
+  LicenseInfo,
+  mapLicenseToTier,
+  PlanTier,
+} from "@app/services/licenseService";
 import { StripeCheckout } from "@app/components/shared/stripeCheckout";
 import { userManagementService } from "@app/services/userManagementService";
 import { alert } from "@app/components/toast";
-import { pollLicenseKeyWithBackoff, activateLicenseKey, resyncExistingLicense } from "@app/utils/licenseCheckoutUtils";
+import {
+  pollLicenseKeyWithBackoff,
+  activateLicenseKey,
+  resyncExistingLicense,
+} from "@app/utils/licenseCheckoutUtils";
 import { useLicense } from "@app/contexts/LicenseContext";
 import { isSupabaseConfigured } from "@app/services/supabaseClient";
 import { getPreferredCurrency } from "@app/utils/currencyDetection";
@@ -17,25 +33,34 @@ export interface CheckoutOptions {
 }
 
 interface CheckoutContextValue {
-  openCheckout: (tier: "server" | "enterprise", options?: CheckoutOptions) => Promise<void>;
+  openCheckout: (
+    tier: "server" | "enterprise",
+    options?: CheckoutOptions,
+  ) => Promise<void>;
   closeCheckout: () => void;
   isOpen: boolean;
   isLoading: boolean;
 }
 
-const CheckoutContext = createContext<CheckoutContextValue | undefined>(undefined);
+const CheckoutContext = createContext<CheckoutContextValue | undefined>(
+  undefined,
+);
 
 interface CheckoutProviderProps {
   children: ReactNode;
   defaultCurrency?: string;
 }
 
-export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({ children, defaultCurrency }) => {
+export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
+  children,
+  defaultCurrency,
+}) => {
   const { t, i18n } = useTranslation();
   const { refetchLicense } = useLicense();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedPlanGroup, setSelectedPlanGroup] = useState<PlanTierGroup | null>(null);
+  const [selectedPlanGroup, setSelectedPlanGroup] =
+    useState<PlanTierGroup | null>(null);
   const [minimumSeats, setMinimumSeats] = useState<number>(1);
   const [currentCurrency, setCurrentCurrency] = useState(() => {
     // Use provided default or auto-detect from locale
@@ -108,7 +133,9 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({ children, de
           const activation = await resyncExistingLicense();
 
           if (activation.success) {
-            console.log("License synced successfully, refreshing license context");
+            console.log(
+              "License synced successfully, refreshing license context",
+            );
 
             // Ensure plans are loaded before using them
             if (!plansLoaded) {
@@ -120,7 +147,8 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({ children, de
             await refetchPlans();
 
             // Determine tier from license type
-            const tier = activation.licenseType === "ENTERPRISE" ? "enterprise" : "server";
+            const tier =
+              activation.licenseType === "ENTERPRISE" ? "enterprise" : "server";
             const planGroups = licenseService.groupPlansByTier(plans);
             const planGroup = planGroups.find((pg) => pg.tier === tier);
 
@@ -137,7 +165,10 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({ children, de
               });
             }
           } else {
-            console.error("Failed to sync license after upgrade:", activation.error);
+            console.error(
+              "Failed to sync license after upgrade:",
+              activation.error,
+            );
             alert({
               alertType: "error",
               title: t("payment.syncError"),
@@ -149,7 +180,10 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({ children, de
 
           try {
             const installationId = await licenseService.getInstallationId();
-            console.log("Polling for license key with installation ID:", installationId);
+            console.log(
+              "Polling for license key with installation ID:",
+              installationId,
+            );
 
             // Use shared polling utility
             const result = await pollLicenseKeyWithBackoff(installationId);
@@ -171,7 +205,10 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({ children, de
                 await refetchPlans();
 
                 // Determine tier from license type
-                const tier = activation.licenseType === "ENTERPRISE" ? "enterprise" : "server";
+                const tier =
+                  activation.licenseType === "ENTERPRISE"
+                    ? "enterprise"
+                    : "server";
                 const planGroups = licenseService.groupPlansByTier(plans);
                 const planGroup = planGroups.find((pg) => pg.tier === tier);
 
@@ -232,7 +269,15 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({ children, de
     };
 
     handleCheckoutReturn();
-  }, [t, refetchPlans, refetchLicense, plans, fetchPlansIfNeeded, plansLoaded, currentCurrency]);
+  }, [
+    t,
+    refetchPlans,
+    refetchLicense,
+    plans,
+    fetchPlansIfNeeded,
+    plansLoaded,
+    currentCurrency,
+  ]);
 
   const openCheckout = useCallback(
     async (tier: "server" | "enterprise", options: CheckoutOptions = {}) => {
@@ -241,7 +286,9 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({ children, de
 
         // Check if Supabase is configured
         if (!isSupabaseConfigured) {
-          throw new Error("Checkout is not available. Supabase is not configured.");
+          throw new Error(
+            "Checkout is not available. Supabase is not configured.",
+          );
         }
 
         // Update currency if provided
@@ -268,7 +315,10 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({ children, de
           licenseInfo = licenseData;
           totalUsers = userData.totalUsers || 0;
         } catch (err) {
-          console.warn("Could not fetch license/user info, proceeding with defaults:", err);
+          console.warn(
+            "Could not fetch license/user info, proceeding with defaults:",
+            err,
+          );
         }
 
         // Calculate minimum seats for enterprise upgrades
@@ -281,12 +331,16 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({ children, de
             // Upgrading from Server (unlimited) to Enterprise (per-seat)
             // Use current total user count as minimum
             calculatedMinSeats = Math.max(totalUsers, 1);
-            console.log(`Setting minimum seats from server user count: ${calculatedMinSeats}`);
+            console.log(
+              `Setting minimum seats from server user count: ${calculatedMinSeats}`,
+            );
           } else if (currentTier === "enterprise") {
             // Upgrading within Enterprise (e.g., monthly to yearly)
             // Use current licensed seat count as minimum
             calculatedMinSeats = Math.max(licenseInfo?.maxUsers || 1, 1);
-            console.log(`Setting minimum seats from current license: ${calculatedMinSeats}`);
+            console.log(
+              `Setting minimum seats from current license: ${calculatedMinSeats}`,
+            );
           }
         }
 
@@ -304,7 +358,8 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({ children, de
         setSelectedPlanGroup(planGroup);
         setIsOpen(true);
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to open checkout";
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to open checkout";
         console.error("Error opening checkout:", errorMessage);
         options.onError?.(errorMessage);
       } finally {
@@ -343,7 +398,12 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({ children, de
   );
 
   const handleLicenseActivated = useCallback(
-    (licenseInfo: { licenseType: string; enabled: boolean; maxUsers: number; hasKey: boolean }) => {
+    (licenseInfo: {
+      licenseType: string;
+      enabled: boolean;
+      maxUsers: number;
+      hasKey: boolean;
+    }) => {
       console.log("License activated:", licenseInfo);
       // Could expose this via context if needed
     },

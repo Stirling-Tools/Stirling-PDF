@@ -4,7 +4,10 @@ import { SingleLargePageParameters } from "@app/hooks/tools/singleLargePage/useS
 
 interface SingleLargePageSettingsProps {
   parameters: SingleLargePageParameters;
-  onParameterChange: <K extends keyof SingleLargePageParameters>(parameter: K, value: SingleLargePageParameters[K]) => void;
+  onParameterChange: <K extends keyof SingleLargePageParameters>(
+    parameter: K,
+    value: SingleLargePageParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 

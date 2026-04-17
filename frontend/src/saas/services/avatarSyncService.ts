@@ -12,7 +12,10 @@ const MAX_AVATAR_SIZE = 500 * 1024; // 500KB max file size after optimization
 const SYNC_INTERVAL_DAYS = 7; // Resync every 7 days
 
 // Client-side cache to prevent repeated sync attempts in same browser session
-const sessionSyncCache = new Map<string, { timestamp: number; success: boolean }>();
+const sessionSyncCache = new Map<
+  string,
+  { timestamp: number; success: boolean }
+>();
 
 export interface ProfilePictureMetadata {
   user_id: string;
@@ -67,7 +70,9 @@ export async function downloadAndOptimizeAvatar(url: string): Promise<Blob> {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to download avatar: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Failed to download avatar: ${response.status} ${response.statusText}`,
+      );
     }
 
     const blob = await response.blob();
@@ -102,7 +107,10 @@ export async function downloadAndOptimizeAvatar(url: string): Promise<Blob> {
 
           // Check file size
           if (optimizedBlob.size > MAX_AVATAR_SIZE) {
-            console.warn("[Avatar Sync] Optimized avatar exceeds max size:", optimizedBlob.size);
+            console.warn(
+              "[Avatar Sync] Optimized avatar exceeds max size:",
+              optimizedBlob.size,
+            );
             // Try with lower quality
             canvas.toBlob(
               (lowerQualityBlob) => {
@@ -124,7 +132,10 @@ export async function downloadAndOptimizeAvatar(url: string): Promise<Blob> {
       );
     });
   } catch (error) {
-    console.error("[Avatar Sync] Failed to download and optimize avatar:", error);
+    console.error(
+      "[Avatar Sync] Failed to download and optimize avatar:",
+      error,
+    );
     throw error;
   }
 }
@@ -134,18 +145,23 @@ export async function downloadAndOptimizeAvatar(url: string): Promise<Blob> {
  * @param userId User ID
  * @param blob Optimized avatar blob
  */
-export async function uploadAvatarToStorage(userId: string, blob: Blob): Promise<void> {
+export async function uploadAvatarToStorage(
+  userId: string,
+  blob: Blob,
+): Promise<void> {
   try {
     const profilePath = `${userId}/avatar`;
 
     console.debug("[Avatar Sync] Uploading avatar to storage:", profilePath);
 
     // Upload to Supabase Storage (overwrites existing file)
-    const { error: uploadError } = await supabase.storage.from(PROFILE_BUCKET).upload(profilePath, blob, {
-      upsert: true, // Overwrite existing file
-      contentType: "image/png",
-      cacheControl: "3600", // Cache for 1 hour
-    });
+    const { error: uploadError } = await supabase.storage
+      .from(PROFILE_BUCKET)
+      .upload(profilePath, blob, {
+        upsert: true, // Overwrite existing file
+        contentType: "image/png",
+        cacheControl: "3600", // Cache for 1 hour
+      });
 
     if (uploadError) {
       throw uploadError;
@@ -163,17 +179,31 @@ export async function uploadAvatarToStorage(userId: string, blob: Blob): Promise
  * @param userId User ID
  * @returns Metadata or null if not found
  */
-export async function getProfilePictureMetadata(userId: string): Promise<ProfilePictureMetadata | null> {
+export async function getProfilePictureMetadata(
+  userId: string,
+): Promise<ProfilePictureMetadata | null> {
   try {
-    const { data, error } = await supabase.from("profile_picture_metadata").select("*").eq("user_id", userId).maybeSingle();
+    const { data, error } = await supabase
+      .from("profile_picture_metadata")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
 
     if (error) {
       // If table doesn't exist, that's expected before migration runs
-      if (error.code === "PGRST116" || error.message?.includes("does not exist")) {
-        console.debug("[Avatar Sync] Metadata table not found - migration may not be applied yet");
+      if (
+        error.code === "PGRST116" ||
+        error.message?.includes("does not exist")
+      ) {
+        console.debug(
+          "[Avatar Sync] Metadata table not found - migration may not be applied yet",
+        );
         return null;
       }
-      console.error("[Avatar Sync] Failed to fetch profile picture metadata:", error);
+      console.error(
+        "[Avatar Sync] Failed to fetch profile picture metadata:",
+        error,
+      );
       return null;
     }
 
@@ -191,7 +221,9 @@ export async function getProfilePictureMetadata(userId: string): Promise<Profile
  */
 export async function updateProfilePictureMetadata(
   userId: string,
-  data: Partial<Omit<ProfilePictureMetadata, "user_id" | "created_at" | "updated_at">>,
+  data: Partial<
+    Omit<ProfilePictureMetadata, "user_id" | "created_at" | "updated_at">
+  >,
 ): Promise<void> {
   try {
     const { error } = await supabase.from("profile_picture_metadata").upsert(
@@ -206,8 +238,13 @@ export async function updateProfilePictureMetadata(
 
     if (error) {
       // If table doesn't exist, log but don't crash
-      if (error.code === "PGRST116" || error.message?.includes("does not exist")) {
-        console.warn("[Avatar Sync] Cannot update metadata - table does not exist. Run migration first.");
+      if (
+        error.code === "PGRST116" ||
+        error.message?.includes("does not exist")
+      ) {
+        console.warn(
+          "[Avatar Sync] Cannot update metadata - table does not exist. Run migration first.",
+        );
         return; // Don't throw, allow feature to work without metadata tracking
       }
       throw error;
@@ -238,12 +275,16 @@ export async function syncOAuthAvatar(user: User): Promise<boolean> {
     // 0. Check client-side session cache first (prevent repeated attempts)
     const cached = sessionSyncCache.get(cacheKey);
     if (cached) {
-      const minutesSinceLastAttempt = (Date.now() - cached.timestamp) / (1000 * 60);
+      const minutesSinceLastAttempt =
+        (Date.now() - cached.timestamp) / (1000 * 60);
       if (minutesSinceLastAttempt < 60) {
-        console.debug("[Avatar Sync] Skipping sync - already attempted in this session:", {
-          minutesAgo: minutesSinceLastAttempt.toFixed(1),
-          lastSuccess: cached.success,
-        });
+        console.debug(
+          "[Avatar Sync] Skipping sync - already attempted in this session:",
+          {
+            minutesAgo: minutesSinceLastAttempt.toFixed(1),
+            lastSuccess: cached.success,
+          },
+        );
         return cached.success;
       }
     }
@@ -255,11 +296,15 @@ export async function syncOAuthAvatar(user: User): Promise<boolean> {
       userId: user.id,
       email: user.email,
       hasUserMetadata: !!user.user_metadata,
-      userMetadataKeys: user.user_metadata ? Object.keys(user.user_metadata) : [],
+      userMetadataKeys: user.user_metadata
+        ? Object.keys(user.user_metadata)
+        : [],
     });
 
     if (!provider || !["google", "github", "azure"].includes(provider)) {
-      console.debug("[Avatar Sync] Skipping sync - not an OAuth provider with avatar support");
+      console.debug(
+        "[Avatar Sync] Skipping sync - not an OAuth provider with avatar support",
+      );
       sessionSyncCache.set(cacheKey, { timestamp: Date.now(), success: false });
       return false;
     }
@@ -277,13 +322,17 @@ export async function syncOAuthAvatar(user: User): Promise<boolean> {
     // Skip if synced recently (within SYNC_INTERVAL_DAYS)
     if (metadata?.last_synced_at) {
       const lastSync = new Date(metadata.last_synced_at);
-      const daysSinceSync = (Date.now() - lastSync.getTime()) / (1000 * 60 * 60 * 24);
+      const daysSinceSync =
+        (Date.now() - lastSync.getTime()) / (1000 * 60 * 60 * 24);
       if (daysSinceSync < SYNC_INTERVAL_DAYS) {
         console.debug("[Avatar Sync] Skipping sync - synced recently:", {
           daysSinceSync: daysSinceSync.toFixed(1),
           threshold: SYNC_INTERVAL_DAYS,
         });
-        sessionSyncCache.set(cacheKey, { timestamp: Date.now(), success: true });
+        sessionSyncCache.set(cacheKey, {
+          timestamp: Date.now(),
+          success: true,
+        });
         return false;
       }
     }
@@ -302,7 +351,12 @@ export async function syncOAuthAvatar(user: User): Promise<boolean> {
       return false;
     }
 
-    console.debug("[Avatar Sync] Starting sync for provider:", provider, "with URL:", avatarUrl);
+    console.debug(
+      "[Avatar Sync] Starting sync for provider:",
+      provider,
+      "with URL:",
+      avatarUrl,
+    );
 
     // 4. Download and optimize avatar
     const optimizedBlob = await downloadAndOptimizeAvatar(avatarUrl);

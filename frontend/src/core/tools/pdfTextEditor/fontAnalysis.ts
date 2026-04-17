@@ -1,6 +1,14 @@
-import { PdfJsonDocument, PdfJsonFont } from "@app/tools/pdfTextEditor/pdfTextEditorTypes";
+import {
+  PdfJsonDocument,
+  PdfJsonFont,
+} from "@app/tools/pdfTextEditor/pdfTextEditorTypes";
 
-export type FontStatus = "perfect" | "embedded-subset" | "system-fallback" | "missing" | "unknown";
+export type FontStatus =
+  | "perfect"
+  | "embedded-subset"
+  | "system-fallback"
+  | "missing"
+  | "unknown";
 
 export interface FontAnalysis {
   fontId: string;
@@ -124,7 +132,9 @@ const hasBackendFallbackFont = (font: PdfJsonFont): boolean => {
  * Extracts the base font name from a subset font name
  * e.g., "ABCDEF+Arial" -> "Arial"
  */
-const extractBaseFontName = (baseName: string | null | undefined): string | null => {
+const extractBaseFontName = (
+  baseName: string | null | undefined,
+): string | null => {
   if (!baseName) return null;
   const match = baseName.match(/^[A-Z]{6}\+(.+)$/);
   return match ? match[1] : baseName;
@@ -134,7 +144,10 @@ const extractBaseFontName = (baseName: string | null | undefined): string | null
  * Analyzes a single font to determine if it can be reproduced perfectly
  * Takes allFonts to check if full versions of subset fonts are available
  */
-export const analyzeFontReproduction = (font: PdfJsonFont, allFonts?: PdfJsonFont[]): FontAnalysis => {
+export const analyzeFontReproduction = (
+  font: PdfJsonFont,
+  allFonts?: PdfJsonFont[],
+): FontAnalysis => {
   const fontId = font.id || font.uid || "unknown";
   const baseName = font.baseName || "Unknown Font";
   const isSubset = isSubsetFont(font.baseName);
@@ -166,8 +179,13 @@ export const analyzeFontReproduction = (font: PdfJsonFont, allFonts?: PdfJsonFon
       hasFullFontVersion = allFonts.some((f) => {
         const otherBaseName = extractBaseFontName(f.baseName);
         const isNotSubset = !isSubsetFont(f.baseName);
-        const hasFormat = !!(f.webProgramFormat || f.pdfProgramFormat || f.programFormat);
-        const sameBase = otherBaseName?.toLowerCase() === baseFont.toLowerCase();
+        const hasFormat = !!(
+          f.webProgramFormat ||
+          f.pdfProgramFormat ||
+          f.programFormat
+        );
+        const sameBase =
+          otherBaseName?.toLowerCase() === baseFont.toLowerCase();
         return sameBase && isNotSubset && hasFormat && (f.embedded ?? false);
       });
     }
@@ -177,49 +195,82 @@ export const analyzeFontReproduction = (font: PdfJsonFont, allFonts?: PdfJsonFon
   if (isStandard14) {
     // Standard 14 fonts are always available in PDF readers - perfect for export!
     status = "perfect";
-    suggestions.push("Standard PDF font (Times, Helvetica, or Courier). Always available in PDF readers.");
-    suggestions.push("Exported PDFs will render consistently across all PDF readers.");
+    suggestions.push(
+      "Standard PDF font (Times, Helvetica, or Courier). Always available in PDF readers.",
+    );
+    suggestions.push(
+      "Exported PDFs will render consistently across all PDF readers.",
+    );
   } else if (embedded && !isSubset) {
     // Perfect: Fully embedded with complete character set
     status = "perfect";
-    suggestions.push("Font is fully embedded. Exported PDFs will reproduce text perfectly, even with edits.");
-  } else if (embedded && isSubset && (hasFullFontVersion || hasBackendFallback)) {
+    suggestions.push(
+      "Font is fully embedded. Exported PDFs will reproduce text perfectly, even with edits.",
+    );
+  } else if (
+    embedded &&
+    isSubset &&
+    (hasFullFontVersion || hasBackendFallback)
+  ) {
     // Subset but we have the full font or backend fallback - perfect!
     status = "perfect";
     if (hasFullFontVersion) {
-      suggestions.push("Full font version is also available in the document. Exported PDFs can reproduce all characters.");
+      suggestions.push(
+        "Full font version is also available in the document. Exported PDFs can reproduce all characters.",
+      );
     } else if (hasBackendFallback) {
-      suggestions.push("Backend has the full font available. Exported PDFs can reproduce all characters, including new text.");
+      suggestions.push(
+        "Backend has the full font available. Exported PDFs can reproduce all characters, including new text.",
+      );
     }
   } else if (embedded && isSubset) {
     // Good, but subset: May have missing characters if user adds new text
     status = "embedded-subset";
-    warnings.push("This is a subset font - only specific characters are embedded in the PDF.");
-    warnings.push("Exported PDFs may have missing characters if you add new text with this font.");
-    suggestions.push("Existing text will export correctly. New characters may render as boxes (☐) or fallback glyphs.");
+    warnings.push(
+      "This is a subset font - only specific characters are embedded in the PDF.",
+    );
+    warnings.push(
+      "Exported PDFs may have missing characters if you add new text with this font.",
+    );
+    suggestions.push(
+      "Existing text will export correctly. New characters may render as boxes (☐) or fallback glyphs.",
+    );
   } else if (!embedded && hasBackendFallback) {
     // Not embedded, but backend has it - perfect for export!
     status = "perfect";
-    suggestions.push("Backend has this font available. Exported PDFs will use the backend fallback font.");
+    suggestions.push(
+      "Backend has this font available. Exported PDFs will use the backend fallback font.",
+    );
     suggestions.push("Text will export correctly with consistent appearance.");
   } else if (!embedded) {
     // Not embedded - must rely on system fonts (risky for export)
     status = "missing";
     warnings.push("Font is not embedded in the PDF.");
-    warnings.push("Exported PDFs will substitute with a fallback font, which may look very different.");
-    suggestions.push("Consider re-embedding fonts or accepting that the exported PDF will use fallback fonts.");
+    warnings.push(
+      "Exported PDFs will substitute with a fallback font, which may look very different.",
+    );
+    suggestions.push(
+      "Consider re-embedding fonts or accepting that the exported PDF will use fallback fonts.",
+    );
   } else if (embedded && !hasWebFormat) {
     // Embedded but no web format available (still okay for export)
     status = "perfect";
-    suggestions.push("Font is embedded in the PDF. Exported PDFs will reproduce correctly.");
-    suggestions.push("Web preview may use a fallback font, but the final PDF export will be accurate.");
+    suggestions.push(
+      "Font is embedded in the PDF. Exported PDFs will reproduce correctly.",
+    );
+    suggestions.push(
+      "Web preview may use a fallback font, but the final PDF export will be accurate.",
+    );
   }
 
   // Additional warnings based on font properties
   if (font.subtype === "Type0" && font.cidSystemInfo) {
     const registry = font.cidSystemInfo.registry || "";
     const ordering = font.cidSystemInfo.ordering || "";
-    if (registry.includes("Adobe") && (ordering.includes("Identity") || ordering.includes("UCS"))) {
+    if (
+      registry.includes("Adobe") &&
+      (ordering.includes("Identity") || ordering.includes("UCS"))
+    ) {
       // CID fonts with Identity encoding are common for Asian languages
       if (!embedded || !hasWebFormat) {
         warnings.push("This CID font may contain Asian or Unicode characters.");
@@ -227,7 +278,11 @@ export const analyzeFontReproduction = (font: PdfJsonFont, allFonts?: PdfJsonFon
     }
   }
 
-  if (font.encoding && !font.encoding.includes("WinAnsiEncoding") && !font.encoding.includes("MacRomanEncoding")) {
+  if (
+    font.encoding &&
+    !font.encoding.includes("WinAnsiEncoding") &&
+    !font.encoding.includes("MacRomanEncoding")
+  ) {
     // Custom encodings may cause issues
     if (font.encoding !== "Identity-H" && font.encoding !== "Identity-V") {
       warnings.push(`Custom encoding detected: ${font.encoding}`);
@@ -253,8 +308,16 @@ export const analyzeFontReproduction = (font: PdfJsonFont, allFonts?: PdfJsonFon
 /**
  * Gets fonts used on a specific page
  */
-export const getFontsForPage = (document: PdfJsonDocument | null, pageIndex: number): PdfJsonFont[] => {
-  if (!document?.fonts || !document?.pages || pageIndex < 0 || pageIndex >= document.pages.length) {
+export const getFontsForPage = (
+  document: PdfJsonDocument | null,
+  pageIndex: number,
+): PdfJsonFont[] => {
+  if (
+    !document?.fonts ||
+    !document?.pages ||
+    pageIndex < 0 ||
+    pageIndex >= document.pages.length
+  ) {
     return [];
   }
 
@@ -272,7 +335,9 @@ export const getFontsForPage = (document: PdfJsonDocument | null, pageIndex: num
   });
 
   // Filter fonts to only those used on this page
-  const allFonts = document.fonts.filter((font): font is PdfJsonFont => font !== null && font !== undefined);
+  const allFonts = document.fonts.filter(
+    (font): font is PdfJsonFont => font !== null && font !== undefined,
+  );
 
   const fontsOnPage = allFonts.filter((font) => {
     // Match by ID
@@ -296,7 +361,11 @@ export const getFontsForPage = (document: PdfJsonDocument | null, pageIndex: num
   // Deduplicate by base font name to avoid showing the same font multiple times
   const uniqueFonts = new Map<string, PdfJsonFont>();
   fontsOnPage.forEach((font) => {
-    const baseName = extractBaseFontName(font.baseName) || font.baseName || font.id || "unknown";
+    const baseName =
+      extractBaseFontName(font.baseName) ||
+      font.baseName ||
+      font.id ||
+      "unknown";
     const key = baseName.toLowerCase();
 
     // Keep the first occurrence, or prefer non-subset over subset
@@ -319,7 +388,10 @@ export const getFontsForPage = (document: PdfJsonDocument | null, pageIndex: num
 /**
  * Analyzes all fonts in a PDF document (or just fonts for a specific page)
  */
-export const analyzeDocumentFonts = (document: PdfJsonDocument | null, pageIndex?: number): DocumentFontAnalysis => {
+export const analyzeDocumentFonts = (
+  document: PdfJsonDocument | null,
+  pageIndex?: number,
+): DocumentFontAnalysis => {
   if (!document?.fonts || document.fonts.length === 0) {
     return {
       fonts: [],
@@ -335,10 +407,13 @@ export const analyzeDocumentFonts = (document: PdfJsonDocument | null, pageIndex
     };
   }
 
-  const allFonts = document.fonts.filter((font): font is PdfJsonFont => font !== null && font !== undefined);
+  const allFonts = document.fonts.filter(
+    (font): font is PdfJsonFont => font !== null && font !== undefined,
+  );
 
   // Filter to page-specific fonts if pageIndex is provided
-  const fontsToAnalyze = pageIndex !== undefined ? getFontsForPage(document, pageIndex) : allFonts;
+  const fontsToAnalyze =
+    pageIndex !== undefined ? getFontsForPage(document, pageIndex) : allFonts;
 
   if (fontsToAnalyze.length === 0) {
     return {
@@ -355,23 +430,33 @@ export const analyzeDocumentFonts = (document: PdfJsonDocument | null, pageIndex
     };
   }
 
-  const fontAnalyses = fontsToAnalyze.map((font) => analyzeFontReproduction(font, allFonts));
+  const fontAnalyses = fontsToAnalyze.map((font) =>
+    analyzeFontReproduction(font, allFonts),
+  );
 
   // Calculate summary
   const summary = {
     perfect: fontAnalyses.filter((f) => f.status === "perfect").length,
-    embeddedSubset: fontAnalyses.filter((f) => f.status === "embedded-subset").length,
-    systemFallback: fontAnalyses.filter((f) => f.status === "system-fallback").length,
+    embeddedSubset: fontAnalyses.filter((f) => f.status === "embedded-subset")
+      .length,
+    systemFallback: fontAnalyses.filter((f) => f.status === "system-fallback")
+      .length,
     missing: fontAnalyses.filter((f) => f.status === "missing").length,
     unknown: fontAnalyses.filter((f) => f.status === "unknown").length,
   };
 
   // Can reproduce perfectly ONLY if all fonts are truly perfect (not subsets)
-  const canReproducePerfectly = fontAnalyses.every((f) => f.status === "perfect");
+  const canReproducePerfectly = fontAnalyses.every(
+    (f) => f.status === "perfect",
+  );
 
   // Has warnings if any font has issues (including subsets)
   const hasWarnings = fontAnalyses.some(
-    (f) => f.warnings.length > 0 || f.status === "missing" || f.status === "system-fallback" || f.status === "embedded-subset",
+    (f) =>
+      f.warnings.length > 0 ||
+      f.status === "missing" ||
+      f.status === "system-fallback" ||
+      f.status === "embedded-subset",
   );
 
   return {

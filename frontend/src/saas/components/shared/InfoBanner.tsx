@@ -100,8 +100,19 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
         alignItems: "center",
       }}
     >
-      <Group gap="sm" align="center" wrap="nowrap" justify="space-between" style={{ width: "100%" }}>
-        <Group gap="sm" align="center" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+      <Group
+        gap="sm"
+        align="center"
+        wrap="nowrap"
+        justify="space-between"
+        style={{ width: "100%" }}
+      >
+        <Group
+          gap="sm"
+          align="center"
+          wrap="nowrap"
+          style={{ flex: 1, minWidth: 0 }}
+        >
           {icon &&
             (typeof icon === "string" ? (
               <LocalIcon
@@ -111,15 +122,28 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
                 style={{ color: iconColor ?? toneStyle.icon, flexShrink: 0 }}
               />
             ) : (
-              <div style={{ flexShrink: 0, display: "flex", alignItems: "center" }}>{icon}</div>
+              <div
+                style={{ flexShrink: 0, display: "flex", alignItems: "center" }}
+              >
+                {icon}
+              </div>
             ))}
           <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
             {title && (
-              <Text fw={600} size="sm" style={{ color: textColor ?? toneStyle.text }}>
+              <Text
+                fw={600}
+                size="sm"
+                style={{ color: textColor ?? toneStyle.text }}
+              >
                 {title}
               </Text>
             )}
-            <Text fw={title ? 400 : 500} size="sm" style={{ color: textColor ?? toneStyle.text }} lineClamp={2}>
+            <Text
+              fw={title ? 400 : 500}
+              size="sm"
+              style={{ color: textColor ?? toneStyle.text }}
+              lineClamp={2}
+            >
               {message}
             </Text>
           </Stack>
@@ -132,7 +156,9 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
               size="xs"
               onClick={onButtonClick}
               loading={loading}
-              leftSection={<LocalIcon icon={buttonIcon} width="0.9rem" height="0.9rem" />}
+              leftSection={
+                <LocalIcon icon={buttonIcon} width="0.9rem" height="0.9rem" />
+              }
               styles={
                 buttonTextColor
                   ? {

@@ -2,7 +2,10 @@ import React from "react";
 import { Stack, Text, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { loadStripe } from "@stripe/stripe-js";
-import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
+import {
+  EmbeddedCheckoutProvider,
+  EmbeddedCheckout,
+} from "@stripe/react-stripe-js";
 import { PlanTier } from "@app/services/licenseService";
 
 // Load Stripe once
@@ -15,7 +18,11 @@ interface PaymentStageProps {
   onPaymentComplete: () => void;
 }
 
-export const PaymentStage: React.FC<PaymentStageProps> = ({ clientSecret, selectedPlan, onPaymentComplete }) => {
+export const PaymentStage: React.FC<PaymentStageProps> = ({
+  clientSecret,
+  selectedPlan,
+  onPaymentComplete,
+}) => {
   const { t } = useTranslation();
 
   // Show loading while creating checkout session

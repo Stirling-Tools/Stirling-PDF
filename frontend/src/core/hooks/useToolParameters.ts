@@ -23,8 +23,14 @@ export function useToolParameters(
 /**
  * Hook for managing a single tool parameter
  */
-export function useToolParameter<T = any>(toolName: string, paramName: string, definition: any): [T, (value: T) => void] {
-  const [allParams, updateParams] = useToolParameters(toolName, { [paramName]: definition });
+export function useToolParameter<T = any>(
+  toolName: string,
+  paramName: string,
+  definition: any,
+): [T, (value: T) => void] {
+  const [allParams, updateParams] = useToolParameters(toolName, {
+    [paramName]: definition,
+  });
 
   const value = allParams[paramName] as T;
 

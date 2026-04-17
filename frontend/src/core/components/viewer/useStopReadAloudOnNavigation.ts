@@ -6,7 +6,10 @@ import { useViewer } from "@app/contexts/ViewerContext";
  * Hook that automatically stops read-aloud when navigating away from the viewer.
  * Monitors: workbench changes and active file changes.
  */
-export function useStopReadAloudOnNavigation(isReadingAloud: boolean, onStop: () => void) {
+export function useStopReadAloudOnNavigation(
+  isReadingAloud: boolean,
+  onStop: () => void,
+) {
   const { workbench } = useNavigationState();
   const viewer = useViewer();
 
@@ -25,7 +28,10 @@ export function useStopReadAloudOnNavigation(isReadingAloud: boolean, onStop: ()
     }
 
     // Stop on active file change
-    if (isReadingAloud && previousStateRef.current.activeFileIndex !== viewer.activeFileIndex) {
+    if (
+      isReadingAloud &&
+      previousStateRef.current.activeFileIndex !== viewer.activeFileIndex
+    ) {
       onStop();
       previousStateRef.current.activeFileIndex = viewer.activeFileIndex;
       return;

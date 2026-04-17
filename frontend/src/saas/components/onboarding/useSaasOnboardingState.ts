@@ -24,7 +24,10 @@ interface UseSaasOnboardingStateProps {
   onClose: () => void;
 }
 
-export function useSaasOnboardingState({ opened, onClose }: UseSaasOnboardingStateProps): UseSaasOnboardingStateResult | null {
+export function useSaasOnboardingState({
+  opened,
+  onClose,
+}: UseSaasOnboardingStateProps): UseSaasOnboardingStateResult | null {
   const { trialStatus, isPro, loading } = useAuth();
   const osType = useOs();
   const selectedDownloadUrlRef = useRef<string>("");
@@ -44,7 +47,10 @@ export function useSaasOnboardingState({ opened, onClose }: UseSaasOnboardingSta
       case "windows":
         return { label: "Windows", url: DOWNLOAD_URLS.WINDOWS };
       case "mac-apple":
-        return { label: "Mac (Apple Silicon)", url: DOWNLOAD_URLS.MAC_APPLE_SILICON };
+        return {
+          label: "Mac (Apple Silicon)",
+          url: DOWNLOAD_URLS.MAC_APPLE_SILICON,
+        };
       case "mac-intel":
         return { label: "Mac (Intel)", url: DOWNLOAD_URLS.MAC_INTEL };
       case "linux-x64":
@@ -58,8 +64,16 @@ export function useSaasOnboardingState({ opened, onClose }: UseSaasOnboardingSta
   const osOptions = useMemo(() => {
     const options = [
       { label: "Windows", url: DOWNLOAD_URLS.WINDOWS, value: "windows" },
-      { label: "Mac (Apple Silicon)", url: DOWNLOAD_URLS.MAC_APPLE_SILICON, value: "mac-apple" },
-      { label: "Mac (Intel)", url: DOWNLOAD_URLS.MAC_INTEL, value: "mac-intel" },
+      {
+        label: "Mac (Apple Silicon)",
+        url: DOWNLOAD_URLS.MAC_APPLE_SILICON,
+        value: "mac-apple",
+      },
+      {
+        label: "Mac (Intel)",
+        url: DOWNLOAD_URLS.MAC_INTEL,
+        value: "mac-intel",
+      },
       { label: "Linux", url: DOWNLOAD_URLS.LINUX_DOCS, value: "linux" },
     ];
     return options.filter((opt) => opt.url);
@@ -71,7 +85,10 @@ export function useSaasOnboardingState({ opened, onClose }: UseSaasOnboardingSta
   }, []);
 
   // Resolve flow based on trial status
-  const resolvedFlow = useMemo(() => resolveSaasFlow(trialStatus, isPro), [trialStatus, isPro]);
+  const resolvedFlow = useMemo(
+    () => resolveSaasFlow(trialStatus, isPro),
+    [trialStatus, isPro],
+  );
 
   const flowSlideIds = resolvedFlow.ids;
   const totalSteps = flowSlideIds.length;
@@ -84,7 +101,8 @@ export function useSaasOnboardingState({ opened, onClose }: UseSaasOnboardingSta
     }
   }, [flowSlideIds.length, currentStep]);
 
-  const currentSlideId = flowSlideIds[currentStep] ?? flowSlideIds[flowSlideIds.length - 1];
+  const currentSlideId =
+    flowSlideIds[currentStep] ?? flowSlideIds[flowSlideIds.length - 1];
   const slideDefinition = SLIDE_DEFINITIONS[currentSlideId];
 
   // Create slide with appropriate params - must be called before any early returns
@@ -97,7 +115,14 @@ export function useSaasOnboardingState({ opened, onClose }: UseSaasOnboardingSta
       onDownloadUrlChange: handleDownloadUrlChange,
       trialStatus: trialStatus ?? undefined,
     });
-  }, [slideDefinition, os.label, os.url, osOptions, handleDownloadUrlChange, trialStatus]);
+  }, [
+    slideDefinition,
+    os.label,
+    os.url,
+    osOptions,
+    handleDownloadUrlChange,
+    trialStatus,
+  ]);
 
   // Navigation functions
   const goNext = useCallback(() => {

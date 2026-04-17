@@ -19,7 +19,9 @@ export class DocumentManipulationService {
     const baseDocument = currentDisplayOrder || pdfDocument;
 
     // Apply DOM changes to each page (rotation only now, splits are position-based)
-    let updatedPages = baseDocument.pages.map((page) => this.applyPageChanges(page));
+    let updatedPages = baseDocument.pages.map((page) =>
+      this.applyPageChanges(page),
+    );
 
     // Convert position-based splits to page-based splits for export
     const resolvedSplitIndexes =
@@ -70,7 +72,10 @@ export class DocumentManipulationService {
     });
 
     // Add end point if not already there
-    if (splitPoints.length === 0 || splitPoints[splitPoints.length - 1] !== document.pages.length) {
+    if (
+      splitPoints.length === 0 ||
+      splitPoints[splitPoints.length - 1] !== document.pages.length
+    ) {
       splitPoints.push(document.pages.length);
     }
 
@@ -118,16 +123,24 @@ export class DocumentManipulationService {
   /**
    * Read rotation from DOM element
    */
-  private getRotationFromDOM(pageElement: Element, originalPage: PDFPage): number {
+  private getRotationFromDOM(
+    pageElement: Element,
+    originalPage: PDFPage,
+  ): number {
     const img = pageElement.querySelector("img");
     if (img) {
-      const originalRotation = parseInt(img.getAttribute("data-original-rotation") || "0");
+      const originalRotation = parseInt(
+        img.getAttribute("data-original-rotation") || "0",
+      );
 
       const currentTransform = img.style.transform || "";
       const rotationMatch = currentTransform.match(/rotate\((-?\d+)deg\)/);
-      const visualRotation = rotationMatch ? parseInt(rotationMatch[1]) : originalRotation;
+      const visualRotation = rotationMatch
+        ? parseInt(rotationMatch[1])
+        : originalRotation;
 
-      const userChange = (((visualRotation - originalRotation) % 360) + 360) % 360;
+      const userChange =
+        (((visualRotation - originalRotation) % 360) + 360) % 360;
 
       let finalRotation = (originalPage.rotation + userChange) % 360;
       if (finalRotation === 360) finalRotation = 0;
@@ -142,7 +155,9 @@ export class DocumentManipulationService {
    * Reset all DOM changes (useful for "discard changes" functionality)
    */
   resetDOMToDocumentState(pdfDocument: PDFDocument): void {
-    console.log("DocumentManipulationService: Resetting DOM to match document state");
+    console.log(
+      "DocumentManipulationService: Resetting DOM to match document state",
+    );
 
     pdfDocument.pages.forEach((page) => {
       const pageElement = document.querySelector(`[data-page-id="${page.id}"]`);

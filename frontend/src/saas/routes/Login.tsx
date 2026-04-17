@@ -48,9 +48,15 @@ export default function Login() {
   // Set document meta
   useDocumentMeta({
     title: `${t("login.title", "Sign in")} - Stirling PDF`,
-    description: t("app.description", "The Free Adobe Acrobat alternative (10M+ Downloads)"),
+    description: t(
+      "app.description",
+      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+    ),
     ogTitle: `${t("login.title", "Sign in")} - Stirling PDF`,
-    ogDescription: t("app.description", "The Free Adobe Acrobat alternative (10M+ Downloads)"),
+    ogDescription: t(
+      "app.description",
+      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+    ),
     ogImage: `${baseUrl}/og_images/home.png`,
     ogUrl: `${window.location.origin}${window.location.pathname}`,
   });
@@ -60,7 +66,9 @@ export default function Login() {
     return <LoggedInState />;
   }
 
-  const signInWithProvider = async (provider: "github" | "google" | "apple" | "azure") => {
+  const signInWithProvider = async (
+    provider: "github" | "google" | "apple" | "azure",
+  ) => {
     try {
       setIsSigningIn(true);
       setError(null);
@@ -68,7 +76,10 @@ export default function Login() {
       const redirectTo = absoluteWithBasePath("/auth/callback");
       console.log(`[Login] Signing in with ${provider}`);
 
-      const oauthOptions: { redirectTo: string; queryParams?: Record<string, string> } = { redirectTo };
+      const oauthOptions: {
+        redirectTo: string;
+        queryParams?: Record<string, string>;
+      } = { redirectTo };
       if (provider === "apple") {
         oauthOptions.queryParams = { scope: "email name" };
       } else if (provider === "azure") {
@@ -87,11 +98,17 @@ export default function Login() {
 
       if (error) {
         console.error(`[Login] ${provider} error:`, error);
-        setError(t("login.failedToSignIn", { provider, message: error.message }));
+        setError(
+          t("login.failedToSignIn", { provider, message: error.message }),
+        );
       }
     } catch (err) {
       console.error(`[Login] Unexpected error:`, err);
-      setError(t("login.unexpectedError", { message: err instanceof Error ? err.message : "Unknown error" }));
+      setError(
+        t("login.unexpectedError", {
+          message: err instanceof Error ? err.message : "Unknown error",
+        }),
+      );
     } finally {
       setIsSigningIn(false);
     }
@@ -123,7 +140,11 @@ export default function Login() {
       }
     } catch (err) {
       console.error("[Login] Unexpected error]:", err);
-      setError(t("login.unexpectedError", { message: err instanceof Error ? err.message : "Unknown error" }));
+      setError(
+        t("login.unexpectedError", {
+          message: err instanceof Error ? err.message : "Unknown error",
+        }),
+      );
     } finally {
       setIsSigningIn(false);
     }
@@ -159,7 +180,11 @@ export default function Login() {
       }
     } catch (err) {
       console.error("[Login] Unexpected error:", err);
-      setError(t("login.unexpectedError", { message: err instanceof Error ? err.message : "Unknown error" }));
+      setError(
+        t("login.unexpectedError", {
+          message: err instanceof Error ? err.message : "Unknown error",
+        }),
+      );
     } finally {
       setIsSigningIn(false);
     }
@@ -178,17 +203,25 @@ export default function Login() {
       const { data } = await signInAnonymously();
 
       if (data.user) {
-        console.log("[Login] Anonymous sign in successful, refreshing session...");
+        console.log(
+          "[Login] Anonymous sign in successful, refreshing session...",
+        );
 
         // Refresh session to ensure backend endpoints are properly synchronized
         await refreshSession();
 
-        console.log("[Login] Session refreshed, user will be redirected by auth state change");
+        console.log(
+          "[Login] Session refreshed, user will be redirected by auth state change",
+        );
         // User will be redirected by the auth state change after session refresh
       }
     } catch (err) {
       console.error("[Login] Unexpected error:", err);
-      setError(t("login.unexpectedError", { message: err instanceof Error ? err.message : "Unknown error" }));
+      setError(
+        t("login.unexpectedError", {
+          message: err instanceof Error ? err.message : "Unknown error",
+        }),
+      );
     } finally {
       setIsSigningIn(false);
     }
@@ -196,15 +229,26 @@ export default function Login() {
 
   return (
     <AuthLayout isEmailFormExpanded={showEmailForm}>
-      <LoginHeader title={t("login.login")} subtitle={t("login.subtitle", "Sign back in to Stirling PDF")} />
+      <LoginHeader
+        title={t("login.login")}
+        subtitle={t("login.subtitle", "Sign back in to Stirling PDF")}
+      />
 
       <ErrorMessage error={error} />
 
       {/* OAuth first */}
-      <OAuthButtons onProviderClick={signInWithProvider} isSubmitting={isSigningIn} layout="fullwidth" />
+      <OAuthButtons
+        onProviderClick={signInWithProvider}
+        isSubmitting={isSigningIn}
+        layout="fullwidth"
+      />
 
       {/* Divider between OAuth and Email */}
-      <DividerWithText text={t("signup.or", "or")} respondsToDarkMode={false} opacity={0.4} />
+      <DividerWithText
+        text={t("signup.or", "or")}
+        respondsToDarkMode={false}
+        opacity={0.4}
+      />
 
       {/* Sign in with email button (primary color to match signup CTA) */}
       <div className="auth-section">
@@ -226,33 +270,55 @@ export default function Login() {
           setPassword={setPassword}
           onSubmit={signInWithEmail}
           isSubmitting={isSigningIn}
-          submitButtonText={isSigningIn ? t("login.loggingIn") : t("login.login")}
+          submitButtonText={
+            isSigningIn ? t("login.loggingIn") : t("login.login")
+          }
         />
       )}
 
       {showEmailForm && (
         <div className="auth-section-sm">
-          <button type="button" onClick={handleForgotPassword} className="auth-link-black">
+          <button
+            type="button"
+            onClick={handleForgotPassword}
+            className="auth-link-black"
+          >
             {t("login.forgotPassword", "Forgot your password?")}
           </button>
         </div>
       )}
 
       {/* Divider then Guest */}
-      <DividerWithText text={t("signup.or", "or")} respondsToDarkMode={false} opacity={0.4} />
+      <DividerWithText
+        text={t("signup.or", "or")}
+        respondsToDarkMode={false}
+        opacity={0.4}
+      />
 
       <GuestSignInButton
         onClick={handleAnonymousSignIn}
         disabled={isSigningIn}
-        label={isSigningIn ? t("login.signingIn", "Signing in...") : t("login.signInAnonymously", "Sign in as a Guest")}
+        label={
+          isSigningIn
+            ? t("login.signingIn", "Signing in...")
+            : t("login.signInAnonymously", "Sign in as a Guest")
+        }
       />
 
       <div className="auth-bottom-row">
-        <button type="button" onClick={() => setShowMagicLink(true)} className="auth-link-black">
+        <button
+          type="button"
+          onClick={() => setShowMagicLink(true)}
+          className="auth-link-black"
+        >
           {t("login.useMagicLink", "Sign in with magic link")}
         </button>
 
-        <button type="button" onClick={() => navigate("/signup")} className="auth-link-black">
+        <button
+          type="button"
+          onClick={() => navigate("/signup")}
+          className="auth-link-black"
+        >
           {t("signup.signUp", "Sign up")}
         </button>
       </div>

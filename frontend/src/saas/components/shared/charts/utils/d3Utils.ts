@@ -102,9 +102,19 @@ export function createRoundedRectPath(
   width: number,
   height: number,
   radius: number,
-  corners: { topLeft?: boolean; topRight?: boolean; bottomLeft?: boolean; bottomRight?: boolean } = {},
+  corners: {
+    topLeft?: boolean;
+    topRight?: boolean;
+    bottomLeft?: boolean;
+    bottomRight?: boolean;
+  } = {},
 ): string {
-  const { topLeft = true, topRight = true, bottomLeft = true, bottomRight = true } = corners;
+  const {
+    topLeft = true,
+    topRight = true,
+    bottomLeft = true,
+    bottomRight = true,
+  } = corners;
 
   if (width <= 0 || height <= 0) return "";
 
@@ -162,7 +172,10 @@ export function createScale(domain: [number, number], range: [number, number]) {
  * @param wait The wait time in milliseconds
  * @returns Debounced function
  */
-export function debounce<T extends (...args: unknown[]) => unknown>(func: T, wait: number): (...args: Parameters<T>) => void {
+export function debounce<T extends (...args: unknown[]) => unknown>(
+  func: T,
+  wait: number,
+): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout;
   return (...args: Parameters<T>) => {
     clearTimeout(timeout);

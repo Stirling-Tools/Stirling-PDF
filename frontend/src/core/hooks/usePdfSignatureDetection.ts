@@ -7,7 +7,9 @@ export interface PdfSignatureDetectionResult {
   isChecking: boolean;
 }
 
-export const usePdfSignatureDetection = (files: StirlingFile[]): PdfSignatureDetectionResult => {
+export const usePdfSignatureDetection = (
+  files: StirlingFile[],
+): PdfSignatureDetectionResult => {
   const [hasDigitalSignatures, setHasDigitalSignatures] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
 
@@ -30,10 +32,15 @@ export const usePdfSignatureDetection = (files: StirlingFile[]): PdfSignatureDet
 
             for (let i = 1; i <= pdf.numPages; i++) {
               const page = await pdf.getPage(i);
-              const annotations = await page.getAnnotations({ intent: "display" });
+              const annotations = await page.getAnnotations({
+                intent: "display",
+              });
 
               annotations.forEach((annotation: any) => {
-                if (annotation.subtype === "Widget" && annotation.fieldType === "Sig") {
+                if (
+                  annotation.subtype === "Widget" &&
+                  annotation.fieldType === "Sig"
+                ) {
                   foundSignature = true;
                 }
               });

@@ -22,7 +22,9 @@ const ToolRegistryContext = createContext<ToolRegistryCatalog | null>(null);
 export const useToolRegistry = (): ToolRegistryCatalog => {
   const context = useContext(ToolRegistryContext);
   if (context === null) {
-    throw new Error("useToolRegistry must be used within a ToolRegistryProvider");
+    throw new Error(
+      "useToolRegistry must be used within a ToolRegistryProvider",
+    );
   }
   return context;
 };

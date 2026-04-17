@@ -21,7 +21,9 @@ export interface SidebarContextValue {
   sidebarState: SidebarState;
   sidebarRefs: SidebarRefs;
   setSidebarsVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  setLeftPanelView: React.Dispatch<React.SetStateAction<"toolPicker" | "toolContent">>;
+  setLeftPanelView: React.Dispatch<
+    React.SetStateAction<"toolPicker" | "toolContent">
+  >;
   setReaderMode: React.Dispatch<React.SetStateAction<boolean>>;
 }
 

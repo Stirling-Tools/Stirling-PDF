@@ -45,12 +45,20 @@ export default function TrialExpiredBootstrap() {
     }
 
     // Check if all conditions are met to show the modal
-    const isExpired = trialStatus.status === "incomplete_expired" || trialStatus.status === "canceled";
-    const hasNoPayment = !trialStatus.hasPaymentMethod && !trialStatus.hasScheduledSub;
+    const isExpired =
+      trialStatus.status === "incomplete_expired" ||
+      trialStatus.status === "canceled";
+    const hasNoPayment =
+      !trialStatus.hasPaymentMethod && !trialStatus.hasScheduledSub;
     const wasDowngraded = !isPro;
     const trialEndedRecently = trialStatus.daysRemaining === 0;
 
-    const shouldShowModal = isExpired && hasNoPayment && wasDowngraded && trialEndedRecently && !hasSeenModal;
+    const shouldShowModal =
+      isExpired &&
+      hasNoPayment &&
+      wasDowngraded &&
+      trialEndedRecently &&
+      !hasSeenModal;
 
     if (shouldShowModal) {
       console.debug("[TrialExpired] Showing trial expired modal", {
@@ -92,7 +100,11 @@ export default function TrialExpiredBootstrap() {
 
   return (
     <>
-      <TrialExpiredModal opened={showModal && !checkoutOpened} onClose={handleClose} onSubscribe={handleSubscribe} />
+      <TrialExpiredModal
+        opened={showModal && !checkoutOpened}
+        onClose={handleClose}
+        onSubscribe={handleSubscribe}
+      />
 
       {user && (
         <StripeCheckout
@@ -103,7 +115,9 @@ export default function TrialExpiredBootstrap() {
           creditsPack={null}
           planName="Pro"
           onSuccess={handleCheckoutSuccess}
-          onError={(error) => console.error("[TrialExpired] Checkout error:", error)}
+          onError={(error) =>
+            console.error("[TrialExpired] Checkout error:", error)
+          }
           isTrialConversion={false} // Trial already ended, so this is not a conversion
         />
       )}

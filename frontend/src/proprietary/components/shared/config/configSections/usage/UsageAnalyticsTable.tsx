@@ -1,5 +1,15 @@
 import React from "react";
-import { Card, Text, Stack, Table, TableThead, TableTbody, TableTr, TableTh, TableTd } from "@mantine/core";
+import {
+  Card,
+  Text,
+  Stack,
+  Table,
+  TableThead,
+  TableTbody,
+  TableTr,
+  TableTh,
+  TableTd,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { EndpointStatistic } from "@app/services/usageAnalyticsService";
 
@@ -30,16 +40,46 @@ const UsageAnalyticsTable: React.FC<UsageAnalyticsTableProps> = ({ data }) => {
         >
           <TableThead>
             <TableTr style={{ backgroundColor: "var(--mantine-color-gray-0)" }}>
-              <TableTh style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)" }} fz="sm" w="5%">
+              <TableTh
+                style={{
+                  fontWeight: 600,
+                  color: "var(--mantine-color-gray-7)",
+                }}
+                fz="sm"
+                w="5%"
+              >
                 #
               </TableTh>
-              <TableTh style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)" }} fz="sm" w="55%">
+              <TableTh
+                style={{
+                  fontWeight: 600,
+                  color: "var(--mantine-color-gray-7)",
+                }}
+                fz="sm"
+                w="55%"
+              >
                 {t("usage.table.endpoint", "Endpoint")}
               </TableTh>
-              <TableTh style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)" }} fz="sm" w="20%" ta="right">
+              <TableTh
+                style={{
+                  fontWeight: 600,
+                  color: "var(--mantine-color-gray-7)",
+                }}
+                fz="sm"
+                w="20%"
+                ta="right"
+              >
                 {t("usage.table.visits", "Visits")}
               </TableTh>
-              <TableTh style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)" }} fz="sm" w="20%" ta="right">
+              <TableTh
+                style={{
+                  fontWeight: 600,
+                  color: "var(--mantine-color-gray-7)",
+                }}
+                fz="sm"
+                w="20%"
+                ta="right"
+              >
                 {t("usage.table.percentage", "Percentage")}
               </TableTh>
             </TableTr>

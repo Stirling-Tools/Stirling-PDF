@@ -136,7 +136,9 @@ export class ZipFileService {
 
       return result;
     } catch (error) {
-      result.errors.push(`Failed to validate ZIP file: ${error instanceof Error ? error.message : "Unknown error"}`);
+      result.errors.push(
+        `Failed to validate ZIP file: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
       return result;
     }
   }
@@ -144,7 +146,10 @@ export class ZipFileService {
   /**
    * Create a ZIP file from an array of files
    */
-  async createZipFromFiles(files: File[], zipFilename: string): Promise<{ zipFile: File; size: number }> {
+  async createZipFromFiles(
+    files: File[],
+    zipFilename: string,
+  ): Promise<{ zipFile: File; size: number }> {
     try {
       const zip = new JSZip();
 
@@ -168,16 +173,22 @@ export class ZipFileService {
 
       return { zipFile, size: zipFile.size };
     } catch (error) {
-      throw new Error(`Failed to create ZIP file: ${error instanceof Error ? error.message : "Unknown error"}`, {
-        cause: error,
-      });
+      throw new Error(
+        `Failed to create ZIP file: ${error instanceof Error ? error.message : "Unknown error"}`,
+        {
+          cause: error,
+        },
+      );
     }
   }
 
   /**
    * Extract PDF files from a ZIP archive
    */
-  async extractPdfFiles(file: File, onProgress?: (progress: ZipExtractionProgress) => void): Promise<ZipExtractionResult> {
+  async extractPdfFiles(
+    file: File,
+    onProgress?: (progress: ZipExtractionProgress) => void,
+  ): Promise<ZipExtractionResult> {
     const result: ZipExtractionResult = {
       success: false,
       extractedFiles: [],
@@ -224,10 +235,14 @@ export class ZipFileService {
           const content = await zipEntry.async("uint8array");
 
           // Create File object
-          const extractedFile = new File([content as any], this.sanitizeFilename(filename), {
-            type: "application/pdf",
-            lastModified: zipEntry.date?.getTime() || Date.now(),
-          });
+          const extractedFile = new File(
+            [content as any],
+            this.sanitizeFilename(filename),
+            {
+              type: "application/pdf",
+              lastModified: zipEntry.date?.getTime() || Date.now(),
+            },
+          );
 
           // Validate extracted PDF
           if (await this.isValidPdfFile(extractedFile)) {
@@ -237,7 +252,9 @@ export class ZipFileService {
             result.errors.push(`File "${filename}" is not a valid PDF`);
           }
         } catch (error) {
-          result.errors.push(`Failed to extract "${filename}": ${error instanceof Error ? error.message : "Unknown error"}`);
+          result.errors.push(
+            `Failed to extract "${filename}": ${error instanceof Error ? error.message : "Unknown error"}`,
+          );
         }
       }
 
@@ -254,7 +271,9 @@ export class ZipFileService {
       result.success = result.extractedCount > 0;
       return result;
     } catch (error) {
-      result.errors.push(`Failed to extract ZIP file: ${error instanceof Error ? error.message : "Unknown error"}`);
+      result.errors.push(
+        `Failed to extract ZIP file: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
       return result;
     }
   }
@@ -264,7 +283,9 @@ export class ZipFileService {
    */
   public isZipFile(file: File): boolean {
     const hasValidType = ZipFileService.VALID_ZIP_TYPES.includes(file.type);
-    const hasValidExtension = ZipFileService.VALID_ZIP_EXTENSIONS.some((ext) => file.name.toLowerCase().endsWith(ext));
+    const hasValidExtension = ZipFileService.VALID_ZIP_EXTENSIONS.some((ext) =>
+      file.name.toLowerCase().endsWith(ext),
+    );
 
     return hasValidType || hasValidExtension;
   }
@@ -273,8 +294,11 @@ export class ZipFileService {
    * Check if a StirlingFileStub represents a ZIP file (for UI checks without loading full file)
    */
   public isZipFileStub(stub: StirlingFileStub): boolean {
-    const hasValidType = stub.type && ZipFileService.VALID_ZIP_TYPES.includes(stub.type);
-    const hasValidExtension = ZipFileService.VALID_ZIP_EXTENSIONS.some((ext) => stub.name.toLowerCase().endsWith(ext));
+    const hasValidType =
+      stub.type && ZipFileService.VALID_ZIP_TYPES.includes(stub.type);
+    const hasValidExtension = ZipFileService.VALID_ZIP_EXTENSIONS.some((ext) =>
+      stub.name.toLowerCase().endsWith(ext),
+    );
 
     return hasValidType || hasValidExtension;
   }
@@ -291,7 +315,11 @@ export class ZipFileService {
    */
   private isHtmlFile(filename: string): boolean {
     const lowerName = filename.toLowerCase();
-    return lowerName.endsWith(".html") || lowerName.endsWith(".htm") || lowerName.endsWith(".xhtml");
+    return (
+      lowerName.endsWith(".html") ||
+      lowerName.endsWith(".htm") ||
+      lowerName.endsWith(".xhtml")
+    );
   }
 
   /**
@@ -386,7 +414,9 @@ export class ZipFileService {
       if (skipAutoUnzip) {
         const zip = new JSZip();
         const zipContents = await zip.loadAsync(zipBlob);
-        const fileCount = Object.values(zipContents.files).filter((entry) => !entry.dir).length;
+        const fileCount = Object.values(zipContents.files).filter(
+          (entry) => !entry.dir,
+        ).length;
         return { shouldExtract: true, fileCount };
       }
 
@@ -400,7 +430,9 @@ export class ZipFileService {
       const zipContents = await zip.loadAsync(zipBlob);
 
       // Count non-directory entries
-      const fileCount = Object.values(zipContents.files).filter((entry) => !entry.dir).length;
+      const fileCount = Object.values(zipContents.files).filter(
+        (entry) => !entry.dir,
+      ).length;
 
       // Only extract if within limit
       return {
@@ -430,12 +462,18 @@ export class ZipFileService {
       autoUnzip: boolean;
       autoUnzipFileLimit: number;
       skipAutoUnzip?: boolean;
-      confirmLargeExtraction?: (fileCount: number, fileName: string) => Promise<boolean>;
+      confirmLargeExtraction?: (
+        fileCount: number,
+        fileName: string,
+      ) => Promise<boolean>;
     },
   ): Promise<File[]> {
     try {
       // Create File object if not already
-      const zipFile = zipBlob instanceof File ? zipBlob : new File([zipBlob], "result.zip", { type: "application/zip" });
+      const zipFile =
+        zipBlob instanceof File
+          ? zipBlob
+          : new File([zipBlob], "result.zip", { type: "application/zip" });
 
       // Check if ZIP contains HTML files - if so, keep as ZIP
       const containsHtml = await this.containsHtmlFiles(zipFile);
@@ -456,8 +494,14 @@ export class ZipFileService {
       }
 
       // Warn user if ZIP is large (fileCount already obtained from shouldUnzip)
-      if (fileCount > ZipFileService.ZIP_WARNING_THRESHOLD && options.confirmLargeExtraction) {
-        const userConfirmed = await options.confirmLargeExtraction(fileCount, zipFile.name);
+      if (
+        fileCount > ZipFileService.ZIP_WARNING_THRESHOLD &&
+        options.confirmLargeExtraction
+      ) {
+        const userConfirmed = await options.confirmLargeExtraction(
+          fileCount,
+          zipFile.name,
+        );
         if (!userConfirmed) {
           return [zipFile]; // User cancelled, keep ZIP as-is
         }
@@ -465,11 +509,16 @@ export class ZipFileService {
 
       // Extract all files
       const extractionResult = await this.extractAllFiles(zipFile);
-      return extractionResult.success ? extractionResult.extractedFiles : [zipFile];
+      return extractionResult.success
+        ? extractionResult.extractedFiles
+        : [zipFile];
     } catch (error) {
       console.error("Error in extractWithPreferences:", error);
       // On error, return ZIP as-is
-      const zipFile = zipBlob instanceof File ? zipBlob : new File([zipBlob], "result.zip", { type: "application/zip" });
+      const zipFile =
+        zipBlob instanceof File
+          ? zipBlob
+          : new File([zipBlob], "result.zip", { type: "application/zip" });
       return [zipFile];
     }
   }
@@ -495,7 +544,9 @@ export class ZipFileService {
       const zipContents = await zip.loadAsync(file);
 
       // Get all files (not directories)
-      const allFiles = Object.entries(zipContents.files).filter(([, zipEntry]) => !zipEntry.dir);
+      const allFiles = Object.entries(zipContents.files).filter(
+        ([, zipEntry]) => !zipEntry.dir,
+      );
 
       result.totalFiles = allFiles.length;
 
@@ -519,13 +570,18 @@ export class ZipFileService {
 
           // Create File object with appropriate MIME type
           const mimeType = this.getMimeTypeFromExtension(filename);
-          const extractedFile = new File([content], filename, { type: mimeType });
+          const extractedFile = new File([content], filename, {
+            type: mimeType,
+          });
 
           result.extractedFiles.push(extractedFile);
           result.extractedCount++;
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : "Unknown error";
-          result.errors.push(`Failed to extract "${filename}": ${errorMessage}`);
+          const errorMessage =
+            error instanceof Error ? error.message : "Unknown error";
+          result.errors.push(
+            `Failed to extract "${filename}": ${errorMessage}`,
+          );
         }
       }
 
@@ -541,7 +597,8 @@ export class ZipFileService {
 
       result.success = result.extractedFiles.length > 0;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       result.errors.push(`Failed to process ZIP file: ${errorMessage}`);
     }
 
@@ -602,7 +659,11 @@ export class ZipFileService {
   async extractAndStoreFilesWithHistory(
     zipFile: File,
     zipStub: StirlingFileStub,
-  ): Promise<{ success: boolean; extractedStubs: StirlingFileStub[]; errors: string[] }> {
+  ): Promise<{
+    success: boolean;
+    extractedStubs: StirlingFileStub[];
+    errors: string[];
+  }> {
     const result = {
       success: false,
       extractedStubs: [] as StirlingFileStub[],
@@ -613,14 +674,19 @@ export class ZipFileService {
       // Check if ZIP contains HTML files - if so, don't extract
       const hasHtml = await this.containsHtmlFiles(zipFile);
       if (hasHtml) {
-        result.errors.push("ZIP contains HTML files and will not be auto-extracted. Download the ZIP to access the files.");
+        result.errors.push(
+          "ZIP contains HTML files and will not be auto-extracted. Download the ZIP to access the files.",
+        );
         return result;
       }
 
       // Extract all files from ZIP (not just PDFs)
       const extractionResult = await this.extractAllFiles(zipFile);
 
-      if (!extractionResult.success || extractionResult.extractedFiles.length === 0) {
+      if (
+        !extractionResult.success ||
+        extractionResult.extractedFiles.length === 0
+      ) {
         result.errors = extractionResult.errors;
         return result;
       }
@@ -657,15 +723,19 @@ export class ZipFileService {
 
           result.extractedStubs.push(stub);
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : "Unknown error";
-          result.errors.push(`Failed to process "${extractedFile.name}": ${errorMessage}`);
+          const errorMessage =
+            error instanceof Error ? error.message : "Unknown error";
+          result.errors.push(
+            `Failed to process "${extractedFile.name}": ${errorMessage}`,
+          );
         }
       }
 
       result.success = result.extractedStubs.length > 0;
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       result.errors.push(`Failed to extract ZIP file: ${errorMessage}`);
       return result;
     }

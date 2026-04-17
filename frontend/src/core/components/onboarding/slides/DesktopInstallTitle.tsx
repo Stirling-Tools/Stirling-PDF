@@ -43,7 +43,9 @@ export const DesktopInstallTitle: React.FC<DesktopInstallTitleProps> = ({
 
   const displayLabel = currentOsOption.label || osLabel;
   const title = displayLabel
-    ? t("onboarding.desktopInstall.titleWithOs", "Download for {{osLabel}}", { osLabel: displayLabel })
+    ? t("onboarding.desktopInstall.titleWithOs", "Download for {{osLabel}}", {
+        osLabel: displayLabel,
+      })
     : t("onboarding.desktopInstall.title", "Download");
 
   // If only one option or no options, don't show dropdown
@@ -52,7 +54,15 @@ export const DesktopInstallTitle: React.FC<DesktopInstallTitleProps> = ({
   }
 
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", width: "100%" }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "0.5rem",
+        width: "100%",
+      }}
+    >
       <span style={{ whiteSpace: "nowrap" }}>{title}</span>
       <Menu position="bottom" offset={5} zIndex={10000}>
         <Menu.Target>
@@ -80,7 +90,9 @@ export const DesktopInstallTitle: React.FC<DesktopInstallTitleProps> = ({
                   backgroundColor: isSelected
                     ? "light-dark(var(--mantine-color-blue-1), var(--mantine-color-blue-8))"
                     : "transparent",
-                  color: isSelected ? "light-dark(var(--mantine-color-blue-9), var(--mantine-color-white))" : "inherit",
+                  color: isSelected
+                    ? "light-dark(var(--mantine-color-blue-9), var(--mantine-color-white))"
+                    : "inherit",
                 }}
               >
                 {option.label}

@@ -23,7 +23,12 @@ enum PageLayoutStep {
 const PageLayout = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
-  const base = useBaseTool("pageLayout", usePageLayoutParameters, usePageLayoutOperation, props);
+  const base = useBaseTool(
+    "pageLayout",
+    usePageLayoutParameters,
+    usePageLayoutOperation,
+    props,
+  );
 
   const pageLayoutTips = usePageLayoutTips();
   const pageLayoutAdvancedTips = usePageLayoutAdvancedTips();
@@ -49,7 +54,8 @@ const PageLayout = (props: BaseToolProps) => {
       {
         title: "Layout settings",
         isCollapsed: accordion.getCollapsedState(PageLayoutStep.LAYOUT),
-        onCollapsedClick: () => accordion.handleStepToggle(PageLayoutStep.LAYOUT),
+        onCollapsedClick: () =>
+          accordion.handleStepToggle(PageLayoutStep.LAYOUT),
         tooltip: pageLayoutTips,
         content: (
           <PageLayoutSettings
@@ -62,7 +68,8 @@ const PageLayout = (props: BaseToolProps) => {
       {
         title: "Advanced settings",
         isCollapsed: accordion.getCollapsedState(PageLayoutStep.ADVANCED),
-        onCollapsedClick: () => accordion.handleStepToggle(PageLayoutStep.ADVANCED),
+        onCollapsedClick: () =>
+          accordion.handleStepToggle(PageLayoutStep.ADVANCED),
         tooltip: pageLayoutAdvancedTips,
         content: (
           <PageLayoutAdvancedSettings
@@ -74,8 +81,11 @@ const PageLayout = (props: BaseToolProps) => {
       },
       {
         title: "Margins and borders",
-        isCollapsed: accordion.getCollapsedState(PageLayoutStep.MARGINS_BORDERS),
-        onCollapsedClick: () => accordion.handleStepToggle(PageLayoutStep.MARGINS_BORDERS),
+        isCollapsed: accordion.getCollapsedState(
+          PageLayoutStep.MARGINS_BORDERS,
+        ),
+        onCollapsedClick: () =>
+          accordion.handleStepToggle(PageLayoutStep.MARGINS_BORDERS),
         tooltip: pageLayoutMarginsBordersTips,
         content: (
           <PageLayoutMarginsBordersSettings

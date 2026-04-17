@@ -28,7 +28,9 @@ export default function Landing() {
   // Debug: Track Landing component lifecycle
   useEffect(() => {
     const mountId = Math.random().toString(36).substring(7);
-    console.log(`[Landing:${mountId}] 🔵 Component mounted at ${location.pathname}`);
+    console.log(
+      `[Landing:${mountId}] 🔵 Component mounted at ${location.pathname}`,
+    );
     console.log(`[Landing:${mountId}] Mount state:`, {
       authLoading,
       configLoading,
@@ -38,7 +40,13 @@ export default function Landing() {
     return () => {
       console.log(`[Landing:${mountId}] 🔴 Component unmounting`);
     };
-  }, [location.pathname, authLoading, configLoading, backendProbe.loading, session]);
+  }, [
+    location.pathname,
+    authLoading,
+    configLoading,
+    backendProbe.loading,
+    session,
+  ]);
 
   // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
   useEffect(() => {
@@ -58,7 +66,13 @@ export default function Landing() {
       void tick();
     }, 5000);
     return () => window.clearInterval(intervalId);
-  }, [backendProbe.status, backendProbe.loginDisabled, backendProbe.probe, navigate, refetch]);
+  }, [
+    backendProbe.status,
+    backendProbe.loginDisabled,
+    backendProbe.probe,
+    navigate,
+    refetch,
+  ]);
 
   useEffect(() => {
     if (backendProbe.status === "up") {
@@ -84,7 +98,14 @@ export default function Landing() {
   // Show loading while checking auth and config
   if (loading) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
           <div className="text-gray-600">Loading...</div>
@@ -122,7 +143,11 @@ export default function Landing() {
             border: "1px solid rgba(37, 99, 235, 0.2)",
           }}
         >
-          <p style={{ margin: "0 0 0.75rem 0", color: "rgba(15, 23, 42, 0.8)" }}>{t("backendStartup.unreachable")}</p>
+          <p
+            style={{ margin: "0 0 0.75rem 0", color: "rgba(15, 23, 42, 0.8)" }}
+          >
+            {t("backendStartup.unreachable")}
+          </p>
           <button
             type="button"
             onClick={handleRetry}

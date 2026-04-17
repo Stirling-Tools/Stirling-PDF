@@ -1,10 +1,22 @@
 import React, { useMemo } from "react";
-import { Badge, Group, Stack, Text, ThemeIcon, Paper, Tooltip, Divider } from "@mantine/core";
+import {
+  Badge,
+  Group,
+  Stack,
+  Text,
+  ThemeIcon,
+  Paper,
+  Tooltip,
+  Divider,
+} from "@mantine/core";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import InfoIcon from "@mui/icons-material/InfoOutlined";
 import SectionBlock from "@app/components/tools/getPdfInfo/shared/SectionBlock";
-import type { PdfCompliance, PdfComplianceSummary } from "@app/types/getPdfInfo";
+import type {
+  PdfCompliance,
+  PdfComplianceSummary,
+} from "@app/types/getPdfInfo";
 import { useTranslation } from "react-i18next";
 
 interface ComplianceSectionProps {
@@ -28,7 +40,9 @@ interface ComplianceCheckResult {
   sortOrder: number;
 }
 
-const parseStandardDisplayName = (standardId: string): { displayName: string; category: string; sortOrder: number } => {
+const parseStandardDisplayName = (
+  standardId: string,
+): { displayName: string; category: string; sortOrder: number } => {
   const id = standardId.toLowerCase().trim();
 
   // PDF/A variants: pdfa-1a, pdfa-1b, pdfa-2a, pdfa-2b, pdfa-2u, pdfa-3a, pdfa-3b, pdfa-3u, pdfa-4, etc.
@@ -39,7 +53,10 @@ const parseStandardDisplayName = (standardId: string): { displayName: string; ca
     return {
       displayName: `PDF/A-${version}${level}`,
       category: "PDF/A",
-      sortOrder: 10 + parseInt(version) * 10 + (level === "A" ? 1 : level === "B" ? 2 : level === "U" ? 3 : 0),
+      sortOrder:
+        10 +
+        parseInt(version) * 10 +
+        (level === "A" ? 1 : level === "B" ? 2 : level === "U" ? 3 : 0),
     };
   }
 
@@ -88,7 +105,11 @@ const parseStandardDisplayName = (standardId: string): { displayName: string; ca
 
   // Not PDF/A indicator
   if (id === "not-pdfa" || id === "not_pdfa") {
-    return { displayName: "PDF/A Detection", category: "Detection", sortOrder: 1 };
+    return {
+      displayName: "PDF/A Detection",
+      category: "Detection",
+      sortOrder: 1,
+    };
   }
 
   // Fallback: capitalize and format
@@ -113,7 +134,9 @@ const buildComplianceResults = (
         continue;
       }
 
-      const { displayName, category, sortOrder } = parseStandardDisplayName(item.Standard);
+      const { displayName, category, sortOrder } = parseStandardDisplayName(
+        item.Standard,
+      );
       processedCategories.add(category);
 
       results.push({
@@ -129,7 +152,11 @@ const buildComplianceResults = (
 
   // Then, add SEC compliance from legacy data if not already present
   // SEC compliance is checked separately by PDFBox, not VeraPDF
-  if (legacyCompliance && "IsPDF/SECCompliant" in legacyCompliance && !processedCategories.has("SEC")) {
+  if (
+    legacyCompliance &&
+    "IsPDF/SECCompliant" in legacyCompliance &&
+    !processedCategories.has("SEC")
+  ) {
     const isSecCompliant = legacyCompliance["IsPDF/SECCompliant"] as boolean;
     results.push({
       displayName: "SEC (EDGAR)",
@@ -149,8 +176,12 @@ const buildComplianceResults = (
   return results;
 };
 
-const getConformanceLevel = (results: ComplianceCheckResult[]): string | null => {
-  const passingPdfA = results.filter((r) => r.category === "PDF/A" && r.isCompliant).sort((a, b) => b.sortOrder - a.sortOrder);
+const getConformanceLevel = (
+  results: ComplianceCheckResult[],
+): string | null => {
+  const passingPdfA = results
+    .filter((r) => r.category === "PDF/A" && r.isCompliant)
+    .sort((a, b) => b.sortOrder - a.sortOrder);
 
   if (passingPdfA.length > 0) {
     return passingPdfA[0].displayName;
@@ -188,13 +219,23 @@ const ComplianceRow: React.FC<{
               {result.displayName}
             </Text>
             <Tooltip label={result.summary} multiline maw={400} withArrow>
-              <Text size="xs" c="dimmed" lineClamp={1} style={{ cursor: "help" }}>
+              <Text
+                size="xs"
+                c="dimmed"
+                lineClamp={1}
+                style={{ cursor: "help" }}
+              >
                 {result.summary}
               </Text>
             </Tooltip>
           </Stack>
         </Group>
-        <Badge color={color} variant="light" size="md" leftSection={<Icon style={{ width: 12, height: 12 }} />}>
+        <Badge
+          color={color}
+          variant="light"
+          size="md"
+          leftSection={<Icon style={{ width: 12, height: 12 }} />}
+        >
           {statusText}
         </Badge>
       </Group>
@@ -212,10 +253,16 @@ const EmptyComplianceState: React.FC = () => {
         </ThemeIcon>
         <Stack gap={2}>
           <Text size="sm" fw={500}>
-            {t("getPdfInfo.compliance.noVerification", "No Verification Performed")}
+            {t(
+              "getPdfInfo.compliance.noVerification",
+              "No Verification Performed",
+            )}
           </Text>
           <Text size="xs" c="dimmed">
-            {t("getPdfInfo.compliance.noVerificationDesc", "PDF standards compliance was not verified for this document.")}
+            {t(
+              "getPdfInfo.compliance.noVerificationDesc",
+              "PDF standards compliance was not verified for this document.",
+            )}
           </Text>
         </Stack>
       </Group>
@@ -223,7 +270,11 @@ const EmptyComplianceState: React.FC = () => {
   );
 };
 
-const ComplianceSection: React.FC<ComplianceSectionProps> = ({ anchorId, complianceSummary, legacyCompliance }) => {
+const ComplianceSection: React.FC<ComplianceSectionProps> = ({
+  anchorId,
+  complianceSummary,
+  legacyCompliance,
+}) => {
   const { t } = useTranslation();
 
   const complianceResults = useMemo(
@@ -231,7 +282,10 @@ const ComplianceSection: React.FC<ComplianceSectionProps> = ({ anchorId, complia
     [complianceSummary, legacyCompliance],
   );
 
-  const conformanceLevel = useMemo(() => getConformanceLevel(complianceResults), [complianceResults]);
+  const conformanceLevel = useMemo(
+    () => getConformanceLevel(complianceResults),
+    [complianceResults],
+  );
 
   const passedCount = complianceResults.filter((r) => r.isCompliant).length;
   const failedCount = complianceResults.filter((r) => !r.isCompliant).length;
@@ -239,7 +293,10 @@ const ComplianceSection: React.FC<ComplianceSectionProps> = ({ anchorId, complia
   const hasResults = complianceResults.length > 0;
 
   return (
-    <SectionBlock title={t("getPdfInfo.sections.compliance", "Compliance")} anchorId={anchorId}>
+    <SectionBlock
+      title={t("getPdfInfo.sections.compliance", "Compliance")}
+      anchorId={anchorId}
+    >
       <Stack gap="md">
         {/* Summary header when there are results */}
         {hasResults && (
@@ -253,12 +310,14 @@ const ComplianceSection: React.FC<ComplianceSectionProps> = ({ anchorId, complia
                 )}
                 {passedCount > 0 && (
                   <Badge color="teal" variant="outline" size="sm">
-                    {passedCount} {t("getPdfInfo.compliance.passedCount", "passed")}
+                    {passedCount}{" "}
+                    {t("getPdfInfo.compliance.passedCount", "passed")}
                   </Badge>
                 )}
                 {failedCount > 0 && (
                   <Badge color="red" variant="outline" size="sm">
-                    {failedCount} {t("getPdfInfo.compliance.failedCount", "failed")}
+                    {failedCount}{" "}
+                    {t("getPdfInfo.compliance.failedCount", "failed")}
                   </Badge>
                 )}
               </Group>
@@ -271,7 +330,10 @@ const ComplianceSection: React.FC<ComplianceSectionProps> = ({ anchorId, complia
         {hasResults ? (
           <Stack gap="xs">
             {complianceResults.map((result, index) => (
-              <ComplianceRow key={`${result.standardId}-${index}`} result={result} />
+              <ComplianceRow
+                key={`${result.standardId}-${index}`}
+                result={result}
+              />
             ))}
           </Stack>
         ) : (

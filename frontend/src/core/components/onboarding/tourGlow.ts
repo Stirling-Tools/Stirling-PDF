@@ -12,6 +12,10 @@ export const addGlowToElements = (selectors: string[]) => {
 };
 
 export const removeAllGlows = () => {
-  document.querySelectorAll(".tour-content-glow").forEach((el) => el.classList.remove("tour-content-glow"));
-  document.querySelectorAll(".tour-nav-glow").forEach((el) => el.classList.remove("tour-nav-glow"));
+  document
+    .querySelectorAll(".tour-content-glow")
+    .forEach((el) => el.classList.remove("tour-content-glow"));
+  document
+    .querySelectorAll(".tour-nav-glow")
+    .forEach((el) => el.classList.remove("tour-nav-glow"));
 };

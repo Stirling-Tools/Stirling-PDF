@@ -25,7 +25,11 @@ function collectSourceFiles(dir: string): string[] {
     const stat = statSync(fullPath);
     if (stat.isDirectory() && entry !== "node_modules" && entry !== "assets") {
       files.push(...collectSourceFiles(fullPath));
-    } else if (stat.isFile() && (extname(entry) === ".ts" || extname(entry) === ".tsx") && !entry.endsWith(".d.ts")) {
+    } else if (
+      stat.isFile() &&
+      (extname(entry) === ".ts" || extname(entry) === ".tsx") &&
+      !entry.endsWith(".d.ts")
+    ) {
       files.push(fullPath);
     }
   }
@@ -45,14 +49,30 @@ function findViteEnvVars(srcDir: string): Set<string> {
 
 describe("env vars", () => {
   it("every VITE_ var used in source is present in an example env file", () => {
-    const baseEnv = readFileSync(join(frontendRoot, "config/.env.example"), "utf-8");
-    const desktopEnv = readFileSync(join(frontendRoot, "config/.env.desktop.example"), "utf-8");
-    const saasEnv = readFileSync(join(frontendRoot, "config/.env.saas.example"), "utf-8");
+    const baseEnv = readFileSync(
+      join(frontendRoot, "config/.env.example"),
+      "utf-8",
+    );
+    const desktopEnv = readFileSync(
+      join(frontendRoot, "config/.env.desktop.example"),
+      "utf-8",
+    );
+    const saasEnv = readFileSync(
+      join(frontendRoot, "config/.env.saas.example"),
+      "utf-8",
+    );
 
-    const exampleKeys = new Set([...parseEnvKeys(baseEnv), ...parseEnvKeys(desktopEnv), ...parseEnvKeys(saasEnv)]);
+    const exampleKeys = new Set([
+      ...parseEnvKeys(baseEnv),
+      ...parseEnvKeys(desktopEnv),
+      ...parseEnvKeys(saasEnv),
+    ]);
     const sourceVars = findViteEnvVars(join(frontendRoot, "src"));
 
     const missing = [...sourceVars].filter((v) => !exampleKeys.has(v));
-    expect(missing, `Missing from 'frontend/config/.env.example' files: ${missing.join(", ")}`).toHaveLength(0);
+    expect(
+      missing,
+      `Missing from 'frontend/config/.env.example' files: ${missing.join(", ")}`,
+    ).toHaveLength(0);
   });
 });

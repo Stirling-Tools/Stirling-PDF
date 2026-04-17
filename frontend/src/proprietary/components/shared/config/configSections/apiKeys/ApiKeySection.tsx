@@ -12,7 +12,13 @@ interface ApiKeySectionProps {
   disabled?: boolean;
 }
 
-export default function ApiKeySection({ publicKey, copied, onCopy, onRefresh, disabled }: ApiKeySectionProps) {
+export default function ApiKeySection({
+  publicKey,
+  copied,
+  onCopy,
+  onRefresh,
+  disabled,
+}: ApiKeySectionProps) {
   const { t } = useTranslation();
   return (
     <>
@@ -40,7 +46,10 @@ export default function ApiKeySection({ publicKey, copied, onCopy, onRefresh, di
                 display: "flex",
                 alignItems: "center",
               }}
-              aria-label={t("config.apiKeys.publicKeyAriaLabel", "Public API key")}
+              aria-label={t(
+                "config.apiKeys.publicKeyAriaLabel",
+                "Public API key",
+              )}
             >
               <FitText text={publicKey} />
             </Box>
@@ -49,7 +58,9 @@ export default function ApiKeySection({ publicKey, copied, onCopy, onRefresh, di
             size="sm"
             variant="light"
             onClick={() => onCopy(publicKey, "public")}
-            leftSection={<LocalIcon icon="content-copy-rounded" width={14} height={14} />}
+            leftSection={
+              <LocalIcon icon="content-copy-rounded" width={14} height={14} />
+            }
             styles={{
               root: {
                 background: "var(--api-keys-button-bg)",
@@ -60,13 +71,17 @@ export default function ApiKeySection({ publicKey, copied, onCopy, onRefresh, di
             }}
             aria-label={t("config.apiKeys.copyKeyAriaLabel", "Copy API key")}
           >
-            {copied === "public" ? t("common.copied", "Copied!") : t("common.copy", "Copy")}
+            {copied === "public"
+              ? t("common.copied", "Copied!")
+              : t("common.copy", "Copy")}
           </Button>
           <Button
             size="sm"
             variant="light"
             onClick={onRefresh}
-            leftSection={<LocalIcon icon="refresh-rounded" width={14} height={14} />}
+            leftSection={
+              <LocalIcon icon="refresh-rounded" width={14} height={14} />
+            }
             styles={{
               root: {
                 background: "var(--api-keys-button-bg)",

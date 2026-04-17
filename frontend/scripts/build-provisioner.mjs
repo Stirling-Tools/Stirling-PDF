@@ -10,9 +10,19 @@ const frontendDir = process.cwd();
 const tauriDir = resolve(frontendDir, "src-tauri");
 const provisionerManifest = join(tauriDir, "provisioner", "Cargo.toml");
 
-execFileSync("cargo", ["build", "--release", "--manifest-path", provisionerManifest], { stdio: "inherit" });
+execFileSync(
+  "cargo",
+  ["build", "--release", "--manifest-path", provisionerManifest],
+  { stdio: "inherit" },
+);
 
-const provisionerExe = join(tauriDir, "provisioner", "target", "release", "stirling-provisioner.exe");
+const provisionerExe = join(
+  tauriDir,
+  "provisioner",
+  "target",
+  "release",
+  "stirling-provisioner.exe",
+);
 if (!existsSync(provisionerExe)) {
   throw new Error(`Provisioner binary not found at ${provisionerExe}`);
 }
@@ -26,9 +36,19 @@ copyFileSync(provisionerExe, destExe);
 // --- Thumbnail handler DLL ---
 const thumbManifest = join(tauriDir, "thumbnail-handler", "Cargo.toml");
 
-execFileSync("cargo", ["build", "--release", "--manifest-path", thumbManifest], { stdio: "inherit" });
+execFileSync(
+  "cargo",
+  ["build", "--release", "--manifest-path", thumbManifest],
+  { stdio: "inherit" },
+);
 
-const thumbDll = join(tauriDir, "thumbnail-handler", "target", "release", "stirling_thumbnail_handler.dll");
+const thumbDll = join(
+  tauriDir,
+  "thumbnail-handler",
+  "target",
+  "release",
+  "stirling_thumbnail_handler.dll",
+);
 if (!existsSync(thumbDll)) {
   throw new Error(`Thumbnail handler DLL not found at ${thumbDll}`);
 }

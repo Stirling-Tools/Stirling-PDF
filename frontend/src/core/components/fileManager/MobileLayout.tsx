@@ -27,7 +27,11 @@ const MobileLayout: React.FC = () => {
   };
 
   return (
-    <Box h="100%" p="sm" style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+    <Box
+      h="100%"
+      p="sm"
+      style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}
+    >
       {/* Section 1: File Sources - Fixed at top */}
       <Box style={{ flexShrink: 0 }}>
         <FileSourceButtons horizontal={true} />

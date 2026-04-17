@@ -42,7 +42,8 @@ function RotateAPIBridgeInner({ documentId }: { documentId: string }) {
         api: {
           rotateForward: () => currentRotate.rotateForward(),
           rotateBackward: () => currentRotate.rotateBackward(),
-          setRotation: (rotationValue: number) => currentRotate.setRotation(rotationValue),
+          setRotation: (rotationValue: number) =>
+            currentRotate.setRotation(rotationValue),
           getRotation: () => rotation,
         },
       });

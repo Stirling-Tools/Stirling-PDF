@@ -24,12 +24,18 @@ vi.mock("../../../utils/toolErrorHandler", () => ({
 }));
 
 // Import the mocked function
-import { MultiFileToolOperationConfig, ToolOperationHook, useToolOperation } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  MultiFileToolOperationConfig,
+  ToolOperationHook,
+  useToolOperation,
+} from "@app/hooks/tools/shared/useToolOperation";
 
 describe("useMergeOperation", () => {
   const mockUseToolOperation = vi.mocked(useToolOperation<MergeParameters>);
 
-  const getToolConfig = () => mockUseToolOperation.mock.calls[0][0] as MultiFileToolOperationConfig<MergeParameters>;
+  const getToolConfig = () =>
+    mockUseToolOperation.mock
+      .calls[0][0] as MultiFileToolOperationConfig<MergeParameters>;
 
   const mockToolOperationReturn: ToolOperationHook<unknown> = {
     files: [],
@@ -90,14 +96,19 @@ describe("useMergeOperation", () => {
   test("should use correct translation keys for error handling", () => {
     renderHook(() => useMergeOperation());
 
-    expect(mockT).toHaveBeenCalledWith("merge.error.failed", "An error occurred while merging the PDFs.");
+    expect(mockT).toHaveBeenCalledWith(
+      "merge.error.failed",
+      "An error occurred while merging the PDFs.",
+    );
   });
 
   test("should build FormData with different parameter combinations", () => {
     renderHook(() => useMergeOperation());
 
     const config = getToolConfig();
-    const mockFiles = [new File(["test"], "test.pdf", { type: "application/pdf" })];
+    const mockFiles = [
+      new File(["test"], "test.pdf", { type: "application/pdf" }),
+    ];
 
     // Test case 1: All options disabled
     const params1: MergeParameters = {

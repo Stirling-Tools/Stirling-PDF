@@ -1,5 +1,18 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef, useMemo } from "react";
-import { saasBillingService, BillingStatus, PlanPrice } from "@app/services/saasBillingService";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
+import {
+  saasBillingService,
+  BillingStatus,
+  PlanPrice,
+} from "@app/services/saasBillingService";
 import { authService } from "@app/services/authService";
 import { connectionModeService } from "@app/services/connectionModeService";
 import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
@@ -80,7 +93,9 @@ const SaasBillingContext = createContext<SaasBillingContextType>({
 });
 
 export function SaasBillingProvider({ children }: { children: ReactNode }) {
-  const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
+  const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(
+    null,
+  );
   const [plans, setPlans] = useState<Map<string, PlanPrice>>(new Map());
   const [plansLoading, setPlansLoading] = useState(false);
   const [plansError, setPlansError] = useState<string | null>(null);
@@ -89,24 +104,35 @@ export function SaasBillingProvider({ children }: { children: ReactNode }) {
   // lastFetchTimeRef is the source of truth for cache logic (always current, no stale closure).
   // lastFetchTimeValue mirrors it as state purely to drive re-renders and expose through context.
   const lastFetchTimeRef = useRef<number | null>(null);
-  const [lastFetchTimeValue, setLastFetchTimeValue] = useState<number | null>(null);
+  const [lastFetchTimeValue, setLastFetchTimeValue] = useState<number | null>(
+    null,
+  );
   // billingStatusRef mirrors billingStatus so fetchBillingData can read the current value
   // without needing billingStatus in its useCallback dep array.
   const billingStatusRef = useRef<BillingStatus | null>(null);
   // plansLastFetchTimeRef is the source of truth for timing; plansLastFetchTimeValue
   // is the state mirror exposed via context so consumers can react to it.
   const plansLastFetchTimeRef = useRef<number | null>(null);
-  const [plansLastFetchTimeValue, setPlansLastFetchTimeValue] = useState<number | null>(null);
+  const [plansLastFetchTimeValue, setPlansLastFetchTimeValue] = useState<
+    number | null
+  >(null);
   // In-flight deduplication — prevents concurrent duplicate network requests.
   const plansFetchInProgressRef = useRef(false);
   const [isSaasMode, setIsSaasMode] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Access team context for derived state
-  const { currentTeam, isPersonalTeam, isTeamLeader, loading: teamLoading } = useSaaSTeam();
+  const {
+    currentTeam,
+    isPersonalTeam,
+    isTeamLeader,
+    loading: teamLoading,
+  } = useSaaSTeam();
 
   // Compute derived state: user is managed member if in non-personal team but not leader
-  const isManagedTeamMember = currentTeam ? !isPersonalTeam && !isTeamLeader : false;
+  const isManagedTeamMember = currentTeam
+    ? !isPersonalTeam && !isTeamLeader
+    : false;
 
   // Check if in SaaS mode and authenticated (same pattern as SaaSTeamContext)
   useEffect(() => {
@@ -120,7 +146,8 @@ export function SaasBillingProvider({ children }: { children: ReactNode }) {
     checkAccess();
 
     // Subscribe to connection mode changes
-    const unsubscribe = connectionModeService.subscribeToModeChanges(checkAccess);
+    const unsubscribe =
+      connectionModeService.subscribeToModeChanges(checkAccess);
     return unsubscribe;
   }, []);
 
@@ -151,7 +178,11 @@ export function SaasBillingProvider({ children }: { children: ReactNode }) {
 
     // Cache check: Skip if fresh data exists (<5 min old)
     const now = Date.now();
-    if (billingStatusRef.current && lastFetchTimeRef.current && now - lastFetchTimeRef.current < 300000) {
+    if (
+      billingStatusRef.current &&
+      lastFetchTimeRef.current &&
+      now - lastFetchTimeRef.current < 300000
+    ) {
       return;
     }
 
@@ -199,7 +230,9 @@ export function SaasBillingProvider({ children }: { children: ReactNode }) {
       setPlansLastFetchTimeValue(now);
     } catch (err) {
       console.error("[SaasBillingContext] Failed to fetch plans:", err);
-      setPlansError(err instanceof Error ? err.message : "Failed to fetch plans");
+      setPlansError(
+        err instanceof Error ? err.message : "Failed to fetch plans",
+      );
     } finally {
       plansFetchInProgressRef.current = false;
       setPlansLoading(false);
@@ -237,7 +270,13 @@ export function SaasBillingProvider({ children }: { children: ReactNode }) {
     ) {
       fetchBillingData();
     }
-  }, [isSaasMode, isAuthenticated, teamLoading, isManagedTeamMember, fetchBillingData]);
+  }, [
+    isSaasMode,
+    isAuthenticated,
+    teamLoading,
+    isManagedTeamMember,
+    fetchBillingData,
+  ]);
 
   // Public refresh methods
   const refreshBilling = useCallback(async () => {
@@ -282,7 +321,10 @@ export function SaasBillingProvider({ children }: { children: ReactNode }) {
         if (newBalance <= 0 && (billingStatus.creditBalance ?? 0) > 0) {
           window.dispatchEvent(
             new CustomEvent("credits:exhausted", {
-              detail: { previousBalance: billingStatus.creditBalance ?? 0, currentBalance: newBalance },
+              detail: {
+                previousBalance: billingStatus.creditBalance ?? 0,
+                currentBalance: newBalance,
+              },
             }),
           );
         }
@@ -336,7 +378,11 @@ export function SaasBillingProvider({ children }: { children: ReactNode }) {
     ],
   );
 
-  return <SaasBillingContext.Provider value={contextValue}>{children}</SaasBillingContext.Provider>;
+  return (
+    <SaasBillingContext.Provider value={contextValue}>
+      {children}
+    </SaasBillingContext.Provider>
+  );
 }
 
 export function useSaaSBilling() {
@@ -349,12 +395,21 @@ export function useSaaSBilling() {
   // Note: context.loading includes teamLoading, so this waits for team to load
   useEffect(() => {
     const needsFetch =
-      context.billingStatus === null && context.lastFetchTime === null && !context.loading && !context.isManagedTeamMember; // Managed members don't need billing data
+      context.billingStatus === null &&
+      context.lastFetchTime === null &&
+      !context.loading &&
+      !context.isManagedTeamMember; // Managed members don't need billing data
 
     if (needsFetch) {
       context.refreshBilling();
     }
-  }, [context.billingStatus, context.lastFetchTime, context.loading, context.isManagedTeamMember, context.refreshBilling]);
+  }, [
+    context.billingStatus,
+    context.lastFetchTime,
+    context.loading,
+    context.isManagedTeamMember,
+    context.refreshBilling,
+  ]);
 
   return context;
 }
@@ -365,10 +420,13 @@ export function useSaaSBilling() {
  * Safe to call from multiple components — in-flight deduplication is handled by fetchPlansData.
  */
 export function usePlanPricing() {
-  const { plans, plansLoading, plansError, plansLastFetchTime, refreshPlans } = useContext(SaasBillingContext);
+  const { plans, plansLoading, plansError, plansLastFetchTime, refreshPlans } =
+    useContext(SaasBillingContext);
 
   useEffect(() => {
-    const isFresh = plansLastFetchTime !== null && Date.now() - plansLastFetchTime < PLANS_CACHE_TTL_MS;
+    const isFresh =
+      plansLastFetchTime !== null &&
+      Date.now() - plansLastFetchTime < PLANS_CACHE_TTL_MS;
 
     if (!isFresh) {
       refreshPlans();

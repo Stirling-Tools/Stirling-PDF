@@ -1,5 +1,9 @@
 // Define workbench values once as source of truth
-export const BASE_WORKBENCH_TYPES = ["viewer", "pageEditor", "fileEditor"] as const;
+export const BASE_WORKBENCH_TYPES = [
+  "viewer",
+  "pageEditor",
+  "fileEditor",
+] as const;
 
 export type BaseWorkbenchType = (typeof BASE_WORKBENCH_TYPES)[number];
 
@@ -16,6 +20,8 @@ export const isValidWorkbench = (value: string): value is WorkbenchType => {
   return value.startsWith("custom:");
 };
 
-export const isBaseWorkbench = (value: WorkbenchType): value is BaseWorkbenchType => {
+export const isBaseWorkbench = (
+  value: WorkbenchType,
+): value is BaseWorkbenchType => {
   return BASE_WORKBENCH_TYPES.includes(value as BaseWorkbenchType);
 };

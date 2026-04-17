@@ -14,7 +14,9 @@ import { endpointAvailabilityService } from "@app/services/endpointAvailabilityS
  *  - Self-hosted server is online
  *  - Local backend port is not yet known
  */
-export function useSelfHostedToolAvailability(tools: Array<{ id: string; endpoints?: string[] }>): Set<string> {
+export function useSelfHostedToolAvailability(
+  tools: Array<{ id: string; endpoints?: string[] }>,
+): Set<string> {
   const [unavailableIds, setUnavailableIds] = useState<Set<string>>(new Set());
   // Keep a stable ref to the latest tools list to avoid unnecessary re-subscriptions
   const toolsRef = useRef(tools);
@@ -52,7 +54,12 @@ export function useSelfHostedToolAvailability(tools: Array<{ id: string; endpoin
           if (endpoints.length === 0) return; // No endpoints → always available
 
           const locallySupported = await Promise.all(
-            endpoints.map((ep) => endpointAvailabilityService.isEndpointSupportedLocally(ep, localUrl)),
+            endpoints.map((ep) =>
+              endpointAvailabilityService.isEndpointSupportedLocally(
+                ep,
+                localUrl,
+              ),
+            ),
           );
 
           if (!locallySupported.some(Boolean)) {

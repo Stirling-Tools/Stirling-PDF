@@ -18,14 +18,18 @@ interface ToolPanelModePromptProps {
  * The orchestrator controls this via forceOpen prop. When shown standalone (legacy),
  * it uses internal state based on preferences.
  */
-const ToolPanelModePrompt = ({ onComplete, forceOpen }: ToolPanelModePromptProps = {}) => {
+const ToolPanelModePrompt = ({
+  onComplete,
+  forceOpen,
+}: ToolPanelModePromptProps = {}) => {
   const { t } = useTranslation();
   const { toolPanelMode, setToolPanelMode } = useToolWorkflow();
   const { preferences, updatePreference } = usePreferences();
   const [internalOpened, setInternalOpened] = useState(false);
 
   // Only show after the intro onboarding has been completed (legacy standalone mode)
-  const shouldShowPrompt = !preferences.toolPanelModePromptSeen && preferences.hasSeenIntroOnboarding;
+  const shouldShowPrompt =
+    !preferences.toolPanelModePromptSeen && preferences.hasSeenIntroOnboarding;
 
   useEffect(() => {
     if (shouldShowPrompt && forceOpen === undefined) {
@@ -87,16 +91,24 @@ const ToolPanelModePrompt = ({ onComplete, forceOpen }: ToolPanelModePromptProps
             <Stack gap="md" className="tool-panel-mode-prompt__card-content">
               <Group justify="space-between">
                 <Stack gap={2}>
-                  <Text fw={600}>{t("toolPanel.modePrompt.sidebarTitle", "Sidebar mode")}</Text>
+                  <Text fw={600}>
+                    {t("toolPanel.modePrompt.sidebarTitle", "Sidebar mode")}
+                  </Text>
                   <Text size="sm" c="dimmed">
-                    {t("toolPanel.modePrompt.sidebarDescription", "Keep tools alongside your workspace for quick switching.")}
+                    {t(
+                      "toolPanel.modePrompt.sidebarDescription",
+                      "Keep tools alongside your workspace for quick switching.",
+                    )}
                   </Text>
                 </Stack>
                 <Badge color="blue" variant="filled">
                   {t("toolPanel.modePrompt.recommended", "Recommended")}
                 </Badge>
               </Group>
-              <div className="tool-panel-mode-prompt__preview tool-panel-mode-prompt__preview--sidebar" aria-hidden>
+              <div
+                className="tool-panel-mode-prompt__preview tool-panel-mode-prompt__preview--sidebar"
+                aria-hidden
+              >
                 <div className="tool-panel-mode-prompt__sidebar-panel">
                   <span className="tool-panel-mode-prompt__sidebar-search" />
                   <span className="tool-panel-mode-prompt__sidebar-item" />
@@ -120,10 +132,18 @@ const ToolPanelModePrompt = ({ onComplete, forceOpen }: ToolPanelModePromptProps
               </Button>
             </Stack>
           </Card>
-          <Card withBorder radius="lg" shadow="xs" padding="lg" className="tool-panel-mode-prompt__card">
+          <Card
+            withBorder
+            radius="lg"
+            shadow="xs"
+            padding="lg"
+            className="tool-panel-mode-prompt__card"
+          >
             <Stack gap="md" className="tool-panel-mode-prompt__card-content">
               <Stack gap={2}>
-                <Text fw={600}>{t("toolPanel.modePrompt.fullscreenTitle", "Fullscreen mode")}</Text>
+                <Text fw={600}>
+                  {t("toolPanel.modePrompt.fullscreenTitle", "Fullscreen mode")}
+                </Text>
                 <Text size="sm" c="dimmed">
                   {t(
                     "toolPanel.modePrompt.fullscreenDescription",
@@ -131,7 +151,10 @@ const ToolPanelModePrompt = ({ onComplete, forceOpen }: ToolPanelModePromptProps
                   )}
                 </Text>
               </Stack>
-              <div className="tool-panel-mode-prompt__preview tool-panel-mode-prompt__preview--fullscreen" aria-hidden>
+              <div
+                className="tool-panel-mode-prompt__preview tool-panel-mode-prompt__preview--fullscreen"
+                aria-hidden
+              >
                 <div className="tool-panel-mode-prompt__fullscreen-columns">
                   <div className="tool-panel-mode-prompt__fullscreen-column">
                     <span className="tool-panel-mode-prompt__fullscreen-card" />
@@ -157,7 +180,10 @@ const ToolPanelModePrompt = ({ onComplete, forceOpen }: ToolPanelModePromptProps
                 className="tool-panel-mode-prompt__action"
                 onClick={() => handleSelect("fullscreen")}
               >
-                {t("toolPanel.modePrompt.chooseFullscreen", "Use fullscreen mode")}
+                {t(
+                  "toolPanel.modePrompt.chooseFullscreen",
+                  "Use fullscreen mode",
+                )}
               </Button>
             </Stack>
           </Card>

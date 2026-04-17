@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Text, Stack, Group, TextInput, Textarea, Divider, Modal } from "@mantine/core";
+import {
+  Button,
+  Text,
+  Stack,
+  Group,
+  TextInput,
+  Textarea,
+  Divider,
+  Modal,
+} from "@mantine/core";
 import { Z_INDEX_AUTOMATE_MODAL } from "@app/styles/zIndex";
 import CheckIcon from "@mui/icons-material/Check";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -8,7 +17,11 @@ import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import ToolConfigurationModal from "@app/components/tools/automate/ToolConfigurationModal";
 import ToolList from "@app/components/tools/automate/ToolList";
 import IconSelector from "@app/components/tools/automate/IconSelector";
-import { AutomationConfig, AutomationMode, AutomationTool } from "@app/types/automation";
+import {
+  AutomationConfig,
+  AutomationMode,
+  AutomationTool,
+} from "@app/types/automation";
 import { useAutomationForm } from "@app/hooks/tools/automate/useAutomationForm";
 import { downloadFolderScanningConfig } from "@app/utils/automationConverter";
 
@@ -103,7 +116,8 @@ export default function AutomationCreation({
     };
 
     try {
-      const { automationStorage } = await import("@app/services/automationStorage");
+      const { automationStorage } =
+        await import("@app/services/automationStorage");
       let savedAutomation;
 
       if (mode === AutomationMode.EDIT && existingAutomation) {
@@ -112,7 +126,8 @@ export default function AutomationCreation({
 
         if (nameChanged) {
           // Name changed - create new automation
-          savedAutomation = await automationStorage.saveAutomation(automationData);
+          savedAutomation =
+            await automationStorage.saveAutomation(automationData);
         } else {
           // Name unchanged - update existing automation
           const updatedAutomation = {
@@ -121,11 +136,13 @@ export default function AutomationCreation({
             id: existingAutomation.id,
             createdAt: existingAutomation.createdAt,
           };
-          savedAutomation = await automationStorage.updateAutomation(updatedAutomation);
+          savedAutomation =
+            await automationStorage.updateAutomation(updatedAutomation);
         }
       } else {
         // Create mode - always create new automation
-        savedAutomation = await automationStorage.saveAutomation(automationData);
+        savedAutomation =
+          await automationStorage.saveAutomation(automationData);
       }
 
       onComplete(savedAutomation);
@@ -134,7 +151,8 @@ export default function AutomationCreation({
     }
   };
 
-  const currentConfigTool = configuraingToolIndex >= 0 ? selectedTools[configuraingToolIndex] : null;
+  const currentConfigTool =
+    configuraingToolIndex >= 0 ? selectedTools[configuraingToolIndex] : null;
 
   return (
     <div>
@@ -160,7 +178,10 @@ export default function AutomationCreation({
         <Group gap="xs" align="flex-end">
           <Stack gap="xs" style={{ flex: 1 }}>
             <TextInput
-              placeholder={t("automate.creation.name.placeholder", "My Automation")}
+              placeholder={t(
+                "automate.creation.name.placeholder",
+                "My Automation",
+              )}
               value={automationName}
               withAsterisk
               label={t("automate.creation.name.label", "Automation Name")}
@@ -169,12 +190,19 @@ export default function AutomationCreation({
             />
           </Stack>
 
-          <IconSelector value={automationIcon || "SettingsIcon"} onChange={setAutomationIcon} size="sm" />
+          <IconSelector
+            value={automationIcon || "SettingsIcon"}
+            onChange={setAutomationIcon}
+            size="sm"
+          />
         </Group>
 
         {/* Automation Description */}
         <Textarea
-          placeholder={t("automate.creation.description.placeholder", "Describe what this automation does...")}
+          placeholder={t(
+            "automate.creation.description.placeholder",
+            "Describe what this automation does...",
+          )}
           value={automationDescription}
           label={t("automate.creation.description.label", "Description")}
           onChange={(e) => setAutomationDescription(e.currentTarget.value)}
@@ -200,7 +228,12 @@ export default function AutomationCreation({
 
         {/* Action Buttons */}
         <Stack gap="sm">
-          <Button leftSection={<CheckIcon />} onClick={saveAutomation} disabled={!canSaveAutomation()} fullWidth>
+          <Button
+            leftSection={<CheckIcon />}
+            onClick={saveAutomation}
+            disabled={!canSaveAutomation()}
+            fullWidth
+          >
             {t("automate.creation.save", "Save Automation")}
           </Button>
 
@@ -217,7 +250,8 @@ export default function AutomationCreation({
                   operation: tool.operation,
                   parameters: tool.parameters || {},
                 })),
-                createdAt: existingAutomation?.createdAt || new Date().toISOString(),
+                createdAt:
+                  existingAutomation?.createdAt || new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
               };
               downloadFolderScanningConfig(tempAutomation, toolRegistry);
@@ -226,7 +260,10 @@ export default function AutomationCreation({
             variant="light"
             fullWidth
           >
-            {t("automate.creation.exportForFolderScanning", "Export for Folder Scanning")}
+            {t(
+              "automate.creation.exportForFolderScanning",
+              "Export for Folder Scanning",
+            )}
           </Button>
         </Stack>
       </Stack>

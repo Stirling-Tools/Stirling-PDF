@@ -3,7 +3,11 @@
  */
 
 import { FileId } from "@app/types/file";
-import { FileContextState, FileContextAction, StirlingFileStub } from "@app/types/fileContext";
+import {
+  FileContextState,
+  FileContextAction,
+  StirlingFileStub,
+} from "@app/types/fileContext";
 
 // Initial state
 export const initialFileContextState: FileContextState = {
@@ -23,10 +27,18 @@ export const initialFileContextState: FileContextState = {
 };
 
 // Helper function for consume/undo operations
-function processFileSwap(state: FileContextState, filesToRemove: FileId[], filesToAdd: StirlingFileStub[]): FileContextState {
+function processFileSwap(
+  state: FileContextState,
+  filesToRemove: FileId[],
+  filesToAdd: StirlingFileStub[],
+): FileContextState {
   // Only remove unpinned files
-  const unpinnedRemoveIds = filesToRemove.filter((id) => !state.pinnedFiles.has(id));
-  const remainingIds = state.files.ids.filter((id) => !unpinnedRemoveIds.includes(id));
+  const unpinnedRemoveIds = filesToRemove.filter(
+    (id) => !state.pinnedFiles.has(id),
+  );
+  const remainingIds = state.files.ids.filter(
+    (id) => !unpinnedRemoveIds.includes(id),
+  );
 
   // Remove unpinned files from state
   const newById = { ...state.files.byId };
@@ -44,7 +56,9 @@ function processFileSwap(state: FileContextState, filesToRemove: FileId[], files
   });
 
   // Clear selections that reference removed files and add new files to selection
-  const validSelectedFileIds = state.ui.selectedFileIds.filter((id) => !unpinnedRemoveIds.includes(id));
+  const validSelectedFileIds = state.ui.selectedFileIds.filter(
+    (id) => !unpinnedRemoveIds.includes(id),
+  );
   const newSelectedFileIds = [...validSelectedFileIds, ...addedIds];
 
   return {
@@ -61,7 +75,10 @@ function processFileSwap(state: FileContextState, filesToRemove: FileId[], files
 }
 
 // Pure reducer function
-export function fileContextReducer(state: FileContextState, action: FileContextAction): FileContextState {
+export function fileContextReducer(
+  state: FileContextState,
+  action: FileContextAction,
+): FileContextState {
   switch (action.type) {
     case "ADD_FILES": {
       const { stirlingFileStubs } = action.payload;
@@ -87,7 +104,9 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
 
     case "REMOVE_FILES": {
       const { fileIds } = action.payload;
-      const remainingIds = state.files.ids.filter((id) => !fileIds.includes(id));
+      const remainingIds = state.files.ids.filter(
+        (id) => !fileIds.includes(id),
+      );
       const newById = { ...state.files.byId };
 
       // Remove files from state (resource cleanup handled by lifecycle manager)
@@ -96,7 +115,9 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
       });
 
       // Clear selections that reference removed files
-      const validSelectedFileIds = state.ui.selectedFileIds.filter((id) => !fileIds.includes(id));
+      const validSelectedFileIds = state.ui.selectedFileIds.filter(
+        (id) => !fileIds.includes(id),
+      );
 
       return {
         ...state,
@@ -143,7 +164,9 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
       const validIds = orderedFileIds.filter((id) => state.files.byId[id]);
 
       // Reorder selected files by passed order
-      const selectedFileIds = orderedFileIds.filter((id) => state.ui.selectedFileIds.includes(id));
+      const selectedFileIds = orderedFileIds.filter((id) =>
+        state.ui.selectedFileIds.includes(id),
+      );
 
       return {
         ...state,
@@ -226,7 +249,10 @@ export function fileContextReducer(state: FileContextState, action: FileContextA
       const { fileId } = action.payload;
       return {
         ...state,
-        ui: { ...state.ui, errorFileIds: state.ui.errorFileIds.filter((id) => id !== fileId) },
+        ui: {
+          ...state.ui,
+          errorFileIds: state.ui.errorFileIds.filter((id) => id !== fileId),
+        },
       };
     }
 

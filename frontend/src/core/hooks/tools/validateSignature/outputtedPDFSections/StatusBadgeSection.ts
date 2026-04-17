@@ -10,7 +10,15 @@ interface StatusBadgeOptions {
   color: ReturnType<typeof rgb>;
 }
 
-export const drawStatusBadge = ({ page, font, fontBold, text, x, y, color }: StatusBadgeOptions): number => {
+export const drawStatusBadge = ({
+  page,
+  font,
+  fontBold,
+  text,
+  x,
+  y,
+  color,
+}: StatusBadgeOptions): number => {
   const paddingX = 14;
   const paddingY = 6;
   const fontSize = 10;

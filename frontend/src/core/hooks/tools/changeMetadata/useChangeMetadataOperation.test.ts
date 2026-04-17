@@ -131,7 +131,9 @@ describe("buildChangeMetadataFormData", () => {
   test("should trim whitespace from custom metadata", () => {
     const params = {
       ...defaultParams,
-      customMetadata: [{ key: "  Department  ", value: "  Engineering  ", id: "custom1" }],
+      customMetadata: [
+        { key: "  Department  ", value: "  Engineering  ", id: "custom1" },
+      ],
     };
 
     const formData = buildChangeMetadataFormData(params, mockFile);

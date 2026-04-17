@@ -24,14 +24,25 @@ export default function SaasOnboardingModal(props: SaasOnboardingModalProps) {
     return null;
   }
 
-  const { currentStep, totalSteps, currentSlide, slideDefinition, flowState, handleButtonAction } = flow;
+  const {
+    currentStep,
+    totalSteps,
+    currentSlide,
+    slideDefinition,
+    flowState,
+    handleButtonAction,
+  } = flow;
 
   const renderHero = () => {
     if (slideDefinition.hero.type === "dual-icon") {
       return (
         <div className={styles.heroIconsContainer}>
           <div className={styles.iconWrapper}>
-            <img src={`${BASE_PATH}/modern-logo/logo512.png`} alt="Stirling icon" className={styles.downloadIcon} />
+            <img
+              src={`${BASE_PATH}/modern-logo/logo512.png`}
+              alt="Stirling icon"
+              className={styles.downloadIcon}
+            />
           </div>
         </div>
       );
@@ -40,9 +51,16 @@ export default function SaasOnboardingModal(props: SaasOnboardingModalProps) {
     return (
       <div className={styles.heroLogoCircle}>
         {slideDefinition.hero.type === "rocket" && (
-          <LocalIcon icon="rocket-launch" width={64} height={64} className={styles.heroIcon} />
+          <LocalIcon
+            icon="rocket-launch"
+            width={64}
+            height={64}
+            className={styles.heroIcon}
+          />
         )}
-        {slideDefinition.hero.type === "diamond" && <DiamondOutlinedIcon sx={{ fontSize: 64, color: "#000000" }} />}
+        {slideDefinition.hero.type === "diamond" && (
+          <DiamondOutlinedIcon sx={{ fontSize: 64, color: "#000000" }} />
+        )}
       </div>
     );
   };
@@ -72,7 +90,12 @@ export default function SaasOnboardingModal(props: SaasOnboardingModalProps) {
       <Stack
         gap={0}
         className={styles.modalContent}
-        style={{ height: "100%", maxHeight: "90vh", display: "flex", flexDirection: "column" }}
+        style={{
+          height: "100%",
+          maxHeight: "90vh",
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
         <div className={styles.heroWrapper} style={{ flexShrink: 0 }}>
           <AnimatedSlideBackground
@@ -96,18 +119,27 @@ export default function SaasOnboardingModal(props: SaasOnboardingModalProps) {
           }}
         >
           <Stack gap={16}>
-            <div key={`title-${currentSlide.key}`} className={`${styles.title} ${styles.titleText}`}>
+            <div
+              key={`title-${currentSlide.key}`}
+              className={`${styles.title} ${styles.titleText}`}
+            >
               {currentSlide.title}
             </div>
 
             <div className={styles.bodyText}>
-              <div key={`body-${currentSlide.key}`} className={`${styles.bodyCopy} ${styles.bodyCopyInner}`}>
+              <div
+                key={`body-${currentSlide.key}`}
+                className={`${styles.bodyCopy} ${styles.bodyCopyInner}`}
+              >
                 {currentSlide.body}
               </div>
               <style>{`div strong{color: var(--onboarding-title); font-weight: 600;}`}</style>
             </div>
 
-            <OnboardingStepper totalSteps={totalSteps} activeStep={currentStep} />
+            <OnboardingStepper
+              totalSteps={totalSteps}
+              activeStep={currentStep}
+            />
 
             <div className={styles.buttonContainer}>
               {renderButtons({

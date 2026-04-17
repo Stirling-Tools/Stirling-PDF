@@ -35,7 +35,8 @@ describe("useAddPasswordOperation", () => {
   const mockUseToolOperation = vi.mocked(useToolOperation);
 
   const getToolConfig = () =>
-    mockUseToolOperation.mock.calls[0][0] as SingleFileToolOperationConfig<AddPasswordFullParameters>;
+    mockUseToolOperation.mock
+      .calls[0][0] as SingleFileToolOperationConfig<AddPasswordFullParameters>;
 
   const mockToolOperationReturn: ToolOperationHook<unknown> = {
     files: [],
@@ -78,49 +79,60 @@ describe("useAddPasswordOperation", () => {
       ownerPassword: "",
       keyLength: 40,
     },
-  ])("should create form data correctly $description", ({ password, ownerPassword, keyLength }) => {
-    renderHook(() => useAddPasswordOperation());
+  ])(
+    "should create form data correctly $description",
+    ({ password, ownerPassword, keyLength }) => {
+      renderHook(() => useAddPasswordOperation());
 
-    const callArgs = getToolConfig();
-    const buildFormData = callArgs.buildFormData;
+      const callArgs = getToolConfig();
+      const buildFormData = callArgs.buildFormData;
 
-    const testParameters: AddPasswordFullParameters = {
-      password,
-      ownerPassword,
-      keyLength,
-      permissions: {
-        preventAssembly: false,
-        preventExtractContent: false,
-        preventExtractForAccessibility: false,
-        preventFillInForm: false,
-        preventModify: false,
-        preventModifyAnnotations: false,
-        preventPrinting: false,
-        preventPrintingFaithful: false,
-      },
-    };
+      const testParameters: AddPasswordFullParameters = {
+        password,
+        ownerPassword,
+        keyLength,
+        permissions: {
+          preventAssembly: false,
+          preventExtractContent: false,
+          preventExtractForAccessibility: false,
+          preventFillInForm: false,
+          preventModify: false,
+          preventModifyAnnotations: false,
+          preventPrinting: false,
+          preventPrintingFaithful: false,
+        },
+      };
 
-    const testFile = new File(["test content"], "test.pdf", { type: "application/pdf" });
-    const formData = buildFormData(testParameters, testFile);
+      const testFile = new File(["test content"], "test.pdf", {
+        type: "application/pdf",
+      });
+      const formData = buildFormData(testParameters, testFile);
 
-    // Verify the form data contains the file
-    expect(formData.get("fileInput")).toBe(testFile);
+      // Verify the form data contains the file
+      expect(formData.get("fileInput")).toBe(testFile);
 
-    // Verify password parameters
-    expect(formData.get("password")).toBe(password);
-    expect(formData.get("ownerPassword")).toBe(ownerPassword);
-    expect(formData.get("keyLength")).toBe(keyLength.toString());
-  });
+      // Verify password parameters
+      expect(formData.get("password")).toBe(password);
+      expect(formData.get("ownerPassword")).toBe(ownerPassword);
+      expect(formData.get("keyLength")).toBe(keyLength.toString());
+    },
+  );
 
   test("should use correct translation for error messages", () => {
     renderHook(() => useAddPasswordOperation());
 
-    expect(mockT).toHaveBeenCalledWith("addPassword.error.failed", "An error occurred while encrypting the PDF.");
+    expect(mockT).toHaveBeenCalledWith(
+      "addPassword.error.failed",
+      "An error occurred while encrypting the PDF.",
+    );
   });
 
   test.each([
     { property: "toolType" as const, expectedValue: ToolType.singleFile },
-    { property: "endpoint" as const, expectedValue: "/api/v1/security/add-password" },
+    {
+      property: "endpoint" as const,
+      expectedValue: "/api/v1/security/add-password",
+    },
     { property: "operationType" as const, expectedValue: "addPassword" },
   ])("should configure $property correctly", ({ property, expectedValue }) => {
     renderHook(() => useAddPasswordOperation());

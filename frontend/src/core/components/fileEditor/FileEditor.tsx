@@ -1,7 +1,13 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { Text, Center, Box, LoadingOverlay, Stack } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
-import { useFileSelection, useFileState, useFileManagement, useFileActions, useFileContext } from "@app/contexts/FileContext";
+import {
+  useFileSelection,
+  useFileState,
+  useFileManagement,
+  useFileActions,
+  useFileContext,
+} from "@app/contexts/FileContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { zipFileService } from "@app/services/zipFileService";
@@ -22,7 +28,10 @@ interface FileEditorProps {
   supportedExtensions?: string[];
 }
 
-const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEditorProps) => {
+const FileEditor = ({
+  toolMode = false,
+  supportedExtensions = ["pdf"],
+}: FileEditorProps) => {
   // Utility function to check if a file extension is supported
   const isFileSupported = useCallback(
     (fileName: string): boolean => {
@@ -40,7 +49,10 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
   const { clearAllFileErrors } = fileContextActions;
 
   // Extract needed values from state (memoized to prevent infinite loops)
-  const activeStirlingFileStubs = useMemo(() => selectors.getStirlingFileStubs(), [state.files.byId, state.files.ids]);
+  const activeStirlingFileStubs = useMemo(
+    () => selectors.getStirlingFileStubs(),
+    [state.files.byId, state.files.ids],
+  );
   const selectedFileIds = state.ui.selectedFileIds;
   const totalItems = state.files.ids.length;
   const selectedCount = selectedFileIds.length;
@@ -58,11 +70,27 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
   const [_error, _setError] = useState<string | null>(null);
 
   // Toast helpers
-  const showStatus = useCallback((message: string, type: "neutral" | "success" | "warning" | "error" = "neutral") => {
-    alert({ alertType: type, title: message, expandable: false, durationMs: 4000 });
-  }, []);
+  const showStatus = useCallback(
+    (
+      message: string,
+      type: "neutral" | "success" | "warning" | "error" = "neutral",
+    ) => {
+      alert({
+        alertType: type,
+        title: message,
+        expandable: false,
+        durationMs: 4000,
+      });
+    },
+    [],
+  );
   const showError = useCallback((message: string) => {
-    alert({ alertType: "error", title: "Error", body: message, expandable: true });
+    alert({
+      alertType: "error",
+      title: "Error",
+      body: message,
+      expandable: true,
+    });
   }, []);
   const [selectionMode, setSelectionMode] = useState(toolMode);
 
@@ -83,7 +111,9 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
   }, [toolMode]);
   const [showFilePickerModal, setShowFilePickerModal] = useState(false);
   // Get selected file IDs from context (defensive programming)
-  const contextSelectedIds = Array.isArray(selectedFileIds) ? selectedFileIds : [];
+  const contextSelectedIds = Array.isArray(selectedFileIds)
+    ? selectedFileIds
+    : [];
 
   // Create refs for frequently changing values to stabilize callbacks
   const contextSelectedIdsRef = useRef<FileId[]>([]);
@@ -95,7 +125,9 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
   const handleSelectAllFiles = useCallback(() => {
     // Respect maxAllowed: if limited, select the last N files
     const allIds = state.files.ids;
-    const idsToSelect = Number.isFinite(maxAllowed) ? allIds.slice(-maxAllowed) : allIds;
+    const idsToSelect = Number.isFinite(maxAllowed)
+      ? allIds.slice(-maxAllowed)
+      : allIds;
     setSelectedFiles(idsToSelect);
     try {
       clearAllFileErrors();
@@ -147,7 +179,9 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
           await addFiles(uploadedFiles, { selectFiles: true });
           // After auto-selection, enforce maxAllowed if needed
           if (Number.isFinite(maxAllowed)) {
-            const nowSelectedIds = selectors.getSelectedStirlingFileStubs().map((r) => r.id);
+            const nowSelectedIds = selectors
+              .getSelectedStirlingFileStubs()
+              .map((r) => r.id);
             if (nowSelectedIds.length > maxAllowed) {
               setSelectedFiles(nowSelectedIds.slice(-maxAllowed));
             }
@@ -155,7 +189,8 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
           showStatus(`Added ${uploadedFiles.length} file(s)`, "success");
         }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to process files";
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to process files";
         showError(errorMessage);
         console.error("File processing error:", err);
       }
@@ -182,14 +217,18 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
         // Add file to selection
         // Determine max files allowed from the active tool (negative or undefined means unlimited)
         const rawMax = selectedTool?.maxFiles;
-        const maxAllowed = !toolMode || rawMax == null || rawMax < 0 ? Infinity : rawMax;
+        const maxAllowed =
+          !toolMode || rawMax == null || rawMax < 0 ? Infinity : rawMax;
 
         if (maxAllowed === 1) {
           // Only one file allowed -> replace selection with the new file
           newSelection = [contextFileId];
         } else {
           // If at capacity, drop the oldest selected and append the new one
-          if (Number.isFinite(maxAllowed) && currentSelectedIds.length >= maxAllowed) {
+          if (
+            Number.isFinite(maxAllowed) &&
+            currentSelectedIds.length >= maxAllowed
+          ) {
             newSelection = [...currentSelectedIds.slice(1), contextFileId];
           } else {
             newSelection = [...currentSelectedIds, contextFileId];
@@ -200,7 +239,13 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
       // Update context (this automatically updates tool selection since they use the same action)
       setSelectedFiles(newSelection);
     },
-    [setSelectedFiles, toolMode, _setStatus, activeStirlingFileStubs, selectedTool?.maxFiles],
+    [
+      setSelectedFiles,
+      toolMode,
+      _setStatus,
+      activeStirlingFileStubs,
+      selectedTool?.maxFiles,
+    ],
   );
 
   // Enforce maxAllowed when tool changes or when an external action sets too many selected files
@@ -226,13 +271,17 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
 
       // Handle multi-file selection reordering
       const filesToMove =
-        selectedFileIds.length > 1 ? selectedFileIds.filter((id) => currentIds.includes(id)) : [sourceFileId];
+        selectedFileIds.length > 1
+          ? selectedFileIds.filter((id) => currentIds.includes(id))
+          : [sourceFileId];
 
       // Create new order
       const newOrder = [...currentIds];
 
       // Remove files to move from their current positions (in reverse order to maintain indices)
-      const sourceIndices = filesToMove.map((id) => newOrder.findIndex((nId) => nId === id)).sort((a, b) => b - a); // Sort descending
+      const sourceIndices = filesToMove
+        .map((id) => newOrder.findIndex((nId) => nId === id))
+        .sort((a, b) => b - a); // Sort descending
 
       sourceIndices.forEach((index) => {
         newOrder.splice(index, 1);
@@ -278,11 +327,19 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
         removeFiles([contextFileId], false);
 
         // Remove from context selections
-        const currentSelected = selectedFileIds.filter((id) => id !== contextFileId);
+        const currentSelected = selectedFileIds.filter(
+          (id) => id !== contextFileId,
+        );
         setSelectedFiles(currentSelected);
       }
     },
-    [activeStirlingFileStubs, selectors, removeFiles, setSelectedFiles, selectedFileIds],
+    [
+      activeStirlingFileStubs,
+      selectors,
+      removeFiles,
+      setSelectedFiles,
+      selectedFileIds,
+    ],
   );
 
   const handleDownloadFile = useCallback(
@@ -315,7 +372,10 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
             isDirty: false,
           });
         } else {
-          console.log("[FileEditor] Skipping clean mark:", { savedPath: result.savedPath, isDirty: record.isDirty });
+          console.log("[FileEditor] Skipping clean mark:", {
+            savedPath: result.savedPath,
+            isDirty: record.isDirty,
+          });
         }
       }
     },
@@ -329,7 +389,10 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
       if (record && file) {
         try {
           // Extract and store files using shared service method
-          const result = await zipFileService.extractAndStoreFilesWithHistory(file, record);
+          const result = await zipFileService.extractAndStoreFilesWithHistory(
+            file,
+            record,
+          );
 
           if (result.success && result.extractedStubs.length > 0) {
             // Add extracted file stubs to FileContext
@@ -376,7 +439,12 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
         navActions.setWorkbench("viewer");
       }
     },
-    [activeStirlingFileStubs, setActiveFileId, setActiveFileIndex, navActions.setWorkbench],
+    [
+      activeStirlingFileStubs,
+      setActiveFileId,
+      setActiveFileIndex,
+      navActions.setWorkbench,
+    ],
   );
 
   const handleLoadFromStorage = useCallback(async (selectedFiles: File[]) => {
@@ -417,7 +485,8 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
                 </Text>
                 <Text c="dimmed">No files loaded</Text>
                 <Text size="sm" c="dimmed">
-                  Upload PDF files, ZIP archives, or load from storage to get started
+                  Upload PDF files, ZIP archives, or load from storage to get
+                  started
                 </Text>
               </Stack>
             </Center>
@@ -432,7 +501,12 @@ const FileEditor = ({ toolMode = false, supportedExtensions = ["pdf"] }: FileEdi
               }}
             >
               {/* Add File Card - only show when files exist */}
-              {activeStirlingFileStubs.length > 0 && <AddFileCard key="add-file-card" onFileSelect={handleFileUpload} />}
+              {activeStirlingFileStubs.length > 0 && (
+                <AddFileCard
+                  key="add-file-card"
+                  onFileSelect={handleFileUpload}
+                />
+              )}
 
               {activeStirlingFileStubs.map((record, index) => {
                 return (

@@ -5,11 +5,18 @@ import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface ExtractImagesSettingsProps {
   parameters: ExtractImagesParameters;
-  onParameterChange: <K extends keyof ExtractImagesParameters>(key: K, value: ExtractImagesParameters[K]) => void;
+  onParameterChange: <K extends keyof ExtractImagesParameters>(
+    key: K,
+    value: ExtractImagesParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const ExtractImagesSettings = ({ parameters, onParameterChange, disabled = false }: ExtractImagesSettingsProps) => {
+const ExtractImagesSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: ExtractImagesSettingsProps) => {
   const { t } = useTranslation();
 
   return (
@@ -19,7 +26,9 @@ const ExtractImagesSettings = ({ parameters, onParameterChange, disabled = false
         value={parameters.format}
         onChange={(value) => {
           const allowedFormats = ["png", "jpg", "gif"] as const;
-          const format = allowedFormats.includes(value as any) ? (value as (typeof allowedFormats)[number]) : "png";
+          const format = allowedFormats.includes(value as any)
+            ? (value as (typeof allowedFormats)[number])
+            : "png";
           onParameterChange("format", format);
         }}
         data={[
@@ -28,7 +37,10 @@ const ExtractImagesSettings = ({ parameters, onParameterChange, disabled = false
           { value: "gif", label: "GIF" },
         ]}
         disabled={disabled}
-        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+        comboboxProps={{
+          withinPortal: true,
+          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+        }}
       />
 
       {/* <Checkbox

@@ -1,6 +1,18 @@
-import { Modal, Stack, Button, Text, Group, Box, ActionIcon, UnstyledButton } from "@mantine/core";
+import {
+  Modal,
+  Stack,
+  Button,
+  Text,
+  Group,
+  Box,
+  ActionIcon,
+  UnstyledButton,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useSavedSignatures, SavedSignature } from "@app/hooks/tools/sign/useSavedSignatures";
+import {
+  useSavedSignatures,
+  SavedSignature,
+} from "@app/hooks/tools/sign/useSavedSignatures";
 import DrawIcon from "@mui/icons-material/Draw";
 import TextFieldsIcon from "@mui/icons-material/TextFields";
 import ImageIcon from "@mui/icons-material/Image";
@@ -77,7 +89,10 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
         <Box
           component="img"
           src={sig.dataUrl}
-          alt={sig.label || t("certSign.collab.signRequest.saved.defaultLabel", "Signature")}
+          alt={
+            sig.label ||
+            t("certSign.collab.signRequest.saved.defaultLabel", "Signature")
+          }
           style={{
             maxWidth: "100%",
             maxHeight: "100%",
@@ -93,7 +108,10 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
     <Modal
       opened={opened}
       onClose={onClose}
-      title={t("certSign.collab.signRequest.selectSignatureTitle", "Select or Create Signature")}
+      title={t(
+        "certSign.collab.signRequest.selectSignatureTitle",
+        "Select or Create Signature",
+      )}
       centered
       size="md"
     >
@@ -101,7 +119,10 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
         {sortedSavedSignatures.length > 0 && (
           <>
             <Text size="sm" fw={600}>
-              {t("certSign.collab.signRequest.savedSignatures", "Saved Signatures")}
+              {t(
+                "certSign.collab.signRequest.savedSignatures",
+                "Saved Signatures",
+              )}
             </Text>
             <Stack gap="xs">
               {sortedSavedSignatures.map((sig) => (
@@ -109,7 +130,11 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
                   key={sig.id}
                   gap={0}
                   wrap="nowrap"
-                  style={{ border: "1px solid var(--mantine-color-gray-3)", borderRadius: 8, overflow: "hidden" }}
+                  style={{
+                    border: "1px solid var(--mantine-color-gray-3)",
+                    borderRadius: 8,
+                    overflow: "hidden",
+                  }}
                 >
                   <UnstyledButton
                     onClick={() => {
@@ -125,7 +150,10 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
                     variant="subtle"
                     size="sm"
                     onClick={() => removeSignature(sig.id)}
-                    aria-label={t("certSign.collab.signRequest.saved.delete", "Delete signature")}
+                    aria-label={t(
+                      "certSign.collab.signRequest.saved.delete",
+                      "Delete signature",
+                    )}
                     style={{ margin: "0 6px" }}
                   >
                     <CloseIcon sx={{ fontSize: "1rem" }} />
@@ -136,8 +164,15 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
           </>
         )}
 
-        <Text size="sm" fw={600} mt={sortedSavedSignatures.length > 0 ? "md" : 0}>
-          {t("certSign.collab.signRequest.createNewSignature", "Create New Signature")}
+        <Text
+          size="sm"
+          fw={600}
+          mt={sortedSavedSignatures.length > 0 ? "md" : 0}
+        >
+          {t(
+            "certSign.collab.signRequest.createNewSignature",
+            "Create New Signature",
+          )}
         </Text>
 
         <Group grow>

@@ -12,7 +12,11 @@ interface ValidateSignatureSettingsProps {
   disabled?: boolean;
 }
 
-const ValidateSignatureSettings = ({ parameters, onParameterChange, disabled = false }: ValidateSignatureSettingsProps) => {
+const ValidateSignatureSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: ValidateSignatureSettingsProps) => {
   const { t } = useTranslation();
   const certFile = parameters.certFile;
 
@@ -24,7 +28,12 @@ const ValidateSignatureSettings = ({ parameters, onParameterChange, disabled = f
     <Card withBorder radius="md" padding="md">
       <Stack gap="sm">
         <div>
-          <Text fw={600}>{t("validateSignature.selectCustomCert", "Custom Certificate File X.509 (Optional)")}</Text>
+          <Text fw={600}>
+            {t(
+              "validateSignature.selectCustomCert",
+              "Custom Certificate File X.509 (Optional)",
+            )}
+          </Text>
           <Text size="sm" c="dimmed">
             {t(
               "validateSignature.settings.certHint",
@@ -42,7 +51,12 @@ const ValidateSignatureSettings = ({ parameters, onParameterChange, disabled = f
             variant="filled"
           />
           {certFile && (
-            <Button variant="subtle" color="gray" onClick={() => handleCertFileChange(null)} disabled={disabled}>
+            <Button
+              variant="subtle"
+              color="gray"
+              onClick={() => handleCertFileChange(null)}
+              disabled={disabled}
+            >
               {t("sign.clear", "Clear")}
             </Button>
           )}

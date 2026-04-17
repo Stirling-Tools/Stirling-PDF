@@ -28,12 +28,16 @@ export const useCompareChangeNavigation = (
       }
 
       const findNodes = (): HTMLElement[] => {
-        return Array.from(container.querySelectorAll(`[data-change-id="${changeValue}"]`)) as HTMLElement[];
+        return Array.from(
+          container.querySelectorAll(`[data-change-id="${changeValue}"]`),
+        ) as HTMLElement[];
       };
 
       const scrollToPageIfNeeded = () => {
         if (!pageNumber) return false;
-        const pageEl = container.querySelector(`.compare-diff-page[data-page-number="${pageNumber}"]`) as HTMLElement | null;
+        const pageEl = container.querySelector(
+          `.compare-diff-page[data-page-number="${pageNumber}"]`,
+        ) as HTMLElement | null;
         if (!pageEl) return false;
         const top = pageEl.offsetTop - Math.round(container.clientHeight * 0.2);
         suppress(() => {
@@ -47,10 +51,18 @@ export const useCompareChangeNavigation = (
         const peerRef = pane === "base" ? comparisonScrollRef : baseScrollRef;
         const peer = peerRef.current;
         if (!peer) return;
-        const peerPageEl = peer.querySelector(`.compare-diff-page[data-page-number="${pageNumber}"]`) as HTMLElement | null;
+        const peerPageEl = peer.querySelector(
+          `.compare-diff-page[data-page-number="${pageNumber}"]`,
+        ) as HTMLElement | null;
         if (!peerPageEl) return;
         const peerMaxTop = Math.max(0, peer.scrollHeight - peer.clientHeight);
-        const top = Math.max(0, Math.min(peerMaxTop, peerPageEl.offsetTop - Math.round(peer.clientHeight * 0.2)));
+        const top = Math.max(
+          0,
+          Math.min(
+            peerMaxTop,
+            peerPageEl.offsetTop - Math.round(peer.clientHeight * 0.2),
+          ),
+        );
         suppress(() => {
           peer.scrollTo({ top, behavior: "auto" });
         });
@@ -61,15 +73,28 @@ export const useCompareChangeNavigation = (
 
         // Prefer a percent-in-page based vertical scroll, which is resilient to transforms.
         const anchor = nodes[0];
-        const pageEl = anchor.closest(".compare-diff-page") as HTMLElement | null;
-        const inner = anchor.closest(".compare-diff-page__inner") as HTMLElement | null;
+        const pageEl = anchor.closest(
+          ".compare-diff-page",
+        ) as HTMLElement | null;
+        const inner = anchor.closest(
+          ".compare-diff-page__inner",
+        ) as HTMLElement | null;
         const topPercent = parseFloat((anchor as HTMLElement).style.top || "0");
         if (pageEl && inner && !Number.isNaN(topPercent)) {
           const innerRect = inner.getBoundingClientRect();
           const innerHeight = Math.max(1, innerRect.height);
           const absoluteTopInPage = (topPercent / 100) * innerHeight;
-          const maxTop = Math.max(0, container.scrollHeight - container.clientHeight);
-          const desiredTop = Math.max(0, Math.min(maxTop, pageEl.offsetTop + absoluteTopInPage - container.clientHeight / 2));
+          const maxTop = Math.max(
+            0,
+            container.scrollHeight - container.clientHeight,
+          );
+          const desiredTop = Math.max(
+            0,
+            Math.min(
+              maxTop,
+              pageEl.offsetTop + absoluteTopInPage - container.clientHeight / 2,
+            ),
+          );
           suppress(() => {
             container.scrollTo({ top: desiredTop, behavior: "auto" });
           });
@@ -92,13 +117,30 @@ export const useCompareChangeNavigation = (
           const boxHeight = Math.max(1, maxBottom - minTop);
           const boxWidth = Math.max(1, maxRight - minLeft);
           const absoluteTop = minTop - containerRect.top + container.scrollTop;
-          const absoluteLeft = minLeft - containerRect.left + container.scrollLeft;
-          const maxTop = Math.max(0, container.scrollHeight - container.clientHeight);
-          const desiredTop = Math.max(0, Math.min(maxTop, absoluteTop - (container.clientHeight - boxHeight) / 2));
-          const desiredLeft = Math.max(0, absoluteLeft - (container.clientWidth - boxWidth) / 2);
+          const absoluteLeft =
+            minLeft - containerRect.left + container.scrollLeft;
+          const maxTop = Math.max(
+            0,
+            container.scrollHeight - container.clientHeight,
+          );
+          const desiredTop = Math.max(
+            0,
+            Math.min(
+              maxTop,
+              absoluteTop - (container.clientHeight - boxHeight) / 2,
+            ),
+          );
+          const desiredLeft = Math.max(
+            0,
+            absoluteLeft - (container.clientWidth - boxWidth) / 2,
+          );
 
           suppress(() => {
-            container.scrollTo({ top: desiredTop, left: desiredLeft, behavior: "auto" });
+            container.scrollTo({
+              top: desiredTop,
+              left: desiredLeft,
+              behavior: "auto",
+            });
           });
         }
 
@@ -110,30 +152,53 @@ export const useCompareChangeNavigation = (
         if (peer) {
           // Use the first node as the anchor
           const anchor = nodes[0];
-          const pageEl = anchor.closest(".compare-diff-page") as HTMLElement | null;
+          const pageEl = anchor.closest(
+            ".compare-diff-page",
+          ) as HTMLElement | null;
           const pageNumAttr = pageEl?.getAttribute("data-page-number");
-          const topPercent = parseFloat((anchor as HTMLElement).style.top || "0");
+          const topPercent = parseFloat(
+            (anchor as HTMLElement).style.top || "0",
+          );
           if (pageNumAttr) {
             const peerPageEl = peer.querySelector(
               `.compare-diff-page[data-page-number="${pageNumAttr}"]`,
             ) as HTMLElement | null;
-            const peerInner = peerPageEl?.querySelector(".compare-diff-page__inner") as HTMLElement | null;
+            const peerInner = peerPageEl?.querySelector(
+              ".compare-diff-page__inner",
+            ) as HTMLElement | null;
             if (peerPageEl && peerInner) {
               const innerRect = peerInner.getBoundingClientRect();
               const innerHeight = Math.max(1, innerRect.height);
               const absoluteTopInPage = (topPercent / 100) * innerHeight;
-              const peerMaxTop = Math.max(0, peer.scrollHeight - peer.clientHeight);
+              const peerMaxTop = Math.max(
+                0,
+                peer.scrollHeight - peer.clientHeight,
+              );
               const peerDesiredTop = Math.max(
                 0,
-                Math.min(peerMaxTop, peerPageEl.offsetTop + absoluteTopInPage - peer.clientHeight / 2),
+                Math.min(
+                  peerMaxTop,
+                  peerPageEl.offsetTop +
+                    absoluteTopInPage -
+                    peer.clientHeight / 2,
+                ),
               );
               suppress(() => {
                 peer.scrollTo({ top: peerDesiredTop, behavior: "auto" });
               });
             } else if (peerPageEl) {
               // Fallback: Scroll to page top (clamped)
-              const peerMaxTop = Math.max(0, peer.scrollHeight - peer.clientHeight);
-              const top = Math.max(0, Math.min(peerMaxTop, peerPageEl.offsetTop - Math.round(peer.clientHeight * 0.2)));
+              const peerMaxTop = Math.max(
+                0,
+                peer.scrollHeight - peer.clientHeight,
+              );
+              const top = Math.max(
+                0,
+                Math.min(
+                  peerMaxTop,
+                  peerPageEl.offsetTop - Math.round(peer.clientHeight * 0.2),
+                ),
+              );
               suppress(() => {
                 peer.scrollTo({ top, behavior: "auto" });
               });
@@ -143,7 +208,9 @@ export const useCompareChangeNavigation = (
 
         const groupsByInner = new Map<HTMLElement, HTMLElement[]>();
         nodes.forEach((element) => {
-          const inner = element.closest(".compare-diff-page__inner") as HTMLElement | null;
+          const inner = element.closest(
+            ".compare-diff-page__inner",
+          ) as HTMLElement | null;
           if (!inner) return;
           const list = groupsByInner.get(inner) ?? [];
           list.push(element);
@@ -182,7 +249,10 @@ export const useCompareChangeNavigation = (
         void container.clientWidth; // Force reflow
         nodes.forEach((element) => {
           element.classList.add("compare-diff-highlight--flash");
-          window.setTimeout(() => element.classList.remove("compare-diff-highlight--flash"), 1600);
+          window.setTimeout(
+            () => element.classList.remove("compare-diff-highlight--flash"),
+            1600,
+          );
         });
       };
 
@@ -229,4 +299,6 @@ export const useCompareChangeNavigation = (
   );
 };
 
-export type UseCompareChangeNavigationReturn = ReturnType<typeof useCompareChangeNavigation>;
+export type UseCompareChangeNavigationReturn = ReturnType<
+  typeof useCompareChangeNavigation
+>;

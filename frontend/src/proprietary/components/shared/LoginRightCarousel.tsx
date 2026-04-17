@@ -28,7 +28,10 @@ function LoginRightCarousel({
 
   const durationsMs = useMemo(() => {
     if (imageSlides.length === 0) return [];
-    return imageSlides.map((_, i) => (i === 0 ? (initialSeconds ?? slideSeconds) : slideSeconds) * 1000);
+    return imageSlides.map(
+      (_, i) =>
+        (i === 0 ? (initialSeconds ?? slideSeconds) : slideSeconds) * 1000,
+    );
   }, [imageSlides, initialSeconds, slideSeconds]);
 
   useEffect(() => {
@@ -51,7 +54,17 @@ function LoginRightCarousel({
     return () => window.removeEventListener("mousemove", onMove);
   }, []);
 
-  function TiltImage({ src, alt, enabled, maxDeg = 6 }: { src: string; alt?: string; enabled: boolean; maxDeg?: number }) {
+  function TiltImage({
+    src,
+    alt,
+    enabled,
+    maxDeg = 6,
+  }: {
+    src: string;
+    alt?: string;
+    enabled: boolean;
+    maxDeg?: number;
+  }) {
     const imgRef = useRef<HTMLImageElement | null>(null);
 
     useEffect(() => {
@@ -94,12 +107,25 @@ function LoginRightCarousel({
   }
 
   return (
-    <div style={{ position: "relative", overflow: "hidden", width: "100%", height: "100%" }}>
+    <div
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        width: "100%",
+        height: "100%",
+      }}
+    >
       {showBackground && (
         <img
           src={`${BASE_PATH}/Login/LoginBackgroundPanel.png`}
           alt="Background panel"
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
         />
       )}
 
@@ -144,13 +170,24 @@ function LoginRightCarousel({
                 </div>
               )}
               {s.subtitle && (
-                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.92)", textShadow: "0 1px 4px rgba(0,0,0,0.25)" }}>
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: "rgba(255,255,255,0.92)",
+                    textShadow: "0 1px 4px rgba(0,0,0,0.25)",
+                  }}
+                >
                   {s.subtitle}
                 </div>
               )}
             </div>
           )}
-          <TiltImage src={s.src} alt={s.alt} enabled={index === idx && !!s.followMouseTilt} maxDeg={s.tiltMaxDeg ?? 6} />
+          <TiltImage
+            src={s.src}
+            alt={s.alt}
+            enabled={index === idx && !!s.followMouseTilt}
+            maxDeg={s.tiltMaxDeg ?? 6}
+          />
         </div>
       ))}
 
@@ -178,7 +215,8 @@ function LoginRightCarousel({
               borderRadius: "50%",
               border: "none",
               cursor: "pointer",
-              backgroundColor: i === index ? "#ffffff" : "rgba(255,255,255,0.5)",
+              backgroundColor:
+                i === index ? "#ffffff" : "rgba(255,255,255,0.5)",
               boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
               display: "block",
               flexShrink: 0,

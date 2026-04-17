@@ -33,7 +33,9 @@ class TomlBackend implements BackendModule<TomlBackendOptions> {
     fetch(url)
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`Failed to load translation file: ${url} (${response.status})`);
+          throw new Error(
+            `Failed to load translation file: ${url} (${response.status})`,
+          );
         }
         return response.text();
       })

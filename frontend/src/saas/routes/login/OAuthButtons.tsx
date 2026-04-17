@@ -31,7 +31,11 @@ export default function OAuthButtons({
     return (
       <div className="oauth-container-icons">
         {oauthProviders.map((p) => (
-          <Tooltip key={p.id} content={`${t("login.signInWith", "Sign in with")} ${p.label}`} position="top">
+          <Tooltip
+            key={p.id}
+            content={`${t("login.signInWith", "Sign in with")} ${p.label}`}
+            position="top"
+          >
             <button
               onClick={() => onProviderClick(p.id as "github" | "google")}
               disabled={isSubmitting || p.isDisabled}
@@ -54,7 +58,11 @@ export default function OAuthButtons({
     return (
       <div className="oauth-container-grid">
         {oauthProviders.map((p) => (
-          <Tooltip key={p.id} content={`${t("login.signInWith", "Sign in with")} ${p.label}`} position="top">
+          <Tooltip
+            key={p.id}
+            content={`${t("login.signInWith", "Sign in with")} ${p.label}`}
+            position="top"
+          >
             <button
               onClick={() => onProviderClick(p.id as "github" | "google")}
               disabled={isSubmitting || p.isDisabled}

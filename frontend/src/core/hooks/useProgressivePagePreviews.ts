@@ -6,7 +6,8 @@ import { PagePreview } from "@app/types/compare";
 const DISPLAY_SCALE = 1;
 const BATCH_SIZE = 10; // Render 10 pages at a time
 
-const getDevicePixelRatio = () => (typeof window !== "undefined" ? window.devicePixelRatio : 1);
+const getDevicePixelRatio = () =>
+  typeof window !== "undefined" ? window.devicePixelRatio : 1;
 
 interface ProgressivePagePreviewsOptions {
   file: File | null;
@@ -23,7 +24,12 @@ interface ProgressivePagePreviewsState {
   loadingPages: Set<number>; // 0-based page indices currently being loaded
 }
 
-export const useProgressivePagePreviews = ({ file, enabled, cacheKey, visiblePageRange }: ProgressivePagePreviewsOptions) => {
+export const useProgressivePagePreviews = ({
+  file,
+  enabled,
+  cacheKey,
+  visiblePageRange,
+}: ProgressivePagePreviewsOptions) => {
   const [state, setState] = useState<ProgressivePagePreviewsState>({
     pages: [],
     loading: false,
@@ -36,7 +42,11 @@ export const useProgressivePagePreviews = ({ file, enabled, cacheKey, visiblePag
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const renderPageBatch = useCallback(
-    async (pdf: PDFDocumentProxy, pageNumbers: number[], signal: AbortSignal): Promise<PagePreview[]> => {
+    async (
+      pdf: PDFDocumentProxy,
+      pageNumbers: number[],
+      signal: AbortSignal,
+    ): Promise<PagePreview[]> => {
       const previews: PagePreview[] = [];
       const dpr = getDevicePixelRatio();
       const renderScale = Math.max(2, Math.min(3, dpr * 2));
@@ -59,7 +69,11 @@ export const useProgressivePagePreviews = ({ file, enabled, cacheKey, visiblePag
             continue;
           }
 
-          await page.render({ canvasContext: context, viewport: renderViewport, canvas }).promise;
+          await page.render({
+            canvasContext: context,
+            viewport: renderViewport,
+            canvas,
+          }).promise;
           previews.push({
             pageNumber,
             width: Math.round(displayViewport.width),
@@ -72,7 +86,10 @@ export const useProgressivePagePreviews = ({ file, enabled, cacheKey, visiblePag
           canvas.width = 0;
           canvas.height = 0;
         } catch (error) {
-          console.error(`[progressive-pages] failed to render page ${pageNumber}:`, error);
+          console.error(
+            `[progressive-pages] failed to render page ${pageNumber}:`,
+            error,
+          );
         }
       }
 
@@ -102,7 +119,10 @@ export const useProgressivePagePreviews = ({ file, enabled, cacheKey, visiblePag
       // Mark pages as loading
       setState((prev) => ({
         ...prev,
-        loadingPages: new Set([...prev.loadingPages, ...pagesToLoad.map((p) => p - 1)]),
+        loadingPages: new Set([
+          ...prev.loadingPages,
+          ...pagesToLoad.map((p) => p - 1),
+        ]),
       }));
 
       try {
@@ -123,7 +143,9 @@ export const useProgressivePagePreviews = ({ file, enabled, cacheKey, visiblePag
               newLoadingPages.delete(pageIndex);
 
               // Insert preview in correct position
-              const insertIndex = newPages.findIndex((p) => p.pageNumber > preview.pageNumber);
+              const insertIndex = newPages.findIndex(
+                (p) => p.pageNumber > preview.pageNumber,
+              );
               if (insertIndex === -1) {
                 newPages.push(preview);
               } else {
@@ -141,7 +163,10 @@ export const useProgressivePagePreviews = ({ file, enabled, cacheKey, visiblePag
         }
       } catch (error) {
         if (!signal.aborted) {
-          console.error("[progressive-pages] failed to load page batch:", error);
+          console.error(
+            "[progressive-pages] failed to load page batch:",
+            error,
+          );
         }
       } finally {
         if (!signal.aborted) {
@@ -268,4 +293,6 @@ export const useProgressivePagePreviews = ({ file, enabled, cacheKey, visiblePag
   };
 };
 
-export type UseProgressivePagePreviewsReturn = ReturnType<typeof useProgressivePagePreviews>;
+export type UseProgressivePagePreviewsReturn = ReturnType<
+  typeof useProgressivePagePreviews
+>;

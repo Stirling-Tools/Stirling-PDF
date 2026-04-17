@@ -8,14 +8,22 @@ export interface HoverOverlayProps {
   children: React.ReactNode;
 }
 
-const HoverOverlay: React.FC<HoverOverlayProps> = ({ onMouseEnter, onMouseLeave, children }) => {
+const HoverOverlay: React.FC<HoverOverlayProps> = ({
+  onMouseEnter,
+  onMouseLeave,
+  children,
+}) => {
   const defaultMouseEnter = (e: React.MouseEvent) => {
-    const overlay = e.currentTarget.querySelector(".hover-overlay") as HTMLElement;
+    const overlay = e.currentTarget.querySelector(
+      ".hover-overlay",
+    ) as HTMLElement;
     if (overlay) overlay.style.opacity = "1";
   };
 
   const defaultMouseLeave = (e: React.MouseEvent) => {
-    const overlay = e.currentTarget.querySelector(".hover-overlay") as HTMLElement;
+    const overlay = e.currentTarget.querySelector(
+      ".hover-overlay",
+    ) as HTMLElement;
     if (overlay) overlay.style.opacity = "0";
   };
 

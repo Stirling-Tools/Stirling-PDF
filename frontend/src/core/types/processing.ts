@@ -1,5 +1,11 @@
 export interface ProcessingError {
-  type: "network" | "parsing" | "memory" | "corruption" | "timeout" | "cancelled";
+  type:
+    | "network"
+    | "parsing"
+    | "memory"
+    | "corruption"
+    | "timeout"
+    | "cancelled";
   message: string;
   recoverable: boolean;
   retryCount: number;
@@ -60,7 +66,11 @@ export interface CacheStats {
   maxSizeBytes: number;
 }
 
-export type ProcessingStrategy = "immediate_full" | "progressive_chunked" | "metadata_only" | "priority_pages";
+export type ProcessingStrategy =
+  | "immediate_full"
+  | "progressive_chunked"
+  | "metadata_only"
+  | "priority_pages";
 
 export interface ProcessingConfig {
   strategy: ProcessingStrategy;

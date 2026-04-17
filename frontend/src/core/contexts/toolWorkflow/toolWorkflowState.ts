@@ -1,5 +1,8 @@
 import { PageEditorFunctions } from "@app/types/pageEditor";
-import { type ToolPanelMode, DEFAULT_TOOL_PANEL_MODE } from "@app/constants/toolPanel";
+import {
+  type ToolPanelMode,
+  DEFAULT_TOOL_PANEL_MODE,
+} from "@app/constants/toolPanel";
 
 export interface ToolWorkflowState {
   // UI State
@@ -18,7 +21,10 @@ export interface ToolWorkflowState {
 // Actions
 export type ToolWorkflowAction =
   | { type: "SET_SIDEBARS_VISIBLE"; payload: boolean }
-  | { type: "SET_LEFT_PANEL_VIEW"; payload: "toolPicker" | "toolContent" | "hidden" }
+  | {
+      type: "SET_LEFT_PANEL_VIEW";
+      payload: "toolPicker" | "toolContent" | "hidden";
+    }
   | { type: "SET_READER_MODE"; payload: boolean }
   | { type: "SET_TOOL_PANEL_MODE"; payload: ToolPanelMode }
   | { type: "SET_PREVIEW_FILE"; payload: File | null }
@@ -40,7 +46,10 @@ export const createInitialState = (): ToolWorkflowState => ({
   toolPanelMode: DEFAULT_TOOL_PANEL_MODE,
 });
 
-export function toolWorkflowReducer(state: ToolWorkflowState, action: ToolWorkflowAction): ToolWorkflowState {
+export function toolWorkflowReducer(
+  state: ToolWorkflowState,
+  action: ToolWorkflowAction,
+): ToolWorkflowState {
   switch (action.type) {
     case "SET_SIDEBARS_VISIBLE":
       return { ...state, sidebarsVisible: action.payload };

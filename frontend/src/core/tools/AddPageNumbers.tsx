@@ -10,14 +10,19 @@ import { useAccordionSteps } from "@app/hooks/tools/shared/useAccordionSteps";
 import AddPageNumbersPositionSettings from "@app/components/tools/addPageNumbers/AddPageNumbersPositionSettings";
 import AddPageNumbersAppearanceSettings from "@app/components/tools/addPageNumbers/AddPageNumbersAppearanceSettings";
 
-const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
+const AddPageNumbers = ({
+  onPreviewFile,
+  onComplete,
+  onError,
+}: BaseToolProps) => {
   const { t } = useTranslation();
   const selectedFiles = useViewScopedFiles();
 
   const params = useAddPageNumbersParameters();
   const operation = useAddPageNumbersOperation();
 
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("add-page-numbers");
+  const { enabled: endpointEnabled, loading: endpointLoading } =
+    useEndpointEnabled("add-page-numbers");
 
   useEffect(() => {
     operation.resetResults();
@@ -31,12 +36,16 @@ const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
         onComplete(operation.files);
       }
     } catch (error: any) {
-      onError?.(error?.message || t("addPageNumbers.error.failed", "Add page numbers operation failed"));
+      onError?.(
+        error?.message ||
+          t("addPageNumbers.error.failed", "Add page numbers operation failed"),
+      );
     }
   };
 
   const hasFiles = selectedFiles.length > 0;
-  const hasResults = operation.files.length > 0 || operation.downloadUrl !== null;
+  const hasResults =
+    operation.files.length > 0 || operation.downloadUrl !== null;
 
   enum AddPageNumbersStep {
     NONE = "none",
@@ -63,8 +72,11 @@ const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
     // Step 1: Position Selection & Pages/Starting Number
     steps.push({
       title: t("addPageNumbers.positionAndPages", "Position & Pages"),
-      isCollapsed: accordion.getCollapsedState(AddPageNumbersStep.POSITION_AND_PAGES),
-      onCollapsedClick: () => accordion.handleStepToggle(AddPageNumbersStep.POSITION_AND_PAGES),
+      isCollapsed: accordion.getCollapsedState(
+        AddPageNumbersStep.POSITION_AND_PAGES,
+      ),
+      onCollapsedClick: () =>
+        accordion.handleStepToggle(AddPageNumbersStep.POSITION_AND_PAGES),
       isVisible: hasFiles || hasResults,
       content: (
         <AddPageNumbersPositionSettings
@@ -81,7 +93,8 @@ const AddPageNumbers = ({ onPreviewFile, onComplete, onError }: BaseToolProps) =
     steps.push({
       title: t("addPageNumbers.customize", "Customize Appearance"),
       isCollapsed: accordion.getCollapsedState(AddPageNumbersStep.CUSTOMIZE),
-      onCollapsedClick: () => accordion.handleStepToggle(AddPageNumbersStep.CUSTOMIZE),
+      onCollapsedClick: () =>
+        accordion.handleStepToggle(AddPageNumbersStep.CUSTOMIZE),
       isVisible: hasFiles || hasResults,
       content: (
         <AddPageNumbersAppearanceSettings

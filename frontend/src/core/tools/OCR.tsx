@@ -24,12 +24,16 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const advancedOCRTips = useAdvancedOCRTips();
 
   // Step expansion state management
-  const [expandedStep, setExpandedStep] = useState<"files" | "settings" | "advanced" | null>("files");
+  const [expandedStep, setExpandedStep] = useState<
+    "files" | "settings" | "advanced" | null
+  >("files");
 
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled("ocr-pdf");
+  const { enabled: endpointEnabled, loading: endpointLoading } =
+    useEndpointEnabled("ocr-pdf");
 
   const hasFiles = selectedFiles.length > 0;
-  const hasResults = ocrOperation.files.length > 0 || ocrOperation.downloadUrl !== null;
+  const hasResults =
+    ocrOperation.files.length > 0 || ocrOperation.downloadUrl !== null;
   const hasValidSettings = ocrParams.validateParameters();
 
   useEffect(() => {
@@ -58,7 +62,9 @@ const OCR = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       }
     } catch (error) {
       if (onError) {
-        onError(error instanceof Error ? error.message : "OCR operation failed");
+        onError(
+          error instanceof Error ? error.message : "OCR operation failed",
+        );
       }
     }
   };

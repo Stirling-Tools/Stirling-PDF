@@ -1,17 +1,29 @@
 import { Stack, Text, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { SanitizeParameters, defaultParameters } from "@app/hooks/tools/sanitize/useSanitizeParameters";
+import {
+  SanitizeParameters,
+  defaultParameters,
+} from "@app/hooks/tools/sanitize/useSanitizeParameters";
 
 interface SanitizeSettingsProps {
   parameters: SanitizeParameters;
-  onParameterChange: <K extends keyof SanitizeParameters>(key: K, value: SanitizeParameters[K]) => void;
+  onParameterChange: <K extends keyof SanitizeParameters>(
+    key: K,
+    value: SanitizeParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const SanitizeSettings = ({ parameters, onParameterChange, disabled = false }: SanitizeSettingsProps) => {
+const SanitizeSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: SanitizeSettingsProps) => {
   const { t } = useTranslation();
 
-  const options = (Object.keys(defaultParameters) as Array<keyof SanitizeParameters>).map((key) => ({
+  const options = (
+    Object.keys(defaultParameters) as Array<keyof SanitizeParameters>
+  ).map((key) => ({
     key,
     label: t(`sanitize.options.${key}.label`, key),
     description: t(`sanitize.options.${key}.desc`, `${key} from the PDF`),
@@ -29,7 +41,9 @@ const SanitizeSettings = ({ parameters, onParameterChange, disabled = false }: S
           <Checkbox
             key={option.key}
             checked={parameters[option.key]}
-            onChange={(event) => onParameterChange(option.key, event.currentTarget.checked)}
+            onChange={(event) =>
+              onParameterChange(option.key, event.currentTarget.checked)
+            }
             disabled={disabled}
             label={
               <div>

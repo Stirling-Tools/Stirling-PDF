@@ -38,7 +38,9 @@ function getCssVariableAsRgb(variableName: string, fallback: RgbTuple) {
     return toRgb(fallback);
   }
 
-  const value = getComputedStyle(document.documentElement).getPropertyValue(variableName).trim();
+  const value = getComputedStyle(document.documentElement)
+    .getPropertyValue(variableName)
+    .trim();
 
   if (!value) {
     console.warn(`CSS variable ${variableName} not found, using fallback`);
@@ -56,14 +58,38 @@ function getCssVariableAsRgb(variableName: string, fallback: RgbTuple) {
 }
 
 export const colorPalette = {
-  headerBackground: getCssVariableAsRgb("--pdf-light-header-bg", defaultLightPalette.headerBackground),
+  headerBackground: getCssVariableAsRgb(
+    "--pdf-light-header-bg",
+    defaultLightPalette.headerBackground,
+  ),
   accent: getCssVariableAsRgb("--pdf-light-accent", defaultLightPalette.accent),
-  textPrimary: getCssVariableAsRgb("--pdf-light-text-primary", defaultLightPalette.textPrimary),
-  textMuted: getCssVariableAsRgb("--pdf-light-text-muted", defaultLightPalette.textMuted),
-  boxBackground: getCssVariableAsRgb("--pdf-light-box-bg", defaultLightPalette.boxBackground),
-  boxBorder: getCssVariableAsRgb("--pdf-light-box-border", defaultLightPalette.boxBorder),
-  warning: getCssVariableAsRgb("--pdf-light-warning", defaultLightPalette.warning),
+  textPrimary: getCssVariableAsRgb(
+    "--pdf-light-text-primary",
+    defaultLightPalette.textPrimary,
+  ),
+  textMuted: getCssVariableAsRgb(
+    "--pdf-light-text-muted",
+    defaultLightPalette.textMuted,
+  ),
+  boxBackground: getCssVariableAsRgb(
+    "--pdf-light-box-bg",
+    defaultLightPalette.boxBackground,
+  ),
+  boxBorder: getCssVariableAsRgb(
+    "--pdf-light-box-border",
+    defaultLightPalette.boxBorder,
+  ),
+  warning: getCssVariableAsRgb(
+    "--pdf-light-warning",
+    defaultLightPalette.warning,
+  ),
   danger: getCssVariableAsRgb("--pdf-light-danger", defaultLightPalette.danger),
-  success: getCssVariableAsRgb("--pdf-light-success", defaultLightPalette.success),
-  neutral: getCssVariableAsRgb("--pdf-light-neutral", defaultLightPalette.neutral),
+  success: getCssVariableAsRgb(
+    "--pdf-light-success",
+    defaultLightPalette.success,
+  ),
+  neutral: getCssVariableAsRgb(
+    "--pdf-light-neutral",
+    defaultLightPalette.neutral,
+  ),
 };

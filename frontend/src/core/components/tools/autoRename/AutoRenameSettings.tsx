@@ -4,7 +4,10 @@ import { AutoRenameParameters } from "@app/hooks/tools/autoRename/useAutoRenameP
 
 interface AutoRenameSettingsProps {
   parameters: AutoRenameParameters;
-  onParameterChange: <K extends keyof AutoRenameParameters>(parameter: K, value: AutoRenameParameters[K]) => void;
+  onParameterChange: <K extends keyof AutoRenameParameters>(
+    parameter: K,
+    value: AutoRenameParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 

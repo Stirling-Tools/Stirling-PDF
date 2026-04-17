@@ -1,16 +1,31 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Stack, Text, Divider, Collapse, Button, NumberInput, Checkbox } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  Divider,
+  Collapse,
+  Button,
+  NumberInput,
+  Checkbox,
+} from "@mantine/core";
 import { BookletImpositionParameters } from "@app/hooks/tools/bookletImposition/useBookletImpositionParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
 
 interface BookletImpositionSettingsProps {
   parameters: BookletImpositionParameters;
-  onParameterChange: (key: keyof BookletImpositionParameters, value: any) => void;
+  onParameterChange: (
+    key: keyof BookletImpositionParameters,
+    value: any,
+  ) => void;
   disabled?: boolean;
 }
 
-const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = false }: BookletImpositionSettingsProps) => {
+const BookletImpositionSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: BookletImpositionSettingsProps) => {
   const { t } = useTranslation();
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
@@ -36,9 +51,17 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
           disabled={disabled}
           label={
             <div>
-              <Text size="sm">{t("bookletImposition.doubleSided.label", "Double-sided printing")}</Text>
+              <Text size="sm">
+                {t(
+                  "bookletImposition.doubleSided.label",
+                  "Double-sided printing",
+                )}
+              </Text>
               <Text size="xs" c="dimmed">
-                {t("bookletImposition.doubleSided.tooltip", "Creates both front and back sides for proper booklet printing")}
+                {t(
+                  "bookletImposition.doubleSided.tooltip",
+                  "Creates both front and back sides for proper booklet printing",
+                )}
               </Text>
             </div>
           }
@@ -62,8 +85,14 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
               value={parameters.duplexPass}
               onChange={(value) => onParameterChange("duplexPass", value)}
               options={[
-                { value: "FIRST", label: t("bookletImposition.duplexPass.first", "1st Pass") },
-                { value: "SECOND", label: t("bookletImposition.duplexPass.second", "2nd Pass") },
+                {
+                  value: "FIRST",
+                  label: t("bookletImposition.duplexPass.first", "1st Pass"),
+                },
+                {
+                  value: "SECOND",
+                  label: t("bookletImposition.duplexPass.second", "2nd Pass"),
+                },
               ]}
               disabled={disabled}
             />
@@ -74,7 +103,10 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
                     "bookletImposition.duplexPass.firstInstructions",
                     "Prints front sides → stack face-down → run again with 2nd Pass",
                   )
-                : t("bookletImposition.duplexPass.secondInstructions", "Load printed stack face-down → prints back sides")}
+                : t(
+                    "bookletImposition.duplexPass.secondInstructions",
+                    "Load printed stack face-down → prints back sides",
+                  )}
             </Text>
           </Stack>
         )}
@@ -84,8 +116,13 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
 
       {/* Advanced Options */}
       <Stack gap="sm">
-        <Button variant="subtle" onClick={() => setAdvancedOpen(!advancedOpen)} disabled={disabled}>
-          {t("bookletImposition.advanced.toggle", "Advanced Options")} {advancedOpen ? "▲" : "▼"}
+        <Button
+          variant="subtle"
+          onClick={() => setAdvancedOpen(!advancedOpen)}
+          disabled={disabled}
+        >
+          {t("bookletImposition.advanced.toggle", "Advanced Options")}{" "}
+          {advancedOpen ? "▲" : "▼"}
         </Button>
 
         <Collapse in={advancedOpen}>
@@ -93,13 +130,26 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
             {/* Right-to-Left Binding */}
             <Checkbox
               checked={parameters.spineLocation === "RIGHT"}
-              onChange={(event) => onParameterChange("spineLocation", event.currentTarget.checked ? "RIGHT" : "LEFT")}
+              onChange={(event) =>
+                onParameterChange(
+                  "spineLocation",
+                  event.currentTarget.checked ? "RIGHT" : "LEFT",
+                )
+              }
               disabled={disabled}
               label={
                 <div>
-                  <Text size="sm">{t("bookletImposition.rtlBinding.label", "Right-to-left binding")}</Text>
+                  <Text size="sm">
+                    {t(
+                      "bookletImposition.rtlBinding.label",
+                      "Right-to-left binding",
+                    )}
+                  </Text>
                   <Text size="xs" c="dimmed">
-                    {t("bookletImposition.rtlBinding.tooltip", "For Arabic, Hebrew, or other right-to-left languages")}
+                    {t(
+                      "bookletImposition.rtlBinding.tooltip",
+                      "For Arabic, Hebrew, or other right-to-left languages",
+                    )}
                   </Text>
                 </div>
               }
@@ -108,11 +158,18 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
             {/* Add Border Option */}
             <Checkbox
               checked={parameters.addBorder}
-              onChange={(event) => onParameterChange("addBorder", event.currentTarget.checked)}
+              onChange={(event) =>
+                onParameterChange("addBorder", event.currentTarget.checked)
+              }
               disabled={disabled}
               label={
                 <div>
-                  <Text size="sm">{t("bookletImposition.addBorder.label", "Add borders around pages")}</Text>
+                  <Text size="sm">
+                    {t(
+                      "bookletImposition.addBorder.label",
+                      "Add borders around pages",
+                    )}
+                  </Text>
                   <Text size="xs" c="dimmed">
                     {t(
                       "bookletImposition.addBorder.tooltip",
@@ -127,13 +184,23 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
             <Stack gap="xs">
               <Checkbox
                 checked={parameters.addGutter}
-                onChange={(event) => onParameterChange("addGutter", event.currentTarget.checked)}
+                onChange={(event) =>
+                  onParameterChange("addGutter", event.currentTarget.checked)
+                }
                 disabled={disabled}
                 label={
                   <div>
-                    <Text size="sm">{t("bookletImposition.addGutter.label", "Add gutter margin")}</Text>
+                    <Text size="sm">
+                      {t(
+                        "bookletImposition.addGutter.label",
+                        "Add gutter margin",
+                      )}
+                    </Text>
                     <Text size="xs" c="dimmed">
-                      {t("bookletImposition.addGutter.tooltip", "Adds inner margin space for binding")}
+                      {t(
+                        "bookletImposition.addGutter.tooltip",
+                        "Adds inner margin space for binding",
+                      )}
                     </Text>
                   </div>
                 }
@@ -141,9 +208,14 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
 
               {parameters.addGutter && (
                 <NumberInput
-                  label={t("bookletImposition.gutterSize.label", "Gutter size (points)")}
+                  label={t(
+                    "bookletImposition.gutterSize.label",
+                    "Gutter size (points)",
+                  )}
                   value={parameters.gutterSize}
-                  onChange={(value) => onParameterChange("gutterSize", value || 12)}
+                  onChange={(value) =>
+                    onParameterChange("gutterSize", value || 12)
+                  }
                   min={6}
                   max={72}
                   step={6}
@@ -156,12 +228,23 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
             {/* Flip on Short Edge */}
             <Checkbox
               checked={parameters.flipOnShortEdge}
-              onChange={(event) => onParameterChange("flipOnShortEdge", event.currentTarget.checked)}
+              onChange={(event) =>
+                onParameterChange(
+                  "flipOnShortEdge",
+                  event.currentTarget.checked,
+                )
+              }
               disabled={disabled || !parameters.doubleSided}
               label={
                 <div>
-                  <Text size="sm" c={!parameters.doubleSided ? "dimmed" : undefined}>
-                    {t("bookletImposition.flipOnShortEdge.label", "Flip on short edge")}
+                  <Text
+                    size="sm"
+                    c={!parameters.doubleSided ? "dimmed" : undefined}
+                  >
+                    {t(
+                      "bookletImposition.flipOnShortEdge.label",
+                      "Flip on short edge",
+                    )}
                   </Text>
                   <Text size="xs" c="dimmed">
                     {!parameters.doubleSided
@@ -180,7 +263,10 @@ const BookletImpositionSettings = ({ parameters, onParameterChange, disabled = f
 
             {/* Paper Size Note */}
             <Text size="xs" c="dimmed" fs="italic">
-              {t("bookletImposition.paperSizeNote", "Paper size is automatically derived from your first page.")}
+              {t(
+                "bookletImposition.paperSizeNote",
+                "Paper size is automatically derived from your first page.",
+              )}
             </Text>
           </Stack>
         </Collapse>

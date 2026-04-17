@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, ReactNode, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useCallback,
+} from "react";
 import { SaaSStripeCheckout } from "@app/components/shared/billing/SaaSStripeCheckout";
 import { useSaaSBilling } from "@app/contexts/SaasBillingContext";
 
@@ -9,7 +15,9 @@ interface SaaSCheckoutContextType {
   closeCheckout: () => void;
 }
 
-const SaaSCheckoutContext = createContext<SaaSCheckoutContextType | undefined>(undefined);
+const SaaSCheckoutContext = createContext<SaaSCheckoutContextType | undefined>(
+  undefined,
+);
 
 export const useSaaSCheckout = () => {
   const context = useContext(SaaSCheckoutContext);
@@ -23,7 +31,9 @@ interface SaaSCheckoutProviderProps {
   children: ReactNode;
 }
 
-export const SaaSCheckoutProvider: React.FC<SaaSCheckoutProviderProps> = ({ children }) => {
+export const SaaSCheckoutProvider: React.FC<SaaSCheckoutProviderProps> = ({
+  children,
+}) => {
   const [opened, setOpened] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
@@ -48,7 +58,10 @@ export const SaaSCheckoutProvider: React.FC<SaaSCheckoutProviderProps> = ({ chil
     try {
       await refreshBilling();
     } catch (error) {
-      console.error("[SaaSCheckoutContext] Failed to refresh billing after checkout:", error);
+      console.error(
+        "[SaaSCheckoutContext] Failed to refresh billing after checkout:",
+        error,
+      );
     }
   }, [refreshBilling]);
 
@@ -62,7 +75,12 @@ export const SaaSCheckoutProvider: React.FC<SaaSCheckoutProviderProps> = ({ chil
       }}
     >
       {children}
-      <SaaSStripeCheckout opened={opened} onClose={closeCheckout} planId={selectedPlan} onSuccess={handleCheckoutSuccess} />
+      <SaaSStripeCheckout
+        opened={opened}
+        onClose={closeCheckout}
+        planId={selectedPlan}
+        onSuccess={handleCheckoutSuccess}
+      />
     </SaaSCheckoutContext.Provider>
   );
 };

@@ -4,7 +4,8 @@ import apiClient from "@app/services/apiClient";
 import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
 import type { GroupEnabledResult } from "@app/types/groupEnabled";
 
-const OFFLINE_REASON_FALLBACK = "Requires your Stirling-PDF server (currently offline)";
+const OFFLINE_REASON_FALLBACK =
+  "Requires your Stirling-PDF server (currently offline)";
 
 /**
  * Desktop override: skips the network request entirely when the self-hosted
@@ -29,13 +30,18 @@ export function useGroupEnabled(group: string): GroupEnabledResult {
     if (status === "offline") {
       setResult({
         enabled: false,
-        unavailableReason: t("toolPanel.fullscreen.selfHostedOffline", OFFLINE_REASON_FALLBACK),
+        unavailableReason: t(
+          "toolPanel.fullscreen.selfHostedOffline",
+          OFFLINE_REASON_FALLBACK,
+        ),
       });
       return;
     }
 
     apiClient
-      .get<boolean>(`/api/v1/config/group-enabled?group=${encodeURIComponent(group)}`)
+      .get<boolean>(
+        `/api/v1/config/group-enabled?group=${encodeURIComponent(group)}`,
+      )
       .then((res) => setResult({ enabled: res.data, unavailableReason: null }))
       .catch(() => setResult({ enabled: false, unavailableReason: null }));
   }, [group, t]);

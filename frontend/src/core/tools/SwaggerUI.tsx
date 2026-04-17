@@ -13,7 +13,11 @@ const SwaggerUI: React.FC<BaseToolProps> = () => {
       <p>Opening Swagger UI in a new tab...</p>
       <p>
         If it didn't open automatically,{" "}
-        <a href={withBasePath("/swagger-ui/5.21.0/index.html")} target="_blank" rel="noopener noreferrer">
+        <a
+          href={withBasePath("/swagger-ui/5.21.0/index.html")}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           click here
         </a>
       </p>

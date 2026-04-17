@@ -5,16 +5,24 @@ interface AnnotationContextValue {
   annotationApiRef: React.RefObject<AnnotationAPI | null>;
 }
 
-const AnnotationContext = createContext<AnnotationContextValue | undefined>(undefined);
+const AnnotationContext = createContext<AnnotationContextValue | undefined>(
+  undefined,
+);
 
-export const AnnotationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AnnotationProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const annotationApiRef = useRef<AnnotationAPI>(null);
 
   const value: AnnotationContextValue = {
     annotationApiRef,
   };
 
-  return <AnnotationContext.Provider value={value}>{children}</AnnotationContext.Provider>;
+  return (
+    <AnnotationContext.Provider value={value}>
+      {children}
+    </AnnotationContext.Provider>
+  );
 };
 
 export const useAnnotation = (): AnnotationContextValue => {

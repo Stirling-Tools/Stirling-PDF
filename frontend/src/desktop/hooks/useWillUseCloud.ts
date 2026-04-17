@@ -29,7 +29,11 @@ export function useWillUseCloud(endpoint?: string): boolean {
         const willRoute = await operationRouter.willRouteToSaaS(endpoint);
         setWillUseCloud(willRoute);
       } catch (error) {
-        console.error("[useWillUseCloud] Failed to check cloud routing for endpoint:", endpoint, error);
+        console.error(
+          "[useWillUseCloud] Failed to check cloud routing for endpoint:",
+          endpoint,
+          error,
+        );
         setWillUseCloud(false);
       }
     };

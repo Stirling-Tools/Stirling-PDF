@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Modal, Stack, Text, PasswordInput, Button, Alert } from "@mantine/core";
+import {
+  Modal,
+  Stack,
+  Text,
+  PasswordInput,
+  Button,
+  Alert,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { accountService } from "@app/services/accountService";
@@ -18,7 +25,11 @@ interface FirstLoginModalProps {
  * Forces first-time users to change their password.
  * Cannot be dismissed until password is successfully changed.
  */
-export default function FirstLoginModal({ opened, onPasswordChanged, username }: FirstLoginModalProps) {
+export default function FirstLoginModal({
+  opened,
+  onPasswordChanged,
+  username,
+}: FirstLoginModalProps) {
   const { t } = useTranslation();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -34,17 +45,29 @@ export default function FirstLoginModal({ opened, onPasswordChanged, username }:
     }
 
     if (newPassword !== confirmPassword) {
-      setError(t("firstLogin.passwordsDoNotMatch", "New passwords do not match"));
+      setError(
+        t("firstLogin.passwordsDoNotMatch", "New passwords do not match"),
+      );
       return;
     }
 
     if (newPassword.length < 8) {
-      setError(t("firstLogin.passwordTooShort", "Password must be at least 8 characters"));
+      setError(
+        t(
+          "firstLogin.passwordTooShort",
+          "Password must be at least 8 characters",
+        ),
+      );
       return;
     }
 
     if (newPassword === currentPassword) {
-      setError(t("firstLogin.passwordMustBeDifferent", "New password must be different from current password"));
+      setError(
+        t(
+          "firstLogin.passwordMustBeDifferent",
+          "New password must be different from current password",
+        ),
+      );
       return;
     }
 
@@ -52,11 +75,18 @@ export default function FirstLoginModal({ opened, onPasswordChanged, username }:
       setLoading(true);
       setError("");
 
-      await accountService.changePasswordOnLogin(currentPassword, newPassword, confirmPassword);
+      await accountService.changePasswordOnLogin(
+        currentPassword,
+        newPassword,
+        confirmPassword,
+      );
 
       alert({
         alertType: "success",
-        title: t("firstLogin.passwordChangedSuccess", "Password changed successfully! Please log in again."),
+        title: t(
+          "firstLogin.passwordChangedSuccess",
+          "Password changed successfully! Please log in again.",
+        ),
       });
 
       // Clear form
@@ -73,7 +103,10 @@ export default function FirstLoginModal({ opened, onPasswordChanged, username }:
       console.error("Failed to change password:", err);
       setError(
         err.response?.data?.message ||
-          t("firstLogin.passwordChangeFailed", "Failed to change password. Please check your current password."),
+          t(
+            "firstLogin.passwordChangeFailed",
+            "Failed to change password. Please check your current password.",
+          ),
       );
     } finally {
       setLoading(false);
@@ -99,12 +132,16 @@ export default function FirstLoginModal({ opened, onPasswordChanged, username }:
           color="blue"
         >
           <Text size="sm">
-            {t("firstLogin.welcomeMessage", "For security reasons, you must change your password on your first login.")}
+            {t(
+              "firstLogin.welcomeMessage",
+              "For security reasons, you must change your password on your first login.",
+            )}
           </Text>
         </Alert>
 
         <Text size="sm" fw={500}>
-          {t("firstLogin.loggedInAs", "Logged in as")}: <strong>{username}</strong>
+          {t("firstLogin.loggedInAs", "Logged in as")}:{" "}
+          <strong>{username}</strong>
         </Text>
 
         {error && (
@@ -119,7 +156,10 @@ export default function FirstLoginModal({ opened, onPasswordChanged, username }:
 
         <PasswordInput
           label={t("firstLogin.currentPassword", "Current Password")}
-          placeholder={t("firstLogin.enterCurrentPassword", "Enter your current password")}
+          placeholder={t(
+            "firstLogin.enterCurrentPassword",
+            "Enter your current password",
+          )}
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.currentTarget.value)}
           required
@@ -127,7 +167,10 @@ export default function FirstLoginModal({ opened, onPasswordChanged, username }:
 
         <PasswordInput
           label={t("firstLogin.newPassword", "New Password")}
-          placeholder={t("firstLogin.enterNewPassword", "Enter new password (min 8 characters)")}
+          placeholder={t(
+            "firstLogin.enterNewPassword",
+            "Enter new password (min 8 characters)",
+          )}
           value={newPassword}
           onChange={(e) => setNewPassword(e.currentTarget.value)}
           minLength={8}
@@ -136,7 +179,10 @@ export default function FirstLoginModal({ opened, onPasswordChanged, username }:
 
         <PasswordInput
           label={t("firstLogin.confirmPassword", "Confirm New Password")}
-          placeholder={t("firstLogin.reEnterNewPassword", "Re-enter new password")}
+          placeholder={t(
+            "firstLogin.reEnterNewPassword",
+            "Re-enter new password",
+          )}
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.currentTarget.value)}
           minLength={8}
@@ -148,7 +194,11 @@ export default function FirstLoginModal({ opened, onPasswordChanged, username }:
           onClick={handleSubmit}
           loading={loading}
           disabled={
-            !currentPassword || !newPassword || !confirmPassword || newPassword.length < 8 || confirmPassword.length < 8
+            !currentPassword ||
+            !newPassword ||
+            !confirmPassword ||
+            newPassword.length < 8 ||
+            confirmPassword.length < 8
           }
           mt="md"
         >

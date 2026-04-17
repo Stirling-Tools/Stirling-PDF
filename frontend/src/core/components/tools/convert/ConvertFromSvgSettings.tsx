@@ -4,11 +4,18 @@ import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters
 
 interface ConvertFromSvgSettingsProps {
   parameters: ConvertParameters;
-  onParameterChange: <K extends keyof ConvertParameters>(key: K, value: ConvertParameters[K]) => void;
+  onParameterChange: <K extends keyof ConvertParameters>(
+    key: K,
+    value: ConvertParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const ConvertFromSvgSettings = ({ parameters, onParameterChange, disabled = false }: ConvertFromSvgSettingsProps) => {
+const ConvertFromSvgSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: ConvertFromSvgSettingsProps) => {
   const { t } = useTranslation();
 
   return (

@@ -1,11 +1,21 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { ToolType, useToolOperation, ToolOperationConfig } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  ToolType,
+  useToolOperation,
+  ToolOperationConfig,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { RemoveBlanksParameters, defaultParameters } from "@app/hooks/tools/removeBlanks/useRemoveBlanksParameters";
+import {
+  RemoveBlanksParameters,
+  defaultParameters,
+} from "@app/hooks/tools/removeBlanks/useRemoveBlanksParameters";
 import { useToolResources } from "@app/hooks/tools/shared/useToolResources";
 
-export const buildRemoveBlanksFormData = (parameters: RemoveBlanksParameters, file: File): FormData => {
+export const buildRemoveBlanksFormData = (
+  parameters: RemoveBlanksParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
   formData.append("threshold", String(parameters.threshold));
@@ -37,6 +47,8 @@ export const useRemoveBlanksOperation = () => {
   return useToolOperation<RemoveBlanksParameters>({
     ...removeBlanksOperationConfig,
     responseHandler,
-    getErrorMessage: createStandardErrorHandler(t("removeBlanks.error.failed", "Failed to remove blank pages")),
+    getErrorMessage: createStandardErrorHandler(
+      t("removeBlanks.error.failed", "Failed to remove blank pages"),
+    ),
   });
 };

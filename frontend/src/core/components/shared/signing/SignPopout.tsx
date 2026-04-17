@@ -9,9 +9,17 @@ import CompletedSessionsPanel from "@app/components/shared/signing/CompletedSess
 import CreateSessionPanel from "@app/components/shared/signing/CreateSessionPanel";
 import apiClient from "@app/services/apiClient";
 import { alert } from "@app/components/toast";
-import { SignRequestSummary, SignRequestDetail, SessionSummary, SessionDetail } from "@app/types/signingSession";
+import {
+  SignRequestSummary,
+  SignRequestDetail,
+  SessionSummary,
+  SessionDetail,
+} from "@app/types/signingSession";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useNavigationActions, useNavigationState } from "@app/contexts/NavigationContext";
+import {
+  useNavigationActions,
+  useNavigationState,
+} from "@app/contexts/NavigationContext";
 import { useFileSelection } from "@app/contexts/file/fileHooks";
 import { fileStorage } from "@app/services/fileStorage";
 import { useFileActions } from "@app/contexts/FileContext";
@@ -19,19 +27,25 @@ import SignRequestWorkbenchView from "@app/components/tools/certSign/SignRequest
 import SessionDetailWorkbenchView from "@app/components/tools/certSign/SessionDetailWorkbenchView";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
 
-export const SIGN_REQUEST_WORKBENCH_TYPE = "custom:signRequestWorkbench" as const;
-export const SESSION_DETAIL_WORKBENCH_TYPE = "custom:sessionDetailWorkbench" as const;
+export const SIGN_REQUEST_WORKBENCH_TYPE =
+  "custom:signRequestWorkbench" as const;
+export const SESSION_DETAIL_WORKBENCH_TYPE =
+  "custom:sessionDetailWorkbench" as const;
 
 type SessionItem = (SignRequestSummary | SessionSummary) & {
   itemType: "signRequest" | "mySession";
 };
 
-function sortSessions(sessions: SessionItem[], tab: "active" | "completed"): SessionItem[] {
+function sortSessions(
+  sessions: SessionItem[],
+  tab: "active" | "completed",
+): SessionItem[] {
   return [...sessions].sort((a, b) => {
     if (tab === "active") {
       const aDue = (a as SignRequestSummary).dueDate;
       const bDue = (b as SignRequestSummary).dueDate;
-      if (aDue && bDue) return new Date(aDue).getTime() - new Date(bDue).getTime();
+      if (aDue && bDue)
+        return new Date(aDue).getTime() - new Date(bDue).getTime();
       if (aDue) return -1;
       if (bDue) return 1;
     }
@@ -47,11 +61,20 @@ interface SignPopoutProps {
   groupSigningEnabled: boolean;
 }
 
-const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: SignPopoutProps) => {
+const SignPopout = ({
+  isOpen,
+  onClose,
+  buttonRef,
+  isRTL,
+  groupSigningEnabled,
+}: SignPopoutProps) => {
   const { t } = useTranslation();
   const isPhone = useIsPhone();
   const popoverRef = useRef<HTMLDivElement>(null);
-  const [popoverPosition, setPopoverPosition] = useState({ top: 160, left: 84 });
+  const [popoverPosition, setPopoverPosition] = useState({
+    top: 160,
+    left: 84,
+  });
   const [maxHeight, setMaxHeight] = useState<number | undefined>(undefined);
 
   // Tab state
@@ -126,7 +149,10 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
     registerCustomWorkbenchView({
       id: SESSION_DETAIL_WORKBENCH_ID,
       workbenchId: SESSION_DETAIL_WORKBENCH_TYPE,
-      label: t("certSign.collab.sessionDetail.workbenchTitle", "Session Management"),
+      label: t(
+        "certSign.collab.sessionDetail.workbenchTitle",
+        "Session Management",
+      ),
       component: SessionDetailWorkbenchView,
       hideTopControls: true,
       hideToolPanel: true,
@@ -197,7 +223,9 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       if (popoverRef.current?.contains(target)) return;
       if (buttonRef.current?.contains(target)) return;
 
-      const mantineDropdown = (target as Element).closest?.(".mantine-Combobox-dropdown, .mantine-Popover-dropdown");
+      const mantineDropdown = (target as Element).closest?.(
+        ".mantine-Combobox-dropdown, .mantine-Popover-dropdown",
+      );
       if (mantineDropdown) return;
 
       onClose();
@@ -220,13 +248,18 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
     setLoading(true);
     try {
       const [requestsResponse, sessionsResponse] = await Promise.all([
-        apiClient.get<SignRequestSummary[]>("/api/v1/security/cert-sign/sign-requests"),
+        apiClient.get<SignRequestSummary[]>(
+          "/api/v1/security/cert-sign/sign-requests",
+        ),
         apiClient.get<SessionSummary[]>("/api/v1/security/cert-sign/sessions"),
       ]);
       setSignRequests(requestsResponse.data);
       setMySessions(sessionsResponse.data);
     } catch (error) {
-      console.error("Failed to fetch signing data:", error instanceof Error ? error.message : error);
+      console.error(
+        "Failed to fetch signing data:",
+        error instanceof Error ? error.message : error,
+      );
       alert({
         alertType: "warning",
         title: t("common.error"),
@@ -248,7 +281,12 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
 
   // Auto-refresh Active tab every 15 seconds to show updated signature status
   useEffect(() => {
-    if (isOpen && groupSigningEnabled && activeTab === "active" && !showCreatePanel) {
+    if (
+      isOpen &&
+      groupSigningEnabled &&
+      activeTab === "active" &&
+      !showCreatePanel
+    ) {
       const interval = setInterval(() => {
         fetchData();
       }, 15000); // Refresh every 15 seconds
@@ -264,7 +302,9 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       .filter((req) => req.myStatus !== "SIGNED" && req.myStatus !== "DECLINED")
       .map((req) => ({ ...req, itemType: "signRequest" as const })),
     // Sessions user created that aren't finalized yet
-    ...mySessions.filter((s) => !s.finalized).map((s) => ({ ...s, itemType: "mySession" as const })),
+    ...mySessions
+      .filter((s) => !s.finalized)
+      .map((s) => ({ ...s, itemType: "mySession" as const })),
   ];
 
   const completedSessions: SessionItem[] = [
@@ -273,7 +313,9 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       .filter((req) => req.myStatus === "SIGNED" || req.myStatus === "DECLINED")
       .map((req) => ({ ...req, itemType: "signRequest" as const })),
     // Sessions user created that have been finalized
-    ...mySessions.filter((s) => s.finalized).map((s) => ({ ...s, itemType: "mySession" as const })),
+    ...mySessions
+      .filter((s) => s.finalized)
+      .map((s) => ({ ...s, itemType: "mySession" as const })),
   ];
 
   // Filter options vary by tab
@@ -286,7 +328,10 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       : [
           { key: "mine", label: t("quickAccess.filterMine", "Mine") },
           { key: "signed", label: t("quickAccess.filterSigned", "Signed") },
-          { key: "declined", label: t("quickAccess.filterDeclined", "Declined") },
+          {
+            key: "declined",
+            label: t("quickAccess.filterDeclined", "Declined"),
+          },
         ];
 
   const applyFiltersAndSearch = (sessions: SessionItem[]): SessionItem[] => {
@@ -296,16 +341,31 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       result = result.filter((s) => s.documentName.toLowerCase().includes(q));
     }
     const now = new Date();
-    if (activeFilters.has("mine")) result = result.filter((s) => s.itemType === "mySession");
+    if (activeFilters.has("mine"))
+      result = result.filter((s) => s.itemType === "mySession");
     if (activeFilters.has("overdue"))
-      result = result.filter((s) => (s as SignRequestSummary).dueDate && new Date((s as SignRequestSummary).dueDate) < now);
-    if (activeFilters.has("signed")) result = result.filter((s) => (s as SignRequestSummary).myStatus === "SIGNED");
-    if (activeFilters.has("declined")) result = result.filter((s) => (s as SignRequestSummary).myStatus === "DECLINED");
+      result = result.filter(
+        (s) =>
+          (s as SignRequestSummary).dueDate &&
+          new Date((s as SignRequestSummary).dueDate) < now,
+      );
+    if (activeFilters.has("signed"))
+      result = result.filter(
+        (s) => (s as SignRequestSummary).myStatus === "SIGNED",
+      );
+    if (activeFilters.has("declined"))
+      result = result.filter(
+        (s) => (s as SignRequestSummary).myStatus === "DECLINED",
+      );
     return result;
   };
 
-  const displayedActiveSessions = applyFiltersAndSearch(sortSessions(activeSessions, "active"));
-  const displayedCompletedSessions = applyFiltersAndSearch(sortSessions(completedSessions, "completed"));
+  const displayedActiveSessions = applyFiltersAndSearch(
+    sortSessions(activeSessions, "active"),
+  );
+  const displayedCompletedSessions = applyFiltersAndSearch(
+    sortSessions(completedSessions, "completed"),
+  );
 
   // Create session handler
   const handleCreateSession = useCallback(async () => {
@@ -314,7 +374,9 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
     setCreating(true);
     try {
       const selectedFile = selectedFiles[0];
-      const stirlingFile = await fileStorage.getStirlingFile(selectedFile.fileId);
+      const stirlingFile = await fileStorage.getStirlingFile(
+        selectedFile.fileId,
+      );
       if (!stirlingFile) throw new Error("File not found");
 
       const formData = new FormData();
@@ -351,7 +413,10 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       setShowCreatePanel(false);
       await fetchData();
     } catch (error) {
-      console.error("Failed to create session:", error instanceof Error ? error.message : error);
+      console.error(
+        "Failed to create session:",
+        error instanceof Error ? error.message : error,
+      );
       alert({
         alertType: "error",
         title: t("common.error"),
@@ -362,7 +427,14 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
     } finally {
       setCreating(false);
     }
-  }, [selectedUserIds, dueDate, selectedFiles, fetchData, t, includeSummaryPage]);
+  }, [
+    selectedUserIds,
+    dueDate,
+    selectedFiles,
+    fetchData,
+    t,
+    includeSummaryPage,
+  ]);
 
   // Handle clicking a sign request
   const handleSignRequestClick = useCallback(
@@ -370,15 +442,24 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       onClose();
       try {
         const [detailResponse, pdfResponse] = await Promise.all([
-          apiClient.get<SignRequestDetail>(`/api/v1/security/cert-sign/sign-requests/${request.sessionId}`),
-          apiClient.get(`/api/v1/security/cert-sign/sign-requests/${request.sessionId}/document`, {
-            responseType: "blob",
-          }),
+          apiClient.get<SignRequestDetail>(
+            `/api/v1/security/cert-sign/sign-requests/${request.sessionId}`,
+          ),
+          apiClient.get(
+            `/api/v1/security/cert-sign/sign-requests/${request.sessionId}/document`,
+            {
+              responseType: "blob",
+            },
+          ),
         ]);
 
-        const pdfFile = new File([pdfResponse.data], detailResponse.data.documentName, {
-          type: "application/pdf",
-        });
+        const pdfFile = new File(
+          [pdfResponse.data],
+          detailResponse.data.documentName,
+          {
+            type: "application/pdf",
+          },
+        );
         const canSign =
           detailResponse.data.myStatus === "PENDING" ||
           detailResponse.data.myStatus === "NOTIFIED" ||
@@ -387,7 +468,8 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
         setCustomWorkbenchViewData(SIGN_REQUEST_WORKBENCH_ID, {
           signRequest: detailResponse.data,
           pdfFile,
-          onSign: (certData: FormData) => handleSign(request.sessionId, certData),
+          onSign: (certData: FormData) =>
+            handleSign(request.sessionId, certData),
           onDecline: () => handleDecline(request.sessionId),
           onBack: () => {
             clearCustomWorkbenchViewData(SIGN_REQUEST_WORKBENCH_ID);
@@ -400,7 +482,10 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
           navigationActions.setWorkbench(SIGN_REQUEST_WORKBENCH_TYPE);
         });
       } catch (error) {
-        console.error("Failed to load sign request:", error instanceof Error ? error.message : error);
+        console.error(
+          "Failed to load sign request:",
+          error instanceof Error ? error.message : error,
+        );
         alert({
           alertType: "error",
           title: t("common.error"),
@@ -410,7 +495,13 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
         });
       }
     },
-    [onClose, setCustomWorkbenchViewData, clearCustomWorkbenchViewData, navigationActions, t],
+    [
+      onClose,
+      setCustomWorkbenchViewData,
+      clearCustomWorkbenchViewData,
+      navigationActions,
+      t,
+    ],
   );
 
   // Handle clicking a session
@@ -419,7 +510,9 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       onClose();
       try {
         // First fetch session detail
-        const detailResponse = await apiClient.get<SessionDetail>(`/api/v1/security/cert-sign/sessions/${session.sessionId}`);
+        const detailResponse = await apiClient.get<SessionDetail>(
+          `/api/v1/security/cert-sign/sessions/${session.sessionId}`,
+        );
 
         // Determine which endpoint to use based on session state
         let pdfFile: File | null = null;
@@ -427,10 +520,15 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
         if (detailResponse.data.finalized) {
           // Finalized sessions have signed PDF available
           try {
-            const pdfResponse = await apiClient.get(`/api/v1/security/cert-sign/sessions/${session.sessionId}/signed-pdf`, {
-              responseType: "blob",
+            const pdfResponse = await apiClient.get(
+              `/api/v1/security/cert-sign/sessions/${session.sessionId}/signed-pdf`,
+              {
+                responseType: "blob",
+              },
+            );
+            pdfFile = new File([pdfResponse.data], session.documentName, {
+              type: "application/pdf",
             });
-            pdfFile = new File([pdfResponse.data], session.documentName, { type: "application/pdf" });
           } catch (pdfError: any) {
             if (pdfError?.response?.status === 404) {
               // Finalized but signed PDF not available - backend issue
@@ -451,10 +549,15 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
         } else {
           // For non-finalized sessions, get original PDF (always available)
           try {
-            const pdfResponse = await apiClient.get(`/api/v1/security/cert-sign/sessions/${session.sessionId}/pdf`, {
-              responseType: "blob",
+            const pdfResponse = await apiClient.get(
+              `/api/v1/security/cert-sign/sessions/${session.sessionId}/pdf`,
+              {
+                responseType: "blob",
+              },
+            );
+            pdfFile = new File([pdfResponse.data], session.documentName, {
+              type: "application/pdf",
             });
-            pdfFile = new File([pdfResponse.data], session.documentName, { type: "application/pdf" });
           } catch (_error) {
             // Fallback if PDF not available
             pdfFile = null;
@@ -464,11 +567,14 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
         setCustomWorkbenchViewData(SESSION_DETAIL_WORKBENCH_ID, {
           session: detailResponse.data,
           pdfFile,
-          onFinalize: () => handleFinalize(session.sessionId, session.documentName),
-          onLoadSignedPdf: () => handleLoadSignedPdf(session.sessionId, session.documentName),
+          onFinalize: () =>
+            handleFinalize(session.sessionId, session.documentName),
+          onLoadSignedPdf: () =>
+            handleLoadSignedPdf(session.sessionId, session.documentName),
           onAddParticipants: (userIds: number[], defaultReason?: string) =>
             handleAddParticipants(session.sessionId, userIds, defaultReason),
-          onRemoveParticipant: (participantId: number) => handleRemoveParticipant(session.sessionId, participantId),
+          onRemoveParticipant: (participantId: number) =>
+            handleRemoveParticipant(session.sessionId, participantId),
           onDelete: () => handleDeleteSession(session.sessionId),
           onBack: () => {
             clearCustomWorkbenchViewData(SESSION_DETAIL_WORKBENCH_ID);
@@ -481,22 +587,37 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
           navigationActions.setWorkbench(SESSION_DETAIL_WORKBENCH_TYPE);
         });
       } catch (error) {
-        console.error("Failed to load session:", error instanceof Error ? error.message : error);
+        console.error(
+          "Failed to load session:",
+          error instanceof Error ? error.message : error,
+        );
         alert({
           alertType: "error",
           title: t("common.error"),
-          body: t("certSign.sessions.fetchFailed", "Failed to load session details"),
+          body: t(
+            "certSign.sessions.fetchFailed",
+            "Failed to load session details",
+          ),
           expandable: false,
           durationMs: 3000,
         });
       }
     },
-    [onClose, setCustomWorkbenchViewData, clearCustomWorkbenchViewData, navigationActions, t],
+    [
+      onClose,
+      setCustomWorkbenchViewData,
+      clearCustomWorkbenchViewData,
+      navigationActions,
+      t,
+    ],
   );
 
   // Action handlers
   const handleSign = async (sessionId: string, certificateData: FormData) => {
-    await apiClient.post(`/api/v1/security/cert-sign/sign-requests/${sessionId}/sign`, certificateData);
+    await apiClient.post(
+      `/api/v1/security/cert-sign/sign-requests/${sessionId}/sign`,
+      certificateData,
+    );
     alert({
       alertType: "success",
       title: t("success"),
@@ -510,7 +631,9 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
   };
 
   const handleDecline = async (sessionId: string) => {
-    await apiClient.post(`/api/v1/security/cert-sign/sign-requests/${sessionId}/decline`);
+    await apiClient.post(
+      `/api/v1/security/cert-sign/sign-requests/${sessionId}/decline`,
+    );
     alert({
       alertType: "success",
       title: t("success"),
@@ -524,13 +647,21 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
   };
 
   const handleFinalize = async (sessionId: string, documentName: string) => {
-    const response = await apiClient.post(`/api/v1/security/cert-sign/sessions/${sessionId}/finalize`, null, {
-      responseType: "blob",
-    });
+    const response = await apiClient.post(
+      `/api/v1/security/cert-sign/sessions/${sessionId}/finalize`,
+      null,
+      {
+        responseType: "blob",
+      },
+    );
     const contentDisposition = response.headers["content-disposition"];
     const filenameMatch = contentDisposition?.match(/filename="?(.+?)"?$/);
-    const filename = filenameMatch ? filenameMatch[1] : `${documentName}_signed.pdf`;
-    const signedFile = new File([response.data], filename, { type: "application/pdf" });
+    const filename = filenameMatch
+      ? filenameMatch[1]
+      : `${documentName}_signed.pdf`;
+    const signedFile = new File([response.data], filename, {
+      type: "application/pdf",
+    });
     await fileActions.addFiles([signedFile]);
     alert({
       alertType: "success",
@@ -544,14 +675,24 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
     await fetchData();
   };
 
-  const handleLoadSignedPdf = async (sessionId: string, documentName: string) => {
-    const response = await apiClient.get(`/api/v1/security/cert-sign/sessions/${sessionId}/signed-pdf`, {
-      responseType: "blob",
-    });
+  const handleLoadSignedPdf = async (
+    sessionId: string,
+    documentName: string,
+  ) => {
+    const response = await apiClient.get(
+      `/api/v1/security/cert-sign/sessions/${sessionId}/signed-pdf`,
+      {
+        responseType: "blob",
+      },
+    );
     const contentDisposition = response.headers["content-disposition"];
     const filenameMatch = contentDisposition?.match(/filename="?(.+?)"?$/);
-    const filename = filenameMatch ? filenameMatch[1] : `${documentName}_signed.pdf`;
-    const signedFile = new File([response.data], filename, { type: "application/pdf" });
+    const filename = filenameMatch
+      ? filenameMatch[1]
+      : `${documentName}_signed.pdf`;
+    const signedFile = new File([response.data], filename, {
+      type: "application/pdf",
+    });
     await fileActions.addFiles([signedFile]);
     alert({
       alertType: "success",
@@ -564,18 +705,30 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
     navigationActions.setWorkbench("viewer");
   };
 
-  const handleAddParticipants = async (sessionId: string, userIds: number[], defaultReason?: string) => {
+  const handleAddParticipants = async (
+    sessionId: string,
+    userIds: number[],
+    defaultReason?: string,
+  ) => {
     const requests = userIds.map((userId) => ({
       userId,
       defaultReason: defaultReason || undefined,
       sendNotification: true,
     }));
-    await apiClient.post(`/api/v1/security/cert-sign/sessions/${sessionId}/participants`, requests);
+    await apiClient.post(
+      `/api/v1/security/cert-sign/sessions/${sessionId}/participants`,
+      requests,
+    );
     await handleRefreshSession(sessionId);
   };
 
-  const handleRemoveParticipant = async (sessionId: string, participantId: number) => {
-    await apiClient.delete(`/api/v1/security/cert-sign/sessions/${sessionId}/participants/${participantId}`);
+  const handleRemoveParticipant = async (
+    sessionId: string,
+    participantId: number,
+  ) => {
+    await apiClient.delete(
+      `/api/v1/security/cert-sign/sessions/${sessionId}/participants/${participantId}`,
+    );
     await handleRefreshSession(sessionId);
   };
 
@@ -594,19 +747,29 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
   };
 
   const handleRefreshSession = async (sessionId: string) => {
-    const response = await apiClient.get<SessionDetail>(`/api/v1/security/cert-sign/sessions/${sessionId}`);
+    const response = await apiClient.get<SessionDetail>(
+      `/api/v1/security/cert-sign/sessions/${sessionId}`,
+    );
     // Update workbench data, preserving PDF and callbacks
-    setCustomWorkbenchViewData(SESSION_DETAIL_WORKBENCH_ID, (prevData: any) => ({
-      ...prevData,
-      session: response.data,
-    }));
+    setCustomWorkbenchViewData(
+      SESSION_DETAIL_WORKBENCH_ID,
+      (prevData: any) => ({
+        ...prevData,
+        session: response.data,
+      }),
+    );
   };
 
   if (typeof document === "undefined") return null;
 
   // Shared card content — rendered inside either the portal (desktop/tablet) or Drawer (phone)
   const popoutCard = (
-    <div className="quick-access-popout__card" style={{ maxHeight: !isPhone && maxHeight ? `${maxHeight}px` : undefined }}>
+    <div
+      className="quick-access-popout__card"
+      style={{
+        maxHeight: !isPhone && maxHeight ? `${maxHeight}px` : undefined,
+      }}
+    >
       {/* Header */}
       <div className="quick-access-popout__header">
         <button
@@ -653,7 +816,9 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       {/* Quick sign tools */}
       {!showCreatePanel && (
         <div className="quick-access-popout__quick-sign">
-          <div className="quick-access-popout__section-label">{t("quickAccess.signYourself", "Sign Yourself")}</div>
+          <div className="quick-access-popout__section-label">
+            {t("quickAccess.signYourself", "Sign Yourself")}
+          </div>
           <div className="quick-access-popout__quick-sign-actions">
             <button
               type="button"
@@ -674,7 +839,11 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
                 handleToolSelect("certSign");
               }}
             >
-              <LocalIcon icon="workspace-premium-rounded" width="1rem" height="1rem" />
+              <LocalIcon
+                icon="workspace-premium-rounded"
+                width="1rem"
+                height="1rem"
+              />
               {t("quickAccess.certSign", "Certificate Sign")}
             </button>
           </div>
@@ -685,7 +854,9 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
       {!showCreatePanel && groupSigningEnabled && (
         <>
           <div className="quick-access-popout__section-label quick-access-popout__section-label--padded quick-access-popout__section-label--row">
-            <span>{t("quickAccess.signatureRequests", "Signature Requests")}</span>
+            <span>
+              {t("quickAccess.signatureRequests", "Signature Requests")}
+            </span>
             <button
               type="button"
               className="quick-access-popout__section-action"
@@ -787,7 +958,11 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
             type="button"
             className="quick-access-popout__primary"
             onClick={handleCreateSession}
-            disabled={selectedFiles.length !== 1 || selectedUserIds.length === 0 || creating}
+            disabled={
+              selectedFiles.length !== 1 ||
+              selectedUserIds.length === 0 ||
+              creating
+            }
           >
             <LocalIcon icon="send-rounded" width="1rem" height="1rem" />
             {creating
@@ -810,7 +985,14 @@ const SignPopout = ({ isOpen, onClose, buttonRef, isRTL, groupSigningEnabled }: 
         withCloseButton={false}
         padding={0}
         className="quick-access-sign-popout"
-        styles={{ body: { padding: 0, height: "100%", display: "flex", flexDirection: "column" } }}
+        styles={{
+          body: {
+            padding: 0,
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+          },
+        }}
       >
         {popoutCard}
       </Drawer>
