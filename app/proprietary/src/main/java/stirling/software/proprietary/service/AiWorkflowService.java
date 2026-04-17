@@ -346,17 +346,16 @@ public class AiWorkflowService {
         List<AiWorkflowResultFile> descriptors = new ArrayList<>();
         for (int i = 0; i < resultFiles.size(); i++) {
             Resource resource = resultFiles.get(i);
-            byte[] bytes;
-            try (java.io.InputStream is = resource.getInputStream()) {
-                bytes = is.readAllBytes();
-            }
             String name =
                     preserveInputNames && inputFileNames.get(i) != null
                             ? inputFileNames.get(i)
                             : resource.getFilename() != null
                                     ? resource.getFilename()
                                     : "result-" + (i + 1) + ".pdf";
-            String fileId = fileStorage.storeBytes(bytes, name);
+            String fileId;
+            try (java.io.InputStream is = resource.getInputStream()) {
+                fileId = fileStorage.storeInputStream(is, name).fileId();
+            }
             descriptors.add(new AiWorkflowResultFile(fileId, name, "application/pdf"));
         }
 
