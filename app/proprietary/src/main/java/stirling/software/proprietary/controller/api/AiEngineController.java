@@ -1,6 +1,7 @@
 package stirling.software.proprietary.controller.api;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
@@ -25,8 +26,11 @@ import jakarta.validation.Valid;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.job.ResultFile;
+import stirling.software.common.service.TaskManager;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
+import stirling.software.proprietary.model.api.ai.AiWorkflowResultFile;
 import stirling.software.proprietary.service.AiEngineClient;
 import stirling.software.proprietary.service.AiWorkflowService;
 
@@ -45,16 +49,19 @@ public class AiEngineController {
     private final AiWorkflowService aiWorkflowService;
     private final ObjectMapper objectMapper;
     private final Executor aiStreamExecutor;
+    private final TaskManager taskManager;
 
     public AiEngineController(
             AiEngineClient aiEngineClient,
             AiWorkflowService aiWorkflowService,
             ObjectMapper objectMapper,
-            @Qualifier("aiStreamExecutor") Executor aiStreamExecutor) {
+            @Qualifier("aiStreamExecutor") Executor aiStreamExecutor,
+            TaskManager taskManager) {
         this.aiEngineClient = aiEngineClient;
         this.aiWorkflowService = aiWorkflowService;
         this.objectMapper = objectMapper;
         this.aiStreamExecutor = aiStreamExecutor;
+        this.taskManager = taskManager;
     }
 
     @GetMapping("/health")
@@ -70,10 +77,14 @@ public class AiEngineController {
     @Operation(
             summary = "Run an AI workflow against a PDF",
             description =
-                    "Accepts a PDF upload and a user message and returns an AI workflow result")
-    public ResponseEntity<AiWorkflowResponse> orchestrate(
-            @Valid @ModelAttribute AiWorkflowRequest request) throws IOException {
-        return ResponseEntity.ok(aiWorkflowService.orchestrate(request));
+                    "Accepts PDF uploads and a user message and returns an AI workflow result."
+                            + " When the workflow produces files, they are registered with the job"
+                            + " system and downloadable via GET /api/v1/general/files/{fileId}.")
+    public AiWorkflowResponse orchestrate(@Valid @ModelAttribute AiWorkflowRequest request)
+            throws IOException {
+        AiWorkflowResponse result = aiWorkflowService.orchestrate(request);
+        registerFileResultAsJob(result);
+        return result;
     }
 
     @PostMapping(value = "/orchestrate/stream", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -102,6 +113,7 @@ public class AiEngineController {
             AiWorkflowResponse result =
                     aiWorkflowService.orchestrate(
                             request, progress -> sendEvent(emitter, "progress", progress));
+            registerFileResultAsJob(result);
             sendEvent(emitter, "result", result);
             emitter.complete();
         } catch (Exception e) {
@@ -109,6 +121,33 @@ public class AiEngineController {
             sendEvent(emitter, "error", Map.of("message", e.getMessage()));
             emitter.completeWithError(e);
         }
+    }
+
+    /**
+     * Register any file results produced by the workflow with {@link TaskManager} so they are
+     * downloadable via {@code GET /api/v1/general/files/{fileId}}. Uses {@code
+     * setMultipleFileResults} so the fileIds we registered earlier are not mangled by TaskManager's
+     * ZIP auto-extract path.
+     */
+    private void registerFileResultAsJob(AiWorkflowResponse result) {
+        List<AiWorkflowResultFile> files = result.getResultFiles();
+        if (files == null || files.isEmpty()) {
+            return;
+        }
+        String jobId = java.util.UUID.randomUUID().toString();
+        taskManager.createTask(jobId);
+        List<ResultFile> jobFiles =
+                files.stream()
+                        .map(
+                                f ->
+                                        ResultFile.builder()
+                                                .fileId(f.getFileId())
+                                                .fileName(f.getFileName())
+                                                .contentType(f.getContentType())
+                                                .build())
+                        .toList();
+        taskManager.setMultipleFileResults(jobId, jobFiles);
+        taskManager.setComplete(jobId);
     }
 
     private void sendEvent(SseEmitter emitter, String name, Object data) {

@@ -2,6 +2,8 @@ package stirling.software.common.service;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
 
@@ -90,7 +92,8 @@ public class InternalApiClient {
                                 response.getBody(),
                                 tempFile.getPath(),
                                 java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                        TempFileResource resource = new TempFileResource(tempFile);
+                        String filename = extractFilename(response.getHeaders());
+                        TempFileResource resource = new TempFileResource(tempFile, filename);
                         return ResponseEntity.status(response.getStatusCode())
                                 .headers(response.getHeaders())
                                 .body(resource);
@@ -98,6 +101,29 @@ public class InternalApiClient {
                         throw new UncheckedIOException(e);
                     }
                 });
+    }
+
+    /**
+     * Extract the filename from a response's {@code Content-Disposition} header. Returns {@code
+     * null} if the header is missing or has no filename.
+     */
+    private static String extractFilename(HttpHeaders headers) {
+        String contentDisposition = headers.getFirst(HttpHeaders.CONTENT_DISPOSITION);
+        if (contentDisposition == null || contentDisposition.isBlank()) {
+            return null;
+        }
+        for (String part : contentDisposition.split(";")) {
+            String trimmed = part.trim();
+            if (trimmed.startsWith("filename")) {
+                String[] kv = trimmed.split("=", 2);
+                if (kv.length != 2) {
+                    continue;
+                }
+                String value = kv[1].trim().replace("\"", "");
+                return URLDecoder.decode(value, StandardCharsets.UTF_8);
+            }
+        }
+        return null;
     }
 
     private String getBaseUrl() {
@@ -123,17 +149,34 @@ public class InternalApiClient {
         }
     }
 
-    /** A {@link FileSystemResource} that holds a reference to its backing {@link TempFile}. */
+    /**
+     * A {@link FileSystemResource} that holds a reference to its backing {@link TempFile}.
+     *
+     * <p>If a display filename is supplied (typically parsed from the upstream response's {@code
+     * Content-Disposition} header), it is returned from {@link #getFilename()} instead of the
+     * underlying temp file's path-based name.
+     */
     public static class TempFileResource extends FileSystemResource {
         private final TempFile tempFile;
+        private final String displayFilename;
 
         public TempFileResource(TempFile tempFile) {
+            this(tempFile, null);
+        }
+
+        public TempFileResource(TempFile tempFile, String displayFilename) {
             super(tempFile.getFile());
             this.tempFile = tempFile;
+            this.displayFilename = displayFilename;
         }
 
         public TempFile getTempFile() {
             return tempFile;
+        }
+
+        @Override
+        public String getFilename() {
+            return displayFilename != null ? displayFilename : super.getFilename();
         }
     }
 }

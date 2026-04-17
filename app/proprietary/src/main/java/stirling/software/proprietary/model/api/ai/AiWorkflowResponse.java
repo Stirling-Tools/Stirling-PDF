@@ -52,14 +52,21 @@ public class AiWorkflowResponse {
     @Schema(description = "Tool parameters for tool_call outcomes")
     private Map<String, Object> parameters;
 
-    @Schema(description = "Result file ID after tool execution completes")
+    @Schema(description = "Result file ID after tool execution completes (single-file result)")
     private String fileId;
 
-    @Schema(description = "Result filename after tool execution completes")
+    @Schema(description = "Result filename after tool execution completes (single-file result)")
     private String fileName;
 
-    @Schema(description = "Result MIME type after tool execution completes")
+    @Schema(description = "Result MIME type after tool execution completes (single-file result)")
     private String contentType;
+
+    @Schema(
+            description =
+                    "Result files produced by the workflow. Always populated on completed outcomes"
+                            + " with at least one entry; for single-file results this mirrors"
+                            + " fileId/fileName/contentType.")
+    private List<AiWorkflowResultFile> resultFiles = new ArrayList<>();
 
     @Schema(description = "Per-file text extraction requests from the AI engine")
     private List<AiWorkflowFileRequest> files = new ArrayList<>();
@@ -72,4 +79,13 @@ public class AiWorkflowResponse {
 
     @Schema(description = "AI engine capability to resume with on the next turn")
     private String resumeWith;
+
+    /**
+     * Alias for {@link #getFileName()} used by {@code JobExecutorService} reflection when
+     * registering a file result against an async job. Keep this here so the AutoJobPostMapping
+     * aspect can discover the filename without renaming the JSON field.
+     */
+    public String getOriginalFilename() {
+        return fileName;
+    }
 }

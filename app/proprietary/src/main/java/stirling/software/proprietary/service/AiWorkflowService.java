@@ -36,6 +36,7 @@ import stirling.software.proprietary.model.api.ai.AiWorkflowPhase;
 import stirling.software.proprietary.model.api.ai.AiWorkflowProgressEvent;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
+import stirling.software.proprietary.model.api.ai.AiWorkflowResultFile;
 import stirling.software.proprietary.service.PdfContentExtractor.LoadedFile;
 import stirling.software.proprietary.service.PdfContentExtractor.PdfContentResult;
 import stirling.software.proprietary.service.PdfContentExtractor.WorkflowArtifact;
@@ -209,7 +210,10 @@ public class AiWorkflowService {
             listener.onProgress(AiWorkflowProgressEvent.executingTool(endpointPath, 1, 1));
             List<Resource> results = executeStep(endpointPath, parameters, inputFiles);
             return new WorkflowState.Terminal(
-                    buildCompletedResponse(response.getRationale(), results));
+                    buildCompletedResponse(
+                            response.getRationale(),
+                            results,
+                            new ArrayList<>(filesByName.keySet())));
         } catch (Exception e) {
             log.error("Failed to execute tool {}: {}", endpointPath, e.getMessage(), e);
             return new WorkflowState.Terminal(
@@ -250,7 +254,10 @@ public class AiWorkflowService {
             }
 
             return new WorkflowState.Terminal(
-                    buildCompletedResponse(response.getSummary(), currentFiles));
+                    buildCompletedResponse(
+                            response.getSummary(),
+                            currentFiles,
+                            new ArrayList<>(filesByName.keySet())));
         } catch (Exception e) {
             log.error("Failed to execute plan: {}", e.getMessage(), e);
             return new WorkflowState.Terminal(
@@ -316,52 +323,38 @@ public class AiWorkflowService {
         return resources;
     }
 
-    private AiWorkflowResponse buildCompletedResponse(String summary, List<Resource> resultFiles)
+    private AiWorkflowResponse buildCompletedResponse(
+            String summary, List<Resource> resultFiles, List<String> inputFileNames)
             throws IOException {
-        String storedFileId;
-        String resultFileName;
-        String contentType;
-
-        if (resultFiles.size() == 1) {
-            Resource resultResource = resultFiles.getFirst();
-            byte[] resultBytes = Files.readAllBytes(resultResource.getFile().toPath());
-            resultFileName =
-                    resultResource.getFilename() != null
-                            ? resultResource.getFilename()
-                            : "result.pdf";
-            storedFileId = fileStorage.storeBytes(resultBytes, resultFileName);
-            contentType = "application/pdf";
-        } else {
-            byte[] zipBytes = zipResults(resultFiles);
-            resultFileName = "results.zip";
-            storedFileId = fileStorage.storeBytes(zipBytes, resultFileName);
-            contentType = "application/zip";
+        // Store every output file individually so each gets its own Stirling file ID and the
+        // frontend can add them as independent variants without going through a zip.
+        boolean preserveInputNames = inputFileNames.size() == resultFiles.size();
+        List<AiWorkflowResultFile> descriptors = new ArrayList<>();
+        for (int i = 0; i < resultFiles.size(); i++) {
+            Resource resource = resultFiles.get(i);
+            byte[] bytes = Files.readAllBytes(resource.getFile().toPath());
+            String name =
+                    preserveInputNames && inputFileNames.get(i) != null
+                            ? inputFileNames.get(i)
+                            : resource.getFilename() != null
+                                    ? resource.getFilename()
+                                    : "result-" + (i + 1) + ".pdf";
+            String fileId = fileStorage.storeBytes(bytes, name);
+            descriptors.add(new AiWorkflowResultFile(fileId, name, "application/pdf"));
         }
 
         AiWorkflowResponse completed = new AiWorkflowResponse();
         completed.setOutcome(AiWorkflowOutcome.COMPLETED);
         completed.setSummary(summary);
-        completed.setFileId(storedFileId);
-        completed.setFileName(resultFileName);
-        completed.setContentType(contentType);
-        return completed;
-    }
-
-    private byte[] zipResults(List<Resource> files) throws IOException {
-        var baos = new java.io.ByteArrayOutputStream();
-        try (var zos = new java.util.zip.ZipOutputStream(baos)) {
-            for (int i = 0; i < files.size(); i++) {
-                Resource file = files.get(i);
-                String name =
-                        file.getFilename() != null
-                                ? file.getFilename()
-                                : "file_" + (i + 1) + ".pdf";
-                zos.putNextEntry(new java.util.zip.ZipEntry(name));
-                zos.write(Files.readAllBytes(file.getFile().toPath()));
-                zos.closeEntry();
-            }
+        completed.setResultFiles(descriptors);
+        // Mirror the first file into the legacy single-file fields so existing clients still work.
+        if (!descriptors.isEmpty()) {
+            AiWorkflowResultFile first = descriptors.getFirst();
+            completed.setFileId(first.getFileId());
+            completed.setFileName(first.getFileName());
+            completed.setContentType(first.getContentType());
         }
-        return baos.toByteArray();
+        return completed;
     }
 
     private void validateRequest(AiWorkflowRequest request) {

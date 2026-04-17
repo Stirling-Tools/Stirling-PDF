@@ -6,8 +6,15 @@ import {
   useRef,
   type ReactNode,
 } from "react";
-import { useAllFiles } from "@app/contexts/FileContext";
+import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
+import apiClient from "@app/services/apiClient";
 import { getAuthHeaders } from "@app/services/apiClientSetup";
+import { createChildStub } from "@app/contexts/file/fileActions";
+import {
+  createStirlingFile,
+  type StirlingFileStub,
+} from "@app/types/fileContext";
+import type { ToolOperation } from "@app/types/file";
 
 export interface ChatMessage {
   id: string;
@@ -46,6 +53,13 @@ type AiWorkflowOutcome =
   | "unsupported_capability"
   | "cannot_continue";
 
+interface AiWorkflowResultFile {
+  /** Stirling file ID — download with /api/v1/general/files/{fileId}. */
+  fileId: string;
+  fileName: string;
+  contentType: string;
+}
+
 interface AiWorkflowResponse {
   outcome: AiWorkflowOutcome;
   answer?: string;
@@ -57,6 +71,12 @@ interface AiWorkflowResponse {
   message?: string;
   evidence?: Array<{ pageNumber: number; text: string }>;
   steps?: Array<Record<string, unknown>>;
+  /** Every file produced by the workflow (empty if the outcome has no files). */
+  resultFiles?: AiWorkflowResultFile[];
+  // Legacy single-file fields — mirror the first entry of resultFiles.
+  fileId?: string;
+  fileName?: string;
+  contentType?: string;
 }
 
 interface ChatState {
@@ -207,8 +227,73 @@ const initialState: ChatState = {
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(chatReducer, initialState);
-  const { files: activeFiles } = useAllFiles();
+  const { files: activeFiles, fileStubs: activeFileStubs } = useAllFiles();
+  const { actions: fileActions } = useFileActions();
   const abortRef = useRef<AbortController | null>(null);
+
+  // Download a File from the Stirling files endpoint.
+  const downloadFile = useCallback(
+    async (descriptor: AiWorkflowResultFile): Promise<File> => {
+      const response = await apiClient.get<Blob>(
+        `/api/v1/general/files/${descriptor.fileId}`,
+        { responseType: "blob" },
+      );
+      return new File([response.data], descriptor.fileName, {
+        type: descriptor.contentType ?? response.data.type,
+      });
+    },
+    [],
+  );
+
+  // Import the files produced by an AI workflow result into FileContext.
+  //
+  // If the workflow produced the same number of outputs as inputs, map each output to its
+  // corresponding input as a new version in the same chain. Otherwise (merge, split, etc.)
+  // add the outputs as new root files.
+  const importResultFile = useCallback(
+    async (
+      result: AiWorkflowResponse,
+      sourceStubs: StirlingFileStub[],
+    ): Promise<void> => {
+      const descriptors = result.resultFiles?.length
+        ? result.resultFiles
+        : result.fileId
+          ? [
+              {
+                fileId: result.fileId,
+                fileName: result.fileName ?? "result.pdf",
+                contentType: result.contentType ?? "application/pdf",
+              } satisfies AiWorkflowResultFile,
+            ]
+          : [];
+      if (descriptors.length === 0) return;
+
+      const files = await Promise.all(descriptors.map(downloadFile));
+
+      if (files.length === sourceStubs.length) {
+        // 1:1 mapping — treat each output as a new version of its matching input.
+        const operation: ToolOperation = {
+          toolId: "ai-workflow",
+          timestamp: Date.now(),
+        };
+        const childStubs = files.map((file, i) =>
+          createChildStub(sourceStubs[i], operation, file),
+        );
+        const stirlingFiles = files.map((file, i) =>
+          createStirlingFile(file, childStubs[i].id),
+        );
+        await fileActions.consumeFiles(
+          sourceStubs.map((s) => s.id),
+          stirlingFiles,
+          childStubs,
+        );
+      } else {
+        // Merge, split, or mismatched counts — add outputs as fresh root files.
+        await fileActions.addFiles(files, { selectFiles: true });
+      }
+    },
+    [fileActions, downloadFile],
+  );
 
   const toggleOpen = useCallback(() => dispatch({ type: "TOGGLE_OPEN" }), []);
   const setOpen = useCallback(
@@ -279,6 +364,21 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 timestamp: Date.now(),
               },
             });
+            if (data.fileId) {
+              importResultFile(data, activeFileStubs).catch((err) => {
+                console.error("Failed to import AI result file", err);
+                dispatch({
+                  type: "ADD_MESSAGE",
+                  message: {
+                    id: crypto.randomUUID(),
+                    role: "assistant",
+                    content:
+                      "The file was processed but I couldn't download it.",
+                    timestamp: Date.now(),
+                  },
+                });
+              });
+            }
           },
           onError: (data) => {
             receivedResult = true;
@@ -318,7 +418,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [activeFiles],
+    [activeFiles, activeFileStubs, importResultFile],
   );
 
   return (
