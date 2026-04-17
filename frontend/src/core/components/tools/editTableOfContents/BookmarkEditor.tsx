@@ -1,8 +1,23 @@
 import { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon, Badge, Button, Flex, Group, NumberInput, Paper, Stack, Text, TextInput, Tooltip } from "@mantine/core";
+import {
+  ActionIcon,
+  Badge,
+  Button,
+  Flex,
+  Group,
+  NumberInput,
+  Paper,
+  Stack,
+  Text,
+  TextInput,
+  Tooltip,
+} from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { BookmarkNode, createBookmarkNode } from "@app/utils/editTableOfContents";
+import {
+  BookmarkNode,
+  createBookmarkNode,
+} from "@app/utils/editTableOfContents";
 
 interface BookmarkEditorProps {
   bookmarks: BookmarkNode[];
@@ -33,7 +48,10 @@ const updateTree = (
   });
 };
 
-const removeFromTree = (nodes: BookmarkNode[], targetId: string): BookmarkNode[] => {
+const removeFromTree = (
+  nodes: BookmarkNode[],
+  targetId: string,
+): BookmarkNode[] => {
   return nodes
     .filter((node) => node.id !== targetId)
     .map((node) => ({
@@ -100,7 +118,11 @@ const addSiblingInTree = (
   return { nodes: added ? result : nodes, added };
 };
 
-export default function BookmarkEditor({ bookmarks, onChange, disabled }: BookmarkEditorProps) {
+export default function BookmarkEditor({
+  bookmarks,
+  onChange,
+  disabled,
+}: BookmarkEditorProps) {
   const { t } = useTranslation();
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -108,18 +130,25 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
 
   const getLatestTree = () => {
     if (editingId) {
-      return updateTree(bookmarks, editingId, (bookmark) => ({ ...bookmark, title: currentTitleInput }));
+      return updateTree(bookmarks, editingId, (bookmark) => ({
+        ...bookmark,
+        title: currentTitleInput,
+      }));
     }
     return bookmarks;
   };
 
   const handleAddTopLevel = () => {
-    const newBookmark = createBookmarkNode({ title: t("editTableOfContents.editor.defaultTitle", "New bookmark") });
+    const newBookmark = createBookmarkNode({
+      title: t("editTableOfContents.editor.defaultTitle", "New bookmark"),
+    });
     onChange([...getLatestTree(), newBookmark]);
   };
 
   const handleTitleChange = (id: string, value: string) => {
-    onChange(updateTree(bookmarks, id, (bookmark) => ({ ...bookmark, title: value })));
+    onChange(
+      updateTree(bookmarks, id, (bookmark) => ({ ...bookmark, title: value })),
+    );
   };
 
   const handlePageChange = (id: string, value: number | string) => {
@@ -133,31 +162,55 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
   };
 
   const handleToggle = (id: string) => {
-    onChange(updateTree(getLatestTree(), id, (bookmark) => ({ ...bookmark, expanded: !bookmark.expanded })));
+    onChange(
+      updateTree(getLatestTree(), id, (bookmark) => ({
+        ...bookmark,
+        expanded: !bookmark.expanded,
+      })),
+    );
   };
 
   const handleRemove = (id: string) => {
-    const confirmation = t("editTableOfContents.editor.confirmRemove", "Remove this bookmark and all of its children?");
+    const confirmation = t(
+      "editTableOfContents.editor.confirmRemove",
+      "Remove this bookmark and all of its children?",
+    );
     if (window.confirm(confirmation)) {
       onChange(removeFromTree(getLatestTree(), id));
     }
   };
 
   const handleAddChild = (parentId: string) => {
-    const child = createBookmarkNode({ title: t("editTableOfContents.editor.defaultChildTitle", "Child bookmark") });
+    const child = createBookmarkNode({
+      title: t(
+        "editTableOfContents.editor.defaultChildTitle",
+        "Child bookmark",
+      ),
+    });
     const { nodes, added } = addChildToTree(getLatestTree(), parentId, child);
     onChange(added ? nodes : [...getLatestTree(), child]);
   };
 
   const handleAddSibling = (targetId: string) => {
-    const sibling = createBookmarkNode({ title: t("editTableOfContents.editor.defaultSiblingTitle", "New bookmark") });
-    const { nodes, added } = addSiblingInTree(getLatestTree(), targetId, sibling);
+    const sibling = createBookmarkNode({
+      title: t(
+        "editTableOfContents.editor.defaultSiblingTitle",
+        "New bookmark",
+      ),
+    });
+    const { nodes, added } = addSiblingInTree(
+      getLatestTree(),
+      targetId,
+      sibling,
+    );
     onChange(added ? nodes : [...getLatestTree(), sibling]);
   };
 
   const renderBookmark = (bookmark: BookmarkNode, level = 0) => {
     const hasChildren = bookmark.children.length > 0;
-    const chevronIcon = bookmark.expanded ? "expand-more-rounded" : "chevron-right-rounded";
+    const chevronIcon = bookmark.expanded
+      ? "expand-more-rounded"
+      : "chevron-right-rounded";
 
     return (
       <Paper
@@ -181,14 +234,23 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
                   if (hasChildren) handleToggle(bookmark.id);
                 }}
                 disabled={disabled || !hasChildren}
-                aria-label={t("editTableOfContents.editor.actions.toggle", "Toggle children")}
+                aria-label={t(
+                  "editTableOfContents.editor.actions.toggle",
+                  "Toggle children",
+                )}
                 style={{ marginTop: 4 }}
               >
                 <LocalIcon icon={chevronIcon} />
               </ActionIcon>
               <Stack gap={2}>
                 <Group gap="xs" align="center">
-                  <Text fw={600}>{bookmark.title || t("editTableOfContents.editor.untitled", "Untitled bookmark")}</Text>
+                  <Text fw={600}>
+                    {bookmark.title ||
+                      t(
+                        "editTableOfContents.editor.untitled",
+                        "Untitled bookmark",
+                      )}
+                  </Text>
                   {level > 0 && (
                     <Badge size="xs" variant="light" color="blue">
                       {t("editTableOfContents.editor.childBadge", "Child")}
@@ -196,12 +258,19 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
                   )}
                 </Group>
                 <Text size="sm" c="dimmed">
-                  {t("editTableOfContents.editor.pagePreview", { page: bookmark.pageNumber })}
+                  {t("editTableOfContents.editor.pagePreview", {
+                    page: bookmark.pageNumber,
+                  })}
                 </Text>
               </Stack>
             </Group>
             <Group gap="xs">
-              <Tooltip label={t("editTableOfContents.editor.actions.addChild", "Add child bookmark")}>
+              <Tooltip
+                label={t(
+                  "editTableOfContents.editor.actions.addChild",
+                  "Add child bookmark",
+                )}
+              >
                 <ActionIcon
                   variant="subtle"
                   color="green"
@@ -214,7 +283,12 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
                   <LocalIcon icon="subdirectory-arrow-right-rounded" />
                 </ActionIcon>
               </Tooltip>
-              <Tooltip label={t("editTableOfContents.editor.actions.addSibling", "Add sibling bookmark")}>
+              <Tooltip
+                label={t(
+                  "editTableOfContents.editor.actions.addSibling",
+                  "Add sibling bookmark",
+                )}
+              >
                 <ActionIcon
                   variant="subtle"
                   color="blue"
@@ -227,7 +301,12 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
                   <LocalIcon icon="add-rounded" />
                 </ActionIcon>
               </Tooltip>
-              <Tooltip label={t("editTableOfContents.editor.actions.remove", "Remove bookmark")}>
+              <Tooltip
+                label={t(
+                  "editTableOfContents.editor.actions.remove",
+                  "Remove bookmark",
+                )}
+              >
                 <ActionIcon
                   variant="subtle"
                   color="red"
@@ -247,24 +326,37 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
             <Stack gap="sm">
               <TextInput
                 size="sm"
-                label={t("editTableOfContents.editor.field.title", "Bookmark title")}
-                value={editingId === bookmark.id ? currentTitleInput : bookmark.title}
+                label={t(
+                  "editTableOfContents.editor.field.title",
+                  "Bookmark title",
+                )}
+                value={
+                  editingId === bookmark.id ? currentTitleInput : bookmark.title
+                }
                 onFocus={() => {
                   setEditingId(bookmark.id);
                   setCurrentTitleInput(bookmark.title);
                 }}
                 onBlur={() => {
-                  if (editingId === bookmark.id && currentTitleInput !== bookmark.title) {
+                  if (
+                    editingId === bookmark.id &&
+                    currentTitleInput !== bookmark.title
+                  ) {
                     handleTitleChange(bookmark.id, currentTitleInput);
                   }
                   setEditingId(null);
                 }}
-                onChange={(event) => setCurrentTitleInput(event.currentTarget.value)}
+                onChange={(event) =>
+                  setCurrentTitleInput(event.currentTarget.value)
+                }
                 disabled={disabled}
               />
               <NumberInput
                 size="sm"
-                label={t("editTableOfContents.editor.field.page", "Target page number")}
+                label={t(
+                  "editTableOfContents.editor.field.page",
+                  "Target page number",
+                )}
                 min={1}
                 clampBehavior="strict"
                 value={bookmark.pageNumber}
@@ -275,9 +367,15 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
           )}
 
           {bookmark.expanded && hasChildren && (
-            <Stack gap="sm" pl="lg" style={{ borderLeft: "1px solid var(--border-default)" }}>
+            <Stack
+              gap="sm"
+              pl="lg"
+              style={{ borderLeft: "1px solid var(--border-default)" }}
+            >
               {bookmark.children.map((child) => (
-                <Fragment key={child.id}>{renderBookmark(child, level + 1)}</Fragment>
+                <Fragment key={child.id}>
+                  {renderBookmark(child, level + 1)}
+                </Fragment>
               ))}
             </Stack>
           )}
@@ -290,9 +388,14 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
     <Stack gap="md">
       <Group justify="space-between" align="flex-start">
         <div>
-          <Text fw={600}>{t("editTableOfContents.editor.heading", "Bookmark editor")}</Text>
+          <Text fw={600}>
+            {t("editTableOfContents.editor.heading", "Bookmark editor")}
+          </Text>
           <Text size="sm" c="dimmed">
-            {t("editTableOfContents.editor.description", "Add, nest, and reorder bookmarks to craft your PDF outline.")}
+            {t(
+              "editTableOfContents.editor.description",
+              "Add, nest, and reorder bookmarks to craft your PDF outline.",
+            )}
           </Text>
         </div>
         <Button
@@ -305,15 +408,23 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
           }}
           disabled={disabled}
         >
-          {t("editTableOfContents.editor.addTopLevel", "Add top-level bookmark")}
+          {t(
+            "editTableOfContents.editor.addTopLevel",
+            "Add top-level bookmark",
+          )}
         </Button>
       </Group>
 
       {bookmarks.length === 0 ? (
         <Paper withBorder radius="md" ta="center" py="xl">
           <Stack gap="xs" align="center" px="lg">
-            <LocalIcon icon="bookmark-add-rounded" style={{ fontSize: "2.25rem" }} />
-            <Text fw={600}>{t("editTableOfContents.editor.empty.title", "No bookmarks yet")}</Text>
+            <LocalIcon
+              icon="bookmark-add-rounded"
+              style={{ fontSize: "2.25rem" }}
+            />
+            <Text fw={600}>
+              {t("editTableOfContents.editor.empty.title", "No bookmarks yet")}
+            </Text>
             <Text size="sm" c="dimmed" maw={420}>
               {t(
                 "editTableOfContents.editor.empty.description",
@@ -330,12 +441,17 @@ export default function BookmarkEditor({ bookmarks, onChange, disabled }: Bookma
               }}
               disabled={disabled}
             >
-              {t("editTableOfContents.editor.empty.action", "Add first bookmark")}
+              {t(
+                "editTableOfContents.editor.empty.action",
+                "Add first bookmark",
+              )}
             </Button>
           </Stack>
         </Paper>
       ) : (
-        <Stack gap="sm">{bookmarks.map((bookmark) => renderBookmark(bookmark))}</Stack>
+        <Stack gap="sm">
+          {bookmarks.map((bookmark) => renderBookmark(bookmark))}
+        </Stack>
       )}
     </Stack>
   );

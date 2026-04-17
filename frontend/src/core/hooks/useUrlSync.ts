@@ -4,7 +4,11 @@
 
 import { useEffect, useCallback, useRef } from "react";
 import { ToolId } from "@app/types/toolId";
-import { parseToolRoute, updateToolRoute, clearToolRoute } from "@app/utils/urlRouting";
+import {
+  parseToolRoute,
+  updateToolRoute,
+  clearToolRoute,
+} from "@app/utils/urlRouting";
 import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import { firePixel } from "@app/utils/scarfTracking";
 import { withBasePath } from "@app/constants/app";
@@ -108,7 +112,14 @@ export function useNavigationUrlSync(
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [selectedTool, handleToolSelect, clearToolSelection, registry, enableSync, checkPremiumAndSelect]);
+  }, [
+    selectedTool,
+    handleToolSelect,
+    clearToolSelection,
+    registry,
+    enableSync,
+    checkPremiumAndSelect,
+  ]);
 }
 
 /**

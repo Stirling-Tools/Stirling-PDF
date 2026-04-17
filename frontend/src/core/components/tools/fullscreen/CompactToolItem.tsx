@@ -4,7 +4,10 @@ import { useTranslation } from "react-i18next";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import HotkeyDisplay from "@app/components/hotkeys/HotkeyDisplay";
 import FavoriteStar from "@app/components/tools/toolPicker/FavoriteStar";
-import { ToolRegistryEntry, getSubcategoryColor } from "@app/data/toolsTaxonomy";
+import {
+  ToolRegistryEntry,
+  getSubcategoryColor,
+} from "@app/data/toolsTaxonomy";
 import {
   getIconBackground,
   getIconStyle,
@@ -21,16 +24,25 @@ interface CompactToolItemProps {
   tooltipPortalTarget?: HTMLElement | undefined;
 }
 
-const CompactToolItem: React.FC<CompactToolItemProps> = ({ id, tool, isSelected, onClick, tooltipPortalTarget }) => {
+const CompactToolItem: React.FC<CompactToolItemProps> = ({
+  id,
+  tool,
+  isSelected,
+  onClick,
+  tooltipPortalTarget,
+}) => {
   const { t } = useTranslation();
-  const { binding, isFav, toggleFavorite, disabled, disabledReason } = useToolMeta(id, tool);
+  const { binding, isFav, toggleFavorite, disabled, disabledReason } =
+    useToolMeta(id, tool);
   const categoryColor = getSubcategoryColor(tool.subcategoryId);
   const iconBg = getIconBackground(categoryColor, false);
   const iconClasses = "tool-panel__fullscreen-list-icon";
 
   let iconNode: React.ReactNode;
   if (React.isValidElement<{ style?: React.CSSProperties }>(tool.icon)) {
-    const element = tool.icon as React.ReactElement<{ style?: React.CSSProperties }>;
+    const element = tool.icon as React.ReactElement<{
+      style?: React.CSSProperties;
+    }>;
     iconNode = React.cloneElement(element, {
       style: {
         ...(element.props.style || {}),
@@ -76,13 +88,18 @@ const CompactToolItem: React.FC<CompactToolItemProps> = ({ id, tool, isSelected,
       </span>
       {!disabled && (
         <div className="tool-panel__fullscreen-star-compact">
-          <FavoriteStar isFavorite={isFav} onToggle={toggleFavorite} size="xs" />
+          <FavoriteStar
+            isFavorite={isFav}
+            onToggle={toggleFavorite}
+            size="xs"
+          />
         </div>
       )}
     </button>
   );
 
-  const { key: disabledKey, fallback: disabledFallback } = getDisabledLabel(disabledReason);
+  const { key: disabledKey, fallback: disabledFallback } =
+    getDisabledLabel(disabledReason);
   const disabledMessage = t(disabledKey, disabledFallback);
 
   const tooltipContent = disabled ? (
@@ -93,8 +110,17 @@ const CompactToolItem: React.FC<CompactToolItemProps> = ({ id, tool, isSelected,
     <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
       <span>{tool.description}</span>
       {binding && (
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.75rem" }}>
-          <span style={{ color: "var(--mantine-color-dimmed)", fontWeight: 500 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            fontSize: "0.75rem",
+          }}
+        >
+          <span
+            style={{ color: "var(--mantine-color-dimmed)", fontWeight: 500 }}
+          >
             {t("settings.hotkeys.shortcut", "Shortcut")}
           </span>
           <HotkeyDisplay binding={binding} />
@@ -104,7 +130,13 @@ const CompactToolItem: React.FC<CompactToolItemProps> = ({ id, tool, isSelected,
   );
 
   return (
-    <Tooltip content={tooltipContent} position="top" portalTarget={tooltipPortalTarget} arrow delay={80}>
+    <Tooltip
+      content={tooltipContent}
+      position="top"
+      portalTarget={tooltipPortalTarget}
+      arrow
+      delay={80}
+    >
       {compactButton}
     </Tooltip>
   );

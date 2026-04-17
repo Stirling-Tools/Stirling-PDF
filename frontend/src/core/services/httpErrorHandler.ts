@@ -1,9 +1,16 @@
 // frontend/src/services/httpErrorHandler.ts
 import { alert } from "@app/components/toast";
-import { broadcastErroredFiles, extractErrorFileIds, normalizeAxiosErrorData } from "@app/services/errorUtils";
+import {
+  broadcastErroredFiles,
+  extractErrorFileIds,
+  normalizeAxiosErrorData,
+} from "@app/services/errorUtils";
 import { showSpecialErrorToast } from "@app/services/specialErrorToasts";
 import { handleSaaSError } from "@app/services/saasErrorInterceptor";
-import { clampText, extractAxiosErrorMessage } from "@app/services/httpErrorUtils";
+import {
+  clampText,
+  extractAxiosErrorMessage,
+} from "@app/services/httpErrorUtils";
 
 // Module-scoped state to reduce global variable usage
 const recentSpecialByEndpoint: Record<string, number> = {};
@@ -100,7 +107,8 @@ export async function handleHttpError(error: any): Promise<boolean> {
   // 3) Show specialized friendly toasts if matched; otherwise show the generic one
   let rawString: string | undefined;
   try {
-    rawString = typeof normalized === "string" ? normalized : JSON.stringify(normalized);
+    rawString =
+      typeof normalized === "string" ? normalized : JSON.stringify(normalized);
   } catch (e) {
     console.debug("extractErrorFileIds", e);
   }
@@ -108,7 +116,13 @@ export async function handleHttpError(error: any): Promise<boolean> {
   const handled = showSpecialErrorToast(rawString, { status });
   if (!handled) {
     const displayBody = clampText(body);
-    alert({ alertType: "error", title, body: displayBody, expandable: true, isPersistentPopup: false });
+    alert({
+      alertType: "error",
+      title,
+      body: displayBody,
+      expandable: true,
+      isPersistentPopup: false,
+    });
   }
 
   return false; // Error was handled with toast, continue normal rejection

@@ -6,7 +6,15 @@
  * so only the active widget re-renders when its value changes.
  */
 import React, { useCallback, memo } from "react";
-import { TextInput, Textarea, Checkbox, Radio, Select, MultiSelect, Stack } from "@mantine/core";
+import {
+  TextInput,
+  Textarea,
+  Checkbox,
+  Radio,
+  Select,
+  MultiSelect,
+  Stack,
+} from "@mantine/core";
 import { useFieldValue } from "@app/tools/formFill/FormFillContext";
 import type { FormField } from "@app/tools/formFill/types";
 
@@ -19,7 +27,10 @@ function FieldInputInner({
   value: string;
   onValueChange: (fieldName: string, value: string) => void;
 }) {
-  const onChange = useCallback((v: string) => onValueChange(field.name, v), [onValueChange, field.name]);
+  const onChange = useCallback(
+    (v: string) => onValueChange(field.name, v),
+    [onValueChange, field.name],
+  );
 
   switch (field.type) {
     case "text":
@@ -130,15 +141,27 @@ function FieldInputInner({
         for (let i = 0; i < field.widgets.length; i++) {
           const w = field.widgets[i];
           // Use widget index as value; display option label, export value, or index
-          const label = (field.options && field.options[i]) || w.exportValue || String(i);
+          const label =
+            (field.options && field.options[i]) || w.exportValue || String(i);
           radioOptions.push({ value: String(i), label });
         }
       }
       return (
-        <Radio.Group value={value} onChange={onChange} aria-label={field.label || field.name} aria-required={field.required}>
+        <Radio.Group
+          value={value}
+          onChange={onChange}
+          aria-label={field.label || field.name}
+          aria-required={field.required}
+        >
           <Stack gap={4} mt={4}>
             {radioOptions.map((opt) => (
-              <Radio key={opt.value} size="xs" value={opt.value} label={opt.label} disabled={field.readOnly} />
+              <Radio
+                key={opt.value}
+                size="xs"
+                value={opt.value}
+                label={opt.label}
+                disabled={field.readOnly}
+              />
             ))}
           </Stack>
         </Radio.Group>
@@ -174,7 +197,9 @@ export function FieldInput({
   onValueChange: (fieldName: string, value: string) => void;
 }) {
   const value = useFieldValue(field.name);
-  return <FieldInputBase field={field} value={value} onValueChange={onValueChange} />;
+  return (
+    <FieldInputBase field={field} value={value} onValueChange={onValueChange} />
+  );
 }
 
 export default FieldInput;

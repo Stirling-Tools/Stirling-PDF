@@ -8,11 +8,16 @@ import type { FormField } from "@app/tools/formFill/types";
  * Fetch form fields with coordinates from the backend.
  * Calls POST /api/v1/form/fields-with-coordinates
  */
-export async function fetchFormFieldsWithCoordinates(file: File | Blob): Promise<FormField[]> {
+export async function fetchFormFieldsWithCoordinates(
+  file: File | Blob,
+): Promise<FormField[]> {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await apiClient.post<FormField[]>("/api/v1/form/fields-with-coordinates", formData);
+  const response = await apiClient.post<FormField[]>(
+    "/api/v1/form/fields-with-coordinates",
+    formData,
+  );
   return response.data;
 }
 
@@ -27,7 +32,10 @@ export async function fillFormFields(
 ): Promise<Blob> {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("data", new Blob([JSON.stringify(values)], { type: "application/json" }));
+  formData.append(
+    "data",
+    new Blob([JSON.stringify(values)], { type: "application/json" }),
+  );
   formData.append("flatten", String(flatten));
 
   const response = await apiClient.post("/api/v1/form/fill", formData, {
@@ -40,11 +48,17 @@ export async function fillFormFields(
  * Extract form fields as CSV.
  * Calls POST /api/v1/form/extract-csv
  */
-export async function extractFormFieldsCsv(file: File | Blob, values?: Record<string, string>): Promise<Blob> {
+export async function extractFormFieldsCsv(
+  file: File | Blob,
+  values?: Record<string, string>,
+): Promise<Blob> {
   const formData = new FormData();
   formData.append("file", file);
   if (values) {
-    formData.append("data", new Blob([JSON.stringify(values)], { type: "application/json" }));
+    formData.append(
+      "data",
+      new Blob([JSON.stringify(values)], { type: "application/json" }),
+    );
   }
 
   const response = await apiClient.post("/api/v1/form/extract-csv", formData, {
@@ -57,11 +71,17 @@ export async function extractFormFieldsCsv(file: File | Blob, values?: Record<st
  * Extract form fields as XLSX.
  * Calls POST /api/v1/form/extract-xlsx
  */
-export async function extractFormFieldsXlsx(file: File | Blob, values?: Record<string, string>): Promise<Blob> {
+export async function extractFormFieldsXlsx(
+  file: File | Blob,
+  values?: Record<string, string>,
+): Promise<Blob> {
   const formData = new FormData();
   formData.append("file", file);
   if (values) {
-    formData.append("data", new Blob([JSON.stringify(values)], { type: "application/json" }));
+    formData.append(
+      "data",
+      new Blob([JSON.stringify(values)], { type: "application/json" }),
+    );
   }
 
   const response = await apiClient.post("/api/v1/form/extract-xlsx", formData, {

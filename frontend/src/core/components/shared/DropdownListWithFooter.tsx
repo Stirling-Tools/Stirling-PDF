@@ -1,5 +1,13 @@
 import React, { ReactNode, useState, useMemo } from "react";
-import { Stack, Text, Popover, Box, Checkbox, Group, TextInput } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  Popover,
+  Box,
+  Checkbox,
+  Group,
+  TextInput,
+} from "@mantine/core";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import SearchIcon from "@mui/icons-material/Search";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
@@ -73,7 +81,9 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
     if (!searchable || !searchTerm.trim()) {
       return items;
     }
-    return items.filter((item) => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    return items.filter((item) =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
   }, [items, searchTerm, searchable]);
 
   const handleItemClick = (itemValue: string) => {
@@ -91,7 +101,9 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
     if (selectedValues.length === 0) {
       return placeholder;
     } else if (selectedValues.length === 1) {
-      const selectedItem = items.find((item) => item.value === selectedValues[0]);
+      const selectedItem = items.find(
+        (item) => item.value === selectedValues[0],
+      );
       return selectedItem?.name || selectedValues[0];
     } else {
       return `${selectedValues.length} selected`;
@@ -122,10 +134,12 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
         <Popover.Target>
           <Box
             style={{
-              border: "light-dark(1px solid var(--mantine-color-gray-3), 1px solid var(--mantine-color-dark-4))",
+              border:
+                "light-dark(1px solid var(--mantine-color-gray-3), 1px solid var(--mantine-color-dark-4))",
               borderRadius: "var(--mantine-radius-sm)",
               padding: "8px 12px",
-              backgroundColor: "light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))",
+              backgroundColor:
+                "light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))",
               opacity: disabled ? 0.6 : 1,
               cursor: disabled ? "not-allowed" : "pointer",
               minHeight: "36px",
@@ -140,7 +154,8 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
             <UnfoldMoreIcon
               style={{
                 fontSize: "1rem",
-                color: "light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-2))",
+                color:
+                  "light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-2))",
               }}
             />
           </Box>
@@ -151,7 +166,8 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
             {header && (
               <Box
                 style={{
-                  borderBottom: "light-dark(1px solid var(--mantine-color-gray-2), 1px solid var(--mantine-color-dark-4))",
+                  borderBottom:
+                    "light-dark(1px solid var(--mantine-color-gray-2), 1px solid var(--mantine-color-dark-4))",
                   paddingBottom: "8px",
                 }}
               >
@@ -162,7 +178,8 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
             {searchable && (
               <Box
                 style={{
-                  borderBottom: "light-dark(1px solid var(--mantine-color-gray-2), 1px solid var(--mantine-color-dark-4))",
+                  borderBottom:
+                    "light-dark(1px solid var(--mantine-color-gray-2), 1px solid var(--mantine-color-dark-4))",
                   paddingBottom: "8px",
                 }}
               >
@@ -181,14 +198,18 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
               {filteredItems.length === 0 ? (
                 <Box style={{ padding: "12px", textAlign: "center" }}>
                   <Text size="sm" c="dimmed">
-                    {searchable && searchTerm ? "No results found" : "No items available"}
+                    {searchable && searchTerm
+                      ? "No results found"
+                      : "No items available"}
                   </Text>
                 </Box>
               ) : (
                 filteredItems.map((item) => (
                   <Box
                     key={item.value}
-                    onClick={() => !item.disabled && handleItemClick(item.value)}
+                    onClick={() =>
+                      !item.disabled && handleItemClick(item.value)
+                    }
                     style={{
                       padding: "8px 12px",
                       cursor: item.disabled ? "not-allowed" : "pointer",
@@ -209,7 +230,11 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
                     }}
                   >
                     <Group gap="sm" style={{ flex: 1 }}>
-                      {item.leftIcon && <Box style={{ display: "flex", alignItems: "center" }}>{item.leftIcon}</Box>}
+                      {item.leftIcon && (
+                        <Box style={{ display: "flex", alignItems: "center" }}>
+                          {item.leftIcon}
+                        </Box>
+                      )}
                       <Text size="sm">{item.name}</Text>
                     </Group>
 
@@ -229,7 +254,8 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
             {footer && (
               <Box
                 style={{
-                  borderTop: "light-dark(1px solid var(--mantine-color-gray-2), 1px solid var(--mantine-color-dark-4))",
+                  borderTop:
+                    "light-dark(1px solid var(--mantine-color-gray-2), 1px solid var(--mantine-color-dark-4))",
                   paddingTop: "8px",
                 }}
               >

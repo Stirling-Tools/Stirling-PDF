@@ -20,7 +20,8 @@ export interface PageEditorDropdownState {
   fileColorMap: Map<FileId, number>;
 }
 
-const isPdf = (name?: string | null) => typeof name === "string" && name.toLowerCase().endsWith(".pdf");
+const isPdf = (name?: string | null) =>
+  typeof name === "string" && name.toLowerCase().endsWith(".pdf");
 
 export function usePageEditorDropdownState(): PageEditorDropdownState {
   const { state, selectors } = useFileState();
@@ -42,9 +43,14 @@ export function usePageEditorDropdownState(): PageEditorDropdownState {
       .filter((file): file is PageEditorDropdownFile => file !== null);
   }, [fileOrder, selectors, state.ui.selectedFileIds]);
 
-  const fileColorMap = useFileColorMap(pageEditorFiles.map((file) => file.fileId));
+  const fileColorMap = useFileColorMap(
+    pageEditorFiles.map((file) => file.fileId),
+  );
 
-  const selectedCount = useMemo(() => pageEditorFiles.filter((file) => file.isSelected).length, [pageEditorFiles]);
+  const selectedCount = useMemo(
+    () => pageEditorFiles.filter((file) => file.isSelected).length,
+    [pageEditorFiles],
+  );
 
   return useMemo<PageEditorDropdownState>(
     () => ({
@@ -55,6 +61,12 @@ export function usePageEditorDropdownState(): PageEditorDropdownState {
       onReorder: reorderFiles,
       fileColorMap,
     }),
-    [pageEditorFiles, selectedCount, toggleFileSelection, reorderFiles, fileColorMap],
+    [
+      pageEditorFiles,
+      selectedCount,
+      toggleFileSelection,
+      reorderFiles,
+      fileColorMap,
+    ],
   );
 }

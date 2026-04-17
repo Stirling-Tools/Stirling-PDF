@@ -10,7 +10,9 @@ export function useRightRailTooltipSide(
   useEffect(() => {
     const computePosition = () => {
       const rail = sidebarRefs?.rightRailRef?.current;
-      const isRTL = typeof document !== "undefined" && document.documentElement.dir === "rtl";
+      const isRTL =
+        typeof document !== "undefined" &&
+        document.documentElement.dir === "rtl";
 
       // Fallback to left if we can't measure
       if (!rail || typeof window === "undefined") {

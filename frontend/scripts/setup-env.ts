@@ -20,7 +20,9 @@ const args = process.argv.slice(2);
 const isDesktop = args.includes("--desktop");
 const isSaas = args.includes("--saas");
 
-console.log("setup-env: see frontend/README.md#environment-variables for documentation");
+console.log(
+  "setup-env: see frontend/README.md#environment-variables for documentation",
+);
 
 function getExampleKeys(exampleFile: string): string[] {
   const examplePath = join(root, exampleFile);
@@ -44,7 +46,9 @@ function ensureEnvFile(envFile: string, exampleFile: string): boolean {
 
   config({ path: envPath });
 
-  const missing = getExampleKeys(exampleFile).filter((k) => !(k in process.env));
+  const missing = getExampleKeys(exampleFile).filter(
+    (k) => !(k in process.env),
+  );
 
   if (missing.length > 0) {
     console.error(
@@ -62,7 +66,8 @@ let failed = false;
 failed = ensureEnvFile(".env", "config/.env.example") || failed;
 
 if (isDesktop) {
-  failed = ensureEnvFile(".env.desktop", "config/.env.desktop.example") || failed;
+  failed =
+    ensureEnvFile(".env.desktop", "config/.env.desktop.example") || failed;
 }
 
 if (isSaas) {
@@ -75,7 +80,9 @@ const allExampleKeys = new Set([
   ...getExampleKeys("config/.env.desktop.example"),
   ...getExampleKeys("config/.env.saas.example"),
 ]);
-const unknownViteVars = Object.keys(process.env).filter((k) => k.startsWith("VITE_") && !allExampleKeys.has(k));
+const unknownViteVars = Object.keys(process.env).filter(
+  (k) => k.startsWith("VITE_") && !allExampleKeys.has(k),
+);
 if (unknownViteVars.length > 0) {
   console.warn(
     "setup-env: the following VITE_ vars are set but not listed in any example file:\n" +

@@ -16,7 +16,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { ActionIcon, Divider } from "@mantine/core";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useNavigationState, useNavigationActions } from "@app/contexts/NavigationContext";
+import {
+  useNavigationState,
+  useNavigationActions,
+} from "@app/contexts/NavigationContext";
 import { useSidebarNavigation } from "@app/hooks/useSidebarNavigation";
 import { handleUnlessSpecialClick } from "@app/utils/clickHandlers";
 import FitText from "@app/components/shared/FitText";
@@ -30,8 +33,12 @@ interface ActiveToolButtonProps {
 
 const NAV_IDS = ["read", "sign", "automate"];
 
-const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton, tooltipPosition = "right" }) => {
-  const { selectedTool, selectedToolKey, leftPanelView, handleBackToTools } = useToolWorkflow();
+const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({
+  setActiveButton,
+  tooltipPosition = "right",
+}) => {
+  const { selectedTool, selectedToolKey, leftPanelView, handleBackToTools } =
+    useToolWorkflow();
   const { hasUnsavedChanges } = useNavigationState();
   const { actions: navigationActions } = useNavigationActions();
   const { getHomeNavigation } = useSidebarNavigation();
@@ -40,11 +47,14 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton, to
   // Special case: multiTool should always show even when sidebars are hidden
   const indicatorShouldShow = Boolean(
     selectedToolKey &&
-    ((leftPanelView === "toolContent" && !NAV_IDS.includes(selectedToolKey)) || selectedToolKey === "multiTool"),
+    ((leftPanelView === "toolContent" && !NAV_IDS.includes(selectedToolKey)) ||
+      selectedToolKey === "multiTool"),
   );
 
   // Local animation and hover state
-  const [indicatorTool, setIndicatorTool] = useState<typeof selectedTool | null>(null);
+  const [indicatorTool, setIndicatorTool] = useState<
+    typeof selectedTool | null
+  >(null);
   const [indicatorVisible, setIndicatorVisible] = useState<boolean>(false);
   const [replayAnim, setReplayAnim] = useState<boolean>(false);
   const [isBackHover, setIsBackHover] = useState<boolean>(false);
@@ -172,9 +182,13 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton, to
                   variant="subtle"
                   onMouseEnter={() => setIsBackHover(true)}
                   onMouseLeave={() => setIsBackHover(false)}
-                  aria-label={isBackHover ? "Back to all tools" : indicatorTool.name}
+                  aria-label={
+                    isBackHover ? "Back to all tools" : indicatorTool.name
+                  }
                   style={{
-                    backgroundColor: isBackHover ? "var(--color-gray-300)" : "var(--icon-tools-bg)",
+                    backgroundColor: isBackHover
+                      ? "var(--color-gray-300)"
+                      : "var(--icon-tools-bg)",
                     color: isBackHover ? "#fff" : "var(--icon-tools-color)",
                     border: "none",
                     borderRadius: "8px",
@@ -183,7 +197,11 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({ setActiveButton, to
                   }}
                 >
                   <span className="iconContainer">
-                    {isBackHover ? <ArrowBackRoundedIcon sx={{ fontSize: "1.875rem" }} /> : indicatorTool.icon}
+                    {isBackHover ? (
+                      <ArrowBackRoundedIcon sx={{ fontSize: "1.875rem" }} />
+                    ) : (
+                      indicatorTool.icon
+                    )}
                   </span>
                 </ActionIcon>
               </Tooltip>

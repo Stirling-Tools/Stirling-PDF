@@ -56,7 +56,10 @@ export function copyRgbaToBgraHeap(
       bgra[i + 2] = rgba[i]; // R
       bgra[i + 3] = rgba[i + 3]; // A
     }
-    new Uint8Array((m.pdfium.wasmExports as any).memory.buffer).set(bgra, bufferPtr);
+    new Uint8Array((m.pdfium.wasmExports as any).memory.buffer).set(
+      bgra,
+      bufferPtr,
+    );
   } else {
     // Stride has padding — swizzle + copy row by row
     const rowBuf = new Uint8Array(rowBytes);
@@ -103,12 +106,24 @@ export function embedBitmapImageOnPage(
     const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
     const stride = m.FPDFBitmap_GetStride(bitmapPtr);
 
-    copyRgbaToBgraHeap(m, image.rgba, bufferPtr, image.width, image.height, stride);
+    copyRgbaToBgraHeap(
+      m,
+      image.rgba,
+      bufferPtr,
+      image.width,
+      image.height,
+      stride,
+    );
 
     const imageObjPtr = m.FPDFPageObj_NewImageObj(docPtr);
     if (!imageObjPtr) return false;
 
-    const setBitmapOk = m.FPDFImageObj_SetBitmap(pagePtr, 0, imageObjPtr, bitmapPtr);
+    const setBitmapOk = m.FPDFImageObj_SetBitmap(
+      pagePtr,
+      0,
+      imageObjPtr,
+      bitmapPtr,
+    );
     if (!setBitmapOk) {
       m.FPDFPageObj_Destroy(imageObjPtr);
       return false;
@@ -183,7 +198,9 @@ export function drawPlaceholderRect(
  * Decode an image data URL (e.g. `data:image/png;base64,...`) to raw RGBA
  * pixel data via an offscreen canvas.
  */
-export function decodeImageDataUrl(dataUrl: string): Promise<DecodedImage | null> {
+export function decodeImageDataUrl(
+  dataUrl: string,
+): Promise<DecodedImage | null> {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {

@@ -13,7 +13,8 @@ import { useDocumentManagerCapability } from "@embedpdf/plugin-document-manager/
  * needed.
  */
 export function useDocumentReady() {
-  const { provides: documentManagerCapability } = useDocumentManagerCapability();
+  const { provides: documentManagerCapability } =
+    useDocumentManagerCapability();
   const [documentReady, setDocumentReady] = useState(false);
 
   useEffect(() => {
@@ -24,11 +25,13 @@ export function useDocumentReady() {
 
     let mounted = true;
 
-    const unsubOpen = documentManagerCapability.onDocumentOpened?.((event: any) => {
-      if (mounted && (event?.documentId || event?.id)) {
-        setDocumentReady(true);
-      }
-    });
+    const unsubOpen = documentManagerCapability.onDocumentOpened?.(
+      (event: any) => {
+        if (mounted && (event?.documentId || event?.id)) {
+          setDocumentReady(true);
+        }
+      },
+    );
 
     const unsubClose = documentManagerCapability.onDocumentClosed?.(() => {
       if (!mounted) return;

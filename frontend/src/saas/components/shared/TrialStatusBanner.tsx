@@ -46,10 +46,13 @@ export function TrialStatusBanner() {
       return;
     }
 
-    const trialEndDate = new Date(trialStatus.trialEnd).toLocaleDateString("en-GB", {
-      month: "short",
-      day: "numeric",
-    });
+    const trialEndDate = new Date(trialStatus.trialEnd).toLocaleDateString(
+      "en-GB",
+      {
+        month: "short",
+        day: "numeric",
+      },
+    );
 
     const message = t(
       "plan.trial.message",
@@ -94,7 +97,14 @@ export function TrialStatusBanner() {
     return () => {
       setBanner(null);
     };
-  }, [shouldShowBanner, trialStatus, setBanner, t, handleOpenCheckout, handleDismiss]);
+  }, [
+    shouldShowBanner,
+    trialStatus,
+    setBanner,
+    t,
+    handleOpenCheckout,
+    handleDismiss,
+  ]);
 
   const handleCheckoutSuccess = () => {
     // Refresh to hide banner and show updated plan

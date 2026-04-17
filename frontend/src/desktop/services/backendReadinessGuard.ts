@@ -25,9 +25,12 @@ let lastBackendToast = 0;
 export async function ensureBackendReady(endpoint?: string): Promise<boolean> {
   // Skip waiting if endpoint will be routed to SaaS backend
   if (endpoint) {
-    const skipCheck = await operationRouter.shouldSkipBackendReadyCheck(endpoint);
+    const skipCheck =
+      await operationRouter.shouldSkipBackendReadyCheck(endpoint);
     if (skipCheck) {
-      console.debug("[backendReadinessGuard] Skipping backend ready check (SaaS routing)");
+      console.debug(
+        "[backendReadinessGuard] Skipping backend ready check (SaaS routing)",
+      );
       return true;
     }
   }
@@ -41,7 +44,10 @@ export async function ensureBackendReady(endpoint?: string): Promise<boolean> {
     // first few seconds after launch. If it doesn't resolve in time we fall
     // through and allow the operation — the HTTP layer will handle any error.
     if (status === "checking") {
-      await Promise.race([selfHostedServerMonitor.checkNow(), new Promise<void>((resolve) => setTimeout(resolve, 1500))]);
+      await Promise.race([
+        selfHostedServerMonitor.checkNow(),
+        new Promise<void>((resolve) => setTimeout(resolve, 1500)),
+      ]);
       status = selfHostedServerMonitor.getSnapshot().status;
     }
 

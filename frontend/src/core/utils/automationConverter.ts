@@ -89,7 +89,10 @@ export function convertToFolderScanningConfig(
  * @param automation The automation configuration to export
  * @param toolRegistry The tool registry to map operation types to endpoints
  */
-export function downloadFolderScanningConfig(automation: AutomationConfig, toolRegistry: Partial<ToolRegistry>): void {
+export function downloadFolderScanningConfig(
+  automation: AutomationConfig,
+  toolRegistry: Partial<ToolRegistry>,
+): void {
   const config = convertToFolderScanningConfig(automation, toolRegistry);
   const json = JSON.stringify(config, null, 2);
   const blob = new Blob([json], { type: "application/json" });

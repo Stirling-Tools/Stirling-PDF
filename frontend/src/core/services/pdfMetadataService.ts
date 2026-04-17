@@ -1,6 +1,10 @@
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import { FileAnalyzer } from "@app/services/fileAnalyzer";
-import { TrappedStatus, CustomMetadataEntry, ExtractedPDFMetadata } from "@app/types/metadata";
+import {
+  TrappedStatus,
+  CustomMetadataEntry,
+  ExtractedPDFMetadata,
+} from "@app/types/metadata";
 import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 
 export interface MetadataExtractionResult {
@@ -13,7 +17,9 @@ export interface MetadataExtractionError {
   error: string;
 }
 
-export type MetadataExtractionResponse = MetadataExtractionResult | MetadataExtractionError;
+export type MetadataExtractionResponse =
+  | MetadataExtractionResult
+  | MetadataExtractionError;
 
 /**
  * Utility to format PDF date strings to required format (yyyy/MM/dd HH:mm:ss)
@@ -125,7 +131,9 @@ function getStringMetadata(info: Record<string, unknown>, key: string): string {
  * Extract all metadata from a PDF file
  * Returns a result object with success/error state
  */
-export async function extractPDFMetadata(file: File): Promise<MetadataExtractionResponse> {
+export async function extractPDFMetadata(
+  file: File,
+): Promise<MetadataExtractionResponse> {
   // Use existing PDF validation
   const isValidPDF = await FileAnalyzer.isValidPDF(file);
   if (!isValidPDF) {
@@ -147,7 +155,8 @@ export async function extractPDFMetadata(file: File): Promise<MetadataExtraction
     });
     metadata = await pdfDoc.getMetadata();
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     cleanupPdfDocument(pdfDoc);
     return {
       success: false,

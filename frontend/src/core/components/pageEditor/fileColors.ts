@@ -54,7 +54,10 @@ export function getFileColor(index: number): string {
  * @param opacity - Opacity value (0-1), defaults to 0.3
  * @returns RGBA color string
  */
-export function getFileColorWithOpacity(index: number, opacity: number = 0.2): string {
+export function getFileColorWithOpacity(
+  index: number,
+  opacity: number = 0.2,
+): string {
   const rgb = getFileColor(index);
   // Convert rgb(r, g, b) to rgba(r, g, b, a)
   return rgb.replace("rgb(", "rgba(").replace(")", `, ${opacity})`);

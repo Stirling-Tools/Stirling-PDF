@@ -1,21 +1,38 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { signatureStorageService, type StorageType } from "@app/services/signatureStorageService";
+import {
+  signatureStorageService,
+  type StorageType,
+} from "@app/services/signatureStorageService";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import type { SavedSignature, SavedSignaturePayload, SavedSignatureType, SignatureScope } from "@app/types/signature";
+import type {
+  SavedSignature,
+  SavedSignaturePayload,
+  SavedSignatureType,
+  SignatureScope,
+} from "@app/types/signature";
 
 export const MAX_SAVED_SIGNATURES_BACKEND = 20; // Backend limit per user
 export const MAX_SAVED_SIGNATURES_LOCALSTORAGE = 10; // LocalStorage limit
 
-export type { SavedSignature, SavedSignaturePayload, SavedSignatureType, SignatureScope };
+export type {
+  SavedSignature,
+  SavedSignaturePayload,
+  SavedSignatureType,
+  SignatureScope,
+};
 
 export type AddSignatureResult =
   | { success: true; signature: SavedSignature }
   | { success: false; reason: "limit" | "invalid" };
 
-const isSupportedEnvironment = () => typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+const isSupportedEnvironment = () =>
+  typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 
 const generateId = () => {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
     return crypto.randomUUID();
   }
   return `sig_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -53,7 +70,9 @@ export const useSavedSignatures = () => {
     if (storageType === "backend" && !isLoading) {
       signatureStorageService.migrateToBackend().then((result) => {
         if (result.migrated > 0) {
-          console.log(`[useSavedSignatures] Migrated ${result.migrated} signatures to backend`);
+          console.log(
+            `[useSavedSignatures] Migrated ${result.migrated} signatures to backend`,
+          );
           // Reload after migration
           signatureStorageService.loadSignatures().then(setSavedSignatures);
         }
@@ -76,14 +95,22 @@ export const useSavedSignatures = () => {
   }, [storageType]);
 
   // Different limits for backend vs localStorage
-  const maxLimit = storageType === "backend" ? MAX_SAVED_SIGNATURES_BACKEND : MAX_SAVED_SIGNATURES_LOCALSTORAGE;
+  const maxLimit =
+    storageType === "backend"
+      ? MAX_SAVED_SIGNATURES_BACKEND
+      : MAX_SAVED_SIGNATURES_LOCALSTORAGE;
   const isAtCapacity = savedSignatures.length >= maxLimit;
 
   const addSignature = useCallback(
-    async (payload: SavedSignaturePayload, label?: string, scope?: SignatureScope): Promise<AddSignatureResult> => {
+    async (
+      payload: SavedSignaturePayload,
+      label?: string,
+      scope?: SignatureScope,
+    ): Promise<AddSignatureResult> => {
       if (
         (payload.type === "text" && !payload.signerName.trim()) ||
-        ((payload.type === "canvas" || payload.type === "image") && !payload.dataUrl)
+        ((payload.type === "canvas" || payload.type === "image") &&
+          !payload.dataUrl)
       ) {
         return { success: false, reason: "invalid" };
       }
@@ -97,7 +124,8 @@ export const useSavedSignatures = () => {
         ...payload,
         id: generateId(),
         label: (label || "Signature").trim() || "Signature",
-        scope: scope || (storageType === "backend" ? "personal" : "localStorage"),
+        scope:
+          scope || (storageType === "backend" ? "personal" : "localStorage"),
         createdAt: timestamp,
         updatedAt: timestamp,
       };
@@ -136,13 +164,20 @@ export const useSavedSignatures = () => {
           setSavedSignatures((prev) =>
             prev.map((entry) =>
               entry.id === id
-                ? { ...entry, label: nextLabel.trim() || entry.label || "Signature", updatedAt: Date.now() }
+                ? {
+                    ...entry,
+                    label: nextLabel.trim() || entry.label || "Signature",
+                    updatedAt: Date.now(),
+                  }
                 : entry,
             ),
           );
         }
       } catch (error) {
-        console.error("[useSavedSignatures] Failed to update signature label:", error);
+        console.error(
+          "[useSavedSignatures] Failed to update signature label:",
+          error,
+        );
       }
     },
     [storageType],
@@ -161,9 +196,14 @@ export const useSavedSignatures = () => {
 
       try {
         await signatureStorageService.saveSignature(updated);
-        setSavedSignatures((prev) => prev.map((entry) => (entry.id === id ? updated : entry)));
+        setSavedSignatures((prev) =>
+          prev.map((entry) => (entry.id === id ? updated : entry)),
+        );
       } catch (error) {
-        console.error("[useSavedSignatures] Failed to replace signature:", error);
+        console.error(
+          "[useSavedSignatures] Failed to replace signature:",
+          error,
+        );
       }
     },
     [savedSignatures],
@@ -171,7 +211,11 @@ export const useSavedSignatures = () => {
 
   const clearSignatures = useCallback(async () => {
     try {
-      await Promise.all(savedSignatures.map((sig) => signatureStorageService.deleteSignature(sig.id)));
+      await Promise.all(
+        savedSignatures.map((sig) =>
+          signatureStorageService.deleteSignature(sig.id),
+        ),
+      );
       setSavedSignatures([]);
     } catch (error) {
       console.error("[useSavedSignatures] Failed to clear signatures:", error);

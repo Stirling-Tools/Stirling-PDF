@@ -68,7 +68,12 @@ const FilePreview: React.FC<FilePreviewProps> = ({
 
   // Build the component composition
   let content = (
-    <DocumentThumbnail file={file} thumbnail={thumbnail} style={animationStyle} onClick={() => onFileClick?.(file)} />
+    <DocumentThumbnail
+      file={file}
+      thumbnail={thumbnail}
+      style={animationStyle}
+      onClick={() => onFileClick?.(file)}
+    />
   );
 
   // Wrap with hover overlay if needed
@@ -84,7 +89,11 @@ const FilePreview: React.FC<FilePreviewProps> = ({
   // Wrap with navigation if needed
   if (showNavigation && hasMultipleFiles && onPrevious && onNext) {
     content = (
-      <NavigationArrows onPrevious={onPrevious} onNext={onNext} disabled={isAnimating}>
+      <NavigationArrows
+        onPrevious={onPrevious}
+        onNext={onNext}
+        disabled={isAnimating}
+      >
         {content}
       </NavigationArrows>
     );

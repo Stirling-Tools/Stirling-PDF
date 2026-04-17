@@ -6,6 +6,8 @@ interface FileEditorFileNameProps {
   file: StirlingFileStub;
 }
 
-const FileEditorFileName = ({ file }: FileEditorFileNameProps) => <PrivateContent>{file.name}</PrivateContent>;
+const FileEditorFileName = ({ file }: FileEditorFileNameProps) => (
+  <PrivateContent>{file.name}</PrivateContent>
+);
 
 export default FileEditorFileName;

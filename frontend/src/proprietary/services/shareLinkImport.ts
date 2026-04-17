@@ -21,11 +21,16 @@ export interface ShareLinkMetadata {
   expiresAt?: string;
 }
 
-export async function fetchShareLinkMetadata(token: string): Promise<ShareLinkMetadata> {
-  const response = await apiClient.get<ShareLinkMetadata>(`/api/v1/storage/share-links/${token}/metadata`, {
-    suppressErrorToast: true,
-    skipAuthRedirect: true,
-  });
+export async function fetchShareLinkMetadata(
+  token: string,
+): Promise<ShareLinkMetadata> {
+  const response = await apiClient.get<ShareLinkMetadata>(
+    `/api/v1/storage/share-links/${token}/metadata`,
+    {
+      suppressErrorToast: true,
+      skipAuthRedirect: true,
+    },
+  );
   return response.data || {};
 }
 
@@ -39,10 +44,17 @@ export async function downloadShareLink(token: string): Promise<{
     suppressErrorToast: true,
     skipAuthRedirect: true,
   });
-  const contentType = (response.headers && (response.headers["content-type"] || response.headers["Content-Type"])) || "";
+  const contentType =
+    (response.headers &&
+      (response.headers["content-type"] || response.headers["Content-Type"])) ||
+    "";
   const disposition =
-    (response.headers && (response.headers["content-disposition"] || response.headers["Content-Disposition"])) || "";
-  const filename = parseContentDispositionFilename(disposition) || "shared-file";
+    (response.headers &&
+      (response.headers["content-disposition"] ||
+        response.headers["Content-Disposition"])) ||
+    "";
+  const filename =
+    parseContentDispositionFilename(disposition) || "shared-file";
   const blob = response.data as Blob;
   const contentTypeValue = contentType || blob.type;
   return { blob, filename, contentType: contentTypeValue };
@@ -93,8 +105,13 @@ export async function importShareLinkToWorkbench(
       for (const entry of sortedEntries) {
         const newId = idMap.get(entry.logicalId);
         if (!newId) continue;
-        const parentId = entry.parentLogicalId ? idMap.get(entry.parentLogicalId) : undefined;
-        const rootId = rootIdMap.get(getShareBundleEntryRootId(manifest, entry)) || idMap.get(manifest.rootLogicalId) || newId;
+        const parentId = entry.parentLogicalId
+          ? idMap.get(entry.parentLogicalId)
+          : undefined;
+        const rootId =
+          rootIdMap.get(getShareBundleEntryRootId(manifest, entry)) ||
+          idMap.get(manifest.rootLogicalId) ||
+          newId;
         const updates = {
           versionNumber: entry.versionNumber,
           originalFileId: rootId,
@@ -109,7 +126,9 @@ export async function importShareLinkToWorkbench(
 
       const selectedIds: FileId[] = [];
       for (const rootId of rootOrder) {
-        const rootEntries = sortedEntries.filter((entry) => getShareBundleEntryRootId(manifest, entry) === rootId);
+        const rootEntries = sortedEntries.filter(
+          (entry) => getShareBundleEntryRootId(manifest, entry) === rootId,
+        );
         const latestEntry = rootEntries[rootEntries.length - 1];
         if (!latestEntry) {
           continue;
@@ -124,13 +143,17 @@ export async function importShareLinkToWorkbench(
     }
   }
 
-  const file = new File([blob], filename, { type: contentTypeValue || blob.type });
+  const file = new File([blob], filename, {
+    type: contentTypeValue || blob.type,
+  });
   const stirlingFiles = await actions.addFilesWithOptions([file], {
     selectFiles: true,
     autoUnzip: false,
     skipAutoUnzip: false,
   });
-  const ids = stirlingFiles.map((stirlingFile: StirlingFile) => stirlingFile.fileId);
+  const ids = stirlingFiles.map(
+    (stirlingFile: StirlingFile) => stirlingFile.fileId,
+  );
   if (ids.length > 0) {
     const sharedUpdates = {
       remoteStorageId: shareMetadata?.fileId,

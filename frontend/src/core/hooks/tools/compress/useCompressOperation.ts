@@ -1,10 +1,19 @@
 import { useTranslation } from "react-i18next";
-import { useToolOperation, ToolType } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  useToolOperation,
+  ToolType,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { CompressParameters, defaultParameters } from "@app/hooks/tools/compress/useCompressParameters";
+import {
+  CompressParameters,
+  defaultParameters,
+} from "@app/hooks/tools/compress/useCompressParameters";
 
 // Static configuration that can be used by both the hook and automation executor
-export const buildCompressFormData = (parameters: CompressParameters, file: File): FormData => {
+export const buildCompressFormData = (
+  parameters: CompressParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
 
@@ -12,7 +21,9 @@ export const buildCompressFormData = (parameters: CompressParameters, file: File
     formData.append("optimizeLevel", parameters.compressionLevel.toString());
   } else {
     // File size method
-    const fileSize = parameters.fileSizeValue ? `${parameters.fileSizeValue}${parameters.fileSizeUnit}` : "";
+    const fileSize = parameters.fileSizeValue
+      ? `${parameters.fileSizeValue}${parameters.fileSizeUnit}`
+      : "";
     if (fileSize) {
       formData.append("expectedOutputSize", fileSize);
     }
@@ -42,6 +53,11 @@ export const useCompressOperation = () => {
 
   return useToolOperation<CompressParameters>({
     ...compressOperationConfig,
-    getErrorMessage: createStandardErrorHandler(t("compress.error.failed", "An error occurred while compressing the PDF.")),
+    getErrorMessage: createStandardErrorHandler(
+      t(
+        "compress.error.failed",
+        "An error occurred while compressing the PDF.",
+      ),
+    ),
   });
 };

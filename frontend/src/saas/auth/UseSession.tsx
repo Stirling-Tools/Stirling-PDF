@@ -1,10 +1,32 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+  useCallback,
+} from "react";
 import { supabase } from "@app/auth/supabase";
-import type { Session, User as SupabaseUser, AuthError } from "@supabase/supabase-js";
-import { CreditSummary, SubscriptionInfo, CreditCheckResult, ApiCredits } from "@app/types/credits";
-import apiClient, { setGlobalCreditUpdateCallback } from "@app/services/apiClient";
+import type {
+  Session,
+  User as SupabaseUser,
+  AuthError,
+} from "@supabase/supabase-js";
+import {
+  CreditSummary,
+  SubscriptionInfo,
+  CreditCheckResult,
+  ApiCredits,
+} from "@app/types/credits";
+import apiClient, {
+  setGlobalCreditUpdateCallback,
+} from "@app/services/apiClient";
 import { synchronizeUserUpgrade } from "@app/services/userService";
-import { syncOAuthAvatar, getProfilePictureMetadata, type ProfilePictureMetadata } from "@app/services/avatarSyncService";
+import {
+  syncOAuthAvatar,
+  getProfilePictureMetadata,
+  type ProfilePictureMetadata,
+} from "@app/services/avatarSyncService";
 
 // Extend Supabase User to include optional username for compatibility
 export type User = SupabaseUser & { username?: string };
@@ -55,7 +77,11 @@ const AuthContext = createContext<AuthContextType>({
   profilePictureMetadata: null,
   signOut: async () => {},
   refreshSession: async () => {},
-  hasSufficientCredits: () => ({ hasSufficientCredits: false, currentBalance: 0, requiredCredits: 0 }),
+  hasSufficientCredits: () => ({
+    hasSufficientCredits: false,
+    currentBalance: 0,
+    requiredCredits: 0,
+  }),
   updateCredits: () => {},
   refreshCredits: async () => {},
   refreshProStatus: async () => {},
@@ -69,12 +95,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<AuthError | null>(null);
   const [creditBalance, setCreditBalance] = useState<number | null>(null);
-  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
-  const [creditSummary, setCreditSummary] = useState<CreditSummary | null>(null);
+  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(
+    null,
+  );
+  const [creditSummary, setCreditSummary] = useState<CreditSummary | null>(
+    null,
+  );
   const [isPro, setIsPro] = useState<boolean | null>(null);
   const [trialStatus, setTrialStatus] = useState<TrialStatus | null>(null);
-  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
-  const [profilePictureMetadata, setProfilePictureMetadata] = useState<ProfilePictureMetadata | null>(null);
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
+    null,
+  );
+  const [profilePictureMetadata, setProfilePictureMetadata] =
+    useState<ProfilePictureMetadata | null>(null);
 
   const fetchCredits = useCallback(
     async (sessionToUse?: Session | null) => {
@@ -89,14 +122,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        console.debug("[Auth Debug] Fetching credits for user:", currentSession.user.id);
+        console.debug(
+          "[Auth Debug] Fetching credits for user:",
+          currentSession.user.id,
+        );
         const response = await apiClient.get<ApiCredits>("/api/v1/credits");
         const apiCredits = response.data;
 
         // Map server payload to app CreditSummary
         const credits: CreditSummary = {
           currentCredits: apiCredits.totalAvailableCredits,
-          maxCredits: apiCredits.weeklyCreditsAllocated + apiCredits.totalBoughtCredits,
+          maxCredits:
+            apiCredits.weeklyCreditsAllocated + apiCredits.totalBoughtCredits,
           creditsUsed:
             apiCredits.weeklyCreditsAllocated -
             apiCredits.weeklyCreditsRemaining +
@@ -139,13 +176,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const currentSession = sessionToUse ?? session;
 
       if (!currentSession?.user) {
-        console.debug("[Auth Debug] No user session, skipping pro status fetch");
+        console.debug(
+          "[Auth Debug] No user session, skipping pro status fetch",
+        );
         setIsPro(null);
         return;
       }
 
       try {
-        console.debug("[Auth Debug] Fetching pro status for user:", currentSession.user.id);
+        console.debug(
+          "[Auth Debug] Fetching pro status for user:",
+          currentSession.user.id,
+        );
         const { data: proStatus, error } = await supabase.rpc("is_pro");
 
         if (error) {
@@ -173,16 +215,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const currentSession = sessionToUse ?? session;
 
       if (!currentSession?.user) {
-        console.debug("[Auth Debug] No user session, skipping trial status fetch");
+        console.debug(
+          "[Auth Debug] No user session, skipping trial status fetch",
+        );
         setTrialStatus(null);
         return;
       }
 
       try {
-        console.debug("[Auth Debug] Fetching trial status for user:", currentSession.user.id);
+        console.debug(
+          "[Auth Debug] Fetching trial status for user:",
+          currentSession.user.id,
+        );
         const { data, error } = await supabase
           .from("billing_subscriptions")
-          .select("status, trial_end, has_payment_method, scheduled_subscription_id")
+          .select(
+            "status, trial_end, has_payment_method, scheduled_subscription_id",
+          )
           .in("status", ["trialing", "incomplete_expired", "canceled"])
           .order("created_at", { ascending: false })
           .limit(1)
@@ -197,7 +246,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (data?.trial_end) {
           const trialEnd = new Date(data.trial_end);
           const now = new Date();
-          const daysRemaining = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+          const daysRemaining = Math.ceil(
+            (trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+          );
 
           setTrialStatus({
             isTrialing: data.status === "trialing" && daysRemaining > 0,
@@ -233,7 +284,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const currentSession = sessionToUse ?? session;
 
       if (!currentSession?.user) {
-        console.debug("[Auth Debug] No user session, skipping profile picture fetch");
+        console.debug(
+          "[Auth Debug] No user session, skipping profile picture fetch",
+        );
         setProfilePictureUrl(null);
         return;
       }
@@ -242,16 +295,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const PROFILE_BUCKET = "profile-pictures";
         const profilePath = `${currentSession.user.id}/avatar`;
 
-        console.debug("[Auth Debug] Fetching profile picture for user:", currentSession.user.id);
-        const { data, error } = await supabase.storage.from(PROFILE_BUCKET).createSignedUrl(profilePath, 60 * 60);
+        console.debug(
+          "[Auth Debug] Fetching profile picture for user:",
+          currentSession.user.id,
+        );
+        const { data, error } = await supabase.storage
+          .from(PROFILE_BUCKET)
+          .createSignedUrl(profilePath, 60 * 60);
 
         if (error) {
           // Profile picture not found is expected for users without uploads
-          console.debug("[Auth Debug] Profile picture not available:", error.message);
+          console.debug(
+            "[Auth Debug] Profile picture not available:",
+            error.message,
+          );
           setProfilePictureUrl(null);
         } else {
           setProfilePictureUrl(data.signedUrl);
-          console.debug("[Auth Debug] Profile picture URL fetched successfully");
+          console.debug(
+            "[Auth Debug] Profile picture URL fetched successfully",
+          );
         }
       } catch (error: unknown) {
         console.debug("[Auth Debug] Failed to fetch profile picture:", error);
@@ -270,18 +333,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const currentSession = sessionToUse ?? session;
 
       if (!currentSession?.user) {
-        console.debug("[Auth Debug] No user session, skipping profile picture metadata fetch");
+        console.debug(
+          "[Auth Debug] No user session, skipping profile picture metadata fetch",
+        );
         setProfilePictureMetadata(null);
         return;
       }
 
       try {
-        console.debug("[Auth Debug] Fetching profile picture metadata for user:", currentSession.user.id);
-        const metadata = await getProfilePictureMetadata(currentSession.user.id);
+        console.debug(
+          "[Auth Debug] Fetching profile picture metadata for user:",
+          currentSession.user.id,
+        );
+        const metadata = await getProfilePictureMetadata(
+          currentSession.user.id,
+        );
         setProfilePictureMetadata(metadata);
-        console.debug("[Auth Debug] Profile picture metadata fetched:", metadata);
+        console.debug(
+          "[Auth Debug] Profile picture metadata fetched:",
+          metadata,
+        );
       } catch (error: unknown) {
-        console.debug("[Auth Debug] Failed to fetch profile picture metadata:", error);
+        console.debug(
+          "[Auth Debug] Failed to fetch profile picture metadata:",
+          error,
+        );
         setProfilePictureMetadata(null);
       }
     },
@@ -294,7 +370,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateCredits = useCallback(
     (newBalance: number) => {
-      console.debug("[Auth Debug] Updating credit balance:", { from: creditBalance, to: newBalance });
+      console.debug("[Auth Debug] Updating credit balance:", {
+        from: creditBalance,
+        to: newBalance,
+      });
       setCreditBalance(newBalance);
       // Also update the creditSummary if it exists
       if (creditSummary) {
@@ -313,7 +392,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (requiredCredits: number): CreditCheckResult => {
       const currentBalance = creditBalance ?? 0;
       const hasSufficient = currentBalance >= requiredCredits;
-      console.debug("[Auth Debug] Credit check:", { requiredCredits, currentBalance, hasSufficient });
+      console.debug("[Auth Debug] Credit check:", {
+        requiredCredits,
+        currentBalance,
+        hasSufficient,
+      });
 
       return {
         hasSufficientCredits: hasSufficient,
@@ -340,7 +423,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(data.session);
       }
     } catch (err) {
-      console.error("[Auth Debug] Unexpected error during session refresh:", err);
+      console.error(
+        "[Auth Debug] Unexpected error during session refresh:",
+        err,
+      );
       setError(err as AuthError);
     } finally {
       setLoading(false);
@@ -396,7 +482,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (data.session?.user) {
             // Sync OAuth avatar in background
             syncOAuthAvatar(data.session.user).catch((err) => {
-              console.debug("[Auth Debug] Failed to sync OAuth avatar on init:", err);
+              console.debug(
+                "[Auth Debug] Failed to sync OAuth avatar on init:",
+                err,
+              );
             });
 
             await fetchCredits(data.session);
@@ -411,7 +500,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
       } catch (err) {
-        console.error("[Auth Debug] Unexpected error during auth initialization:", err);
+        console.error(
+          "[Auth Debug] Unexpected error during auth initialization:",
+          err,
+        );
         if (mounted) {
           setError(err as AuthError);
         }
@@ -477,7 +569,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setTimeout(() => {
                   fetchProfilePicture(newSession).finally(() => {
                     setLoading(false);
-                    console.debug("[Auth Debug] User data fully loaded after sign in");
+                    console.debug(
+                      "[Auth Debug] User data fully loaded after sign in",
+                    );
                   });
                 }, 500);
               });
@@ -493,7 +587,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 fetchProfilePictureMetadata(newSession),
                 fetchProfilePicture(newSession),
               ]).then(() => {
-                console.debug("[Auth Debug] User data refreshed after token refresh");
+                console.debug(
+                  "[Auth Debug] User data refreshed after token refresh",
+                );
               });
             }
           } else if (event === "USER_UPDATED") {
@@ -503,8 +599,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const pendingUpgrade = sessionStorage.getItem("pendingUpgrade");
             const upgradeProvider = sessionStorage.getItem("upgradeProvider");
 
-            if (pendingUpgrade && newSession?.user && newSession.user.is_anonymous === false) {
-              console.debug("[Auth Debug] Processing pending OAuth upgrade:", upgradeProvider);
+            if (
+              pendingUpgrade &&
+              newSession?.user &&
+              newSession.user.is_anonymous === false
+            ) {
+              console.debug(
+                "[Auth Debug] Processing pending OAuth upgrade:",
+                upgradeProvider,
+              );
 
               // Clear the flags first to prevent loops
               sessionStorage.removeItem("pendingUpgrade");
@@ -513,7 +616,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               // Synchronize with backend
               synchronizeUserUpgrade(upgradeProvider || undefined)
                 .then(() => {
-                  console.debug("[Auth Debug] User upgrade synchronized successfully");
+                  console.debug(
+                    "[Auth Debug] User upgrade synchronized successfully",
+                  );
 
                   // Refresh credits, pro status, trial status, profile picture metadata, and profile picture after upgrade
                   if (newSession?.user) {
@@ -527,10 +632,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   }
                 })
                 .then(() => {
-                  console.debug("[Auth Debug] User data refreshed after upgrade");
+                  console.debug(
+                    "[Auth Debug] User data refreshed after upgrade",
+                  );
                 })
                 .catch((err) => {
-                  console.error("[Auth Debug] Failed to synchronize user upgrade:", err);
+                  console.error(
+                    "[Auth Debug] Failed to synchronize user upgrade:",
+                    err,
+                  );
                 });
             }
           }

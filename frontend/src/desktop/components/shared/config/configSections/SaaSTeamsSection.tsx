@@ -72,7 +72,9 @@ export function SaaSTeamsSection() {
   }, []); // Only run on mount/unmount
 
   const navigateToPlan = () => {
-    window.dispatchEvent(new CustomEvent("appConfig:navigate", { detail: { key: "planBilling" } }));
+    window.dispatchEvent(
+      new CustomEvent("appConfig:navigate", { detail: { key: "planBilling" } }),
+    );
   };
 
   const handleInvite = async (e: React.FormEvent) => {
@@ -85,37 +87,71 @@ export function SaaSTeamsSection() {
 
     try {
       await inviteUser(inviteEmail);
-      setSuccess(t("team.inviteSent", "Invitation sent to {{email}}", { email: inviteEmail }));
+      setSuccess(
+        t("team.inviteSent", "Invitation sent to {{email}}", {
+          email: inviteEmail,
+        }),
+      );
       setInviteEmail("");
     } catch (err) {
       const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || t("team.inviteError", "Failed to send invitation"));
+      setError(
+        error.response?.data?.error ||
+          t("team.inviteError", "Failed to send invitation"),
+      );
     } finally {
       setInviting(false);
     }
   };
 
   const handleRemove = async (memberId: number, memberEmail: string) => {
-    if (!window.confirm(t("team.confirmRemove", "Remove {{email}} from the team?", { email: memberEmail }))) return;
+    if (
+      !window.confirm(
+        t("team.confirmRemove", "Remove {{email}} from the team?", {
+          email: memberEmail,
+        }),
+      )
+    )
+      return;
 
     try {
       await removeMember(memberId);
       setSuccess(t("team.memberRemoved", "Member removed successfully"));
     } catch (err) {
       const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || t("team.removeError", "Failed to remove member"));
+      setError(
+        error.response?.data?.error ||
+          t("team.removeError", "Failed to remove member"),
+      );
     }
   };
 
-  const handleCancelInvitation = async (invitationId: number, email: string) => {
-    if (!window.confirm(t("team.confirmCancelInvite", "Cancel invitation for {{email}}?", { email }))) return;
+  const handleCancelInvitation = async (
+    invitationId: number,
+    email: string,
+  ) => {
+    if (
+      !window.confirm(
+        t("team.confirmCancelInvite", "Cancel invitation for {{email}}?", {
+          email,
+        }),
+      )
+    )
+      return;
 
     try {
       await cancelInvitation(invitationId);
-      setSuccess(t("team.inviteCancelled", "Invitation for {{email}} cancelled", { email }));
+      setSuccess(
+        t("team.inviteCancelled", "Invitation for {{email}} cancelled", {
+          email,
+        }),
+      );
     } catch (err) {
       const error = err as { response?: { data?: { error?: string } } };
-      setError(error.response?.data?.error || t("team.cancelInviteError", "Failed to cancel invitation"));
+      setError(
+        error.response?.data?.error ||
+          t("team.cancelInviteError", "Failed to cancel invitation"),
+      );
     }
   };
 
@@ -146,8 +182,15 @@ export function SaaSTeamsSection() {
       setIsEditingName(false);
       await refreshTeams();
     } catch (err) {
-      const error = err as { response?: { data?: { error?: string } }; message?: string };
-      setError(error.response?.data?.error || error.message || t("team.renameError", "Failed to rename team"));
+      const error = err as {
+        response?: { data?: { error?: string } };
+        message?: string;
+      };
+      setError(
+        error.response?.data?.error ||
+          error.message ||
+          t("team.renameError", "Failed to rename team"),
+      );
     } finally {
       setRenamingTeam(false);
     }
@@ -162,7 +205,9 @@ export function SaaSTeamsSection() {
           'Are you sure you want to leave "{{name}}"? You are a team leader. Make sure there are other leaders before leaving.',
           { name: currentTeam.name },
         )
-      : t("team.confirmLeave", 'Are you sure you want to leave "{{name}}"?', { name: currentTeam.name });
+      : t("team.confirmLeave", 'Are you sure you want to leave "{{name}}"?', {
+          name: currentTeam.name,
+        });
 
     if (!window.confirm(confirmMessage)) return;
 
@@ -170,8 +215,15 @@ export function SaaSTeamsSection() {
       await leaveTeam();
       setSuccess(t("team.leaveSuccess", "Successfully left team"));
     } catch (err) {
-      const error = err as { response?: { data?: { error?: string } }; message?: string };
-      setError(error.response?.data?.error || error.message || t("team.leaveError", "Failed to leave team"));
+      const error = err as {
+        response?: { data?: { error?: string } };
+        message?: string;
+      };
+      setError(
+        error.response?.data?.error ||
+          error.message ||
+          t("team.leaveError", "Failed to leave team"),
+      );
     }
   };
 
@@ -211,7 +263,12 @@ export function SaaSTeamsSection() {
                 >
                   <LocalIcon icon="check" width="1rem" height="1rem" />
                 </ActionIcon>
-                <ActionIcon variant="subtle" color="gray" onClick={handleCancelRename} disabled={renamingTeam}>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  onClick={handleCancelRename}
+                  disabled={renamingTeam}
+                >
                   <LocalIcon icon="close" width="1rem" height="1rem" />
                 </ActionIcon>
               </Group>
@@ -230,7 +287,9 @@ export function SaaSTeamsSection() {
                     <LocalIcon icon="edit" width="1rem" height="1rem" />
                   </ActionIcon>
                 )}
-                {isTeamLeader && <Badge color="blue">{t("team.leader", "LEADER")}</Badge>}
+                {isTeamLeader && (
+                  <Badge color="blue">{t("team.leader", "LEADER")}</Badge>
+                )}
                 {isPersonalTeam && (
                   <Badge color="gray" variant="light" size="xs">
                     {t("team.personal", "Personal")}
@@ -240,7 +299,9 @@ export function SaaSTeamsSection() {
             )}
             {!isEditingName && !isPersonalTeam && (
               <Text size="sm" c="dimmed" mt={4}>
-                {t("team.memberCount", "{{count}} team members", { count: currentTeam.seatsUsed })}
+                {t("team.memberCount", "{{count}} team members", {
+                  count: currentTeam.seatsUsed,
+                })}
               </Text>
             )}
           </div>
@@ -250,7 +311,9 @@ export function SaaSTeamsSection() {
               variant="outline"
               size="xs"
               onClick={handleLeaveTeam}
-              leftSection={<LocalIcon icon="logout" width="1rem" height="1rem" />}
+              leftSection={
+                <LocalIcon icon="logout" width="1rem" height="1rem" />
+              }
             >
               {t("team.leaveButton", "Leave Team")}
             </Button>
@@ -260,15 +323,28 @@ export function SaaSTeamsSection() {
 
       {/* Upgrade Banner for Free Users */}
       {isPersonalTeam && !isPro && (
-        <Alert color="blue" icon={<LocalIcon icon="info" width={16} height={16} />}>
+        <Alert
+          color="blue"
+          icon={<LocalIcon icon="info" width={16} height={16} />}
+        >
           <Group justify="space-between" align="center">
             <div>
               <Text fw={500} size="sm">
-                {t("team.upgrade.title", "Upgrade to Pro to unlock team features")}
+                {t(
+                  "team.upgrade.title",
+                  "Upgrade to Pro to unlock team features",
+                )}
               </Text>
               <Text size="xs" c="dimmed" mt={2}>
-                {t("team.upgrade.description", "Invite members, share credits, and more.")}{" "}
-                <Anchor size="xs" onClick={() => setFeaturesModalOpened(true)} style={{ cursor: "pointer" }}>
+                {t(
+                  "team.upgrade.description",
+                  "Invite members, share credits, and more.",
+                )}{" "}
+                <Anchor
+                  size="xs"
+                  onClick={() => setFeaturesModalOpened(true)}
+                  style={{ cursor: "pointer" }}
+                >
                   {t("common.learnMore", "Learn more")}
                 </Anchor>
               </Text>
@@ -311,7 +387,10 @@ export function SaaSTeamsSection() {
                 {t("team.features.title", "Team Collaboration")}
               </Text>
               <Text size="sm" c="dimmed" ta="center">
-                {t("team.features.subtitle", "Upgrade to Pro and unlock powerful team features")}
+                {t(
+                  "team.features.subtitle",
+                  "Upgrade to Pro and unlock powerful team features",
+                )}
               </Text>
             </Stack>
 
@@ -326,27 +405,53 @@ export function SaaSTeamsSection() {
               }
             >
               <List.Item>
-                <Text fw={500}>{t("team.features.invite.title", "Invite team members")}</Text>
+                <Text fw={500}>
+                  {t("team.features.invite.title", "Invite team members")}
+                </Text>
                 <Text size="xs" c="dimmed">
-                  {t("team.features.invite.description", "Add unlimited users with additional seat purchases")}
+                  {t(
+                    "team.features.invite.description",
+                    "Add unlimited users with additional seat purchases",
+                  )}
                 </Text>
               </List.Item>
               <List.Item>
-                <Text fw={500}>{t("team.features.credits.title", "Share credits across your team")}</Text>
+                <Text fw={500}>
+                  {t(
+                    "team.features.credits.title",
+                    "Share credits across your team",
+                  )}
+                </Text>
                 <Text size="xs" c="dimmed">
-                  {t("team.features.credits.description", "Pool resources for collaborative work")}
+                  {t(
+                    "team.features.credits.description",
+                    "Pool resources for collaborative work",
+                  )}
                 </Text>
               </List.Item>
               <List.Item>
-                <Text fw={500}>{t("team.features.dashboard.title", "Team management dashboard")}</Text>
+                <Text fw={500}>
+                  {t(
+                    "team.features.dashboard.title",
+                    "Team management dashboard",
+                  )}
+                </Text>
                 <Text size="xs" c="dimmed">
-                  {t("team.features.dashboard.description", "Control permissions, monitor usage, and manage members")}
+                  {t(
+                    "team.features.dashboard.description",
+                    "Control permissions, monitor usage, and manage members",
+                  )}
                 </Text>
               </List.Item>
               <List.Item>
-                <Text fw={500}>{t("team.features.billing.title", "Centralized billing")}</Text>
+                <Text fw={500}>
+                  {t("team.features.billing.title", "Centralized billing")}
+                </Text>
                 <Text size="xs" c="dimmed">
-                  {t("team.features.billing.description", "One invoice for all team seats and usage")}
+                  {t(
+                    "team.features.billing.description",
+                    "One invoice for all team seats and usage",
+                  )}
                 </Text>
               </List.Item>
             </List>
@@ -403,7 +508,10 @@ export function SaaSTeamsSection() {
               <Button
                 type="submit"
                 loading={inviting}
-                disabled={!inviteEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteEmail)}
+                disabled={
+                  !inviteEmail.trim() ||
+                  !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteEmail)
+                }
               >
                 {t("team.invite.sendButton", "Send Invite")}
               </Button>
@@ -429,17 +537,39 @@ export function SaaSTeamsSection() {
           }
         >
           <Table.Thead>
-            <Table.Tr style={{ backgroundColor: "var(--mantine-color-gray-0)" }}>
-              <Table.Th style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--mantine-color-gray-7)" }}>
+            <Table.Tr
+              style={{ backgroundColor: "var(--mantine-color-gray-0)" }}
+            >
+              <Table.Th
+                style={{
+                  fontWeight: 600,
+                  fontSize: "0.875rem",
+                  color: "var(--mantine-color-gray-7)",
+                }}
+              >
                 {t("team.members.nameColumn", "Name")}
               </Table.Th>
-              <Table.Th style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--mantine-color-gray-7)" }}>
+              <Table.Th
+                style={{
+                  fontWeight: 600,
+                  fontSize: "0.875rem",
+                  color: "var(--mantine-color-gray-7)",
+                }}
+              >
                 {t("team.members.emailColumn", "Email")}
               </Table.Th>
-              <Table.Th style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--mantine-color-gray-7)" }}>
+              <Table.Th
+                style={{
+                  fontWeight: 600,
+                  fontSize: "0.875rem",
+                  color: "var(--mantine-color-gray-7)",
+                }}
+              >
                 {t("team.members.roleColumn", "Role")}
               </Table.Th>
-              {isTeamLeader && !isPersonalTeam && <Table.Th style={{ width: 50 }}></Table.Th>}
+              {isTeamLeader && !isPersonalTeam && (
+                <Table.Th style={{ width: 50 }}></Table.Th>
+              )}
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -485,17 +615,33 @@ export function SaaSTeamsSection() {
                     {isTeamLeader && !isPersonalTeam && (
                       <Table.Td>
                         {member.role !== "LEADER" && (
-                          <Menu position="bottom-end" withinPortal zIndex={Z_INDEX_OVER_CONFIG_MODAL}>
+                          <Menu
+                            position="bottom-end"
+                            withinPortal
+                            zIndex={Z_INDEX_OVER_CONFIG_MODAL}
+                          >
                             <Menu.Target>
                               <ActionIcon variant="subtle">
-                                <LocalIcon icon="more-vert" width="1rem" height="1rem" />
+                                <LocalIcon
+                                  icon="more-vert"
+                                  width="1rem"
+                                  height="1rem"
+                                />
                               </ActionIcon>
                             </Menu.Target>
                             <Menu.Dropdown>
                               <Menu.Item
                                 color="red"
-                                leftSection={<LocalIcon icon="person-remove" width="1rem" height="1rem" />}
-                                onClick={() => handleRemove(member.id, member.email)}
+                                leftSection={
+                                  <LocalIcon
+                                    icon="person-remove"
+                                    width="1rem"
+                                    height="1rem"
+                                  />
+                                }
+                                onClick={() =>
+                                  handleRemove(member.id, member.email)
+                                }
                               >
                                 {t("team.members.remove", "Remove from Team")}
                               </Menu.Item>
@@ -532,10 +678,22 @@ export function SaaSTeamsSection() {
                           <ActionIcon
                             variant="subtle"
                             color="red"
-                            onClick={() => handleCancelInvitation(invitation.invitationId, invitation.inviteeEmail)}
-                            aria-label={t("team.invite.cancelLabel", "Cancel invitation")}
+                            onClick={() =>
+                              handleCancelInvitation(
+                                invitation.invitationId,
+                                invitation.inviteeEmail,
+                              )
+                            }
+                            aria-label={t(
+                              "team.invite.cancelLabel",
+                              "Cancel invitation",
+                            )}
                           >
-                            <LocalIcon icon="close" width="1rem" height="1rem" />
+                            <LocalIcon
+                              icon="close"
+                              width="1rem"
+                              height="1rem"
+                            />
                           </ActionIcon>
                         </Table.Td>
                       )}

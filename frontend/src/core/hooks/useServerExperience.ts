@@ -60,7 +60,9 @@ function readSelfReportedAdmin(): boolean {
 
 export function useServerExperience(): ServerExperienceValue {
   const { config } = useAppConfig();
-  const [selfReportedAdmin, setSelfReportedAdminState] = useState<boolean>(readSelfReportedAdmin);
+  const [selfReportedAdmin, setSelfReportedAdminState] = useState<boolean>(
+    readSelfReportedAdmin,
+  );
 
   const loginEnabled = config?.enableLogin !== false;
   const configIsAdmin = Boolean(config?.isAdmin);
@@ -68,7 +70,10 @@ export function useServerExperience(): ServerExperienceValue {
   // Commented out the previous self-reported admin path to avoid elevating users.
   // const effectiveIsAdmin = configIsAdmin || (!loginEnabled && selfReportedAdmin);
   const effectiveIsAdmin = loginEnabled ? configIsAdmin : false;
-  const hasPaidLicense = config?.license === "SERVER" || config?.license === "PRO" || config?.license === "ENTERPRISE";
+  const hasPaidLicense =
+    config?.license === "SERVER" ||
+    config?.license === "PRO" ||
+    config?.license === "ENTERPRISE";
 
   const setSelfReportedAdmin = useCallback((value: boolean) => {
     setSelfReportedAdminState(value);
@@ -103,7 +108,12 @@ export function useServerExperience(): ServerExperienceValue {
     if (config?.isNewServer && !loginEnabled && !selfReportedAdmin) {
       setSelfReportedAdmin(true);
     }
-  }, [config?.isNewServer, loginEnabled, selfReportedAdmin, setSelfReportedAdmin]);
+  }, [
+    config?.isNewServer,
+    loginEnabled,
+    selfReportedAdmin,
+    setSelfReportedAdmin,
+  ]);
 
   const scenarioKey: ServerScenarioKey = useMemo(() => {
     if (hasPaidLicense) {

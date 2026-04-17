@@ -68,118 +68,155 @@ interface SecuritySettingsData {
 export default function AdminSecuritySection() {
   const { t } = useTranslation();
   const { loginEnabled, validateLoginEnabled } = useLoginRequired();
-  const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
+  const {
+    restartModalOpened,
+    showRestartModal,
+    closeRestartModal,
+    restartServer,
+  } = useRestartServer();
 
-  const { settings, setSettings, loading, saving, fetchSettings, saveSettings, isFieldPending } =
-    useAdminSettings<SecuritySettingsData>({
-      sectionName: "security",
-      fetchTransformer: async (): Promise<SecuritySettingsData & { _pending?: Record<string, unknown> }> => {
-        const [securityResponse, premiumResponse, systemResponse] = await Promise.all([
+  const {
+    settings,
+    setSettings,
+    loading,
+    saving,
+    fetchSettings,
+    saveSettings,
+    isFieldPending,
+  } = useAdminSettings<SecuritySettingsData>({
+    sectionName: "security",
+    fetchTransformer: async (): Promise<
+      SecuritySettingsData & { _pending?: Record<string, unknown> }
+    > => {
+      const [securityResponse, premiumResponse, systemResponse] =
+        await Promise.all([
           apiClient.get("/api/v1/admin/settings/section/security"),
           apiClient.get("/api/v1/admin/settings/section/premium"),
           apiClient.get("/api/v1/admin/settings/section/system"),
         ]);
 
-        const securityData = securityResponse.data || {};
-        const premiumData = premiumResponse.data || {};
-        const systemData = systemResponse.data || {};
+      const securityData = securityResponse.data || {};
+      const premiumData = premiumResponse.data || {};
+      const systemData = systemResponse.data || {};
 
-        console.log("[AdminSecuritySection] Raw backend data:");
-        console.log("Security:", JSON.parse(JSON.stringify(securityData)));
-        console.log("Premium:", JSON.parse(JSON.stringify(premiumData)));
-        console.log("System:", JSON.parse(JSON.stringify(systemData)));
+      console.log("[AdminSecuritySection] Raw backend data:");
+      console.log("Security:", JSON.parse(JSON.stringify(securityData)));
+      console.log("Premium:", JSON.parse(JSON.stringify(premiumData)));
+      console.log("System:", JSON.parse(JSON.stringify(systemData)));
 
-        const { _pending: securityPending, ...securityActive } = securityData;
-        const { _pending: premiumPending, ...premiumActive } = premiumData;
-        const { _pending: systemPending, ...systemActive } = systemData;
+      const { _pending: securityPending, ...securityActive } = securityData;
+      const { _pending: premiumPending, ...premiumActive } = premiumData;
+      const { _pending: systemPending, ...systemActive } = systemData;
 
-        console.log("[AdminSecuritySection] Extracted pending blocks:", {
-          securityPending: JSON.parse(JSON.stringify(securityPending || {})),
-          premiumPending: JSON.parse(JSON.stringify(premiumPending || {})),
-          systemPending: JSON.parse(JSON.stringify(systemPending || {})),
-        });
+      console.log("[AdminSecuritySection] Extracted pending blocks:", {
+        securityPending: JSON.parse(JSON.stringify(securityPending || {})),
+        premiumPending: JSON.parse(JSON.stringify(premiumPending || {})),
+        systemPending: JSON.parse(JSON.stringify(systemPending || {})),
+      });
 
-        const combined: SecuritySettingsData & { _pending?: Record<string, unknown> } = {
-          ...securityActive,
-        };
+      const combined: SecuritySettingsData & {
+        _pending?: Record<string, unknown>;
+      } = {
+        ...securityActive,
+      };
 
-        // Only add audit if it exists (don't create defaults)
-        if (premiumActive.enterpriseFeatures?.audit) {
-          combined.audit = premiumActive.enterpriseFeatures.audit;
-        }
+      // Only add audit if it exists (don't create defaults)
+      if (premiumActive.enterpriseFeatures?.audit) {
+        combined.audit = premiumActive.enterpriseFeatures.audit;
+      }
 
-        // Only add html if it exists (don't create defaults)
-        if (systemActive.html) {
-          combined.html = systemActive.html;
-        }
+      // Only add html if it exists (don't create defaults)
+      if (systemActive.html) {
+        combined.html = systemActive.html;
+      }
 
-        // Merge all _pending blocks
-        const mergedPending: Record<string, unknown> = {};
-        if (securityPending) {
-          Object.assign(mergedPending, securityPending);
-        }
-        if (premiumPending?.enterpriseFeatures?.audit) {
-          mergedPending.audit = premiumPending.enterpriseFeatures.audit;
-        }
-        if (systemPending?.html) {
-          mergedPending.html = systemPending.html;
-        }
+      // Merge all _pending blocks
+      const mergedPending: Record<string, unknown> = {};
+      if (securityPending) {
+        Object.assign(mergedPending, securityPending);
+      }
+      if (premiumPending?.enterpriseFeatures?.audit) {
+        mergedPending.audit = premiumPending.enterpriseFeatures.audit;
+      }
+      if (systemPending?.html) {
+        mergedPending.html = systemPending.html;
+      }
 
-        if (Object.keys(mergedPending).length > 0) {
-          combined._pending = mergedPending;
-        }
+      if (Object.keys(mergedPending).length > 0) {
+        combined._pending = mergedPending;
+      }
 
-        return combined;
-      },
-      saveTransformer: (settings: SecuritySettingsData) => {
-        const { audit, html, ...securitySettings } = settings;
+      return combined;
+    },
+    saveTransformer: (settings: SecuritySettingsData) => {
+      const { audit, html, ...securitySettings } = settings;
 
-        const deltaSettings: Record<string, unknown> = {
-          // Security settings
-          "security.enableLogin": securitySettings.enableLogin,
-          "security.loginMethod": securitySettings.loginMethod,
-          "security.loginAttemptCount": securitySettings.loginAttemptCount,
-          "security.loginResetTimeMinutes": securitySettings.loginResetTimeMinutes,
-          "security.xFrameOptions": securitySettings.xFrameOptions,
-          // JWT settings
-          "security.jwt.persistence": securitySettings.jwt?.persistence,
-          "security.jwt.enableKeyRotation": securitySettings.jwt?.enableKeyRotation,
-          "security.jwt.enableKeyCleanup": securitySettings.jwt?.enableKeyCleanup,
-          "security.jwt.tokenExpiryMinutes": securitySettings.jwt?.tokenExpiryMinutes,
-          "security.jwt.desktopTokenExpiryMinutes": securitySettings.jwt?.desktopTokenExpiryMinutes,
-          "security.jwt.allowedClockSkewSeconds": securitySettings.jwt?.allowedClockSkewSeconds,
-          "security.jwt.refreshGraceMinutes": securitySettings.jwt?.refreshGraceMinutes,
-          "security.jwt.secureCookie": securitySettings.jwt?.secureCookie,
-          // Premium audit settings
-          "premium.enterpriseFeatures.audit.enabled": audit?.enabled,
-          "premium.enterpriseFeatures.audit.level": audit?.level,
-          "premium.enterpriseFeatures.audit.retentionDays": audit?.retentionDays,
-          "premium.enterpriseFeatures.audit.captureFileHash": audit?.captureFileHash,
-          "premium.enterpriseFeatures.audit.capturePdfAuthor": audit?.capturePdfAuthor,
-          "premium.enterpriseFeatures.audit.captureOperationResults": audit?.captureOperationResults,
-        };
+      const deltaSettings: Record<string, unknown> = {
+        // Security settings
+        "security.enableLogin": securitySettings.enableLogin,
+        "security.loginMethod": securitySettings.loginMethod,
+        "security.loginAttemptCount": securitySettings.loginAttemptCount,
+        "security.loginResetTimeMinutes":
+          securitySettings.loginResetTimeMinutes,
+        "security.xFrameOptions": securitySettings.xFrameOptions,
+        // JWT settings
+        "security.jwt.persistence": securitySettings.jwt?.persistence,
+        "security.jwt.enableKeyRotation":
+          securitySettings.jwt?.enableKeyRotation,
+        "security.jwt.enableKeyCleanup": securitySettings.jwt?.enableKeyCleanup,
+        "security.jwt.tokenExpiryMinutes":
+          securitySettings.jwt?.tokenExpiryMinutes,
+        "security.jwt.desktopTokenExpiryMinutes":
+          securitySettings.jwt?.desktopTokenExpiryMinutes,
+        "security.jwt.allowedClockSkewSeconds":
+          securitySettings.jwt?.allowedClockSkewSeconds,
+        "security.jwt.refreshGraceMinutes":
+          securitySettings.jwt?.refreshGraceMinutes,
+        "security.jwt.secureCookie": securitySettings.jwt?.secureCookie,
+        // Premium audit settings
+        "premium.enterpriseFeatures.audit.enabled": audit?.enabled,
+        "premium.enterpriseFeatures.audit.level": audit?.level,
+        "premium.enterpriseFeatures.audit.retentionDays": audit?.retentionDays,
+        "premium.enterpriseFeatures.audit.captureFileHash":
+          audit?.captureFileHash,
+        "premium.enterpriseFeatures.audit.capturePdfAuthor":
+          audit?.capturePdfAuthor,
+        "premium.enterpriseFeatures.audit.captureOperationResults":
+          audit?.captureOperationResults,
+      };
 
-        // System HTML settings
-        if (html?.urlSecurity) {
-          deltaSettings["system.html.urlSecurity.enabled"] = html.urlSecurity.enabled;
-          deltaSettings["system.html.urlSecurity.level"] = html.urlSecurity.level;
-          deltaSettings["system.html.urlSecurity.allowedDomains"] = html.urlSecurity.allowedDomains;
-          deltaSettings["system.html.urlSecurity.blockedDomains"] = html.urlSecurity.blockedDomains;
-          deltaSettings["system.html.urlSecurity.internalTlds"] = html.urlSecurity.internalTlds;
-          deltaSettings["system.html.urlSecurity.blockPrivateNetworks"] = html.urlSecurity.blockPrivateNetworks;
-          deltaSettings["system.html.urlSecurity.blockLocalhost"] = html.urlSecurity.blockLocalhost;
-          deltaSettings["system.html.urlSecurity.blockLinkLocal"] = html.urlSecurity.blockLinkLocal;
-          deltaSettings["system.html.urlSecurity.blockCloudMetadata"] = html.urlSecurity.blockCloudMetadata;
-        }
+      // System HTML settings
+      if (html?.urlSecurity) {
+        deltaSettings["system.html.urlSecurity.enabled"] =
+          html.urlSecurity.enabled;
+        deltaSettings["system.html.urlSecurity.level"] = html.urlSecurity.level;
+        deltaSettings["system.html.urlSecurity.allowedDomains"] =
+          html.urlSecurity.allowedDomains;
+        deltaSettings["system.html.urlSecurity.blockedDomains"] =
+          html.urlSecurity.blockedDomains;
+        deltaSettings["system.html.urlSecurity.internalTlds"] =
+          html.urlSecurity.internalTlds;
+        deltaSettings["system.html.urlSecurity.blockPrivateNetworks"] =
+          html.urlSecurity.blockPrivateNetworks;
+        deltaSettings["system.html.urlSecurity.blockLocalhost"] =
+          html.urlSecurity.blockLocalhost;
+        deltaSettings["system.html.urlSecurity.blockLinkLocal"] =
+          html.urlSecurity.blockLinkLocal;
+        deltaSettings["system.html.urlSecurity.blockCloudMetadata"] =
+          html.urlSecurity.blockCloudMetadata;
+      }
 
-        return {
-          sectionData: {},
-          deltaSettings,
-        };
-      },
-    });
+      return {
+        sectionData: {},
+        deltaSettings,
+      };
+    },
+  });
 
-  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(settings, loading);
+  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
+    settings,
+    loading,
+  );
 
   useEffect(() => {
     if (loginEnabled) {
@@ -232,7 +269,10 @@ export default function AdminSecuritySection() {
             {t("admin.settings.security.title", "Security")}
           </Text>
           <Text size="sm" c="dimmed">
-            {t("admin.settings.security.description", "Configure authentication, login behaviour, and security policies.")}
+            {t(
+              "admin.settings.security.description",
+              "Configure authentication, login behaviour, and security policies.",
+            )}
           </Text>
         </div>
 
@@ -243,10 +283,19 @@ export default function AdminSecuritySection() {
               {t("admin.settings.security.authentication", "Authentication")}
             </Text>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.security.enableLogin.label", "Enable Login")}
+                  {t(
+                    "admin.settings.security.enableLogin.label",
+                    "Enable Login",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
@@ -259,7 +308,9 @@ export default function AdminSecuritySection() {
                 <Switch
                   name="enableLogin"
                   checked={settings?.enableLogin || false}
-                  onChange={(e) => setSettings({ ...settings, enableLogin: e.target.checked })}
+                  onChange={(e) =>
+                    setSettings({ ...settings, enableLogin: e.target.checked })
+                  }
                   disabled={!loginEnabled}
                 />
                 <PendingBadge show={isFieldPending("enableLogin")} />
@@ -269,18 +320,47 @@ export default function AdminSecuritySection() {
             <div>
               <Select
                 name="loginMethod"
-                label={t("admin.settings.security.loginMethod.label", "Login Method")}
+                label={t(
+                  "admin.settings.security.loginMethod.label",
+                  "Login Method",
+                )}
                 description={t(
                   "admin.settings.security.loginMethod.description",
                   "The authentication method to use for user login",
                 )}
                 value={settings?.loginMethod || "all"}
-                onChange={(value) => setSettings({ ...settings, loginMethod: value || "all" })}
+                onChange={(value) =>
+                  setSettings({ ...settings, loginMethod: value || "all" })
+                }
                 data={[
-                  { value: "all", label: t("admin.settings.security.loginMethod.all", "All Methods") },
-                  { value: "normal", label: t("admin.settings.security.loginMethod.normal", "Username/Password Only") },
-                  { value: "oauth2", label: t("admin.settings.security.loginMethod.oauth2", "OAuth2 Only") },
-                  { value: "saml2", label: t("admin.settings.security.loginMethod.saml2", "SAML2 Only") },
+                  {
+                    value: "all",
+                    label: t(
+                      "admin.settings.security.loginMethod.all",
+                      "All Methods",
+                    ),
+                  },
+                  {
+                    value: "normal",
+                    label: t(
+                      "admin.settings.security.loginMethod.normal",
+                      "Username/Password Only",
+                    ),
+                  },
+                  {
+                    value: "oauth2",
+                    label: t(
+                      "admin.settings.security.loginMethod.oauth2",
+                      "OAuth2 Only",
+                    ),
+                  },
+                  {
+                    value: "saml2",
+                    label: t(
+                      "admin.settings.security.loginMethod.saml2",
+                      "SAML2 Only",
+                    ),
+                  },
                 ]}
                 comboboxProps={{ zIndex: 1400 }}
                 disabled={!loginEnabled}
@@ -297,7 +377,12 @@ export default function AdminSecuritySection() {
                 name="loginAttemptCount"
                 label={
                   <Group component="span" gap="xs">
-                    <span>{t("admin.settings.security.loginAttemptCount.label", "Login Attempt Limit")}</span>
+                    <span>
+                      {t(
+                        "admin.settings.security.loginAttemptCount.label",
+                        "Login Attempt Limit",
+                      )}
+                    </span>
                     <PendingBadge show={isFieldPending("loginAttemptCount")} />
                   </Group>
                 }
@@ -306,7 +391,9 @@ export default function AdminSecuritySection() {
                   "Maximum number of failed login attempts before account lockout",
                 )}
                 value={settings?.loginAttemptCount || 0}
-                onChange={(value) => setSettings({ ...settings, loginAttemptCount: Number(value) })}
+                onChange={(value) =>
+                  setSettings({ ...settings, loginAttemptCount: Number(value) })
+                }
                 min={0}
                 max={100}
                 disabled={!loginEnabled}
@@ -318,8 +405,15 @@ export default function AdminSecuritySection() {
                 name="loginResetTimeMinutes"
                 label={
                   <Group component="span" gap="xs">
-                    <span>{t("admin.settings.security.loginResetTimeMinutes.label", "Login Reset Time (minutes)")}</span>
-                    <PendingBadge show={isFieldPending("loginResetTimeMinutes")} />
+                    <span>
+                      {t(
+                        "admin.settings.security.loginResetTimeMinutes.label",
+                        "Login Reset Time (minutes)",
+                      )}
+                    </span>
+                    <PendingBadge
+                      show={isFieldPending("loginResetTimeMinutes")}
+                    />
                   </Group>
                 }
                 description={t(
@@ -327,7 +421,12 @@ export default function AdminSecuritySection() {
                   "Time before failed login attempts are reset",
                 )}
                 value={settings?.loginResetTimeMinutes || 0}
-                onChange={(value) => setSettings({ ...settings, loginResetTimeMinutes: Number(value) })}
+                onChange={(value) =>
+                  setSettings({
+                    ...settings,
+                    loginResetTimeMinutes: Number(value),
+                  })
+                }
                 min={0}
                 max={1440}
                 disabled={!loginEnabled}
@@ -339,7 +438,12 @@ export default function AdminSecuritySection() {
                 name="xFrameOptions"
                 label={
                   <Group component="span" gap="xs">
-                    <span>{t("admin.settings.security.xFrameOptions.label", "X-Frame-Options")}</span>
+                    <span>
+                      {t(
+                        "admin.settings.security.xFrameOptions.label",
+                        "X-Frame-Options",
+                      )}
+                    </span>
                     <PendingBadge show={isFieldPending("xFrameOptions")} />
                   </Group>
                 }
@@ -348,9 +452,17 @@ export default function AdminSecuritySection() {
                   "Controls whether the application can be embedded in iframes",
                 )}
                 value={settings?.xFrameOptions || "DENY"}
-                onChange={(value) => setSettings({ ...settings, xFrameOptions: value || "DENY" })}
+                onChange={(value) =>
+                  setSettings({ ...settings, xFrameOptions: value || "DENY" })
+                }
                 data={[
-                  { value: "DENY", label: t("admin.settings.security.xFrameOptions.deny", "Deny (Prevents all framing)") },
+                  {
+                    value: "DENY",
+                    label: t(
+                      "admin.settings.security.xFrameOptions.deny",
+                      "Deny (Prevents all framing)",
+                    ),
+                  },
                   {
                     value: "SAMEORIGIN",
                     label: t(
@@ -360,7 +472,10 @@ export default function AdminSecuritySection() {
                   },
                   {
                     value: "DISABLED",
-                    label: t("admin.settings.security.xFrameOptions.disabled", "Disabled (No X-Frame-Options header)"),
+                    label: t(
+                      "admin.settings.security.xFrameOptions.disabled",
+                      "Disabled (No X-Frame-Options header)",
+                    ),
                   },
                 ]}
                 comboboxProps={{ zIndex: 1400 }}
@@ -374,7 +489,10 @@ export default function AdminSecuritySection() {
         <Alert
           variant="light"
           color="blue"
-          title={t("admin.settings.security.ssoNotice.title", "Looking for SSO/SAML settings?")}
+          title={t(
+            "admin.settings.security.ssoNotice.title",
+            "Looking for SSO/SAML settings?",
+          )}
           icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
         >
           <Text size="sm">
@@ -392,10 +510,19 @@ export default function AdminSecuritySection() {
               {t("admin.settings.security.jwt.label", "JWT Configuration")}
             </Text>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.security.jwt.persistence.label", "Enable Key Persistence")}
+                  {t(
+                    "admin.settings.security.jwt.persistence.label",
+                    "Enable Key Persistence",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
@@ -408,17 +535,31 @@ export default function AdminSecuritySection() {
                 <Switch
                   name="jwt_persistence"
                   checked={settings?.jwt?.persistence || false}
-                  onChange={(e) => setSettings({ ...settings, jwt: { ...settings?.jwt, persistence: e.target.checked } })}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      jwt: { ...settings?.jwt, persistence: e.target.checked },
+                    })
+                  }
                   disabled={!loginEnabled}
                 />
                 <PendingBadge show={isFieldPending("jwt.persistence")} />
               </Group>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.security.jwt.enableKeyRotation.label", "Enable Key Rotation")}
+                  {t(
+                    "admin.settings.security.jwt.enableKeyRotation.label",
+                    "Enable Key Rotation",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
@@ -432,7 +573,13 @@ export default function AdminSecuritySection() {
                   name="jwt_enableKeyRotation"
                   checked={settings?.jwt?.enableKeyRotation || false}
                   onChange={(e) =>
-                    setSettings({ ...settings, jwt: { ...settings?.jwt, enableKeyRotation: e.target.checked } })
+                    setSettings({
+                      ...settings,
+                      jwt: {
+                        ...settings?.jwt,
+                        enableKeyRotation: e.target.checked,
+                      },
+                    })
                   }
                   disabled={!loginEnabled}
                 />
@@ -440,10 +587,19 @@ export default function AdminSecuritySection() {
               </Group>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.security.jwt.enableKeyCleanup.label", "Enable Key Cleanup")}
+                  {t(
+                    "admin.settings.security.jwt.enableKeyCleanup.label",
+                    "Enable Key Cleanup",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
@@ -456,7 +612,15 @@ export default function AdminSecuritySection() {
                 <Switch
                   name="jwt_enableKeyCleanup"
                   checked={settings?.jwt?.enableKeyCleanup || false}
-                  onChange={(e) => setSettings({ ...settings, jwt: { ...settings?.jwt, enableKeyCleanup: e.target.checked } })}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      jwt: {
+                        ...settings?.jwt,
+                        enableKeyCleanup: e.target.checked,
+                      },
+                    })
+                  }
                   disabled={!loginEnabled}
                 />
                 <PendingBadge show={isFieldPending("jwt.enableKeyCleanup")} />
@@ -468,8 +632,15 @@ export default function AdminSecuritySection() {
                 name="jwt_tokenExpiryMinutes"
                 label={
                   <Group component="span" gap="xs">
-                    <span>{t("admin.settings.security.jwt.tokenExpiryMinutes.label", "Web Token Expiry (minutes)")}</span>
-                    <PendingBadge show={isFieldPending("jwt.tokenExpiryMinutes")} />
+                    <span>
+                      {t(
+                        "admin.settings.security.jwt.tokenExpiryMinutes.label",
+                        "Web Token Expiry (minutes)",
+                      )}
+                    </span>
+                    <PendingBadge
+                      show={isFieldPending("jwt.tokenExpiryMinutes")}
+                    />
                   </Group>
                 }
                 description={t(
@@ -478,7 +649,13 @@ export default function AdminSecuritySection() {
                 )}
                 value={settings?.jwt?.tokenExpiryMinutes || 1440}
                 onChange={(value) =>
-                  setSettings({ ...settings, jwt: { ...settings?.jwt, tokenExpiryMinutes: Number(value) } })
+                  setSettings({
+                    ...settings,
+                    jwt: {
+                      ...settings?.jwt,
+                      tokenExpiryMinutes: Number(value),
+                    },
+                  })
                 }
                 min={1}
                 max={43200}
@@ -492,9 +669,14 @@ export default function AdminSecuritySection() {
                 label={
                   <Group component="span" gap="xs">
                     <span>
-                      {t("admin.settings.security.jwt.desktopTokenExpiryMinutes.label", "Desktop Token Expiry (minutes)")}
+                      {t(
+                        "admin.settings.security.jwt.desktopTokenExpiryMinutes.label",
+                        "Desktop Token Expiry (minutes)",
+                      )}
                     </span>
-                    <PendingBadge show={isFieldPending("jwt.desktopTokenExpiryMinutes")} />
+                    <PendingBadge
+                      show={isFieldPending("jwt.desktopTokenExpiryMinutes")}
+                    />
                   </Group>
                 }
                 description={t(
@@ -503,7 +685,13 @@ export default function AdminSecuritySection() {
                 )}
                 value={settings?.jwt?.desktopTokenExpiryMinutes || 43200}
                 onChange={(value) =>
-                  setSettings({ ...settings, jwt: { ...settings?.jwt, desktopTokenExpiryMinutes: Number(value) } })
+                  setSettings({
+                    ...settings,
+                    jwt: {
+                      ...settings?.jwt,
+                      desktopTokenExpiryMinutes: Number(value),
+                    },
+                  })
                 }
                 min={1}
                 max={525600}
@@ -517,9 +705,14 @@ export default function AdminSecuritySection() {
                 label={
                   <Group component="span" gap="xs">
                     <span>
-                      {t("admin.settings.security.jwt.allowedClockSkewSeconds.label", "Clock Skew Tolerance (seconds)")}
+                      {t(
+                        "admin.settings.security.jwt.allowedClockSkewSeconds.label",
+                        "Clock Skew Tolerance (seconds)",
+                      )}
                     </span>
-                    <PendingBadge show={isFieldPending("jwt.allowedClockSkewSeconds")} />
+                    <PendingBadge
+                      show={isFieldPending("jwt.allowedClockSkewSeconds")}
+                    />
                   </Group>
                 }
                 description={t(
@@ -528,7 +721,13 @@ export default function AdminSecuritySection() {
                 )}
                 value={settings?.jwt?.allowedClockSkewSeconds ?? 60}
                 onChange={(value) =>
-                  setSettings({ ...settings, jwt: { ...settings?.jwt, allowedClockSkewSeconds: Number(value) } })
+                  setSettings({
+                    ...settings,
+                    jwt: {
+                      ...settings?.jwt,
+                      allowedClockSkewSeconds: Number(value),
+                    },
+                  })
                 }
                 min={0}
                 max={300}
@@ -541,8 +740,15 @@ export default function AdminSecuritySection() {
                 name="jwt_refreshGraceMinutes"
                 label={
                   <Group component="span" gap="xs">
-                    <span>{t("admin.settings.security.jwt.refreshGraceMinutes.label", "Refresh Grace Period (minutes)")}</span>
-                    <PendingBadge show={isFieldPending("jwt.refreshGraceMinutes")} />
+                    <span>
+                      {t(
+                        "admin.settings.security.jwt.refreshGraceMinutes.label",
+                        "Refresh Grace Period (minutes)",
+                      )}
+                    </span>
+                    <PendingBadge
+                      show={isFieldPending("jwt.refreshGraceMinutes")}
+                    />
                   </Group>
                 }
                 description={t(
@@ -551,7 +757,13 @@ export default function AdminSecuritySection() {
                 )}
                 value={settings?.jwt?.refreshGraceMinutes ?? 15}
                 onChange={(value) =>
-                  setSettings({ ...settings, jwt: { ...settings?.jwt, refreshGraceMinutes: Number(value) } })
+                  setSettings({
+                    ...settings,
+                    jwt: {
+                      ...settings?.jwt,
+                      refreshGraceMinutes: Number(value),
+                    },
+                  })
                 }
                 min={0}
                 max={120}
@@ -559,10 +771,19 @@ export default function AdminSecuritySection() {
               />
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.security.jwt.secureCookie.label", "Secure Cookie")}
+                  {t(
+                    "admin.settings.security.jwt.secureCookie.label",
+                    "Secure Cookie",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
@@ -575,7 +796,12 @@ export default function AdminSecuritySection() {
                 <Switch
                   name="jwt_secureCookie"
                   checked={settings?.jwt?.secureCookie || false}
-                  onChange={(e) => setSettings({ ...settings, jwt: { ...settings?.jwt, secureCookie: e.target.checked } })}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      jwt: { ...settings?.jwt, secureCookie: e.target.checked },
+                    })
+                  }
                   disabled={!loginEnabled}
                 />
                 <PendingBadge show={isFieldPending("jwt.secureCookie")} />
@@ -596,10 +822,19 @@ export default function AdminSecuritySection() {
               </Badge>
             </Group>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.security.audit.enabled.label", "Enable Audit Logging")}
+                  {t(
+                    "admin.settings.security.audit.enabled.label",
+                    "Enable Audit Logging",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
@@ -612,7 +847,12 @@ export default function AdminSecuritySection() {
                 <Switch
                   name="audit_enabled"
                   checked={settings?.audit?.enabled || false}
-                  onChange={(e) => setSettings({ ...settings, audit: { ...settings?.audit, enabled: e.target.checked } })}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      audit: { ...settings?.audit, enabled: e.target.checked },
+                    })
+                  }
                   disabled={!loginEnabled}
                 />
                 <PendingBadge show={isFieldPending("audit.enabled")} />
@@ -624,13 +864,26 @@ export default function AdminSecuritySection() {
                 name="audit_level"
                 label={
                   <Group component="span" gap="xs">
-                    <span>{t("admin.settings.security.audit.level.label", "Audit Level")}</span>
+                    <span>
+                      {t(
+                        "admin.settings.security.audit.level.label",
+                        "Audit Level",
+                      )}
+                    </span>
                     <PendingBadge show={isFieldPending("audit.level")} />
                   </Group>
                 }
-                description={t("admin.settings.security.audit.level.description", "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE")}
+                description={t(
+                  "admin.settings.security.audit.level.description",
+                  "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE",
+                )}
                 value={settings?.audit?.level || 2}
-                onChange={(value) => setSettings({ ...settings, audit: { ...settings?.audit, level: Number(value) } })}
+                onChange={(value) =>
+                  setSettings({
+                    ...settings,
+                    audit: { ...settings?.audit, level: Number(value) },
+                  })
+                }
                 min={0}
                 max={3}
                 disabled={!loginEnabled}
@@ -642,8 +895,15 @@ export default function AdminSecuritySection() {
                 name="audit_retentionDays"
                 label={
                   <Group component="span" gap="xs">
-                    <span>{t("admin.settings.security.audit.retentionDays.label", "Audit Retention (days)")}</span>
-                    <PendingBadge show={isFieldPending("audit.retentionDays")} />
+                    <span>
+                      {t(
+                        "admin.settings.security.audit.retentionDays.label",
+                        "Audit Retention (days)",
+                      )}
+                    </span>
+                    <PendingBadge
+                      show={isFieldPending("audit.retentionDays")}
+                    />
                   </Group>
                 }
                 description={t(
@@ -651,7 +911,12 @@ export default function AdminSecuritySection() {
                   "Number of days to retain audit logs",
                 )}
                 value={settings?.audit?.retentionDays || 90}
-                onChange={(value) => setSettings({ ...settings, audit: { ...settings?.audit, retentionDays: Number(value) } })}
+                onChange={(value) =>
+                  setSettings({
+                    ...settings,
+                    audit: { ...settings?.audit, retentionDays: Number(value) },
+                  })
+                }
                 min={1}
                 max={3650}
                 disabled={!loginEnabled}
@@ -661,7 +926,10 @@ export default function AdminSecuritySection() {
             <Alert
               color="yellow"
               icon={<LocalIcon icon="info" />}
-              title={t("admin.settings.security.audit.advancedOptions.title", "Advanced Options")}
+              title={t(
+                "admin.settings.security.audit.advancedOptions.title",
+                "Advanced Options",
+              )}
             >
               {t(
                 "admin.settings.security.audit.advancedOptions.description",
@@ -669,10 +937,19 @@ export default function AdminSecuritySection() {
               )}
             </Alert>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.security.audit.captureFileHash.label", "Capture File Hash")}
+                  {t(
+                    "admin.settings.security.audit.captureFileHash.label",
+                    "Capture File Hash",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
@@ -686,7 +963,13 @@ export default function AdminSecuritySection() {
                   name="audit_captureFileHash"
                   checked={settings?.audit?.captureFileHash || false}
                   onChange={(e) =>
-                    setSettings({ ...settings, audit: { ...settings?.audit, captureFileHash: e.target.checked } })
+                    setSettings({
+                      ...settings,
+                      audit: {
+                        ...settings?.audit,
+                        captureFileHash: e.target.checked,
+                      },
+                    })
                   }
                   disabled={!loginEnabled}
                 />
@@ -694,10 +977,19 @@ export default function AdminSecuritySection() {
               </Group>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.security.audit.capturePdfAuthor.label", "Capture PDF Author")}
+                  {t(
+                    "admin.settings.security.audit.capturePdfAuthor.label",
+                    "Capture PDF Author",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
@@ -711,7 +1003,13 @@ export default function AdminSecuritySection() {
                   name="audit_capturePdfAuthor"
                   checked={settings?.audit?.capturePdfAuthor || false}
                   onChange={(e) =>
-                    setSettings({ ...settings, audit: { ...settings?.audit, capturePdfAuthor: e.target.checked } })
+                    setSettings({
+                      ...settings,
+                      audit: {
+                        ...settings?.audit,
+                        capturePdfAuthor: e.target.checked,
+                      },
+                    })
                   }
                   disabled={!loginEnabled}
                 />
@@ -719,10 +1017,19 @@ export default function AdminSecuritySection() {
               </Group>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.security.audit.captureOperationResults.label", "Capture Operation Results")}
+                  {t(
+                    "admin.settings.security.audit.captureOperationResults.label",
+                    "Capture Operation Results",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
@@ -736,11 +1043,19 @@ export default function AdminSecuritySection() {
                   name="audit_captureOperationResults"
                   checked={settings?.audit?.captureOperationResults || false}
                   onChange={(e) =>
-                    setSettings({ ...settings, audit: { ...settings?.audit, captureOperationResults: e.target.checked } })
+                    setSettings({
+                      ...settings,
+                      audit: {
+                        ...settings?.audit,
+                        captureOperationResults: e.target.checked,
+                      },
+                    })
                   }
                   disabled={!loginEnabled}
                 />
-                <PendingBadge show={isFieldPending("audit.captureOperationResults")} />
+                <PendingBadge
+                  show={isFieldPending("audit.captureOperationResults")}
+                />
               </Group>
             </div>
           </Stack>
@@ -751,7 +1066,10 @@ export default function AdminSecuritySection() {
           <Stack gap="md">
             <div>
               <Text fw={600} size="sm" mb="xs">
-                {t("admin.settings.security.htmlUrlSecurity.label", "HTML URL Security")}
+                {t(
+                  "admin.settings.security.htmlUrlSecurity.label",
+                  "HTML URL Security",
+                )}
               </Text>
               <Text size="xs" c="dimmed">
                 {t(
@@ -761,10 +1079,19 @@ export default function AdminSecuritySection() {
               </Text>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.security.htmlUrlSecurity.enabled.label", "Enable URL Security")}
+                  {t(
+                    "admin.settings.security.htmlUrlSecurity.enabled.label",
+                    "Enable URL Security",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
@@ -782,13 +1109,18 @@ export default function AdminSecuritySection() {
                       ...settings,
                       html: {
                         ...settings?.html,
-                        urlSecurity: { ...settings?.html?.urlSecurity, enabled: e.target.checked },
+                        urlSecurity: {
+                          ...settings?.html?.urlSecurity,
+                          enabled: e.target.checked,
+                        },
                       },
                     })
                   }
                   disabled={!loginEnabled}
                 />
-                <PendingBadge show={isFieldPending("html.urlSecurity.enabled")} />
+                <PendingBadge
+                  show={isFieldPending("html.urlSecurity.enabled")}
+                />
               </Group>
             </div>
 
@@ -797,8 +1129,15 @@ export default function AdminSecuritySection() {
                 name="html_urlSecurity_level"
                 label={
                   <Group component="span" gap="xs">
-                    <span>{t("admin.settings.security.htmlUrlSecurity.level.label", "Security Level")}</span>
-                    <PendingBadge show={isFieldPending("html.urlSecurity.level")} />
+                    <span>
+                      {t(
+                        "admin.settings.security.htmlUrlSecurity.level.label",
+                        "Security Level",
+                      )}
+                    </span>
+                    <PendingBadge
+                      show={isFieldPending("html.urlSecurity.level")}
+                    />
                   </Group>
                 }
                 description={t(
@@ -811,17 +1150,35 @@ export default function AdminSecuritySection() {
                     ...settings,
                     html: {
                       ...settings?.html,
-                      urlSecurity: { ...settings?.html?.urlSecurity, level: value || "MEDIUM" },
+                      urlSecurity: {
+                        ...settings?.html?.urlSecurity,
+                        level: value || "MEDIUM",
+                      },
                     },
                   })
                 }
                 data={[
-                  { value: "MAX", label: t("admin.settings.security.htmlUrlSecurity.level.max", "Maximum (Whitelist Only)") },
+                  {
+                    value: "MAX",
+                    label: t(
+                      "admin.settings.security.htmlUrlSecurity.level.max",
+                      "Maximum (Whitelist Only)",
+                    ),
+                  },
                   {
                     value: "MEDIUM",
-                    label: t("admin.settings.security.htmlUrlSecurity.level.medium", "Medium (Block Internal)"),
+                    label: t(
+                      "admin.settings.security.htmlUrlSecurity.level.medium",
+                      "Medium (Block Internal)",
+                    ),
                   },
-                  { value: "OFF", label: t("admin.settings.security.htmlUrlSecurity.level.off", "Off (No Restrictions)") },
+                  {
+                    value: "OFF",
+                    label: t(
+                      "admin.settings.security.htmlUrlSecurity.level.off",
+                      "Off (No Restrictions)",
+                    ),
+                  },
                 ]}
                 comboboxProps={{ zIndex: 1400 }}
                 disabled={!loginEnabled}
@@ -831,7 +1188,10 @@ export default function AdminSecuritySection() {
             <Accordion variant="separated">
               <Accordion.Item value="advanced">
                 <Accordion.Control>
-                  {t("admin.settings.security.htmlUrlSecurity.advanced", "Advanced Settings")}
+                  {t(
+                    "admin.settings.security.htmlUrlSecurity.advanced",
+                    "Advanced Settings",
+                  )}
                 </Accordion.Control>
                 <Accordion.Panel>
                   <Stack gap="md">
@@ -847,14 +1207,22 @@ export default function AdminSecuritySection() {
                                 "Allowed Domains (Whitelist)",
                               )}
                             </span>
-                            <PendingBadge show={isFieldPending("html.urlSecurity.allowedDomains")} />
+                            <PendingBadge
+                              show={isFieldPending(
+                                "html.urlSecurity.allowedDomains",
+                              )}
+                            />
                           </Group>
                         }
                         description={t(
                           "admin.settings.security.htmlUrlSecurity.allowedDomains.description",
                           "One domain per line (e.g., cdn.example.com). Only these domains allowed when level is MAX",
                         )}
-                        value={settings?.html?.urlSecurity?.allowedDomains?.join("\n") || ""}
+                        value={
+                          settings?.html?.urlSecurity?.allowedDomains?.join(
+                            "\n",
+                          ) || ""
+                        }
                         onChange={(e) =>
                           setSettings({
                             ...settings,
@@ -862,7 +1230,11 @@ export default function AdminSecuritySection() {
                               ...settings?.html,
                               urlSecurity: {
                                 ...settings?.html?.urlSecurity,
-                                allowedDomains: e.target.value ? e.target.value.split("\n").filter((d) => d.trim()) : [],
+                                allowedDomains: e.target.value
+                                  ? e.target.value
+                                      .split("\n")
+                                      .filter((d) => d.trim())
+                                  : [],
                               },
                             },
                           })
@@ -886,14 +1258,22 @@ export default function AdminSecuritySection() {
                                 "Blocked Domains (Blacklist)",
                               )}
                             </span>
-                            <PendingBadge show={isFieldPending("html.urlSecurity.blockedDomains")} />
+                            <PendingBadge
+                              show={isFieldPending(
+                                "html.urlSecurity.blockedDomains",
+                              )}
+                            />
                           </Group>
                         }
                         description={t(
                           "admin.settings.security.htmlUrlSecurity.blockedDomains.description",
                           "One domain per line (e.g., malicious.com). Additional domains to block",
                         )}
-                        value={settings?.html?.urlSecurity?.blockedDomains?.join("\n") || ""}
+                        value={
+                          settings?.html?.urlSecurity?.blockedDomains?.join(
+                            "\n",
+                          ) || ""
+                        }
                         onChange={(e) =>
                           setSettings({
                             ...settings,
@@ -901,7 +1281,11 @@ export default function AdminSecuritySection() {
                               ...settings?.html,
                               urlSecurity: {
                                 ...settings?.html?.urlSecurity,
-                                blockedDomains: e.target.value ? e.target.value.split("\n").filter((d) => d.trim()) : [],
+                                blockedDomains: e.target.value
+                                  ? e.target.value
+                                      .split("\n")
+                                      .filter((d) => d.trim())
+                                  : [],
                               },
                             },
                           })
@@ -919,15 +1303,28 @@ export default function AdminSecuritySection() {
                         name="html_urlSecurity_internalTlds"
                         label={
                           <Group component="span" gap="xs">
-                            <span>{t("admin.settings.security.htmlUrlSecurity.internalTlds.label", "Internal TLDs")}</span>
-                            <PendingBadge show={isFieldPending("html.urlSecurity.internalTlds")} />
+                            <span>
+                              {t(
+                                "admin.settings.security.htmlUrlSecurity.internalTlds.label",
+                                "Internal TLDs",
+                              )}
+                            </span>
+                            <PendingBadge
+                              show={isFieldPending(
+                                "html.urlSecurity.internalTlds",
+                              )}
+                            />
                           </Group>
                         }
                         description={t(
                           "admin.settings.security.htmlUrlSecurity.internalTlds.description",
                           "One TLD per line (e.g., .local, .internal). Block domains with these TLD patterns",
                         )}
-                        value={settings?.html?.urlSecurity?.internalTlds?.join("\n") || ""}
+                        value={
+                          settings?.html?.urlSecurity?.internalTlds?.join(
+                            "\n",
+                          ) || ""
+                        }
                         onChange={(e) =>
                           setSettings({
                             ...settings,
@@ -935,7 +1332,11 @@ export default function AdminSecuritySection() {
                               ...settings?.html,
                               urlSecurity: {
                                 ...settings?.html?.urlSecurity,
-                                internalTlds: e.target.value ? e.target.value.split("\n").filter((d) => d.trim()) : [],
+                                internalTlds: e.target.value
+                                  ? e.target.value
+                                      .split("\n")
+                                      .filter((d) => d.trim())
+                                  : [],
                               },
                             },
                           })
@@ -949,13 +1350,25 @@ export default function AdminSecuritySection() {
 
                     {/* Network Blocking Options */}
                     <Text fw={600} size="sm" mt="md">
-                      {t("admin.settings.security.htmlUrlSecurity.networkBlocking", "Network Blocking")}
+                      {t(
+                        "admin.settings.security.htmlUrlSecurity.networkBlocking",
+                        "Network Blocking",
+                      )}
                     </Text>
 
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
                       <div>
                         <Text fw={500} size="sm">
-                          {t("admin.settings.security.htmlUrlSecurity.blockPrivateNetworks.label", "Block Private Networks")}
+                          {t(
+                            "admin.settings.security.htmlUrlSecurity.blockPrivateNetworks.label",
+                            "Block Private Networks",
+                          )}
                         </Text>
                         <Text size="xs" c="dimmed" mt={4}>
                           {t(
@@ -967,26 +1380,45 @@ export default function AdminSecuritySection() {
                       <Group gap="xs">
                         <Switch
                           name="html_urlSecurity_blockPrivateNetworks"
-                          checked={settings?.html?.urlSecurity?.blockPrivateNetworks || false}
+                          checked={
+                            settings?.html?.urlSecurity?.blockPrivateNetworks ||
+                            false
+                          }
                           onChange={(e) =>
                             setSettings({
                               ...settings,
                               html: {
                                 ...settings?.html,
-                                urlSecurity: { ...settings?.html?.urlSecurity, blockPrivateNetworks: e.target.checked },
+                                urlSecurity: {
+                                  ...settings?.html?.urlSecurity,
+                                  blockPrivateNetworks: e.target.checked,
+                                },
                               },
                             })
                           }
                           disabled={!loginEnabled}
                         />
-                        <PendingBadge show={isFieldPending("html.urlSecurity.blockPrivateNetworks")} />
+                        <PendingBadge
+                          show={isFieldPending(
+                            "html.urlSecurity.blockPrivateNetworks",
+                          )}
+                        />
                       </Group>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
                       <div>
                         <Text fw={500} size="sm">
-                          {t("admin.settings.security.htmlUrlSecurity.blockLocalhost.label", "Block Localhost")}
+                          {t(
+                            "admin.settings.security.htmlUrlSecurity.blockLocalhost.label",
+                            "Block Localhost",
+                          )}
                         </Text>
                         <Text size="xs" c="dimmed" mt={4}>
                           {t(
@@ -998,26 +1430,44 @@ export default function AdminSecuritySection() {
                       <Group gap="xs">
                         <Switch
                           name="html_urlSecurity_blockLocalhost"
-                          checked={settings?.html?.urlSecurity?.blockLocalhost || false}
+                          checked={
+                            settings?.html?.urlSecurity?.blockLocalhost || false
+                          }
                           onChange={(e) =>
                             setSettings({
                               ...settings,
                               html: {
                                 ...settings?.html,
-                                urlSecurity: { ...settings?.html?.urlSecurity, blockLocalhost: e.target.checked },
+                                urlSecurity: {
+                                  ...settings?.html?.urlSecurity,
+                                  blockLocalhost: e.target.checked,
+                                },
                               },
                             })
                           }
                           disabled={!loginEnabled}
                         />
-                        <PendingBadge show={isFieldPending("html.urlSecurity.blockLocalhost")} />
+                        <PendingBadge
+                          show={isFieldPending(
+                            "html.urlSecurity.blockLocalhost",
+                          )}
+                        />
                       </Group>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
                       <div>
                         <Text fw={500} size="sm">
-                          {t("admin.settings.security.htmlUrlSecurity.blockLinkLocal.label", "Block Link-Local Addresses")}
+                          {t(
+                            "admin.settings.security.htmlUrlSecurity.blockLinkLocal.label",
+                            "Block Link-Local Addresses",
+                          )}
                         </Text>
                         <Text size="xs" c="dimmed" mt={4}>
                           {t(
@@ -1029,23 +1479,38 @@ export default function AdminSecuritySection() {
                       <Group gap="xs">
                         <Switch
                           name="html_urlSecurity_blockLinkLocal"
-                          checked={settings?.html?.urlSecurity?.blockLinkLocal || false}
+                          checked={
+                            settings?.html?.urlSecurity?.blockLinkLocal || false
+                          }
                           onChange={(e) =>
                             setSettings({
                               ...settings,
                               html: {
                                 ...settings?.html,
-                                urlSecurity: { ...settings?.html?.urlSecurity, blockLinkLocal: e.target.checked },
+                                urlSecurity: {
+                                  ...settings?.html?.urlSecurity,
+                                  blockLinkLocal: e.target.checked,
+                                },
                               },
                             })
                           }
                           disabled={!loginEnabled}
                         />
-                        <PendingBadge show={isFieldPending("html.urlSecurity.blockLinkLocal")} />
+                        <PendingBadge
+                          show={isFieldPending(
+                            "html.urlSecurity.blockLinkLocal",
+                          )}
+                        />
                       </Group>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
                       <div>
                         <Text fw={500} size="sm">
                           {t(
@@ -1063,19 +1528,29 @@ export default function AdminSecuritySection() {
                       <Group gap="xs">
                         <Switch
                           name="html_urlSecurity_blockCloudMetadata"
-                          checked={settings?.html?.urlSecurity?.blockCloudMetadata || false}
+                          checked={
+                            settings?.html?.urlSecurity?.blockCloudMetadata ||
+                            false
+                          }
                           onChange={(e) =>
                             setSettings({
                               ...settings,
                               html: {
                                 ...settings?.html,
-                                urlSecurity: { ...settings?.html?.urlSecurity, blockCloudMetadata: e.target.checked },
+                                urlSecurity: {
+                                  ...settings?.html?.urlSecurity,
+                                  blockCloudMetadata: e.target.checked,
+                                },
                               },
                             })
                           }
                           disabled={!loginEnabled}
                         />
-                        <PendingBadge show={isFieldPending("html.urlSecurity.blockCloudMetadata")} />
+                        <PendingBadge
+                          show={isFieldPending(
+                            "html.urlSecurity.blockCloudMetadata",
+                          )}
+                        />
                       </Group>
                     </div>
                   </Stack>
@@ -1095,7 +1570,11 @@ export default function AdminSecuritySection() {
       />
 
       {/* Restart Confirmation Modal */}
-      <RestartConfirmationModal opened={restartModalOpened} onClose={closeRestartModal} onRestart={restartServer} />
+      <RestartConfirmationModal
+        opened={restartModalOpened}
+        onClose={closeRestartModal}
+        onRestart={restartServer}
+      />
     </div>
   );
 }

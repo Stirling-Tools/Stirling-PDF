@@ -20,7 +20,14 @@ export type SlideId =
   | "analytics-choice"
   | "mfa-setup";
 
-export type HeroType = "rocket" | "dual-icon" | "shield" | "diamond" | "logo" | "lock" | "analytics";
+export type HeroType =
+  | "rocket"
+  | "dual-icon"
+  | "shield"
+  | "diamond"
+  | "logo"
+  | "lock"
+  | "analytics";
 
 export type ButtonAction =
   | "next"
@@ -91,7 +98,11 @@ export interface SlideDefinition {
 export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
   "first-login": {
     id: "first-login",
-    createSlide: ({ firstLoginUsername, onPasswordChanged, usingDefaultCredentials }) =>
+    createSlide: ({
+      firstLoginUsername,
+      onPasswordChanged,
+      usingDefaultCredentials,
+    }) =>
       FirstLoginSlide({
         username: firstLoginUsername || "",
         onPasswordChanged: onPasswordChanged || (() => {}),
@@ -148,7 +159,8 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
   },
   "security-check": {
     id: "security-check",
-    createSlide: ({ selectedRole, onRoleSelect }) => SecurityCheckSlide({ selectedRole, onRoleSelect }),
+    createSlide: ({ selectedRole, onRoleSelect }) =>
+      SecurityCheckSlide({ selectedRole, onRoleSelect }),
     hero: { type: "shield" },
     buttons: [
       {
@@ -172,7 +184,8 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
   },
   "admin-overview": {
     id: "admin-overview",
-    createSlide: ({ licenseNotice, loginEnabled }) => PlanOverviewSlide({ isAdmin: true, licenseNotice, loginEnabled }),
+    createSlide: ({ licenseNotice, loginEnabled }) =>
+      PlanOverviewSlide({ isAdmin: true, licenseNotice, loginEnabled }),
     hero: { type: "diamond" },
     buttons: [
       {
@@ -262,7 +275,8 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
   },
   "analytics-choice": {
     id: "analytics-choice",
-    createSlide: ({ analyticsError }) => AnalyticsChoiceSlide({ analyticsError }),
+    createSlide: ({ analyticsError }) =>
+      AnalyticsChoiceSlide({ analyticsError }),
     hero: { type: "analytics" },
     buttons: [
       {
@@ -285,7 +299,8 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
   },
   "mfa-setup": {
     id: "mfa-setup",
-    createSlide: ({ onMfaSetupComplete = () => {} }: SlideFactoryParams) => MFASetupSlide({ onMfaSetupComplete }),
+    createSlide: ({ onMfaSetupComplete = () => {} }: SlideFactoryParams) =>
+      MFASetupSlide({ onMfaSetupComplete }),
     hero: { type: "lock" },
     buttons: [], // Form has its own submit button
   },

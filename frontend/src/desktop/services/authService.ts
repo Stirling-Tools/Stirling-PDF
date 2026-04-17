@@ -5,7 +5,11 @@ import { connectionModeService } from "@app/services/connectionModeService";
 import { tauriBackendService } from "@app/services/tauriBackendService";
 import axios from "axios";
 import tauriHttpClient from "@app/services/tauriHttpClient";
-import { DESKTOP_DEEP_LINK_CALLBACK, STIRLING_SAAS_URL, SUPABASE_KEY } from "@app/constants/connection";
+import {
+  DESKTOP_DEEP_LINK_CALLBACK,
+  STIRLING_SAAS_URL,
+  SUPABASE_KEY,
+} from "@app/constants/connection";
 
 export interface UserInfo {
   username: string;
@@ -33,7 +37,11 @@ interface OAuthCallbackResult {
   expires_in: number | null;
 }
 
-export type AuthStatus = "authenticated" | "unauthenticated" | "refreshing" | "oauth_pending";
+export type AuthStatus =
+  | "authenticated"
+  | "unauthenticated"
+  | "refreshing"
+  | "oauth_pending";
 
 export class AuthService {
   private static instance: AuthService;
@@ -41,7 +49,9 @@ export class AuthService {
   private userInfo: UserInfo | null = null;
   private cachedToken: string | null = null;
   private lastTokenSaveTime: number = 0;
-  private authListeners = new Set<(status: AuthStatus, userInfo: UserInfo | null) => void>();
+  private authListeners = new Set<
+    (status: AuthStatus, userInfo: UserInfo | null) => void
+  >();
   private refreshPromise: Promise<boolean> | null = null;
   private selfHostedDeepLinkFlowActive = false;
 
@@ -55,10 +65,16 @@ export class AuthService {
   /**
    * Save token to all storage locations and notify listeners
    */
-  private async saveTokenEverywhere(token: string, refreshToken?: string | null, emitJwtAvailable = true): Promise<void> {
+  private async saveTokenEverywhere(
+    token: string,
+    refreshToken?: string | null,
+    emitJwtAvailable = true,
+  ): Promise<void> {
     // Validate token before caching
     if (!token || token.trim().length === 0) {
-      console.warn("[Desktop AuthService] Attempted to save invalid/empty token");
+      console.warn(
+        "[Desktop AuthService] Attempted to save invalid/empty token",
+      );
       throw new Error("Invalid token");
     }
 
@@ -66,7 +82,10 @@ export class AuthService {
     try {
       await invoke("save_auth_token", { token });
     } catch (error) {
-      console.error("[Desktop AuthService] Failed to save token to Tauri store:", error);
+      console.error(
+        "[Desktop AuthService] Failed to save token to Tauri store:",
+        error,
+      );
       // Don't throw - we can still use localStorage
     }
 
@@ -74,7 +93,10 @@ export class AuthService {
     try {
       localStorage.setItem("stirling_jwt", token);
     } catch (error) {
-      console.error("[Desktop AuthService] Failed to save token to localStorage:", error);
+      console.error(
+        "[Desktop AuthService] Failed to save token to localStorage:",
+        error,
+      );
     }
 
     // Cache the valid token in memory
@@ -88,7 +110,10 @@ export class AuthService {
         // Only remove from localStorage after successful save
         localStorage.removeItem("stirling_refresh_token");
       } catch (error) {
-        console.error("[Desktop AuthService] Failed to save refresh token:", error);
+        console.error(
+          "[Desktop AuthService] Failed to save refresh token:",
+          error,
+        );
       }
     }
 
@@ -109,7 +134,10 @@ export class AuthService {
         return token;
       }
     } catch (error) {
-      console.error("[Desktop AuthService] Failed to read from Tauri store:", error);
+      console.error(
+        "[Desktop AuthService] Failed to read from Tauri store:",
+        error,
+      );
     }
 
     // Fallback to localStorage
@@ -134,13 +162,19 @@ export class AuthService {
     try {
       await invoke("clear_auth_token");
     } catch (error) {
-      console.warn("[Desktop AuthService] Failed to clear Tauri keyring access token", error);
+      console.warn(
+        "[Desktop AuthService] Failed to clear Tauri keyring access token",
+        error,
+      );
     }
 
     try {
       await invoke("clear_refresh_token");
     } catch (error) {
-      console.warn("[Desktop AuthService] Failed to clear Tauri keyring refresh token", error);
+      console.warn(
+        "[Desktop AuthService] Failed to clear Tauri keyring refresh token",
+        error,
+      );
     }
 
     // Best effort: clear web storage
@@ -148,7 +182,10 @@ export class AuthService {
       localStorage.removeItem("stirling_jwt");
       localStorage.removeItem("stirling_refresh_token");
     } catch (error) {
-      console.warn("[Desktop AuthService] Failed to clear localStorage tokens", error);
+      console.warn(
+        "[Desktop AuthService] Failed to clear localStorage tokens",
+        error,
+      );
     }
   }
 
@@ -165,7 +202,9 @@ export class AuthService {
     this.setAuthStatus("unauthenticated", null);
   }
 
-  subscribeToAuth(listener: (status: AuthStatus, userInfo: UserInfo | null) => void): () => void {
+  subscribeToAuth(
+    listener: (status: AuthStatus, userInfo: UserInfo | null) => void,
+  ): () => void {
     this.authListeners.add(listener);
     // Immediately notify new listener of current state
     listener(this.authStatus, this.userInfo);
@@ -179,7 +218,9 @@ export class AuthService {
   }
 
   private notifyListeners() {
-    this.authListeners.forEach((listener) => listener(this.authStatus, this.userInfo));
+    this.authListeners.forEach((listener) =>
+      listener(this.authStatus, this.userInfo),
+    );
   }
 
   private setAuthStatus(status: AuthStatus, userInfo: UserInfo | null = null) {
@@ -198,15 +239,25 @@ export class AuthService {
     // (e.g. after completing re-auth via the sign-in modal). This prevents the
     // simulation from looping: expired → modal → re-auth → expired → modal…
     if (this.authStatus === "authenticated") return false;
-    return import.meta.env.DEV && String(import.meta.env.VITE_DEV_SIMULATE_EXPIRED_JWT ?? "").toLowerCase() === "true";
+    return (
+      import.meta.env.DEV &&
+      String(
+        import.meta.env.VITE_DEV_SIMULATE_EXPIRED_JWT ?? "",
+      ).toLowerCase() === "true"
+    );
   }
 
-  async completeSupabaseSession(accessToken: string, serverUrl: string): Promise<UserInfo> {
+  async completeSupabaseSession(
+    accessToken: string,
+    serverUrl: string,
+  ): Promise<UserInfo> {
     if (!accessToken || !accessToken.trim()) {
       throw new Error("Invalid access token");
     }
     if (!SUPABASE_KEY) {
-      throw new Error("VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY is not configured");
+      throw new Error(
+        "VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY is not configured",
+      );
     }
 
     await this.saveTokenEverywhere(accessToken);
@@ -227,7 +278,9 @@ export class AuthService {
       throw new Error("VITE_SAAS_SERVER_URL is not configured");
     }
     if (!SUPABASE_KEY) {
-      throw new Error("VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY is not configured");
+      throw new Error(
+        "VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY is not configured",
+      );
     }
 
     const redirectParam = encodeURIComponent(DESKTOP_DEEP_LINK_CALLBACK);
@@ -258,11 +311,18 @@ export class AuthService {
           error.message;
         throw new Error(message || "Sign up failed", { cause: error });
       }
-      throw error instanceof Error ? error : new Error("Sign up failed", { cause: error });
+      throw error instanceof Error
+        ? error
+        : new Error("Sign up failed", { cause: error });
     }
   }
 
-  async login(serverUrl: string, username: string, password: string, mfaCode?: string): Promise<UserInfo> {
+  async login(
+    serverUrl: string,
+    username: string,
+    password: string,
+    mfaCode?: string,
+  ): Promise<UserInfo> {
     try {
       // Validate SaaS configuration if connecting to SaaS
       if (serverUrl === STIRLING_SAAS_URL) {
@@ -270,7 +330,9 @@ export class AuthService {
           throw new Error("VITE_SAAS_SERVER_URL is not configured");
         }
         if (!SUPABASE_KEY) {
-          throw new Error("VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY is not configured");
+          throw new Error(
+            "VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY is not configured",
+          );
         }
       }
 
@@ -291,7 +353,9 @@ export class AuthService {
         await this.saveTokenEverywhere(token);
       } catch (error) {
         console.error("[Desktop AuthService] Failed to save token:", error);
-        throw new Error("Failed to save authentication token", { cause: error });
+        throw new Error("Failed to save authentication token", {
+          cause: error,
+        });
       }
 
       // Save user info to store
@@ -318,34 +382,56 @@ export class AuthService {
 
         if (errMsg.includes("mfa_required")) {
           this.setAuthStatus("unauthenticated", null);
-          throw new AuthServiceError("Two-factor code required.", "mfa_required");
+          throw new AuthServiceError(
+            "Two-factor code required.",
+            "mfa_required",
+          );
         }
 
         if (errMsg.includes("invalid_mfa_code")) {
           this.setAuthStatus("unauthenticated", null);
-          throw new AuthServiceError("Invalid two-factor code.", "invalid_mfa_code");
+          throw new AuthServiceError(
+            "Invalid two-factor code.",
+            "invalid_mfa_code",
+          );
         }
 
         // Authentication errors
-        if (errMsg.includes("401") || errMsg.includes("unauthorized") || errMsg.includes("invalid credentials")) {
+        if (
+          errMsg.includes("401") ||
+          errMsg.includes("unauthorized") ||
+          errMsg.includes("invalid credentials")
+        ) {
           this.setAuthStatus("unauthenticated", null);
-          throw new Error("Invalid username or password. Please check your credentials and try again.", {
-            cause: error,
-          });
+          throw new Error(
+            "Invalid username or password. Please check your credentials and try again.",
+            {
+              cause: error,
+            },
+          );
         }
         // Server not found or unreachable
-        else if (errMsg.includes("connection refused") || errMsg.includes("econnrefused")) {
+        else if (
+          errMsg.includes("connection refused") ||
+          errMsg.includes("econnrefused")
+        ) {
           this.setAuthStatus("unauthenticated", null);
-          throw new Error("Cannot connect to server. Please check the server URL and ensure the server is running.", {
-            cause: error,
-          });
+          throw new Error(
+            "Cannot connect to server. Please check the server URL and ensure the server is running.",
+            {
+              cause: error,
+            },
+          );
         }
         // Timeout
         else if (errMsg.includes("timeout") || errMsg.includes("timed out")) {
           this.setAuthStatus("unauthenticated", null);
-          throw new Error("Login request timed out. Please check your network connection and try again.", {
-            cause: error,
-          });
+          throw new Error(
+            "Login request timed out. Please check your network connection and try again.",
+            {
+              cause: error,
+            },
+          );
         }
         // DNS failure
         else if (
@@ -355,7 +441,10 @@ export class AuthService {
           errMsg.includes("enotfound")
         ) {
           this.setAuthStatus("unauthenticated", null);
-          throw new Error("Cannot resolve server address. Please check the server URL is correct.", { cause: error });
+          throw new Error(
+            "Cannot resolve server address. Please check the server URL is correct.",
+            { cause: error },
+          );
         }
         // SSL/TLS errors
         else if (
@@ -365,23 +454,32 @@ export class AuthService {
           errMsg.includes("cert")
         ) {
           this.setAuthStatus("unauthenticated", null);
-          throw new Error("SSL/TLS certificate error. Server may have an invalid or self-signed certificate.", {
-            cause: error,
-          });
+          throw new Error(
+            "SSL/TLS certificate error. Server may have an invalid or self-signed certificate.",
+            {
+              cause: error,
+            },
+          );
         }
         // 404 - endpoint not found
         else if (errMsg.includes("404") || errMsg.includes("not found")) {
           this.setAuthStatus("unauthenticated", null);
-          throw new Error("Login endpoint not found. Please ensure you are connecting to a valid Stirling PDF server.", {
-            cause: error,
-          });
+          throw new Error(
+            "Login endpoint not found. Please ensure you are connecting to a valid Stirling PDF server.",
+            {
+              cause: error,
+            },
+          );
         }
         // 403 - security disabled
         else if (errMsg.includes("403") || errMsg.includes("forbidden")) {
           this.setAuthStatus("unauthenticated", null);
-          throw new Error("Login is not enabled on this server. Please enable security mode (DOCKER_ENABLE_SECURITY=true).", {
-            cause: error,
-          });
+          throw new Error(
+            "Login is not enabled on this server. Please enable security mode (DOCKER_ENABLE_SECURITY=true).",
+            {
+              cause: error,
+            },
+          );
         }
       }
 
@@ -403,13 +501,17 @@ export class AuthService {
     try {
       // Best-effort backend logout so any server-side session/cookies are cleared
       try {
-        const currentConfig = await connectionModeService.getCurrentConfig().catch(() => null);
+        const currentConfig = await connectionModeService
+          .getCurrentConfig()
+          .catch(() => null);
         const serverUrl = currentConfig?.server_config?.url;
         const token = await this.getAuthToken();
 
         if (serverUrl && token) {
           const base = serverUrl.replace(/\/+$/, "");
-          const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
+          const headers: Record<string, string> = {
+            Authorization: `Bearer ${token}`,
+          };
 
           // Treat 401/403 as benign (session already expired)
           const safePost = async (url: string) => {
@@ -420,10 +522,15 @@ export class AuthService {
                 validateStatus: () => true, // handle status manually
               });
               if (resp.status >= 400 && ![401, 403].includes(resp.status)) {
-                console.warn(`[Desktop AuthService] Logout call to ${url} failed: ${resp.status}`);
+                console.warn(
+                  `[Desktop AuthService] Logout call to ${url} failed: ${resp.status}`,
+                );
               }
             } catch (err) {
-              console.warn(`[Desktop AuthService] Backend logout failed via ${url}`, err);
+              console.warn(
+                `[Desktop AuthService] Backend logout failed via ${url}`,
+                err,
+              );
             }
           };
 
@@ -433,7 +540,10 @@ export class AuthService {
           await safePost(`${base}/logout`);
         }
       } catch (err) {
-        console.warn("[Desktop AuthService] Failed to call backend logout endpoint", err);
+        console.warn(
+          "[Desktop AuthService] Failed to call backend logout endpoint",
+          err,
+        );
       }
 
       // Clear token from all storage locations
@@ -460,7 +570,9 @@ export class AuthService {
         // Health checks run every 5s, so 30s leeway would cause 5-6 unnecessary cache clears
         // The 30s leeway is used elsewhere for proactive refresh before user operations
         if (this.isTokenExpiringSoon(this.cachedToken, 5)) {
-          console.warn("[Desktop AuthService] ⚠️ Cached token is expired or expiring soon, invalidating cache");
+          console.warn(
+            "[Desktop AuthService] ⚠️ Cached token is expired or expiring soon, invalidating cache",
+          );
           this.cachedToken = null;
           // Fall through to fetch from storage
         } else {
@@ -469,7 +581,9 @@ export class AuthService {
         }
       }
 
-      console.debug("[Desktop AuthService] Cache miss, fetching from storage...");
+      console.debug(
+        "[Desktop AuthService] Cache miss, fetching from storage...",
+      );
       const token = await this.getTokenFromAnySource();
 
       // Cache token if found (backend will validate expiry)
@@ -481,7 +595,9 @@ export class AuthService {
           return null;
         }
         this.cachedToken = token;
-        console.log("[Desktop AuthService] ✅ Token cached in memory after retrieval");
+        console.log(
+          "[Desktop AuthService] ✅ Token cached in memory after retrieval",
+        );
         return token;
       }
       return null;
@@ -498,7 +614,10 @@ export class AuthService {
 
   async getUserInfo(): Promise<UserInfo | null> {
     if (this.userInfo) {
-      console.log("[Desktop AuthService] Using cached user info:", this.userInfo.username);
+      console.log(
+        "[Desktop AuthService] Using cached user info:",
+        this.userInfo.username,
+      );
       return this.userInfo;
     }
 
@@ -506,14 +625,20 @@ export class AuthService {
       console.log("[Desktop AuthService] Retrieving user info from store...");
       const userInfo = await invoke<UserInfo | null>("get_user_info");
       if (userInfo) {
-        console.log("[Desktop AuthService] User info found:", userInfo.username);
+        console.log(
+          "[Desktop AuthService] User info found:",
+          userInfo.username,
+        );
         this.userInfo = userInfo;
       } else {
         console.log("[Desktop AuthService] No user info in store");
       }
       return userInfo;
     } catch (error) {
-      console.error("[Desktop AuthService] Failed to get user info from store:", error);
+      console.error(
+        "[Desktop AuthService] Failed to get user info from store:",
+        error,
+      );
       return null;
     }
   }
@@ -523,10 +648,15 @@ export class AuthService {
       return false;
     }
     try {
-      console.debug("[Desktop AuthService] Waiting for in-flight refresh to complete");
+      console.debug(
+        "[Desktop AuthService] Waiting for in-flight refresh to complete",
+      );
       return await this.refreshPromise;
     } catch (error) {
-      console.warn("[Desktop AuthService] In-flight refresh failed while waiting", error);
+      console.warn(
+        "[Desktop AuthService] In-flight refresh failed while waiting",
+        error,
+      );
       return false;
     }
   }
@@ -541,7 +671,9 @@ export class AuthService {
     try {
       const parts = token.split(".");
       if (parts.length < 2) {
-        console.warn("[Desktop AuthService] Token malformed - less than 2 parts");
+        console.warn(
+          "[Desktop AuthService] Token malformed - less than 2 parts",
+        );
         return true;
       }
 
@@ -580,7 +712,9 @@ export class AuthService {
   async refreshToken(serverUrl: string): Promise<boolean> {
     // Prevent concurrent refresh attempts - reuse in-flight refresh
     if (this.refreshPromise) {
-      console.log("[Desktop AuthService] Refresh already in progress, awaiting existing refresh");
+      console.log(
+        "[Desktop AuthService] Refresh already in progress, awaiting existing refresh",
+      );
       return this.refreshPromise;
     }
 
@@ -615,10 +749,15 @@ export class AuthService {
         },
       );
 
-      const token = response.data?.session?.access_token ?? response.data?.access_token ?? response.data?.token;
+      const token =
+        response.data?.session?.access_token ??
+        response.data?.access_token ??
+        response.data?.token;
 
       if (!token) {
-        console.error("[Desktop AuthService] Refresh response missing token payload");
+        console.error(
+          "[Desktop AuthService] Refresh response missing token payload",
+        );
         this.setAuthStatus("unauthenticated", null);
         await this.logout();
         return false;
@@ -646,7 +785,9 @@ export class AuthService {
   async refreshSupabaseToken(authServerUrl: string): Promise<boolean> {
     // Prevent concurrent refresh attempts - reuse in-flight refresh
     if (this.refreshPromise) {
-      console.log("[Desktop AuthService] Refresh already in progress, awaiting existing refresh");
+      console.log(
+        "[Desktop AuthService] Refresh already in progress, awaiting existing refresh",
+      );
       return this.refreshPromise;
     }
 
@@ -658,7 +799,9 @@ export class AuthService {
     }
   }
 
-  private async _doRefreshSupabaseToken(authServerUrl: string): Promise<boolean> {
+  private async _doRefreshSupabaseToken(
+    authServerUrl: string,
+  ): Promise<boolean> {
     try {
       console.log("[Desktop AuthService] Refreshing Supabase token");
       this.setAuthStatus("refreshing", this.userInfo);
@@ -692,10 +835,15 @@ export class AuthService {
       const userInfo = await this.getUserInfo();
       this.setAuthStatus("authenticated", userInfo);
 
-      console.log("[Desktop AuthService] Supabase token refreshed successfully");
+      console.log(
+        "[Desktop AuthService] Supabase token refreshed successfully",
+      );
       return true;
     } catch (error) {
-      console.error("[Desktop AuthService] Supabase token refresh failed:", error);
+      console.error(
+        "[Desktop AuthService] Supabase token refresh failed:",
+        error,
+      );
       this.setAuthStatus("unauthenticated", null);
 
       // Clear stored credentials on refresh failure
@@ -711,23 +859,35 @@ export class AuthService {
     const path = typeof window !== "undefined" ? window.location.pathname : "";
     if (path.startsWith("/login") || path.startsWith("/setup")) {
       // Check if token exists in storage (user just logged in via web flow)
-      const tokenInStorage = typeof window !== "undefined" ? localStorage.getItem("stirling_jwt") : null;
+      const tokenInStorage =
+        typeof window !== "undefined"
+          ? localStorage.getItem("stirling_jwt")
+          : null;
       if (tokenInStorage) {
-        console.log("[Desktop AuthService] On login/setup path with token present - skipping validation");
-        console.log("[Desktop AuthService] Login flow will handle authentication state");
+        console.log(
+          "[Desktop AuthService] On login/setup path with token present - skipping validation",
+        );
+        console.log(
+          "[Desktop AuthService] Login flow will handle authentication state",
+        );
         // Return early to avoid clearing partial state during login completion
         // The login completion handler (completeSelfHostedSession) will:
         // 1. Fetch and save user info
         // 2. Set auth status to authenticated
         return;
       } else {
-        console.log("[Desktop AuthService] On login/setup path, clearing any cached auth");
+        console.log(
+          "[Desktop AuthService] On login/setup path, clearing any cached auth",
+        );
         // Local clear only; avoid backend logout to prevent noisy errors when already unauthenticated
         await this.clearTokenEverywhere().catch(() => {});
         try {
           await invoke("clear_user_info");
         } catch (err) {
-          console.warn("[Desktop AuthService] Failed to clear user info on login/setup init", err);
+          console.warn(
+            "[Desktop AuthService] Failed to clear user info on login/setup init",
+            err,
+          );
         }
         this.setAuthStatus("unauthenticated", null);
         return;
@@ -740,11 +900,15 @@ export class AuthService {
     if (token && userInfo) {
       console.log("[Desktop AuthService] Found existing token and user info");
       this.setAuthStatus("authenticated", userInfo);
-      console.log("[Desktop AuthService] Auth state initialized as authenticated");
+      console.log(
+        "[Desktop AuthService] Auth state initialized as authenticated",
+      );
     } else {
       console.log("[Desktop AuthService] No token or user info found");
       this.setAuthStatus("unauthenticated", null);
-      console.log("[Desktop AuthService] Auth state initialized as unauthenticated");
+      console.log(
+        "[Desktop AuthService] Auth state initialized as unauthenticated",
+      );
 
       // Defensive: ensure any partial tokens are purged to prevent auto-login loops.
       // Skip when simulating expiry — the token is real and must not be destroyed.
@@ -757,14 +921,24 @@ export class AuthService {
   /**
    * Start OAuth login flow by opening system browser with localhost callback
    */
-  async loginWithOAuth(provider: string, authServerUrl: string, successHtml: string, errorHtml: string): Promise<UserInfo> {
+  async loginWithOAuth(
+    provider: string,
+    authServerUrl: string,
+    successHtml: string,
+    errorHtml: string,
+  ): Promise<UserInfo> {
     try {
-      console.log("[Desktop AuthService] Starting OAuth login with provider:", provider);
+      console.log(
+        "[Desktop AuthService] Starting OAuth login with provider:",
+        provider,
+      );
       this.setAuthStatus("oauth_pending", null);
 
       // Validate Supabase key is configured for OAuth
       if (!SUPABASE_KEY) {
-        throw new Error("VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY is not configured");
+        throw new Error(
+          "VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY is not configured",
+        );
       }
 
       // Call Rust command which:
@@ -780,16 +954,30 @@ export class AuthService {
         errorHtml,
       });
 
-      console.log("[Desktop AuthService] OAuth authentication successful, storing tokens");
-      console.log("[Desktop AuthService] OAuth result - has access_token:", !!result.access_token);
-      console.log("[Desktop AuthService] OAuth result - has refresh_token:", !!result.refresh_token);
-      console.log("[Desktop AuthService] OAuth result - expires_in:", result.expires_in);
+      console.log(
+        "[Desktop AuthService] OAuth authentication successful, storing tokens",
+      );
+      console.log(
+        "[Desktop AuthService] OAuth result - has access_token:",
+        !!result.access_token,
+      );
+      console.log(
+        "[Desktop AuthService] OAuth result - has refresh_token:",
+        !!result.refresh_token,
+      );
+      console.log(
+        "[Desktop AuthService] OAuth result - expires_in:",
+        result.expires_in,
+      );
 
       // Save token and refresh token to all storage locations
       await this.saveTokenEverywhere(result.access_token, result.refresh_token);
 
       // Fetch user info from Supabase using the access token
-      const userInfo = await this.fetchSupabaseUserInfo(authServerUrl, result.access_token);
+      const userInfo = await this.fetchSupabaseUserInfo(
+        authServerUrl,
+        result.access_token,
+      );
 
       // Save user info to store
       await invoke("save_user_info", {
@@ -802,7 +990,10 @@ export class AuthService {
 
       return userInfo;
     } catch (error) {
-      console.error("[Desktop AuthService] Failed to complete OAuth login:", error);
+      console.error(
+        "[Desktop AuthService] Failed to complete OAuth login:",
+        error,
+      );
       this.setAuthStatus("unauthenticated", null);
       throw error;
     }
@@ -812,11 +1003,16 @@ export class AuthService {
    * Self-hosted SSO/OAuth2 flow for the desktop app.
 1   * Opens the system browser and waits for a deep link callback with the JWT.
    */
-  async loginWithSelfHostedOAuth(providerPath: string, serverUrl: string): Promise<UserInfo> {
+  async loginWithSelfHostedOAuth(
+    providerPath: string,
+    serverUrl: string,
+  ): Promise<UserInfo> {
     // Generate and store nonce for CSRF protection
     const nonce = crypto.randomUUID();
     sessionStorage.setItem("oauth_nonce", nonce);
-    console.log("[Desktop AuthService] Generated OAuth nonce for CSRF protection");
+    console.log(
+      "[Desktop AuthService] Generated OAuth nonce for CSRF protection",
+    );
 
     const trimmedServer = serverUrl.replace(/\/+$/, "");
     const fullUrl = providerPath.startsWith("http")
@@ -835,7 +1031,9 @@ export class AuthService {
     // Register deep-link listener before opening browser to avoid callback races on first launch.
     return this.waitForDeepLinkCompletion(trimmedServer, async () => {
       if (!(await this.openInSystemBrowser(authUrl))) {
-        throw new Error("Unable to open system browser for SSO. Please check your system settings.");
+        throw new Error(
+          "Unable to open system browser for SSO. Please check your system settings.",
+        );
       }
     });
   }
@@ -843,9 +1041,14 @@ export class AuthService {
   /**
    * Wait for a deep-link event to complete self-hosted SSO after system browser OAuth
    */
-  private async waitForDeepLinkCompletion(serverUrl: string, startFlow?: () => Promise<void>): Promise<UserInfo> {
+  private async waitForDeepLinkCompletion(
+    serverUrl: string,
+    startFlow?: () => Promise<void>,
+  ): Promise<UserInfo> {
     if (!isTauri()) {
-      throw new Error("Deep link authentication is only supported in Tauri desktop app.");
+      throw new Error(
+        "Deep link authentication is only supported in Tauri desktop app.",
+      );
     }
 
     this.selfHostedDeepLinkFlowActive = true;
@@ -885,13 +1088,16 @@ export class AuthService {
           if (type !== "sso" && type !== "sso-selfhosted") {
             return;
           }
-          const token = params.get("access_token") || parsed.searchParams.get("access_token");
+          const token =
+            params.get("access_token") ||
+            parsed.searchParams.get("access_token");
           if (!token) {
             return;
           }
 
           // CSRF Protection: Validate nonce before accepting token
-          const nonceFromUrl = params.get("nonce") || parsed.searchParams.get("nonce");
+          const nonceFromUrl =
+            params.get("nonce") || parsed.searchParams.get("nonce");
           const storedNonce = sessionStorage.getItem("oauth_nonce");
 
           if (!nonceFromUrl || !storedNonce || nonceFromUrl !== storedNonce) {
@@ -900,8 +1106,14 @@ export class AuthService {
             clearTimeout(timeoutId);
             sessionStorage.removeItem("oauth_nonce");
             this.selfHostedDeepLinkFlowActive = false;
-            console.error("[Desktop AuthService] Nonce validation failed - potential CSRF attack");
-            reject(new Error("Invalid authentication state. Nonce validation failed."));
+            console.error(
+              "[Desktop AuthService] Nonce validation failed - potential CSRF attack",
+            );
+            reject(
+              new Error(
+                "Invalid authentication state. Nonce validation failed.",
+              ),
+            );
             return;
           }
 
@@ -912,13 +1124,19 @@ export class AuthService {
           this.selfHostedDeepLinkFlowActive = false;
           console.log("[Desktop AuthService] Nonce validated successfully");
 
-          const userInfo = await this.completeSelfHostedSession(serverUrl, token);
+          const userInfo = await this.completeSelfHostedSession(
+            serverUrl,
+            token,
+          );
           // Ensure connection mode is set and backend is ready (in case caller doesn't)
           try {
             await connectionModeService.switchToSelfHosted({ url: serverUrl });
             await tauriBackendService.initializeExternalBackend();
           } catch (e) {
-            console.warn("[Desktop AuthService] Failed to initialize backend after deep link:", e);
+            console.warn(
+              "[Desktop AuthService] Failed to initialize backend after deep link:",
+              e,
+            );
           }
           resolve(userInfo);
         } catch (err) {
@@ -927,7 +1145,9 @@ export class AuthService {
           clearTimeout(timeoutId);
           sessionStorage.removeItem("oauth_nonce");
           this.selfHostedDeepLinkFlowActive = false;
-          reject(err instanceof Error ? err : new Error("Failed to complete SSO"));
+          reject(
+            err instanceof Error ? err : new Error("Failed to complete SSO"),
+          );
         }
       })
         .then(async (fn) => {
@@ -948,7 +1168,11 @@ export class AuthService {
             clearTimeout(timeoutId);
             sessionStorage.removeItem("oauth_nonce");
             this.selfHostedDeepLinkFlowActive = false;
-            reject(err instanceof Error ? err : new Error("Failed to start SSO login"));
+            reject(
+              err instanceof Error
+                ? err
+                : new Error("Failed to start SSO login"),
+            );
           }
         })
         .catch((err) => {
@@ -960,7 +1184,11 @@ export class AuthService {
           clearTimeout(timeoutId);
           sessionStorage.removeItem("oauth_nonce");
           this.selfHostedDeepLinkFlowActive = false;
-          reject(err instanceof Error ? err : new Error("Failed to listen for deep link events"));
+          reject(
+            err instanceof Error
+              ? err
+              : new Error("Failed to listen for deep link events"),
+          );
         });
     });
   }
@@ -982,7 +1210,10 @@ export class AuthService {
   /**
    * Save JWT + user info for self-hosted SSO logins
    */
-  async completeSelfHostedSession(serverUrl: string, token: string): Promise<UserInfo> {
+  async completeSelfHostedSession(
+    serverUrl: string,
+    token: string,
+  ): Promise<UserInfo> {
     const userInfo = await this.fetchSelfHostedUserInfo(serverUrl, token);
 
     await this.saveTokenEverywhere(token);
@@ -995,13 +1226,19 @@ export class AuthService {
     return userInfo;
   }
 
-  private async fetchSelfHostedUserInfo(serverUrl: string, token: string): Promise<UserInfo> {
+  private async fetchSelfHostedUserInfo(
+    serverUrl: string,
+    token: string,
+  ): Promise<UserInfo> {
     try {
-      const response = await axios.get(`${serverUrl.replace(/\/+$/, "")}/api/v1/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await axios.get(
+        `${serverUrl.replace(/\/+$/, "")}/api/v1/auth/me`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       const data = response.data;
       const user = data.user || data;
@@ -1011,7 +1248,10 @@ export class AuthService {
         email: user.email || undefined,
       };
     } catch (error) {
-      console.error("[Desktop AuthService] Failed to fetch user info after SSO:", error);
+      console.error(
+        "[Desktop AuthService] Failed to fetch user info after SSO:",
+        error,
+      );
       throw error;
     }
   }
@@ -1019,7 +1259,10 @@ export class AuthService {
   /**
    * Fetch user info from Supabase using access token
    */
-  private async fetchSupabaseUserInfo(authServerUrl: string, accessToken: string): Promise<UserInfo> {
+  private async fetchSupabaseUserInfo(
+    authServerUrl: string,
+    accessToken: string,
+  ): Promise<UserInfo> {
     try {
       const userEndpoint = `${authServerUrl}/auth/v1/user`;
 

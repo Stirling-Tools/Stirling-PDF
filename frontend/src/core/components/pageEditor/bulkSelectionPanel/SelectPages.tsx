@@ -93,7 +93,12 @@ const SelectPages = ({
               error={Boolean(error)}
             />
           )}
-          <Button size="sm" className={classes.applyButton} onClick={handleApply} disabled={isDisabled}>
+          <Button
+            size="sm"
+            className={classes.applyButton}
+            onClick={handleApply}
+            disabled={isDisabled}
+          >
             Apply
           </Button>
         </Group>

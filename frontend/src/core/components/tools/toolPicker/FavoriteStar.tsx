@@ -12,7 +12,12 @@ interface FavoriteStarProps {
   size?: MantineSize;
 }
 
-const FavoriteStar: React.FC<FavoriteStarProps> = ({ isFavorite, onToggle, className, size = "xs" }) => {
+const FavoriteStar: React.FC<FavoriteStarProps> = ({
+  isFavorite,
+  onToggle,
+  className,
+  size = "xs",
+}) => {
   const { t } = useTranslation();
 
   return (
@@ -39,9 +44,15 @@ const FavoriteStar: React.FC<FavoriteStarProps> = ({ isFavorite, onToggle, class
       }
     >
       {isFavorite ? (
-        <StarRoundedIcon fontSize="inherit" style={{ color: "var(--special-color-favorites)", fontSize: "1rem" }} />
+        <StarRoundedIcon
+          fontSize="inherit"
+          style={{ color: "var(--special-color-favorites)", fontSize: "1rem" }}
+        />
       ) : (
-        <StarBorderRoundedIcon fontSize="inherit" style={{ fontSize: "1rem" }} />
+        <StarBorderRoundedIcon
+          fontSize="inherit"
+          style={{ fontSize: "1rem" }}
+        />
       )}
     </ActionIcon>
   );

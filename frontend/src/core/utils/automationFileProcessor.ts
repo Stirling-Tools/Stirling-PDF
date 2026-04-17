@@ -25,14 +25,19 @@ export class AutomationFileProcessor {
   static isZipFile(blob: Blob): boolean {
     // This is a simple check - in a real implementation you might want to read the first few bytes
     // For now, we'll rely on the extraction attempt and fallback
-    return blob.type === "application/zip" || blob.type === "application/x-zip-compressed";
+    return (
+      blob.type === "application/zip" ||
+      blob.type === "application/x-zip-compressed"
+    );
   }
 
   /**
    * Extract files from a ZIP blob during automation execution, with fallback for non-ZIP files
    * Extracts all file types (PDFs, images, etc.) except HTML files which stay zipped
    */
-  static async extractAutomationZipFiles(blob: Blob): Promise<AutomationProcessingResult> {
+  static async extractAutomationZipFiles(
+    blob: Blob,
+  ): Promise<AutomationProcessingResult> {
     try {
       const zipFile = ResourceManager.createTimestampedFile(
         blob,
@@ -60,7 +65,9 @@ export class AutomationFileProcessor {
         return {
           success: true,
           files: [zipFile],
-          errors: [`ZIP extraction failed, kept as ZIP: ${result.errors?.join(", ") || "Unknown error"}`],
+          errors: [
+            `ZIP extraction failed, kept as ZIP: ${result.errors?.join(", ") || "Unknown error"}`,
+          ],
         };
       }
 
@@ -70,7 +77,10 @@ export class AutomationFileProcessor {
         errors: [],
       };
     } catch (error) {
-      console.warn("Failed to extract automation ZIP files, keeping as ZIP:", error);
+      console.warn(
+        "Failed to extract automation ZIP files, keeping as ZIP:",
+        error,
+      );
       // Fallback: keep as ZIP file for next automation step to handle
       const fallbackFile = ResourceManager.createTimestampedFile(
         blob,
@@ -106,11 +116,17 @@ export class AutomationFileProcessor {
         return {
           success: false,
           files: [],
-          errors: [`Automation step failed - HTTP ${response.status}: ${response.statusText}`],
+          errors: [
+            `Automation step failed - HTTP ${response.status}: ${response.statusText}`,
+          ],
         };
       }
 
-      const resultFile = ResourceManager.createResultFile(response.data, originalFileName, AUTOMATION_CONSTANTS.FILE_PREFIX);
+      const resultFile = ResourceManager.createResultFile(
+        response.data,
+        originalFileName,
+        AUTOMATION_CONSTANTS.FILE_PREFIX,
+      );
 
       return {
         success: true,
@@ -121,7 +137,9 @@ export class AutomationFileProcessor {
       return {
         success: false,
         files: [],
-        errors: [`Automation step failed: ${error.response?.data || error.message}`],
+        errors: [
+          `Automation step failed: ${error.response?.data || error.message}`,
+        ],
       };
     }
   }
@@ -144,7 +162,9 @@ export class AutomationFileProcessor {
         return {
           success: false,
           files: [],
-          errors: [`Automation step failed - HTTP ${response.status}: ${response.statusText}`],
+          errors: [
+            `Automation step failed - HTTP ${response.status}: ${response.statusText}`,
+          ],
         };
       }
 
@@ -154,7 +174,9 @@ export class AutomationFileProcessor {
       return {
         success: false,
         files: [],
-        errors: [`Automation step failed: ${error.response?.data || error.message}`],
+        errors: [
+          `Automation step failed: ${error.response?.data || error.message}`,
+        ],
       };
     }
   }

@@ -12,7 +12,8 @@ export class ProcessingErrorHandler {
     retryCount: number = 0,
     maxRetries: number = this.DEFAULT_MAX_RETRIES,
   ): ProcessingError {
-    const originalError = error instanceof Error ? error : new Error(String(error));
+    const originalError =
+      error instanceof Error ? error : new Error(String(error));
     const message = originalError.message;
 
     // Determine error type based on error message and properties
@@ -34,11 +35,18 @@ export class ProcessingErrorHandler {
   /**
    * Determine the type of error based on error characteristics
    */
-  private static determineErrorType(error: Error, message: string): ProcessingError["type"] {
+  private static determineErrorType(
+    error: Error,
+    message: string,
+  ): ProcessingError["type"] {
     const lowerMessage = message.toLowerCase();
 
     // Network-related errors
-    if (lowerMessage.includes("network") || lowerMessage.includes("fetch") || lowerMessage.includes("connection")) {
+    if (
+      lowerMessage.includes("network") ||
+      lowerMessage.includes("fetch") ||
+      lowerMessage.includes("connection")
+    ) {
       return "network";
     }
 
@@ -53,12 +61,20 @@ export class ProcessingErrorHandler {
     }
 
     // Timeout errors
-    if (lowerMessage.includes("timeout") || lowerMessage.includes("aborted") || error.name === "AbortError") {
+    if (
+      lowerMessage.includes("timeout") ||
+      lowerMessage.includes("aborted") ||
+      error.name === "AbortError"
+    ) {
       return "timeout";
     }
 
     // Cancellation
-    if (lowerMessage.includes("cancel") || lowerMessage.includes("abort") || error.name === "AbortError") {
+    if (
+      lowerMessage.includes("cancel") ||
+      lowerMessage.includes("abort") ||
+      error.name === "AbortError"
+    ) {
       return "cancelled";
     }
 
@@ -80,7 +96,11 @@ export class ProcessingErrorHandler {
   /**
    * Determine if an error is recoverable based on type and retry count
    */
-  private static isRecoverable(errorType: ProcessingError["type"], retryCount: number, maxRetries: number): boolean {
+  private static isRecoverable(
+    errorType: ProcessingError["type"],
+    retryCount: number,
+    maxRetries: number,
+  ): boolean {
     // Never recoverable
     if (errorType === "cancelled" || errorType === "corruption") {
       return false;
@@ -97,13 +117,20 @@ export class ProcessingErrorHandler {
     }
 
     // Network and timeout errors are usually recoverable
-    return errorType === "network" || errorType === "timeout" || errorType === "parsing";
+    return (
+      errorType === "network" ||
+      errorType === "timeout" ||
+      errorType === "parsing"
+    );
   }
 
   /**
    * Format error message for user display
    */
-  private static formatErrorMessage(errorType: ProcessingError["type"], originalMessage: string): string {
+  private static formatErrorMessage(
+    errorType: ProcessingError["type"],
+    originalMessage: string,
+  ): string {
     switch (errorType) {
       case "network":
         return "Network connection failed. Please check your internet connection and try again.";
@@ -160,10 +187,13 @@ export class ProcessingErrorHandler {
         }
 
         // Wait before retry with progressive backoff
-        const delay = this.RETRY_DELAYS[Math.min(attempt, this.RETRY_DELAYS.length - 1)];
+        const delay =
+          this.RETRY_DELAYS[Math.min(attempt, this.RETRY_DELAYS.length - 1)];
         await this.delay(delay);
 
-        console.log(`Retrying operation (attempt ${attempt + 2}/${maxRetries + 1}) after ${delay}ms delay`);
+        console.log(
+          `Retrying operation (attempt ${attempt + 2}/${maxRetries + 1}) after ${delay}ms delay`,
+        );
       }
     }
 
@@ -222,7 +252,11 @@ export class ProcessingErrorHandler {
   static getErrorSuggestions(error: ProcessingError): string[] {
     switch (error.type) {
       case "network":
-        return ["Check your internet connection", "Try refreshing the page", "Try again in a few moments"];
+        return [
+          "Check your internet connection",
+          "Try refreshing the page",
+          "Try again in a few moments",
+        ];
 
       case "memory":
         return [
@@ -248,10 +282,18 @@ export class ProcessingErrorHandler {
         ];
 
       case "parsing":
-        return ["Verify this is a valid PDF file", "Try a different PDF file", "Contact support if the problem persists"];
+        return [
+          "Verify this is a valid PDF file",
+          "Try a different PDF file",
+          "Contact support if the problem persists",
+        ];
 
       default:
-        return ["Try refreshing the page", "Try again in a few moments", "Contact support if the problem persists"];
+        return [
+          "Try refreshing the page",
+          "Try again in a few moments",
+          "Contact support if the problem persists",
+        ];
     }
   }
 

@@ -11,7 +11,9 @@ interface OpenFilesFromDiskOptions {
   onFallbackOpen?: () => void;
 }
 
-export async function openFilesFromDisk(options: OpenFilesFromDiskOptions = {}): Promise<File[]> {
+export async function openFilesFromDisk(
+  options: OpenFilesFromDiskOptions = {},
+): Promise<File[]> {
   const filesWithPaths = await openFileDialog({
     multiple: options.multiple ?? true,
     filters: options.filters ?? getDocumentFileDialogFilter(),

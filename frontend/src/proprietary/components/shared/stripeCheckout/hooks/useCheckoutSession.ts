@@ -1,7 +1,10 @@
 import { useCallback } from "react";
 import licenseService, { PlanTier } from "@app/services/licenseService";
 import { resyncExistingLicense } from "@app/utils/licenseCheckoutUtils";
-import { CheckoutState, PollingStatus } from "@app/components/shared/stripeCheckout/types/checkout";
+import {
+  CheckoutState,
+  PollingStatus,
+} from "@app/components/shared/stripeCheckout/types/checkout";
 
 /**
  * Checkout session creation and payment handling hook
@@ -19,7 +22,12 @@ export const useCheckoutSession = (
   pollForLicenseKey: (installId: string) => Promise<void>,
   onSuccess?: (sessionId: string) => void,
   onError?: (error: string) => void,
-  onLicenseActivated?: (licenseInfo: { licenseType: string; enabled: boolean; maxUsers: number; hasKey: boolean }) => void,
+  onLicenseActivated?: (licenseInfo: {
+    licenseType: string;
+    enabled: boolean;
+    maxUsers: number;
+    hasKey: boolean;
+  }) => void,
 ) => {
   const createCheckoutSession = useCallback(async () => {
     if (!selectedPlan) {
@@ -46,13 +54,20 @@ export const useCheckoutSession = (
       let existingLicenseKey: string | undefined;
       try {
         const licenseInfo = await licenseService.getLicenseInfo();
-        if (licenseInfo?.licenseType && licenseInfo.licenseType !== "NORMAL" && licenseInfo.licenseKey) {
+        if (
+          licenseInfo?.licenseType &&
+          licenseInfo.licenseType !== "NORMAL" &&
+          licenseInfo.licenseKey
+        ) {
           existingLicenseKey = licenseInfo.licenseKey;
           setCurrentLicenseKey(existingLicenseKey);
           console.log("Found existing valid license for upgrade");
         }
       } catch (error) {
-        console.warn("Could not fetch license info, proceeding as new license:", error);
+        console.warn(
+          "Could not fetch license info, proceeding as new license:",
+          error,
+        );
       }
 
       const response = await licenseService.createCheckoutSession({
@@ -80,7 +95,10 @@ export const useCheckoutSession = (
         loading: false,
       }));
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to create checkout session";
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to create checkout session";
       setState({
         currentStage: "error",
         error: errorMessage,
@@ -88,7 +106,16 @@ export const useCheckoutSession = (
       });
       onError?.(errorMessage);
     }
-  }, [selectedPlan, state.email, installationId, minimumSeats, setState, setInstallationId, setCurrentLicenseKey, onError]);
+  }, [
+    selectedPlan,
+    state.email,
+    installationId,
+    minimumSeats,
+    setState,
+    setInstallationId,
+    setCurrentLicenseKey,
+    onError,
+  ]);
 
   const handlePaymentComplete = useCallback(async () => {
     // Preserve state when changing stage

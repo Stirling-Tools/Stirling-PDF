@@ -11,11 +11,16 @@ export interface RightRailButtonWithAction extends RightRailButtonConfig {
  * - Automatically registers on mount and unregisters on unmount
  * - Updates registration when the input array reference changes
  */
-export function useRightRailButtons(buttons: readonly RightRailButtonWithAction[]) {
+export function useRightRailButtons(
+  buttons: readonly RightRailButtonWithAction[],
+) {
   const { registerButtons, unregisterButtons, setAction } = useRightRail();
 
   // Memoize configs and ids to reduce churn
-  const configs: RightRailButtonConfig[] = useMemo(() => buttons.map(({ onClick, ...cfg }) => cfg), [buttons]);
+  const configs: RightRailButtonConfig[] = useMemo(
+    () => buttons.map(({ onClick, ...cfg }) => cfg),
+    [buttons],
+  );
   const ids: string[] = useMemo(() => buttons.map((b) => b.id), [buttons]);
 
   useEffect(() => {
@@ -25,8 +30,10 @@ export function useRightRailButtons(buttons: readonly RightRailButtonWithAction[
     if (process.env.NODE_ENV === "development") {
       const idSet = new Set<string>();
       buttons.forEach((b) => {
-        if (!b.onClick && !b.render) console.warn("[RightRail] Missing onClick/render for id:", b.id);
-        if (idSet.has(b.id)) console.warn("[RightRail] Duplicate id in buttons array:", b.id);
+        if (!b.onClick && !b.render)
+          console.warn("[RightRail] Missing onClick/render for id:", b.id);
+        if (idSet.has(b.id))
+          console.warn("[RightRail] Duplicate id in buttons array:", b.id);
         idSet.add(b.id);
       });
     }

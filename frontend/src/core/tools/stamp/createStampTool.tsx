@@ -1,8 +1,14 @@
 import { useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
-import SignSettings, { SignatureSource } from "@app/components/tools/sign/SignSettings";
-import { DEFAULT_PARAMETERS, useSignParameters, SignParameters } from "@app/hooks/tools/sign/useSignParameters";
+import SignSettings, {
+  SignatureSource,
+} from "@app/components/tools/sign/SignSettings";
+import {
+  DEFAULT_PARAMETERS,
+  useSignParameters,
+  SignParameters,
+} from "@app/hooks/tools/sign/useSignParameters";
 import { useSignOperation } from "@app/hooks/tools/sign/useSignOperation";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
@@ -22,7 +28,12 @@ export type StampToolConfig = {
   enableApplyAction?: boolean;
 };
 
-const STAMP_TOOL_DEFAULT_SOURCES: SignatureSource[] = ["canvas", "image", "text", "saved"];
+const STAMP_TOOL_DEFAULT_SOURCES: SignatureSource[] = [
+  "canvas",
+  "image",
+  "text",
+  "saved",
+];
 
 export const createStampTool = (config: StampToolConfig) => {
   const {
@@ -37,10 +48,15 @@ export const createStampTool = (config: StampToolConfig) => {
   const StampTool = (props: BaseToolProps) => {
     const { t } = useTranslation();
     const translateTool = useCallback(
-      (key: string, defaultValue: string) => t(`${translationScope}.${key}`, defaultValue),
+      (key: string, defaultValue: string) =>
+        t(`${translationScope}.${key}`, defaultValue),
       [t, translationScope],
     );
-    const { setWorkbench, setHasUnsavedChanges, unregisterUnsavedChangesChecker } = useNavigation();
+    const {
+      setWorkbench,
+      setHasUnsavedChanges,
+      unregisterUnsavedChangesChecker,
+    } = useNavigation();
     const {
       setSignatureConfig,
       activateDrawMode,
@@ -54,19 +70,39 @@ export const createStampTool = (config: StampToolConfig) => {
       setSignaturesApplied,
     } = useSignature();
     const { consumeFiles, selectors } = useFileContext();
-    const { exportActions, getScrollState, activeFileIndex, setActiveFileIndex } = useViewer();
-    const base = useBaseTool(toolId, useSignParameters, useSignOperation, props);
+    const {
+      exportActions,
+      getScrollState,
+      activeFileIndex,
+      setActiveFileIndex,
+    } = useViewer();
+    const base = useBaseTool(
+      toolId,
+      useSignParameters,
+      useSignOperation,
+      props,
+    );
 
     const allowedSignatureTypes = allowedSignatureSources.filter(
       (source): source is SignParameters["signatureType"] => source !== "saved",
     );
-    const enforcedSignatureType = defaultSignatureType ?? allowedSignatureTypes[0] ?? DEFAULT_PARAMETERS.signatureType;
+    const enforcedSignatureType =
+      defaultSignatureType ??
+      allowedSignatureTypes[0] ??
+      DEFAULT_PARAMETERS.signatureType;
 
     useEffect(() => {
-      if (!allowedSignatureTypes.includes(base.params.parameters.signatureType)) {
+      if (
+        !allowedSignatureTypes.includes(base.params.parameters.signatureType)
+      ) {
         base.params.updateParameter("signatureType", enforcedSignatureType);
       }
-    }, [allowedSignatureTypes, base.params.parameters.signatureType, base.params.updateParameter, enforcedSignatureType]);
+    }, [
+      allowedSignatureTypes,
+      base.params.parameters.signatureType,
+      base.params.updateParameter,
+      enforcedSignatureType,
+    ]);
 
     const hasOpenedViewer = useRef(false);
     const activeModeRef = useRef<"draw" | "placement" | null>(null);
@@ -107,7 +143,8 @@ export const createStampTool = (config: StampToolConfig) => {
         setHasUnsavedChanges(false);
 
         const allFiles = selectors.getFiles();
-        const fileIndex = activeFileIndex < allFiles.length ? activeFileIndex : 0;
+        const fileIndex =
+          activeFileIndex < allFiles.length ? activeFileIndex : 0;
         const originalFile = allFiles[fileIndex];
 
         if (!originalFile) {
@@ -126,7 +163,11 @@ export const createStampTool = (config: StampToolConfig) => {
         });
 
         if (flattenResult) {
-          await consumeFiles(flattenResult.inputFileIds, [flattenResult.outputStirlingFile], [flattenResult.outputStub]);
+          await consumeFiles(
+            flattenResult.inputFileIds,
+            [flattenResult.outputStirlingFile],
+            [flattenResult.outputStub],
+          );
 
           setActiveFileIndex(0);
           setSignaturesApplied(true);
@@ -139,7 +180,9 @@ export const createStampTool = (config: StampToolConfig) => {
               case "image":
                 return Boolean(params.signatureData);
               case "text":
-                return Boolean(params.signerName && params.signerName.trim() !== "");
+                return Boolean(
+                  params.signerName && params.signerName.trim() !== "",
+                );
               default:
                 return false;
             }
@@ -232,7 +275,8 @@ export const createStampTool = (config: StampToolConfig) => {
   StampToolComponent.tool = () => useSignOperation;
   StampToolComponent.getDefaultParameters = () => ({
     ...DEFAULT_PARAMETERS,
-    signatureType: config.defaultSignatureType ?? DEFAULT_PARAMETERS.signatureType,
+    signatureType:
+      config.defaultSignatureType ?? DEFAULT_PARAMETERS.signatureType,
   });
 
   return StampToolComponent;

@@ -1,5 +1,8 @@
 import { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
-import { createChildStub, generateProcessedFileMetadata } from "@app/contexts/file/fileActions";
+import {
+  createChildStub,
+  generateProcessedFileMetadata,
+} from "@app/contexts/file/fileActions";
 import { createStirlingFile } from "@app/types/fileContext";
 import { ToolId } from "@app/types/toolId";
 

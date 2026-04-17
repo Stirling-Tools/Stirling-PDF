@@ -1,13 +1,32 @@
 import { useMemo, useState } from "react";
 import type React from "react";
 import { useTranslation } from "react-i18next";
-import { Text, Group, ActionIcon, Stack, Slider, Box, Tooltip as MantineTooltip, Button, Tooltip, Paper } from "@mantine/core";
+import {
+  Text,
+  Group,
+  ActionIcon,
+  Stack,
+  Slider,
+  Box,
+  Tooltip as MantineTooltip,
+  Button,
+  Tooltip,
+  Paper,
+} from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { ColorPicker, ColorSwatchButton } from "@app/components/annotation/shared/ColorPicker";
+import {
+  ColorPicker,
+  ColorSwatchButton,
+} from "@app/components/annotation/shared/ColorPicker";
 import { ImageUploader } from "@app/components/annotation/shared/ImageUploader";
 import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
 import { DrawingControls } from "@app/components/annotation/shared/DrawingControls";
-import type { AnnotationToolId, AnnotationAPI, SignatureAPI, AnnotationObject } from "@app/components/viewer/viewerTypes";
+import type {
+  AnnotationToolId,
+  AnnotationAPI,
+  SignatureAPI,
+  AnnotationObject,
+} from "@app/components/viewer/viewerTypes";
 import type { ViewerContextType } from "@app/contexts/ViewerContext";
 import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import type { BuildToolOptionsExtras } from "@app/tools/annotate/useAnnotationStyleState";
@@ -62,7 +81,10 @@ interface StyleActions {
   setShapeThickness: (value: number) => void;
 }
 
-type BuildToolOptionsFn = (toolId: AnnotationToolId, extras?: BuildToolOptionsExtras) => Record<string, unknown>;
+type BuildToolOptionsFn = (
+  toolId: AnnotationToolId,
+  extras?: BuildToolOptionsExtras,
+) => Record<string, unknown>;
 
 type ColorTarget =
   | "ink"
@@ -85,7 +107,9 @@ interface AnnotationPanelProps {
   styleActions: StyleActions;
   getActiveColor: (tool: AnnotationToolId) => string;
   buildToolOptions: BuildToolOptionsFn;
-  deriveToolFromAnnotation: (annotation: AnnotationObject | null | undefined) => AnnotationToolId | undefined;
+  deriveToolFromAnnotation: (
+    annotation: AnnotationObject | null | undefined,
+  ) => AnnotationToolId | undefined;
   selectedAnn: { object: AnnotationObject } | null;
   selectedTextDraft: string;
   setSelectedTextDraft: (text: string) => void;
@@ -96,12 +120,16 @@ interface AnnotationPanelProps {
   viewerContext: ViewerContextType | null;
   setPlacementMode: (value: boolean) => void;
   setSignatureConfig: (config: SignParameters | null) => void;
-  computeStampDisplaySize: (natural: { width: number; height: number } | null) => { width: number; height: number };
+  computeStampDisplaySize: (
+    natural: { width: number; height: number } | null,
+  ) => { width: number; height: number };
   stampImageData?: string;
   setStampImageData: (value: string | undefined) => void;
   stampImageSize: { width: number; height: number } | null;
   setStampImageSize: (value: { width: number; height: number } | null) => void;
-  setPlacementPreviewSize: (value: { width: number; height: number } | null) => void;
+  setPlacementPreviewSize: (
+    value: { width: number; height: number } | null,
+  ) => void;
   undo: () => void;
   redo: () => void;
   historyAvailability: { canUndo: boolean; canRedo: boolean };
@@ -190,51 +218,118 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
     setShapeThickness,
   } = styleActions;
 
-  const textMarkupTools: { id: AnnotationToolId; label: string; icon: string }[] = [
-    { id: "highlight", label: t("annotation.highlight", "Highlight"), icon: "highlight" },
-    { id: "underline", label: t("annotation.underline", "Underline"), icon: "format-underlined" },
-    { id: "strikeout", label: t("annotation.strikeout", "Strikeout"), icon: "strikethrough-s" },
-    { id: "squiggly", label: t("annotation.squiggly", "Squiggly"), icon: "show-chart" },
+  const textMarkupTools: {
+    id: AnnotationToolId;
+    label: string;
+    icon: string;
+  }[] = [
+    {
+      id: "highlight",
+      label: t("annotation.highlight", "Highlight"),
+      icon: "highlight",
+    },
+    {
+      id: "underline",
+      label: t("annotation.underline", "Underline"),
+      icon: "format-underlined",
+    },
+    {
+      id: "strikeout",
+      label: t("annotation.strikeout", "Strikeout"),
+      icon: "strikethrough-s",
+    },
+    {
+      id: "squiggly",
+      label: t("annotation.squiggly", "Squiggly"),
+      icon: "show-chart",
+    },
   ];
 
-  const drawingTools: { id: AnnotationToolId; label: string; icon: string }[] = [
-    { id: "ink", label: t("annotation.pen", "Pen"), icon: "edit" },
-    { id: "inkHighlighter", label: t("annotation.freehandHighlighter", "Freehand Highlighter"), icon: "brush" },
-  ];
+  const drawingTools: { id: AnnotationToolId; label: string; icon: string }[] =
+    [
+      { id: "ink", label: t("annotation.pen", "Pen"), icon: "edit" },
+      {
+        id: "inkHighlighter",
+        label: t("annotation.freehandHighlighter", "Freehand Highlighter"),
+        icon: "brush",
+      },
+    ];
 
   const shapeTools: { id: AnnotationToolId; label: string; icon: string }[] = [
-    { id: "square", label: t("annotation.square", "Square"), icon: "crop-square" },
-    { id: "circle", label: t("annotation.circle", "Circle"), icon: "radio-button-unchecked" },
+    {
+      id: "square",
+      label: t("annotation.square", "Square"),
+      icon: "crop-square",
+    },
+    {
+      id: "circle",
+      label: t("annotation.circle", "Circle"),
+      icon: "radio-button-unchecked",
+    },
     { id: "line", label: t("annotation.line", "Line"), icon: "show-chart" },
-    { id: "polygon", label: t("annotation.polygon", "Polygon"), icon: "change-history" },
+    {
+      id: "polygon",
+      label: t("annotation.polygon", "Polygon"),
+      icon: "change-history",
+    },
   ];
 
-  const commentTools: { id: AnnotationToolId; label: string; icon: string }[] = [
-    { id: "textComment", label: t("annotation.comment", "Comment"), icon: "comment" },
-    { id: "insertText", label: t("annotation.insertText", "Insert Text"), icon: "add-comment" },
-    { id: "replaceText", label: t("annotation.replaceText", "Replace Text"), icon: "find-replace" },
-  ];
+  const commentTools: { id: AnnotationToolId; label: string; icon: string }[] =
+    [
+      {
+        id: "textComment",
+        label: t("annotation.comment", "Comment"),
+        icon: "comment",
+      },
+      {
+        id: "insertText",
+        label: t("annotation.insertText", "Insert Text"),
+        icon: "add-comment",
+      },
+      {
+        id: "replaceText",
+        label: t("annotation.replaceText", "Replace Text"),
+        icon: "find-replace",
+      },
+    ];
 
   const otherTools: { id: AnnotationToolId; label: string; icon: string }[] = [
-    { id: "text", label: t("annotation.text", "Text box"), icon: "text-fields" },
+    {
+      id: "text",
+      label: t("annotation.text", "Text box"),
+      icon: "text-fields",
+    },
     { id: "note", label: t("annotation.note", "Note"), icon: "sticky-note-2" },
-    { id: "stamp", label: t("annotation.stamp", "Add Image"), icon: "add-photo-alternate" },
+    {
+      id: "stamp",
+      label: t("annotation.stamp", "Add Image"),
+      icon: "add-photo-alternate",
+    },
   ];
 
   const activeColor = useMemo(
-    () => (colorPickerTarget ? getActiveColor(colorPickerTarget as AnnotationToolId) : "#000000"),
+    () =>
+      colorPickerTarget
+        ? getActiveColor(colorPickerTarget as AnnotationToolId)
+        : "#000000",
     [colorPickerTarget, getActiveColor],
   );
 
   const annotationsVisible = viewerContext?.isAnnotationsVisible ?? true;
 
-  const renderToolButtons = (tools: { id: AnnotationToolId; label: string; icon: string }[]) => (
+  const renderToolButtons = (
+    tools: { id: AnnotationToolId; label: string; icon: string }[],
+  ) => (
     <Group gap="xs">
       {tools.map((tool) => (
         <MantineTooltip key={tool.id} label={tool.label} withArrow>
           <ActionIcon
-            variant={activeTool === tool.id && annotationsVisible ? "filled" : "subtle"}
-            color={activeTool === tool.id && annotationsVisible ? "blue" : undefined}
+            variant={
+              activeTool === tool.id && annotationsVisible ? "filled" : "subtle"
+            }
+            color={
+              activeTool === tool.id && annotationsVisible ? "blue" : undefined
+            }
             radius="md"
             onClick={() => activateAnnotationTool(tool.id)}
             disabled={!annotationsVisible}
@@ -271,17 +366,25 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
               onImageChange={async (file) => {
                 if (file) {
                   try {
-                    const dataUrl: string = await new Promise((resolve, reject) => {
-                      const reader = new FileReader();
-                      reader.onload = () => resolve(reader.result as string);
-                      reader.onerror = reject;
-                      reader.readAsDataURL(file);
-                    });
+                    const dataUrl: string = await new Promise(
+                      (resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result as string);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                      },
+                    );
 
-                    const naturalSize = await new Promise<{ width: number; height: number } | null>((resolve) => {
+                    const naturalSize = await new Promise<{
+                      width: number;
+                      height: number;
+                    } | null>((resolve) => {
                       const img = new Image();
                       img.onload = () =>
-                        resolve({ width: img.naturalWidth || img.width, height: img.naturalHeight || img.height });
+                        resolve({
+                          width: img.naturalWidth || img.width,
+                          height: img.naturalHeight || img.height,
+                        });
                       img.onerror = () => resolve(null);
                       img.src = dataUrl;
                     });
@@ -303,8 +406,14 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                         stampImageData: dataUrl,
                         stampImageSize: displaySize,
                       });
-                      annotationApiRef?.current?.setAnnotationStyle?.("stamp", stampOptions);
-                      annotationApiRef?.current?.activateAnnotationTool?.("stamp", stampOptions);
+                      annotationApiRef?.current?.setAnnotationStyle?.(
+                        "stamp",
+                        stampOptions,
+                      );
+                      annotationApiRef?.current?.activateAnnotationTool?.(
+                        "stamp",
+                        stampOptions,
+                      );
                     }, 150);
                   } catch (err) {
                     console.error("Failed to load stamp image", err);
@@ -354,7 +463,8 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                   color={
                     activeTool === "ink"
                       ? inkColor
-                      : activeTool === "highlight" || activeTool === "inkHighlighter"
+                      : activeTool === "highlight" ||
+                          activeTool === "inkHighlighter"
                         ? highlightColor
                         : activeTool === "underline"
                           ? underlineColor
@@ -362,7 +472,12 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                             ? strikeoutColor
                             : activeTool === "squiggly"
                               ? squigglyColor
-                              : ["square", "circle", "line", "polygon"].includes(activeTool)
+                              : [
+                                    "square",
+                                    "circle",
+                                    "line",
+                                    "polygon",
+                                  ].includes(activeTool)
                                 ? shapeStrokeColor
                                 : textColor
                   }
@@ -371,7 +486,8 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                     const target: ColorTarget =
                       activeTool === "ink"
                         ? "ink"
-                        : activeTool === "highlight" || activeTool === "inkHighlighter"
+                        : activeTool === "highlight" ||
+                            activeTool === "inkHighlighter"
                           ? "highlight"
                           : activeTool === "underline"
                             ? "underline"
@@ -379,7 +495,12 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                               ? "strikeout"
                               : activeTool === "squiggly"
                                 ? "squiggly"
-                                : ["square", "circle", "line", "polygon"].includes(activeTool)
+                                : [
+                                      "square",
+                                      "circle",
+                                      "line",
+                                      "polygon",
+                                    ].includes(activeTool)
                                   ? "shapeStroke"
                                   : "text";
                     setColorPickerTarget(target);
@@ -409,16 +530,27 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                 <Text size="xs" c="dimmed" mb={4}>
                   {t("annotation.strokeWidth", "Width")}
                 </Text>
-                <Slider min={1} max={12} value={inkWidth} onChange={setInkWidth} />
+                <Slider
+                  min={1}
+                  max={12}
+                  value={inkWidth}
+                  onChange={setInkWidth}
+                />
               </Box>
             )}
 
-            {(activeTool === "highlight" || activeTool === "inkHighlighter") && (
+            {(activeTool === "highlight" ||
+              activeTool === "inkHighlighter") && (
               <Box>
                 <Text size="xs" c="dimmed" mb={4}>
                   {t("annotation.opacity", "Opacity")}
                 </Text>
-                <Slider min={10} max={100} value={highlightOpacity} onChange={setHighlightOpacity} />
+                <Slider
+                  min={10}
+                  max={100}
+                  value={highlightOpacity}
+                  onChange={setHighlightOpacity}
+                />
               </Box>
             )}
 
@@ -427,7 +559,12 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                 <Text size="xs" c="dimmed" mb={4}>
                   {t("annotation.opacity", "Opacity")}
                 </Text>
-                <Slider min={10} max={100} value={underlineOpacity} onChange={setUnderlineOpacity} />
+                <Slider
+                  min={10}
+                  max={100}
+                  value={underlineOpacity}
+                  onChange={setUnderlineOpacity}
+                />
               </Box>
             )}
 
@@ -436,7 +573,12 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                 <Text size="xs" c="dimmed" mb={4}>
                   {t("annotation.strokeWidth", "Width")}
                 </Text>
-                <Slider min={1} max={20} value={freehandHighlighterWidth} onChange={setFreehandHighlighterWidth} />
+                <Slider
+                  min={1}
+                  max={20}
+                  value={freehandHighlighterWidth}
+                  onChange={setFreehandHighlighterWidth}
+                />
               </Box>
             )}
 
@@ -446,7 +588,12 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                   <Text size="xs" c="dimmed" mb={4}>
                     {t("annotation.fontSize", "Font size")}
                   </Text>
-                  <Slider min={8} max={32} value={textSize} onChange={setTextSize} />
+                  <Slider
+                    min={8}
+                    max={32}
+                    value={textSize}
+                    onChange={setTextSize}
+                  />
                 </Box>
                 <Box>
                   <Text size="xs" c="dimmed" mb={4}>
@@ -458,21 +605,35 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                       onClick={() => setTextAlignment("left")}
                       size="md"
                     >
-                      <LocalIcon icon="format-align-left" width={18} height={18} />
+                      <LocalIcon
+                        icon="format-align-left"
+                        width={18}
+                        height={18}
+                      />
                     </ActionIcon>
                     <ActionIcon
-                      variant={textAlignment === "center" ? "filled" : "default"}
+                      variant={
+                        textAlignment === "center" ? "filled" : "default"
+                      }
                       onClick={() => setTextAlignment("center")}
                       size="md"
                     >
-                      <LocalIcon icon="format-align-center" width={18} height={18} />
+                      <LocalIcon
+                        icon="format-align-center"
+                        width={18}
+                        height={18}
+                      />
                     </ActionIcon>
                     <ActionIcon
                       variant={textAlignment === "right" ? "filled" : "default"}
                       onClick={() => setTextAlignment("right")}
                       size="md"
                     >
-                      <LocalIcon icon="format-align-right" width={18} height={18} />
+                      <LocalIcon
+                        icon="format-align-right"
+                        width={18}
+                        height={18}
+                      />
                     </ActionIcon>
                   </Group>
                 </Box>
@@ -494,12 +655,22 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                       variant={textBackgroundColor ? "light" : "default"}
                       onClick={() => {
                         setTextBackgroundColor("");
-                        annotationApiRef?.current?.setAnnotationStyle?.("text", buildToolOptions("text"));
-                        if (selectedAnn?.object?.type === 3 && deriveToolFromAnnotation(selectedAnn.object) !== "note") {
+                        annotationApiRef?.current?.setAnnotationStyle?.(
+                          "text",
+                          buildToolOptions("text"),
+                        );
+                        if (
+                          selectedAnn?.object?.type === 3 &&
+                          deriveToolFromAnnotation(selectedAnn.object) !==
+                            "note"
+                        ) {
                           annotationApiRef?.current?.updateAnnotation?.(
                             selectedAnn.object?.pageIndex ?? 0,
                             selectedAnn.object.id as string,
-                            { backgroundColor: "transparent", fillColor: "transparent" },
+                            {
+                              backgroundColor: "transparent",
+                              fillColor: "transparent",
+                            },
                           );
                         }
                       }}
@@ -532,12 +703,21 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                     variant={noteBackgroundColor ? "light" : "default"}
                     onClick={() => {
                       setNoteBackgroundColor("");
-                      annotationApiRef?.current?.setAnnotationStyle?.("note", buildToolOptions("note"));
-                      if (selectedAnn?.object?.type === 3 && deriveToolFromAnnotation(selectedAnn.object) === "note") {
+                      annotationApiRef?.current?.setAnnotationStyle?.(
+                        "note",
+                        buildToolOptions("note"),
+                      );
+                      if (
+                        selectedAnn?.object?.type === 3 &&
+                        deriveToolFromAnnotation(selectedAnn.object) === "note"
+                      ) {
                         annotationApiRef?.current?.updateAnnotation?.(
                           selectedAnn.object?.pageIndex ?? 0,
                           selectedAnn.object.id as string,
-                          { backgroundColor: "transparent", fillColor: "transparent" },
+                          {
+                            backgroundColor: "transparent",
+                            fillColor: "transparent",
+                          },
                         );
                       }
                     }}
@@ -573,7 +753,12 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                       <Text size="xs" c="dimmed" mb={4}>
                         {t("annotation.strokeWidth", "Width")}
                       </Text>
-                      <Slider min={1} max={12} value={shapeThickness} onChange={setShapeThickness} />
+                      <Slider
+                        min={1}
+                        max={12}
+                        value={shapeThickness}
+                        onChange={setShapeThickness}
+                      />
                     </>
                   ) : (
                     <Group gap="xs" align="flex-end">
@@ -581,12 +766,19 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                         <Text size="xs" c="dimmed" mb={4}>
                           {t("annotation.strokeWidth", "Stroke")}
                         </Text>
-                        <Slider min={0} max={12} value={shapeThickness} onChange={setShapeThickness} />
+                        <Slider
+                          min={0}
+                          max={12}
+                          value={shapeThickness}
+                          onChange={setShapeThickness}
+                        />
                       </Box>
                       <Button
                         size="xs"
                         variant={shapeThickness === 0 ? "filled" : "light"}
-                        onClick={() => setShapeThickness(shapeThickness === 0 ? 1 : 0)}
+                        onClick={() =>
+                          setShapeThickness(shapeThickness === 0 ? 1 : 0)
+                        }
                       >
                         {shapeThickness === 0
                           ? t("annotation.borderOff", "Border: Off")
@@ -643,48 +835,93 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
         if (colorPickerTarget === "highlight") {
           setHighlightOpacity(opacity);
           if (activeTool === "highlight" || activeTool === "inkHighlighter") {
-            annotationApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
+            annotationApiRef?.current?.setAnnotationStyle?.(
+              activeTool,
+              buildToolOptions(activeTool),
+            );
           }
-          if (selectedAnn?.object?.id && (selectedAnn.object?.type === 9 || selectedAnn.object?.type === 15)) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, {
-              opacity: opacity / 100,
-            });
+          if (
+            selectedAnn?.object?.id &&
+            (selectedAnn.object?.type === 9 || selectedAnn.object?.type === 15)
+          ) {
+            annotationApiRef?.current?.updateAnnotation?.(
+              selectedAnn.object.pageIndex ?? 0,
+              selectedAnn.object.id as string,
+              {
+                opacity: opacity / 100,
+              },
+            );
           }
         } else if (colorPickerTarget === "underline") {
           setUnderlineOpacity(opacity);
-          annotationApiRef?.current?.setAnnotationStyle?.("underline", buildToolOptions("underline"));
+          annotationApiRef?.current?.setAnnotationStyle?.(
+            "underline",
+            buildToolOptions("underline"),
+          );
           if (selectedAnn?.object?.id && selectedAnn.object?.type === 10) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, {
-              opacity: opacity / 100,
-            });
+            annotationApiRef?.current?.updateAnnotation?.(
+              selectedAnn.object.pageIndex ?? 0,
+              selectedAnn.object.id as string,
+              {
+                opacity: opacity / 100,
+              },
+            );
           }
         } else if (colorPickerTarget === "strikeout") {
           setStrikeoutOpacity(opacity);
-          annotationApiRef?.current?.setAnnotationStyle?.("strikeout", buildToolOptions("strikeout"));
+          annotationApiRef?.current?.setAnnotationStyle?.(
+            "strikeout",
+            buildToolOptions("strikeout"),
+          );
           if (selectedAnn?.object?.id && selectedAnn.object?.type === 12) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, {
-              opacity: opacity / 100,
-            });
+            annotationApiRef?.current?.updateAnnotation?.(
+              selectedAnn.object.pageIndex ?? 0,
+              selectedAnn.object.id as string,
+              {
+                opacity: opacity / 100,
+              },
+            );
           }
         } else if (colorPickerTarget === "squiggly") {
           setSquigglyOpacity(opacity);
-          annotationApiRef?.current?.setAnnotationStyle?.("squiggly", buildToolOptions("squiggly"));
+          annotationApiRef?.current?.setAnnotationStyle?.(
+            "squiggly",
+            buildToolOptions("squiggly"),
+          );
           if (selectedAnn?.object?.id && selectedAnn.object?.type === 11) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, {
-              opacity: opacity / 100,
-            });
+            annotationApiRef?.current?.updateAnnotation?.(
+              selectedAnn.object.pageIndex ?? 0,
+              selectedAnn.object.id as string,
+              {
+                opacity: opacity / 100,
+              },
+            );
           }
         } else if (colorPickerTarget === "shapeStroke") {
           setShapeStrokeOpacity(opacity);
-          const shapeToolsList = ["square", "circle", "polygon"] as AnnotationToolId[];
+          const shapeToolsList = [
+            "square",
+            "circle",
+            "polygon",
+          ] as AnnotationToolId[];
           if (shapeToolsList.includes(activeTool)) {
-            annotationApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
+            annotationApiRef?.current?.setAnnotationStyle?.(
+              activeTool,
+              buildToolOptions(activeTool),
+            );
           }
         } else if (colorPickerTarget === "shapeFill") {
           setShapeFillOpacity(opacity);
-          const fillShapeTools = ["square", "circle", "polygon"] as AnnotationToolId[];
+          const fillShapeTools = [
+            "square",
+            "circle",
+            "polygon",
+          ] as AnnotationToolId[];
           if (fillShapeTools.includes(activeTool)) {
-            annotationApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
+            annotationApiRef?.current?.setAnnotationStyle?.(
+              activeTool,
+              buildToolOptions(activeTool),
+            );
           }
         }
       }}
@@ -692,53 +929,97 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
         if (colorPickerTarget === "ink") {
           setInkColor(color);
           if (activeTool === "ink") {
-            annotationApiRef?.current?.setAnnotationStyle?.("ink", buildToolOptions("ink"));
+            annotationApiRef?.current?.setAnnotationStyle?.(
+              "ink",
+              buildToolOptions("ink"),
+            );
           }
           if (selectedAnn?.object?.type === 15) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, {
-              color,
-            });
+            annotationApiRef?.current?.updateAnnotation?.(
+              selectedAnn.object.pageIndex ?? 0,
+              selectedAnn.object.id as string,
+              {
+                color,
+              },
+            );
           }
         } else if (colorPickerTarget === "highlight") {
           setHighlightColor(color);
           if (activeTool === "highlight" || activeTool === "inkHighlighter") {
-            annotationApiRef?.current?.setAnnotationStyle?.(activeTool, buildToolOptions(activeTool));
+            annotationApiRef?.current?.setAnnotationStyle?.(
+              activeTool,
+              buildToolOptions(activeTool),
+            );
           }
-          if (selectedAnn?.object?.type === 9 || selectedAnn?.object?.type === 15) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, {
-              color,
-            });
+          if (
+            selectedAnn?.object?.type === 9 ||
+            selectedAnn?.object?.type === 15
+          ) {
+            annotationApiRef?.current?.updateAnnotation?.(
+              selectedAnn.object.pageIndex ?? 0,
+              selectedAnn.object.id as string,
+              {
+                color,
+              },
+            );
           }
         } else if (colorPickerTarget === "underline") {
           setUnderlineColor(color);
-          annotationApiRef?.current?.setAnnotationStyle?.("underline", buildToolOptions("underline"));
+          annotationApiRef?.current?.setAnnotationStyle?.(
+            "underline",
+            buildToolOptions("underline"),
+          );
           if (selectedAnn?.object?.id) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, {
-              color,
-            });
+            annotationApiRef?.current?.updateAnnotation?.(
+              selectedAnn.object.pageIndex ?? 0,
+              selectedAnn.object.id as string,
+              {
+                color,
+              },
+            );
           }
         } else if (colorPickerTarget === "strikeout") {
           setStrikeoutColor(color);
-          annotationApiRef?.current?.setAnnotationStyle?.("strikeout", buildToolOptions("strikeout"));
+          annotationApiRef?.current?.setAnnotationStyle?.(
+            "strikeout",
+            buildToolOptions("strikeout"),
+          );
           if (selectedAnn?.object?.id) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, {
-              color,
-            });
+            annotationApiRef?.current?.updateAnnotation?.(
+              selectedAnn.object.pageIndex ?? 0,
+              selectedAnn.object.id as string,
+              {
+                color,
+              },
+            );
           }
         } else if (colorPickerTarget === "squiggly") {
           setSquigglyColor(color);
-          annotationApiRef?.current?.setAnnotationStyle?.("squiggly", buildToolOptions("squiggly"));
+          annotationApiRef?.current?.setAnnotationStyle?.(
+            "squiggly",
+            buildToolOptions("squiggly"),
+          );
           if (selectedAnn?.object?.id) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, {
-              color,
-            });
+            annotationApiRef?.current?.updateAnnotation?.(
+              selectedAnn.object.pageIndex ?? 0,
+              selectedAnn.object.id as string,
+              {
+                color,
+              },
+            );
           }
         } else if (colorPickerTarget === "textBackground") {
           setTextBackgroundColor(color);
           if (activeTool === "text") {
-            annotationApiRef?.current?.setAnnotationStyle?.("text", buildToolOptions("text"));
+            annotationApiRef?.current?.setAnnotationStyle?.(
+              "text",
+              buildToolOptions("text"),
+            );
           }
-          if (selectedAnn?.object?.type === 3 && deriveToolFromAnnotation(selectedAnn.object) !== "note") {
+          if (
+            selectedAnn?.object?.type === 3 &&
+            deriveToolFromAnnotation(selectedAnn.object) !== "note"
+          ) {
             annotationApiRef?.current?.updateAnnotation?.(
               selectedAnn.object?.pageIndex ?? 0,
               selectedAnn.object.id as string,
@@ -748,9 +1029,15 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
         } else if (colorPickerTarget === "noteBackground") {
           setNoteBackgroundColor(color);
           if (activeTool === "note") {
-            annotationApiRef?.current?.setAnnotationStyle?.("note", buildToolOptions("note"));
+            annotationApiRef?.current?.setAnnotationStyle?.(
+              "note",
+              buildToolOptions("note"),
+            );
           }
-          if (selectedAnn?.object?.type === 3 && deriveToolFromAnnotation(selectedAnn.object) === "note") {
+          if (
+            selectedAnn?.object?.type === 3 &&
+            deriveToolFromAnnotation(selectedAnn.object) === "note"
+          ) {
             annotationApiRef?.current?.updateAnnotation?.(
               selectedAnn.object?.pageIndex ?? 0,
               selectedAnn.object.id as string,
@@ -760,45 +1047,85 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
         } else {
           setTextColor(color);
           if (activeTool === "text") {
-            annotationApiRef?.current?.setAnnotationStyle?.("text", buildToolOptions("text"));
+            annotationApiRef?.current?.setAnnotationStyle?.(
+              "text",
+              buildToolOptions("text"),
+            );
           }
-          if (selectedAnn?.object?.type === 3 || selectedAnn?.object?.type === 1) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, {
-              textColor: color,
-              color,
-            });
+          if (
+            selectedAnn?.object?.type === 3 ||
+            selectedAnn?.object?.type === 1
+          ) {
+            annotationApiRef?.current?.updateAnnotation?.(
+              selectedAnn.object.pageIndex ?? 0,
+              selectedAnn.object.id as string,
+              {
+                textColor: color,
+                color,
+              },
+            );
           }
         }
 
-        const shapeToolsList = ["square", "circle", "line", "lineArrow", "polyline", "polygon"] as AnnotationToolId[];
-        const fillShapeTools = ["square", "circle", "polygon"] as AnnotationToolId[];
+        const shapeToolsList = [
+          "square",
+          "circle",
+          "line",
+          "lineArrow",
+          "polyline",
+          "polygon",
+        ] as AnnotationToolId[];
+        const fillShapeTools = [
+          "square",
+          "circle",
+          "polygon",
+        ] as AnnotationToolId[];
 
         if (colorPickerTarget === "shapeStroke") {
           setShapeStrokeColor(color);
-          const styleTool = shapeToolsList.includes(activeTool) ? activeTool : null;
+          const styleTool = shapeToolsList.includes(activeTool)
+            ? activeTool
+            : null;
           if (styleTool) {
-            annotationApiRef?.current?.setAnnotationStyle?.(styleTool, buildToolOptions(styleTool));
+            annotationApiRef?.current?.setAnnotationStyle?.(
+              styleTool,
+              buildToolOptions(styleTool),
+            );
           }
           if (selectedAnn?.object?.id) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, {
-              strokeColor: color,
-              color: selectedAnn.object?.color ?? shapeFillColor,
-              borderWidth: shapeThickness,
-            });
+            annotationApiRef?.current?.updateAnnotation?.(
+              selectedAnn.object.pageIndex ?? 0,
+              selectedAnn.object.id as string,
+              {
+                strokeColor: color,
+                color: selectedAnn.object?.color ?? shapeFillColor,
+                borderWidth: shapeThickness,
+              },
+            );
           }
         }
         if (colorPickerTarget === "shapeFill") {
           setShapeFillColor(color);
-          const styleTool = fillShapeTools.includes(activeTool) ? activeTool : null;
+          const styleTool = fillShapeTools.includes(activeTool)
+            ? activeTool
+            : null;
           if (styleTool) {
-            annotationApiRef?.current?.setAnnotationStyle?.(styleTool, buildToolOptions(styleTool));
+            annotationApiRef?.current?.setAnnotationStyle?.(
+              styleTool,
+              buildToolOptions(styleTool),
+            );
           }
           if (selectedAnn?.object?.id) {
-            annotationApiRef?.current?.updateAnnotation?.(selectedAnn.object.pageIndex ?? 0, selectedAnn.object.id as string, {
-              color,
-              strokeColor: selectedAnn.object?.strokeColor ?? shapeStrokeColor,
-              borderWidth: shapeThickness,
-            });
+            annotationApiRef?.current?.updateAnnotation?.(
+              selectedAnn.object.pageIndex ?? 0,
+              selectedAnn.object.id as string,
+              {
+                color,
+                strokeColor:
+                  selectedAnn.object?.strokeColor ?? shapeStrokeColor,
+                borderWidth: shapeThickness,
+              },
+            );
           }
         }
       }}
@@ -809,9 +1136,15 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
   return (
     <Stack gap="md">
       <Group gap="xs" wrap="nowrap" align="center">
-        <Tooltip label={t("annotation.selectAndMove", "Select and edit annotations")}>
+        <Tooltip
+          label={t("annotation.selectAndMove", "Select and edit annotations")}
+        >
           <ActionIcon
-            variant={activeTool === "select" && annotationsVisible ? "filled" : "default"}
+            variant={
+              activeTool === "select" && annotationsVisible
+                ? "filled"
+                : "default"
+            }
             size="lg"
             disabled={!annotationsVisible}
             onClick={() => {

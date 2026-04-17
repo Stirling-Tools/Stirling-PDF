@@ -40,7 +40,8 @@ export interface MachineInfo {
 }
 
 export class UpdateService {
-  private readonly baseUrl = "https://supabase.stirling.com/functions/v1/updates";
+  private readonly baseUrl =
+    "https://supabase.stirling.com/functions/v1/updates";
 
   /**
    * Compare two version strings
@@ -69,13 +70,21 @@ export class UpdateService {
    */
   getDownloadUrl(machineInfo: MachineInfo): string | null {
     // Only show download for non-Docker installations
-    if (machineInfo.machineType === "Docker" || machineInfo.machineType === "Kubernetes") {
+    if (
+      machineInfo.machineType === "Docker" ||
+      machineInfo.machineType === "Kubernetes"
+    ) {
       return null;
     }
 
     // Determine file based on machine type and security
     if (machineInfo.machineType === "Server-jar") {
-      return DOWNLOAD_BASE_URL + (machineInfo.activeSecurity ? "Stirling-PDF-with-login.jar" : "Stirling-PDF.jar");
+      return (
+        DOWNLOAD_BASE_URL +
+        (machineInfo.activeSecurity
+          ? "Stirling-PDF-with-login.jar"
+          : "Stirling-PDF.jar")
+      );
     }
 
     // Client installations
@@ -98,7 +107,10 @@ export class UpdateService {
   /**
    * Fetch update summary from API
    */
-  async getUpdateSummary(currentVersion: string, machineInfo: MachineInfo): Promise<UpdateSummary | null> {
+  async getUpdateSummary(
+    currentVersion: string,
+    machineInfo: MachineInfo,
+  ): Promise<UpdateSummary | null> {
     // Map Java License enum to API types
     let type = "normal";
     if (machineInfo.licenseType === "SERVER") {
@@ -118,7 +130,10 @@ export class UpdateService {
         const data = await response.json();
         return data as UpdateSummary;
       } else {
-        console.error("Failed to fetch update summary from Supabase:", response.status);
+        console.error(
+          "Failed to fetch update summary from Supabase:",
+          response.status,
+        );
         return null;
       }
     } catch (error) {
@@ -130,7 +145,10 @@ export class UpdateService {
   /**
    * Fetch full update information with detailed version info
    */
-  async getFullUpdateInfo(currentVersion: string, machineInfo: MachineInfo): Promise<FullUpdateInfo | null> {
+  async getFullUpdateInfo(
+    currentVersion: string,
+    machineInfo: MachineInfo,
+  ): Promise<FullUpdateInfo | null> {
     // Map Java License enum to API types
     let type = "normal";
     if (machineInfo.licenseType === "SERVER") {
@@ -150,7 +168,10 @@ export class UpdateService {
         const data = await response.json();
         return data as FullUpdateInfo;
       } else {
-        console.error("Failed to fetch full update info from Supabase:", response.status);
+        console.error(
+          "Failed to fetch full update info from Supabase:",
+          response.status,
+        );
         return null;
       }
     } catch (error) {
@@ -163,7 +184,8 @@ export class UpdateService {
    * Get current version from GitHub build.gradle as fallback
    */
   async getCurrentVersionFromGitHub(): Promise<string> {
-    const url = "https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/master/build.gradle";
+    const url =
+      "https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/master/build.gradle";
 
     try {
       const response = await fetch(url);

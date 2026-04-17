@@ -16,7 +16,10 @@ import {
 } from "@app/utils/convertUtils";
 import { detectFileExtension as detectFileExtensionUtil } from "@app/utils/fileUtils";
 import { BaseParameters } from "@app/types/parameters";
-import { useBaseParameters, BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
+import {
+  useBaseParameters,
+  BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
 import { useCallback, useMemo } from "react";
 
 export interface ConvertParameters extends BaseParameters {
@@ -75,7 +78,9 @@ export interface ConvertParameters extends BaseParameters {
 
 export interface ConvertParametersHook extends BaseParametersHook<ConvertParameters> {
   getEndpoint: () => string;
-  getAvailableToExtensions: (fromExtension: string) => Array<{ value: string; label: string; group: string }>;
+  getAvailableToExtensions: (
+    fromExtension: string,
+  ) => Array<{ value: string; label: string; group: string }>;
   analyzeFileTypes: (files: Array<{ name: string }>) => void;
 }
 
@@ -156,7 +161,8 @@ const validateParameters = (params: ConvertParameters): boolean => {
 };
 
 const getEndpointName = (params: ConvertParameters): string => {
-  const { fromExtension, toExtension, isSmartDetection, smartDetectionType } = params;
+  const { fromExtension, toExtension, isSmartDetection, smartDetectionType } =
+    params;
 
   if (isSmartDetection) {
     if (smartDetectionType === "mixed") {
@@ -193,7 +199,8 @@ export const useConvertParameters = (): ConvertParametersHook => {
   const baseHook = useBaseParameters(config);
 
   const getEndpoint = () => {
-    const { fromExtension, toExtension, isSmartDetection, smartDetectionType } = baseHook.parameters;
+    const { fromExtension, toExtension, isSmartDetection, smartDetectionType } =
+      baseHook.parameters;
 
     if (isSmartDetection) {
       if (smartDetectionType === "mixed") {
@@ -225,7 +232,10 @@ export const useConvertParameters = (): ConvertParametersHook => {
         // No files - only reset smart detection, keep user's format choices
         baseHook.setParameters((prev) => {
           // Only update if something actually changed
-          if (prev.isSmartDetection === false && prev.smartDetectionType === "none") {
+          if (
+            prev.isSmartDetection === false &&
+            prev.smartDetectionType === "none"
+          ) {
             return prev; // No change needed
           }
 
@@ -243,7 +253,9 @@ export const useConvertParameters = (): ConvertParametersHook => {
         // Single file - use regular detection with smart target selection
         const detectedExt = detectFileExtensionUtil(files[0].name);
         let fromExt = detectedExt;
-        let availableTargets = detectedExt ? CONVERSION_MATRIX[detectedExt] || [] : [];
+        let availableTargets = detectedExt
+          ? CONVERSION_MATRIX[detectedExt] || []
+          : [];
 
         // If no explicit conversion exists for this file type, create a dynamic format entry
         // and fall back to 'any' conversion logic for the actual endpoint
@@ -267,7 +279,8 @@ export const useConvertParameters = (): ConvertParametersHook => {
           // 3. There's only one possible target (forced conversion)
           let newToExtension = currentToExt;
           if (!currentToExt || !isCurrentToExtValid) {
-            newToExtension = availableTargets.length === 1 ? availableTargets[0] : "";
+            newToExtension =
+              availableTargets.length === 1 ? availableTargets[0] : "";
           }
 
           const newState = {
@@ -294,7 +307,9 @@ export const useConvertParameters = (): ConvertParametersHook => {
       }
 
       // Multiple files - analyze file types
-      const extensions = files.map((file) => detectFileExtensionUtil(file.name));
+      const extensions = files.map((file) =>
+        detectFileExtensionUtil(file.name),
+      );
       const uniqueExtensions = [...new Set(extensions)];
 
       if (uniqueExtensions.length === 1) {
@@ -320,7 +335,8 @@ export const useConvertParameters = (): ConvertParametersHook => {
           // 3. There's only one possible target (forced conversion)
           let newToExtension = currentToExt;
           if (!currentToExt || !isCurrentToExtValid) {
-            newToExtension = availableTargets.length === 1 ? availableTargets[0] : "";
+            newToExtension =
+              availableTargets.length === 1 ? availableTargets[0] : "";
           }
 
           const newState = {

@@ -1,9 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { isAxiosError } from "axios";
-import { Tabs, Loader, Alert, Stack, Text, Button, Accordion } from "@mantine/core";
+import {
+  Tabs,
+  Loader,
+  Alert,
+  Stack,
+  Text,
+  Button,
+  Accordion,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import auditService, { AuditSystemStatus as AuditStatus } from "@app/services/auditService";
+import auditService, {
+  AuditSystemStatus as AuditStatus,
+} from "@app/services/auditService";
 import AuditSystemStatus from "@app/components/shared/config/configSections/audit/AuditSystemStatus";
 import AuditStatsCards from "@app/components/shared/config/configSections/audit/AuditStatsCards";
 import AuditChartsSection from "@app/components/shared/config/configSections/audit/AuditChartsSection";
@@ -27,7 +37,9 @@ const AdminAuditSection: React.FC = () => {
   const [systemStatus, setSystemStatus] = useState<AuditStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [timePeriod, setTimePeriod] = useState<"day" | "week" | "month">("week");
+  const [timePeriod, setTimePeriod] = useState<"day" | "week" | "month">(
+    "week",
+  );
 
   useEffect(() => {
     const fetchSystemStatus = async () => {
@@ -42,7 +54,11 @@ const AdminAuditSection: React.FC = () => {
         if (status === 403 || status === 404) {
           setError("enterprise-license-required");
         } else {
-          setError(err instanceof Error ? err.message : "Failed to load audit system status");
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Failed to load audit system status",
+          );
         }
       } finally {
         setLoading(false);
@@ -73,7 +89,14 @@ const AdminAuditSection: React.FC = () => {
 
   if (actualLoading) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "2rem 0" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "2rem 0",
+        }}
+      >
         <Loader size="lg" />
       </div>
     );
@@ -82,7 +105,10 @@ const AdminAuditSection: React.FC = () => {
   if (error) {
     if (error === "enterprise-license-required") {
       return (
-        <Alert color="blue" title={t("audit.enterpriseRequired", "Enterprise License Required")}>
+        <Alert
+          color="blue"
+          title={t("audit.enterpriseRequired", "Enterprise License Required")}
+        >
           {t(
             "audit.enterpriseRequiredMessage",
             "The audit logging system is an enterprise feature. Please upgrade to an enterprise license to access audit logs and analytics.",
@@ -91,7 +117,10 @@ const AdminAuditSection: React.FC = () => {
       );
     }
     return (
-      <Alert color="red" title={t("audit.error.title", "Error loading audit system")}>
+      <Alert
+        color="red"
+        title={t("audit.error.title", "Error loading audit system")}
+      >
         {error}
       </Alert>
     );
@@ -99,8 +128,14 @@ const AdminAuditSection: React.FC = () => {
 
   if (!systemStatus) {
     return (
-      <Alert color="yellow" title={t("audit.notAvailable", "Audit system not available")}>
-        {t("audit.notAvailableMessage", "The audit system is not configured or not available.")}
+      <Alert
+        color="yellow"
+        title={t("audit.notAvailable", "Audit system not available")}
+      >
+        {t(
+          "audit.notAvailableMessage",
+          "The audit system is not configured or not available.",
+        )}
       </Alert>
     );
   }
@@ -110,7 +145,10 @@ const AdminAuditSection: React.FC = () => {
   return (
     <Stack gap="lg">
       <LoginRequiredBanner show={!loginEnabled} />
-      <EnterpriseRequiredBanner show={!hasEnterpriseLicense} featureName={t("settings.licensingAnalytics.audit", "Audit")} />
+      <EnterpriseRequiredBanner
+        show={!hasEnterpriseLicense}
+        featureName={t("settings.licensingAnalytics.audit", "Audit")}
+      />
 
       {/* Info banner about audit settings */}
       {isEnabled && (
@@ -131,7 +169,13 @@ const AdminAuditSection: React.FC = () => {
               variant="light"
               size="xs"
               onClick={() => navigate("/settings/adminSecurity#auditLogging")}
-              rightSection={<LocalIcon icon="arrow-forward" width="0.9rem" height="0.9rem" />}
+              rightSection={
+                <LocalIcon
+                  icon="arrow-forward"
+                  width="0.9rem"
+                  height="0.9rem"
+                />
+              }
             >
               {t("audit.goToSettings", "Go to Audit Settings")}
             </Button>
@@ -161,14 +205,23 @@ const AdminAuditSection: React.FC = () => {
           <Tabs.Panel value="dashboard" pt="md">
             <Stack gap="lg">
               {/* Stats Cards - Always Visible */}
-              <AuditStatsCards loginEnabled={isEnabled} timePeriod={timePeriod} />
+              <AuditStatsCards
+                loginEnabled={isEnabled}
+                timePeriod={timePeriod}
+              />
 
               {/* Charts in Accordion - Collapsible */}
               <Accordion defaultValue={["events-over-time"]} multiple>
                 <Accordion.Item value="events-over-time">
-                  <Accordion.Control>{t("audit.charts.overTime", "Events Over Time")}</Accordion.Control>
+                  <Accordion.Control>
+                    {t("audit.charts.overTime", "Events Over Time")}
+                  </Accordion.Control>
                   <Accordion.Panel>
-                    <AuditChartsSection loginEnabled={isEnabled} timePeriod={timePeriod} onTimePeriodChange={setTimePeriod} />
+                    <AuditChartsSection
+                      loginEnabled={isEnabled}
+                      timePeriod={timePeriod}
+                      onTimePeriodChange={setTimePeriod}
+                    />
                   </Accordion.Panel>
                 </Accordion.Item>
               </Accordion>
@@ -197,8 +250,14 @@ const AdminAuditSection: React.FC = () => {
           </Tabs.Panel>
         </Tabs>
       ) : (
-        <Alert color="blue" title={t("audit.disabled", "Audit logging is disabled")}>
-          {t("audit.disabledMessage", "Enable audit logging in your application configuration to track system events.")}
+        <Alert
+          color="blue"
+          title={t("audit.disabled", "Audit logging is disabled")}
+        >
+          {t(
+            "audit.disabledMessage",
+            "Enable audit logging in your application configuration to track system events.",
+          )}
         </Alert>
       )}
     </Stack>

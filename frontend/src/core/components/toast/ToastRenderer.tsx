@@ -47,7 +47,13 @@ export default function ToastRenderer() {
       acc[key].push(t);
       return acc;
     },
-    { "top-left": [], "top-right": [], "bottom-left": [], "bottom-right": [], "bottom-center": [] },
+    {
+      "top-left": [],
+      "top-right": [],
+      "bottom-left": [],
+      "bottom-right": [],
+      "bottom-center": [],
+    },
   );
 
   return (
@@ -61,13 +67,21 @@ export default function ToastRenderer() {
                 <div className="toast-header">
                   {/* Icon */}
                   <div className="toast-icon">
-                    {t.icon ?? <LocalIcon icon={getDefaultIconName(t)} width={20} height={20} />}
+                    {t.icon ?? (
+                      <LocalIcon
+                        icon={getDefaultIconName(t)}
+                        width={20}
+                        height={20}
+                      />
+                    )}
                   </div>
 
                   {/* Title + count badge */}
                   <div className="toast-title-container">
                     <span>{t.title}</span>
-                    {typeof t.count === "number" && t.count > 1 && <span className="toast-count-badge">{t.count}</span>}
+                    {typeof t.count === "number" && t.count > 1 && (
+                      <span className="toast-count-badge">{t.count}</span>
+                    )}
                   </div>
 
                   {/* Controls */}
@@ -76,7 +90,9 @@ export default function ToastRenderer() {
                       <button
                         aria-label="Toggle details"
                         onClick={() => {
-                          const evt = new CustomEvent("toast:toggle", { detail: { id: t.id } });
+                          const evt = new CustomEvent("toast:toggle", {
+                            detail: { id: t.id },
+                          });
                           window.dispatchEvent(evt);
                         }}
                         className={`toast-button toast-expand-button ${t.isExpanded ? "toast-expand-button--expanded" : ""}`}
@@ -84,7 +100,11 @@ export default function ToastRenderer() {
                         <LocalIcon icon="expand-more-rounded" />
                       </button>
                     )}
-                    <button aria-label="Dismiss" onClick={() => dismiss(t.id)} className="toast-button">
+                    <button
+                      aria-label="Dismiss"
+                      onClick={() => dismiss(t.id)}
+                      className="toast-button"
+                    >
                       <LocalIcon icon="close" width={20} height={20} />
                     </button>
                   </div>
@@ -92,17 +112,25 @@ export default function ToastRenderer() {
                 {/* Progress bar - always show when present */}
                 {typeof t.progress === "number" && (
                   <div className="toast-progress-container">
-                    <div className={getProgressBarClass(t)} style={{ width: `${t.progress}%` }} />
+                    <div
+                      className={getProgressBarClass(t)}
+                      style={{ width: `${t.progress}%` }}
+                    />
                   </div>
                 )}
 
                 {/* Body content - only show when expanded */}
-                {(t.isExpanded || !t.expandable) && <div className="toast-body">{t.body}</div>}
+                {(t.isExpanded || !t.expandable) && (
+                  <div className="toast-body">{t.body}</div>
+                )}
 
                 {/* Button - always show when present, positioned below body */}
                 {t.buttonText && t.buttonCallback && (
                   <div className="toast-action-container">
-                    <button onClick={t.buttonCallback} className={getActionButtonClass(t)}>
+                    <button
+                      onClick={t.buttonCallback}
+                      className={getActionButtonClass(t)}
+                    >
                       {t.buttonText}
                     </button>
                   </div>

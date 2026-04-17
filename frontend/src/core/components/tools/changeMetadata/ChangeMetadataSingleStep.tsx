@@ -12,18 +12,23 @@ import AdvancedOptionsStep from "@app/components/tools/changeMetadata/steps/Adva
 
 interface ChangeMetadataSingleStepProps {
   parameters: ChangeMetadataParameters;
-  onParameterChange: <K extends keyof ChangeMetadataParameters>(key: K, value: ChangeMetadataParameters[K]) => void;
+  onParameterChange: <K extends keyof ChangeMetadataParameters>(
+    key: K,
+    value: ChangeMetadataParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const ChangeMetadataSingleStep = ({ parameters, onParameterChange, disabled = false }: ChangeMetadataSingleStepProps) => {
+const ChangeMetadataSingleStep = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: ChangeMetadataSingleStepProps) => {
   const { t } = useTranslation();
 
   // Get custom metadata functions using the utility
-  const { addCustomMetadata, removeCustomMetadata, updateCustomMetadata } = createCustomMetadataFunctions(
-    parameters,
-    onParameterChange,
-  );
+  const { addCustomMetadata, removeCustomMetadata, updateCustomMetadata } =
+    createCustomMetadataFunctions(parameters, onParameterChange);
 
   // Extract metadata from uploaded files
   const { isExtractingMetadata } = useMetadataExtraction({
@@ -40,7 +45,11 @@ const ChangeMetadataSingleStep = ({ parameters, onParameterChange, disabled = fa
         <Text size="sm" fw={500}>
           {t("changeMetadata.deleteAll.label", "Delete All Metadata")}
         </Text>
-        <DeleteAllStep parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
+        <DeleteAllStep
+          parameters={parameters}
+          onParameterChange={onParameterChange}
+          disabled={disabled}
+        />
       </Stack>
 
       <Divider />
@@ -50,7 +59,11 @@ const ChangeMetadataSingleStep = ({ parameters, onParameterChange, disabled = fa
         <Text size="sm" fw={500}>
           {t("changeMetadata.standardFields.title", "Standard Metadata")}
         </Text>
-        <StandardMetadataStep parameters={parameters} onParameterChange={onParameterChange} disabled={fieldsDisabled} />
+        <StandardMetadataStep
+          parameters={parameters}
+          onParameterChange={onParameterChange}
+          disabled={fieldsDisabled}
+        />
       </Stack>
 
       <Divider />
@@ -60,7 +73,11 @@ const ChangeMetadataSingleStep = ({ parameters, onParameterChange, disabled = fa
         <Text size="sm" fw={500}>
           {t("changeMetadata.dates.title", "Document Dates")}
         </Text>
-        <DocumentDatesStep parameters={parameters} onParameterChange={onParameterChange} disabled={fieldsDisabled} />
+        <DocumentDatesStep
+          parameters={parameters}
+          onParameterChange={onParameterChange}
+          disabled={fieldsDisabled}
+        />
       </Stack>
 
       <Divider />

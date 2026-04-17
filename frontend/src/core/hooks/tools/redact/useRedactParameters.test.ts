@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useRedactParameters, defaultParameters } from "@app/hooks/tools/redact/useRedactParameters";
+import {
+  useRedactParameters,
+  defaultParameters,
+} from "@app/hooks/tools/redact/useRedactParameters";
 
 describe("useRedactParameters", () => {
   test("should initialize with default parameters", () => {
@@ -48,18 +51,26 @@ describe("useRedactParameters", () => {
   describe("validation", () => {
     test.each([
       {
-        description: "validate when wordsToRedact has non-empty words in automatic mode",
+        description:
+          "validate when wordsToRedact has non-empty words in automatic mode",
         wordsToRedact: ["word1", "word2"],
         expected: true,
       },
-      { description: "not validate when wordsToRedact is empty in automatic mode", wordsToRedact: [], expected: false },
       {
-        description: "not validate when wordsToRedact contains only empty strings in automatic mode",
+        description:
+          "not validate when wordsToRedact is empty in automatic mode",
+        wordsToRedact: [],
+        expected: false,
+      },
+      {
+        description:
+          "not validate when wordsToRedact contains only empty strings in automatic mode",
         wordsToRedact: ["", "  ", ""],
         expected: false,
       },
       {
-        description: "validate when wordsToRedact contains at least one non-empty word in automatic mode",
+        description:
+          "validate when wordsToRedact contains at least one non-empty word in automatic mode",
         wordsToRedact: ["", "valid", "  "],
         expected: true,
       },
@@ -93,7 +104,9 @@ describe("useRedactParameters", () => {
         result.current.updateParameter("mode", "automatic");
       });
 
-      expect(result.current.getEndpointName()).toBe("/api/v1/security/auto-redact");
+      expect(result.current.getEndpointName()).toBe(
+        "/api/v1/security/auto-redact",
+      );
     });
 
     test("should return empty endpoint for manual mode (handled client-side)", () => {
@@ -141,6 +154,9 @@ describe("useRedactParameters", () => {
       result.current.updateParameter("wordsToRedact", ["updated", "multiple"]);
     });
 
-    expect(result.current.parameters.wordsToRedact).toEqual(["updated", "multiple"]);
+    expect(result.current.parameters.wordsToRedact).toEqual([
+      "updated",
+      "multiple",
+    ]);
   });
 });

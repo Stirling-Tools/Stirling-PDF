@@ -39,7 +39,11 @@
 
 .layer-item:hover {
   background: color-mix(in srgb, var(--text-primary) 6%, var(--bg-toolbar));
-  border-color: color-mix(in srgb, var(--text-primary) 14%, var(--border-subtle));
+  border-color: color-mix(
+    in srgb,
+    var(--text-primary) 14%,
+    var(--border-subtle)
+  );
 }
 
 .layer-item:active {
@@ -92,7 +96,8 @@
   flex-direction: column;
   gap: 0.125rem;
   margin-top: 0.125rem;
-  border-left: 2px solid color-mix(in srgb, var(--border-subtle) 60%, transparent);
+  border-left: 2px solid
+    color-mix(in srgb, var(--border-subtle) 60%, transparent);
   margin-left: 0.875rem;
   padding-left: 0.25rem;
 }

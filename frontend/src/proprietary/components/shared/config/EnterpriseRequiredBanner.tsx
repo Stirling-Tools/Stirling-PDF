@@ -10,15 +10,23 @@ interface EnterpriseRequiredBannerProps {
 /**
  * Banner that explains enterprise-only features are in demo mode
  */
-export default function EnterpriseRequiredBanner({ show, featureName }: EnterpriseRequiredBannerProps) {
+export default function EnterpriseRequiredBanner({
+  show,
+  featureName,
+}: EnterpriseRequiredBannerProps) {
   const { t } = useTranslation();
 
   if (!show) return null;
 
   return (
     <Alert
-      icon={<LocalIcon icon="workspace-premium-rounded" width={20} height={20} />}
-      title={t("admin.settings.enterpriseRequired.title", "Enterprise License Required")}
+      icon={
+        <LocalIcon icon="workspace-premium-rounded" width={20} height={20} />
+      }
+      title={t(
+        "admin.settings.enterpriseRequired.title",
+        "Enterprise License Required",
+      )}
       color="yellow"
       variant="light"
       styles={{

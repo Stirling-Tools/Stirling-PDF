@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Stack, Text, TextInput, Button, Group, ActionIcon } from "@mantine/core";
+import {
+  Stack,
+  Text,
+  TextInput,
+  Button,
+  Group,
+  ActionIcon,
+} from "@mantine/core";
 
 interface WordsToRedactInputProps {
   wordsToRedact: string[];
@@ -8,7 +15,11 @@ interface WordsToRedactInputProps {
   disabled?: boolean;
 }
 
-export default function WordsToRedactInput({ wordsToRedact, onWordsChange, disabled }: WordsToRedactInputProps) {
+export default function WordsToRedactInput({
+  wordsToRedact,
+  onWordsChange,
+  disabled,
+}: WordsToRedactInputProps) {
   const { t } = useTranslation();
   const [currentWord, setCurrentWord] = useState("");
 
@@ -60,7 +71,13 @@ export default function WordsToRedactInput({ wordsToRedact, onWordsChange, disab
           >
             {word}
           </Text>
-          <ActionIcon size="sm" variant="subtle" color="red" onClick={() => removeWord(index)} disabled={disabled}>
+          <ActionIcon
+            size="sm"
+            variant="subtle"
+            color="red"
+            onClick={() => removeWord(index)}
+            disabled={disabled}
+          >
             ×
           </ActionIcon>
         </Group>
@@ -69,7 +86,10 @@ export default function WordsToRedactInput({ wordsToRedact, onWordsChange, disab
       {/* Add new word input */}
       <Group gap="sm" align="end">
         <TextInput
-          placeholder={t("redact.auto.wordsToRedact.placeholder", "Enter a word")}
+          placeholder={t(
+            "redact.auto.wordsToRedact.placeholder",
+            "Enter a word",
+          )}
           value={currentWord}
           onChange={(e) => setCurrentWord(e.target.value)}
           onKeyDown={handleKeyPress}
@@ -77,7 +97,12 @@ export default function WordsToRedactInput({ wordsToRedact, onWordsChange, disab
           size="sm"
           style={{ flex: 1 }}
         />
-        <Button size="sm" variant="light" onClick={addWord} disabled={disabled || !currentWord.trim()}>
+        <Button
+          size="sm"
+          variant="light"
+          onClick={addWord}
+          disabled={disabled || !currentWord.trim()}
+        >
           + {t("redact.auto.wordsToRedact.add", "Add")}
         </Button>
       </Group>
@@ -85,7 +110,10 @@ export default function WordsToRedactInput({ wordsToRedact, onWordsChange, disab
       {/* Examples */}
       {wordsToRedact.length === 0 && (
         <Text size="xs" c="dimmed">
-          {t("redact.auto.wordsToRedact.examples", "Examples: Confidential, Top-Secret")}
+          {t(
+            "redact.auto.wordsToRedact.examples",
+            "Examples: Confidential, Top-Secret",
+          )}
         </Text>
       )}
     </Stack>

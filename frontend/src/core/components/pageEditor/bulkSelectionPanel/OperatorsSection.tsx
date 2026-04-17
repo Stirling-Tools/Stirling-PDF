@@ -8,7 +8,10 @@ interface OperatorsSectionProps {
   onInsertOperator: (op: LogicalOperator) => void;
 }
 
-const OperatorsSection = ({ csvInput, onInsertOperator }: OperatorsSectionProps) => {
+const OperatorsSection = ({
+  csvInput,
+  onInsertOperator,
+}: OperatorsSectionProps) => {
   const { t } = useTranslation();
 
   return (

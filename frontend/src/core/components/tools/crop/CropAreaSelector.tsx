@@ -88,7 +88,10 @@ const CropAreaSelector: React.FC<CropAreaSelectorProps> = ({
 
       // Start new crop selection
       const newDomRect: Rectangle = { x, y, width: 20, height: 20 };
-      const constrainedRect = constrainDOMRectToThumbnail(newDomRect, pdfBounds);
+      const constrainedRect = constrainDOMRectToThumbnail(
+        newDomRect,
+        pdfBounds,
+      );
       const newCropArea = domToPDFCoordinates(constrainedRect, pdfBounds);
 
       onCropAreaChange(newCropArea);
@@ -119,18 +122,33 @@ const CropAreaSelector: React.FC<CropAreaSelectorProps> = ({
           height: domRect.height,
         };
 
-        const constrainedRect = constrainDOMRectToThumbnail(newDomRect, pdfBounds);
+        const constrainedRect = constrainDOMRectToThumbnail(
+          newDomRect,
+          pdfBounds,
+        );
         const newCropArea = domToPDFCoordinates(constrainedRect, pdfBounds);
         onCropAreaChange(newCropArea);
       } else if (isResizing) {
         // Resizing the crop area
         const newDomRect = calculateResizedRect(isResizing, domRect, x, y);
-        const constrainedRect = constrainDOMRectToThumbnail(newDomRect, pdfBounds);
+        const constrainedRect = constrainDOMRectToThumbnail(
+          newDomRect,
+          pdfBounds,
+        );
         const newCropArea = domToPDFCoordinates(constrainedRect, pdfBounds);
         onCropAreaChange(newCropArea);
       }
     },
-    [disabled, isDragging, isResizing, dragStart, domRect, initialCropArea, pdfBounds, onCropAreaChange],
+    [
+      disabled,
+      isDragging,
+      isResizing,
+      dragStart,
+      domRect,
+      initialCropArea,
+      pdfBounds,
+      onCropAreaChange,
+    ],
   );
 
   // Handle mouse up
@@ -181,7 +199,8 @@ const CropAreaSelector: React.FC<CropAreaSelectorProps> = ({
             backgroundColor: theme.other.crop.overlayBackground,
             cursor: "move",
             pointerEvents: "auto",
-            transition: isDragging || isResizing ? undefined : "all 1s ease-in-out",
+            transition:
+              isDragging || isResizing ? undefined : "all 1s ease-in-out",
           }}
           onMouseDown={handleOverlayMouseDown}
         >
@@ -195,21 +214,54 @@ const CropAreaSelector: React.FC<CropAreaSelectorProps> = ({
 
 // Helper functions
 
-function getResizeHandle(x: number, y: number, domRect: Rectangle): ResizeHandle {
+function getResizeHandle(
+  x: number,
+  y: number,
+  domRect: Rectangle,
+): ResizeHandle {
   const handleSize = 8;
   const tolerance = handleSize;
 
   // Corner handles (check these first, they have priority)
-  if (isNear(x, domRect.x, tolerance) && isNear(y, domRect.y, tolerance)) return "nw";
-  if (isNear(x, domRect.x + domRect.width, tolerance) && isNear(y, domRect.y, tolerance)) return "ne";
-  if (isNear(x, domRect.x, tolerance) && isNear(y, domRect.y + domRect.height, tolerance)) return "sw";
-  if (isNear(x, domRect.x + domRect.width, tolerance) && isNear(y, domRect.y + domRect.height, tolerance)) return "se";
+  if (isNear(x, domRect.x, tolerance) && isNear(y, domRect.y, tolerance))
+    return "nw";
+  if (
+    isNear(x, domRect.x + domRect.width, tolerance) &&
+    isNear(y, domRect.y, tolerance)
+  )
+    return "ne";
+  if (
+    isNear(x, domRect.x, tolerance) &&
+    isNear(y, domRect.y + domRect.height, tolerance)
+  )
+    return "sw";
+  if (
+    isNear(x, domRect.x + domRect.width, tolerance) &&
+    isNear(y, domRect.y + domRect.height, tolerance)
+  )
+    return "se";
 
   // Edge handles (only if not in corner area)
-  if (isNear(x, domRect.x + domRect.width / 2, tolerance) && isNear(y, domRect.y, tolerance)) return "n";
-  if (isNear(x, domRect.x + domRect.width, tolerance) && isNear(y, domRect.y + domRect.height / 2, tolerance)) return "e";
-  if (isNear(x, domRect.x + domRect.width / 2, tolerance) && isNear(y, domRect.y + domRect.height, tolerance)) return "s";
-  if (isNear(x, domRect.x, tolerance) && isNear(y, domRect.y + domRect.height / 2, tolerance)) return "w";
+  if (
+    isNear(x, domRect.x + domRect.width / 2, tolerance) &&
+    isNear(y, domRect.y, tolerance)
+  )
+    return "n";
+  if (
+    isNear(x, domRect.x + domRect.width, tolerance) &&
+    isNear(y, domRect.y + domRect.height / 2, tolerance)
+  )
+    return "e";
+  if (
+    isNear(x, domRect.x + domRect.width / 2, tolerance) &&
+    isNear(y, domRect.y + domRect.height, tolerance)
+  )
+    return "s";
+  if (
+    isNear(x, domRect.x, tolerance) &&
+    isNear(y, domRect.y + domRect.height / 2, tolerance)
+  )
+    return "w";
 
   return null;
 }
@@ -219,10 +271,20 @@ function isNear(a: number, b: number, tolerance: number): boolean {
 }
 
 function isPointInCropArea(x: number, y: number, domRect: Rectangle): boolean {
-  return x >= domRect.x && x <= domRect.x + domRect.width && y >= domRect.y && y <= domRect.y + domRect.height;
+  return (
+    x >= domRect.x &&
+    x <= domRect.x + domRect.width &&
+    y >= domRect.y &&
+    y <= domRect.y + domRect.height
+  );
 }
 
-function calculateResizedRect(handle: ResizeHandle, currentRect: Rectangle, mouseX: number, mouseY: number): Rectangle {
+function calculateResizedRect(
+  handle: ResizeHandle,
+  currentRect: Rectangle,
+  mouseX: number,
+  mouseY: number,
+): Rectangle {
   let { x, y, width, height } = currentRect;
 
   switch (handle) {
@@ -286,16 +348,76 @@ function renderResizeHandles(disabled: boolean, theme: MantineTheme) {
   return (
     <>
       {/* Corner handles */}
-      <Box style={{ ...handleStyle, left: -handleSize / 2, top: -handleSize / 2, cursor: "nw-resize" }} />
-      <Box style={{ ...handleStyle, right: -handleSize / 2, top: -handleSize / 2, cursor: "ne-resize" }} />
-      <Box style={{ ...handleStyle, left: -handleSize / 2, bottom: -handleSize / 2, cursor: "sw-resize" }} />
-      <Box style={{ ...handleStyle, right: -handleSize / 2, bottom: -handleSize / 2, cursor: "se-resize" }} />
+      <Box
+        style={{
+          ...handleStyle,
+          left: -handleSize / 2,
+          top: -handleSize / 2,
+          cursor: "nw-resize",
+        }}
+      />
+      <Box
+        style={{
+          ...handleStyle,
+          right: -handleSize / 2,
+          top: -handleSize / 2,
+          cursor: "ne-resize",
+        }}
+      />
+      <Box
+        style={{
+          ...handleStyle,
+          left: -handleSize / 2,
+          bottom: -handleSize / 2,
+          cursor: "sw-resize",
+        }}
+      />
+      <Box
+        style={{
+          ...handleStyle,
+          right: -handleSize / 2,
+          bottom: -handleSize / 2,
+          cursor: "se-resize",
+        }}
+      />
 
       {/* Edge handles */}
-      <Box style={{ ...handleStyle, left: "50%", marginLeft: -handleSize / 2, top: -handleSize / 2, cursor: "n-resize" }} />
-      <Box style={{ ...handleStyle, right: -handleSize / 2, top: "50%", marginTop: -handleSize / 2, cursor: "e-resize" }} />
-      <Box style={{ ...handleStyle, left: "50%", marginLeft: -handleSize / 2, bottom: -handleSize / 2, cursor: "s-resize" }} />
-      <Box style={{ ...handleStyle, left: -handleSize / 2, top: "50%", marginTop: -handleSize / 2, cursor: "w-resize" }} />
+      <Box
+        style={{
+          ...handleStyle,
+          left: "50%",
+          marginLeft: -handleSize / 2,
+          top: -handleSize / 2,
+          cursor: "n-resize",
+        }}
+      />
+      <Box
+        style={{
+          ...handleStyle,
+          right: -handleSize / 2,
+          top: "50%",
+          marginTop: -handleSize / 2,
+          cursor: "e-resize",
+        }}
+      />
+      <Box
+        style={{
+          ...handleStyle,
+          left: "50%",
+          marginLeft: -handleSize / 2,
+          bottom: -handleSize / 2,
+          cursor: "s-resize",
+        }}
+      />
+      <Box
+        style={{
+          ...handleStyle,
+          left: -handleSize / 2,
+          top: "50%",
+          marginTop: -handleSize / 2,
+          cursor: "w-resize",
+        }}
+      />
     </>
   );
 }

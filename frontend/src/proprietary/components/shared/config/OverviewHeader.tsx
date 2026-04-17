@@ -19,13 +19,23 @@ export function OverviewHeader() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "0.5rem",
+        }}
+      >
         <div>
           <Text fw={600} size="lg">
             {t("config.overview.title", "Application Configuration")}
           </Text>
           <Text size="sm" c="dimmed">
-            {t("config.overview.description", "Current application settings and configuration details.")}
+            {t(
+              "config.overview.description",
+              "Current application settings and configuration details.",
+            )}
           </Text>
           {user?.email && (
             <Text size="xs" c="dimmed" mt="0.25rem">

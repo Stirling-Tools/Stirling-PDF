@@ -15,15 +15,20 @@ export interface BaseParametersConfig<T> {
   validateFn?: (params: T) => boolean;
 }
 
-export function useBaseParameters<T>(config: BaseParametersConfig<T>): BaseParametersHook<T> {
+export function useBaseParameters<T>(
+  config: BaseParametersConfig<T>,
+): BaseParametersHook<T> {
   const [parameters, setParameters] = useState<T>(config.defaultParameters);
 
-  const updateParameter = useCallback(<K extends keyof T>(parameter: K, value: T[K]) => {
-    setParameters((prev) => ({
-      ...prev,
-      [parameter]: value,
-    }));
-  }, []);
+  const updateParameter = useCallback(
+    <K extends keyof T>(parameter: K, value: T[K]) => {
+      setParameters((prev) => ({
+        ...prev,
+        [parameter]: value,
+      }));
+    },
+    [],
+  );
 
   const resetParameters = useCallback(() => {
     setParameters(config.defaultParameters);

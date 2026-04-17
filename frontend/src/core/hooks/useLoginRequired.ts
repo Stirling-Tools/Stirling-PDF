@@ -19,7 +19,10 @@ export function useLoginRequired() {
     alert({
       alertType: "warning",
       title: t("admin.error", "Error"),
-      body: t("admin.settings.loginRequired", "Login mode must be enabled to modify admin settings"),
+      body: t(
+        "admin.settings.loginRequired",
+        "Login mode must be enabled to modify admin settings",
+      ),
     });
   }, [t]);
 
@@ -68,7 +71,10 @@ export function useLoginRequired() {
    * Wrap fetch function to skip API call when login disabled
    */
   const withLoginCheckForFetch = useCallback(
-    <T extends (...args: any[]) => Promise<any>>(fetchHandler: T, skipWhenDisabled: boolean = true): T => {
+    <T extends (...args: any[]) => Promise<any>>(
+      fetchHandler: T,
+      skipWhenDisabled: boolean = true,
+    ): T => {
       return (async (...args: any[]) => {
         if (!loginEnabled && skipWhenDisabled) {
           // Skip fetch when login disabled - component will use default/empty values

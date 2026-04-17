@@ -1,6 +1,9 @@
 import apiClient from "@app/services/apiClient";
 import { fileStorage } from "@app/services/fileStorage";
-import { buildHistoryBundle, buildSharePackage } from "@app/services/serverStorageBundle";
+import {
+  buildHistoryBundle,
+  buildSharePackage,
+} from "@app/services/serverStorageBundle";
 import type { FileId } from "@app/types/file";
 import type { StirlingFileStub } from "@app/types/fileContext";
 
@@ -35,17 +38,24 @@ export async function uploadHistoryChain(
   }
 
   const { bundleFile, manifest } = await buildHistoryBundle(originalFileId);
-  const auditLog = new File([JSON.stringify(manifest, null, 2)], "audit-log.json", {
-    type: "application/json",
-    lastModified: Date.now(),
-  });
+  const auditLog = new File(
+    [JSON.stringify(manifest, null, 2)],
+    "audit-log.json",
+    {
+      type: "application/json",
+      lastModified: Date.now(),
+    },
+  );
   const formData = new FormData();
   formData.append("file", finalFile, finalFile.name);
   formData.append("historyBundle", bundleFile, bundleFile.name);
   formData.append("auditLog", auditLog, auditLog.name);
 
   if (existingRemoteId) {
-    const response = await apiClient.put(`/api/v1/storage/files/${existingRemoteId}`, formData);
+    const response = await apiClient.put(
+      `/api/v1/storage/files/${existingRemoteId}`,
+      formData,
+    );
     const updatedAt = resolveUpdatedAt(response.data?.updatedAt);
     return { remoteId: existingRemoteId, updatedAt, chain };
   }
@@ -105,17 +115,24 @@ export async function uploadHistoryChains(
   }
 
   const { bundleFile, manifest } = await buildHistoryBundle(uniqueRoots);
-  const auditLog = new File([JSON.stringify(manifest, null, 2)], "audit-log.json", {
-    type: "application/json",
-    lastModified: Date.now(),
-  });
+  const auditLog = new File(
+    [JSON.stringify(manifest, null, 2)],
+    "audit-log.json",
+    {
+      type: "application/json",
+      lastModified: Date.now(),
+    },
+  );
   const formData = new FormData();
   formData.append("file", shareFile, shareFile.name);
   formData.append("historyBundle", bundleFile, bundleFile.name);
   formData.append("auditLog", auditLog, auditLog.name);
 
   if (existingRemoteId) {
-    const response = await apiClient.put(`/api/v1/storage/files/${existingRemoteId}`, formData);
+    const response = await apiClient.put(
+      `/api/v1/storage/files/${existingRemoteId}`,
+      formData,
+    );
     const updatedAt = resolveUpdatedAt(response.data?.updatedAt);
     return { remoteId: existingRemoteId, updatedAt, chain: combinedChain };
   }

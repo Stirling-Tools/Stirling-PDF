@@ -1,7 +1,14 @@
 import { createContext, useContext, useState, useRef, useMemo } from "react";
-import { SidebarState, SidebarRefs, SidebarContextValue, SidebarProviderProps } from "@app/types/sidebar";
+import {
+  SidebarState,
+  SidebarRefs,
+  SidebarContextValue,
+  SidebarProviderProps,
+} from "@app/types/sidebar";
 
-const SidebarContext = createContext<SidebarContextValue | undefined>(undefined);
+const SidebarContext = createContext<SidebarContextValue | undefined>(
+  undefined,
+);
 
 export function SidebarProvider({ children }: SidebarProviderProps) {
   // All sidebar state management
@@ -10,7 +17,9 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
   const rightRailRef = useRef<HTMLDivElement>(null);
 
   const [sidebarsVisible, setSidebarsVisible] = useState(true);
-  const [leftPanelView, setLeftPanelView] = useState<"toolPicker" | "toolContent">("toolPicker");
+  const [leftPanelView, setLeftPanelView] = useState<
+    "toolPicker" | "toolContent"
+  >("toolPicker");
   const [readerMode, setReaderMode] = useState(false);
 
   const sidebarState: SidebarState = useMemo(
@@ -39,10 +48,20 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
       setLeftPanelView,
       setReaderMode,
     }),
-    [sidebarState, sidebarRefs, setSidebarsVisible, setLeftPanelView, setReaderMode],
+    [
+      sidebarState,
+      sidebarRefs,
+      setSidebarsVisible,
+      setLeftPanelView,
+      setReaderMode,
+    ],
   );
 
-  return <SidebarContext.Provider value={contextValue}>{children}</SidebarContext.Provider>;
+  return (
+    <SidebarContext.Provider value={contextValue}>
+      {children}
+    </SidebarContext.Provider>
+  );
 }
 
 export function useSidebarContext(): SidebarContextValue {

@@ -27,7 +27,8 @@ i18n
           "convert.colorType": "Color Type",
           "convert.dpi": "DPI",
           "convert.singleOrMultiple": "Output",
-          "convert.emailNote": "Email attachments and embedded images will be included",
+          "convert.emailNote":
+            "Email attachments and embedded images will be included",
           "convert.pdfaOptions": "PDF/A Options",
           "convert.outputFormat": "Output Format",
           "convert.pdfaNote":

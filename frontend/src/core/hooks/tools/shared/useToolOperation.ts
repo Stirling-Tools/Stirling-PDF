@@ -5,20 +5,37 @@ import { useFileContext } from "@app/contexts/FileContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { ViewerContext } from "@app/contexts/ViewerContext";
 import { useToolState } from "@app/hooks/tools/shared/useToolState";
-import { useToolApiCalls, type ApiCallsConfig } from "@app/hooks/tools/shared/useToolApiCalls";
+import {
+  useToolApiCalls,
+  type ApiCallsConfig,
+} from "@app/hooks/tools/shared/useToolApiCalls";
 import { useToolResources } from "@app/hooks/tools/shared/useToolResources";
-import { extractErrorMessage, handle422Error } from "@app/utils/toolErrorHandler";
-import { StirlingFile, extractFiles, FileId, StirlingFileStub } from "@app/types/fileContext";
+import {
+  extractErrorMessage,
+  handle422Error,
+} from "@app/utils/toolErrorHandler";
+import {
+  StirlingFile,
+  extractFiles,
+  FileId,
+  StirlingFileStub,
+} from "@app/types/fileContext";
 import { FILE_EVENTS } from "@app/services/errorUtils";
 import { getFilenameWithoutExtension } from "@app/utils/fileUtils";
-import { createChildStub, generateProcessedFileMetadata } from "@app/contexts/file/fileActions";
+import {
+  createChildStub,
+  generateProcessedFileMetadata,
+} from "@app/contexts/file/fileActions";
 import { createNewStirlingFileStub } from "@app/types/fileContext";
 import { ToolOperation } from "@app/types/file";
 import { ensureBackendReady } from "@app/services/backendReadinessGuard";
 import { useWillUseCloud } from "@app/hooks/useWillUseCloud";
 import { useCreditCheck } from "@app/hooks/useCreditCheck";
 import { notifyPdfProcessingComplete } from "@app/services/desktopNotificationService";
-import { buildInputTracking, buildOutputPairs } from "@app/hooks/tools/shared/toolOperationHelpers";
+import {
+  buildInputTracking,
+  buildOutputPairs,
+} from "@app/hooks/tools/shared/toolOperationHelpers";
 import {
   ToolType,
   ToolOperationConfig,
@@ -58,9 +75,12 @@ export { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
  * @param config - Tool operation configuration
  * @returns Hook interface with state and execution methods
  */
-export const useToolOperation = <TParams>(config: ToolOperationConfig<TParams>): ToolOperationHook<TParams> => {
+export const useToolOperation = <TParams>(
+  config: ToolOperationConfig<TParams>,
+): ToolOperationHook<TParams> => {
   const { t } = useTranslation();
-  const { addFiles, consumeFiles, undoConsumeFiles, selectors } = useFileContext();
+  const { addFiles, consumeFiles, undoConsumeFiles, selectors } =
+    useFileContext();
   const { actions: navActions } = useNavigationActions();
   const viewerContext = useContext(ViewerContext);
   const setActiveFileId = viewerContext?.setActiveFileId ?? (() => {});
@@ -68,8 +88,14 @@ export const useToolOperation = <TParams>(config: ToolOperationConfig<TParams>):
   // Composed hooks
   const { state, actions } = useToolState();
   const { actions: fileActions } = useFileContext();
-  const { processFiles, cancelOperation: cancelApiCalls } = useToolApiCalls<TParams>();
-  const { generateThumbnails, createDownloadInfo, cleanupBlobUrls, extractZipFiles } = useToolResources();
+  const { processFiles, cancelOperation: cancelApiCalls } =
+    useToolApiCalls<TParams>();
+  const {
+    generateThumbnails,
+    createDownloadInfo,
+    cleanupBlobUrls,
+    extractZipFiles,
+  } = useToolResources();
 
   // Determine endpoint for cloud usage check and credit routing.
   // For function endpoints, use defaultParameters to get a representative static value.
@@ -110,7 +136,9 @@ export const useToolOperation = <TParams>(config: ToolOperationConfig<TParams>):
           console.log("markFileError", e);
         }
       }
-      const validFiles: StirlingFile[] = selectedFiles.filter((file) => file.size > 0);
+      const validFiles: StirlingFile[] = selectedFiles.filter(
+        (file) => file.size > 0,
+      );
       if (validFiles.length === 0) {
         actions.setError(t("noValidFiles", "No valid files to process"));
         return;
@@ -127,10 +155,17 @@ export const useToolOperation = <TParams>(config: ToolOperationConfig<TParams>):
         }
         actions.setError(
           encryptedFiles.length === 1
-            ? t("encryptedFileBlocked", "File is password-protected. Unlock it first.")
-            : t("encryptedFilesBlocked", "{{count}} files are password-protected. Unlock them first.", {
-                count: encryptedFiles.length,
-              }),
+            ? t(
+                "encryptedFileBlocked",
+                "File is password-protected. Unlock it first.",
+              )
+            : t(
+                "encryptedFilesBlocked",
+                "{{count}} files are password-protected. Unlock them first.",
+                {
+                  count: encryptedFiles.length,
+                },
+              ),
         );
         return;
       }
@@ -153,10 +188,16 @@ export const useToolOperation = <TParams>(config: ToolOperationConfig<TParams>):
 
       // Backend readiness check (will skip for SaaS-routed endpoints).
       // Custom processors without an endpoint skip this — they manage their own backend calls.
-      const endpointForReadyCheck = config.toolType !== ToolType.custom ? runtimeEndpoint : undefined;
+      const endpointForReadyCheck =
+        config.toolType !== ToolType.custom ? runtimeEndpoint : undefined;
       const backendReady = await ensureBackendReady(endpointForReadyCheck);
       if (!backendReady) {
-        actions.setError(t("backendHealth.offline", "Embedded backend is offline. Please try again shortly."));
+        actions.setError(
+          t(
+            "backendHealth.offline",
+            "Embedded backend is offline. Please try again shortly.",
+          ),
+        );
         return;
       }
 
@@ -174,10 +215,15 @@ export const useToolOperation = <TParams>(config: ToolOperationConfig<TParams>):
       const errorListener = (e: Event) => {
         const detail = (e as CustomEvent)?.detail as any;
         if (detail?.fileIds) {
-          externalErrorFileIds = Array.isArray(detail.fileIds) ? detail.fileIds : [];
+          externalErrorFileIds = Array.isArray(detail.fileIds)
+            ? detail.fileIds
+            : [];
         }
       };
-      window.addEventListener(FILE_EVENTS.markError, errorListener as EventListener);
+      window.addEventListener(
+        FILE_EVENTS.markError,
+        errorListener as EventListener,
+      );
 
       try {
         let processedFiles: File[];
@@ -196,7 +242,9 @@ export const useToolOperation = <TParams>(config: ToolOperationConfig<TParams>):
               responseHandler: config.responseHandler,
               preserveBackendFilename: config.preserveBackendFilename,
             };
-            console.debug("[useToolOperation] Multi-file start", { count: filesForAPI.length });
+            console.debug("[useToolOperation] Multi-file start", {
+              count: filesForAPI.length,
+            });
             const result = await processFiles(
               params,
               validFiles,
@@ -217,21 +265,32 @@ export const useToolOperation = <TParams>(config: ToolOperationConfig<TParams>):
             // Multi-file processing - single API call with all files
             actions.setStatus("Processing files...");
             const formData = config.buildFormData(params, filesForAPI);
-            const endpoint = typeof config.endpoint === "function" ? config.endpoint(params) : config.endpoint;
+            const endpoint =
+              typeof config.endpoint === "function"
+                ? config.endpoint(params)
+                : config.endpoint;
 
-            const response = await apiClient.post(endpoint, formData, { responseType: "blob" });
+            const response = await apiClient.post(endpoint, formData, {
+              responseType: "blob",
+            });
 
             // Multi-file responses are typically ZIP files that need extraction, but some may return single PDFs
             if (config.responseHandler) {
               // Use custom responseHandler for multi-file (handles ZIP extraction)
-              processedFiles = await config.responseHandler(response.data, filesForAPI);
+              processedFiles = await config.responseHandler(
+                response.data,
+                filesForAPI,
+              );
             } else if (
               response.data.type === "application/pdf" ||
-              (response.headers && response.headers["content-type"] === "application/pdf")
+              (response.headers &&
+                response.headers["content-type"] === "application/pdf")
             ) {
               // Single PDF response (e.g. split with merge option) - add prefix to first original filename
               const filename = `${config.filePrefix}${filesForAPI[0]?.name || "document.pdf"}`;
-              const singleFile = new File([response.data], filename, { type: "application/pdf" });
+              const singleFile = new File([response.data], filename, {
+                type: "application/pdf",
+              });
               processedFiles = [singleFile];
             } else {
               // Default: assume ZIP response for multi-file endpoints
@@ -269,7 +328,9 @@ export const useToolOperation = <TParams>(config: ToolOperationConfig<TParams>):
               }
               // Fallback to naive alignment if names don't match
               if (mappedSuccess.length === 0) {
-                successSourceIds = validFiles.slice(0, processedFiles.length).map((f) => f.fileId);
+                successSourceIds = validFiles
+                  .slice(0, processedFiles.length)
+                  .map((f) => f.fileId);
               } else {
                 successSourceIds = mappedSuccess;
               }
@@ -306,7 +367,9 @@ export const useToolOperation = <TParams>(config: ToolOperationConfig<TParams>):
 
         if (externalErrorFileIds.length > 0) {
           // If backend told us which sources failed, prefer that mapping
-          successSourceIds = validFiles.map((f) => f.fileId).filter((id) => !externalErrorFileIds.includes(id));
+          successSourceIds = validFiles
+            .map((f) => f.fileId)
+            .filter((id) => !externalErrorFileIds.includes(id));
           // Also mark failed IDs immediately
           try {
             for (const badId of externalErrorFileIds) {
@@ -341,7 +404,10 @@ export const useToolOperation = <TParams>(config: ToolOperationConfig<TParams>):
             successSourceIds.every((id, i) => {
               const inputFile = validFiles.find((f) => f.fileId === id);
               const inExt = inputFile?.name.split(".").pop()?.toLowerCase();
-              const outExt = processedFiles[i].name.split(".").pop()?.toLowerCase();
+              const outExt = processedFiles[i].name
+                .split(".")
+                .pop()
+                ?.toLowerCase();
               return inExt != null && inExt === outExt;
             });
 
@@ -350,12 +416,17 @@ export const useToolOperation = <TParams>(config: ToolOperationConfig<TParams>):
             processedFiles.map((file) => generateProcessedFileMetadata(file)),
           );
 
-          const { inputFileIds, inputStirlingFileStubs } = buildInputTracking(validFiles, selectors);
+          const { inputFileIds, inputStirlingFileStubs } = buildInputTracking(
+            validFiles,
+            selectors,
+          );
 
           if (isVersionOp) {
             // Output is a modified version of the input — link it to the input's version chain.
             // The input is removed from the workbench and replaced in-place by the output.
-            const downloadLocalPath = selectors.getStirlingFileStub(validFiles[0].fileId)?.localFilePath ?? null;
+            const downloadLocalPath =
+              selectors.getStirlingFileStub(validFiles[0].fileId)
+                ?.localFilePath ?? null;
 
             const newToolOperation: ToolOperation = {
               toolId: config.operationType,
@@ -367,33 +438,45 @@ export const useToolOperation = <TParams>(config: ToolOperationConfig<TParams>):
               .filter(Boolean) as StirlingFileStub[];
 
             if (successInputStubs.length !== processedFiles.length) {
-              console.warn("[useToolOperation] Mismatch successInputStubs vs outputs", {
-                successInputStubs: successInputStubs.length,
-                outputs: processedFiles.length,
-              });
+              console.warn(
+                "[useToolOperation] Mismatch successInputStubs vs outputs",
+                {
+                  successInputStubs: successInputStubs.length,
+                  outputs: processedFiles.length,
+                },
+              );
             }
 
-            const { outputStirlingFileStubs, outputStirlingFiles } = buildOutputPairs(
-              processedFiles,
-              thumbnails,
-              processedFileMetadataArray,
-              (file, thumbnail, metadata, index) =>
-                createChildStub(
-                  successInputStubs[index] || inputStirlingFileStubs[index] || inputStirlingFileStubs[0],
-                  newToolOperation,
-                  file,
-                  thumbnail,
-                  metadata,
-                ),
-            );
+            const { outputStirlingFileStubs, outputStirlingFiles } =
+              buildOutputPairs(
+                processedFiles,
+                thumbnails,
+                processedFileMetadataArray,
+                (file, thumbnail, metadata, index) =>
+                  createChildStub(
+                    successInputStubs[index] ||
+                      inputStirlingFileStubs[index] ||
+                      inputStirlingFileStubs[0],
+                    newToolOperation,
+                    file,
+                    thumbnail,
+                    metadata,
+                  ),
+              );
 
             // Only consume inputs that successfully produced outputs
-            const toConsumeInputIds = successSourceIds.filter((id) => inputFileIds.includes(id));
+            const toConsumeInputIds = successSourceIds.filter((id) =>
+              inputFileIds.includes(id),
+            );
             console.debug("[useToolOperation] Consuming files (version)", {
               inputCount: inputFileIds.length,
               toConsume: toConsumeInputIds.length,
             });
-            const outputFileIds = await consumeFiles(toConsumeInputIds, outputStirlingFiles, outputStirlingFileStubs);
+            const outputFileIds = await consumeFiles(
+              toConsumeInputIds,
+              outputStirlingFiles,
+              outputStirlingFileStubs,
+            );
             // Tell the viewer to follow the replacement file — consumeFiles prepends the new file
             // to the list, so activeFileIndex would point to the wrong file without this.
             if (outputFileIds.length === 1) setActiveFileId(outputFileIds[0]);
@@ -403,7 +486,9 @@ export const useToolOperation = <TParams>(config: ToolOperationConfig<TParams>):
 
             // Carry the desktop save path forward so the output can be saved back to the same file
             if (toConsumeInputIds.length === 1 && outputFileIds.length === 1) {
-              const inputStub = selectors.getStirlingFileStub(toConsumeInputIds[0]);
+              const inputStub = selectors.getStirlingFileStub(
+                toConsumeInputIds[0],
+              );
               if (inputStub?.localFilePath) {
                 fileActions.updateStirlingFileStub(outputFileIds[0], {
                   localFilePath: inputStub.localFilePath,
@@ -411,63 +496,100 @@ export const useToolOperation = <TParams>(config: ToolOperationConfig<TParams>):
               }
             }
 
-            actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename, downloadLocalPath, outputFileIds);
+            actions.setDownloadInfo(
+              downloadInfo.url,
+              downloadInfo.filename,
+              downloadLocalPath,
+              outputFileIds,
+            );
 
             lastOperationRef.current = {
               inputFiles: extractFiles(validFiles),
-              inputStirlingFileStubs: inputStirlingFileStubs.map((record) => ({ ...record })),
+              inputStirlingFileStubs: inputStirlingFileStubs.map((record) => ({
+                ...record,
+              })),
               outputFileIds,
             };
           } else {
             // Outputs are independent artifacts (format conversion, merge, split).
             // Create fresh root stubs with no parent chain, then swap out only the inputs
             // that successfully produced outputs — other workbench files are untouched.
-            const { outputStirlingFileStubs, outputStirlingFiles } = buildOutputPairs(
-              processedFiles,
-              thumbnails,
-              processedFileMetadataArray,
-              (file, thumbnail, metadata) => createNewStirlingFileStub(file, undefined, thumbnail, metadata),
-            );
+            const { outputStirlingFileStubs, outputStirlingFiles } =
+              buildOutputPairs(
+                processedFiles,
+                thumbnails,
+                processedFileMetadataArray,
+                (file, thumbnail, metadata) =>
+                  createNewStirlingFileStub(
+                    file,
+                    undefined,
+                    thumbnail,
+                    metadata,
+                  ),
+              );
 
-            const toConsumeInputIds = successSourceIds.filter((id) => inputFileIds.includes(id));
+            const toConsumeInputIds = successSourceIds.filter((id) =>
+              inputFileIds.includes(id),
+            );
             console.debug("[useToolOperation] Consuming files (independent)", {
               inputCount: inputFileIds.length,
               toConsume: toConsumeInputIds.length,
             });
-            const outputFileIds = await consumeFiles(toConsumeInputIds, outputStirlingFiles, outputStirlingFileStubs);
+            const outputFileIds = await consumeFiles(
+              toConsumeInputIds,
+              outputStirlingFiles,
+              outputStirlingFileStubs,
+            );
 
             // Notify on desktop when processing completes
             await notifyPdfProcessingComplete(outputFileIds.length);
 
-            actions.setDownloadInfo(downloadInfo.url, downloadInfo.filename, null, outputFileIds);
+            actions.setDownloadInfo(
+              downloadInfo.url,
+              downloadInfo.filename,
+              null,
+              outputFileIds,
+            );
 
             // Send the user to the viewer for a single PDF output, otherwise the file editor
-            const isSinglePdf = processedFiles.length === 1 && processedFiles[0].type === "application/pdf";
+            const isSinglePdf =
+              processedFiles.length === 1 &&
+              processedFiles[0].type === "application/pdf";
             navActions.setWorkbench(isSinglePdf ? "viewer" : "fileEditor");
 
             lastOperationRef.current = {
               inputFiles: extractFiles(validFiles),
-              inputStirlingFileStubs: inputStirlingFileStubs.map((record) => ({ ...record })),
+              inputStirlingFileStubs: inputStirlingFileStubs.map((record) => ({
+                ...record,
+              })),
               outputFileIds,
             };
           }
         }
       } catch (error: any) {
         try {
-          const handled = await handle422Error(error, (id) => fileActions.markFileError(id as FileId));
+          const handled = await handle422Error(error, (id) =>
+            fileActions.markFileError(id as FileId),
+          );
           if (handled) {
-            actions.setStatus("Process failed due to invalid/corrupted file(s)");
+            actions.setStatus(
+              "Process failed due to invalid/corrupted file(s)",
+            );
             return;
           }
         } catch (_e) {
           void _e;
         }
 
-        const errorMessage = config.getErrorMessage?.(error) || extractErrorMessage(error);
+        const errorMessage =
+          config.getErrorMessage?.(error) || extractErrorMessage(error);
         actions.setError(errorMessage);
         actions.setStatus("");
       } finally {
-        window.removeEventListener(FILE_EVENTS.markError, errorListener as EventListener);
+        window.removeEventListener(
+          FILE_EVENTS.markError,
+          errorListener as EventListener,
+        );
         actions.setLoading(false);
         actions.setProgress(null);
       }
@@ -516,16 +638,24 @@ export const useToolOperation = <TParams>(config: ToolOperationConfig<TParams>):
       return;
     }
 
-    const { inputFiles, inputStirlingFileStubs, outputFileIds } = lastOperationRef.current;
+    const { inputFiles, inputStirlingFileStubs, outputFileIds } =
+      lastOperationRef.current;
 
     // Validate that we have data to undo
     if (inputFiles.length === 0 || inputStirlingFileStubs.length === 0) {
-      actions.setError(t("invalidUndoData", "Cannot undo: invalid operation data"));
+      actions.setError(
+        t("invalidUndoData", "Cannot undo: invalid operation data"),
+      );
       return;
     }
 
     if (outputFileIds.length === 0) {
-      actions.setError(t("noFilesToUndo", "Cannot undo: no files were processed in the last operation"));
+      actions.setError(
+        t(
+          "noFilesToUndo",
+          "Cannot undo: no files were processed in the last operation",
+        ),
+      );
       return;
     }
 
@@ -544,14 +674,25 @@ export const useToolOperation = <TParams>(config: ToolOperationConfig<TParams>):
 
       // Provide more specific error messages based on error type
       if (error.message?.includes("Mismatch between input files")) {
-        errorMessage = t("undoDataMismatch", "Cannot undo: operation data is corrupted");
+        errorMessage = t(
+          "undoDataMismatch",
+          "Cannot undo: operation data is corrupted",
+        );
       } else if (error.message?.includes("IndexedDB")) {
-        errorMessage = t("undoStorageError", "Undo completed but some files could not be saved to storage");
+        errorMessage = t(
+          "undoStorageError",
+          "Undo completed but some files could not be saved to storage",
+        );
       } else if (error.name === "QuotaExceededError") {
-        errorMessage = t("undoQuotaError", "Cannot undo: insufficient storage space");
+        errorMessage = t(
+          "undoQuotaError",
+          "Cannot undo: insufficient storage space",
+        );
       }
 
-      actions.setError(`${t("undoFailed", "Failed to undo operation")}: ${errorMessage}`);
+      actions.setError(
+        `${t("undoFailed", "Failed to undo operation")}: ${errorMessage}`,
+      );
 
       // Don't clear the operation data if undo failed - user might want to try again
     }

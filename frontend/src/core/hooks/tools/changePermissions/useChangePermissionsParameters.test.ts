@@ -34,7 +34,9 @@ describe("useChangePermissionsParameters", () => {
   test("should update all permission parameters", () => {
     const { result } = renderHook(() => useChangePermissionsParameters());
 
-    const permissionKeys = Object.keys(defaultParameters) as Array<keyof ChangePermissionsParameters>;
+    const permissionKeys = Object.keys(defaultParameters) as Array<
+      keyof ChangePermissionsParameters
+    >;
 
     // Set all to true
     act(() => {
@@ -103,7 +105,9 @@ describe("useChangePermissionsParameters", () => {
 
     // Set all restrictions - should still be valid
     act(() => {
-      const permissionKeys = Object.keys(defaultParameters) as Array<keyof ChangePermissionsParameters>;
+      const permissionKeys = Object.keys(defaultParameters) as Array<
+        keyof ChangePermissionsParameters
+      >;
       permissionKeys.forEach((key) => {
         result.current.updateParameter(key, true);
       });

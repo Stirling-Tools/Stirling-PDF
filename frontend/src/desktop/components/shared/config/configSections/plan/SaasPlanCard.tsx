@@ -12,11 +12,18 @@ interface SaasPlanCardProps {
   onUpgradeClick?: (plan: PlanTier) => void;
 }
 
-export const SaasPlanCard: React.FC<SaasPlanCardProps> = ({ plan, isCurrentPlan, currentTier, onUpgradeClick }) => {
+export const SaasPlanCard: React.FC<SaasPlanCardProps> = ({
+  plan,
+  isCurrentPlan,
+  currentTier,
+  onUpgradeClick,
+}) => {
   const { t } = useTranslation();
 
   // Free plan is included if user has Team or Enterprise tier
-  const isIncluded = plan.id === "free" && (currentTier === "team" || currentTier === "enterprise");
+  const isIncluded =
+    plan.id === "free" &&
+    (currentTier === "team" || currentTier === "enterprise");
 
   // Determine card styling based on plan type
   const getCardStyle = () => {
@@ -108,7 +115,9 @@ export const SaasPlanCard: React.FC<SaasPlanCardProps> = ({ plan, isCurrentPlan,
           </Text>
           <Group gap="xs" align="baseline">
             <Text size="xl" fw={700}>
-              {plan.isContactOnly ? t("plan.customPricing", "Custom") : `${plan.currency}${plan.price}`}
+              {plan.isContactOnly
+                ? t("plan.customPricing", "Custom")
+                : `${plan.currency}${plan.price}`}
             </Text>
             {!plan.isContactOnly && (
               <Text size="sm" c="dimmed">
@@ -132,14 +141,24 @@ export const SaasPlanCard: React.FC<SaasPlanCardProps> = ({ plan, isCurrentPlan,
             {plan.id === "free"
               ? t("credits.modal.forRegularWork", "For regular PDF work:")
               : plan.id === "enterprise"
-                ? t("credits.modal.everythingInCredits", "Everything in Credits, plus:")
-                : t("credits.modal.everythingInFree", "Everything in Free, plus:")}
+                ? t(
+                    "credits.modal.everythingInCredits",
+                    "Everything in Credits, plus:",
+                  )
+                : t(
+                    "credits.modal.everythingInFree",
+                    "Everything in Free, plus:",
+                  )}
           </Text>
           {plan.highlights.map((highlight: string, index: number) => (
             <FeatureListItem
               key={index}
               included
-              color={plan.id === "free" ? "var(--mantine-color-gray-6)" : "var(--color-primary-600)"}
+              color={
+                plan.id === "free"
+                  ? "var(--mantine-color-gray-6)"
+                  : "var(--color-primary-600)"
+              }
               size="xs"
             >
               {highlight}
@@ -150,7 +169,13 @@ export const SaasPlanCard: React.FC<SaasPlanCardProps> = ({ plan, isCurrentPlan,
         <div className="flex-grow" />
 
         <Button
-          variant={isCurrentPlan || isIncluded ? "subtle" : plan.isContactOnly ? "outline" : "filled"}
+          variant={
+            isCurrentPlan || isIncluded
+              ? "subtle"
+              : plan.isContactOnly
+                ? "outline"
+                : "filled"
+          }
           color={plan.isContactOnly ? undefined : "blue"}
           disabled={isCurrentPlan || isIncluded}
           fullWidth
@@ -173,7 +198,11 @@ export const SaasPlanCard: React.FC<SaasPlanCardProps> = ({ plan, isCurrentPlan,
             }),
           }}
           component={plan.isContactOnly ? "a" : undefined}
-          href={plan.isContactOnly ? `mailto:contact@stirlingpdf.com?subject=${plan.name} Plan Inquiry` : undefined}
+          href={
+            plan.isContactOnly
+              ? `mailto:contact@stirlingpdf.com?subject=${plan.name} Plan Inquiry`
+              : undefined
+          }
         >
           {isCurrentPlan
             ? t("plan.current", "Current Plan")

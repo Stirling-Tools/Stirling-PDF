@@ -14,7 +14,11 @@ interface PageSelectionSyntaxHintProps {
 
 const FALLBACK_MAX_PAGES = 100000; // large upper bound for syntax validation without a document
 
-const PageSelectionSyntaxHint = ({ input, maxPages, variant = "panel" }: PageSelectionSyntaxHintProps) => {
+const PageSelectionSyntaxHint = ({
+  input,
+  maxPages,
+  variant = "panel",
+}: PageSelectionSyntaxHintProps) => {
   const [syntaxError, setSyntaxError] = useState<string | null>(null);
   const { t } = useTranslation();
 
@@ -26,20 +30,42 @@ const PageSelectionSyntaxHint = ({ input, maxPages, variant = "panel" }: PageSel
     }
 
     try {
-      const { warning } = parseSelectionWithDiagnostics(text, maxPages && maxPages > 0 ? maxPages : FALLBACK_MAX_PAGES);
+      const { warning } = parseSelectionWithDiagnostics(
+        text,
+        maxPages && maxPages > 0 ? maxPages : FALLBACK_MAX_PAGES,
+      );
       setSyntaxError(
-        warning ? t("bulkSelection.syntaxError", "There is a syntax issue. See Page Selection tips for help.") : null,
+        warning
+          ? t(
+              "bulkSelection.syntaxError",
+              "There is a syntax issue. See Page Selection tips for help.",
+            )
+          : null,
       );
     } catch {
-      setSyntaxError(t("bulkSelection.syntaxError", "There is a syntax issue. See Page Selection tips for help."));
+      setSyntaxError(
+        t(
+          "bulkSelection.syntaxError",
+          "There is a syntax issue. See Page Selection tips for help.",
+        ),
+      );
     }
   }, [input, maxPages]);
 
   if (!syntaxError) return null;
 
   return (
-    <div className={variant === "panel" ? classes.selectedList : classes.errorCompact}>
-      <Text size="xs" className={variant === "panel" ? classes.errorText : classes.errorTextClamp}>
+    <div
+      className={
+        variant === "panel" ? classes.selectedList : classes.errorCompact
+      }
+    >
+      <Text
+        size="xs"
+        className={
+          variant === "panel" ? classes.errorText : classes.errorTextClamp
+        }
+      >
         {syntaxError}
       </Text>
     </div>

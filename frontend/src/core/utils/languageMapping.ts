@@ -20,7 +20,16 @@ const languageDefinitions: LanguageDefinition[] = [
   {
     ocrCode: "spa",
     displayName: "Spanish",
-    browserCodes: ["es", "es-ES", "es-MX", "es-AR", "es-CO", "es-CL", "es-PE", "es-VE"],
+    browserCodes: [
+      "es",
+      "es-ES",
+      "es-MX",
+      "es-AR",
+      "es-CO",
+      "es-CL",
+      "es-PE",
+      "es-VE",
+    ],
   },
 
   // French
@@ -907,7 +916,9 @@ languageDefinitions.forEach((lang) => {
  * mapBrowserLanguageToOcr('en-GB') // Returns 'eng'
  * mapBrowserLanguageToOcr('zh-CN') // Returns 'chi_sim'
  */
-export function mapBrowserLanguageToOcr(browserLanguage: string): string | null {
+export function mapBrowserLanguageToOcr(
+  browserLanguage: string,
+): string | null {
   if (!browserLanguage) return null;
 
   // Normalize the input
@@ -918,7 +929,11 @@ export function mapBrowserLanguageToOcr(browserLanguage: string): string | null 
   if (exactMatch) return exactMatch;
 
   // Try with different casing variations
-  const variations = [browserLanguage.toLowerCase(), browserLanguage.toUpperCase().toLowerCase(), normalizedInput];
+  const variations = [
+    browserLanguage.toLowerCase(),
+    browserLanguage.toUpperCase().toLowerCase(),
+    normalizedInput,
+  ];
 
   for (const variant of variations) {
     const match = browserToOcrMap.get(variant);

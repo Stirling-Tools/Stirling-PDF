@@ -25,7 +25,13 @@ export default function PageSelectByNumberButton({
   updatePagesFromCSV,
 }: PageSelectByNumberButtonProps) {
   return (
-    <Tooltip content={label} position="left" offset={12} arrow portalTarget={document.body}>
+    <Tooltip
+      content={label}
+      position="left"
+      offset={12}
+      arrow
+      portalTarget={document.body}
+    >
       <div className={`right-rail-fade enter`}>
         <Popover position="left" withArrow shadow="md" offset={8}>
           <Popover.Target>

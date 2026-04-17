@@ -23,10 +23,14 @@ export const normalizeRotation = (deg: number | undefined | null): number => {
  * Merge overlapping or touching rectangles into larger non-overlapping blocks.
  * Robust across rotations (vertical groups) and prevents dark spots from overlaps.
  */
-export const mergeConnectedRects = (rects: TokenBoundingBox[]): TokenBoundingBox[] => {
+export const mergeConnectedRects = (
+  rects: TokenBoundingBox[],
+): TokenBoundingBox[] => {
   if (rects.length === 0) return rects;
   const EPS = 0.004; // small tolerance in normalized page coords
-  const sorted = rects.slice().sort((a, b) => (a.top !== b.top ? a.top - b.top : a.left - b.left));
+  const sorted = rects
+    .slice()
+    .sort((a, b) => (a.top !== b.top ? a.top - b.top : a.left - b.left));
   const merged: TokenBoundingBox[] = [];
 
   const overlapsOrTouches = (a: TokenBoundingBox, b: TokenBoundingBox) => {
@@ -34,7 +38,12 @@ export const mergeConnectedRects = (rects: TokenBoundingBox[]): TokenBoundingBox
     const aB = a.top + a.height;
     const bR = b.left + b.width;
     const bB = b.top + b.height;
-    return !(b.left > aR + EPS || bR < a.left - EPS || b.top > aB + EPS || bB < a.top - EPS);
+    return !(
+      b.left > aR + EPS ||
+      bR < a.left - EPS ||
+      b.top > aB + EPS ||
+      bB < a.top - EPS
+    );
   };
 
   for (const r of sorted) {
@@ -69,7 +78,8 @@ export const groupWordRects = (
 ): Map<string, TokenBoundingBox[]> => {
   const groupedRects = new Map<string, TokenBoundingBox[]>();
   for (const { rect, metaIndex } of wordRects) {
-    const id = metaIndexToGroupId.get(metaIndex) ?? `${pane}-token-${metaIndex}`;
+    const id =
+      metaIndexToGroupId.get(metaIndex) ?? `${pane}-token-${metaIndex}`;
     const current = groupedRects.get(id) ?? [];
     current.push(rect);
     groupedRects.set(id, current);
@@ -88,8 +98,19 @@ export const computePageLayoutMetrics = (args: {
   zoom: number;
   offsetPixels: number; // highlight offset in px relative to original page height
 }) => {
-  const { page, peerPage, layout, isMobileViewport, scrollRefWidth, viewportWidth, zoom, offsetPixels } = args;
-  const targetHeight = peerPage ? Math.max(page.height, peerPage.height) : page.height;
+  const {
+    page,
+    peerPage,
+    layout,
+    isMobileViewport,
+    scrollRefWidth,
+    viewportWidth,
+    zoom,
+    offsetPixels,
+  } = args;
+  const targetHeight = peerPage
+    ? Math.max(page.height, peerPage.height)
+    : page.height;
   const fit = targetHeight / page.height;
   const highlightOffset = offsetPixels / page.height;
   const rotationNorm = normalizeRotation(page.rotation);
@@ -102,8 +123,12 @@ export const computePageLayoutMetrics = (args: {
     : Math.max(320, Math.round(viewportWidth * 0.5));
   const stackedHeight = Math.round(stackedWidth * 1.4142);
 
-  const baseWidth = isStackedPortrait ? stackedWidth : Math.round(page.width * fit);
-  const baseHeight = isStackedPortrait ? stackedHeight : Math.round(targetHeight);
+  const baseWidth = isStackedPortrait
+    ? stackedWidth
+    : Math.round(page.width * fit);
+  const baseHeight = isStackedPortrait
+    ? stackedHeight
+    : Math.round(targetHeight);
   const containerMaxW = scrollRefWidth ?? viewportWidth;
 
   // Container-first zooming with a stable baseline:
@@ -133,8 +158,13 @@ export const computePageLayoutMetrics = (args: {
     innerScale = 1;
   }
 
-  const containerWidth = Math.max(MIN_CONTAINER_WIDTH, Math.min(containerMaxW, Math.round(baseWidth * containerScale)));
-  const containerHeight = Math.round(baseHeight * (containerWidth / Math.max(1, baseWidth)));
+  const containerWidth = Math.max(
+    MIN_CONTAINER_WIDTH,
+    Math.min(containerMaxW, Math.round(baseWidth * containerScale)),
+  );
+  const containerHeight = Math.round(
+    baseHeight * (containerWidth / Math.max(1, baseWidth)),
+  );
 
   return {
     targetHeight,
@@ -153,7 +183,9 @@ export const computePageLayoutMetrics = (args: {
 };
 
 /** Map changes to dropdown options tuple. */
-export const mapChangesForDropdown = (changes: Array<{ value: string; label: string; pageNumber: number }>) =>
+export const mapChangesForDropdown = (
+  changes: Array<{ value: string; label: string; pageNumber: number }>,
+) =>
   changes.map(({ value, label, pageNumber }) => ({ value, label, pageNumber }));
 
 /** File selection helpers */
@@ -169,7 +201,9 @@ export const getFileFromSelection = (
 
 export const getStubFromSelection = (
   fileId: FileId | null,
-  selectors: { getStirlingFileStub: (id: FileId) => StirlingFileStub | undefined },
+  selectors: {
+    getStirlingFileStub: (id: FileId) => StirlingFileStub | undefined;
+  },
 ): StirlingFileStub | null => {
   if (!fileId) return null;
   const stub = selectors.getStirlingFileStub(fileId);
@@ -199,7 +233,9 @@ export const computeProgressPct = (
 ): number => {
   const totalCombined = totalsKnown ? (baseTotal ?? 0) + (compTotal ?? 0) : 0;
   const renderedCombined = baseRendered + compRendered;
-  return totalsKnown && totalCombined > 0 ? Math.min(100, Math.round((renderedCombined / totalCombined) * 100)) : 0;
+  return totalsKnown && totalCombined > 0
+    ? Math.min(100, Math.round((renderedCombined / totalCombined) * 100))
+    : 0;
 };
 
 export const computeCountsText = (

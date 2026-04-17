@@ -28,7 +28,17 @@ export function NonPdfBanner({ meta, onConvertToPdf }: NonPdfBannerProps) {
       <Badge
         variant="default"
         size="lg"
-        leftSection={<Box style={{ display: "flex", alignItems: "center", fontSize: "0.85rem" }}>{meta.icon}</Box>}
+        leftSection={
+          <Box
+            style={{
+              display: "flex",
+              alignItems: "center",
+              fontSize: "0.85rem",
+            }}
+          >
+            {meta.icon}
+          </Box>
+        }
         style={{ fontWeight: 600 }}
       >
         {t("viewer.nonPdf.fileTypeBadge", { type: meta.label })}

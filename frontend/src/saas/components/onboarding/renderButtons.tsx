@@ -2,7 +2,11 @@ import React from "react";
 import { Button, Group, ActionIcon } from "@mantine/core";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { TFunction } from "i18next";
-import { ButtonDefinition, type FlowState, type ButtonAction } from "@app/components/onboarding/saasOnboardingFlowConfig";
+import {
+  ButtonDefinition,
+  type FlowState,
+  type ButtonAction,
+} from "@app/components/onboarding/saasOnboardingFlowConfig";
 
 interface RenderButtonsProps {
   slideDefinition: {
@@ -14,9 +18,18 @@ interface RenderButtonsProps {
   t: TFunction;
 }
 
-export function renderButtons({ slideDefinition, flowState, onAction, t }: RenderButtonsProps) {
-  const leftButtons = slideDefinition.buttons.filter((btn) => btn.group === "left");
-  const rightButtons = slideDefinition.buttons.filter((btn) => btn.group === "right");
+export function renderButtons({
+  slideDefinition,
+  flowState,
+  onAction,
+  t,
+}: RenderButtonsProps) {
+  const leftButtons = slideDefinition.buttons.filter(
+    (btn) => btn.group === "left",
+  );
+  const rightButtons = slideDefinition.buttons.filter(
+    (btn) => btn.group === "right",
+  );
 
   const buttonStyles = (variant: ButtonDefinition["variant"]) =>
     variant === "primary"
@@ -63,7 +76,9 @@ export function renderButtons({ slideDefinition, flowState, onAction, t }: Rende
             },
           }}
         >
-          {button.icon === "chevron-left" && <ChevronLeftIcon fontSize="small" />}
+          {button.icon === "chevron-left" && (
+            <ChevronLeftIcon fontSize="small" />
+          )}
         </ActionIcon>
       );
     }
@@ -72,7 +87,12 @@ export function renderButtons({ slideDefinition, flowState, onAction, t }: Rende
     const label = resolveButtonLabel(button);
 
     return (
-      <Button key={button.key} onClick={() => onAction(button.action)} disabled={disabled} styles={buttonStyles(variant)}>
+      <Button
+        key={button.key}
+        onClick={() => onAction(button.action)}
+        disabled={disabled}
+        styles={buttonStyles(variant)}
+      >
         {label}
       </Button>
     );

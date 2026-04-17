@@ -30,7 +30,9 @@ function handleConfigLoaded(config: AppConfig) {
 export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <AppProviders appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}>
+      <AppProviders
+        appConfigProviderProps={{ onConfigLoaded: handleConfigLoaded }}
+      >
         <AppLayout>
           <OnboardingBootstrap />
           <TrialExpiredBootstrap />

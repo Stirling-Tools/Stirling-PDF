@@ -11,7 +11,12 @@ const AutoRename = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const autoRenameTips = useAutoRenameTips();
 
-  const base = useBaseTool("auto-rename-pdf-file", useAutoRenameParameters, useAutoRenameOperation, props);
+  const base = useBaseTool(
+    "auto-rename-pdf-file",
+    useAutoRenameParameters,
+    useAutoRenameOperation,
+    props,
+  );
 
   return createToolFlow({
     files: {

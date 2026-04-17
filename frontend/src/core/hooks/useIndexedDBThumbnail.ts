@@ -8,7 +8,9 @@ import { FileId } from "@app/types/fileContext";
  * Hook for IndexedDB-aware thumbnail loading
  * Handles thumbnail generation for files not in IndexedDB
  */
-export function useIndexedDBThumbnail(file: StirlingFileStub | undefined | null): {
+export function useIndexedDBThumbnail(
+  file: StirlingFileStub | undefined | null,
+): {
   thumbnail: string | null;
   isGenerating: boolean;
 } {
@@ -45,7 +47,9 @@ export function useIndexedDBThumbnail(file: StirlingFileStub | undefined | null)
             }
             fileObject = loadedFile;
           } else {
-            throw new Error("File ID not available or IndexedDB context not available");
+            throw new Error(
+              "File ID not available or IndexedDB context not available",
+            );
           }
 
           // Use the universal thumbnail generator
@@ -63,7 +67,11 @@ export function useIndexedDBThumbnail(file: StirlingFileStub | undefined | null)
             }
           }
         } catch (error) {
-          console.warn("Failed to generate thumbnail for file", file.name, error);
+          console.warn(
+            "Failed to generate thumbnail for file",
+            file.name,
+            error,
+          );
           if (!cancelled) setThumb(null);
         } finally {
           if (!cancelled) setGenerating(false);

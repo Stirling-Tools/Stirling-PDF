@@ -1,6 +1,11 @@
 import { PdfiumFont } from "@app/services/pdfiumDocBuilder";
 
-export const wrapText = (text: string, font: PdfiumFont, fontSize: number, maxWidth: number): string[] => {
+export const wrapText = (
+  text: string,
+  font: PdfiumFont,
+  fontSize: number,
+  maxWidth: number,
+): string[] => {
   const lines: string[] = [];
   const paragraphs = text.split(/\r?\n/);
 
@@ -14,7 +19,8 @@ export const wrapText = (text: string, font: PdfiumFont, fontSize: number, maxWi
     const words = trimmed.split(/\s+/);
     let currentLine = "";
     words.forEach((word) => {
-      const tentative = currentLine.length > 0 ? `${currentLine} ${word}` : word;
+      const tentative =
+        currentLine.length > 0 ? `${currentLine} ${word}` : word;
       const width = font.widthOfTextAtSize(tentative, fontSize);
       if (width <= maxWidth) {
         currentLine = tentative;
@@ -36,7 +42,10 @@ export const wrapText = (text: string, font: PdfiumFont, fontSize: number, maxWi
 export const formatFileSize = (bytes?: number | null) => {
   if (!bytes || bytes <= 0) return "--";
   const units = ["B", "KB", "MB", "GB"];
-  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  const exponent = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(1024)),
+    units.length - 1,
+  );
   const size = bytes / Math.pow(1024, exponent);
   return `${size.toFixed(exponent === 0 ? 0 : 1)} ${units[exponent]}`;
 };

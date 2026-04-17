@@ -44,7 +44,9 @@ const FitText: React.FC<FitTextProps> = ({
   const displayText = useMemo(() => {
     if (!text) return text;
     if (!lines || lines <= 1) return text;
-    const chars = Array.isArray(softBreakChars) ? softBreakChars : [softBreakChars];
+    const chars = Array.isArray(softBreakChars)
+      ? softBreakChars
+      : [softBreakChars];
     const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const re = new RegExp(`(${chars.filter(Boolean).map(esc).join("|")})`, "g");
     return text.replace(re, `$1\u200B`);
@@ -67,7 +69,11 @@ const FitText: React.FC<FitTextProps> = ({
   };
 
   return (
-    <ElementTag ref={ref} className={className} style={{ ...clampStyles, ...style }}>
+    <ElementTag
+      ref={ref}
+      className={className}
+      style={{ ...clampStyles, ...style }}
+    >
       {displayText}
     </ElementTag>
   );

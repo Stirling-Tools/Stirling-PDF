@@ -1,6 +1,10 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { ToolType, useToolOperation, ToolOperationConfig } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  ToolType,
+  useToolOperation,
+  ToolOperationConfig,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
   ScannerImageSplitParameters,
@@ -8,7 +12,10 @@ import {
 } from "@app/hooks/tools/scannerImageSplit/useScannerImageSplitParameters";
 import { useToolResources } from "@app/hooks/tools/shared/useToolResources";
 
-export const buildScannerImageSplitFormData = (parameters: ScannerImageSplitParameters, file: File): FormData => {
+export const buildScannerImageSplitFormData = (
+  parameters: ScannerImageSplitParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
   formData.append("angle_threshold", parameters.angle_threshold.toString());
@@ -45,13 +52,18 @@ export const useScannerImageSplitOperation = () => {
           return extractedFiles;
         }
       } catch (error) {
-        console.warn("Failed to extract as ZIP, treating as single file:", error);
+        console.warn(
+          "Failed to extract as ZIP, treating as single file:",
+          error,
+        );
       }
 
       // Fallback: treat as single file (PNG image)
       const inputFileName = originalFiles[0]?.name || "document";
       const baseFileName = inputFileName.replace(/\.[^.]+$/, "");
-      const singleFile = new File([blob], `${baseFileName}.png`, { type: "image/png" });
+      const singleFile = new File([blob], `${baseFileName}.png`, {
+        type: "image/png",
+      });
       return [singleFile];
     },
     [extractZipFiles],
@@ -61,7 +73,10 @@ export const useScannerImageSplitOperation = () => {
     ...scannerImageSplitOperationConfig,
     responseHandler,
     getErrorMessage: createStandardErrorHandler(
-      t("scannerImageSplit.error.failed", "An error occurred while extracting image scans."),
+      t(
+        "scannerImageSplit.error.failed",
+        "An error occurred while extracting image scans.",
+      ),
     ),
   };
 

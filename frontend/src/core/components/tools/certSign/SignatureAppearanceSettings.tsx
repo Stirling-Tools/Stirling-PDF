@@ -25,9 +25,20 @@ const SignatureAppearanceSettings = ({
             color={!parameters.showSignature ? "blue" : "var(--text-muted)"}
             onClick={() => onParameterChange("showSignature", false)}
             disabled={disabled}
-            style={{ flex: 1, height: "auto", minHeight: "40px", fontSize: "11px" }}
+            style={{
+              flex: 1,
+              height: "auto",
+              minHeight: "40px",
+              fontSize: "11px",
+            }}
           >
-            <div style={{ textAlign: "center", lineHeight: "1.1", fontSize: "11px" }}>
+            <div
+              style={{
+                textAlign: "center",
+                lineHeight: "1.1",
+                fontSize: "11px",
+              }}
+            >
               {t("certSign.appearance.invisible", "Invisible")}
             </div>
           </Button>
@@ -36,9 +47,20 @@ const SignatureAppearanceSettings = ({
             color={parameters.showSignature ? "blue" : "var(--text-muted)"}
             onClick={() => onParameterChange("showSignature", true)}
             disabled={disabled}
-            style={{ flex: 1, height: "auto", minHeight: "40px", fontSize: "11px" }}
+            style={{
+              flex: 1,
+              height: "auto",
+              minHeight: "40px",
+              fontSize: "11px",
+            }}
           >
-            <div style={{ textAlign: "center", lineHeight: "1.1", fontSize: "11px" }}>
+            <div
+              style={{
+                textAlign: "center",
+                lineHeight: "1.1",
+                fontSize: "11px",
+              }}
+            >
               {t("certSign.appearance.visible", "Visible")}
             </div>
           </Button>
@@ -54,19 +76,25 @@ const SignatureAppearanceSettings = ({
           <TextInput
             label={t("certSign.reason", "Reason")}
             value={parameters.reason}
-            onChange={(event) => onParameterChange("reason", event.currentTarget.value)}
+            onChange={(event) =>
+              onParameterChange("reason", event.currentTarget.value)
+            }
             disabled={disabled}
           />
           <TextInput
             label={t("certSign.location", "Location")}
             value={parameters.location}
-            onChange={(event) => onParameterChange("location", event.currentTarget.value)}
+            onChange={(event) =>
+              onParameterChange("location", event.currentTarget.value)
+            }
             disabled={disabled}
           />
           <TextInput
             label={t("certSign.name", "Name")}
             value={parameters.name}
-            onChange={(event) => onParameterChange("name", event.currentTarget.value)}
+            onChange={(event) =>
+              onParameterChange("name", event.currentTarget.value)
+            }
             disabled={disabled}
           />
           <NumberInput
@@ -86,9 +114,20 @@ const SignatureAppearanceSettings = ({
                 color={!parameters.showLogo ? "blue" : "var(--text-muted)"}
                 onClick={() => onParameterChange("showLogo", false)}
                 disabled={disabled}
-                style={{ flex: 1, height: "auto", minHeight: "40px", fontSize: "11px" }}
+                style={{
+                  flex: 1,
+                  height: "auto",
+                  minHeight: "40px",
+                  fontSize: "11px",
+                }}
               >
-                <div style={{ textAlign: "center", lineHeight: "1.1", fontSize: "11px" }}>
+                <div
+                  style={{
+                    textAlign: "center",
+                    lineHeight: "1.1",
+                    fontSize: "11px",
+                  }}
+                >
                   {t("certSign.noLogo", "No Logo")}
                 </div>
               </Button>
@@ -97,9 +136,20 @@ const SignatureAppearanceSettings = ({
                 color={parameters.showLogo ? "blue" : "var(--text-muted)"}
                 onClick={() => onParameterChange("showLogo", true)}
                 disabled={disabled}
-                style={{ flex: 1, height: "auto", minHeight: "40px", fontSize: "11px" }}
+                style={{
+                  flex: 1,
+                  height: "auto",
+                  minHeight: "40px",
+                  fontSize: "11px",
+                }}
               >
-                <div style={{ textAlign: "center", lineHeight: "1.1", fontSize: "11px" }}>
+                <div
+                  style={{
+                    textAlign: "center",
+                    lineHeight: "1.1",
+                    fontSize: "11px",
+                  }}
+                >
                   {t("certSign.showLogo", "Show Logo")}
                 </div>
               </Button>

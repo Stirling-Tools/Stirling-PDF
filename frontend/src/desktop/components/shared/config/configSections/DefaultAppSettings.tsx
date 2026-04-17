@@ -16,9 +16,15 @@ export const DefaultAppSettings: React.FC = () => {
           </Text>
           <Text size="xs" c="dimmed" mt={4}>
             {isDefault === true
-              ? t("settings.general.defaultPdfEditorActive", "Stirling PDF is your default PDF editor")
+              ? t(
+                  "settings.general.defaultPdfEditorActive",
+                  "Stirling PDF is your default PDF editor",
+                )
               : isDefault === false
-                ? t("settings.general.defaultPdfEditorInactive", "Another application is set as default")
+                ? t(
+                    "settings.general.defaultPdfEditorInactive",
+                    "Another application is set as default",
+                  )
                 : t("settings.general.defaultPdfEditorChecking", "Checking...")}
           </Text>
         </div>

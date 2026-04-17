@@ -17,7 +17,9 @@ export function downloadBlob(blob: Blob, filename: string): void {
  * @param file - The file object with storage information
  * @throws Error if file cannot be retrieved from storage
  */
-export async function downloadFileFromStorage(file: StirlingFileStub): Promise<void> {
+export async function downloadFileFromStorage(
+  file: StirlingFileStub,
+): Promise<void> {
   const lookupKey = file.id;
   const stirlingFile = await fileStorage.getStirlingFile(lookupKey);
 
@@ -36,7 +38,9 @@ export async function downloadFileFromStorage(file: StirlingFileStub): Promise<v
  * Downloads multiple files as individual downloads
  * @param files - Array of files to download
  */
-export async function downloadMultipleFiles(files: StirlingFileStub[]): Promise<void> {
+export async function downloadMultipleFiles(
+  files: StirlingFileStub[],
+): Promise<void> {
   for (const file of files) {
     await downloadFileFromStorage(file);
   }
@@ -47,7 +51,10 @@ export async function downloadMultipleFiles(files: StirlingFileStub[]): Promise<
  * @param files - Array of files to include in ZIP
  * @param zipFilename - Optional custom ZIP filename (defaults to timestamped name)
  */
-export async function downloadFilesAsZip(files: StirlingFileStub[], zipFilename?: string): Promise<void> {
+export async function downloadFilesAsZip(
+  files: StirlingFileStub[],
+  zipFilename?: string,
+): Promise<void> {
   if (files.length === 0) {
     throw new Error("No files provided for ZIP download");
   }
@@ -69,10 +76,15 @@ export async function downloadFilesAsZip(files: StirlingFileStub[], zipFilename?
   }
 
   // Generate default filename if not provided
-  const finalZipFilename = zipFilename || `files-${new Date().toISOString().slice(0, 19).replace(/[:-]/g, "")}.zip`;
+  const finalZipFilename =
+    zipFilename ||
+    `files-${new Date().toISOString().slice(0, 19).replace(/[:-]/g, "")}.zip`;
 
   // Create and download ZIP
-  const { zipFile } = await zipFileService.createZipFromFiles(filesToZip, finalZipFilename);
+  const { zipFile } = await zipFileService.createZipFromFiles(
+    filesToZip,
+    finalZipFilename,
+  );
   await downloadFile({ data: zipFile, filename: finalZipFilename });
 }
 
@@ -122,7 +134,11 @@ export function downloadFileObject(file: File, filename?: string): void {
  * @param filename - Filename for the download
  * @param mimeType - MIME type (defaults to text/plain)
  */
-export function downloadTextAsFile(content: string, filename: string, mimeType: string = "text/plain"): void {
+export function downloadTextAsFile(
+  content: string,
+  filename: string,
+  mimeType: string = "text/plain",
+): void {
   const blob = new Blob([content], { type: mimeType });
   void downloadFile({ data: blob, filename });
 }

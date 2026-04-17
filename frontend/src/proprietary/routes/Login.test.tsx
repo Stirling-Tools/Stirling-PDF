@@ -232,7 +232,9 @@ describe("Login", () => {
 
     // Fill in form using getElementById
     const emailInput = document.getElementById("email") as HTMLInputElement;
-    const passwordInput = document.getElementById("password") as HTMLInputElement;
+    const passwordInput = document.getElementById(
+      "password",
+    ) as HTMLInputElement;
 
     if (!emailInput || !passwordInput) {
       throw new Error("Form inputs not found");
@@ -246,7 +248,9 @@ describe("Login", () => {
     const submitButton = await waitFor(
       () => {
         const buttons = screen.queryAllByRole("button");
-        const submitBtn = buttons.find((btn) => btn.getAttribute("type") === "submit");
+        const submitBtn = buttons.find(
+          (btn) => btn.getAttribute("type") === "submit",
+        );
         if (!submitBtn) {
           throw new Error("Submit button not found");
         }
@@ -432,7 +436,9 @@ describe("Login", () => {
     );
 
     const emailInput = document.getElementById("email") as HTMLInputElement;
-    const passwordInput = document.getElementById("password") as HTMLInputElement;
+    const passwordInput = document.getElementById(
+      "password",
+    ) as HTMLInputElement;
 
     await user.type(emailInput, "wrong@example.com");
     await user.type(passwordInput, "wrongpassword");
@@ -440,7 +446,9 @@ describe("Login", () => {
     const submitButton = await waitFor(
       () => {
         const buttons = screen.queryAllByRole("button");
-        const submitBtn = buttons.find((btn) => btn.getAttribute("type") === "submit");
+        const submitBtn = buttons.find(
+          (btn) => btn.getAttribute("type") === "submit",
+        );
         if (!submitBtn) {
           throw new Error("Submit button not found");
         }
@@ -475,7 +483,9 @@ describe("Login", () => {
     const submitButton = await waitFor(
       () => {
         const buttons = screen.queryAllByRole("button");
-        const submitBtn = buttons.find((btn) => btn.getAttribute("type") === "submit");
+        const submitBtn = buttons.find(
+          (btn) => btn.getAttribute("type") === "submit",
+        );
         if (!submitBtn) {
           throw new Error("Submit button not found");
         }
@@ -534,7 +544,11 @@ describe("Login", () => {
 
   it("should redirect to home when login disabled", async () => {
     mockBackendProbeState.loginDisabled = true;
-    mockProbe.mockResolvedValueOnce({ status: "up", loginDisabled: true, loading: false });
+    mockProbe.mockResolvedValueOnce({
+      status: "up",
+      loginDisabled: true,
+      loading: false,
+    });
     vi.mocked(apiClient.get).mockResolvedValueOnce({
       data: {
         enableLogin: false,
@@ -648,7 +662,9 @@ describe("Login", () => {
     );
 
     const emailInput = document.getElementById("email") as HTMLInputElement;
-    const passwordInput = document.getElementById("password") as HTMLInputElement;
+    const passwordInput = document.getElementById(
+      "password",
+    ) as HTMLInputElement;
 
     await user.type(emailInput, "test@example.com");
     await user.type(passwordInput, "password123");
@@ -656,7 +672,9 @@ describe("Login", () => {
     const submitButton = await waitFor(
       () => {
         const buttons = screen.queryAllByRole("button");
-        const submitBtn = buttons.find((btn) => btn.getAttribute("type") === "submit");
+        const submitBtn = buttons.find(
+          (btn) => btn.getAttribute("type") === "submit",
+        );
         if (!submitBtn) {
           throw new Error("Submit button not found");
         }

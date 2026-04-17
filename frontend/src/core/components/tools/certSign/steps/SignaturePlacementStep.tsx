@@ -40,11 +40,22 @@ export const SignaturePlacementStep: React.FC<SignaturePlacementStepProps> = ({
       <div style={{ flex: 1, minHeight: "400px" }}>{children}</div>
 
       <Group gap="sm">
-        <Button variant="default" onClick={onBack} leftSection={<ArrowBackIcon sx={{ fontSize: 16 }} />}>
+        <Button
+          variant="default"
+          onClick={onBack}
+          leftSection={<ArrowBackIcon sx={{ fontSize: 16 }} />}
+        >
           {t("certSign.collab.signRequest.steps.back", "Back")}
         </Button>
-        <Button onClick={onNext} disabled={!isPlaced || disabled} style={{ flex: 1 }}>
-          {t("certSign.collab.signRequest.steps.continueToReview", "Continue to Review")}
+        <Button
+          onClick={onNext}
+          disabled={!isPlaced || disabled}
+          style={{ flex: 1 }}
+        >
+          {t(
+            "certSign.collab.signRequest.steps.continueToReview",
+            "Continue to Review",
+          )}
         </Button>
       </Group>
     </Stack>

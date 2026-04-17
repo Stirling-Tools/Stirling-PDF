@@ -14,7 +14,12 @@ type LandingActionsProps = {
   onFileSelect: (event: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
-export function LandingActions({ fileInputRef, onUploadClick, onMobileUploadClick, onFileSelect }: LandingActionsProps) {
+export function LandingActions({
+  fileInputRef,
+  onUploadClick,
+  onMobileUploadClick,
+  onFileSelect,
+}: LandingActionsProps) {
   const terminology = useFileActionTerminology();
   const { openFilesModal } = useFilesModalContext();
   const icons = useFileActionIcons();
@@ -26,7 +31,14 @@ export function LandingActions({ fileInputRef, onUploadClick, onMobileUploadClic
       <Group gap="sm" justify="center" wrap="wrap" mb="xs">
         <Button
           classNames={{ root: "landing-btn-primary" }}
-          leftSection={<LocalIcon icon={icons.uploadIconName} width="1rem" height="1rem" style={{ color: "white" }} />}
+          leftSection={
+            <LocalIcon
+              icon={icons.uploadIconName}
+              width="1rem"
+              height="1rem"
+              style={{ color: "white" }}
+            />
+          }
           onClick={(e) => {
             e.stopPropagation();
             onUploadClick();
@@ -38,7 +50,14 @@ export function LandingActions({ fileInputRef, onUploadClick, onMobileUploadClic
         <Button
           variant="default"
           classNames={{ root: "landing-btn-secondary" }}
-          leftSection={<LocalIcon icon="add" width="1rem" height="1rem" className="text-[var(--accent-interactive)]" />}
+          leftSection={
+            <LocalIcon
+              icon="add"
+              width="1rem"
+              height="1rem"
+              className="text-[var(--accent-interactive)]"
+            />
+          }
           onClick={(e) => {
             e.stopPropagation();
             openFilesModal();
@@ -60,12 +79,22 @@ export function LandingActions({ fileInputRef, onUploadClick, onMobileUploadClic
                 onMobileUploadClick();
               }}
             >
-              <LocalIcon icon="qr-code-rounded" width="1.25rem" height="1.25rem" />
+              <LocalIcon
+                icon="qr-code-rounded"
+                width="1.25rem"
+                height="1.25rem"
+              />
             </ActionIcon>
           </Tooltip>
         )}
       </Group>
-      <input ref={fileInputRef} type="file" multiple onChange={onFileSelect} style={{ display: "none" }} />
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        onChange={onFileSelect}
+        style={{ display: "none" }}
+      />
     </>
   );
 }

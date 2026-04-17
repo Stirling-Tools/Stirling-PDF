@@ -38,7 +38,9 @@ function setStoredBypass(enabled: boolean): void {
  */
 export function useBypassOnboarding(): boolean {
   const location = useLocation();
-  const [bypassOnboarding, setBypassOnboarding] = useState<boolean>(() => readStoredBypass());
+  const [bypassOnboarding, setBypassOnboarding] = useState<boolean>(() =>
+    readStoredBypass(),
+  );
 
   const shouldBypassFromSearch = useMemo(() => {
     try {

@@ -43,9 +43,13 @@ const removePlaceholderPages = (document: PDFDocument): PDFDocument => {
   };
 };
 
-const normalizeProcessedDocuments = (processed: PDFDocument | PDFDocument[]): PDFDocument | PDFDocument[] => {
+const normalizeProcessedDocuments = (
+  processed: PDFDocument | PDFDocument[],
+): PDFDocument | PDFDocument[] => {
   if (Array.isArray(processed)) {
-    const normalized = processed.map(removePlaceholderPages).filter((doc) => doc.pages.length > 0);
+    const normalized = processed
+      .map(removePlaceholderPages)
+      .filter((doc) => doc.pages.length > 0);
     return normalized;
   }
   return removePlaceholderPages(processed);
@@ -104,17 +108,23 @@ export const usePageEditorExport = ({
 
     setExportLoading(true);
     try {
-      const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
-        displayDocument,
-        displayDocument,
-        splitPositions,
-      );
+      const processedDocuments =
+        documentManipulationService.applyDOMChangesToDocument(
+          displayDocument,
+          displayDocument,
+          splitPositions,
+        );
 
-      const normalizedDocuments = normalizeProcessedDocuments(processedDocuments);
-      const documentWithDOMState = Array.isArray(normalizedDocuments) ? normalizedDocuments[0] : normalizedDocuments;
+      const normalizedDocuments =
+        normalizeProcessedDocuments(processedDocuments);
+      const documentWithDOMState = Array.isArray(normalizedDocuments)
+        ? normalizedDocuments[0]
+        : normalizedDocuments;
 
       if (!documentWithDOMState || documentWithDOMState.pages.length === 0) {
-        console.warn("Export skipped: no concrete pages available after filtering placeholders.");
+        console.warn(
+          "Export skipped: no concrete pages available after filtering placeholders.",
+        );
         setExportLoading(false);
         return;
       }
@@ -126,14 +136,23 @@ export const usePageEditorExport = ({
       const sourceFiles = getSourceFiles();
       const exportFilename = getExportFilename();
       const result = sourceFiles
-        ? await pdfExportService.exportPDFMultiFile(documentWithDOMState, sourceFiles, validSelectedPageIds, {
-            selectedOnly: true,
-            filename: exportFilename,
-          })
-        : await pdfExportService.exportPDF(documentWithDOMState, validSelectedPageIds, {
-            selectedOnly: true,
-            filename: exportFilename,
-          });
+        ? await pdfExportService.exportPDFMultiFile(
+            documentWithDOMState,
+            sourceFiles,
+            validSelectedPageIds,
+            {
+              selectedOnly: true,
+              filename: exportFilename,
+            },
+          )
+        : await pdfExportService.exportPDF(
+            documentWithDOMState,
+            validSelectedPageIds,
+            {
+              selectedOnly: true,
+              filename: exportFilename,
+            },
+          );
 
       pdfExportService.downloadFile(result.blob, result.filename);
       setHasUnsavedChanges(false);
@@ -158,26 +177,36 @@ export const usePageEditorExport = ({
 
     setExportLoading(true);
     try {
-      const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
-        displayDocument,
-        displayDocument,
-        splitPositions,
-      );
+      const processedDocuments =
+        documentManipulationService.applyDOMChangesToDocument(
+          displayDocument,
+          displayDocument,
+          splitPositions,
+        );
 
-      const normalizedDocuments = normalizeProcessedDocuments(processedDocuments);
+      const normalizedDocuments =
+        normalizeProcessedDocuments(processedDocuments);
 
       if (
-        (Array.isArray(normalizedDocuments) && normalizedDocuments.length === 0) ||
-        (!Array.isArray(normalizedDocuments) && normalizedDocuments.pages.length === 0)
+        (Array.isArray(normalizedDocuments) &&
+          normalizedDocuments.length === 0) ||
+        (!Array.isArray(normalizedDocuments) &&
+          normalizedDocuments.pages.length === 0)
       ) {
-        console.warn("Export skipped: no concrete pages available after filtering placeholders.");
+        console.warn(
+          "Export skipped: no concrete pages available after filtering placeholders.",
+        );
         setExportLoading(false);
         return;
       }
 
       const sourceFiles = getSourceFiles();
       const exportFilename = getExportFilename();
-      const files = await exportProcessedDocumentsToFiles(normalizedDocuments, sourceFiles, exportFilename);
+      const files = await exportProcessedDocumentsToFiles(
+        normalizedDocuments,
+        sourceFiles,
+        exportFilename,
+      );
 
       if (files.length > 1) {
         const JSZip = await import("jszip");
@@ -203,33 +232,50 @@ export const usePageEditorExport = ({
       console.error("Export failed:", error);
       setExportLoading(false);
     }
-  }, [displayDocument, splitPositions, getSourceFiles, getExportFilename, setHasUnsavedChanges, setExportLoading]);
+  }, [
+    displayDocument,
+    splitPositions,
+    getSourceFiles,
+    getExportFilename,
+    setHasUnsavedChanges,
+    setExportLoading,
+  ]);
 
   const applyChanges = useCallback(async () => {
     if (!displayDocument) return;
 
     setExportLoading(true);
     try {
-      const processedDocuments = documentManipulationService.applyDOMChangesToDocument(
-        displayDocument,
-        displayDocument,
-        splitPositions,
-      );
+      const processedDocuments =
+        documentManipulationService.applyDOMChangesToDocument(
+          displayDocument,
+          displayDocument,
+          splitPositions,
+        );
 
-      const normalizedDocuments = normalizeProcessedDocuments(processedDocuments);
+      const normalizedDocuments =
+        normalizeProcessedDocuments(processedDocuments);
 
       if (
-        (Array.isArray(normalizedDocuments) && normalizedDocuments.length === 0) ||
-        (!Array.isArray(normalizedDocuments) && normalizedDocuments.pages.length === 0)
+        (Array.isArray(normalizedDocuments) &&
+          normalizedDocuments.length === 0) ||
+        (!Array.isArray(normalizedDocuments) &&
+          normalizedDocuments.pages.length === 0)
       ) {
-        console.warn("Apply changes skipped: no concrete pages available after filtering placeholders.");
+        console.warn(
+          "Apply changes skipped: no concrete pages available after filtering placeholders.",
+        );
         setExportLoading(false);
         return;
       }
 
       const sourceFiles = getSourceFiles();
       const exportFilename = getExportFilename();
-      const files = await exportProcessedDocumentsToFiles(normalizedDocuments, sourceFiles, exportFilename);
+      const files = await exportProcessedDocumentsToFiles(
+        normalizedDocuments,
+        sourceFiles,
+        exportFilename,
+      );
 
       // Add "_multitool" suffix to filenames
       const renamedFiles = files.map((file) => {

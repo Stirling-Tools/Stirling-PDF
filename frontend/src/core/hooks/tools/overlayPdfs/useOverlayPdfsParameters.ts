@@ -1,8 +1,14 @@
 import { useCallback } from "react";
 import { BaseParameters } from "@app/types/parameters";
-import { useBaseParameters, type BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
+import {
+  useBaseParameters,
+  type BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
 
-export type OverlayMode = "SequentialOverlay" | "InterleavedOverlay" | "FixedRepeatOverlay";
+export type OverlayMode =
+  | "SequentialOverlay"
+  | "InterleavedOverlay"
+  | "FixedRepeatOverlay";
 
 export interface OverlayPdfsParameters extends BaseParameters {
   overlayFiles: File[];
@@ -18,17 +24,24 @@ export const defaultParameters: OverlayPdfsParameters = {
   counts: [],
 };
 
-export type OverlayPdfsParametersHook = BaseParametersHook<OverlayPdfsParameters>;
+export type OverlayPdfsParametersHook =
+  BaseParametersHook<OverlayPdfsParameters>;
 
 export const useOverlayPdfsParameters = (): OverlayPdfsParametersHook => {
   const base = useBaseParameters<OverlayPdfsParameters>({
     defaultParameters,
     endpointName: "overlay-pdfs",
     validateFn: (params) => {
-      if (!params.overlayFiles || params.overlayFiles.length === 0) return false;
+      if (!params.overlayFiles || params.overlayFiles.length === 0)
+        return false;
       if (params.overlayMode === "FixedRepeatOverlay") {
-        if (!params.counts || params.counts.length !== params.overlayFiles.length) return false;
-        if (params.counts.some((c) => !Number.isFinite(c) || c <= 0)) return false;
+        if (
+          !params.counts ||
+          params.counts.length !== params.overlayFiles.length
+        )
+          return false;
+        if (params.counts.some((c) => !Number.isFinite(c) || c <= 0))
+          return false;
       }
       return true;
     },

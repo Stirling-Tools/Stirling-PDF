@@ -9,7 +9,12 @@ interface RedactModeSelectorProps {
   hasAnyFiles?: boolean;
 }
 
-export default function RedactModeSelector({ mode, onModeChange, disabled, hasAnyFiles = false }: RedactModeSelectorProps) {
+export default function RedactModeSelector({
+  mode,
+  onModeChange,
+  disabled,
+  hasAnyFiles = false,
+}: RedactModeSelectorProps) {
   const { t } = useTranslation();
 
   return (
@@ -23,7 +28,10 @@ export default function RedactModeSelector({ mode, onModeChange, disabled, hasAn
           label: t("redact.modeSelector.automatic", "Automatic"),
           disabled: !hasAnyFiles, // Allow switching to automatic whenever files exist; selection can happen after
           tooltip: !hasAnyFiles
-            ? t("redact.modeSelector.automaticDisabledTooltip", "Upload files to use automatic redaction")
+            ? t(
+                "redact.modeSelector.automaticDisabledTooltip",
+                "Upload files to use automatic redaction",
+              )
             : undefined,
         },
         {

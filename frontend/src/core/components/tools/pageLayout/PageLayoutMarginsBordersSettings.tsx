@@ -8,13 +8,22 @@ export default function PageLayoutMarginsBordersSettings({
   disabled,
 }: {
   parameters: PageLayoutParameters;
-  onParameterChange: <K extends keyof PageLayoutParameters>(key: K, value: PageLayoutParameters[K]) => void;
+  onParameterChange: <K extends keyof PageLayoutParameters>(
+    key: K,
+    value: PageLayoutParameters[K],
+  ) => void;
   disabled?: boolean;
 }) {
   const { t } = useTranslation();
 
-  const cols = parameters.mode === "DEFAULT" ? Math.ceil(Math.sqrt(parameters.pagesPerSheet)) : parameters.cols;
-  const rows = parameters.mode === "DEFAULT" ? Math.ceil(parameters.pagesPerSheet / cols) : parameters.rows;
+  const cols =
+    parameters.mode === "DEFAULT"
+      ? Math.ceil(Math.sqrt(parameters.pagesPerSheet))
+      : parameters.cols;
+  const rows =
+    parameters.mode === "DEFAULT"
+      ? Math.ceil(parameters.pagesPerSheet / cols)
+      : parameters.rows;
 
   const left = parameters.leftMargin ?? 0;
   const right = parameters.rightMargin ?? 0;
@@ -42,15 +51,24 @@ export default function PageLayoutMarginsBordersSettings({
   const invalidInnerSize = (innerWidth <= 0 || innerHeight <= 0) && inner > 0;
 
   const outerHeightError = invalidOuterHeight
-    ? t("pageLayout.error.outerVerticalMarginsTooLarge", "Top/Bottom margins are too large for this page size.")
+    ? t(
+        "pageLayout.error.outerVerticalMarginsTooLarge",
+        "Top/Bottom margins are too large for this page size.",
+      )
     : undefined;
 
   const outerWidthError = invalidOuterWidth
-    ? t("pageLayout.error.outerHorizontalMarginsTooLarge", "Left/Right margins are too large for this page size.")
+    ? t(
+        "pageLayout.error.outerHorizontalMarginsTooLarge",
+        "Left/Right margins are too large for this page size.",
+      )
     : undefined;
 
   const innerError = invalidInnerSize
-    ? t("pageLayout.error.innerMarginTooLarge", "Inner margin is too large for the selected layout.")
+    ? t(
+        "pageLayout.error.innerMarginTooLarge",
+        "Inner margin is too large for the selected layout.",
+      )
     : undefined;
 
   return (
@@ -109,7 +127,9 @@ export default function PageLayoutMarginsBordersSettings({
 
       <Switch
         checked={parameters.addBorder}
-        onChange={(e) => onParameterChange("addBorder", e.currentTarget.checked)}
+        onChange={(e) =>
+          onParameterChange("addBorder", e.currentTarget.checked)
+        }
         label={t("pageLayout.addBorder", "Add Borders")}
         disabled={disabled}
       />

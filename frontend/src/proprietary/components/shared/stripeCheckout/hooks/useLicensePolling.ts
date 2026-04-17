@@ -1,5 +1,8 @@
 import { useCallback } from "react";
-import { pollLicenseKeyWithBackoff, activateLicenseKey } from "@app/utils/licenseCheckoutUtils";
+import {
+  pollLicenseKeyWithBackoff,
+  activateLicenseKey,
+} from "@app/utils/licenseCheckoutUtils";
 import { PollingStatus } from "@app/components/shared/stripeCheckout/types/checkout";
 
 /**
@@ -9,7 +12,12 @@ export const useLicensePolling = (
   isMountedRef: React.RefObject<boolean>,
   setPollingStatus: React.Dispatch<React.SetStateAction<PollingStatus>>,
   setLicenseKey: React.Dispatch<React.SetStateAction<string | null>>,
-  onLicenseActivated?: (licenseInfo: { licenseType: string; enabled: boolean; maxUsers: number; hasKey: boolean }) => void,
+  onLicenseActivated?: (licenseInfo: {
+    licenseType: string;
+    enabled: boolean;
+    maxUsers: number;
+    hasKey: boolean;
+  }) => void,
 ) => {
   const pollForLicenseKey = useCallback(
     async (installId: string) => {

@@ -7,7 +7,10 @@ import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface AdvancedOptionsStepProps {
   parameters: ChangeMetadataParameters;
-  onParameterChange: <K extends keyof ChangeMetadataParameters>(key: K, value: ChangeMetadataParameters[K]) => void;
+  onParameterChange: <K extends keyof ChangeMetadataParameters>(
+    key: K,
+    value: ChangeMetadataParameters[K],
+  ) => void;
   disabled?: boolean;
   addCustomMetadata: (key?: string, value?: string) => void;
   removeCustomMetadata: (id: string) => void;
@@ -37,11 +40,23 @@ const AdvancedOptionsStep = ({
         }}
         disabled={disabled || parameters.deleteAll}
         data={[
-          { value: TrappedStatus.UNKNOWN, label: t("changeMetadata.trapped.unknown", "Unknown") },
-          { value: TrappedStatus.TRUE, label: t("changeMetadata.trapped.true", "True") },
-          { value: TrappedStatus.FALSE, label: t("changeMetadata.trapped.false", "False") },
+          {
+            value: TrappedStatus.UNKNOWN,
+            label: t("changeMetadata.trapped.unknown", "Unknown"),
+          },
+          {
+            value: TrappedStatus.TRUE,
+            label: t("changeMetadata.trapped.true", "True"),
+          },
+          {
+            value: TrappedStatus.FALSE,
+            label: t("changeMetadata.trapped.false", "False"),
+          },
         ]}
-        comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+        comboboxProps={{
+          withinPortal: true,
+          zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+        }}
       />
 
       <Divider />

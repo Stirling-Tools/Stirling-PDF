@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  ReactNode,
+} from "react";
 import { Modal, Text, Button, Group, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
@@ -16,17 +22,23 @@ interface UnsavedChangesContextType {
   markClean: () => void;
 }
 
-const UnsavedChangesContext = createContext<UnsavedChangesContextType | undefined>(undefined);
+const UnsavedChangesContext = createContext<
+  UnsavedChangesContextType | undefined
+>(undefined);
 
 interface UnsavedChangesProviderProps {
   children: ReactNode;
 }
 
-export function UnsavedChangesProvider({ children }: UnsavedChangesProviderProps) {
+export function UnsavedChangesProvider({
+  children,
+}: UnsavedChangesProviderProps) {
   const { t } = useTranslation();
   const [isDirty, setIsDirty] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [resolvePromise, setResolvePromise] = useState<((value: boolean) => void) | null>(null);
+  const [resolvePromise, setResolvePromise] = useState<
+    ((value: boolean) => void) | null
+  >(null);
 
   const confirmIfDirty = useCallback((): Promise<boolean> => {
     if (!isDirty) {
@@ -57,7 +69,9 @@ export function UnsavedChangesProvider({ children }: UnsavedChangesProviderProps
   };
 
   return (
-    <UnsavedChangesContext.Provider value={{ isDirty, setIsDirty, confirmIfDirty, markClean }}>
+    <UnsavedChangesContext.Provider
+      value={{ isDirty, setIsDirty, confirmIfDirty, markClean }}
+    >
       {children}
       <Modal
         opened={modalOpen}
@@ -69,7 +83,10 @@ export function UnsavedChangesProvider({ children }: UnsavedChangesProviderProps
       >
         <Stack gap="md">
           <Text size="sm">
-            {t("admin.settings.unsavedChanges.message", "You have unsaved changes. Do you want to discard them?")}
+            {t(
+              "admin.settings.unsavedChanges.message",
+              "You have unsaved changes. Do you want to discard them?",
+            )}
           </Text>
           <Group justify="flex-end" gap="sm">
             <Button variant="default" onClick={handleCancel}>
@@ -88,7 +105,9 @@ export function UnsavedChangesProvider({ children }: UnsavedChangesProviderProps
 export function useUnsavedChanges(): UnsavedChangesContextType {
   const context = useContext(UnsavedChangesContext);
   if (!context) {
-    throw new Error("useUnsavedChanges must be used within an UnsavedChangesProvider");
+    throw new Error(
+      "useUnsavedChanges must be used within an UnsavedChangesProvider",
+    );
   }
   return context;
 }

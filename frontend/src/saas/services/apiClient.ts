@@ -8,7 +8,9 @@ import { openPlanSettings } from "@app/utils/appSettings";
 let globalCreditUpdateCallback: ((credits: number) => void) | null = null;
 
 // Function to set the global credit update callback
-export const setGlobalCreditUpdateCallback = (callback: (credits: number) => void) => {
+export const setGlobalCreditUpdateCallback = (
+  callback: (credits: number) => void,
+) => {
   globalCreditUpdateCallback = callback;
 };
 
@@ -18,8 +20,14 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
     const parts = token.split(".");
     if (parts.length < 2) return null;
     const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
-    const json = typeof atob !== "undefined" ? atob(padded) : Buffer.from(padded, "base64").toString("binary");
+    const padded = base64.padEnd(
+      base64.length + ((4 - (base64.length % 4)) % 4),
+      "=",
+    );
+    const json =
+      typeof atob !== "undefined"
+        ? atob(padded)
+        : Buffer.from(padded, "base64").toString("binary");
     return JSON.parse(json);
   } catch (e) {
     console.warn("[API Client] Failed to decode JWT payload:", e);
@@ -65,7 +73,10 @@ apiClient.interceptors.request.use(
       if (session?.access_token) {
         config.headers.Authorization = `Bearer ${session.access_token}`;
         const payload = decodeJwtPayload(session.access_token);
-        const role = (payload?.["role"] as string) || (payload?.["user_role"] as string) || undefined;
+        const role =
+          (payload?.["role"] as string) ||
+          (payload?.["user_role"] as string) ||
+          undefined;
         const aud = payload?.["aud"] as string | undefined;
         const isAnon = role === "anon" || aud === "anon";
 
@@ -73,10 +84,20 @@ apiClient.interceptors.request.use(
         if (import.meta.env.DEV) {
           console.debug("[API Client] Added JWT token to request:", config.url);
           console.debug("[API Client] JWT payload:", payload);
-          console.debug("[API Client] Token role:", role, "| aud:", aud, "| isAnon:", isAnon);
+          console.debug(
+            "[API Client] Token role:",
+            role,
+            "| aud:",
+            aud,
+            "| isAnon:",
+            isAnon,
+          );
         }
       } else {
-        console.debug("[API Client] No JWT token available for request:", config.url);
+        console.debug(
+          "[API Client] No JWT token available for request:",
+          config.url,
+        );
       }
     } catch (error) {
       console.error("[API Client] Error in request interceptor:", error);
@@ -105,27 +126,44 @@ apiClient.interceptors.response.use(
     if (creditsRemaining && globalCreditUpdateCallback) {
       const credits = parseInt(creditsRemaining, 10);
       if (!isNaN(credits) && credits >= 0) {
-        console.debug("[API Client] Updating credits from response header:", credits, "for URL:", response.config?.url);
+        console.debug(
+          "[API Client] Updating credits from response header:",
+          credits,
+          "for URL:",
+          response.config?.url,
+        );
         globalCreditUpdateCallback(credits);
         // Show low-credit toast with top-up button when below threshold
         if (credits < LOW_CREDIT_THRESHOLD) {
           notifyLowCredits(credits);
         }
       } else {
-        console.warn("[API Client] Invalid credits value in response header:", creditsRemaining);
+        console.warn(
+          "[API Client] Invalid credits value in response header:",
+          creditsRemaining,
+        );
       }
     }
     if (response.config?.url?.includes("/api/v1/credits")) {
-      console.debug("[API Client] Credits endpoint response headers:", response.headers);
+      console.debug(
+        "[API Client] Credits endpoint response headers:",
+        response.headers,
+      );
     }
     return response;
   },
   async (error) => {
     const originalRequest = error.config;
-    const isPublicEndpoint = publicEndpoints.some((endpoint) => originalRequest.url?.includes(endpoint));
+    const isPublicEndpoint = publicEndpoints.some((endpoint) =>
+      originalRequest.url?.includes(endpoint),
+    );
 
     // If we get a 401 and haven't already tried to refresh, and it's not a public endpoint
-    if (error.response?.status === 401 && !originalRequest._retry && !isPublicEndpoint) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !isPublicEndpoint
+    ) {
       originalRequest._retry = true;
 
       try {
@@ -146,7 +184,8 @@ apiClient.interceptors.response.use(
 
             // Only redirect to login for protected endpoints, not public ones
             const isPublicEndpoint =
-              originalRequest.url?.includes("/api/v1/config/") || originalRequest.url?.includes("/api/v1/info/");
+              originalRequest.url?.includes("/api/v1/config/") ||
+              originalRequest.url?.includes("/api/v1/info/");
 
             if (!isPublicEndpoint) {
               // Redirect to login only for protected endpoints
@@ -167,7 +206,9 @@ apiClient.interceptors.response.use(
           }
         } else {
           // No session exists, only redirect if not already on login page
-          console.debug("[API Client] No session to refresh, 401 on protected endpoint");
+          console.debug(
+            "[API Client] No session to refresh, 401 on protected endpoint",
+          );
           if (window.location.pathname !== "/login") {
             window.location.href = "/login";
           }
@@ -179,7 +220,10 @@ apiClient.interceptors.response.use(
 
     // For public endpoints with 401, just log and continue (don't redirect)
     if (isPublicEndpoint && error.response?.status === 401) {
-      console.debug("[API Client] 401 on public endpoint, continuing without auth:", originalRequest.url);
+      console.debug(
+        "[API Client] 401 on public endpoint, continuing without auth:",
+        originalRequest.url,
+      );
     }
     const status = error.response?.status;
     const url = error.config?.url;

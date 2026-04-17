@@ -31,7 +31,10 @@ describe("useAddPasswordParameters", () => {
     expect(result.current.parameters[paramName]).toBe(value);
   });
 
-  test.each([{ paramName: "preventAssembly" as const }, { paramName: "preventPrinting" as const }])(
+  test.each([
+    { paramName: "preventAssembly" as const },
+    { paramName: "preventPrinting" as const },
+  ])(
     "should update boolean permission parameter $paramName",
     ({ paramName }) => {
       const { result } = renderHook(() => useAddPasswordParameters());
@@ -132,19 +135,20 @@ describe("useAddPasswordParameters", () => {
     expect(result.current.validateParameters()).toBe(true);
   });
 
-  test.each(Object.keys(defaultChangePermissionsParameters) as Array<keyof ChangePermissionsParameters>)(
-    "should handle boolean restriction parameter %s",
-    (param) => {
-      const { result } = renderHook(() => useAddPasswordParameters());
+  test.each(
+    Object.keys(defaultChangePermissionsParameters) as Array<
+      keyof ChangePermissionsParameters
+    >,
+  )("should handle boolean restriction parameter %s", (param) => {
+    const { result } = renderHook(() => useAddPasswordParameters());
 
-      act(() => {
-        result.current.resetParameters();
-        result.current.permissions.updateParameter(param, true);
-      });
+    act(() => {
+      result.current.resetParameters();
+      result.current.permissions.updateParameter(param, true);
+    });
 
-      expect(result.current.validateParameters()).toBe(true);
-    },
-  );
+    expect(result.current.validateParameters()).toBe(true);
+  });
 
   test("should handle mixed parameter types in updateParameter", () => {
     const { result } = renderHook(() => useAddPasswordParameters());

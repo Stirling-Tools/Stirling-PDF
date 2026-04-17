@@ -1,5 +1,15 @@
 import React, { useMemo, useState } from "react";
-import { Stack, Card, Box, Text, Badge, Group, Divider, ScrollArea, Button } from "@mantine/core";
+import {
+  Stack,
+  Card,
+  Box,
+  Text,
+  Badge,
+  Group,
+  Divider,
+  ScrollArea,
+  Button,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { detectFileExtension, getFileSize } from "@app/utils/fileUtils";
 import { StirlingFileStub } from "@app/types/fileContext";
@@ -14,31 +24,43 @@ interface FileInfoCardProps {
   modalHeight: string;
 }
 
-const FileInfoCard: React.FC<FileInfoCardProps> = ({ currentFile, modalHeight }) => {
+const FileInfoCard: React.FC<FileInfoCardProps> = ({
+  currentFile,
+  modalHeight,
+}) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const { onMakeCopy } = useFileManagerContext();
   const [showShareManageModal, setShowShareManageModal] = useState(false);
   const isSharedWithYou = useMemo(() => {
     if (!currentFile) return false;
-    return currentFile.remoteOwnedByCurrentUser === false || currentFile.remoteSharedViaLink;
+    return (
+      currentFile.remoteOwnedByCurrentUser === false ||
+      currentFile.remoteSharedViaLink
+    );
   }, [currentFile]);
   const isOwnedRemote = useMemo(() => {
     if (!currentFile) return false;
-    return Boolean(currentFile.remoteStorageId) && currentFile.remoteOwnedByCurrentUser !== false;
+    return (
+      Boolean(currentFile.remoteStorageId) &&
+      currentFile.remoteOwnedByCurrentUser !== false
+    );
   }, [currentFile]);
-  const localUpdatedAt = currentFile?.createdAt ?? currentFile?.lastModified ?? 0;
+  const localUpdatedAt =
+    currentFile?.createdAt ?? currentFile?.lastModified ?? 0;
   const remoteUpdatedAt = currentFile?.remoteStorageUpdatedAt ?? 0;
   const isUploaded = Boolean(currentFile?.remoteStorageId);
   const isUpToDate = isUploaded && remoteUpdatedAt >= localUpdatedAt;
   const isOutOfSync = isUploaded && !isUpToDate && isOwnedRemote;
-  const isLocalOnly = !currentFile?.remoteStorageId && !currentFile?.remoteSharedViaLink;
+  const isLocalOnly =
+    !currentFile?.remoteStorageId && !currentFile?.remoteSharedViaLink;
   const isSharedByYou = useMemo(() => {
     if (!currentFile) return false;
     return isOwnedRemote && Boolean(currentFile.remoteHasShareLinks);
   }, [currentFile, isOwnedRemote]);
   const uploadEnabled = config?.storageEnabled === true;
-  const sharingEnabled = uploadEnabled && config?.storageSharingEnabled === true;
+  const sharingEnabled =
+    uploadEnabled && config?.storageSharingEnabled === true;
   const ownerLabel = useMemo(() => {
     if (!currentFile) return "";
     if (currentFile.remoteOwnerUsername) {
@@ -56,7 +78,12 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({ currentFile, modalHeight })
       withBorder
       p={0}
       mah={`calc(${modalHeight} * 0.45)`}
-      style={{ overflow: "hidden", flexShrink: 1, display: "flex", flexDirection: "column" }}
+      style={{
+        overflow: "hidden",
+        flexShrink: 1,
+        display: "flex",
+        flexDirection: "column",
+      }}
     >
       <Box
         bg="gray.4"
@@ -75,9 +102,16 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({ currentFile, modalHeight })
         <Stack gap="sm">
           <Group justify="space-between" py="xs">
             <Text size="sm" c="dimmed">
-              <PrivateContent>{t("fileManager.fileName", "Name")}</PrivateContent>
+              <PrivateContent>
+                {t("fileManager.fileName", "Name")}
+              </PrivateContent>
             </Text>
-            <Text size="sm" fw={500} style={{ maxWidth: "60%", textAlign: "right" }} truncate>
+            <Text
+              size="sm"
+              fw={500}
+              style={{ maxWidth: "60%", textAlign: "right" }}
+              truncate
+            >
               {currentFile ? currentFile.name : ""}
             </Text>
           </Group>
@@ -112,7 +146,9 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({ currentFile, modalHeight })
               {t("fileManager.lastModified", "Last modified")}
             </Text>
             <Text size="sm" fw={500}>
-              {currentFile ? new Date(currentFile.lastModified).toLocaleDateString() : ""}
+              {currentFile
+                ? new Date(currentFile.lastModified).toLocaleDateString()
+                : ""}
             </Text>
           </Group>
           <Divider />
@@ -122,7 +158,11 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({ currentFile, modalHeight })
               {t("fileManager.fileVersion", "Version")}
             </Text>
             {currentFile && (
-              <Badge size="sm" variant="light" color={currentFile?.versionNumber ? "blue" : "gray"}>
+              <Badge
+                size="sm"
+                variant="light"
+                color={currentFile?.versionNumber ? "blue" : "gray"}
+              >
                 v{currentFile ? currentFile.versionNumber || 1 : ""}
               </Badge>
             )}
@@ -154,7 +194,11 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({ currentFile, modalHeight })
                 <Text size="xs" c="dimmed" mb="xs">
                   {t("fileManager.toolChain", "Tools Applied")}
                 </Text>
-                <ToolChain toolChain={currentFile.toolHistory} displayStyle="badges" size="xs" />
+                <ToolChain
+                  toolChain={currentFile.toolHistory}
+                  displayStyle="badges"
+                  size="xs"
+                />
               </Box>
             </>
           )}
@@ -162,7 +206,12 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({ currentFile, modalHeight })
           {currentFile && isSharedWithYou && (
             <>
               <Divider />
-              <Button size="sm" variant="light" onClick={() => onMakeCopy(currentFile)} fullWidth>
+              <Button
+                size="sm"
+                variant="light"
+                onClick={() => onMakeCopy(currentFile)}
+                fullWidth
+              >
                 {t("fileManager.makeCopy", "Make a copy")}
               </Button>
             </>
@@ -177,7 +226,10 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({ currentFile, modalHeight })
                 </Text>
                 {uploadEnabled && isOutOfSync ? (
                   <Badge size="xs" variant="light" color="yellow">
-                    {t("fileManager.changesNotUploaded", "Changes not uploaded")}
+                    {t(
+                      "fileManager.changesNotUploaded",
+                      "Changes not uploaded",
+                    )}
                   </Badge>
                 ) : uploadEnabled ? (
                   <Badge size="xs" variant="light" color="teal">
@@ -206,7 +258,12 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({ currentFile, modalHeight })
                       {t("fileManager.sharedByYou", "Shared by you")}
                     </Badge>
                   </Group>
-                  <Button size="sm" variant="light" onClick={() => setShowShareManageModal(true)} fullWidth>
+                  <Button
+                    size="sm"
+                    variant="light"
+                    onClick={() => setShowShareManageModal(true)}
+                    fullWidth
+                  >
                     {t("storageShare.manage", "Manage sharing")}
                   </Button>
                 </>

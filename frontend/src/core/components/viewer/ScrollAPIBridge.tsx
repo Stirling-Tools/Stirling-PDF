@@ -35,7 +35,11 @@ function ScrollAPIBridgeInner({ documentId }: { documentId: string }) {
 
   useEffect(() => {
     const currentScroll = scrollRef.current;
-    if (currentScroll && currentPage !== undefined && totalPages !== undefined) {
+    if (
+      currentScroll &&
+      currentPage !== undefined &&
+      totalPages !== undefined
+    ) {
       const newState = {
         currentPage,
         totalPages,

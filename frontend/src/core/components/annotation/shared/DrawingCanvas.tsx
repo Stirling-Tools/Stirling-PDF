@@ -47,7 +47,9 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   const modalCanvasRef = useRef<HTMLCanvasElement>(null);
   const padRef = useRef<SignaturePad | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [savedSignatureData, setSavedSignatureData] = useState<string | null>(null);
+  const [savedSignatureData, setSavedSignatureData] = useState<string | null>(
+    null,
+  );
 
   const initPad = (canvas: HTMLCanvasElement) => {
     if (!padRef.current) {
@@ -125,7 +127,17 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     trimmedCanvas.height = trimHeight;
     const trimmedCtx = trimmedCanvas.getContext("2d");
     if (trimmedCtx) {
-      trimmedCtx.drawImage(canvas, minX, minY, trimWidth, trimHeight, 0, 0, trimWidth, trimHeight);
+      trimmedCtx.drawImage(
+        canvas,
+        minX,
+        minY,
+        trimWidth,
+        trimHeight,
+        0,
+        0,
+        trimWidth,
+        trimHeight,
+      );
     }
 
     return trimmedCanvas.toDataURL("image/png");
@@ -140,7 +152,10 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     const img = new Image();
     img.onload = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+      const scale = Math.min(
+        canvas.width / img.width,
+        canvas.height / img.height,
+      );
       const scaledWidth = img.width * scale;
       const scaledHeight = img.height * scale;
       const x = (canvas.width - scaledWidth) / 2;
@@ -181,7 +196,12 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     if (previewCanvasRef.current) {
       const ctx = previewCanvasRef.current.getContext("2d");
       if (ctx) {
-        ctx.clearRect(0, 0, previewCanvasRef.current.width, previewCanvasRef.current.height);
+        ctx.clearRect(
+          0,
+          0,
+          previewCanvasRef.current.width,
+          previewCanvasRef.current.height,
+        );
       }
     }
     setSavedSignatureData(null); // Clear saved signature
@@ -230,7 +250,9 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       <Paper withBorder p="md">
         <Stack gap="sm">
           <PrivateContent>
-            <Text fw={500}>{t("sign.canvas.heading", "Draw your signature")}</Text>
+            <Text fw={500}>
+              {t("sign.canvas.heading", "Draw your signature")}
+            </Text>
             <canvas
               ref={previewCanvasRef}
               width={width}
@@ -264,7 +286,10 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
               <Text size="sm" fw={500}>
                 {t("sign.canvas.colorLabel", "Colour")}
               </Text>
-              <ColorSwatchButton color={selectedColor} onClick={onColorSwatchClick} />
+              <ColorSwatchButton
+                color={selectedColor}
+                onClick={onColorSwatchClick}
+              />
             </Stack>
             <Stack gap={4} style={{ minWidth: 120 }}>
               <Text size="sm" fw={500}>

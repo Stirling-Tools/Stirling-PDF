@@ -108,7 +108,9 @@ const licenseService = {
     try {
       // Check if Supabase is configured
       if (!isSupabaseConfigured || !supabase) {
-        throw new Error("Supabase is not configured. Please use static plans instead.");
+        throw new Error(
+          "Supabase is not configured. Please use static plans instead.",
+        );
       }
 
       // Fetch all self-hosted prices from Stripe
@@ -139,11 +141,19 @@ const licenseService = {
 
       // Log missing prices for debugging
       if (data.missing && data.missing.length > 0) {
-        console.warn("Missing Stripe prices for lookup keys:", data.missing, "in currency:", currency);
+        console.warn(
+          "Missing Stripe prices for lookup keys:",
+          data.missing,
+          "in currency:",
+          currency,
+        );
       }
 
       // Build price map for easy access
-      const priceMap = new Map<string, { unit_amount: number; currency: string }>();
+      const priceMap = new Map<
+        string,
+        { unit_amount: number; currency: string }
+      >();
       for (const [lookupKey, priceData] of Object.entries(data.prices)) {
         priceMap.set(lookupKey, {
           unit_amount: priceData.unit_amount,
@@ -215,7 +225,9 @@ const licenseService = {
       const validPlans = plans.filter((plan) => plan.price > 0);
 
       if (validPlans.length < plans.length) {
-        const missingPlans = plans.filter((plan) => plan.price === 0).map((p) => p.id);
+        const missingPlans = plans
+          .filter((plan) => plan.price === 0)
+          .map((p) => p.id);
         console.warn("Filtered out plans with missing prices:", missingPlans);
       }
 
@@ -264,8 +276,12 @@ const licenseService = {
     }
 
     // Server tier
-    const serverMonthly = plans.find((p) => p.lookupKey === "selfhosted:server:monthly");
-    const serverYearly = plans.find((p) => p.lookupKey === "selfhosted:server:yearly");
+    const serverMonthly = plans.find(
+      (p) => p.lookupKey === "selfhosted:server:monthly",
+    );
+    const serverYearly = plans.find(
+      (p) => p.lookupKey === "selfhosted:server:yearly",
+    );
     if (serverMonthly || serverYearly) {
       groups.push({
         tier: "server",
@@ -279,8 +295,12 @@ const licenseService = {
     }
 
     // Enterprise tier (uses server pricing + seats)
-    const enterpriseMonthly = plans.find((p) => p.id === "selfhosted:enterprise:monthly");
-    const enterpriseYearly = plans.find((p) => p.id === "selfhosted:enterprise:yearly");
+    const enterpriseMonthly = plans.find(
+      (p) => p.id === "selfhosted:enterprise:monthly",
+    );
+    const enterpriseYearly = plans.find(
+      (p) => p.id === "selfhosted:enterprise:yearly",
+    );
     if (enterpriseMonthly || enterpriseYearly) {
       groups.push({
         tier: "enterprise",
@@ -299,7 +319,9 @@ const licenseService = {
   /**
    * Create a Stripe checkout session for upgrading
    */
-  async createCheckoutSession(request: CheckoutSessionRequest): Promise<CheckoutSessionResponse> {
+  async createCheckoutSession(
+    request: CheckoutSessionRequest,
+  ): Promise<CheckoutSessionResponse> {
     // Check if Supabase is configured
     if (!isSupabaseConfigured || !supabase) {
       throw new Error("Supabase is not configured. Checkout is not available.");
@@ -323,8 +345,13 @@ const licenseService = {
         ui_mode: checkoutMode,
         // For hosted checkout, provide success/cancel URLs
         success_url:
-          checkoutMode === "hosted" ? `${settingsUrl}?session_id={CHECKOUT_SESSION_ID}&payment_status=success` : undefined,
-        cancel_url: checkoutMode === "hosted" ? `${settingsUrl}?payment_status=canceled` : undefined,
+          checkoutMode === "hosted"
+            ? `${settingsUrl}?session_id={CHECKOUT_SESSION_ID}&payment_status=success`
+            : undefined,
+        cancel_url:
+          checkoutMode === "hosted"
+            ? `${settingsUrl}?payment_status=canceled`
+            : undefined,
       },
     });
 
@@ -339,10 +366,15 @@ const licenseService = {
    * Create a Stripe billing portal session for managing subscription
    * Uses license key for self-hosted authentication
    */
-  async createBillingPortalSession(returnUrl: string, licenseKey: string): Promise<BillingPortalResponse> {
+  async createBillingPortalSession(
+    returnUrl: string,
+    licenseKey: string,
+  ): Promise<BillingPortalResponse> {
     // Check if Supabase is configured
     if (!isSupabaseConfigured || !supabase) {
-      throw new Error("Supabase is not configured. Billing portal is not available.");
+      throw new Error(
+        "Supabase is not configured. Billing portal is not available.",
+      );
     }
 
     const { data, error } = await supabase.functions.invoke("manage-billing", {
@@ -354,7 +386,9 @@ const licenseService = {
     });
 
     if (error) {
-      throw new Error(`Failed to create billing portal session: ${error.message}`);
+      throw new Error(
+        `Failed to create billing portal session: ${error.message}`,
+      );
     }
 
     return data as BillingPortalResponse;
@@ -381,7 +415,9 @@ const licenseService = {
   async checkLicenseKey(installationId: string): Promise<LicenseKeyResponse> {
     // Check if Supabase is configured
     if (!isSupabaseConfigured || !supabase) {
-      throw new Error("Supabase is not configured. License key lookup is not available.");
+      throw new Error(
+        "Supabase is not configured. License key lookup is not available.",
+      );
     }
 
     const { data, error } = await supabase.functions.invoke("get-license-key", {
@@ -423,11 +459,15 @@ const licenseService = {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await apiClient.post("/api/v1/admin/license-file", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
+      const response = await apiClient.post(
+        "/api/v1/admin/license-file",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         },
-      });
+      );
 
       return response.data;
     } catch (error) {
@@ -441,7 +481,9 @@ const licenseService = {
    */
   async getLicenseInfo(): Promise<LicenseInfo> {
     try {
-      const response = await apiClient.get("/api/v1/admin/license-info", { suppressErrorToast: true });
+      const response = await apiClient.get("/api/v1/admin/license-info", {
+        suppressErrorToast: true,
+      });
       return response.data;
     } catch (error) {
       console.error("Error fetching license info:", error);
@@ -470,10 +512,15 @@ const licenseService = {
    * @param licenseKey - Current license key for authentication
    * @returns Billing portal URL for confirming the change
    */
-  async updateEnterpriseSeats(newSeatCount: number, licenseKey: string): Promise<string> {
+  async updateEnterpriseSeats(
+    newSeatCount: number,
+    licenseKey: string,
+  ): Promise<string> {
     // Check if Supabase is configured
     if (!isSupabaseConfigured || !supabase) {
-      throw new Error("Supabase is not configured. Seat updates are not available.");
+      throw new Error(
+        "Supabase is not configured. Seat updates are not available.",
+      );
     }
 
     const baseUrl = window.location.origin;
@@ -505,7 +552,9 @@ const licenseService = {
  * @param licenseInfo - Current license information
  * @returns Plan tier: 'free' | 'server' | 'enterprise'
  */
-export const mapLicenseToTier = (licenseInfo: LicenseInfo | null): "free" | "server" | "enterprise" | null => {
+export const mapLicenseToTier = (
+  licenseInfo: LicenseInfo | null,
+): "free" | "server" | "enterprise" | null => {
   if (!licenseInfo) return null;
 
   // No license or NORMAL type = Free tier

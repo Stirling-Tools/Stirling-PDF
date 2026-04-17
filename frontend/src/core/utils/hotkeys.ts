@@ -52,14 +52,21 @@ export const isMacLike = (): boolean => {
   }
   const platform = navigator.platform?.toLowerCase() ?? "";
   const userAgent = navigator.userAgent?.toLowerCase() ?? "";
-  return /mac|iphone|ipad|ipod/.test(platform) || /mac|iphone|ipad|ipod/.test(userAgent);
+  return (
+    /mac|iphone|ipad|ipod/.test(platform) ||
+    /mac|iphone|ipad|ipod/.test(userAgent)
+  );
 };
 
-export const isModifierCode = (code: string): boolean => MODIFIER_CODES.has(code);
+export const isModifierCode = (code: string): boolean =>
+  MODIFIER_CODES.has(code);
 
 const isFunctionKey = (code: string): boolean => /^F\d{1,2}$/.test(code);
 
-export const bindingEquals = (a?: HotkeyBinding | null, b?: HotkeyBinding | null): boolean => {
+export const bindingEquals = (
+  a?: HotkeyBinding | null,
+  b?: HotkeyBinding | null,
+): boolean => {
   if (!a && !b) return true;
   if (!a || !b) return false;
   return (
@@ -71,7 +78,10 @@ export const bindingEquals = (a?: HotkeyBinding | null, b?: HotkeyBinding | null
   );
 };
 
-export const bindingMatchesEvent = (binding: HotkeyBinding, event: KeyboardEvent): boolean => {
+export const bindingMatchesEvent = (
+  binding: HotkeyBinding,
+  event: KeyboardEvent,
+): boolean => {
   return (
     event.code === binding.code &&
     event.altKey === Boolean(binding.alt) &&
@@ -81,7 +91,9 @@ export const bindingMatchesEvent = (binding: HotkeyBinding, event: KeyboardEvent
   );
 };
 
-export const eventToBinding = (event: KeyboardEvent | ReactKeyboardEvent): HotkeyBinding | null => {
+export const eventToBinding = (
+  event: KeyboardEvent | ReactKeyboardEvent,
+): HotkeyBinding | null => {
   const code = event.code;
   if (!code || isModifierCode(code)) {
     return null;
@@ -143,7 +155,10 @@ const getKeyLabel = (code: string): string => {
   }
 };
 
-export const getDisplayParts = (binding: HotkeyBinding | null | undefined, macLike: boolean): string[] => {
+export const getDisplayParts = (
+  binding: HotkeyBinding | null | undefined,
+  macLike: boolean,
+): string[] => {
   if (!binding) return [];
   const parts: string[] = [];
   if (binding.meta) {
@@ -162,11 +177,15 @@ export const getDisplayParts = (binding: HotkeyBinding | null | undefined, macLi
   return parts;
 };
 
-export const serializeBindings = (bindings: Record<string, HotkeyBinding>): string => {
+export const serializeBindings = (
+  bindings: Record<string, HotkeyBinding>,
+): string => {
   return JSON.stringify(bindings);
 };
 
-export const deserializeBindings = (value: string | null | undefined): Record<string, HotkeyBinding> => {
+export const deserializeBindings = (
+  value: string | null | undefined,
+): Record<string, HotkeyBinding> => {
   if (!value) {
     return {};
   }

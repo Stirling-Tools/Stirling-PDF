@@ -224,7 +224,13 @@
 }
 
 .rainbowPaper {
-  background: linear-gradient(90deg, #00ffff, #0088ff, #8800ff, #ff0088) !important;
+  background: linear-gradient(
+    90deg,
+    #00ffff,
+    #0088ff,
+    #8800ff,
+    #ff0088
+  ) !important;
   background-size: 100% 100% !important;
   animation:
     rainbowBackground 3.5s ease infinite,
@@ -239,7 +245,13 @@
   position: fixed !important;
   top: 20px !important;
   right: 20px !important;
-  background: linear-gradient(45deg, #ffff00, #88ff00, #00ff88, #00ffff) !important;
+  background: linear-gradient(
+    45deg,
+    #ffff00,
+    #88ff00,
+    #00ff88,
+    #00ffff
+  ) !important;
   background-size: 300% 300% !important;
   animation:
     rainbowBackground 1s ease infinite,
@@ -277,7 +289,13 @@
 
 /* Make all buttons rainbow in rainbow mode */
 .rainbowMode button {
-  background: linear-gradient(45deg, #ffff00, #88ff00, #00ff88, #00ffff) !important;
+  background: linear-gradient(
+    45deg,
+    #ffff00,
+    #88ff00,
+    #00ff88,
+    #00ffff
+  ) !important;
   background-size: 100% 100% !important;
   animation: rainbowBackground 2s ease infinite !important;
   border: 2px solid !important;
@@ -292,7 +310,13 @@
 .rainbowMode input,
 .rainbowMode select,
 .rainbowMode textarea {
-  background: linear-gradient(90deg, #ffff00, #88ff00, #00ff88, #00ffff) !important;
+  background: linear-gradient(
+    90deg,
+    #ffff00,
+    #88ff00,
+    #00ff88,
+    #00ffff
+  ) !important;
   background-size: 100% 100% !important;
   animation: rainbowBackground 2.5s ease infinite !important;
   border: 2px solid !important;

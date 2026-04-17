@@ -59,10 +59,30 @@ export function PlanUpgradeCard({ currentTier }: PlanUpgradeCardProps) {
               defaultValue: `${BILLING_CONFIG.INCLUDED_CREDITS_PER_MONTH} credits per month (vs ${BILLING_CONFIG.FREE_CREDITS_PER_MONTH} on Free)`,
             })}
           </List.Item>
-          <List.Item>{t("settings.planBilling.upgrade.featureMembers", "Unlimited team members")}</List.Item>
-          <List.Item>{t("settings.planBilling.upgrade.featureThroughput", "Faster processing throughput")}</List.Item>
-          <List.Item>{t("settings.planBilling.upgrade.featureApi", "API access for automation")}</List.Item>
-          <List.Item>{t("settings.planBilling.upgrade.featureSupport", "Priority support")}</List.Item>
+          <List.Item>
+            {t(
+              "settings.planBilling.upgrade.featureMembers",
+              "Unlimited team members",
+            )}
+          </List.Item>
+          <List.Item>
+            {t(
+              "settings.planBilling.upgrade.featureThroughput",
+              "Faster processing throughput",
+            )}
+          </List.Item>
+          <List.Item>
+            {t(
+              "settings.planBilling.upgrade.featureApi",
+              "API access for automation",
+            )}
+          </List.Item>
+          <List.Item>
+            {t(
+              "settings.planBilling.upgrade.featureSupport",
+              "Priority support",
+            )}
+          </List.Item>
         </List>
 
         {/* Upgrade button */}
@@ -71,7 +91,10 @@ export function PlanUpgradeCard({ currentTier }: PlanUpgradeCardProps) {
         </Button>
 
         <Text size="xs" c="dimmed" ta="center">
-          {t("settings.planBilling.upgrade.opensInBrowser", "Opens in browser to complete upgrade")}
+          {t(
+            "settings.planBilling.upgrade.opensInBrowser",
+            "Opens in browser to complete upgrade",
+          )}
         </Text>
       </Stack>
     </Card>

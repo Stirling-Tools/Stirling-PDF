@@ -1,7 +1,19 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+  useCallback,
+} from "react";
 import { springAuth } from "@app/auth/springAuthClient";
 import { clearPlatformAuthOnLoginInit } from "@app/extensions/authSessionCleanup";
-import type { Session, User, AuthError, AuthChangeEvent } from "@app/auth/springAuthClient";
+import type {
+  Session,
+  User,
+  AuthError,
+  AuthChangeEvent,
+} from "@app/auth/springAuthClient";
 
 /**
  * Auth Context Type
@@ -54,7 +66,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       setError(null);
-      console.debug("[Auth] refreshSession: start", { path: window.location.pathname });
+      console.debug("[Auth] refreshSession: start", {
+        path: window.location.pathname,
+      });
       console.debug("[Auth] Refreshing session...");
 
       const { data, error } = await springAuth.refreshSession();
@@ -110,9 +124,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initializeAuth = async () => {
       try {
         console.debug(`[Auth:${mountId}] Initializing auth...`);
-        console.debug(`[Auth:${mountId}] Path: ${window.location.pathname} Search: ${window.location.search}`);
+        console.debug(
+          `[Auth:${mountId}] Path: ${window.location.pathname} Search: ${window.location.search}`,
+        );
         // Clear any platform-specific cached auth on login page init.
-        if (typeof window !== "undefined" && window.location.pathname.startsWith("/login")) {
+        if (
+          typeof window !== "undefined" &&
+          window.location.pathname.startsWith("/login")
+        ) {
           await clearPlatformAuthOnLoginInit();
         }
 
@@ -134,12 +153,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(data.session);
         }
       } catch (err) {
-        console.error("[Auth] Unexpected error during auth initialization:", err);
+        console.error(
+          "[Auth] Unexpected error during auth initialization:",
+          err,
+        );
         if (mounted) {
           setError(err as AuthError);
         }
       } finally {
-        console.debug(`[Auth:${mountId}] Initialize auth complete. mounted=${mounted}`);
+        console.debug(
+          `[Auth:${mountId}] Initialize auth complete. mounted=${mounted}`,
+        );
         if (mounted) {
           setLoading(false);
         }
@@ -152,8 +176,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const handleJwtAvailable = () => {
       console.log(`[Auth:${mountId}] ════════════════════════════════════`);
       console.log(`[Auth:${mountId}] 🔄 JWT available event received`);
-      console.log(`[Auth:${mountId}] Current state: loading=${loading}, hasSession=${!!session}`);
-      console.log(`[Auth:${mountId}] Setting loading=true to stabilize auth state`);
+      console.log(
+        `[Auth:${mountId}] Current state: loading=${loading}, hasSession=${!!session}`,
+      );
+      console.log(
+        `[Auth:${mountId}] Setting loading=true to stabilize auth state`,
+      );
       setLoading(true); // Prevent unstable renders during auth state transition
       setError(null);
       console.log(`[Auth:${mountId}] Refreshing session...`);
@@ -165,40 +193,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Subscribe to auth state changes
     const {
       data: { subscription },
-    } = springAuth.onAuthStateChange(async (event: AuthChangeEvent, newSession: Session | null) => {
-      if (!mounted) {
-        console.log(`[Auth:${mountId}] ⚠️  Auth state change ignored (unmounted): ${event}`);
-        return;
-      }
-
-      console.log(`[Auth:${mountId}] ════════════════════════════════════`);
-      console.log(`[Auth:${mountId}] 📢 Auth state change event: ${event}`);
-      console.log(`[Auth:${mountId}] Has session: ${!!newSession}`);
-      console.log(`[Auth:${mountId}] User: ${newSession?.user?.email || "none"}`);
-      console.log(`[Auth:${mountId}] Timestamp: ${new Date().toISOString()}`);
-
-      // Schedule state update
-      setTimeout(() => {
-        if (mounted) {
-          console.log(`[Auth:${mountId}] Applying session update (event: ${event})`);
-          setSession(newSession);
-          setError(null);
-
-          // Handle specific events
-          if (event === "SIGNED_OUT") {
-            console.log(`[Auth:${mountId}] ✓ User signed out, session cleared`);
-          } else if (event === "SIGNED_IN") {
-            console.log(`[Auth:${mountId}] ✓ User signed in successfully`);
-          } else if (event === "TOKEN_REFRESHED") {
-            console.log(`[Auth:${mountId}] ✓ Token refreshed`);
-          } else if (event === "USER_UPDATED") {
-            console.log(`[Auth:${mountId}] ✓ User updated`);
-          }
-        } else {
-          console.log(`[Auth:${mountId}] ⚠️  Session update skipped (unmounted during timeout)`);
+    } = springAuth.onAuthStateChange(
+      async (event: AuthChangeEvent, newSession: Session | null) => {
+        if (!mounted) {
+          console.log(
+            `[Auth:${mountId}] ⚠️  Auth state change ignored (unmounted): ${event}`,
+          );
+          return;
         }
-      }, 0);
-    });
+
+        console.log(`[Auth:${mountId}] ════════════════════════════════════`);
+        console.log(`[Auth:${mountId}] 📢 Auth state change event: ${event}`);
+        console.log(`[Auth:${mountId}] Has session: ${!!newSession}`);
+        console.log(
+          `[Auth:${mountId}] User: ${newSession?.user?.email || "none"}`,
+        );
+        console.log(`[Auth:${mountId}] Timestamp: ${new Date().toISOString()}`);
+
+        // Schedule state update
+        setTimeout(() => {
+          if (mounted) {
+            console.log(
+              `[Auth:${mountId}] Applying session update (event: ${event})`,
+            );
+            setSession(newSession);
+            setError(null);
+
+            // Handle specific events
+            if (event === "SIGNED_OUT") {
+              console.log(
+                `[Auth:${mountId}] ✓ User signed out, session cleared`,
+              );
+            } else if (event === "SIGNED_IN") {
+              console.log(`[Auth:${mountId}] ✓ User signed in successfully`);
+            } else if (event === "TOKEN_REFRESHED") {
+              console.log(`[Auth:${mountId}] ✓ Token refreshed`);
+            } else if (event === "USER_UPDATED") {
+              console.log(`[Auth:${mountId}] ✓ User updated`);
+            }
+          } else {
+            console.log(
+              `[Auth:${mountId}] ⚠️  Session update skipped (unmounted during timeout)`,
+            );
+          }
+        }, 0);
+      },
+    );
 
     return () => {
       console.log(`[Auth:${mountId}] 🔴 AuthProvider unmounting`);

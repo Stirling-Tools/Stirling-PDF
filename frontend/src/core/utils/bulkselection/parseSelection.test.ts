@@ -72,11 +72,15 @@ describe("parseSelection", () => {
   });
 
   it("17) progression plus range: 2n | 9-11 within 12", () => {
-    expect(parseSelection("2n | 9-11", 12)).toEqual([2, 4, 6, 8, 9, 10, 11, 12]);
+    expect(parseSelection("2n | 9-11", 12)).toEqual([
+      2, 4, 6, 8, 9, 10, 11, 12,
+    ]);
   });
 
   it("18) complex: (2n-1 & 1-20) & ! (5-7)", () => {
-    expect(parseSelection("2n-1 & 1-20 & !5-7", 20)).toEqual([1, 3, 9, 11, 13, 15, 17, 19]);
+    expect(parseSelection("2n-1 & 1-20 & !5-7", 20)).toEqual([
+      1, 3, 9, 11, 13, 15, 17, 19,
+    ]);
   });
 
   it("19) falls back to CSV when expression malformed", () => {
@@ -101,11 +105,15 @@ describe("parseSelection", () => {
     // Inner: 10-20 & !2n => odd numbers from 11..19 plus 10,12,14,16,18,20 excluded
     // Complement in 1..25 removes those, keeping others
     const result = parseSelection("!(10-20 & !2n)", 25);
-    expect(result).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 21, 22, 23, 24, 25]);
+    expect(result).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 21, 22, 23, 24, 25,
+    ]);
   });
 
   it("23) nested parentheses with progressions", () => {
-    expect(parseSelection("(2n | 3n+1) & 1-20", 50)).toEqual([1, 2, 4, 6, 7, 8, 10, 12, 13, 14, 16, 18, 19, 20]);
+    expect(parseSelection("(2n | 3n+1) & 1-20", 50)).toEqual([
+      1, 2, 4, 6, 7, 8, 10, 12, 13, 14, 16, 18, 19, 20,
+    ]);
   });
 
   it("24) parentheses with NOT directly on group", () => {
@@ -123,12 +131,16 @@ describe("parseSelection", () => {
 
   it("27) nested NOT and AND with parentheses", () => {
     // !(odd & 5-9) within 1..12 => remove odd numbers 5,7,9
-    expect(parseSelection("!(odd & 5-9)", 12)).toEqual([1, 2, 3, 4, 6, 8, 10, 11, 12]);
+    expect(parseSelection("!(odd & 5-9)", 12)).toEqual([
+      1, 2, 3, 4, 6, 8, 10, 11, 12,
+    ]);
   });
 
   it("28) deep nesting and mixing operators", () => {
     const expr = "(1-4 & 2n) , ( (5-10 & odd) & !(7) ), (3n+1 & 1-20)";
-    expect(parseSelection(expr, 20)).toEqual([1, 2, 4, 5, 7, 9, 10, 13, 16, 19]);
+    expect(parseSelection(expr, 20)).toEqual([
+      1, 2, 4, 5, 7, 9, 10, 13, 16, 19,
+    ]);
   });
 
   it("31) word NOT works like ! for terms", () => {
@@ -159,7 +171,9 @@ describe("parseSelection", () => {
   });
 
   it("35) handles large progressions efficiently", () => {
-    expect(parseSelection("100n", 1000)).toEqual([100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]);
+    expect(parseSelection("100n", 1000)).toEqual([
+      100, 200, 300, 400, 500, 600, 700, 800, 900, 1000,
+    ]);
   });
 
   it("36) handles progressions with large offsets", () => {
@@ -178,7 +192,9 @@ describe("parseSelection", () => {
     // (odd & !5-15) = odd numbers not in 5-15 = [1,3,17,19]
     // (3n+1 & 1-10) = [1,4,7,10]
     // Union of all = [1,2,3,4,6,7,8,10,12,14,16,17,18,19,20]
-    expect(parseSelection(expr, 20)).toEqual([1, 2, 3, 4, 6, 7, 8, 10, 12, 14, 16, 17, 18, 19, 20]);
+    expect(parseSelection(expr, 20)).toEqual([
+      1, 2, 3, 4, 6, 7, 8, 10, 12, 14, 16, 17, 18, 19, 20,
+    ]);
   });
 
   it("39) multiple NOT operators in sequence", () => {
@@ -224,13 +240,17 @@ describe("parseSelection", () => {
   });
 
   it("47) very large ranges are clamped correctly", () => {
-    expect(parseSelection("1-999999", 10)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(parseSelection("1-999999", 10)).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+    ]);
     // Note: -100-5 would fallback to CSV and reject -100, but 0-5 should work
     expect(parseSelection("0-5", 10)).toEqual([1, 2, 3, 4, 5]);
   });
 
   it("48) multiple comma-separated ranges", () => {
-    expect(parseSelection("1-2, 4-5, 7-8, 10", 10)).toEqual([1, 2, 4, 5, 7, 8, 10]);
+    expect(parseSelection("1-2, 4-5, 7-8, 10", 10)).toEqual([
+      1, 2, 4, 5, 7, 8, 10,
+    ]);
   });
 
   it("49) combination of all features in one expression", () => {

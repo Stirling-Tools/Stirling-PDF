@@ -54,7 +54,10 @@ export class FileAnalyzer {
       analysis.isCorrupted = quickAnalysis.isCorrupted;
 
       // Determine strategy based on file characteristics
-      analysis.recommendedStrategy = this.determineStrategy(file.size, quickAnalysis.pageCount);
+      analysis.recommendedStrategy = this.determineStrategy(
+        file.size,
+        quickAnalysis.pageCount,
+      );
 
       // Estimate processing time
       analysis.estimatedProcessingTime = this.estimateProcessingTime(
@@ -96,8 +99,11 @@ export class FileAnalyzer {
       // pdf.js opened it — owner-password-only case, no prompt needed.
       return false;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message.toLowerCase() : "";
-      return errorMessage.includes("password") || errorMessage.includes("encrypted");
+      const errorMessage =
+        error instanceof Error ? error.message.toLowerCase() : "";
+      return (
+        errorMessage.includes("password") || errorMessage.includes("encrypted")
+      );
     } finally {
       if (pdf) pdfWorkerManager.destroyDocument(pdf);
     }
@@ -131,8 +137,10 @@ export class FileAnalyzer {
       };
     } catch (error) {
       // Try to determine if it's corruption vs encryption
-      const errorMessage = error instanceof Error ? error.message.toLowerCase() : "";
-      const isEncrypted = errorMessage.includes("password") || errorMessage.includes("encrypted");
+      const errorMessage =
+        error instanceof Error ? error.message.toLowerCase() : "";
+      const isEncrypted =
+        errorMessage.includes("password") || errorMessage.includes("encrypted");
 
       return {
         pageCount: 0,
@@ -147,24 +155,36 @@ export class FileAnalyzer {
   /**
    * Determine the best processing strategy based on file characteristics
    */
-  private static determineStrategy(fileSize: number, pageCount?: number): ProcessingStrategy {
+  private static determineStrategy(
+    fileSize: number,
+    pageCount?: number,
+  ): ProcessingStrategy {
     // Handle corrupted or encrypted files
     if (!pageCount || pageCount === 0) {
       return "metadata_only";
     }
 
     // Small files with few pages - process everything immediately
-    if (fileSize <= this.SIZE_THRESHOLDS.SMALL && pageCount <= this.PAGE_THRESHOLDS.FEW) {
+    if (
+      fileSize <= this.SIZE_THRESHOLDS.SMALL &&
+      pageCount <= this.PAGE_THRESHOLDS.FEW
+    ) {
       return "immediate_full";
     }
 
     // Medium files or many pages - priority pages first, then progressive
-    if (fileSize <= this.SIZE_THRESHOLDS.MEDIUM && pageCount <= this.PAGE_THRESHOLDS.MANY) {
+    if (
+      fileSize <= this.SIZE_THRESHOLDS.MEDIUM &&
+      pageCount <= this.PAGE_THRESHOLDS.MANY
+    ) {
       return "priority_pages";
     }
 
     // Large files or massive page counts - chunked processing
-    if (fileSize <= this.SIZE_THRESHOLDS.LARGE && pageCount <= this.PAGE_THRESHOLDS.MASSIVE) {
+    if (
+      fileSize <= this.SIZE_THRESHOLDS.LARGE &&
+      pageCount <= this.PAGE_THRESHOLDS.MASSIVE
+    ) {
       return "progressive_chunked";
     }
 
@@ -175,7 +195,11 @@ export class FileAnalyzer {
   /**
    * Estimate processing time based on file characteristics and strategy
    */
-  private static estimateProcessingTime(_fileSize: number, pageCount: number = 0, strategy: ProcessingStrategy): number {
+  private static estimateProcessingTime(
+    _fileSize: number,
+    pageCount: number = 0,
+    strategy: ProcessingStrategy,
+  ): number {
     const baseTimes = {
       immediate_full: 200, // 200ms per page
       priority_pages: 150, // 150ms per page (optimized)
@@ -239,8 +263,11 @@ export class FileAnalyzer {
     const recommendations = {
       totalEstimatedTime,
       suggestedBatchSize: this.calculateBatchSize(files.length, totalSize),
-      shouldUseWebWorker: totalPages > 100 || totalSize > this.SIZE_THRESHOLDS.MEDIUM,
-      memoryWarning: totalSize > this.SIZE_THRESHOLDS.LARGE || totalPages > this.PAGE_THRESHOLDS.MASSIVE,
+      shouldUseWebWorker:
+        totalPages > 100 || totalSize > this.SIZE_THRESHOLDS.MEDIUM,
+      memoryWarning:
+        totalSize > this.SIZE_THRESHOLDS.LARGE ||
+        totalPages > this.PAGE_THRESHOLDS.MASSIVE,
     };
 
     return { analyses, recommendations };
@@ -249,7 +276,10 @@ export class FileAnalyzer {
   /**
    * Calculate optimal batch size for processing multiple files
    */
-  private static calculateBatchSize(fileCount: number, totalSize: number): number {
+  private static calculateBatchSize(
+    fileCount: number,
+    totalSize: number,
+  ): number {
     // Process small batches for large total sizes
     if (totalSize > this.SIZE_THRESHOLDS.LARGE) {
       return Math.max(1, Math.floor(fileCount / 4));
@@ -267,7 +297,10 @@ export class FileAnalyzer {
    * Check if a file appears to be a valid PDF
    */
   static async isValidPDF(file: File): Promise<boolean> {
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+    if (
+      file.type !== "application/pdf" &&
+      !file.name.toLowerCase().endsWith(".pdf")
+    ) {
       return false;
     }
 

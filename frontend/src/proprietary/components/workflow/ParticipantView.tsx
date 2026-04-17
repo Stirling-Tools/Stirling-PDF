@@ -1,6 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Stack, Card, Text, Badge, Group, Button, Loader, Alert, TextInput, FileInput, Select } from "@mantine/core";
+import {
+  Stack,
+  Card,
+  Text,
+  Badge,
+  Group,
+  Button,
+  Loader,
+  Alert,
+  TextInput,
+  FileInput,
+  Select,
+} from "@mantine/core";
 import { useParticipantSession } from "@app/hooks/workflow/useParticipantSession";
 import InfoIcon from "@mui/icons-material/Info";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -13,7 +25,15 @@ interface ParticipantViewProps {
 
 const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
   const { t } = useTranslation();
-  const { session, participant, loading, error, submitSignature, decline, downloadDocument } = useParticipantSession(token);
+  const {
+    session,
+    participant,
+    loading,
+    error,
+    submitSignature,
+    decline,
+    downloadDocument,
+  } = useParticipantSession(token);
 
   const [certType, setCertType] = useState<string>("P12");
   const [password, setPassword] = useState<string>("");
@@ -24,7 +44,10 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [declineReason, _setDeclineReason] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [notification, setNotification] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   type CertValidationState =
     | { status: "idle" }
@@ -32,7 +55,9 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
     | { status: "valid"; notAfter: string | null; subjectName: string | null }
     | { status: "error"; message: string };
 
-  const [certValidation, setCertValidation] = useState<CertValidationState>({ status: "idle" });
+  const [certValidation, setCertValidation] = useState<CertValidationState>({
+    status: "idle",
+  });
   const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -56,24 +81,39 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
           formData.append("p12File", certFile);
         }
 
-        const res = await fetch("/api/v1/workflow/participant/validate-certificate", {
-          method: "POST",
-          body: formData,
-        });
+        const res = await fetch(
+          "/api/v1/workflow/participant/validate-certificate",
+          {
+            method: "POST",
+            body: formData,
+          },
+        );
         const data = await res.json();
 
         if (data.valid) {
-          setCertValidation({ status: "valid", notAfter: data.notAfter, subjectName: data.subjectName });
+          setCertValidation({
+            status: "valid",
+            notAfter: data.notAfter,
+            subjectName: data.subjectName,
+          });
         } else {
           setCertValidation({
             status: "error",
-            message: data.error ?? t("certSign.collab.participant.certInvalidFallback", "Invalid certificate"),
+            message:
+              data.error ??
+              t(
+                "certSign.collab.participant.certInvalidFallback",
+                "Invalid certificate",
+              ),
           });
         }
       } catch {
         setCertValidation({
           status: "error",
-          message: t("certSign.collab.participant.certNetworkError", "Could not validate certificate"),
+          message: t(
+            "certSign.collab.participant.certNetworkError",
+            "Could not validate certificate",
+          ),
         });
       }
     }, 600);
@@ -85,7 +125,10 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
 
   const handleSubmitSignature = async () => {
     if (!certFile && certType !== "SERVER") {
-      setNotification({ type: "error", message: "Please select a certificate file" });
+      setNotification({
+        type: "error",
+        message: "Please select a certificate file",
+      });
       return;
     }
 
@@ -104,7 +147,10 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
         reason,
         showLogo: true,
       });
-      setNotification({ type: "success", message: "Signature submitted successfully!" });
+      setNotification({
+        type: "success",
+        message: "Signature submitted successfully!",
+      });
     } catch (err: unknown) {
       setNotification({
         type: "error",
@@ -116,13 +162,21 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
   };
 
   const handleDecline = async () => {
-    if (window.confirm("Are you sure you want to decline signing this document?")) {
+    if (
+      window.confirm("Are you sure you want to decline signing this document?")
+    ) {
       setNotification(null);
       try {
         await decline(token, declineReason || "Declined by participant");
-        setNotification({ type: "success", message: "You have declined this signing request." });
+        setNotification({
+          type: "success",
+          message: "You have declined this signing request.",
+        });
       } catch (err: unknown) {
-        setNotification({ type: "error", message: `Failed to decline: ${err instanceof Error ? err.message : String(err)}` });
+        setNotification({
+          type: "error",
+          message: `Failed to decline: ${err instanceof Error ? err.message : String(err)}`,
+        });
       }
     }
   };
@@ -169,13 +223,22 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
     }
   };
 
-  const canSign = !participant.hasCompleted && !participant.isExpired && session.status === "IN_PROGRESS";
+  const canSign =
+    !participant.hasCompleted &&
+    !participant.isExpired &&
+    session.status === "IN_PROGRESS";
 
   return (
     <Stack gap="md">
       {notification && (
         <Alert
-          icon={notification.type === "success" ? <CheckCircleIcon fontSize="small" /> : <InfoIcon fontSize="small" />}
+          icon={
+            notification.type === "success" ? (
+              <CheckCircleIcon fontSize="small" />
+            ) : (
+              <InfoIcon fontSize="small" />
+            )
+          }
           color={notification.type === "success" ? "green" : "red"}
           withCloseButton
           onClose={() => setNotification(null)}
@@ -198,7 +261,11 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
           </Group>
 
           {session.message && (
-            <Alert icon={<InfoIcon fontSize="small" />} color="blue" variant="light">
+            <Alert
+              icon={<InfoIcon fontSize="small" />}
+              color="blue"
+              variant="light"
+            >
               <Text size="sm">{session.message}</Text>
             </Alert>
           )}
@@ -265,24 +332,54 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
 
                 {/* Certificate validation feedback */}
                 {certValidation.status === "validating" && (
-                  <Text size="sm" c="dimmed" data-testid="cert-validation-feedback">
-                    {t("certSign.collab.participant.certValidating", "Validating certificate...")}
+                  <Text
+                    size="sm"
+                    c="dimmed"
+                    data-testid="cert-validation-feedback"
+                  >
+                    {t(
+                      "certSign.collab.participant.certValidating",
+                      "Validating certificate...",
+                    )}
                   </Text>
                 )}
                 {certValidation.status === "valid" && (
-                  <Text size="sm" c="green" data-testid="cert-validation-feedback">
-                    {t("certSign.collab.participant.certValid", "✓ Certificate valid")}
+                  <Text
+                    size="sm"
+                    c="green"
+                    data-testid="cert-validation-feedback"
+                  >
+                    {t(
+                      "certSign.collab.participant.certValid",
+                      "✓ Certificate valid",
+                    )}
                     {certValidation.notAfter
-                      ? t("certSign.collab.participant.certValidUntil", " until {{date}}", {
-                          date: new Date(certValidation.notAfter).toLocaleDateString(),
-                        })
+                      ? t(
+                          "certSign.collab.participant.certValidUntil",
+                          " until {{date}}",
+                          {
+                            date: new Date(
+                              certValidation.notAfter,
+                            ).toLocaleDateString(),
+                          },
+                        )
                       : ""}
-                    {certValidation.subjectName ? ` · ${certValidation.subjectName}` : ""}
+                    {certValidation.subjectName
+                      ? ` · ${certValidation.subjectName}`
+                      : ""}
                   </Text>
                 )}
                 {certValidation.status === "error" && (
-                  <Text size="sm" c="red" data-testid="cert-validation-feedback">
-                    {t("certSign.collab.participant.certInvalid", "✗ {{error}}", { error: certValidation.message })}
+                  <Text
+                    size="sm"
+                    c="red"
+                    data-testid="cert-validation-feedback"
+                  >
+                    {t(
+                      "certSign.collab.participant.certInvalid",
+                      "✗ {{error}}",
+                      { error: certValidation.message },
+                    )}
                   </Text>
                 )}
               </>
@@ -308,7 +405,9 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
               label="Page Number (optional)"
               type="number"
               value={pageNumber}
-              onChange={(e) => setPageNumber(parseInt(e.currentTarget.value) || 1)}
+              onChange={(e) =>
+                setPageNumber(parseInt(e.currentTarget.value) || 1)
+              }
               size="sm"
               min={1}
             />
@@ -318,7 +417,9 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
                 leftSection={<CheckCircleIcon fontSize="small" />}
                 onClick={handleSubmitSignature}
                 loading={isSubmitting}
-                disabled={isSubmitting || certValidation.status === "validating"}
+                disabled={
+                  isSubmitting || certValidation.status === "validating"
+                }
                 color="green"
                 data-testid="submit-signature-button"
               >
@@ -341,7 +442,8 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
 
       {participant.hasCompleted && (
         <Alert icon={<CheckCircleIcon fontSize="small" />} color="green">
-          You have {participant.status === "SIGNED" ? "signed" : "declined"} this document.
+          You have {participant.status === "SIGNED" ? "signed" : "declined"}{" "}
+          this document.
         </Alert>
       )}
 

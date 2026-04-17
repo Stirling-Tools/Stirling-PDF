@@ -1,7 +1,11 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Divider, Loader, Alert, Select, Group, Text } from "@mantine/core";
 import { usePlans, PlanTier } from "@app/hooks/usePlans";
-import StripeCheckout, { PurchaseType, CreditsPack, PlanID } from "@app/components/shared/StripeCheckoutSaas";
+import StripeCheckout, {
+  PurchaseType,
+  CreditsPack,
+  PlanID,
+} from "@app/components/shared/StripeCheckoutSaas";
 import AvailablePlansSection from "@app/components/shared/config/configSections/plan/AvailablePlansSection";
 import ApiPackagesSection from "@app/components/shared/config/configSections/plan/ApiPackagesSection";
 import ActivePlanSection from "@app/components/shared/config/configSections/plan/ActivePlanSection";
@@ -11,8 +15,10 @@ const Plan: React.FC = () => {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PlanTier | null>(null);
   const [selectedCredits, setSelectedCredits] = useState(0); // Index of selected credit package
-  const [purchaseType, setPurchaseType] = useState<PurchaseType>("subscription");
-  const [selectedCreditsPack, setSelectedCreditsPack] = useState<CreditsPack>(null);
+  const [purchaseType, setPurchaseType] =
+    useState<PurchaseType>("subscription");
+  const [selectedCreditsPack, setSelectedCreditsPack] =
+    useState<CreditsPack>(null);
   const [currency, setCurrency] = useState<string>("gbp");
   const { trialStatus } = useAuth();
   const { data, loading, error, updateCurrentPlan } = usePlans(currency);
@@ -33,7 +39,10 @@ const Plan: React.FC = () => {
 
       if (plan.isContactOnly) {
         // Open contact form or redirect to contact page
-        window.open("mailto:contact@stirlingpdf.com?subject=Enterprise Plan Inquiry", "_blank");
+        window.open(
+          "mailto:contact@stirlingpdf.com?subject=Enterprise Plan Inquiry",
+          "_blank",
+        );
         return;
       }
 
@@ -93,7 +102,9 @@ const Plan: React.FC = () => {
     if (!data) return;
 
     // Find Pro plan from available plans
-    const proPlan = Array.from(data.plans.values()).find((plan) => plan.id === "pro");
+    const proPlan = Array.from(data.plans.values()).find(
+      (plan) => plan.id === "pro",
+    );
 
     if (proPlan) {
       setSelectedPlan(proPlan);
@@ -112,7 +123,9 @@ const Plan: React.FC = () => {
       handleAddPaymentClick();
       // Clean up URL
       params.delete("action");
-      const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+      const newUrl = params.toString()
+        ? `${window.location.pathname}?${params.toString()}`
+        : window.location.pathname;
       window.history.replaceState({}, "", newUrl);
     }
   }, [data, handleAddPaymentClick]);
@@ -142,7 +155,8 @@ const Plan: React.FC = () => {
     );
   }
 
-  const { plans, apiPackages, currentPlan, nextBillingDate, activeSince } = data;
+  const { plans, apiPackages, currentPlan, nextBillingDate, activeSince } =
+    data;
   const plansArray = Array.from(plans.values());
 
   return (
@@ -174,7 +188,11 @@ const Plan: React.FC = () => {
 
       <Divider />
 
-      <AvailablePlansSection plans={plansArray} currentPlan={currentPlan} onUpgradeClick={handleUpgradeClick} />
+      <AvailablePlansSection
+        plans={plansArray}
+        currentPlan={currentPlan}
+        onUpgradeClick={handleUpgradeClick}
+      />
 
       <Divider />
 
@@ -187,19 +205,27 @@ const Plan: React.FC = () => {
 
       {/* Stripe Checkout Modal */}
       <StripeCheckout
-        opened={checkoutOpen && (selectedPlan !== null || selectedCreditsPack !== null)}
+        opened={
+          checkoutOpen &&
+          (selectedPlan !== null || selectedCreditsPack !== null)
+        }
         onClose={handleCheckoutClose}
         purchaseType={purchaseType}
-        planId={purchaseType === "subscription" ? (selectedPlan?.id as PlanID) : null}
+        planId={
+          purchaseType === "subscription" ? (selectedPlan?.id as PlanID) : null
+        }
         creditsPack={purchaseType === "credits" ? selectedCreditsPack : null}
         planName={
           purchaseType === "subscription"
             ? selectedPlan?.name || ""
-            : data?.apiPackages.find((pkg) => pkg.id === selectedCreditsPack)?.name || ""
+            : data?.apiPackages.find((pkg) => pkg.id === selectedCreditsPack)
+                ?.name || ""
         }
         onSuccess={handlePaymentSuccess}
         onError={handlePaymentError}
-        isTrialConversion={trialStatus?.isTrialing && purchaseType === "subscription"}
+        isTrialConversion={
+          trialStatus?.isTrialing && purchaseType === "subscription"
+        }
       />
     </div>
   );

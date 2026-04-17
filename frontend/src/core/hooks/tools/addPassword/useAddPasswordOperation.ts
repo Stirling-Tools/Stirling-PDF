@@ -1,12 +1,21 @@
 import { useTranslation } from "react-i18next";
-import { ToolType, useToolOperation } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  ToolType,
+  useToolOperation,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { AddPasswordFullParameters, defaultParameters } from "@app/hooks/tools/addPassword/useAddPasswordParameters";
+import {
+  AddPasswordFullParameters,
+  defaultParameters,
+} from "@app/hooks/tools/addPassword/useAddPasswordParameters";
 import { defaultParameters as permissionsDefaults } from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
 import { getFormData } from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
 
 // Static function that can be used by both the hook and automation executor
-export const buildAddPasswordFormData = (parameters: AddPasswordFullParameters, file: File): FormData => {
+export const buildAddPasswordFormData = (
+  parameters: AddPasswordFullParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
   formData.append("password", parameters.password);
@@ -38,6 +47,11 @@ export const useAddPasswordOperation = () => {
 
   return useToolOperation<AddPasswordFullParameters>({
     ...addPasswordOperationConfig,
-    getErrorMessage: createStandardErrorHandler(t("addPassword.error.failed", "An error occurred while encrypting the PDF.")),
+    getErrorMessage: createStandardErrorHandler(
+      t(
+        "addPassword.error.failed",
+        "An error occurred while encrypting the PDF.",
+      ),
+    ),
   });
 };

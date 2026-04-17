@@ -30,9 +30,15 @@ export default function ObscuredOverlay({
           }}
         >
           <div className={styles.overlayContent}>
-            {overlayMessage && <div className={styles.overlayMessage}>{overlayMessage}</div>}
+            {overlayMessage && (
+              <div className={styles.overlayMessage}>{overlayMessage}</div>
+            )}
             {buttonText && onButtonClick && (
-              <button type="button" onClick={onButtonClick} className={styles.overlayButton}>
+              <button
+                type="button"
+                onClick={onButtonClick}
+                className={styles.overlayButton}
+              >
                 {buttonText}
               </button>
             )}

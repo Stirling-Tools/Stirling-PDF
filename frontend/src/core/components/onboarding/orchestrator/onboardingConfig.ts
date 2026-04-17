@@ -115,13 +115,15 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "tour-overview",
     type: "modal-slide",
     slideId: "tour-overview",
-    condition: (ctx) => !ctx.effectiveIsAdmin && ctx.tourType !== "admin" && !ctx.isDesktopApp,
+    condition: (ctx) =>
+      !ctx.effectiveIsAdmin && ctx.tourType !== "admin" && !ctx.isDesktopApp,
   },
   {
     id: "server-license",
     type: "modal-slide",
     slideId: "server-license",
-    condition: (ctx) => ctx.effectiveIsAdmin && ctx.licenseNotice.requiresLicense,
+    condition: (ctx) =>
+      ctx.effectiveIsAdmin && ctx.licenseNotice.requiresLicense,
   },
   {
     id: "mfa-setup",

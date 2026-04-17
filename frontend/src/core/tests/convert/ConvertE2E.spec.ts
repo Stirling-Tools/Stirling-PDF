@@ -46,36 +46,57 @@ const MOCK_ENDPOINTS_AVAILABILITY = Object.fromEntries(
 // ---------------------------------------------------------------------------
 async function mockAppApis(page: Page) {
   // Backend probe — must return UP so Landing shows app in anonymous mode
-  await page.route("**/api/v1/info/status", (route) => route.fulfill({ json: { status: "UP" } }));
+  await page.route("**/api/v1/info/status", (route) =>
+    route.fulfill({ json: { status: "UP" } }),
+  );
 
   // App config — enableLogin:false puts the app in anonymous mode
   await page.route("**/api/v1/config/app-config", (route) =>
     route.fulfill({
-      json: { enableLogin: false, languages: ["en-GB"], defaultLocale: "en-GB" },
+      json: {
+        enableLogin: false,
+        languages: ["en-GB"],
+        defaultLocale: "en-GB",
+      },
     }),
   );
 
   // Auth — fallback if anything calls auth/me
   await page.route("**/api/v1/auth/me", (route) =>
     route.fulfill({
-      json: { id: 1, username: "testuser", email: "test@example.com", roles: ["ROLE_USER"] },
+      json: {
+        id: 1,
+        username: "testuser",
+        email: "test@example.com",
+        roles: ["ROLE_USER"],
+      },
     }),
   );
 
   // Endpoint availability — queried by ConvertSettings
-  await page.route("**/api/v1/config/endpoints-availability", (route) => route.fulfill({ json: MOCK_ENDPOINTS_AVAILABILITY }));
+  await page.route("**/api/v1/config/endpoints-availability", (route) =>
+    route.fulfill({ json: MOCK_ENDPOINTS_AVAILABILITY }),
+  );
 
   // Single-endpoint check — queried by Convert.tsx for the execute button
-  await page.route("**/api/v1/config/endpoint-enabled*", (route) => route.fulfill({ json: true }));
+  await page.route("**/api/v1/config/endpoint-enabled*", (route) =>
+    route.fulfill({ json: true }),
+  );
 
   // Group-enabled check
-  await page.route("**/api/v1/config/group-enabled*", (route) => route.fulfill({ json: true }));
+  await page.route("**/api/v1/config/group-enabled*", (route) =>
+    route.fulfill({ json: true }),
+  );
 
   // Footer info — non-critical
-  await page.route("**/api/v1/ui-data/footer-info", (route) => route.fulfill({ json: {} }));
+  await page.route("**/api/v1/ui-data/footer-info", (route) =>
+    route.fulfill({ json: {} }),
+  );
 
   // Proprietary endpoints — silence proxy errors in the Vite dev server
-  await page.route("**/api/v1/proprietary/**", (route) => route.fulfill({ json: {} }));
+  await page.route("**/api/v1/proprietary/**", (route) =>
+    route.fulfill({ json: {} }),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -85,10 +106,16 @@ async function mockAppApis(page: Page) {
 // ---------------------------------------------------------------------------
 async function uploadFile(page: Page, filePath: string) {
   await page.getByTestId("files-button").click();
-  await page.waitForSelector(".mantine-Modal-overlay", { state: "visible", timeout: 5000 });
+  await page.waitForSelector(".mantine-Modal-overlay", {
+    state: "visible",
+    timeout: 5000,
+  });
   await page.locator('[data-testid="file-input"]').setInputFiles(filePath);
   // Modal auto-closes after file is selected
-  await page.waitForSelector(".mantine-Modal-overlay", { state: "hidden", timeout: 10000 });
+  await page.waitForSelector(".mantine-Modal-overlay", {
+    state: "hidden",
+    timeout: 10000,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -98,7 +125,9 @@ async function uploadFile(page: Page, filePath: string) {
 // ---------------------------------------------------------------------------
 async function navigateToConvert(page: Page) {
   await page.locator('[data-tour="tool-button-convert"]').click();
-  await page.waitForSelector('[data-testid="convert-from-dropdown"]', { timeout: 5000 });
+  await page.waitForSelector('[data-testid="convert-from-dropdown"]', {
+    timeout: 5000,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -118,10 +147,14 @@ test.describe("Convert Tool", () => {
   test.beforeEach(async ({ page }) => {
     await mockAppApis(page);
     await page.goto("/?bypassOnboarding=true");
-    await page.waitForSelector('[data-testid="files-button"]', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="files-button"]', {
+      timeout: 10000,
+    });
   });
 
-  test("convert button is disabled before a TO format is selected", async ({ page }) => {
+  test("convert button is disabled before a TO format is selected", async ({
+    page,
+  }) => {
     await uploadFile(page, SAMPLE_PDF);
     await navigateToConvert(page);
 
@@ -131,9 +164,21 @@ test.describe("Convert Tool", () => {
     await expect(convertBtn).toBeDisabled();
   });
 
-  test("successful PDF to PNG conversion shows download option", async ({ page }) => {
+  test("successful PDF to PNG conversion shows download option", async ({
+    page,
+  }) => {
     // Minimal valid PNG header (8 bytes signature + padding)
-    const fakePng = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, ...Array(504).fill(0)]);
+    const fakePng = Buffer.from([
+      0x89,
+      0x50,
+      0x4e,
+      0x47,
+      0x0d,
+      0x0a,
+      0x1a,
+      0x0a,
+      ...Array(504).fill(0),
+    ]);
 
     await page.route("**/api/v1/convert/pdf/img", (route) =>
       route.fulfill({
@@ -149,7 +194,9 @@ test.describe("Convert Tool", () => {
     await selectToFormat(page, "png");
     await page.getByTestId("convert-button").click();
 
-    await expect(page.getByTestId("download-result-button")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId("download-result-button")).toBeVisible({
+      timeout: 10000,
+    });
   });
 
   test("conversion API error shows error notification", async ({ page }) => {
@@ -167,10 +214,14 @@ test.describe("Convert Tool", () => {
     await page.getByTestId("convert-button").click();
 
     // Mantine Notification renders as role="alert"
-    await expect(page.getByRole("alert").first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole("alert").first()).toBeVisible({
+      timeout: 5000,
+    });
   });
 
-  test("convert button becomes enabled after selecting a valid TO format", async ({ page }) => {
+  test("convert button becomes enabled after selecting a valid TO format", async ({
+    page,
+  }) => {
     await uploadFile(page, SAMPLE_PDF);
     await navigateToConvert(page);
 

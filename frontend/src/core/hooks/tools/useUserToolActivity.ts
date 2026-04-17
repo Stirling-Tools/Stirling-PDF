@@ -44,7 +44,9 @@ export function useToolHistory() {
 
     setFavoriteTools((prev) => {
       const isFavorite = prev.includes(toolId);
-      const updated = isFavorite ? prev.filter((id) => id !== toolId) : [...prev, toolId];
+      const updated = isFavorite
+        ? prev.filter((id) => id !== toolId)
+        : [...prev, toolId];
       window.localStorage.setItem(FAVORITE_TOOLS_KEY, JSON.stringify(updated));
       return updated;
     });

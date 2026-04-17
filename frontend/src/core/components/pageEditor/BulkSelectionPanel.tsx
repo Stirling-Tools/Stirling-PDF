@@ -39,9 +39,17 @@ const BulkSelectionPanel = ({
         onToggleAdvanced={setAdvancedOpened}
       />
 
-      <PageSelectionSyntaxHint input={csvInput} maxPages={maxPages} variant="panel" />
+      <PageSelectionSyntaxHint
+        input={csvInput}
+        maxPages={maxPages}
+        variant="panel"
+      />
 
-      <SelectedPagesDisplay selectedPageIds={selectedPageIds} displayDocument={displayDocument} syntaxError={null} />
+      <SelectedPagesDisplay
+        selectedPageIds={selectedPageIds}
+        displayDocument={displayDocument}
+        syntaxError={null}
+      />
 
       <AdvancedSelectionPanel
         csvInput={csvInput}

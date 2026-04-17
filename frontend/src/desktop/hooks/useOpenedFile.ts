@@ -28,7 +28,10 @@ export function useOpenedFile() {
         console.log("🔍 fileOpenService.getOpenedFiles() returned:", filePaths);
 
         if (filePaths.length > 0) {
-          console.log(`✅ Found ${filePaths.length} file(s) in storage:`, filePaths);
+          console.log(
+            `✅ Found ${filePaths.length} file(s) in storage:`,
+            filePaths,
+          );
           openedFilePathsRef.current = filePaths;
           setOpenedFilePaths(filePaths);
         }
@@ -57,5 +60,10 @@ export function useOpenedFile() {
     };
   }, []);
 
-  return { openedFilePaths, loading, clearOpenedFilePaths, consumeOpenedFilePaths };
+  return {
+    openedFilePaths,
+    loading,
+    clearOpenedFilePaths,
+    consumeOpenedFilePaths,
+  };
 }

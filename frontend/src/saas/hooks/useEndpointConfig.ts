@@ -38,7 +38,8 @@ export function useEndpointEnabled(endpoint: string): {
       const isEnabled = response.data;
       setEnabled(isEnabled);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+      const errorMessage =
+        err instanceof Error ? err.message : "Unknown error occurred";
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -68,8 +69,12 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
   error: string | null;
   refetch: () => Promise<void>;
 } {
-  const [endpointStatus, setEndpointStatus] = useState<Record<string, boolean>>({});
-  const [endpointDetails, setEndpointDetails] = useState<Record<string, EndpointAvailabilityDetails>>({});
+  const [endpointStatus, setEndpointStatus] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [endpointDetails, setEndpointDetails] = useState<
+    Record<string, EndpointAvailabilityDetails>
+  >({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const fetchAllEndpointStatuses = async (force = false) => {
@@ -77,7 +82,9 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
 
     // Skip if we already fetched these exact endpoints globally
     if (!force && globalFetchedSets.has(endpointsKey)) {
-      console.debug("[useEndpointConfig] Already fetched these endpoints globally, using cache");
+      console.debug(
+        "[useEndpointConfig] Already fetched these endpoints globally, using cache",
+      );
       const cached = endpoints.reduce(
         (acc, endpoint) => {
           const cachedDetails = globalEndpointCache[endpoint];
@@ -87,7 +94,10 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
           }
           return acc;
         },
-        { status: {} as Record<string, boolean>, details: {} as Record<string, EndpointAvailabilityDetails> },
+        {
+          status: {} as Record<string, boolean>,
+          details: {} as Record<string, EndpointAvailabilityDetails>,
+        },
       );
       setEndpointStatus(cached.status);
       setEndpointDetails((prev) => ({ ...prev, ...cached.details }));
@@ -106,9 +116,13 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
       setError(null);
 
       // Check which endpoints we haven't fetched yet
-      const newEndpoints = endpoints.filter((ep) => !(ep in globalEndpointCache));
+      const newEndpoints = endpoints.filter(
+        (ep) => !(ep in globalEndpointCache),
+      );
       if (newEndpoints.length === 0) {
-        console.debug("[useEndpointConfig] All endpoints already in global cache");
+        console.debug(
+          "[useEndpointConfig] All endpoints already in global cache",
+        );
         const cached = endpoints.reduce(
           (acc, endpoint) => {
             const cachedDetails = globalEndpointCache[endpoint];
@@ -118,7 +132,10 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
             }
             return acc;
           },
-          { status: {} as Record<string, boolean>, details: {} as Record<string, EndpointAvailabilityDetails> },
+          {
+            status: {} as Record<string, boolean>,
+            details: {} as Record<string, EndpointAvailabilityDetails>,
+          },
         );
         setEndpointStatus(cached.status);
         setEndpointDetails((prev) => ({ ...prev, ...cached.details }));
@@ -129,7 +146,9 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
       // Use batch API for efficiency - only fetch new endpoints
       const endpointsParam = newEndpoints.join(",");
 
-      const response = await apiClient.get<Record<string, EndpointAvailabilityDetails>>(
+      const response = await apiClient.get<
+        Record<string, EndpointAvailabilityDetails>
+      >(
         `/api/v1/config/endpoints-availability?endpoints=${encodeURIComponent(endpointsParam)}`,
       );
       const statusMap = response.data;
@@ -153,7 +172,10 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
           }
           return acc;
         },
-        { status: {} as Record<string, boolean>, details: {} as Record<string, EndpointAvailabilityDetails> },
+        {
+          status: {} as Record<string, boolean>,
+          details: {} as Record<string, EndpointAvailabilityDetails>,
+        },
       );
       setEndpointStatus(fullStatus.status);
       setEndpointDetails((prev) => ({ ...prev, ...fullStatus.details }));
@@ -161,35 +183,56 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
     } catch (err: unknown) {
       // On 401 (auth error), use optimistic fallback instead of disabling
       if (isAxiosError(err) && err.response?.status === 401) {
-        console.warn("[useEndpointConfig] 401 error - using optimistic fallback");
+        console.warn(
+          "[useEndpointConfig] 401 error - using optimistic fallback",
+        );
         const optimisticStatus = endpoints.reduce(
           (acc, endpoint) => {
-            const optimisticDetails: EndpointAvailabilityDetails = { enabled: true, reason: null };
+            const optimisticDetails: EndpointAvailabilityDetails = {
+              enabled: true,
+              reason: null,
+            };
             acc.status[endpoint] = true;
             acc.details[endpoint] = optimisticDetails;
             globalEndpointCache[endpoint] = optimisticDetails;
             return acc;
           },
-          { status: {} as Record<string, boolean>, details: {} as Record<string, EndpointAvailabilityDetails> },
+          {
+            status: {} as Record<string, boolean>,
+            details: {} as Record<string, EndpointAvailabilityDetails>,
+          },
         );
         setEndpointStatus(optimisticStatus.status);
-        setEndpointDetails((prev) => ({ ...prev, ...optimisticStatus.details }));
+        setEndpointDetails((prev) => ({
+          ...prev,
+          ...optimisticStatus.details,
+        }));
         setLoading(false);
         return;
       }
-      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+      const errorMessage =
+        err instanceof Error ? err.message : "Unknown error occurred";
       setError(errorMessage);
-      console.error("[EndpointConfig] Failed to check multiple endpoints:", err);
+      console.error(
+        "[EndpointConfig] Failed to check multiple endpoints:",
+        err,
+      );
 
       // Fallback: assume all endpoints are enabled on error (optimistic)
       const optimisticStatus = endpoints.reduce(
         (acc, endpoint) => {
-          const optimisticDetails: EndpointAvailabilityDetails = { enabled: true, reason: null };
+          const optimisticDetails: EndpointAvailabilityDetails = {
+            enabled: true,
+            reason: null,
+          };
           acc.status[endpoint] = true;
           acc.details[endpoint] = optimisticDetails;
           return acc;
         },
-        { status: {} as Record<string, boolean>, details: {} as Record<string, EndpointAvailabilityDetails> },
+        {
+          status: {} as Record<string, boolean>,
+          details: {} as Record<string, EndpointAvailabilityDetails>,
+        },
       );
       setEndpointStatus(optimisticStatus.status);
       setEndpointDetails((prev) => ({ ...prev, ...optimisticStatus.details }));

@@ -8,7 +8,10 @@ interface ImageToolProps {
   disabled?: boolean;
 }
 
-export const ImageTool: React.FC<ImageToolProps> = ({ onImageChange, disabled = false }) => {
+export const ImageTool: React.FC<ImageToolProps> = ({
+  onImageChange,
+  disabled = false,
+}) => {
   const [, setImageData] = useState<string | null>(null);
 
   const handleImageUpload = async (file: File | null) => {
@@ -45,7 +48,11 @@ export const ImageTool: React.FC<ImageToolProps> = ({ onImageChange, disabled = 
   };
 
   return (
-    <BaseAnnotationTool config={toolConfig} onSignatureDataChange={onImageChange} disabled={disabled}>
+    <BaseAnnotationTool
+      config={toolConfig}
+      onSignatureDataChange={onImageChange}
+      disabled={disabled}
+    >
       <Stack gap="sm">
         <ImageUploader
           onImageChange={handleImageUpload}

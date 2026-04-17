@@ -26,7 +26,8 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const addPasswordPermissionsTips = useAddPasswordPermissionsTips();
 
   // Endpoint validation
-  const { enabled: endpointEnabled, loading: endpointLoading } = useEndpointEnabled(addPasswordParams.getEndpointName());
+  const { enabled: endpointEnabled, loading: endpointLoading } =
+    useEndpointEnabled(addPasswordParams.getEndpointName());
 
   useEffect(() => {
     addPasswordOperation.resetResults();
@@ -35,13 +36,20 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const handleAddPassword = async () => {
     try {
-      await addPasswordOperation.executeOperation(addPasswordParams.fullParameters, selectedFiles);
+      await addPasswordOperation.executeOperation(
+        addPasswordParams.fullParameters,
+        selectedFiles,
+      );
       if (addPasswordOperation.files && onComplete) {
         onComplete(addPasswordOperation.files);
       }
     } catch (error) {
       if (onError) {
-        onError(error instanceof Error ? error.message : t("addPassword.error.failed", "Add password operation failed"));
+        onError(
+          error instanceof Error
+            ? error.message
+            : t("addPassword.error.failed", "Add password operation failed"),
+        );
       }
     }
   };
@@ -62,7 +70,9 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   };
 
   const hasFiles = selectedFiles.length > 0;
-  const hasResults = addPasswordOperation.files.length > 0 || addPasswordOperation.downloadUrl !== null;
+  const hasResults =
+    addPasswordOperation.files.length > 0 ||
+    addPasswordOperation.downloadUrl !== null;
   const passwordsCollapsed = !hasFiles || hasResults;
   const permissionsCollapsed = collapsedPermissions || hasResults;
 
@@ -88,7 +98,9 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       {
         title: t("changePermissions.title", "Document Permissions"),
         isCollapsed: permissionsCollapsed,
-        onCollapsedClick: hasResults ? handleSettingsReset : () => setCollapsedPermissions(!collapsedPermissions),
+        onCollapsedClick: hasResults
+          ? handleSettingsReset
+          : () => setCollapsedPermissions(!collapsedPermissions),
         content: (
           <ChangePermissionsSettings
             parameters={addPasswordParams.permissions.parameters}

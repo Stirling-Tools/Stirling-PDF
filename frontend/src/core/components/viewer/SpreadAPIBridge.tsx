@@ -50,7 +50,8 @@ function SpreadAPIBridgeInner({ documentId }: { documentId: string }) {
         getSpreadMode: () => currentSpread.getSpreadMode(),
         toggleSpreadMode: () => {
           const current = currentSpread.getSpreadMode();
-          const nextMode = current === SpreadMode.None ? SpreadMode.Odd : SpreadMode.None;
+          const nextMode =
+            current === SpreadMode.None ? SpreadMode.Odd : SpreadMode.None;
           currentSpread.setSpreadMode(nextMode);
         },
         SpreadMode,

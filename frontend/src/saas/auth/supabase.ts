@@ -22,7 +22,9 @@ if (!config.url) {
 }
 
 if (!config.key) {
-  throw new Error("Missing VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY environment variable");
+  throw new Error(
+    "Missing VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY environment variable",
+  );
 }
 
 export const supabase = createClient(config.url, config.key, {
@@ -95,7 +97,10 @@ export const linkEmailIdentity = async (email: string, password?: string) => {
     const { error: refreshError } = await supabase.auth.refreshSession();
 
     if (refreshError) {
-      console.warn("[Supabase] Session refresh after email linking failed:", refreshError);
+      console.warn(
+        "[Supabase] Session refresh after email linking failed:",
+        refreshError,
+      );
       // Don't throw - linking was successful, refresh is just for consistency
     } else {
       console.log("[Supabase] Session refreshed after email linking");
@@ -113,7 +118,10 @@ export const linkEmailIdentity = async (email: string, password?: string) => {
   }
 };
 
-export const linkOAuthIdentity = async (provider: "google" | "github" | "apple" | "azure", redirectTo?: string) => {
+export const linkOAuthIdentity = async (
+  provider: "google" | "github" | "apple" | "azure",
+  redirectTo?: string,
+) => {
   try {
     const { data, error } = await supabase.auth.linkIdentity({
       provider: provider,

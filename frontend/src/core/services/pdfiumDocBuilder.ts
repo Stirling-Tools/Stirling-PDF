@@ -8,7 +8,11 @@
  *
  * Used by the signature validation report system.
  */
-import { getPdfiumModule, writeUtf16, saveRawDocument } from "@app/services/pdfiumService";
+import {
+  getPdfiumModule,
+  writeUtf16,
+  saveRawDocument,
+} from "@app/services/pdfiumService";
 import { embedBitmapImageOnPage } from "@app/utils/pdfiumBitmapUtils";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 
@@ -30,7 +34,12 @@ export function rgb(r: number, g: number, b: number): PdfiumColor {
 }
 
 function colorToRGBA(c: PdfiumColor): [number, number, number, number] {
-  return [Math.round(c._r * 255), Math.round(c._g * 255), Math.round(c._b * 255), 255];
+  return [
+    Math.round(c._r * 255),
+    Math.round(c._g * 255),
+    Math.round(c._b * 255),
+    255,
+  ];
 }
 
 // ---------------------------------------------------------------------------
@@ -52,7 +61,10 @@ export const StandardFonts = {
 export class PdfiumFont {
   readonly name: string;
   private _canvas: OffscreenCanvas | HTMLCanvasElement | null = null;
-  private _ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null = null;
+  private _ctx:
+    | CanvasRenderingContext2D
+    | OffscreenCanvasRenderingContext2D
+    | null = null;
 
   constructor(name: string) {
     this.name = name;
@@ -77,13 +89,16 @@ export class PdfiumFont {
 
   /** Map PDF font name to a CSS font-family for canvas measurement. */
   private _cssFontFamily(): string {
-    if (this.name.startsWith("Helvetica")) return "Helvetica, Arial, sans-serif";
+    if (this.name.startsWith("Helvetica"))
+      return "Helvetica, Arial, sans-serif";
     if (this.name.startsWith("Courier")) return "Courier, monospace";
     if (this.name.startsWith("Times")) return "Times New Roman, serif";
     return "sans-serif";
   }
 
-  private _getCtx(): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D {
+  private _getCtx():
+    | CanvasRenderingContext2D
+    | OffscreenCanvasRenderingContext2D {
     if (this._ctx) return this._ctx;
     if (typeof OffscreenCanvas !== "undefined") {
       this._canvas = new OffscreenCanvas(1, 1);
@@ -118,7 +133,10 @@ export class PdfiumImage {
   }
 
   /** Scale to fit within maxWidth × maxHeight preserving aspect ratio (matches pdf-lib's `PDFImage.scaleToFit()`). */
-  scaleToFit(maxWidth: number, maxHeight: number): { width: number; height: number } {
+  scaleToFit(
+    maxWidth: number,
+    maxHeight: number,
+  ): { width: number; height: number } {
     const ratio = Math.min(maxWidth / this.width, maxHeight / this.height, 1);
     return { width: this.width * ratio, height: this.height * ratio };
   }
@@ -168,7 +186,13 @@ export class PdfiumPage {
   readonly width: number;
   readonly height: number;
 
-  constructor(m: WrappedPdfiumModule, docPtr: number, pagePtr: number, width: number, height: number) {
+  constructor(
+    m: WrappedPdfiumModule,
+    docPtr: number,
+    pagePtr: number,
+    width: number,
+    height: number,
+  ) {
     this._m = m;
     this._docPtr = docPtr;
     this._pagePtr = pagePtr;
@@ -210,7 +234,15 @@ export class PdfiumPage {
    * Draw a rectangle on the page. API compatible with pdf-lib's `PDFPage.drawRectangle()`.
    */
   drawRectangle(options: DrawRectangleOptions): void {
-    const { x, y, width, height, color, borderColor, borderWidth = 1 } = options;
+    const {
+      x,
+      y,
+      width,
+      height,
+      color,
+      borderColor,
+      borderWidth = 1,
+    } = options;
     const m = this._m;
 
     const pathPtr = m.FPDFPageObj_CreateNewPath(x, y);
@@ -323,7 +355,12 @@ export class PdfiumDocument {
   addPage(dimensions: [number, number]): PdfiumPage {
     const [width, height] = dimensions;
     const insertIdx = this._pages.length;
-    const pagePtr = this._m.FPDFPage_New(this._docPtr, insertIdx, width, height);
+    const pagePtr = this._m.FPDFPage_New(
+      this._docPtr,
+      insertIdx,
+      width,
+      height,
+    );
     if (!pagePtr) throw new Error("PDFium: failed to create page");
     const page = new PdfiumPage(this._m, this._docPtr, pagePtr, width, height);
     this._pages.push(page);
@@ -340,12 +377,18 @@ export class PdfiumDocument {
 
   /** Embed a PNG image from raw bytes. */
   async embedPng(bytes: Uint8Array | ArrayBuffer): Promise<PdfiumImage> {
-    return this._decodeImage(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes), "image/png");
+    return this._decodeImage(
+      bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes),
+      "image/png",
+    );
   }
 
   /** Embed a JPEG image from raw bytes. */
   async embedJpg(bytes: Uint8Array | ArrayBuffer): Promise<PdfiumImage> {
-    return this._decodeImage(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes), "image/jpeg");
+    return this._decodeImage(
+      bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes),
+      "image/jpeg",
+    );
   }
 
   /** Get the number of pages. */
@@ -375,7 +418,10 @@ export class PdfiumDocument {
    * Decode image bytes to RGBA pixel data via canvas.
    * PDFium's image object APIs require bitmap data.
    */
-  private _decodeImage(bytes: Uint8Array, mimeType: string): Promise<PdfiumImage> {
+  private _decodeImage(
+    bytes: Uint8Array,
+    mimeType: string,
+  ): Promise<PdfiumImage> {
     return new Promise((resolve, reject) => {
       const blob = new Blob([bytes as BlobPart], { type: mimeType });
       const url = URL.createObjectURL(blob);
@@ -394,7 +440,13 @@ export class PdfiumDocument {
           ctx.drawImage(img, 0, 0);
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
           URL.revokeObjectURL(url);
-          resolve(new PdfiumImage(new Uint8Array(imageData.data.buffer), canvas.width, canvas.height));
+          resolve(
+            new PdfiumImage(
+              new Uint8Array(imageData.data.buffer),
+              canvas.width,
+              canvas.height,
+            ),
+          );
         } catch (err) {
           URL.revokeObjectURL(url);
           reject(err);

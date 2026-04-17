@@ -36,7 +36,10 @@ interface CreateUserStepsConfigArgs {
   actions: UserStepActions;
 }
 
-export function createUserStepsConfig({ t, actions }: CreateUserStepsConfigArgs): Record<TourStep, StepType> {
+export function createUserStepsConfig({
+  t,
+  actions,
+}: CreateUserStepsConfigArgs): Record<TourStep, StepType> {
   const {
     saveWorkbenchState,
     closeFilesModal,

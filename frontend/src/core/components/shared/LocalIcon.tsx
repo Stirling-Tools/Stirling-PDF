@@ -10,7 +10,9 @@ try {
     addCollection(iconSet);
     iconsLoaded = true;
     const localIconCount = Object.keys(iconSet.icons || {}).length;
-    console.info(`✅ Local icons loaded: ${localIconCount} icons (${Math.round(JSON.stringify(iconSet).length / 1024)}KB)`);
+    console.info(
+      `✅ Local icons loaded: ${localIconCount} icons (${Math.round(JSON.stringify(iconSet).length / 1024)}KB)`,
+    );
   }
 } catch {
   console.info("ℹ️  Local icons not available - using CDN fallback");
@@ -28,9 +30,17 @@ interface LocalIconProps {
  * LocalIcon component that uses our locally bundled Material Symbols icons
  * instead of loading from CDN
  */
-export const LocalIcon: React.FC<LocalIconProps> = ({ icon, width, height, style, ...props }) => {
+export const LocalIcon: React.FC<LocalIconProps> = ({
+  icon,
+  width,
+  height,
+  style,
+  ...props
+}) => {
   // Convert our icon naming convention to the local collection format
-  const iconName = icon.startsWith("material-symbols:") ? icon : `material-symbols:${icon}`;
+  const iconName = icon.startsWith("material-symbols:")
+    ? icon
+    : `material-symbols:${icon}`;
 
   // Development logging (only in dev mode)
   if (process.env.NODE_ENV === "development") {

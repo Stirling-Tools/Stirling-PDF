@@ -39,9 +39,19 @@ const PlanCard: React.FC<PlanCardProps> = ({
   const shouldHideUpgrade = plan.id === "free" && isUserProOrAbove;
 
   return (
-    <Card key={plan.id} padding="lg" radius="sm" withBorder className="h-full w-[33%] relative">
+    <Card
+      key={plan.id}
+      padding="lg"
+      radius="sm"
+      withBorder
+      className="h-full w-[33%] relative"
+    >
       {plan.popular && (
-        <Badge variant="filled" size="xs" style={{ position: "absolute", top: "0.5rem", right: "0.5rem" }}>
+        <Badge
+          variant="filled"
+          size="xs"
+          style={{ position: "absolute", top: "0.5rem", right: "0.5rem" }}
+        >
           {t("plan.popular", "Popular")}
         </Badge>
       )}
@@ -53,7 +63,9 @@ const PlanCard: React.FC<PlanCardProps> = ({
           </Text>
           <Group gap="xs" align="baseline">
             <Text size="2xl" fw={700}>
-              {plan.isContactOnly ? t("plan.customPricing", "Custom") : `${plan.currency}${plan.price}`}
+              {plan.isContactOnly
+                ? t("plan.customPricing", "Custom")
+                : `${plan.currency}${plan.price}`}
             </Text>
             {!plan.isContactOnly && (
               <Text size="sm" c="dimmed">
@@ -75,7 +87,13 @@ const PlanCard: React.FC<PlanCardProps> = ({
 
         {!shouldHideUpgrade && (
           <Button
-            variant={isCurrentPlan ? "filled" : plan.isContactOnly ? "outline" : "filled"}
+            variant={
+              isCurrentPlan
+                ? "filled"
+                : plan.isContactOnly
+                  ? "outline"
+                  : "filled"
+            }
             disabled={isCurrentPlan}
             fullWidth
             onClick={() => onUpgradeClick?.(plan)}

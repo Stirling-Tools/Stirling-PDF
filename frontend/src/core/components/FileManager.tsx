@@ -11,7 +11,10 @@ import DesktopLayout from "@app/components/fileManager/DesktopLayout";
 import DragOverlay from "@app/components/fileManager/DragOverlay";
 import { FileManagerProvider } from "@app/contexts/FileManagerContext";
 import { Z_INDEX_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
-import { isGoogleDriveConfigured, extractGoogleDriveBackendConfig } from "@app/services/googleDrivePickerService";
+import {
+  isGoogleDriveConfigured,
+  extractGoogleDriveBackendConfig,
+} from "@app/services/googleDrivePickerService";
 import { loadScript } from "@app/utils/scriptLoader";
 import { useAllFiles } from "@app/contexts/FileContext";
 
@@ -20,7 +23,12 @@ interface FileManagerProps {
 }
 
 const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
-  const { isFilesModalOpen, closeFilesModal, onFileUpload, onRecentFileSelect } = useFilesModalContext();
+  const {
+    isFilesModalOpen,
+    closeFilesModal,
+    onFileUpload,
+    onRecentFileSelect,
+  } = useFilesModalContext();
   const { config } = useAppConfig();
   const [recentFiles, setRecentFiles] = useState<StirlingFileStub[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -101,7 +109,9 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
     return () => {
       // StoredFileMetadata doesn't have blob URLs, so no cleanup needed
       // Blob URLs are managed by FileContext and tool operations
-      console.log("FileManager unmounting - FileContext handles blob URL cleanup");
+      console.log(
+        "FileManager unmounting - FileContext handles blob URL cleanup",
+      );
     };
   }, []);
 
@@ -109,7 +119,12 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
   // Use useMemo to only track Google Drive config changes, not all config updates
   const googleDriveBackendConfig = useMemo(
     () => extractGoogleDriveBackendConfig(config),
-    [config?.googleDriveEnabled, config?.googleDriveClientId, config?.googleDriveApiKey, config?.googleDriveAppId],
+    [
+      config?.googleDriveEnabled,
+      config?.googleDriveClientId,
+      config?.googleDriveApiKey,
+      config?.googleDriveAppId,
+    ],
   );
 
   useEffect(() => {

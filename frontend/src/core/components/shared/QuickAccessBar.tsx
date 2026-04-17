@@ -1,4 +1,11 @@
-import React, { useState, useRef, forwardRef, useEffect, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useRef,
+  forwardRef,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import { createPortal } from "react-dom";
 import { Stack, Divider, Menu, Indicator } from "@mantine/core";
 import { useTranslation } from "react-i18next";
@@ -12,7 +19,10 @@ import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvi
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileSelection, useFileState } from "@app/contexts/file/fileHooks";
-import { useNavigationState, useNavigationActions } from "@app/contexts/NavigationContext";
+import {
+  useNavigationState,
+  useNavigationActions,
+} from "@app/contexts/NavigationContext";
 import { useSidebarNavigation } from "@app/hooks/useSidebarNavigation";
 import { handleUnlessSpecialClick } from "@app/utils/clickHandlers";
 import { ButtonConfig } from "@app/types/sidebar";
@@ -67,7 +77,8 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { selectedFiles, selectedFileIds } = useFileSelection();
   const { state, selectors } = useFileState();
   const { actions } = useFileActions();
-  const { hasUnsavedChanges, workbench: currentWorkbench } = useNavigationState();
+  const { hasUnsavedChanges, workbench: currentWorkbench } =
+    useNavigationState();
   const { actions: navigationActions } = useNavigationActions();
   const { getToolNavigation } = useSidebarNavigation();
   const { config } = useAppConfig();
@@ -76,18 +87,29 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const [activeButton, setActiveButton] = useState<string>("tools");
   const [accessMenuOpen, setAccessMenuOpen] = useState(false);
   const [accessInviteOpen, setAccessInviteOpen] = useState(false);
-  const [selectedAccessFileId, setSelectedAccessFileId] = useState<string | null>(null);
+  const [selectedAccessFileId, setSelectedAccessFileId] = useState<
+    string | null
+  >(null);
   const [shareManageOpen, setShareManageOpen] = useState(false);
   const scrollableRef = useRef<HTMLDivElement>(null);
   const accessButtonRef = useRef<HTMLDivElement>(null);
   const accessPopoverRef = useRef<HTMLDivElement>(null);
-  const [accessPopoverPosition, setAccessPopoverPosition] = useState({ top: 160, left: 84 });
+  const [accessPopoverPosition, setAccessPopoverPosition] = useState({
+    top: 160,
+    left: 84,
+  });
   const { sharingEnabled, shareLinksEnabled } = useSharingEnabled();
   const groupSigningEnabled = useGroupSigningEnabled();
   const isSignWorkbenchActive =
-    currentWorkbench === SIGN_REQUEST_WORKBENCH_TYPE || currentWorkbench === SESSION_DETAIL_WORKBENCH_TYPE;
+    currentWorkbench === SIGN_REQUEST_WORKBENCH_TYPE ||
+    currentWorkbench === SESSION_DETAIL_WORKBENCH_TYPE;
   const [inviteRows, setInviteRows] = useState<
-    Array<{ id: number; email: string; role: "editor" | "commenter" | "viewer"; error?: string }>
+    Array<{
+      id: number;
+      email: string;
+      role: "editor" | "commenter" | "viewer";
+      error?: string;
+    }>
   >([{ id: Date.now(), email: "", role: "editor" }]);
   const [isInviting, setIsInviting] = useState(false);
 
@@ -101,8 +123,12 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     if (!groupSigningEnabled) return;
     const fetchCount = async () => {
       try {
-        const response = await apiClient.get<SignRequestSummary[]>("/api/v1/security/cert-sign/sign-requests");
-        const pending = response.data.filter((r) => r.myStatus !== "SIGNED" && r.myStatus !== "DECLINED").length;
+        const response = await apiClient.get<SignRequestSummary[]>(
+          "/api/v1/security/cert-sign/sign-requests",
+        );
+        const pending = response.data.filter(
+          (r) => r.myStatus !== "SIGNED" && r.myStatus !== "DECLINED",
+        ).length;
         setPendingSignCount(pending);
       } catch {
         /* silent — avoid noisy background error toasts */
@@ -118,8 +144,12 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     if (!signMenuOpen && groupSigningEnabled) {
       const timeout = setTimeout(async () => {
         try {
-          const response = await apiClient.get<SignRequestSummary[]>("/api/v1/security/cert-sign/sign-requests");
-          const pending = response.data.filter((r) => r.myStatus !== "SIGNED" && r.myStatus !== "DECLINED").length;
+          const response = await apiClient.get<SignRequestSummary[]>(
+            "/api/v1/security/cert-sign/sign-requests",
+          );
+          const pending = response.data.filter(
+            (r) => r.myStatus !== "SIGNED" && r.myStatus !== "DECLINED",
+          ).length;
           setPendingSignCount(pending);
         } catch {
           /* silent */
@@ -131,16 +161,28 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
 
   const configButtonIcon = useConfigButtonIcon();
 
-  const { tooltipOpen, manualCloseOnly, showCloseButton, toursMenuOpen, setToursMenuOpen, handleTooltipOpenChange } =
-    useToursTooltip();
+  const {
+    tooltipOpen,
+    manualCloseOnly,
+    showCloseButton,
+    toursMenuOpen,
+    setToursMenuOpen,
+    handleTooltipOpenChange,
+  } = useToursTooltip();
 
-  const isRTL = typeof document !== "undefined" && document.documentElement.dir === "rtl";
+  const isRTL =
+    typeof document !== "undefined" && document.documentElement.dir === "rtl";
   const hasSelectedFiles = selectedFiles.length > 0;
   const selectedFileStubs = useMemo(
-    () => selectedFileIds.map((id) => selectors.getStirlingFileStub(id)).filter((x): x is StirlingFileStub => Boolean(x)),
+    () =>
+      selectedFileIds
+        .map((id) => selectors.getStirlingFileStub(id))
+        .filter((x): x is StirlingFileStub => Boolean(x)),
     [selectedFileIds, selectors, state.files.byId],
   );
-  const selectedAccessFileStub = selectedFileStubs.find((file) => file.id === selectedAccessFileId) || selectedFileStubs[0];
+  const selectedAccessFileStub =
+    selectedFileStubs.find((file) => file.id === selectedAccessFileId) ||
+    selectedFileStubs[0];
   useEffect(() => {
     if (!hasSelectedFiles) {
       setAccessMenuOpen(false);
@@ -148,7 +190,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       setAccessInviteOpen(false);
       return;
     }
-    if (!selectedAccessFileId || !selectedFiles.some((file) => file.fileId === selectedAccessFileId)) {
+    if (
+      !selectedAccessFileId ||
+      !selectedFiles.some((file) => file.fileId === selectedAccessFileId)
+    ) {
       setSelectedAccessFileId(selectedFiles[0]?.fileId ?? null);
     }
   }, [hasSelectedFiles, selectedAccessFileId, selectedFiles]);
@@ -187,7 +232,9 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       if (accessButtonRef.current?.contains(target)) return;
 
       // Check if click is inside a Mantine dropdown
-      const mantineDropdown = (target as Element).closest?.(".mantine-Combobox-dropdown, .mantine-Popover-dropdown");
+      const mantineDropdown = (target as Element).closest?.(
+        ".mantine-Combobox-dropdown, .mantine-Popover-dropdown",
+      );
       if (mantineDropdown) return;
 
       setAccessMenuOpen(false);
@@ -211,7 +258,9 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       try {
         const parsed = new URL(frontendUrl);
         if (parsed.protocol === "http:" || parsed.protocol === "https:") {
-          const normalized = frontendUrl.endsWith("/") ? frontendUrl.slice(0, -1) : frontendUrl;
+          const normalized = frontendUrl.endsWith("/")
+            ? frontendUrl.slice(0, -1)
+            : frontendUrl;
           return `${normalized}/share/`;
         }
       } catch {
@@ -233,7 +282,11 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       }
       const originalFileId = (fileStub.originalFileId || fileStub.id) as FileId;
       const remoteId = fileStub.remoteStorageId as number | undefined;
-      const { remoteId: storedId, updatedAt, chain } = await uploadHistoryChain(originalFileId, remoteId);
+      const {
+        remoteId: storedId,
+        updatedAt,
+        chain,
+      } = await uploadHistoryChain(originalFileId, remoteId);
       for (const stub of chain) {
         actions.updateStirlingFileStub(stub.id, {
           remoteStorageId: storedId,
@@ -266,7 +319,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     if (selectedFileStubs.length > 1) {
       alert({
         alertType: "warning",
-        title: t("storageShare.selectSingleFile", "Select a single file to manage sharing."),
+        title: t(
+          "storageShare.selectSingleFile",
+          "Select a single file to manage sharing.",
+        ),
         expandable: false,
         durationMs: 2500,
       });
@@ -275,7 +331,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     if (selectedAccessFileStub?.remoteOwnedByCurrentUser === false) {
       alert({
         alertType: "warning",
-        title: t("storageShare.ownerOnly", "Only the owner can manage sharing."),
+        title: t(
+          "storageShare.ownerOnly",
+          "Only the owner can manage sharing.",
+        ),
         expandable: false,
         durationMs: 2500,
       });
@@ -291,19 +350,40 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       console.error("Failed to upload file for sharing:", error);
       alert({
         alertType: "warning",
-        title: t("storageUpload.failure", "Upload failed. Please check your login and storage settings."),
+        title: t(
+          "storageUpload.failure",
+          "Upload failed. Please check your login and storage settings.",
+        ),
         expandable: false,
         durationMs: 3000,
       });
     }
-  }, [ensureStoredFile, selectedAccessFileStub, selectedFileStubs.length, sharingEnabled, t]);
+  }, [
+    ensureStoredFile,
+    selectedAccessFileStub,
+    selectedFileStubs.length,
+    sharingEnabled,
+    t,
+  ]);
 
   const handleInviteRowChange = useCallback(
-    (id: number, updates: Partial<{ email: string; role: "editor" | "commenter" | "viewer"; error?: string }>) => {
+    (
+      id: number,
+      updates: Partial<{
+        email: string;
+        role: "editor" | "commenter" | "viewer";
+        error?: string;
+      }>,
+    ) => {
       setInviteRows((prev) =>
         prev.map((row) => {
           if (row.id !== id) return row;
-          const nextError = Object.prototype.hasOwnProperty.call(updates, "error") ? updates.error : row.error;
+          const nextError = Object.prototype.hasOwnProperty.call(
+            updates,
+            "error",
+          )
+            ? updates.error
+            : row.error;
           return { ...row, ...updates, error: nextError };
         }),
       );
@@ -312,11 +392,16 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   );
 
   const handleAddInviteRow = useCallback(() => {
-    setInviteRows((prev) => [...prev, { id: Date.now(), email: "", role: "editor" }]);
+    setInviteRows((prev) => [
+      ...prev,
+      { id: Date.now(), email: "", role: "editor" },
+    ]);
   }, []);
 
   const handleRemoveInviteRow = useCallback((id: number) => {
-    setInviteRows((prev) => (prev.length > 1 ? prev.filter((row) => row.id !== id) : prev));
+    setInviteRows((prev) =>
+      prev.length > 1 ? prev.filter((row) => row.id !== id) : prev,
+    );
   }, []);
 
   const handleSendInvites = useCallback(async () => {
@@ -324,7 +409,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     if (selectedAccessFileStub.remoteOwnedByCurrentUser === false) {
       alert({
         alertType: "warning",
-        title: t("storageShare.ownerOnly", "Only the owner can manage sharing."),
+        title: t(
+          "storageShare.ownerOnly",
+          "Only the owner can manage sharing.",
+        ),
         expandable: false,
         durationMs: 2500,
       });
@@ -334,7 +422,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       const trimmed = row.email.trim();
       let error: string | undefined;
       if (!trimmed) {
-        error = t("storageShare.invalidUsername", "Enter a valid username or email address.");
+        error = t(
+          "storageShare.invalidUsername",
+          "Enter a valid username or email address.",
+        );
       }
       return { ...row, email: trimmed, error };
     });
@@ -363,14 +454,23 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       console.error("Failed to send invite:", error);
       alert({
         alertType: "warning",
-        title: t("storageShare.userAddFailed", "Unable to share with that user."),
+        title: t(
+          "storageShare.userAddFailed",
+          "Unable to share with that user.",
+        ),
         expandable: false,
         durationMs: 3000,
       });
     } finally {
       setIsInviting(false);
     }
-  }, [ensureStoredFile, inviteRows, resetInviteRows, selectedAccessFileStub, t]);
+  }, [
+    ensureStoredFile,
+    inviteRows,
+    resetInviteRows,
+    selectedAccessFileStub,
+    t,
+  ]);
 
   const handleCopyShareLink = async () => {
     if (!selectedAccessFileStub) return;
@@ -386,7 +486,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     if (selectedFileStubs.length > 1) {
       alert({
         alertType: "warning",
-        title: t("storageShare.selectSingleFile", "Select a single file to copy a link."),
+        title: t(
+          "storageShare.selectSingleFile",
+          "Select a single file to copy a link.",
+        ),
         expandable: false,
         durationMs: 2500,
       });
@@ -395,7 +498,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     if (selectedAccessFileStub?.remoteOwnedByCurrentUser === false) {
       alert({
         alertType: "warning",
-        title: t("storageShare.ownerOnly", "Only the owner can manage sharing."),
+        title: t(
+          "storageShare.ownerOnly",
+          "Only the owner can manage sharing.",
+        ),
         expandable: false,
         durationMs: 2500,
       });
@@ -408,7 +514,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         console.error("Failed to upload file for sharing:", error);
         alert({
           alertType: "warning",
-          title: t("storageUpload.failure", "Upload failed. Please check your login and storage settings."),
+          title: t(
+            "storageUpload.failure",
+            "Upload failed. Please check your login and storage settings.",
+          ),
           expandable: false,
           durationMs: 3000,
         });
@@ -417,25 +526,37 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     }
     try {
       const storedId = await ensureStoredFile(selectedAccessFileStub);
-      const response = await apiClient.get<{ shareLinks?: Array<{ token?: string }> }>(`/api/v1/storage/files/${storedId}`, {
+      const response = await apiClient.get<{
+        shareLinks?: Array<{ token?: string }>;
+      }>(`/api/v1/storage/files/${storedId}`, {
         suppressErrorToast: true,
       });
       const links = response.data?.shareLinks ?? [];
       let token = links[links.length - 1]?.token;
       if (!token) {
-        const shareResponse = await apiClient.post(`/api/v1/storage/files/${storedId}/shares/links`, {
-          accessRole: "editor",
-        });
+        const shareResponse = await apiClient.post(
+          `/api/v1/storage/files/${storedId}/shares/links`,
+          {
+            accessRole: "editor",
+          },
+        );
         token = shareResponse.data?.token;
         if (token) {
-          actions.updateStirlingFileStub(selectedAccessFileStub.id, { remoteHasShareLinks: true });
-          await fileStorage.updateFileMetadata(selectedAccessFileStub.id, { remoteHasShareLinks: true });
+          actions.updateStirlingFileStub(selectedAccessFileStub.id, {
+            remoteHasShareLinks: true,
+          });
+          await fileStorage.updateFileMetadata(selectedAccessFileStub.id, {
+            remoteHasShareLinks: true,
+          });
         }
       }
       if (!token) {
         alert({
           alertType: "warning",
-          title: t("storageShare.failure", "Unable to generate a share link. Please try again."),
+          title: t(
+            "storageShare.failure",
+            "Unable to generate a share link. Please try again.",
+          ),
           expandable: false,
           durationMs: 2500,
         });
@@ -475,14 +596,28 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   };
 
   // Helper function to render navigation buttons with URL support
-  const renderNavButton = (config: ButtonConfig, index: number, shouldGuardNavigation = false) => {
+  const renderNavButton = (
+    config: ButtonConfig,
+    index: number,
+    shouldGuardNavigation = false,
+  ) => {
     const isActive =
       !isSignWorkbenchActive &&
-      isNavButtonActive(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView);
+      isNavButtonActive(
+        config,
+        activeButton,
+        isFilesModalOpen,
+        configModalOpen,
+        selectedToolKey,
+        leftPanelView,
+      );
 
     // Check if this button has URL navigation support
     const navProps =
-      config.type === "navigation" && (config.id === "read" || config.id === "automate") ? getToolNavigation(config.id) : null;
+      config.type === "navigation" &&
+      (config.id === "read" || config.id === "automate")
+        ? getToolNavigation(config.id)
+        : null;
 
     const handleClick = (e?: React.MouseEvent) => {
       // If there are unsaved changes and this button should guard navigation, show warning modal
@@ -507,11 +642,21 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           border: "none",
           borderRadius: "0.5rem",
         }
-      : getNavButtonStyle(config, activeButton, isFilesModalOpen, configModalOpen, selectedToolKey, leftPanelView);
+      : getNavButtonStyle(
+          config,
+          activeButton,
+          isFilesModalOpen,
+          configModalOpen,
+          selectedToolKey,
+          leftPanelView,
+        );
 
     // Render navigation button with conditional URL support
     return (
-      <div key={config.id} style={{ marginTop: index === 0 ? "0.5rem" : "0rem" }}>
+      <div
+        key={config.id}
+        style={{ marginTop: index === 0 ? "0.5rem" : "0rem" }}
+      >
         <QuickAccessButton
           icon={config.icon}
           label={config.name}
@@ -535,7 +680,13 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         {
           id: "read",
           name: t("quickAccess.reader", "Reader"),
-          icon: <LocalIcon icon="menu-book-rounded" width="1.25rem" height="1.25rem" />,
+          icon: (
+            <LocalIcon
+              icon="menu-book-rounded"
+              width="1.25rem"
+              height="1.25rem"
+            />
+          ),
           size: "md" as const,
           isRound: false,
           type: "navigation" as const,
@@ -547,7 +698,13 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         {
           id: "automate",
           name: t("quickAccess.automate", "Automate"),
-          icon: <LocalIcon icon="automation-outline" width="1.25rem" height="1.25rem" />,
+          icon: (
+            <LocalIcon
+              icon="automation-outline"
+              width="1.25rem"
+              height="1.25rem"
+            />
+          ),
           size: "md" as const,
           isRound: false,
           type: "navigation" as const,
@@ -566,17 +723,28 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         // 'read' is always available (viewer mode)
         if (button.id === "read") return true;
         // Check if tool is actually available (not just present in registry)
-        const availability = toolAvailability[button.id as keyof typeof toolAvailability];
+        const availability =
+          toolAvailability[button.id as keyof typeof toolAvailability];
         return availability?.available !== false;
       }),
-    [t, setActiveButton, handleReaderToggle, selectedToolKey, resetTool, handleToolSelect, toolAvailability],
+    [
+      t,
+      setActiveButton,
+      handleReaderToggle,
+      selectedToolKey,
+      resetTool,
+      handleToolSelect,
+      toolAvailability,
+    ],
   );
 
   const middleButtons: ButtonConfig[] = [
     {
       id: "files",
       name: t("quickAccess.files", "Files"),
-      icon: <LocalIcon icon="folder-rounded" width="1.25rem" height="1.25rem" />,
+      icon: (
+        <LocalIcon icon="folder-rounded" width="1.25rem" height="1.25rem" />
+      ),
       isRound: true,
       size: "md",
       type: "modal",
@@ -596,13 +764,16 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
 
   // Determine if settings button should be hidden
   // Hide when login is disabled AND showSettingsWhenNoLogin is false
-  const shouldHideSettingsButton = config?.enableLogin === false && config?.showSettingsWhenNoLogin === false;
+  const shouldHideSettingsButton =
+    config?.enableLogin === false && config?.showSettingsWhenNoLogin === false;
 
   const bottomButtons: ButtonConfig[] = [
     {
       id: "help",
       name: t("quickAccess.tours", "Tours"),
-      icon: <LocalIcon icon="explore-rounded" width="1.25rem" height="1.25rem" />,
+      icon: (
+        <LocalIcon icon="explore-rounded" width="1.25rem" height="1.25rem" />
+      ),
       isRound: true,
       size: "md",
       type: "action",
@@ -616,7 +787,13 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           {
             id: "config",
             name: t("quickAccess.settings", "Settings"),
-            icon: configButtonIcon ?? <LocalIcon icon="settings-rounded" width="1.25rem" height="1.25rem" />,
+            icon: configButtonIcon ?? (
+              <LocalIcon
+                icon="settings-rounded"
+                width="1.25rem"
+                height="1.25rem"
+              />
+            ),
             size: "md" as const,
             type: "modal" as const,
             onClick: () => {
@@ -636,8 +813,14 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
     >
       {/* Fixed header outside scrollable area */}
       <div className="quick-access-header">
-        <ActiveToolButton activeButton={activeButton} setActiveButton={setActiveButton} />
-        <AllToolsNavButton activeButton={activeButton} setActiveButton={setActiveButton} />
+        <ActiveToolButton
+          activeButton={activeButton}
+          setActiveButton={setActiveButton}
+        />
+        <AllToolsNavButton
+          activeButton={activeButton}
+          setActiveButton={setActiveButton}
+        />
       </div>
 
       {/* Scrollable content area */}
@@ -654,7 +837,11 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           <Stack gap="lg" align="stretch">
             {mainButtons.map((config, index) => (
               <React.Fragment key={config.id}>
-                {renderNavButton(config, index, config.id === "read" || config.id === "automate")}
+                {renderNavButton(
+                  config,
+                  index,
+                  config.id === "read" || config.id === "automate",
+                )}
               </React.Fragment>
             ))}
           </Stack>
@@ -665,12 +852,20 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
               <Divider size="xs" className="content-divider" />
               <Stack gap="lg" align="stretch">
                 {middleButtons.map((config, index) => (
-                  <React.Fragment key={config.id}>{renderNavButton(config, index)}</React.Fragment>
+                  <React.Fragment key={config.id}>
+                    {renderNavButton(config, index)}
+                  </React.Fragment>
                 ))}
                 {hasSelectedFiles && sharingEnabled && (
                   <div ref={accessButtonRef}>
                     <QuickAccessButton
-                      icon={<LocalIcon icon="group-rounded" width="1.25rem" height="1.25rem" />}
+                      icon={
+                        <LocalIcon
+                          icon="group-rounded"
+                          width="1.25rem"
+                          height="1.25rem"
+                        />
+                      }
                       label={t("quickAccess.access", "Access")}
                       isActive={!isSignWorkbenchActive && accessMenuOpen}
                       onClick={() => {
@@ -682,11 +877,27 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                   </div>
                 )}
                 {groupSigningEnabled && (
-                  <div ref={signButtonRef} style={{ display: "flex", justifyContent: "center" }}>
+                  <div
+                    ref={signButtonRef}
+                    style={{ display: "flex", justifyContent: "center" }}
+                  >
                     {pendingSignCount > 0 ? (
-                      <Indicator inline label={pendingSignCount} size={14} color="red" position="top-end" offset={4}>
+                      <Indicator
+                        inline
+                        label={pendingSignCount}
+                        size={14}
+                        color="red"
+                        position="top-end"
+                        offset={4}
+                      >
                         <QuickAccessButton
-                          icon={<LocalIcon icon="edit-square-rounded" width="1.15rem" height="1.15rem" />}
+                          icon={
+                            <LocalIcon
+                              icon="edit-square-rounded"
+                              width="1.15rem"
+                              height="1.15rem"
+                            />
+                          }
                           label={t("quickAccess.sign", "Sign")}
                           isActive={signMenuOpen || isSignWorkbenchActive}
                           onClick={() => setSignMenuOpen((prev) => !prev)}
@@ -696,7 +907,13 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                       </Indicator>
                     ) : (
                       <QuickAccessButton
-                        icon={<LocalIcon icon="edit-square-rounded" width="1.15rem" height="1.15rem" />}
+                        icon={
+                          <LocalIcon
+                            icon="edit-square-rounded"
+                            width="1.15rem"
+                            height="1.15rem"
+                          />
+                        }
                         label={t("quickAccess.sign", "Sign")}
                         isActive={signMenuOpen || isSignWorkbenchActive}
                         onClick={() => setSignMenuOpen((prev) => !prev)}
@@ -726,29 +943,65 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                       "quickAccess.toursTooltip.admin",
                       "Watch walkthroughs here: Tools tour, New V2 layout tour, and the Admin tour.",
                     )
-                  : t("quickAccess.toursTooltip.user", "Watch walkthroughs here: Tools tour and the New V2 layout tour.");
+                  : t(
+                      "quickAccess.toursTooltip.user",
+                      "Watch walkthroughs here: Tools tour and the New V2 layout tour.",
+                    );
                 const tourItems = [
                   {
                     key: "whatsnew",
-                    icon: <LocalIcon icon="auto-awesome-rounded" width="1.25rem" height="1.25rem" />,
-                    title: t("quickAccess.helpMenu.whatsNewTour", "See what's new in V2"),
-                    description: t("quickAccess.helpMenu.whatsNewTourDesc", "Tour the updated layout"),
+                    icon: (
+                      <LocalIcon
+                        icon="auto-awesome-rounded"
+                        width="1.25rem"
+                        height="1.25rem"
+                      />
+                    ),
+                    title: t(
+                      "quickAccess.helpMenu.whatsNewTour",
+                      "See what's new in V2",
+                    ),
+                    description: t(
+                      "quickAccess.helpMenu.whatsNewTourDesc",
+                      "Tour the updated layout",
+                    ),
                     onClick: () => requestStartTour("whatsnew"),
                   },
                   {
                     key: "tools",
-                    icon: <LocalIcon icon="view-carousel-rounded" width="1.25rem" height="1.25rem" />,
+                    icon: (
+                      <LocalIcon
+                        icon="view-carousel-rounded"
+                        width="1.25rem"
+                        height="1.25rem"
+                      />
+                    ),
                     title: t("quickAccess.helpMenu.toolsTour", "Tools Tour"),
-                    description: t("quickAccess.helpMenu.toolsTourDesc", "Learn what the tools can do"),
+                    description: t(
+                      "quickAccess.helpMenu.toolsTourDesc",
+                      "Learn what the tools can do",
+                    ),
                     onClick: () => requestStartTour("tools"),
                   },
                   ...(isAdmin
                     ? [
                         {
                           key: "admin",
-                          icon: <LocalIcon icon="admin-panel-settings-rounded" width="1.25rem" height="1.25rem" />,
-                          title: t("quickAccess.helpMenu.adminTour", "Admin Tour"),
-                          description: t("quickAccess.helpMenu.adminTourDesc", "Explore admin settings & features"),
+                          icon: (
+                            <LocalIcon
+                              icon="admin-panel-settings-rounded"
+                              width="1.25rem"
+                              height="1.25rem"
+                            />
+                          ),
+                          title: t(
+                            "quickAccess.helpMenu.adminTour",
+                            "Admin Tour",
+                          ),
+                          description: t(
+                            "quickAccess.helpMenu.adminTourDesc",
+                            "Explore admin settings & features",
+                          ),
                           onClick: () => requestStartTour("admin"),
                         },
                       ]
@@ -769,10 +1022,20 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                       </Menu.Target>
                       <Menu.Dropdown>
                         {tourItems.map((item) => (
-                          <Menu.Item key={item.key} leftSection={item.icon} onClick={item.onClick}>
+                          <Menu.Item
+                            key={item.key}
+                            leftSection={item.icon}
+                            onClick={item.onClick}
+                          >
                             <div>
-                              <div style={{ fontWeight: 500 }}>{item.title}</div>
-                              <div style={{ fontSize: "0.875rem", opacity: 0.7 }}>{item.description}</div>
+                              <div style={{ fontWeight: 500 }}>
+                                {item.title}
+                              </div>
+                              <div
+                                style={{ fontSize: "0.875rem", opacity: 0.7 }}
+                              >
+                                {item.description}
+                              </div>
                             </div>
                           </Menu.Item>
                         ))}
@@ -803,12 +1066,20 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
 
               const buttonNode = renderNavButton(buttonConfig, index);
               const shouldShowSettingsBadge =
-                buttonConfig.id === "config" && licenseAlert.active && licenseAlert.audience === "admin";
+                buttonConfig.id === "config" &&
+                licenseAlert.active &&
+                licenseAlert.audience === "admin";
 
               return (
                 <React.Fragment key={buttonConfig.id}>
                   {shouldShowSettingsBadge ? (
-                    <Indicator inline size={12} color="orange" position="top-end" offset={4}>
+                    <Indicator
+                      inline
+                      size={12}
+                      color="orange"
+                      position="top-end"
+                      offset={4}
+                    >
                       {buttonNode}
                     </Indicator>
                   ) : (
@@ -821,7 +1092,10 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
         </div>
       </div>
 
-      <AppConfigModal opened={configModalOpen} onClose={() => setConfigModalOpen(false)} />
+      <AppConfigModal
+        opened={configModalOpen}
+        onClose={() => setConfigModalOpen(false)}
+      />
 
       {selectedAccessFileStub && (
         <ShareManagementModal
@@ -852,7 +1126,11 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                   onClick={() => setAccessInviteOpen(false)}
                   aria-label={t("quickAccess.accessBack", "Back")}
                 >
-                  <LocalIcon icon="arrow-back-rounded" width="1rem" height="1rem" />
+                  <LocalIcon
+                    icon="arrow-back-rounded"
+                    width="1rem"
+                    height="1rem"
+                  />
                 </button>
                 <div className="quick-access-popout__title">
                   {accessInviteOpen
@@ -869,7 +1147,11 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                       }}
                       aria-label={t("storageShare.manage", "Manage sharing")}
                     >
-                      <LocalIcon icon="settings-rounded" width="1rem" height="1rem" />
+                      <LocalIcon
+                        icon="settings-rounded"
+                        width="1rem"
+                        height="1rem"
+                      />
                     </button>
                   )}
                   <button
@@ -878,19 +1160,29 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                     onClick={() => setAccessMenuOpen(false)}
                     aria-label={t("close", "Close")}
                   >
-                    <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
+                    <LocalIcon
+                      icon="close-rounded"
+                      width="1rem"
+                      height="1rem"
+                    />
                   </button>
                 </div>
               </div>
 
-              <div className={`quick-access-popout__body ${accessInviteOpen ? "is-invite" : ""}`}>
+              <div
+                className={`quick-access-popout__body ${accessInviteOpen ? "is-invite" : ""}`}
+              >
                 <div className="quick-access-popout__panel">
                   <div className="quick-access-popout__section">
-                    <div className="quick-access-popout__label">{t("quickAccess.accessFileLabel", "File")}</div>
+                    <div className="quick-access-popout__label">
+                      {t("quickAccess.accessFileLabel", "File")}
+                    </div>
                     <select
                       className="quick-access-popout__select"
                       value={selectedAccessFileStub?.id ?? ""}
-                      onChange={(event) => setSelectedAccessFileId(event.target.value)}
+                      onChange={(event) =>
+                        setSelectedAccessFileId(event.target.value)
+                      }
                     >
                       {selectedFileStubs.map((file) => (
                         <option key={file.id} value={file.id}>
@@ -903,15 +1195,26 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                   <div className="quick-access-popout__divider" />
 
                   <div className="quick-access-popout__section">
-                    <div className="quick-access-popout__label">{t("quickAccess.accessGeneral", "General Access")}</div>
+                    <div className="quick-access-popout__label">
+                      {t("quickAccess.accessGeneral", "General Access")}
+                    </div>
                     <div className="quick-access-popout__row">
                       <div className="quick-access-popout__icon-bubble">
-                        <LocalIcon icon="lock-outline" width="1rem" height="1rem" />
+                        <LocalIcon
+                          icon="lock-outline"
+                          width="1rem"
+                          height="1rem"
+                        />
                       </div>
                       <div className="quick-access-popout__row-text">
-                        <div className="quick-access-popout__row-title">{t("quickAccess.accessRestricted", "Restricted")}</div>
+                        <div className="quick-access-popout__row-title">
+                          {t("quickAccess.accessRestricted", "Restricted")}
+                        </div>
                         <div className="quick-access-popout__row-subtitle">
-                          {t("quickAccess.accessRestrictedHint", "Only people with access can open")}
+                          {t(
+                            "quickAccess.accessRestrictedHint",
+                            "Only people with access can open",
+                          )}
                         </div>
                       </div>
                     </div>
@@ -920,54 +1223,95 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                   <div className="quick-access-popout__divider" />
 
                   <div className="quick-access-popout__section">
-                    <div className="quick-access-popout__label">{t("quickAccess.accessPeople", "People with access")}</div>
+                    <div className="quick-access-popout__label">
+                      {t("quickAccess.accessPeople", "People with access")}
+                    </div>
                     <div className="quick-access-popout__person">
                       <div className="quick-access-popout__avatar">
-                        {(selectedAccessFileStub?.remoteOwnerUsername || "You").slice(0, 2).toUpperCase()}
+                        {(selectedAccessFileStub?.remoteOwnerUsername || "You")
+                          .slice(0, 2)
+                          .toUpperCase()}
                       </div>
                       <div className="quick-access-popout__person-text">
                         <div className="quick-access-popout__row-title">
-                          {selectedAccessFileStub?.remoteOwnerUsername || t("quickAccess.accessYou", "You")}
+                          {selectedAccessFileStub?.remoteOwnerUsername ||
+                            t("quickAccess.accessYou", "You")}
                         </div>
                         <div className="quick-access-popout__row-subtitle">
-                          {selectedAccessFileStub?.name ?? t("quickAccess.accessSelectedFile", "Selected file")}
+                          {selectedAccessFileStub?.name ??
+                            t(
+                              "quickAccess.accessSelectedFile",
+                              "Selected file",
+                            )}
                         </div>
                       </div>
-                      <span className="quick-access-popout__pill">{t("quickAccess.accessOwner", "Owner")}</span>
+                      <span className="quick-access-popout__pill">
+                        {t("quickAccess.accessOwner", "Owner")}
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="quick-access-popout__panel quick-access-popout__panel--invite">
                   <div className="quick-access-popout__section">
-                    <div className="quick-access-popout__label">{t("quickAccess.accessInviteTitle", "Invite People")}</div>
+                    <div className="quick-access-popout__label">
+                      {t("quickAccess.accessInviteTitle", "Invite People")}
+                    </div>
                   </div>
                   {inviteRows.map((row) => (
-                    <div key={row.id} className="quick-access-popout__invite-row">
+                    <div
+                      key={row.id}
+                      className="quick-access-popout__invite-row"
+                    >
                       <div className="quick-access-popout__input-group">
-                        <label className="quick-access-popout__label">{t("quickAccess.accessEmail", "Email Address")}</label>
+                        <label className="quick-access-popout__label">
+                          {t("quickAccess.accessEmail", "Email Address")}
+                        </label>
                         <input
                           className={`quick-access-popout__input ${row.error ? "has-error" : ""}`}
-                          placeholder={t("quickAccess.accessEmailPlaceholder", "name@company.com")}
+                          placeholder={t(
+                            "quickAccess.accessEmailPlaceholder",
+                            "name@company.com",
+                          )}
                           value={row.email}
-                          onChange={(event) => handleInviteRowChange(row.id, { email: event.target.value, error: undefined })}
+                          onChange={(event) =>
+                            handleInviteRowChange(row.id, {
+                              email: event.target.value,
+                              error: undefined,
+                            })
+                          }
                         />
-                        {row.error && <div className="quick-access-popout__input-error">{row.error}</div>}
+                        {row.error && (
+                          <div className="quick-access-popout__input-error">
+                            {row.error}
+                          </div>
+                        )}
                       </div>
                       <div className="quick-access-popout__input-group">
-                        <label className="quick-access-popout__label">{t("quickAccess.accessRole", "Role")}</label>
+                        <label className="quick-access-popout__label">
+                          {t("quickAccess.accessRole", "Role")}
+                        </label>
                         <select
                           className="quick-access-popout__select"
                           value={row.role}
                           onChange={(event) =>
                             handleInviteRowChange(row.id, {
-                              role: event.target.value as "editor" | "commenter" | "viewer",
+                              role: event.target.value as
+                                | "editor"
+                                | "commenter"
+                                | "viewer",
                             })
                           }
                         >
-                          <option value="editor">{t("quickAccess.accessRoleEditor", "Editor")}</option>
-                          <option value="commenter">{t("quickAccess.accessRoleCommenter", "Commenter")}</option>
-                          <option value="viewer">{t("quickAccess.accessRoleViewer", "Viewer")}</option>
+                          <option value="editor">
+                            {t("quickAccess.accessRoleEditor", "Editor")}
+                          </option>
+                          <option value="commenter">
+                            {t("quickAccess.accessRoleCommenter", "Commenter")}
+                          </option>
+                          <option value="viewer">
+                            {t("quickAccess.accessRoleViewer", "Viewer")}
+                          </option>
                         </select>
                       </div>
                       <button
@@ -977,11 +1321,19 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                         disabled={inviteRows.length === 1}
                         aria-label={t("quickAccess.accessRemove", "Remove")}
                       >
-                        <LocalIcon icon="close-rounded" width="0.9rem" height="0.9rem" />
+                        <LocalIcon
+                          icon="close-rounded"
+                          width="0.9rem"
+                          height="0.9rem"
+                        />
                       </button>
                     </div>
                   ))}
-                  <button type="button" className="quick-access-popout__add" onClick={handleAddInviteRow}>
+                  <button
+                    type="button"
+                    className="quick-access-popout__add"
+                    onClick={handleAddInviteRow}
+                  >
                     <span className="quick-access-popout__add-icon">+</span>
                     {t("quickAccess.accessAddPerson", "Add another person")}
                   </button>
@@ -997,12 +1349,24 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                       onClick={() => void handleSendInvites()}
                       disabled={isInviting}
                     >
-                      <LocalIcon icon="send-rounded" width="1rem" height="1rem" />
+                      <LocalIcon
+                        icon="send-rounded"
+                        width="1rem"
+                        height="1rem"
+                      />
                       {t("quickAccess.accessSendInvite", "Send Invite")}
                     </button>
                     {shareLinksEnabled && (
-                      <button type="button" className="quick-access-popout__link" onClick={handleCopyShareLink}>
-                        <LocalIcon icon="link-rounded" width="1rem" height="1rem" />
+                      <button
+                        type="button"
+                        className="quick-access-popout__link"
+                        onClick={handleCopyShareLink}
+                      >
+                        <LocalIcon
+                          icon="link-rounded"
+                          width="1rem"
+                          height="1rem"
+                        />
                         {t("quickAccess.accessCopyLink", "Copy link")}
                       </button>
                     )}
@@ -1010,14 +1374,30 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                 ) : (
                   <>
                     {sharingEnabled && (
-                      <button type="button" className="quick-access-popout__primary" onClick={() => setAccessInviteOpen(true)}>
-                        <LocalIcon icon="person-add-rounded" width="1rem" height="1rem" />
+                      <button
+                        type="button"
+                        className="quick-access-popout__primary"
+                        onClick={() => setAccessInviteOpen(true)}
+                      >
+                        <LocalIcon
+                          icon="person-add-rounded"
+                          width="1rem"
+                          height="1rem"
+                        />
                         {t("accessInvite", "Invite")}
                       </button>
                     )}
                     {shareLinksEnabled && (
-                      <button type="button" className="quick-access-popout__link" onClick={handleCopyShareLink}>
-                        <LocalIcon icon="link-rounded" width="1rem" height="1rem" />
+                      <button
+                        type="button"
+                        className="quick-access-popout__link"
+                        onClick={handleCopyShareLink}
+                      >
+                        <LocalIcon
+                          icon="link-rounded"
+                          width="1rem"
+                          height="1rem"
+                        />
                         {t("quickAccess.accessCopyLink", "Copy link")}
                       </button>
                     )}

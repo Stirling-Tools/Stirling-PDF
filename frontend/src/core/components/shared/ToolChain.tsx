@@ -72,7 +72,10 @@ const ToolChain: React.FC<ToolChainProps> = ({
 
   // Compact style for very small spaces
   if (displayStyle === "compact") {
-    const compactText = toolIds.length === 1 ? getToolName(toolIds[0]) : `${toolIds.length} tools`;
+    const compactText =
+      toolIds.length === 1
+        ? getToolName(toolIds[0])
+        : `${toolIds.length} tools`;
     const isCompactTruncated = toolIds.length > 1;
 
     const compactElement = (

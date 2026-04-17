@@ -6,25 +6,39 @@ export type PagesPerSheetOption = {
   description: string;
 };
 
-export const getPagesPerSheetOptions = (t: TFunction): PagesPerSheetOption[] => [
+export const getPagesPerSheetOptions = (
+  t: TFunction,
+): PagesPerSheetOption[] => [
   {
     value: 2,
     label: "2",
-    description: t("pageLayout.desc.2", "Place 2 pages side-by-side on a single sheet."),
+    description: t(
+      "pageLayout.desc.2",
+      "Place 2 pages side-by-side on a single sheet.",
+    ),
   },
   {
     value: 4,
     label: "4",
-    description: t("pageLayout.desc.4", "Place 4 pages on a single sheet (2 × 2 grid)."),
+    description: t(
+      "pageLayout.desc.4",
+      "Place 4 pages on a single sheet (2 × 2 grid).",
+    ),
   },
   {
     value: 9,
     label: "9",
-    description: t("pageLayout.desc.9", "Place 9 pages on a single sheet (3 × 3 grid)."),
+    description: t(
+      "pageLayout.desc.9",
+      "Place 9 pages on a single sheet (3 × 3 grid).",
+    ),
   },
   {
     value: 16,
     label: "16",
-    description: t("pageLayout.desc.16", "Place 16 pages on a single sheet (4 × 4 grid)."),
+    description: t(
+      "pageLayout.desc.16",
+      "Place 16 pages on a single sheet (4 × 4 grid).",
+    ),
   },
 ];

@@ -34,7 +34,10 @@ export interface DocumentPermissionsAPIWrapper {
 }
 
 export interface ScrollAPIWrapper {
-  scrollToPage: (params: { pageNumber: number; behavior?: ScrollBehavior }) => void;
+  scrollToPage: (params: {
+    pageNumber: number;
+    behavior?: ScrollBehavior;
+  }) => void;
   scrollToPreviousPage: () => void;
   scrollToNextPage: () => void;
 }
@@ -101,14 +104,20 @@ export interface ExportAPIWrapper {
 export interface BookmarkAPIWrapper {
   fetchBookmarks: () => Promise<PdfBookmarkObject[]>;
   clearBookmarks: () => void;
-  setLocalBookmarks: (bookmarks: PdfBookmarkObject[] | null, error?: string | null) => void;
+  setLocalBookmarks: (
+    bookmarks: PdfBookmarkObject[] | null,
+    error?: string | null,
+  ) => void;
 }
 
 export interface AttachmentAPIWrapper {
   getAttachments: () => Promise<PdfAttachmentObject[]>;
   downloadAttachment: (attachment: PdfAttachmentObject) => void;
   clearAttachments: () => void;
-  setLocalAttachments: (attachments: PdfAttachmentObject[] | null, error?: string | null) => void;
+  setLocalAttachments: (
+    attachments: PdfAttachmentObject[] | null,
+    error?: string | null,
+  ) => void;
 }
 
 export interface ScrollState {
@@ -242,6 +251,9 @@ export function getBridgeState<K extends BridgeKey>(
   return registry[type]?.state ?? fallback;
 }
 
-export function getBridgeApi<K extends BridgeKey>(registry: ViewerBridgeRegistry, type: K): BridgeApiMap[K] | null {
+export function getBridgeApi<K extends BridgeKey>(
+  registry: ViewerBridgeRegistry,
+  type: K,
+): BridgeApiMap[K] | null {
   return registry[type]?.api ?? null;
 }

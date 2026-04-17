@@ -14,7 +14,9 @@ export function useServerLicenseRequest(): {
   closeLicenseSlide: () => void;
 } {
   const [showLicenseSlide, setShowLicenseSlide] = useState(false);
-  const [licenseNotice, setLicenseNotice] = useState<OnboardingRuntimeState["licenseNotice"] | null>(null);
+  const [licenseNotice, setLicenseNotice] = useState<
+    OnboardingRuntimeState["licenseNotice"] | null
+  >(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -35,7 +37,11 @@ export function useServerLicenseRequest(): {
     };
 
     window.addEventListener(SERVER_LICENSE_REQUEST_EVENT, handleLicenseRequest);
-    return () => window.removeEventListener(SERVER_LICENSE_REQUEST_EVENT, handleLicenseRequest);
+    return () =>
+      window.removeEventListener(
+        SERVER_LICENSE_REQUEST_EVENT,
+        handleLicenseRequest,
+      );
   }, []);
 
   const closeLicenseSlide = useCallback(() => {
@@ -51,7 +57,8 @@ export function useTourRequest(): {
   clearTourRequest: () => void;
 } {
   const [tourRequested, setTourRequested] = useState(false);
-  const [requestedTourType, setRequestedTourType] = useState<TourType>("whatsnew");
+  const [requestedTourType, setRequestedTourType] =
+    useState<TourType>("whatsnew");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -63,7 +70,8 @@ export function useTourRequest(): {
     };
 
     window.addEventListener(START_TOUR_EVENT, handleTourRequest);
-    return () => window.removeEventListener(START_TOUR_EVENT, handleTourRequest);
+    return () =>
+      window.removeEventListener(START_TOUR_EVENT, handleTourRequest);
   }, []);
 
   const clearTourRequest = useCallback(() => {

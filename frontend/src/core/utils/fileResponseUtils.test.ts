@@ -3,7 +3,10 @@
  */
 
 import { describe, test, expect } from "vitest";
-import { getFilenameFromHeaders, createFileFromApiResponse } from "@app/utils/fileResponseUtils";
+import {
+  getFilenameFromHeaders,
+  createFileFromApiResponse,
+} from "@app/utils/fileResponseUtils";
 
 describe("fileResponseUtils", () => {
   describe("getFilenameFromHeaders", () => {
@@ -71,7 +74,11 @@ describe("fileResponseUtils", () => {
       };
       const fallbackFilename = "fallback.pdf";
 
-      const file = createFileFromApiResponse(responseData, headers, fallbackFilename);
+      const file = createFileFromApiResponse(
+        responseData,
+        headers,
+        fallbackFilename,
+      );
 
       expect(file.name).toBe("server_filename.pdf");
       expect(file.type).toBe("application/pdf");
@@ -85,7 +92,11 @@ describe("fileResponseUtils", () => {
       };
       const fallbackFilename = "converted_file.pdf";
 
-      const file = createFileFromApiResponse(responseData, headers, fallbackFilename);
+      const file = createFileFromApiResponse(
+        responseData,
+        headers,
+        fallbackFilename,
+      );
 
       expect(file.name).toBe("converted_file.pdf");
       expect(file.type).toBe("application/pdf");
@@ -99,7 +110,11 @@ describe("fileResponseUtils", () => {
       };
       const fallbackFilename = "fallback.pdf";
 
-      const file = createFileFromApiResponse(responseData, headers, fallbackFilename);
+      const file = createFileFromApiResponse(
+        responseData,
+        headers,
+        fallbackFilename,
+      );
 
       expect(file.name).toBe("email_content.html");
       expect(file.type).toBe("text/html");
@@ -113,7 +128,11 @@ describe("fileResponseUtils", () => {
       };
       const fallbackFilename = "fallback.pdf";
 
-      const file = createFileFromApiResponse(responseData, headers, fallbackFilename);
+      const file = createFileFromApiResponse(
+        responseData,
+        headers,
+        fallbackFilename,
+      );
 
       expect(file.name).toBe("converted_files.zip");
       expect(file.type).toBe("application/zip");
@@ -124,7 +143,11 @@ describe("fileResponseUtils", () => {
       const headers = {};
       const fallbackFilename = "test.bin";
 
-      const file = createFileFromApiResponse(responseData, headers, fallbackFilename);
+      const file = createFileFromApiResponse(
+        responseData,
+        headers,
+        fallbackFilename,
+      );
 
       expect(file.name).toBe("test.bin");
       expect(file.type).toBe("application/octet-stream");
@@ -135,7 +158,11 @@ describe("fileResponseUtils", () => {
       const headers = null;
       const fallbackFilename = "test.bin";
 
-      const file = createFileFromApiResponse(responseData, headers, fallbackFilename);
+      const file = createFileFromApiResponse(
+        responseData,
+        headers,
+        fallbackFilename,
+      );
 
       expect(file.name).toBe("test.bin");
       expect(file.type).toBe("application/octet-stream");

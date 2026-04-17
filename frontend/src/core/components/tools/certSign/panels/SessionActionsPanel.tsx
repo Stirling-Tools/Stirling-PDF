@@ -56,8 +56,16 @@ export const SessionActionsPanel: React.FC<SessionActionsPanelProps> = ({
       {!session.finalized && (
         <>
           <Divider />
-          <Button leftSection={<AddIcon />} onClick={onAddParticipants} variant="light" fullWidth>
-            {t("certSign.collab.sessionDetail.addParticipants", "Add Participants")}
+          <Button
+            leftSection={<AddIcon />}
+            onClick={onAddParticipants}
+            variant="light"
+            fullWidth
+          >
+            {t(
+              "certSign.collab.sessionDetail.addParticipants",
+              "Add Participants",
+            )}
           </Button>
 
           <Divider />
@@ -70,16 +78,31 @@ export const SessionActionsPanel: React.FC<SessionActionsPanelProps> = ({
             loading={finalizing}
           >
             {allSigned
-              ? t("certSign.collab.finalize.button", "Finalize and Load Signed PDF")
-              : t("certSign.collab.finalize.early", "Finalize with Current Signatures")}
+              ? t(
+                  "certSign.collab.finalize.button",
+                  "Finalize and Load Signed PDF",
+                )
+              : t(
+                  "certSign.collab.finalize.early",
+                  "Finalize with Current Signatures",
+                )}
           </Button>
         </>
       )}
 
       {session.finalized && (
         <>
-          <Button leftSection={<CheckCircleIcon />} color="blue" fullWidth onClick={onLoadSignedPdf} loading={loadingPdf}>
-            {t("certSign.collab.sessionDetail.loadSignedPdf", "Load Signed PDF into Active Files")}
+          <Button
+            leftSection={<CheckCircleIcon />}
+            color="blue"
+            fullWidth
+            onClick={onLoadSignedPdf}
+            loading={loadingPdf}
+          >
+            {t(
+              "certSign.collab.sessionDetail.loadSignedPdf",
+              "Load Signed PDF into Active Files",
+            )}
           </Button>
         </>
       )}

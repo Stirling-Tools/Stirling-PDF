@@ -16,7 +16,10 @@ export function markOnboardingCompleted(): void {
   try {
     localStorage.setItem(ONBOARDING_COMPLETED_KEY, "true");
   } catch (error) {
-    console.error("[onboardingStorage] Error marking onboarding as completed:", error);
+    console.error(
+      "[onboardingStorage] Error marking onboarding as completed:",
+      error,
+    );
   }
 }
 
@@ -25,7 +28,10 @@ export function resetOnboardingProgress(): void {
   try {
     localStorage.removeItem(ONBOARDING_COMPLETED_KEY);
   } catch (error) {
-    console.error("[onboardingStorage] Error resetting onboarding progress:", error);
+    console.error(
+      "[onboardingStorage] Error resetting onboarding progress:",
+      error,
+    );
   }
 }
 
@@ -43,7 +49,10 @@ export function markToursTooltipShown(): void {
   try {
     localStorage.setItem(TOURS_TOOLTIP_KEY, "true");
   } catch (error) {
-    console.error("[onboardingStorage] Error marking tours tooltip as shown:", error);
+    console.error(
+      "[onboardingStorage] Error marking tours tooltip as shown:",
+      error,
+    );
   }
 }
 
@@ -61,7 +70,10 @@ export function migrateFromLegacyPreferences(): void {
       const prefs = JSON.parse(prefsRaw) as Record<string, unknown>;
 
       // If user had completed onboarding in old system, mark new system as complete
-      if (prefs.hasCompletedOnboarding === true || prefs.hasSeenIntroOnboarding === true) {
+      if (
+        prefs.hasCompletedOnboarding === true ||
+        prefs.hasSeenIntroOnboarding === true
+      ) {
         markOnboardingCompleted();
       }
     }

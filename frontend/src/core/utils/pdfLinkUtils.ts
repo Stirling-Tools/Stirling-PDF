@@ -14,10 +14,19 @@ import {
   readAnnotRectAdjusted,
   parseRectToCss,
 } from "@app/services/pdfiumService";
-import { FPDF_ANNOT_LINK, PDFACTION_GOTO, PDFACTION_URI } from "@app/utils/pdfiumBitmapUtils";
+import {
+  FPDF_ANNOT_LINK,
+  PDFACTION_GOTO,
+  PDFACTION_URI,
+} from "@app/utils/pdfiumBitmapUtils";
 
 export type LinkType = "internal" | "external" | "unknown";
-export type LinkBorderStyle = "solid" | "dashed" | "beveled" | "inset" | "underline";
+export type LinkBorderStyle =
+  | "solid"
+  | "dashed"
+  | "beveled"
+  | "inset"
+  | "underline";
 export type LinkHighlightMode = "none" | "invert" | "outline" | "push";
 
 export interface PdfLibLink {
@@ -71,13 +80,25 @@ export async function createLinkAnnotation(
   options: CreateLinkOptions,
   password?: string,
 ): Promise<ArrayBuffer> {
-  const { pageIndex, rect, url, destinationPage, title, color = [0, 0, 1], borderWidth = 0 } = options;
+  const {
+    pageIndex,
+    rect,
+    url,
+    destinationPage,
+    title,
+    color = [0, 0, 1],
+    borderWidth = 0,
+  } = options;
 
   if (!url && destinationPage === undefined) {
-    throw new Error("createLinkAnnotation: must provide either url or destinationPage");
+    throw new Error(
+      "createLinkAnnotation: must provide either url or destinationPage",
+    );
   }
   if (url && destinationPage !== undefined) {
-    throw new Error("createLinkAnnotation: url and destinationPage are mutually exclusive");
+    throw new Error(
+      "createLinkAnnotation: url and destinationPage are mutually exclusive",
+    );
   }
   if (rect.width <= 0 || rect.height <= 0) {
     throw new Error("createLinkAnnotation: rect dimensions must be positive");
@@ -88,8 +109,13 @@ export async function createLinkAnnotation(
 
   try {
     const pageCount = m.FPDF_GetPageCount(docPtr);
-    if (destinationPage !== undefined && (destinationPage < 0 || destinationPage >= pageCount)) {
-      throw new RangeError(`createLinkAnnotation: destinationPage ${destinationPage} out of range [0, ${pageCount})`);
+    if (
+      destinationPage !== undefined &&
+      (destinationPage < 0 || destinationPage >= pageCount)
+    ) {
+      throw new RangeError(
+        `createLinkAnnotation: destinationPage ${destinationPage} out of range [0, ${pageCount})`,
+      );
     }
 
     const pagePtr = m.FPDF_LoadPage(docPtr, pageIndex);
@@ -192,7 +218,11 @@ export async function extractLinksFromPage(
   data: ArrayBuffer | Uint8Array,
   pageIndex: number,
   password?: string,
-): Promise<{ links: PdfLibLink[]; pdfPageWidth: number; pdfPageHeight: number }> {
+): Promise<{
+  links: PdfLibLink[];
+  pdfPageWidth: number;
+  pdfPageHeight: number;
+}> {
   const m = await getPdfiumModule();
   const docPtr = await openRawDocumentSafe(data, password);
 
@@ -269,10 +299,20 @@ export async function extractLinksFromPage(
 
         // Get title from /Contents
         let title: string | undefined;
-        const contentsLen = m.FPDFAnnot_GetStringValue(annotPtr, "Contents", 0, 0);
+        const contentsLen = m.FPDFAnnot_GetStringValue(
+          annotPtr,
+          "Contents",
+          0,
+          0,
+        );
         if (contentsLen > 2) {
           const contentsBuf = m.pdfium.wasmExports.malloc(contentsLen);
-          m.FPDFAnnot_GetStringValue(annotPtr, "Contents", contentsBuf, contentsLen);
+          m.FPDFAnnot_GetStringValue(
+            annotPtr,
+            "Contents",
+            contentsBuf,
+            contentsLen,
+          );
           title = readUtf16(m, contentsBuf, contentsLen) || undefined;
           m.pdfium.wasmExports.free(contentsBuf);
         }
@@ -284,7 +324,14 @@ export async function extractLinksFromPage(
         const gPtr = rPtr + 4;
         const bPtr = rPtr + 8;
         const aPtr = rPtr + 12;
-        const hasColor = m.FPDFAnnot_GetColor(annotPtr, 0, rPtr, gPtr, bPtr, aPtr);
+        const hasColor = m.FPDFAnnot_GetColor(
+          annotPtr,
+          0,
+          rPtr,
+          gPtr,
+          bPtr,
+          aPtr,
+        );
         if (hasColor) {
           color = [
             m.pdfium.getValue(rPtr, "i32") / 255,

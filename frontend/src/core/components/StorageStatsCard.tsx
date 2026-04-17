@@ -14,7 +14,12 @@ interface StorageStatsCardProps {
   onReloadFiles: () => void;
 }
 
-const StorageStatsCard: React.FC<StorageStatsCardProps> = ({ storageStats, filesCount, onClearAll, onReloadFiles }) => {
+const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
+  storageStats,
+  filesCount,
+  onClearAll,
+  onReloadFiles,
+}) => {
   const { t } = useTranslation();
 
   if (!storageStats) return null;
@@ -27,19 +32,27 @@ const StorageStatsCard: React.FC<StorageStatsCardProps> = ({ storageStats, files
         <StorageIcon />
         <div style={{ flex: 1 }}>
           <Text size="sm" fw={500}>
-            {t("fileManager.storage", "Storage")}: {formatFileSize(storageStats.used)}
+            {t("fileManager.storage", "Storage")}:{" "}
+            {formatFileSize(storageStats.used)}
             {storageStats.quota && ` / ${formatFileSize(storageStats.quota)}`}
           </Text>
           {storageStats.quota && (
             <Progress
               value={storageUsagePercent}
-              color={storageUsagePercent > 80 ? "red" : storageUsagePercent > 60 ? "yellow" : "blue"}
+              color={
+                storageUsagePercent > 80
+                  ? "red"
+                  : storageUsagePercent > 60
+                    ? "yellow"
+                    : "blue"
+              }
               size="sm"
               mt={4}
             />
           )}
           <Text size="xs" c="dimmed">
-            {storageStats.fileCount} {t("fileManager.filesStored", "files stored")}
+            {storageStats.fileCount}{" "}
+            {t("fileManager.filesStored", "files stored")}
           </Text>
         </div>
         <Group gap="xs">
@@ -54,7 +67,12 @@ const StorageStatsCard: React.FC<StorageStatsCardProps> = ({ storageStats, files
               {t("fileManager.clearAll", "Clear All")}
             </Button>
           )}
-          <Button variant="light" color="blue" size="xs" onClick={onReloadFiles}>
+          <Button
+            variant="light"
+            color="blue"
+            size="xs"
+            onClick={onReloadFiles}
+          >
             Reload Files
           </Button>
         </Group>

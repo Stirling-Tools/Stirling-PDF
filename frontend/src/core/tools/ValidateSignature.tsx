@@ -16,7 +16,10 @@ import {
 } from "@app/hooks/tools/validateSignature/useValidateSignatureOperation";
 import ValidateSignatureReportView from "@app/components/tools/validateSignature/ValidateSignatureReportView";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useNavigationActions, useNavigationState } from "@app/contexts/NavigationContext";
+import {
+  useNavigationActions,
+  useNavigationState,
+} from "@app/contexts/NavigationContext";
 import type { SignatureValidationReportData } from "@app/types/validateSignature";
 
 const ValidateSignature = (props: BaseToolProps) => {
@@ -34,11 +37,17 @@ const ValidateSignature = (props: BaseToolProps) => {
   const REPORT_WORKBENCH_ID = "custom:validateSignatureReport" as const;
   const reportIcon = useMemo(() => <PictureAsPdfIcon fontSize="small" />, []);
 
-  const base = useBaseTool("validateSignature", useValidateSignatureParameters, useValidateSignatureOperation, props);
+  const base = useBaseTool(
+    "validateSignature",
+    useValidateSignatureParameters,
+    useValidateSignatureOperation,
+    props,
+  );
 
   const operation = base.operation as ValidateSignatureOperationHook;
   const hasResults = operation.results.length > 0;
-  const showResultsStep = hasResults || base.operation.isLoading || !!base.operation.errorMessage;
+  const showResultsStep =
+    hasResults || base.operation.isLoading || !!base.operation.errorMessage;
 
   useEffect(() => {
     registerCustomWorkbenchView({
@@ -53,7 +62,13 @@ const ValidateSignature = (props: BaseToolProps) => {
       clearCustomWorkbenchViewData(REPORT_VIEW_ID);
       unregisterCustomWorkbenchView(REPORT_VIEW_ID);
     };
-  }, [clearCustomWorkbenchViewData, registerCustomWorkbenchView, reportIcon, t, unregisterCustomWorkbenchView]);
+  }, [
+    clearCustomWorkbenchViewData,
+    registerCustomWorkbenchView,
+    reportIcon,
+    t,
+    unregisterCustomWorkbenchView,
+  ]);
 
   const reportData = useMemo<SignatureValidationReportData | null>(() => {
     if (operation.results.length === 0) {
@@ -77,11 +92,15 @@ const ValidateSignature = (props: BaseToolProps) => {
       setCustomWorkbenchViewData(REPORT_VIEW_ID, reportData);
 
       const generatedAt = reportData.generatedAt ?? null;
-      const isNewReport = generatedAt && generatedAt !== lastReportGeneratedAtRef.current;
+      const isNewReport =
+        generatedAt && generatedAt !== lastReportGeneratedAtRef.current;
 
       if (isNewReport) {
         lastReportGeneratedAtRef.current = generatedAt;
-        if (navigationState.selectedTool === "validateSignature" && navigationState.workbench !== REPORT_WORKBENCH_ID) {
+        if (
+          navigationState.selectedTool === "validateSignature" &&
+          navigationState.workbench !== REPORT_WORKBENCH_ID
+        ) {
           navigationActions.setWorkbench(REPORT_WORKBENCH_ID);
         }
       }
@@ -107,7 +126,9 @@ const ValidateSignature = (props: BaseToolProps) => {
       {
         title: t("validateSignature.settings.title", "Validation Settings"),
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         content: (
           <ValidateSignatureSettings
             parameters={base.params.parameters}

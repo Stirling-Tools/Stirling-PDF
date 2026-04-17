@@ -9,7 +9,12 @@ import { BaseToolProps, ToolComponent } from "@app/types/tool";
 const TimestampPdf = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
-  const base = useBaseTool("timestampPdf", useTimestampPdfParameters, useTimestampPdfOperation, props);
+  const base = useBaseTool(
+    "timestampPdf",
+    useTimestampPdfParameters,
+    useTimestampPdfOperation,
+    props,
+  );
 
   return createToolFlow({
     files: {
@@ -20,7 +25,9 @@ const TimestampPdf = (props: BaseToolProps) => {
       {
         title: t("timestampPdf.steps.settings", "Settings"),
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         content: (
           <TimestampPdfSettings
             parameters={base.params.parameters}
@@ -35,7 +42,10 @@ const TimestampPdf = (props: BaseToolProps) => {
       isVisible: !base.hasResults,
       loadingText: t("loading"),
       onClick: base.handleExecute,
-      disabled: !base.params.validateParameters() || !base.hasFiles || !base.endpointEnabled,
+      disabled:
+        !base.params.validateParameters() ||
+        !base.hasFiles ||
+        !base.endpointEnabled,
     },
     review: {
       isVisible: base.hasResults,

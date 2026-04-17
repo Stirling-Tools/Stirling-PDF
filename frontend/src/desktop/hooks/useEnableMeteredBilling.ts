@@ -33,17 +33,22 @@ export function useEnableMeteredBilling(
         throw new Error("Not authenticated");
       }
 
-      const { data, error } = await supabase.functions.invoke("create-meter-subscription", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data, error } = await supabase.functions.invoke(
+        "create-meter-subscription",
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
       if (error) {
         throw new Error(error.message || "Failed to enable metered billing");
       }
 
       if (!data?.success) {
-        throw new Error(data?.error || data?.message || "Failed to enable metered billing");
+        throw new Error(
+          data?.error || data?.message || "Failed to enable metered billing",
+        );
       }
 
       console.debug(`[${logPrefix}] Metered billing enabled successfully`);
@@ -51,7 +56,8 @@ export function useEnableMeteredBilling(
       await refreshBilling();
       onSuccess();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to enable metered billing";
+      const message =
+        err instanceof Error ? err.message : "Failed to enable metered billing";
       console.error(`[${logPrefix}] Failed to enable metered billing:`, err);
       setMeteringError(message);
     } finally {

@@ -13,6 +13,11 @@ export const validatePageNumbers = (pageNumbers: string): boolean => {
 
   return parts.every((part) => {
     if (!part) return false;
-    return allToken.test(part) || singlePageRegex.test(part) || rangeRegex.test(part) || mathRegex.test(part);
+    return (
+      allToken.test(part) ||
+      singlePageRegex.test(part) ||
+      rangeRegex.test(part) ||
+      mathRegex.test(part)
+    );
   });
 };

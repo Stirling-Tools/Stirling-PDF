@@ -1,4 +1,11 @@
-import { ActionIcon, Tooltip, Popover, TextInput, Button, Stack } from "@mantine/core";
+import {
+  ActionIcon,
+  Tooltip,
+  Popover,
+  TextInput,
+  Button,
+  Stack,
+} from "@mantine/core";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -53,7 +60,13 @@ export function EditTextButton({ onEdit }: { onEdit: () => void }) {
   const { t } = useTranslation();
   return (
     <Tooltip label={t("annotation.editText", "Edit Text")}>
-      <ActionIcon variant="subtle" color="gray" size="md" onClick={onEdit} styles={commonButtonStyles}>
+      <ActionIcon
+        variant="subtle"
+        color="gray"
+        size="md"
+        onClick={onEdit}
+        styles={commonButtonStyles}
+      >
         <EditIcon style={{ fontSize: 18 }} />
       </ActionIcon>
     </Tooltip>
@@ -66,11 +79,19 @@ interface AttachCommentButtonProps {
   onAdd: () => void;
 }
 
-export function AttachCommentButton({ isInSidebar, onView, onAdd }: AttachCommentButtonProps) {
+export function AttachCommentButton({
+  isInSidebar,
+  onView,
+  onAdd,
+}: AttachCommentButtonProps) {
   const { t } = useTranslation();
   return (
     <Tooltip
-      label={isInSidebar ? t("viewer.comments.viewComment", "View comment") : t("viewer.comments.addComment", "Add comment")}
+      label={
+        isInSidebar
+          ? t("viewer.comments.viewComment", "View comment")
+          : t("viewer.comments.addComment", "Add comment")
+      }
     >
       <ActionIcon
         variant={isInSidebar ? "filled" : "subtle"}
@@ -94,9 +115,19 @@ export function CommentButton({ hasContent, onClick }: CommentButtonProps) {
   const { t } = useTranslation();
   return (
     <Tooltip
-      label={hasContent ? t("viewer.comments.viewComment", "View comment") : t("viewer.comments.addComment", "Add comment")}
+      label={
+        hasContent
+          ? t("viewer.comments.viewComment", "View comment")
+          : t("viewer.comments.addComment", "Add comment")
+      }
     >
-      <ActionIcon variant="subtle" color="gray" size="md" onClick={onClick} styles={commonButtonStyles}>
+      <ActionIcon
+        variant="subtle"
+        color="gray"
+        size="md"
+        onClick={onClick}
+        styles={commonButtonStyles}
+      >
         <CommentIcon style={{ fontSize: 18 }} />
       </ActionIcon>
     </Tooltip>
@@ -109,7 +140,11 @@ interface LinkButtonProps {
   onAddLink: (url: string) => void;
 }
 
-export function LinkButton({ firstLinkTarget, onGoToLink, onAddLink }: LinkButtonProps) {
+export function LinkButton({
+  firstLinkTarget,
+  onGoToLink,
+  onAddLink,
+}: LinkButtonProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState("");
@@ -117,7 +152,13 @@ export function LinkButton({ firstLinkTarget, onGoToLink, onAddLink }: LinkButto
   if (firstLinkTarget) {
     return (
       <Tooltip label={t("viewer.comments.goToLink", "Go to link")}>
-        <ActionIcon variant="subtle" color="gray" size="md" onClick={onGoToLink} styles={commonButtonStyles}>
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          size="md"
+          onClick={onGoToLink}
+          styles={commonButtonStyles}
+        >
           <OpenInNewIcon style={{ fontSize: 18 }} />
         </ActionIcon>
       </Tooltip>
@@ -128,7 +169,13 @@ export function LinkButton({ firstLinkTarget, onGoToLink, onAddLink }: LinkButto
     <Popover opened={open} onClose={() => setOpen(false)} position="top">
       <Popover.Target>
         <Tooltip label={t("viewer.comments.addLink", "Add link")}>
-          <ActionIcon variant="subtle" color="gray" size="md" onClick={() => setOpen((o) => !o)} styles={commonButtonStyles}>
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            size="md"
+            onClick={() => setOpen((o) => !o)}
+            styles={commonButtonStyles}
+          >
             <LocalIcon icon="link" width="1.25rem" height="1.25rem" />
           </ActionIcon>
         </Tooltip>

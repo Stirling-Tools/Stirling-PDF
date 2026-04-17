@@ -1,5 +1,8 @@
 import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
-import { HORIZONTAL_PADDING_RATIO, VERTICAL_PADDING_RATIO } from "@app/constants/signConstants";
+import {
+  HORIZONTAL_PADDING_RATIO,
+  VERTICAL_PADDING_RATIO,
+} from "@app/constants/signConstants";
 
 export interface SignaturePreview {
   dataUrl: string;
@@ -15,7 +18,9 @@ const loadImage = (src: string): Promise<HTMLImageElement> =>
     img.src = src;
   });
 
-export const buildSignaturePreview = async (config: SignParameters | null): Promise<SignaturePreview | null> => {
+export const buildSignaturePreview = async (
+  config: SignParameters | null,
+): Promise<SignaturePreview | null> => {
   if (typeof window === "undefined" || typeof document === "undefined") {
     return null;
   }

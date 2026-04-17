@@ -28,22 +28,40 @@ export async function exportProcessedDocumentsToFiles(
       const partFilename = `${baseName}_part_${i + 1}.pdf`;
 
       const result = sourceFiles
-        ? await pdfExportService.exportPDFMultiFile(doc, sourceFiles, [], { selectedOnly: false, filename: partFilename })
-        : await pdfExportService.exportPDF(doc, [], { selectedOnly: false, filename: partFilename });
+        ? await pdfExportService.exportPDFMultiFile(doc, sourceFiles, [], {
+            selectedOnly: false,
+            filename: partFilename,
+          })
+        : await pdfExportService.exportPDF(doc, [], {
+            selectedOnly: false,
+            filename: partFilename,
+          });
 
-      files.push(new File([result.blob], result.filename, { type: "application/pdf" }));
+      files.push(
+        new File([result.blob], result.filename, { type: "application/pdf" }),
+      );
     }
 
     return files;
   } else {
     // Single document
     const result = sourceFiles
-      ? await pdfExportService.exportPDFMultiFile(processedDocuments, sourceFiles, [], {
+      ? await pdfExportService.exportPDFMultiFile(
+          processedDocuments,
+          sourceFiles,
+          [],
+          {
+            selectedOnly: false,
+            filename: exportFilename,
+          },
+        )
+      : await pdfExportService.exportPDF(processedDocuments, [], {
           selectedOnly: false,
           filename: exportFilename,
-        })
-      : await pdfExportService.exportPDF(processedDocuments, [], { selectedOnly: false, filename: exportFilename });
+        });
 
-    return [new File([result.blob], result.filename, { type: "application/pdf" })];
+    return [
+      new File([result.blob], result.filename, { type: "application/pdf" }),
+    ];
   }
 }

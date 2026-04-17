@@ -32,10 +32,19 @@ const GoogleDriveIcon: React.FC<{ disabled?: boolean }> = ({ disabled }) => (
   />
 );
 
-const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({ horizontal = false }) => {
-  const { activeSource, onSourceChange, onLocalFileClick, onGoogleDriveSelect, onNewFilesSelect } = useFileManagerContext();
+const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
+  horizontal = false,
+}) => {
+  const {
+    activeSource,
+    onSourceChange,
+    onLocalFileClick,
+    onGoogleDriveSelect,
+    onNewFilesSelect,
+  } = useFileManagerContext();
   const { t } = useTranslation();
-  const { isEnabled: isGoogleDriveEnabled, openPicker: openGoogleDrivePicker } = useGoogleDrivePicker();
+  const { isEnabled: isGoogleDriveEnabled, openPicker: openGoogleDrivePicker } =
+    useGoogleDrivePicker();
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
   const UploadIcon = icons.upload;
@@ -66,21 +75,29 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({ horizontal = fals
   };
 
   // Determine visibility of Google Drive button
-  const shouldHideGoogleDrive = !isGoogleDriveEnabled && config?.hideDisabledToolsGoogleDrive;
+  const shouldHideGoogleDrive =
+    !isGoogleDriveEnabled && config?.hideDisabledToolsGoogleDrive;
 
   // Determine visibility of Mobile QR Scanner button
-  const shouldHideMobileQR = !isMobileUploadEnabled && config?.hideDisabledToolsMobileQRScanner;
+  const shouldHideMobileQR =
+    !isMobileUploadEnabled && config?.hideDisabledToolsMobileQRScanner;
 
   const buttonProps = {
-    variant: (source: string) => (activeSource === source ? "filled" : "subtle"),
-    getColor: (source: string) => (activeSource === source ? "var(--mantine-color-gray-2)" : undefined),
+    variant: (source: string) =>
+      activeSource === source ? "filled" : "subtle",
+    getColor: (source: string) =>
+      activeSource === source ? "var(--mantine-color-gray-2)" : undefined,
     getStyles: (source: string) => ({
       root: {
         backgroundColor: activeSource === source ? undefined : "transparent",
-        color: activeSource === source ? "var(--mantine-color-gray-9)" : "var(--mantine-color-gray-6)",
+        color:
+          activeSource === source
+            ? "var(--mantine-color-gray-9)"
+            : "var(--mantine-color-gray-6)",
         border: "none",
         "&:hover": {
-          backgroundColor: activeSource === source ? undefined : "var(--mantine-color-gray-0)",
+          backgroundColor:
+            activeSource === source ? undefined : "var(--mantine-color-gray-0)",
         },
       },
     }),
@@ -97,7 +114,9 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({ horizontal = fals
         color={buttonProps.getColor("recent")}
         styles={buttonProps.getStyles("recent")}
       >
-        {horizontal ? t("fileManager.recent", "Recent") : t("fileManager.recent", "Recent")}
+        {horizontal
+          ? t("fileManager.recent", "Recent")
+          : t("fileManager.recent", "Recent")}
       </Button>
 
       <Button
@@ -136,17 +155,24 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({ horizontal = fals
               backgroundColor: "transparent",
               border: "none",
               "&:hover": {
-                backgroundColor: isGoogleDriveEnabled ? "var(--mantine-color-gray-0)" : "transparent",
+                backgroundColor: isGoogleDriveEnabled
+                  ? "var(--mantine-color-gray-0)"
+                  : "transparent",
               },
             },
           }}
           title={
             !isGoogleDriveEnabled
-              ? t("fileManager.googleDriveNotAvailable", "Google Drive integration not available")
+              ? t(
+                  "fileManager.googleDriveNotAvailable",
+                  "Google Drive integration not available",
+                )
               : undefined
           }
         >
-          {horizontal ? t("fileManager.googleDriveShort", "Drive") : t("fileManager.googleDrive", "Google Drive")}
+          {horizontal
+            ? t("fileManager.googleDriveShort", "Drive")
+            : t("fileManager.googleDrive", "Google Drive")}
         </Button>
       )}
 
@@ -165,13 +191,24 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({ horizontal = fals
               backgroundColor: "transparent",
               border: "none",
               "&:hover": {
-                backgroundColor: isMobileUploadEnabled ? "var(--mantine-color-gray-0)" : "transparent",
+                backgroundColor: isMobileUploadEnabled
+                  ? "var(--mantine-color-gray-0)"
+                  : "transparent",
               },
             },
           }}
-          title={!isMobileUploadEnabled ? t("fileManager.mobileUploadNotAvailable", "Mobile upload not available") : undefined}
+          title={
+            !isMobileUploadEnabled
+              ? t(
+                  "fileManager.mobileUploadNotAvailable",
+                  "Mobile upload not available",
+                )
+              : undefined
+          }
         >
-          {horizontal ? t("fileManager.mobileShort", "Mobile") : t("fileManager.mobileUpload", "Mobile Upload")}
+          {horizontal
+            ? t("fileManager.mobileShort", "Mobile")
+            : t("fileManager.mobileUpload", "Mobile Upload")}
         </Button>
       )}
     </>
@@ -195,7 +232,14 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({ horizontal = fals
   return (
     <>
       <Stack gap="xs" style={{ height: "100%" }}>
-        <Text size="sm" pt="sm" fw={500} c="dimmed" mb="xs" style={{ paddingLeft: "1rem" }}>
+        <Text
+          size="sm"
+          pt="sm"
+          fw={500}
+          c="dimmed"
+          mb="xs"
+          style={{ paddingLeft: "1rem" }}
+        >
           {t("fileManager.myFiles", "My Files")}
         </Text>
         {buttons}

@@ -7,14 +7,24 @@ export interface StripeCheckoutProps {
   minimumSeats?: number;
   onSuccess?: (sessionId: string) => void;
   onError?: (error: string) => void;
-  onLicenseActivated?: (licenseInfo: { licenseType: string; enabled: boolean; maxUsers: number; hasKey: boolean }) => void;
+  onLicenseActivated?: (licenseInfo: {
+    licenseType: string;
+    enabled: boolean;
+    maxUsers: number;
+    hasKey: boolean;
+  }) => void;
   hostedCheckoutSuccess?: {
     isUpgrade: boolean;
     licenseKey?: string;
   } | null;
 }
 
-export type CheckoutStage = "email" | "plan-selection" | "payment" | "success" | "error";
+export type CheckoutStage =
+  | "email"
+  | "plan-selection"
+  | "payment"
+  | "success"
+  | "error";
 
 export type CheckoutState = {
   currentStage: CheckoutStage;

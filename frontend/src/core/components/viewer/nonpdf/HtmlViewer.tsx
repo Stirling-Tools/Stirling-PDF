@@ -20,9 +20,18 @@ export function HtmlViewer({ file }: HtmlViewerProps) {
 
   return (
     <Box style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-      <Paper radius={0} p="xs" style={{ borderBottom: "1px solid var(--mantine-color-gray-2)", flexShrink: 0 }}>
+      <Paper
+        radius={0}
+        p="xs"
+        style={{
+          borderBottom: "1px solid var(--mantine-color-gray-2)",
+          flexShrink: 0,
+        }}
+      >
         <Text size="xs" c="dimmed">
-          {t("viewer.nonPdf.htmlPreviewWarning", { size: formatFileSize(file.size) })}
+          {t("viewer.nonPdf.htmlPreviewWarning", {
+            size: formatFileSize(file.size),
+          })}
         </Text>
       </Paper>
       {objectUrl && (

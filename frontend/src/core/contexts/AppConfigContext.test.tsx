@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { waitFor, renderHook, act } from "@testing-library/react";
-import { AppConfigProvider, useAppConfig } from "@app/contexts/AppConfigContext";
+import {
+  AppConfigProvider,
+  useAppConfig,
+} from "@app/contexts/AppConfigContext";
 import apiClient from "@app/services/apiClient";
 import { ReactNode } from "react";
 
@@ -21,7 +24,9 @@ describe("AppConfigContext", () => {
     vi.restoreAllMocks();
   });
 
-  const wrapper = ({ children }: { children: ReactNode }) => <AppConfigProvider>{children}</AppConfigProvider>;
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <AppConfigProvider>{children}</AppConfigProvider>
+  );
 
   it("should fetch and provide app config on non-auth pages", async () => {
     const mockConfig = {
@@ -250,7 +255,9 @@ describe("AppConfigContext", () => {
     };
 
     const customWrapper = ({ children }: { children: ReactNode }) => (
-      <AppConfigProvider initialConfig={initialConfig}>{children}</AppConfigProvider>
+      <AppConfigProvider initialConfig={initialConfig}>
+        {children}
+      </AppConfigProvider>
     );
 
     const { result } = renderHook(() => useAppConfig(), {

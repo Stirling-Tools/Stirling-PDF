@@ -1,5 +1,21 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActionIcon, Box, Button, Group, Menu, Modal, SegmentedControl, Stack, Text } from "@mantine/core";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Group,
+  Menu,
+  Modal,
+  SegmentedControl,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DrawIcon from "@mui/icons-material/Draw";
 import ImageIcon from "@mui/icons-material/Image";
@@ -9,8 +25,14 @@ import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import CheckIcon from "@mui/icons-material/Check";
 
-import { DEFAULT_PARAMETERS, type SignParameters } from "@app/hooks/tools/sign/useSignParameters";
-import { useSavedSignatures, type SavedSignature } from "@app/hooks/tools/sign/useSavedSignatures";
+import {
+  DEFAULT_PARAMETERS,
+  type SignParameters,
+} from "@app/hooks/tools/sign/useSignParameters";
+import {
+  useSavedSignatures,
+  type SavedSignature,
+} from "@app/hooks/tools/sign/useSavedSignatures";
 import { DrawingCanvas } from "@app/components/annotation/shared/DrawingCanvas";
 import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
 import { TextInputWithFont } from "@app/components/annotation/shared/TextInputWithFont";
@@ -42,9 +64,17 @@ export default function SignControlsStrip({
   onDeleteSelected,
 }: SignControlsStripProps) {
   const { t } = useTranslation();
-  const { savedSignatures, addSignature, removeSignature, isAtCapacity, byTypeCounts } = useSavedSignatures();
+  const {
+    savedSignatures,
+    addSignature,
+    removeSignature,
+    isAtCapacity,
+    byTypeCounts,
+  } = useSavedSignatures();
 
-  const [createSignatureType, setCreateSignatureType] = useState<"canvas" | "text" | "image" | null>(null);
+  const [createSignatureType, setCreateSignatureType] = useState<
+    "canvas" | "text" | "image" | null
+  >(null);
   const [canvasColorPickerOpen, setCanvasColorPickerOpen] = useState(false);
   const [canvasColor, setCanvasColor] = useState("#000000");
   const [canvasPenSize, setCanvasPenSize] = useState(2);
@@ -52,10 +82,18 @@ export default function SignControlsStrip({
   const latestCanvasDataRef = useRef<string | undefined>(undefined);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [textSignerName, setTextSignerName] = useState(DEFAULT_PARAMETERS.signerName ?? "");
-  const [textFontFamily, setTextFontFamily] = useState(DEFAULT_PARAMETERS.fontFamily ?? "Helvetica");
-  const [textFontSize, setTextFontSize] = useState(DEFAULT_PARAMETERS.fontSize ?? 16);
-  const [textColor, setTextColor] = useState(DEFAULT_PARAMETERS.textColor ?? "#000000");
+  const [textSignerName, setTextSignerName] = useState(
+    DEFAULT_PARAMETERS.signerName ?? "",
+  );
+  const [textFontFamily, setTextFontFamily] = useState(
+    DEFAULT_PARAMETERS.fontFamily ?? "Helvetica",
+  );
+  const [textFontSize, setTextFontSize] = useState(
+    DEFAULT_PARAMETERS.fontSize ?? 16,
+  );
+  const [textColor, setTextColor] = useState(
+    DEFAULT_PARAMETERS.textColor ?? "#000000",
+  );
 
   const renderSavedSignaturePreview = useCallback(
     (sig: SavedSignature) => {
@@ -109,7 +147,10 @@ export default function SignControlsStrip({
           <Box
             component="img"
             src={sig.dataUrl}
-            alt={sig.label || t("certSign.collab.signRequest.saved.defaultLabel", "Signature")}
+            alt={
+              sig.label ||
+              t("certSign.collab.signRequest.saved.defaultLabel", "Signature")
+            }
             style={{
               maxWidth: "100%",
               maxHeight: "100%",
@@ -125,7 +166,9 @@ export default function SignControlsStrip({
 
   const sortedSavedSignatures = useMemo(() => {
     if (!savedSignatures.length) return [];
-    return [...savedSignatures].sort((a, b) => (b.updatedAt ?? b.createdAt) - (a.updatedAt ?? a.createdAt));
+    return [...savedSignatures].sort(
+      (a, b) => (b.updatedAt ?? b.createdAt) - (a.updatedAt ?? a.createdAt),
+    );
   }, [savedSignatures]);
 
   const hasAutoSelected = useRef(false);
@@ -153,7 +196,11 @@ export default function SignControlsStrip({
         signatureData: lastSig.dataUrl,
       });
     }
-  }, [sortedSavedSignatures, signatureConfig?.signatureData, onSignatureSelected]);
+  }, [
+    sortedSavedSignatures,
+    signatureConfig?.signatureData,
+    onSignatureSelected,
+  ]);
 
   const beginPlacement = useCallback(
     (config: SignParameters) => {
@@ -194,21 +241,24 @@ export default function SignControlsStrip({
     onPlacementModeChange(true);
   }, [onPlacementModeChange]);
 
-  const handleCreateSignature = useCallback((type: "canvas" | "text" | "image") => {
-    if (type === "image") {
-      fileInputRef.current?.click();
-      return;
-    }
-    setCreateSignatureType(type);
-    if (type === "canvas") {
-      setCanvasColor("#000000");
-      setCanvasPenSize(2);
-      setCanvasPenSizeInput("2");
-      latestCanvasDataRef.current = undefined;
-    } else if (type === "text") {
-      setTextSignerName("");
-    }
-  }, []);
+  const handleCreateSignature = useCallback(
+    (type: "canvas" | "text" | "image") => {
+      if (type === "image") {
+        fileInputRef.current?.click();
+        return;
+      }
+      setCreateSignatureType(type);
+      if (type === "canvas") {
+        setCanvasColor("#000000");
+        setCanvasPenSize(2);
+        setCanvasPenSizeInput("2");
+        latestCanvasDataRef.current = undefined;
+      } else if (type === "text") {
+        setTextSignerName("");
+      }
+    },
+    [],
+  );
 
   const handleCancelCreate = useCallback(() => {
     setCreateSignatureType(null);
@@ -228,7 +278,10 @@ export default function SignControlsStrip({
     if (!preview?.dataUrl) return null;
 
     const nextIndex = (byTypeCounts?.text ?? 0) + 1;
-    const baseLabel = t("certSign.collab.signRequest.saved.defaultTextLabel", "Typed signature");
+    const baseLabel = t(
+      "certSign.collab.signRequest.saved.defaultTextLabel",
+      "Typed signature",
+    );
     await addSignature(
       {
         type: "text",
@@ -248,14 +301,30 @@ export default function SignControlsStrip({
       textColor,
       dataUrl: preview.dataUrl,
     };
-  }, [addSignature, byTypeCounts?.text, isAtCapacity, t, textColor, textFontFamily, textFontSize, textSignerName]);
+  }, [
+    addSignature,
+    byTypeCounts?.text,
+    isAtCapacity,
+    t,
+    textColor,
+    textFontFamily,
+    textFontSize,
+    textSignerName,
+  ]);
 
   const saveImageToLibrary = useCallback(
     async (dataUrl: string) => {
       if (!dataUrl || isAtCapacity) return;
       const nextIndex = (byTypeCounts?.image ?? 0) + 1;
-      const baseLabel = t("certSign.collab.signRequest.saved.defaultImageLabel", "Uploaded signature");
-      await addSignature({ type: "image", dataUrl }, `${baseLabel} ${nextIndex}`, "localStorage");
+      const baseLabel = t(
+        "certSign.collab.signRequest.saved.defaultImageLabel",
+        "Uploaded signature",
+      );
+      await addSignature(
+        { type: "image", dataUrl },
+        `${baseLabel} ${nextIndex}`,
+        "localStorage",
+      );
     },
     [addSignature, byTypeCounts?.image, isAtCapacity, t],
   );
@@ -268,7 +337,8 @@ export default function SignControlsStrip({
         if (typeof value === "string") resolve(value);
         else reject(new Error("Failed to read image as data URL"));
       };
-      reader.onerror = () => reject(reader.error ?? new Error("Failed to read file"));
+      reader.onerror = () =>
+        reject(reader.error ?? new Error("Failed to read file"));
       reader.readAsDataURL(file);
     });
   }, []);
@@ -277,8 +347,15 @@ export default function SignControlsStrip({
     async (dataUrl: string) => {
       if (!dataUrl || isAtCapacity) return;
       const nextIndex = (byTypeCounts?.canvas ?? 0) + 1;
-      const baseLabel = t("certSign.collab.signRequest.saved.defaultCanvasLabel", "Drawing signature");
-      await addSignature({ type: "canvas", dataUrl }, `${baseLabel} ${nextIndex}`, "localStorage");
+      const baseLabel = t(
+        "certSign.collab.signRequest.saved.defaultCanvasLabel",
+        "Drawing signature",
+      );
+      await addSignature(
+        { type: "canvas", dataUrl },
+        `${baseLabel} ${nextIndex}`,
+        "localStorage",
+      );
     },
     [addSignature, byTypeCounts?.canvas, isAtCapacity, t],
   );
@@ -289,7 +366,9 @@ export default function SignControlsStrip({
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       const isTypingTarget =
-        target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || (target as any)?.isContentEditable;
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        (target as any)?.isContentEditable;
       if (isTypingTarget) return;
 
       if (event.key === "Escape") {
@@ -369,15 +448,24 @@ export default function SignControlsStrip({
           maxWidth: 160,
         }}
       >
-        {(signatureConfig.signerName ?? "").trim() || t("certSign.collab.signRequest.preview.textFallback", "Signature")}
+        {(signatureConfig.signerName ?? "").trim() ||
+          t("certSign.collab.signRequest.preview.textFallback", "Signature")}
       </div>
     ) : (
       <div className={styles.signingPreviewFrame}>
         {signatureConfig.signatureData ? (
           <img
             src={signatureConfig.signatureData}
-            alt={t("certSign.collab.signRequest.preview.imageAlt", "Selected signature")}
-            style={{ maxWidth: 160, maxHeight: 32, objectFit: "contain", display: "block" }}
+            alt={t(
+              "certSign.collab.signRequest.preview.imageAlt",
+              "Selected signature",
+            )}
+            style={{
+              maxWidth: 160,
+              maxHeight: 32,
+              objectFit: "contain",
+              display: "block",
+            }}
           />
         ) : (
           <Text size="xs" c="dimmed">
@@ -413,7 +501,12 @@ export default function SignControlsStrip({
                   label: (
                     <Group gap={6} wrap="nowrap">
                       <DrawIcon sx={{ fontSize: "1.1rem" }} />
-                      <span>{t("certSign.collab.signRequest.mode.place", "Place Signature")}</span>
+                      <span>
+                        {t(
+                          "certSign.collab.signRequest.mode.place",
+                          "Place Signature",
+                        )}
+                      </span>
                     </Group>
                   ),
                 },
@@ -422,14 +515,22 @@ export default function SignControlsStrip({
                   label: (
                     <Group gap={6} wrap="nowrap">
                       <OpenWithIcon sx={{ fontSize: "1.1rem" }} />
-                      <span>{t("certSign.collab.signRequest.mode.move", "Move Signature")}</span>
+                      <span>
+                        {t(
+                          "certSign.collab.signRequest.mode.move",
+                          "Move Signature",
+                        )}
+                      </span>
                     </Group>
                   ),
                 },
               ]}
               size="xs"
               radius="xl"
-              aria-label={t("certSign.collab.signRequest.mode.title", "Sign or move mode")}
+              aria-label={t(
+                "certSign.collab.signRequest.mode.title",
+                "Sign or move mode",
+              )}
             />
           </div>
 
@@ -449,7 +550,10 @@ export default function SignControlsStrip({
                 <button
                   type="button"
                   className={styles.signingPreviewButton}
-                  aria-label={t("certSign.collab.signRequest.changeSignature", "Change signature")}
+                  aria-label={t(
+                    "certSign.collab.signRequest.changeSignature",
+                    "Change signature",
+                  )}
                 >
                   {previewNode}
                 </button>
@@ -457,7 +561,10 @@ export default function SignControlsStrip({
               <Menu.Dropdown>
                 {sortedSavedSignatures.length ? (
                   sortedSavedSignatures.map((sig) => (
-                    <Menu.Item key={sig.id} onClick={() => applySavedSignature(sig)}>
+                    <Menu.Item
+                      key={sig.id}
+                      onClick={() => applySavedSignature(sig)}
+                    >
                       <Group gap="sm" wrap="nowrap" justify="space-between">
                         {renderSavedSignaturePreview(sig)}
                         <ActionIcon
@@ -469,7 +576,10 @@ export default function SignControlsStrip({
                             e.stopPropagation();
                             removeSignature(sig.id);
                           }}
-                          aria-label={t("certSign.collab.signRequest.saved.delete", "Delete signature")}
+                          aria-label={t(
+                            "certSign.collab.signRequest.saved.delete",
+                            "Delete signature",
+                          )}
                         >
                           <CloseIcon sx={{ fontSize: "0.9rem" }} />
                         </ActionIcon>
@@ -477,25 +587,48 @@ export default function SignControlsStrip({
                     </Menu.Item>
                   ))
                 ) : (
-                  <Menu.Item disabled>{t("certSign.collab.signRequest.saved.none", "No saved signatures")}</Menu.Item>
+                  <Menu.Item disabled>
+                    {t(
+                      "certSign.collab.signRequest.saved.none",
+                      "No saved signatures",
+                    )}
+                  </Menu.Item>
                 )}
                 <Menu.Divider />
-                <Menu.Item onClick={() => handleCreateSignature("canvas")} disabled={isAtCapacity}>
+                <Menu.Item
+                  onClick={() => handleCreateSignature("canvas")}
+                  disabled={isAtCapacity}
+                >
                   <Group gap="xs">
                     <DrawIcon sx={{ fontSize: "1rem" }} />
-                    <span>{t("certSign.collab.signRequest.modeTabs.draw", "Draw")}</span>
+                    <span>
+                      {t("certSign.collab.signRequest.modeTabs.draw", "Draw")}
+                    </span>
                   </Group>
                 </Menu.Item>
-                <Menu.Item onClick={() => handleCreateSignature("text")} disabled={isAtCapacity}>
+                <Menu.Item
+                  onClick={() => handleCreateSignature("text")}
+                  disabled={isAtCapacity}
+                >
                   <Group gap="xs">
                     <TextFieldsIcon sx={{ fontSize: "1rem" }} />
-                    <span>{t("certSign.collab.signRequest.modeTabs.text", "Type")}</span>
+                    <span>
+                      {t("certSign.collab.signRequest.modeTabs.text", "Type")}
+                    </span>
                   </Group>
                 </Menu.Item>
-                <Menu.Item onClick={() => handleCreateSignature("image")} disabled={isAtCapacity}>
+                <Menu.Item
+                  onClick={() => handleCreateSignature("image")}
+                  disabled={isAtCapacity}
+                >
                   <Group gap="xs">
                     <ImageIcon sx={{ fontSize: "1rem" }} />
-                    <span>{t("certSign.collab.signRequest.modeTabs.image", "Upload")}</span>
+                    <span>
+                      {t(
+                        "certSign.collab.signRequest.modeTabs.image",
+                        "Upload",
+                      )}
+                    </span>
                   </Group>
                 </Menu.Item>
               </Menu.Dropdown>
@@ -508,8 +641,14 @@ export default function SignControlsStrip({
               className={`${styles.iconButton} ${styles.signStripMobileDelete}`}
               onClick={onDeleteSelected}
               disabled={!hasSelectedAnnotation}
-              aria-label={t("certSign.collab.signRequest.deleteSelected", "Delete selected signature")}
-              title={t("certSign.collab.signRequest.deleteSelected", "Delete selected signature")}
+              aria-label={t(
+                "certSign.collab.signRequest.deleteSelected",
+                "Delete selected signature",
+              )}
+              title={t(
+                "certSign.collab.signRequest.deleteSelected",
+                "Delete selected signature",
+              )}
             >
               <DeleteOutlineIcon sx={{ fontSize: "1.2rem" }} />
             </button>
@@ -519,13 +658,24 @@ export default function SignControlsStrip({
               className={`${styles.iconButton} ${styles.iconTextButton}`}
               onClick={onComplete}
               disabled={!canComplete}
-              aria-label={t("certSign.collab.signRequest.completeAndSign", "Complete & Sign")}
-              title={t("certSign.collab.signRequest.completeAndSign", "Complete & Sign")}
+              aria-label={t(
+                "certSign.collab.signRequest.completeAndSign",
+                "Complete & Sign",
+              )}
+              title={t(
+                "certSign.collab.signRequest.completeAndSign",
+                "Complete & Sign",
+              )}
             >
               <span className={styles.actionIcon}>
                 <CheckIcon sx={{ fontSize: "1.2rem" }} />
               </span>
-              <span className={styles.actionLabel}>{t("certSign.collab.signRequest.completeAndSign", "Complete & Sign")}</span>
+              <span className={styles.actionLabel}>
+                {t(
+                  "certSign.collab.signRequest.completeAndSign",
+                  "Complete & Sign",
+                )}
+              </span>
             </button>
           </div>
         </div>
@@ -568,7 +718,10 @@ export default function SignControlsStrip({
       >
         <Stack gap="md">
           <Text size="sm" c="dimmed">
-            {t("certSign.collab.signRequest.text.modalHint", "Enter your name, then click Continue to place it on the PDF.")}
+            {t(
+              "certSign.collab.signRequest.text.modalHint",
+              "Enter your name, then click Continue to place it on the PDF.",
+            )}
           </Text>
           <TextInputWithFont
             text={textSignerName}
@@ -579,12 +732,27 @@ export default function SignControlsStrip({
             onFontSizeChange={setTextFontSize}
             textColor={textColor}
             onTextColorChange={setTextColor}
-            label={t("certSign.collab.signRequest.text.label", "Signature Text")}
-            placeholder={t("certSign.collab.signRequest.text.placeholder", "Enter your name...")}
+            label={t(
+              "certSign.collab.signRequest.text.label",
+              "Signature Text",
+            )}
+            placeholder={t(
+              "certSign.collab.signRequest.text.placeholder",
+              "Enter your name...",
+            )}
             fontLabel={t("certSign.collab.signRequest.text.fontLabel", "Font")}
-            fontSizeLabel={t("certSign.collab.signRequest.text.fontSizeLabel", "Size")}
-            fontSizePlaceholder={t("certSign.collab.signRequest.text.fontSizePlaceholder", "16")}
-            colorLabel={t("certSign.collab.signRequest.text.colorLabel", "Color")}
+            fontSizeLabel={t(
+              "certSign.collab.signRequest.text.fontSizeLabel",
+              "Size",
+            )}
+            fontSizePlaceholder={t(
+              "certSign.collab.signRequest.text.fontSizePlaceholder",
+              "16",
+            )}
+            colorLabel={t(
+              "certSign.collab.signRequest.text.colorLabel",
+              "Color",
+            )}
           />
           <Group justify="flex-end">
             <Button variant="subtle" onClick={handleCancelCreate}>
@@ -603,11 +771,20 @@ export default function SignControlsStrip({
           onClose={() => setCanvasColorPickerOpen(false)}
           selectedColor={canvasColor}
           onColorChange={setCanvasColor}
-          title={t("certSign.collab.signRequest.canvas.colorPickerTitle", "Choose stroke colour")}
+          title={t(
+            "certSign.collab.signRequest.canvas.colorPickerTitle",
+            "Choose stroke colour",
+          )}
         />
       )}
 
-      <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleImageSelected} />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={handleImageSelected}
+      />
     </div>
   );
 }

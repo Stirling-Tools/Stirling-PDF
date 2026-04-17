@@ -8,7 +8,11 @@ interface CertificateTypeSettingsProps {
   disabled?: boolean;
 }
 
-const CertificateTypeSettings = ({ parameters, onParameterChange, disabled = false }: CertificateTypeSettingsProps) => {
+const CertificateTypeSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: CertificateTypeSettingsProps) => {
   const { config } = useAppConfig();
   const isServerCertificateEnabled = config?.serverCertificateEnabled ?? false;
 
@@ -22,7 +26,9 @@ const CertificateTypeSettings = ({ parameters, onParameterChange, disabled = fal
       <div style={{ display: "flex", gap: "4px" }}>
         <Button
           variant={parameters.signMode === "MANUAL" ? "filled" : "outline"}
-          color={parameters.signMode === "MANUAL" ? "blue" : "var(--text-muted)"}
+          color={
+            parameters.signMode === "MANUAL" ? "blue" : "var(--text-muted)"
+          }
           onClick={() => {
             onParameterChange("signMode", "MANUAL");
             // Reset cert type when switching to manual
@@ -31,23 +37,47 @@ const CertificateTypeSettings = ({ parameters, onParameterChange, disabled = fal
             }
           }}
           disabled={disabled}
-          style={{ flex: 1, height: "auto", minHeight: "40px", fontSize: "11px" }}
+          style={{
+            flex: 1,
+            height: "auto",
+            minHeight: "40px",
+            fontSize: "11px",
+          }}
         >
-          <div style={{ textAlign: "center", lineHeight: "1.1", fontSize: "11px" }}>Manual</div>
+          <div
+            style={{ textAlign: "center", lineHeight: "1.1", fontSize: "11px" }}
+          >
+            Manual
+          </div>
         </Button>
         {isServerCertificateEnabled && (
           <Button
             variant={parameters.signMode === "AUTO" ? "filled" : "outline"}
-            color={parameters.signMode === "AUTO" ? "green" : "var(--text-muted)"}
+            color={
+              parameters.signMode === "AUTO" ? "green" : "var(--text-muted)"
+            }
             onClick={() => {
               onParameterChange("signMode", "AUTO");
               // Clear cert type and files when switching to auto
               onParameterChange("certType", "");
             }}
             disabled={disabled}
-            style={{ flex: 1, height: "auto", minHeight: "40px", fontSize: "11px" }}
+            style={{
+              flex: 1,
+              height: "auto",
+              minHeight: "40px",
+              fontSize: "11px",
+            }}
           >
-            <div style={{ textAlign: "center", lineHeight: "1.1", fontSize: "11px" }}>Auto (server)</div>
+            <div
+              style={{
+                textAlign: "center",
+                lineHeight: "1.1",
+                fontSize: "11px",
+              }}
+            >
+              Auto (server)
+            </div>
           </Button>
         )}
       </div>

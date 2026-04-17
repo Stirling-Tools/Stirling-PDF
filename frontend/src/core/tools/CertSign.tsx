@@ -15,7 +15,12 @@ import { BaseToolProps, ToolComponent } from "@app/types/tool";
 const CertSign = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
-  const base = useBaseTool("certSign", useCertSignParameters, useCertSignOperation, props);
+  const base = useBaseTool(
+    "certSign",
+    useCertSignParameters,
+    useCertSignOperation,
+    props,
+  );
 
   const certTypeTips = useCertificateTypeTips();
   const appearanceTips = useSignatureAppearanceTips();
@@ -54,7 +59,9 @@ const CertSign = (props: BaseToolProps) => {
       {
         title: t("certSign.signMode.stepTitle", "Sign Mode"),
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: signModeTips,
         content: (
           <CertificateTypeSettings
@@ -69,7 +76,9 @@ const CertSign = (props: BaseToolProps) => {
             {
               title: t("certSign.certTypeStep.stepTitle", "Certificate Format"),
               isCollapsed: base.settingsCollapsed,
-              onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+              onCollapsedClick: base.settingsCollapsed
+                ? base.handleSettingsReset
+                : undefined,
               tooltip: certTypeTips,
               content: (
                 <CertificateFormatSettings
@@ -86,7 +95,9 @@ const CertSign = (props: BaseToolProps) => {
             {
               title: t("certSign.certFiles.stepTitle", "Certificate Files"),
               isCollapsed: base.settingsCollapsed,
-              onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+              onCollapsedClick: base.settingsCollapsed
+                ? base.handleSettingsReset
+                : undefined,
               content: (
                 <CertificateFilesSettings
                   parameters={base.params.parameters}
@@ -100,7 +111,10 @@ const CertSign = (props: BaseToolProps) => {
       {
         title: t("certSign.appearance.stepTitle", "Signature Appearance"),
         isCollapsed: base.settingsCollapsed || !areCertFilesConfigured(),
-        onCollapsedClick: base.settingsCollapsed || !areCertFilesConfigured() ? base.handleSettingsReset : undefined,
+        onCollapsedClick:
+          base.settingsCollapsed || !areCertFilesConfigured()
+            ? base.handleSettingsReset
+            : undefined,
         tooltip: appearanceTips,
         content: (
           <SignatureAppearanceSettings

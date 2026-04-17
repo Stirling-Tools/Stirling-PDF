@@ -2,7 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Modal, Button, Text, Alert, Loader, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { loadStripe } from "@stripe/stripe-js";
-import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
+import {
+  EmbeddedCheckoutProvider,
+  EmbeddedCheckout,
+} from "@stripe/react-stripe-js";
 import { supabase } from "@app/auth/supabase";
 import { Z_INDEX_OVER_SETTINGS_MODAL } from "@app/styles/zIndex";
 
@@ -26,7 +29,12 @@ interface StripeCheckoutProps {
   // Proprietary-specific props (for compatibility)
   planGroup?: unknown;
   minimumSeats?: number;
-  onLicenseActivated?: (licenseInfo: { licenseType: string; enabled: boolean; maxUsers: number; hasKey: boolean }) => void;
+  onLicenseActivated?: (licenseInfo: {
+    licenseType: string;
+    enabled: boolean;
+    maxUsers: number;
+    hasKey: boolean;
+  }) => void;
   hostedCheckoutSuccess?: {
     isUpgrade: boolean;
     licenseKey?: string;
@@ -65,16 +73,19 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     try {
       setState({ status: "loading" });
 
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: {
-          purchase_type: purchaseType,
-          ui_mode: "embedded",
-          plan: planId,
-          credits_pack: creditsPack,
-          callback_base_url: window.location.origin,
-          trial_conversion: isTrialConversion || false,
+      const { data, error } = await supabase.functions.invoke(
+        "create-checkout",
+        {
+          body: {
+            purchase_type: purchaseType,
+            ui_mode: "embedded",
+            plan: planId,
+            credits_pack: creditsPack,
+            callback_base_url: window.location.origin,
+            trial_conversion: isTrialConversion || false,
+          },
         },
-      });
+      );
 
       if (error) {
         throw new Error(error.message || "Failed to create checkout session");
@@ -100,7 +111,10 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         },
       });
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to create checkout session";
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to create checkout session";
       setState({
         status: "error",
         error: errorMessage,
@@ -120,7 +134,12 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
 
   const handleClose = () => {
     // Reset state to idle to clean up the session
-    setState({ status: "idle", clientSecret: undefined, error: undefined, sessionParams: undefined });
+    setState({
+      status: "idle",
+      clientSecret: undefined,
+      error: undefined,
+      sessionParams: undefined,
+    });
     onClose();
   };
 
@@ -136,12 +155,21 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         state.sessionParams.creditsPack !== creditsPack;
 
       if (needsNewSession) {
-        console.log("Creating new checkout session:", { purchaseType, planId, creditsPack });
+        console.log("Creating new checkout session:", {
+          purchaseType,
+          planId,
+          creditsPack,
+        });
         createCheckoutSession();
       }
     } else if (!opened) {
       // Clean up state when modal closes
-      setState({ status: "idle", clientSecret: undefined, error: undefined, sessionParams: undefined });
+      setState({
+        status: "idle",
+        clientSecret: undefined,
+        error: undefined,
+        sessionParams: undefined,
+      });
     }
   }, [opened, purchaseType, planId, creditsPack]);
 
@@ -175,7 +203,10 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
 
       case "success":
         return (
-          <Alert color="green" title={t("payment.success", "Payment Successful!")}>
+          <Alert
+            color="green"
+            title={t("payment.success", "Payment Successful!")}
+          >
             <Stack gap="md">
               <Text size="sm">
                 {t(
@@ -184,7 +215,10 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
                 )}
               </Text>
               <Text size="xs" c="dimmed">
-                {t("payment.autoClose", "This window will close automatically...")}
+                {t(
+                  "payment.autoClose",
+                  "This window will close automatically...",
+                )}
               </Text>
             </Stack>
           </Alert>

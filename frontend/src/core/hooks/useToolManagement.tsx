@@ -1,7 +1,11 @@
 import { useState, useCallback, useMemo } from "react";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { usePreferences } from "@app/contexts/PreferencesContext";
-import { getAllEndpoints, type ToolRegistryEntry, type ToolRegistry } from "@app/data/toolsTaxonomy";
+import {
+  getAllEndpoints,
+  type ToolRegistryEntry,
+  type ToolRegistry,
+} from "@app/data/toolsTaxonomy";
 import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
 import { useSelfHostedToolAvailability } from "@app/hooks/useSelfHostedToolAvailability";
 import { useSaaSMode } from "@app/hooks/useSaaSMode";
@@ -9,7 +13,11 @@ import { FileId } from "@app/types/file";
 import { ToolId } from "@app/types/toolId";
 import type { EndpointDisableReason } from "@app/types/endpointAvailability";
 
-export type ToolDisableCause = "disabledByAdmin" | "missingDependency" | "unknown" | "selfHostedOffline";
+export type ToolDisableCause =
+  | "disabledByAdmin"
+  | "missingDependency"
+  | "unknown"
+  | "selfHostedOffline";
 
 export interface ToolAvailabilityInfo {
   available: boolean;
@@ -35,8 +43,15 @@ export const useToolManagement = (): ToolManagementResult => {
   const { preferences } = usePreferences();
   const isSaaSMode = useSaaSMode();
 
-  const allEndpoints = useMemo(() => getAllEndpoints(baseRegistry), [baseRegistry]);
-  const { endpointStatus, endpointDetails, loading: endpointsLoading } = useMultipleEndpointsEnabled(allEndpoints);
+  const allEndpoints = useMemo(
+    () => getAllEndpoints(baseRegistry),
+    [baseRegistry],
+  );
+  const {
+    endpointStatus,
+    endpointDetails,
+    loading: endpointsLoading,
+  } = useMultipleEndpointsEnabled(allEndpoints);
 
   const toolEndpointList = useMemo(
     () =>
@@ -72,14 +87,22 @@ export const useToolManagement = (): ToolManagementResult => {
 
       if (endpoints.length === 0) return true;
 
-      const hasLocalSupport = endpoints.some((endpoint: string) => endpointStatus[endpoint] !== false);
+      const hasLocalSupport = endpoints.some(
+        (endpoint: string) => endpointStatus[endpoint] !== false,
+      );
 
       // In SaaS mode tools without local support can route to the cloud backend
       if (!hasLocalSupport && isSaaSMode) return true;
 
       return hasLocalSupport;
     },
-    [endpointsLoading, endpointStatus, baseRegistry, isSaaSMode, selfHostedOfflineIds],
+    [
+      endpointsLoading,
+      endpointStatus,
+      baseRegistry,
+      isSaaSMode,
+      selfHostedOfflineIds,
+    ],
   );
 
   const deriveToolDisableReason = useCallback(
@@ -121,10 +144,18 @@ export const useToolManagement = (): ToolManagementResult => {
     const availability: ToolAvailabilityMap = {};
     (Object.keys(baseRegistry) as ToolId[]).forEach((toolKey) => {
       const available = isToolAvailable(toolKey);
-      availability[toolKey] = available ? { available: true } : { available: false, reason: deriveToolDisableReason(toolKey) };
+      availability[toolKey] = available
+        ? { available: true }
+        : { available: false, reason: deriveToolDisableReason(toolKey) };
     });
     return availability;
-  }, [baseRegistry, deriveToolDisableReason, endpointsLoading, isToolAvailable, selfHostedOfflineIds]);
+  }, [
+    baseRegistry,
+    deriveToolDisableReason,
+    endpointsLoading,
+    isToolAvailable,
+    selfHostedOfflineIds,
+  ]);
 
   const toolRegistry: Partial<ToolRegistry> = useMemo(() => {
     const availableToolRegistry: Partial<ToolRegistry> = {};
@@ -132,10 +163,16 @@ export const useToolManagement = (): ToolManagementResult => {
       const baseTool = baseRegistry[toolKey];
       if (!baseTool) return;
       const availabilityInfo = toolAvailability[toolKey];
-      const isAvailable = availabilityInfo ? availabilityInfo.available !== false : true;
+      const isAvailable = availabilityInfo
+        ? availabilityInfo.available !== false
+        : true;
 
       // Check if tool is "coming soon" (has no component and no link)
-      const isComingSoon = !baseTool.component && !baseTool.link && toolKey !== "read" && toolKey !== "multiTool";
+      const isComingSoon =
+        !baseTool.component &&
+        !baseTool.link &&
+        toolKey !== "read" &&
+        toolKey !== "multiTool";
 
       if (preferences.hideUnavailableTools && (!isAvailable || isComingSoon)) {
         return;

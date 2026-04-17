@@ -12,7 +12,10 @@ import AddPageNumbersAppearanceSettings from "@app/components/tools/addPageNumbe
 
 interface AddPageNumbersAutomationSettingsProps {
   parameters: AddPageNumbersParameters;
-  onParameterChange: <K extends keyof AddPageNumbersParameters>(key: K, value: AddPageNumbersParameters[K]) => void;
+  onParameterChange: <K extends keyof AddPageNumbersParameters>(
+    key: K,
+    value: AddPageNumbersParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
@@ -46,7 +49,11 @@ const AddPageNumbersAutomationSettings = ({
         <Text size="sm" fw={600}>
           {t("addPageNumbers.customize", "Customize Appearance")}
         </Text>
-        <AddPageNumbersAppearanceSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
+        <AddPageNumbersAppearanceSettings
+          parameters={parameters}
+          onParameterChange={onParameterChange}
+          disabled={disabled}
+        />
       </Stack>
     </Stack>
   );

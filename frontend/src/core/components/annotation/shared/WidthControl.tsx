@@ -1,4 +1,11 @@
-import { ActionIcon, Tooltip, Popover, Stack, Slider, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Tooltip,
+  Popover,
+  Stack,
+  Slider,
+  Text,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import LineWeightIcon from "@mui/icons-material/LineWeight";
@@ -11,7 +18,13 @@ interface WidthControlProps {
   disabled?: boolean;
 }
 
-export function WidthControl({ value, onChange, min, max, disabled = false }: WidthControlProps) {
+export function WidthControl({
+  value,
+  onChange,
+  min,
+  max,
+  disabled = false,
+}: WidthControlProps) {
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
 
@@ -48,7 +61,13 @@ export function WidthControl({ value, onChange, min, max, disabled = false }: Wi
           <Text size="xs" fw={500}>
             {t("annotation.width", "Width")}
           </Text>
-          <Slider value={value} onChange={onChange} min={min} max={max} label={(val) => `${val}pt`} />
+          <Slider
+            value={value}
+            onChange={onChange}
+            min={min}
+            max={max}
+            label={(val) => `${val}pt`}
+          />
         </Stack>
       </Popover.Dropdown>
     </Popover>

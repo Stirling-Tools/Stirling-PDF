@@ -107,7 +107,9 @@ export const userManagementService = {
    * Get all users with session data (admin only)
    */
   async getUsers(): Promise<AdminSettingsData> {
-    const response = await apiClient.get<AdminSettingsData>("/api/v1/proprietary/ui-data/admin-settings");
+    const response = await apiClient.get<AdminSettingsData>(
+      "/api/v1/proprietary/ui-data/admin-settings",
+    );
     return response.data;
   },
 
@@ -162,18 +164,27 @@ export const userManagementService = {
   async toggleUserEnabled(username: string, enabled: boolean): Promise<void> {
     const formData = new FormData();
     formData.append("enabled", enabled.toString());
-    await apiClient.post(`/api/v1/user/admin/changeUserEnabled/${username}`, formData, {
-      suppressErrorToast: true,
-    });
+    await apiClient.post(
+      `/api/v1/user/admin/changeUserEnabled/${username}`,
+      formData,
+      {
+        suppressErrorToast: true,
+      },
+    );
   },
 
   /**
    * Delete a user (admin only)
    */
-  async deleteUser(user: User, options?: { notifyUser?: boolean }): Promise<void> {
+  async deleteUser(
+    user: User,
+    options?: { notifyUser?: boolean },
+  ): Promise<void> {
     if (isSupabaseConfigured && supabase) {
       if (!user.email) {
-        throw new Error("Email missing for this user. Please contact support for manual removal.");
+        throw new Error(
+          "Email missing for this user. Please contact support for manual removal.",
+        );
       }
 
       const { error } = await supabase.functions.invoke("delete-user", {
@@ -203,9 +214,13 @@ export const userManagementService = {
       formData.append("teamId", data.teamId.toString());
     }
 
-    const response = await apiClient.post<InviteUsersResponse>("/api/v1/user/admin/inviteUsers", formData, {
-      suppressErrorToast: true, // Component will handle error display
-    });
+    const response = await apiClient.post<InviteUsersResponse>(
+      "/api/v1/user/admin/inviteUsers",
+      formData,
+      {
+        suppressErrorToast: true, // Component will handle error display
+      },
+    );
 
     return response.data;
   },
@@ -213,7 +228,9 @@ export const userManagementService = {
   /**
    * Generate an invite link (admin only)
    */
-  async generateInviteLink(data: InviteLinkRequest): Promise<InviteLinkResponse> {
+  async generateInviteLink(
+    data: InviteLinkRequest,
+  ): Promise<InviteLinkResponse> {
     const formData = new FormData();
     // Only append email if it's provided and not empty
     if (data.email && data.email.trim()) {
@@ -230,9 +247,13 @@ export const userManagementService = {
       formData.append("sendEmail", data.sendEmail.toString());
     }
 
-    const response = await apiClient.post<InviteLinkResponse>("/api/v1/invite/generate", formData, {
-      suppressErrorToast: true,
-    });
+    const response = await apiClient.post<InviteLinkResponse>(
+      "/api/v1/invite/generate",
+      formData,
+      {
+        suppressErrorToast: true,
+      },
+    );
 
     return response.data;
   },
@@ -241,7 +262,9 @@ export const userManagementService = {
    * Get list of active invite links (admin only)
    */
   async getInviteLinks(): Promise<InviteToken[]> {
-    const response = await apiClient.get<{ invites: InviteToken[] }>("/api/v1/invite/list");
+    const response = await apiClient.get<{ invites: InviteToken[] }>(
+      "/api/v1/invite/list",
+    );
     return response.data.invites;
   },
 
@@ -258,7 +281,9 @@ export const userManagementService = {
    * Clean up expired invite links (admin only)
    */
   async cleanupExpiredInvites(): Promise<{ deletedCount: number }> {
-    const response = await apiClient.post<{ deletedCount: number }>("/api/v1/invite/cleanup");
+    const response = await apiClient.post<{ deletedCount: number }>(
+      "/api/v1/invite/cleanup",
+    );
     return response.data;
   },
 };

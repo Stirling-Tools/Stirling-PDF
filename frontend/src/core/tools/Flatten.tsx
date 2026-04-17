@@ -11,7 +11,12 @@ const Flatten = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const flattenTips = useFlattenTips();
 
-  const base = useBaseTool("flatten", useFlattenParameters, useFlattenOperation, props);
+  const base = useBaseTool(
+    "flatten",
+    useFlattenParameters,
+    useFlattenOperation,
+    props,
+  );
 
   return createToolFlow({
     files: {
@@ -22,7 +27,9 @@ const Flatten = (props: BaseToolProps) => {
       {
         title: t("flatten.options.stepTitle", "Flatten Options"),
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         tooltip: flattenTips,
         content: (
           <FlattenSettings

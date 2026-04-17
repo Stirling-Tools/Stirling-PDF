@@ -16,7 +16,10 @@ import {
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import EditableSecretField from "@app/components/shared/EditableSecretField";
-import { Provider, ProviderField } from "@app/components/shared/config/configSections/providerDefinitions";
+import {
+  Provider,
+  ProviderField,
+} from "@app/components/shared/config/configSections/providerDefinitions";
 
 interface ProviderCardProps {
   provider: Provider;
@@ -41,7 +44,8 @@ export default function ProviderCard({
 }: ProviderCardProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
-  const [localSettings, setLocalSettings] = useState<Record<string, any>>(settings);
+  const [localSettings, setLocalSettings] =
+    useState<Record<string, any>>(settings);
 
   // Keep local settings in sync with incoming settings (values loaded from settings.yml)
   // Update whenever parent settings change, whether expanded or not (important for Discard to work)
@@ -57,7 +61,8 @@ export default function ProviderCard({
       const defaultSettings: Record<string, any> = { ...settings };
       provider.fields.forEach((field) => {
         if (field.defaultValue !== undefined) {
-          defaultSettings[field.key] = defaultSettings[field.key] ?? field.defaultValue;
+          defaultSettings[field.key] =
+            defaultSettings[field.key] ?? field.defaultValue;
         }
       });
       setLocalSettings(defaultSettings);
@@ -88,7 +93,14 @@ export default function ProviderCard({
     switch (field.type) {
       case "switch":
         return (
-          <div key={field.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div
+            key={field.key}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <div>
               <Text fw={500} size="sm">
                 {field.label}
@@ -146,7 +158,9 @@ export default function ProviderCard({
         );
 
       case "tags": {
-        const tagValue = Array.isArray(value) ? value.map((val) => `${val}`) : [];
+        const tagValue = Array.isArray(value)
+          ? value.map((val) => `${val}`)
+          : [];
 
         return (
           <TagsInput
@@ -179,7 +193,13 @@ export default function ProviderCard({
   const renderProviderIcon = () => {
     // If icon starts with '/', it's a path to an SVG file
     if (provider.icon.startsWith("/")) {
-      return <img src={provider.icon} alt={provider.name} style={{ width: "1.5rem", height: "1.5rem" }} />;
+      return (
+        <img
+          src={provider.icon}
+          alt={provider.name}
+          style={{ width: "1.5rem", height: "1.5rem" }}
+        />
+      );
     }
     // Otherwise use LocalIcon for iconify icons
     return <LocalIcon icon={provider.icon} width="1.5rem" height="1.5rem" />;
@@ -206,12 +226,20 @@ export default function ProviderCard({
             <Button
               variant={isConfigured ? "subtle" : "filled"}
               size="xs"
-              onClick={isConfigured ? () => setExpanded(!expanded) : handleConnectToggle}
+              onClick={
+                isConfigured
+                  ? () => setExpanded(!expanded)
+                  : handleConnectToggle
+              }
               rightSection={
                 expanded ? (
                   <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
                 ) : isConfigured ? (
-                  <LocalIcon icon="expand-more-rounded" width="1rem" height="1rem" />
+                  <LocalIcon
+                    icon="expand-more-rounded"
+                    width="1rem"
+                    height="1rem"
+                  />
                 ) : undefined
               }
             >
@@ -231,8 +259,17 @@ export default function ProviderCard({
           <Stack gap="md" mt="xs">
             {/* Documentation Link */}
             {provider.documentationUrl && (
-              <Anchor href={provider.documentationUrl} target="_blank" size="xs" c="blue">
-                {t("admin.settings.connections.documentation", "View documentation")} ↗
+              <Anchor
+                href={provider.documentationUrl}
+                target="_blank"
+                size="xs"
+                c="blue"
+              >
+                {t(
+                  "admin.settings.connections.documentation",
+                  "View documentation",
+                )}{" "}
+                ↗
               </Anchor>
             )}
 
@@ -241,7 +278,13 @@ export default function ProviderCard({
             {!readOnly && (onSave || onDisconnect) && (
               <Group justify="flex-end" mt="sm">
                 {onDisconnect && (
-                  <Button variant="outline" color="red" size="sm" onClick={onDisconnect} disabled={disabled}>
+                  <Button
+                    variant="outline"
+                    color="red"
+                    size="sm"
+                    onClick={onDisconnect}
+                    disabled={disabled}
+                  >
                     {t("admin.settings.connections.disconnect", "Disconnect")}
                   </Button>
                 )}

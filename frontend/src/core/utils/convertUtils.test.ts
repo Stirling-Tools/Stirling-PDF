@@ -3,7 +3,12 @@
  */
 
 import { describe, test, expect } from "vitest";
-import { getEndpointName, getEndpointUrl, isConversionSupported, isImageFormat } from "@app/utils/convertUtils";
+import {
+  getEndpointName,
+  getEndpointUrl,
+  isConversionSupported,
+  isImageFormat,
+} from "@app/utils/convertUtils";
 
 describe("convertUtils", () => {
   describe("getEndpointName", () => {
@@ -101,8 +106,12 @@ describe("convertUtils", () => {
       // PDF to Office formats
       expect(getEndpointUrl("pdf", "docx")).toBe("/api/v1/convert/pdf/word");
       expect(getEndpointUrl("pdf", "odt")).toBe("/api/v1/convert/pdf/word");
-      expect(getEndpointUrl("pdf", "pptx")).toBe("/api/v1/convert/pdf/presentation");
-      expect(getEndpointUrl("pdf", "odp")).toBe("/api/v1/convert/pdf/presentation");
+      expect(getEndpointUrl("pdf", "pptx")).toBe(
+        "/api/v1/convert/pdf/presentation",
+      );
+      expect(getEndpointUrl("pdf", "odp")).toBe(
+        "/api/v1/convert/pdf/presentation",
+      );
 
       // PDF to Data formats
       expect(getEndpointUrl("pdf", "csv")).toBe("/api/v1/convert/pdf/csv");
@@ -242,7 +251,9 @@ describe("convertUtils", () => {
       expect(isConversionSupported("pdf", "exe")).toBe(false);
       expect(isConversionSupported("wav", "pdf")).toBe(true); // Fallback to file to pdf
       expect(isConversionSupported("png", "docx")).toBe(false);
-      expect(isConversionSupported("nonexistent", "alsononexistent")).toBe(false);
+      expect(isConversionSupported("nonexistent", "alsononexistent")).toBe(
+        false,
+      );
     });
 
     test("should handle empty inputs", () => {

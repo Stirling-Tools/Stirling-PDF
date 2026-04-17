@@ -74,7 +74,9 @@ class WorkflowService {
   /**
    * Submit signature as a participant
    */
-  async submitSignature(request: SignatureSubmissionRequest): Promise<ParticipantResponse> {
+  async submitSignature(
+    request: SignatureSubmissionRequest,
+  ): Promise<ParticipantResponse> {
     const formData = new FormData();
     formData.append("participantToken", request.participantToken);
 
@@ -82,28 +84,43 @@ class WorkflowService {
     if (request.password) formData.append("password", request.password);
     if (request.p12File) formData.append("p12File", request.p12File);
     if (request.jksFile) formData.append("jksFile", request.jksFile);
-    if (request.showSignature !== undefined) formData.append("showSignature", request.showSignature.toString());
-    if (request.pageNumber) formData.append("pageNumber", request.pageNumber.toString());
+    if (request.showSignature !== undefined)
+      formData.append("showSignature", request.showSignature.toString());
+    if (request.pageNumber)
+      formData.append("pageNumber", request.pageNumber.toString());
     if (request.location) formData.append("location", request.location);
     if (request.reason) formData.append("reason", request.reason);
-    if (request.showLogo !== undefined) formData.append("showLogo", request.showLogo.toString());
-    if (request.wetSignatureData) formData.append("wetSignatureData", request.wetSignatureData);
+    if (request.showLogo !== undefined)
+      formData.append("showLogo", request.showLogo.toString());
+    if (request.wetSignatureData)
+      formData.append("wetSignatureData", request.wetSignatureData);
 
-    const response = await api.post("/api/v1/workflow/participant/submit-signature", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
+    const response = await api.post(
+      "/api/v1/workflow/participant/submit-signature",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       },
-    });
+    );
     return response.data;
   }
 
   /**
    * Decline participation
    */
-  async declineParticipation(token: string, reason?: string): Promise<ParticipantResponse> {
-    const response = await api.post("/api/v1/workflow/participant/decline", null, {
-      params: { token, reason },
-    });
+  async declineParticipation(
+    token: string,
+    reason?: string,
+  ): Promise<ParticipantResponse> {
+    const response = await api.post(
+      "/api/v1/workflow/participant/decline",
+      null,
+      {
+        params: { token, reason },
+      },
+    );
     return response.data;
   }
 

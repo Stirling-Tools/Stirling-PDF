@@ -4,7 +4,11 @@ import { useTranslation } from "react-i18next";
 import { computeSignatureStatus } from "@app/hooks/tools/validateSignature/utils/signatureStatus";
 import type { SignatureValidationSignature } from "@app/types/validateSignature";
 
-const SignatureStatusBadge = ({ signature }: { signature: SignatureValidationSignature }) => {
+const SignatureStatusBadge = ({
+  signature,
+}: {
+  signature: SignatureValidationSignature;
+}) => {
   const { t } = useTranslation();
   const status = computeSignatureStatus(signature, t);
   const classMap = {
@@ -15,7 +19,13 @@ const SignatureStatusBadge = ({ signature }: { signature: SignatureValidationSig
   } as const;
 
   return (
-    <Popover withinPortal position="bottom" withArrow shadow="md" disabled={status.details.length === 0}>
+    <Popover
+      withinPortal
+      position="bottom"
+      withArrow
+      shadow="md"
+      disabled={status.details.length === 0}
+    >
       <Popover.Target>
         <Badge
           className={classMap[status.kind]}

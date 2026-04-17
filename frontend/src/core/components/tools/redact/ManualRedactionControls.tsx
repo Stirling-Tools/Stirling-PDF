@@ -14,15 +14,29 @@ interface ManualRedactionControlsProps {
  * ManualRedactionControls provides UI for manual PDF redaction in the tool panel.
  * Displays controls for marking text/areas for redaction and applying them.
  */
-export default function ManualRedactionControls({ disabled = false }: ManualRedactionControlsProps) {
+export default function ManualRedactionControls({
+  disabled = false,
+}: ManualRedactionControlsProps) {
   const { t } = useTranslation();
 
   // Use our RedactionContext which bridges to EmbedPDF
-  const { activateManualRedact, redactionsApplied, setActiveType, setManualRedactColor } = useRedaction();
-  const { pendingCount, activeType, isBridgeReady, isRedacting, manualRedactColor } = useRedactionMode();
+  const {
+    activateManualRedact,
+    redactionsApplied,
+    setActiveType,
+    setManualRedactColor,
+  } = useRedaction();
+  const {
+    pendingCount,
+    activeType,
+    isBridgeReady,
+    isRedacting,
+    manualRedactColor,
+  } = useRedactionMode();
 
   // Get viewer context to manage annotation mode and save changes
-  const { isAnnotationMode, setAnnotationMode, applyChanges, activeFileIndex } = useViewer();
+  const { isAnnotationMode, setAnnotationMode, applyChanges, activeFileIndex } =
+    useViewer();
 
   // Get signature context to deactivate annotation tools when switching to redaction
   const { signatureApiRef } = useSignature();
@@ -40,7 +54,13 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
   // If anything deactivates it (annotation tools, text selection, file switch, etc.)
   // this re-enables it automatically — no manual "Activate" button needed.
   useEffect(() => {
-    if (disabled || !isBridgeReady || isSavingRef.current || showNavigationWarning) return;
+    if (
+      disabled ||
+      !isBridgeReady ||
+      isSavingRef.current ||
+      showNavigationWarning
+    )
+      return;
 
     if (!isRedacting || isAnnotationMode) {
       // Kill annotation mode if it stole focus
@@ -112,7 +132,10 @@ export default function ManualRedactionControls({ disabled = false }: ManualReda
         </Text>
 
         <Text size="xs" c="dimmed">
-          {t("redact.manual.instructions", "Select text or draw areas on the PDF to mark content for redaction.")}
+          {t(
+            "redact.manual.instructions",
+            "Select text or draw areas on the PDF to mark content for redaction.",
+          )}
         </Text>
 
         <ColorInput

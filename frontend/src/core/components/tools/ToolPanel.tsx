@@ -49,8 +49,13 @@ export default function ToolPanel() {
 
   const isFullscreenMode = toolPanelMode === "fullscreen";
   const toolPickerVisible = !readerMode;
-  const fullscreenExpanded = isFullscreenMode && leftPanelView === "toolPicker" && !isMobile && toolPickerVisible;
-  const isRTL = typeof document !== "undefined" && document.documentElement.dir === "rtl";
+  const fullscreenExpanded =
+    isFullscreenMode &&
+    leftPanelView === "toolPicker" &&
+    !isMobile &&
+    toolPickerVisible;
+  const isRTL =
+    typeof document !== "undefined" && document.documentElement.dir === "rtl";
 
   // Disable right rail buttons when fullscreen mode is active
   useEffect(() => {
@@ -129,9 +134,19 @@ export default function ToolPanel() {
               borderBottom: "1px solid var(--tool-panel-search-border-bottom)",
             }}
           >
-            <ToolSearch value={searchQuery} onChange={setSearchQuery} toolRegistry={toolRegistry} mode="filter" />
+            <ToolSearch
+              value={searchQuery}
+              onChange={setSearchQuery}
+              toolRegistry={toolRegistry}
+              mode="filter"
+            />
             {!isMobile && leftPanelView === "toolPicker" && (
-              <Tooltip content={toggleLabel} position="bottom" arrow={true} openOnFocus={false}>
+              <Tooltip
+                content={toggleLabel}
+                position="bottom"
+                arrow={true}
+                openOnFocus={false}
+              >
                 <ActionIcon
                   variant="subtle"
                   radius="xl"
@@ -140,7 +155,10 @@ export default function ToolPanel() {
                   aria-label={toggleLabel}
                   className="tool-panel__mode-toggle"
                 >
-                  <DoubleArrowIcon fontSize="small" style={{ transform: isRTL ? "scaleX(-1)" : undefined }} />
+                  <DoubleArrowIcon
+                    fontSize="small"
+                    style={{ transform: isRTL ? "scaleX(-1)" : undefined }}
+                  />
                 </ActionIcon>
               </Tooltip>
             )}
@@ -160,7 +178,9 @@ export default function ToolPanel() {
                 selectedToolKey={selectedToolKey}
                 onSelect={(id) => handleToolSelect(id as ToolId)}
                 filteredTools={filteredTools}
-                isSearching={Boolean(searchQuery && searchQuery.trim().length > 0)}
+                isSearching={Boolean(
+                  searchQuery && searchQuery.trim().length > 0,
+                )}
               />
             </div>
           ) : (
@@ -168,9 +188,17 @@ export default function ToolPanel() {
               <div className="flex-1 min-h-0 overflow-hidden">
                 <ScrollArea h="100%">
                   {selectedToolKey ? (
-                    <ToolRenderer selectedToolKey={selectedToolKey} onPreviewFile={setPreviewFile} />
+                    <ToolRenderer
+                      selectedToolKey={selectedToolKey}
+                      onPreviewFile={setPreviewFile}
+                    />
                   ) : (
-                    <div className="tool-panel__placeholder">{t("toolPanel.placeholder", "Choose a tool to get started")}</div>
+                    <div className="tool-panel__placeholder">
+                      {t(
+                        "toolPanel.placeholder",
+                        "Choose a tool to get started",
+                      )}
+                    </div>
                   )}
                 </ScrollArea>
               </div>
@@ -189,7 +217,12 @@ export default function ToolPanel() {
           matchedTextMap={matchedTextMap}
           onSearchChange={setSearchQuery}
           onSelect={(id: ToolId) => handleToolSelect(id)}
-          onToggleDescriptions={() => updatePreference("showLegacyToolDescriptions", !preferences.showLegacyToolDescriptions)}
+          onToggleDescriptions={() =>
+            updatePreference(
+              "showLegacyToolDescriptions",
+              !preferences.showLegacyToolDescriptions,
+            )
+          }
           onExitFullscreenMode={() => setToolPanelMode("sidebar")}
           toggleLabel={toggleLabel}
           geometry={fullscreenGeometry}

@@ -39,14 +39,20 @@ export const useSignupFormValidation = () => {
 
     // Validate password
     if (!password) {
-      fieldErrors.password = t("signup.passwordRequired", "Password is required");
+      fieldErrors.password = t(
+        "signup.passwordRequired",
+        "Password is required",
+      );
     } else if (password.length < 6) {
       fieldErrors.password = t("signup.passwordTooShort");
     }
 
     // Validate confirm password
     if (!confirmPassword) {
-      fieldErrors.confirmPassword = t("signup.confirmPasswordRequired", "Please confirm your password");
+      fieldErrors.confirmPassword = t(
+        "signup.confirmPasswordRequired",
+        "Please confirm your password",
+      );
     } else if (password !== confirmPassword) {
       fieldErrors.confirmPassword = t("signup.passwordsDoNotMatch");
     }

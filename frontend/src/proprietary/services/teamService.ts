@@ -42,7 +42,9 @@ export const teamService = {
    * Get all teams with user counts
    */
   async getTeams(): Promise<Team[]> {
-    const response = await apiClient.get<{ teamsWithCounts: Team[] }>("/api/v1/proprietary/ui-data/teams");
+    const response = await apiClient.get<{ teamsWithCounts: Team[] }>(
+      "/api/v1/proprietary/ui-data/teams",
+    );
     return response.data.teamsWithCounts;
   },
 
@@ -50,7 +52,9 @@ export const teamService = {
    * Get team details including members
    */
   async getTeamDetails(teamId: number): Promise<TeamDetailsUIResponse> {
-    const response = await apiClient.get<TeamDetailsUIResponse>(`/api/v1/proprietary/ui-data/teams/${teamId}`);
+    const response = await apiClient.get<TeamDetailsUIResponse>(
+      `/api/v1/proprietary/ui-data/teams/${teamId}`,
+    );
     return response.data;
   },
 
@@ -103,7 +107,11 @@ export const teamService = {
   /**
    * Move a user to a specific team (used when "removing" from a team - moves to Default)
    */
-  async moveUserToTeam(username: string, currentRole: string, teamId: number): Promise<void> {
+  async moveUserToTeam(
+    username: string,
+    currentRole: string,
+    teamId: number,
+  ): Promise<void> {
     const formData = new FormData();
     formData.append("username", username);
     formData.append("role", currentRole);

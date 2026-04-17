@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useCallback,
+} from "react";
 import apiClient from "@app/services/apiClient";
 import { getSimulatedAppConfig } from "@app/testing/serverExperienceSimulations";
 import type { AppConfig, AppConfigBootstrapMode } from "@app/types/appConfig";
@@ -58,7 +65,9 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   const [error, setError] = useState<string | null>(null);
   // Track how many times we've attempted to fetch. useRef avoids re-renders that can trigger loops.
   const fetchCountRef = React.useRef(0);
-  const [hasResolvedConfig, setHasResolvedConfig] = useState(Boolean(initialConfig) && !isBlockingMode);
+  const [hasResolvedConfig, setHasResolvedConfig] = useState(
+    Boolean(initialConfig) && !isBlockingMode,
+  );
   const [loading, setLoading] = useState(!hasResolvedConfig);
 
   const onConfigLoadedRef = React.useRef(onConfigLoaded);
@@ -97,7 +106,9 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
 
           if (attempt > 0) {
             const delay = initialDelay * Math.pow(2, attempt - 1);
-            console.log(`[AppConfig] Retry attempt ${attempt}/${maxRetries} after ${delay}ms delay...`);
+            console.log(
+              `[AppConfig] Retry attempt ${attempt}/${maxRetries} after ${delay}ms delay...`,
+            );
             await sleep(delay);
           } else {
             console.log("[AppConfig] Fetching app config...");
@@ -105,15 +116,25 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
 
           // apiClient automatically adds JWT header if available via interceptors
           // Always suppress error toast - we handle 401 errors locally
-          console.debug("[AppConfig] Fetching app config", { attempt, force, path: window.location.pathname });
-          const response = await apiClient.get<AppConfig>("/api/v1/config/app-config", {
-            suppressErrorToast: true,
-            skipAuthRedirect: true,
-          } as any);
+          console.debug("[AppConfig] Fetching app config", {
+            attempt,
+            force,
+            path: window.location.pathname,
+          });
+          const response = await apiClient.get<AppConfig>(
+            "/api/v1/config/app-config",
+            {
+              suppressErrorToast: true,
+              skipAuthRedirect: true,
+            } as any,
+          );
           const data = response.data;
 
           console.debug("[AppConfig] Config fetched successfully:", data);
-          console.debug("[AppConfig] Fetch duration ms:", (performance.now() - startTime).toFixed(2));
+          console.debug(
+            "[AppConfig] Fetch duration ms:",
+            (performance.now() - startTime).toFixed(2),
+          );
           setConfig(data);
           setHasResolvedConfig(true);
           setLoading(false);
@@ -125,8 +146,13 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
           // On 401 (not authenticated), use default config with login enabled
           // This allows the app to work even without authentication
           if (status === 401) {
-            console.debug("[AppConfig] 401 error - using default config (login enabled)");
-            console.debug("[AppConfig] Fetch duration ms:", (performance.now() - startTime).toFixed(2));
+            console.debug(
+              "[AppConfig] 401 error - using default config (login enabled)",
+            );
+            console.debug(
+              "[AppConfig] Fetch duration ms:",
+              (performance.now() - startTime).toFixed(2),
+            );
             setConfig({ enableLogin: true });
             setHasResolvedConfig(true);
             setLoading(false);
@@ -134,7 +160,8 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
           }
 
           // Check if we should retry (network errors or 5xx errors)
-          const shouldRetry = (!status || status >= 500) && attempt < maxRetries;
+          const shouldRetry =
+            (!status || status >= 500) && attempt < maxRetries;
 
           if (shouldRetry) {
             console.warn(
@@ -146,10 +173,19 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
           }
 
           // Final attempt failed or non-retryable error (4xx)
-          const errorMessage = err?.response?.data?.message || err?.message || "Unknown error occurred";
+          const errorMessage =
+            err?.response?.data?.message ||
+            err?.message ||
+            "Unknown error occurred";
           setError(errorMessage);
-          console.error(`[AppConfig] Failed to fetch app config after ${attempt + 1} attempts:`, err);
-          console.debug("[AppConfig] Fetch duration ms:", (performance.now() - startTime).toFixed(2));
+          console.error(
+            `[AppConfig] Failed to fetch app config after ${attempt + 1} attempts:`,
+            err,
+          );
+          console.debug(
+            "[AppConfig] Fetch duration ms:",
+            (performance.now() - startTime).toFixed(2),
+          );
           // Preserve existing config (initial default or previous fetch). If nothing is set, assume login enabled.
           setConfig((current) => current ?? { enableLogin: true });
           setHasResolvedConfig(true);
@@ -166,7 +202,10 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
 
   useEffect(() => {
     if (isAuthPage) {
-      console.debug("[AppConfig] On auth page - using default config, skipping fetch", { path: window.location.pathname });
+      console.debug(
+        "[AppConfig] On auth page - using default config, skipping fetch",
+        { path: window.location.pathname },
+      );
       setConfig({ enableLogin: true });
       setHasResolvedConfig(true);
       setLoading(false);
@@ -187,7 +226,11 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
     refetch,
   };
 
-  return <AppConfigContext.Provider value={value}>{children}</AppConfigContext.Provider>;
+  return (
+    <AppConfigContext.Provider value={value}>
+      {children}
+    </AppConfigContext.Provider>
+  );
 };
 
 /**

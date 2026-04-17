@@ -1,13 +1,25 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 import { useDocumentManagerPlugin } from "@embedpdf/plugin-document-manager/react";
 
 interface ActiveDocumentContextType {
   documentId: string | null;
 }
 
-const ActiveDocumentContext = createContext<ActiveDocumentContextType>({ documentId: null });
+const ActiveDocumentContext = createContext<ActiveDocumentContextType>({
+  documentId: null,
+});
 
-export function ActiveDocumentProvider({ children }: { children: React.ReactNode }) {
+export function ActiveDocumentProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { plugin, isLoading } = useDocumentManagerPlugin();
   const [documentId, setDocumentId] = useState<string | null>(null);
   const unsubscribeRef = useRef<(() => void) | null>(null);
@@ -51,7 +63,11 @@ export function ActiveDocumentProvider({ children }: { children: React.ReactNode
     };
   }, []);
 
-  return <ActiveDocumentContext.Provider value={{ documentId }}>{children}</ActiveDocumentContext.Provider>;
+  return (
+    <ActiveDocumentContext.Provider value={{ documentId }}>
+      {children}
+    </ActiveDocumentContext.Provider>
+  );
 }
 
 export function useActiveDocument(): string | null {

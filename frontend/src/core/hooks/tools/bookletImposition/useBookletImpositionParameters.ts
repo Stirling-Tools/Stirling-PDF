@@ -1,5 +1,8 @@
 import { BaseParameters } from "@app/types/parameters";
-import { useBaseParameters, BaseParametersHook } from "@app/hooks/tools/shared/useBaseParameters";
+import {
+  useBaseParameters,
+  BaseParametersHook,
+} from "@app/hooks/tools/shared/useBaseParameters";
 
 export interface BookletImpositionParameters extends BaseParameters {
   pagesPerSheet: 2;
@@ -23,14 +26,16 @@ export const defaultParameters: BookletImpositionParameters = {
   flipOnShortEdge: false,
 };
 
-export type BookletImpositionParametersHook = BaseParametersHook<BookletImpositionParameters>;
+export type BookletImpositionParametersHook =
+  BaseParametersHook<BookletImpositionParameters>;
 
-export const useBookletImpositionParameters = (): BookletImpositionParametersHook => {
-  return useBaseParameters({
-    defaultParameters,
-    endpointName: "booklet-imposition",
-    validateFn: (params) => {
-      return params.pagesPerSheet === 2;
-    },
-  });
-};
+export const useBookletImpositionParameters =
+  (): BookletImpositionParametersHook => {
+    return useBaseParameters({
+      defaultParameters,
+      endpointName: "booklet-imposition",
+      validateFn: (params) => {
+        return params.pagesPerSheet === 2;
+      },
+    });
+  };

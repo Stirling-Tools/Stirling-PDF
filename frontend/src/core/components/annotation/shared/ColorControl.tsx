@@ -1,10 +1,19 @@
-import { ActionIcon, Tooltip, Popover, Stack, ColorSwatch, ColorPicker as MantineColorPicker, Group } from "@mantine/core";
+import {
+  ActionIcon,
+  Tooltip,
+  Popover,
+  Stack,
+  ColorSwatch,
+  ColorPicker as MantineColorPicker,
+  Group,
+} from "@mantine/core";
 import { useState, useCallback, useEffect } from "react";
 import ColorizeIcon from "@mui/icons-material/Colorize";
 
 // safari and firefox do not support the eye dropper API, only edge, chrome and opera do.
 // the button is hidden in the UI if the API is not supported.
-const supportsEyeDropper = typeof window !== "undefined" && "EyeDropper" in window;
+const supportsEyeDropper =
+  typeof window !== "undefined" && "EyeDropper" in window;
 
 interface EyeDropper {
   open(): Promise<{ sRGBHex: string }>;
@@ -18,7 +27,12 @@ interface ColorControlProps {
   disabled?: boolean;
 }
 
-export function ColorControl({ value, onChange, label, disabled = false }: ColorControlProps) {
+export function ColorControl({
+  value,
+  onChange,
+  label,
+  disabled = false,
+}: ColorControlProps) {
   const [opened, setOpened] = useState(false);
   // Buffer the colour locally so the picker stays responsive during drag.
   // Only propagate to the parent (which triggers expensive annotation updates)
@@ -40,7 +54,13 @@ export function ColorControl({ value, onChange, label, disabled = false }: Color
   }, [onChange]);
 
   return (
-    <Popover opened={opened} onChange={setOpened} position="bottom" withArrow withinPortal>
+    <Popover
+      opened={opened}
+      onChange={setOpened}
+      position="bottom"
+      withArrow
+      withinPortal
+    >
       <Popover.Target>
         <Tooltip label={label}>
           <ActionIcon

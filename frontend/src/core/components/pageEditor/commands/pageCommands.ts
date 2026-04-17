@@ -35,11 +35,15 @@ export class RotatePageCommand extends DOMCommand {
 
     this.setDocument({
       ...currentDoc,
-      pages: currentDoc.pages.map((p) => (p.id === this.pageId ? { ...p, rotation: newRotation } : p)),
+      pages: currentDoc.pages.map((p) =>
+        p.id === this.pageId ? { ...p, rotation: newRotation } : p,
+      ),
     });
 
     // Also update DOM immediately for CSS animation on currently-mounted pages
-    const pageElement = document.querySelector(`[data-page-id="${this.pageId}"]`);
+    const pageElement = document.querySelector(
+      `[data-page-id="${this.pageId}"]`,
+    );
     if (pageElement) {
       const img = pageElement.querySelector("img");
       if (img) img.style.transform = `rotate(${newRotation}deg)`;
@@ -54,10 +58,14 @@ export class RotatePageCommand extends DOMCommand {
 
     this.setDocument({
       ...currentDoc,
-      pages: currentDoc.pages.map((p) => (p.id === this.pageId ? { ...p, rotation: this.originalRotation! } : p)),
+      pages: currentDoc.pages.map((p) =>
+        p.id === this.pageId ? { ...p, rotation: this.originalRotation! } : p,
+      ),
     });
 
-    const pageElement = document.querySelector(`[data-page-id="${this.pageId}"]`);
+    const pageElement = document.querySelector(
+      `[data-page-id="${this.pageId}"]`,
+    );
     if (pageElement) {
       const img = pageElement.querySelector("img");
       if (img) img.style.transform = `rotate(${this.originalRotation}deg)`;
@@ -118,12 +126,17 @@ export class DeletePagesCommand extends DOMCommand {
     const selectedPageNumbersBefore = this.getSelectedPages();
     const selectedIdSet = new Set(
       selectedPageNumbersBefore
-        .map((pageNum) => currentDoc.pages.find((p) => p.pageNumber === pageNum)?.id)
+        .map(
+          (pageNum) =>
+            currentDoc.pages.find((p) => p.pageNumber === pageNum)?.id,
+        )
         .filter((id): id is string => Boolean(id)),
     );
 
     // Filter out deleted pages by ID (stable across undo/redo)
-    const remainingPages = currentDoc.pages.filter((page) => !this.pageIdsToDelete.includes(page.id));
+    const remainingPages = currentDoc.pages.filter(
+      (page) => !this.pageIdsToDelete.includes(page.id),
+    );
 
     if (remainingPages.length === 0) {
       // If all pages would be deleted, clear selection/splits and close PDF
@@ -162,7 +175,9 @@ export class DeletePagesCommand extends DOMCommand {
     // Apply changes
     this.setDocument(updatedDocument);
 
-    const remainingSelectedPageIds = remainingPages.filter((page) => selectedIdSet.has(page.id)).map((page) => page.id);
+    const remainingSelectedPageIds = remainingPages
+      .filter((page) => selectedIdSet.has(page.id))
+      .map((page) => page.id);
     this.setSelectedPageIds(remainingSelectedPageIds);
 
     this.setSplitPositions(newPositions);
@@ -175,7 +190,12 @@ export class DeletePagesCommand extends DOMCommand {
     this.setDocument(this.originalDocument);
     this.setSplitPositions(this.originalSplitPositions);
     const restoredIds = this.originalSelectedPages
-      .map((pageNum) => this.originalDocument!.pages.find((page) => page.pageNumber === pageNum)?.id || "")
+      .map(
+        (pageNum) =>
+          this.originalDocument!.pages.find(
+            (page) => page.pageNumber === pageNum,
+          )?.id || "",
+      )
       .filter((id) => id !== "");
     this.setSelectedPageIds(restoredIds);
   }
@@ -207,18 +227,28 @@ export class ReorderPagesCommand extends DOMCommand {
     this.originalPages = currentDoc.pages.map((page) => ({ ...page }));
 
     // Perform the reorder
-    const sourceIndex = currentDoc.pages.findIndex((p) => p.pageNumber === this.sourcePageNumber);
+    const sourceIndex = currentDoc.pages.findIndex(
+      (p) => p.pageNumber === this.sourcePageNumber,
+    );
     if (sourceIndex === -1) return;
 
     const newPages = [...currentDoc.pages];
 
-    if (this.selectedPages && this.selectedPages.length > 1 && this.selectedPages.includes(this.sourcePageNumber)) {
+    if (
+      this.selectedPages &&
+      this.selectedPages.length > 1 &&
+      this.selectedPages.includes(this.sourcePageNumber)
+    ) {
       // Multi-page reorder
       const selectedPageObjects = this.selectedPages
-        .map((pageNum) => currentDoc.pages.find((p) => p.pageNumber === pageNum))
+        .map((pageNum) =>
+          currentDoc.pages.find((p) => p.pageNumber === pageNum),
+        )
         .filter((page) => page !== undefined) as PDFPage[];
 
-      const remainingPages = newPages.filter((page) => !this.selectedPages!.includes(page.pageNumber));
+      const remainingPages = newPages.filter(
+        (page) => !this.selectedPages!.includes(page.pageNumber),
+      );
       remainingPages.splice(this.targetIndex, 0, ...selectedPageObjects);
 
       remainingPages.forEach((page, index) => {
@@ -231,7 +261,10 @@ export class ReorderPagesCommand extends DOMCommand {
       const [movedPage] = newPages.splice(sourceIndex, 1);
 
       // Adjust target index if moving forward (after removal, indices shift)
-      const adjustedTargetIndex = sourceIndex < this.targetIndex ? this.targetIndex - 1 : this.targetIndex;
+      const adjustedTargetIndex =
+        sourceIndex < this.targetIndex
+          ? this.targetIndex - 1
+          : this.targetIndex;
 
       newPages.splice(adjustedTargetIndex, 0, movedPage);
 
@@ -346,7 +379,8 @@ export class BulkRotateCommand extends DOMCommand {
     const newRotationById = new Map<string, number>();
     const updatedPages = currentDoc.pages.map((page) => {
       if (pageIdSet.has(page.id)) {
-        const newRotation = (((page.rotation + this.degrees) % 360) + 360) % 360;
+        const newRotation =
+          (((page.rotation + this.degrees) % 360) + 360) % 360;
         newRotationById.set(page.id, newRotation);
         return { ...page, rotation: newRotation };
       }
@@ -360,7 +394,8 @@ export class BulkRotateCommand extends DOMCommand {
       const pageElement = document.querySelector(`[data-page-id="${pageId}"]`);
       if (pageElement) {
         const img = pageElement.querySelector("img");
-        if (img) img.style.transform = `rotate(${newRotationById.get(pageId)}deg)`;
+        if (img)
+          img.style.transform = `rotate(${newRotationById.get(pageId)}deg)`;
       }
     }
   }
@@ -371,7 +406,9 @@ export class BulkRotateCommand extends DOMCommand {
 
     // Restore original rotations in state
     const updatedPages = currentDoc.pages.map((page) =>
-      this.originalRotations.has(page.id) ? { ...page, rotation: this.originalRotations.get(page.id)! } : page,
+      this.originalRotations.has(page.id)
+        ? { ...page, rotation: this.originalRotations.get(page.id)! }
+        : page,
     );
 
     this.setDocument({ ...currentDoc, pages: updatedPages });
@@ -455,7 +492,9 @@ export class SplitAllCommand extends DOMCommand {
 
     // Check if all splits are already active
     const currentSplits = this.getSplitPositions();
-    const hasAllSplits = Array.from(this.allPossibleSplits).every((pos) => currentSplits.has(pos));
+    const hasAllSplits = Array.from(this.allPossibleSplits).every((pos) =>
+      currentSplits.has(pos),
+    );
 
     if (hasAllSplits) {
       // Remove all splits
@@ -473,7 +512,9 @@ export class SplitAllCommand extends DOMCommand {
 
   get description(): string {
     const currentSplits = this.getSplitPositions();
-    const hasAllSplits = Array.from(this.allPossibleSplits).every((pos) => currentSplits.has(pos));
+    const hasAllSplits = Array.from(this.allPossibleSplits).every((pos) =>
+      currentSplits.has(pos),
+    );
     return hasAllSplits ? "Remove all splits" : "Split all pages";
   }
 }
@@ -622,7 +663,9 @@ export class BulkPageBreakCommand extends DOMCommand {
       // Find the original page by matching the page ID from the original document
       const originalPage = this.originalDocument?.pages[originalPageNum - 1];
       if (originalPage) {
-        const foundPage = newPages.find((page) => page.id === originalPage.id && !page.isBlankPage);
+        const foundPage = newPages.find(
+          (page) => page.id === originalPage.id && !page.isBlankPage,
+        );
         if (foundPage) {
           updatedSelection.push(foundPage.pageNumber);
         }
@@ -655,7 +698,10 @@ export class InsertFilesCommand extends DOMCommand {
     private setDocument: (doc: PDFDocument) => void,
     private setSelectedPages: (pages: number[]) => void,
     private getSelectedPages: () => number[],
-    private updateFileContext?: (updatedDocument: PDFDocument, insertedFiles?: Map<FileId, File>) => void,
+    private updateFileContext?: (
+      updatedDocument: PDFDocument,
+      insertedFiles?: Map<FileId, File>,
+    ) => void,
   ) {
     super();
   }
@@ -677,7 +723,8 @@ export class InsertFilesCommand extends DOMCommand {
       // Process all files and wait for their completion
       const baseTimestamp = Date.now();
       const extractionPromises = this.files.map(async (file, index) => {
-        const fileId = `inserted-${file.name}-${baseTimestamp + index}` as FileId;
+        const fileId =
+          `inserted-${file.name}-${baseTimestamp + index}` as FileId;
         // Store inserted file for export
         this.insertedFileMap.set(fileId, file);
         // Use base timestamp + index to ensure unique but predictable file IDs
@@ -702,7 +749,10 @@ export class InsertFilesCommand extends DOMCommand {
 
       // Add pages before insertion point
       for (let i = 0; i < insertIndex && i < currentDoc.pages.length; i++) {
-        const page = { ...currentDoc.pages[i], pageNumber: pageNumberCounter++ };
+        const page = {
+          ...currentDoc.pages[i],
+          pageNumber: pageNumberCounter++,
+        };
         newPages.push(page);
       }
 
@@ -720,7 +770,10 @@ export class InsertFilesCommand extends DOMCommand {
 
       // Add remaining pages after insertion point
       for (let i = insertIndex; i < currentDoc.pages.length; i++) {
-        const page = { ...currentDoc.pages[i], pageNumber: pageNumberCounter++ };
+        const page = {
+          ...currentDoc.pages[i],
+          pageNumber: pageNumberCounter++,
+        };
         newPages.push(page);
       }
 
@@ -765,9 +818,12 @@ export class InsertFilesCommand extends DOMCommand {
     }
   }
 
-  private async generateThumbnailsForInsertedPages(updatedDocument: PDFDocument): Promise<void> {
+  private async generateThumbnailsForInsertedPages(
+    updatedDocument: PDFDocument,
+  ): Promise<void> {
     try {
-      const { thumbnailGenerationService } = await import("@app/services/thumbnailGenerationService");
+      const { thumbnailGenerationService } =
+        await import("@app/services/thumbnailGenerationService");
 
       // Group pages by file ID to generate thumbnails efficiently
       const pagesByFileId = new Map<FileId, PDFPage[]>();
@@ -789,7 +845,10 @@ export class InsertFilesCommand extends DOMCommand {
 
         console.log("Generating thumbnails for file:", fileId);
         console.log("Pages:", pages.length);
-        console.log("ArrayBuffer size:", arrayBuffer?.byteLength || "undefined");
+        console.log(
+          "ArrayBuffer size:",
+          arrayBuffer?.byteLength || "undefined",
+        );
 
         try {
           if (arrayBuffer && arrayBuffer.byteLength > 0) {
@@ -802,12 +861,21 @@ export class InsertFilesCommand extends DOMCommand {
             console.log("Generating thumbnails for page numbers:", pageNumbers);
 
             // Generate thumbnails for all pages from this file at once
-            const results = await thumbnailGenerationService.generateThumbnails(fileId, arrayBuffer, pageNumbers, {
-              scale: 0.2,
-              quality: 0.8,
-            });
+            const results = await thumbnailGenerationService.generateThumbnails(
+              fileId,
+              arrayBuffer,
+              pageNumbers,
+              {
+                scale: 0.2,
+                quality: 0.8,
+              },
+            );
 
-            console.log("Thumbnail generation results:", results.length, "thumbnails generated");
+            console.log(
+              "Thumbnail generation results:",
+              results.length,
+              "thumbnails generated",
+            );
 
             // Update pages with generated thumbnails
             for (let i = 0; i < results.length && i < pages.length; i++) {
@@ -815,7 +883,9 @@ export class InsertFilesCommand extends DOMCommand {
               const page = pages[i];
 
               if (result.success) {
-                const pageIndex = updatedDocument.pages.findIndex((p) => p.id === page.id);
+                const pageIndex = updatedDocument.pages.findIndex(
+                  (p) => p.id === page.id,
+                );
                 if (pageIndex >= 0) {
                   updatedDocument.pages[pageIndex].thumbnail = result.thumbnail;
                   console.log("Updated thumbnail for page:", page.id);
@@ -829,7 +899,11 @@ export class InsertFilesCommand extends DOMCommand {
             console.error("No valid ArrayBuffer found for file ID:", fileId);
           }
         } catch (error) {
-          console.error("Failed to generate thumbnails for file:", fileId, error);
+          console.error(
+            "Failed to generate thumbnails for file:",
+            fileId,
+            error,
+          );
         } finally {
           this.fileDataMap.delete(fileId);
         }
@@ -839,13 +913,19 @@ export class InsertFilesCommand extends DOMCommand {
     }
   }
 
-  private async extractPagesFromFile(file: File, baseTimestamp: number): Promise<PDFPage[]> {
+  private async extractPagesFromFile(
+    file: File,
+    baseTimestamp: number,
+  ): Promise<PDFPage[]> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = async (event) => {
         try {
           const arrayBuffer = event.target?.result as ArrayBuffer;
-          console.log("File reader onload - arrayBuffer size:", arrayBuffer?.byteLength || "undefined");
+          console.log(
+            "File reader onload - arrayBuffer size:",
+            arrayBuffer?.byteLength || "undefined",
+          );
 
           if (!arrayBuffer) {
             reject(new Error("Failed to read file"));
@@ -856,7 +936,8 @@ export class InsertFilesCommand extends DOMCommand {
           const clonedArrayBuffer = arrayBuffer.slice(0);
 
           // Use PDF.js via the worker manager to extract pages
-          const { pdfWorkerManager } = await import("@app/services/pdfWorkerManager");
+          const { pdfWorkerManager } =
+            await import("@app/services/pdfWorkerManager");
           const pdf = await pdfWorkerManager.createDocument(clonedArrayBuffer);
 
           const pageCount = pdf.numPages;
@@ -864,13 +945,24 @@ export class InsertFilesCommand extends DOMCommand {
           const fileId = `inserted-${file.name}-${baseTimestamp}` as FileId;
 
           console.log("Original ArrayBuffer size:", arrayBuffer.byteLength);
-          console.log("Storing ArrayBuffer for fileId:", fileId, "size:", arrayBuffer.byteLength);
+          console.log(
+            "Storing ArrayBuffer for fileId:",
+            fileId,
+            "size:",
+            arrayBuffer.byteLength,
+          );
 
           // Store the original ArrayBuffer for thumbnail generation
           this.fileDataMap.set(fileId, arrayBuffer);
 
-          console.log("After storing - fileDataMap size:", this.fileDataMap.size);
-          console.log("Stored value size:", this.fileDataMap.get(fileId)?.byteLength || "undefined");
+          console.log(
+            "After storing - fileDataMap size:",
+            this.fileDataMap.size,
+          );
+          console.log(
+            "Stored value size:",
+            this.fileDataMap.get(fileId)?.byteLength || "undefined",
+          );
 
           for (let i = 1; i <= pageCount; i++) {
             const pageId = `${fileId}-page-${i}`;

@@ -8,7 +8,10 @@ interface SelectDocumentStepProps {
   onNext: () => void;
 }
 
-export const SelectDocumentStep: React.FC<SelectDocumentStepProps> = ({ selectedFiles, onNext }) => {
+export const SelectDocumentStep: React.FC<SelectDocumentStepProps> = ({
+  selectedFiles,
+  onNext,
+}) => {
   const { t } = useTranslation();
 
   const hasValidFile = selectedFiles.length === 1;
@@ -27,7 +30,10 @@ export const SelectDocumentStep: React.FC<SelectDocumentStepProps> = ({ selected
         <>
           <div>
             <Text size="sm" c="dimmed" mb="xs">
-              {t("groupSigning.steps.selectDocument.selectedFile", "Selected document")}
+              {t(
+                "groupSigning.steps.selectDocument.selectedFile",
+                "Selected document",
+              )}
             </Text>
             <div
               style={{
@@ -40,7 +46,9 @@ export const SelectDocumentStep: React.FC<SelectDocumentStepProps> = ({ selected
                 backgroundColor: "var(--mantine-color-default-hover)",
               }}
             >
-              <PictureAsPdfIcon sx={{ fontSize: 32, color: "var(--mantine-color-red-6)" }} />
+              <PictureAsPdfIcon
+                sx={{ fontSize: 32, color: "var(--mantine-color-red-6)" }}
+              />
               <div style={{ flex: 1 }}>
                 <Text size="sm" fw={600}>
                   {selectedFile?.name}
@@ -55,7 +63,10 @@ export const SelectDocumentStep: React.FC<SelectDocumentStepProps> = ({ selected
           </div>
 
           <Button onClick={onNext} fullWidth>
-            {t("groupSigning.steps.selectDocument.continue", "Continue to Participant Selection")}
+            {t(
+              "groupSigning.steps.selectDocument.continue",
+              "Continue to Participant Selection",
+            )}
           </Button>
         </>
       )}

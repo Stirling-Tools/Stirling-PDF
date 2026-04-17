@@ -11,14 +11,18 @@ export default function PageLayoutSettings({
   disabled,
 }: {
   parameters: PageLayoutParameters;
-  onParameterChange: <K extends keyof PageLayoutParameters>(key: K, value: PageLayoutParameters[K]) => void;
+  onParameterChange: <K extends keyof PageLayoutParameters>(
+    key: K,
+    value: PageLayoutParameters[K],
+  ) => void;
   disabled?: boolean;
 }) {
   const { t } = useTranslation();
 
   const pagesPerSheetOptions = getPagesPerSheetOptions(t);
   const selectedPagesPerSheetOption =
-    pagesPerSheetOptions.find((o) => o.value === parameters.pagesPerSheet) || pagesPerSheetOptions[0];
+    pagesPerSheetOptions.find((o) => o.value === parameters.pagesPerSheet) ||
+    pagesPerSheetOptions[0];
 
   return (
     <Stack gap="sm">
@@ -41,12 +45,18 @@ export default function PageLayoutSettings({
         <>
           <Select
             label={t("pageLayout.pagesPerSheet", "Pages per sheet:")}
-            data={pagesPerSheetOptions.map((o) => ({ value: String(o.value), label: o.label }))}
+            data={pagesPerSheetOptions.map((o) => ({
+              value: String(o.value),
+              label: o.label,
+            }))}
             value={String(parameters.pagesPerSheet)}
             onChange={(v) => onParameterChange("pagesPerSheet", Number(v))}
             allowDeselect={false}
             disabled={disabled}
-            comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+            comboboxProps={{
+              withinPortal: true,
+              zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+            }}
           />
           {selectedPagesPerSheetOption && (
             <div

@@ -89,7 +89,9 @@ i18n
       loadPath: (lngs: string[], namespaces: string[]) => {
         const lng = lngs[0];
         const basePath = import.meta.env.BASE_URL || "/";
-        const cleanBasePath = basePath.endsWith("/") ? basePath.slice(0, -1) : basePath;
+        const cleanBasePath = basePath.endsWith("/")
+          ? basePath.slice(0, -1)
+          : basePath;
         return `${cleanBasePath}/locales/${lng}/${namespaces[0]}.toml`;
       },
     },
@@ -128,7 +130,10 @@ i18n.on("initialized", () => {
     const detectedLang = i18n.language;
     if (detectedLang) {
       localStorage.setItem(I18N_STORAGE_KEYS.LANGUAGE, detectedLang);
-      localStorage.setItem(I18N_STORAGE_KEYS.LANGUAGE_SOURCE, String(LanguageSource.Browser));
+      localStorage.setItem(
+        I18N_STORAGE_KEYS.LANGUAGE_SOURCE,
+        String(LanguageSource.Browser),
+      );
     }
   }
 });
@@ -142,7 +147,9 @@ export function normalizeLanguageCode(languageCode: string): string {
     return base.toLowerCase();
   }
 
-  const normalizedParts = rest.map((part) => (part.length <= 3 ? part.toUpperCase() : part));
+  const normalizedParts = rest.map((part) =>
+    part.length <= 3 ? part.toUpperCase() : part,
+  );
   return [base.toLowerCase(), ...normalizedParts].join("-");
 }
 
@@ -167,14 +174,19 @@ export function toUnderscoreLanguages(languages: string[]): string[] {
 function getCurrentSourcePriority(): LanguageSource {
   const sourceStr = localStorage.getItem(I18N_STORAGE_KEYS.LANGUAGE_SOURCE);
   const sourceNum = sourceStr ? parseInt(sourceStr, 10) : null;
-  return sourceNum !== null && !isNaN(sourceNum) ? (sourceNum as LanguageSource) : LanguageSource.Fallback;
+  return sourceNum !== null && !isNaN(sourceNum)
+    ? (sourceNum as LanguageSource)
+    : LanguageSource.Fallback;
 }
 
 /**
  * Set language with priority tracking
  * Only updates if new source has equal or higher priority than current
  */
-function setLanguageWithPriority(language: string, source: LanguageSource): boolean {
+function setLanguageWithPriority(
+  language: string,
+  source: LanguageSource,
+): boolean {
   const currentPriority = getCurrentSourcePriority();
   const newPriority = source;
 
@@ -205,10 +217,18 @@ export function setUserLanguage(language: string): void {
  * @param configLanguages - Optional array of language codes from server config (ui.languages)
  * @param defaultLocale - Optional default language for new users (system.defaultLocale)
  */
-export function updateSupportedLanguages(configLanguages?: string[] | null, defaultLocale?: string | null) {
+export function updateSupportedLanguages(
+  configLanguages?: string[] | null,
+  defaultLocale?: string | null,
+) {
   // Normalize and validate default locale if provided
-  const normalizedDefault = defaultLocale ? normalizeLanguageCode(defaultLocale) : null;
-  const validDefault = normalizedDefault && normalizedDefault in supportedLanguages ? normalizedDefault : null;
+  const normalizedDefault = defaultLocale
+    ? normalizeLanguageCode(defaultLocale)
+    : null;
+  const validDefault =
+    normalizedDefault && normalizedDefault in supportedLanguages
+      ? normalizedDefault
+      : null;
 
   if (!configLanguages || configLanguages.length === 0) {
     // No filter specified - keep all languages
@@ -219,7 +239,9 @@ export function updateSupportedLanguages(configLanguages?: string[] | null, defa
     return;
   }
 
-  const validLanguages = configLanguages.map(normalizeLanguageCode).filter((lang) => lang in supportedLanguages);
+  const validLanguages = configLanguages
+    .map(normalizeLanguageCode)
+    .filter((lang) => lang in supportedLanguages);
 
   // If no valid languages were provided, keep existing configuration
   if (validLanguages.length === 0) {

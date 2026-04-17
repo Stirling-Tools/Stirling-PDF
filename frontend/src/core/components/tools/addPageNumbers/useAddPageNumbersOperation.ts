@@ -1,9 +1,18 @@
 import { useTranslation } from "react-i18next";
-import { ToolType, useToolOperation } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  ToolType,
+  useToolOperation,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { AddPageNumbersParameters, defaultParameters } from "@app/components/tools/addPageNumbers/useAddPageNumbersParameters";
+import {
+  AddPageNumbersParameters,
+  defaultParameters,
+} from "@app/components/tools/addPageNumbers/useAddPageNumbersParameters";
 
-export const buildAddPageNumbersFormData = (parameters: AddPageNumbersParameters, file: File): FormData => {
+export const buildAddPageNumbersFormData = (
+  parameters: AddPageNumbersParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
   formData.append("customMargin", parameters.customMargin);
@@ -32,7 +41,10 @@ export const useAddPageNumbersOperation = () => {
   return useToolOperation<AddPageNumbersParameters>({
     ...addPageNumbersOperationConfig,
     getErrorMessage: createStandardErrorHandler(
-      t("addPageNumbers.error.failed", "An error occurred while adding page numbers to the PDF."),
+      t(
+        "addPageNumbers.error.failed",
+        "An error occurred while adding page numbers to the PDF.",
+      ),
     ),
   });
 };

@@ -82,7 +82,9 @@ export function detectCurrencyFromLocale(locale: string): string {
 
   // Try matching just the language code (e.g., 'en' from 'en-US')
   const languageCode = locale.split("-")[0];
-  const matchingLocale = Object.keys(LOCALE_TO_CURRENCY_MAP).find((key) => key.startsWith(languageCode));
+  const matchingLocale = Object.keys(LOCALE_TO_CURRENCY_MAP).find((key) =>
+    key.startsWith(languageCode),
+  );
 
   if (matchingLocale) {
     return LOCALE_TO_CURRENCY_MAP[matchingLocale];

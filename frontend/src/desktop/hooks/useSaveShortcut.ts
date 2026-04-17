@@ -19,9 +19,14 @@ export function useSaveShortcut() {
 
         // Get selected files or all files if nothing selected
         const selectedFileIds = state.ui.selectedFileIds;
-        const filesToSave = selectedFileIds.length > 0 ? selectors.getFiles(selectedFileIds) : selectors.getFiles();
+        const filesToSave =
+          selectedFileIds.length > 0
+            ? selectors.getFiles(selectedFileIds)
+            : selectors.getFiles();
         const stubsToSave =
-          selectedFileIds.length > 0 ? selectors.getStirlingFileStubs(selectedFileIds) : selectors.getStirlingFileStubs();
+          selectedFileIds.length > 0
+            ? selectors.getStirlingFileStubs(selectedFileIds)
+            : selectors.getStirlingFileStubs();
 
         if (filesToSave.length === 0) {
           return;

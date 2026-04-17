@@ -38,8 +38,12 @@ const QuickAccessButton: React.FC<QuickAccessButtonProps> = ({
   disabled = false,
 }) => {
   const buttonSize = size || (isActive ? "lg" : "md");
-  const bgColor = backgroundColor || (isActive ? "var(--icon-tools-bg)" : "var(--icon-inactive-bg)");
-  const textColor = color || (isActive ? "var(--icon-tools-color)" : "var(--icon-inactive-color)");
+  const bgColor =
+    backgroundColor ||
+    (isActive ? "var(--icon-tools-bg)" : "var(--icon-inactive-bg)");
+  const textColor =
+    color ||
+    (isActive ? "var(--icon-tools-color)" : "var(--icon-inactive-color)");
 
   const actionIconProps =
     component === "a" && href

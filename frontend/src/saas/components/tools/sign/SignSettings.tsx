@@ -1,11 +1,25 @@
 ﻿import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Stack, Button, Text, Alert, SegmentedControl, Divider, ActionIcon, Tooltip, Group, Box } from "@mantine/core";
+import {
+  Stack,
+  Button,
+  Text,
+  Alert,
+  SegmentedControl,
+  Divider,
+  ActionIcon,
+  Tooltip,
+  Group,
+  Box,
+} from "@mantine/core";
 import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
 import { useSignature } from "@app/contexts/SignatureContext";
 import { useViewer } from "@app/contexts/ViewerContext";
-import { PLACEMENT_ACTIVATION_DELAY, FILE_SWITCH_ACTIVATION_DELAY } from "@app/constants/signConstants";
+import {
+  PLACEMENT_ACTIVATION_DELAY,
+  FILE_SWITCH_ACTIVATION_DELAY,
+} from "@app/constants/signConstants";
 
 // Import the new reusable components
 import { DrawingCanvas } from "@app/components/annotation/shared/DrawingCanvas";
@@ -37,7 +51,10 @@ type SignatureDrafts = {
 
 interface SignSettingsProps {
   parameters: SignParameters;
-  onParameterChange: <K extends keyof SignParameters>(key: K, value: SignParameters[K]) => void;
+  onParameterChange: <K extends keyof SignParameters>(
+    key: K,
+    value: SignParameters[K],
+  ) => void;
   disabled?: boolean;
   onActivateDrawMode?: () => void;
   onActivateSignaturePlacement?: () => void;
@@ -53,7 +70,12 @@ interface SignSettingsProps {
 
 export type SignatureSource = "canvas" | "image" | "text" | "saved";
 
-const DEFAULT_SIGNATURE_SOURCES: SignatureSource[] = ["canvas", "image", "text", "saved"];
+const DEFAULT_SIGNATURE_SOURCES: SignatureSource[] = [
+  "canvas",
+  "image",
+  "text",
+  "saved",
+];
 
 const SignSettings = ({
   parameters,
@@ -72,7 +94,10 @@ const SignSettings = ({
   const { t } = useTranslation();
   const { isPlacementMode, signaturesApplied, historyApiRef } = useSignature();
   const { activeFileIndex } = useViewer();
-  const [historyAvailability, setHistoryAvailability] = useState({ canUndo: false, canRedo: false });
+  const [historyAvailability, setHistoryAvailability] = useState({
+    canUndo: false,
+    canRedo: false,
+  });
   const historyApiInstance = historyApiRef.current;
   const translate = useCallback(
     (key: string, defaultValue: string, options?: Record<string, unknown>) =>
@@ -80,7 +105,8 @@ const SignSettings = ({
     [t, translationScope],
   );
   const effectiveDefaultSource =
-    (defaultSignatureSource && allowedSignatureSources.includes(defaultSignatureSource)
+    (defaultSignatureSource &&
+    allowedSignatureSources.includes(defaultSignatureSource)
       ? defaultSignatureSource
       : allowedSignatureSources[0]) ?? "text";
   const canUseSavedLibrary = allowedSignatureSources.includes("saved");
@@ -90,11 +116,16 @@ const SignSettings = ({
   const [penSize, setPenSize] = useState(2);
   const [penSizeInput, setPenSizeInput] = useState("2");
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
-  const [isPlacementManuallyPaused, setPlacementManuallyPaused] = useState(false);
+  const [isPlacementManuallyPaused, setPlacementManuallyPaused] =
+    useState(false);
 
   // State for different signature types
-  const [canvasSignatureData, setCanvasSignatureData] = useState<string | undefined>();
-  const [imageSignatureData, setImageSignatureData] = useState<string | undefined>();
+  const [canvasSignatureData, setCanvasSignatureData] = useState<
+    string | undefined
+  >();
+  const [imageSignatureData, setImageSignatureData] = useState<
+    string | undefined
+  >();
   const [signatureDrafts, setSignatureDrafts] = useState<SignatureDrafts>({});
   const lastSyncedTextDraft = useRef<SignatureDrafts["text"] | null>(null);
   const lastAppliedPlacementKey = useRef<string | null>(null);
@@ -109,21 +140,30 @@ const SignSettings = ({
     byTypeCounts,
     storageType,
   } = useSavedSignatures();
-  const [signatureSource, setSignatureSource] = useState<SignatureSource>(() => {
-    const paramSource = parameters.signatureType as SignatureSource;
-    if (allowedSignatureSources.includes(paramSource)) {
-      return paramSource;
-    }
-    return effectiveDefaultSource;
-  });
-  const [lastSavedSignatureKeys, setLastSavedSignatureKeys] = useState<Record<SavedSignatureType, string | null>>({
+  const [signatureSource, setSignatureSource] = useState<SignatureSource>(
+    () => {
+      const paramSource = parameters.signatureType as SignatureSource;
+      if (allowedSignatureSources.includes(paramSource)) {
+        return paramSource;
+      }
+      return effectiveDefaultSource;
+    },
+  );
+  const [lastSavedSignatureKeys, setLastSavedSignatureKeys] = useState<
+    Record<SavedSignatureType, string | null>
+  >({
     canvas: null,
     image: null,
     text: null,
   });
 
   const buildTextSignatureKey = useCallback(
-    (signerName: string, fontSize: number, fontFamily: string, textColor: string) =>
+    (
+      signerName: string,
+      fontSize: number,
+      fontFamily: string,
+      textColor: string,
+    ) =>
       JSON.stringify({
         signerName: signerName.trim(),
         fontSize,
@@ -191,7 +231,10 @@ const SignSettings = ({
     (type: SavedSignatureType, explicitKey?: string | null) => {
       setLastSavedSignatureKeys((prev) => ({
         ...prev,
-        [type]: explicitKey !== undefined ? explicitKey : (signatureKeysByType[type] ?? null),
+        [type]:
+          explicitKey !== undefined
+            ? explicitKey
+            : (signatureKeysByType[type] ?? null),
       }));
     },
     [signatureKeysByType],
@@ -202,7 +245,11 @@ const SignSettings = ({
       if (!canvasSignatureData) {
         return;
       }
-      const result = await saveSignatureToLibrary({ type: "canvas", dataUrl: canvasSignatureData }, "canvas", scope);
+      const result = await saveSignatureToLibrary(
+        { type: "canvas", dataUrl: canvasSignatureData },
+        "canvas",
+        scope,
+      );
       if (result.success) {
         setLastSavedKeyForType("canvas");
       }
@@ -215,7 +262,11 @@ const SignSettings = ({
       if (!imageSignatureData) {
         return;
       }
-      const result = await saveSignatureToLibrary({ type: "image", dataUrl: imageSignatureData }, "image", scope);
+      const result = await saveSignatureToLibrary(
+        { type: "image", dataUrl: imageSignatureData },
+        "image",
+        scope,
+      );
       if (result.success) {
         setLastSavedKeyForType("image");
       }
@@ -296,7 +347,12 @@ const SignSettings = ({
 
       const savedKey =
         signature.type === "text"
-          ? buildTextSignatureKey(signature.signerName, signature.fontSize, signature.fontFamily, signature.textColor)
+          ? buildTextSignatureKey(
+              signature.signerName,
+              signature.fontSize,
+              signature.fontFamily,
+              signature.textColor,
+            )
           : signature.dataUrl;
       setLastSavedKeyForType(signature.type, savedKey);
 
@@ -358,17 +414,30 @@ const SignSettings = ({
 
     let tooltipMessage: string | undefined;
     if (!isReady) {
-      tooltipMessage = translate("saved.saveUnavailable", "Create a signature first to save it.");
+      tooltipMessage = translate(
+        "saved.saveUnavailable",
+        "Create a signature first to save it.",
+      );
     } else if (isSaved) {
-      tooltipMessage = translate("saved.noChanges", "Current signature is already saved.");
+      tooltipMessage = translate(
+        "saved.noChanges",
+        "Current signature is already saved.",
+      );
     } else if (isSavedSignatureLimitReached) {
-      tooltipMessage = translate("saved.limitDescription", "Remove a saved signature before adding new ones (max {{max}}).", {
-        max: maxLimit,
-      });
+      tooltipMessage = translate(
+        "saved.limitDescription",
+        "Remove a saved signature before adding new ones (max {{max}}).",
+        {
+          max: maxLimit,
+        },
+      );
     }
 
     // SaaS-specific: Use simple "Save" label for localStorage mode
-    const buttonLabel = storageType === "localStorage" && scope === "personal" ? translate("saved.save", "Save") : label;
+    const buttonLabel =
+      storageType === "localStorage" && scope === "personal"
+        ? translate("saved.save", "Save")
+        : label;
 
     const button = (
       <Button
@@ -376,7 +445,9 @@ const SignSettings = ({
         variant="outline"
         color={isSaved ? "green" : undefined}
         onClick={() => onClick(scope)}
-        disabled={!isReady || disabled || isSavedSignatureLimitReached || !hasChanges}
+        disabled={
+          !isReady || disabled || isSavedSignatureLimitReached || !hasChanges
+        }
         leftSection={<LocalIcon icon={icon} width={16} height={16} />}
         fullWidth={fullWidth}
       >
@@ -387,7 +458,14 @@ const SignSettings = ({
     if (tooltipMessage) {
       return (
         <Tooltip label={tooltipMessage}>
-          <Box style={{ display: fullWidth ? "block" : "inline-block", width: fullWidth ? "100%" : undefined }}>{button}</Box>
+          <Box
+            style={{
+              display: fullWidth ? "block" : "inline-block",
+              width: fullWidth ? "100%" : undefined,
+            }}
+          >
+            {button}
+          </Box>
         </Tooltip>
       );
     }
@@ -436,7 +514,11 @@ const SignSettings = ({
     const hasBothButtons = personalButton && sharedButton;
 
     if (!hasBothButtons) {
-      return <Box style={{ width: "100%", marginTop: "0.4rem" }}>{personalButton || sharedButton}</Box>;
+      return (
+        <Box style={{ width: "100%", marginTop: "0.4rem" }}>
+          {personalButton || sharedButton}
+        </Box>
+      );
     }
 
     return (
@@ -455,13 +537,21 @@ const SignSettings = ({
     if (signatureSource === "saved") {
       return;
     }
-    const nextSource = allowedSignatureSources.includes(parameters.signatureType as SignatureSource)
+    const nextSource = allowedSignatureSources.includes(
+      parameters.signatureType as SignatureSource,
+    )
       ? (parameters.signatureType as SignatureSource)
       : effectiveDefaultSource;
     if (signatureSource !== nextSource) {
       setSignatureSource(nextSource);
     }
-  }, [parameters.signatureType, signatureSource, allowedSignatureSources, effectiveDefaultSource, canUseSavedLibrary]);
+  }, [
+    parameters.signatureType,
+    signatureSource,
+    allowedSignatureSources,
+    effectiveDefaultSource,
+    canUseSavedLibrary,
+  ]);
 
   useEffect(() => {
     if (!disabled) {
@@ -533,7 +623,10 @@ const SignSettings = ({
 
         // Directly activate placement on image upload
         if (typeof window !== "undefined") {
-          window.setTimeout(() => onActivateSignaturePlacement?.(), PLACEMENT_ACTIVATION_DELAY);
+          window.setTimeout(
+            () => onActivateSignaturePlacement?.(),
+            PLACEMENT_ACTIVATION_DELAY,
+          );
         } else {
           onActivateSignaturePlacement?.();
         }
@@ -560,7 +653,10 @@ const SignSettings = ({
           lastAppliedPlacementKey.current = null;
           // Directly activate placement on signature change
           if (typeof window !== "undefined") {
-            window.setTimeout(() => onActivateSignaturePlacement?.(), PLACEMENT_ACTIVATION_DELAY);
+            window.setTimeout(
+              () => onActivateSignaturePlacement?.(),
+              PLACEMENT_ACTIVATION_DELAY,
+            );
           } else {
             onActivateSignaturePlacement?.();
           }
@@ -571,14 +667,21 @@ const SignSettings = ({
     [onActivateSignaturePlacement],
   );
 
-  const hasCanvasSignature = useMemo(() => Boolean(canvasSignatureData), [canvasSignatureData]);
-  const hasImageSignature = useMemo(() => Boolean(imageSignatureData), [imageSignatureData]);
+  const hasCanvasSignature = useMemo(
+    () => Boolean(canvasSignatureData),
+    [canvasSignatureData],
+  );
+  const hasImageSignature = useMemo(
+    () => Boolean(imageSignatureData),
+    [imageSignatureData],
+  );
   const hasTextSignature = useMemo(
     () => Boolean(parameters.signerName && parameters.signerName.trim() !== ""),
     [parameters.signerName],
   );
 
-  const hasAnySignature = hasCanvasSignature || hasImageSignature || hasTextSignature;
+  const hasAnySignature =
+    hasCanvasSignature || hasImageSignature || hasTextSignature;
 
   const isCurrentTypeReady = useMemo(() => {
     switch (parameters.signatureType) {
@@ -591,7 +694,12 @@ const SignSettings = ({
       default:
         return false;
     }
-  }, [parameters.signatureType, hasCanvasSignature, hasImageSignature, hasTextSignature]);
+  }, [
+    parameters.signatureType,
+    hasCanvasSignature,
+    hasImageSignature,
+    hasTextSignature,
+  ]);
 
   const placementSignatureKey = useMemo(() => {
     if (!isCurrentTypeReady) {
@@ -605,7 +713,8 @@ const SignSettings = ({
     return isCurrentTypeReady;
   }, [disabled, isCurrentTypeReady]);
 
-  const shouldAutoActivate = shouldEnablePlacement && !isPlacementManuallyPaused && !signaturesApplied;
+  const shouldAutoActivate =
+    shouldEnablePlacement && !isPlacementManuallyPaused && !signaturesApplied;
 
   useEffect(() => {
     setSignatureDrafts((prev) => {
@@ -667,7 +776,12 @@ const SignSettings = ({
 
       return { ...prev, text: nextDraft };
     });
-  }, [parameters.signerName, parameters.fontSize, parameters.fontFamily, parameters.textColor]);
+  }, [
+    parameters.signerName,
+    parameters.fontSize,
+    parameters.fontFamily,
+    parameters.textColor,
+  ]);
 
   useEffect(() => {
     if (parameters.signatureType === "text") {
@@ -741,7 +855,13 @@ const SignSettings = ({
     if (parameters.signatureData !== newSignatureData) {
       onParameterChange("signatureData", newSignatureData);
     }
-  }, [parameters.signatureType, parameters.signatureData, canvasSignatureData, imageSignatureData, onParameterChange]);
+  }, [
+    parameters.signatureType,
+    parameters.signatureData,
+    canvasSignatureData,
+    imageSignatureData,
+    onParameterChange,
+  ]);
 
   useEffect(() => {
     if (!shouldEnablePlacement) {
@@ -804,7 +924,13 @@ const SignSettings = ({
     }
 
     trigger();
-  }, [placementSignatureKey, shouldAutoActivate, shouldEnablePlacement, isPlacementMode, onActivateSignaturePlacement]);
+  }, [
+    placementSignatureKey,
+    shouldAutoActivate,
+    shouldEnablePlacement,
+    isPlacementMode,
+    onActivateSignaturePlacement,
+  ]);
   useEffect(() => {
     if (activeFileIndex === previousFileIndexRef.current) {
       return;
@@ -827,7 +953,12 @@ const SignSettings = ({
     }
 
     onActivateSignaturePlacement?.();
-  }, [activeFileIndex, shouldEnablePlacement, signaturesApplied, onActivateSignaturePlacement]);
+  }, [
+    activeFileIndex,
+    shouldEnablePlacement,
+    signaturesApplied,
+    onActivateSignaturePlacement,
+  ]);
 
   const sourceLabels: Record<SignatureSource, string> = {
     canvas: translate("type.canvas", "Draw"),
@@ -878,7 +1009,11 @@ const SignSettings = ({
             disabled={disabled}
             initialSignatureData={canvasSignatureData}
           />
-          {renderSaveButtonRow("canvas", hasCanvasSignature, handleSaveCanvasSignature)}
+          {renderSaveButtonRow(
+            "canvas",
+            hasCanvasSignature,
+            handleSaveCanvasSignature,
+          )}
         </Stack>
       );
     }
@@ -886,8 +1021,15 @@ const SignSettings = ({
     if (signatureSource === "image") {
       return (
         <Stack gap="xs">
-          <ImageUploader onImageChange={handleImageChange} disabled={disabled} />
-          {renderSaveButtonRow("image", hasImageSignature, handleSaveImageSignature)}
+          <ImageUploader
+            onImageChange={handleImageChange}
+            disabled={disabled}
+          />
+          {renderSaveButtonRow(
+            "image",
+            hasImageSignature,
+            handleSaveImageSignature,
+          )}
         </Stack>
       );
     }
@@ -900,7 +1042,9 @@ const SignSettings = ({
           fontSize={parameters.fontSize || 16}
           onFontSizeChange={(size) => onParameterChange("fontSize", size)}
           fontFamily={parameters.fontFamily || "Helvetica"}
-          onFontFamilyChange={(family) => onParameterChange("fontFamily", family)}
+          onFontFamilyChange={(family) =>
+            onParameterChange("fontFamily", family)
+          }
           textColor={parameters.textColor || "#000000"}
           onTextColorChange={(color) => onParameterChange("textColor", color)}
           disabled={disabled}
@@ -908,13 +1052,19 @@ const SignSettings = ({
           placeholder={translate("text.placeholder", "Enter text")}
           fontLabel={translate("text.fontLabel", "Font")}
           fontSizeLabel={translate("text.fontSizeLabel", "Font size")}
-          fontSizePlaceholder={translate("text.fontSizePlaceholder", "Type or select font size (8-200)")}
+          fontSizePlaceholder={translate(
+            "text.fontSizePlaceholder",
+            "Type or select font size (8-200)",
+          )}
           onAnyChange={() => {
             setPlacementManuallyPaused(false);
             lastAppliedPlacementKey.current = null;
             // Directly activate placement on text changes
             if (typeof window !== "undefined") {
-              window.setTimeout(() => onActivateSignaturePlacement?.(), PLACEMENT_ACTIVATION_DELAY);
+              window.setTimeout(
+                () => onActivateSignaturePlacement?.(),
+                PLACEMENT_ACTIVATION_DELAY,
+              );
             } else {
               onActivateSignaturePlacement?.();
             }
@@ -927,7 +1077,10 @@ const SignSettings = ({
 
   const placementInstructions = () => {
     if (signatureSource === "saved") {
-      return translate("instructions.saved", "Select a saved signature above, then click anywhere on the PDF to place it.");
+      return translate(
+        "instructions.saved",
+        "Select a saved signature above, then click anywhere on the PDF to place it.",
+      );
     }
     if (parameters.signatureType === "canvas") {
       return translate(
@@ -936,7 +1089,10 @@ const SignSettings = ({
       );
     }
     if (parameters.signatureType === "image") {
-      return translate("instructions.image", "After uploading your signature image, click anywhere on the PDF to place it.");
+      return translate(
+        "instructions.image",
+        "After uploading your signature image, click anywhere on the PDF to place it.",
+      );
     }
     return translate(
       "instructions.text",
@@ -952,12 +1108,18 @@ const SignSettings = ({
           : translate("instructions.paused", "Placement paused"),
         message: isPlacementMode
           ? placementInstructions()
-          : translate("instructions.resumeHint", "Resume placement to click and add your signature."),
+          : translate(
+              "instructions.resumeHint",
+              "Resume placement to click and add your signature.",
+            ),
       }
     : {
         color: "yellow",
         title: translate("instructions.title", "How to add your signature"),
-        message: translate("instructions.noSignature", "Create a signature above to enable placement tools."),
+        message: translate(
+          "instructions.noSignature",
+          "Create a signature above to enable placement tools.",
+        ),
       };
 
   const handlePausePlacement = () => {
@@ -1007,7 +1169,11 @@ const SignSettings = ({
               gap: "0.4rem",
             }}
           >
-            <LocalIcon icon="material-symbols:pause-rounded" width={20} height={20} />
+            <LocalIcon
+              icon="material-symbols:pause-rounded"
+              width={20}
+              height={20}
+            />
             <Text component="span" size="sm" fw={500}>
               {translate("mode.pause", "Pause placement")}
             </Text>
@@ -1020,7 +1186,9 @@ const SignSettings = ({
             size="lg"
             aria-label={translate("mode.resume", "Resume placement")}
             onClick={handleResumePlacement}
-            disabled={disabled || !isCurrentTypeReady || !onActivateSignaturePlacement}
+            disabled={
+              disabled || !isCurrentTypeReady || !onActivateSignaturePlacement
+            }
             style={{
               width: "auto",
               paddingInline: "0.75rem",
@@ -1029,7 +1197,11 @@ const SignSettings = ({
               gap: "0.4rem",
             }}
           >
-            <LocalIcon icon="material-symbols:play-arrow-rounded" width={20} height={20} />
+            <LocalIcon
+              icon="material-symbols:play-arrow-rounded"
+              width={20}
+              height={20}
+            />
             <Text component="span" size="sm" fw={500}>
               {translate("mode.resume", "Resume placement")}
             </Text>
@@ -1042,13 +1214,18 @@ const SignSettings = ({
     <Stack>
       <Stack gap="sm">
         <Text size="sm" c="dimmed">
-          {translate("step.createDesc", "Choose how you want to create the signature")}
+          {translate(
+            "step.createDesc",
+            "Choose how you want to create the signature",
+          )}
         </Text>
         {sourceOptions.length > 1 && (
           <SegmentedControl
             value={signatureSource}
             fullWidth
-            onChange={(value) => handleSignatureSourceChange(value as SignatureSource)}
+            onChange={(value) =>
+              handleSignatureSourceChange(value as SignatureSource)
+            }
             data={sourceOptions}
           />
         )}

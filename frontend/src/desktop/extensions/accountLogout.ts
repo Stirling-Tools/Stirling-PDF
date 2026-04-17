@@ -11,13 +11,19 @@ interface AccountLogoutDeps {
  * Desktop-specific logout: mirrors Connection Settings flow to avoid stale state.
  */
 export function useAccountLogout() {
-  return async ({ signOut, redirectToLogin }: AccountLogoutDeps): Promise<void> => {
+  return async ({
+    signOut,
+    redirectToLogin,
+  }: AccountLogoutDeps): Promise<void> => {
     try {
       await signOut();
 
       const currentConfig = await connectionModeService.getCurrentConfig();
       // Save server URL before clearing so user can easily reconnect (self-hosted only)
-      if (currentConfig.mode === "selfhosted" && currentConfig.server_config?.url) {
+      if (
+        currentConfig.mode === "selfhosted" &&
+        currentConfig.server_config?.url
+      ) {
         localStorage.setItem("server_url", currentConfig.server_config.url);
       }
       // Always switch to local after logout so the app remains usable
@@ -28,7 +34,10 @@ export function useAccountLogout() {
       // connectionModeService subscription when mode changes to local.
       return;
     } catch (err) {
-      console.warn("[Desktop AccountLogout] Desktop-specific logout failed, falling back to redirect", err);
+      console.warn(
+        "[Desktop AccountLogout] Desktop-specific logout failed, falling back to redirect",
+        err,
+      );
     }
 
     redirectToLogin();

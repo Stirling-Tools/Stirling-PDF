@@ -35,12 +35,18 @@ export async function pollLicenseKeyWithBackoff(
   installationId: string,
   config: PollConfig = {},
 ): Promise<LicenseKeyPollResult> {
-  const { isMounted = () => true, onStatusChange, backoffMs = [1000, 2000, 4000, 8000, 16000] } = config;
+  const {
+    isMounted = () => true,
+    onStatusChange,
+    backoffMs = [1000, 2000, 4000, 8000, 16000],
+  } = config;
 
   let attemptIndex = 0;
 
   onStatusChange?.("polling");
-  console.log(`Starting license key polling for installation: ${installationId}`);
+  console.log(
+    `Starting license key polling for installation: ${installationId}`,
+  );
 
   const poll = async (): Promise<LicenseKeyPollResult> => {
     // Check if component is still mounted
@@ -170,7 +176,10 @@ export async function activateLicenseKey(
           licenseInfo,
         };
       } catch (infoError) {
-        console.error("Error fetching license info after activation:", infoError);
+        console.error(
+          "Error fetching license info after activation:",
+          infoError,
+        );
         // Still return success since save succeeded
         return {
           success: true,

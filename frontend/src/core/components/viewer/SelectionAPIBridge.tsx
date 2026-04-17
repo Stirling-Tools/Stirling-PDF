@@ -23,13 +23,19 @@ export function SelectionAPIBridge() {
       getFormattedSelection: () => selection.getFormattedSelection(),
     });
 
-    registerBridge("selection", { state: { hasSelection: false }, api: buildApi() });
+    registerBridge("selection", {
+      state: { hasSelection: false },
+      api: buildApi(),
+    });
 
     const unsubChange = selection.onSelectionChange((event: any) => {
       const hasText = !!event?.selection;
       hasSelectionRef.current = hasText;
 
-      registerBridge("selection", { state: { hasSelection: hasText }, api: buildApi() });
+      registerBridge("selection", {
+        state: { hasSelection: hasText },
+        api: buildApi(),
+      });
 
       if (hasText) {
         try {
@@ -51,13 +57,15 @@ export function SelectionAPIBridge() {
     });
 
     // Fallback: subscribe to the plugin's copy event for navigator.clipboard writes
-    const unsubCopy = selection.onCopyToClipboard(({ text }: { text: string }) => {
-      if (text) {
-        navigator.clipboard.writeText(text).catch(() => {
-          /* ignore */
-        });
-      }
-    });
+    const unsubCopy = selection.onCopyToClipboard(
+      ({ text }: { text: string }) => {
+        if (text) {
+          navigator.clipboard.writeText(text).catch(() => {
+            /* ignore */
+          });
+        }
+      },
+    );
 
     const handleCopy = (event: ClipboardEvent) => {
       if (!hasSelectionRef.current || !selectedTextRef.current) return;
@@ -66,7 +74,11 @@ export function SelectionAPIBridge() {
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === "c" && hasSelectionRef.current) {
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        event.key === "c" &&
+        hasSelectionRef.current
+      ) {
         selection.copyToClipboard();
       }
     };

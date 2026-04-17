@@ -5,6 +5,10 @@
  */
 export const useSaaSBilling = (): null => null;
 
-export function SaasBillingProvider({ children }: { children: React.ReactNode }) {
+export function SaasBillingProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return <>{children}</>;
 }

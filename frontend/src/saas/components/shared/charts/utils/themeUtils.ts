@@ -13,10 +13,13 @@ export interface ThemeInfo {
  * @returns ThemeInfo object with theme detection results
  */
 export function detectTheme(): ThemeInfo {
-  const rootEl = typeof document !== "undefined" ? document.documentElement : null;
+  const rootEl =
+    typeof document !== "undefined" ? document.documentElement : null;
   const schemeAttr = rootEl?.getAttribute("data-mantine-color-scheme");
   const prefersDark =
-    typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    typeof window !== "undefined" &&
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
 
   const isDark = schemeAttr ? schemeAttr === "dark" : prefersDark;
 
@@ -48,7 +51,10 @@ export function getChartThemeVars(isDark: boolean) {
  * @param tooltipElement The tooltip DOM element
  * @param isDark Whether the theme is dark
  */
-export function applyTooltipStyles(tooltipElement: HTMLElement, isDark: boolean) {
+export function applyTooltipStyles(
+  tooltipElement: HTMLElement,
+  isDark: boolean,
+) {
   const themeVars = getChartThemeVars(isDark);
 
   tooltipElement.style.background = themeVars.background;

@@ -38,7 +38,9 @@ export function createFileSelectors(
 
     getStirlingFileStubs: (ids?: FileId[]) => {
       const currentIds = ids || stateRef.current.files.ids;
-      return currentIds.map((id) => stateRef.current.files.byId[id]).filter(Boolean);
+      return currentIds
+        .map((id) => stateRef.current.files.byId[id])
+        .filter(Boolean);
     },
 
     getAllFileIds: () => stateRef.current.files.ids,
@@ -53,7 +55,9 @@ export function createFileSelectors(
     },
 
     getSelectedStirlingFileStubs: () => {
-      return stateRef.current.ui.selectedFileIds.map((id) => stateRef.current.files.byId[id]).filter(Boolean);
+      return stateRef.current.ui.selectedFileIds
+        .map((id) => stateRef.current.files.byId[id])
+        .filter(Boolean);
     },
 
     // Pinned files selectors
@@ -95,7 +99,9 @@ export function createFileSelectors(
 /**
  * Helper for building quickKey sets for deduplication
  */
-export function buildQuickKeySet(stirlingFileStubs: Record<FileId, StirlingFileStub>): Set<string> {
+export function buildQuickKeySet(
+  stirlingFileStubs: Record<FileId, StirlingFileStub>,
+): Set<string> {
   const quickKeys = new Set<string>();
   Object.values(stirlingFileStubs).forEach((record) => {
     if (record.quickKey) {

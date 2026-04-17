@@ -3,7 +3,13 @@ import React from "react";
 import { ToolOperationConfig } from "@app/hooks/tools/shared/toolOperationTypes";
 import { BaseToolProps } from "@app/types/tool";
 import { WorkbenchType } from "@app/types/workbench";
-import { LinkToolId, RegularToolId, SuperToolId, ToolId, ToolKind } from "@app/types/toolId";
+import {
+  LinkToolId,
+  RegularToolId,
+  SuperToolId,
+  ToolId,
+  ToolKind,
+} from "@app/types/toolId";
 import DrawRoundedIcon from "@mui/icons-material/DrawRounded";
 import SecurityRoundedIcon from "@mui/icons-material/SecurityRounded";
 import VerifiedUserRoundedIcon from "@mui/icons-material/VerifiedUserRounded";
@@ -69,7 +75,10 @@ export type RegularToolRegistry = Record<RegularToolId, ToolRegistryEntry>;
 export type SuperToolRegistry = Record<SuperToolId, ToolRegistryEntry>;
 export type LinkToolRegistry = Record<LinkToolId, ToolRegistryEntry>;
 export type ToolRegistry = Record<ToolId, ToolRegistryEntry>;
-export type ProprietaryToolRegistry = Record<ProprietaryToolId, ToolRegistryEntry>;
+export type ProprietaryToolRegistry = Record<
+  ProprietaryToolId,
+  ToolRegistryEntry
+>;
 
 export const SUBCATEGORY_ORDER: SubcategoryId[] = [
   SubcategoryId.SIGNING,
@@ -99,7 +108,9 @@ export const SUBCATEGORY_COLOR_MAP: Record<SubcategoryId, string> = {
   [SubcategoryId.DEVELOPER_TOOLS]: "var(--category-color-developer)", // Gray
 };
 
-export const getSubcategoryIcon = (subcategory: SubcategoryId): React.ReactNode => {
+export const getSubcategoryIcon = (
+  subcategory: SubcategoryId,
+): React.ReactNode => {
   switch (subcategory) {
     case SubcategoryId.SIGNING:
       return React.createElement(DrawRoundedIcon);
@@ -128,9 +139,12 @@ export const getSubcategoryIcon = (subcategory: SubcategoryId): React.ReactNode 
   }
 };
 
-export const getCategoryLabel = (t: TFunction, id: ToolCategoryId): string => t(`toolPicker.categories.${id}`, id);
-export const getSubcategoryLabel = (t: TFunction, id: SubcategoryId): string => t(`toolPicker.subcategories.${id}`, id);
-export const getSubcategoryColor = (subcategory: SubcategoryId): string => SUBCATEGORY_COLOR_MAP[subcategory] || "#7882FF";
+export const getCategoryLabel = (t: TFunction, id: ToolCategoryId): string =>
+  t(`toolPicker.categories.${id}`, id);
+export const getSubcategoryLabel = (t: TFunction, id: SubcategoryId): string =>
+  t(`toolPicker.subcategories.${id}`, id);
+export const getSubcategoryColor = (subcategory: SubcategoryId): string =>
+  SUBCATEGORY_COLOR_MAP[subcategory] || "#7882FF";
 
 export const getAllEndpoints = (registry: ToolRegistry): string[] => {
   const lists: string[][] = [];
@@ -142,7 +156,9 @@ export const getAllEndpoints = (registry: ToolRegistry): string[] => {
   return Array.from(new Set(lists.flat()));
 };
 
-export const getConversionEndpoints = (extensionToEndpoint: Record<string, Record<string, string>>): string[] => {
+export const getConversionEndpoints = (
+  extensionToEndpoint: Record<string, Record<string, string>>,
+): string[] => {
   const endpoints = new Set<string>();
   Object.values(extensionToEndpoint).forEach((toEndpoints) => {
     Object.values(toEndpoints).forEach((endpoint) => {
@@ -157,7 +173,9 @@ export const getAllApplicationEndpoints = (
   extensionToEndpoint?: Record<string, Record<string, string>>,
 ): string[] => {
   const toolEp = getAllEndpoints(registry);
-  const convEp = extensionToEndpoint ? getConversionEndpoints(extensionToEndpoint) : [];
+  const convEp = extensionToEndpoint
+    ? getConversionEndpoints(extensionToEndpoint)
+    : [];
   return Array.from(new Set([...toolEp, ...convEp]));
 };
 
@@ -184,7 +202,10 @@ export const getToolUrlPath = (toolId: string): string => {
 /**
  * Check if a tool ID exists in the registry
  */
-export const isValidToolId = (toolId: string, registry: ToolRegistry): boolean => {
+export const isValidToolId = (
+  toolId: string,
+  registry: ToolRegistry,
+): boolean => {
   return toolId in registry;
 };
 

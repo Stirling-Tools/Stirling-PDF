@@ -159,7 +159,12 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
 
   const handleJumpToSubmit = () => {
     const index = parseInt(jumpToValue, 10);
-    if (!isNaN(index) && resultInfo && index >= 1 && index <= resultInfo.totalResults) {
+    if (
+      !isNaN(index) &&
+      resultInfo &&
+      index >= 1 &&
+      index <= resultInfo.totalResults
+    ) {
       handleJumpToResult(index);
       setJumpToValue(""); // Clear the input after jumping
     }
@@ -194,7 +199,12 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
         <Text size="sm" fw={600}>
           {t("search.title", "Search PDF")}
         </Text>
-        <ActionIcon variant="subtle" size="sm" onClick={handleCloseClick} aria-label="Close search">
+        <ActionIcon
+          variant="subtle"
+          size="sm"
+          onClick={handleCloseClick}
+          aria-label="Close search"
+        >
           <LocalIcon icon="close" width="1rem" height="1rem" />
         </ActionIcon>
       </Group>
@@ -214,7 +224,11 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
           style={{ flex: 1 }}
           rightSection={
             searchQuery.trim() && (
-              <ActionIcon variant="subtle" onClick={handleClearSearch} aria-label="Clear search">
+              <ActionIcon
+                variant="subtle"
+                onClick={handleClearSearch}
+                aria-label="Clear search"
+              >
                 <LocalIcon icon="close" width="0.875rem" height="0.875rem" />
               </ActionIcon>
             )
@@ -234,7 +248,12 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
 
               // Jump immediately as user types
               const index = parseInt(newValue, 10);
-              if (resultInfo && !isNaN(index) && index >= 1 && index <= resultInfo.totalResults) {
+              if (
+                resultInfo &&
+                !isNaN(index) &&
+                index >= 1 &&
+                index <= resultInfo.totalResults
+              ) {
                 handleJumpToResult(index);
               }
             }}
@@ -266,7 +285,9 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
             variant="subtle"
             size="sm"
             onClick={handleNext}
-            disabled={!resultInfo || resultInfo.currentIndex >= resultInfo.totalResults}
+            disabled={
+              !resultInfo || resultInfo.currentIndex >= resultInfo.totalResults
+            }
             aria-label="Next result"
           >
             <LocalIcon icon="keyboard-arrow-down" width="1rem" height="1rem" />

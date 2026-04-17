@@ -119,7 +119,9 @@ class SelfHostedServerMonitor {
     const next = { ...this.state, ...partial };
 
     const changed =
-      next.status !== this.state.status || next.isOnline !== this.state.isOnline || next.serverUrl !== this.state.serverUrl;
+      next.status !== this.state.status ||
+      next.isOnline !== this.state.isOnline ||
+      next.serverUrl !== this.state.serverUrl;
 
     this.state = next;
 

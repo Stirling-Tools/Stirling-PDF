@@ -1,7 +1,17 @@
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { TextInput, NumberInput, Switch, Stack, Paper, Text, Loader, Group, Badge } from "@mantine/core";
+import {
+  TextInput,
+  NumberInput,
+  Switch,
+  Stack,
+  Paper,
+  Text,
+  Loader,
+  Group,
+  Badge,
+} from "@mantine/core";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
@@ -25,48 +35,73 @@ interface FeaturesSettingsData {
 export default function AdminFeaturesSection() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { loginEnabled, validateLoginEnabled, getDisabledStyles } = useLoginRequired();
-  const { restartModalOpened, showRestartModal, closeRestartModal, restartServer } = useRestartServer();
+  const { loginEnabled, validateLoginEnabled, getDisabledStyles } =
+    useLoginRequired();
+  const {
+    restartModalOpened,
+    showRestartModal,
+    closeRestartModal,
+    restartServer,
+  } = useRestartServer();
 
-  const { settings, setSettings, loading, saving, fetchSettings, saveSettings, isFieldPending } =
-    useAdminSettings<FeaturesSettingsData>({
-      sectionName: "features",
-      fetchTransformer: async (): Promise<FeaturesSettingsData & { _pending?: Record<string, unknown> }> => {
-        const systemResponse = await apiClient.get("/api/v1/admin/settings/section/system");
-        const systemData = systemResponse.data || {};
+  const {
+    settings,
+    setSettings,
+    loading,
+    saving,
+    fetchSettings,
+    saveSettings,
+    isFieldPending,
+  } = useAdminSettings<FeaturesSettingsData>({
+    sectionName: "features",
+    fetchTransformer: async (): Promise<
+      FeaturesSettingsData & { _pending?: Record<string, unknown> }
+    > => {
+      const systemResponse = await apiClient.get(
+        "/api/v1/admin/settings/section/system",
+      );
+      const systemData = systemResponse.data || {};
 
-        const result: FeaturesSettingsData & { _pending?: Record<string, unknown> } = {
-          serverCertificate: systemData.serverCertificate || {
-            enabled: true,
-            organizationName: "Stirling-PDF",
-            validity: 365,
-            regenerateOnStartup: false,
-          },
+      const result: FeaturesSettingsData & {
+        _pending?: Record<string, unknown>;
+      } = {
+        serverCertificate: systemData.serverCertificate || {
+          enabled: true,
+          organizationName: "Stirling-PDF",
+          validity: 365,
+          regenerateOnStartup: false,
+        },
+      };
+
+      // Map pending changes from system._pending.serverCertificate
+      if (systemData._pending?.serverCertificate) {
+        result._pending = {
+          serverCertificate: systemData._pending.serverCertificate,
         };
+      }
 
-        // Map pending changes from system._pending.serverCertificate
-        if (systemData._pending?.serverCertificate) {
-          result._pending = { serverCertificate: systemData._pending.serverCertificate };
-        }
+      return result;
+    },
+    saveTransformer: (settings: FeaturesSettingsData) => {
+      const deltaSettings: Record<string, unknown> = {};
 
-        return result;
-      },
-      saveTransformer: (settings: FeaturesSettingsData) => {
-        const deltaSettings: Record<string, unknown> = {};
+      if (settings.serverCertificate) {
+        deltaSettings["system.serverCertificate.enabled"] =
+          settings.serverCertificate.enabled;
+        deltaSettings["system.serverCertificate.organizationName"] =
+          settings.serverCertificate.organizationName;
+        deltaSettings["system.serverCertificate.validity"] =
+          settings.serverCertificate.validity;
+        deltaSettings["system.serverCertificate.regenerateOnStartup"] =
+          settings.serverCertificate.regenerateOnStartup;
+      }
 
-        if (settings.serverCertificate) {
-          deltaSettings["system.serverCertificate.enabled"] = settings.serverCertificate.enabled;
-          deltaSettings["system.serverCertificate.organizationName"] = settings.serverCertificate.organizationName;
-          deltaSettings["system.serverCertificate.validity"] = settings.serverCertificate.validity;
-          deltaSettings["system.serverCertificate.regenerateOnStartup"] = settings.serverCertificate.regenerateOnStartup;
-        }
-
-        return {
-          sectionData: {},
-          deltaSettings,
-        };
-      },
-    });
+      return {
+        sectionData: {},
+        deltaSettings,
+      };
+    },
+  });
 
   useEffect(() => {
     if (loginEnabled) {
@@ -74,7 +109,10 @@ export default function AdminFeaturesSection() {
     }
   }, [loginEnabled]);
 
-  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(settings, loading);
+  const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
+    settings,
+    loading,
+  );
 
   const handleSave = async () => {
     if (!validateLoginEnabled()) {
@@ -117,7 +155,10 @@ export default function AdminFeaturesSection() {
             {t("admin.settings.features.title", "Features")}
           </Text>
           <Text size="sm" c="dimmed">
-            {t("admin.settings.features.description", "Configure optional features and functionality.")}
+            {t(
+              "admin.settings.features.description",
+              "Configure optional features and functionality.",
+            )}
           </Text>
         </div>
 
@@ -126,14 +167,20 @@ export default function AdminFeaturesSection() {
           <Stack gap="md">
             <Group justify="space-between" align="center">
               <Text fw={600} size="sm">
-                {t("admin.settings.features.serverCertificate.label", "Server Certificate")}
+                {t(
+                  "admin.settings.features.serverCertificate.label",
+                  "Server Certificate",
+                )}
               </Text>
               <Badge
                 color="grape"
                 size="sm"
                 style={{ cursor: "pointer" }}
                 onClick={() => navigate("/settings/adminPlan")}
-                title={t("admin.settings.badge.clickToUpgrade", "Click to view plan details")}
+                title={t(
+                  "admin.settings.badge.clickToUpgrade",
+                  "Click to view plan details",
+                )}
               >
                 PRO
               </Badge>
@@ -146,10 +193,19 @@ export default function AdminFeaturesSection() {
               )}
             </Text>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.features.serverCertificate.enabled.label", "Enable Server Certificate")}
+                  {t(
+                    "admin.settings.features.serverCertificate.enabled.label",
+                    "Enable Server Certificate",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
@@ -165,13 +221,18 @@ export default function AdminFeaturesSection() {
                     if (!loginEnabled) return;
                     setSettings({
                       ...settings,
-                      serverCertificate: { ...settings.serverCertificate, enabled: e.target.checked },
+                      serverCertificate: {
+                        ...settings.serverCertificate,
+                        enabled: e.target.checked,
+                      },
                     });
                   }}
                   disabled={!loginEnabled}
                   styles={getDisabledStyles()}
                 />
-                <PendingBadge show={isFieldPending("serverCertificate.enabled")} />
+                <PendingBadge
+                  show={isFieldPending("serverCertificate.enabled")}
+                />
               </Group>
             </div>
 
@@ -179,19 +240,33 @@ export default function AdminFeaturesSection() {
               <TextInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.features.serverCertificate.organizationName.label", "Organization Name")}</span>
-                    <PendingBadge show={isFieldPending("serverCertificate.organizationName")} />
+                    <span>
+                      {t(
+                        "admin.settings.features.serverCertificate.organizationName.label",
+                        "Organization Name",
+                      )}
+                    </span>
+                    <PendingBadge
+                      show={isFieldPending(
+                        "serverCertificate.organizationName",
+                      )}
+                    />
                   </Group>
                 }
                 description={t(
                   "admin.settings.features.serverCertificate.organizationName.description",
                   "Organization name for generated certificates",
                 )}
-                value={settings.serverCertificate?.organizationName || "Stirling-PDF"}
+                value={
+                  settings.serverCertificate?.organizationName || "Stirling-PDF"
+                }
                 onChange={(e) =>
                   setSettings({
                     ...settings,
-                    serverCertificate: { ...settings.serverCertificate, organizationName: e.target.value },
+                    serverCertificate: {
+                      ...settings.serverCertificate,
+                      organizationName: e.target.value,
+                    },
                   })
                 }
                 placeholder="Stirling-PDF"
@@ -203,8 +278,15 @@ export default function AdminFeaturesSection() {
               <NumberInput
                 label={
                   <Group gap="xs">
-                    <span>{t("admin.settings.features.serverCertificate.validity.label", "Certificate Validity (days)")}</span>
-                    <PendingBadge show={isFieldPending("serverCertificate.validity")} />
+                    <span>
+                      {t(
+                        "admin.settings.features.serverCertificate.validity.label",
+                        "Certificate Validity (days)",
+                      )}
+                    </span>
+                    <PendingBadge
+                      show={isFieldPending("serverCertificate.validity")}
+                    />
                   </Group>
                 }
                 description={t(
@@ -215,7 +297,10 @@ export default function AdminFeaturesSection() {
                 onChange={(value) =>
                   setSettings({
                     ...settings,
-                    serverCertificate: { ...settings.serverCertificate, validity: Number(value) },
+                    serverCertificate: {
+                      ...settings.serverCertificate,
+                      validity: Number(value),
+                    },
                   })
                 }
                 min={1}
@@ -224,10 +309,19 @@ export default function AdminFeaturesSection() {
               />
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.features.serverCertificate.regenerateOnStartup.label", "Regenerate on Startup")}
+                  {t(
+                    "admin.settings.features.serverCertificate.regenerateOnStartup.label",
+                    "Regenerate on Startup",
+                  )}
                 </Text>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t(
@@ -238,18 +332,25 @@ export default function AdminFeaturesSection() {
               </div>
               <Group gap="xs">
                 <Switch
-                  checked={settings.serverCertificate?.regenerateOnStartup ?? false}
+                  checked={
+                    settings.serverCertificate?.regenerateOnStartup ?? false
+                  }
                   onChange={(e) => {
                     if (!loginEnabled) return;
                     setSettings({
                       ...settings,
-                      serverCertificate: { ...settings.serverCertificate, regenerateOnStartup: e.target.checked },
+                      serverCertificate: {
+                        ...settings.serverCertificate,
+                        regenerateOnStartup: e.target.checked,
+                      },
                     });
                   }}
                   disabled={!loginEnabled}
                   styles={getDisabledStyles()}
                 />
-                <PendingBadge show={isFieldPending("serverCertificate.regenerateOnStartup")} />
+                <PendingBadge
+                  show={isFieldPending("serverCertificate.regenerateOnStartup")}
+                />
               </Group>
             </div>
           </Stack>
@@ -265,7 +366,11 @@ export default function AdminFeaturesSection() {
       />
 
       {/* Restart Confirmation Modal */}
-      <RestartConfirmationModal opened={restartModalOpened} onClose={closeRestartModal} onRestart={restartServer} />
+      <RestartConfirmationModal
+        opened={restartModalOpened}
+        onClose={closeRestartModal}
+        onRestart={restartServer}
+      />
     </div>
   );
 }

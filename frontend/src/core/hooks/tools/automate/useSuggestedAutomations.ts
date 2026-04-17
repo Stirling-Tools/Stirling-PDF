@@ -6,10 +6,30 @@ import { SuggestedAutomation } from "@app/types/automation";
 import { SPLIT_METHODS } from "@app/constants/splitConstants";
 
 // Create icon components
-const CompressIcon = () => React.createElement(LocalIcon, { icon: "compress", width: "1.5rem", height: "1.5rem" });
-const SecurityIcon = () => React.createElement(LocalIcon, { icon: "security", width: "1.5rem", height: "1.5rem" });
-const StarIcon = () => React.createElement(LocalIcon, { icon: "star", width: "1.5rem", height: "1.5rem" });
-const PrivacyIcon = () => React.createElement(LocalIcon, { icon: "shield-lock", width: "1.5rem", height: "1.5rem" });
+const CompressIcon = () =>
+  React.createElement(LocalIcon, {
+    icon: "compress",
+    width: "1.5rem",
+    height: "1.5rem",
+  });
+const SecurityIcon = () =>
+  React.createElement(LocalIcon, {
+    icon: "security",
+    width: "1.5rem",
+    height: "1.5rem",
+  });
+const StarIcon = () =>
+  React.createElement(LocalIcon, {
+    icon: "star",
+    width: "1.5rem",
+    height: "1.5rem",
+  });
+const PrivacyIcon = () =>
+  React.createElement(LocalIcon, {
+    icon: "shield-lock",
+    width: "1.5rem",
+    height: "1.5rem",
+  });
 
 export function useSuggestedAutomations(): SuggestedAutomation[] {
   const { t } = useTranslation();
@@ -19,7 +39,10 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
     return [
       {
         id: "secure-pdf-ingestion",
-        name: t("automation.suggested.securePdfIngestion", "Secure PDF Ingestion"),
+        name: t(
+          "automation.suggested.securePdfIngestion",
+          "Secure PDF Ingestion",
+        ),
         description: t(
           "automation.suggested.securePdfIngestionDesc",
           "Comprehensive PDF processing workflow that sanitizes documents, applies OCR with cleanup, converts to PDF/A format for long-term archival, and optimizes file size.",
@@ -74,7 +97,10 @@ export function useSuggestedAutomations(): SuggestedAutomation[] {
       },
       {
         id: "pre-publish-sanitization",
-        name: t("automation.suggested.prePublishSanitization", "Pre-publish Sanitization"),
+        name: t(
+          "automation.suggested.prePublishSanitization",
+          "Pre-publish Sanitization",
+        ),
         description: t(
           "automation.suggested.prePublishSanitizationDesc",
           "Sanitization workflow that removes all hidden metadata, JavaScript, embedded files, annotations, and flattens forms to prevent data leakage before publishing PDFs online.",

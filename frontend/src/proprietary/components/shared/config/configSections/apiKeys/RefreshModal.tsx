@@ -9,7 +9,11 @@ interface RefreshModalProps {
   onConfirm: () => void;
 }
 
-export default function RefreshModal({ opened, onClose, onConfirm }: RefreshModalProps) {
+export default function RefreshModal({
+  opened,
+  onClose,
+  onConfirm,
+}: RefreshModalProps) {
   const { t } = useTranslation();
   return (
     <Modal
@@ -34,7 +38,10 @@ export default function RefreshModal({ opened, onClose, onConfirm }: RefreshModa
           )}
         </Text>
         <Text size="sm" fw={500}>
-          {t("config.apiKeys.refreshModal.confirmPrompt", "Are you sure you want to continue?")}
+          {t(
+            "config.apiKeys.refreshModal.confirmPrompt",
+            "Are you sure you want to continue?",
+          )}
         </Text>
         <Group justify="flex-end" gap="sm">
           <Button variant="default" onClick={onClose}>

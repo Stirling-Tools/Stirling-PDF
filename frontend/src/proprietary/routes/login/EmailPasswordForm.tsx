@@ -122,7 +122,12 @@ export default function EmailPasswordForm({
 
       <Button
         type="submit"
-        disabled={isSubmitting || !email || (showPasswordField && !password) || (requiresMfa && !mfaCode.trim())}
+        disabled={
+          isSubmitting ||
+          !email ||
+          (showPasswordField && !password) ||
+          (requiresMfa && !mfaCode.trim())
+        }
         className="auth-button"
         fullWidth
         loading={isSubmitting}

@@ -12,7 +12,10 @@ import LoginHeader from "@app/routes/login/LoginHeader";
 import ErrorMessage from "@app/routes/login/ErrorMessage";
 import DividerWithText from "@app/components/shared/DividerWithText";
 import SignupForm from "@app/routes/signup/SignupForm";
-import { useSignupFormValidation, SignupFieldErrors } from "@app/routes/signup/SignupFormValidation";
+import {
+  useSignupFormValidation,
+  SignupFieldErrors,
+} from "@app/routes/signup/SignupFormValidation";
 import { useAuthService } from "@app/routes/signup/AuthService";
 
 export default function Signup() {
@@ -39,9 +42,15 @@ export default function Signup() {
   // Set document meta
   useDocumentMeta({
     title: `${t("signup.title", "Create an account")} - Stirling PDF`,
-    description: t("app.description", "The Free Adobe Acrobat alternative (10M+ Downloads)"),
+    description: t(
+      "app.description",
+      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+    ),
     ogTitle: `${t("signup.title", "Create an account")} - Stirling PDF`,
-    ogDescription: t("app.description", "The Free Adobe Acrobat alternative (10M+ Downloads)"),
+    ogDescription: t(
+      "app.description",
+      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+    ),
     ogImage: `${baseUrl}/og_images/home.png`,
     ogUrl: `${window.location.origin}${window.location.pathname}`,
   });
@@ -71,7 +80,11 @@ export default function Signup() {
       }
     } catch (err) {
       console.error("[Signup] Unexpected error:", err);
-      setError(err instanceof Error ? err.message : t("signup.unexpectedError", { message: "Unknown error" }));
+      setError(
+        err instanceof Error
+          ? err.message
+          : t("signup.unexpectedError", { message: "Unknown error" }),
+      );
     } finally {
       setIsSigningUp(false);
     }
@@ -79,7 +92,10 @@ export default function Signup() {
 
   return (
     <AuthLayout>
-      <LoginHeader title={t("signup.title", "Create an account")} subtitle={t("signup.subtitle", "Join Stirling PDF")} />
+      <LoginHeader
+        title={t("signup.title", "Create an account")}
+        subtitle={t("signup.subtitle", "Join Stirling PDF")}
+      />
 
       <ErrorMessage error={error} />
 
@@ -98,11 +114,19 @@ export default function Signup() {
         showTerms={false}
       />
 
-      <DividerWithText text={t("signup.or", "or")} respondsToDarkMode={false} opacity={0.4} />
+      <DividerWithText
+        text={t("signup.or", "or")}
+        respondsToDarkMode={false}
+        opacity={0.4}
+      />
 
       {/* Bottom row - centered */}
       <div style={{ textAlign: "center", margin: "0.5rem 0 0.25rem" }}>
-        <button type="button" onClick={() => navigate("/login")} className="auth-link-black">
+        <button
+          type="button"
+          onClick={() => navigate("/login")}
+          className="auth-link-black"
+        >
           {t("login.logIn", "Log In")}
         </button>
       </div>

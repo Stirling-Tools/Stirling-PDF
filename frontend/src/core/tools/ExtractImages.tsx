@@ -9,7 +9,12 @@ import { BaseToolProps, ToolComponent } from "@app/types/tool";
 const ExtractImages = (props: BaseToolProps) => {
   const { t } = useTranslation();
 
-  const base = useBaseTool("extractImages", useExtractImagesParameters, useExtractImagesOperation, props);
+  const base = useBaseTool(
+    "extractImages",
+    useExtractImagesParameters,
+    useExtractImagesOperation,
+    props,
+  );
 
   return createToolFlow({
     files: {
@@ -20,7 +25,9 @@ const ExtractImages = (props: BaseToolProps) => {
       {
         title: t("extractImages.settings.title", "Settings"),
         isCollapsed: base.settingsCollapsed,
-        onCollapsedClick: base.settingsCollapsed ? base.handleSettingsReset : undefined,
+        onCollapsedClick: base.settingsCollapsed
+          ? base.handleSettingsReset
+          : undefined,
         content: (
           <ExtractImagesSettings
             parameters={base.params.parameters}

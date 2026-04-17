@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { Button, Group, Text, Stack, useMantineColorScheme } from "@mantine/core";
+import {
+  Button,
+  Group,
+  Text,
+  Stack,
+  useMantineColorScheme,
+} from "@mantine/core";
 import HistoryIcon from "@mui/icons-material/History";
 import { useTranslation } from "react-i18next";
 import { useFileManagerContext } from "@app/contexts/FileManagerContext";
@@ -49,7 +55,9 @@ const EmptyFilesState: React.FC = () => {
       >
         {/* No Recent Files Message */}
         <Stack align="center" gap="sm">
-          <HistoryIcon style={{ fontSize: "3rem", color: "var(--mantine-color-gray-5)" }} />
+          <HistoryIcon
+            style={{ fontSize: "3rem", color: "var(--mantine-color-gray-5)" }}
+          />
           <Text c="dimmed" ta="center" size="lg">
             {t("fileManager.noRecentFiles", "No recent files")}
           </Text>
@@ -91,7 +99,8 @@ const EmptyFilesState: React.FC = () => {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              transition: "width .5s ease, padding .5s ease, border-radius .5s ease",
+              transition:
+                "width .5s ease, padding .5s ease, border-radius .5s ease",
             }}
             onClick={handleUploadClick}
             onMouseEnter={() => setIsUploadHover(true)}
@@ -102,12 +111,19 @@ const EmptyFilesState: React.FC = () => {
               height="1.25rem"
               style={{ color: "var(--accent-interactive)" }}
             />
-            {isUploadHover && <span style={{ marginLeft: ".5rem" }}>{terminology.uploadFromComputer}</span>}
+            {isUploadHover && (
+              <span style={{ marginLeft: ".5rem" }}>
+                {terminology.uploadFromComputer}
+              </span>
+            )}
           </Button>
         </div>
 
         {/* Instruction Text */}
-        <span className="text-[var(--accent-interactive)]" style={{ fontSize: ".8rem", textAlign: "center" }}>
+        <span
+          className="text-[var(--accent-interactive)]"
+          style={{ fontSize: ".8rem", textAlign: "center" }}
+        >
           {terminology.dropFilesHere}
         </span>
       </div>

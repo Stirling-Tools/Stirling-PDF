@@ -54,7 +54,9 @@ export function useSuggestedTools(): SuggestedTool[] {
 
   return useMemo(() => {
     // Filter out the current tool
-    const filteredTools = ALL_SUGGESTED_TOOLS.filter((tool) => tool.id !== selectedTool);
+    const filteredTools = ALL_SUGGESTED_TOOLS.filter(
+      (tool) => tool.id !== selectedTool,
+    );
 
     // Add navigation props to each tool
     return filteredTools.map((tool) => {

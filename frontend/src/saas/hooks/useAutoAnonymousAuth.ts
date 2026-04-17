@@ -75,7 +75,11 @@ export function useAutoAnonymousAuth() {
   const triggerAnonymousAuth = useCallback(async () => {
     if (state.isAutoAuthenticating) return;
 
-    setState((prev) => ({ ...prev, isAutoAuthenticating: true, autoAuthError: null }));
+    setState((prev) => ({
+      ...prev,
+      isAutoAuthenticating: true,
+      autoAuthError: null,
+    }));
     try {
       console.log("[useAutoAnonymousAuth] anonymous auth starting");
 
@@ -89,13 +93,18 @@ export function useAutoAnonymousAuth() {
       }
 
       console.log("[useAutoAnonymousAuth] anonymous auth complete");
-      setState((prev) => ({ ...prev, isAutoAuthenticating: false, shouldTriggerAutoAuth: false }));
+      setState((prev) => ({
+        ...prev,
+        isAutoAuthenticating: false,
+        shouldTriggerAutoAuth: false,
+      }));
     } catch (e) {
       console.error("[useAutoAnonymousAuth] anonymous auth failed", e);
       setState((prev) => ({
         ...prev,
         isAutoAuthenticating: false,
-        autoAuthError: e instanceof Error ? e.message : "Anonymous authentication failed",
+        autoAuthError:
+          e instanceof Error ? e.message : "Anonymous authentication failed",
       }));
     }
   }, [state.isAutoAuthenticating, waitForToken]);
@@ -127,7 +136,11 @@ export function useAutoAnonymousAuth() {
   // Clear error if route is no longer a tool route, or once authenticated
   useEffect(() => {
     if (session || !shouldAutoAuthenticate()) {
-      setState((prev) => ({ ...prev, autoAuthError: null, shouldTriggerAutoAuth: false }));
+      setState((prev) => ({
+        ...prev,
+        autoAuthError: null,
+        shouldTriggerAutoAuth: false,
+      }));
     }
   }, [session, shouldAutoAuthenticate]);
 

@@ -18,7 +18,10 @@ export const usePageSelectionTips = (): TooltipContent => {
         bullets: [
           t("bulkSelection.syntax.bullets.numbers", "Numbers/ranges: 5, 10-20"),
           t("bulkSelection.syntax.bullets.keywords", "Keywords: odd, even"),
-          t("bulkSelection.syntax.bullets.progressions", "Progressions: 3n, 4n+1"),
+          t(
+            "bulkSelection.syntax.bullets.progressions",
+            "Progressions: 3n, 4n+1",
+          ),
         ],
       },
       {
@@ -28,9 +31,18 @@ export const usePageSelectionTips = (): TooltipContent => {
           "AND has higher precedence than comma. NOT applies within the document range.",
         ),
         bullets: [
-          t("bulkSelection.operators.and", 'AND: & or "and" — require both conditions (e.g., 1-50 & even)'),
-          t("bulkSelection.operators.comma", "Comma: , or | — combine selections (e.g., 1-10, 20)"),
-          t("bulkSelection.operators.not", 'NOT: ! or "not" — exclude pages (e.g., 3n & not 30)'),
+          t(
+            "bulkSelection.operators.and",
+            'AND: & or "and" — require both conditions (e.g., 1-50 & even)',
+          ),
+          t(
+            "bulkSelection.operators.comma",
+            "Comma: , or | — combine selections (e.g., 1-10, 20)",
+          ),
+          t(
+            "bulkSelection.operators.not",
+            'NOT: ! or "not" — exclude pages (e.g., 3n & not 30)',
+          ),
         ],
       },
       {

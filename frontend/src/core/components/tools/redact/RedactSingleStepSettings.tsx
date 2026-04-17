@@ -6,11 +6,18 @@ import RedactAdvancedSettings from "@app/components/tools/redact/RedactAdvancedS
 
 interface RedactSingleStepSettingsProps {
   parameters: RedactParameters;
-  onParameterChange: <K extends keyof RedactParameters>(key: K, value: RedactParameters[K]) => void;
+  onParameterChange: <K extends keyof RedactParameters>(
+    key: K,
+    value: RedactParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const RedactSingleStepSettings = ({ parameters, onParameterChange, disabled = false }: RedactSingleStepSettingsProps) => {
+const RedactSingleStepSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: RedactSingleStepSettingsProps) => {
   return (
     <Stack gap="md">
       {/* Mode Selection */}
@@ -35,7 +42,11 @@ const RedactSingleStepSettings = ({ parameters, onParameterChange, disabled = fa
           <Divider />
 
           {/* Advanced Settings */}
-          <RedactAdvancedSettings parameters={parameters} onParameterChange={onParameterChange} disabled={disabled} />
+          <RedactAdvancedSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
         </>
       )}
 
@@ -44,8 +55,11 @@ const RedactSingleStepSettings = ({ parameters, onParameterChange, disabled = fa
         <>
           <Divider />
           <Stack gap="md">
-            <div style={{ padding: "20px", textAlign: "center", color: "#666" }}>
-              Manual redaction interface will be available here when implemented.
+            <div
+              style={{ padding: "20px", textAlign: "center", color: "#666" }}
+            >
+              Manual redaction interface will be available here when
+              implemented.
             </div>
           </Stack>
         </>

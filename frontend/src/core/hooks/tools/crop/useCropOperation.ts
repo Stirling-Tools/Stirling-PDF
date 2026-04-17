@@ -1,10 +1,19 @@
 import { useTranslation } from "react-i18next";
-import { useToolOperation, ToolType } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  useToolOperation,
+  ToolType,
+} from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { CropParameters, defaultParameters } from "@app/hooks/tools/crop/useCropParameters";
+import {
+  CropParameters,
+  defaultParameters,
+} from "@app/hooks/tools/crop/useCropParameters";
 
 // Static configuration that can be used by both the hook and automation executor
-export const buildCropFormData = (parameters: CropParameters, file: File): FormData => {
+export const buildCropFormData = (
+  parameters: CropParameters,
+  file: File,
+): FormData => {
   const formData = new FormData();
   formData.append("fileInput", file);
 
@@ -36,6 +45,8 @@ export const useCropOperation = () => {
 
   return useToolOperation<CropParameters>({
     ...cropOperationConfig,
-    getErrorMessage: createStandardErrorHandler(t("crop.error.failed", "An error occurred while cropping the PDF.")),
+    getErrorMessage: createStandardErrorHandler(
+      t("crop.error.failed", "An error occurred while cropping the PDF."),
+    ),
   });
 };

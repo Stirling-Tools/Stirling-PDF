@@ -14,14 +14,20 @@ export async function getAuthTokenFromAnySource(): Promise<string | null> {
       return token;
     }
   } catch (error) {
-    console.error("[Desktop AuthTokenStore] Failed to read from Tauri store:", error);
+    console.error(
+      "[Desktop AuthTokenStore] Failed to read from Tauri store:",
+      error,
+    );
   }
 
   // Fallback to localStorage
   try {
     return localStorage.getItem(TOKEN_KEY);
   } catch (error) {
-    console.error("[Desktop AuthTokenStore] Failed to read from localStorage:", error);
+    console.error(
+      "[Desktop AuthTokenStore] Failed to read from localStorage:",
+      error,
+    );
     return null;
   }
 }

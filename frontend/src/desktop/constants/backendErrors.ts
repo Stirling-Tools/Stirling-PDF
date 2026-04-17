@@ -7,12 +7,17 @@ export interface BackendNotReadyError extends Error {
 }
 
 export function createBackendNotReadyError(): BackendNotReadyError {
-  return Object.assign(new Error(i18n.t("backendHealth.starting", "Backend starting up...")), {
-    code: BACKEND_NOT_READY_CODE,
-  });
+  return Object.assign(
+    new Error(i18n.t("backendHealth.starting", "Backend starting up...")),
+    {
+      code: BACKEND_NOT_READY_CODE,
+    },
+  );
 }
 
-export function isBackendNotReadyError(error: unknown): error is BackendNotReadyError {
+export function isBackendNotReadyError(
+  error: unknown,
+): error is BackendNotReadyError {
   return (
     typeof error === "object" &&
     error !== null &&

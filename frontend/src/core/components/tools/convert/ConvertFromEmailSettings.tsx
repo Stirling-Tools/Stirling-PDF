@@ -4,11 +4,18 @@ import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters
 
 interface ConvertFromEmailSettingsProps {
   parameters: ConvertParameters;
-  onParameterChange: <K extends keyof ConvertParameters>(key: K, value: ConvertParameters[K]) => void;
+  onParameterChange: <K extends keyof ConvertParameters>(
+    key: K,
+    value: ConvertParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const ConvertFromEmailSettings = ({ parameters, onParameterChange, disabled = false }: ConvertFromEmailSettingsProps) => {
+const ConvertFromEmailSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: ConvertFromEmailSettingsProps) => {
   const { t } = useTranslation();
 
   return (
@@ -53,7 +60,10 @@ const ConvertFromEmailSettings = ({ parameters, onParameterChange, disabled = fa
       )}
 
       <Checkbox
-        label={t("convert.includeAllRecipients", "Include CC and BCC recipients in header")}
+        label={t(
+          "convert.includeAllRecipients",
+          "Include CC and BCC recipients in header",
+        )}
         checked={parameters.emailOptions.includeAllRecipients}
         onChange={(event) =>
           onParameterChange("emailOptions", {
@@ -66,7 +76,10 @@ const ConvertFromEmailSettings = ({ parameters, onParameterChange, disabled = fa
       />
 
       <Checkbox
-        label={t("convert.downloadHtml", "Download HTML intermediate file instead of PDF")}
+        label={t(
+          "convert.downloadHtml",
+          "Download HTML intermediate file instead of PDF",
+        )}
         checked={parameters.emailOptions.downloadHtml}
         onChange={(event) =>
           onParameterChange("emailOptions", {

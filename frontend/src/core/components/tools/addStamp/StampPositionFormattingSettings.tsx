@@ -1,5 +1,14 @@
 import { useTranslation } from "react-i18next";
-import { Group, Select, Stack, ColorInput, Button, Slider, Text, NumberInput } from "@mantine/core";
+import {
+  Group,
+  Select,
+  Stack,
+  ColorInput,
+  Button,
+  Slider,
+  Text,
+  NumberInput,
+} from "@mantine/core";
 import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import styles from "@app/components/tools/addStamp/StampPreview.module.css";
@@ -8,7 +17,10 @@ import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface StampPositionFormattingSettingsProps {
   parameters: AddStampParameters;
-  onParameterChange: <K extends keyof AddStampParameters>(key: K, value: AddStampParameters[K]) => void;
+  onParameterChange: <K extends keyof AddStampParameters>(
+    key: K,
+    value: AddStampParameters[K],
+  ) => void;
   disabled?: boolean;
   showPositionGrid?: boolean; // When true, show the 9-position grid for automation
 }
@@ -67,18 +79,32 @@ const StampPositionFormattingSettings = ({
       )}
       {/* Icon pill buttons row */}
       <div className="flex justify-between gap-[0.5rem]">
-        <Tooltip content={t("AddStampRequest.rotation", "Rotation")} position="top">
+        <Tooltip
+          content={t("AddStampRequest.rotation", "Rotation")}
+          position="top"
+        >
           <Button
-            variant={parameters._activePill === "rotation" ? "filled" : "outline"}
+            variant={
+              parameters._activePill === "rotation" ? "filled" : "outline"
+            }
             className="flex-1"
             onClick={() => onParameterChange("_activePill", "rotation")}
           >
-            <LocalIcon icon="rotate-right-rounded" width="1.1rem" height="1.1rem" />
+            <LocalIcon
+              icon="rotate-right-rounded"
+              width="1.1rem"
+              height="1.1rem"
+            />
           </Button>
         </Tooltip>
-        <Tooltip content={t("AddStampRequest.opacity", "Opacity")} position="top">
+        <Tooltip
+          content={t("AddStampRequest.opacity", "Opacity")}
+          position="top"
+        >
           <Button
-            variant={parameters._activePill === "opacity" ? "filled" : "outline"}
+            variant={
+              parameters._activePill === "opacity" ? "filled" : "outline"
+            }
             className="flex-1"
             onClick={() => onParameterChange("_activePill", "opacity")}
           >
@@ -94,11 +120,17 @@ const StampPositionFormattingSettings = ({
           position="top"
         >
           <Button
-            variant={parameters._activePill === "fontSize" ? "filled" : "outline"}
+            variant={
+              parameters._activePill === "fontSize" ? "filled" : "outline"
+            }
             className="flex-1"
             onClick={() => onParameterChange("_activePill", "fontSize")}
           >
-            <LocalIcon icon="zoom-in-map-rounded" width="1.1rem" height="1.1rem" />
+            <LocalIcon
+              icon="zoom-in-map-rounded"
+              width="1.1rem"
+              height="1.1rem"
+            />
           </Button>
         </Tooltip>
       </div>
@@ -114,7 +146,12 @@ const StampPositionFormattingSettings = ({
           <Group className={styles.sliderGroup} align="center">
             <NumberInput
               value={parameters.fontSize}
-              onChange={(v) => onParameterChange("fontSize", typeof v === "number" && v > 0 ? v : 1)}
+              onChange={(v) =>
+                onParameterChange(
+                  "fontSize",
+                  typeof v === "number" && v > 0 ? v : 1,
+                )
+              }
               min={1}
               max={400}
               step={1}
@@ -136,11 +173,15 @@ const StampPositionFormattingSettings = ({
       )}
       {parameters._activePill === "rotation" && (
         <Stack gap="xs">
-          <Text className={styles.labelText}>{t("AddStampRequest.rotation", "Rotation")}</Text>
+          <Text className={styles.labelText}>
+            {t("AddStampRequest.rotation", "Rotation")}
+          </Text>
           <Group className={styles.sliderGroup} align="center">
             <NumberInput
               value={parameters.rotation}
-              onChange={(v) => onParameterChange("rotation", typeof v === "number" ? v : 0)}
+              onChange={(v) =>
+                onParameterChange("rotation", typeof v === "number" ? v : 0)
+              }
               min={-180}
               max={180}
               step={1}
@@ -162,11 +203,15 @@ const StampPositionFormattingSettings = ({
       )}
       {parameters._activePill === "opacity" && (
         <Stack gap="xs">
-          <Text className={styles.labelText}>{t("AddStampRequest.opacity", "Opacity")}</Text>
+          <Text className={styles.labelText}>
+            {t("AddStampRequest.opacity", "Opacity")}
+          </Text>
           <Group className={styles.sliderGroup} align="center">
             <NumberInput
               value={parameters.opacity}
-              onChange={(v) => onParameterChange("opacity", typeof v === "number" ? v : 0)}
+              onChange={(v) =>
+                onParameterChange("opacity", typeof v === "number" ? v : 0)
+              }
               min={0}
               max={100}
               step={1}
@@ -193,7 +238,10 @@ const StampPositionFormattingSettings = ({
           onChange={(value) => onParameterChange("customColor", value)}
           format="hex"
           disabled={disabled}
-          popoverProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+          popoverProps={{
+            withinPortal: true,
+            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+          }}
         />
       )}
 
@@ -202,7 +250,9 @@ const StampPositionFormattingSettings = ({
         <Select
           label={t("AddStampRequest.margin", "Margin")}
           value={parameters.customMargin}
-          onChange={(v) => onParameterChange("customMargin", (v as any) || "medium")}
+          onChange={(v) =>
+            onParameterChange("customMargin", (v as any) || "medium")
+          }
           data={[
             { value: "small", label: t("margin.small", "Small") },
             { value: "medium", label: t("margin.medium", "Medium") },
@@ -210,7 +260,10 @@ const StampPositionFormattingSettings = ({
             { value: "x-large", label: t("margin.xLarge", "Extra Large") },
           ]}
           disabled={disabled}
-          comboboxProps={{ withinPortal: true, zIndex: Z_INDEX_AUTOMATE_DROPDOWN }}
+          comboboxProps={{
+            withinPortal: true,
+            zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
+          }}
         />
       )}
     </Stack>

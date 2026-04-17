@@ -57,14 +57,22 @@ export const usePlans = (currency: string = "gbp") => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPlanId, setCurrentPlanId] = useState<string>("free");
-  const [dynamicPrices, setDynamicPrices] = useState<Map<string, { unit_amount: number; currency: string }>>(new Map());
+  const [dynamicPrices, setDynamicPrices] = useState<
+    Map<string, { unit_amount: number; currency: string }>
+  >(new Map());
 
   const fetchPricing = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const lookupKeys = ["plan:pro", "api:xsmall", "api:small", "api:medium", "api:large"];
+      const lookupKeys = [
+        "plan:pro",
+        "api:xsmall",
+        "api:small",
+        "api:medium",
+        "api:large",
+      ];
 
       const { data, error } = await supabase.functions.invoke<{
         prices: Record<string, { unit_amount: number; currency: string }>;
@@ -73,10 +81,14 @@ export const usePlans = (currency: string = "gbp") => {
         body: { lookup_keys: lookupKeys, currency },
       });
       if (error) throw error;
-      if (!data || !data.prices || !data.missing) throw new Error("No pricing data returned");
+      if (!data || !data.prices || !data.missing)
+        throw new Error("No pricing data returned");
       console.log("Fetched pricing data:", data);
 
-      const priceMap = new Map<string, { unit_amount: number; currency: string }>();
+      const priceMap = new Map<
+        string,
+        { unit_amount: number; currency: string }
+      >();
       // map your UI keys to lookup keys (if names differ)
       const keyMap: Record<string, string> = {
         pro: "plan:pro",
@@ -104,7 +116,9 @@ export const usePlans = (currency: string = "gbp") => {
       setDynamicPrices(priceMap);
     } catch (err) {
       console.error("Error fetching pricing:", err);
-      setError(err instanceof Error ? err.message : "Failed to fetch pricing data");
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch pricing data",
+      );
       // continue with static prices if needed
     } finally {
       setLoading(false);
@@ -126,18 +140,35 @@ export const usePlans = (currency: string = "gbp") => {
           t("plan.free.highlight3", "Community support"),
         ],
         features: [
-          { name: t("plan.feature.pdfTools", "Basic PDF Tools"), included: true },
-          { name: t("plan.feature.fileSize", "File Size Limit"), included: false },
-          { name: t("plan.feature.automation", "automate tool workflows"), included: false },
+          {
+            name: t("plan.feature.pdfTools", "Basic PDF Tools"),
+            included: true,
+          },
+          {
+            name: t("plan.feature.fileSize", "File Size Limit"),
+            included: false,
+          },
+          {
+            name: t("plan.feature.automation", "automate tool workflows"),
+            included: false,
+          },
           { name: t("plan.feature.api", "API Access"), included: false },
-          { name: t("plan.feature.priority", "Priority Support"), included: false },
-          { name: t("plan.feature.customPricing", "Custom Pricing"), included: false },
+          {
+            name: t("plan.feature.priority", "Priority Support"),
+            included: false,
+          },
+          {
+            name: t("plan.feature.customPricing", "Custom Pricing"),
+            included: false,
+          },
         ],
       },
       {
         id: "pro",
         name: t("plan.pro.name", "Pro"),
-        price: dynamicPrices.get("pro") ? dynamicPrices.get("pro")!.unit_amount / 100 : 8,
+        price: dynamicPrices.get("pro")
+          ? dynamicPrices.get("pro")!.unit_amount / 100
+          : 8,
         currency: dynamicPrices.get("pro")
           ? getCurrencySymbol(dynamicPrices.get("pro")!.currency)
           : getCurrencySymbol(currency),
@@ -149,12 +180,27 @@ export const usePlans = (currency: string = "gbp") => {
           t("plan.pro.highlight3", "No watermarks"),
         ],
         features: [
-          { name: t("plan.feature.pdfTools", "Basic PDF Tools"), included: true },
-          { name: t("plan.feature.fileSize", "File Size Limit"), included: true },
-          { name: t("plan.feature.automation", "automate tool workflows"), included: true },
+          {
+            name: t("plan.feature.pdfTools", "Basic PDF Tools"),
+            included: true,
+          },
+          {
+            name: t("plan.feature.fileSize", "File Size Limit"),
+            included: true,
+          },
+          {
+            name: t("plan.feature.automation", "automate tool workflows"),
+            included: true,
+          },
           { name: t("plan.feature.api", "Weekly API Credits"), included: true },
-          { name: t("plan.feature.priority", "Priority Support"), included: false },
-          { name: t("plan.feature.customPricing", "Custom Pricing"), included: false },
+          {
+            name: t("plan.feature.priority", "Priority Support"),
+            included: false,
+          },
+          {
+            name: t("plan.feature.customPricing", "Custom Pricing"),
+            included: false,
+          },
         ],
       },
       {
@@ -170,12 +216,27 @@ export const usePlans = (currency: string = "gbp") => {
           t("plan.enterprise.highlight3", "Latest features"),
         ],
         features: [
-          { name: t("plan.feature.pdfTools", "Basic PDF Tools"), included: true },
-          { name: t("plan.feature.fileSize", "File Size Limit"), included: true },
-          { name: t("plan.feature.automation", "automate tool workflows"), included: true },
+          {
+            name: t("plan.feature.pdfTools", "Basic PDF Tools"),
+            included: true,
+          },
+          {
+            name: t("plan.feature.fileSize", "File Size Limit"),
+            included: true,
+          },
+          {
+            name: t("plan.feature.automation", "automate tool workflows"),
+            included: true,
+          },
           { name: t("plan.feature.api", "Weekly API Credits"), included: true },
-          { name: t("plan.feature.priority", "Priority Support"), included: true },
-          { name: t("plan.feature.customPricing", "Custom Pricing"), included: true },
+          {
+            name: t("plan.feature.priority", "Priority Support"),
+            included: true,
+          },
+          {
+            name: t("plan.feature.customPricing", "Custom Pricing"),
+            included: true,
+          },
         ],
       },
     ];
@@ -184,7 +245,9 @@ export const usePlans = (currency: string = "gbp") => {
     const getPriceInfo = (key: string, fallbackPrice: number) => {
       const priceObj = dynamicPrices.get(key);
       const price = priceObj ? priceObj.unit_amount / 100 : fallbackPrice;
-      const currencySymbol = priceObj ? getCurrencySymbol(priceObj.currency) : getCurrencySymbol(currency);
+      const currencySymbol = priceObj
+        ? getCurrencySymbol(priceObj.currency)
+        : getCurrencySymbol(currency);
       return { price, currencySymbol };
     };
 
@@ -199,9 +262,15 @@ export const usePlans = (currency: string = "gbp") => {
     const mediumPerCredit = mediumPrice.price / 1000;
     const largePerCredit = largePrice.price / 5000;
 
-    const smallDiscount = Math.round((1 - smallPerCredit / xsmallPerCredit) * 100);
-    const mediumDiscount = Math.round((1 - mediumPerCredit / xsmallPerCredit) * 100);
-    const largeDiscount = Math.round((1 - largePerCredit / xsmallPerCredit) * 100);
+    const smallDiscount = Math.round(
+      (1 - smallPerCredit / xsmallPerCredit) * 100,
+    );
+    const mediumDiscount = Math.round(
+      (1 - mediumPerCredit / xsmallPerCredit) * 100,
+    );
+    const largeDiscount = Math.round(
+      (1 - largePerCredit / xsmallPerCredit) * 100,
+    );
 
     const apiPackages: ApiPackage[] = [
       {

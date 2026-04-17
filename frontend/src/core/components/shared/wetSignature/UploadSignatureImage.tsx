@@ -10,7 +10,11 @@ interface UploadSignatureImageProps {
   disabled?: boolean;
 }
 
-export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({ signature, onChange, disabled = false }) => {
+export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
+  signature,
+  onChange,
+  disabled = false,
+}) => {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -21,13 +25,23 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({ sign
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      setError(t("certSign.collab.signRequest.invalidFileType", "Please select an image file"));
+      setError(
+        t(
+          "certSign.collab.signRequest.invalidFileType",
+          "Please select an image file",
+        ),
+      );
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setError(t("certSign.collab.signRequest.fileTooLarge", "File size must be less than 5MB"));
+      setError(
+        t(
+          "certSign.collab.signRequest.fileTooLarge",
+          "File size must be less than 5MB",
+        ),
+      );
       return;
     }
 
@@ -57,7 +71,10 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({ sign
   return (
     <Stack gap="sm">
       <Text size="sm" c="dimmed">
-        {t("certSign.collab.signRequest.uploadSignature", "Upload your signature image")}
+        {t(
+          "certSign.collab.signRequest.uploadSignature",
+          "Upload your signature image",
+        )}
       </Text>
 
       {signature ? (
@@ -74,7 +91,12 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({ sign
               minHeight: "150px",
             }}
           >
-            <Image src={signature} alt="Signature" fit="contain" style={{ maxHeight: "150px", maxWidth: "100%" }} />
+            <Image
+              src={signature}
+              alt="Signature"
+              fit="contain"
+              style={{ maxHeight: "150px", maxWidth: "100%" }}
+            />
           </div>
 
           <Button

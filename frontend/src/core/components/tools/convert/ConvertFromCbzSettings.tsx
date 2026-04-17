@@ -4,11 +4,18 @@ import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters
 
 interface ConvertFromCbzSettingsProps {
   parameters: ConvertParameters;
-  onParameterChange: <K extends keyof ConvertParameters>(key: K, value: ConvertParameters[K]) => void;
+  onParameterChange: <K extends keyof ConvertParameters>(
+    key: K,
+    value: ConvertParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
-const ConvertFromCbzSettings = ({ parameters, onParameterChange, disabled = false }: ConvertFromCbzSettingsProps) => {
+const ConvertFromCbzSettings = ({
+  parameters,
+  onParameterChange,
+  disabled = false,
+}: ConvertFromCbzSettingsProps) => {
   const { t } = useTranslation();
 
   return (
@@ -18,7 +25,10 @@ const ConvertFromCbzSettings = ({ parameters, onParameterChange, disabled = fals
       </Text>
 
       <Checkbox
-        label={t("convert.optimizeForEbook", "Optimize PDF for ebook readers (uses Ghostscript)")}
+        label={t(
+          "convert.optimizeForEbook",
+          "Optimize PDF for ebook readers (uses Ghostscript)",
+        )}
         checked={parameters.cbzOptions.optimizeForEbook}
         onChange={(event) =>
           onParameterChange("cbzOptions", {

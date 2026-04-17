@@ -4,10 +4,15 @@ import type { PagePreview } from "@app/types/compare";
 
 const DISPLAY_SCALE = 1;
 
-const getDevicePixelRatio = () => (typeof window !== "undefined" ? window.devicePixelRatio : 1);
+const getDevicePixelRatio = () =>
+  typeof window !== "undefined" ? window.devicePixelRatio : 1;
 
 // Observable preview cache so rendering progress can resume across remounts and view switches
-type CacheEntry = { pages: PagePreview[]; total: number; subscribers: Set<() => void> };
+type CacheEntry = {
+  pages: PagePreview[];
+  total: number;
+  subscribers: Set<() => void>;
+};
 const previewCache: Map<string, CacheEntry> = new Map();
 const latestVersionMap: Map<string, symbol> = new Map();
 
@@ -36,7 +41,11 @@ const subscribe = (key: string, fn: () => void): (() => void) => {
   return () => entry.subscribers.delete(fn);
 };
 
-const appendBatchToCache = (key: string, batch: PagePreview[], provisionalTotal?: number) => {
+const appendBatchToCache = (
+  key: string,
+  batch: PagePreview[],
+  provisionalTotal?: number,
+) => {
   const entry = getOrCreateEntry(key);
   const next = entry.pages.slice();
   for (const p of batch) {
@@ -45,7 +54,8 @@ const appendBatchToCache = (key: string, batch: PagePreview[], provisionalTotal?
     else next.splice(idx, 0, p);
   }
   entry.pages = next;
-  if (typeof provisionalTotal === "number" && entry.total === 0) entry.total = provisionalTotal;
+  if (typeof provisionalTotal === "number" && entry.total === 0)
+    entry.total = provisionalTotal;
   notify(entry);
 };
 
@@ -55,7 +65,11 @@ const setTotalInCache = (key: string, total: number) => {
   notify(entry);
 };
 
-const replacePagesInCache = (key: string, pages: PagePreview[], total?: number) => {
+const replacePagesInCache = (
+  key: string,
+  pages: PagePreview[],
+  total?: number,
+) => {
   const entry = getOrCreateEntry(key);
   entry.pages = pages.slice();
   if (typeof total === "number") entry.total = total;
@@ -85,7 +99,11 @@ const renderPdfDocumentToImages = async (
     let batch: PagePreview[] = [];
     const shouldStop = () => Boolean(shouldAbort?.());
 
-    for (let pageNumber = Math.max(1, startAtPage); pageNumber <= pdf.numPages; pageNumber += 1) {
+    for (
+      let pageNumber = Math.max(1, startAtPage);
+      pageNumber <= pdf.numPages;
+      pageNumber += 1
+    ) {
       if (shouldStop()) break;
       const page = await pdf.getPage(pageNumber);
       const displayViewport = page.getViewport({ scale: DISPLAY_SCALE });
@@ -102,7 +120,11 @@ const renderPdfDocumentToImages = async (
       }
 
       try {
-        await page.render({ canvasContext: context, viewport: renderViewport, canvas }).promise;
+        await page.render({
+          canvasContext: context,
+          viewport: renderViewport,
+          canvas,
+        }).promise;
         if (shouldStop()) break;
 
         const preview: PagePreview = {
@@ -142,7 +164,11 @@ interface UseComparePagePreviewsOptions {
   cacheKey: number | null;
 }
 
-export const useComparePagePreviews = ({ file, enabled, cacheKey }: UseComparePagePreviewsOptions) => {
+export const useComparePagePreviews = ({
+  file,
+  enabled,
+  cacheKey,
+}: UseComparePagePreviewsOptions) => {
   const [pages, setPages] = useState<PagePreview[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalPages, setTotalPages] = useState(0);
@@ -166,7 +192,11 @@ export const useComparePagePreviews = ({ file, enabled, cacheKey }: UseComparePa
     const entry = getOrCreateEntry(key);
     const cachedTotal = entry.total ?? entry.pages.length ?? 0;
     let lastKnownTotal = cachedTotal;
-    const isFullyCached = Boolean(entry.pages.length > 0 && cachedTotal > 0 && entry.pages.length >= cachedTotal);
+    const isFullyCached = Boolean(
+      entry.pages.length > 0 &&
+      cachedTotal > 0 &&
+      entry.pages.length >= cachedTotal,
+    );
 
     if (entry.pages.length > 0) {
       const nextPages = entry.pages.slice();
@@ -182,7 +212,8 @@ export const useComparePagePreviews = ({ file, enabled, cacheKey }: UseComparePa
       const e = getOrCreateEntry(key);
       setPages(e.pages.slice());
       setTotalPages(e.total);
-      const done = e.pages.length > 0 && e.total > 0 && e.pages.length >= e.total;
+      const done =
+        e.pages.length > 0 && e.total > 0 && e.pages.length >= e.total;
       setLoading(!done);
     });
 
@@ -220,11 +251,17 @@ export const useComparePagePreviews = ({ file, enabled, cacheKey }: UseComparePa
             return;
           }
           const cacheEntry = getOrCreateEntry(key);
-          const finalTotal = lastKnownTotal || cachedTotal || cacheEntry.total || previews.length;
+          const finalTotal =
+            lastKnownTotal ||
+            cachedTotal ||
+            cacheEntry.total ||
+            previews.length;
           lastKnownTotal = finalTotal;
           const cachePages = cacheEntry.pages ?? [];
           const preferPreviews = previews.length > cachePages.length;
-          const finalPages = preferPreviews ? previews.slice() : cachePages.slice();
+          const finalPages = preferPreviews
+            ? previews.slice()
+            : cachePages.slice();
           replacePagesInCache(key, finalPages, finalTotal);
         }
       } catch (error) {
@@ -250,4 +287,6 @@ export const useComparePagePreviews = ({ file, enabled, cacheKey }: UseComparePa
   return { pages, loading, totalPages, renderedPages: pages.length };
 };
 
-export type UseComparePagePreviewsReturn = ReturnType<typeof useComparePagePreviews>;
+export type UseComparePagePreviewsReturn = ReturnType<
+  typeof useComparePagePreviews
+>;

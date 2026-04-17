@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { Button, PasswordInput, Group, Alert, LoadingOverlay, Modal, Divider } from "@mantine/core";
+import {
+  Button,
+  PasswordInput,
+  Group,
+  Alert,
+  LoadingOverlay,
+  Modal,
+  Divider,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@app/auth/UseSession";
 import { supabase } from "@app/auth/supabase";
@@ -23,7 +31,12 @@ const PasswordSecurity: React.FC = () => {
       return;
     }
     if (newPassword.length < 6) {
-      setError(t("signup.passwordTooShort", "Password must be at least 6 characters long"));
+      setError(
+        t(
+          "signup.passwordTooShort",
+          "Password must be at least 6 characters long",
+        ),
+      );
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -37,13 +50,20 @@ const PasswordSecurity: React.FC = () => {
       setSuccess(null);
 
       // Update to the new password directly
-      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
       if (updateError) {
         setError(updateError.message);
         return;
       }
 
-      setSuccess(t("login.passwordUpdatedSuccess", "Your password has been updated successfully."));
+      setSuccess(
+        t(
+          "login.passwordUpdatedSuccess",
+          "Your password has been updated successfully.",
+        ),
+      );
       setNewPassword("");
       setConfirmPassword("");
       setDidUpdate(true);
@@ -66,13 +86,34 @@ const PasswordSecurity: React.FC = () => {
     <div style={{ position: "relative" }}>
       <LoadingOverlay visible={isLoading} />
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <div>
-          <h3 style={{ margin: 0, color: "var(--mantine-color-text)", fontSize: "1rem" }}>
+          <h3
+            style={{
+              margin: 0,
+              color: "var(--mantine-color-text)",
+              fontSize: "1rem",
+            }}
+          >
             {t("config.account.security.title", "Passwords & Security")}
           </h3>
-          <p style={{ margin: "0.25rem 0 1rem 0", color: "var(--mantine-color-dimmed)", fontSize: "0.875rem" }}>
-            {t("config.account.security.description", "Manage your password and security settings.")}
+          <p
+            style={{
+              margin: "0.25rem 0 1rem 0",
+              color: "var(--mantine-color-dimmed)",
+              fontSize: "0.875rem",
+            }}
+          >
+            {t(
+              "config.account.security.description",
+              "Manage your password and security settings.",
+            )}
           </p>
         </div>
         <Button type="button" onClick={() => setOpened(true)} variant="filled">
@@ -95,10 +136,16 @@ const PasswordSecurity: React.FC = () => {
 
         {didUpdate ? (
           <Alert color="green" mb="md">
-            {success || t("login.passwordUpdatedSuccess", "Your password has been updated successfully.")}
+            {success ||
+              t(
+                "login.passwordUpdatedSuccess",
+                "Your password has been updated successfully.",
+              )}
           </Alert>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}
+          >
             <PasswordInput
               label={t("account.newPassword", "New Password")}
               placeholder={t("account.newPassword", "New Password")}
@@ -107,17 +154,28 @@ const PasswordSecurity: React.FC = () => {
             />
             <PasswordInput
               label={t("account.confirmNewPassword", "Confirm New Password")}
-              placeholder={t("account.confirmNewPassword", "Confirm New Password")}
+              placeholder={t(
+                "account.confirmNewPassword",
+                "Confirm New Password",
+              )}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.currentTarget.value)}
             />
 
             <Divider my="sm" />
             <Group justify="flex-end">
-              <Button type="button" variant="default" onClick={() => setOpened(false)}>
+              <Button
+                type="button"
+                variant="default"
+                onClick={() => setOpened(false)}
+              >
                 {t("common.cancel", "Cancel")}
               </Button>
-              <Button type="button" onClick={handleChangePassword} loading={isLoading}>
+              <Button
+                type="button"
+                onClick={handleChangePassword}
+                loading={isLoading}
+              >
                 {t("config.account.security.update", "Update password")}
               </Button>
             </Group>
