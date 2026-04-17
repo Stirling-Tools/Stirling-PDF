@@ -1,4 +1,5 @@
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import type { PDFDocumentProxy } from "pdfjs-dist/legacy/build/pdf.mjs";
 
 export interface ThumbnailWithMetadata {
   thumbnail: string; // Always returns a thumbnail (placeholder if needed)
@@ -542,22 +543,25 @@ function formatFileSize(bytes: number): string {
 }
 
 async function generatePDFThumbnail(arrayBuffer: ArrayBuffer, file: File, scale: number): Promise<string> {
+  let pdf: PDFDocumentProxy | null = null;
   try {
-    const pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
+    pdf = await pdfWorkerManager.createDocument(arrayBuffer, {
       disableAutoFetch: true,
       disableStream: true,
     });
 
     const thumbnail = await generateStandardPDFThumbnail(pdf, scale);
-
-    // Immediately clean up memory after thumbnail generation using worker manager
-    pdfWorkerManager.destroyDocument(pdf);
     return thumbnail;
   } catch (error) {
     if (error && typeof error === "object" && (error as any).name === "PasswordException") {
       return generateEncryptedPDFThumbnail(file);
     }
     throw error; // Not an encryption issue, re-throw
+  } finally {
+    // Always clean up the PDF document to prevent worker pool exhaustion
+    if (pdf) {
+      pdfWorkerManager.destroyDocument(pdf);
+    }
   }
 }
 
@@ -630,9 +634,10 @@ export async function generateThumbnailWithMetadata(
   const scale = calculateScaleFromFileSize(file.size);
   const isVeryLarge = file.size >= 100 * 1024 * 1024; // 100MB threshold
 
+  let pdf: PDFDocumentProxy | null = null;
   try {
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfWorkerManager.createDocument(arrayBuffer);
+    pdf = await pdfWorkerManager.createDocument(arrayBuffer);
 
     const pageCount = pdf.numPages;
     const page = await pdf.getPage(1);
@@ -653,7 +658,6 @@ export async function generateThumbnailWithMetadata(
     const context = canvas.getContext("2d");
 
     if (!context) {
-      pdfWorkerManager.destroyDocument(pdf);
       throw new Error("Could not get canvas context");
     }
 
@@ -663,7 +667,6 @@ export async function generateThumbnailWithMetadata(
     // For very large files, skip reading rotation/dimensions for all pages (just use first page data)
     if (isVeryLarge) {
       const rotation = page.rotate || 0;
-      pdfWorkerManager.destroyDocument(pdf);
       return {
         thumbnail,
         pageCount,
@@ -687,7 +690,6 @@ export async function generateThumbnailWithMetadata(
       }
     }
 
-    pdfWorkerManager.destroyDocument(pdf);
     return { thumbnail, pageCount, pageRotations, pageDimensions };
   } catch (error) {
     if (error && typeof error === "object" && (error as any).name === "PasswordException") {
@@ -698,5 +700,10 @@ export async function generateThumbnailWithMetadata(
 
     const thumbnail = generatePlaceholderThumbnail(file);
     return { thumbnail, pageCount: 1 };
+  } finally {
+    // Always clean up the PDF document to prevent worker pool exhaustion
+    if (pdf) {
+      pdfWorkerManager.destroyDocument(pdf);
+    }
   }
 }
