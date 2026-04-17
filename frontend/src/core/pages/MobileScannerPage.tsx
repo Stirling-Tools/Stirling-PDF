@@ -10,11 +10,10 @@ import {
   Progress,
   Switch,
   Card,
-  useMantineColorScheme,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useLogoPath } from "@app/hooks/useLogoPath";
-import { useLogoAssets } from "@app/hooks/useLogoAssets";
+import { LogoIcon } from "@app/components/shared/LogoIcon";
+import { Wordmark } from "@app/components/shared/Wordmark";
 import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import PhotoCameraRoundedIcon from "@mui/icons-material/PhotoCameraRounded";
@@ -41,10 +40,6 @@ export default function MobileScannerPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const sessionId = searchParams.get("session");
-  const { colorScheme } = useMantineColorScheme();
-  const brandIconSrc = useLogoPath();
-  const { wordmark } = useLogoAssets();
-  const brandTextSrc = colorScheme === "dark" ? wordmark.white : wordmark.black;
 
   const [mode, setMode] = useState<"choice" | "camera" | "file" | null>(
     "choice",
@@ -1024,16 +1019,11 @@ export default function MobileScannerPage() {
         }}
       >
         <Group gap="sm" align="center">
-          <img
-            src={brandIconSrc}
+          <LogoIcon
             alt={t("home.mobile.brandAlt", "Stirling PDF logo")}
             style={{ height: "32px", width: "32px" }}
           />
-          <img
-            src={brandTextSrc}
-            alt="Stirling PDF"
-            style={{ height: "24px" }}
-          />
+          <Wordmark alt="Stirling PDF" style={{ height: "24px" }} />
         </Group>
       </Box>
 

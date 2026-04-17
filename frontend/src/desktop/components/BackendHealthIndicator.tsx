@@ -1,12 +1,6 @@
 import React, { useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Box,
-  Tooltip,
-  useMantineTheme,
-  useComputedColorScheme,
-  rem,
-} from "@mantine/core";
+import { Box, Tooltip, useMantineTheme, rem } from "@mantine/core";
 import { useBackendHealth } from "@app/hooks/useBackendHealth";
 
 interface BackendHealthIndicatorProps {
@@ -18,7 +12,6 @@ export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({
 }) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
-  const colorScheme = useComputedColorScheme("light");
   const { status, isOnline, checkHealth } = useBackendHealth();
 
   const label = useMemo(() => {
@@ -60,14 +53,7 @@ export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({
   );
 
   return (
-    <Tooltip
-      label={label}
-      position="left"
-      offset={12}
-      withArrow
-      withinPortal
-      color={colorScheme === "dark" ? undefined : "dark"}
-    >
+    <Tooltip label={label} position="left" offset={12} withArrow withinPortal>
       <Box
         component="span"
         className={className ? `${className}` : undefined}
@@ -82,10 +68,7 @@ export const BackendHealthIndicator: React.FC<BackendHealthIndicatorProps> = ({
           height: rem(12),
           borderRadius: "50%",
           backgroundColor: dotColor,
-          boxShadow:
-            colorScheme === "dark"
-              ? "0 0 0 2px rgba(255, 255, 255, 0.18)"
-              : "0 0 0 2px rgba(0, 0, 0, 0.08)",
+          boxShadow: "var(--status-dot-ring)",
           cursor: "pointer",
           display: "inline-block",
           outline: "none",

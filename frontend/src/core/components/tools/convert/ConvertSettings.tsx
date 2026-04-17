@@ -6,7 +6,6 @@ import {
   Divider,
   UnstyledButton,
   useMantineTheme,
-  useMantineColorScheme,
 } from "@mantine/core";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useTranslation } from "react-i18next";
@@ -64,7 +63,6 @@ const ConvertSettings = ({
 }: ConvertSettingsProps) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
-  const { colorScheme } = useMantineColorScheme();
   const { setSelectedFiles } = useFileSelection();
   const { state, selectors } = useFileState();
   const activeFiles = state.files.ids;
@@ -339,14 +337,8 @@ const ConvertSettings = ({
               padding: "0.5rem 0.75rem",
               border: `0.0625rem solid ${theme.colors.gray[4]}`,
               borderRadius: theme.radius.sm,
-              backgroundColor:
-                colorScheme === "dark"
-                  ? theme.colors.dark[5]
-                  : theme.colors.gray[1],
-              color:
-                colorScheme === "dark"
-                  ? theme.colors.dark[2]
-                  : theme.colors.gray[6],
+              backgroundColor: "var(--select-placeholder-bg)",
+              color: "var(--select-placeholder-text)",
               cursor: "not-allowed",
             }}
           >
@@ -360,10 +352,7 @@ const ConvertSettings = ({
               <KeyboardArrowDownIcon
                 style={{
                   fontSize: "1rem",
-                  color:
-                    colorScheme === "dark"
-                      ? theme.colors.dark[2]
-                      : theme.colors.gray[6],
+                  color: "var(--select-placeholder-text)",
                 }}
               />
             </Group>
