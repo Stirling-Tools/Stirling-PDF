@@ -1,25 +1,17 @@
 import React, { useState } from "react";
-import {
-  Button,
-  Group,
-  Text,
-  Stack,
-  useMantineColorScheme,
-} from "@mantine/core";
+import { Button, Group, Text, Stack } from "@mantine/core";
 import HistoryIcon from "@mui/icons-material/History";
 import { useTranslation } from "react-i18next";
 import { useFileManagerContext } from "@app/contexts/FileManagerContext";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { useLogoAssets } from "@app/hooks/useLogoAssets";
+import { Wordmark } from "@app/components/shared/Wordmark";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 
 const EmptyFilesState: React.FC = () => {
   const { t } = useTranslation();
-  const { colorScheme } = useMantineColorScheme();
   const { onLocalFileClick } = useFileManagerContext();
   const [isUploadHover, setIsUploadHover] = useState(false);
-  const { wordmark } = useLogoAssets();
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
 
@@ -65,9 +57,9 @@ const EmptyFilesState: React.FC = () => {
 
         {/* Stirling PDF Logo */}
         <Group gap="xs" align="center">
-          <img
-            src={colorScheme === "dark" ? wordmark.white : wordmark.grey}
+          <Wordmark
             alt="Stirling PDF"
+            muted
             style={{ height: "2.2rem", width: "auto" }}
           />
         </Group>
